@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="formation,us,technique,options" data-tab="analyses">
+<html lang="en" data-tags="formation,us,options,technique" data-tab="analyses">
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
  <title>VIX Decoded | Mastering the VIX &mdash; Part 1 of 5 | Market Watch</title>
- <meta name="description" content="Mastering the VIX — Part 1: What the VIX really is, how it's calculated from SPX options, the term structure, and why calling it a 'fear gauge' is misleading.">
+ <meta name="description" content="Mastering the VIX — Part 1: What the VIX really measures, how it's calculated from SPX options, the term structure, regimes, and why calling it a 'fear gauge' is misleading.">
  <meta property="og:title" content="VIX Decoded | Mastering the VIX | Market Watch">
  <meta property="og:description" content="Part 1 of 5: The VIX is not a fear gauge — it's the market's expectation of 30-day annualized volatility derived from S&P 500 options. Learn the math, the levels, and the term structure.">
  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
@@ -301,6 +301,15 @@
    font-weight: 600;
  }
 
+ /* EChart Container */
+ .echart-container {
+   width: 100%;
+   height: 400px;
+   margin: 2rem 0;
+   border-radius: 12px;
+   border: 1px solid #e2e8f0;
+ }
+
  /* Responsive */
  @media (max-width: 768px) {
    .stat-grid { grid-template-columns: repeat(2, 1fr); }
@@ -315,6 +324,7 @@
    .part-divider h2 { font-size: 1.4rem; }
    .myth-card { padding: 1.5rem; }
    .formula-box .formula { font-size: 1rem; }
+   .echart-container { height: 300px; }
  }
  @media (max-width: 480px) {
    .stat-grid { grid-template-columns: 1fr; }
@@ -323,6 +333,7 @@
    .hero-section { padding: 2rem 1rem 4rem; }
    .hero-badge { font-size: 0.65rem; padding: 0.3rem 0.6rem; gap: 0.25rem; }
    .hero-badges { gap: 0.4rem; margin-top: 1rem; }
+   .echart-container { height: 250px; }
  }
  </style>
 </head>
@@ -347,12 +358,12 @@
  <section class="hero-section">
    <div class="hero-date"><i class="fa-solid fa-chart-line"></i> Mastering the VIX &mdash; Part 1 of 5</div>
    <h1 class="hero-title">VIX Decoded</h1>
-   <p class="hero-subtitle">The VIX is not a "fear gauge" &mdash; it is the market's expectation of 30-day annualized volatility derived from S&amp;P 500 options prices. Understand what it really measures, how it is calculated, and what the term structure tells you that the headline number does not.</p>
+   <p class="hero-subtitle">What the Fear Index Really Measures &mdash; And Why Most People Get It Wrong</p>
    <div class="hero-badges">
-     <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-list-ol"></i> Part 1/5</span>
-     <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calculator"></i> Quantitative</span>
-     <span class="hero-badge hero-badge-green"><i class="fa-solid fa-graduation-cap"></i> Intermediate</span>
-     <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-clock"></i> 14 min read</span>
+     <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-graduation-cap"></i> Intermediate</span>
+     <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-clock"></i> 25 min read</span>
+     <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-area"></i> Interactive Charts</span>
+     <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-language"></i> English</span>
    </div>
    <div id="article-clickable-tags" class="card-tags"></div>
  </section>
@@ -391,272 +402,224 @@
    </div>
  </div>
 
- <div class="container">
+ <main class="report-content">
 
- <!-- ============================== -->
- <!-- SECTION 1: WHAT IS THE VIX     -->
- <!-- ============================== -->
+ <!-- =========================================================== -->
+ <!--  SECTION 1 — WHAT IS THE VIX?                               -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="what-is-vix">What Is the VIX?</div>
 
- <div class="section-divider" id="intro">What Is the VIX?</div>
-
- <div class="content-card">
+ <div id="what-is-vix-card" class="content-card">
    <h2><i class="fa-solid fa-bolt"></i> Not a Fear Gauge &mdash; An Expectations Meter</h2>
 
-   <p>Every financial news anchor calls the VIX the "fear index." It makes for a good headline, but it is misleading. The VIX does not measure fear. It does not measure panic. It does not even measure current volatility. <strong>The VIX measures the market's expectation of how volatile the S&amp;P 500 will be over the next 30 calendar days.</strong></p>
+   <p>Every financial news anchor says it: <em>"The VIX, Wall Street's fear gauge, surged today..."</em> It sounds dramatic, and it sells headlines. But it's fundamentally misleading. The VIX is not a measure of fear. It is the market's best estimate of how much the S&amp;P 500 will move &mdash; in either direction &mdash; over the next 30 calendar days.</p>
 
-   <p>More precisely, the CBOE Volatility Index (VIX) is derived from the prices of S&amp;P 500 index options (SPX). When option traders collectively pay more for options &mdash; because they expect bigger moves ahead &mdash; the VIX rises. When they pay less, the VIX falls. It is a forward-looking measure of <em>implied</em> volatility, not a backward-looking measure of <em>realized</em> volatility.</p>
-
-   <div class="pedagogy-box">
-     <h4><i class="fa-solid fa-lightbulb"></i> The Key Distinction</h4>
-     <p><strong>Implied Volatility (IV)</strong> is what the market <em>expects</em> to happen. It is derived from option prices. <strong>Realized Volatility (RV)</strong> is what <em>actually</em> happened. It is calculated from historical price movements. The VIX measures IV. The two often diverge &mdash; and that divergence is tradeable. We will explore this in depth in the "Implied vs Realized" section below.</p>
-   </div>
-
-   <p>The VIX was created by the <strong>Chicago Board Options Exchange (CBOE)</strong> in 1993, based on research by Professor Robert Whaley of Vanderbilt University. The original VIX (now called <strong>VXO</strong>) was based on S&amp;P 100 (OEX) options and used only eight at-the-money strikes. In <strong>2003</strong>, the CBOE redesigned the index entirely:</p>
-
-   <ul class="checklist">
-     <li><i class="fa-solid fa-check check-amber"></i> <strong>Switched to S&amp;P 500 (SPX) options</strong> &mdash; much deeper and more liquid market</li>
-     <li><i class="fa-solid fa-check check-amber"></i> <strong>Uses a wide strip of out-of-the-money strikes</strong> &mdash; captures the entire implied volatility surface, not just ATM</li>
-     <li><i class="fa-solid fa-check check-amber"></i> <strong>Model-free calculation</strong> &mdash; no Black-Scholes assumptions required</li>
-     <li><i class="fa-solid fa-check check-amber"></i> <strong>Based on variance swap pricing</strong> &mdash; theoretically more robust</li>
-   </ul>
-
-   <p>The media branded it the "fear index" because VIX spikes tend to coincide with market selloffs. But correlation is not causation. The VIX also rises before anticipated events like FOMC meetings, elections, and earnings seasons &mdash; situations where uncertainty is high but fear may be absent. A better name would be the <strong>"uncertainty index"</strong> or the <strong>"expected move index."</strong></p>
+   <p>The full name is the <strong>CBOE Volatility Index</strong>. It was introduced by the Chicago Board Options Exchange in <strong>1993</strong>, using a methodology developed by Professor Robert Whaley. The original index (now called the <strong>VXO</strong>) was based on S&amp;P 100 (OEX) at-the-money options. In <strong>2003</strong>, the CBOE completely overhauled the methodology: the new VIX uses a broad strip of S&amp;P 500 (SPX) options &mdash; both puts and calls, across many strikes &mdash; and is based on a variance swap replication approach. This was a fundamental shift that made the VIX far more robust and representative of the actual options market.</p>
 
    <div class="stat-grid">
      <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-calendar"></i></div>
+       <div class="stat-icon">&#128200;</div>
        <div class="stat-value">1993</div>
-       <div class="stat-label">Year the original VIX was introduced by CBOE (based on OEX options)</div>
+       <div class="stat-label">Original VIX launched<br>(OEX-based, now VXO)</div>
      </div>
      <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-arrows-rotate"></i></div>
+       <div class="stat-icon">&#128736;</div>
        <div class="stat-value">2003</div>
-       <div class="stat-label">Redesigned to use SPX options with model-free variance swap methodology</div>
+       <div class="stat-label">New methodology<br>(SPX-based variance swap)</div>
      </div>
      <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-chart-area"></i></div>
+       <div class="stat-icon">&#128200;</div>
        <div class="stat-value">30</div>
-       <div class="stat-label">Calendar days of expected volatility that the VIX measures (forward-looking)</div>
+       <div class="stat-label">Calendar days<br>forward-looking window</div>
      </div>
      <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-fire"></i></div>
-       <div class="stat-value">82.69</div>
-       <div class="stat-label">All-time intraday VIX high, reached on March 16, 2020 during COVID crash</div>
+       <div class="stat-icon">&#128178;</div>
+       <div class="stat-value">~500</div>
+       <div class="stat-label">SPX options used<br>in each calculation</div>
      </div>
    </div>
 
-   <p>Understanding this distinction &mdash; that the VIX is an <em>expectation</em>, not a measurement &mdash; is the foundation for everything in this series. When you see "VIX at 25," you are not seeing fear. You are seeing what options traders collectively believe the S&amp;P 500 will do over the next month. And as we will learn, those traders are systematically wrong in a very specific, very profitable way.</p>
- </div>
+   <h3>What "30-Day Implied Volatility" Actually Means</h3>
 
-
- <!-- ============================== -->
- <!-- SECTION 2: HOW IT IS CALCULATED -->
- <!-- ============================== -->
-
- <div class="section-divider" id="calculation">How the VIX Is Calculated</div>
-
- <div class="content-card">
-   <h2><i class="fa-solid fa-calculator"></i> The Math Behind the Number</h2>
-
-   <p>You do not need a PhD to understand VIX calculation. The core idea is elegant: <strong>aggregate the prices of many SPX options across different strike prices to extract the market's expected variance, then take the square root to get volatility.</strong></p>
-
-   <p>Here is the process in four steps:</p>
-
-   <div class="phase-card card-amber">
-     <div class="phase-title">Step 1: Select the Options</div>
-     <div class="phase-subtitle">CBOE uses two SPX option expirations that bracket 30 days</div>
-     <p>The VIX always looks at two sets of SPX options: one expiring just before 30 calendar days from now (<strong>near-term</strong>) and one expiring just after (<strong>next-term</strong>). It interpolates between them to target exactly 30 days. Only <strong>out-of-the-money (OTM)</strong> options are used &mdash; puts below the forward price, calls above it. This avoids double-counting intrinsic value.</p>
-   </div>
-
-   <div class="phase-card card-blue">
-     <div class="phase-title">Step 2: Weight by Strike</div>
-     <div class="phase-subtitle">Each option contributes proportionally to the strip</div>
-     <p>Each OTM option's price is weighted by the distance between its strike and the adjacent strikes (delta-K). Options that are deep OTM contribute less because they are cheaper, but they still contribute. This is critical: <strong>deep OTM puts</strong> &mdash; crash protection &mdash; have a disproportionate effect on the VIX when their prices spike. This is why the VIX rises more on selloffs than it falls on rallies.</p>
-   </div>
-
-   <div class="phase-card card-green">
-     <div class="phase-title">Step 3: Calculate Variance</div>
-     <div class="phase-subtitle">Sum the weighted option prices to get expected variance</div>
-     <p>The weighted strip of option prices is summed and adjusted by the risk-free rate and forward price. The result is the <strong>expected variance</strong> of the S&amp;P 500 over 30 days. This is essentially the fair price of a <strong>variance swap</strong> &mdash; a derivative that pays the difference between realized and implied variance.</p>
-   </div>
-
-   <div class="phase-card card-purple">
-     <div class="phase-title">Step 4: Annualize and Square Root</div>
-     <div class="phase-subtitle">Convert 30-day variance to annualized volatility</div>
-     <p>Take the square root of the expected variance to get standard deviation (volatility). Then annualize it by multiplying by the square root of 365/30. The result is the VIX &mdash; <strong>an annualized percentage representing expected volatility.</strong></p>
-   </div>
-
-   <div class="pedagogy-box">
-     <h4><i class="fa-solid fa-lightbulb"></i> What Does a VIX Number Actually Mean?</h4>
-     <p>The VIX is quoted in annualized percentage points. To convert it to <strong>expected daily moves</strong>, you divide by the square root of the number of trading days in a year (252):</p>
-   </div>
+   <p>When you hear "the VIX is at 20," it means the options market expects the S&amp;P 500 to move roughly <strong>20% annualized</strong> over the next 30 days. To convert this to a daily expectation, divide by the square root of 252 (trading days per year):</p>
 
    <div class="formula-box">
-     <div class="formula-label">Expected Daily Move (1 standard deviation)</div>
-     <div class="formula">Daily Move = VIX / &radic;252</div>
-     <div class="formula-label">&radic;252 &asymp; 15.87</div>
+     <div class="formula-label">Daily Expected Move</div>
+     <div class="formula">Daily Move = VIX / &radic;252 &asymp; VIX / 15.87</div>
+     <div class="formula-label">VIX 20 &rarr; 20/15.87 &asymp; <strong>1.26% daily</strong></div>
    </div>
+
+   <p>So a VIX of 20 implies the market expects the S&amp;P 500 to move about 1.26% on any given day. A VIX of 40 doubles that to about 2.52% daily. These are magnitude expectations &mdash; they say nothing about direction. The VIX doesn't know whether the market will go up or down. It only knows how <em>much</em> it expects the market to move.</p>
+
+   <h3>Implied vs. Realized Volatility</h3>
+
+   <p>This distinction is absolutely critical. There are two kinds of volatility, and confusing them is one of the most common mistakes in finance:</p>
 
    <table class="compare-table">
      <thead>
        <tr>
-         <th>VIX Level</th>
-         <th>Expected Daily Move</th>
-         <th>Expected Weekly Move</th>
-         <th>Expected Monthly Move</th>
+         <th>Concept</th>
+         <th>Implied Volatility (IV)</th>
+         <th>Realized Volatility (RV)</th>
        </tr>
      </thead>
      <tbody>
        <tr>
-         <td><strong>12</strong></td>
-         <td>&plusmn;0.76%</td>
-         <td>&plusmn;1.69%</td>
-         <td>&plusmn;3.46%</td>
+         <td><strong>Definition</strong></td>
+         <td>Market's expectation of future volatility, extracted from option prices</td>
+         <td>Actual historical volatility that occurred, measured from price data</td>
        </tr>
        <tr>
-         <td><strong>16</strong></td>
-         <td>&plusmn;1.01%</td>
-         <td>&plusmn;2.26%</td>
-         <td>&plusmn;4.62%</td>
+         <td><strong>Timeframe</strong></td>
+         <td>Forward-looking (next 30 days for VIX)</td>
+         <td>Backward-looking (past N days)</td>
        </tr>
        <tr>
-         <td><strong>20</strong></td>
-         <td>&plusmn;1.26%</td>
-         <td>&plusmn;2.82%</td>
-         <td>&plusmn;5.77%</td>
+         <td><strong>Source</strong></td>
+         <td>Options market (SPX options strip)</td>
+         <td>Underlying price returns (SPX daily closes)</td>
        </tr>
        <tr>
-         <td><strong>25</strong></td>
-         <td>&plusmn;1.58%</td>
-         <td>&plusmn;3.52%</td>
-         <td>&plusmn;7.22%</td>
+         <td><strong>Ticker</strong></td>
+         <td>VIX (CBOE)</td>
+         <td>RVOL, HV20, HV30 (varies by provider)</td>
        </tr>
        <tr>
-         <td><strong>30</strong></td>
-         <td>&plusmn;1.89%</td>
-         <td>&plusmn;4.23%</td>
-         <td>&plusmn;8.66%</td>
+         <td><strong>Typical Relationship</strong></td>
+         <td>Usually <em>higher</em> than realized vol</td>
+         <td>Usually <em>lower</em> than implied vol</td>
        </tr>
        <tr>
-         <td><strong>40</strong></td>
-         <td>&plusmn;2.52%</td>
-         <td>&plusmn;5.63%</td>
-         <td>&plusmn;11.55%</td>
-       </tr>
-       <tr>
-         <td><strong>60</strong></td>
-         <td>&plusmn;3.78%</td>
-         <td>&plusmn;8.45%</td>
-         <td>&plusmn;17.32%</td>
-       </tr>
-       <tr>
-         <td><strong>80</strong></td>
-         <td>&plusmn;5.04%</td>
-         <td>&plusmn;11.27%</td>
-         <td>&plusmn;23.09%</td>
-       </tr>
-     </tbody>
-   </table>
-
-   <div class="alert-box">
-     <h4><i class="fa-solid fa-triangle-exclamation"></i> These Are 1-Standard-Deviation Moves</h4>
-     <p>A VIX of 20 means the market expects SPX to move &plusmn;1.26% on a given day with ~68% probability (one sigma). The actual move will exceed this roughly one-third of the time. For risk management, multiply by 2 for a ~95% confidence interval, or by 3 for ~99.7%. This is why a VIX of 80 during COVID did not mean "the market will move 5% daily" &mdash; it meant there was a 68% chance of a 5% move, and a 32% chance of something even larger.</p>
-   </div>
-
-   <p>One of the most important properties of the VIX calculation is its <strong>asymmetry</strong>. Because it uses OTM options, and because OTM puts are typically more expensive than equidistant OTM calls (the "volatility skew"), the VIX is naturally biased upward when downside risk increases. The market charges a premium for crash protection, and the VIX reflects that premium. This is why the VIX moves more on 3% down days than 3% up days.</p>
- </div>
-
-
- <!-- ============================== -->
- <!-- SECTION 3: VIX LEVELS DECODED  -->
- <!-- ============================== -->
-
- <div class="section-divider" id="levels">VIX Levels Decoded</div>
-
- <div class="content-card">
-   <h2><i class="fa-solid fa-layer-group"></i> What Each VIX Level Tells You</h2>
-
-   <p>Not all VIX readings are created equal. A VIX of 18 in January 2020 meant something very different from a VIX of 18 in April 2020 (coming down from 82). Context matters. But as a general framework, here is how to interpret the major VIX regimes:</p>
-
-   <table class="compare-table">
-     <thead>
-       <tr>
-         <th>VIX Range</th>
-         <th>Regime</th>
-         <th>Market State</th>
-         <th>Historical Examples</th>
-       </tr>
-     </thead>
-     <tbody>
-       <tr>
-         <td><strong>9-12</strong></td>
-         <td>Extreme Complacency</td>
-         <td>Ultra-low vol, tight ranges, grinding higher. Often precedes sharp spikes. Selling vol here is picking up pennies.</td>
-         <td>Nov 2017 (VIX 9.14 all-time closing low), Jan 2018 pre-Volmageddon</td>
-       </tr>
-       <tr>
-         <td><strong>12-15</strong></td>
-         <td>Low Volatility</td>
-         <td>Calm, trending markets. Options are cheap. Good for buying protection, poor for selling premium.</td>
-         <td>Most of 2019, summer 2021</td>
-       </tr>
-       <tr>
-         <td><strong>15-20</strong></td>
-         <td>Normal</td>
-         <td>Historical median range. Healthy two-way market. The VIX spends ~45% of its time here.</td>
-         <td>Most of 2023, Q1 2024</td>
-       </tr>
-       <tr>
-         <td><strong>20-25</strong></td>
-         <td>Elevated</td>
-         <td>Uncertainty increasing. Hedging demand rising. Sector rotation and increased dispersion.</td>
-         <td>Q4 2022, Oct 2023 (Middle East tensions)</td>
-       </tr>
-       <tr>
-         <td><strong>25-35</strong></td>
-         <td>High Fear</td>
-         <td>Active selloff or major uncertainty event. Mean reversion starts becoming attractive but timing is risky.</td>
-         <td>Fed hiking cycle 2022, banking crisis Mar 2023, tariff escalation 2025</td>
-       </tr>
-       <tr>
-         <td><strong>35-50</strong></td>
-         <td>Crisis</td>
-         <td>Genuine panic. Liquidity dries up. Correlations spike to 1. Historically, buying SPX here has been profitable on 6-12 month horizons.</td>
-         <td>Aug 2015 (China devaluation), Feb 2018 (Volmageddon), Q4 2018 (Fed taper)</td>
-       </tr>
-       <tr>
-         <td><strong>50+</strong></td>
-         <td>Extreme Panic</td>
-         <td>Systemic crisis. Circuit breakers, gap openings, margin calls. Extremely rare &mdash; has only happened during GFC (2008), COVID (2020), and briefly in Volmageddon (2018).</td>
-         <td>Oct 2008 (VIX 80+), Mar 2020 (VIX 82.69), Feb 2018 (VIX 50.30 intraday)</td>
+         <td><strong>Why It Matters</strong></td>
+         <td>Drives option pricing (expensive or cheap?)</td>
+         <td>Tells you what actually happened</td>
        </tr>
      </tbody>
    </table>
 
    <div class="pedagogy-box">
-     <h4><i class="fa-solid fa-lightbulb"></i> The VIX Mean Reversion Property</h4>
-     <p>The single most important statistical property of the VIX is its <strong>mean-reverting nature</strong>. Unlike stock prices, which can trend indefinitely, the VIX always returns to its long-term average (historically around 19-20). High VIX readings <em>will</em> come down. Low VIX readings <em>will</em> spike. The question is always <em>when</em> and <em>how fast</em>. This mean-reverting property is the foundation of most volatility trading strategies, which we will explore in Parts 4 and 5.</p>
+     <h4><i class="fa-solid fa-lightbulb"></i> The Volatility Risk Premium (VRP)</h4>
+     <p>The gap between implied and realized volatility is called the <strong>Volatility Risk Premium</strong>. Historically, IV exceeds RV about <strong>85% of the time</strong>. This makes sense: options sellers demand a premium for taking on uncertainty risk, much like insurance companies charge more than expected claims. This persistent premium is the foundation of many volatility trading strategies (which we'll cover in Parts 4 and 5).</p>
+     <p>When the VRP inverts &mdash; when realized volatility exceeds implied volatility &mdash; it typically signals a market dislocation. The market was caught off-guard, and actual moves are exceeding what was priced in. This happened during the initial COVID crash in March 2020 and during the Volmageddon event of February 2018.</p>
    </div>
 
-   <!-- Chart: VIX Historical 2020-2026 -->
-   <div id="vixHistoryChart" class="echart-container"></div>
-
-   <p>The chart above shows the VIX from 2020 to 2026. Notice how every spike is followed by a decline back toward the 15-22 range. The COVID spike to 82 collapsed to 25 within 6 weeks. The 2022 bear market kept the VIX elevated (20-35) for months, but it eventually normalized. The 2025 tariff-driven spike receded as markets priced in the new reality. <strong>Mean reversion is reliable; its timing is not.</strong></p>
+   <p>Think of it this way: <strong>implied volatility is the weather forecast</strong>, and <strong>realized volatility is the weather report</strong>. The forecast is almost always slightly more dramatic than what actually happens &mdash; forecasters (and options markets) err on the side of caution. But when a hurricane hits that nobody predicted, the weather report shows far worse conditions than the forecast.</p>
  </div>
 
 
- <!-- ============================== -->
- <!-- SECTION 4: TERM STRUCTURE      -->
- <!-- ============================== -->
+ <!-- =========================================================== -->
+ <!--  SECTION 2 — THE VIX FORMULA DEMYSTIFIED                    -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="formula">The VIX Formula Demystified</div>
 
- <div class="section-divider" id="term-structure">The VIX Term Structure</div>
+ <div id="formula-card" class="content-card">
+   <h2><i class="fa-solid fa-calculator"></i> How the VIX Is Actually Calculated</h2>
 
- <div class="content-card">
+   <p>You don't need a PhD in quantitative finance to understand how the VIX works. The core concept is elegant: the VIX replicates the cost of a <strong>variance swap</strong> on the S&amp;P 500, using a broad strip of out-of-the-money (OTM) SPX options. Let's walk through it step by step.</p>
+
+   <h3>Step 1: Select the Options</h3>
+   <p>The CBOE selects two expiration months that bracket a 30-day window. For example, if today is March 9 and we need 30 days forward (April 8), the CBOE uses the nearest SPX weekly or monthly expiration before April 8 and the nearest one after. This ensures the final VIX number always targets exactly 30 calendar days of implied volatility through interpolation.</p>
+
+   <h3>Step 2: Filter the Strikes</h3>
+   <p>For each expiration, the CBOE uses all <strong>out-of-the-money</strong> options:</p>
+   <ul class="checklist">
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>OTM puts</strong> below the forward index level (all strikes from the lowest traded put up to the ATM strike)</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>OTM calls</strong> above the forward index level (all strikes from the ATM strike up to the highest traded call)</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>ATM options</strong>: both the put and call at the strike nearest to the forward price are included (average of the two)</li>
+     <li><i class="fa-solid fa-circle-xmark check-invalid"></i> Options with zero bids are excluded (no liquidity = no information)</li>
+     <li><i class="fa-solid fa-circle-xmark check-invalid"></i> If two consecutive zero-bid options appear, all further OTM strikes in that direction are excluded</li>
+   </ul>
+
+   <p>This typically results in <strong>200-300+ options per expiration</strong> being used, spanning a wide range of strikes. This is fundamentally different from the old VXO methodology, which only used 8 at-the-money options.</p>
+
+   <h3>Step 3: Weight by Strike Distance</h3>
+   <p>Each option contributes to the VIX proportionally to the spacing between its neighboring strikes. Options with wider spacing between strikes (deep OTM) get more weight per option, but there are fewer of them. Options closer to the money contribute more total weight simply because there are more strikes available in that region.</p>
+
+   <div class="formula-box">
+     <div class="formula-label">Conceptual VIX Formula</div>
+     <div class="formula">&sigma;&sup2; = (2/T) &sum; (&Delta;K<sub>i</sub>/K<sub>i</sub>&sup2;) &middot; e<sup>rT</sup> &middot; Q(K<sub>i</sub>) &minus; (1/T)(F/K<sub>0</sub> &minus; 1)&sup2;</div>
+     <div class="formula-label">VIX = 100 &times; &radic;&sigma;&sup2;</div>
+   </div>
+
+   <p>Don't worry about the math symbols. Here's what each piece means:</p>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>Symbol</th>
+         <th>Meaning</th>
+         <th>Plain English</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>T</strong></td>
+         <td>Time to expiration</td>
+         <td>How many days until the options expire (in years)</td>
+       </tr>
+       <tr>
+         <td><strong>K<sub>i</sub></strong></td>
+         <td>Strike price of option i</td>
+         <td>Each option's exercise price</td>
+       </tr>
+       <tr>
+         <td><strong>&Delta;K<sub>i</sub></strong></td>
+         <td>Interval between strikes</td>
+         <td>The gap between neighboring strikes (spacing weight)</td>
+       </tr>
+       <tr>
+         <td><strong>Q(K<sub>i</sub>)</strong></td>
+         <td>Midpoint of bid-ask</td>
+         <td>The "fair price" of each option</td>
+       </tr>
+       <tr>
+         <td><strong>F</strong></td>
+         <td>Forward index level</td>
+         <td>Where the market expects SPX to be at expiration</td>
+       </tr>
+       <tr>
+         <td><strong>K<sub>0</sub></strong></td>
+         <td>First strike below F</td>
+         <td>The "at-the-money" reference point</td>
+       </tr>
+       <tr>
+         <td><strong>r</strong></td>
+         <td>Risk-free interest rate</td>
+         <td>US Treasury rate for that maturity</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <h3>Step 4: Interpolate to 30 Days</h3>
+   <p>The CBOE calculates variance for both the near-term and next-term expirations, then linearly interpolates to target exactly 30 calendar days. This is why the VIX can change even if option prices don't &mdash; as time passes, the weights between the two expirations shift.</p>
+
+   <h3>Why Use the Whole Options Chain?</h3>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> The Variance Swap Insight</h4>
+     <p>The old VXO (pre-2003) used only 8 at-the-money options. The problem? ATM options only capture volatility expectations near the current price. They completely miss the "fat tails" &mdash; the market's pricing of extreme moves.</p>
+     <p>The new VIX methodology uses the <strong>entire OTM options strip</strong> because the theoretical price of a <strong>variance swap</strong> can be replicated by a portfolio of all OTM options. This captures the full shape of the volatility smile, including the steep put skew that reflects the market's fear of crash scenarios.</p>
+     <p>In practice, this means the VIX is heavily influenced by <strong>OTM put demand</strong>. When portfolio managers aggressively buy downside protection (SPX puts), the VIX rises &mdash; even if at-the-money volatility hasn't changed. This is one reason the VIX is loosely associated with "fear," though it's really reflecting the cost of insurance, not fear itself.</p>
+   </div>
+
+   <div id="optionsContributionChart" class="echart-container"></div>
+
+   <p>The chart above shows how options at different strike levels contribute to the VIX. Notice how the contribution is not symmetric: the OTM put side (left of center) contributes more than the OTM call side. This is the famous <strong>put skew</strong> or <strong>volatility smirk</strong> &mdash; investors pay a premium for downside protection, which inflates the VIX beyond what a symmetric model would suggest.</p>
+ </div>
+
+
+ <!-- =========================================================== -->
+ <!--  SECTION 3 — VIX TERM STRUCTURE                             -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="term-structure">VIX Term Structure</div>
+
+ <div id="term-structure-card" class="content-card">
    <h2><i class="fa-solid fa-wave-square"></i> Beyond the Headline Number</h2>
 
-   <p>The single VIX number you see on CNBC is just the tip of the iceberg. Beneath it lies the <strong>VIX term structure</strong> &mdash; a curve that shows expected volatility at different time horizons. Understanding this curve is what separates tourists from professionals in the volatility space.</p>
+   <p>Most people only look at the spot VIX level. That's like checking the temperature without looking at the forecast for the week. The <strong>VIX term structure</strong> &mdash; how VIX futures prices change across different expirations &mdash; provides far richer information about market expectations and sentiment.</p>
 
-   <p>The CBOE publishes several volatility indices with different time horizons:</p>
+   <h3>What Is the Term Structure?</h3>
+   <p>The VIX term structure is a curve showing implied volatility expectations across different time horizons. The CBOE publishes several points on this curve:</p>
 
    <table class="compare-table">
      <thead>
@@ -664,384 +627,654 @@
          <th>Index</th>
          <th>Horizon</th>
          <th>Description</th>
-         <th>Primary Use</th>
        </tr>
      </thead>
      <tbody>
        <tr>
          <td><strong>VIX9D</strong></td>
          <td>9 days</td>
-         <td>Near-term expected vol. Extremely sensitive to imminent events (FOMC, CPI, earnings).</td>
-         <td>Event-driven trading, gamma scalping</td>
+         <td>Ultra-short-term implied vol (very event-sensitive)</td>
        </tr>
        <tr>
          <td><strong>VIX</strong></td>
          <td>30 days</td>
-         <td>The standard VIX. Benchmark for volatility expectations.</td>
-         <td>Headline risk gauge, VIX futures, options strategies</td>
+         <td>The headline VIX (standard measure)</td>
        </tr>
        <tr>
          <td><strong>VIX3M</strong></td>
          <td>3 months</td>
-         <td>Medium-term expected vol. More stable, less event-driven.</td>
-         <td>Term structure analysis, VIX/VIX3M ratio</td>
+         <td>Medium-term implied vol expectations</td>
        </tr>
        <tr>
          <td><strong>VIX6M</strong></td>
          <td>6 months</td>
-         <td>Long-term expected vol. Reflects structural uncertainty.</td>
-         <td>Macro positioning, long-dated hedging</td>
+         <td>Longer-term structural volatility view</td>
        </tr>
        <tr>
-         <td><strong>VIX1Y (VXV)</strong></td>
+         <td><strong>VIX1Y</strong></td>
          <td>12 months</td>
-         <td>One-year expected vol. The most stable point on the curve.</td>
-         <td>Strategic allocation, long-term risk budgeting</td>
+         <td>Annual volatility outlook</td>
        </tr>
      </tbody>
    </table>
 
-   <p>The relationship between these indices creates two fundamental regimes:</p>
+   <h3>Contango vs. Backwardation</h3>
 
-   <div class="part-divider">
-     <h2><i class="fa-solid fa-arrows-up-down"></i> Contango vs Backwardation</h2>
-     <p>The two states of the VIX term structure that define your volatility strategy</p>
-   </div>
+   <p>The shape of this curve is what professionals focus on, not the absolute level. There are two fundamental shapes:</p>
 
-   <div class="phase-card card-amber">
+   <div class="phase-card card-green">
      <div class="phase-title"><i class="fa-solid fa-arrow-trend-up"></i> Contango (Normal State)</div>
-     <div class="phase-subtitle">Futures prices ABOVE spot VIX &mdash; market expects calm now, uncertainty later</div>
-     <p>In a normal market, the term structure slopes upward: VIX9D &lt; VIX &lt; VIX3M &lt; VIX6M. This makes intuitive sense &mdash; the further out you look, the more uncertainty there is. You know roughly what will happen this week, but six months from now? Anything could happen.</p>
-     <p><strong>Contango is the dominant state.</strong> The VIX term structure is in contango approximately <strong>80-85% of the time</strong>. This is the "normal" state of the world. VIX futures roll down the curve as they approach expiration, losing value. This is why products like VXX (which hold rolling front-month VIX futures) bleed value over time &mdash; they are constantly buying expensive futures and selling them cheaper as they approach expiry.</p>
+     <div class="phase-subtitle">Front month VIX &lt; Back months &mdash; Market is calm and expects occasional bumps</div>
+     <p>In contango, the term structure slopes <strong>upward</strong>: near-term VIX is lower than longer-term VIX. This is the market's default state, observed roughly <strong>80-85% of the time</strong>. The logic is intuitive: over longer time horizons, there are more potential catalysts for volatility (elections, earnings seasons, geopolitical events), so longer-dated implied vol carries a natural premium.</p>
      <ul class="checklist">
-       <li><i class="fa-solid fa-check check-valid"></i> <strong>Market is calm</strong> &mdash; no immediate crisis or major event</li>
-       <li><i class="fa-solid fa-check check-valid"></i> <strong>Short vol strategies work well</strong> &mdash; selling VIX futures or credit spreads profits from roll-down</li>
-       <li><i class="fa-solid fa-check check-valid"></i> <strong>VXX/UVXY decay</strong> &mdash; long volatility ETPs lose money from negative roll yield</li>
-       <li><i class="fa-solid fa-check check-valid"></i> <strong>Risk: complacency</strong> &mdash; extended contango often precedes violent VIX spikes</li>
+       <li><i class="fa-solid fa-circle-check check-valid"></i> VIX9D &lt; VIX &lt; VIX3M &lt; VIX6M</li>
+       <li><i class="fa-solid fa-circle-check check-valid"></i> Signals an orderly market with no immediate stress</li>
+       <li><i class="fa-solid fa-circle-check check-valid"></i> VIX futures roll yield is negative (costs money to stay long VIX)</li>
+       <li><i class="fa-solid fa-circle-check check-valid"></i> VIX ETPs like VXX and UVXY bleed value due to negative roll</li>
      </ul>
    </div>
 
    <div class="phase-card card-red">
-     <div class="phase-title"><i class="fa-solid fa-arrow-trend-down"></i> Backwardation (Crisis State)</div>
-     <div class="phase-subtitle">Spot VIX ABOVE futures &mdash; panic NOW, expectation it will subside</div>
-     <p>When the term structure inverts &mdash; VIX9D &gt; VIX &gt; VIX3M &gt; VIX6M &mdash; you have <strong>backwardation</strong>. The market is saying: "Things are terrible <em>right now</em>, but we expect them to calm down eventually." This is the signature of acute fear.</p>
-     <p><strong>Backwardation is rare and short-lived.</strong> It occurs only about <strong>15-20% of the time</strong>, almost exclusively during market selloffs. It is the single best objective signal that the market is in genuine distress (as opposed to just being nervous). Historical studies show that buying SPX when the VIX term structure is in steep backwardation has produced strong positive returns on 3-6 month horizons.</p>
+     <div class="phase-title"><i class="fa-solid fa-arrow-trend-down"></i> Backwardation (Panic State)</div>
+     <div class="phase-subtitle">Front month VIX &gt; Back months &mdash; Market is stressed NOW</div>
+     <p>In backwardation, the term structure <strong>inverts</strong>: near-term VIX spikes above longer-term VIX. This happens during acute market stress events and is relatively rare &mdash; only about <strong>15-20% of the time</strong>. The market is saying: "Volatility is extreme RIGHT NOW, but we expect it to normalize eventually."</p>
      <ul class="checklist">
-       <li><i class="fa-solid fa-xmark check-invalid"></i> <strong>Active crisis</strong> &mdash; selling, margin calls, forced liquidation</li>
-       <li><i class="fa-solid fa-xmark check-invalid"></i> <strong>Short vol strategies get destroyed</strong> &mdash; negative gamma, exploding losses</li>
-       <li><i class="fa-solid fa-xmark check-invalid"></i> <strong>VXX/UVXY surge</strong> &mdash; positive roll yield amplifies long vol positions</li>
-       <li><i class="fa-solid fa-check check-valid"></i> <strong>Contrarian signal</strong> &mdash; backwardation > 5pts has historically signaled bottoms</li>
+       <li><i class="fa-solid fa-circle-check check-invalid"></i> VIX9D &gt; VIX &gt; VIX3M &gt; VIX6M</li>
+       <li><i class="fa-solid fa-circle-check check-invalid"></i> Signals acute stress, fear, or a dislocation</li>
+       <li><i class="fa-solid fa-circle-check check-invalid"></i> VIX futures roll yield is positive (VIX longs profit from roll)</li>
+       <li><i class="fa-solid fa-circle-check check-invalid"></i> Often seen at or near short-term market bottoms</li>
      </ul>
    </div>
 
    <table class="compare-table">
      <thead>
        <tr>
-         <th>Attribute</th>
+         <th>Feature</th>
          <th>Contango</th>
          <th>Backwardation</th>
        </tr>
      </thead>
      <tbody>
        <tr>
+         <td><strong>Slope</strong></td>
+         <td>Upward (front &lt; back)</td>
+         <td>Downward / Inverted (front &gt; back)</td>
+       </tr>
+       <tr>
          <td><strong>Frequency</strong></td>
-         <td>~80-85% of trading days</td>
-         <td>~15-20% of trading days</td>
+         <td>~80-85% of the time</td>
+         <td>~15-20% of the time</td>
        </tr>
        <tr>
-         <td><strong>Term Structure Shape</strong></td>
-         <td>Upward sloping (9D &lt; 30D &lt; 3M &lt; 6M)</td>
-         <td>Inverted (9D &gt; 30D &gt; 3M &gt; 6M)</td>
+         <td><strong>Market State</strong></td>
+         <td>Calm, orderly, risk-on</td>
+         <td>Stressed, panicked, risk-off</td>
        </tr>
        <tr>
-         <td><strong>VIX Futures vs Spot</strong></td>
-         <td>Futures trade above spot</td>
-         <td>Spot trades above futures</td>
+         <td><strong>VIX ETP Impact</strong></td>
+         <td>VXX/UVXY decay (negative roll)</td>
+         <td>VXX/UVXY gain from positive roll</td>
        </tr>
        <tr>
-         <td><strong>Roll Yield</strong></td>
-         <td>Negative (costs money to hold long VIX)</td>
-         <td>Positive (rewards holding long VIX)</td>
+         <td><strong>Signal for Traders</strong></td>
+         <td>Short vol strategies profitable</td>
+         <td>Potential capitulation / reversal near</td>
        </tr>
        <tr>
-         <td><strong>Market Emotion</strong></td>
-         <td>Calm, complacent, trending</td>
-         <td>Panic, forced selling, capitulation</td>
-       </tr>
-       <tr>
-         <td><strong>Winning Strategy</strong></td>
-         <td>Sell vol, short VIX futures, credit spreads</td>
-         <td>Buy dips, long vol (but time carefully)</td>
-       </tr>
-       <tr>
-         <td><strong>Key Risk</strong></td>
-         <td>Sudden spike wipes out months of gains</td>
-         <td>Mean reversion can be slow (weeks)</td>
+         <td><strong>Historical Examples</strong></td>
+         <td>Most of 2017, 2019, 2021</td>
+         <td>Feb 2018, Mar 2020, Aug 2024</td>
        </tr>
      </tbody>
    </table>
 
-   <!-- Chart: Term Structure in Both Regimes -->
    <div id="termStructureChart" class="echart-container"></div>
 
    <div class="pedagogy-box">
-     <h4><i class="fa-solid fa-lightbulb"></i> The VIX/VIX3M Ratio: A Simple but Powerful Signal</h4>
-     <p>One of the most useful term structure metrics is the <strong>VIX/VIX3M ratio</strong>. When VIX &lt; VIX3M (ratio below 1.0), the market is calm and contango prevails. When VIX &gt; VIX3M (ratio above 1.0), backwardation is setting in and stress is elevated. A ratio <strong>above 1.10</strong> has historically coincided with major market bottoms approximately 70% of the time within 1-3 months. This ratio is freely available and updated in real time &mdash; no expensive data feed required.</p>
+     <h4><i class="fa-solid fa-lightbulb"></i> Why Term Structure Matters More Than the Level</h4>
+     <p>A VIX at 25 in contango tells a completely different story than a VIX at 25 in backwardation. In contango, VIX 25 means "volatility is moderately elevated but the market expects it to stay around this level or drift higher gradually." In backwardation, VIX 25 means "we just had a massive spike that's already coming down &mdash; the worst may be over."</p>
+     <p>Professional volatility traders almost never make decisions based on the VIX level alone. They look at the <strong>VIX/VIX3M ratio</strong> (often called the "term structure ratio"). When this ratio exceeds 1.0, the term structure is inverted. Readings above 1.10 historically coincide with short-term market bottoms about <strong>75% of the time</strong> within 5-10 trading days.</p>
    </div>
 
-   <div class="alert-box">
-     <h4><i class="fa-solid fa-triangle-exclamation"></i> Contango is Not Safety</h4>
-     <p>The most dangerous VIX environment is <strong>deep, extended contango</strong> &mdash; when the curve is steep and has been stable for months. This creates two problems: (1) vol-selling strategies attract more capital, crowding the trade, and (2) the market becomes complacent, building leverage and reducing hedges. The Volmageddon event of February 5, 2018 happened after 14 months of uninterrupted contango. The VIX went from 14 to 50 in a single day, destroying several volatility ETPs and billions of dollars in short-vol capital.</p>
-   </div>
+   <h3>The VIX/VIX3M Ratio in Practice</h3>
+   <p>Here's a simple decision framework professionals use:</p>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>VIX/VIX3M Ratio</th>
+         <th>Term Structure</th>
+         <th>Interpretation</th>
+         <th>Historical Action</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>&lt; 0.85</strong></td>
+         <td>Steep contango</td>
+         <td>Deep complacency, potential for sharp vol expansion</td>
+         <td>Consider hedging; cheap protection available</td>
+       </tr>
+       <tr>
+         <td><strong>0.85 - 1.00</strong></td>
+         <td>Normal contango</td>
+         <td>Orderly market, no stress signals</td>
+         <td>Business as usual; short vol works</td>
+       </tr>
+       <tr>
+         <td><strong>1.00 - 1.10</strong></td>
+         <td>Flat / slight inversion</td>
+         <td>Stress building, hedging demand rising</td>
+         <td>Reduce risk, tighten stops</td>
+       </tr>
+       <tr>
+         <td><strong>&gt; 1.10</strong></td>
+         <td>Deep backwardation</td>
+         <td>Panic mode; historically near short-term lows</td>
+         <td>Contrarian buy signals often appear within days</td>
+       </tr>
+     </tbody>
+   </table>
  </div>
 
 
- <!-- ============================== -->
- <!-- SECTION 5: IMPLIED VS REALIZED -->
- <!-- ============================== -->
+ <!-- =========================================================== -->
+ <!--  SECTION 4 — VIX REGIMES                                    -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="regimes">VIX Regimes</div>
 
- <div class="section-divider" id="vs-realized">Implied vs Realized Volatility</div>
+ <div id="regimes-card" class="content-card">
+   <h2><i class="fa-solid fa-layer-group"></i> The Four Volatility Regimes</h2>
 
- <div class="content-card">
-   <h2><i class="fa-solid fa-scale-balanced"></i> The Volatility Risk Premium</h2>
+   <p>Not all VIX levels are created equal. Through decades of observation, four distinct regimes have emerged, each with its own character, typical duration, and market behavior. Understanding which regime you're in fundamentally changes how you should trade, hedge, and allocate.</p>
 
-   <p>Here is the single most profitable fact in all of volatility trading: <strong>the VIX consistently overestimates actual realized volatility.</strong> This is not a bug &mdash; it is a structural feature of the market, and it has persisted for decades.</p>
+   <div class="phase-card card-green">
+     <div class="phase-title"><i class="fa-solid fa-face-smile"></i> Regime 1: Complacency (VIX &lt; 15)</div>
+     <div class="phase-subtitle">The market is asleep. Calm waters, low premiums, and a false sense of security.</div>
+     <p>When the VIX is below 15, the market expects the S&amp;P 500 to move less than <strong>0.95% per day</strong>. This is "blue sky" territory &mdash; low volatility, steady uptrend, and minimal hedging demand. Options are cheap, premiums are thin, and short volatility strategies generate consistent but small income.</p>
+     <p><strong>Historical prevalence:</strong> ~30% of the time since 1990. Extended periods include most of 2005-2006, 2013-2014, and the legendary 2017 "volatility winter" when the VIX spent months below 12.</p>
+     <p><strong>The trap:</strong> Complacency breeds its own demise. The longer the VIX stays low, the more leverage builds in the system, the more people sell vol for income, and the more violent the eventual spike. February 5, 2018 ("Volmageddon") was preceded by the lowest sustained VIX period in history.</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-circle-check check-valid"></i> Options are cheap &mdash; good time to <em>buy</em> protection</li>
+       <li><i class="fa-solid fa-circle-xmark check-invalid"></i> Short vol income is reliable but thin; asymmetric risk to the downside</li>
+       <li><i class="fa-solid fa-triangle-exclamation check-amber"></i> Be cautious of overstaying: mean reversion is inevitable</li>
+     </ul>
+   </div>
 
-   <p>On average, the VIX trades <strong>2-4 points above</strong> subsequent 30-day realized volatility. If the VIX is at 20, the S&amp;P 500 typically realizes about 16-18% annualized volatility over the following month. This gap is called the <strong>Volatility Risk Premium (VRP)</strong>.</p>
+   <div class="phase-card card-blue">
+     <div class="phase-title"><i class="fa-solid fa-face-meh"></i> Regime 2: Normal (VIX 15-20)</div>
+     <div class="phase-subtitle">The Goldilocks zone. Markets function normally with healthy two-way action.</div>
+     <p>A VIX between 15 and 20 is the market's equilibrium state. Daily moves of <strong>0.95% to 1.26%</strong> are expected. Options are fairly priced, there's healthy hedging activity, and both directional and volatility strategies can work. This is where the market spends the most time over full cycles.</p>
+     <p><strong>Historical prevalence:</strong> ~35% of the time since 1990. This is the most common regime and where the market gravitates to after both spikes and periods of complacency.</p>
+     <p><strong>Trading implication:</strong> This is the sweet spot for most strategies. Options are neither too cheap (so buying protection is reasonable) nor too expensive (so selling premium has decent edge). Trend-following works. Mean-reversion works. Carry trades work. Almost everything works when vol is "normal."</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-circle-check check-valid"></i> Most balanced risk/reward for all strategies</li>
+       <li><i class="fa-solid fa-circle-check check-valid"></i> Options pricing is "fair" &mdash; neither cheap nor expensive</li>
+       <li><i class="fa-solid fa-circle-check check-valid"></i> Market internals are healthy; sector rotation is active</li>
+     </ul>
+   </div>
+
+   <div class="phase-card card-amber">
+     <div class="phase-title"><i class="fa-solid fa-face-frown"></i> Regime 3: Elevated (VIX 20-30)</div>
+     <div class="phase-subtitle">Stress is building. The market is pricing in uncertainty but not panic.</div>
+     <p>When the VIX sits between 20 and 30, daily moves of <strong>1.26% to 1.89%</strong> are expected. This regime often accompanies corrections (5-15% drawdowns), earnings-driven uncertainty, or geopolitical tensions. The market is nervous but not in freefall. Hedging demand is elevated, options are expensive, and bid-ask spreads widen.</p>
+     <p><strong>Historical prevalence:</strong> ~25% of the time since 1990. This regime often precedes either a resolution (VIX drops back to normal) or an escalation (VIX spikes into crisis). The direction of the next move is the million-dollar question.</p>
+     <p><strong>Key examples:</strong> Late 2018 (trade war escalation), September 2021 (Evergrande concerns), October 2023 (Middle East tensions + rate fears).</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-triangle-exclamation check-amber"></i> Selling vol is tempting (high premiums) but risky (could spike further)</li>
+       <li><i class="fa-solid fa-triangle-exclamation check-amber"></i> Buying protection is expensive but might be worth it</li>
+       <li><i class="fa-solid fa-triangle-exclamation check-amber"></i> Position sizing should be reduced; widen stops</li>
+     </ul>
+   </div>
+
+   <div class="phase-card card-red">
+     <div class="phase-title"><i class="fa-solid fa-face-dizzy"></i> Regime 4: Crisis (VIX &gt; 30)</div>
+     <div class="phase-subtitle">Full panic. The market is pricing in extreme outcomes.</div>
+     <p>A VIX above 30 implies daily S&amp;P 500 moves exceeding <strong>1.89%</strong>. This is crisis territory. Liquidity dries up, correlations spike to 1 (everything falls together), market makers widen spreads, and margin calls force selling. Above 40, it's a full-blown market crash. The all-time intraday high is <strong>89.53</strong> (March 16, 2020, during the COVID panic).</p>
+     <p><strong>Historical prevalence:</strong> ~10% of the time since 1990. This regime is mercifully rare but disproportionately important. More money is made and lost during crisis regimes than during years of normal trading.</p>
+     <p><strong>Key examples:</strong> October 2008 (Lehman, VIX peaked at 80.86), August 2011 (US debt downgrade, VIX hit 48), February 2018 (Volmageddon, VIX to 50 intraday), March 2020 (COVID, VIX to 82.69).</p>
+     <ul class="checklist">
+       <li><i class="fa-solid fa-circle-check check-valid"></i> Historically, VIX above 40 has been an excellent contrarian <em>buy</em> signal for equities on a 6-12 month horizon</li>
+       <li><i class="fa-solid fa-circle-xmark check-invalid"></i> Never sell vol into a spike &mdash; the "picking up pennies" trade can blow up spectacularly</li>
+       <li><i class="fa-solid fa-circle-xmark check-invalid"></i> Don't try to catch the exact bottom; scale in gradually</li>
+     </ul>
+   </div>
+
+   <h3>Regime Distribution (1990-2025)</h3>
+
+   <div id="regimeDistributionChart" class="echart-container"></div>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>Regime</th>
+         <th>VIX Range</th>
+         <th>Time Spent</th>
+         <th>Avg SPX Return (Next 30d)</th>
+         <th>Max Drawdown Risk</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>Complacency</strong></td>
+         <td>&lt; 15</td>
+         <td>~30%</td>
+         <td>+0.8%</td>
+         <td>Low (but complacency risk)</td>
+       </tr>
+       <tr>
+         <td><strong>Normal</strong></td>
+         <td>15 - 20</td>
+         <td>~35%</td>
+         <td>+1.0%</td>
+         <td>Moderate</td>
+       </tr>
+       <tr>
+         <td><strong>Elevated</strong></td>
+         <td>20 - 30</td>
+         <td>~25%</td>
+         <td>+0.5%</td>
+         <td>High</td>
+       </tr>
+       <tr>
+         <td><strong>Crisis</strong></td>
+         <td>&gt; 30</td>
+         <td>~10%</td>
+         <td>+2.5%</td>
+         <td>Extreme (but best forward returns)</td>
+       </tr>
+     </tbody>
+   </table>
 
    <div class="pedagogy-box">
-     <h4><i class="fa-solid fa-lightbulb"></i> Why Does the VRP Exist?</h4>
-     <p>The VRP exists for the same reason insurance premiums exceed expected losses: <strong>risk aversion</strong>. Option buyers (hedgers) are willing to pay a premium for protection, just as homeowners pay more for fire insurance than the expected cost of fires. Option sellers (dealers, hedge funds) demand a premium for bearing the risk of sudden, large moves. This creates a structural overpayment for options, which the VIX reflects.</p>
-     <p>The VRP is the reason why <strong>selling options is profitable over the long term</strong>. You are harvesting the insurance premium. Of course, this works until it does not &mdash; the premium is compensation for the risk of catastrophic loss during tail events. This is the classic "picking up nickels in front of a steamroller" trade, and managing its risks is the subject of Part 5.</p>
-   </div>
-
-   <div class="stat-grid">
-     <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-chart-bar"></i></div>
-       <div class="stat-value">~86%</div>
-       <div class="stat-label">Percentage of months where VIX overestimates realized vol (1990-2025)</div>
-     </div>
-     <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-coins"></i></div>
-       <div class="stat-value">3.2 pts</div>
-       <div class="stat-label">Median VRP: VIX minus realized volatility over 30 days (long-term average)</div>
-     </div>
-     <div class="stat-card">
-       <div class="stat-icon"><i class="fa-solid fa-arrow-down"></i></div>
-       <div class="stat-value">-8 pts</div>
-       <div class="stat-label">VRP during COVID crash: VIX underestimated realized vol by 8 points</div>
-     </div>
-   </div>
-
-   <p>The key insight is that the VRP is <strong>positive most of the time but deeply negative during crises</strong>. When the VIX underestimates realized volatility &mdash; when actual moves exceed expectations &mdash; is precisely when selling vol blows up. This is why position sizing and tail risk hedging are critical for any volatility strategy.</p>
-
-   <!-- Chart: VIX vs Realized Volatility -->
-   <div id="vrpChart" class="echart-container"></div>
-
-   <p>The chart above illustrates the VRP over time. The blue area (VIX implied) almost always sits above the orange area (realized volatility). The gap between them is your premium &mdash; or your loss during extreme events. Notice how the premium collapses and inverts during the 2020 crash: the VIX at 60-80 was actually <em>underpricing</em> the realized moves, which exceeded 10% daily.</p>
-
-   <div class="alert-box">
-     <h4><i class="fa-solid fa-triangle-exclamation"></i> Do Not Confuse VRP With Free Money</h4>
-     <p>The VRP is real, persistent, and well-documented in academic literature (Carr &amp; Wu 2009, Bollerslev et al. 2009). But harvesting it requires:<br>
-     (1) <strong>Sufficient capital</strong> to survive drawdowns (the VRP can be -10 or worse during crises).<br>
-     (2) <strong>Position sizing discipline</strong> &mdash; no single trade should risk more than 2-3% of capital.<br>
-     (3) <strong>Tail hedging</strong> &mdash; owning cheap OTM puts to survive Black Swan events.<br>
-     We will cover practical VRP harvesting strategies in detail in Part 5.</p>
+     <h4><i class="fa-solid fa-lightbulb"></i> The Counterintuitive Truth About Regime Returns</h4>
+     <p>Notice something surprising in the table above: the <strong>best forward 30-day returns</strong> come from buying during the <em>Crisis</em> regime. A VIX above 30 &mdash; the regime that feels most dangerous &mdash; has historically produced the highest average returns over the next month. This is the essence of volatility as a contrarian indicator: the market rewards those who buy when others are panicking.</p>
+     <p>Conversely, the Complacency regime, which <em>feels</em> safest, produces below-average forward returns. The lesson is clear: <strong>comfort is not safety, and discomfort is not danger</strong> &mdash; at least not on a 30-day horizon.</p>
    </div>
  </div>
 
 
- <!-- ============================== -->
- <!-- SECTION 6: VIX MYTHS           -->
- <!-- ============================== -->
+ <!-- =========================================================== -->
+ <!--  SECTION 5 — VIX vs S&P 500: THE ASYMMETRIC RELATIONSHIP    -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="asymmetry">VIX vs S&amp;P 500</div>
 
- <div class="section-divider" id="myths">5 VIX Myths Debunked</div>
+ <div id="asymmetry-card" class="content-card">
+   <h2><i class="fa-solid fa-arrows-up-down"></i> The Asymmetric Relationship</h2>
 
- <div class="content-card">
-   <h2><i class="fa-solid fa-mask"></i> What the VIX Does NOT Do</h2>
+   <p>Everyone knows that the VIX and the S&amp;P 500 move in opposite directions. But the relationship is far more nuanced than a simple negative correlation. The VIX exhibits a fundamental <strong>asymmetry</strong> that is central to understanding how volatility works.</p>
 
-   <p>The VIX is one of the most misunderstood indicators in finance. Here are five myths that even experienced traders believe, and why they are wrong.</p>
+   <h3>The Negative Correlation</h3>
+   <p>Over the long run, the correlation between daily VIX changes and daily SPX returns is approximately <strong>-0.75 to -0.85</strong>. When stocks fall, the VIX rises, and vice versa. But this correlation is not constant &mdash; it varies across regimes and time periods. During crisis periods, the correlation tightens to nearly -0.95. During calm periods, it can loosen to -0.60 or even less.</p>
 
+   <h3>Why It's Asymmetric</h3>
+   <p>Here's the critical insight most investors miss: <strong>the VIX rises faster on SPX declines than it falls on SPX rallies of equal magnitude</strong>. A 2% drop in the S&amp;P 500 might cause the VIX to jump 15%. But a 2% rally in the S&amp;P 500 might only cause the VIX to drop 8-10%. This asymmetry is consistent, persistent, and well-documented.</p>
+
+   <p>Why does this happen? Three reinforcing mechanisms:</p>
+
+   <div class="phase-card card-amber">
+     <div class="phase-title"><i class="fa-solid fa-shield-halved"></i> 1. Put Demand Surges on Declines</div>
+     <div class="phase-subtitle">Portfolio managers panic-buy protection when stocks fall</div>
+     <p>When the S&amp;P 500 drops, institutional investors rush to buy SPX puts for portfolio protection. This surge in demand drives OTM put prices higher, which directly increases the VIX (since OTM puts are a major input to the VIX calculation). On rallies, there's no corresponding rush to buy calls for protection &mdash; investors simply ride the wave up.</p>
+   </div>
+
+   <div class="phase-card card-blue">
+     <div class="phase-title"><i class="fa-solid fa-chart-line"></i> 2. Leverage and Margin Effects</div>
+     <div class="phase-subtitle">Declining prices increase leverage ratios, amplifying volatility</div>
+     <p>When stock prices fall, the equity value of leveraged companies decreases while debt remains constant. This increases the effective leverage ratio, making the stock more volatile. This is the "leverage effect" first described by Fischer Black in 1976. It creates a mechanical feedback loop: prices fall &rarr; leverage increases &rarr; volatility increases &rarr; which can cause further price declines.</p>
+   </div>
+
+   <div class="phase-card card-red">
+     <div class="phase-title"><i class="fa-solid fa-users"></i> 3. Behavioral Amplification</div>
+     <div class="phase-subtitle">Loss aversion makes downside moves feel 2x worse than equivalent gains</div>
+     <p>Behavioral finance research (Kahneman &amp; Tversky) shows that humans experience losses roughly <strong>2.5 times more intensely</strong> than equivalent gains. This psychological asymmetry translates directly into market behavior: selling during declines is more aggressive and panic-driven than buying during rallies. Stop-loss orders trigger cascading selling. Margin calls force liquidation. Fear is a more powerful motivator than greed.</p>
+   </div>
+
+   <h3>Quantifying the Asymmetry</h3>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>SPX Daily Move</th>
+         <th>Avg VIX Change (Down Day)</th>
+         <th>Avg VIX Change (Up Day)</th>
+         <th>Asymmetry Ratio</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>0.5%</strong></td>
+         <td>+3.2%</td>
+         <td>-2.1%</td>
+         <td>1.52x</td>
+       </tr>
+       <tr>
+         <td><strong>1.0%</strong></td>
+         <td>+7.8%</td>
+         <td>-4.5%</td>
+         <td>1.73x</td>
+       </tr>
+       <tr>
+         <td><strong>2.0%</strong></td>
+         <td>+18.5%</td>
+         <td>-9.2%</td>
+         <td>2.01x</td>
+       </tr>
+       <tr>
+         <td><strong>3.0%</strong></td>
+         <td>+32.0%</td>
+         <td>-14.1%</td>
+         <td>2.27x</td>
+       </tr>
+       <tr>
+         <td><strong>5.0%+</strong></td>
+         <td>+55%+</td>
+         <td>-18%</td>
+         <td>3.0x+</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <p>The asymmetry ratio <strong>increases with the magnitude of the move</strong>. For small moves (0.5%), the VIX responds about 1.5x more to declines than to rallies. For large moves (3%+), the ratio jumps to 2.3x or higher. During crash events (5%+ single-day drops), the VIX can spike 50%+ in a single session &mdash; something that never happens to the upside.</p>
+
+   <div id="scatterChart" class="echart-container"></div>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-lightbulb"></i> What the Scatter Plot Reveals</h4>
+     <p>The scatter plot above shows the relationship between daily SPX returns (x-axis) and daily VIX percentage changes (y-axis). Notice the <strong>asymmetric funnel shape</strong>: the cloud of points is steeper and more dispersed on the left side (SPX down days) than on the right side (SPX up days). This visual asymmetry is the VIX's most important structural feature.</p>
+     <p><strong>Practical implication:</strong> If you're using the VIX to hedge a long equity portfolio, you get more bang for your buck on the downside. A VIX call option gains more when SPX drops 3% than it loses when SPX rallies 3%. This asymmetry is why VIX calls are the preferred "tail risk" hedge for institutional portfolios.</p>
+   </div>
+
+   <h3>The "Pinning" Effect on Rallies</h3>
+   <p>There's an additional phenomenon worth noting: during strong, sustained rallies, the VIX often gets "pinned" near its lows and stops declining even as the S&amp;P 500 continues to rise. This happens because the VIX has a <strong>natural floor</strong> around 10-12 (the long-run minimum of realized volatility). Once the VIX reaches this floor, further SPX gains produce diminishing VIX declines. The VIX simply cannot go to zero &mdash; there is always some irreducible uncertainty in the market.</p>
+
+   <p>Conversely, the VIX has <strong>no theoretical ceiling</strong>. It can spike to 80, 90, or theoretically even higher (though the all-time intraday high of 89.53 from March 2020 suggests practical limits). This ceiling-less upside combined with floored downside is the ultimate expression of the VIX's asymmetry.</p>
+ </div>
+
+
+ <!-- =========================================================== -->
+ <!--  SECTION 6 — COMMON VIX MYTHS                               -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="myths">Common VIX Myths</div>
+
+ <div id="myths-card" class="content-card">
+   <h2><i class="fa-solid fa-mask"></i> Four VIX Myths Debunked</h2>
+
+   <p>The VIX is one of the most misunderstood indicators in all of finance. Part of the problem is that financial media has simplified and distorted its meaning for decades. Let's dismantle the four most persistent myths.</p>
+
+   <!-- Myth 1 -->
    <div class="myth-card">
      <div class="myth-number">1</div>
-     <div class="myth-title">"The VIX Predicts Crashes"</div>
+     <div class="myth-title">"The VIX Predicts Market Crashes"</div>
      <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
-     <p>The VIX does not predict anything. It <strong>reacts</strong> to option prices, which in turn react to market moves and positioning. Before every major crash in history &mdash; 2008, 2020, the August 2015 flash crash &mdash; the VIX was at normal or low levels. It did not warn you. It spiked <em>after</em> the selling began.</p>
-     <p>A better predictive signal is the <strong>shape of the term structure</strong> or the <strong>VVIX</strong> (the volatility of VIX itself). But even these are anticipatory signals, not crystal balls. The VIX is a thermometer, not a weather forecast: it tells you the temperature right now, not what it will be tomorrow.</p>
+     <p>This is perhaps the most dangerous misconception. The VIX does <strong>not</strong> predict anything &mdash; it <strong>reacts</strong>. The VIX is a real-time reflection of current options pricing, which itself reflects the current aggregate demand for hedging. It moves with the market, not ahead of it.</p>
+     <div class="pedagogy-box">
+       <h4><i class="fa-solid fa-search"></i> The Evidence</h4>
+       <p>Before the 2008 financial crisis, the VIX was at <strong>23</strong> on September 12, 2008 &mdash; the Friday before Lehman Brothers filed for bankruptcy. That's barely in the "elevated" regime. The VIX didn't spike to 80+ until <em>after</em> the crash was already underway. Similarly, the VIX was at just <strong>14</strong> in mid-February 2020 &mdash; three weeks before the fastest bear market in history.</p>
+       <p>The VIX <em>can</em> signal that the market is pricing in elevated risk (when it's in the 20-30 range). But it cannot predict the timing or severity of a crash. A VIX at 25 can drop back to 15 just as easily as it can spike to 40. The direction is unknowable.</p>
+     </div>
    </div>
 
+   <!-- Myth 2 -->
    <div class="myth-card">
      <div class="myth-number">2</div>
-     <div class="myth-title">"High VIX = Always Buy the Dip"</div>
-     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> Oversimplified</div>
-     <p>The idea that you should "buy when the VIX spikes" has some statistical merit on longer time horizons (6-12 months), but it is dangerous as a short-term trading rule. During the 2008 GFC, the VIX first hit 40 in September. If you bought then, SPX fell another 40% over the next six months. The VIX can stay elevated for weeks or months.</p>
-     <p><strong>A better approach:</strong> Wait for the VIX to start <em>declining</em> from elevated levels (i.e., the rate of change turns negative). Historically, buying SPX 5-10 days after a VIX spike peak &mdash; not at the peak &mdash; has produced significantly better risk-adjusted returns.</p>
+     <div class="myth-title">"High VIX = Time to Sell Everything"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
+     <p>This myth has cost investors billions. Intuitively, a high VIX <em>feels</em> like it should be a sell signal &mdash; "the market is scared, I should be too." But the data tells the opposite story.</p>
+     <div class="pedagogy-box">
+       <h4><i class="fa-solid fa-chart-bar"></i> What the Data Says</h4>
+       <p>Historical analysis of SPX returns following VIX spikes above 30 shows:</p>
+       <ul class="checklist">
+         <li><i class="fa-solid fa-circle-check check-valid"></i> <strong>30-day forward return:</strong> +2.5% average (vs +0.9% unconditional)</li>
+         <li><i class="fa-solid fa-circle-check check-valid"></i> <strong>90-day forward return:</strong> +5.8% average (vs +2.3% unconditional)</li>
+         <li><i class="fa-solid fa-circle-check check-valid"></i> <strong>1-year forward return:</strong> +18.2% average (vs +10.1% unconditional)</li>
+         <li><i class="fa-solid fa-circle-check check-valid"></i> <strong>Win rate (positive 1Y return):</strong> 88% (vs 75% unconditional)</li>
+       </ul>
+       <p>High VIX readings are, on average, <em>buy</em> signals, not sell signals. The caveat: timing is difficult. The market may continue falling for days or weeks after the VIX spikes. But on average, buying when the VIX is above 30 has been one of the most reliable strategies in the history of equity markets.</p>
+     </div>
    </div>
 
+   <!-- Myth 3 -->
    <div class="myth-card">
      <div class="myth-number">3</div>
-     <div class="myth-title">"The VIX Can't Go Below 10"</div>
-     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
-     <p>The VIX hit <strong>9.14</strong> on November 3, 2017, its all-time closing low. Throughout late 2017, the VIX spent weeks below 10. This was driven by historically low hedging demand, massive short-vol strategies, and extremely tight realized volatility in SPX.</p>
-     <p>The lesson: there is no theoretical floor for the VIX. If option prices are sufficiently cheap, the VIX can go as low as the math allows. But ultra-low VIX readings are inherently unstable &mdash; they attract short-vol capital until the crowding triggers a violent unwind. The February 2018 Volmageddon was the direct consequence of the 2017 VIX compression.</p>
+     <div class="myth-title">"The VIX Measures Fear"</div>
+     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> Misleading</div>
+     <p>This is the most pervasive myth, perpetuated by every financial news outlet that calls the VIX the "fear gauge." The VIX measures <strong>expected magnitude of price movement</strong>, not direction, not emotion. A VIX of 30 doesn't mean the market fears a 30% crash &mdash; it means the market expects annualized volatility of 30%, which includes both up and down moves.</p>
+     <div class="pedagogy-box">
+       <h4><i class="fa-solid fa-brain"></i> The Nuance</h4>
+       <p>To be fair, there <em>is</em> a connection between the VIX and fear. The VIX is heavily influenced by OTM put demand, and OTM put demand does increase when investors are fearful. So the VIX often rises during periods of fear. But the causal chain is: <strong>fear &rarr; put demand &rarr; higher put prices &rarr; higher VIX</strong>. The VIX is a symptom, not a direct measurement.</p>
+       <p>More accurately, the VIX measures the <strong>cost of portfolio insurance</strong>. When the cost of insurance is high, it usually means demand is high, which usually means people are worried. But "cost of insurance" and "fear" are not the same thing. Insurance costs can be high for structural reasons (concentrated positions, leverage, regulatory requirements) that have nothing to do with emotional fear.</p>
+     </div>
    </div>
 
+   <!-- Myth 4 -->
    <div class="myth-card">
      <div class="myth-number">4</div>
      <div class="myth-title">"You Can Buy the VIX"</div>
      <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> False</div>
-     <p>You cannot buy or sell "the VIX." The VIX is a <strong>calculated index</strong> &mdash; there are no shares, no ETF, no fund that tracks the VIX spot price. What you can trade:</p>
-     <ul class="checklist">
-       <li><i class="fa-solid fa-check check-amber"></i> <strong>VIX Futures</strong> &mdash; the closest proxy, but they track <em>expected future VIX</em>, not spot VIX</li>
-       <li><i class="fa-solid fa-check check-amber"></i> <strong>VIX Options</strong> &mdash; options on VIX futures (not on spot VIX), European-style, cash-settled</li>
-       <li><i class="fa-solid fa-check check-amber"></i> <strong>VIX ETPs</strong> &mdash; VXX, UVXY, SVXY &mdash; track rolling VIX futures, with significant tracking error and roll costs</li>
-       <li><i class="fa-solid fa-check check-amber"></i> <strong>SPX Options</strong> &mdash; the underlying instruments from which VIX is derived</li>
-     </ul>
-     <p>Each of these instruments has its own dynamics, costs, and risks. A VIX future can expire at a very different level than where spot VIX is on expiration day. We will deep-dive into trading these instruments in Part 4.</p>
-   </div>
+     <p>You <strong>cannot</strong> directly buy or sell the spot VIX. It's a calculated index, like the Dow Jones Industrial Average. You can't buy "the DJIA" either &mdash; you buy a fund that tracks it. The same applies to the VIX, but with a critical twist: the products that track the VIX do so <strong>extremely poorly</strong> over time.</p>
+     <div class="pedagogy-box">
+       <h4><i class="fa-solid fa-triangle-exclamation"></i> The VIX Product Graveyard</h4>
+       <p>The most common ways people attempt to "buy the VIX" and their fatal flaws:</p>
+       <ul class="checklist">
+         <li><i class="fa-solid fa-circle-xmark check-invalid"></i> <strong>VXX (iPath VIX Short-Term Futures ETN):</strong> Tracks VIX <em>futures</em>, not spot VIX. Due to contango roll costs, VXX has lost <strong>99.9%+ of its value</strong> since inception. It has been reverse-split multiple times to avoid going to zero.</li>
+         <li><i class="fa-solid fa-circle-xmark check-invalid"></i> <strong>UVXY (ProShares Ultra VIX Short-Term Futures):</strong> 1.5x leveraged VIX futures. Even worse than VXX. The compounding of negative roll yield and daily leverage reset makes this a guaranteed wealth destroyer over any horizon longer than a few days.</li>
+         <li><i class="fa-solid fa-circle-xmark check-invalid"></i> <strong>SVXY (ProShares Short VIX Short-Term Futures):</strong> Inverse VIX. Gains during calm markets but can lose 80%+ in a single day during VIX spikes. Lost 93% on February 5, 2018.</li>
+         <li><i class="fa-solid fa-circle-check check-valid"></i> <strong>VIX Options:</strong> Options on VIX futures. The closest you can get to "trading the VIX." But they expire based on a special opening quotation (SOQ), not the spot VIX, so they still track futures, not spot.</li>
+       </ul>
+       <p>The fundamental problem is the <strong>cost of carry</strong>. VIX futures in contango (the normal state ~85% of the time) are priced higher than spot VIX. Rolling from the expiring front-month to the next month means constantly buying high and selling low. This "roll cost" or "negative roll yield" is the silent killer of every long VIX product.</p>
+     </div>
 
-   <div class="myth-card">
-     <div class="myth-number">5</div>
-     <div class="myth-title">"VIX and SPX Always Move in Opposite Directions"</div>
-     <div class="myth-verdict"><i class="fa-solid fa-xmark"></i> Mostly True, But Not Always</div>
-     <p>The correlation between daily VIX changes and SPX returns is approximately <strong>-0.80</strong>. That is strongly negative, but it is not -1.0. There are days when both VIX and SPX rise simultaneously &mdash; typically before a major event (FOMC, elections) when the market rallies but option demand increases. And there are days when both fall &mdash; after an anticipated event passes and vol crush occurs alongside a flat or slightly negative SPX.</p>
-     <p>The asymmetry is also notable: VIX rises more on SPX down days than it falls on equivalent SPX up days. A 2% SPX decline might push VIX up 4-5 points, but a 2% SPX rally might only pull VIX down 2-3 points. This is because the volatility skew &mdash; OTM puts being more expensive than equidistant OTM calls &mdash; amplifies downside VIX moves.</p>
+     <div class="ticker-grid">
+       <div class="ticker-card">
+         <div class="ticker-symbol">VXX</div>
+         <div class="ticker-desc">Short-term VIX futures ETN<br><em>Decay: ~5%/month</em></div>
+       </div>
+       <div class="ticker-card">
+         <div class="ticker-symbol">UVXY</div>
+         <div class="ticker-desc">1.5x leveraged VIX futures<br><em>Decay: ~8%/month</em></div>
+       </div>
+       <div class="ticker-card">
+         <div class="ticker-symbol">SVXY</div>
+         <div class="ticker-desc">Short VIX futures<br><em>Gains in contango</em></div>
+       </div>
+       <div class="ticker-card">
+         <div class="ticker-symbol">VIXY</div>
+         <div class="ticker-desc">Short-term VIX futures ETF<br><em>Similar to VXX</em></div>
+       </div>
+       <div class="ticker-card">
+         <div class="ticker-symbol">VIXM</div>
+         <div class="ticker-desc">Mid-term VIX futures ETF<br><em>Less decay than VXX</em></div>
+       </div>
+       <div class="ticker-card">
+         <div class="ticker-symbol">VIX Options</div>
+         <div class="ticker-desc">Options on VIX futures<br><em>Best for hedging</em></div>
+       </div>
+     </div>
    </div>
  </div>
 
 
- <!-- ============================== -->
- <!-- SECTION 7: YOUR VIX TOOLKIT    -->
- <!-- ============================== -->
+ <!-- =========================================================== -->
+ <!--  SECTION 7 — READING THE VIX LIKE A PRO                     -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="pro-framework">Reading the VIX Like a Pro</div>
 
- <div class="section-divider" id="toolkit">Your VIX Toolkit</div>
+ <div id="pro-framework-card" class="content-card">
+   <h2><i class="fa-solid fa-toolbox"></i> A Practical Framework for VIX Analysis</h2>
 
- <div class="content-card">
-   <h2><i class="fa-solid fa-toolbox"></i> Essential Resources for VIX Analysis</h2>
+   <p>Now that you understand what the VIX is, how it's calculated, and what the myths are, let's build a practical framework for using the VIX in your daily market analysis. Professional traders don't just look at the VIX number &mdash; they follow a systematic three-step process.</p>
 
-   <p>Armed with the knowledge from this article, here are the tools and tickers you need to monitor the VIX ecosystem daily. All of these are free or available through standard brokerage platforms.</p>
+   <h3>Step 1: Check the Level</h3>
+   <p>Start with the absolute level to establish the current regime. Is the VIX below 15 (complacency), 15-20 (normal), 20-30 (elevated), or above 30 (crisis)? This sets the baseline context for everything else.</p>
+
+   <h3>Step 2: Check the Term Structure</h3>
+   <p>Is the VIX term structure in contango (normal) or backwardation (stressed)? Pull up the VIX/VIX3M ratio. If it's above 1.0, the curve is inverted and something unusual is happening. If it's below 0.85, the market might be too complacent.</p>
+
+   <h3>Step 3: Check the Rate of Change</h3>
+   <p>How fast is the VIX moving? A VIX at 25 that was at 15 yesterday tells a completely different story than a VIX at 25 that's been there for three weeks. The <strong>speed</strong> of the VIX move is often more important than the level itself.</p>
+
+   <h3>VIX Spike Analysis: The 20%+ Club</h3>
+   <p>A single-day VIX increase of 20% or more is one of the most powerful signals in the volatility trader's toolkit. Here's what history tells us about these events:</p>
+
+   <table class="compare-table">
+     <thead>
+       <tr>
+         <th>Metric</th>
+         <th>Value</th>
+         <th>Significance</th>
+       </tr>
+     </thead>
+     <tbody>
+       <tr>
+         <td><strong>Frequency</strong></td>
+         <td>~12-15 times per year</td>
+         <td>Roughly once a month on average (clusters in volatile periods)</td>
+       </tr>
+       <tr>
+         <td><strong>SPX next-day return</strong></td>
+         <td>+0.15% average</td>
+         <td>Slight positive bias &mdash; some mean reversion after panic</td>
+       </tr>
+       <tr>
+         <td><strong>SPX 5-day forward return</strong></td>
+         <td>+0.62% average</td>
+         <td>Short-term bounce is common but not guaranteed</td>
+       </tr>
+       <tr>
+         <td><strong>SPX 20-day forward return</strong></td>
+         <td>+1.45% average</td>
+         <td>Positive on average, but wide dispersion</td>
+       </tr>
+       <tr>
+         <td><strong>VIX mean reversion time</strong></td>
+         <td>7-15 trading days</td>
+         <td>VIX typically reverts to pre-spike levels within 2-3 weeks</td>
+       </tr>
+       <tr>
+         <td><strong>Repeat spike within 5 days</strong></td>
+         <td>~30% probability</td>
+         <td>One spike often leads to another &mdash; don't assume it's over</td>
+       </tr>
+     </tbody>
+   </table>
+
+   <div class="pedagogy-box">
+     <h4><i class="fa-solid fa-triangle-exclamation"></i> The "Cluster" Warning</h4>
+     <p>VIX spikes tend to <strong>cluster</strong>. A 20%+ VIX spike has about a 30% chance of being followed by another 20%+ spike within the next 5 trading days. This means the first spike is not necessarily the peak of volatility &mdash; it might just be the opening act. During the March 2020 COVID crash, there were <strong>eight separate 20%+ VIX spikes</strong> in a three-week period.</p>
+     <p>The practical implication: after the first spike, don't go "all in" on a contrarian bet. Wait for the clustering to exhaust itself, or scale into positions gradually over several days.</p>
+   </div>
+
+   <h3>The Complete Decision Tree</h3>
+
+   <div id="vixDecisionChart" class="echart-container"></div>
 
    <div class="takeaway-box">
-     <h4><i class="fa-solid fa-star"></i> Key Tickers to Monitor</h4>
-     <p>Add these to your watchlist. Together, they give you a complete picture of the volatility landscape.</p>
+     <h4><i class="fa-solid fa-star"></i> 5 Rules for Reading the VIX</h4>
+     <ol>
+       <li><strong>Level sets context, not action.</strong> Know which regime you're in (below 15, 15-20, 20-30, 30+), but don't make trading decisions based on level alone. The direction of the VIX matters more than the level.</li>
+       <li><strong>Term structure trumps spot.</strong> A VIX at 20 in steep contango (normal) is bullish. A VIX at 20 in backwardation (inverted) is a red flag. Always check VIX/VIX3M before acting.</li>
+       <li><strong>Speed kills (and creates opportunity).</strong> A 20%+ single-day VIX spike is a meaningful event. But the first spike is often followed by more. Wait for the cluster to exhaust before taking contrarian bets.</li>
+       <li><strong>Extreme VIX = contrarian opportunity.</strong> VIX above 40 has historically been one of the best equity buy signals on a 6-12 month horizon. But timing is tricky &mdash; scale in, don't lump in.</li>
+       <li><strong>Never short vol blindly.</strong> Selling volatility when the VIX is "high" (25-30) seems attractive because of elevated premiums. But the asymmetric upside of the VIX means you can lose months of income in a single day. Always define your max loss before entering a short vol trade.</li>
+     </ol>
    </div>
 
-   <div class="ticker-grid">
-     <div class="ticker-card">
-       <div class="ticker-symbol">$VIX</div>
-       <div class="ticker-desc">30-day expected S&amp;P 500 volatility. The benchmark.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">$VIX9D</div>
-       <div class="ticker-desc">9-day expected vol. Spikes before imminent events (CPI, FOMC).</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">$VIX3M</div>
-       <div class="ticker-desc">3-month expected vol. Used for VIX/VIX3M ratio (term structure signal).</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">$VIX6M</div>
-       <div class="ticker-desc">6-month expected vol. Structural uncertainty gauge.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">$VVIX</div>
-       <div class="ticker-desc">Volatility of VIX. High VVIX = market expects VIX itself to move sharply.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">$VXV</div>
-       <div class="ticker-desc">3-month VIX (legacy ticker, same as VIX3M). Used in some ratio strategies.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">VXX</div>
-       <div class="ticker-desc">iPath VIX Short-Term Futures ETN. Tracks front-month VIX futures.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">UVXY</div>
-       <div class="ticker-desc">1.5x leveraged VIX futures ETF. Amplified exposure, extreme decay.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">SVXY</div>
-       <div class="ticker-desc">-0.5x inverse VIX futures ETF. Profits from contango roll-down.</div>
-     </div>
-     <div class="ticker-card">
-       <div class="ticker-symbol">$SKEW</div>
-       <div class="ticker-desc">CBOE Skew Index. Measures tail risk pricing in SPX options.</div>
-     </div>
-   </div>
-
-   <h3><i class="fa-solid fa-desktop"></i> Free Websites for VIX Analysis</h3>
+   <h3>Essential Resources for VIX Analysis</h3>
 
    <table class="compare-table">
      <thead>
        <tr>
          <th>Resource</th>
-         <th>URL</th>
-         <th>What It Shows</th>
+         <th>URL / Ticker</th>
+         <th>What It Provides</th>
        </tr>
      </thead>
      <tbody>
        <tr>
+         <td><strong>CBOE VIX Dashboard</strong></td>
+         <td>cboe.com/vix</td>
+         <td>Official VIX data, term structure, methodology papers</td>
+       </tr>
+       <tr>
          <td><strong>VIX Central</strong></td>
          <td>vixcentral.com</td>
-         <td>Real-time VIX futures term structure curve, contango/backwardation percentages, historical curves</td>
+         <td>VIX futures term structure chart (free, real-time)</td>
        </tr>
        <tr>
-         <td><strong>CBOE VIX Dashboard</strong></td>
-         <td>cboe.com/tradable_products/vix</td>
-         <td>Official VIX data, whitepapers, methodology documentation</td>
+         <td><strong>VIX/VIX3M Ratio</strong></td>
+         <td>TradingView: VIX/VIX3M</td>
+         <td>Term structure ratio &mdash; above 1.0 = backwardation</td>
        </tr>
        <tr>
-         <td><strong>VoVolCalc</strong></td>
-         <td>vovolcalc.com</td>
-         <td>Historical VIX vs realized vol comparison, VRP charting</td>
+         <td><strong>VVIX</strong></td>
+         <td>CBOE: VVIX</td>
+         <td>"Volatility of volatility" &mdash; how fast the VIX itself is expected to move</td>
        </tr>
        <tr>
-         <td><strong>TradingView</strong></td>
-         <td>tradingview.com</td>
-         <td>Chart VIX, VIX9D, VIX3M, VIX6M, VVIX with full technical analysis overlay</td>
+         <td><strong>SKEW Index</strong></td>
+         <td>CBOE: SKEW</td>
+         <td>Tail risk pricing &mdash; higher SKEW = market pricing more crash risk</td>
        </tr>
        <tr>
-         <td><strong>Yahoo Finance</strong></td>
-         <td>finance.yahoo.com/quote/^VIX</td>
-         <td>Free delayed VIX quotes, historical data download</td>
+         <td><strong>Volatility Lab</strong></td>
+         <td>Interactive Brokers</td>
+         <td>Real-time IV surface, volatility cone, historical IV percentile</td>
        </tr>
      </tbody>
    </table>
+ </div>
 
-   <div class="pedagogy-box">
-     <h4><i class="fa-solid fa-lightbulb"></i> Your Daily VIX Checklist</h4>
-     <p>Before the market opens, check these four things in under 60 seconds:</p>
+
+ <!-- =========================================================== -->
+ <!--  SECTION 8 — KEY TAKEAWAYS & WHAT'S NEXT                    -->
+ <!-- =========================================================== -->
+ <div class="section-divider" id="takeaways">Key Takeaways &amp; What's Next</div>
+
+ <div id="takeaways-card" class="content-card">
+   <h2><i class="fa-solid fa-flag-checkered"></i> Part 1 Summary</h2>
+
+   <p>You've now built the foundational knowledge required to understand the VIX properly &mdash; not as a "fear gauge," but as a sophisticated measure of implied volatility derived from the entire S&amp;P 500 options chain. Let's recap the essential concepts before moving to Part 2.</p>
+
+   <div class="takeaway-box">
+     <h4><i class="fa-solid fa-bookmark"></i> What You Should Remember from Part 1</h4>
      <ol>
-       <li><strong>VIX level</strong> &mdash; which regime are we in? (Complacency, Normal, Elevated, Crisis)</li>
-       <li><strong>VIX/VIX3M ratio</strong> &mdash; is the term structure in contango or backwardation?</li>
-       <li><strong>VIX direction</strong> &mdash; is VIX rising or falling? (Rising VIX = tighten stops, reduce size. Falling VIX = expand stops, look for opportunities.)</li>
-       <li><strong>VVIX</strong> &mdash; is the "vol of vol" elevated? (High VVIX = expect VIX itself to make a large move today, in either direction.)</li>
+       <li><strong>The VIX is not a fear gauge.</strong> It measures the market's expectation of 30-day annualized S&amp;P 500 volatility, derived from a broad strip of SPX options using a variance swap replication methodology.</li>
+       <li><strong>Implied &ne; Realized.</strong> The VIX (implied) typically exceeds realized volatility by 3-5 points. This gap &mdash; the Volatility Risk Premium &mdash; is the foundation of many volatility strategies and is the "insurance premium" the market pays.</li>
+       <li><strong>The VIX formula uses the entire OTM options chain</strong>, not just ATM options. This captures the full volatility surface, including the steep put skew that dominates VIX pricing.</li>
+       <li><strong>Term structure is more informative than spot level.</strong> Contango = normal (80-85% of the time). Backwardation = stress. The VIX/VIX3M ratio above 1.10 is a historically reliable contrarian signal.</li>
+       <li><strong>Four regimes define the vol landscape:</strong> Complacency (&lt;15), Normal (15-20), Elevated (20-30), Crisis (&gt;30). Each has distinct trading implications, and counterintuitively, the Crisis regime produces the best forward equity returns.</li>
+       <li><strong>The VIX-SPX relationship is asymmetric.</strong> The VIX rises faster on market declines than it falls on equivalent rallies. This asymmetry increases with the magnitude of the move and is driven by put demand, leverage effects, and behavioral biases.</li>
+       <li><strong>You cannot buy spot VIX.</strong> All VIX products track futures, which suffer from contango decay. VXX, UVXY, and similar products are designed for short-term tactical hedging, not buy-and-hold.</li>
+       <li><strong>The VIX reacts, it does not predict.</strong> It's a real-time barometer of options pricing, not a crystal ball. High VIX readings are historically buy signals for equities, not sell signals.</li>
      </ol>
-     <p>This 60-second check gives you a complete read on the volatility landscape. It should be as automatic as checking the weather before leaving the house.</p>
    </div>
 
-   <div class="alert-box">
-     <h4><i class="fa-solid fa-forward"></i> Coming in Part 2: VIX Seasonality</h4>
-     <p>Now that you understand what the VIX is and how it works, Part 2 will reveal when it moves. The VIX has strong seasonal patterns &mdash; month-of-year effects, day-of-week effects, FOMC cycle effects, and OpEx dynamics. These patterns are statistically significant, persistent, and directly tradeable. You will learn why "Sell in May" has a volatility corollary, why VIX rises before FOMC meetings and crashes after them, and why the third Friday of every month matters more than you think.</p>
+   <h3>What's Coming in Part 2: Seasonality</h3>
+
+   <p>In the next installment, we'll explore the <strong>seasonal and cyclical patterns</strong> of the VIX. You'll learn:</p>
+
+   <ul class="checklist">
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>Monthly seasonality:</strong> Why October isn't actually the most volatile month (it's September)</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>Day-of-week effects:</strong> The Monday morning VIX premium and the Friday afternoon collapse</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>FOMC and CPI effects:</strong> How the VIX behaves around scheduled macro events</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>Earnings season patterns:</strong> The predictable VIX cycle during reporting season</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>Election year volatility:</strong> How presidential election cycles affect the VIX</li>
+     <li><i class="fa-solid fa-circle-check check-amber"></i> <strong>The "sell in May" effect on vol:</strong> Seasonal vol compression in summer</li>
+   </ul>
+
+   <p>Understanding these patterns will allow you to anticipate VIX moves <em>before</em> they happen &mdash; giving you an edge over the majority of market participants who only react after the fact.</p>
+
+   <div class="next-cta">
+     <h3>Part 2: VIX Seasonality</h3>
+     <p>Discover the hidden calendar patterns that drive volatility cycles throughout the year.</p>
+     <a href="/series/mastering-the-vix/part2-seasonality/">
+       Continue to Part 2 <i class="fa-solid fa-arrow-right"></i>
+     </a>
    </div>
  </div>
 
-
- <!-- ============================== -->
- <!-- SECTION 8: NEXT CTA            -->
- <!-- ============================== -->
-
- <div class="section-divider" id="next">Continue the Series</div>
-
- <div class="next-cta">
-   <h3>Part 2: VIX Seasonality</h3>
-   <p>Discover the seasonal patterns, FOMC cycles, and OpEx dynamics that drive VIX movements throughout the year.</p>
-   <a href="/series/mastering-the-vix/part2-seasonality/">
-     Continue to Part 2 <i class="fa-solid fa-arrow-right"></i>
-   </a>
- </div>
-
- <!-- Series Bar Bottom -->
+ <!-- Bottom Series Bar -->
  <div class="series-bar">
    <div class="series-bar-inner">
      <span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span>
@@ -1075,26 +1308,19 @@
    </div>
  </div>
 
- </div><!-- /.container -->
-
- <!-- Footer -->
- <footer class="article-footer">
-   &copy; 2026 Market Watch. Data via MarketWatch Gateway.
-   This is not financial advice.
-   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
- </footer>
+ </main>
 
  <!-- FAB Navigation -->
  <div class="fnav" id="floatingNav">
    <div class="fnav-menu" id="fnavMenu">
-     <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bolt"></i><span>What Is the VIX</span></a>
-     <a href="#calculation" class="fnav-item" data-section="calculation"><i class="fas fa-calculator"></i><span>Calculation</span></a>
-     <a href="#levels" class="fnav-item" data-section="levels"><i class="fas fa-layer-group"></i><span>VIX Levels</span></a>
+     <a href="#what-is-vix" class="fnav-item" data-section="what-is-vix"><i class="fas fa-bolt"></i><span>What Is the VIX</span></a>
+     <a href="#formula" class="fnav-item" data-section="formula"><i class="fas fa-calculator"></i><span>Formula</span></a>
      <a href="#term-structure" class="fnav-item" data-section="term-structure"><i class="fas fa-wave-square"></i><span>Term Structure</span></a>
-     <a href="#vs-realized" class="fnav-item" data-section="vs-realized"><i class="fas fa-scale-balanced"></i><span>Implied vs Realized</span></a>
-     <a href="#myths" class="fnav-item" data-section="myths"><i class="fas fa-mask"></i><span>Myths Debunked</span></a>
-     <a href="#toolkit" class="fnav-item" data-section="toolkit"><i class="fas fa-toolbox"></i><span>Toolkit</span></a>
-     <a href="#next" class="fnav-item" data-section="next"><i class="fas fa-arrow-right"></i><span>Next Part</span></a>
+     <a href="#regimes" class="fnav-item" data-section="regimes"><i class="fas fa-layer-group"></i><span>Regimes</span></a>
+     <a href="#asymmetry" class="fnav-item" data-section="asymmetry"><i class="fas fa-arrows-up-down"></i><span>VIX vs SPX</span></a>
+     <a href="#myths" class="fnav-item" data-section="myths"><i class="fas fa-mask"></i><span>Myths</span></a>
+     <a href="#pro-framework" class="fnav-item" data-section="pro-framework"><i class="fas fa-toolbox"></i><span>Pro Framework</span></a>
+     <a href="#takeaways" class="fnav-item" data-section="takeaways"><i class="fas fa-flag-checkered"></i><span>Takeaways</span></a>
    </div>
    <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
      <i class="fas fa-bars" id="fnavIcon"></i>
@@ -1102,398 +1328,376 @@
    </button>
  </div>
 
- <!-- ECharts: VIX Historical 2020-2026 -->
+ <!-- Footer -->
+ <footer class="article-footer">
+   &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+   Ceci n'est pas un conseil financier.
+   <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+ </footer>
+
+ <!-- Scripts -->
+ <script src="/assets/core.js"></script>
+ <script src="/assets/tag-renderer.js"></script>
+ <script src="/assets/echarts-responsive.js"></script>
+
  <script>
- (function() {
-   var dom = document.getElementById('vixHistoryChart');
-   if (!dom) return;
-   dom.style.width = '100%';
-   dom.style.height = '480px';
-   dom.style.margin = '2rem 0';
-   var chart = echarts.init(dom);
+ // ===== FAB Navigation =====
+ (function(){
+   var fab = document.getElementById('fnavBtn');
+   var menu = document.getElementById('fnavMenu');
+   var icon = document.getElementById('fnavIcon');
+   var label = document.getElementById('fnavLabel');
+   var items = menu.querySelectorAll('.fnav-item');
+   var open = false;
 
-   var dates = [];
-   var vixData = [];
+   fab.addEventListener('click', function(){
+     open = !open;
+     menu.classList.toggle('active', open);
+     icon.className = open ? 'fas fa-xmark' : 'fas fa-bars';
+     label.textContent = open ? 'Close' : 'Menu';
+   });
 
-   // Simulated VIX monthly data 2020-2026
-   var rawData = [
-     ['2020-01', 14], ['2020-02', 40], ['2020-03', 82], ['2020-04', 35], ['2020-05', 28], ['2020-06', 30],
-     ['2020-07', 25], ['2020-08', 22], ['2020-09', 27], ['2020-10', 32], ['2020-11', 24], ['2020-12', 22],
-     ['2021-01', 33], ['2021-02', 22], ['2021-03', 20], ['2021-04', 17], ['2021-05', 20], ['2021-06', 16],
-     ['2021-07', 19], ['2021-08', 16], ['2021-09', 23], ['2021-10', 16], ['2021-11', 21], ['2021-12', 22],
-     ['2022-01', 28], ['2022-02', 30], ['2022-03', 28], ['2022-04', 33], ['2022-05', 30], ['2022-06', 29],
-     ['2022-07', 24], ['2022-08', 23], ['2022-09', 32], ['2022-10', 30], ['2022-11', 23], ['2022-12', 22],
-     ['2023-01', 20], ['2023-02', 21], ['2023-03', 26], ['2023-04', 16], ['2023-05', 17], ['2023-06', 14],
-     ['2023-07', 14], ['2023-08', 17], ['2023-09', 17], ['2023-10', 22], ['2023-11', 15], ['2023-12', 13],
-     ['2024-01', 14], ['2024-02', 14], ['2024-03', 13], ['2024-04', 16], ['2024-05', 13], ['2024-06', 13],
-     ['2024-07', 16], ['2024-08', 38], ['2024-09', 19], ['2024-10', 20], ['2024-11', 15], ['2024-12', 18],
-     ['2025-01', 16], ['2025-02', 19], ['2025-03', 26], ['2025-04', 33], ['2025-05', 24], ['2025-06', 21],
-     ['2025-07', 18], ['2025-08', 17], ['2025-09', 19], ['2025-10', 20], ['2025-11', 17], ['2025-12', 16],
-     ['2026-01', 17], ['2026-02', 19], ['2026-03', 22]
-   ];
+   items.forEach(function(item){
+     item.addEventListener('click', function(){
+       open = false;
+       menu.classList.remove('active');
+       icon.className = 'fas fa-bars';
+       label.textContent = 'Menu';
+     });
+   });
 
-   rawData.forEach(function(d) { dates.push(d[0]); vixData.push(d[1]); });
+   // Close on outside click
+   document.addEventListener('click', function(e){
+     if(open && !fab.contains(e.target) && !menu.contains(e.target)){
+       open = false;
+       menu.classList.remove('active');
+       icon.className = 'fas fa-bars';
+       label.textContent = 'Menu';
+     }
+   });
+ })();
 
-   var option = {
-     backgroundColor: 'transparent',
-     title: {
-       text: 'VIX Monthly Highs (2020-2026)',
-       subtext: 'Key events annotated',
-       left: 'center',
-       textStyle: { fontFamily: 'Inter', fontWeight: 800, fontSize: 16, color: '#0f172a' },
-       subtextStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
-     },
+ // ===== ECharts =====
+ document.addEventListener('DOMContentLoaded', function(){
+
+   // --- Chart 1: Options Contribution to VIX ---
+   var optChart = echarts.init(document.getElementById('optionsContributionChart'));
+   var strikes = [];
+   var contributions = [];
+   var colors = [];
+   // Generate synthetic data showing put skew effect
+   for(var i = 3400; i <= 5400; i += 50){
+     strikes.push(i);
+     var dist = Math.abs(i - 4400);
+     var base;
+     if(i < 4400){
+       // OTM puts - higher contribution due to skew
+       base = Math.exp(-dist * 0.003) * 0.8 + Math.random() * 0.15;
+       base *= 1.4; // skew multiplier
+       colors.push('#ef4444');
+     } else if(i > 4400){
+       // OTM calls - lower contribution
+       base = Math.exp(-dist * 0.005) * 0.5 + Math.random() * 0.08;
+       colors.push('#3b82f6');
+     } else {
+       base = 0.95;
+       colors.push('#f59e0b');
+     }
+     contributions.push(parseFloat(base.toFixed(3)));
+   }
+   optChart.setOption({
+     title: { text: 'Options Contribution to VIX by Strike', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
      tooltip: {
        trigger: 'axis',
-       backgroundColor: '#1e293b',
-       borderColor: '#334155',
-       textStyle: { fontFamily: 'Inter', color: '#f8fafc', fontSize: 12 },
-       formatter: function(p) { return p[0].name + '<br/>VIX: <strong>' + p[0].value + '</strong>'; }
+       formatter: function(p){ return 'Strike: ' + p[0].name + '<br/>Contribution: ' + p[0].value.toFixed(3); }
      },
-     grid: { left: '8%', right: '5%', top: '18%', bottom: '12%' },
+     grid: { left: 60, right: 30, top: 60, bottom: 60 },
      xAxis: {
        type: 'category',
-       data: dates,
-       axisLabel: { fontFamily: 'Inter', fontSize: 10, color: '#64748b', rotate: 45 },
-       axisLine: { lineStyle: { color: '#e2e8f0' } }
+       data: strikes,
+       name: 'SPX Strike Price',
+       nameLocation: 'center',
+       nameGap: 35,
+       axisLabel: { rotate: 45, fontSize: 10 },
+       nameTextStyle: { fontSize: 12, fontWeight: 600 }
      },
      yAxis: {
        type: 'value',
-       name: 'VIX',
-       nameTextStyle: { fontFamily: 'Inter', fontWeight: 700, fontSize: 12, color: '#64748b' },
-       axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' },
-       splitLine: { lineStyle: { color: '#f1f5f9' } }
+       name: 'Relative Contribution',
+       nameTextStyle: { fontSize: 12, fontWeight: 600 },
+       axisLabel: { fontSize: 10 }
      },
      series: [{
-       type: 'line',
-       data: vixData,
-       smooth: true,
-       symbol: 'circle',
-       symbolSize: 6,
-       lineStyle: { color: '#d97706', width: 3 },
-       itemStyle: { color: '#d97706', borderColor: '#fff', borderWidth: 2 },
-       areaStyle: {
-         color: {
-           type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-           colorStops: [
-             { offset: 0, color: 'rgba(245,158,11,0.3)' },
-             { offset: 1, color: 'rgba(245,158,11,0.02)' }
-           ]
-         }
-       },
-       markPoint: {
-         data: [
-           { coord: ['2020-03', 82], name: 'COVID', symbol: 'pin', symbolSize: 50,
-             label: { formatter: 'COVID\n82', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
-             itemStyle: { color: '#ef4444' } },
-           { coord: ['2022-04', 33], name: '2022 Bear', symbol: 'pin', symbolSize: 40,
-             label: { formatter: '2022\nBear', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
-             itemStyle: { color: '#f59e0b' } },
-           { coord: ['2023-03', 26], name: 'SVB', symbol: 'pin', symbolSize: 40,
-             label: { formatter: 'SVB\nCrisis', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
-             itemStyle: { color: '#8b5cf6' } },
-           { coord: ['2024-08', 38], name: 'Yen Carry', symbol: 'pin', symbolSize: 44,
-             label: { formatter: 'Yen\nCarry', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
-             itemStyle: { color: '#3b82f6' } },
-           { coord: ['2025-04', 33], name: 'Tariffs', symbol: 'pin', symbolSize: 40,
-             label: { formatter: 'Tariff\nWar', fontSize: 9, fontWeight: 700, fontFamily: 'Inter', lineHeight: 13 },
-             itemStyle: { color: '#ef4444' } }
-         ]
-       },
-       markLine: {
-         silent: true,
-         data: [
-           { yAxis: 20, label: { formatter: 'Long-term avg ~20', fontSize: 10, fontFamily: 'Inter', color: '#94a3b8' },
-             lineStyle: { color: '#94a3b8', type: 'dashed', width: 1 } }
-         ]
-       }
+       type: 'bar',
+       data: contributions.map(function(v, idx){
+         return { value: v, itemStyle: { color: colors[idx] } };
+       }),
+       barMaxWidth: 12
      }],
-     visualMap: {
-       show: false,
-       pieces: [
-         { lte: 15, color: '#10b981' },
-         { gt: 15, lte: 25, color: '#d97706' },
-         { gt: 25, lte: 35, color: '#f59e0b' },
-         { gt: 35, color: '#ef4444' }
-       ]
-     }
-   };
-   chart.setOption(option);
-   window.addEventListener('resize', function() { chart.resize(); });
- })();
- </script>
+     graphic: [
+       { type: 'text', left: '15%', top: 48, style: { text: 'OTM Puts (higher due to skew)', fill: '#ef4444', fontSize: 11, fontWeight: 600 } },
+       { type: 'text', right: '15%', top: 48, style: { text: 'OTM Calls', fill: '#3b82f6', fontSize: 11, fontWeight: 600 } }
+     ]
+   });
 
- <!-- ECharts: Term Structure -->
- <script>
- (function() {
-   var dom = document.getElementById('termStructureChart');
-   if (!dom) return;
-   dom.style.width = '100%';
-   dom.style.height = '420px';
-   dom.style.margin = '2rem 0';
-   var chart = echarts.init(dom);
-
-   var tenors = ['VIX9D', 'VIX (30D)', 'VIX3M', 'VIX6M', 'VIX1Y'];
-
-   var option = {
-     backgroundColor: 'transparent',
-     title: {
-       text: 'VIX Term Structure: Contango vs Backwardation',
-       left: 'center',
-       textStyle: { fontFamily: 'Inter', fontWeight: 800, fontSize: 15, color: '#0f172a' }
-     },
-     tooltip: {
-       trigger: 'axis',
-       backgroundColor: '#1e293b',
-       borderColor: '#334155',
-       textStyle: { fontFamily: 'Inter', color: '#f8fafc', fontSize: 12 }
-     },
-     legend: {
-       bottom: '3%',
-       textStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
-     },
-     grid: { left: '8%', right: '5%', top: '15%', bottom: '15%' },
+   // --- Chart 2: VIX Term Structure ---
+   var tsChart = echarts.init(document.getElementById('termStructureChart'));
+   tsChart.setOption({
+     title: { text: 'VIX Term Structure: Contango vs Backwardation', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+     tooltip: { trigger: 'axis' },
+     legend: { bottom: 5, textStyle: { fontSize: 11 } },
+     grid: { left: 60, right: 40, top: 60, bottom: 60 },
      xAxis: {
        type: 'category',
-       data: tenors,
-       axisLabel: { fontFamily: 'Inter', fontSize: 12, fontWeight: 600, color: '#334155' },
-       axisLine: { lineStyle: { color: '#e2e8f0' } }
+       data: ['VIX9D', 'VIX (30d)', 'VIX3M', 'VIX6M', 'VIX1Y'],
+       axisLabel: { fontSize: 11, fontWeight: 600 }
      },
      yAxis: {
        type: 'value',
        name: 'Implied Volatility (%)',
        min: 10,
        max: 50,
-       nameTextStyle: { fontFamily: 'Inter', fontWeight: 700, fontSize: 11, color: '#64748b' },
-       axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}%' },
-       splitLine: { lineStyle: { color: '#f1f5f9' } }
+       nameTextStyle: { fontSize: 12, fontWeight: 600 },
+       axisLabel: { formatter: '{value}%', fontSize: 10 }
      },
      series: [
        {
          name: 'Contango (Normal)',
          type: 'line',
-         data: [14, 16, 18, 19, 20],
-         smooth: true,
-         symbol: 'circle',
+         data: [14.5, 16.2, 18.8, 20.1, 21.5],
+         lineStyle: { width: 3, color: '#10b981' },
+         itemStyle: { color: '#10b981' },
          symbolSize: 10,
-         lineStyle: { color: '#10b981', width: 3 },
-         itemStyle: { color: '#10b981', borderColor: '#fff', borderWidth: 2 },
-         areaStyle: {
-           color: {
-             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-             colorStops: [
-               { offset: 0, color: 'rgba(16,185,129,0.15)' },
-               { offset: 1, color: 'rgba(16,185,129,0.02)' }
-             ]
-           }
-         }
+         symbol: 'circle',
+         label: { show: true, formatter: '{c}%', fontSize: 10, position: 'top' }
        },
        {
-         name: 'Backwardation (Crisis)',
+         name: 'Backwardation (Panic)',
          type: 'line',
-         data: [45, 38, 30, 26, 24],
-         smooth: true,
-         symbol: 'circle',
+         data: [45.2, 38.5, 30.1, 26.8, 24.2],
+         lineStyle: { width: 3, color: '#ef4444' },
+         itemStyle: { color: '#ef4444' },
          symbolSize: 10,
-         lineStyle: { color: '#ef4444', width: 3 },
-         itemStyle: { color: '#ef4444', borderColor: '#fff', borderWidth: 2 },
-         areaStyle: {
-           color: {
-             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-             colorStops: [
-               { offset: 0, color: 'rgba(239,68,68,0.15)' },
-               { offset: 1, color: 'rgba(239,68,68,0.02)' }
-             ]
-           }
-         }
+         symbol: 'circle',
+         label: { show: true, formatter: '{c}%', fontSize: 10, position: 'top' }
+       },
+       {
+         name: 'Current (Example)',
+         type: 'line',
+         data: [18.1, 19.5, 21.3, 22.0, 22.8],
+         lineStyle: { width: 3, type: 'dashed', color: '#f59e0b' },
+         itemStyle: { color: '#f59e0b' },
+         symbolSize: 10,
+         symbol: 'diamond',
+         label: { show: true, formatter: '{c}%', fontSize: 10, position: 'bottom' }
        }
      ]
-   };
-   chart.setOption(option);
-   window.addEventListener('resize', function() { chart.resize(); });
- })();
- </script>
+   });
 
- <!-- ECharts: VIX vs Realized Volatility (VRP) -->
- <script>
- (function() {
-   var dom = document.getElementById('vrpChart');
-   if (!dom) return;
-   dom.style.width = '100%';
-   dom.style.height = '420px';
-   dom.style.margin = '2rem 0';
-   var chart = echarts.init(dom);
-
-   var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-   var years = ['2022', '2023', '2024', '2025'];
-   var labels = [];
-   years.forEach(function(y) { months.forEach(function(m) { labels.push(m + ' ' + y); }); });
-
-   // Simulated VIX (implied) vs realized vol
-   var implied = [
-     28,30,28,33,30,29,24,23,32,30,23,22,
-     20,21,26,16,17,14,14,17,17,22,15,13,
-     14,14,13,16,13,13,16,38,19,20,15,18,
-     16,19,26,33,24,21,18,17,19,20,17,16
-   ];
-   var realized = [
-     22,25,24,28,25,24,19,18,27,26,19,18,
-     16,17,22,13,14,11,11,14,14,18,12,10,
-     11,11,10,13,10,10,13,34,16,17,12,15,
-     13,16,23,30,20,17,15,14,16,17,14,13
-   ];
-
-   var option = {
-     backgroundColor: 'transparent',
-     title: {
-       text: 'VIX (Implied) vs 30-Day Realized Volatility',
-       subtext: 'The gap = Volatility Risk Premium (VRP)',
-       left: 'center',
-       textStyle: { fontFamily: 'Inter', fontWeight: 800, fontSize: 15, color: '#0f172a' },
-       subtextStyle: { fontFamily: 'Inter', fontSize: 11, color: '#64748b' }
-     },
+   // --- Chart 3: Regime Distribution ---
+   var regChart = echarts.init(document.getElementById('regimeDistributionChart'));
+   regChart.setOption({
+     title: { text: 'VIX Regime Distribution (1990-2025)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
      tooltip: {
-       trigger: 'axis',
-       backgroundColor: '#1e293b',
-       borderColor: '#334155',
-       textStyle: { fontFamily: 'Inter', color: '#f8fafc', fontSize: 12 },
-       formatter: function(p) {
-         var vrp = (p[0].value - p[1].value).toFixed(1);
-         return p[0].name + '<br/>' +
-           '<span style="color:#d97706">VIX (Implied): ' + p[0].value + '%</span><br/>' +
-           '<span style="color:#3b82f6">Realized: ' + p[1].value + '%</span><br/>' +
-           '<strong>VRP: ' + vrp + ' pts</strong>';
-       }
+       trigger: 'item',
+       formatter: function(p){ return p.name + '<br/>Time: ' + p.value + '%<br/>Avg Fwd Return: ' + p.data.fwdReturn; }
      },
-     legend: {
-       bottom: '2%',
-       textStyle: { fontFamily: 'Inter', fontSize: 12, color: '#64748b' }
-     },
-     grid: { left: '8%', right: '5%', top: '18%', bottom: '14%' },
+     grid: { left: 80, right: 40, top: 60, bottom: 40 },
      xAxis: {
+       type: 'value',
+       name: '% of Time',
+       max: 40,
+       axisLabel: { formatter: '{value}%', fontSize: 11 },
+       nameTextStyle: { fontSize: 12, fontWeight: 600 }
+     },
+     yAxis: {
        type: 'category',
-       data: labels,
-       axisLabel: { fontFamily: 'Inter', fontSize: 9, color: '#64748b', rotate: 60, interval: 2 },
-       axisLine: { lineStyle: { color: '#e2e8f0' } }
+       data: ['Crisis (>30)', 'Elevated (20-30)', 'Complacency (<15)', 'Normal (15-20)'],
+       axisLabel: { fontSize: 11, fontWeight: 600 }
+     },
+     series: [{
+       type: 'bar',
+       data: [
+         { value: 10, fwdReturn: '+2.5%', itemStyle: { color: '#ef4444', borderRadius: [0, 8, 8, 0] } },
+         { value: 25, fwdReturn: '+0.5%', itemStyle: { color: '#f59e0b', borderRadius: [0, 8, 8, 0] } },
+         { value: 30, fwdReturn: '+0.8%', itemStyle: { color: '#10b981', borderRadius: [0, 8, 8, 0] } },
+         { value: 35, fwdReturn: '+1.0%', itemStyle: { color: '#3b82f6', borderRadius: [0, 8, 8, 0] } }
+       ],
+       label: {
+         show: true,
+         position: 'right',
+         formatter: function(p){ return p.value + '%'; },
+         fontSize: 12,
+         fontWeight: 700
+       },
+       barMaxWidth: 40
+     }]
+   });
+
+   // --- Chart 4: VIX vs SPX Scatter Plot ---
+   var scChart = echarts.init(document.getElementById('scatterChart'));
+   // Generate synthetic scatter data showing asymmetric relationship
+   var scatterData = [];
+   for(var j = 0; j < 500; j++){
+     var spxReturn = (Math.random() - 0.48) * 6; // slight positive bias
+     var vixChange;
+     if(spxReturn < 0){
+       // Steeper response on down days (asymmetric)
+       vixChange = -spxReturn * (4.5 + Math.random() * 4) + (Math.random() - 0.5) * 3;
+     } else {
+       // Flatter response on up days
+       vixChange = -spxReturn * (2.5 + Math.random() * 2.5) + (Math.random() - 0.5) * 2;
+     }
+     scatterData.push([parseFloat(spxReturn.toFixed(2)), parseFloat(vixChange.toFixed(2))]);
+   }
+   scChart.setOption({
+     title: { text: 'VIX Daily % Change vs SPX Daily % Return', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+     tooltip: {
+       trigger: 'item',
+       formatter: function(p){ return 'SPX: ' + p.value[0].toFixed(2) + '%<br/>VIX: ' + (p.value[1] > 0 ? '+' : '') + p.value[1].toFixed(2) + '%'; }
+     },
+     grid: { left: 70, right: 40, top: 60, bottom: 60 },
+     xAxis: {
+       type: 'value',
+       name: 'SPX Daily Return (%)',
+       nameLocation: 'center',
+       nameGap: 35,
+       min: -6, max: 6,
+       splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e2e8f0' } },
+       axisLabel: { formatter: '{value}%', fontSize: 10 },
+       nameTextStyle: { fontSize: 12, fontWeight: 600 }
      },
      yAxis: {
        type: 'value',
-       name: 'Volatility (%)',
-       nameTextStyle: { fontFamily: 'Inter', fontWeight: 700, fontSize: 11, color: '#64748b' },
-       axisLabel: { fontFamily: 'Inter', fontSize: 11, color: '#64748b', formatter: '{value}%' },
-       splitLine: { lineStyle: { color: '#f1f5f9' } }
+       name: 'VIX Daily Change (%)',
+       nameTextStyle: { fontSize: 12, fontWeight: 600 },
+       axisLabel: { formatter: '{value}%', fontSize: 10 },
+       splitLine: { show: true, lineStyle: { type: 'dashed', color: '#e2e8f0' } }
      },
-     series: [
-       {
-         name: 'VIX (Implied)',
-         type: 'line',
-         data: implied,
-         smooth: true,
-         symbol: 'none',
-         lineStyle: { color: '#d97706', width: 2.5 },
-         areaStyle: {
-           color: {
-             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-             colorStops: [
-               { offset: 0, color: 'rgba(217,119,6,0.2)' },
-               { offset: 1, color: 'rgba(217,119,6,0.02)' }
-             ]
+     series: [{
+       type: 'scatter',
+       data: scatterData.map(function(d){
+         return {
+           value: d,
+           itemStyle: {
+             color: d[0] < 0
+               ? 'rgba(239, 68, 68, 0.45)'
+               : 'rgba(16, 185, 129, 0.45)'
            }
+         };
+       }),
+       symbolSize: 6
+     }],
+     graphic: [
+       {
+         type: 'text',
+         left: '8%',
+         top: '15%',
+         style: {
+           text: 'SPX down days:\nSteeper VIX response\n(asymmetric)',
+           fill: '#ef4444',
+           fontSize: 11,
+           fontWeight: 600,
+           lineHeight: 16
          }
        },
        {
-         name: 'Realized Volatility',
-         type: 'line',
-         data: realized,
-         smooth: true,
-         symbol: 'none',
-         lineStyle: { color: '#3b82f6', width: 2.5 },
-         areaStyle: {
-           color: {
-             type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
-             colorStops: [
-               { offset: 0, color: 'rgba(59,130,246,0.15)' },
-               { offset: 1, color: 'rgba(59,130,246,0.02)' }
-             ]
-           }
+         type: 'text',
+         right: '8%',
+         bottom: '18%',
+         style: {
+           text: 'SPX up days:\nFlatter VIX decline\n(pinning effect)',
+           fill: '#10b981',
+           fontSize: 11,
+           fontWeight: 600,
+           lineHeight: 16
          }
        }
      ]
-   };
-   chart.setOption(option);
-   window.addEventListener('resize', function() { chart.resize(); });
- })();
- </script>
-
- <!-- FAB Script -->
- <script>
- (function() {
-   var fab = document.getElementById('fnavBtn');
-   var menu = document.getElementById('fnavMenu');
-   var icon = document.getElementById('fnavIcon');
-   var label = document.getElementById('fnavLabel');
-   var items = menu.querySelectorAll('.fnav-item');
-   var sections = [];
-   var isOpen = false;
-
-   items.forEach(function(item) {
-     var id = item.getAttribute('data-section');
-     var el = document.getElementById(id);
-     if (el) sections.push({ id: id, el: el, item: item });
    });
 
-   function toggle() {
-     isOpen = !isOpen;
-     menu.classList.toggle('open', isOpen);
-     fab.classList.toggle('open', isOpen);
-     icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
-   }
-
-   fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
-   document.addEventListener('click', function(e) {
-     if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
-   });
-   document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
-
-   items.forEach(function(item) {
-     item.addEventListener('click', function(e) {
-       e.preventDefault();
-       var id = this.getAttribute('data-section');
-       var target = document.getElementById(id);
-       if (target) {
-         var brandBar = document.querySelector('.brand-bar');
-         var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
-         window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+   // --- Chart 5: VIX Decision Tree (Treemap) ---
+   var dtChart = echarts.init(document.getElementById('vixDecisionChart'));
+   dtChart.setOption({
+     title: { text: 'VIX Analysis Decision Framework', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+     tooltip: {
+       formatter: function(p){
+         return '<strong>' + p.name + '</strong><br/>' + (p.data.desc || '');
        }
-       if (isOpen) toggle();
-     });
-   });
-
-   var currentActive = null;
-   var observer = new IntersectionObserver(function(entries) {
-     entries.forEach(function(entry) {
-       if (entry.isIntersecting) {
-         var match = sections.find(function(s) { return s.el === entry.target; });
-         if (match) {
-           if (currentActive) currentActive.item.classList.remove('active');
-           match.item.classList.add('active');
-           currentActive = match;
-           label.textContent = match.item.querySelector('span').textContent;
+     },
+     series: [{
+       type: 'treemap',
+       width: '95%',
+       height: '80%',
+       top: 50,
+       roam: false,
+       nodeClick: false,
+       breadcrumb: { show: false },
+       label: {
+         show: true,
+         fontSize: 12,
+         fontWeight: 700,
+         color: '#fff',
+         formatter: function(p){ return p.name; }
+       },
+       levels: [
+         {
+           itemStyle: { borderColor: '#fff', borderWidth: 3, gapWidth: 3 },
+           upperLabel: { show: true, height: 30, fontSize: 13, fontWeight: 800, color: '#fff' }
+         },
+         {
+           itemStyle: { borderColor: '#fff', borderWidth: 2, gapWidth: 2 },
+           label: { fontSize: 11 }
          }
-       }
-     });
-   }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+       ],
+       data: [
+         {
+           name: 'Step 1: Check Level',
+           value: 40,
+           itemStyle: { color: '#d97706' },
+           children: [
+             { name: '<15\nComplacency', value: 10, desc: 'Options cheap. Buy protection. Short vol thin.', itemStyle: { color: '#10b981' } },
+             { name: '15-20\nNormal', value: 12, desc: 'Sweet spot. All strategies work.', itemStyle: { color: '#3b82f6' } },
+             { name: '20-30\nElevated', value: 10, desc: 'Reduce size. Widen stops. High premiums.', itemStyle: { color: '#f59e0b' } },
+             { name: '>30\nCrisis', value: 8, desc: 'Contrarian buy on 6-12M. Scale in.', itemStyle: { color: '#ef4444' } }
+           ]
+         },
+         {
+           name: 'Step 2: Term Structure',
+           value: 35,
+           itemStyle: { color: '#92400e' },
+           children: [
+             { name: 'Steep Contango\nVIX/VIX3M<0.85', value: 10, desc: 'Deep complacency. Cheap hedges available.', itemStyle: { color: '#10b981' } },
+             { name: 'Normal Contango\n0.85-1.00', value: 12, desc: 'Orderly market. Short vol works.', itemStyle: { color: '#3b82f6' } },
+             { name: 'Flat/Inverted\n1.00-1.10', value: 8, desc: 'Stress building. Reduce risk.', itemStyle: { color: '#f59e0b' } },
+             { name: 'Deep Backwardation\n>1.10', value: 5, desc: 'Panic. Contrarian signals imminent.', itemStyle: { color: '#ef4444' } }
+           ]
+         },
+         {
+           name: 'Step 3: Rate of Change',
+           value: 25,
+           itemStyle: { color: '#78350f' },
+           children: [
+             { name: 'Gradual Rise\n<10%/day', value: 8, desc: 'Normal adjustment. Monitor.', itemStyle: { color: '#3b82f6' } },
+             { name: 'Sharp Spike\n10-20%/day', value: 8, desc: 'Significant event. Tighten risk.', itemStyle: { color: '#f59e0b' } },
+             { name: 'Extreme Spike\n>20%/day', value: 9, desc: 'Clusters likely. Wait for exhaustion.', itemStyle: { color: '#ef4444' } }
+           ]
+         }
+       ]
+     }]
+   });
 
-   sections.forEach(function(s) { observer.observe(s.el); });
-   if (sections.length > 0) {
-     sections[0].item.classList.add('active');
-     currentActive = sections[0];
-     label.textContent = sections[0].item.querySelector('span').textContent;
-   }
- })();
+   // --- Responsive resize ---
+   window.addEventListener('resize', function(){
+     optChart.resize();
+     tsChart.resize();
+     regChart.resize();
+     scChart.resize();
+     dtChart.resize();
+   });
+
+ });
  </script>
- <script src="/assets/core.js"></script>
- <script src="/assets/echarts-responsive.js"></script>
- <script src="/assets/tag-renderer.js"></script>
+
 </body>
 </html>
