@@ -51,36 +51,6 @@
       display: block;
     }
 
-    /* Override flex display from global CSS */
-    .hero-section {
-      text-align: center;
-      padding: 3rem 2rem 2rem;
-      background: linear-gradient(180deg,
-          var(--bg-panel) 0%,
-          var(--bg-app) 100%);
-      color: var(--text-primary);
-    }
-
-    .hero-title {
-      font-size: 2.5rem;
-      font-weight: 800;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg,
-          var(--text-primary) 0%,
-          var(--text-secondary) 100%);
-      background-clip: text;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-subtitle {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      max-width: 700px;
-      margin: 0 auto 1.5rem;
-      line-height: 1.5;
-    }
-
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -91,9 +61,188 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(min(100%, 350px), 1fr));
       gap: 2rem;
-      margin-top: -4rem;
-      /* Overlap hero */
+      margin-top: 0;
       padding-bottom: 4rem;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 220px;
+      background: var(--bg-panel);
+      border-right: 1px solid #e2e8f0;
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      padding: 1.25rem 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 1.25rem 1.25rem;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 800;
+      font-size: 0.95rem;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: -0.02em;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 0.75rem;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 0.75rem;
+    }
+
+    .sidebar-link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      font-family: 'Inter', sans-serif;
+      width: 100%;
+      text-align: left;
+    }
+
+    .sidebar-link:hover {
+      background: #f1f5f9;
+      color: var(--text-primary);
+    }
+
+    .sidebar-link.active {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      color: var(--accent);
+    }
+
+    .sidebar-link i {
+      width: 20px;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+
+    .sidebar-link .sidebar-count {
+      margin-left: auto;
+      background: #f1f5f9;
+      color: var(--text-muted);
+      font-size: 0.65rem;
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    .sidebar-link.active .sidebar-count {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .sidebar-bottom {
+      padding: 0.75rem 1.25rem 0;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .sidebar-search-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .sidebar-search-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sidebar-search-btn kbd {
+      margin-left: auto;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 3px;
+      padding: 0 4px;
+      font-size: 0.65rem;
+      font-family: inherit;
+      color: #94a3b8;
+    }
+
+    .sidebar .lang-select {
+      width: 100%;
+    }
+
+    /* ===== MAIN CONTENT AREA ===== */
+    .main-content {
+      margin-left: 220px;
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR TOGGLE (mobile hamburger) ===== */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 0.75rem;
+      left: 0.75rem;
+      z-index: 300;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+      transition: all 0.15s;
+    }
+
+    .sidebar-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 190;
+      backdrop-filter: blur(2px);
+    }
+
+    .sidebar-overlay.visible {
+      display: block;
     }
 
     .report-card {
@@ -150,17 +299,6 @@
       background: #1d4ed8;
     }
 
-    /* ===== TOP BAR (search + lang) ===== */
-    .top-bar {
-      position: fixed;
-      top: 1.25rem;
-      right: 1.5rem;
-      z-index: 50;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
     .lang-select {
       appearance: none;
       -webkit-appearance: none;
@@ -214,12 +352,12 @@
       white-space: nowrap;
     }
 
-    /* Main tabs — Desktop: classic horizontal | Mobile: icon grid */
+    /* Main tabs — Hidden on desktop (sidebar replaces), bottom bar on mobile */
     .main-tabs {
-      display: flex;
+      display: none;
       gap: 0;
-      margin: 4rem 0 0;
-      border-bottom: 2px solid #e2e8f0;
+      margin: 0;
+      border-bottom: none;
     }
 
     .main-tab {
@@ -280,64 +418,7 @@
       display: block;
     }
 
-    /* Mobile tabs: icon grid */
-    @media (max-width: 768px) {
-      .main-tabs {
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 0.5rem;
-        border-bottom: none;
-        margin: 2rem 0 0;
-        padding: 0.5rem;
-        background: var(--bg-panel);
-        border-radius: 16px;
-        border: var(--border);
-      }
-
-      .main-tab {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        padding: 12px 6px;
-        border-radius: 12px;
-        font-size: 0.65rem;
-        min-height: 64px;
-        transition: all 0.2s;
-      }
-
-      .main-tab .tab-icon {
-        font-size: 1.3rem;
-        margin-right: 0;
-        display: block;
-        line-height: 1;
-      }
-
-      .main-tab .tab-label {
-        display: block;
-        font-size: 0.65rem;
-        letter-spacing: 0.02em;
-      }
-
-      .main-tab .tab-count {
-        display: none;
-      }
-
-      .main-tab.active {
-        background: linear-gradient(135deg, #eff6ff, #dbeafe);
-        color: var(--accent);
-        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
-      }
-
-      .main-tab.active::after {
-        display: none;
-      }
-
-      .main-tab:hover {
-        background: #f1f5f9;
-      }
-    }
+    /* Mobile tabs: handled in bottom nav bar section below */
 
     /* Radar mode switcher */
     .radar-mode {
@@ -525,36 +606,46 @@
 
     footer {
       text-align: center;
-      padding: 2rem;
+      padding: 1rem 2rem;
       color: var(--text-muted);
-      font-size: 0.9rem;
+      font-size: 0.75rem;
+      border-top: 1px solid #e2e8f0;
+      margin-top: 2rem;
+    }
+
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    footer a:hover {
+      color: var(--accent);
     }
 
     .footer-links {
-      display: flex;
-      justify-content: center;
+      display: inline-flex;
       gap: 0.75rem;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0;
       flex-wrap: wrap;
+      justify-content: center;
     }
     .footer-link {
       display: inline-flex;
       align-items: center;
       gap: 0.35rem;
-      padding: 0.35rem 0.75rem;
-      border-radius: 8px;
-      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
       font-weight: 600;
       text-decoration: none;
-      transition: all 0.2s;
-      border: 1px solid var(--border);
+      transition: all 0.15s;
       color: var(--text-muted);
-      background: var(--bg-hover);
+      background: none;
+      border: none;
     }
     .footer-link:hover {
-      color: var(--text-primary);
-      border-color: var(--text-muted);
-      transform: translateY(-1px);
+      color: var(--accent);
     }
 
     /* Ticker analysis cards with logo */
@@ -709,38 +800,6 @@
     }
 
     /* Search Dialog */
-    .search-trigger {
-      background: white;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 8px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 0.85rem;
-      color: #94a3b8;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-      transition: 0.2s;
-    }
-
-    .search-trigger:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-    }
-
-    .search-trigger kbd {
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      padding: 1px 6px;
-      font-size: 0.7rem;
-      font-family: inherit;
-      color: #94a3b8;
-    }
-
     .search-overlay {
       display: none;
       position: fixed;
@@ -903,59 +962,33 @@
 
     /* Responsive Design */
     @media (max-width: 768px) {
-      .search-trigger kbd {
-        display: none;
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 250;
+        width: 260px;
       }
 
-      .search-trigger {
-        padding: 0;
-        font-size: 0;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        justify-content: center;
-        gap: 0;
+      .sidebar.open {
+        transform: translateX(0);
       }
 
-      .search-trigger i {
-        font-size: 1rem;
-        margin: 0;
+      .sidebar-toggle {
+        display: flex;
       }
 
-      .hero-section {
-        padding: 2rem 1rem 1.5rem;
-      }
-
-      .hero-title {
-        font-size: 1.8rem;
-      }
-
-      .hero-subtitle {
-        font-size: 0.95rem;
-        padding: 0 1rem;
+      .main-content {
+        margin-left: 0;
       }
 
       .grid-cards {
         grid-template-columns: 1fr;
         gap: 1.5rem;
-        margin-top: -2rem;
         padding: 0 1rem 2rem;
       }
 
       .container {
         padding: 0 1rem;
-      }
-
-      .top-bar {
-        top: 0.75rem;
-        right: 0.75rem;
-        gap: 6px;
-      }
-
-      .lang-select {
-        font-size: 0.75rem;
-        padding: 6px 26px 6px 8px;
-        border-radius: 8px;
       }
 
       .report-card {
@@ -985,15 +1018,6 @@
     }
 
     @media (max-width: 480px) {
-      .hero-title {
-        font-size: 1.5rem !important;
-      }
-
-      .hero-subtitle {
-        font-size: 0.85rem !important;
-        padding: 0 0.5rem !important;
-      }
-
       .container {
         padding: 0 0.5rem !important;
       }
@@ -1046,7 +1070,6 @@
         font-size: 0.8rem !important;
       }
 
-      /* Petits liens de langue/variantes */
       .report-card .actions div[style*="display:flex"] a {
         font-size: 0.65rem !important;
         padding: 3px 8px !important;
@@ -1059,7 +1082,6 @@
         min-width: 0 !important;
       }
 
-      /* Force container padding pour éviter débordement */
       .report-card .actions {
         margin: 0 -0.25rem;
       }
@@ -1368,35 +1390,10 @@
       font-weight: 700;
     }
 
-    /* ===== DESKTOP: PILL TABS ===== */
+    /* ===== DESKTOP: TABS HIDDEN (sidebar replaces) ===== */
     @media (min-width: 769px) {
       .main-tabs {
-        background: #f1f5f9;
-        border-radius: 14px;
-        padding: 4px;
-        border-bottom: none;
-        display: inline-flex;
-        gap: 2px;
-      }
-
-      .main-tab {
-        border-radius: 10px;
-        padding: 10px 22px;
-        transition: all 0.25s;
-      }
-
-      .main-tab.active {
-        background: #fff;
-        color: var(--accent);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-      }
-
-      .main-tab.active::after {
-        display: none;
-      }
-
-      .main-tab:hover:not(.active) {
-        background: rgba(255, 255, 255, 0.5);
+        display: none !important;
       }
     }
 
@@ -1442,9 +1439,7 @@
         padding: 4px 0;
         padding-bottom: calc(4px + env(safe-area-inset-bottom, 0px));
         box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-        grid-template-columns: unset;
         gap: 0;
-        border: none;
         min-height: auto;
       }
 
@@ -1501,27 +1496,6 @@
 
       footer {
         padding-bottom: 90px;
-      }
-
-      /* Search trigger: circle on mobile */
-      .search-trigger {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 0;
-      }
-
-      .search-trigger i {
-        font-size: 0.9rem;
-        margin: 0;
-      }
-
-      .search-trigger kbd {
-        display: none;
       }
     }
 
@@ -1826,51 +1800,81 @@
       style="display: none; visibility: hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <!-- Top Bar: Language + Search -->
-  <div class="top-bar">
-    <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
-      <option value="all">🌐 All</option>
-      <option value="en">🇺🇸 EN</option>
-      <option value="fr">🇫🇷 FR</option>
-      <option value="ar">🇸🇦 AR</option>
-      <option value="es">🇪🇸 ES</option>
-      <option value="zh">🇨🇳 ZH</option>
-    </select>
-    <button class="search-trigger" onclick="openSearch()">
-      <i class="fa-solid fa-magnifying-glass"></i>
-      <span data-i18n="search.trigger">Rechercher...</span>
-      <kbd>⌘K</kbd>
-    </button>
-  </div>
-
-  <div class="hero-section">
-    <a href="#" class="brand" style="
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
-          margin-bottom: 2rem;
-          text-decoration: none;
-          color: var(--text-primary);
-          font-weight: 800;
-          font-size: 1.2rem;
-        ">
-      <img src="/logo.svg" alt="MW" width="32" height="32">
-      MARKET WATCH
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <a href="/" class="sidebar-brand">
+      <img src="/logo.svg" alt="MW" width="28" height="28">
+      MarketWatch
     </a>
-    <div class="container">
-      <h1 class="hero-title" data-i18n="hero.title">Intelligence Institutionnelle.</h1>
-      <p class="hero-subtitle" data-i18n="hero.sub">
-        Analyses hebdomadaires approfondies sur la Macro, les Actions, Métaux
-        et Cryptos. Clair, actionnable, sans bruit.
-      </p>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-tab="radar" onclick="sidebarSwitchTab('radar')">
+        <i class="fa-solid fa-satellite-dish"></i>
+        <span data-i18n="tab.radar">Radar</span>
+      </button>
+      <button class="sidebar-link" data-tab="weekly" onclick="sidebarSwitchTab('weekly')">
+        <i class="fa-solid fa-calendar-week"></i>
+        <span data-i18n="tab.weekly">Hebdo</span>
+        <span class="sidebar-count" id="sidebarWeeklyCount">10</span>
+      </button>
+      <button class="sidebar-link" data-tab="daily" onclick="sidebarSwitchTab('daily')">
+        <i class="fa-solid fa-sun"></i>
+        <span data-i18n="tab.daily">Daily</span>
+        <span class="sidebar-count" id="sidebarDailyCount">16</span>
+      </button>
+      <button class="sidebar-link" data-tab="analyses" onclick="sidebarSwitchTab('analyses')">
+        <i class="fa-solid fa-chart-column"></i>
+        <span data-i18n="tab.analyses">Analyses</span>
+        <span class="sidebar-count" id="sidebarAnalysesCount"></span>
+      </button>
+      <button class="sidebar-link" data-tab="scanner" onclick="sidebarSwitchTab('scanner')">
+        <i class="fa-solid fa-crosshairs"></i>
+        <span data-i18n="tab.scanner">Scanner</span>
+        <span class="sidebar-count" id="sidebarScannerCount">14</span>
+      </button>
+      <button class="sidebar-link" data-tab="series" onclick="sidebarSwitchTab('series')">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <span data-i18n="tab.series">Séries</span>
+        <span class="sidebar-count" id="sidebarSeriesCount">28</span>
+      </button>
+      <button class="sidebar-link" data-tab="tech" onclick="sidebarSwitchTab('tech')">
+        <i class="fa-solid fa-microchip"></i>
+        <span data-i18n="tab.tech">Tech</span>
+        <span class="sidebar-count" id="sidebarTechCount"></span>
+      </button>
+    </nav>
+    <div class="sidebar-bottom">
+      <button class="sidebar-search-btn" onclick="openSearch()">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <span data-i18n="search.trigger">Search...</span>
+        <kbd>⌘K</kbd>
+      </button>
+      <select class="lang-select" id="langSelect" onchange="setLang(this.value)">
+        <option value="all">🌐 All</option>
+        <option value="en">🇺🇸 EN</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="ar">🇸🇦 AR</option>
+        <option value="es">🇪🇸 ES</option>
+        <option value="zh">🇨🇳 ZH</option>
+      </select>
     </div>
-  </div>
+  </aside>
 
-  <!-- A+ Picks Ticker Tape -->
+  <!-- Mobile sidebar overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- Mobile hamburger toggle -->
+  <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Menu">
+    <i class="fas fa-bars" id="sidebarToggleIcon"></i>
+  </button>
+
+  <!-- Main content area -->
+  <div class="main-content" id="mainContent">
+
+  <!-- A+ Picks Ticker Tape — Always at very top -->
   <iframe src="/widget/?mode=tape&theme=light" id="tickerTape" title="A+ Picks" style="width:100%;height:38px;border:none;display:block;margin-bottom:0"></iframe>
 
   <!-- Promo Banners (skippable) -->
-  <div class="container">
+  <div class="container" style="padding-top: 1rem">
     <a href="/prompt-ia/" class="promo-banner promo-banner-indigo" id="promoBannerPrompt">
       <div class="promo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
       <div class="promo-text">
@@ -1897,7 +1901,7 @@
   </script>
 
   <div class="container">
-    <!-- TABS -->
+    <!-- TABS (mobile bottom bar only — hidden on desktop, sidebar replaces) -->
     <div class="main-tabs">
       <button class="main-tab" data-tab="weekly">
         <i class="fa-solid fa-calendar-week tab-icon"></i>
@@ -2693,14 +2697,14 @@
   </div>
 
   <footer>
-    <div class="footer-links">
-      <a href="/series/quick-start/" class="footer-link"><i class="fa-solid fa-bolt"></i> Quick Start</a>
-      <a href="/prompt-ia/" class="footer-link"><i class="fa-solid fa-wand-magic-sparkles"></i> Prompt IA</a>
-      <a href="/integrations/" class="footer-link"><i class="fa-solid fa-plug"></i> Integrations</a>
-      <a href="/?tab=tech" class="footer-link" onclick="event.preventDefault();switchTab('tech');loadTabContent('tech');window.scrollTo(0,0);"><i class="fa-solid fa-microchip"></i> Tech</a>
-    </div>
-    <p data-i18n="footer.copy">© 2026 Market Watch. Tous droits réservés.</p>
+    <span data-i18n="footer.copy">© 2026 Market Watch</span> ·
+    <a href="/series/quick-start/">Quick Start</a> ·
+    <a href="/prompt-ia/">Prompt IA</a> ·
+    <a href="/integrations/">Integrations</a> ·
+    Not financial advice.
   </footer>
+
+  </div><!-- /.main-content -->
 
   <script>
     function openChart(symbol, name) {
@@ -2857,11 +2861,37 @@
       });
 
     // ===================================================================
+    // SIDEBAR TOGGLE (mobile)
+    // ===================================================================
+    function toggleSidebar() {
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      var icon = document.getElementById('sidebarToggleIcon');
+      var isOpen = sidebar.classList.toggle('open');
+      overlay.classList.toggle('visible', isOpen);
+      icon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+    }
+    function closeSidebar() {
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      var icon = document.getElementById('sidebarToggleIcon');
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+      if (icon) icon.className = 'fas fa-bars';
+    }
+    function sidebarSwitchTab(tab) {
+      switchTab(tab);
+      loadTabContent(tab);
+      closeSidebar();
+    }
+
+    // ===================================================================
     // TABS
     // ===================================================================
     var currentTab = "radar";
     function switchTab(tab) {
       currentTab = tab;
+      // Sync mobile bottom bar
       document.querySelectorAll(".main-tab").forEach(function (t) {
         t.classList.remove("active");
       });
@@ -2872,6 +2902,12 @@
       var panel = document.getElementById("tab-" + tab);
       if (btn) btn.classList.add("active");
       if (panel) panel.classList.add("active");
+      // Sync sidebar links
+      document.querySelectorAll(".sidebar-link").forEach(function (l) {
+        l.classList.remove("active");
+      });
+      var sideLink = document.querySelector('.sidebar-link[data-tab="' + tab + '"]');
+      if (sideLink) sideLink.classList.add("active");
       var url = new URL(window.location);
       if (tab === "radar") {
         url.searchParams.delete("tab");
@@ -5096,6 +5132,8 @@
         var noTagFilter = (typeof activeTags === 'undefined' || !activeTags.length);
         if (noLangFilter && noTagFilter) {
           countEl.textContent = state.data.length;
+          var sc = document.getElementById('sidebar' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Count');
+          if (sc) sc.textContent = state.data.length;
           return;
         }
 
@@ -5118,6 +5156,9 @@
           count++;
         });
         countEl.textContent = count;
+        // Sync sidebar count
+        var sidebarCountEl = document.getElementById('sidebar' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Count');
+        if (sidebarCountEl) sidebarCountEl.textContent = countEl.textContent;
       });
     }
 
