@@ -3956,82 +3956,52 @@
     // =========== MODE 1: SIGNAL BOARD ===========
     function renderSignals(el) {
       var items = RD.items.slice().sort(function(a,b) { return (b.importance||0) - (a.importance||0); });
-      var catIcons = {risk:'fa-skull-crossbones',event:'fa-bolt',opportunity:'fa-rocket',regime:'fa-shield-halved'};
 
       var h = '<style>';
-      h += '.rs-feed{margin:0 auto}';
-      h += '.rs-tick{margin-bottom:0.35rem}';
-      h += '.rs-pri{border-radius:10px;padding:0.7rem 0.85rem;border:1px solid #e2e8f0;background:#fff;position:relative;overflow:hidden;transition:transform 0.15s,box-shadow 0.15s}';
-      h += '.rs-pri:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,0.06)}';
-      h += '.rs-pri-head{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem}';
-      h += '.rs-pri-badge{font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;padding:2px 7px;border-radius:4px;flex-shrink:0}';
-      h += '.rs-pri-imp{font-family:"JetBrains Mono",monospace;font-size:1.1rem;font-weight:800;opacity:0.1;position:absolute;top:0.55rem;right:0.75rem;line-height:1}';
-      h += '.rs-pri-label{font-family:"DM Sans",sans-serif;font-size:0.88rem;font-weight:800;line-height:1.2;display:flex;align-items:center;gap:0.3rem}';
-      h += '.rs-pri-detail{font-family:"DM Sans",sans-serif;font-size:0.73rem;line-height:1.4;opacity:0.7;margin-top:0.15rem;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}';
-      h += '.rs-pri-footer{display:flex;align-items:center;gap:0.6rem;margin-top:0.35rem;font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:700;opacity:0.4;text-transform:uppercase;letter-spacing:0.04em}';
-      h += '.rs-cmp{display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.6rem;border-radius:8px;transition:background 0.12s;cursor:default}';
-      h += 'a.rs-cmp{text-decoration:none;cursor:pointer}';
-      h += 'a.rs-cmp:hover{background:#f8fafc}';
-      h += '.rs-cmp-cat{width:8px;height:8px;border-radius:50%;flex-shrink:0}';
-      h += '.rs-cmp-label{font-family:"DM Sans",sans-serif;font-size:0.78rem;font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}';
-      h += '.rs-cmp-bar{width:36px;height:3px;border-radius:2px;background:#f1f5f9;flex-shrink:0;overflow:hidden}';
-      h += '.rs-cmp-bar-fill{height:100%;border-radius:2px}';
-      h += '.rs-cmp-date{font-family:"JetBrains Mono",monospace;font-size:0.55rem;font-weight:600;opacity:0.35;flex-shrink:0}';
-      h += '.rs-cmp-arrow{font-size:0.55rem;opacity:0;transition:opacity 0.12s;flex-shrink:0}';
-      h += 'a.rs-cmp:hover .rs-cmp-arrow{opacity:0.6}';
+      h += '.rs-list{display:flex;flex-direction:column;gap:1px;background:#e2e8f0;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}';
+      h += '.rs-row{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 1rem;background:#fff;text-decoration:none;color:#0f172a;transition:background 0.12s}';
+      h += 'a.rs-row:hover{background:#f8fafc}';
+      h += '.rs-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}';
+      h += '.rs-cat{font-size:0.55rem;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:2px 6px;border-radius:4px;flex-shrink:0;white-space:nowrap}';
+      h += '.rs-label{flex:1;min-width:0;font-size:0.85rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}';
+      h += '.rs-detail{flex:2;min-width:0;font-size:0.75rem;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}';
+      h += '.rs-imp{font-family:"JetBrains Mono",monospace;font-size:0.65rem;font-weight:700;width:20px;text-align:center;flex-shrink:0}';
+      h += '.rs-bar{width:48px;height:4px;border-radius:2px;background:#f1f5f9;flex-shrink:0;overflow:hidden}';
+      h += '.rs-bar-fill{height:100%;border-radius:2px}';
+      h += '.rs-date{font-size:0.65rem;color:#94a3b8;flex-shrink:0;white-space:nowrap}';
+      h += '.rs-arrow{font-size:0.55rem;color:#94a3b8;flex-shrink:0;opacity:0;transition:opacity 0.12s}';
+      h += 'a.rs-row:hover .rs-arrow{opacity:1}';
+      h += '@media(max-width:768px){.rs-detail{display:none}.rs-bar{display:none}}';
       h += '</style>';
 
-      // Feed header
-      h += '<div style="margin:0 auto 0.5rem;display:flex;align-items:center;justify-content:space-between;">';
+      // Header
+      h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;">';
       h += '<div style="display:flex;align-items:center;gap:0.5rem;">';
       h += '<div style="width:6px;height:6px;border-radius:50%;background:#10b981;animation:pulse-dot 2s infinite;"></div>';
-      h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.65rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-muted);">PRIORITY FEED</span>';
+      h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.65rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#64748b;">SIGNALS</span>';
       h += '</div>';
-      h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.6rem;font-weight:600;color:var(--text-muted);opacity:0.5;">'+items.length+' SIGNALS</span>';
+      h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.6rem;font-weight:600;color:#94a3b8;">'+items.length+' items</span>';
       h += '</div>';
 
-      h += '<div class="rs-feed">';
+      h += '<div class="rs-list">';
 
-      items.forEach(function(it, idx) {
+      items.forEach(function(it) {
         var c = C[it.category] || C.regime;
-        var icon = catIcons[it.category] || c.icon;
         var imp = it.importance || 5;
-        var isPriority = imp >= 9;
         var bar = Math.min(100, imp * 10);
+        var tag = it.link ? 'a' : 'div';
+        var href = it.link ? ' href="'+it.link+'"' : '';
 
-        h += '<div class="rs-tick">';
-
-        if (isPriority) {
-          var tag = it.link ? 'a' : 'div';
-          var href = it.link ? ' href="'+it.link+'"' : '';
-          h += '<'+tag+' class="rs-pri"'+href+' style="border-color:'+c.border+';color:'+c.text+';border-left:3px solid '+c.fill+';">';
-          h += '<div class="rs-pri-imp" style="color:'+c.fill+';">'+imp+'</div>';
-          h += '<div class="rs-pri-head">';
-          h += '<span class="rs-pri-badge" style="background:'+c.bg+';color:'+c.fill+';border:1px solid '+c.border+';">'+c.label.toUpperCase()+'</span>';
-          if (it.date) h += '<span style="font-family:\'JetBrains Mono\',monospace;font-size:0.55rem;font-weight:600;opacity:0.35;">'+it.date+'</span>';
-          h += '</div>';
-          h += '<div class="rs-pri-label" style="color:'+c.text+';">'+it.label;
-          if (it.link) h += ' <i class="fas fa-arrow-up-right-from-square" style="font-size:0.55rem;color:'+c.fill+';opacity:0.45;"></i>';
-          h += '</div>';
-          if (it.detail) h += '<div class="rs-pri-detail" style="color:'+c.text+';">'+it.detail+'</div>';
-          h += '<div class="rs-pri-footer" style="color:'+c.text+';">';
-          h += '<span>IMP '+imp+'/10</span>';
-          if (it.link_label) h += '<span>'+it.link_label+'</span>';
-          h += '</div>';
-          h += '</'+tag+'>';
-        } else {
-          var tag2 = it.link ? 'a' : 'div';
-          var href2 = it.link ? ' href="'+it.link+'"' : '';
-          h += '<'+tag2+' class="rs-cmp"'+href2+' style="color:'+c.text+';">';
-          h += '<div class="rs-cmp-cat" style="background:'+c.fill+';"></div>';
-          h += '<span class="rs-cmp-label">'+it.label+'</span>';
-          h += '<div class="rs-cmp-bar"><div class="rs-cmp-bar-fill" style="width:'+bar+'%;background:'+c.fill+';"></div></div>';
-          if (it.date) h += '<span class="rs-cmp-date">'+it.date.slice(5)+'</span>';
-          if (it.link) h += '<i class="fas fa-chevron-right rs-cmp-arrow" style="color:'+c.fill+';"></i>';
-          h += '</'+tag2+'>';
-        }
-
-        h += '</div>';
+        h += '<'+tag+' class="rs-row"'+href+'>';
+        h += '<div class="rs-dot" style="background:'+c.fill+';box-shadow:0 0 4px '+c.glow+';"></div>';
+        h += '<span class="rs-cat" style="background:'+c.bg+';color:'+c.fill+';border:1px solid '+c.border+';">'+c.label+'</span>';
+        h += '<span class="rs-label">'+it.label+'</span>';
+        if (it.detail) h += '<span class="rs-detail">'+it.detail+'</span>';
+        h += '<div class="rs-bar"><div class="rs-bar-fill" style="width:'+bar+'%;background:'+c.fill+';"></div></div>';
+        h += '<span class="rs-imp" style="color:'+c.fill+';">'+imp+'</span>';
+        if (it.date) h += '<span class="rs-date">'+it.date.slice(5)+'</span>';
+        if (it.link) h += '<i class="fas fa-chevron-right rs-arrow"></i>';
+        h += '</'+tag+'>';
       });
 
       h += '</div>';
