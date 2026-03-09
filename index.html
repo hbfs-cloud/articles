@@ -337,9 +337,71 @@
       }
     }
 
+    .filter-collapse {
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    .filter-toggle-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #475569;
+      cursor: pointer;
+      list-style: none;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .filter-toggle-btn::-webkit-details-marker { display: none; }
+
+    .filter-toggle-btn:hover {
+      border-color: #3b82f6;
+      color: #1e293b;
+    }
+
+    .filter-collapse[open] .filter-toggle-btn {
+      border-color: #3b82f6;
+      color: #1e293b;
+      background: #eff6ff;
+    }
+
+    .filter-chevron {
+      font-size: 0.65rem;
+      transition: transform 0.2s;
+    }
+
+    .filter-collapse[open] .filter-chevron {
+      transform: rotate(180deg);
+    }
+
+    .filter-active-count {
+      display: none;
+      background: #3b82f6;
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 10px;
+      min-width: 18px;
+      text-align: center;
+    }
+
+    .filter-active-count.visible {
+      display: inline-block;
+    }
+
     .filter-bar {
-      margin: 1.5rem 0;
-      padding: 0 0.5rem;
+      margin: 1rem 0 0;
+      padding: 1rem;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
     }
 
     #tab-analyses .grid-cards {
@@ -1955,6 +2017,13 @@
         </p>
       </div>
 
+      <details class="filter-collapse" id="analysesFilterToggle">
+        <summary class="filter-toggle-btn">
+          <i class="fa-solid fa-sliders"></i>
+          <span data-i18n="filter.label">Filters</span>
+          <span class="filter-active-count" id="filterActiveCount"></span>
+          <i class="fa-solid fa-chevron-down filter-chevron"></i>
+        </summary>
       <div class="filter-bar">
         <div class="filter-group">
           <div class="filter-chips" id="gradeFilter">
@@ -2030,6 +2099,7 @@
           </div>
         </div>
       </div>
+      </details>
 
       <div class="grid-cards">
         <!-- No Results Placeholder -->
@@ -2999,6 +3069,18 @@
 
       updateContextBar();
       if (typeof updateTabCounts === 'function') updateTabCounts();
+
+      // Update active filter count badge
+      var activeCount = 0;
+      if (gradeFilter !== 'all') activeCount++;
+      if (confFilter !== 'all') activeCount++;
+      if (maxDays !== 30) activeCount++;
+      if (activeTags.length) activeCount += activeTags.length;
+      var badge = document.getElementById('filterActiveCount');
+      if (badge) {
+        badge.textContent = activeCount;
+        badge.classList.toggle('visible', activeCount > 0);
+      }
     }
 
     // Helper to parse dates like "4 Mars 2026" or "25 Février 2026"
@@ -3645,6 +3727,11 @@
         }
       }
       applyAllFilters();
+      // Auto-open filter panel if filters are active from URL
+      if (urlGrade || urlTags) {
+        var toggle = document.getElementById('analysesFilterToggle');
+        if (toggle) toggle.open = true;
+      }
     })();
   </script>
 
