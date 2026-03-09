@@ -21,6 +21,8 @@
     '.mw-sidebar-link:hover{background:#f1f5f9;color:#0f172a}',
     '.mw-sidebar-link.active{background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#2563eb}',
     '.mw-sidebar-link i{width:20px;text-align:center;font-size:0.95rem}',
+    '.mw-sidebar-count{margin-left:auto;background:#f1f5f9;color:#64748b;font-size:0.65rem;padding:1px 6px;border-radius:8px}',
+    '.mw-sidebar-link.active .mw-sidebar-count{background:#2563eb;color:#fff}',
     '.mw-sidebar-bottom{padding:0.75rem 0.75rem 0;border-top:1px solid #e2e8f0;margin-top:0.5rem;display:flex;flex-direction:column;gap:2px}',
     '.mw-sidebar-extra{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;font-size:0.8rem;font-weight:600;color:#64748b;text-decoration:none;transition:all 0.15s}',
     '.mw-sidebar-extra:hover{background:#f1f5f9;color:#0f172a}',
@@ -74,7 +76,8 @@
   var navLinks = tabs.map(function (t) {
     var active = t.tab === currentTab ? ' active' : '';
     var href = '/' + (t.tab === 'radar' ? '' : '?tab=' + t.tab);
-    return '<a href="' + href + '" class="mw-sidebar-link' + active + '"><i class="fa-solid ' + t.icon + '"></i><span>' + t.label + '</span></a>';
+    var countSpan = t.tab !== 'radar' ? '<span class="mw-sidebar-count" id="mwCount-' + t.tab + '"></span>' : '';
+    return '<a href="' + href + '" class="mw-sidebar-link' + active + '"><i class="fa-solid ' + t.icon + '"></i><span>' + t.label + '</span>' + countSpan + '</a>';
   }).join('');
 
   var sidebarHTML = [
@@ -127,5 +130,17 @@
     if (e.key === 'Escape' && sidebar.classList.contains('open')) {
       closeSidebar();
     }
+  });
+
+  // === Fetch tab counts ===
+  var countTabs = ['weekly', 'daily', 'analyses', 'scanner', 'series', 'tech'];
+  countTabs.forEach(function (tab) {
+    fetch('/data/' + tab + '.json?v=' + Date.now())
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        var el = document.getElementById('mwCount-' + tab);
+        if (el && data && data.length) el.textContent = data.length;
+      })
+      .catch(function () { /* silent */ });
   });
 })();
