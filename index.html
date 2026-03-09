@@ -47,23 +47,6 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <script src="/data/search_data.js"></script>
   <style>
-    /* ===== SIDEBAR LAYOUT FIX — forced here to override any cascade issue ===== */
-    #sidebar {
-      display: grid !important;
-      grid-template-rows: auto auto 1fr auto !important;
-      height: 100% !important;
-    }
-    #sidebar > .sidebar-nav {
-      overflow-y: auto !important;
-      min-height: 0 !important;
-    }
-    @media (max-width: 768px) {
-      #sidebar {
-        height: 100vh !important;
-        height: 100dvh !important;
-      }
-    }
-
     /* Landing Specific Overrides */
     body {
       display: block;
@@ -105,7 +88,6 @@
 
     /* ===== MAIN CONTENT AREA ===== */
     .main-content {
-      margin-left: 260px;
       min-height: 100vh;
       width: auto;
       flex: none;
@@ -1535,118 +1517,128 @@
       style="display: none; visibility: hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
 
-  <!-- Sidebar -->
-  <aside class="sidebar" id="sidebar">
-    <a href="/" class="sidebar-brand">
-      <img src="/logo.svg" alt="MW" width="24" height="24">
-      Market Watch
-    </a>
-    <div class="sidebar-top">
-      <button class="sidebar-search-btn" onclick="openSearch()">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <span data-i18n="search.trigger">Search...</span>
-        <kbd>⌘K</kbd>
-      </button>
-      <select class="sidebar-lang" id="langSelect" onchange="setLang(this.value)">
-        <option value="all">🌐 All</option>
-        <option value="en">🇺🇸 EN</option>
-        <option value="fr">🇫🇷 FR</option>
-        <option value="ar">🇸🇦 AR</option>
-        <option value="es">🇪🇸 ES</option>
-        <option value="zh">🇨🇳 ZH</option>
-      </select>
-    </div>
-    <nav class="sidebar-nav">
-      <a href="javascript:void(0)" class="sidebar-link active" data-tab="radar" onclick="sidebarSwitchTab('radar')">
-        <i class="fa-solid fa-satellite-dish"></i>
-        <span data-i18n="tab.radar">Radar</span>
-      </a>
-      <a href="javascript:void(0)" class="sidebar-link" data-tab="weekly" onclick="sidebarSwitchTab('weekly')">
-        <i class="fa-solid fa-calendar-week"></i>
-        <span data-i18n="tab.weekly">Hebdo</span>
-        <span class="sidebar-count" id="sidebarWeeklyCount">10</span>
-      </a>
-      <a href="javascript:void(0)" class="sidebar-link" data-tab="daily" onclick="sidebarSwitchTab('daily')">
-        <i class="fa-solid fa-sun"></i>
-        <span data-i18n="tab.daily">Daily</span>
-        <span class="sidebar-count" id="sidebarDailyCount">16</span>
-      </a>
-      <a href="javascript:void(0)" class="sidebar-link" data-tab="analyses" onclick="sidebarSwitchTab('analyses')">
-        <i class="fa-solid fa-chart-column"></i>
-        <span data-i18n="tab.analyses">Analyses</span>
-        <span class="sidebar-count" id="sidebarAnalysesCount"></span>
-      </a>
-      <a href="javascript:void(0)" class="sidebar-link" data-tab="scanner" onclick="sidebarSwitchTab('scanner')">
-        <i class="fa-solid fa-crosshairs"></i>
-        <span data-i18n="tab.scanner">Scanner</span>
-        <span class="sidebar-count" id="sidebarScannerCount">14</span>
-      </a>
-      <a href="javascript:void(0)" class="sidebar-link" data-tab="series" onclick="sidebarSwitchTab('series')">
-        <i class="fa-solid fa-graduation-cap"></i>
-        <span data-i18n="tab.series">Séries</span>
-        <span class="sidebar-count" id="sidebarSeriesCount">28</span>
-      </a>
-      <a href="javascript:void(0)" class="sidebar-link" data-tab="tech" onclick="sidebarSwitchTab('tech')">
-        <i class="fa-solid fa-microchip"></i>
-        <span data-i18n="tab.tech">Tech</span>
-        <span class="sidebar-count" id="sidebarTechCount">18</span>
-      </a>
-    </nav>
-    <div class="sidebar-bottom">
-      <a href="/prompt-ia/" class="sidebar-link sidebar-extra">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span>Prompt IA</span>
-      </a>
-      <a href="/integrations/" class="sidebar-link sidebar-extra">
-        <i class="fa-solid fa-plug"></i>
-        <span>Integrations</span>
-      </a>
-      <a href="/series/quick-start/" class="sidebar-link sidebar-extra">
-        <i class="fa-solid fa-graduation-cap"></i>
-        <span data-i18n="sidebar.start">Débuter en Bourse</span>
-      </a>
-    </div>
-  </aside>
-  <div class="sidebar-overlay" id="sidebarOverlay"></div>
-  <button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu">
-    <i class="fas fa-bars" id="sidebarToggleIcon"></i>
-  </button>
-
-  <!-- Sidebar toggle logic — isolated script so it can't break from other JS errors -->
+  <!-- Sidebar — built by JS to be identical to sidebar.js on article pages -->
   <script>
-    (function() {
-      var sidebar = document.getElementById('sidebar');
-      var overlay = document.getElementById('sidebarOverlay');
-      var toggleBtn = document.getElementById('sidebarToggle');
-      var icon = document.getElementById('sidebarToggleIcon');
+  (function() {
+    // Build sidebar HTML — same structure as sidebar.js
+    var tabs = [
+      { tab: 'radar', icon: 'fa-satellite-dish', label: 'Radar' },
+      { tab: 'weekly', icon: 'fa-calendar-week', label: 'Hebdo' },
+      { tab: 'daily', icon: 'fa-sun', label: 'Daily' },
+      { tab: 'analyses', icon: 'fa-chart-column', label: 'Analyses' },
+      { tab: 'scanner', icon: 'fa-crosshairs', label: 'Scanner' },
+      { tab: 'series', icon: 'fa-graduation-cap', label: 'Séries' },
+      { tab: 'tech', icon: 'fa-microchip', label: 'Tech' }
+    ];
 
-      function closeSidebar() {
-        sidebar.classList.remove('open');
-        overlay.classList.remove('visible');
-        if (icon) icon.className = 'fas fa-bars';
-      }
+    var navLinks = tabs.map(function(tb) {
+      var active = tb.tab === 'radar' ? ' active' : '';
+      var countSpan = tb.tab !== 'radar' ? '<span class="sidebar-count" id="sidebarCount-' + tb.tab + '"></span>' : '';
+      return '<a href="javascript:void(0)" class="sidebar-link' + active + '" data-tab="' + tb.tab + '">' +
+        '<i class="fa-solid ' + tb.icon + '"></i>' +
+        '<span data-i18n="tab.' + tb.tab + '">' + tb.label + '</span>' +
+        countSpan + '</a>';
+    }).join('');
 
-      function toggleSidebar() {
-        var isOpen = sidebar.classList.toggle('open');
-        overlay.classList.toggle('visible', isOpen);
-        icon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
-      }
+    var html =
+      '<aside class="sidebar open" id="sidebar">' +
+      '<a href="/" class="sidebar-brand"><img src="/logo.svg" alt="MW" width="24" height="24">Market Watch</a>' +
+      '<div class="sidebar-top">' +
+        '<button class="sidebar-search-btn" id="sidebarSearchBtn"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="search.trigger">Search...</span><kbd>\u2318K</kbd></button>' +
+        '<select class="sidebar-lang" id="langSelect">' +
+          '<option value="all">\ud83c\udf10 All</option>' +
+          '<option value="en">\ud83c\uddfa\ud83c\uddf8 EN</option>' +
+          '<option value="fr">\ud83c\uddeb\ud83c\uddf7 FR</option>' +
+          '<option value="ar">\ud83c\uddf8\ud83c\udde6 AR</option>' +
+          '<option value="es">\ud83c\uddea\ud83c\uddf8 ES</option>' +
+          '<option value="zh">\ud83c\udde8\ud83c\uddf3 ZH</option>' +
+        '</select>' +
+      '</div>' +
+      '<nav class="sidebar-nav">' + navLinks + '</nav>' +
+      '<div class="sidebar-bottom">' +
+        '<a href="/prompt-ia/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-wand-magic-sparkles"></i><span>Prompt IA</span></a>' +
+        '<a href="/integrations/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-plug"></i><span>Integrations</span></a>' +
+        '<a href="/series/quick-start/" class="sidebar-link sidebar-extra"><i class="fa-solid fa-graduation-cap"></i><span data-i18n="sidebar.start">Débuter en Bourse</span></a>' +
+      '</div>' +
+      '</aside>' +
+      '<div class="sidebar-overlay" id="sidebarOverlay"></div>' +
+      '<button class="sidebar-toggle" id="sidebarToggle" aria-label="Menu"><i class="fas fa-bars" id="sidebarToggleIcon"></i></button>';
 
-      // Expose globally for onclick handlers
-      window.toggleSidebar = toggleSidebar;
-      window.closeSidebar = closeSidebar;
-      window.sidebarSwitchTab = function(tab) {
+    document.body.insertAdjacentHTML('afterbegin', html);
+    document.body.classList.add('has-sidebar');
+
+    // On mobile, close sidebar initially
+    var sidebar = document.getElementById('sidebar');
+    if (window.innerWidth <= 768) {
+      sidebar.classList.remove('open');
+    }
+
+    // Toggle logic
+    var overlay = document.getElementById('sidebarOverlay');
+    var toggleBtn = document.getElementById('sidebarToggle');
+    var icon = document.getElementById('sidebarToggleIcon');
+
+    function closeSidebar() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+      if (icon) icon.className = 'fas fa-bars';
+    }
+
+    function toggleSidebar() {
+      var isOpen = sidebar.classList.toggle('open');
+      overlay.classList.toggle('visible', isOpen);
+      icon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+    }
+
+    window.toggleSidebar = toggleSidebar;
+    window.closeSidebar = closeSidebar;
+
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+    if (overlay) overlay.addEventListener('click', closeSidebar);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar();
+    });
+
+    // Nav tab clicks — wire to switchTab when available
+    document.querySelectorAll('#sidebar .sidebar-link[data-tab]').forEach(function(link) {
+      link.addEventListener('click', function() {
+        var tab = this.getAttribute('data-tab');
         if (typeof switchTab === 'function') switchTab(tab);
         if (typeof loadTabContent === 'function') loadTabContent(tab);
         closeSidebar();
-      };
-
-      if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
-      if (overlay) overlay.addEventListener('click', closeSidebar);
-      document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && sidebar.classList.contains('open')) closeSidebar();
       });
-    })();
+    });
+
+    // Search button
+    var searchBtn = document.getElementById('sidebarSearchBtn');
+    if (searchBtn) searchBtn.addEventListener('click', function() {
+      if (typeof openSearch === 'function') openSearch();
+    });
+
+    // Lang select
+    var langSel = document.getElementById('langSelect');
+    if (langSel) langSel.addEventListener('change', function() {
+      if (typeof setLang === 'function') setLang(this.value);
+    });
+
+    // Expose sidebarSwitchTab globally for any remaining callers
+    window.sidebarSwitchTab = function(tab) {
+      if (typeof switchTab === 'function') switchTab(tab);
+      if (typeof loadTabContent === 'function') loadTabContent(tab);
+      closeSidebar();
+    };
+
+    // Fetch tab counts
+    ['weekly', 'daily', 'analyses', 'scanner', 'series', 'tech'].forEach(function(tab) {
+      fetch('/data/' + tab + '.json?v=' + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var el = document.getElementById('sidebarCount-' + tab);
+          if (el && data && data.length) el.textContent = data.length;
+        })
+        .catch(function() {});
+    });
+  })();
   </script>
 
   <!-- Main content area -->
@@ -4939,7 +4931,7 @@
         var noTagFilter = (typeof activeTags === 'undefined' || !activeTags.length);
         if (noLangFilter && noTagFilter) {
           countEl.textContent = state.data.length;
-          var sc = document.getElementById('sidebar' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Count');
+          var sc = document.getElementById('sidebarCount-' + tab);
           if (sc) sc.textContent = state.data.length;
           return;
         }
@@ -4964,7 +4956,7 @@
         });
         countEl.textContent = count;
         // Sync sidebar count
-        var sidebarCountEl = document.getElementById('sidebar' + tab.charAt(0).toUpperCase() + tab.slice(1) + 'Count');
+        var sidebarCountEl = document.getElementById('sidebarCount-' + tab);
         if (sidebarCountEl) sidebarCountEl.textContent = countEl.textContent;
       });
     }
