@@ -339,6 +339,15 @@
       }
     }
 
+    /* Radar mode switcher */
+    .radar-mode {
+      padding: 8px 14px; border: 1px solid var(--border); background: var(--bg-panel);
+      border-radius: 8px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem;
+      transition: all 0.15s;
+    }
+    .radar-mode:hover { border-color: var(--accent); color: var(--accent); }
+    .radar-mode.active { background: var(--accent); color: white; border-color: var(--accent); }
+
     .filter-collapse {
       margin: 1.5rem 0 0.5rem;
     }
@@ -2377,33 +2386,23 @@
     <!-- TAB: RADAR -->
     <!-- ============================================================ -->
     <div class="tab-panel" id="tab-radar">
-      <div style="margin: 1.5rem 0 1rem; text-align: center">
-        <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
-          <i class="fa-solid fa-satellite-dish" style="color: #50b4ee; margin-right: 8px"></i><span data-i18n="panel.radar.title">Radar — Market Intelligence</span>
-        </h2>
-        <p style="color: var(--text-muted); margin: 0.5rem 0 0; font-size: 0.95rem;" data-i18n="panel.radar.sub">Black swans, risks, catalysts, earnings, and opportunities — one glance.</p>
+      <!-- Status bar -->
+      <div id="radarStatus" style="display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;margin:1rem 0 0.75rem;"></div>
+
+      <!-- Mode switcher -->
+      <div style="display:flex;justify-content:center;gap:0.25rem;margin-bottom:1rem;">
+        <button class="radar-mode active" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i></button>
+        <button class="radar-mode" data-mode="board" title="Dashboard"><i class="fas fa-columns"></i></button>
+        <button class="radar-mode" data-mode="matrix" title="Threat Matrix"><i class="fas fa-border-all"></i></button>
+        <button class="radar-mode" data-mode="timeline" title="Timeline"><i class="fas fa-timeline"></i></button>
+        <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i></button>
       </div>
 
-      <!-- Radar Canvas -->
-      <div id="radarContainer" style="position:relative;max-width:700px;margin:0 auto;aspect-ratio:1/1;">
-        <canvas id="radarCanvas" style="width:100%;height:100%;display:block;border-radius:50%;"></canvas>
-        <!-- Tooltip -->
-        <div id="radarTooltip" style="display:none;position:absolute;background:#0f172a;color:#e2e8f0;border:1px solid #334155;border-radius:10px;padding:10px 14px;font-size:0.8rem;max-width:260px;pointer-events:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.4);line-height:1.4;"></div>
-      </div>
-
-      <!-- Legend -->
-      <div style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;margin:1rem 0 0.5rem;font-size:0.8rem;color:var(--text-muted);">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.risks">Risks / Black Swans</span></span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.events">Events / Earnings</span></span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.opps">Opportunities</span></span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;margin-right:4px;vertical-align:middle;"></span> <span data-i18n="radar.legend.regime">Regime / Sentiment</span></span>
-      </div>
-
-      <!-- Radar info panels (populated from radar.json) -->
-      <div id="radarPanels" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin-top:1.5rem;"></div>
+      <!-- Render area -->
+      <div id="radarView" style="min-height:400px;"></div>
 
       <!-- Last update -->
-      <p id="radarUpdated" style="text-align:center;font-size:0.75rem;color:var(--text-muted);margin-top:1rem;"></p>
+      <p id="radarUpdated" style="text-align:center;font-size:0.7rem;color:var(--text-muted);margin:1rem 0 0;"></p>
     </div>
     <!-- /tab-radar -->
 
@@ -4134,324 +4133,375 @@
   </script>
 
   <!-- ============================================================ -->
-  <!-- RADAR ENGINE -->
+  <!-- RADAR ENGINE v3 — 5 modes -->
   <!-- ============================================================ -->
   <script>
   (function() {
-    var radarData = null;
-    var radarAngle = 0;
-    var radarAnim = null;
-    var blips = [];
-    var hoveredBlip = null;
-    var canvas, ctx, cw, ch, cx, cy, radius;
+    var RD = null; // radar data
+    var currentMode = localStorage.getItem('mw-radar-mode') || 'signals';
+    var radarAngle = 0, radarAnim = null, blips = [], hoveredBlip = null;
+    var canvas, ctx, cw, ch, cx, cy, radius, dpr = 1;
 
-    // Category colors
-    var CAT_COLORS = {
-      risk:   { fill: '#ef4444', glow: 'rgba(239,68,68,0.5)' },
-      event:  { fill: '#f59e0b', glow: 'rgba(245,158,11,0.5)' },
-      opportunity: { fill: '#10b981', glow: 'rgba(16,185,129,0.5)' },
-      regime: { fill: '#3b82f6', glow: 'rgba(59,130,246,0.5)' }
+    var C = {
+      risk:        { fill:'#ef4444', glow:'rgba(239,68,68,0.4)', bg:'#fef2f2', border:'#fecaca', text:'#991b1b', icon:'fa-triangle-exclamation', label:'Risks' },
+      event:       { fill:'#f59e0b', glow:'rgba(245,158,11,0.4)', bg:'#fffbeb', border:'#fde68a', text:'#92400e', icon:'fa-calendar-day', label:'Events' },
+      opportunity: { fill:'#10b981', glow:'rgba(16,185,129,0.4)', bg:'#ecfdf5', border:'#a7f3d0', text:'#065f46', icon:'fa-bullseye', label:'Opportunities' },
+      regime:      { fill:'#3b82f6', glow:'rgba(59,130,246,0.4)', bg:'#eff6ff', border:'#bfdbfe', text:'#1e40af', icon:'fa-gauge-high', label:'Regime' }
     };
 
-    function initRadar() {
-      canvas = document.getElementById('radarCanvas');
-      if (!canvas) return;
-      ctx = canvas.getContext('2d');
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-
-      // Mouse/touch events
-      canvas.addEventListener('mousemove', onHover);
-      canvas.addEventListener('mouseleave', function() { hoveredBlip = null; hideTooltip(); });
-      canvas.addEventListener('click', onClick);
-      canvas.addEventListener('touchstart', onTouch, { passive: true });
-
-      loadRadarData();
+    function init() {
+      loadData();
+      // Mode buttons
+      document.querySelectorAll('.radar-mode').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          setMode(this.dataset.mode);
+        });
+      });
     }
 
-    function resizeCanvas() {
-      var container = document.getElementById('radarContainer');
-      var w = container.clientWidth;
-      var dpr = window.devicePixelRatio || 1;
-      canvas.width = w * dpr;
-      canvas.height = w * dpr;
-      cw = w * dpr; ch = w * dpr;
-      cx = cw / 2; cy = ch / 2;
-      radius = (Math.min(cw, ch) / 2) - 4 * dpr;
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    function setMode(mode) {
+      currentMode = mode;
+      localStorage.setItem('mw-radar-mode', mode);
+      document.querySelectorAll('.radar-mode').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.mode === mode);
+      });
+      stopAnim();
+      render();
     }
 
-    function loadRadarData() {
+    function loadData() {
       fetch('/data/radar.json?v=' + Date.now())
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          radarData = data;
-          buildBlips();
-          buildPanels();
+          RD = data;
+          buildStatus();
           var up = document.getElementById('radarUpdated');
-          if (up && data.updated) up.textContent = 'Last update: ' + data.updated;
-          startAnimation();
+          if (up && data.updated) up.textContent = 'Updated: ' + data.updated;
+          // Set initial mode button
+          document.querySelectorAll('.radar-mode').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.mode === currentMode);
+          });
+          render();
         })
-        .catch(function(e) { console.warn('Radar data not available', e); });
+        .catch(function(e) { console.warn('Radar unavailable', e); });
+    }
+
+    function buildStatus() {
+      var el = document.getElementById('radarStatus');
+      if (!el || !RD) return;
+      var regimeColor = RD.regime === 'RISK-OFF' ? '#ef4444' : RD.regime === 'RISK-ON' ? '#10b981' : '#f59e0b';
+      var fgColor = (RD.fear_greed||50) <= 25 ? '#ef4444' : (RD.fear_greed||50) >= 75 ? '#10b981' : '#f59e0b';
+      var vixColor = (RD.vix||0) >= 25 ? '#ef4444' : (RD.vix||0) >= 18 ? '#f59e0b' : '#10b981';
+      var p = 'display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:0.75rem;font-weight:700;';
+      el.innerHTML =
+        '<span style="'+p+'background:'+regimeColor+'18;color:'+regimeColor+';border:1px solid '+regimeColor+'30;"><i class="fas fa-shield-halved"></i> '+RD.regime+'</span>' +
+        '<span style="'+p+'background:'+vixColor+'18;color:'+vixColor+';border:1px solid '+vixColor+'30;">VIX '+RD.vix+'</span>' +
+        '<span style="'+p+'background:#3b82f618;color:#60a5fa;border:1px solid #3b82f630;">SPX '+(RD.spx?RD.spx.toLocaleString():'—')+'</span>' +
+        '<span style="'+p+'background:'+fgColor+'18;color:'+fgColor+';border:1px solid '+fgColor+'30;"><i class="fas fa-gauge"></i> F&amp;G '+RD.fear_greed+'</span>';
+    }
+
+    function render() {
+      if (!RD) return;
+      var view = document.getElementById('radarView');
+      ({ signals: renderSignals, board: renderBoard, matrix: renderMatrix, timeline: renderTimeline, radar: renderRadar }[currentMode] || renderSignals)(view);
+    }
+
+    // Shared: build a single item row
+    function itemRow(it, cat) {
+      var c = C[cat] || C.regime;
+      var bar = Math.min(100, (it.importance||5) * 10);
+      var link = it.link ? '<a href="'+it.link+'" style="color:'+c.fill+';font-size:0.7rem;text-decoration:none;margin-left:4px;" title="'+(it.link_label||'Read')+'"><i class="fas fa-arrow-up-right-from-square"></i></a>' : '';
+      return '<div style="display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid var(--border);">' +
+        '<div style="width:4px;height:28px;border-radius:2px;background:'+c.fill+';flex-shrink:0;"></div>' +
+        '<div style="flex:1;min-width:0;">' +
+          '<div style="display:flex;align-items:center;gap:0.4rem;"><strong style="font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+it.label+'</strong>'+link+'</div>' +
+          (it.detail ? '<p style="margin:1px 0 0;font-size:0.72rem;color:var(--text-muted);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+it.detail+'</p>' : '') +
+        '</div>' +
+        '<div style="flex-shrink:0;width:50px;">' +
+          '<div style="height:4px;background:var(--border);border-radius:2px;"><div style="width:'+bar+'%;height:100%;background:'+c.fill+';border-radius:2px;"></div></div>' +
+          (it.date ? '<div style="font-size:0.6rem;color:var(--text-muted);margin-top:2px;text-align:right;">'+it.date.slice(5)+'</div>' : '') +
+        '</div>' +
+      '</div>';
+    }
+
+    // =========== MODE 1: SIGNAL BOARD ===========
+    function renderSignals(el) {
+      var items = RD.items.slice().sort(function(a,b) { return (b.importance||0) - (a.importance||0); });
+      var h = '<div style="max-width:700px;margin:0 auto;">';
+      items.forEach(function(it) { h += itemRow(it, it.category); });
+      h += '</div>';
+      el.innerHTML = h;
+    }
+
+    // =========== MODE 2: DASHBOARD BOARD ===========
+    function renderBoard(el) {
+      var cats = ['risk','event','opportunity','regime'];
+      var h = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;">';
+      cats.forEach(function(cat) {
+        var c = C[cat];
+        var items = RD.items.filter(function(it) { return it.category === cat; });
+        items.sort(function(a,b) { return (b.importance||0) - (a.importance||0); });
+        h += '<div style="background:'+c.bg+';border:1px solid '+c.border+';border-radius:12px;padding:1rem;border-top:3px solid '+c.fill+';">';
+        h += '<h3 style="margin:0 0 0.75rem;font-size:0.9rem;color:'+c.text+';"><i class="fas '+c.icon+'"></i> '+c.label+' <span style="font-size:0.7rem;opacity:0.5;">('+items.length+')</span></h3>';
+        items.forEach(function(it) {
+          var bar = Math.min(100, (it.importance||5)*10);
+          var link = it.link ? ' <a href="'+it.link+'" style="color:'+c.fill+';font-size:0.65rem;"><i class="fas fa-arrow-up-right-from-square"></i></a>' : '';
+          h += '<div style="margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:1px solid '+c.border+';">';
+          h += '<div style="display:flex;justify-content:space-between;align-items:center;gap:0.4rem;">';
+          h += '<strong style="font-size:0.78rem;color:'+c.text+';">'+it.label+link+'</strong>';
+          h += '<div style="width:40px;height:3px;background:'+c.border+';border-radius:2px;flex-shrink:0;"><div style="width:'+bar+'%;height:100%;background:'+c.fill+';border-radius:2px;"></div></div>';
+          h += '</div>';
+          if (it.detail) h += '<p style="margin:2px 0 0;font-size:0.7rem;color:'+c.text+';opacity:0.7;line-height:1.3;">'+it.detail+'</p>';
+          h += '</div>';
+        });
+        h += '</div>';
+      });
+      h += '</div>';
+      el.innerHTML = h;
+    }
+
+    // =========== MODE 3: THREAT MATRIX ===========
+    function renderMatrix(el) {
+      var items = RD.items.slice();
+      // X = proximity (days until event, 0=today), Y = importance
+      var today = new Date(); today.setHours(0,0,0,0);
+      items.forEach(function(it) {
+        if (it.date) {
+          var d = new Date(it.date); d.setHours(0,0,0,0);
+          it._days = Math.round((d - today) / 86400000);
+        } else { it._days = 0; }
+      });
+      var maxDays = 30;
+
+      var h = '<div style="position:relative;background:#0f172a;border-radius:12px;padding:1.5rem;overflow:hidden;min-height:400px;">';
+      // Axes
+      h += '<div style="position:absolute;left:1.5rem;top:1rem;bottom:2.5rem;width:1px;background:rgba(80,180,238,0.2);"></div>';
+      h += '<div style="position:absolute;left:1.5rem;right:1rem;bottom:2.5rem;height:1px;background:rgba(80,180,238,0.2);"></div>';
+      // Labels
+      h += '<div style="position:absolute;left:0;top:50%;transform:rotate(-90deg) translateX(50%);font-size:0.65rem;color:#475569;font-weight:700;letter-spacing:0.1em;">IMPACT</div>';
+      h += '<div style="position:absolute;bottom:0.5rem;left:50%;transform:translateX(-50%);font-size:0.65rem;color:#475569;font-weight:700;letter-spacing:0.1em;">TIME PROXIMITY (days)</div>';
+      // Grid lines
+      for (var g = 1; g <= 4; g++) {
+        var pct = g * 20;
+        h += '<div style="position:absolute;left:1.5rem;right:1rem;bottom:calc(2.5rem + '+pct+'%*(100% - 4rem)/100);height:1px;background:rgba(80,180,238,0.06);"></div>';
+      }
+      // Items as positioned dots
+      items.forEach(function(it) {
+        var c = C[it.category] || C.regime;
+        var imp = (it.importance||5);
+        var days = Math.max(-5, Math.min(maxDays, it._days));
+        // X: left (close to now) → right (far future). Reverse: 0 days = right side
+        var xPct = Math.max(5, Math.min(92, 90 - (days / maxDays) * 85));
+        var yPct = Math.max(8, Math.min(88, imp * 9));
+        var sz = Math.max(8, imp * 3.5);
+        var link = it.link ? 'cursor:pointer;' : '';
+        h += '<div style="position:absolute;left:'+xPct+'%;bottom:calc(2.5rem + '+yPct+'%*(100% - 4rem)/100);transform:translate(-50%,50%);text-align:center;'+link+'" '+(it.link ? 'onclick="location.href=\''+it.link+'\'"' : '')+'>';
+        h += '<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:'+c.fill+';box-shadow:0 0 '+(sz/2)+'px '+c.glow+';margin:0 auto;"></div>';
+        if (imp >= 6) h += '<div style="font-size:0.6rem;color:'+c.fill+';font-weight:700;margin-top:2px;white-space:nowrap;">'+(it.short||it.label)+'</div>';
+        h += '</div>';
+      });
+      h += '</div>';
+      // Matrix legend
+      h += '<div style="display:flex;justify-content:center;gap:1rem;margin-top:0.75rem;font-size:0.7rem;color:var(--text-muted);">';
+      ['risk','event','opportunity','regime'].forEach(function(cat) {
+        h += '<span><i class="fas fa-circle" style="font-size:5px;color:'+C[cat].fill+';vertical-align:middle;margin-right:3px;"></i>'+C[cat].label+'</span>';
+      });
+      h += '</div>';
+      el.innerHTML = h;
+    }
+
+    // =========== MODE 4: TIMELINE ===========
+    function renderTimeline(el) {
+      var items = RD.items.slice();
+      var today = new Date(); today.setHours(0,0,0,0);
+      items.forEach(function(it) {
+        if (it.date) {
+          var d = new Date(it.date); d.setHours(0,0,0,0);
+          it._days = Math.round((d - today) / 86400000);
+        } else { it._days = 0; }
+      });
+      items.sort(function(a,b) { return a._days - b._days; });
+
+      var h = '<div style="position:relative;padding:1rem 0;">';
+      // Center line
+      h += '<div style="position:absolute;left:50%;top:0;bottom:0;width:2px;background:var(--border);transform:translateX(-50%);"></div>';
+      // Today marker
+      var todayIdx = 0;
+      items.forEach(function(it,i) { if (it._days <= 0) todayIdx = i; });
+
+      items.forEach(function(it, i) {
+        var c = C[it.category] || C.regime;
+        var isLeft = i % 2 === 0;
+        var imp = it.importance || 5;
+        var dotSz = Math.max(10, imp * 2.5);
+        var dayLabel = it._days === 0 ? 'Today' : it._days < 0 ? Math.abs(it._days)+'d ago' : 'In '+it._days+'d';
+        var link = it.link ? 'cursor:pointer;' : '';
+        var onclick = it.link ? ' onclick="location.href=\''+it.link+'\'"' : '';
+
+        h += '<div style="display:flex;align-items:flex-start;margin-bottom:0.5rem;'+(isLeft?'flex-direction:row;':'flex-direction:row-reverse;')+'">';
+        // Content side
+        h += '<div style="flex:1;'+(isLeft?'text-align:right;padding-right:1.25rem;':'text-align:left;padding-left:1.25rem;')+link+'"'+onclick+'>';
+        h += '<div style="display:inline-block;background:'+c.bg+';border:1px solid '+c.border+';border-radius:8px;padding:0.4rem 0.7rem;max-width:300px;text-align:left;">';
+        h += '<div style="display:flex;align-items:center;gap:0.3rem;"><span style="font-size:0.65rem;color:'+c.fill+';font-weight:700;"><i class="fas '+c.icon+'"></i></span><strong style="font-size:0.78rem;color:'+c.text+';">'+it.label+'</strong></div>';
+        if (it.detail) h += '<p style="margin:2px 0 0;font-size:0.68rem;color:'+c.text+';opacity:0.7;line-height:1.25;">'+it.detail.substring(0,120)+(it.detail.length>120?'...':'')+'</p>';
+        h += '</div>';
+        h += '<div style="font-size:0.6rem;color:var(--text-muted);margin-top:2px;">'+dayLabel+(it.date?' · '+it.date:'')+'</div>';
+        h += '</div>';
+        // Center dot
+        h += '<div style="flex-shrink:0;width:'+dotSz+'px;height:'+dotSz+'px;border-radius:50%;background:'+c.fill+';border:2px solid '+c.bg+';z-index:1;margin-top:0.5rem;"></div>';
+        // Other side spacer
+        h += '<div style="flex:1;"></div>';
+        h += '</div>';
+      });
+      h += '</div>';
+      el.innerHTML = h;
+    }
+
+    // =========== MODE 5: RADAR CANVAS ===========
+    function renderRadar(el) {
+      el.innerHTML = '<div style="background:#060b18;border-radius:12px;padding:1rem;overflow:hidden;">' +
+        '<div id="radarContainer" style="position:relative;width:100%;max-width:600px;margin:0 auto;">' +
+        '<canvas id="radarCanvas" style="width:100%;display:block;"></canvas>' +
+        '<div id="radarTooltip" style="display:none;position:absolute;background:#1e293b;color:#e2e8f0;border:1px solid #475569;border-radius:10px;padding:10px 14px;font-size:0.8rem;max-width:260px;pointer-events:none;z-index:10;box-shadow:0 8px 24px rgba(0,0,0,0.6);line-height:1.4;"></div>' +
+        '</div>' +
+        '<div style="display:flex;justify-content:center;gap:1rem;margin-top:0.75rem;font-size:0.7rem;">' +
+        '<span style="color:#ef4444;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Risks</span>' +
+        '<span style="color:#f59e0b;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Events</span>' +
+        '<span style="color:#10b981;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Opps</span>' +
+        '<span style="color:#3b82f6;"><i class="fas fa-circle" style="font-size:5px;vertical-align:middle;margin-right:3px;"></i>Regime</span>' +
+        '</div></div>';
+
+      setTimeout(function() {
+        canvas = document.getElementById('radarCanvas');
+        if (!canvas) return;
+        ctx = canvas.getContext('2d');
+        dpr = window.devicePixelRatio || 1;
+        sizeCanvas(); buildBlips(); startAnim();
+        canvas.addEventListener('mousemove', onCanvasHover);
+        canvas.addEventListener('mouseleave', function() { hoveredBlip = null; hideTooltip(); });
+        canvas.addEventListener('click', onCanvasClick);
+        canvas.addEventListener('touchstart', onCanvasTouch, { passive: true });
+        window.addEventListener('resize', function() { if (currentMode==='radar') { sizeCanvas(); buildBlips(); } });
+      }, 50);
+    }
+
+    function sizeCanvas() {
+      var c = document.getElementById('radarContainer');
+      if (!c) return;
+      var w = c.clientWidth, h = Math.min(w, 580);
+      canvas.style.height = h + 'px';
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      cw = canvas.width; ch = canvas.height;
+      cx = cw/2; cy = ch/2;
+      radius = (Math.min(cw,ch)/2) - 8*dpr;
     }
 
     function buildBlips() {
       blips = [];
-      if (!radarData || !radarData.items) return;
-      radarData.items.forEach(function(item, i) {
-        // importance 1-10 → distance from center (10=close=urgent, 1=far=background)
-        var imp = item.importance || 5;
-        var dist = radius * (1 - (imp / 12)); // high importance = closer to center
-        // Spread items around the circle by category quadrant + offset
-        var quadrant = { risk: 0, event: 1, opportunity: 2, regime: 3 }[item.category] || 0;
-        var baseAngle = (quadrant * Math.PI / 2) + (Math.PI / 8); // start of quadrant
-        var offset = (i * 0.618) % 1; // golden ratio spread
-        var angle = baseAngle + offset * (Math.PI / 2.5);
-        var size = Math.max(4, Math.min(14, imp * 1.3)) * (window.devicePixelRatio || 1);
-        blips.push({
-          x: cx + Math.cos(angle) * dist,
-          y: cy + Math.sin(angle) * dist,
-          angle: angle,
-          dist: dist,
-          size: size,
-          color: CAT_COLORS[item.category] || CAT_COLORS.regime,
-          data: item,
-          pulse: 0
+      if (!RD) return;
+      var groups = { risk:[], event:[], opportunity:[], regime:[] };
+      RD.items.forEach(function(it) { (groups[it.category]||groups.regime).push(it); });
+      var qA = { risk:-Math.PI/4, event:Math.PI/4, opportunity:3*Math.PI/4, regime:-3*Math.PI/4 };
+      var spread = Math.PI/2.8;
+      Object.keys(groups).forEach(function(cat) {
+        var items = groups[cat], base = qA[cat]||0;
+        items.forEach(function(it,i) {
+          var imp = it.importance||5;
+          var dist = radius*(0.25+0.65*(1-imp/10)) + Math.sin(i*2.7)*radius*0.06;
+          var angle = base - spread/2 + (items.length>1 ? i/(items.length-1)*spread : spread/2);
+          blips.push({ x:cx+Math.cos(angle)*dist, y:cy+Math.sin(angle)*dist, angle:angle, dist:dist,
+            size:Math.max(5,Math.min(16,imp*1.5))*dpr, color:C[it.category]||C.regime, data:it, pulse:0 });
         });
       });
     }
 
-    function buildPanels() {
-      var container = document.getElementById('radarPanels');
-      if (!container || !radarData) return;
-      var cats = [
-        { key: 'risk', icon: 'fa-triangle-exclamation', label: 'Risks', color: '#ef4444' },
-        { key: 'event', icon: 'fa-calendar-day', label: 'Events', color: '#f59e0b' },
-        { key: 'opportunity', icon: 'fa-bullseye', label: 'Opportunities', color: '#10b981' },
-        { key: 'regime', icon: 'fa-gauge-high', label: 'Regime', color: '#3b82f6' }
-      ];
-      var html = '';
-      cats.forEach(function(cat) {
-        var items = (radarData.items || []).filter(function(it) { return it.category === cat.key; });
-        if (!items.length) return;
-        html += '<div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:1rem;border-left:4px solid ' + cat.color + ';">';
-        html += '<h3 style="margin:0 0 0.75rem;font-size:1rem;color:' + cat.color + ';"><i class="fas ' + cat.icon + '"></i> ' + cat.label + ' <span style="font-size:0.8rem;color:var(--text-muted);">(' + items.length + ')</span></h3>';
-        items.forEach(function(it) {
-          var impDots = '';
-          for (var d = 0; d < Math.min(it.importance || 5, 10); d++) impDots += '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + cat.color + ';margin-right:2px;opacity:' + (0.3 + 0.7 * (d < (it.importance || 5))) + ';"></span>';
-          var linkHtml = it.link ? ' <a href="' + it.link + '" style="color:' + cat.color + ';font-size:0.75rem;text-decoration:none;font-weight:600;" title="' + (it.link_label || 'Read more') + '"><i class="fas fa-arrow-up-right-from-square"></i></a>' : '';
-          html += '<div style="margin-bottom:0.6rem;padding-bottom:0.6rem;border-bottom:1px solid var(--border);">';
-          html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-          html += '<strong style="font-size:0.85rem;">' + it.label + linkHtml + '</strong>';
-          html += '<span style="font-size:0.7rem;">' + impDots + '</span>';
-          html += '</div>';
-          if (it.detail) html += '<p style="margin:0.2rem 0 0;font-size:0.78rem;color:var(--text-muted);line-height:1.3;">' + it.detail + '</p>';
-          if (it.date) html += '<span style="font-size:0.7rem;color:var(--text-muted);"><i class="fas fa-clock" style="margin-right:3px;"></i>' + it.date + '</span>';
-          html += '</div>';
-        });
-        html += '</div>';
-      });
-      container.innerHTML = html;
-    }
-
-    function startAnimation() {
+    function startAnim() {
       if (radarAnim) return;
-      function frame() {
-        radarAngle += 0.008;
-        if (radarAngle > Math.PI * 2) radarAngle -= Math.PI * 2;
-        drawRadar();
-        radarAnim = requestAnimationFrame(frame);
-      }
-      radarAnim = requestAnimationFrame(frame);
+      (function f() { radarAngle+=0.007; if(radarAngle>Math.PI*2) radarAngle-=Math.PI*2; drawRadarCanvas(); radarAnim=requestAnimationFrame(f); })();
     }
+    function stopAnim() { if (radarAnim) { cancelAnimationFrame(radarAnim); radarAnim=null; } }
 
-    function stopAnimation() {
-      if (radarAnim) { cancelAnimationFrame(radarAnim); radarAnim = null; }
-    }
-
-    function drawRadar() {
-      var dpr = window.devicePixelRatio || 1;
-      ctx.clearRect(0, 0, cw, ch);
-
-      // Background
-      ctx.fillStyle = '#0a0f1e';
-      ctx.beginPath(); ctx.arc(cx, cy, radius + 2 * dpr, 0, Math.PI * 2); ctx.fill();
-
-      // Concentric circles
-      for (var i = 1; i <= 4; i++) {
-        var r = radius * i / 4;
-        ctx.strokeStyle = 'rgba(80,180,238,0.15)';
-        ctx.lineWidth = 1 * dpr;
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
-      }
-
-      // Cross lines
-      ctx.strokeStyle = 'rgba(80,180,238,0.1)';
-      ctx.lineWidth = 1 * dpr;
-      ctx.beginPath(); ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius); ctx.stroke();
-
-      // Quadrant labels
-      ctx.font = (10 * dpr) + 'px Inter, sans-serif';
-      ctx.fillStyle = 'rgba(80,180,238,0.4)';
-      ctx.textAlign = 'center';
-      ctx.fillText('RISKS', cx + radius * 0.55, cy - radius * 0.85);
-      ctx.fillText('EVENTS', cx + radius * 0.85, cy + radius * 0.55);
-      ctx.fillText('OPPORTUNITIES', cx - radius * 0.55, cy + radius * 0.85);
-      ctx.fillText('REGIME', cx - radius * 0.85, cy - radius * 0.55);
-
-      // Sweep gradient (conic if supported, else radial fallback)
+    function drawRadarCanvas() {
+      ctx.clearRect(0,0,cw,ch);
+      // Circles
+      for (var i=1;i<=5;i++) { ctx.strokeStyle='rgba(80,180,238,'+(0.06+i*0.03)+')'; ctx.lineWidth=dpr; ctx.beginPath(); ctx.arc(cx,cy,radius*i/5,0,Math.PI*2); ctx.stroke(); }
+      // Cross
+      ctx.strokeStyle='rgba(80,180,238,0.08)'; ctx.setLineDash([4*dpr,6*dpr]);
+      ctx.beginPath(); ctx.moveTo(cx-radius,cy); ctx.lineTo(cx+radius,cy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,cy-radius); ctx.lineTo(cx,cy+radius); ctx.stroke();
+      ctx.setLineDash([]);
+      // Labels
+      var lsz=11*dpr; ctx.font='700 '+lsz+'px Inter,system-ui,sans-serif'; ctx.textAlign='center';
+      ctx.fillStyle='rgba(239,68,68,0.3)'; ctx.fillText('RISKS',cx+radius*0.5,cy-radius*0.8);
+      ctx.fillStyle='rgba(245,158,11,0.3)'; ctx.fillText('EVENTS',cx+radius*0.5,cy+radius*0.85);
+      ctx.fillStyle='rgba(16,185,129,0.3)'; ctx.fillText('OPPS',cx-radius*0.5,cy+radius*0.85);
+      ctx.fillStyle='rgba(59,130,246,0.3)'; ctx.fillText('REGIME',cx-radius*0.5,cy-radius*0.8);
+      // Sweep
       if (ctx.createConicGradient) {
-        var sweepLen = Math.PI / 3;
-        var grad = ctx.createConicGradient(radarAngle - sweepLen, cx, cy);
-        grad.addColorStop(0, 'rgba(80,180,238,0)');
-        grad.addColorStop(0.7, 'rgba(80,180,238,0)');
-        grad.addColorStop(0.95, 'rgba(80,180,238,0.12)');
-        grad.addColorStop(1, 'rgba(80,180,238,0.25)');
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.fill();
-      } else {
-        // Fallback: draw a sweep wedge
-        ctx.fillStyle = 'rgba(80,180,238,0.08)';
-        ctx.beginPath(); ctx.moveTo(cx, cy);
-        ctx.arc(cx, cy, radius, radarAngle - Math.PI / 4, radarAngle);
-        ctx.closePath(); ctx.fill();
+        var g=ctx.createConicGradient(radarAngle-Math.PI/3,cx,cy);
+        g.addColorStop(0,'rgba(80,180,238,0)'); g.addColorStop(0.65,'rgba(80,180,238,0)');
+        g.addColorStop(0.92,'rgba(80,180,238,0.08)'); g.addColorStop(1,'rgba(80,180,238,0.22)');
+        ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.fill();
       }
-
-      // Sweep line
-      ctx.strokeStyle = 'rgba(80,180,238,0.7)';
-      ctx.lineWidth = 2 * dpr;
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.lineTo(cx + Math.cos(radarAngle) * radius, cy + Math.sin(radarAngle) * radius);
-      ctx.stroke();
-
-      // Center dot
-      ctx.fillStyle = '#50b4ee';
-      ctx.beginPath(); ctx.arc(cx, cy, 3 * dpr, 0, Math.PI * 2); ctx.fill();
-
+      // Line
+      ctx.strokeStyle='#50b4ee'; ctx.lineWidth=2*dpr; ctx.shadowColor='#50b4ee'; ctx.shadowBlur=8*dpr;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(radarAngle)*radius,cy+Math.sin(radarAngle)*radius); ctx.stroke();
+      ctx.shadowBlur=0;
+      // Center
+      ctx.fillStyle='#50b4ee'; ctx.beginPath(); ctx.arc(cx,cy,4*dpr,0,Math.PI*2); ctx.fill();
       // Blips
       blips.forEach(function(b) {
-        // Pulse when sweep passes over
-        var angleDiff = Math.abs(((radarAngle - b.angle) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2));
-        if (angleDiff < 0.15 || angleDiff > Math.PI * 2 - 0.15) b.pulse = 1;
-        if (b.pulse > 0) b.pulse -= 0.012;
-
-        var sz = b.size + (b === hoveredBlip ? 4 * dpr : 0);
-        var alpha = 0.5 + b.pulse * 0.5;
-
-        // Glow
-        if (b.pulse > 0.1 || b === hoveredBlip) {
-          ctx.fillStyle = b.color.glow;
-          ctx.beginPath(); ctx.arc(b.x, b.y, sz + 6 * dpr, 0, Math.PI * 2); ctx.fill();
-        }
-
-        // Dot
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = b.color.fill;
-        ctx.beginPath(); ctx.arc(b.x, b.y, sz, 0, Math.PI * 2); ctx.fill();
-        ctx.globalAlpha = 1;
-
-        // Label for important items
-        if ((b.data.importance || 0) >= 7 || b === hoveredBlip) {
-          ctx.font = 'bold ' + (9 * dpr) + 'px Inter, sans-serif';
-          ctx.fillStyle = '#e2e8f0';
-          ctx.textAlign = 'center';
-          ctx.fillText(b.data.short || b.data.label, b.x, b.y - sz - 4 * dpr);
+        var ad=((radarAngle-b.angle)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+        if(ad<0.2) b.pulse=1; if(b.pulse>0) b.pulse-=0.01;
+        var hov=b===hoveredBlip, sz=b.size*(hov?1.4:1), alpha=0.55+b.pulse*0.45;
+        if(b.pulse>0.05||hov) { ctx.strokeStyle=b.color.glow; ctx.lineWidth=2*dpr; ctx.beginPath(); ctx.arc(b.x,b.y,sz+5*dpr,0,Math.PI*2); ctx.stroke(); }
+        if(b.pulse>0.3||hov) { ctx.fillStyle=b.color.glow; ctx.beginPath(); ctx.arc(b.x,b.y,sz+3*dpr,0,Math.PI*2); ctx.fill(); }
+        ctx.globalAlpha=alpha; ctx.fillStyle=b.color.fill; ctx.shadowColor=b.color.fill; ctx.shadowBlur=(b.pulse>0.3?10:4)*dpr;
+        ctx.beginPath(); ctx.arc(b.x,b.y,sz,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0; ctx.globalAlpha=1;
+        if((b.data.importance||0)>=5||hov) {
+          var fs=((b.data.importance||5)>=8?10:8)*dpr; ctx.font='700 '+fs+'px Inter,system-ui,sans-serif'; ctx.textAlign='center';
+          var t=b.data.short||b.data.label, tw=ctx.measureText(t).width, lx=b.x, ly=b.y-sz-6*dpr;
+          ctx.fillStyle='rgba(6,11,24,0.8)';
+          if(ctx.roundRect) { ctx.beginPath(); ctx.roundRect(lx-tw/2-4*dpr,ly-fs+dpr,tw+8*dpr,fs+4*dpr,3*dpr); ctx.fill(); }
+          ctx.fillStyle=b.color.fill; ctx.fillText(t,lx,ly);
         }
       });
-
       // Outer ring
-      ctx.strokeStyle = 'rgba(80,180,238,0.3)';
-      ctx.lineWidth = 2 * dpr;
-      ctx.beginPath(); ctx.arc(cx, cy, radius, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle='rgba(80,180,238,0.2)'; ctx.lineWidth=2*dpr; ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.stroke();
     }
 
     function getBlipAt(e) {
-      var rect = canvas.getBoundingClientRect();
-      var dpr = window.devicePixelRatio || 1;
-      var mx = (e.clientX - rect.left) * dpr;
-      var my = (e.clientY - rect.top) * dpr;
-      var closest = null, minD = Infinity;
-      blips.forEach(function(b) {
-        var d = Math.sqrt((b.x - mx) * (b.x - mx) + (b.y - my) * (b.y - my));
-        if (d < b.size + 10 * dpr && d < minD) { closest = b; minD = d; }
-      });
-      return closest;
+      var rect=canvas.getBoundingClientRect(), mx=(e.clientX-rect.left)*dpr, my=(e.clientY-rect.top)*dpr, hit=null, best=Infinity;
+      blips.forEach(function(b) { var d=Math.hypot(b.x-mx,b.y-my); if(d<b.size+15*dpr&&d<best){hit=b;best=d;} });
+      return hit;
     }
-
-    function onHover(e) {
-      var b = getBlipAt(e);
-      hoveredBlip = b;
-      canvas.style.cursor = b ? 'pointer' : 'default';
-      if (b) {
-        showTooltip(e, b.data);
-      } else {
-        hideTooltip();
-      }
+    function onCanvasHover(e) { var b=getBlipAt(e); hoveredBlip=b; canvas.style.cursor=b?'pointer':'default'; b?showTip(e,b.data):hideTooltip(); }
+    function onCanvasClick(e) { var b=getBlipAt(e); if(b&&b.data.link) location.href=b.data.link; }
+    function onCanvasTouch(e) { var t=e.touches[0],b=getBlipAt(t); if(b){hoveredBlip=b;showTip(t,b.data);if(b.data.link)setTimeout(function(){location.href=b.data.link;},800);} }
+    function showTip(e,d) {
+      var tip=document.getElementById('radarTooltip'), rect=document.getElementById('radarContainer').getBoundingClientRect();
+      var cc=C[d.category]||C.regime;
+      tip.innerHTML='<strong style="color:'+cc.fill+';">'+d.label+'</strong>'+(d.detail?'<br><span style="color:#cbd5e1;">'+d.detail+'</span>':'')+(d.date?'<br><span style="font-size:0.68rem;color:#64748b;"><i class="fas fa-clock"></i> '+d.date+'</span>':'')+(d.link?'<br><span style="font-size:0.7rem;color:#50b4ee;font-weight:600;">Click to read <i class="fas fa-arrow-right"></i></span>':'');
+      tip.style.display='block';
+      var x=e.clientX-rect.left+15, y=e.clientY-rect.top-10;
+      if(x+260>rect.width)x-=280; if(y+120>rect.height)y-=100; if(x<0)x=10;
+      tip.style.left=x+'px'; tip.style.top=y+'px';
     }
+    function hideTooltip() { var t=document.getElementById('radarTooltip'); if(t) t.style.display='none'; }
 
-    function onClick(e) {
-      var b = getBlipAt(e);
-      if (b && b.data.link) {
-        window.location.href = b.data.link;
-      }
-    }
-
-    function onTouch(e) {
-      var touch = e.touches[0];
-      var b = getBlipAt(touch);
-      if (b) {
-        showTooltip(touch, b.data);
-        hoveredBlip = b;
-        if (b.data.link) {
-          setTimeout(function() { window.location.href = b.data.link; }, 600);
-        }
-      }
-    }
-
-    function showTooltip(e, data) {
-      var tip = document.getElementById('radarTooltip');
-      var container = document.getElementById('radarContainer');
-      var rect = container.getBoundingClientRect();
-      tip.innerHTML = '<strong>' + data.label + '</strong>' +
-        (data.detail ? '<br><span style="color:#94a3b8;">' + data.detail + '</span>' : '') +
-        (data.date ? '<br><span style="font-size:0.7rem;color:#64748b;"><i class="fas fa-clock"></i> ' + data.date + '</span>' : '') +
-        (data.link ? '<br><span style="font-size:0.7rem;color:#50b4ee;">Click to read <i class="fas fa-arrow-right"></i></span>' : '');
-      tip.style.display = 'block';
-      var x = e.clientX - rect.left + 15;
-      var y = e.clientY - rect.top - 10;
-      if (x + 260 > rect.width) x = x - 280;
-      if (y + 100 > rect.height) y = y - 80;
-      tip.style.left = x + 'px';
-      tip.style.top = y + 'px';
-    }
-
-    function hideTooltip() {
-      document.getElementById('radarTooltip').style.display = 'none';
-    }
-
-    // Start/stop radar when tab is visible
-    var radarInitialized = false;
-    var origSwitchTab = window.switchTab || function(){};
-
+    // Tab lifecycle
+    var radarReady = false;
     document.addEventListener('DOMContentLoaded', function() {
-      // Patch switchTab to start/stop radar animation
-      var _switchTab = switchTab;
+      var _sw = switchTab;
       switchTab = function(tab) {
-        _switchTab(tab);
+        _sw(tab);
         if (tab === 'radar') {
-          if (!radarInitialized) { initRadar(); radarInitialized = true; }
-          else { resizeCanvas(); buildBlips(); startAnimation(); }
-        } else {
-          stopAnimation();
-        }
+          if (!radarReady) { init(); radarReady = true; }
+          else { render(); }
+        } else { stopAnim(); }
       };
-
-      // If ?tab=radar on load
-      var params = new URLSearchParams(window.location.search);
-      if (params.get('tab') === 'radar') {
-        setTimeout(function() { initRadar(); radarInitialized = true; startAnimation(); }, 200);
+      if (new URLSearchParams(location.search).get('tab') === 'radar') {
+        setTimeout(function() { init(); radarReady = true; }, 200);
       }
     });
   })();
