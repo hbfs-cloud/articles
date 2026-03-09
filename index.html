@@ -1615,7 +1615,7 @@
   <iframe src="/widget/?mode=tape&theme=light" id="tickerTape" title="A+ Picks" style="width:100%;height:42px;border:none;border-bottom:1px solid #e2e8f0;display:block;background:#fff"></iframe>
 
   <!-- Promo Banners (skippable) -->
-  <div class="container" style="padding-top: 0">
+  <div id="promoContainer" class="container" style="padding-top: 0">
     <a href="/prompt-ia/" class="promo-banner promo-banner-indigo" id="promoBannerPrompt">
       <div class="promo-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
       <div class="promo-text">
@@ -1624,7 +1624,7 @@
       </div>
       <span class="promo-badge" data-i18n="promo.badge">NOUVEAU</span>
       <span class="promo-arrow"><i class="fa-solid fa-arrow-right"></i></span>
-      <button class="promo-close" aria-label="Fermer" onclick="event.preventDefault();event.stopPropagation();this.closest('.promo-banner').style.display='none';localStorage.setItem('promo-prompt-hide','1');"><i class="fa-solid fa-xmark"></i></button>
+      <button class="promo-close" aria-label="Fermer" onclick="event.preventDefault();event.stopPropagation();this.closest('.promo-banner').style.display='none';localStorage.setItem('promo-prompt-hide','1');var c=document.getElementById('promoContainer'),bs=c.querySelectorAll('.promo-banner'),ah=true;bs.forEach(function(b){if(b.style.display!=='none')ah=false;});if(ah)c.style.display='none';"><i class="fa-solid fa-xmark"></i></button>
     </a>
     <a href="/series/quick-start/" class="promo-banner promo-banner-emerald" id="promoBannerQS">
       <div class="promo-icon">&#9889;</div>
@@ -1633,12 +1633,14 @@
         <div class="promo-sub" data-i18n="promo.qs.sub">Tout ce qu'il faut savoir pour trader, condensé en 30 minutes. Zéro prérequis.</div>
       </div>
       <span class="promo-arrow"><i class="fa-solid fa-arrow-right"></i></span>
-      <button class="promo-close" aria-label="Fermer" onclick="event.preventDefault();event.stopPropagation();this.closest('.promo-banner').style.display='none';localStorage.setItem('promo-qs-hide','1');"><i class="fa-solid fa-xmark"></i></button>
+      <button class="promo-close" aria-label="Fermer" onclick="event.preventDefault();event.stopPropagation();this.closest('.promo-banner').style.display='none';localStorage.setItem('promo-qs-hide','1');var c=document.getElementById('promoContainer'),bs=c.querySelectorAll('.promo-banner'),ah=true;bs.forEach(function(b){if(b.style.display!=='none')ah=false;});if(ah)c.style.display='none';"><i class="fa-solid fa-xmark"></i></button>
     </a>
   </div>
   <script>
     if(localStorage.getItem('promo-prompt-hide')==='1'){var a=document.getElementById('promoBannerPrompt');if(a)a.style.display='none';}
     if(localStorage.getItem('promo-qs-hide')==='1'){var b=document.getElementById('promoBannerQS');if(b)b.style.display='none';}
+    // Hide promo container entirely if all banners dismissed
+    (function(){var c=document.getElementById('promoContainer');if(c){var banners=c.querySelectorAll('.promo-banner');var allHidden=true;banners.forEach(function(b){if(b.style.display!=='none')allHidden=false;});if(allHidden)c.style.display='none';}})();
   </script>
 
   <div class="container">
