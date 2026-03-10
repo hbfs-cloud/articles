@@ -2151,6 +2151,7 @@
         <button class="radar-mode" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i></button>
         <button class="radar-mode active" data-mode="board" title="Dashboard"><i class="fas fa-columns"></i></button>
         <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i></button>
+        <button class="radar-mode" id="radarFullscreenBtn" title="Fullscreen" style="margin-left:0.5rem;"><i class="fas fa-expand"></i></button>
       </div>
 
       <!-- Render area -->
@@ -3919,12 +3920,44 @@
 
     function init() {
       loadData();
+      // Auto-refresh every 4 hours
+      setInterval(loadData, 4 * 3600 * 1000);
       // Mode buttons
       document.querySelectorAll('.radar-mode').forEach(function(btn) {
+        if (btn.id === 'radarFullscreenBtn') return;
         btn.addEventListener('click', function() {
           setMode(this.dataset.mode);
         });
       });
+      // Fullscreen button
+      var fsBtn = document.getElementById('radarFullscreenBtn');
+      if (fsBtn) {
+        fsBtn.addEventListener('click', function() {
+          var panel = document.getElementById('tab-radar');
+          if (!document.fullscreenElement) {
+            (panel.requestFullscreen || panel.webkitRequestFullscreen || panel.msRequestFullscreen).call(panel);
+            panel.style.background = '#f8fafc';
+            panel.style.padding = '1rem';
+            panel.style.overflow = 'auto';
+            fsBtn.querySelector('i').className = 'fas fa-compress';
+          } else {
+            (document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen).call(document);
+            fsBtn.querySelector('i').className = 'fas fa-expand';
+          }
+        });
+        document.addEventListener('fullscreenchange', function() {
+          if (!document.fullscreenElement) {
+            fsBtn.querySelector('i').className = 'fas fa-expand';
+            var panel = document.getElementById('tab-radar');
+            panel.style.background = '';
+            panel.style.padding = '';
+            panel.style.overflow = '';
+            if (currentMode === 'radar') { sizeCanvas(); buildBlips(); }
+          } else {
+            if (currentMode === 'radar') { setTimeout(function() { sizeCanvas(); buildBlips(); }, 100); }
+          }
+        });
+      }
     }
 
     function setMode(mode) {
@@ -4241,7 +4274,7 @@
     function sizeCanvas() {
       var c = document.getElementById('radarContainer');
       if (!c) return;
-      var w = c.clientWidth, h = Math.max(w * 0.75, 480);
+      var w = c.clientWidth, h = Math.max(w * 0.56, 360);
       canvas.style.height = h + 'px';
       canvas.width = w * dpr; canvas.height = h * dpr;
       cw = canvas.width; ch = canvas.height;
@@ -4264,11 +4297,11 @@
         items.sort(function(a,b) { return (b.importance||5) - (a.importance||5); });
         items.forEach(function(it,i) {
           var imp = it.importance||5;
-          // Distance from center: imp 10 → 12%, imp 1 → 88%
-          var distRatio = 0.12 + 0.76 * (1 - imp/10);
-          // Stagger: alternate items on slightly different radii to avoid overlap
-          var stagger = (i % 2 === 0 ? 0.04 : -0.04) * (1 + i*0.01);
-          distRatio = Math.max(0.10, Math.min(0.92, distRatio + stagger));
+          // Distance from center: imp 10 → 18%, imp 1 → 92% (wider spread)
+          var distRatio = 0.18 + 0.74 * (1 - imp/10);
+          // Stagger: alternate items on different radii to avoid overlap
+          var stagger = (i % 2 === 0 ? 0.06 : -0.06) * (1 + i*0.015);
+          distRatio = Math.max(0.15, Math.min(0.94, distRatio + stagger));
           var dist = radius * distRatio;
           // Spread items evenly across the quadrant arc
           var angle;
@@ -4277,8 +4310,8 @@
           } else {
             angle = base - spread/2 + (i / (items.length - 1)) * spread;
           }
-          // Blip radius proportional to importance: imp 10 → 24px, imp 5 → 10px, imp 1 → 4px
-          var sz = Math.max(4, Math.round(imp * imp * 0.24)) * dpr;
+          // Blip radius proportional to importance: imp 10 → 30px, imp 5 → 9px, imp 1 → 3px (more contrast)
+          var sz = Math.max(3, Math.round(imp * imp * 0.30)) * dpr;
           // Only blink for truly critical items: importance >= 9
           var shouldBlink = imp >= 9;
           blips.push({ x:cx+Math.cos(angle)*dist, y:cy+Math.sin(angle)*dist, angle:angle, dist:dist,
@@ -4310,7 +4343,7 @@
         // Ring labels on right side
         if (i<=5) {
           var rlsz=7*dpr; ctx.font='600 '+rlsz+'px "JetBrains Mono",monospace'; ctx.textAlign='left';
-          ctx.fillStyle='rgba(148,163,184,0.35)';
+          ctx.fillStyle='rgba(71,85,105,0.55)';
           ctx.fillText(ringLabels[i-1],cx+r+4*dpr,cy-3*dpr);
         }
       }
@@ -4323,10 +4356,10 @@
 
       // Quadrant labels — large, bold, positioned in corners
       var lsz=14*dpr; ctx.font='800 '+lsz+'px Inter,system-ui,sans-serif'; ctx.textAlign='center';
-      ctx.fillStyle='rgba(239,68,68,0.35)'; ctx.fillText('RISKS',cx+radius*0.55,cy-radius*0.85);
-      ctx.fillStyle='rgba(245,158,11,0.35)'; ctx.fillText('EVENTS',cx+radius*0.55,cy+radius*0.9);
-      ctx.fillStyle='rgba(16,185,129,0.35)'; ctx.fillText('OPPS',cx-radius*0.55,cy+radius*0.9);
-      ctx.fillStyle='rgba(59,130,246,0.35)'; ctx.fillText('REGIME',cx-radius*0.55,cy-radius*0.85);
+      ctx.fillStyle='rgba(239,68,68,0.50)'; ctx.fillText('RISKS',cx+radius*0.55,cy-radius*0.85);
+      ctx.fillStyle='rgba(245,158,11,0.50)'; ctx.fillText('EVENTS',cx+radius*0.55,cy+radius*0.9);
+      ctx.fillStyle='rgba(16,185,129,0.50)'; ctx.fillText('OPPS',cx-radius*0.55,cy+radius*0.9);
+      ctx.fillStyle='rgba(59,130,246,0.50)'; ctx.fillText('REGIME',cx-radius*0.55,cy-radius*0.85);
 
       // Sweep cone
       if (ctx.createConicGradient) {
