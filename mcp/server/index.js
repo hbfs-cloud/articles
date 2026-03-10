@@ -53,6 +53,7 @@ import * as tickEnricher   from './lib/tick-enricher.js';
 import * as jobManager     from './lib/job-manager.js';
 import * as rollingScanner from './lib/rolling-scanner.js';
 import * as webull from './lib/webull.js';
+import * as localLLM from './lib/local-llm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -1277,6 +1278,56 @@ server.tool(
     return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
   }
 );
+
+// ────────────────────────────────────
+// LOCAL LLM ORCHESTRATION
+// Conditionally registered — only if CLIs are detected on the machine
+// ────────────────────────────────────
+
+const detectedCLIs = await localLLM.detect();
+
+if (detectedCLIs.length > 0) {
+  server.tool(
+    'local_llm_list',
+    'List locally available AI CLIs (Claude Code, Gemini, etc.) detected on this machine.',
+    {},
+    async () => {
+      const list = localLLM.available();
+      return { content: [{ type: 'text', text: JSON.stringify(list, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'local_llm_invoke',
+    `Invoke a local AI CLI for cross-model collaboration. Available: ${detectedCLIs.join(', ')}. Use cases: second opinion, web-grounded search (gemini), code analysis (claude), fact-checking, cross-validation. The response is the raw CLI output.`,
+    {
+      cli: z.enum(detectedCLIs).describe('Which CLI to invoke'),
+      prompt: z.string().describe('The prompt to send'),
+      model: z.string().optional().describe('Model override (e.g. "claude-sonnet-4-20250514" for claude, "gemini-2.5-pro" for gemini)'),
+      timeout: z.number().optional().describe('Timeout in ms (default 120000)'),
+      cwd: z.string().optional().describe('Working directory for the CLI'),
+      maxTurns: z.number().optional().describe('Max agent turns (claude only, default unlimited)')
+    },
+    async ({ cli, prompt, model, timeout, cwd, maxTurns }) => {
+      const result = await localLLM.invoke(cli, prompt, { model, timeout, cwd, maxTurns });
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+    }
+  );
+
+  server.tool(
+    'local_llm_consensus',
+    `Ask the same question to multiple local AI CLIs and compare responses. Available: ${detectedCLIs.join(', ')}. Useful for cross-validation and reducing hallucination.`,
+    {
+      prompt: z.string().describe('The prompt to send to all CLIs'),
+      clis: z.array(z.enum(detectedCLIs)).optional().describe(`Which CLIs to query (default: all available: ${detectedCLIs.join(', ')})`),
+      model: z.string().optional().describe('Model override (applied to all CLIs)')
+    },
+    async ({ prompt, clis, model }) => {
+      const results = await localLLM.consensus(prompt, { clis, model });
+      return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+    }
+  );
+}
 
 // ────────────────────────────────────
 // RESOURCES
