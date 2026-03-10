@@ -478,6 +478,7 @@ Après génération du fichier HTML, ces 5 étapes sont **BLOQUANTES**. Si l'une
 
 1. **Vérifier la taille** : `wc -c scanner/YYYYMMDD/index.html` — doit être > 30KB (sinon article tronqué/incomplet)
 2. **Indexer** : `node tools/add_card.js scanner/YYYYMMDD/index.html` — vérifier que `data/scanner.json` et `data/search_data.js` apparaissent dans `git status`
+   - **INTERDIT** de modifier `data/scanner.json` manuellement ou via Write/Edit. TOUJOURS utiliser `add_card.js` qui gère l'escaping JSON correctement.
 3. **Mettre à jour le watchlist** : Écrire `mcp/watchlist.json` avec les 10 picks du scan
 4. **Mettre à jour le radar** : Écrire `data/radar.json` avec les données actuelles
 5. **Commit & Push** :

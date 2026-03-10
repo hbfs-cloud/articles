@@ -204,6 +204,7 @@ Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une
 
 1. **Vérifier la taille** : `wc -c daily/YYYYMMDD/index.html` — doit être > 30KB (sinon article tronqué/incomplet)
 2. **Indexer** : `node tools/add_card.js daily/YYYYMMDD/index.html` — vérifier que `data/daily.json` et `data/search_data.js` apparaissent dans `git status`
+   - **INTERDIT** de modifier `data/daily.json` manuellement ou via Write/Edit. TOUJOURS utiliser `add_card.js` qui gère l'escaping JSON correctement.
 3. **Mettre à jour le radar** : Écrire `data/radar.json` avec les données actuelles (risques, events, opportunités, régime)
 4. **Commit & Push** :
    ```bash
