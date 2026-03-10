@@ -2670,12 +2670,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Special VIX Deflation Scanner: Top 7 A+ Early Risk-Off — BATL, ERAS, AAOI, EDSA, ANTX, KORE, NCI",
-    "desc": "Capitalizing on decreased volatility for short-term opportunities. Despite a VIX deflation from ~29.5 to 23.56, the detected regime is Early Risk-Off, suggesting underlying caution. This scan focuses on high-momentum setups for 2-3 day trades.",
-    "tags": "us,eu,trade-idea,momentum_expansion,special",
+    "title": "Special VIX Deflation Scan — Top 12 A+ Swing Setups (US, EU, ETFs)",
+    "desc": "VIX peaked at 29.49 last week and is now deflating to 24.44 (-17%). Credit spreads are calm (HYG +0.6%), which means this was a technical spike, not a systemic one. Per our Mastering the VIX framework, this triggers a Mean Reversion Swing setup with a historical 78% win rate on 1-month SPY longs whe...",
+    "tags": "us,eu,etf,tech,semis,defense,macro,technique,trade-idea,special",
     "grade": "",
     "href": "/scanner/20260310/",
-    "date": "Tuesday, March 10, 2026"
+    "date": "10 mars 2026"
   },
   {
     "type": "scanner",
@@ -2683,12 +2683,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — MRVL, HIMS, CF, IOT, ADBE, LLY, TLT, SQQQ, DBA, SAP",
+    "title": "Daily Scanner",
     "desc": "The regime detector flags Early Risk-Off with a score of 0.46/1.0. VIX elevated at 25.50, DXY weakening at 98.73, and credit/liquidity metrics under pressure. The Iran conflict dominates macro headlines with oil crashing -10.2% as G7 discusses emergency reserves. Following the retrospective of March...",
     "tags": "us,eu,etf,tech,semis,healthcare,energy,materials,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260309/",
-    "date": "Monday, March 9, 2026"
+    "date": "CPI Week & Adobe Earnings"
   },
   {
     "type": "scanner",
