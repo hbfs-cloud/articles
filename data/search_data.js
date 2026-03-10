@@ -2644,12 +2644,25 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Daily Scanner",
+    "title": "Top 10 A+ EARLY RISK-OFF. — MRVL, HIMS, CF, LLY, IOT, ADBE, SAP, TLT, DBA, SQQQ",
+    "desc": "The regime detector flags Early Risk-Off with a score of 0.46/1.0. VIX elevated at 25.50, DXY weakening at 98.73, and credit/liquidity metrics under pressure. The Iran conflict dominates macro headlines with oil crashing -10.2% as G7 discusses emergency reserves. Following the retrospective of March...",
+    "tags": "us,eu,etf,tech,semis,healthcare,energy,materials,commodity,geopolitique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260309/",
+    "date": "Sunday, March 9, 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ EARLY RISK-OFF — NEM, ADM, BBIO, AMZN, KR, ARGX, RIO, EWJ, GDX, XLP",
     "desc": "The regime detector confirms Early Risk-Off with a composite score of 0.52/1.0. VIX elevated at 24.93 (component score 1.0), TLT under pressure at $88.28 (score 0.77), SPX struggling at 6,781 below its 50DMA (score 0.48). Gold is surging as the ultimate safe haven — GLD +1.1%, silver +2.3%. Followin...",
     "tags": "us,eu,asia,etf,materials,healthcare,consumer,energy,commodity,technique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260310-2300/",
-    "date": "Gold Rush & Defensive Rotation"
+    "date": "Monday, March 10, 2026"
   },
   {
     "type": "scanner",
@@ -2663,19 +2676,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260310/",
     "date": "10 mars 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Daily Scanner",
-    "desc": "The regime detector flags Early Risk-Off with a score of 0.46/1.0. VIX elevated at 25.50, DXY weakening at 98.73, and credit/liquidity metrics under pressure. The Iran conflict dominates macro headlines with oil crashing -10.2% as G7 discusses emergency reserves. Following the retrospective of March...",
-    "tags": "us,eu,etf,tech,semis,healthcare,energy,materials,commodity,geopolitique,trade-idea,macro",
-    "grade": "",
-    "href": "/scanner/20260309/",
-    "date": "CPI Week & Adobe Earnings"
   },
   {
     "type": "scanner",
