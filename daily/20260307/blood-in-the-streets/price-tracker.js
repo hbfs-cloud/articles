@@ -4,9 +4,16 @@
  * Works on both the main index page (.wl-pick) and sub-watchlist pages (.setup-card).
  */
 (function () {
+  // Each proxy returns { url, unwrap } — unwrap extracts Yahoo JSON from the proxy response
   var PROXIES = [
-    function (u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-    function (u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); }
+    {
+      url: function (u) { return 'https://api.allorigins.win/get?url=' + encodeURIComponent(u); },
+      unwrap: function (d) { return typeof d.contents === 'string' ? JSON.parse(d.contents) : d; }
+    },
+    {
+      url: function (u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+      unwrap: function (d) { return d; }
+    }
   ];
   var CACHE_KEY = 'bts-prices-v2';
   var CACHE_TTL = 5 * 60 * 1000;
@@ -63,15 +70,17 @@
   // ── Fetch single ticker with proxy fallback ──
   function fetchOne(sym, proxyIdx) {
     if (proxyIdx >= PROXIES.length) return Promise.resolve(null);
+    var proxy = PROXIES[proxyIdx];
     var yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(sym) + '?interval=1d&range=5d';
-    var url = PROXIES[proxyIdx](yahooUrl);
-    return fetch(url, { signal: AbortSignal.timeout(10000) })
+    var url = proxy.url(yahooUrl);
+    return fetch(url, { signal: AbortSignal.timeout(12000) })
       .then(function (r) {
         if (!r.ok) throw new Error(r.status);
         return r.json();
       })
       .then(function (d) {
-        var res = d && d.chart && d.chart.result && d.chart.result[0];
+        var yahoo = proxy.unwrap(d);
+        var res = yahoo && yahoo.chart && yahoo.chart.result && yahoo.chart.result[0];
         if (res && res.meta && res.meta.regularMarketPrice) return res.meta.regularMarketPrice;
         throw new Error('no data');
       })
