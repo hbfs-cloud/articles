@@ -1,5 +1,18 @@
 window.searchDataPrebuilt = [
   {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "BATL, ERAS, AAOI, EDSA, ANTX, KORE, NCI",
+    "exchange": "US, EU",
+    "name": "Special VIX Deflation Scanner",
+    "title": "Special VIX Deflation Scanner: Top 7 A+ Early Risk-Off — BATL, ERAS, AAOI, EDSA, ANTX, KORE, NCI",
+    "desc": "Capitalizing on decreased volatility for short-term opportunities. Despite a VIX deflation from ~29.5 to 23.56, the detected regime is Early Risk-Off, suggesting underlying caution. This scan focuses on high-momentum setups for 2-3 day trades.",
+    "tags": "us,eu,trade-idea,momentum_expansion,special",
+    "grade": "A+",
+    "href": "/scanner/20260310/",
+    "date": "10 March 2026"
+  },
+  {
     "type": "hebdo",
     "icon": "fa-calendar-week",
     "ticker": "",
@@ -19,7 +32,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Iran, NFP & Or $5,248 : La Semaine du Chaos",
-    "desc": "Frappes US-Israël sur l'Iran, Khamenei éliminé. Pétrole +12%, Or $5,248.\n    NFP vendredi, ISM Services lundi. NVIDIA $68Mds (+3.4%). BTC rebond $72K.\n    S&P 500 -1.0% post-choc. Risque d'escalade Moyen-Orient.",
+    "desc": "Frappes US-Israël sur l'Iran, Khamenei éliminé. Pétrole +12%, Or $5,248.
+    NFP vendredi, ISM Services lundi. NVIDIA $68Mds (+3.4%). BTC rebond $72K.
+    S&P 500 -1.0% post-choc. Risque d'escalade Moyen-Orient.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260302/",
@@ -32,7 +47,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "NVIDIA, Tarifs 15% & Or $5,000 : La Semaine Décisive",
-    "desc": "NVIDIA earnings mercredi ($65B+). SCOTUS invalide tarifs IEEPA,\n    Trump riposte 15% global. Or $5,081 (+1.7%). Argent +6%. S&P\n    +1.1%. Consumer Confidence mardi. Rotation tangible accélère.",
+    "desc": "NVIDIA earnings mercredi ($65B+). SCOTUS invalide tarifs IEEPA,
+    Trump riposte 15% global. Or $5,081 (+1.7%). Argent +6%. S&P
+    +1.1%. Consumer Confidence mardi. Rotation tangible accélère.",
     "tags": "us,eu,crypto,commodity,macro,geopolitique,technique,trade-idea,earnings",
     "grade": "",
     "href": "weekly/20260223/",
@@ -45,7 +62,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "La Grande Rotation & Genève : Semaine Charnière",
-    "desc": "ROTATION HISTORIQUE: Mag 7 en bear market. Nasdaq -$1,500 Md YTD.\n    FOMC Minutes mercredi. Walmart jeudi. Or > $5K. BTC $69,900\n    fragile. Talks Ukraine à Genève.",
+    "desc": "ROTATION HISTORIQUE: Mag 7 en bear market. Nasdaq -$1,500 Md YTD.
+    FOMC Minutes mercredi. Walmart jeudi. Or > $5K. BTC $69,900
+    fragile. Talks Ukraine à Genève.",
     "tags": "us,eu,crypto,commodity,macro,geopolitique,technique",
     "grade": "",
     "href": "weekly/20260216/",
@@ -58,7 +77,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "NFP & CPI : La Semaine Qui Décidera 2026",
-    "desc": "SEMAINE PIVOT: NFP mercredi, CPI vendredi. Dow franchit 50K. CTA\n    -$33B à -$80B ventes potentielles. Nasdaq -2.8%. Rotation\n    small-cap dramatique. Or test $5K.",
+    "desc": "SEMAINE PIVOT: NFP mercredi, CPI vendredi. Dow franchit 50K. CTA
+    -$33B à -$80B ventes potentielles. Nasdaq -2.8%. Rotation
+    small-cap dramatique. Or test $5K.",
     "tags": "us,macro,earnings,technique",
     "grade": "",
     "href": "weekly/20260209/",
@@ -71,7 +92,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Crash Métaux Historique & Earnings Mega-Tech",
-    "desc": "CRASH HISTORIQUE: Or $4,745 (-11.39%), Argent $78.53 (-31.37%).\n    Earnings GOOGL, AMZN, AMD. NFP vendredi. S&P +2.31%. BTC -14.50%.\n    Volatilité extrême.",
+    "desc": "CRASH HISTORIQUE: Or $4,745 (-11.39%), Argent $78.53 (-31.37%).
+    Earnings GOOGL, AMZN, AMD. NFP vendredi. S&P +2.31%. BTC -14.50%.
+    Volatilité extrême.",
     "tags": "us,commodity,crypto,earnings,macro",
     "grade": "",
     "href": "weekly/20260202/",
@@ -84,7 +107,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "FOMC Critique & Tarifs Canada 100%",
-    "desc": "Décision FOMC cruciale. Tarifs Canada portés à 100%. Marchés sous\n    tension géopolitique. Métaux en consolidation.",
+    "desc": "Décision FOMC cruciale. Tarifs Canada portés à 100%. Marchés sous
+    tension géopolitique. Métaux en consolidation.",
     "tags": "us,macro,geopolitique",
     "grade": "",
     "href": "weekly/20260126/",
@@ -97,7 +121,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Tarifs Europe & FOMC Critique",
-    "desc": "Menace de tarifs sur l'Europe. FOMC en ligne de mire. Rotation\n    sectorielle en cours. Or et métaux solides.",
+    "desc": "Menace de tarifs sur l'Europe. FOMC en ligne de mire. Rotation
+    sectorielle en cours. Or et métaux solides.",
     "tags": "us,eu,macro,geopolitique",
     "grade": "",
     "href": "weekly/20260119/",
@@ -110,7 +135,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Earnings Bancaires & Inflation Décisive",
-    "desc": "Saison des résultats bancaires. CPI et PPI en focus. Marchés en\n    attente de confirmation directionnelle.",
+    "desc": "Saison des résultats bancaires. CPI et PPI en focus. Marchés en
+    attente de confirmation directionnelle.",
     "tags": "us,financials,earnings,macro",
     "grade": "",
     "href": "weekly/20260112/",
@@ -123,7 +149,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Le Premier Cygne Noir de 2026",
-    "desc": "Choc Venezuela : nationalisation des ressources. Marchés en\n    turbulence. Impact sur pétrole, métaux et géopolitique globale.",
+    "desc": "Choc Venezuela : nationalisation des ressources. Marchés en
+    turbulence. Impact sur pétrole, métaux et géopolitique globale.",
     "tags": "us,energy,commodity,geopolitique",
     "grade": "",
     "href": "weekly/20260103/",
@@ -136,7 +163,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "L'Année du Métal et la Revanche de l'Europe",
-    "desc": "Bilan 2025 et outlook 2026. Métaux précieux en vedette. Europe en\n    rotation favorable. Perspectives macro et sectorielles.",
+    "desc": "Bilan 2025 et outlook 2026. Métaux précieux en vedette. Europe en
+    rotation favorable. Perspectives macro et sectorielles.",
     "tags": "us,eu,commodity,macro",
     "grade": "",
     "href": "weekly/20251229/",
@@ -149,7 +177,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Bitcoin Claws Back $67KAfter Saturday's War Shock",
-    "desc": "BTC is trading -10.7% below the 50D MA ($75,291) and -30% below the 200D MA ($95,895).\n    This confirms a medium-term bearish structure. The January 2026 high of ~$96,011 now acts as major resistance.\n    The current bounce from $63K is a relief rally in a downtrend — not yet a confirme...",
+    "desc": "BTC is trading -10.7% below the 50D MA ($75,291) and -30% below the 200D MA ($95,895).
+    This confirms a medium-term bearish structure. The January 2026 high of ~$96,011 now acts as major resistance.
+    The current bounce from $63K is a relief rally in a downtrend — not yet a confirme...",
     "tags": "crypto,geopolitique,macro,formation,trade-idea",
     "grade": "",
     "href": "/daily/20260308/",
@@ -162,7 +192,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Blood in the Streets: 120 Massacred Stocks in 12 Watchlists",
-    "desc": "\"The time to buy is when there's blood in the streets, even if the blood is your own.\" — Baron Rothschild",
+    "desc": ""The time to buy is when there's blood in the streets, even if the blood is your own." — Baron Rothschild",
     "tags": "special-edition,us,eu,asia,tech,ai,financials,materials,commodity,etf,speculative,trade-idea,macro",
     "grade": "",
     "href": "/daily/20260307/blood-in-the-streets/",
@@ -214,7 +244,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Iran Jour 4 : Asie en Chute LibreKOSPI −12% · Pétrole $79 · AVGO ce Soir",
-    "desc": "Le 20 février 2026, la Cour Suprême a invalidé les tarifs IEEPA de Trump dans l'affaire Learning Resources Inc. v. Trump (6-3, Roberts + majorité). Trump a immédiatement activé la Section 122 du Trade Act 1974 pour imposer des tarifs de 15% sur toutes les importations (justifiée par un \"déficit comm...",
+    "desc": "Le 20 février 2026, la Cour Suprême a invalidé les tarifs IEEPA de Trump dans l'affaire Learning Resources Inc. v. Trump (6-3, Roberts + majorité). Trump a immédiatement activé la Section 122 du Trade Act 1974 pour imposer des tarifs de 15% sur toutes les importations (justifiée par un "déficit comm...",
     "tags": "us,eu,asia,crypto,geopolitique,macro,energy,formation,trade-idea",
     "grade": "",
     "href": "/daily/20260304/",
@@ -227,7 +257,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Iran Jour 3 : Ormuz Fermé, Pétrole +6% — Les Marchés US Encaissent le Choc avec un Reversal Spectaculaire",
-    "desc": "Jour 3 du conflit US-Iran. L'Iran a déclaré le détroit d'Ormuz fermé suite aux frappes US-israéliennes.\nLe trafic tanker est essentiellement à l'arrêt. ~20% du pétrole mondial transite par Ormuz.\nLe Brent a atteint $82,37 en intraday (+13% en pic) avant de se stabiliser à +7,4% au settlement.\nL'OPEP...",
+    "desc": "Jour 3 du conflit US-Iran. L'Iran a déclaré le détroit d'Ormuz fermé suite aux frappes US-israéliennes.
+Le trafic tanker est essentiellement à l'arrêt. ~20% du pétrole mondial transite par Ormuz.
+Le Brent a atteint $82,37 en intraday (+13% en pic) avant de se stabiliser à +7,4% au settlement.
+L'OPEP...",
     "tags": "us,eu,asia,crypto,geopolitique,macro,energy,formation,trade-idea",
     "grade": "",
     "href": "/daily/20260303/",
@@ -291,8 +324,13 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Gold Hits $5,196 ATH as Tariff Shock Slams Risk Assets — NVIDIA\n    Tomorrow",
-    "desc": "Trump 15% global tariff slams markets: S&P -1.04%, Dow -1.66%.\n    BTC crashes to $63K — lowest since Dec 2024. Gold $5,196 ATH.\n    Silver +5.2%. VIX 21 elevated. Home Depot Q4 today. NVIDIA\n    mega-earnings tomorrow. Zelensky peace plan. Healthcare leads\n    rotation. Fear & Greed 10.",
+    "title": "Gold Hits $5,196 ATH as Tariff Shock Slams Risk Assets — NVIDIA
+    Tomorrow",
+    "desc": "Trump 15% global tariff slams markets: S&P -1.04%, Dow -1.66%.
+    BTC crashes to $63K — lowest since Dec 2024. Gold $5,196 ATH.
+    Silver +5.2%. VIX 21 elevated. Home Depot Q4 today. NVIDIA
+    mega-earnings tomorrow. Zelensky peace plan. Healthcare leads
+    rotation. Fear & Greed 10.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260224/",
@@ -305,7 +343,11 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Zelensky Peace Plan Tomorrow — XRP Crowned Hottest Trade of 2026",
-    "desc": "Zelensky announces peace plan & wartime elections Feb 24. BTC\n    $68.2K consolidation (-2.88 sigma below 200D MA). XRP +28% from\n    Feb low — CNBC's hottest crypto. SOL ETFs buck outflow trend. Fear\n    & Greed 10. NVIDIA Tuesday. New global tariff in effect.\n    Funding Rates deep dive.",
+    "desc": "Zelensky announces peace plan & wartime elections Feb 24. BTC
+    $68.2K consolidation (-2.88 sigma below 200D MA). XRP +28% from
+    Feb low — CNBC's hottest crypto. SOL ETFs buck outflow trend. Fear
+    & Greed 10. NVIDIA Tuesday. New global tariff in effect.
+    Funding Rates deep dive.",
     "tags": "crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260223/",
@@ -318,7 +360,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Fear & Greed Hits 9 — Only the 3rd Time Below 10 Since 2020",
-    "desc": "Crypto Fear & Greed at 9 (Extreme Fear) — historic low. BTC\n    $67.8K consolidation. ETH RSI 27 deeply oversold. 30K BTC whale\n    accumulation. 5 weeks ETF outflows ($4B). New 15% tariff Monday.\n    NVIDIA Wednesday. Iran strike window. Volume Profile deep dive.",
+    "desc": "Crypto Fear & Greed at 9 (Extreme Fear) — historic low. BTC
+    $67.8K consolidation. ETH RSI 27 deeply oversold. 30K BTC whale
+    accumulation. 5 weeks ETF outflows ($4B). New 15% tariff Monday.
+    NVIDIA Wednesday. Iran strike window. Volume Profile deep dive.",
     "tags": "crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260222/",
@@ -331,7 +376,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "SCOTUS Strikes Down Tariffs — Markets Rally Into the Weekend",
-    "desc": "SCOTUS rules IEEPA tariffs unconstitutional 6-3. S&P +0.72%,\n    Nasdaq +0.88%, DAX +0.87%. Silver +7.9%, Gold ATH $5,080. Iran\n    strike risk. Trump signs 10% replacement tariff. Full US, EU, Asia\n    coverage + NVIDIA preview.",
+    "desc": "SCOTUS rules IEEPA tariffs unconstitutional 6-3. S&P +0.72%,
+    Nasdaq +0.88%, DAX +0.87%. Silver +7.9%, Gold ATH $5,080. Iran
+    strike risk. Trump signs 10% replacement tariff. Full US, EU, Asia
+    coverage + NVIDIA preview.",
     "tags": "us,eu,asia,commodity,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260221/",
@@ -343,8 +391,13 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "SCOTUS vs Tarifs : La Cour Suprême Invalide les Droits de\n    Douane",
-    "desc": "Décision historique 6-3 : l'IEEPA ne peut pas servir de\n    base légale aux tarifs. $134Mds de revenus en jeu. Impact\n    sur le dollar (-0.2%), l'euro (1.18+), BTC ($68,200), l'or\n    ($5,000+ ATH). Gagnants : retail, tech, luxe Europe. Perdants :\n    producteurs domestiques US.",
+    "title": "SCOTUS vs Tarifs : La Cour Suprême Invalide les Droits de
+    Douane",
+    "desc": "Décision historique 6-3 : l'IEEPA ne peut pas servir de
+    base légale aux tarifs. $134Mds de revenus en jeu. Impact
+    sur le dollar (-0.2%), l'euro (1.18+), BTC ($68,200), l'or
+    ($5,000+ ATH). Gagnants : retail, tech, luxe Europe. Perdants :
+    producteurs domestiques US.",
     "tags": "us,eu,crypto,commodity,forex,geopolitique,macro",
     "grade": "",
     "href": "daily/scotus-tariffs/",
@@ -357,7 +410,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Cour Suprême, Iran & Core PCE : Vendredi Décisif",
-    "desc": "Triple catalyseur : SCOTUS ruling tarifs possible, Trump décide\n    sur l'Iran sous 10 jours, Core PCE + Flash PMI aujourd'hui.\n    Pétrole +7% en 2 jours. Or $5,000+ ATH. S&P -0.28%, Dow -0.54%.\n    BTC $67,743. NVDA earnings mercredi prochain.",
+    "desc": "Triple catalyseur : SCOTUS ruling tarifs possible, Trump décide
+    sur l'Iran sous 10 jours, Core PCE + Flash PMI aujourd'hui.
+    Pétrole +7% en 2 jours. Or $5,000+ ATH. S&P -0.28%, Dow -0.54%.
+    BTC $67,743. NVDA earnings mercredi prochain.",
     "tags": "us,commodity,crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260220/",
@@ -370,7 +426,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "FOMC Minutes & Sélections A++ Globales",
-    "desc": "Top 3 Dow Jones (GS, NVDA, CAT) + Top 4 Europe (BNP, BBVA, UCG,\n    Siemens) + Top 3 Asie (Samsung, SoftBank, TSMC). WMT earnings.\n    FOMC Minutes. PCE vendredi. S&P +0.56%, Nasdaq +0.78%. Or $5,008.\n    BTC $66,750.",
+    "desc": "Top 3 Dow Jones (GS, NVDA, CAT) + Top 4 Europe (BNP, BBVA, UCG,
+    Siemens) + Top 3 Asie (Samsung, SoftBank, TSMC). WMT earnings.
+    FOMC Minutes. PCE vendredi. S&P +0.56%, Nasdaq +0.78%. Or $5,008.
+    BTC $66,750.",
     "tags": "us,eu,asia,financials,earnings,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260219/",
@@ -383,7 +442,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Évolution des Volumes de Transaction 2024-2026",
-    "desc": "Analyse complète de l'évolution des volumes sur les marchés US\n    ($42.6T), Europe (€2.7T Euronext), Asie-Pacifique ($90.4B IPOs\n    +73%), et Crypto ($86.2T perp +47%). 10 charts ECharts\n    interactifs. Tendances, perspectives et déductions stratégiques.",
+    "desc": "Analyse complète de l'évolution des volumes sur les marchés US
+    ($42.6T), Europe (€2.7T Euronext), Asie-Pacifique ($90.4B IPOs
+    +73%), et Crypto ($86.2T perp +47%). 10 charts ECharts
+    interactifs. Tendances, perspectives et déductions stratégiques.",
     "tags": "us,eu,asia,crypto,technique,macro",
     "grade": "",
     "href": "daily/volume-evolution/",
@@ -396,7 +458,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Presidents' Day & Talks de Genève",
-    "desc": "Marchés US fermés (Presidents' Day). Talks Ukraine-Russie Round 3\n    à Genève. FOMC Minutes mercredi. Core PCE vendredi. BTC $67,987\n    sous pression. Or recule à $4,955. Semaine macro chargée.",
+    "desc": "Marchés US fermés (Presidents' Day). Talks Ukraine-Russie Round 3
+    à Genève. FOMC Minutes mercredi. Core PCE vendredi. BTC $67,987
+    sous pression. Or recule à $4,955. Semaine macro chargée.",
     "tags": "us,crypto,geopolitique,macro,formation",
     "grade": "",
     "href": "daily/20260217/",
@@ -445,7 +509,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "CRWV",
-    "exchange": "NASDAQ • Technology • Software - Infrastructure\n    — AI Cloud Computing",
+    "exchange": "NASDAQ • Technology • Software - Infrastructure
+    — AI Cloud Computing",
     "name": "CRWV — AI Cloud Infrastructure leader, 110% rev growth, NVIDIA-backed, 60% off highs. Analyst ...",
     "title": "CRWV — AI Cloud Infrastructure leader, 110% rev growth, NVIDIA-backed, 60% off highs. Analyst ...",
     "desc": "CoreWeave (CRWV) institutional analysis: AI cloud infrastructure hyperscaler, 110% revenue growth, $30.5B MCap, 60% off highs. NVIDIA-backed GPU cloud leader.",
@@ -510,7 +575,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "VIAV",
-    "exchange": "NASDAQ • Technology • Communication Equipment\n    — Network Test & Fiber Optics",
+    "exchange": "NASDAQ • Technology • Communication Equipment
+    — Network Test & Fiber Optics",
     "name": "VIAV — Fiber optics & network test play, 59.5% gross margins, $6.4B market cap, 200% 1Y rally....",
     "title": "VIAV — Fiber optics & network test play, 59.5% gross margins, $6.4B market cap, 200% 1Y rally....",
     "desc": "Viavi Solutions (VIAV) analysis: Network test & fiber optics leader, +200% in 12 months, revenue growth +16.6%, strong buy consensus. Target $27.21.",
@@ -549,7 +615,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "AXTI",
-    "exchange": "NASDAQ • Technology • Semiconductor Equipment & Materials\n    — Compound Substrates (InP / GaAs / Ge)",
+    "exchange": "NASDAQ • Technology • Semiconductor Equipment & Materials
+    — Compound Substrates (InP / GaAs / Ge)",
     "name": "AXTI — AXT Inc: compound semiconductor substrates (InP, GaAs, Ge) for fiber optics, 5G, AI. $1...",
     "title": "AXTI — AXT Inc: compound semiconductor substrates (InP, GaAs, Ge) for fiber optics, 5G, AI. $1...",
     "desc": "Institutional analysis of AXT Inc (AXTI): compound semiconductor substrate maker for 5G, AI, data centers. InP/GaAs materials play. $32 after 2700% rally from 52W lows.",
@@ -562,7 +629,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "NBIS",
-    "exchange": "NASDAQ • Communication Services • AI Infrastructure\n    — Full-Stack GPU Cloud",
+    "exchange": "NASDAQ • Communication Services • AI Infrastructure
+    — Full-Stack GPU Cloud",
     "name": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
     "title": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
     "desc": "Nebius Group full-stack AI infrastructure analysis: $530M revenue (+501% YoY), $3.7B cash, $20B+ backlog, MSFT $17.4B contract. Target $147.",
@@ -575,7 +643,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "POET",
-    "exchange": "NASDAQ • Technology • Semiconductors\n    — Photonic Integrated Circuits / AI Interconnects",
+    "exchange": "NASDAQ • Technology • Semiconductors
+    — Photonic Integrated Circuits / AI Interconnects",
     "name": "POET — Photonic integration for AI datacenters. $6.30, 80% revenue growth, optical interposer ...",
     "title": "POET — Photonic integration for AI datacenters. $6.30, 80% revenue growth, optical interposer ...",
     "desc": "POET Technologies institutional analysis: Optical Interposer platform for AI/datacenter interconnects. $92M cash, $962M MCap, strong buy consensus $7.65 target.",
@@ -588,7 +657,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "MRVL",
-    "exchange": "NASDAQ • Technology • Semiconductors\n    — Data Infrastructure / Custom AI ASICs",
+    "exchange": "NASDAQ • Technology • Semiconductors
+    — Data Infrastructure / Custom AI ASICs",
     "name": "MRVL — Custom AI accelerators driving 22% revenue growth. Q4 beat, massive guidance raise. Ana...",
     "title": "MRVL — Custom AI accelerators driving 22% revenue growth. Q4 beat, massive guidance raise. Ana...",
     "desc": "Institutional-grade analysis of Marvell Technology (MRVL): AI ASIC leader, Q4 beat, FY27 $11B revenue guide, +18% post-earnings gap. Target $119.",
@@ -601,7 +671,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "LITE",
-    "exchange": "NASDAQ • Technology • Communication Equipment\n    — Photonics / AI Datacenter",
+    "exchange": "NASDAQ • Technology • Communication Equipment
+    — Photonics / AI Datacenter",
     "name": "LITE — Photonics powerhouse riding AI datacenter wave. 65.5% revenue growth, $2.1B revenue, an...",
     "title": "LITE — Photonics powerhouse riding AI datacenter wave. 65.5% revenue growth, $2.1B revenue, an...",
     "desc": "Institutional-grade analysis of Lumentum Holdings (LITE): AI/datacenter photonics leader, 65.5% revenue growth, 4 consecutive EPS beats. Target $655.",
@@ -640,7 +711,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "CORZ",
-    "exchange": "NASDAQ • Technology • Software - Infrastructure\n    — Bitcoin Mining / AI Data Centers",
+    "exchange": "NASDAQ • Technology • Software - Infrastructure
+    — Bitcoin Mining / AI Data Centers",
     "name": "CORZ — BTC miner pivoting to AI data centers, $1B Morgan Stanley loan, RSI 37 oversold, analys...",
     "title": "CORZ — BTC miner pivoting to AI data centers, $1B Morgan Stanley loan, RSI 37 oversold, analys...",
     "desc": "Core Scientific analysis: Bitcoin miner pivoting to AI/HPC hosting, $1B Morgan Stanley facility, $4.7B MCap, 19% short interest. Target $26.40.",
@@ -692,7 +764,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "RCAT",
-    "exchange": "NASDAQ • Industrials • Aerospace & Defense\n    — Military Drones • ISR Systems • Electronic Warfare",
+    "exchange": "NASDAQ • Industrials • Aerospace & Defense
+    — Military Drones • ISR Systems • Electronic Warfare",
     "name": "RCAT — Military drone pure-play surging on Middle East tensions and NATO spending. #1 trending...",
     "title": "RCAT — Military drone pure-play surging on Middle East tensions and NATO spending. #1 trending...",
     "desc": "Red Cat Holdings (RCAT) deep-dive: military drone pure-play, ARACHNID ISR systems, Black Widow tactical drones, +79% above EMA200. Defense momentum meets speculative risk. Target $22-25.",
@@ -705,7 +778,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "ALT",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n    — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
+    "exchange": "NASDAQ • Healthcare • Biotechnology
+    — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
     "name": "ALT — pemvidutide BTD MASH, Phase 3 en 2026, cash $340M, beta 0.17 — biotech pure-play obésit...",
     "title": "ALT — pemvidutide BTD MASH, Phase 3 en 2026, cash $340M, beta 0.17 — biotech pure-play obésit...",
     "desc": "Analyse experte Altimmune : pemvidutide Phase 3 MASH 2026, FDA Breakthrough Therapy, cash $340M, dual GLP-1/glucagon. Obésité & MASH leader émergent.",
@@ -731,7 +805,8 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "IOVA",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n    — Thérapie Cellulaire TIL / Oncologie",
+    "exchange": "NASDAQ • Healthcare • Biotechnology
+    — Thérapie Cellulaire TIL / Oncologie",
     "name": "IOVA — AMTAGVI revenue $264M, +30% QoQ en Q4, Fast Track NSCLC, 35% SI — setup squeeze ou piège ?",
     "title": "IOVA — AMTAGVI revenue $264M, +30% QoQ en Q4, Fast Track NSCLC, 35% SI — setup squeeze ou piège ?",
     "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, +61% YoY, 35% SI, RSI 80, path to profitability. Thérapie cellulaire TIL leader.",
@@ -773,7 +848,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Software • Application",
     "name": "TEAM — Atlassian: Deep Value Opportunity ou Value Trap ?",
     "title": "TEAM — Atlassian: Deep Value Opportunity ou Value Trap ?",
-    "desc": "Analyse approfondie d'Atlassian (TEAM). Positionnement Cloud/IA,\n    risques de décélération de croissance, valorisation, dynamique de\n    l'actionnariat et signaux techniques. Inclus une Trade Idea.",
+    "desc": "Analyse approfondie d'Atlassian (TEAM). Positionnement Cloud/IA,
+    risques de décélération de croissance, valorisation, dynamique de
+    l'actionnariat et signaux techniques. Inclus une Trade Idea.",
     "tags": "us,tech,ai,trade-idea,software",
     "grade": "B",
     "href": "analyses/TEAM/",
@@ -786,7 +863,10 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Biotechnology • PHASE 2 SUCCESS",
     "name": "TARA — Succès Phase 2 & Setup Post-Catalyseur",
     "title": "TARA — Succès Phase 2 & Setup Post-Catalyseur",
-    "desc": "Analyse de la réussite exceptionnelle de la Phase 2\n    (TARA-002, cancer NMIBC), solide cash runway de 132M$, anomalie de\n    marché \"Sell-the-News\". Décortication du niveau\n    technique institutionnel.",
+    "desc": "Analyse de la réussite exceptionnelle de la Phase 2
+    (TARA-002, cancer NMIBC), solide cash runway de 132M$, anomalie de
+    marché "Sell-the-News". Décortication du niveau
+    technique institutionnel.",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "A",
     "href": "analyses/TARA",
@@ -797,9 +877,14 @@ window.searchDataPrebuilt = [
     "icon": "fa-chart-column",
     "ticker": "NVDA",
     "exchange": "NASDAQ • Semiconductors",
-    "name": "NVIDIA Corporation — Pré-Earnings Q4 & Le\n    Tribunal",
-    "title": "NVIDIA Corporation — Pré-Earnings Q4 & Le\n    Tribunal",
-    "desc": "Analyse approfondie pré-earnings Q4 FY2026 (25/02).\n    Fondamentaux, technique, options, impact DeepSeek, tarifs Trump,\n    rotation sectorielle. Inclut Le Tribunal : débat\n    contradictoire acheter/vendre en 7 rounds.",
+    "name": "NVIDIA Corporation — Pré-Earnings Q4 & Le
+    Tribunal",
+    "title": "NVIDIA Corporation — Pré-Earnings Q4 & Le
+    Tribunal",
+    "desc": "Analyse approfondie pré-earnings Q4 FY2026 (25/02).
+    Fondamentaux, technique, options, impact DeepSeek, tarifs Trump,
+    rotation sectorielle. Inclut Le Tribunal : débat
+    contradictoire acheter/vendre en 7 rounds.",
     "tags": "us,semis,tech,ai,trade-idea",
     "grade": "A",
     "href": "analyses/NVDA",
@@ -812,7 +897,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Cloud & AI • SPECULATIVE",
     "name": "RXT — The Palantir Hype: Turnaround or Trap?",
     "title": "RXT — The Palantir Hype: Turnaround or Trap?",
-    "desc": "+360% surge in 2 days on Palantir AI partnership. $2.69B revenue\n    but $3.28B debt, declining margins, analyst target $1.48.\n    Extremely speculative — beginner's guide to hype stocks.",
+    "desc": "+360% surge in 2 days on Palantir AI partnership. $2.69B revenue
+    but $3.28B debt, declining margins, analyst target $1.48.
+    Extremely speculative — beginner's guide to hype stocks.",
     "tags": "us,tech,ai,speculative,trade-idea",
     "grade": "D",
     "href": "analyses/RXT",
@@ -825,7 +912,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Fitness Equipment • SCAM ALERT",
     "name": "TRNR — Fraud Investigation: The Dilution Death Spiral",
     "title": "TRNR — Fraud Investigation: The Dilution Death Spiral",
-    "desc": "4 reverse splits in 20 months (400,000:1), $46.8M debt on $845K\n    cash, negative gross margins, going concern warning, -99.997%\n    decline, Sportstech lawsuit. A textbook penny stock scam.",
+    "desc": "4 reverse splits in 20 months (400,000:1), $46.8M debt on $845K
+    cash, negative gross margins, going concern warning, -99.997%
+    decline, Sportstech lawsuit. A textbook penny stock scam.",
     "tags": "us,consumer,speculative",
     "grade": "F",
     "href": "analyses/TRNR",
@@ -838,7 +927,10 @@ window.searchDataPrebuilt = [
     "exchange": "Euronext Paris • Aérospatiale & Défense",
     "name": "Airbus — Résultats Record, Guidance Prudente",
     "title": "Airbus — Résultats Record, Guidance Prudente",
-    "desc": "FY2025 : CA €73.4B, EBIT €7.1B (+31%), 793 livraisons,\n    carnet record 8,754 avions (€619B). Guidance 2026 : ~870\n    livraisons (sous consensus). P&W engine shortage. Dividende\n    €3.20. 6 ECharts.",
+    "desc": "FY2025 : CA €73.4B, EBIT €7.1B (+31%), 793 livraisons,
+    carnet record 8,754 avions (€619B). Guidance 2026 : ~870
+    livraisons (sous consensus). P&W engine shortage. Dividende
+    €3.20. 6 ECharts.",
     "tags": "eu,industrials,defense,earnings,trade-idea",
     "grade": "B",
     "href": "analyses/AIR",
@@ -851,7 +943,10 @@ window.searchDataPrebuilt = [
     "exchange": "Euronext Paris • Transport Aérien",
     "name": "Air France-KLM — Profit Record Historique",
     "title": "Air France-KLM — Profit Record Historique",
-    "desc": "FY2025 : CA €33B (+4.9%), premier résultat op.\n    >€2B (record), bénéfice net €1.75B\n    (x3). +14% en séance. Premium & transatlantique forts.\n    KLM sous pression. 100M+ passagers. 5 ECharts.",
+    "desc": "FY2025 : CA €33B (+4.9%), premier résultat op.
+    >€2B (record), bénéfice net €1.75B
+    (x3). +14% en séance. Premium & transatlantique forts.
+    KLM sous pression. 100M+ passagers. 5 ECharts.",
     "tags": "eu,industrials,earnings,trade-idea",
     "grade": "B",
     "href": "analyses/AF",
@@ -864,7 +959,10 @@ window.searchDataPrebuilt = [
     "exchange": "Euronext Paris • Infrastructure Financière",
     "name": "Euronext — Monopole Européen, Marge 62.7%",
     "title": "Euronext — Monopole Européen, Marge 62.7%",
-    "desc": "FY2025 : CA €1.82B (+12.1%), EBITDA €1.14B (marge\n    62.7%), EPS €7.27 (+10.3%). Acquisition Athex, retail\n    >€1B/jour. Plan Innovate for Growth 2027. Power futures,\n    Repo, CSD. 7 ECharts.",
+    "desc": "FY2025 : CA €1.82B (+12.1%), EBITDA €1.14B (marge
+    62.7%), EPS €7.27 (+10.3%). Acquisition Athex, retail
+    >€1B/jour. Plan Innovate for Growth 2027. Power futures,
+    Repo, CSD. 7 ECharts.",
     "tags": "eu,financials,earnings,trade-idea",
     "grade": "A",
     "href": "analyses/ENX",
@@ -877,9 +975,12 @@ window.searchDataPrebuilt = [
     "exchange": "Crypto • Thématique • USDT, USDC, DAI",
     "name": "Stablecoins — Le Nouveau Dollar Digital",
     "title": "Stablecoins — Le Nouveau Dollar Digital",
-    "desc": "Analyse thématique complète : marché $312B (+50%), volume $33T,\n    USDT $184B vs USDC $74B, réserves T-Bills, GENIUS Act & MiCA,\n    yield-bearing stablecoins, risques systémiques. 6 charts ECharts\n    interactifs.",
+    "desc": "Analyse thématique complète : marché $312B (+50%), volume $33T,
+    USDT $184B vs USDC $74B, réserves T-Bills, GENIUS Act & MiCA,
+    yield-bearing stablecoins, risques systémiques. 6 charts ECharts
+    interactifs.",
     "tags": "crypto",
-    "grade": "B",
+    "grade": "",
     "href": "analyses/STABLECOINS",
     "date": ""
   },
@@ -890,7 +991,10 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Technology • Software - Infrastructure",
     "name": "ZETA — IA Marketing & OpenAI",
     "title": "ZETA — IA Marketing & OpenAI",
-    "desc": "Analyse complète Zeta Global (ZETA) : plateforme IA marketing,\n    partenariat OpenAI (Athena), acquisition Marigold $325M. $15.35 |\n    MCap $3.4B | Revenue $1.2B (+26%). Earnings 24 février —\n    catalyseur majeur.",
+    "desc": "Analyse complète Zeta Global (ZETA) : plateforme IA marketing,
+    partenariat OpenAI (Athena), acquisition Marigold $325M. $15.35 |
+    MCap $3.4B | Revenue $1.2B (+26%). Earnings 24 février —
+    catalyseur majeur.",
     "tags": "us,tech,ai,earnings,trade-idea",
     "grade": "B",
     "href": "analyses/ZETA",
@@ -903,7 +1007,10 @@ window.searchDataPrebuilt = [
     "exchange": "Euronext • Index • Pan-Europe",
     "name": "STOXX 600 — Focus FR, DE, ES, IT",
     "title": "STOXX 600 — Focus FR, DE, ES, IT",
-    "desc": "Analyse complète STOXX 600 : VGK $88.70 ATH, ECB 2% stable, 4 pays\n    majeurs (EWQ, EWG, EWP, EWI). 5 setups A+ : BBVA, SAP, Siemens\n    Energy, UniCredit, TotalEnergies. Rotation sectorielle et\n    catalyseurs 4 semaines.",
+    "desc": "Analyse complète STOXX 600 : VGK $88.70 ATH, ECB 2% stable, 4 pays
+    majeurs (EWQ, EWG, EWP, EWI). 5 setups A+ : BBVA, SAP, Siemens
+    Energy, UniCredit, TotalEnergies. Rotation sectorielle et
+    catalyseurs 4 semaines.",
     "tags": "eu,macro,technique",
     "grade": "A",
     "href": "analyses/STOXX600",
@@ -916,7 +1023,9 @@ window.searchDataPrebuilt = [
     "exchange": "KRX • Index • Séoul",
     "name": "KOSPI Séoul — Semiconducteurs & HBM",
     "title": "KOSPI Séoul — Semiconducteurs & HBM",
-    "desc": "Analyse complète KOSPI : EWY $133.97 ATH, rally +76% en 2025.\n    Samsung ₩181,200, SK Hynix ₩880,000, supercycle HBM4/IA. Trade\n    ideas : EWY, SSNLF, KORU. Won stable, risque géopolitique Chine.",
+    "desc": "Analyse complète KOSPI : EWY $133.97 ATH, rally +76% en 2025.
+    Samsung ₩181,200, SK Hynix ₩880,000, supercycle HBM4/IA. Trade
+    ideas : EWY, SSNLF, KORU. Won stable, risque géopolitique Chine.",
     "tags": "asia,semis,technique",
     "grade": "A",
     "href": "analyses/KOSPI",
@@ -929,7 +1038,9 @@ window.searchDataPrebuilt = [
     "exchange": "Forex • Major Pair • Long Terme",
     "name": "Euro / Dollar US — Analyse Long Terme",
     "title": "Euro / Dollar US — Analyse Long Terme",
-    "desc": "Analyse complete EUR/USD : 1.1867 | Fed dovish vs ECB stable | DXY\n    < 97 | EUR vs CHF, GBP, JPY | MAD, DZD, AED | Previsions\n    institutionnelles 1.20-1.25",
+    "desc": "Analyse complete EUR/USD : 1.1867 | Fed dovish vs ECB stable | DXY
+    < 97 | EUR vs CHF, GBP, JPY | MAD, DZD, AED | Previsions
+    institutionnelles 1.20-1.25",
     "tags": "forex,macro",
     "grade": "B+",
     "href": "analyses/EURUSD",
@@ -942,7 +1053,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE / Euronext • Steel",
     "name": "ArcelorMittal S.A.",
     "title": "ArcelorMittal S.A.",
-    "desc": "Analyse complète ArcelorMittal (MT) : N°2 mondial de l'acier.\n    $61.59, MCap $46.9B, EBITDA $5.9B, P/B 0.86x. Bénéfices x2.5 en\n    2025, CBAM en catalyseur.",
+    "desc": "Analyse complète ArcelorMittal (MT) : N°2 mondial de l'acier.
+    $61.59, MCap $46.9B, EBITDA $5.9B, P/B 0.86x. Bénéfices x2.5 en
+    2025, CBAM en catalyseur.",
     "tags": "eu,materials,trade-idea",
     "grade": "B+",
     "href": "analyses/MT",
@@ -955,7 +1068,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "GE Vernova",
     "title": "GE Vernova",
-    "desc": "Analyse technique et fondamentale complète de GE Vernova (GEV).\n    Prix: $802.90, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de GE Vernova (GEV).
+    Prix: $802.90, Market Cap: .",
     "tags": "us,industrials,energy,trade-idea",
     "grade": "A",
     "href": "analyses/GEV",
@@ -968,7 +1082,9 @@ window.searchDataPrebuilt = [
     "exchange": "Commodity • Precious Metals",
     "name": "Or (Gold) — $5,046/oz — Bull Market Séculaire",
     "title": "Or (Gold) — $5,046/oz — Bull Market Séculaire",
-    "desc": "ATH $5,602 le 28 Jan puis crash -11%. Recovery $5,000+. Central\n    banks record buying. DXY < 97. ETF inflows $9.4B. Target\n    $6,000.",
+    "desc": "ATH $5,602 le 28 Jan puis crash -11%. Recovery $5,000+. Central
+    banks record buying. DXY < 97. ETF inflows $9.4B. Target
+    $6,000.",
     "tags": "commodity,trade-idea",
     "grade": "A",
     "href": "analyses/XAU",
@@ -979,9 +1095,13 @@ window.searchDataPrebuilt = [
     "icon": "fa-chart-column",
     "ticker": "XAG",
     "exchange": "Commodity • Precious Metals",
-    "name": "Argent (Silver) — $69.72 (SLV) — Haussier avec\n    Volatilité",
-    "title": "Argent (Silver) — $69.72 (SLV) — Haussier avec\n    Volatilité",
-    "desc": "Crash -30% depuis $100+ en janvier. Gold/Silver ratio 74:1 =\n    argent sous-évalué. Demande industrielle (solar, EVs) en hausse.\n    52W High $109.83.",
+    "name": "Argent (Silver) — $69.72 (SLV) — Haussier avec
+    Volatilité",
+    "title": "Argent (Silver) — $69.72 (SLV) — Haussier avec
+    Volatilité",
+    "desc": "Crash -30% depuis $100+ en janvier. Gold/Silver ratio 74:1 =
+    argent sous-évalué. Demande industrielle (solar, EVs) en hausse.
+    52W High $109.83.",
     "tags": "commodity,trade-idea",
     "grade": "B+",
     "href": "analyses/XAG",
@@ -994,7 +1114,9 @@ window.searchDataPrebuilt = [
     "exchange": "Crypto • Bitcoin",
     "name": "Bitcoin — $70,310 — Correction Majeure -44%",
     "title": "Bitcoin — $70,310 — Correction Majeure -44%",
-    "desc": "ATH $126,198 puis chute à $70,310. Sous les MA50 et MA200. Death\n    cross territory. MCap $1.4T. ETFs BTC en outflows. Macro\n    headwinds.",
+    "desc": "ATH $126,198 puis chute à $70,310. Sous les MA50 et MA200. Death
+    cross territory. MCap $1.4T. ETFs BTC en outflows. Macro
+    headwinds.",
     "tags": "crypto,technique,trade-idea",
     "grade": "C+",
     "href": "analyses/BTC",
@@ -1007,7 +1129,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "Argan, Inc.",
     "title": "Argan, Inc.",
-    "desc": "Analyse technique et fondamentale complète de Argan, Inc. (AGX).\n    Prix: $412.87, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Argan, Inc. (AGX).
+    Prix: $412.87, Market Cap: .",
     "tags": "us,industrials,trade-idea",
     "grade": "A-",
     "href": "analyses/AGX",
@@ -1020,7 +1143,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Consumer Cyclical",
     "name": "Amazon.com Inc",
     "title": "Amazon.com Inc",
-    "desc": "Analyse complète d'Amazon (AMZN) : AWS, e-commerce, valorisation,\n    technique et risques. RSI à 23 — zone de survente extrême. Target\n    $282 (+42%).",
+    "desc": "Analyse complète d'Amazon (AMZN) : AWS, e-commerce, valorisation,
+    technique et risques. RSI à 23 — zone de survente extrême. Target
+    $282 (+42%).",
     "tags": "us,tech,consumer,ai,trade-idea",
     "grade": "A-",
     "href": "analyses/AMZN",
@@ -1033,7 +1158,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "Avino Silver & Gold Mines",
     "title": "Avino Silver & Gold Mines",
-    "desc": "Avino Silver & Gold Mines est un producteur d'argent, d'or et\n    de cuivre basé au Canada avec des opérations minières au Mexique.\n    La société exploite...",
+    "desc": "Avino Silver & Gold Mines est un producteur d'argent, d'or et
+    de cuivre basé au Canada avec des opérations minières au Mexique.
+    La société exploite...",
     "tags": "us,materials,commodity,trade-idea",
     "grade": "A-",
     "href": "analyses/ASM",
@@ -1046,7 +1173,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Communication Services",
     "name": "Alphabet Inc.",
     "title": "Alphabet Inc.",
-    "desc": "Analyse complète d'Alphabet Inc. (GOOGL) : fondamentaux,\n    technique, risques et trade idea. $305.60 — Strong Buy — Target\n    $373.",
+    "desc": "Analyse complète d'Alphabet Inc. (GOOGL) : fondamentaux,
+    technique, risques et trade idea. $305.60 — Strong Buy — Target
+    $373.",
     "tags": "us,tech,ai,trade-idea",
     "grade": "A-",
     "href": "analyses/GOOGL",
@@ -1059,7 +1188,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services",
     "name": "Interactive Brokers Group",
     "title": "Interactive Brokers Group",
-    "desc": "Analyse complete d'Interactive Brokers Group (IBKR) - Le courtier\n    electronique mondial leader. Revenue $6.2B, marges 79%, ROE 23.5%,\n    4 trimestres de beats consecutifs.",
+    "desc": "Analyse complete d'Interactive Brokers Group (IBKR) - Le courtier
+    electronique mondial leader. Revenue $6.2B, marges 79%, ROE 23.5%,
+    4 trimestres de beats consecutifs.",
     "tags": "us,financials,trade-idea",
     "grade": "A-",
     "href": "analyses/IBKR",
@@ -1072,7 +1203,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Communication Services",
     "name": "Meta Platforms",
     "title": "Meta Platforms",
-    "desc": "Analyse complete de Meta Platforms (META) : fondamentaux,\n    technique, insiders, risques et trade idea. Revenue $201B, marge\n    opérationnelle 41%, target $860.",
+    "desc": "Analyse complete de Meta Platforms (META) : fondamentaux,
+    technique, insiders, risques et trade idea. Revenue $201B, marge
+    opérationnelle 41%, target $860.",
     "tags": "us,tech,ai,trade-idea",
     "grade": "A-",
     "href": "analyses/META",
@@ -1085,7 +1218,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Microsoft Corporation",
     "title": "Microsoft Corporation",
-    "desc": "Analyse institutionnelle complete de Microsoft (MSFT) :\n    fondamentaux, technique, risques, insiders et trade idea. Revenue\n    $305B, marge opérationnelle 47%, target $596.",
+    "desc": "Analyse institutionnelle complete de Microsoft (MSFT) :
+    fondamentaux, technique, risques, insiders et trade idea. Revenue
+    $305B, marge opérationnelle 47%, target $596.",
     "tags": "us,tech,ai,trade-idea",
     "grade": "A-",
     "href": "analyses/MSFT",
@@ -1098,7 +1233,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technologie / Semiconducteurs",
     "name": "Rambus Inc",
     "title": "Rambus Inc",
-    "desc": "Rambus Inc est un concepteur de puces d'interface mémoire DDR5 et\n    de propriété intellectuelle (IP) pour semiconducteurs. Fondée en\n    1990 à San Jose (CA), Rambus...",
+    "desc": "Rambus Inc est un concepteur de puces d'interface mémoire DDR5 et
+    de propriété intellectuelle (IP) pour semiconducteurs. Fondée en
+    1990 à San Jose (CA), Rambus...",
     "tags": "us,semis,tech,trade-idea",
     "grade": "A-",
     "href": "analyses/RMBS",
@@ -1111,7 +1248,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Apple Inc.",
     "title": "Apple Inc.",
-    "desc": "Analyse complète Apple Inc. (AAPL) : fondamentaux, technique,\n    insiders, risques et trade idea. $255.39 | MCap $3.75T | Revenue\n    +15.7%",
+    "desc": "Analyse complète Apple Inc. (AAPL) : fondamentaux, technique,
+    insiders, risques et trade idea. $255.39 | MCap $3.75T | Revenue
+    +15.7%",
     "tags": "us,tech,trade-idea",
     "grade": "B+",
     "href": "analyses/AAPL",
@@ -1124,7 +1263,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Basic Materials",
     "name": "First Majestic Silver — Silver Bull Play",
     "title": "First Majestic Silver — Silver Bull Play",
-    "desc": "Silver miner #1. Revenue +95% YoY. Cash $575M. 3 mines au Mexique.\n    Near 52W high $27.90. Argent > $100. Rotation métaux précieux.",
+    "desc": "Silver miner #1. Revenue +95% YoY. Cash $575M. 3 mines au Mexique.
+    Near 52W high $27.90. Argent > $100. Rotation métaux précieux.",
     "tags": "us,materials,commodity,trade-idea",
     "grade": "B+",
     "href": "analyses/AG",
@@ -1137,7 +1277,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Advanced Micro Devices",
     "title": "Advanced Micro Devices",
-    "desc": "Analyse complete d'AMD : leader GPU/CPU pour l'IA et les data\n    centers. Revenue $34.6B (+34%), EPS en forte hausse, target $287.\n    Profil Growth/AI.",
+    "desc": "Analyse complete d'AMD : leader GPU/CPU pour l'IA et les data
+    centers. Revenue $34.6B (+34%), EPS en forte hausse, target $287.
+    Profil Growth/AI.",
     "tags": "us,semis,tech,ai,trade-idea",
     "grade": "B+",
     "href": "analyses/AMD",
@@ -1150,7 +1292,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "Bloom Energy Corporation",
     "title": "Bloom Energy Corporation",
-    "desc": "Analyse complete de Bloom Energy Corporation (BE) : piles a\n    combustible, hydrogene, data centers AI. Score B+ | Haussier\n    structurel.",
+    "desc": "Analyse complete de Bloom Energy Corporation (BE) : piles a
+    combustible, hydrogene, data centers AI. Score B+ | Haussier
+    structurel.",
     "tags": "us,industrials,energy,trade-idea",
     "grade": "B+",
     "href": "analyses/BE",
@@ -1163,7 +1307,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Technology",
     "name": "Bullish",
     "title": "Bullish",
-    "desc": "Analyse complete de Bullish (BLSH) - Exchange crypto, CoinDesk,\n    indices digitaux. Score B+ Haussier. Target $45.20.",
+    "desc": "Analyse complete de Bullish (BLSH) - Exchange crypto, CoinDesk,
+    indices digitaux. Score B+ Haussier. Target $45.20.",
     "tags": "us,crypto,financials,trade-idea",
     "grade": "B+",
     "href": "analyses/BLSH",
@@ -1176,7 +1321,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Energy",
     "name": "Cameco Corporation",
     "title": "Cameco Corporation",
-    "desc": "Analyse complète de Cameco Corporation (CCJ) : leader mondial de\n    l'uranium, Westinghouse, renaissance nucléaire. Prix $113.09,\n    target $123.",
+    "desc": "Analyse complète de Cameco Corporation (CCJ) : leader mondial de
+    l'uranium, Westinghouse, renaissance nucléaire. Prix $113.09,
+    target $123.",
     "tags": "us,energy,trade-idea",
     "grade": "B+",
     "href": "analyses/CCJ",
@@ -1189,7 +1336,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Energy",
     "name": "Chevron — Energy Major / Dividende 3.9%",
     "title": "Chevron — Energy Major / Dividende 3.9%",
-    "desc": "Major pétrolière near 52W high. Beta 0.67 = défensif. Div 3.9%\n    safe. P/B 1.94x. Rotation value/energy. Géopolitique = tailwind.",
+    "desc": "Major pétrolière near 52W high. Beta 0.67 = défensif. Div 3.9%
+    safe. P/B 1.94x. Rotation value/energy. Géopolitique = tailwind.",
     "tags": "us,energy,dividende,trade-idea",
     "grade": "B+",
     "href": "analyses/CVX",
@@ -1202,7 +1350,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Dynavax Technologies",
     "title": "Dynavax Technologies",
-    "desc": "Dynavax Technologies est une société biopharmaceutique spécialisée\n    dans les vaccins. Fondée en 1996 à Emeryville, Californie, elle\n    commercialise HEPLISAV-B, un...",
+    "desc": "Dynavax Technologies est une société biopharmaceutique spécialisée
+    dans les vaccins. Fondée en 1996 à Emeryville, Californie, elle
+    commercialise HEPLISAV-B, un...",
     "tags": "us,healthcare,trade-idea",
     "grade": "B+",
     "href": "analyses/DVAX",
@@ -1215,7 +1365,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Basic Materials",
     "name": "Endeavour Silver Corp.",
     "title": "Endeavour Silver Corp.",
-    "desc": "Analyse complete d'Endeavour Silver Corp (EXK) : fondamentaux,\n    technique, risques, options et trade idea. Silver miner mid-cap\n    avec croissance revenue +167% et beta 2.1.",
+    "desc": "Analyse complete d'Endeavour Silver Corp (EXK) : fondamentaux,
+    technique, risques, options et trade idea. Silver miner mid-cap
+    avec croissance revenue +167% et beta 2.1.",
     "tags": "us,materials,commodity,trade-idea",
     "grade": "B+",
     "href": "analyses/EXK",
@@ -1228,7 +1380,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "FedEx — Logistics Bellwether",
     "title": "FedEx — Logistics Bellwether",
-    "desc": "Near 52W high. Revenue +13.9%. DRIVE transformation. Freight\n    spin-off catalyst. PE 20.7x. Indicateur économique positif.",
+    "desc": "Near 52W high. Revenue +13.9%. DRIVE transformation. Freight
+    spin-off catalyst. PE 20.7x. Indicateur économique positif.",
     "tags": "us,industrials,trade-idea",
     "grade": "B+",
     "href": "analyses/FDX",
@@ -1241,7 +1394,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services",
     "name": "Robinhood Markets",
     "title": "Robinhood Markets",
-    "desc": "Analyse technique et fondamentale complète de Robinhood Markets\n    (HOOD). Prix: $75.93, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Robinhood Markets
+    (HOOD). Prix: $75.93, Market Cap: .",
     "tags": "",
     "grade": "B+",
     "href": "analyses/HOOD",
@@ -1254,7 +1408,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "Integra Resources Corp.",
     "title": "Integra Resources Corp.",
-    "desc": "Analyse complete d'Integra Resources Corp. (ITRG) : producteur\n    d'or et d'argent, projet DeLamar, fondamentaux, technique, risques\n    et trade idea.",
+    "desc": "Analyse complete d'Integra Resources Corp. (ITRG) : producteur
+    d'or et d'argent, projet DeLamar, fondamentaux, technique, risques
+    et trade idea.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/ITRG",
@@ -1267,7 +1423,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Energy",
     "name": "Centrus Energy Corp.",
     "title": "Centrus Energy Corp.",
-    "desc": "Analyse complete de Centrus Energy Corp. (LEU) - Leader americain\n    de l'enrichissement d'uranium. Fondamentaux, technique, risques et\n    trade idea.",
+    "desc": "Analyse complete de Centrus Energy Corp. (LEU) - Leader americain
+    de l'enrichissement d'uranium. Fondamentaux, technique, risques et
+    trade idea.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/LEU",
@@ -1280,7 +1438,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "MongoDB, Inc.",
     "title": "MongoDB, Inc.",
-    "desc": "Analyse complete de MongoDB (MDB) : leader NoSQL\n    database-as-a-service, revenue +18.7%, target analyste $448.74.\n    Analyse technique, fondamentaux, risques et trade idea.",
+    "desc": "Analyse complete de MongoDB (MDB) : leader NoSQL
+    database-as-a-service, revenue +18.7%, target analyste $448.74.
+    Analyse technique, fondamentaux, risques et trade idea.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/MDB",
@@ -1293,7 +1453,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Communication Services",
     "name": "Netflix, Inc.",
     "title": "Netflix, Inc.",
-    "desc": "Analyse complète Netflix : Warner Bros acquisition $82.7B, RSI\n    oversold 27.6, revenue $45.2B (+17.6%), marge nette 24.3%. Verdict\n    institutionnel.",
+    "desc": "Analyse complète Netflix : Warner Bros acquisition $82.7B, RSI
+    oversold 27.6, revenue $45.2B (+17.6%), marge nette 24.3%. Verdict
+    institutionnel.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/NFLX",
@@ -1306,7 +1468,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Palantir Technologies",
     "title": "Palantir Technologies",
-    "desc": "Analyse complete de Palantir Technologies (PLTR) : IA enterprise,\n    revenue +70%, marge nette 36%, valorisation premium. Score B+.",
+    "desc": "Analyse complete de Palantir Technologies (PLTR) : IA enterprise,
+    revenue +70%, marge nette 36%, valorisation premium. Score B+.",
     "tags": "us,tech,ai,defense,trade-idea",
     "grade": "B+",
     "href": "analyses/PLTR",
@@ -1319,7 +1482,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Communication Services",
     "name": "Reddit, Inc.",
     "title": "Reddit, Inc.",
-    "desc": "Analyse complete de Reddit (RDDT) : Revenue +70%, marge nette 24%,\n    RSI 26 oversold. Opportunite de rebond sur un leader des\n    communautes digitales.",
+    "desc": "Analyse complete de Reddit (RDDT) : Revenue +70%, marge nette 24%,
+    RSI 26 oversold. Opportunite de rebond sur un leader des
+    communautes digitales.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/RDDT",
@@ -1332,7 +1497,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotechnologie",
     "name": "Avidity Biosciences",
     "title": "Avidity Biosciences",
-    "desc": "Avidity Biosciences est une biotech de thérapies ARN de nouvelle\n    génération fondée en 2012 à San Diego. Sa plateforme propriétaire\n    AOC (Antibody...",
+    "desc": "Avidity Biosciences est une biotech de thérapies ARN de nouvelle
+    génération fondée en 2012 à San Diego. Sa plateforme propriétaire
+    AOC (Antibody...",
     "tags": "",
     "grade": "B+",
     "href": "analyses/RNA",
@@ -1345,7 +1512,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE (ADR) • Healthcare / Pharma",
     "name": "Takeda Pharmaceutical",
     "title": "Takeda Pharmaceutical",
-    "desc": "Takeda Pharmaceutical est le plus grand groupe pharmaceutique\n    japonais et l'un des top 10 mondiaux. Fondée en 1781 à Tokyo (245\n    ans d'histoire !), Takeda est...",
+    "desc": "Takeda Pharmaceutical est le plus grand groupe pharmaceutique
+    japonais et l'un des top 10 mondiaux. Fondée en 1781 à Tokyo (245
+    ans d'histoire !), Takeda est...",
     "tags": "",
     "grade": "B+",
     "href": "analyses/TAK",
@@ -1358,7 +1527,9 @@ window.searchDataPrebuilt = [
     "exchange": "Precision Oncology",
     "name": "Tango Therapeutics",
     "title": "Tango Therapeutics",
-    "desc": "Tango Therapeutics est une société de biotechnologie spécialisée\n    en oncologie de précision basée à Boston. Fondée en 2017, elle\n    développe des thérapies ciblées...",
+    "desc": "Tango Therapeutics est une société de biotechnologie spécialisée
+    en oncologie de précision basée à Boston. Fondée en 2017, elle
+    développe des thérapies ciblées...",
     "tags": "",
     "grade": "B+",
     "href": "analyses/TNGX",
@@ -1371,7 +1542,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials / Energy Services",
     "name": "TETRA Technologies",
     "title": "TETRA Technologies",
-    "desc": "TETRA Technologies est un spécialiste des services énergétiques et\n    des fluides industriels. Fondée en 1981 au Texas, la société opère\n    dans deux domaines : les...",
+    "desc": "TETRA Technologies est un spécialiste des services énergétiques et
+    des fluides industriels. Fondée en 1981 au Texas, la société opère
+    dans deux domaines : les...",
     "tags": "",
     "grade": "B+",
     "href": "analyses/TTI",
@@ -1384,7 +1557,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Technology",
     "name": "Twilio Inc.",
     "title": "Twilio Inc.",
-    "desc": "Analyse complète de Twilio Inc. (TWLO) : CPaaS leader, croissance\n    revenue +14.3%, 4 beats EPS consécutifs, target $142.91.\n    Plateforme de communication cloud & AI.",
+    "desc": "Analyse complète de Twilio Inc. (TWLO) : CPaaS leader, croissance
+    revenue +14.3%, 4 beats EPS consécutifs, target $142.91.
+    Plateforme de communication cloud & AI.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/TWLO",
@@ -1397,7 +1572,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Energy (Uranium)",
     "name": "Energy Fuels Inc.",
     "title": "Energy Fuels Inc.",
-    "desc": "Analyse complete d'Energy Fuels (UUUU) : uranium, terres rares,\n    fondamentaux, technique, risques et trade idea. Le pure-play\n    uranium americain au coeur de la renaissance nucleaire.",
+    "desc": "Analyse complete d'Energy Fuels (UUUU) : uranium, terres rares,
+    fondamentaux, technique, risques et trade idea. Le pure-play
+    uranium americain au coeur de la renaissance nucleaire.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/UUUU",
@@ -1410,7 +1587,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Western Digital — AI Data Storage",
     "title": "Western Digital — AI Data Storage",
-    "desc": "+876% depuis 52W low. ROE 41%. Net margin 35.6%. AI data center\n    boom. Short 10.5%. Fresh BUY signal. Target $321.",
+    "desc": "+876% depuis 52W low. ROE 41%. Net margin 35.6%. AI data center
+    boom. Short 10.5%. Fresh BUY signal. Target $321.",
     "tags": "",
     "grade": "B+",
     "href": "analyses/WDC",
@@ -1423,7 +1601,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE Arca • ETF / Énergie",
     "name": "Energy Select Sector SPDR ETF",
     "title": "Energy Select Sector SPDR ETF",
-    "desc": "XLE (Energy Select Sector SPDR ETF) réplique la performance du\n    secteur énergie du S&P 500. Il offre une exposition diversifiée\n    aux plus grandes sociétés...",
+    "desc": "XLE (Energy Select Sector SPDR ETF) réplique la performance du
+    secteur énergie du S&P 500. Il offre une exposition diversifiée
+    aux plus grandes sociétés...",
     "tags": "",
     "grade": "B+",
     "href": "analyses/XLE",
@@ -1436,7 +1616,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Materials / Gold Mining",
     "name": "Aris Mining Corporation",
     "title": "Aris Mining Corporation",
-    "desc": "Aris Mining Corporation est un producteur d'or basé à Vancouver,\n    Canada, avec des opérations en Colombie et au Guyana. La société\n    exploite des mines d'or dans...",
+    "desc": "Aris Mining Corporation est un producteur d'or basé à Vancouver,
+    Canada, avec des opérations en Colombie et au Guyana. La société
+    exploite des mines d'or dans...",
     "tags": "",
     "grade": "B",
     "href": "analyses/ARMN",
@@ -1449,7 +1631,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE Arca • ETF / Shipping / Freight Futures",
     "name": "Breakwave Dry Bulk Shipping ETF",
     "title": "Breakwave Dry Bulk Shipping ETF",
-    "desc": "BDRY (Breakwave Dry Bulk Shipping ETF) est le seul ETF pur play\n    sur les taux de fret maritime (dry bulk). Il investit dans des\n    contrats à terme sur le fret...",
+    "desc": "BDRY (Breakwave Dry Bulk Shipping ETF) est le seul ETF pur play
+    sur les taux de fret maritime (dry bulk). Il investit dans des
+    contrats à terme sur le fret...",
     "tags": "",
     "grade": "B",
     "href": "analyses/BDRY",
@@ -1462,7 +1646,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Clover Health Investments",
     "title": "Clover Health Investments",
-    "desc": "Analyse complete de Clover Health (CLOV) : Medicare Advantage,\n    Clover Assistant AI, croissance +50%, chemin vers la profitabilite\n    GAAP en 2026. Verdict, fondamentaux, technique et",
+    "desc": "Analyse complete de Clover Health (CLOV) : Medicare Advantage,
+    Clover Assistant AI, croissance +50%, chemin vers la profitabilite
+    GAAP en 2026. Verdict, fondamentaux, technique et",
     "tags": "",
     "grade": "B",
     "href": "analyses/CLOV",
@@ -1475,7 +1661,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Financial Services",
     "name": "Circle Internet Group",
     "title": "Circle Internet Group",
-    "desc": "Analyse technique et fondamentale complète de Circle Internet\n    Group (CRCL). Prix: $60.10, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Circle Internet
+    Group (CRCL). Prix: $60.10, Market Cap: .",
     "tags": "",
     "grade": "B",
     "href": "analyses/CRCL",
@@ -1488,7 +1675,9 @@ window.searchDataPrebuilt = [
     "exchange": "Oncology",
     "name": "CytomX Therapeutics",
     "title": "CytomX Therapeutics",
-    "desc": "CytomX Therapeutics est une société de biotechnologie oncologique\n    basée à South San Francisco. Sa technologie propriétaire PROBODY\n    permet l'activation...",
+    "desc": "CytomX Therapeutics est une société de biotechnologie oncologique
+    basée à South San Francisco. Sa technologie propriétaire PROBODY
+    permet l'activation...",
     "tags": "",
     "grade": "B",
     "href": "analyses/CTMX",
@@ -1501,7 +1690,9 @@ window.searchDataPrebuilt = [
     "exchange": "TSX/OTC • Basic Materials / Precious Metals",
     "name": "Elemental Royalty Corp",
     "title": "Elemental Royalty Corp",
-    "desc": "Elemental Royalty Corp est une société de royalties sur les métaux\n    précieux basée à Vancouver. Son modèle est simple et puissant :\n    elle achète des royalties et...",
+    "desc": "Elemental Royalty Corp est une société de royalties sur les métaux
+    précieux basée à Vancouver. Son modèle est simple et puissant :
+    elle achète des royalties et...",
     "tags": "",
     "grade": "B",
     "href": "analyses/ELE",
@@ -1514,7 +1705,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotechnologie",
     "name": "Amicus Therapeutics",
     "title": "Amicus Therapeutics",
-    "desc": "Amicus Therapeutics est une société biopharmaceutique spécialisée\n    dans les maladies rares. Fondée en 2002 à Princeton (NJ), elle\n    développe et commercialise des...",
+    "desc": "Amicus Therapeutics est une société biopharmaceutique spécialisée
+    dans les maladies rares. Fondée en 2002 à Princeton (NJ), elle
+    développe et commercialise des...",
     "tags": "",
     "grade": "B",
     "href": "analyses/FOLD",
@@ -1527,7 +1720,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotechnology",
     "name": "Gossamer Bio",
     "title": "Gossamer Bio",
-    "desc": "Analyse approfondie de Gossamer Bio (GOSS) - Biotech late-stage\n    focalisee sur seralutinib pour l'hypertension arterielle\n    pulmonaire. Target $9.43, Strong Buy.",
+    "desc": "Analyse approfondie de Gossamer Bio (GOSS) - Biotech late-stage
+    focalisee sur seralutinib pour l'hypertension arterielle
+    pulmonaire. Target $9.43, Strong Buy.",
     "tags": "",
     "grade": "B",
     "href": "analyses/GOSS",
@@ -1540,7 +1735,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Strategy Inc",
     "title": "Strategy Inc",
-    "desc": "Analyse technique et fondamentale complète de Strategy Inc (MSTR).\n    Prix: $134.05, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Strategy Inc (MSTR).
+    Prix: $134.05, Market Cap: .",
     "tags": "",
     "grade": "B",
     "href": "analyses/MSTR",
@@ -1553,7 +1749,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Energy",
     "name": "National Energy Services Reunited",
     "title": "National Energy Services Reunited",
-    "desc": "National Energy Services Reunited (NESR) est un fournisseur de\n    services pétroliers spécialisé dans la région MENA (Moyen-Orient\n    et Afrique du Nord). Fondée en...",
+    "desc": "National Energy Services Reunited (NESR) est un fournisseur de
+    services pétroliers spécialisé dans la région MENA (Moyen-Orient
+    et Afrique du Nord). Fondée en...",
     "tags": "",
     "grade": "B",
     "href": "analyses/NESR",
@@ -1566,7 +1764,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Consumer Cyclical",
     "name": "NIO Inc.",
     "title": "NIO Inc.",
-    "desc": "Analyse approfondie de NIO Inc. - Leader chinois des véhicules\n    electriques premium. Prix $4.95, Market Cap $11.7B, Revenue Growth\n    +16.7%, premier profit trimestriel attendu.",
+    "desc": "Analyse approfondie de NIO Inc. - Leader chinois des véhicules
+    electriques premium. Prix $4.95, Market Cap $11.7B, Revenue Growth
+    +16.7%, premier profit trimestriel attendu.",
     "tags": "",
     "grade": "B",
     "href": "analyses/NIO",
@@ -1579,7 +1779,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Healthcare / Medical Care Facilities",
     "name": "PACS Group",
     "title": "PACS Group",
-    "desc": "PACS Group est un opérateur majeur d'établissements de soins\n    post-aigus aux États-Unis. Fondée en 2013 à Farmington, Utah, la\n    société gère des centres de soins...",
+    "desc": "PACS Group est un opérateur majeur d'établissements de soins
+    post-aigus aux États-Unis. Fondée en 2013 à Farmington, Utah, la
+    société gère des centres de soins...",
     "tags": "",
     "grade": "B",
     "href": "analyses/PACS",
@@ -1592,7 +1794,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "Paramount Gold Nevada Corp.",
     "title": "Paramount Gold Nevada Corp.",
-    "desc": "Analyse complète de Paramount Gold Nevada Corp. (PZG) -\n    Exploration aurifère, projet Grassy Mountain, approbation fédérale\n    obtenue. Target $3.25 (Strong Buy).",
+    "desc": "Analyse complète de Paramount Gold Nevada Corp. (PZG) -
+    Exploration aurifère, projet Grassy Mountain, approbation fédérale
+    obtenue. Target $3.25 (Strong Buy).",
     "tags": "",
     "grade": "B",
     "href": "analyses/PZG",
@@ -1605,7 +1809,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "TRX Gold Corporation",
     "title": "TRX Gold Corporation",
-    "desc": "TRX Gold Corporation est un producteur d'or basé au Canada\n    (Oakville, Ontario), fondé en 1990. La société opère le projet\n    phare Buckreef Gold en Tanzanie. Avec...",
+    "desc": "TRX Gold Corporation est un producteur d'or basé au Canada
+    (Oakville, Ontario), fondé en 1990. La société opère le projet
+    phare Buckreef Gold en Tanzanie. Avec...",
     "tags": "",
     "grade": "B",
     "href": "analyses/TRX",
@@ -1618,7 +1824,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "The Toro Company",
     "title": "The Toro Company",
-    "desc": "The Toro Company est un leader mondial des équipements d'extérieur\n    et d'entretien paysager. Fondée en 1914 à Bloomington, Minnesota,\n    elle fabrique des...",
+    "desc": "The Toro Company est un leader mondial des équipements d'extérieur
+    et d'entretien paysager. Fondée en 1914 à Bloomington, Minnesota,
+    elle fabrique des...",
     "tags": "",
     "grade": "B",
     "href": "analyses/TTC",
@@ -1628,10 +1836,12 @@ window.searchDataPrebuilt = [
     "type": "analyse",
     "icon": "fa-chart-column",
     "ticker": "UEC",
-    "exchange": "NYSE American • Energy",
+    "exchange": "NYSE American • Energy (Uranium)",
     "name": "Uranium Energy Corp.",
     "title": "Uranium Energy Corp.",
-    "desc": "Analyse institutionnelle complète de Uranium Energy Corp. (UEC) :\n    fondamentaux, technique, insiders, risques et trade idea. Prix\n    actuel $15.52.",
+    "desc": "Analyse institutionnelle complète de Uranium Energy Corp. (UEC) :
+    fondamentaux, technique, insiders, risques et trade idea. Prix
+    actuel $15.52.",
     "tags": "us,energy,speculative,trade-idea",
     "grade": "B",
     "href": "analyses/UEC",
@@ -1644,7 +1854,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "WhiteFiber, Inc.",
     "title": "WhiteFiber, Inc.",
-    "desc": "Analyse technique et fondamentale complète de WhiteFiber, Inc.\n    (WYFI). Prix: $19.42, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de WhiteFiber, Inc.
+    (WYFI). Prix: $19.42, Market Cap: .",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "B",
     "href": "analyses/WYFI",
@@ -1657,7 +1868,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Industrials",
     "name": "American Battery Technology",
     "title": "American Battery Technology",
-    "desc": "Analyse technique et fondamentale complète de American Battery\n    Technology (ABTC). Prix: $3.84, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de American Battery
+    Technology (ABTC). Prix: $3.84, Market Cap: .",
     "tags": "us,industrials,materials,speculative",
     "grade": "B-",
     "href": "analyses/ABTC",
@@ -1670,7 +1882,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "Amprius Technologies",
     "title": "Amprius Technologies",
-    "desc": "Analyse complète d'Amprius Technologies (AMPX) : batteries\n    silicium-anode next-gen pour drones, défense et aérospatiale.\n    Revenue +173%, target $17.57 Strong Buy.",
+    "desc": "Analyse complète d'Amprius Technologies (AMPX) : batteries
+    silicium-anode next-gen pour drones, défense et aérospatiale.
+    Revenue +173%, target $17.57 Strong Buy.",
     "tags": "us,industrials,speculative,trade-idea",
     "grade": "B-",
     "href": "analyses/AMPX",
@@ -1683,7 +1897,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Capricor Therapeutics",
     "title": "Capricor Therapeutics",
-    "desc": "Capricor Therapeutics est une biotech spécialisée en thérapie\n    cellulaire, fondée en 2005 à San Diego. La société développe\n    Deramiocel, un traitement à base de...",
+    "desc": "Capricor Therapeutics est une biotech spécialisée en thérapie
+    cellulaire, fondée en 2005 à San Diego. La société développe
+    Deramiocel, un traitement à base de...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
     "href": "analyses/CAPR",
@@ -1696,7 +1912,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology / Semiconductor Equipment",
     "name": "FormFactor Inc",
     "title": "FormFactor Inc",
-    "desc": "FormFactor Inc est un leader mondial des équipements de test pour\n    semi-conducteurs. Fondée en 1993 à Livermore, Californie, la\n    société conçoit et fabrique des...",
+    "desc": "FormFactor Inc est un leader mondial des équipements de test pour
+    semi-conducteurs. Fondée en 1993 à Livermore, Californie, la
+    société conçoit et fabrique des...",
     "tags": "us,semis,tech,speculative",
     "grade": "B-",
     "href": "analyses/FORM",
@@ -1709,7 +1927,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Ichor Holdings",
     "title": "Ichor Holdings",
-    "desc": "Ichor Holdings est un fournisseur de sous-systèmes de livraison de\n    gaz et de produits chimiques pour l'industrie des équipements\n    semi-conducteurs. Fondée en...",
+    "desc": "Ichor Holdings est un fournisseur de sous-systèmes de livraison de
+    gaz et de produits chimiques pour l'industrie des équipements
+    semi-conducteurs. Fondée en...",
     "tags": "us,semis,tech,speculative",
     "grade": "B-",
     "href": "analyses/ICHR",
@@ -1722,7 +1942,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotechnologie",
     "name": "Maze Therapeutics",
     "title": "Maze Therapeutics",
-    "desc": "Maze Therapeutics est une biotech de médecine rénale de précision\n    fondée en 2017 à South San Francisco. Avec seulement 125 employés,\n    MAZE utilise la génomique...",
+    "desc": "Maze Therapeutics est une biotech de médecine rénale de précision
+    fondée en 2017 à South San Francisco. Avec seulement 125 employés,
+    MAZE utilise la génomique...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
     "href": "analyses/MAZE",
@@ -1735,7 +1957,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "MBX Biosciences Inc",
     "title": "MBX Biosciences Inc",
-    "desc": "MBX Biosciences est une biotech clinique spécialisée dans les\n    maladies endocriniennes et métaboliques. Fondée en 2018 à Carmel\n    (Indiana), la société développe...",
+    "desc": "MBX Biosciences est une biotech clinique spécialisée dans les
+    maladies endocriniennes et métaboliques. Fondée en 2018 à Carmel
+    (Indiana), la société développe...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
     "href": "analyses/MBX",
@@ -1748,7 +1972,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Praxis Precision Medicines",
     "title": "Praxis Precision Medicines",
-    "desc": "Praxis Precision Medicines est une société de biotechnologie\n    spécialisée dans les neurosciences de précision, ciblant les\n    troubles du système nerveux central...",
+    "desc": "Praxis Precision Medicines est une société de biotechnologie
+    spécialisée dans les neurosciences de précision, ciblant les
+    troubles du système nerveux central...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
     "href": "analyses/PRAX",
@@ -1761,7 +1987,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "SanDisk Corporation",
     "title": "SanDisk Corporation",
-    "desc": "SanDisk Corporation est le leader mondial du stockage NAND flash,\n    issu du spin-off de Western Digital (WDC) en 2024. Basée à\n    Milpitas, Californie, la société...",
+    "desc": "SanDisk Corporation est le leader mondial du stockage NAND flash,
+    issu du spin-off de Western Digital (WDC) en 2024. Basée à
+    Milpitas, Californie, la société...",
     "tags": "us,semis,tech",
     "grade": "B-",
     "href": "analyses/SNDK",
@@ -1774,7 +2002,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Terns Pharmaceuticals",
     "title": "Terns Pharmaceuticals",
-    "desc": "Terns Pharmaceuticals est une biotech multi-pipeline fondée en\n    2016 à Foster City, Californie. Avec seulement 59 employés, la\n    société développe trois...",
+    "desc": "Terns Pharmaceuticals est une biotech multi-pipeline fondée en
+    2016 à Foster City, Californie. Avec seulement 59 employés, la
+    société développe trois...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
     "href": "analyses/TERN",
@@ -1787,7 +2017,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Basic Materials",
     "name": "USA Rare Earth",
     "title": "USA Rare Earth",
-    "desc": "Analyse complete de USA Rare Earth (USAR) : mine-to-magnet,\n    financement gouvernemental $3.1B, Round Top Texas, risques et\n    opportunites.",
+    "desc": "Analyse complete de USA Rare Earth (USAR) : mine-to-magnet,
+    financement gouvernemental $3.1B, Round Top Texas, risques et
+    opportunites.",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "B-",
     "href": "analyses/USAR",
@@ -1800,7 +2032,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Industrials",
     "name": "American Battery Technology",
     "title": "American Battery Technology",
-    "desc": "Analyse complète ABAT : recyclage de batteries lithium-ion,\n    extraction minière, revenus record +1300% YoY. Target $6.00.\n    Données temps réel.",
+    "desc": "Analyse complète ABAT : recyclage de batteries lithium-ion,
+    extraction minière, revenus record +1300% YoY. Target $6.00.
+    Données temps réel.",
     "tags": "us,industrials,materials,speculative,trade-idea",
     "grade": "C+",
     "href": "analyses/ABAT",
@@ -1813,7 +2047,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Aeva Technologies",
     "title": "Aeva Technologies",
-    "desc": "Analyse technique et fondamentale complète de Aeva Technologies\n    (AEVA). Prix: $13.50, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Aeva Technologies
+    (AEVA). Prix: $13.50, Market Cap: .",
     "tags": "us,tech,speculative",
     "grade": "C+",
     "href": "analyses/AEVA",
@@ -1826,7 +2061,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Alumis Inc",
     "title": "Alumis Inc",
-    "desc": "Alumis Inc est une biotech spécialisée dans les maladies\n    auto-immunes, fondée en 2021 à South San Francisco. La société\n    développe des inhibiteurs de TYK2, une...",
+    "desc": "Alumis Inc est une biotech spécialisée dans les maladies
+    auto-immunes, fondée en 2021 à South San Francisco. La société
+    développe des inhibiteurs de TYK2, une...",
     "tags": "us,healthcare,speculative",
     "grade": "C+",
     "href": "analyses/ALMS",
@@ -1839,7 +2076,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Bitcoin Treasury",
     "name": "Strive Inc. — Bitcoin Treasury Play",
     "title": "Strive Inc. — Bitcoin Treasury Play",
-    "desc": "13,132 BTC en trésorerie. P/B 0.36x. RSI 30.9. Discount 57% sur\n    NAV. Bear market crypto. Short interest 18.2%.",
+    "desc": "13,132 BTC en trésorerie. P/B 0.36x. RSI 30.9. Discount 57% sur
+    NAV. Bear market crypto. Short interest 18.2%.",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "C+",
     "href": "analyses/ASST",
@@ -1852,7 +2090,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "AST SpaceMobile",
     "title": "AST SpaceMobile",
-    "desc": "Analyse complète AST SpaceMobile (ASTS) : connectivité satellite\n    direct-to-smartphone, constellation BlueBird, dilution récente\n    -20%, short interest 19%. Score C+ Spéculatif.",
+    "desc": "Analyse complète AST SpaceMobile (ASTS) : connectivité satellite
+    direct-to-smartphone, constellation BlueBird, dilution récente
+    -20%, short interest 19%. Score C+ Spéculatif.",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "C+",
     "href": "analyses/ASTS",
@@ -1865,7 +2105,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services",
     "name": "Coinbase Global, Inc.",
     "title": "Coinbase Global, Inc.",
-    "desc": "Analyse technique et fondamentale complète de Coinbase Global,\n    Inc. (COIN). Prix: $165.11, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Coinbase Global,
+    Inc. (COIN). Prix: $165.11, Market Cap: .",
     "tags": "us,financials,crypto,trade-idea",
     "grade": "C+",
     "href": "analyses/COIN",
@@ -1878,7 +2119,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services / Crypto",
     "name": "DeFi Development Corp.",
     "title": "DeFi Development Corp.",
-    "desc": "Analyse technique et fondamentale complète de DeFi Development\n    Corp. (DFDV). Prix: $3.89, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de DeFi Development
+    Corp. (DFDV). Prix: $3.89, Market Cap: .",
     "tags": "us,crypto,speculative",
     "grade": "C+",
     "href": "analyses/DFDV",
@@ -1891,7 +2133,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Industrials",
     "name": "Eos Energy Enterprises",
     "title": "Eos Energy Enterprises",
-    "desc": "Analyse complète d'Eos Energy Enterprises (EOSE) : stockage\n    d'énergie zinc-air, prêt DOE $303M, short interest 25.6%, earnings\n    le 26 février. Score C+ Spéculatif.",
+    "desc": "Analyse complète d'Eos Energy Enterprises (EOSE) : stockage
+    d'énergie zinc-air, prêt DOE $303M, short interest 25.6%, earnings
+    le 26 février. Score C+ Spéculatif.",
     "tags": "us,industrials,energy,speculative,trade-idea",
     "grade": "C+",
     "href": "analyses/EOSE",
@@ -1904,7 +2148,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Erasca Inc",
     "title": "Erasca Inc",
-    "desc": "Erasca Inc est une société de biotechnologie spécialisée en\n    oncologie de précision, ciblant la voie de signalisation RAS/MAPK.\n    Fondée en 2018 à San Diego, elle...",
+    "desc": "Erasca Inc est une société de biotechnologie spécialisée en
+    oncologie de précision, ciblant la voie de signalisation RAS/MAPK.
+    Fondée en 2018 à San Diego, elle...",
     "tags": "",
     "grade": "C+",
     "href": "analyses/ERAS",
@@ -1917,7 +2163,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "Gold Resource Corporation",
     "title": "Gold Resource Corporation",
-    "desc": "Analyse complete de Gold Resource Corporation (GORO) : mine Don\n    David au Mexique, projet Back Forty, fondamentaux, technique et\n    trade idea.",
+    "desc": "Analyse complete de Gold Resource Corporation (GORO) : mine Don
+    David au Mexique, projet Back Forty, fondamentaux, technique et
+    trade idea.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/GORO",
@@ -1930,7 +2178,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Gorilla Technology Group",
     "title": "Gorilla Technology Group",
-    "desc": "Analyse complète de Gorilla Technology Group (GRRR) : AI Data\n    Centers, IoT, sécurité intelligente. Pipeline $10B+, backlog\n    $100M+. Cours $12.59, target $36.67.",
+    "desc": "Analyse complète de Gorilla Technology Group (GRRR) : AI Data
+    Centers, IoT, sécurité intelligente. Pipeline $10B+, backlog
+    $100M+. Cours $12.59, target $36.67.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/GRRR",
@@ -1943,7 +2193,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "Hillenbrand Inc",
     "title": "Hillenbrand Inc",
-    "desc": "Hillenbrand Inc est un fabricant d'équipements industriels\n    spécialisés fondé en 1906 à Batesville, Indiana. La société\n    produit des équipements de compounding...",
+    "desc": "Hillenbrand Inc est un fabricant d'équipements industriels
+    spécialisés fondé en 1906 à Batesville, Indiana. La société
+    produit des équipements de compounding...",
     "tags": "",
     "grade": "C+",
     "href": "analyses/HI",
@@ -1956,7 +2208,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "i-80 Gold Corp",
     "title": "i-80 Gold Corp",
-    "desc": "i-80 Gold Corp est un producteur et développeur d'or basé à Reno,\n    Nevada. Fondée en 2020, la société possède un portfolio de 4\n    projets aurifères au Nevada :...",
+    "desc": "i-80 Gold Corp est un producteur et développeur d'or basé à Reno,
+    Nevada. Fondée en 2020, la société possède un portfolio de 4
+    projets aurifères au Nevada :...",
     "tags": "",
     "grade": "C+",
     "href": "analyses/IAUX",
@@ -1969,7 +2223,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Technology",
     "name": "KULR Technology Group",
     "title": "KULR Technology Group",
-    "desc": "Analyse complète KULR Technology Group : gestion thermique\n    batteries, BBU AI data centers, trésorerie Bitcoin 1,021 BTC.\n    Target $10 Strong Buy.",
+    "desc": "Analyse complète KULR Technology Group : gestion thermique
+    batteries, BBU AI data centers, trésorerie Bitcoin 1,021 BTC.
+    Target $10 Strong Buy.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/KULR",
@@ -1982,7 +2238,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Lenz Therapeutics",
     "title": "Lenz Therapeutics",
-    "desc": "Analyse complete de LENZ Therapeutics (NASDAQ: LENZ) - Biotech\n    presbyopie, VIZZ FDA-approved, Phase commerciale. Score C+\n    Speculatif.",
+    "desc": "Analyse complete de LENZ Therapeutics (NASDAQ: LENZ) - Biotech
+    presbyopie, VIZZ FDA-approved, Phase commerciale. Score C+
+    Speculatif.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/LENZ",
@@ -1995,7 +2253,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Pony AI Inc.",
     "title": "Pony AI Inc.",
-    "desc": "Analyse complete de Pony AI Inc. (NASDAQ: PONY) - Leader mondial\n    du robotaxi autonome. Revenue +72%, partenariat Toyota, inclusion\n    MSCI China Index.",
+    "desc": "Analyse complete de Pony AI Inc. (NASDAQ: PONY) - Leader mondial
+    du robotaxi autonome. Revenue +72%, partenariat Toyota, inclusion
+    MSCI China Index.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/PONY",
@@ -2008,7 +2268,9 @@ window.searchDataPrebuilt = [
     "exchange": "OTC Markets • Consumer Defensive",
     "name": "Reliv International",
     "title": "Reliv International",
-    "desc": "Analyse fondamentale et technique de Reliv International (RELV) -\n    Supplements nutritionnels, marges brutes 73%, micro-cap value\n    play. Consumer Defensive / Packaged Foods.",
+    "desc": "Analyse fondamentale et technique de Reliv International (RELV) -
+    Supplements nutritionnels, marges brutes 73%, micro-cap value
+    play. Consumer Defensive / Packaged Foods.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/RELV",
@@ -2021,7 +2283,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Energy Storage",
     "name": "SES AI Corporation — AI Battery / Defense Drones",
     "title": "SES AI Corporation — AI Battery / Defense Drones",
-    "desc": "Batteries lithium-métal IA. Revenue +102% QoQ. Cash $214M. Pivot\n    drones/défense NDAA. Target $3.00 (+52%). Spéculatif pre-profit.",
+    "desc": "Batteries lithium-métal IA. Revenue +102% QoQ. Cash $214M. Pivot
+    drones/défense NDAA. Target $3.00 (+52%). Spéculatif pre-profit.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/SES",
@@ -2034,7 +2297,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services",
     "name": "Soluna Holdings",
     "title": "Soluna Holdings",
-    "desc": "Analyse technique et fondamentale complète de Soluna Holdings\n    (SLNH). Prix: $0.89, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Soluna Holdings
+    (SLNH). Prix: $0.89, Market Cap: .",
     "tags": "",
     "grade": "C+",
     "href": "analyses/SLNH",
@@ -2047,7 +2311,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Tempus AI",
     "title": "Tempus AI",
-    "desc": "Analyse complète de Tempus AI (TEM) : IA en médecine de précision,\n    revenue +84.7%, RSI oversold à 28. Earnings le 24 février.",
+    "desc": "Analyse complète de Tempus AI (TEM) : IA en médecine de précision,
+    revenue +84.7%, RSI oversold à 28. Earnings le 24 février.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/TEM",
@@ -2060,7 +2325,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Basic Materials / Copper Mining",
     "name": "Taseko Mines",
     "title": "Taseko Mines",
-    "desc": "Taseko Mines est un producteur de cuivre basé à Vancouver, Canada.\n    Son actif principal est la mine de Gibraltar en\n    Colombie-Britannique, l'une des plus grandes...",
+    "desc": "Taseko Mines est un producteur de cuivre basé à Vancouver, Canada.
+    Son actif principal est la mine de Gibraltar en
+    Colombie-Britannique, l'une des plus grandes...",
     "tags": "",
     "grade": "C+",
     "href": "analyses/TGB",
@@ -2073,7 +2340,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Consumer Cyclical",
     "name": "Tesla, Inc.",
     "title": "Tesla, Inc.",
-    "desc": "Analyse institutionnelle complete de Tesla Inc. (TSLA) :\n    fondamentaux, technique, risques, options et trade idea. Prix\n    $417.44, Market Cap $1.57T.",
+    "desc": "Analyse institutionnelle complete de Tesla Inc. (TSLA) :
+    fondamentaux, technique, risques, options et trade idea. Prix
+    $417.44, Market Cap $1.57T.",
     "tags": "us,tech,consumer,ai,trade-idea",
     "grade": "C+",
     "href": "analyses/TSLA",
@@ -2086,7 +2355,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Energy",
     "name": "Ur-Energy Inc.",
     "title": "Ur-Energy Inc.",
-    "desc": "Analyse complete de Ur-Energy Inc. (URG) - Producteur d'uranium\n    ISR au Wyoming. Prix $1.59, Target $2.26 (Strong Buy). Secteur\n    nucleaire en plein essor.",
+    "desc": "Analyse complete de Ur-Energy Inc. (URG) - Producteur d'uranium
+    ISR au Wyoming. Prix $1.59, Target $2.26 (Strong Buy). Secteur
+    nucleaire en plein essor.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/URG",
@@ -2099,7 +2370,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "WeRide Inc.",
     "title": "WeRide Inc.",
-    "desc": "Analyse complete de WeRide Inc. (WRD) - Leader mondial du robotaxi\n    autonome. Revenue +144% YoY, expansion mondiale avec Uber, target\n    $15.98 Strong Buy.",
+    "desc": "Analyse complete de WeRide Inc. (WRD) - Leader mondial du robotaxi
+    autonome. Revenue +144% YoY, expansion mondiale avec Uber, target
+    $15.98 Strong Buy.",
     "tags": "",
     "grade": "C+",
     "href": "analyses/WRD",
@@ -2112,7 +2385,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE/TSX • Basic Materials / Mining",
     "name": "Western Copper and Gold Corp",
     "title": "Western Copper and Gold Corp",
-    "desc": "Western Copper and Gold est une société d'exploration minière\n    basée à Vancouver, Canada. Avec seulement 15 employés, elle\n    détient la propriété minérale Casino...",
+    "desc": "Western Copper and Gold est une société d'exploration minière
+    basée à Vancouver, Canada. Avec seulement 15 employés, elle
+    détient la propriété minérale Casino...",
     "tags": "",
     "grade": "C+",
     "href": "analyses/WRN",
@@ -2125,7 +2400,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Consumer Cyclical",
     "name": "XPeng Inc.",
     "title": "XPeng Inc.",
-    "desc": "Analyse approfondie de XPeng Inc. (NYSE: XPEV) - Constructeur\n    chinois de véhicules electriques intelligents. Revenue +101.8%,\n    target $27.34 (Buy).",
+    "desc": "Analyse approfondie de XPeng Inc. (NYSE: XPEV) - Constructeur
+    chinois de véhicules electriques intelligents. Revenue +101.8%,
+    target $27.34 (Buy).",
     "tags": "",
     "grade": "C+",
     "href": "analyses/XPEV",
@@ -2138,7 +2415,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Pharma",
     "name": "BioAge Labs",
     "title": "BioAge Labs",
-    "desc": "BioAge Labs est une biotech focalisée sur l'obésité et le\n    métabolisme, fondée en 2015 à Richmond, Californie. La société\n    développe Azelaprag, un traitement...",
+    "desc": "BioAge Labs est une biotech focalisée sur l'obésité et le
+    métabolisme, fondée en 2015 à Richmond, Californie. La société
+    développe Azelaprag, un traitement...",
     "tags": "",
     "grade": "C",
     "href": "analyses/BIOA",
@@ -2151,7 +2430,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Financial Services",
     "name": "Bitmine Immersion Technologies",
     "title": "Bitmine Immersion Technologies",
-    "desc": "The MicroStrategy of Ethereum: Tom Lee, Fundstrat scandal, 4.37M\n    ETH treasury, DeFi & crypto deep dive. Price: $20.13, MCap:\n    $9.16B.",
+    "desc": "The MicroStrategy of Ethereum: Tom Lee, Fundstrat scandal, 4.37M
+    ETH treasury, DeFi & crypto deep dive. Price: $20.13, MCap:
+    $9.16B.",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "C",
     "href": "analyses/BMNR/beginner/en",
@@ -2164,7 +2445,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Pulse Biosciences",
     "title": "Pulse Biosciences",
-    "desc": "Pulse Biosciences est une société de dispositifs médicaux\n    innovants basée à Miami, Floride, fondée en 2014. Elle développe\n    la technologie CellFX, basée sur...",
+    "desc": "Pulse Biosciences est une société de dispositifs médicaux
+    innovants basée à Miami, Floride, fondée en 2014. Elle développe
+    la technologie CellFX, basée sur...",
     "tags": "",
     "grade": "C",
     "href": "analyses/PLSE",
@@ -2177,7 +2460,8 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Technology",
     "name": "D-Wave Quantum",
     "title": "D-Wave Quantum",
-    "desc": "Analyse technique et fondamentale complète de D-Wave Quantum\n    (QBTS). Prix: $19.64, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de D-Wave Quantum
+    (QBTS). Prix: $19.64, Market Cap: .",
     "tags": "",
     "grade": "C",
     "href": "analyses/QBTS",
@@ -2190,7 +2474,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Eledon Pharmaceuticals",
     "title": "Eledon Pharmaceuticals",
-    "desc": "Analyse technique et fondamentale complète de Eledon\n    Pharmaceuticals (ELDN). Prix: $2.02, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Eledon
+    Pharmaceuticals (ELDN). Prix: $2.02, Market Cap: .",
     "tags": "",
     "grade": "C-",
     "href": "analyses/ELDN",
@@ -2203,7 +2488,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Healthcare",
     "name": "UnitedHealth Group",
     "title": "UnitedHealth Group",
-    "desc": "Analyse fondamentale et technique approfondie de UnitedHealth\n    Group (UNH). Leader mondial de l'assurance sante et des services\n    de sante integres. Score C- Baissier.",
+    "desc": "Analyse fondamentale et technique approfondie de UnitedHealth
+    Group (UNH). Leader mondial de l'assurance sante et des services
+    de sante integres. Score C- Baissier.",
     "tags": "",
     "grade": "C-",
     "href": "analyses/UNH",
@@ -2216,7 +2503,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotech",
     "name": "Allogene Therapeutics Inc",
     "title": "Allogene Therapeutics Inc",
-    "desc": "Allogene Therapeutics développe des thérapies CAR-T allogéniques\n    (\"off-the-shelf\"). Contrairement aux CAR-T autologues (Kymriah,\n    Yescarta) qui utilisent les...",
+    "desc": "Allogene Therapeutics développe des thérapies CAR-T allogéniques
+    ("off-the-shelf"). Contrairement aux CAR-T autologues (Kymriah,
+    Yescarta) qui utilisent les...",
     "tags": "us,healthcare,speculative",
     "grade": "D+",
     "href": "analyses/ALLO",
@@ -2229,7 +2518,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Allarity Therapeutics",
     "title": "Allarity Therapeutics",
-    "desc": "Analyse complete d'Allarity Therapeutics (ALLR) : biotech clinique\n    specialisee dans le stenoparib, inhibiteur dual PARP/Wnt pour le\n    cancer ovarien. Phase 2 en cours, FDA Fast Track",
+    "desc": "Analyse complete d'Allarity Therapeutics (ALLR) : biotech clinique
+    specialisee dans le stenoparib, inhibiteur dual PARP/Wnt pour le
+    cancer ovarien. Phase 2 en cours, FDA Fast Track",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/ALLR",
@@ -2242,7 +2533,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Industrials",
     "name": "Aqua Metals",
     "title": "Aqua Metals",
-    "desc": "Analyse complète d'Aqua Metals (AQMS) : recyclage de batteries par\n    AquaRefining, acquisition Lion Energy, valorisation micro-cap et\n    risques de dilution.",
+    "desc": "Analyse complète d'Aqua Metals (AQMS) : recyclage de batteries par
+    AquaRefining, acquisition Lion Energy, valorisation micro-cap et
+    risques de dilution.",
     "tags": "us,industrials,materials,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/AQMS",
@@ -2255,7 +2548,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Basic Materials",
     "name": "American Resources Corporation",
     "title": "American Resources Corporation",
-    "desc": "Analyse approfondie d'American Resources Corporation (AREC) : rare\n    earths, charbon métallurgique, recyclage de métaux. Target\n    analyste $6.75 (Strong Buy). Micro-cap speculative a f",
+    "desc": "Analyse approfondie d'American Resources Corporation (AREC) : rare
+    earths, charbon métallurgique, recyclage de métaux. Target
+    analyste $6.75 (Strong Buy). Micro-cap speculative a f",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/AREC",
@@ -2268,7 +2563,9 @@ window.searchDataPrebuilt = [
     "exchange": "Bitcoin Options Income",
     "name": "Roundhill Bitcoin Covered Call Strategy ETF",
     "title": "Roundhill Bitcoin Covered Call Strategy ETF",
-    "desc": "BTCC est un ETF géré par Roundhill Investments qui applique une\n    stratégie de covered call sur des ETF Bitcoin. L'objectif est de\n    générer un revenu régulier via...",
+    "desc": "BTCC est un ETF géré par Roundhill Investments qui applique une
+    stratégie de covered call sur des ETF Bitcoin. L'objectif est de
+    générer un revenu régulier via...",
     "tags": "crypto,etf,options",
     "grade": "D+",
     "href": "analyses/BTCC",
@@ -2281,7 +2578,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services",
     "name": "Bitcoin Depot Inc.",
     "title": "Bitcoin Depot Inc.",
-    "desc": "Analyse complète de Bitcoin Depot Inc. (BTM) : leader\n    nord-américain des ATM Bitcoin. Revenue $636M, micro cap $35M,\n    réseau de 8,000+ kiosques crypto.",
+    "desc": "Analyse complète de Bitcoin Depot Inc. (BTM) : leader
+    nord-américain des ATM Bitcoin. Revenue $636M, micro cap $35M,
+    réseau de 8,000+ kiosques crypto.",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/BTM",
@@ -2294,7 +2593,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Webull Corporation",
     "title": "Webull Corporation",
-    "desc": "Analyse complète de Webull Corporation (BULL) : plateforme de\n    trading digital, revenue +54.5%, RSI oversold à 31.9. Verdict,\n    fondamentaux, technique et trade idea.",
+    "desc": "Analyse complète de Webull Corporation (BULL) : plateforme de
+    trading digital, revenue +54.5%, RSI oversold à 31.9. Verdict,
+    fondamentaux, technique et trade idea.",
     "tags": "us,financials,tech,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/BULL",
@@ -2307,7 +2608,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Canaan Inc.",
     "title": "Canaan Inc.",
-    "desc": "Analyse technique et fondamentale complète de Canaan Inc. (CAN).\n    Prix: $0.50, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Canaan Inc. (CAN).
+    Prix: $0.50, Market Cap: .",
     "tags": "us,tech,crypto,speculative",
     "grade": "D+",
     "href": "analyses/CAN",
@@ -2320,7 +2622,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Basic Materials",
     "name": "Electra Battery Materials",
     "title": "Electra Battery Materials",
-    "desc": "Analyse complete d'Electra Battery Materials (ELBM) : raffinerie\n    de cobalt en Ontario, mineraux critiques pour véhicules\n    electriques, structure du capital et risques.",
+    "desc": "Analyse complete d'Electra Battery Materials (ELBM) : raffinerie
+    de cobalt en Ontario, mineraux critiques pour véhicules
+    electriques, structure du capital et risques.",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/ELBM",
@@ -2333,7 +2637,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Energy (Uranium)",
     "name": "enCore Energy Corp.",
     "title": "enCore Energy Corp.",
-    "desc": "Analyse complète d'enCore Energy Corp. (EU) — Producteur d'uranium\n    ISR aux États-Unis. Target $4.27, consensus Strong Buy. Profil\n    spéculatif uranium/nucléaire.",
+    "desc": "Analyse complète d'enCore Energy Corp. (EU) — Producteur d'uranium
+    ISR aux États-Unis. Target $4.27, consensus Strong Buy. Profil
+    spéculatif uranium/nucléaire.",
     "tags": "us,energy,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/EU",
@@ -2346,7 +2652,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Healthcare",
     "name": "Hims & Hers Health",
     "title": "Hims & Hers Health",
-    "desc": "Analyse complete de Hims & Hers Health (HIMS) : telemedecine,\n    GLP-1, FDA, short interest 41.7%, RSI 17. Verdict, fondamentaux,\n    risques et idee de trade.",
+    "desc": "Analyse complete de Hims & Hers Health (HIMS) : telemedecine,
+    GLP-1, FDA, short interest 41.7%, RSI 17. Verdict, fondamentaux,
+    risques et idee de trade.",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/HIMS",
@@ -2359,7 +2667,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Hoth Therapeutics",
     "title": "Hoth Therapeutics",
-    "desc": "Analyse complete de Hoth Therapeutics (NASDAQ: HOTH) - Biotech\n    clinical-stage, pipeline obesity/oncologie, GDNF vs semaglutide.\n    Micro-cap $15.5M.",
+    "desc": "Analyse complete de Hoth Therapeutics (NASDAQ: HOTH) - Biotech
+    clinical-stage, pipeline obesity/oncologie, GDNF vs semaglutide.
+    Micro-cap $15.5M.",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/HOTH",
@@ -2372,7 +2682,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare / Biotechnology",
     "name": "Hyperion DeFi, Inc.",
     "title": "Hyperion DeFi, Inc.",
-    "desc": "Analyse complete de Hyperion DeFi (HYPD) : ophthalmic tech\n    pivotant vers une stratégie tresor HYPE token. Target $5.88\n    (Strong Buy). Short interest 26%. Risque élevé.",
+    "desc": "Analyse complete de Hyperion DeFi (HYPD) : ophthalmic tech
+    pivotant vers une stratégie tresor HYPE token. Target $5.88
+    (Strong Buy). Short interest 26%. Risque élevé.",
     "tags": "us,crypto,healthcare,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/HYPD",
@@ -2385,7 +2697,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Inhibrx Biosciences",
     "title": "Inhibrx Biosciences",
-    "desc": "Inhibrx Biosciences est une société de biotechnologie spécialisée\n    en immuno-oncologie, basée à La Jolla, Californie. Restructurée en\n    2024, l'entreprise...",
+    "desc": "Inhibrx Biosciences est une société de biotechnologie spécialisée
+    en immuno-oncologie, basée à La Jolla, Californie. Restructurée en
+    2024, l'entreprise...",
     "tags": "us,healthcare,speculative",
     "grade": "D+",
     "href": "analyses/INBX",
@@ -2398,7 +2712,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Materials",
     "name": "Snow Lake Energy",
     "title": "Snow Lake Energy",
-    "desc": "Analyse approfondie de Snow Lake Energy (LITM) : exploration\n    lithium et uranium, acquisition GUE, projets nucléaires. Verdict,\n    fondamentaux, risques et trade idea.",
+    "desc": "Analyse approfondie de Snow Lake Energy (LITM) : exploration
+    lithium et uranium, acquisition GUE, projets nucléaires. Verdict,
+    fondamentaux, risques et trade idea.",
     "tags": "us,materials,energy,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/LITM",
@@ -2411,7 +2727,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Lyft, Inc.",
     "title": "Lyft, Inc.",
-    "desc": "Analyse complète de Lyft, Inc. (LYFT) : fondamentaux, technique,\n    risques et trade idea. RSI en zone de survente à 25, short\n    interest élevé à 16.5% du float.",
+    "desc": "Analyse complète de Lyft, Inc. (LYFT) : fondamentaux, technique,
+    risques et trade idea. RSI en zone de survente à 25, short
+    interest élevé à 16.5% du float.",
     "tags": "us,tech,trade-idea",
     "grade": "D+",
     "href": "analyses/LYFT",
@@ -2424,7 +2742,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Financial Services",
     "name": "MARA Holdings",
     "title": "MARA Holdings",
-    "desc": "Analyse approfondie de MARA Holdings (ex-Marathon Digital) :\n    Bitcoin mining, expansion AI data centers, short interest 38.9%,\n    target analyste $19.60 (+147%). Profil a très haute vo",
+    "desc": "Analyse approfondie de MARA Holdings (ex-Marathon Digital) :
+    Bitcoin mining, expansion AI data centers, short interest 38.9%,
+    target analyste $19.60 (+147%). Profil a très haute vo",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/MARA",
@@ -2437,7 +2757,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Consumer Cyclical",
     "name": "Microvast Holdings",
     "title": "Microvast Holdings",
-    "desc": "Analyse complete de Microvast Holdings (MVST) : batteries\n    lithium-ion pour véhicules electriques et stockage d'énergie.\n    Revenue $444M, Short Interest 13.7%, Beta 3.37.",
+    "desc": "Analyse complete de Microvast Holdings (MVST) : batteries
+    lithium-ion pour véhicules electriques et stockage d'énergie.
+    Revenue $444M, Short Interest 13.7%, Beta 3.37.",
     "tags": "us,industrials,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/MVST",
@@ -2450,7 +2772,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "Rigetti Computing",
     "title": "Rigetti Computing",
-    "desc": "Analyse approfondie de Rigetti Computing (RGTI) : quantum\n    computing, fondamentaux, technique, risques et idee de trade.\n    Pure-play quantique a $16.09, MCap $5.3B.",
+    "desc": "Analyse approfondie de Rigetti Computing (RGTI) : quantum
+    computing, fondamentaux, technique, risques et idee de trade.
+    Pure-play quantique a $16.09, MCap $5.3B.",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/RGTI",
@@ -2463,7 +2787,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Communication Services",
     "name": "SharpLink Gaming",
     "title": "SharpLink Gaming",
-    "desc": "Analyse institutionnelle complete de SharpLink Gaming (SBET) -\n    Ethereum Treasury Platform. Score D+ Speculatif. Prix $6.87, MCap\n    $1.35B, 864K ETH en tresorerie.",
+    "desc": "Analyse institutionnelle complete de SharpLink Gaming (SBET) -
+    Ethereum Treasury Platform. Score D+ Speculatif. Prix $6.87, MCap
+    $1.35B, 864K ETH en tresorerie.",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/SBET",
@@ -2476,7 +2802,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE • Industrials",
     "name": "NuScale Power Corporation",
     "title": "NuScale Power Corporation",
-    "desc": "Analyse complète de NuScale Power (SMR) : pionnier des réacteurs\n    nucléaires modulaires (SMR). Fondamentaux, technique, risques et\n    trade idea.",
+    "desc": "Analyse complète de NuScale Power (SMR) : pionnier des réacteurs
+    nucléaires modulaires (SMR). Fondamentaux, technique, risques et
+    trade idea.",
     "tags": "us,industrials,energy,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/SMR",
@@ -2489,7 +2817,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Consumer Cyclical",
     "name": "Sportsman's Warehouse",
     "title": "Sportsman's Warehouse",
-    "desc": "Analyse complète de Sportsman's Warehouse (SPWH) : fondamentaux,\n    technique, insiders, short interest, options et trade idea.\n    Retailer outdoor en difficulté, $1.25, P/B 0.23x.",
+    "desc": "Analyse complète de Sportsman's Warehouse (SPWH) : fondamentaux,
+    technique, insiders, short interest, options et trade idea.
+    Retailer outdoor en difficulté, $1.25, P/B 0.23x.",
     "tags": "us,consumer,speculative,trade-idea",
     "grade": "D+",
     "href": "analyses/SPWH",
@@ -2502,7 +2832,8 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Consumer Cyclical",
     "name": "Tron Inc.",
     "title": "Tron Inc.",
-    "desc": "Analyse technique et fondamentale complète de Tron Inc. (TRON).\n    Prix: $1.30, Market Cap: .",
+    "desc": "Analyse technique et fondamentale complète de Tron Inc. (TRON).
+    Prix: $1.30, Market Cap: .",
     "tags": "us,consumer,speculative",
     "grade": "D+",
     "href": "analyses/TRON",
@@ -2515,7 +2846,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Healthcare",
     "name": "Vivos Therapeutics",
     "title": "Vivos Therapeutics",
-    "desc": "Analyse complete de Vivos Therapeutics (VVOS) - MedTech\n    specialisee dans le traitement non-invasif de l'apnee du sommeil.\n    Cours $1.52, micro-cap Healthcare.",
+    "desc": "Analyse complete de Vivos Therapeutics (VVOS) - MedTech
+    specialisee dans le traitement non-invasif de l'apnee du sommeil.
+    Cours $1.52, micro-cap Healthcare.",
     "tags": "us,healthcare,speculative",
     "grade": "D+",
     "href": "analyses/VVOS",
@@ -2528,7 +2861,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE American • Basic Materials",
     "name": "Westwater Resources",
     "title": "Westwater Resources",
-    "desc": "Analyse approfondie de Westwater Resources (WWR) - Graphite\n    naturel battery-grade, usine Kellyton, minerais critiques. Cours\n    $0.88, MCap $104M.",
+    "desc": "Analyse approfondie de Westwater Resources (WWR) - Graphite
+    naturel battery-grade, usine Kellyton, minerais critiques. Cours
+    $0.88, MCap $104M.",
     "tags": "",
     "grade": "D+",
     "href": "analyses/WWR",
@@ -2541,7 +2876,9 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ • Technology",
     "name": "CISO Global Inc.",
     "title": "CISO Global Inc.",
-    "desc": "Analyse complete de CISO Global Inc. : cybersecurite AI,\n    CHECKLIGHT, risque de delisting NASDAQ. Score D - Speculatif a\n    haut risque.",
+    "desc": "Analyse complete de CISO Global Inc. : cybersecurite AI,
+    CHECKLIGHT, risque de delisting NASDAQ. Score D - Speculatif a
+    haut risque.",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "D",
     "href": "analyses/CISO",
@@ -2554,7 +2891,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE Arca • ETF / Options Income",
     "name": "YieldMax PYPL Option Income Strategy ETF",
     "title": "YieldMax PYPL Option Income Strategy ETF",
-    "desc": "PYPY (YieldMax PYPL Option Income Strategy ETF) est un ETF qui\n    génère des revenus via une stratégie de covered call sur PayPal\n    (PYPL). Il achète des options...",
+    "desc": "PYPY (YieldMax PYPL Option Income Strategy ETF) est un ETF qui
+    génère des revenus via une stratégie de covered call sur PayPal
+    (PYPL). Il achète des options...",
     "tags": "etf,options",
     "grade": "D",
     "href": "analyses/PYPY",
@@ -2567,7 +2906,9 @@ window.searchDataPrebuilt = [
     "exchange": "Bitcoin Options Income",
     "name": "YieldMax Bitcoin Option Income Strategy ETF",
     "title": "YieldMax Bitcoin Option Income Strategy ETF",
-    "desc": "YBIT est un ETF géré par YieldMax (Tidal Financial Group) qui\n    utilise une stratégie d'options synthétiques sur des ETP Bitcoin\n    pour générer un revenu élevé. Le...",
+    "desc": "YBIT est un ETF géré par YieldMax (Tidal Financial Group) qui
+    utilise une stratégie d'options synthétiques sur des ETP Bitcoin
+    pour générer un revenu élevé. Le...",
     "tags": "crypto,etf,options",
     "grade": "D",
     "href": "analyses/YBIT",
@@ -2580,7 +2921,9 @@ window.searchDataPrebuilt = [
     "exchange": "Inverse Leveraged Crypto",
     "name": "Roundhill 2x Inverse Daily Crypto Equities ETF",
     "title": "Roundhill 2x Inverse Daily Crypto Equities ETF",
-    "desc": "REKT est un ETF géré par Roundhill Investments qui fournit une\n    exposition inverse 2x quotidienne aux actions de sociétés\n    blockchain et crypto cotées aux...",
+    "desc": "REKT est un ETF géré par Roundhill Investments qui fournit une
+    exposition inverse 2x quotidienne aux actions de sociétés
+    blockchain et crypto cotées aux...",
     "tags": "crypto,etf,options,speculative",
     "grade": "D-",
     "href": "analyses/REKT",
@@ -2593,7 +2936,9 @@ window.searchDataPrebuilt = [
     "exchange": "Bitcoin Buffer",
     "name": "YieldMax Bitcoin Buffer30 Option Income Strategy ETF",
     "title": "YieldMax Bitcoin Buffer30 Option Income Strategy ETF",
-    "desc": "CBTA est un ETF géré par YieldMax (Tidal Financial Group) qui\n    combine une stratégie \"buffer\" (amortisseur) avec des options sur\n    le Bitcoin. Le \"Buffer30\"...",
+    "desc": "CBTA est un ETF géré par YieldMax (Tidal Financial Group) qui
+    combine une stratégie "buffer" (amortisseur) avec des options sur
+    le Bitcoin. Le "Buffer30"...",
     "tags": "crypto,etf,options",
     "grade": "F",
     "href": "analyses/CBTA",
@@ -2606,7 +2951,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE Arca • ETF / Options Income / Inverse",
     "name": "YieldMax Short COIN Option Income ETF",
     "title": "YieldMax Short COIN Option Income ETF",
-    "desc": "FIAT (YieldMax Short COIN Option Income ETF) est un ETF qui prend\n    une exposition inverse (short) à Coinbase (COIN) via une stratégie\n    d'options, tout en...",
+    "desc": "FIAT (YieldMax Short COIN Option Income ETF) est un ETF qui prend
+    une exposition inverse (short) à Coinbase (COIN) via une stratégie
+    d'options, tout en...",
     "tags": "crypto,etf,options",
     "grade": "F",
     "href": "analyses/FIAT",
@@ -2619,7 +2966,9 @@ window.searchDataPrebuilt = [
     "exchange": "NYSE (Delisted) • Oil & Gas Royalties",
     "name": "PHX Minerals",
     "title": "PHX Minerals",
-    "desc": "Analyse complete de PHX Minerals (PHE) - Royalties minerales\n    gaz/petrole, acquisition WhiteHawk Energy a $4.35/action.\n    Fondamentaux, risques et contexte.",
+    "desc": "Analyse complete de PHX Minerals (PHE) - Royalties minerales
+    gaz/petrole, acquisition WhiteHawk Energy a $4.35/action.
+    Fondamentaux, risques et contexte.",
     "tags": "us,energy,speculative",
     "grade": "N/A",
     "href": "analyses/PHE",
@@ -2761,8 +3110,13 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ Early Risk-Off — TLT, XLV, XLE, TTE, EWG, EWJ, LITE,\n    ICHR, XLF, ICLN",
-    "desc": "Sélection heuristique adaptée au régime Early Risk-Off. Données\n    limitées (quotes et bars_daily uniquement). Zéro overlap avec le\n    scan précédent. Priorité aux défensifs, hedges, secteurs\n    résilients et diversification géographique. Prix P0 validés.\n    Post-rétrospective C+.",
+    "title": "Top 10 A+ Early Risk-Off — TLT, XLV, XLE, TTE, EWG, EWJ, LITE,
+    ICHR, XLF, ICLN",
+    "desc": "Sélection heuristique adaptée au régime Early Risk-Off. Données
+    limitées (quotes et bars_daily uniquement). Zéro overlap avec le
+    scan précédent. Priorité aux défensifs, hedges, secteurs
+    résilients et diversification géographique. Prix P0 validés.
+    Post-rétrospective C+.",
     "tags": "us,eu,asia,etf,commodity,energy,healthcare,materials,trade-idea,tech",
     "grade": "",
     "href": "/scanner/20260224/",
@@ -2774,8 +3128,14 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ Early Risk-Off — ABBV, AAOI, AA, AAL, AAPL (US), VGK,\n    EWQ (EU), EWY (Asia), GLD, SLV (Hedges)",
-    "desc": "Tarifs 15% globaux (post-SCOTUS). Dow -822 pts. Or ATH $5,192/oz\n    (+2.7%), argent breakout $88 (+5.2%). NVDA earnings mercredi AMC\n    ($65.7B). Stagflation (GDP 1.4%, PCE 3.0%). Iran/Hormuz tensions.\n    0% overlap scan précédent. 20% hedges métaux précieux. Prix P0\n    validés. Post-rétrospective C+. 10 setups analysés : ABBV, AAOI,\n    AA, AAL, AAPL (US), VGK, EWQ (Europe), EWY (Asie), GLD, SLV.",
+    "title": "Top 10 A+ Early Risk-Off — ABBV, AAOI, AA, AAL, AAPL (US), VGK,
+    EWQ (EU), EWY (Asia), GLD, SLV (Hedges)",
+    "desc": "Tarifs 15% globaux (post-SCOTUS). Dow -822 pts. Or ATH $5,192/oz
+    (+2.7%), argent breakout $88 (+5.2%). NVDA earnings mercredi AMC
+    ($65.7B). Stagflation (GDP 1.4%, PCE 3.0%). Iran/Hormuz tensions.
+    0% overlap scan précédent. 20% hedges métaux précieux. Prix P0
+    validés. Post-rétrospective C+. 10 setups analysés : ABBV, AAOI,
+    AA, AAL, AAPL (US), VGK, EWQ (Europe), EWY (Asie), GLD, SLV.",
     "tags": "us,eu,asia,etf,commodity,energy,healthcare,materials,trade-idea",
     "grade": "",
     "href": "/scanner/20260223/",
@@ -2788,10 +3148,13 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Rétrospective Scanner — 10-20 Février 2026",
-    "desc": "4 scans analysés, 40 setups évalués. Hit rate 62.5% (setups\n    valides). Problème critique : 25% d'entrées avec prix obsolètes.\n    Top : ACMR +184%, AA +53%. Flop : ACHC -42%. Duplication 60% entre\n    scans consécutifs.",
+    "desc": "4 scans analysés, 40 setups évalués. Hit rate 62.5% (setups
+    valides). Problème critique : 25% d'entrées avec prix obsolètes.
+    Top : ACMR +184%, AA +53%. Flop : ACHC -42%. Duplication 60% entre
+    scans consécutifs.",
     "tags": "us,retrospective,technique",
     "grade": "",
-    "href": "/scanner/retrospective/20260220/",
+    "href": "/scanner/20260220/",
     "date": "20 Février 2026"
   },
   {
@@ -2800,8 +3163,13 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ Relief Rally SCOTUS Tariffs — COLD, OMC, NICE, DE, AG,\n    ETSY, LITE, FIX, GEV, CAT",
-    "desc": "SCOTUS 6-3 invalide les tarifs IEEPA, relief rally SPY +0.72%. AG\n    +11.18% (52W high silver), ETSY +8.39% (Depop $1.2B), FIX +6.46%\n    (52W high infra), NICE +5.50%, LITE +5.05% (AI infra). GEV -0.51%,\n    CAT -0.10% consolident. Régime Early Risk-Off. VIX 19.28. NVDA\n    earnings 26 fév.",
+    "title": "Top 10 A+ Relief Rally SCOTUS Tariffs — COLD, OMC, NICE, DE, AG,
+    ETSY, LITE, FIX, GEV, CAT",
+    "desc": "SCOTUS 6-3 invalide les tarifs IEEPA, relief rally SPY +0.72%. AG
+    +11.18% (52W high silver), ETSY +8.39% (Depop $1.2B), FIX +6.46%
+    (52W high infra), NICE +5.50%, LITE +5.05% (AI infra). GEV -0.51%,
+    CAT -0.10% consolident. Régime Early Risk-Off. VIX 19.28. NVDA
+    earnings 26 fév.",
     "tags": "us,commodity,materials,industrials,trade-idea",
     "grade": "",
     "href": "/scanner/20260220/",
@@ -2813,8 +3181,13 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ Earnings & Géopolitique — COLD, OMC, NICE, DE, AG,\n    OXY, ETSY, ADI, XLE, JNJ",
-    "desc": "4 Earnings Breakouts (COLD +15.75%, OMC +15.36%, NICE +13.25%, DE\n    +11.58%) + 3 Géopolitique/Énergie (AG, OXY, XLE — Iran/pétrole) +\n    Analyst Wave ADI (16+ upgrades) + Défensifs (JNJ 52W High, ETSY\n    oversold bounce). Régime Early Risk-Off. Fed Minutes hawkish. VIX\n    20.23.",
+    "title": "Top 10 A+ Earnings & Géopolitique — COLD, OMC, NICE, DE, AG,
+    OXY, ETSY, ADI, XLE, JNJ",
+    "desc": "4 Earnings Breakouts (COLD +15.75%, OMC +15.36%, NICE +13.25%, DE
+    +11.58%) + 3 Géopolitique/Énergie (AG, OXY, XLE — Iran/pétrole) +
+    Analyst Wave ADI (16+ upgrades) + Défensifs (JNJ 52W High, ETSY
+    oversold bounce). Régime Early Risk-Off. Fed Minutes hawkish. VIX
+    20.23.",
     "tags": "us,energy,earnings,geopolitique,trade-idea",
     "grade": "",
     "href": "/scanner/20260219/",
@@ -2827,7 +3200,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Top 10 Setups A+ Ultra-Safe — Early Risk-Off",
-    "desc": "5 US défensifs (JNJ AAA, PG, ABBV, ABT, XLV) + 5 refuges/leaders\n    (GLD, TLT, TSM, ASML, VGK). Tous mega caps, dividendes, beta\n    <1.0. Score moyen 91.5/100.",
+    "desc": "5 US défensifs (JNJ AAA, PG, ABBV, ABT, XLV) + 5 refuges/leaders
+    (GLD, TLT, TSM, ASML, VGK). Tous mega caps, dividendes, beta
+    <1.0. Score moyen 91.5/100.",
     "tags": "us,eu,commodity,etf,trade-idea",
     "grade": "",
     "href": "/scanner/20260217/",
@@ -2840,7 +3215,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Top 10 Setups — Régime Early Risk-Off",
-    "desc": "Régime Early Risk-Off détecté. Stratégies short squeeze (40%) et\n    pre-squeeze (35%) favorisées. 10 setups analysés : ADBE, ADP,\n    ABBV, AA, ACAD, AAP, ACM, ACHC, ACMR, AAON.",
+    "desc": "Régime Early Risk-Off détecté. Stratégies short squeeze (40%) et
+    pre-squeeze (35%) favorisées. 10 setups analysés : ADBE, ADP,
+    ABBV, AA, ACAD, AAP, ACM, ACHC, ACMR, AAON.",
     "tags": "us,trade-idea,technique",
     "grade": "",
     "href": "/scanner/20260215/",
@@ -2983,7 +3360,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Signal vs Bruit : Survivre à l'Ère de l'IA",
-    "desc": "Quand tout le monde peut vibe coder, comment distinguer le signal du bruit ?\n    Concepts immuables, compétences irremplaçables, touche humaine, éducation,\n    et qui seront les riches de demain.",
+    "desc": "Quand tout le monde peut vibe coder, comment distinguer le signal du bruit ?
+    Concepts immuables, compétences irremplaçables, touche humaine, éducation,
+    et qui seront les riches de demain.",
     "tags": "tech,ai,formation,education,societe",
     "grade": "",
     "href": "tech/signal-vs-noise/",
@@ -2996,7 +3375,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "AI-Driven Development : Le Guide Complet",
-    "desc": "Le guide complet du développement assisté par IA : framework Product Owner,\n    sécurité AI-First, architecture bulletproof (marts, semantic layer, agents),\n    Claude Code, Cursor, MCP, patterns et best practices.",
+    "desc": "Le guide complet du développement assisté par IA : framework Product Owner,
+    sécurité AI-First, architecture bulletproof (marts, semantic layer, agents),
+    Claude Code, Cursor, MCP, patterns et best practices.",
     "tags": "tech,ai,formation,securite,architecture",
     "grade": "",
     "href": "tech/ai-driven-dev/",
@@ -3009,7 +3390,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "dbt : Le Guide Complet pour Débutants",
-    "desc": "Le « T » du ELT expliqué : modèles SQL, matérialisations, tests, Jinja,\n    architecture 3 couches (staging → intermediate → marts), patterns\n    (star schema, surrogate keys), packages et écosystème.",
+    "desc": "Le « T » du ELT expliqué : modèles SQL, matérialisations, tests, Jinja,
+    architecture 3 couches (staging → intermediate → marts), patterns
+    (star schema, surrogate keys), packages et écosystème.",
     "tags": "tech,formation,sql,snowflake",
     "grade": "",
     "href": "tech/dbt-guide/",
@@ -3022,7 +3405,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Meltano : Le Guide Complet ELT Open-Source",
-    "desc": "Le « EL » du ELT expliqué : taps, targets, protocole Singer, SDK pour\n    connecteurs custom, orchestration Airflow, mappers, 600+ connecteurs.\n    Le complément parfait de dbt.",
+    "desc": "Le « EL » du ELT expliqué : taps, targets, protocole Singer, SDK pour
+    connecteurs custom, orchestration Airflow, mappers, 600+ connecteurs.
+    Le complément parfait de dbt.",
     "tags": "tech,formation,singer,opensource",
     "grade": "",
     "href": "tech/meltano-guide/",
@@ -3035,7 +3420,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Guide Complet OpenClow & DroidClow",
-    "desc": "Découvrez comment créer votre propre agent de trading intelligent\n    assisté par IA grâce à openClow, le Gateway MCP, et son\n    automatisation.",
+    "desc": "Découvrez comment créer votre propre agent de trading intelligent
+    assisté par IA grâce à openClow, le Gateway MCP, et son
+    automatisation.",
     "tags": "tech,ai,formation",
     "grade": "",
     "href": "tech/openclow-trading-guide/",
@@ -3048,7 +3435,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "OpenCode : L'IA qui Code",
-    "desc": "Découvrez comment Open Interpreter et les modèles locaux\n    transforment votre ordinateur en agent autonome capable d'exécuter\n    du vrai code, loin du cloud.",
+    "desc": "Découvrez comment Open Interpreter et les modèles locaux
+    transforment votre ordinateur en agent autonome capable d'exécuter
+    du vrai code, loin du cloud.",
     "tags": "tech,ai,formation",
     "grade": "",
     "href": "tech/opencode/",
@@ -3061,7 +3450,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Building a Securities Master",
-    "desc": "Point-in-Time data model, SCD Type 2, PostgreSQL partitioning,\n    Meltano pipelines, dbt transforms, Evidence.dev dashboards.\n    Orchestrated by Nomad.",
+    "desc": "Point-in-Time data model, SCD Type 2, PostgreSQL partitioning,
+    Meltano pipelines, dbt transforms, Evidence.dev dashboards.
+    Orchestrated by Nomad.",
     "tags": "tech,formation",
     "grade": "",
     "href": "tech/securities-master/part1-foundations/",
@@ -3074,7 +3465,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "L'Écosystème Anthropic",
-    "desc": "Une introduction simple et immersive pour comprendre les outils\n    révolutionnaires d'Anthropic : Claude, Artifacts, l'utilisation de\n    l'ordinateur et le protocole MCP.",
+    "desc": "Une introduction simple et immersive pour comprendre les outils
+    révolutionnaires d'Anthropic : Claude, Artifacts, l'utilisation de
+    l'ordinateur et le protocole MCP.",
     "tags": "tech,ai",
     "grade": "",
     "href": "tech/anthropic-ecosystem/part1-foundation/",
@@ -3295,7 +3688,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Timing the Market: The Definitive Playbook",
-    "desc": "Every proven model to find bottoms (VIX, AAII, breadth), detect\n    tops (concentration, divergences), catch trends (Weinstein,\n    Minervini, sector rotation) & macro timing (yield curve, Fed,\n    CAPE). Backtested data.",
+    "desc": "Every proven model to find bottoms (VIX, AAII, breadth), detect
+    tops (concentration, divergences), catch trends (Weinstein,
+    Minervini, sector rotation) & macro timing (yield curve, Fed,
+    CAPE). Backtested data.",
     "tags": "technique,macro,formation,trade-idea",
     "grade": "",
     "href": "series/timing-the-market/expert/en/",
@@ -3308,7 +3704,10 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "When Machines Trade",
-    "desc": "From Tulip Mania to AI Agents: how 400 years of trading patterns\n    are being rewritten. Algo dominance, alpha decay, technical\n    analysis under threat, 1-10 year projections & a retail\n    survival guide.",
+    "desc": "From Tulip Mania to AI Agents: how 400 years of trading patterns
+    are being rewritten. Algo dominance, alpha decay, technical
+    analysis under threat, 1-10 year projections & a retail
+    survival guide.",
     "tags": "ai,formation,macro,technique",
     "grade": "",
     "href": "series/when-machines-trade/beginner/en/",
@@ -3321,7 +3720,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "The AI Singularity Trade",
-    "desc": "How the world changes before 2030. Compute arms race, autonomous\n    agents, healthcare, robotics, autonomous driving, cybersecurity,\n    labor shock, geopolitics. Winners, losers & trade setups.",
+    "desc": "How the world changes before 2030. Compute arms race, autonomous
+    agents, healthcare, robotics, autonomous driving, cybersecurity,
+    labor shock, geopolitics. Winners, losers & trade setups.",
     "tags": "ai,tech,trade-idea,macro,geopolitique",
     "grade": "",
     "href": "series/ai-singularity/expert/en/introduction/",
@@ -3334,7 +3735,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Scarcity Alpha: Trading Structural Shortages",
-    "desc": "Semiconductors, uranium, copper, grid equipment, natural gas,\n    water, cocoa, rare earths, data centers. Stock/ETF setups with\n    entry, stop, targets & R:R for each shortage.",
+    "desc": "Semiconductors, uranium, copper, grid equipment, natural gas,
+    water, cocoa, rare earths, data centers. Stock/ETF setups with
+    entry, stop, targets & R:R for each shortage.",
     "tags": "trade-idea,macro,technique,commodity,energy,semis",
     "grade": "",
     "href": "series/scarcity-alpha/expert/en/introduction/",
@@ -3347,7 +3750,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Bien Débuter en Bourse",
-    "desc": "Du marché au stock picking, construction de portefeuille, all-in,\n    stratégies avancées et gestion des pertes.",
+    "desc": "Du marché au stock picking, construction de portefeuille, all-in,
+    stratégies avancées et gestion des pertes.",
     "tags": "formation",
     "grade": "",
     "href": "series/comprendre-le-marche/",
@@ -3360,7 +3764,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Maîtriser les Earnings",
-    "desc": "EPS, marges, valorisation, float, short interest, insiders et\n    comment l'IA peut vous aider.",
+    "desc": "EPS, marges, valorisation, float, short interest, insiders et
+    comment l'IA peut vous aider.",
     "tags": "earnings,formation",
     "grade": "",
     "href": "series/maitriser-les-earnings/",
@@ -3373,7 +3778,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Le Guide du Super Spéculateur",
-    "desc": "Meme stocks, short squeeze, ETFs levier, earnings, max pain,\n    biotech FDA, Polymarket, insiders. Objectif x10.",
+    "desc": "Meme stocks, short squeeze, ETFs levier, earnings, max pain,
+    biotech FDA, Polymarket, insiders. Objectif x10.",
     "tags": "speculative,options,formation",
     "grade": "",
     "href": "series/guide-speculateur/part1-philosophie/",
@@ -3386,7 +3792,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "La Bourse pour le Musulman",
-    "desc": "Finance islamique, actions halal, ETFs Shariah-compliant, crypto\n    et Islam, Zakat, portefeuilles modèles.",
+    "desc": "Finance islamique, actions halal, ETFs Shariah-compliant, crypto
+    et Islam, Zakat, portefeuilles modèles.",
     "tags": "formation",
     "grade": "",
     "href": "series/bourse-musulman/part1-fondements/",
@@ -3399,7 +3806,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Investir en Bon Père de Famille",
-    "desc": "Intérêts composés, PEA, ETFs, stratégie dividendes, plan d'action\n    sur 30 ans vers l'indépendance financière.",
+    "desc": "Intérêts composés, PEA, ETFs, stratégie dividendes, plan d'action
+    sur 30 ans vers l'indépendance financière.",
     "tags": "dividende,etf,formation",
     "grade": "",
     "href": "series/bon-pere-de-famille/part1-philosophie/",
@@ -3412,7 +3820,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Automatiser son Trading avec Claude Code",
-    "desc": "Claude Code, MCP Gateway, screeners automatisés, réseaux sociaux,\n    bots Discord/Telegram, NLP, multi-agent.",
+    "desc": "Claude Code, MCP Gateway, screeners automatisés, réseaux sociaux,
+    bots Discord/Telegram, NLP, multi-agent.",
     "tags": "ai,tech,formation",
     "grade": "",
     "href": "series/automatiser-trading-claude/part1-introduction/",
@@ -3425,7 +3834,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Corrélations & Saisonnalités",
-    "desc": "Or/Dollar/Taux, performances mensuelles, vendredis piégeurs,\n    corrélations inter-marchés, saisonnalités exploitables.",
+    "desc": "Or/Dollar/Taux, performances mensuelles, vendredis piégeurs,
+    corrélations inter-marchés, saisonnalités exploitables.",
     "tags": "macro,technique,formation",
     "grade": "",
     "href": "series/correlations-saisonnalites/part1-les-correlations/",
@@ -3438,7 +3848,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Savoir Lire un Chart",
-    "desc": "Chandeliers, supports/résistances, indicateurs, évaluer le bottom,\n    espérance de gain, patterns chartistes.",
+    "desc": "Chandeliers, supports/résistances, indicateurs, évaluer le bottom,
+    espérance de gain, patterns chartistes.",
     "tags": "technique,formation",
     "grade": "",
     "href": "series/lire-un-chart/part1-les-bases/",
@@ -3451,7 +3862,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Gérer le Risque de Gap",
-    "desc": "Gaps sur ETF, actions, crypto. Overnight risk, earnings gaps,\n    week-end gaps, protections et stratégies.",
+    "desc": "Gaps sur ETF, actions, crypto. Overnight risk, earnings gaps,
+    week-end gaps, protections et stratégies.",
     "tags": "technique,formation",
     "grade": "",
     "href": "series/risque-de-gap/part1-anatomie-gap/",
@@ -3464,7 +3876,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Chasser en Meute",
-    "desc": "Réseaux sociaux, groupes Telegram, recommandations d'analystes,\n    copy trading, pump & dump, intelligence collective.",
+    "desc": "Réseaux sociaux, groupes Telegram, recommandations d'analystes,
+    copy trading, pump & dump, intelligence collective.",
     "tags": "speculative,formation",
     "grade": "",
     "href": "series/chasser-en-meute/part1-pouvoir-foule/",
@@ -3477,7 +3890,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Les Bourses du Maghreb & Moyen-Orient",
-    "desc": "Casablanca, Tunis, Alger, Tadawul, ADX, DFM, Qatar. Panorama,\n    opportunités, guide pratique et fintech MENA.",
+    "desc": "Casablanca, Tunis, Alger, Tadawul, ADX, DFM, Qatar. Panorama,
+    opportunités, guide pratique et fintech MENA.",
     "tags": "asia,formation",
     "grade": "",
     "href": "series/bourses-mena/part1-panorama/",
@@ -3490,7 +3904,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Le Scalping & Trading Intraday",
-    "desc": "Trader l'open/close, sessions Asie-Europe-US depuis Paris,\n    détecter les tendances intraday, outils, discipline.",
+    "desc": "Trader l'open/close, sessions Asie-Europe-US depuis Paris,
+    détecter les tendances intraday, outils, discipline.",
     "tags": "technique,formation",
     "grade": "",
     "href": "series/scalping-intraday/part1-ouvrir-la-journee/",
@@ -3503,7 +3918,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Trader les Crypto",
-    "desc": "Écosystème, analyse technique crypto, on-chain analysis,\n    DeFi/yield, altcoins/narratives, sécurité et fiscalité.",
+    "desc": "Écosystème, analyse technique crypto, on-chain analysis,
+    DeFi/yield, altcoins/narratives, sécurité et fiscalité.",
     "tags": "crypto,formation",
     "grade": "",
     "href": "series/trader-crypto/part1-ecosysteme/",
@@ -3516,7 +3932,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Trader les ETF",
-    "desc": "Comprendre les ETF, classes d'actifs, thématiques/sectoriels,\n    stratégies DCA/rotation, leveraged, portefeuille.",
+    "desc": "Comprendre les ETF, classes d'actifs, thématiques/sectoriels,
+    stratégies DCA/rotation, leveraged, portefeuille.",
     "tags": "etf,formation",
     "grade": "",
     "href": "series/trader-etf/part1-comprendre-etf/",
@@ -3529,7 +3946,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Lire le Marché — Données Publiques",
-    "desc": "SEC filings, options flow, dark pool, short interest, FTD,\n    sentiment, earnings, analystes. Construire son dashboard.",
+    "desc": "SEC filings, options flow, dark pool, short interest, FTD,
+    sentiment, earnings, analystes. Construire son dashboard.",
     "tags": "technique,formation",
     "grade": "",
     "href": "series/lire-le-marche/part1-sec-filings/",
@@ -3542,7 +3960,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Trader les Proxys à Haut Beta",
-    "desc": "Beta comme levier naturel, identifier les proxys, secteurs leaders\n    (tech, semis, biotech, miners), gestion du risque.",
+    "desc": "Beta comme levier naturel, identifier les proxys, secteurs leaders
+    (tech, semis, biotech, miners), gestion du risque.",
     "tags": "technique,speculative,formation",
     "grade": "",
     "href": "series/proxys-haut-beta/part1-comprendre-beta/",
@@ -3555,7 +3974,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Swing Mode — De Zéro à Rentable",
-    "desc": "Setup, scanner, 3 stratégies concrètes (pullback EMA, breakout,\n    recovery), alertes, gestion de position et routine. Max 4\n    positions décorrélées sur actions 20+ ans.",
+    "desc": "Setup, scanner, 3 stratégies concrètes (pullback EMA, breakout,
+    recovery), alertes, gestion de position et routine. Max 4
+    positions décorrélées sur actions 20+ ans.",
     "tags": "technique,formation,trade-idea",
     "grade": "",
     "href": "series/swing-mode/part1-setup/",
@@ -3568,7 +3989,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Patrimoine en Europe — Le Guide de A à Z",
-    "desc": "Épargne, enveloppes fiscales (PEA, ISA, Säule 3a), immobilier,\n    fiscalité, retraite, transmission et plan d'action de 0 à 500K€.\n    France, Belgique, Suisse, Allemagne, UK.",
+    "desc": "Épargne, enveloppes fiscales (PEA, ISA, Säule 3a), immobilier,
+    fiscalité, retraite, transmission et plan d'action de 0 à 500K€.
+    France, Belgique, Suisse, Allemagne, UK.",
     "tags": "eu,formation,macro",
     "grade": "",
     "href": "series/patrimoine-europe/part1-socle-epargne/",
