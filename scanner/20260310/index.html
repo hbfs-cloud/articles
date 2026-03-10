@@ -91,6 +91,13 @@
                 <p>Pour des raisons de rapidité et pour répondre à la demande immédiate du marché, une analyse approfondie des rétrospectives précédentes sera intégrée dans la prochaine mise à jour du scanner. Cependant, le modèle tient compte des performances passées pour ajuster les pondérations des stratégies.</p>
             </div>
 
+            <div style="text-align: center; margin-bottom: 20px;">
+                <button id="copyTelegramButton" style="background-color: #0088cc; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+                    Copy Telegram Message 🚀
+                </button>
+                <p id="copyFeedback" style="color: green; margin-top: 10px; display: none;">Copié ! ✅</p>
+            </div>
+
             <h2>Top 7 Setups A+ pour Aujourd'hui (US & EU)</h2>
             <p>Ces 7 titres ont été identifiés avec les scores les plus élevés pour notre stratégie <strong>Momentum Expansion</strong>, optimisée pour des mouvements rapides dans le contexte actuel. Les points d'entrée et de sortie sont indicatifs et doivent être ajustés en fonction de votre gestion du risque intraday.</p>
             <p><strong>Horizon de trade : Immédiat (achat dans l'heure) à 2-3 jours maximum.</strong></p>
@@ -235,6 +242,61 @@
         document.addEventListener('DOMContentLoaded', function() {
             renderTags(); // From tag-renderer.js
             initLiveTracker(); // From live-tracker.js, will fetch live prices
+
+            const copyTelegramButton = document.getElementById('copyTelegramButton');
+            const copyFeedback = document.getElementById('copyFeedback');
+
+            const allInStocks = [
+                {
+                    ticker: 'ERAS',
+                    entry: '5.20', // Removing '$' for numerical parsing if needed by live-tracker, can add back in message construction
+                    target: '6.50',
+                    stop: '4.80',
+                    reason: 'Robust momentum & clean technical setup in biotech sector.'
+                },
+                {
+                    ticker: 'AAOI',
+                    entry: '15.50',
+                    target: '17.00',
+                    stop: '14.80',
+                    reason: 'Strong tech momentum in AI fiber optics, benefiting from sector tailwinds.'
+                },
+                {
+                    ticker: 'EDSA',
+                    entry: '3.10',
+                    target: '3.80',
+                    stop: '2.80',
+                    reason: 'High momentum biotech with significant recent activity, watch for catalysts.'
+                },
+                {
+                    ticker: 'KORE',
+                    entry: '1.80',
+                    target: '2.10',
+                    stop: '1.65',
+                    reason: 'Solid momentum in less volatile telecom sector, stable setup.'
+                }
+            ];
+
+            copyTelegramButton.addEventListener('click', async () => {
+                let message = "🔥 **Special VIX Deflation Scan (10 Mar 2026) - ALL-IN ELIGIBLE!** 🔥\n\n";
+                allInStocks.forEach(stock => {
+                    message += `🚀 ${stock.ticker}: Buy~$${stock.entry} T:$${stock.target} S:$${stock.stop} | R: ${stock.reason} (3 days)\n`;
+                });
+                message += "\n#VIXDeflation #Momentum #ShortTerm #TradeIdeas\n";
+                message += "\n*Disclaimer: High conviction, short-term trades. Manage risk accordingly. Not financial advice.*";
+
+                try {
+                    await navigator.clipboard.writeText(message);
+                    copyFeedback.textContent = "Copié ! ✅";
+                    copyFeedback.style.display = 'block';
+                    setTimeout(() => copyFeedback.style.display = 'none', 3000);
+                } catch (err) {
+                    console.error('Failed to copy text: ', err);
+                    copyFeedback.textContent = "Erreur de copie ❌";
+                    copyFeedback.style.display = 'block';
+                    setTimeout(() => copyFeedback.style.display = 'none', 3000);
+                }
+            });
         });
     </script>
 </body>
