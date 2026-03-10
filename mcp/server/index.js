@@ -1178,82 +1178,102 @@ server.tool(
 );
 
 // ────────────────────────────────────
-// WEBULL RANKINGS & DATA
+// WEBULL DATA (7 consolidated tools)
 // ────────────────────────────────────
 
 server.tool(
-  'webull_top_gainers',
-  'Get top gaining stocks from Webull. Returns symbol, price, change%, volume. Default: US market, top 20.',
+  'webull_market',
+  'Webull market overview: indices, top gainers/losers/active (with period tabs), hot sectors, hot ETFs, advancers/decliners breadth. One call = full market snapshot.',
   {
-    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK, 15=CN'),
-    pageSize: z.number().optional().describe('Number of results (default 20, max 50)')
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK')
   },
-  async ({ regionId, pageSize }) => {
-    const data = await webull.getTopGainers({ regionId: regionId || 6, pageSize: pageSize || 20 });
-    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-  }
-);
-
-server.tool(
-  'webull_top_losers',
-  'Get top losing stocks from Webull. Returns symbol, price, change%, volume.',
-  {
-    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK, 15=CN'),
-    pageSize: z.number().optional().describe('Number of results (default 20, max 50)')
-  },
-  async ({ regionId, pageSize }) => {
-    const data = await webull.getTopLosers({ regionId: regionId || 6, pageSize: pageSize || 20 });
-    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-  }
-);
-
-server.tool(
-  'webull_most_active',
-  'Get most actively traded stocks from Webull by volume.',
-  {
-    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK, 15=CN'),
-    pageSize: z.number().optional().describe('Number of results (default 20, max 50)')
-  },
-  async ({ regionId, pageSize }) => {
-    const data = await webull.getMostActive({ regionId: regionId || 6, pageSize: pageSize || 20 });
-    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
-  }
-);
-
-server.tool(
-  'webull_search',
-  'Search for a ticker on Webull. Returns tickerId needed for quote/chart calls.',
-  {
-    keyword: z.string().describe('Symbol or company name to search')
-  },
-  async ({ keyword }) => {
-    const data = await webull.searchTicker(keyword);
+  async ({ regionId }) => {
+    const data = await webull.getMarket({ regionId: regionId || 6 });
     return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
   }
 );
 
 server.tool(
   'webull_quote',
-  'Get detailed Webull quote by symbol. Searches for the ticker then fetches full quote data.',
+  'Webull full quote (78 fields: price, PE, EPS, 52w range, dividend, yield, market cap, avg volume, earnings date, etc). Optionally includes capital flow (institutional vs retail) and order book depth.',
   {
-    symbol: z.string().describe('Stock symbol (e.g. AAPL, NVDA)')
+    symbol: z.string().describe('Stock/ETF symbol (e.g. AAPL, SPY)'),
+    include: z.array(z.enum(['flow', 'depth'])).optional().describe('Extra data: "flow" = capital flow history, "depth" = bid/ask order book (market hours only)')
   },
-  async ({ symbol }) => {
-    const data = await webull.getQuoteBySymbol(symbol);
+  async ({ symbol, include }) => {
+    const data = await webull.getQuote(symbol, { include: include || [] });
     return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
   }
 );
 
 server.tool(
   'webull_chart',
-  'Get OHLCV chart data from Webull by symbol.',
+  'Webull OHLCV bars for any symbol. Supports intraday (m1-m60), daily, weekly. Set crypto=true for crypto pairs.',
   {
-    symbol: z.string().describe('Stock symbol (e.g. AAPL, NVDA)'),
-    type: z.string().optional().describe('Interval: m1,m5,m15,m30,m60,d1,w1,mo1 (default d1)'),
-    count: z.number().optional().describe('Number of bars (default 60)')
+    symbol: z.string().describe('Symbol (e.g. AAPL, BTC, SPY)'),
+    type: z.string().optional().describe('Interval: m1, m5, m15, m30, m60, d1 (default), w1'),
+    count: z.number().optional().describe('Number of bars (default 60)'),
+    crypto: z.boolean().optional().describe('Use crypto chart endpoint (default false)')
   },
-  async ({ symbol, type, count }) => {
-    const data = await webull.getChartBySymbol(symbol, { type: type || 'd1', count: count || 60 });
+  async ({ symbol, type, count, crypto }) => {
+    const data = await webull.getChart(symbol, { type: type || 'd1', count: count || 60, crypto: crypto || false });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_screener',
+  'Webull stock screener with 9 filter rules: price, changeRatio, volume, pe, eps, roe, yield, dividend, turnoverRate. Rules accept {min,max} objects or raw strings like "gte=10&lte=500".',
+  {
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK'),
+    rules: z.record(z.any()).optional().describe('Filter rules, e.g. { price: {min:10,max:500}, volume: {min:1000000}, pe: {min:5,max:30} }'),
+    sort: z.string().optional().describe('Sort by rule name: price, changeRatio, volume, pe, eps, roe, yield, dividend, turnoverRate'),
+    sortDesc: z.boolean().optional().describe('Sort descending (default true)'),
+    fetch: z.number().optional().describe('Number of results (default 20)')
+  },
+  async ({ regionId, rules, sort, sortDesc, fetch: limit }) => {
+    const data = await webull.runScreener({ regionId, rules: rules || {}, sort, sortDesc, fetch: limit });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_calendar',
+  'Webull financial calendar: upcoming earnings (with EPS estimates, BMO/AMC), dividends (ex-date, yield, amount), or stock splits.',
+  {
+    type: z.enum(['earnings', 'dividend', 'splits']).describe('Calendar type'),
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK'),
+    startDate: z.string().optional().describe('Start date YYYY-MM-DD (default today)'),
+    pageSize: z.number().optional().describe('Results per page (default 30)')
+  },
+  async ({ type, regionId, startDate, pageSize }) => {
+    const data = await webull.getCalendar({ type, regionId, startDate, pageSize });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_social',
+  'Webull social data for a ticker: sentiment (post count, views, followers), user posts, and ticker news.',
+  {
+    symbol: z.string().describe('Stock symbol (e.g. AAPL, TSLA)'),
+    include: z.array(z.enum(['sentiment', 'posts', 'news'])).optional().describe('Data to include (default: ["sentiment"])')
+  },
+  async ({ symbol, include }) => {
+    const data = await webull.getSocial(symbol, { include: include || ['sentiment'] });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_search',
+  'Search Webull for tickers by symbol or company name. Returns tickerId, symbol, name, exchange, type.',
+  {
+    keyword: z.string().describe('Symbol or company name'),
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK')
+  },
+  async ({ keyword, regionId }) => {
+    const data = await webull.searchTicker(keyword, { regionId });
     return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
   }
 );
