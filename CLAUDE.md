@@ -1,686 +1,217 @@
 # CLAUDE.md - Market Watch Articles Project
 
 ## Project Overview
-Site de publication d'analyses financières institutionnelles hebdomadaires et ponctuelles, hébergé sur GitHub Pages.
-- **URL des articles** : `https://articles.market-watch.xyz/` (CNAME = `articles.market-watch.xyz`)
+Site de publication d'analyses financières institutionnelles, hébergé sur GitHub Pages.
+- **URL articles** : `https://articles.market-watch.xyz/` (CNAME = `articles.market-watch.xyz`)
 - **Landing marketing** : `https://market-watch.xyz/` (site séparé, ne sert PAS les articles)
-- **IMPORTANT** : Toujours utiliser `articles.market-watch.xyz` pour les URLs d'articles, jamais `market-watch.xyz`
+- **IMPORTANT** : Toujours utiliser `articles.market-watch.xyz` pour les URLs d'articles
 
 ## Structure du Projet
 ```
 articles/
 ├── src/                          # Source Astro (nouveaux articles)
 │   ├── components/               # 36 composants réutilisables (*.astro)
-│   │   ├── HeroSection.astro     # Hero avec badges, date, switcher slot
-│   │   ├── ArticleNav.astro      # FAB flottant + dropdown sections
-│   │   ├── SeriesBar.astro       # Wizard séries (top + bottom)
-│   │   ├── VariantSwitcher.astro # Switcher langue/niveau (variants.json)
-│   │   ├── HistoryModal.astro    # Modal historique versions
-│   │   ├── ChartModal.astro      # Modal chart Finviz/TradingView
-│   │   ├── ContentCard.astro     # Carte contenu (sections)
-│   │   ├── DataTable.astro       # Tableau de données
-│   │   ├── CompareTable.astro    # Tableau comparatif dark-header
-│   │   ├── QuoteBlock.astro      # Citation avec auteur
-│   │   ├── TakeawayBox.astro     # Résumé points clés
-│   │   ├── DisclaimerBox.astro   # Avertissement rouge
-│   │   ├── BiasGrid.astro        # Grille de biais/concepts
-│   │   ├── LayerCard.astro       # Carte framework multicouche
-│   │   ├── RoadmapGrid.astro     # Grille chapitres/parties
-│   │   ├── ScoreRow.astro        # Métriques en grille
-│   │   ├── HofCard.astro         # Carte Hall of Fame
-│   │   ├── SetupCard.astro       # Carte setup scanner
-│   │   ├── NextCta.astro         # CTA article suivant
-│   │   ├── SectionDivider.astro  # Séparateur avec icône
-│   │   ├── EChart.astro          # Conteneur ECharts
-│   │   ├── Mermaid.astro         # Diagramme Mermaid
-│   │   ├── CodeBlock.astro       # Bloc code avec label
-│   │   └── ...                   # MetricGrid, Badge, Calendar, etc.
-│   ├── layouts/                  # 8 layouts (*.astro)
-│   │   ├── BaseLayout.astro      # Layout de base (GTM, fonts, CSS, brand-bar, footer)
-│   │   ├── DailyLayout.astro     # Briefing quotidien
-│   │   ├── WeeklyLayout.astro    # Rapport hebdomadaire
-│   │   ├── AnalysesLayout.astro  # Analyse ticker (hero + switcher + history)
-│   │   ├── AnalysisLayout.astro  # Analyse ticker (legacy ticker-header)
-│   │   ├── ScannerLayout.astro   # Scanner quotidien
-│   │   ├── SeriesLayout.astro    # Série multi-chapitres
-│   │   └── TechLayout.astro      # Articles techniques (code + mermaid)
-│   ├── content/                  # Collections de contenu (MDX)
-│   │   ├── config.ts             # Schémas Zod (daily, tech, analyses, weekly, scanner)
-│   │   ├── daily/                # Nouveaux briefings en MDX
-│   │   └── tech/                 # Nouveaux articles tech en MDX
+│   ├── layouts/                  # 8 layouts (Base, Daily, Weekly, Analyses, Analysis, Scanner, Series, Tech)
+│   ├── content/                  # Collections MDX (daily/, tech/)
 │   └── pages/                    # Routes dynamiques
-│       ├── daily/[...slug].astro
-│       └── tech/[...slug].astro
-├── public/                       # Fichiers statiques (servis par Astro)
-│   └── logo.svg                  # Logo Market Watch
-├── assets/                       # CSS global partagé
+├── assets/                       # CSS + JS global partagé
 │   ├── report.css                # Theme light (3000+ lignes)
-│   ├── report-dark.css           # Theme dark (scanner)
 │   ├── core.js                   # Tag renderer + filtres
+│   ├── live-tracker.js           # Prix temps réel (Yahoo + Binance)
 │   └── style.css                 # Landing page CSS
-├── weekly/                       # Rapports hebdomadaires (legacy HTML)
-├── daily/                        # Briefings quotidiens (legacy HTML)
-├── analyses/                     # Analyses par ticker (legacy HTML)
-├── scanner/                      # Scans quotidiens (legacy HTML)
-├── series/                       # Séries éducatives (legacy HTML)
-├── tech/                         # Guides techniques (legacy HTML)
+├── weekly/ daily/ analyses/ scanner/ series/ tech/  # Legacy HTML
 ├── data/                         # Index JSON par tab + search_data.js
-├── tools/                        # Scripts de migration et maintenance
-│   ├── migrate_astro.js          # Migration/fix en masse (433 articles)
-│   ├── add_card.js               # Ajout automatique à l'index JSON
-│   └── ...
-├── scripts/
-│   └── copy-legacy.mjs           # Post-build: copie legacy HTML → dist/
-├── astro.config.mjs              # Config Astro (Shiki, MDX)
-├── package.json                  # npm scripts: dev, build, preview
-├── CLAUDE.md                     # Ce fichier (instructions pour Claude)
-└── CNAME                         # DNS: market-watch.xyz
+├── tools/                        # add_card.js, migrate_astro.js, etc.
+├── widget/                       # Widgets embarquables (iframe)
+└── mcp/                          # MCP server + watchlist.json
 ```
 
 ## Architecture Hybride (Astro + Legacy)
-- **Nouveaux articles** : écrits en MDX dans `src/content/`, rendus via layouts Astro
-- **Articles existants** (433) : HTML fixé in-place, copié dans `dist/` par `copy-legacy.mjs`
+- **Nouveaux articles** : MDX dans `src/content/`, rendus via layouts Astro
+- **Articles existants** (433) : HTML legacy copié dans `dist/` par `copy-legacy.mjs`
 - **Build** : `npm run build` = `astro build` + `copy-legacy.mjs`
-- **Priorité** : Astro-generated files > legacy HTML (copy-legacy n'écrase pas)
 - **Migration tool** : `node tools/migrate_astro.js --apply` standardise tous les HTML legacy
 
-## Composants Astro Disponibles
-Les LLMs qui génèrent du contenu MDX doivent utiliser ces composants importés :
-```mdx
-import ContentCard from '../../components/ContentCard.astro'
-import DataTable from '../../components/DataTable.astro'
-import CompareTable from '../../components/CompareTable.astro'
-import QuoteBlock from '../../components/QuoteBlock.astro'
-import TakeawayBox from '../../components/TakeawayBox.astro'
-import ScoreRow from '../../components/ScoreRow.astro'
-import LayerCard from '../../components/LayerCard.astro'
-import BiasGrid from '../../components/BiasGrid.astro'
-import SetupCard from '../../components/SetupCard.astro'
-import SectionDivider from '../../components/SectionDivider.astro'
-import NextCta from '../../components/NextCta.astro'
-import EChart from '../../components/EChart.astro'
-```
-
 ## MCP Gateway
-Le projet utilise un MCP Gateway MarketWatch disponible via les outils `mcp__claude_ai_Gateway__*`.
-- **GetMarketOverview**: Snapshot complet du marché (indices, commodities, crypto, rates, sentiment, news)
+Outils `mcp__claude_ai_Gateway__*` :
+- **GetMarketOverview**: Snapshot global (indices, commodities, crypto, rates, sentiment, news)
 - **QueryData**: 58 types de données (quotes, bars, technicals, sentiment, news, earnings, etc.)
-- **GetInstruments**: Analyse complète d'un symbole (nécessite paramètre `symbols`)
-- **RunAutoScreener**: Screener auto-adaptatif avec détection de régime
+- **GetInstruments**: Analyse complète d'un symbole (`symbols` requis)
+- **RunAutoScreener**: Screener auto-adaptatif + détection de régime
 - **RunScreener**: Screener DSL personnalisé
-- **CalculateOptionsGreeks**: Calcul des Greeks pour options
-- **AnalyzeOptionsStrategy**: Analyse de stratégies multi-legs
-- **LLMAnalysis**: Analyse DeepSeek
+- **CalculateOptionsGreeks** / **AnalyzeOptionsStrategy** / **LLMAnalysis**
 
-## Polymarket — Marchés Prédictifs (Source Transversale)
-
-Les données Polymarket doivent être intégrées dans **tous les types d'articles** (weekly, daily, scanner, analyses) quand elles apportent un signal pertinent. Les marchés prédictifs offrent des probabilités en temps réel basées sur le consensus des traders.
-
-### Quand utiliser
-- **Géopolitique** : conflits, sanctions, élections, accords (ex: "Will US strike Iran?" → 72%)
-- **Macro/Fed** : probabilités de cut/hike, récession, CPI (ex: "Fed rate cut June 2026" → 45%)
-- **Crypto** : prix BTC/ETH à date X, régulation, approbation ETF
-- **Earnings** : marchés sur beat/miss de grandes caps
-- **Tout événement binaire** ayant un marché actif et liquide sur Polymarket
-
-### Collecte
-- `WebSearch "polymarket {sujet}" site:polymarket.com` pour trouver les marchés
+## Polymarket — Marchés Prédictifs
+Intégrer dans **tous les types d'articles** quand pertinent. Signal **complémentaire**, jamais la base d'une thèse.
+- `WebSearch "polymarket {sujet}" site:polymarket.com`
 - Données clés : probabilité (%), volume ($), tendance vs 7j
-
-### Format HTML
-```html
-<div class="didactic-box">
-    <h4><i class="fa-solid fa-chart-column"></i> Polymarket Signal</h4>
-    <p><strong>{Titre du marché}</strong> — {Probabilité}% ({tendance ↑↓})</p>
-    <p>Volume: ${montant} · <a href="https://polymarket.com/event/{slug}" class="source-ref" target="_blank" rel="noopener">
-        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
-        <span class="source-name">Polymarket</span></a></p>
-    <p><em>{Divergence vs consensus institutionnel si notable}</em></p>
-</div>
-```
-
-### Directives
-- Signal **complémentaire**, jamais la base d'une thèse
-- Toujours mentionner le **volume** (un marché à $50K ≠ un marché à $5M)
-- Comparer au consensus institutionnel — les divergences sont les plus intéressantes
-- Lien source obligatoire vers le marché Polymarket
-- **Sections typiques par article** :
-  | Type | Sections où intégrer Polymarket |
-  |------|-------------------------------|
-  | Weekly | Géopolitique, Outlook, Macro, Crypto, Matrice des Risques |
-  | Daily | Alerte du jour, Géopolitique, Crypto, Ce qu'il faut surveiller |
-  | Scanner | Catalyseurs des setups (si marché prédictif pertinent) |
-  | Analyses | Macro, Risques, Social Radar (si marché sur le ticker/secteur) |
+- Toujours mentionner le volume et comparer au consensus institutionnel
+- Format : `<div class="didactic-box">` avec lien `source-ref` vers Polymarket
+- **Où** : Géopolitique, Macro, Crypto, Outlook, Matrice des Risques, Catalyseurs scanner
 
 ## Commandes Utilisateur
 
-### "Nouvelle analyse weekly" / "Update l'article pour next week"
-**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+### "Nouvelle analyse weekly"
+**Langue par défaut : anglais intermediate.** Voir `weekly/CLAUDE.md` pour le template complet et les 18 sections obligatoires.
 
-#### Étape 0 — Calcul de la date et anti-doublon (CRITIQUE)
-Le weekly couvre **la semaine À VENIR**, pas la semaine passée. La date du dossier est **le lundi de la semaine couverte**.
-- Si publié **dimanche 1er mars** → couvre **semaine du 2-6 mars** → dossier `weekly/20260302/`
-- Si publié **samedi 28 fév** → couvre **semaine du 2-6 mars** → dossier `weekly/20260302/`
-- **JAMAIS** créer un dossier avec une date passée qui chevauche un weekly déjà publié
-- **Vérification anti-doublon** : Lister `ls weekly/` et vérifier qu'aucun dossier existant ne couvre la même semaine. Si doublon détecté → STOP et demander confirmation à l'utilisateur.
-- **Convention de nommage** : `weekly/YYYYMMDD/` où YYYYMMDD = **lundi** de la semaine couverte (jamais mardi, mercredi, etc.)
-
-#### Étape 1 — Référence et collecte
-1. Lire **`weekly/20260223/index.html`** (article de référence) pour reproduire exactement le même layout, structure HTML et style visuel
-2. Collecter les données via MCP Gateway:
-   - `GetMarketOverview` (deep) pour snapshot global
-   - `QueryData` types: quote, bars_daily pour SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD
-   - `QueryData` types: quote pour les cryptos (SOL-USD, XRP-USD, DOGE-USD)
-   - WebSearch pour: CPI/inflation, earnings calendar semaine prochaine, géopolitique (Ukraine, Venezuela, Chine), sector rotation, Fed/FOMC
-
-#### Étape 2 — Génération
-3. Créer le dossier `weekly/YYYYMMDD/` (date du lundi de la semaine couverte)
-4. Utiliser impérativement le CSS global: `<link rel="stylesheet" href="/assets/report.css">`
-5. Créer index.html avec **TOUTES** les sections obligatoires (voir weekly/CLAUDE.md — 18 sections)
-6. **Contraintes layout CRITIQUES** :
-   - **FAB obligatoire** : Le weekly utilise le FAB flottant (fnav) comme tous les autres types d'articles. PAS de Navigation Grid inline.
-   - **PAS de `hero-brand-link` / `hero-brand-logo`** dans le hero : Le hero contient uniquement `hero-title`, `hero-subtitle`, `hero-badges`, `article-clickable-tags` et le bouton historique.
-   - **Taille minimum** : L'article doit faire **> 100KB**. Si < 100KB, il manque probablement des sections.
-   - **Toutes les 18 sections** de weekly/CLAUDE.md doivent être présentes (Hero, Nav Grid, Alerte, Calendrier, Synthèse, Bilan S-1, Macro, Métaux, Crypto, Earnings, Géopolitique, Rotation, Risques, Allocation, Trades, Leaders, Outlook, Sources)
-
-#### Étape 3 — Indexation et publication
-7. Langue: Anglais, niveau intermédiaire, ton institutionnel mais accessible
-8. Lancer `node tools/add_card.js weekly/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
-9. **OBLIGATOIRE — Commit & Push** :
+1. **Date** : Le weekly couvre la semaine **À VENIR**. Dossier = `weekly/YYYYMMDD/` (YYYYMMDD = lundi). Vérifier anti-doublon avec `ls weekly/`.
+2. **Référence** : Lire `weekly/20260223/index.html` pour reproduire le layout exact
+3. **Collecte MCP** : `GetMarketOverview` (deep) + `QueryData` (SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (calendrier, géopolitique, earnings)
+4. **Générer** : `weekly/YYYYMMDD/index.html` avec les 18 sections (> 100KB). CSS = `/assets/report.css`. FAB obligatoire, PAS de hero-brand-link.
+5. **Indexer + Push** :
    ```bash
+   node tools/add_card.js weekly/YYYYMMDD/index.html
    git add weekly/YYYYMMDD/ data/weekly.json data/search_data.js data/radar.json
    git commit -m "feat: weekly YYYYMMDD — {titre court}"
    git push origin main
    ```
 
-### "Analyse [TICKER]" (ex: "Analyse BMNR", "Analyse BTC")
+### "Analyse [TICKER]"
 Par défaut, génère **une seule variante** : `intermediate/en`.
-L'utilisateur peut restreindre ou étendre avec des paramètres : `analyse AAPL expert fr` ou `analyse AAPL beginner en`.
 
-1. **Parser les paramètres** :
-   - `level` : intermediate (défaut: **intermediate**)
-   - `langs` : en (défaut: **en**)
-   - **IMPORTANT** : Sauf demande contraire, **SEULEMENT** la variante `intermediate/en` est générée.
-2. **Si l'analyse existe déjà** : archiver l'ancienne version
-   - Créer `analyses/{TICKER}/archive/{YYYYMMDD}/` (date de l'ancienne analyse)
-   - Déplacer l'ancien `index.html` dans l'archive
-3. **Collecter via MCP** :
-   - `GetInstruments` symbols=[TICKER]
-   - `QueryData` types: quote,bars_daily,bars_intraday,financials,earnings_quarterly,holders,stats,support_resistance,volume_profile,sentiment_overall,trading_signals,analyst_actions,insider_transactions,ctb,news
-   - `QueryData` types: options_chain si applicable
-4. Recherche web pour actualités récentes
-5. **Générer la version expert/fr d'abord** (= `analyses/{TICKER}/index.html`, le root)
-   - Inclure le switcher langue/niveau dans le hero
-   - Utiliser ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
-   - **OBLIGATOIRE** : Inclure une section **Trade Idea** quand c'est pertinent (voir ci-dessous)
-   - **OBLIGATOIRE** : Inclure une section **Social Radar** avec analyse du sentiment (StockTwits, Reddit) et un `socialChart` ECharts, comme dans l'article TARA.
-
-7. **Créer/mettre à jour `variants.json`** dans le dossier ticker :
-   ```json
-   {
-     "ticker": "AAPL",
-     "default": { "level": "beginner", "lang": "en" },
-     "variants": [
-       { "level": "expert", "lang": "fr", "path": "." },
-       { "level": "expert", "lang": "en", "path": "expert/en" },
-       { "level": "expert", "lang": "ar", "path": "expert/ar" },
-       { "level": "beginner", "lang": "fr", "path": "beginner/fr" },
-       { "level": "beginner", "lang": "en", "path": "beginner/en" },
-       { "level": "beginner", "lang": "ar", "path": "beginner/ar" }
-     ],
-     "date": "YYYY-MM-DD"
-   }
+1. **Si existe déjà** : archiver dans `analyses/{TICKER}/archive/{YYYYMMDD}/`
+2. **Collecte MCP** : `GetInstruments` + `QueryData` (quote, bars_daily, bars_intraday, financials, earnings_quarterly, holders, stats, support_resistance, volume_profile, sentiment_overall, trading_signals, analyst_actions, insider_transactions, ctb, news, options_chain)
+3. **Générer** `analyses/{TICKER}/index.html` :
+   - Switcher langue/niveau dans le hero
+   - ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
+   - **Section Trade Idea** obligatoire pour tickers tradables (classe `trade-box` + `trade-levels`, R/R ≥ 1:1.5)
+   - **Section Social Radar** obligatoire (sentiment StockTwits/Reddit + `socialChart` ECharts)
+   - Non pertinent pour indices/thématiques/devises
+4. **Créer `variants.json`** dans le dossier ticker
+5. **Indexer + Push** :
+   ```bash
+   node tools/update_history.js analyses/{TICKER}/index.html
+   node tools/add_card.js analyses/{TICKER}/index.html
+   git add analyses/{TICKER}/ data/analyses.json data/search_data.js
+   git commit -m "feat: analyse {TICKER} — {titre court}"
+   git push origin main
    ```
-8. **Section Trade Idea** (obligatoire quand pertinent — actions, ETF, crypto tradables) :
-   - Utiliser la classe CSS `trade-box` avec `trade-levels` (entry, stop, TP1, TP2, R/R)
-   - **Entrée** : zone de prix avec justification technique (support, EMA, pullback, breakout)
-   - **Stop Loss** : niveau d'invalidation technique clair (sous support, 52W low, EMA 200)
-   - **TP1 / TP2** : objectifs échelonnés avec raisonnement (consensus, résistance, retracement)
-   - **R/R** : ratio risk/reward minimum 1:1.5
-   - **Thèse du trade** : dans un `pedagogy-box`, expliquer le setup en 3-4 phrases
-   - **Signaux de renforcement** : 4 triggers bullish dans un bloc vert (`background:#f0fdf4; border:1px solid #16a34a`)
-   - **Signaux d'annulation** : 4 triggers d'invalidation dans un bloc rouge (`background:#fef2f2; border:1px solid #dc2626`)
-   - **Timing & Sizing** : dans un `alert-box`, préciser horizon (swing/moyen terme), catalyseurs calendrier, sizing (% portefeuille), beta, entrée échelonnée
-   - Ajouter un lien `<a href="#trade" class="nav-item">Trade Idea</a>` dans la navigation
-   - **Non pertinent pour** : indices (STOXX600, KOSPI), thématiques (STABLECOINS), devises (EURUSD) sauf si trade FX explicite
-9. Lancer `node tools/update_history.js analyses/{TICKER}/index.html` pour auto-générer la modale Historique à partir des versions archivées dans `archive/`
-10. Lancer `node tools/add_card.js analyses/{TICKER}/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
-11. **OBLIGATOIRE — Commit & Push** :
-    ```bash
-    git add analyses/{TICKER}/ data/analyses.json data/search_data.js
-    git commit -m "feat: analyse {TICKER} — {titre court}"
-    git push origin main
-    ```
 
 ### "Analyse Daily" / "Briefing du jour"
-Briefing matinal quotidien publié à 7h00. Couvre US, EU, Asie-Pacifique et Crypto. Le weekend, focus crypto et géopolitique.
-**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+**Langue par défaut : anglais intermediate.** Voir `daily/CLAUDE.md` pour le template complet et les 17 sections obligatoires.
 
-1. **Collecter via MCP** :
-   - `GetMarketOverview` (deep) pour snapshot global (indices, commodities, crypto, rates, regime, sentiment, news)
-   - `QueryData` types: quote,bars_daily pour SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD
-2. **WebSearch** pour :
-   - Calendrier économique du jour/semaine (CPI, FOMC, PMI, GDP, etc.)
-   - Actualités géopolitiques majeures (Ukraine, Chine, tariffs, etc.)
-   - Earnings calendar du jour
-   - **Polymarket** : marchés prédictifs pertinents (géopolitique, Fed, crypto) — voir section "Polymarket" ci-dessus
-3. **Créer `daily/YYYYMMDD/index.html`** avec les sections :
-   - Hero + badges clés du jour
-   - Navigation Grid
-   - Alerte du jour (événement #1)
-   - Dashboard Rapide (4x4 métriques avec badges couleur)
-   - Bilan de la veille / semaine passée
-   - Agenda du jour & semaine (calendrier Lun-Ven)
-   - Marchés US (indices, secteurs, movers)
-   - Marchés Europe (DAX, CAC, FTSE)
-   - Marchés Asie-Pacifique (Nikkei, HSI, ASX)
-   - Crypto (BTC, ETH, alts, niveaux clés)
-   - Géopolitique (impacts marché)
-   - **Formation du Jour** — leçon pédagogique liée à un événement (ex: "Comprendre le Core PCE", "Lire un carnet d'ordres", "L'impact du VIX")
-   - **Idées de Trading** — 2-3 trades swing argumentés avec entrée/stop/target/R:R
-   - Ce qu'il faut surveiller aujourd'hui
-   - Sources & Disclaimer
-4. **Utiliser le css light**: `<link rel="stylesheet" href="/assets/report.css">`
-5. Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
-6. **OBLIGATOIRE — Commit & Push** :
+1. **Collecte MCP** : `GetMarketOverview` (deep) + `QueryData` (SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (calendrier, géopolitique, earnings, Polymarket)
+2. **Générer** `daily/YYYYMMDD/index.html`. CSS = `/assets/report.css`.
+3. **Samedi** = briefing complet (récap vendredi + bilan semaine + preview lundi)
+4. **Dimanche** = crypto-only + géopolitique (marchés fermés)
+5. **Formation progressive** : cursus 4 semaines cyclique (Bases → Technique → Fondamentaux → Avancé)
+6. **Indexer + Push** :
    ```bash
+   node tools/add_card.js daily/YYYYMMDD/index.html
    git add daily/YYYYMMDD/ data/daily.json data/search_data.js data/radar.json
    git commit -m "feat: briefing quotidien DD mois YYYY — {titre court}"
    git push origin main
    ```
 
-#### Spécificités Samedi (post-séance vendredi)
-Le briefing du samedi est un **briefing complet** qui couvre la séance de vendredi :
-- **Toutes les sections standard** : US, Europe, Asie-Pacifique (récap de la séance de vendredi)
-- **Bilan hebdomadaire** : récap de la semaine complète (performances 5 jours)
-- Crypto (marchés 24/7) : analyse technique BTC, ETH, alts
-- Géopolitique : impacts attendus sur l'ouverture lundi
-- **Preview semaine prochaine** : earnings, macro, événements clés
-- Formation : sujet standard
-
-#### Spécificités Dimanche (marchés fermés)
-Le dimanche est le seul jour **crypto-only + géopolitique** :
-- Focus crypto (marchés 24/7) : analyse technique détaillée BTC, ETH, alts
-- Focus géopolitique : impacts attendus sur l'ouverture lundi
-- Pas de sections US/EU/AP (marchés fermés, déjà couverts samedi)
-- Formation : sujet plus long/approfondi (ex: "Introduction au Volume Profile")
-- Preview lundi : catalyseurs, niveaux à surveiller
-
-#### Plan de Formation Progressive
-Les "Formation du Jour" suivent un cursus progressif :
-- **Semaine 1** : Bases (indices, lire un graphe, bid/ask, VIX)
-- **Semaine 2** : Technique (RSI, MACD, supports/résistances, moyennes mobiles)
-- **Semaine 3** : Fondamentaux (P/E, EPS, marges, free cash flow, earnings)
-- **Semaine 4** : Avancé (options basics, vol implicite, corrélations, régimes)
-- Puis cycle recommence avec des sujets plus avancés
-
 ### "Scanner" / "Scan du jour"
-**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+**Langue par défaut : anglais intermediate.** Voir `scanner/CLAUDE.md` pour le template complet, les sections, et la méthodologie.
 
-1. **Lire TOUTES les rétrospectives existantes** (tous les dossiers `scanner/retrospective/YYYYMMDD/`) :
-   - Lister tous les dossiers datés dans `scanner/retrospective/` et lire chaque `index.html`
-   - Pour chaque rétro : extraire la note globale, hit rates par stratégie, top/flop setups
-   - **Cumuler les enseignements** : une stratégie qui sous-performe dans 2+ rétros consécutives doit être fortement réduite
-   - Identifier les secteurs à faux signaux récurrents → les éviter ou filtrer plus strict
-   - Lister les tickers qui ont floppé dans les rétros récentes → les exclure
-   - Ajuster les stops si plusieurs rétros signalent des stops trop serrés/larges
-   - **Priorité** : la rétro la plus récente a le plus de poids, mais les patterns récurrents des rétros antérieures sont tout aussi importants
-2. **Lire le scan précédent** (`scanner/YYYYMMDD/` le plus récent) :
-   - Extraire les 10 tickers pour le filtre anti-doublon (min 70% nouveaux tickers)
-3. **Collecter via MCP** :
-   - `RunAutoScreener` pour détection du régime + candidats
-   - `RunScreener` avec 3 DSL complémentaires (oversold, momentum, breakout)
-   - `RunScreener` avec symboles EU : VGK, EWG, EWQ, EWU, SAP, ASML, BBVA, TTE, SIE, LVMHF
-   - `RunScreener` avec symboles APAC : EWJ, EWY, EWH, FXI, MCHI
-   - `RunScreener` avec ETFs sectoriels/thématiques : XLF, XLE, XLK, XLV, XLI, GLD, SLV, TLT, ARKK, ICLN
-   - `QueryData` types: quote,insider_transactions pour **tous** les candidats retenus (validation prix spot obligatoire + détection des achats significatifs d'insiders)
-   - **Contrôle P0** : Rejeter tout ticker dont le prix d'entrée calculé diffère de >10% du prix spot
-4. **Sélection finale — 10 setups A+** :
-   - Score composite ≥ 85/100, confluence technique ≥ 3 signaux
-   - **Diversification géographique obligatoire** : min 5 US + 2 EU + 1 APAC + 2 ETFs
-   - En régime Risk-Off/Early Risk-Off : min 20% de setups short ou hedges (GLD, TLT, SH, SQQQ)
-   - Pondérer les stratégies selon le hit rate cumulé de toutes les rétrospectives
-5. **WebSearch** pour catalyseurs récents de chaque ticker retenu
-6. **Créer `scanner/YYYYMMDD/index.html`** (thème light) :
-   - Mentionner en intro : "Suite à la rétrospective du DD/MM (note X, hit rate Y%), nous avons ajusté [Z]"
-   - Badge géographique sur chaque setup (US 🇺🇸 / Europe 🇪🇺 / Asia 🌏 / ETF 📊)
-   - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
-   - **Titre carte** (**OBLIGATOIRE**) : Le `<h2>` de la carte dans `data/scanner.json` doit suivre le format `Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, ..., {TICKER10}`. Jamais de titre générique ("Daily Scanner", "Scan du jour").
-7. Créer les variantes multilangue/multiniveau
-8. **OBLIGATOIRE — Inclure le live price tracker** : Ajouter `<script src="/assets/live-tracker.js"></script>` avant `</body>`. Ce script dynamise les setup cards avec les prix temps réel et le statut (Trending, Stopped, TP Hit, etc.).
-9. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
-10. **OBLIGATOIRE — Mettre à jour `mcp/watchlist.json`** avec les données du scan :
-   - Écrire directement le fichier `mcp/watchlist.json` avec les 10 picks, le régime, VIX, DXY, SPX, Fear/Greed
-   - Format : voir `mcp/watchlist.json` existant comme référence
-   - Ce fichier alimente la **Live Data Preview** de `/prompt-ia/` et le **MCP server** pour les agents IA
-   - Les champs obligatoires : `updated` (ISO date), `regime`, `vix`, `dxy`, `spx`, `fear_greed`, `picks[]` (ticker, name, strategy, entry, stop, tp1, tp2, rr, score, region, tags, catalyst), `alerts`, `next_update`
-11. **OBLIGATOIRE — Commit & Push** :
+1. **Lire TOUTES les rétrospectives** (`scanner/retrospective/YYYYMMDD/`) pour cumuler les enseignements
+2. **Lire le scan précédent** pour filtre anti-doublon (min 70% nouveaux tickers)
+3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `QueryData` (quote, insider_transactions)
+4. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
+6. **Indexer + Push** :
    ```bash
+   node tools/add_card.js scanner/YYYYMMDD/index.html
    git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
    git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
    git push origin main
    ```
 
-### "Rétrospective Scanner" / "Rétro scanner"
-Rétrospective hebdomadaire qui évalue les scans des 10 derniers jours et note le scanner.
-**Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
+### "Rétrospective Scanner"
+**Langue par défaut : anglais intermediate.** Voir `scanner/CLAUDE.md` section 5bis pour le template complet.
 
-1. **Lister les scans récents** : Lire tous les `scanner/YYYYMMDD/index.html` des 10 derniers jours
-2. **Extraire les setups** : Pour chaque scan, extraire les 10 tickers avec entry/stop/TP/stratégie
-3. **Collecter les prix actuels** via MCP :
-   - `QueryData` types=quote,bars_daily symbols={tous les tickers}
-   - Calculer : hit rate TP1, hit rate TP2, stop rate, P&L moyen
-4. **Créer `scanner/retrospective/YYYYMMDD/index.html`** (dossier daté = date de publication) avec :
-   - Note globale (A+ à F), dashboard rapide, tableau de tous les setups
-   - Analyse par stratégie, top 3 / flop 3, leçons & améliorations
-   - **IMPORTANT** : Chaque rétrospective a son propre dossier daté, on ne remplace JAMAIS les précédentes
-5. **Mettre à jour le redirect** `scanner/retrospective/index.html` pour pointer vers la nouvelle :
-   ```html
-   <meta http-equiv="refresh" content="0;url=/scanner/retrospective/YYYYMMDD/">
-   ```
-6. Lancer `node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html` pour l'ajouter à l'index JSON.
-   - La carte DOIT avoir le style rétrospective : bordure colorée, badges RÉTROSPECTIVE + NOTE, bouton gradient
-   - Chaque retro a une carte unique dans `scanner.json` avec son href daté (`/scanner/retrospective/YYYYMMDD/`)
-   - Toutes les retros sont conservées dans l'index et triées par date avec les scans
-7. Voir scanner/CLAUDE.md pour le template complet
-8. **OBLIGATOIRE — Mettre à jour le dashboard "Performance du Scanner" dans `index.html`** :
-   Le bloc "Performance du Scanner" (entre les commentaires `===== SCANNER PERFORMANCE DASHBOARD =====`) dans `index.html` est **hardcodé** et doit être mis à jour manuellement après chaque rétrospective. Mettre à jour :
-   - **Date** : "Mis à jour : DD Mois YYYY — Période : DD-DD Mois YYYY"
-   - **Note** : La lettre dans le badge grade (ex: `B+`) et la couleur du gradient (`#3b82f6` pour B+, `#f59e0b` pour C+, `#10b981` pour A/A+, `#ef4444` pour D/F)
-   - **5 KPIs** : Hit Rate (%), Meilleur Pick (+X% / TICKER), Scans (N / N setups), Pire Pick (-X% / TICKER), Régime dominant
-   - **3 ECharts** dans le `<script>` `initScannerCharts()` :
-     1. `scannerTopChart` (Top Picks P&L) : liste des tickers dans `yAxis.data` + valeurs P&L dans `series[0].data` (triés du pire au meilleur, avec couleurs `#ef4444` négatif, `#10b981` positif, `#06b6d4` outlier)
-     2. `scannerResultsChart` (Résultats par Scan) : dates dans `xAxis.data` + 3 séries stacked bar (TP1 Hit, Stop Hit, En cours) avec données par scan
-     3. `scannerScoreChart` (Score Moyen) : dates dans `xAxis.data` + scores moyens dans `series[0].data` (line) + tickers uniques dans `series[1].data` (bar)
-9. **OBLIGATOIRE — Commit & Push** : Après toutes les étapes ci-dessus, faire :
+1. Lire tous les scans des 10 derniers jours, extraire les setups
+2. Collecter prix actuels via `QueryData` (quote, bars_daily)
+3. Créer `scanner/retrospective/YYYYMMDD/index.html` (note A+ à F, dashboard, tableau, top/flop)
+4. Mettre à jour redirect `scanner/retrospective/index.html`
+5. Mettre à jour le dashboard "Performance du Scanner" dans `index.html` (KPIs + 3 ECharts)
+6. **Indexer + Push** :
    ```bash
+   node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html
    git add scanner/retrospective/YYYYMMDD/ scanner/retrospective/index.html data/scanner.json data/search_data.js index.html
-   git commit -m "feat: rétrospective scanner DD-DD mois YYYY — Note X, Y% HR, TICKER +Z%"
+   git commit -m "feat: rétrospective scanner — Note X, Y% HR"
    git push origin main
    ```
-   Vérifier que le fichier HTML fait > 10KB et que `add_card.js` a réussi avant de push.
 
-### Landing Page (index.html) — Tabs
-6 tabs principaux : **Hebdo** (weekly), **Daily** (briefing quotidien), **Analyses** (analyses individuelles), **Scanner** (scans quotidiens), **Radar** (intelligence marché temps réel), **Séries** (séries éducatives).
-- **Tech** est dans le footer (pas dans les tabs), accessible via `?tab=tech`
-- URL state : `?tab=daily`, `?tab=analyses`, `?tab=scanner`, `?tab=radar`, `?tab=series`
-- Grade filter : `?grade=A` (tab analyses uniquement)
-- Recherche : symbole ticker uniquement
-- Mobile : les tabs s'affichent en grille d'icones (5 colonnes) au lieu de texte horizontal
-- **Ordre des cartes** (**OBLIGATOIRE**) : Dans tous les tabs, les cartes `.report-card` sont **toujours triées par date décroissante** (plus récent en haut). Exception : dans le tab Scanner, le bloc "Performance du Scanner" reste fixe en tout premier (avant les cartes). Les rétrospectives et scans sont ensuite mélangés et triés strictement par date.
+## Landing Page (index.html)
+6 tabs : **Hebdo**, **Daily**, **Analyses**, **Scanner**, **Radar**, **Séries**. Tech dans le footer (`?tab=tech`).
+- URL state : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — combinables
+- Cartes toujours triées par date décroissante. Exception : bloc "Performance du Scanner" fixe en premier dans le tab Scanner.
+- Indexation : `node tools/add_card.js chemin/vers/index.html` (JAMAIS modifier index.html à la main pour ajouter une carte)
 
-### Radar — `data/radar.json` (OBLIGATOIRE à mettre à jour)
-Le tab Radar affiche un radar animé (canvas) avec des blips représentant les risques, événements, opportunités et le régime de marché. Les blips sont cliquables et redirigent vers la section pertinente de l'article source.
-
-**Mise à jour OBLIGATOIRE** : À chaque publication de daily, weekly, ou scanner, Claude DOIT mettre à jour `data/radar.json` avec les données actuelles. Ce fichier n'est PAS généré par un script — il est rédigé par Claude qui comprend le contexte et l'importance relative de chaque élément.
-
-**Format `data/radar.json`** :
-```json
-{
-  "updated": "2026-03-09",
-  "regime": "RISK-OFF",
-  "vix": 29.49,
-  "spx": 6740.02,
-  "fear_greed": 22,
-  "items": [
-    {
-      "category": "risk|event|opportunity|regime",
-      "label": "Titre court affiché",
-      "short": "LABEL RADAR",
-      "detail": "Description 1-2 phrases avec contexte et impact",
-      "importance": 1-10,
-      "date": "YYYY-MM-DD",
-      "link": "/daily/YYYYMMDD/#section",
-      "link_label": "Read more"
-    }
-  ]
-}
-```
-
-**Catégories et couleurs** :
-| Catégorie | Couleur | Quadrant | Exemples |
-|-----------|---------|----------|----------|
-| `risk` | Rouge | Haut-droite | Trade war, recession, VIX spike, crash sectoriel |
-| `event` | Ambre | Bas-droite | CPI, FOMC, NFP, earnings majeurs, IPOs |
-| `opportunity` | Vert | Bas-gauche | Picks scanner A+, setups actifs, secteurs en rotation |
-| `regime` | Bleu | Haut-gauche | Régime Risk-On/Off, Fear&Greed, DXY, rotation sectorielle |
-
-**Importance (1-10)** : Détermine la taille du blip ET sa distance au centre (10 = gros blip au centre = urgent/critique, 1 = petit blip en périphérie = bruit de fond). Labels affichés uniquement si importance >= 7.
-
-**Champ `link`** : URL relative pointant vers la section exacte de l'article qui traite du sujet. Format : `/daily/YYYYMMDD/#section-id` ou `/scanner/YYYYMMDD/#setup-N`. L'utilisateur clique sur le blip et arrive directement au bon endroit.
-
-**Règles de curation** :
-- 20-30 items au total (pas plus — le radar doit rester lisible)
-- Min 4 items par catégorie
-- Les opportunités viennent des 2-3 derniers scans (picks avec score >= 88)
-- Les risques reflètent les menaces actives (pas les risques théoriques)
-- Les événements couvrent la semaine en cours + les events majeurs à 30 jours
-- Le régime reflète l'état actuel (VIX, F&G, DXY, rotation, sentiment)
-- Supprimer les items obsolètes (events passés, opportunités qui ont touché leur TP/stop)
+## Radar — `data/radar.json`
+Mis à jour à chaque publication (daily, weekly, scanner). Rédigé par Claude, pas mécanique.
+- 20-30 items, min 4 par catégorie : `risk` (rouge), `event` (ambre), `opportunity` (vert), `regime` (bleu)
+- `importance` 1-10 : taille du blip + distance au centre. Labels si ≥ 7.
+- `link` : URL relative vers la section exacte (`/daily/YYYYMMDD/#section-id`)
+- Supprimer items obsolètes. Opportunités = picks scanner score ≥ 88.
 
 ## Live Price Tracker (`assets/live-tracker.js`)
-
-Script partagé qui dynamise les articles avec des prix temps réel via Yahoo Finance. À inclure sur tout article contenant des setup cards avec des niveaux de trading.
-
-### Fonctionnement
-- Détecte automatiquement les setup cards dans le DOM (scanner et blood-in-the-streets)
-- Fetch les prix via `api.allorigins.win/get` (proxy CORS) + Binance pour crypto
-- Injecte un badge sous chaque prix montrant : % évolution, prix actuel, statut (Trending, Entry Zone, Stopped, TP1 Hit, etc.)
-- Cache `sessionStorage` 5 min, max 6 requêtes parallèles
-- Marque visuellement les picks invalidés (grayscale), en tendance (vert), TP atteints
-
-### Intégration (OBLIGATOIRE pour scanner)
-Ajouter avant `</body>` de chaque article scanner :
+Script partagé pour prix temps réel sur les setup cards. **OBLIGATOIRE pour scanner.**
 ```html
 <script src="/assets/live-tracker.js"></script>
 ```
-
-### Classification des positions
-| Statut | Condition | Couleur | Visuel |
-|--------|-----------|---------|--------|
-| TP2 Hit | Prix ≥ TP2 | Or | Badge doré |
-| TP1 Hit | Prix ≥ TP1 | Vert | Badge vert |
-| Trending | Prix > Entry | Vert | Bordure verte |
-| Entry Zone | Prix ≈ Entry (±2%) | Ambre | Pulsation |
-| Underwater | Entre Stop et Entry | Rouge clair | — |
-| Near Stop | Prix ≈ Stop (±2%) | Rouge | Pulsation rapide |
-| Stopped | Prix ≤ Stop | Gris | Grayscale + opacité |
+- Yahoo Finance via `api.allorigins.win/get` + Binance pour crypto
+- Classification : TP2 Hit (or) → TP1 Hit (vert) → Trending (vert) → Entry Zone (ambre) → Underwater (rouge clair) → Near Stop (rouge) → Stopped (gris/grayscale)
+- Cache sessionStorage 5 min, max 6 requêtes parallèles
 
 ### Proxy CORS — Convention Projet
-**TOUJOURS** utiliser `api.allorigins.win/get` (pas `/raw` qui n'a pas les headers CORS) :
+**TOUJOURS** `api.allorigins.win/get` (pas `/raw` — pas de headers CORS) :
 ```javascript
 var url = 'https://api.allorigins.win/get?url=' + encodeURIComponent(yahooUrl);
 fetch(url).then(r => r.json()).then(d => {
   var yahoo = JSON.parse(d.contents); // /get wraps dans { contents: "..." }
-  var price = yahoo.chart.result[0].meta.regularMarketPrice;
 });
 ```
-**Fallback** : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw` (pas de CORS).
+Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
 
-## Widgets Embarquables (`/widget/`)
+## Widgets (`/widget/`)
+- **Galerie** : `/widget/gallery.html` — 6 types avec previews et embed code
+- **Types** : `picks` (watchlist), `dashboard` (indicateurs), `regime` (VIX-based), `sector` (rotation), `movers` (top/flop), `radar` (risques)
+- Régime dynamique : VIX < 15 RISK-ON, 15-20 NEUTRAL, 20-28 EARLY RISK-OFF, > 28 RISK-OFF
+- Proxy : allorigins `/get` + Binance directe. Cache sessionStorage 5 min, polling 30s.
 
-### Architecture
-Le système de widgets permet d'embarquer des composants Market Watch dans n'importe quel site via iframe.
+## Conventions HTML (OBLIGATOIRE pour tous les articles)
+Les templates complets sont dans les sous-CLAUDE.md (daily/, weekly/, scanner/). Voici les règles transversales :
 
-- **Configurateur** : `/widget/?mode=embed` (page de configuration avec previews)
-- **Galerie** : `/widget/gallery.html` (tous les types de widgets avec previews)
-- **Embed direct** : `/widget/?type={type}&theme={dark|light}`
+1. **`<html>`** : `lang="{en|fr|ar}" data-tags="{tags}" data-tab="{type}"` + optionnel `data-level`, `data-grade`
+2. **Brand Bar** : `<nav class="brand-bar">` + `brand-bar-inner` + logo `/logo.svg`. TOUJOURS présent.
+3. **Tags** : `<div id="article-clickable-tags" class="card-tags"></div>` dans le hero. Peuplé par `tag-renderer.js`.
+4. **FAB** : `<div class="fnav">` avec 6 items. Obligatoire pour scanner, daily, analyses, tech, series. Pas pour weekly.
+5. **Footer** : `<footer class="article-footer">`. JAMAIS `report-footer`, `site-footer`, etc.
+6. **Scripts** : `core.js` + `tag-renderer.js` avant `</body>`. Ajouter `echarts-responsive.js` si ECharts, `live-tracker.js` si scanner.
+7. **CSS** : EXCLUSIVEMENT `/assets/report.css`. JAMAIS de dossier `assets/` local, JAMAIS `report-dark.css`.
+8. **Pas de CSS inline** sauf conteneurs ECharts et blocs Confirmations/Invalidations scanner.
+9. **GTM** : GTM-T5Z595CW sur toutes les pages.
+10. **Fonts** : Inter (Google Fonts) + Font Awesome 6.4.0.
+11. **Charts** : ECharts préféré. Ne pas mélanger ApexCharts et ECharts dans un même article.
+12. **Accents français obligatoires** : UTF-8 direct (résultat, bénéfice, marché, première).
+13. **Logo** : brand-bar = logo MW `/logo.svg`. Cartes index.html = logo parqet.com. JAMAIS de logo société dans le ticker-header.
 
-### Types de Widgets
+### Tags — Taxonomie
+| Catégorie | Tags | Couleur |
+|-----------|------|---------|
+| Région | `us`, `eu`, `asia`, `crypto`, `commodity`, `forex`, `etf` | Bleu |
+| Secteur | `tech`, `semis`, `healthcare`, `energy`, `financials`, `industrials`, `materials`, `consumer`, `defense` | Vert |
+| Thème | `ai`, `earnings`, `geopolitique`, `macro`, `technique`, `options`, `dividende`, `small-cap`, `speculative` | Violet |
+| Contenu | `trade-idea`, `formation`, `retrospective` | Ambre |
 
-| Type | URL | Source de données | Description |
-|------|-----|-------------------|-------------|
-| `picks` | `/widget/?mode=tape` ou `vertical` | `mcp/watchlist.json` | 10 A+ picks du scanner avec prix live |
-| `dashboard` | `/widget/gallery.html?type=dashboard` | Yahoo Finance (SPY, QQQ, VIX, GLD, BTC...) | Dashboard indicateurs marché |
-| `regime` | `/widget/gallery.html?type=regime` | Yahoo Finance (^VIX, SPY) | Indicateur de régime de marché |
-| `sector` | `/widget/gallery.html?type=sector` | Yahoo Finance (XLK, XLV, XLF, XLE...) | Rotation sectorielle (barplot CSS) |
-| `movers` | `/widget/gallery.html?type=movers` | Yahoo Finance (30 tickers populaires) | Top 5 gainers / Top 5 losers |
-| `radar` | `/widget/gallery.html?type=radar` | `data/radar.json` | Radar des risques/opportunités |
+### Internationalisation
+- Boutons cartes : traduits dynamiquement par `translateCardButtons()` — ne PAS coder en dur dans les JSON
+- Badge "Latest Report" (weekly) : ajouté par JS, jamais en dur
+- Filtres : `data-i18n` + objet `translations` (5 langues : en, fr, ar, es, zh)
 
-### Calcul du Régime (dynamique)
-Le régime est calculé côté client à partir du VIX :
-- VIX < 15 → **RISK-ON** (vert `#10b981`)
-- VIX 15-20 → **NEUTRAL** (ambre `#f59e0b`)
-- VIX 20-28 → **EARLY RISK-OFF** (orange `#f97316`)
-- VIX > 28 → **RISK-OFF** (rouge `#ef4444`)
+## Tâches Planifiées
+Gérées via le **bot Discord** (`claude-discord-bot`), pas via cron.
 
-### Conventions Widget
-- Proxy Yahoo : `api.allorigins.win/get` (voir section Proxy CORS ci-dessus)
-- Crypto : Binance API directe (`api.binance.com/api/v3/ticker/price`)
-- Cache : `sessionStorage` 5 min
-- Polling : 30s stocks, 15s crypto
-- Responsive : fonctionne à partir de 380px
-- Brand : logo MW depuis `/logo.svg`
+| Tâche | Schedule | Commande |
+|-------|----------|----------|
+| Briefing Daily | Tous les jours 7h | `every day at 07:00 articles analyse daily` |
+| Scanner | Lun-Ven 23h | `every weekday at 23:00 articles scan du jour` |
+| Rétrospective | Vendredi 23h | `every friday at 23:00 articles rétrospective scanner` |
 
-## Conventions
-
-### CSS et Assets
-- **CSS**: Utiliser EXCLUSIVEMENT le CSS global : `<link rel="stylesheet" href="/assets/report.css">`. **JAMAIS** de dossier `assets/` local. **JAMAIS** de `report-dark.css` (obsolète).
-- **Pas de CSS inline** (**OBLIGATOIRE**) : Ne JAMAIS utiliser d'attribut `style="..."` sur les éléments HTML. Toujours utiliser les classes CSS définies dans `report.css`. Les seules exceptions tolérées sont les `style` sur les conteneurs ECharts (`width`/`height` dynamiques) et les blocs Confirmations/Invalidations dans le scanner.
-- **GTM**: Toujours inclure Google Tag Manager (GTM-T5Z595CW)
-- **Fonts**: Inter (Google Fonts) + Font Awesome 6.4.0
-- **Charts**: ECharts (préféré pour tous les types). ApexCharts acceptable en complément mais **ne pas mélanger** les deux dans un même article.
-- **Responsive**: Mobile-first, breakpoints 768px et 480px
-- **Données**: Toujours citer les sources, disclaimer en bas
-- **Langue**: Anglais intermediate par défaut, multilingue optionnel (en, fr, ar, es, zh) — mêmes langues que market-watch.xyz
-
-### Structure HTML Commune (OBLIGATOIRE pour TOUS les types d'articles)
-
-Chaque article (daily, weekly, scanner, analyses, tech, series) DOIT respecter cette structure :
-
-#### 1. Balise `<html>` — Attributs Data
-```html
-<html lang="{fr|en|ar}" data-tags="{tags}" data-tab="{tab}">
-```
-- `data-tags` : tags CSV pertinents (voir taxonomie ci-dessous)
-- `data-tab` : type d'article (`daily`, `weekly`, `scanner`, `analyses`, `tech`)
-- `data-level` : optionnel (`expert`, `beginner`)
-- `data-grade` : optionnel, pour analyses (`A+`, `A`, `B+`, etc.)
-
-#### 2. Brand Bar (OBLIGATOIRE)
-```html
-<nav class="brand-bar">
-  <div class="brand-bar-inner">
-    <a href="/" class="brand-logo">
-      <img src="/logo.svg" alt="" width="36" height="36">
-      <span class="brand-title">MarketWatch</span>
-    </a>
-    <div class="brand-actions">
-      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
-    </div>
-  </div>
-</nav>
-```
-**TOUJOURS** `<nav class="brand-bar">` avec `<div class="brand-bar-inner">`. Logo MW (`/logo.svg`).
-
-#### 3. Tags Cliquables (OBLIGATOIRE)
-```html
-<div id="article-clickable-tags" class="card-tags"></div>
-```
-Placé dans le hero de chaque article. Peuplé automatiquement par `/assets/tag-renderer.js`.
-
-#### 4. FAB — Navigation Flottante
-```html
-<div class="fnav" id="floatingNav">
-  <div class="fnav-menu" id="fnavMenu">
-    <a href="#section" class="fnav-item" data-section="section"><i class="fas fa-icon"></i><span>Label</span></a>
-    <!-- 6 items typiquement -->
-  </div>
-  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
-    <i class="fas fa-bars" id="fnavIcon"></i>
-    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
-  </button>
-</div>
-```
-**Obligatoire pour** : scanner, daily, analyses, tech, series. **Pas pour** : weekly.
-
-#### 5. Footer (OBLIGATOIRE)
-```html
-<footer class="article-footer">
-  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
-  Ceci n'est pas un conseil financier.
-  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
-</footer>
-```
-**TOUJOURS** `class="article-footer"`. **JAMAIS** `report-footer`, `footer-bar`, `site-footer`, `briefing-footer`, ou toute autre classe.
-
-#### 6. Scripts (OBLIGATOIRE — avant `</body>`)
-```html
-<script src="/assets/core.js"></script>
-<script src="/assets/tag-renderer.js"></script>
-<script src="/assets/echarts-responsive.js"></script>
-```
-- `echarts-responsive.js` : Patch automatique des instances ECharts pour mobile (réduction des fontSize, ajustement des grilles, tooltip confiné). Inclure uniquement sur les pages avec des ECharts.
-
-### Internationalisation des Cartes (OBLIGATOIRE)
-- **Boutons des cartes** : Le texte du bouton `.btn-read-primary` est traduit dynamiquement par `translateCardButtons()` dans `index.html`. Ne PAS écrire le texte du bouton en dur dans les JSON. Les traductions sont dans l'objet `btnLabels` (6 types × 5 langues).
-  - Article **monolingue** (`data-lang="en"`) → bouton dans la langue de l'article
-  - Article **multilingue** (`data-lang="ar,en,fr"`) → bouton dans la langue choisie par l'utilisateur sur le site, fallback anglais
-- **Badge "Latest Report"** (weekly uniquement) : Un badge "Dernier Rapport" / "Latest Report" est ajouté dynamiquement par JS sur la **première carte** du tab weekly. Ce badge est traduit selon la même logique (langue article mono / langue site multi). Il ne doit JAMAIS être codé en dur dans les JSON — il est géré par `translateCardButtons()`.
-- **Filtres Analyses** : Les chips de filtre (grade, confidence, quick tags, slider jours) utilisent `data-i18n` et sont traduits dans l'objet `translations` (5 langues). Toute nouvelle UI doit utiliser ce système.
-
-### Autres Conventions
-- **Logo brand-bar** (**OBLIGATOIRE**) : Dans les pages d'analyses individuelles (`analyses/{TICKER}/`), le `ticker-header` doit **TOUJOURS** utiliser le logo Market Watch (`<img src="https://market-watch.xyz/logo.svg" alt="MW">`), **JAMAIS** le logo de la société. Le logo de la société (parqet.com) est réservé **uniquement** aux cartes de listing dans `index.html`.
-- **Logo société dans index.html** : Sur la landing page (cartes `.report-card`), utiliser `<img src="https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg">` avec fallback initiales. Pour les tickers européens, utiliser le ticker court (AIR, AF, ENX) et non AIR.PA.
-- **Accents** (**OBLIGATOIRE**) : Toujours utiliser les caractères accentués français (é, è, ê, ë, à, â, ù, û, ô, î, ï, ç). Ne JAMAIS écrire "resultat" → écrire "résultat", "benefice" → "bénéfice", "marche" → "marché", "premiere" → "première", etc. Les entités HTML (`&eacute;`, `&agrave;`) sont acceptables dans le HTML mais les caractères UTF-8 directs sont préférés.
-- **Badges**: badge-red (alerte), badge-blue (info), badge-green (positif), badge-purple (spécial)
-- **Classes CSS**: content-card, data-table, metric-grid/metric-card, risk-matrix/risk-item, pedagogy-box, didactic-box, alert-box, geo-alert, calendar-days-grid
-- **Tags** (**OBLIGATOIRE**) : Chaque `.report-card` dans `index.html` **doit** avoir un attribut `data-tags="tag1,tag2,..."`. Taxonomie :
-  | Catégorie | Tags | Couleur CSS |
-  |-----------|------|-------------|
-  | Région | `us`, `eu`, `asia`, `crypto`, `commodity`, `forex`, `etf` | Bleu (`data-cat="region"`) |
-  | Secteur | `tech`, `semis`, `healthcare`, `energy`, `financials`, `industrials`, `materials`, `consumer`, `defense` | Vert (`data-cat="sector"`) |
-  | Thème | `ai`, `earnings`, `geopolitique`, `macro`, `technique`, `options`, `dividende`, `small-cap`, `speculative` | Violet (`data-cat="theme"`) |
-  | Contenu | `trade-idea`, `formation`, `retrospective` | Ambre (`data-cat="content"`) |
-  - Les tags sont rendus automatiquement en chips colorés par le JS (`tagMeta` object)
-  - Cliquer sur un tag active le filtre global (AND cumulatif)
-- **Tags Clickables sur les Pages d'Articles** : Pour activer les tags cliquables sur une page d'article individuelle (weekly, daily, analyses, etc.) qui redirigent vers la page principale (`index.html`) avec le filtre de tag appliqué, suivre ces étapes :
-  1. **Inclure le Script Générique** : Ajouter `<script src="/assets/tag-renderer.js"></script>` avant la balise `</body>` de la page d'article.
-  2. **Définir les Tags de l'Article** : Ajouter l'attribut `data-tags="tag1,tag2,..."` à la balise `<html>` de la page d'article. Ces tags doivent correspondre aux tags définis dans `tagMeta` sur `index.html`.
-  3. **Définir le Tab par Défaut (Optionnel)** : Si la page d'article correspond principalement à un onglet spécifique sur `index.html` (ex: `analyses` pour les analyses individuelles, `weekly` pour les rapports hebdomadaires), ajouter `data-tab="[nom_du_tab]"` à la balise `<html>`. Si omis, le tab `analyses` sera utilisé par défaut.
-  4. **Emplacement des Tags** : Ajouter un `div` avec l'ID `article-clickable-tags` là où les tags cliquables doivent apparaître sur la page. Exemple : `<div id="article-clickable-tags" class="card-tags"></div>`. Le script `tag-renderer.js` détectera et peuplera ce `div` automatiquement.
-- **URL params** : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — tous combinables
-- **Indexation et Compteurs de tabs** (**OBLIGATOIRE**) : Le contenu de `index.html` (cartes et compteurs par tab) est désormais loadé dynamiquement depuis des fichiers JSON (`data/daily.json`, etc.). La recherche utilise également un index pré-calculé. 
-  - À chaque ajout de rapport (analyse, daily, scanner...), vous DEVEZ utiliser le script automatisé : `node tools/add_card.js chemin/vers/index.html`
-  - Le script parsera l'article, créera la carte HTML, l'injectera au début du JSON (via `data/`), mettra à jour l'index de recherche global (`data/search_data.js`). Ne jamais modifier `index.html` à la main pour ajouter une carte !
-
-## Tâches Planifiées (Scheduled Tasks)
-
-Les tâches planifiées sont gérées via le **bot Discord** (`claude-discord-bot`), pas via cron.
-
-### Architecture
-- **Bot Discord** : `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/`
-- **Schedules** : `claude-discord-bot/schedules.json` (source de vérité)
-- **Commandes Discord** :
-  - `every day at 07:00 articles analyse daily` — Briefing quotidien 7h (tous les jours)
-  - `every weekday at 23:00 articles scan du jour` — Scanner quotidien Lun-Ven 23h
-  - `every friday at 23:00 articles rétrospective scanner` — Rétrospective scanner hebdo Ven 23h
-  - `every sunday at 18:00 articles nouvelle analyse weekly` — Weekly hebdo
-  - `schedules` / `list` — Lister toutes les tâches planifiées
-  - `pause #1` / `resume #1` / `cancel #1` / `run #1` — Gérer les tâches
-
-### Tâches actives
-
-| Tâche | Schedule | Commande Discord |
-|-------|----------|-----------------|
-| Briefing Daily | Tous les jours 7h00 | `every day at 07:00 articles analyse daily` |
-| Scanner Quotidien | Lun-Ven 23h00 | `every weekday at 23:00 articles scan du jour` |
-| Rétrospective Scanner | Vendredi 23h00 | `every friday at 23:00 articles rétrospective scanner` |
-
-### Post-tâche : Auto Commit & Push (OBLIGATOIRE)
-
-Après chaque tâche schedulée (daily, scanner, rétrospective, weekly) qui se termine **avec succès** (fichier HTML généré + indexé), Claude **DOIT** automatiquement :
-
-1.  **Exécuter `node tools/add_card.js chemin/vers/index.html`** pour indexer l'article.
-    *   **Vérification immédiate**: Après cette étape, vérifier `git status`. Vous devriez voir `data/{type}.json` (ex: `data/scanner.json`) et `data/search_data.js` comme modifiés. Si ce n'est pas le cas, l'indexation a échoué.
-2.  **`git add`** les fichiers créés/modifiés (dossier article, `data/{type}.json` et `data/search_data.js`).
-3.  **`git commit`** avec un message descriptif au format : `feat: {type} {date} — {titre court}`
-    *   Exemples : `feat: briefing quotidien 27 février 2026 — NVIDIA selloff`, `feat: scanner 20260227 — Risk-Off, 10 setups A+`
-4.  **`git push origin main`** pour déclencher le déploiement GitHub Pages
-
-**Ne PAS push si** :
-- La génération a échoué ou est incomplète
-- Le fichier HTML fait moins de 10KB (probablement tronqué)
-- `node tools/add_card.js` a échoué (l'article n'est pas indexé, confirmé par `git status` qui ne montre pas les fichiers `data/*.json` modifiés).
-
-**Vérification post-push** : Attendre 60s puis vérifier que le GitHub Actions deploy a bien démarré via `gh run list --limit 1`.
+### Post-tâche : Commit & Push (OBLIGATOIRE)
+Après chaque tâche réussie : `add_card.js` → vérifier `git status` → `git add` (fichiers spécifiques) → `git commit` → `git push origin main`.
+**Ne PAS push si** : HTML < 10KB, `add_card.js` échoué, génération incomplète.
