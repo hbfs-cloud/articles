@@ -103,8 +103,8 @@ Utiliser ECharts pour les visualisations (bar, radar, gauge, line). Conteneur : 
 
 1. **Brand Bar** — Logo MARKET WATCH + switcher langue
 2. **Hero Section** — Titre du jour + badges clés (3-5) + date
-3. **Navigation Grid** — Liens internes vers chaque section (icônes + labels)
-4. **Alerte du Jour** — Événement #1 en `.alert-banner` (rouge si critique, orange si important)
+3. ~~Navigation Grid~~ — **SUPPRIMÉ** : redondant avec le FAB flottant. Ne plus générer de nav-grid.
+4. **Alerte du Jour** — Événement #1 en `.alert-banner` (rouge si critique, orange si important). **IMPORTANT** : texte `color: #fff; opacity: 1` — jamais d'opacity réduite sur fond coloré (illisible)
 5. **Dashboard Rapide** — Grille 4×4 `.dashboard-grid` avec `.dash-card` :
    - S&P 500, Nasdaq, Dow, Russell 2000, BTC, Or, Pétrole, VIX
    - Chaque carte : label, valeur, variation (`.up` / `.down`), badge couleur
