@@ -38,6 +38,20 @@ sources:
       - "4"               # insider transactions
       - "13F-HR"          # institutional holdings
 
+  webull:
+    enabled: true
+    # No API key needed — uses public Webull webapp API
+    # Provides: market overview, rankings (8 period tabs), screener (9 filters),
+    # full quotes (78 fields), capital flow, earnings/dividend/splits calendar,
+    # social sentiment, charts (all intervals including crypto)
+    cache_ttl:
+      market: 120         # 2 minutes
+      quotes: 30          # 30 seconds
+      charts: 120         # 2 minutes
+      screener: 120       # 2 minutes
+      calendar: 300       # 5 minutes
+      social: 300         # 5 minutes
+
   fred:
     enabled: false
     api_key: ""           # Get free key at https://fred.stlouisfed.org/docs/api/api_key.html
@@ -49,7 +63,21 @@ sources:
       - FEDFUNDS          # Fed Funds Rate
 
 # ══════════════════════════════════════
-# AI / LLM (for local analysis)
+# LOCAL LLM ORCHESTRATION
+# ══════════════════════════════════════
+# Auto-detects AI CLIs installed on your machine (claude, gemini).
+# Enables cross-model collaboration: any MCP client can invoke other AIs.
+# No configuration needed — detection is automatic at startup.
+# Tools: local_llm_list, local_llm_invoke, local_llm_consensus
+local_llm:
+  enabled: true           # set to false to disable feature detection
+  timeout: 180000         # default timeout for CLI invocations (ms)
+  # Supported CLIs (auto-detected):
+  #   claude  — Claude Code (claude -p). Code analysis, refactoring, MCP-aware.
+  #   gemini  — Gemini CLI (gemini -p). Web-grounded search, fact-checking.
+
+# ══════════════════════════════════════
+# AI / LLM (for local analysis — built-in LLM for news sentiment, DD reports)
 # ══════════════════════════════════════
 llm:
   provider: "deepseek"    # deepseek (free), openai, anthropic, ollama
