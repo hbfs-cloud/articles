@@ -472,5 +472,22 @@ Les leçons de chaque rétrospective sont utilisées pour affiner les scans suiv
 - Si les stops sont trop serrés → élargir les seuils ATR
 - Mentionner explicitement dans le prochain scan : "Suite à la rétrospective du DD/MM, nous avons ajusté..."
 
+### Post-Publication (OBLIGATOIRE — NE JAMAIS SAUTER)
+
+Après génération du fichier HTML, ces 5 étapes sont **BLOQUANTES**. Si l'une échoue, NE PAS passer à la suivante :
+
+1. **Vérifier la taille** : `wc -c scanner/YYYYMMDD/index.html` — doit être > 30KB (sinon article tronqué/incomplet)
+2. **Indexer** : `node tools/add_card.js scanner/YYYYMMDD/index.html` — vérifier que `data/scanner.json` et `data/search_data.js` apparaissent dans `git status`
+3. **Mettre à jour le watchlist** : Écrire `mcp/watchlist.json` avec les 10 picks du scan
+4. **Mettre à jour le radar** : Écrire `data/radar.json` avec les données actuelles
+5. **Commit & Push** :
+   ```bash
+   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
+   git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
+   git push origin main
+   ```
+
+**Si `add_card.js` échoue** : vérifier que le HTML est valide, que le `<html>` a `data-tab="scanner"` et `data-tags`, et que le hero contient un `<h1>`.
+
 ---
 

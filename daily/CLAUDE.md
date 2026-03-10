@@ -197,7 +197,22 @@ Le dimanche est le **seul jour** avec format réduit crypto-only :
 - **FAB** : toujours 6 items dans `.fnav`
 - **Tags** : toujours `data-tags` sur `<html>` + `data-tab="daily"` + `<div id="article-clickable-tags">`
 - **Scripts** : toujours `/assets/core.js` + `/assets/tag-renderer.js` avant `</body>`
-- Lancer `node tools/add_card.js daily/YYYYMMDD/index.html` après création
+
+### Post-Publication (OBLIGATOIRE — NE JAMAIS SAUTER)
+
+Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une échoue, NE PAS passer à la suivante :
+
+1. **Vérifier la taille** : `wc -c daily/YYYYMMDD/index.html` — doit être > 30KB (sinon article tronqué/incomplet)
+2. **Indexer** : `node tools/add_card.js daily/YYYYMMDD/index.html` — vérifier que `data/daily.json` et `data/search_data.js` apparaissent dans `git status`
+3. **Mettre à jour le radar** : Écrire `data/radar.json` avec les données actuelles (risques, events, opportunités, régime)
+4. **Commit & Push** :
+   ```bash
+   git add daily/YYYYMMDD/ data/daily.json data/search_data.js data/radar.json
+   git commit -m "feat: briefing quotidien DD mois YYYY — {titre court}"
+   git push origin main
+   ```
+
+**Si `add_card.js` échoue** : vérifier que le HTML est valide, que le `<html>` a `data-tab="daily"` et `data-tags`, et que le hero contient un `<h1>`.
 
 ---
 

@@ -286,14 +286,35 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
 .market-status.closed .status-dot{background:#f59e0b}
 
 /* Picks */
-.picks-notice{text-align:center;padding:40px 20px}
-.picks-notice i{font-size:2rem;color:var(--accent);margin-bottom:12px}
-.picks-notice h3{font-size:.88rem;font-weight:800;margin-bottom:6px}
-.theme-dark .picks-notice h3{color:#fff}
-.theme-light .picks-notice h3{color:#0f172a}
-.picks-notice p{font-size:.68rem;color:#94a3b8;margin-bottom:16px}
-.picks-link{display:inline-flex;align-items:center;gap:6px;font-size:.7rem;font-weight:700;color:#fff;background:var(--accent);padding:10px 20px;border-radius:var(--radius-sm);text-decoration:none;transition:background .15s}
-.picks-link:hover{background:var(--accent-hover)}
+.picks-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding:8px 10px;border-radius:var(--radius-sm)}
+.theme-dark .picks-header{background:var(--bg-dark-card);border:1px solid var(--border-dark)}
+.theme-light .picks-header{background:var(--bg-light-card);border:1px solid var(--border-light)}
+.picks-header-left{display:flex;align-items:center;gap:8px}
+.picks-header-left i{font-size:.8rem;color:var(--accent)}
+.picks-header-title{font-size:.72rem;font-weight:800}
+.theme-dark .picks-header-title{color:#fff}
+.theme-light .picks-header-title{color:#0f172a}
+.picks-header-meta{font-size:.48rem;color:#94a3b8;font-weight:600}
+.picks-regime{font-size:.48rem;font-weight:800;padding:2px 8px;border-radius:4px;text-transform:uppercase}
+.picks-list{display:flex;flex-direction:column;gap:5px}
+.picks-item{display:grid;grid-template-columns:52px 1fr 54px 54px;gap:6px;align-items:center;padding:8px 10px;border-radius:var(--radius-sm);transition:transform .15s}
+.picks-item:hover{transform:translateX(2px)}
+.theme-dark .picks-item{background:var(--bg-dark-card);border:1px solid var(--border-dark)}
+.theme-light .picks-item{background:var(--bg-light-card);border:1px solid var(--border-light)}
+.picks-ticker{font-size:.68rem;font-weight:800}
+.theme-dark .picks-ticker{color:#fff}
+.theme-light .picks-ticker{color:#0f172a}
+.picks-info{overflow:hidden}
+.picks-name{font-size:.48rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.picks-strategy{font-size:.42rem;font-weight:700;padding:1px 5px;border-radius:3px;display:inline-block;margin-top:1px}
+.picks-levels{font-size:.46rem;font-family:'Inter',monospace;text-align:right}
+.picks-entry{font-weight:700}
+.theme-dark .picks-entry{color:#e2e8f0}
+.theme-light .picks-entry{color:#0f172a}
+.picks-stop{color:var(--neg);font-weight:600}
+.picks-tp{color:var(--pos);font-weight:600}
+.picks-score{font-size:.52rem;font-weight:800;text-align:center;width:32px;height:32px;line-height:32px;border-radius:50%;flex-shrink:0}
+.picks-rr{font-size:.42rem;color:#94a3b8;text-align:right}
 
 @media(max-width:480px){
   .dash-grid{grid-template-columns:repeat(2,1fr)}
@@ -312,13 +333,17 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
 
   /* ══════ CONFIG ══════ */
   var YAHOO_V8 = 'https://query1.finance.yahoo.com/v8/finance/chart/';
-  var PROXY_URL = 'https://api.allorigins.win/get?url=';
+  var PROXY_URLS = [
+    'https://api.allorigins.win/get?url=',
+    'https://api.codetabs.com/v1/proxy?quest='
+  ];
+  var PROXY_URL = PROXY_URLS[0];
   var BINANCE_API = 'https://api.binance.com/api/v3/ticker/24hr';
   var RADAR_URL = '/data/radar.json';
   var WATCHLIST_URL = '/mcp/watchlist.json';
   var CACHE_TTL = 5 * 60 * 1000;
   var REFRESH_INTERVAL = 60000; // 60s between full refreshes
-  var MAX_CONCURRENT = 4;
+  var MAX_CONCURRENT = 6;
   var BASE_URL = 'https://articles.market-watch.xyz';
 
   var DASHBOARD_SYMBOLS = [
@@ -326,10 +351,10 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
     { sym: 'QQQ',       label: 'Nasdaq 100', type: 'stock' },
     { sym: 'DIA',       label: 'Dow Jones',  type: 'stock' },
     { sym: 'IWM',       label: 'Russell 2K', type: 'stock' },
-    { sym: '%5EVIX',    label: 'VIX',        type: 'stock', isVix: true, displaySym: '^VIX' },
+    { sym: '^VIX',      label: 'VIX',        type: 'stock', isVix: true },
     { sym: 'DX-Y.NYB',  label: 'DXY',        type: 'stock' },
-    { sym: 'GC%3DF',    label: 'Gold',       type: 'stock', displaySym: 'GC=F' },
-    { sym: 'CL%3DF',    label: 'Oil (WTI)',  type: 'stock', displaySym: 'CL=F' },
+    { sym: 'GC=F',      label: 'Gold',       type: 'stock' },
+    { sym: 'CL=F',      label: 'Oil (WTI)',  type: 'stock' },
     { sym: 'BTC-USD',   label: 'Bitcoin',    type: 'crypto' },
     { sym: 'ETH-USD',   label: 'Ethereum',   type: 'crypto' },
     { sym: 'TLT',       label: 'Bonds 20Y',  type: 'stock', hidden: true },
@@ -348,10 +373,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
     { sym: 'XLB', label: 'Materials' },
   ];
 
-  var MOVERS_UNIVERSE = [
-    'AAPL','MSFT','AMZN','GOOGL','META','NVDA','TSLA','AMD','NFLX',
-    'JPM','GS','XOM','BA','UNH','PLTR','COIN','MSTR','SOFI','CRM'
-  ];
+  var YAHOO_SCREENER = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?';
 
   var CRYPTO_PAIRS = [
     { sym: 'BTCUSDT',  label: 'BTC',  name: 'Bitcoin',   featured: true },
@@ -402,31 +424,56 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
   }
 
   /* ══════ YAHOO V8 — single symbol ══════ */
+  function fetchWithTimeout(url, ms) {
+    return new Promise(function(resolve, reject) {
+      var timer = setTimeout(function() { reject(new Error('timeout')); }, ms);
+      fetch(url).then(function(r) {
+        clearTimeout(timer);
+        resolve(r);
+      }).catch(function(e) {
+        clearTimeout(timer);
+        reject(e);
+      });
+    });
+  }
+
+  function parseYahooResponse(wrapper, sym) {
+    var yahoo = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper;
+    // codetabs proxy returns raw JSON (no wrapper)
+    if (!yahoo.chart && wrapper.chart) yahoo = wrapper;
+    var res = yahoo && yahoo.chart && yahoo.chart.result && yahoo.chart.result[0];
+    if (!res || !res.meta) throw new Error('no data');
+
+    var meta = res.meta;
+    var price = meta.regularMarketPrice;
+    var prevClose = meta.chartPreviousClose || meta.previousClose || price;
+    var chg = price - prevClose;
+    var chgPct = prevClose ? (chg / prevClose) * 100 : 0;
+
+    return { price: price, chg: chg, chgPct: chgPct, prevClose: prevClose, name: meta.shortName || sym };
+  }
+
   function fetchYahooOne(sym) {
     var cached = cacheGet('y_' + sym);
     if (cached) return Promise.resolve(cached);
 
     var yahooUrl = YAHOO_V8 + encodeURIComponent(sym) + '?interval=1d&range=2d';
-    var url = PROXY_URL + encodeURIComponent(yahooUrl);
 
-    return fetch(url, { signal: AbortSignal.timeout(10000) })
-      .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
-      .then(function(wrapper) {
-        var yahoo = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper;
-        var res = yahoo && yahoo.chart && yahoo.chart.result && yahoo.chart.result[0];
-        if (!res || !res.meta) throw new Error('no data');
+    // Try primary proxy first, fallback to secondary
+    function tryProxy(idx) {
+      if (idx >= PROXY_URLS.length) return Promise.resolve(null);
+      var url = PROXY_URLS[idx] + encodeURIComponent(yahooUrl);
+      return fetchWithTimeout(url, 8000)
+        .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(function(wrapper) {
+          var result = parseYahooResponse(wrapper, sym);
+          cacheSet('y_' + sym, result);
+          return result;
+        })
+        .catch(function() { return tryProxy(idx + 1); });
+    }
 
-        var meta = res.meta;
-        var price = meta.regularMarketPrice;
-        var prevClose = meta.chartPreviousClose || meta.previousClose || price;
-        var chg = price - prevClose;
-        var chgPct = prevClose ? (chg / prevClose) * 100 : 0;
-
-        var result = { price: price, chg: chg, chgPct: chgPct, prevClose: prevClose, name: meta.shortName || sym };
-        cacheSet('y_' + sym, result);
-        return result;
-      })
-      .catch(function() { return null; });
+    return tryProxy(0);
   }
 
   /* ══════ BATCH FETCH with concurrency ══════ */
@@ -513,7 +560,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
   // Multi-factor regime: VIX (primary) + SPX % change + TLT % change
   // Score 0-1: >0.7 = Risk-Off, 0.5-0.7 = Early Risk-Off, 0.3-0.5 = Neutral, <0.3 = Risk-On
   function regimeFromData(allData) {
-    var vixD = allData['%5EVIX'] || allData['^VIX'];
+    var vixD = allData['^VIX'] || allData['%5EVIX'];
     var spyD = allData['SPY'];
     var tltD = allData['TLT'];
 
@@ -549,7 +596,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
 
   // Fallback for when only VIX is available
   function regimeFromVix(vix) {
-    return regimeFromData({ '%5EVIX': { price: vix, chgPct: 0 } });
+    return regimeFromData({ '^VIX': { price: vix, chgPct: 0 } });
   }
 
   function fearGreedFromVix(vix) {
@@ -573,6 +620,14 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
   }
 
   function widgetShell(id) {
+    // Auto-timeout: if still loading after 12s, show error
+    setTimeout(function() {
+      var el = document.getElementById(id + 'Content');
+      if (el && el.classList.contains('w-loading')) {
+        el.innerHTML = '<div class="w-error"><i class="fas fa-exclamation-triangle"></i> Slow connection. <a href="javascript:location.reload()" style="color:#6366f1;text-decoration:underline;font-weight:700">Retry</a></div>';
+        el.classList.remove('w-loading');
+      }
+    }, 12000);
     return '<div class="w-wrap"><div class="w-head"><a href="' + BASE_URL + '" target="_blank" class="w-brand"><img src="/logo.svg" alt="MW"><span>MARKET WATCH</span></a><span class="w-updated" id="' + id + 'Updated"></span></div><div id="' + id + 'Content" class="w-loading"><i class="fas fa-spinner"></i> Loading...</div><div class="w-footer"><a href="' + BASE_URL + '/widget/gallery.html" target="_blank"><i class="fas fa-grid-2"></i> More widgets</a></div></div>';
   }
 
@@ -639,7 +694,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
     // Modal logic
     var currentWidget = null;
     var currentTheme = 'dark';
-    var sizes = { dashboard: [380, 420], sector: [380, 480], movers: [380, 400], picks: [380, 280], regime: [320, 220], crypto: [380, 520], proxy: [380, 540], regions: [380, 400], radar: [380, 420] };
+    var sizes = { dashboard: [380, 420], sector: [380, 480], movers: [380, 400], picks: [380, 560], regime: [320, 220], crypto: [380, 520], proxy: [380, 540], regions: [380, 400], radar: [380, 420] };
     var names = { dashboard: 'Market Dashboard', sector: 'Sector Rotation', movers: 'Top Movers', picks: 'Scanner A+ Picks', regime: 'Market Regime', crypto: 'Crypto Live', proxy: 'High-Beta Proxies', regions: 'Regional Overview', radar: 'Risk Radar' };
 
     function updateCode() {
@@ -707,8 +762,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
 
       DASHBOARD_SYMBOLS.forEach(function(s) {
         if (s.hidden) return;
-        var key = s.displaySym || s.sym;
-        var d = data[s.sym] || data[key];
+        var d = data[s.sym];
         if (!d) {
           html += '<div class="dash-card"><div class="dash-label">' + s.label + '</div><div class="dash-price">--</div><div class="dash-chg flat">--</div></div>';
           return;
@@ -774,20 +828,53 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
     loadMovers();
   }
 
-  function loadMovers() {
-    var configs = MOVERS_UNIVERSE.map(function(s) { return { sym: s, type: 'stock' }; });
-    fetchAll(configs).then(function(data) {
-      var items = MOVERS_UNIVERSE.map(function(sym) {
-        var d = data[sym];
-        return { sym: sym, price: d ? d.price : 0, chgPct: d ? d.chgPct : 0 };
-      }).filter(function(i) { return i.price > 0; });
+  function fetchYahooScreener(scrId, count) {
+    var cached = cacheGet('scr_' + scrId);
+    if (cached) return Promise.resolve(cached);
 
-      items.sort(function(a, b) { return b.chgPct - a.chgPct; });
-      var gainers = items.slice(0, 5);
-      var losers = items.slice(-5).reverse();
+    var url = YAHOO_SCREENER + 'scrIds=' + scrId + '&count=' + (count || 10);
+
+    function tryProxy(idx) {
+      if (idx >= PROXY_URLS.length) return Promise.resolve([]);
+      var proxyUrl = PROXY_URLS[idx] + encodeURIComponent(url);
+      return fetchWithTimeout(proxyUrl, 8000)
+        .then(function(r) { return r.json(); })
+        .then(function(wrapper) {
+          var raw = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper;
+          var result = raw && raw.finance && raw.finance.result && raw.finance.result[0];
+          var quotes = result && result.quotes ? result.quotes : [];
+          var items = quotes.map(function(q) {
+            return {
+              sym: q.symbol,
+              name: q.shortName || q.longName || q.symbol,
+              price: q.regularMarketPrice || 0,
+              chgPct: q.regularMarketChangePercent || 0,
+              vol: q.regularMarketVolume || 0,
+              mktCap: q.marketCap || 0
+            };
+          });
+          if (items.length > 0) cacheSet('scr_' + scrId, items);
+          return items;
+        })
+        .catch(function() { return tryProxy(idx + 1); });
+    }
+
+    return tryProxy(0);
+  }
+
+  function loadMovers() {
+    Promise.all([
+      fetchYahooScreener('day_gainers', 8),
+      fetchYahooScreener('day_losers', 8)
+    ]).then(function(results) {
+      var gainers = results[0].slice(0, 5);
+      var losers = results[1].slice(0, 5);
 
       function renderCol(title, cls, list) {
         var h = '<div class="movers-col"><h3 class="' + cls + '"><i class="fas fa-arrow-' + (cls === 'gainers' ? 'up' : 'down') + '"></i> ' + title + '</h3>';
+        if (list.length === 0) {
+          h += '<div style="font-size:.52rem;color:#64748b;padding:8px;text-align:center">No data available</div>';
+        }
         list.forEach(function(item, i) {
           h += '<div class="movers-item"><span class="movers-rank">' + (i + 1) + '</span>';
           h += '<span class="movers-ticker">' + item.sym + '</span>';
@@ -797,7 +884,8 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
         return h + '</div>';
       }
 
-      var html = '<div class="movers-cols">' + renderCol('Top Gainers', 'gainers', gainers) + renderCol('Top Losers', 'losers', losers) + '</div>';
+      var html = marketStatusHtml();
+      html += '<div class="movers-cols">' + renderCol('Top Gainers', 'gainers', gainers) + renderCol('Top Losers', 'losers', losers) + '</div>';
       document.getElementById('moversContent').innerHTML = html;
       stampUpdate('movers');
       setTimeout(loadMovers, REFRESH_INTERVAL);
@@ -811,17 +899,55 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
   function renderPicks() {
     document.body.className = 'widget-mode theme-' + theme;
     root.innerHTML = widgetShell('picks');
+    loadPicks();
+  }
 
+  function loadPicks() {
     fetch(WATCHLIST_URL)
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        var html = '<div class="picks-notice"><i class="fas fa-crosshairs"></i>';
-        html += '<h3>Scanner A+ Picks</h3>';
-        html += '<p>' + (data.picks ? data.picks.length : 0) + ' active picks &middot; ' + (data.regime || 'Unknown') + ' &middot; Updated ' + (data.updated || '--') + '</p>';
-        html += '<a href="' + BASE_URL + '/widget/?mode=vertical&theme=' + theme + '&price=true" target="_blank" class="picks-link"><i class="fas fa-table-list"></i> Open Picks Widget</a>';
-        html += '<br><br><a href="' + BASE_URL + '/widget/?mode=tape&theme=' + theme + '" target="_blank" class="picks-link" style="background:#334155"><i class="fas fa-grip-lines"></i> Open Tape Widget</a>';
+        var picks = data.picks || [];
+        var regimeLabel = data.regime || 'Unknown';
+        var regimeColors = { 'RISK-ON': '#10b981', 'NEUTRAL': '#f59e0b', 'EARLY RISK-OFF': '#f97316', 'RISK-OFF': '#ef4444' };
+        var regimeColor = regimeColors[regimeLabel] || '#94a3b8';
+        var stratColors = { 'Momentum': '#3b82f6', 'Breakout': '#8b5cf6', 'Oversold Bounce': '#06b6d4', 'Mean Reversion': '#06b6d4', 'Trend Following': '#10b981', 'Value': '#f59e0b', 'Swing': '#ec4899' };
+
+        var html = '<div class="picks-header">';
+        html += '<div class="picks-header-left"><i class="fas fa-crosshairs"></i>';
+        html += '<div><div class="picks-header-title">' + picks.length + ' A+ Picks</div>';
+        html += '<div class="picks-header-meta">Updated ' + (data.updated || '--') + '</div></div></div>';
+        html += '<div class="picks-regime" style="color:' + regimeColor + ';background:' + regimeColor + '15">' + regimeLabel + '</div></div>';
+
+        html += '<div class="picks-list">';
+        picks.forEach(function(p) {
+          var stratColor = stratColors[p.strategy] || '#94a3b8';
+          var scoreColor = p.score >= 90 ? '#10b981' : p.score >= 85 ? '#3b82f6' : '#f59e0b';
+
+          html += '<div class="picks-item">';
+          html += '<div><div class="picks-ticker">' + p.ticker + '</div>';
+          html += '<div class="picks-strategy" style="color:' + stratColor + ';background:' + stratColor + '15">' + (p.strategy || '--') + '</div></div>';
+
+          html += '<div class="picks-info"><div class="picks-name">' + (p.name || '') + '</div>';
+          html += '<div class="picks-rr">R/R ' + (p.rr || '--') + '</div></div>';
+
+          html += '<div class="picks-levels">';
+          html += '<div class="picks-entry">$' + (p.entry || '--') + '</div>';
+          html += '<div class="picks-stop">S: $' + (p.stop || '--') + '</div></div>';
+
+          html += '<div class="picks-levels">';
+          html += '<div class="picks-tp">T1: $' + (p.tp1 || '--') + '</div>';
+          html += '<div class="picks-tp">T2: $' + (p.tp2 || '--') + '</div></div>';
+
+          html += '</div>';
+        });
         html += '</div>';
+
+        if (picks.length === 0) {
+          html = '<div class="w-error"><i class="fas fa-crosshairs"></i> No picks available. Check back after the next scan.</div>';
+        }
+
         document.getElementById('picksContent').innerHTML = html;
+        stampUpdate('picks');
       })
       .catch(function() {
         document.getElementById('picksContent').innerHTML = '<div class="w-error"><i class="fas fa-exclamation-triangle"></i> Unable to load picks.</div>';
@@ -836,7 +962,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
   }
 
   function loadRegime() {
-    var configs = [{ sym: '%5EVIX', type: 'stock' }, { sym: 'SPY', type: 'stock' }, { sym: 'TLT', type: 'stock' }];
+    var configs = [{ sym: '^VIX', type: 'stock' }, { sym: 'SPY', type: 'stock' }, { sym: 'TLT', type: 'stock' }];
     fetchAll(configs).then(function(data) {
       var regime = regimeFromData(data);
       var vixVal = regime.vix;
@@ -901,7 +1027,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
     // Fetch a small set of data to render inline mini-previews
     var previewSyms = [
       { sym: 'SPY', type: 'stock' }, { sym: 'QQQ', type: 'stock' },
-      { sym: '%5EVIX', type: 'stock' }, { sym: 'XLK', type: 'stock' },
+      { sym: '^VIX', type: 'stock' }, { sym: 'XLK', type: 'stock' },
       { sym: 'XLF', type: 'stock' }, { sym: 'XLE', type: 'stock' },
       { sym: 'NVDA', type: 'stock' }, { sym: 'TSLA', type: 'stock' },
       { sym: 'BTC-USD', type: 'crypto' }, { sym: 'ETH-USD', type: 'crypto' },
@@ -925,7 +1051,7 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
       // Dashboard preview
       var el = document.getElementById('preview-dashboard');
       if (el) {
-        var vixD = data['%5EVIX'];
+        var vixD = data['^VIX'];
         var vix = vixD ? vixD.price : 20;
         var regime = regimeFromVix(vix);
         var miniItems = [
@@ -972,40 +1098,59 @@ body.widget-mode.theme-light{background:var(--bg-light);color:var(--text-light)}
         el.innerHTML = h;
       }
 
-      // Movers preview
+      // Movers preview — use screener API for real data
       el = document.getElementById('preview-movers');
       if (el) {
-        var nvda = data['NVDA'];
-        var tsla = data['TSLA'];
-        var h = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
-        h += '<div><div style="font-size:.48rem;font-weight:800;color:#10b981;margin-bottom:4px"><i class="fas fa-arrow-up" style="font-size:.4rem"></i> GAINERS</div>';
-        [nvda, tsla].forEach(function(d, i) {
-          if (!d) return;
-          var sym = i === 0 ? 'NVDA' : 'TSLA';
-          h += '<div style="display:flex;align-items:center;gap:4px;padding:4px 6px;background:#1e293b;border-radius:4px;margin-bottom:2px">';
-          h += '<span style="font-size:.5rem;font-weight:800;color:#e2e8f0">' + sym + '</span>';
-          h += '<span style="font-size:.44rem;color:' + (d.chgPct >= 0 ? '#10b981' : '#ef4444') + ';font-weight:700;margin-left:auto">' + fmtPct(d.chgPct) + '</span></div>';
+        Promise.all([
+          fetchYahooScreener('day_gainers', 3),
+          fetchYahooScreener('day_losers', 3)
+        ]).then(function(res) {
+          var g = res[0].slice(0, 2);
+          var l = res[1].slice(0, 2);
+          var h = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+          h += '<div><div style="font-size:.48rem;font-weight:800;color:#10b981;margin-bottom:4px"><i class="fas fa-arrow-up" style="font-size:.4rem"></i> GAINERS</div>';
+          g.forEach(function(item) {
+            h += '<div style="display:flex;align-items:center;gap:4px;padding:4px 6px;background:#1e293b;border-radius:4px;margin-bottom:2px">';
+            h += '<span style="font-size:.5rem;font-weight:800;color:#e2e8f0">' + item.sym + '</span>';
+            h += '<span style="font-size:.44rem;color:#10b981;font-weight:700;margin-left:auto">' + fmtPct(item.chgPct) + '</span></div>';
+          });
+          h += '</div><div><div style="font-size:.48rem;font-weight:800;color:#ef4444;margin-bottom:4px"><i class="fas fa-arrow-down" style="font-size:.4rem"></i> LOSERS</div>';
+          l.forEach(function(item) {
+            h += '<div style="display:flex;align-items:center;gap:4px;padding:4px 6px;background:#1e293b;border-radius:4px;margin-bottom:2px">';
+            h += '<span style="font-size:.5rem;font-weight:800;color:#e2e8f0">' + item.sym + '</span>';
+            h += '<span style="font-size:.44rem;color:#ef4444;font-weight:700;margin-left:auto">' + fmtPct(item.chgPct) + '</span></div>';
+          });
+          h += '</div></div>';
+          el.innerHTML = h;
+        }).catch(function() {
+          el.innerHTML = '<div style="font-size:.48rem;color:#475569;text-align:center;padding:16px">Market data loading...</div>';
         });
-        h += '</div><div><div style="font-size:.48rem;font-weight:800;color:#ef4444;margin-bottom:4px"><i class="fas fa-arrow-down" style="font-size:.4rem"></i> LOSERS</div>';
-        h += '<div style="font-size:.44rem;color:#475569;padding:8px;text-align:center">Live data</div></div></div>';
-        el.innerHTML = h;
       }
 
       // Picks preview
       el = document.getElementById('preview-picks');
       if (el) {
-        var n = watchlist.picks ? watchlist.picks.length : 0;
-        var h = '<div style="text-align:center;padding:12px">';
-        h += '<i class="fas fa-crosshairs" style="font-size:1.2rem;color:#8b5cf6;margin-bottom:6px;display:block"></i>';
-        h += '<div style="font-size:.64rem;font-weight:800;color:#e2e8f0">' + n + ' A+ Picks</div>';
-        h += '<div style="font-size:.46rem;color:#64748b">' + (watchlist.regime || '') + ' · ' + (watchlist.updated || '') + '</div></div>';
+        var wPicks = watchlist.picks || [];
+        var h = '<div style="display:flex;align-items:center;gap:6px;padding:4px 6px;background:#1e293b;border-radius:5px;margin-bottom:4px">';
+        h += '<i class="fas fa-crosshairs" style="font-size:.48rem;color:#8b5cf6"></i>';
+        h += '<span style="font-size:.5rem;font-weight:800;color:#e2e8f0">' + wPicks.length + ' A+ Picks</span>';
+        h += '<span style="font-size:.42rem;color:#64748b;margin-left:auto">' + (watchlist.regime || '') + '</span></div>';
+        wPicks.slice(0, 4).forEach(function(p) {
+          h += '<div style="display:flex;align-items:center;gap:6px;padding:3px 6px;background:#1e293b;border-radius:4px;margin-bottom:2px">';
+          h += '<span style="font-size:.5rem;font-weight:800;color:#e2e8f0;width:36px">' + p.ticker + '</span>';
+          h += '<span style="font-size:.4rem;color:#94a3b8;flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">' + (p.strategy || '') + '</span>';
+          h += '<span style="font-size:.42rem;font-weight:700;color:#10b981">$' + (p.entry || '--') + '</span></div>';
+        });
+        if (wPicks.length > 4) {
+          h += '<div style="font-size:.42rem;color:#64748b;text-align:center;margin-top:2px">+' + (wPicks.length - 4) + ' more picks</div>';
+        }
         el.innerHTML = h;
       }
 
       // Regime preview
       el = document.getElementById('preview-regime');
       if (el) {
-        var vixD2 = data['%5EVIX'];
+        var vixD2 = data['^VIX'];
         var vix2 = vixD2 ? vixD2.price : 20;
         var reg2 = regimeFromVix(vix2);
         var h = '<div style="text-align:center;padding:12px">';
