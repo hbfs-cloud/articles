@@ -52,6 +52,7 @@ import * as barsWorker from './lib/bars-worker.js';
 import * as tickEnricher   from './lib/tick-enricher.js';
 import * as jobManager     from './lib/job-manager.js';
 import * as rollingScanner from './lib/rolling-scanner.js';
+import * as webull from './lib/webull.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -1173,6 +1174,87 @@ server.tool(
         }, null, 2)
       }]
     };
+  }
+);
+
+// ────────────────────────────────────
+// WEBULL RANKINGS & DATA
+// ────────────────────────────────────
+
+server.tool(
+  'webull_top_gainers',
+  'Get top gaining stocks from Webull. Returns symbol, price, change%, volume. Default: US market, top 20.',
+  {
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK, 15=CN'),
+    pageSize: z.number().optional().describe('Number of results (default 20, max 50)')
+  },
+  async ({ regionId, pageSize }) => {
+    const data = await webull.getTopGainers({ regionId: regionId || 6, pageSize: pageSize || 20 });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_top_losers',
+  'Get top losing stocks from Webull. Returns symbol, price, change%, volume.',
+  {
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK, 15=CN'),
+    pageSize: z.number().optional().describe('Number of results (default 20, max 50)')
+  },
+  async ({ regionId, pageSize }) => {
+    const data = await webull.getTopLosers({ regionId: regionId || 6, pageSize: pageSize || 20 });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_most_active',
+  'Get most actively traded stocks from Webull by volume.',
+  {
+    regionId: z.number().optional().describe('Region: 6=US (default), 12=HK, 15=CN'),
+    pageSize: z.number().optional().describe('Number of results (default 20, max 50)')
+  },
+  async ({ regionId, pageSize }) => {
+    const data = await webull.getMostActive({ regionId: regionId || 6, pageSize: pageSize || 20 });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_search',
+  'Search for a ticker on Webull. Returns tickerId needed for quote/chart calls.',
+  {
+    keyword: z.string().describe('Symbol or company name to search')
+  },
+  async ({ keyword }) => {
+    const data = await webull.searchTicker(keyword);
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_quote',
+  'Get detailed Webull quote by symbol. Searches for the ticker then fetches full quote data.',
+  {
+    symbol: z.string().describe('Stock symbol (e.g. AAPL, NVDA)')
+  },
+  async ({ symbol }) => {
+    const data = await webull.getQuoteBySymbol(symbol);
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
+  }
+);
+
+server.tool(
+  'webull_chart',
+  'Get OHLCV chart data from Webull by symbol.',
+  {
+    symbol: z.string().describe('Stock symbol (e.g. AAPL, NVDA)'),
+    type: z.string().optional().describe('Interval: m1,m5,m15,m30,m60,d1,w1,mo1 (default d1)'),
+    count: z.number().optional().describe('Number of bars (default 60)')
+  },
+  async ({ symbol, type, count }) => {
+    const data = await webull.getChartBySymbol(symbol, { type: type || 'd1', count: count || 60 });
+    return { content: [{ type: 'text', text: JSON.stringify(data, null, 2) }] };
   }
 );
 
