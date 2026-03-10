@@ -50,6 +50,14 @@ const STANDARD_BRAND_BAR = `\n  <nav class="brand-bar">
         <img src="/logo.svg" alt="" width="36" height="36">
         <span class="brand-title">MarketWatch</span>
       </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">S&eacute;ries</a>
+      </div>
       <div class="brand-actions">
         <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
       </div>
@@ -965,13 +973,23 @@ function fixBrandBarFormat(html) {
   const fixes = [];
   let out = html;
 
+  // If brand-bar exists but lacks brand-nav → replace with standard
+  if (out.includes('brand-bar-inner') && !out.includes('brand-nav')) {
+    const oldBB = out.match(/<nav\s+class="brand-bar"[^>]*>[\s\S]*?<\/nav>/i);
+    if (oldBB) {
+      out = out.replace(oldBB[0], STANDARD_BRAND_BAR.trim());
+      fixes.push('brand-bar: added brand-nav main menu');
+    }
+    return { html: out, fixes };
+  }
+
   // Check if brand-bar uses the old format (with switcher-bar or MARKET WATCH text)
   if (!out.includes('class="switcher-bar"') && !out.includes('MARKET WATCH</a>')) {
     return { html: out, fixes };
   }
 
-  // Already has brand-bar-inner → skip
-  if (out.includes('brand-bar-inner')) {
+  // Already has brand-bar-inner with brand-nav → skip
+  if (out.includes('brand-bar-inner') && out.includes('brand-nav')) {
     return { html: out, fixes };
   }
 

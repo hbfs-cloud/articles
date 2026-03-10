@@ -25,7 +25,7 @@ Le daily du **25 février 2026** (`daily/20260225/`) est la référence pour la 
 ```
 **JAMAIS** de dossier `assets/` local. **JAMAIS** de `report-dark.css` pour le daily.
 
-#### Brand Bar (OBLIGATOIRE)
+#### Brand Bar (OBLIGATOIRE — avec menu principal)
 ```html
 <nav class="brand-bar">
   <div class="brand-bar-inner">
@@ -33,12 +33,21 @@ Le daily du **25 février 2026** (`daily/20260225/`) est la référence pour la 
       <img src="/logo.svg" alt="" width="36" height="36">
       <span class="brand-title">MarketWatch</span>
     </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">S&eacute;ries</a>
+    </div>
     <div class="brand-actions">
       <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
     </div>
   </div>
 </nav>
 ```
+**Le lien actif est auto-highlight via CSS** (`data-tab` sur `<html>` → sélecteur CSS). Pas de `class="active"` en dur.
 
 #### Hero Section — `<section class="hero-section">`
 ```html

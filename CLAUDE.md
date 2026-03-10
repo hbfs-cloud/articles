@@ -177,7 +177,7 @@ Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
 Les templates complets sont dans les sous-CLAUDE.md (daily/, weekly/, scanner/). Voici les règles transversales :
 
 1. **`<html>`** : `lang="{en|fr|ar}" data-tags="{tags}" data-tab="{type}"` + optionnel `data-level`, `data-grade`
-2. **Brand Bar** : `<nav class="brand-bar">` + `brand-bar-inner` + logo `/logo.svg`. TOUJOURS présent.
+2. **Brand Bar** : `<nav class="brand-bar">` + `brand-bar-inner` + logo `/logo.svg` + **`brand-nav`** (menu principal : Hebdo, Daily, Analyses, Scanner, Radar, Séries). TOUJOURS présent. Le lien actif est auto-highlight via CSS `data-tab` (pas de `class="active"` en dur).
 3. **Tags** : `<div id="article-clickable-tags" class="card-tags"></div>` dans le hero. Peuplé par `tag-renderer.js`.
 4. **FAB** : `<div class="fnav">` avec 6 items. Obligatoire pour scanner, daily, analyses, tech, series. Pas pour weekly.
 5. **Footer** : `<footer class="article-footer">`. JAMAIS `report-footer`, `site-footer`, etc.
