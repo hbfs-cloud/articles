@@ -93,4 +93,55 @@ document.addEventListener("DOMContentLoaded", function() {
     if (articleTagsString) {
         renderClickableTags(articleTagsString, "article-clickable-tags", articleDefaultTab);
     }
+
+    // === FAB (Floating Action Button) Navigation ===
+    var fnavBtn = document.getElementById('fnavBtn');
+    var fnavMenu = document.getElementById('fnavMenu');
+    if (fnavBtn && fnavMenu) {
+        fnavBtn.addEventListener('click', function() {
+            var isOpen = fnavMenu.classList.toggle('open');
+            fnavBtn.classList.toggle('open', isOpen);
+            var icon = document.getElementById('fnavIcon');
+            var label = document.getElementById('fnavLabel');
+            if (icon) icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+            if (label) label.textContent = isOpen ? 'Close' : 'Menu';
+        });
+        // Close on outside click
+        document.addEventListener('click', function(e) {
+            if (!fnavBtn.contains(e.target) && !fnavMenu.contains(e.target)) {
+                fnavMenu.classList.remove('open');
+                fnavBtn.classList.remove('open');
+                var icon = document.getElementById('fnavIcon');
+                var label = document.getElementById('fnavLabel');
+                if (icon) icon.className = 'fas fa-bars';
+                if (label) label.textContent = 'Menu';
+            }
+        });
+        // Smooth scroll + close on item click
+        fnavMenu.querySelectorAll('.fnav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                fnavMenu.classList.remove('open');
+                fnavBtn.classList.remove('open');
+                var icon = document.getElementById('fnavIcon');
+                var label = document.getElementById('fnavLabel');
+                if (icon) icon.className = 'fas fa-bars';
+                if (label) label.textContent = 'Menu';
+            });
+        });
+        // IntersectionObserver for active section highlighting
+        var sections = [];
+        fnavMenu.querySelectorAll('.fnav-item[data-section]').forEach(function(item) {
+            var sec = document.getElementById(item.dataset.section);
+            if (sec) sections.push({ el: sec, item: item });
+        });
+        if (sections.length && 'IntersectionObserver' in window) {
+            var obs = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    var match = sections.find(function(s) { return s.el === entry.target; });
+                    if (match) match.item.classList.toggle('active', entry.isIntersecting);
+                });
+            }, { threshold: 0.15 });
+            sections.forEach(function(s) { obs.observe(s.el); });
+        }
+    }
 });
