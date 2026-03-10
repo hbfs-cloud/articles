@@ -347,13 +347,14 @@ Les "Formation du Jour" suivent un cursus progressif :
    - Voir `scanner/CLAUDE.md` Section 5 pour le template complet
    - **Titre carte** (**OBLIGATOIRE**) : Le `<h2>` de la carte dans `data/scanner.json` doit suivre le format `Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, ..., {TICKER10}`. Jamais de titre générique ("Daily Scanner", "Scan du jour").
 7. Créer les variantes multilangue/multiniveau
-8. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
-9. **OBLIGATOIRE — Mettre à jour `mcp/watchlist.json`** avec les données du scan :
+8. **OBLIGATOIRE — Inclure le live price tracker** : Ajouter `<script src="/assets/live-tracker.js"></script>` avant `</body>`. Ce script dynamise les setup cards avec les prix temps réel et le statut (Trending, Stopped, TP Hit, etc.).
+9. Lancer `node tools/add_card.js scanner/YYYYMMDD/index.html` pour l'ajouter automatiquement à l'index JSON et régénérer la recherche.
+10. **OBLIGATOIRE — Mettre à jour `mcp/watchlist.json`** avec les données du scan :
    - Écrire directement le fichier `mcp/watchlist.json` avec les 10 picks, le régime, VIX, DXY, SPX, Fear/Greed
    - Format : voir `mcp/watchlist.json` existant comme référence
    - Ce fichier alimente la **Live Data Preview** de `/prompt-ia/` et le **MCP server** pour les agents IA
    - Les champs obligatoires : `updated` (ISO date), `regime`, `vix`, `dxy`, `spx`, `fear_greed`, `picks[]` (ticker, name, strategy, entry, stop, tp1, tp2, rr, score, region, tags, catalyst), `alerts`, `next_update`
-10. **OBLIGATOIRE — Commit & Push** :
+11. **OBLIGATOIRE — Commit & Push** :
    ```bash
    git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
    git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
@@ -456,6 +457,80 @@ Le tab Radar affiche un radar animé (canvas) avec des blips représentant les r
 - Les événements couvrent la semaine en cours + les events majeurs à 30 jours
 - Le régime reflète l'état actuel (VIX, F&G, DXY, rotation, sentiment)
 - Supprimer les items obsolètes (events passés, opportunités qui ont touché leur TP/stop)
+
+## Live Price Tracker (`assets/live-tracker.js`)
+
+Script partagé qui dynamise les articles avec des prix temps réel via Yahoo Finance. À inclure sur tout article contenant des setup cards avec des niveaux de trading.
+
+### Fonctionnement
+- Détecte automatiquement les setup cards dans le DOM (scanner et blood-in-the-streets)
+- Fetch les prix via `api.allorigins.win/get` (proxy CORS) + Binance pour crypto
+- Injecte un badge sous chaque prix montrant : % évolution, prix actuel, statut (Trending, Entry Zone, Stopped, TP1 Hit, etc.)
+- Cache `sessionStorage` 5 min, max 6 requêtes parallèles
+- Marque visuellement les picks invalidés (grayscale), en tendance (vert), TP atteints
+
+### Intégration (OBLIGATOIRE pour scanner)
+Ajouter avant `</body>` de chaque article scanner :
+```html
+<script src="/assets/live-tracker.js"></script>
+```
+
+### Classification des positions
+| Statut | Condition | Couleur | Visuel |
+|--------|-----------|---------|--------|
+| TP2 Hit | Prix ≥ TP2 | Or | Badge doré |
+| TP1 Hit | Prix ≥ TP1 | Vert | Badge vert |
+| Trending | Prix > Entry | Vert | Bordure verte |
+| Entry Zone | Prix ≈ Entry (±2%) | Ambre | Pulsation |
+| Underwater | Entre Stop et Entry | Rouge clair | — |
+| Near Stop | Prix ≈ Stop (±2%) | Rouge | Pulsation rapide |
+| Stopped | Prix ≤ Stop | Gris | Grayscale + opacité |
+
+### Proxy CORS — Convention Projet
+**TOUJOURS** utiliser `api.allorigins.win/get` (pas `/raw` qui n'a pas les headers CORS) :
+```javascript
+var url = 'https://api.allorigins.win/get?url=' + encodeURIComponent(yahooUrl);
+fetch(url).then(r => r.json()).then(d => {
+  var yahoo = JSON.parse(d.contents); // /get wraps dans { contents: "..." }
+  var price = yahoo.chart.result[0].meta.regularMarketPrice;
+});
+```
+**Fallback** : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw` (pas de CORS).
+
+## Widgets Embarquables (`/widget/`)
+
+### Architecture
+Le système de widgets permet d'embarquer des composants Market Watch dans n'importe quel site via iframe.
+
+- **Configurateur** : `/widget/?mode=embed` (page de configuration avec previews)
+- **Galerie** : `/widget/gallery.html` (tous les types de widgets avec previews)
+- **Embed direct** : `/widget/?type={type}&theme={dark|light}`
+
+### Types de Widgets
+
+| Type | URL | Source de données | Description |
+|------|-----|-------------------|-------------|
+| `picks` | `/widget/?mode=tape` ou `vertical` | `mcp/watchlist.json` | 10 A+ picks du scanner avec prix live |
+| `dashboard` | `/widget/gallery.html?type=dashboard` | Yahoo Finance (SPY, QQQ, VIX, GLD, BTC...) | Dashboard indicateurs marché |
+| `regime` | `/widget/gallery.html?type=regime` | Yahoo Finance (^VIX, SPY) | Indicateur de régime de marché |
+| `sector` | `/widget/gallery.html?type=sector` | Yahoo Finance (XLK, XLV, XLF, XLE...) | Rotation sectorielle (barplot CSS) |
+| `movers` | `/widget/gallery.html?type=movers` | Yahoo Finance (30 tickers populaires) | Top 5 gainers / Top 5 losers |
+| `radar` | `/widget/gallery.html?type=radar` | `data/radar.json` | Radar des risques/opportunités |
+
+### Calcul du Régime (dynamique)
+Le régime est calculé côté client à partir du VIX :
+- VIX < 15 → **RISK-ON** (vert `#10b981`)
+- VIX 15-20 → **NEUTRAL** (ambre `#f59e0b`)
+- VIX 20-28 → **EARLY RISK-OFF** (orange `#f97316`)
+- VIX > 28 → **RISK-OFF** (rouge `#ef4444`)
+
+### Conventions Widget
+- Proxy Yahoo : `api.allorigins.win/get` (voir section Proxy CORS ci-dessus)
+- Crypto : Binance API directe (`api.binance.com/api/v3/ticker/price`)
+- Cache : `sessionStorage` 5 min
+- Polling : 30s stocks, 15s crypto
+- Responsive : fonctionne à partir de 380px
+- Brand : logo MW depuis `/logo.svg`
 
 ## Conventions
 

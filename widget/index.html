@@ -182,7 +182,8 @@ body:has(.tape){overflow:hidden}
 <script>
 (function(){
   var WATCHLIST_URL = 'https://articles.market-watch.xyz/mcp/watchlist.json';
-  var YAHOO_PROXY = 'https://corsproxy.io/?url=';
+  var YAHOO_PROXY = 'https://api.allorigins.win/get?url=';
+  var YAHOO_PROXY_FALLBACK = 'https://corsproxy.io/?url=';
   var BINANCE_API = 'https://api.binance.com/api/v3/ticker/price';
   var FLAGS = { US: '\ud83c\uddfa\ud83c\uddf8', EU: '\ud83c\uddea\ud83c\uddfa', APAC: '\ud83c\udf0f', ETF: '\ud83d\udcca' };
 
@@ -245,23 +246,36 @@ body:has(.tape){overflow:hidden}
       .catch(function(){return null;});
   }
 
+  function parseYahooChart(d, sym) {
+    var result = d.chart && d.chart.result && d.chart.result[0];
+    if (!result) return null;
+    var meta = result.meta;
+    var price = meta.regularMarketPrice;
+    var prevClose = meta.chartPreviousClose || meta.previousClose;
+    var chg = prevClose ? price - prevClose : 0;
+    var chgPct = prevClose ? (chg/prevClose)*100 : 0;
+    return { ticker:sym, price:price, chg:chg, chgPct:chgPct };
+  }
+
   function fetchYahooPrices(symbols) {
-    // Batch via v8 chart — one request per symbol via CORS proxy
+    // Batch via v8 chart — one request per symbol via allorigins proxy (fallback: corsproxy)
     var fetches = symbols.map(function(sym) {
-      var url = YAHOO_PROXY + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d');
-      return fetch(url, { signal: AbortSignal.timeout(8000) })
+      var yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/'+sym+'?interval=1d&range=1d';
+      var url = YAHOO_PROXY + encodeURIComponent(yahooUrl);
+      return fetch(url, { signal: AbortSignal.timeout(12000) })
         .then(function(r){return r.json();})
-        .then(function(d){
-          var result = d.chart && d.chart.result && d.chart.result[0];
-          if (!result) return null;
-          var meta = result.meta;
-          var price = meta.regularMarketPrice;
-          var prevClose = meta.chartPreviousClose || meta.previousClose;
-          var chg = prevClose ? price - prevClose : 0;
-          var chgPct = prevClose ? (chg/prevClose)*100 : 0;
-          return { ticker:sym, price:price, chg:chg, chgPct:chgPct };
+        .then(function(wrapper){
+          var d = JSON.parse(wrapper.contents);
+          return parseYahooChart(d, sym);
         })
-        .catch(function(){return null;});
+        .catch(function(){
+          // Fallback: try corsproxy.io
+          var fallbackUrl = YAHOO_PROXY_FALLBACK + encodeURIComponent(yahooUrl);
+          return fetch(fallbackUrl, { signal: AbortSignal.timeout(12000) })
+            .then(function(r){return r.json();})
+            .then(function(d){return parseYahooChart(d, sym);})
+            .catch(function(){return null;});
+        });
     });
     return Promise.allSettled(fetches).then(function(results){
       var out = [];

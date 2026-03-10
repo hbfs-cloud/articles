@@ -255,7 +255,15 @@ Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
 ```html
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
+<script src="/assets/live-tracker.js"></script>
 ```
+
+**`live-tracker.js`** dynamise les setup cards avec les prix temps réel :
+- Badge sous chaque prix : % évolution depuis l'article + prix actuel
+- Statut automatique : Trending, Entry Zone, Stopped, TP1/TP2 Hit, Underwater, Near Stop
+- Picks invalidés (stopped) marqués visuellement en grayscale
+- Source : Yahoo Finance via `api.allorigins.win/get` + Binance pour crypto
+- Cache `sessionStorage` 5 min, auto-refresh 30s
 
 ### Sections de l'Article Scanner
 
