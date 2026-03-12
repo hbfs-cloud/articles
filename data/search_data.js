@@ -2657,12 +2657,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ — COP, — COP, XOM, WMT, KO, LLY, SAP, NVO, HIMX, GSG, SH",
-    "desc": "Following retrospectives graded B- (Feb 24–Mar 5): Energy and squeeze strategies clearly outperformed (AAOI +19%, NOW +14.1%, USO +14%); EU/Asia broad ETFs and precious metals underperformed, generating most stops.\n      Today we reduce ETF Europe/Asia exposure, eliminate precious metals, reinforce ...",
-    "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,financials,healthcare",
+    "title": "Top 10 A+ RISK-OFF. 10 — CF, KR, XOM, EQNR, NEM, LMT, MRK, GLD, SQQQ, DBA",
+    "desc": "The regime detector confirms Risk-Off with a score of 0.38/1.0. VIX surging to 27.29, Brent crude touching $100+ on Strait of Hormuz escalation, and broad equity sell-off (S&P -1.52%, NASDAQ -1.78%, Russell -2.12%). February payrolls showed -92K jobs lost — worst labor market print since 2024. CPI t...",
+    "tags": "us,eu,etf,energy,materials,defense,healthcare,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260312/",
-    "date": "12 mars 2026"
+    "date": "Thursday, March 12, 2026"
   },
   {
     "type": "scanner",
