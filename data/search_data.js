@@ -2696,6 +2696,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Scanner Retrospective",
+    "desc": "Stops trigger in 1–2 days (markets fall fast); TP1 targets need 5–15 days (recoveries are gradual). This structurally over-weights stops in early evaluations. March 13 setups have 0 days to resolve — excluded from performance calculations.",
+    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective,energy,macro,risk-off,stagflation",
+    "grade": "",
+    "href": "/scanner/retrospective/20260313/",
+    "date": "13 mars 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Top 10 A+ RISK-OFF. 10 — CVX, COP, HAL, RTX, ABBV, UNH, CAT, TLT, EWD, BITO",
     "desc": "Risk-Off deepens as Brent crude surges to $103.86 (+3.4%), now firmly above $100 for the second straight session. Iran’s Strait of Hormuz threats continue to dominate headlines. VIX elevated at ~29.4. S&P -0.61%, NASDAQ -0.93%, Nikkei -1.16%. DXY strengthening to 100.50 as dollar safety bids intensi...",
     "tags": "us,eu,etf,energy,defense,healthcare,industrials,commodity,geopolitique,trade-idea,macro",
@@ -2715,19 +2728,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260313-2300/",
     "date": "Friday Evening, March 13, 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Scanner Retrospective",
-    "desc": "This was a \"VIX deflation\" opportunistic scan generated when VIX briefly dipped to 24.75 intraday — interpreting it as a relief rally setup. The market violently disagreed within 24 hours. Every single momentum play was stopped.",
-    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
-    "grade": "",
-    "href": "/scanner/retrospective/20260313/",
-    "date": "13 mars 2026"
   },
   {
     "type": "scanner",
