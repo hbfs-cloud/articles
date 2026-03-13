@@ -148,6 +148,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "CPI Shock: +3.1% YoYStagflation Confirmed",
+    "desc": "Sources: Bureau of Labor Statistics (CPI Feb 2026), Federal Reserve (FOMC calendar), MarketWatch Gateway (real-time quotes), Yahoo Finance, Bloomberg consensus (analyst estimates), IEA (oil reserves), World Gold Council (central bank flows), SEC EDGAR (8-K filings RTX), Baker Hughes (rig count).",
+    "tags": "macro,geopolitique,trade-idea,formation,energy,healthcare,defense",
+    "grade": "",
+    "href": "/daily/20260313/",
+    "date": "13 mars 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Brent Breaks $100 — Strait of Hormuz Crisis & Recession Alarm",
     "desc": "Brent crude crosses $100 as Iran's new Supreme Leader seals the Strait of Hormuz. S&P 500 at 2026 lows. VIX 24.23. Rate cuts evaporating. CPI +2.4%. Recession odds at 32%.",
     "tags": "energy,macro,geopolitique,trade-idea,formation,crypto,us,eu,asia,commodity",
@@ -2676,6 +2689,19 @@ window.searchDataPrebuilt = [
     "grade": "N/A",
     "href": "analyses/PHE",
     "date": ""
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Daily Scanner",
+    "desc": "Following the Mar 6 retrospective (provisional grade B−): 1) EU/Asia ETF allocation reduced — only EWD included (Sweden, oil-adjacent) with a genuinely A+ setup; 2) Energy weighting increased: CVX, COP, HAL = 3 energy names; 3) No small-caps ($5B market cap minimum enforced in Risk-Off); 4) Pre/Shor...",
+    "tags": "us,eu,etf,energy,defense,healthcare,materials,commodity,geopolitique,trade-idea,macro,technique",
+    "grade": "",
+    "href": "/scanner/20260313/",
+    "date": "Stagflation Confirmed"
   },
   {
     "type": "scanner",
