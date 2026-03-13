@@ -71,6 +71,13 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 
 1. **Si existe déjà** : archiver dans `analyses/{TICKER}/archive/{YYYYMMDD}/`
 2. **Collecte MCP** : `GetInstruments` + `QueryData` (quote, bars_daily, bars_intraday, financials, earnings_quarterly, holders, stats, support_resistance, volume_profile, sentiment_overall, trading_signals, analyst_actions, insider_transactions, ctb, news, options_chain)
+3. **⚠️ Dilution Check (OBLIGATOIRE)** : `WebSearch "{TICKER} SEC filing S-3 prospectus dilution warrants"` + vérifier `insider_transactions` et `news` pour :
+   - Prospectus S-3/shelf registration déposé à la SEC (dilution potentielle)
+   - Warrants actifs ou récemment exercés
+   - Fonds agressifs connus (H.C. Wainwright, Maxim Group, Roth Capital, Ladenburg Thalmann) dans les underwriters
+   - ATM (At-The-Market) offerings en cours
+   - Historique de dilutions répétées (serial diluters)
+   - **Si risque détecté** : mention obligatoire en rouge dans la section Risks + impact sur le Trade Idea (réduire le score, élargir le stop, ou exclure)
 3. **Générer** `analyses/{TICKER}/index.html` :
    - Switcher langue/niveau dans le hero
    - ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
@@ -109,7 +116,11 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 1. **Lire TOUTES les rétrospectives** (`scanner/retrospective/YYYYMMDD/`) pour cumuler les enseignements
 2. **Lire le scan précédent** pour filtre anti-doublon (min 70% nouveaux tickers)
 3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `QueryData` (quote, insider_transactions)
-4. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+4. **⚠️ Dilution Filter (OBLIGATOIRE)** : Pour chaque ticker candidat (surtout small/mid-caps), `WebSearch "{TICKER} dilution warrants SEC S-3"` pour détecter :
+   - Shelf registrations / S-3 filings récents
+   - Warrants, ATM offerings, fonds toxiques (H.C. Wainwright, Maxim, Roth Capital, etc.)
+   - Serial diluters → **EXCLURE du scan** (leçon INDO : setup technique parfait mais dilution massive non détectée)
+5. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
 6. **Indexer + Push** :
    ```bash
