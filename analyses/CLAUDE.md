@@ -601,11 +601,18 @@ Pedagogy-box finale combinant les trois sous-sections :
 - Impact mécanique : à quel prix les warrants s'exercent et créent de la pression vendeuse
 - Verdict : dilution imminente ou non
 
-**b) Fonds Toxiques / Death Spiral**
-- Présence de PIPE deals, convertibles toxiques
-- Fonds connus pour shorter après financement (Hudson Bay, Armistice, etc.)
-- Historique de financements dilutifs avec ces fonds
-- Verdict : présence ou absence de fonds toxiques
+**b) Fonds Toxiques / Death Spiral — VÉRIFICATION OBLIGATOIRE**
+- Présence de PIPE deals, convertibles toxiques, prospectus de dilution récent (S-1, S-3, 424B dans les 90 jours)
+- **Banques d'investissement agressives** — si présentes dans un deal récent, c'est un signal rouge majeur :
+  - WC Wainwright, Maxim Group, Dawson James, Ladenburg Thalmann, Aegis Capital
+  - Ces fonds accompagnent systématiquement les offres dilutives et revendent immédiatement
+  - WebSearch : `"{TICKER} Wainwright" OR "{TICKER} Maxim Group" OR "{TICKER} Dawson James" offering 2025 2026`
+- Fonds connus pour shorter après financement : Hudson Bay Capital, Armistice Capital, Sabby Management, Empery Asset Management
+- **ATM program actif** : vérifier SEC filing via WebSearch `"{TICKER}" site:sec.gov "at-the-market"`
+- **Reverse split** dans les 12 mois → signal de détresse critique
+- Verdict : présence ou absence de fonds toxiques + niveau de risque de dilution imminente
+
+> **CAS INDO** : L'action n'affichait aucun signal technique négatif sur la fiche. Mais WC Wainwright + warrants actifs = dilution concrétisée. Ce type de risque N'APPARAÎT PAS dans les données de prix classiques. Seule la vérification SEC active permet de le détecter.
 
 **c) ATM Offerings & Shelf Registrations**
 - Programme ATM actif ? Montant autorisé vs utilisé

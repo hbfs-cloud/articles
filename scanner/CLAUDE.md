@@ -37,6 +37,37 @@ scanner/
 3. **`QueryData`** types: quote,insider_transactions pour les 10 tickers retenus (validation prix spot + détection achats insiders)
 4. **WebSearch** pour les catalyseurs récents de chaque ticker
 
+### Filtres Anti-Dilution & Fonds Agressifs (OBLIGATOIRE — BLOQUANT)
+
+**Avant de retenir un ticker dans le top 10, vérifier OBLIGATOIREMENT les risques de dilution massive. Un ticker qui échoue à ces filtres est DISQUALIFIÉ même avec un score élevé.**
+
+#### Checks SEC (via WebSearch "site:sec.gov {TICKER} S-1 S-3 424B")
+- **Prospectus de dilution** : dépôt S-1, S-3, 424B récent (< 90 jours) → **DISQUALIFIER**
+- **ATM program (At-The-Market)** : accord permettant l'émission continue d'actions → **DISQUALIFIER si actif**
+- **Warrants** : vérifier s'il existe des warrants exerçables à court terme (PIPE, SPAC legacy) → **-15 pts score ou DISQUALIFIER**
+- **Shelf registration** : dépôt S-3ASR ou shelf registration déclenché → **avertissement obligatoire**
+
+#### Fonds Agressifs & Short Interest Toxique
+- **Vérifier le short interest** : si > 30% du float → flag "High Short Interest" obligatoire dans les invalidations
+- **Fonds agressifs (Wainwright, Maxim, Dawson James, etc.)** : si le ticker a eu une offre récente via ces banques → **DISQUALIFIER** (ces fonds revendent immédiatement, écrasant le cours)
+- **PIPE récent** : Private Investment in Public Equity dans les 6 mois → **DISQUALIFIER** (actions déjà en circulation à discount)
+- **Reverse split récent** (< 6 mois) → **DISQUALIFIER** (signe de détresse financière)
+
+#### Procédure de vérification
+```
+Pour chaque ticker candidat :
+1. WebSearch "{TICKER} SEC filing dilution warrant 2025 2026"
+2. WebSearch "{TICKER} prospectus offering site:sec.gov"
+3. Si micro-cap (< $500M market cap) : vérification OBLIGATOIRE du float et short interest
+4. Résultat : mentionner dans la section Invalidations si risque identifié
+```
+
+#### Exemple (cas INDO)
+INDO avait un fund agressif (Wainwright) + warrants → dilution massive concrétisée.
+Ce risque n'apparaissait PAS sur la fiche technique classique. Seule la vérification SEC active permet de le détecter.
+
+---
+
 ### Insider Transactions — Signal Spécial (OBLIGATOIRE)
 
 **Objectif** : Détecter les achats significatifs d'insiders (CEO, CFO, Board) comme signal de conviction supplémentaire.

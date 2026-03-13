@@ -2696,12 +2696,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Daily Scanner",
+    "title": "Top 10 A+ RISK-OFF — CVX, COP, HAL, RTX, ABBV, UNH, CAT, TLT, EWD, BITO",
     "desc": "Following the Mar 6 retrospective (provisional grade B−): 1) EU/Asia ETF allocation reduced — only EWD included (Sweden, oil-adjacent) with a genuinely A+ setup; 2) Energy weighting increased: CVX, COP, HAL = 3 energy names; 3) No small-caps ($5B market cap minimum enforced in Risk-Off); 4) Pre/Shor...",
     "tags": "us,eu,etf,energy,defense,healthcare,materials,commodity,geopolitique,trade-idea,macro,technique",
     "grade": "",
     "href": "/scanner/20260313/",
-    "date": "Stagflation Confirmed"
+    "date": "Friday, March 13, 2026"
   },
   {
     "type": "scanner",
@@ -2709,12 +2709,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Daily Scanner",
+    "title": "Top 10 A+ RISK-OFF — MOS, COP, DVN, GOLD, WMT, RTX, TTE, SAP, INDA, SH",
     "desc": "Retrospective Adjustment Notice: Following retrospectives (grades C+, B+, B-), we adjusted our methodology for full Risk-Off conditions: energy/commodity momentum setups are now prioritized over oversold bounces; EU ETFs are replaced with quality EU large-caps (TTE, SAP); precious metal miners are p...",
     "tags": "us,eu,asia,energy,materials,consumer,industrials,tech,etf,commodity,macro,technique,trade-idea,defense",
     "grade": "",
     "href": "/scanner/20260312/",
-    "date": "Energy & Commodities Lead"
+    "date": "Wednesday, March 12, 2026"
   },
   {
     "type": "scanner",
