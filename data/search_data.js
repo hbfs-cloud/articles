@@ -2697,8 +2697,8 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Scanner Retrospective",
-    "desc": "Stops trigger in 1–2 days (markets fall fast); TP1 targets need 5–15 days (recoveries are gradual). This structurally over-weights stops in early evaluations. March 13 setups have 0 days to resolve — excluded from performance calculations.",
-    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective,energy,macro,risk-off,stagflation",
+    "desc": "Stops trigger in 1–3 days; TP1 targets need 5–15 days. Early scans (Mar 3–5) are the most mature but benefited from energy momentum — later scans still maturing.",
+    "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,energy,defense,commodity,short-squeeze",
     "grade": "",
     "href": "/scanner/retrospective/20260313/",
     "date": "13 mars 2026"
