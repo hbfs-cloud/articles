@@ -148,6 +148,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Brent Breaks $100 — Strait of Hormuz Crisis & Recession Alarm",
+    "desc": "Brent crude crosses $100 as Iran's new Supreme Leader seals the Strait of Hormuz. S&P 500 at 2026 lows. VIX 24.23. Rate cuts evaporating. CPI +2.4%. Recession odds at 32%.",
+    "tags": "energy,macro,geopolitique,trade-idea,formation,crypto,us,eu,asia,commodity",
+    "grade": "",
+    "href": "/daily/20260313/",
+    "date": "13 mars 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Oil Reserves Gambit &Oracle's AI Blowout",
     "desc": "Markets stabilize as IEA proposes record crude reserve release. Oracle surges 10% after-hours on monster Q3. VIX at 24.93, Iran war Day 11. CPI on Friday.",
     "tags": "macro,geopolitique,trade-idea,formation,energy",
@@ -2657,12 +2670,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-OFF. 10 — CF, KR, XOM, EQNR, NEM, LMT, MRK, GLD, SQQQ, DBA",
-    "desc": "The regime detector confirms Risk-Off with a score of 0.38/1.0. VIX surging to 27.29, Brent crude touching $100+ on Strait of Hormuz escalation, and broad equity sell-off (S&P -1.52%, NASDAQ -1.78%, Russell -2.12%). February payrolls showed -92K jobs lost — worst labor market print since 2024. CPI t...",
-    "tags": "us,eu,etf,energy,materials,defense,healthcare,commodity,geopolitique,trade-idea,macro",
+    "title": "Daily Scanner",
+    "desc": "Retrospective Adjustment Notice: Following retrospectives (grades C+, B+, B-), we adjusted our methodology for full Risk-Off conditions: energy/commodity momentum setups are now prioritized over oversold bounces; EU ETFs are replaced with quality EU large-caps (TTE, SAP); precious metal miners are p...",
+    "tags": "us,eu,asia,energy,materials,consumer,industrials,tech,etf,commodity,macro,technique,trade-idea,defense",
     "grade": "",
     "href": "/scanner/20260312/",
-    "date": "Thursday, March 12, 2026"
+    "date": "Energy & Commodities Lead"
   },
   {
     "type": "scanner",
