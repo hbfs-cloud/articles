@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,regime,analyse" data-tab="analyses">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lire le Régime de Marché — La Checklist MarketWatch Partie 1 | Market Watch</title>
+  <meta name="description" content="Série La Checklist MarketWatch — Partie 1 : Les 6 composantes du Régime Score, les 5 régimes et leur playbook, et comment basculer en Risk-Off en 5 minutes chaque matin.">
+  <meta property="og:title" content="Lire le Régime de Marché — La Checklist MarketWatch Part 1 | Market Watch">
+  <meta property="og:description" content="VIX, SPX trends, crédit spreads, DXY, TLT, liquidité — les 6 composantes du Régime Score expliquées avec les cas réels de mars 2026.">
+  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/series/marketwatch-checklist/part1-regime/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="/assets/report.css">
+
+  <style>
+  /* ===== THEME BLEU MARINE ===== */
+  :root {
+    --navy: #1e40af;
+    --blue: #3b82f6;
+    --blue-light: #93c5fd;
+    --blue-bg: #eff6ff;
+    --blue-border: rgba(59,130,246,.2);
+    --risk-on: #10b981;
+    --neutral: #3b82f6;
+    --early-off: #f59e0b;
+    --risk-off: #ef4444;
+    --crisis: #7f1d1d;
+  }
+
+  /* ===== HERO ===== */
+  .hero-section {
+    padding: 4rem 2rem 8rem;
+    background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 100%);
+    text-align: center;
+  }
+  .hero-date {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--navy);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-bottom: 1rem;
+  }
+  .series-nav-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    font-size: .85rem;
+    font-weight: 600;
+    color: #64748b;
+    flex-wrap: wrap;
+  }
+  .series-nav-top a {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .45rem 1rem;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    text-decoration: none;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: .8rem;
+    transition: all .2s;
+  }
+  .series-nav-top a:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(59,130,246,.15); }
+  .series-nav-top .nav-sep { color: #cbd5e1; }
+
+  .hero-badges {
+    display: flex;
+    gap: .75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .5rem 1rem;
+    border-radius: 99px;
+    font-size: .8rem;
+    font-weight: 700;
+  }
+  .hero-badge-navy  { background: rgba(30,64,175,.1);  color: var(--navy); border: 1px solid rgba(30,64,175,.2); }
+  .hero-badge-blue  { background: rgba(59,130,246,.1); color: #2563eb;     border: 1px solid var(--blue-border); }
+  .hero-badge-green { background: rgba(16,185,129,.1); color: #10b981;     border: 1px solid rgba(16,185,129,.2); }
+  .hero-badge-red   { background: rgba(239,68,68,.1);  color: #ef4444;     border: 1px solid rgba(239,68,68,.2); }
+  .hero-badge-amber { background: rgba(245,158,11,.1); color: #d97706;     border: 1px solid rgba(245,158,11,.2); }
+
+  /* ===== SECTION DIVIDER ===== */
+  .section-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 3rem auto 2rem;
+    max-width: 960px;
+    padding: 0 1rem;
+    color: #94a3b8;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+  .section-divider::before,
+  .section-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+  /* ===== CALLOUT BOXES ===== */
+  .callout {
+    border-radius: 14px;
+    padding: 1.5rem 1.75rem;
+    margin: 2rem 0;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  .callout-icon { font-size: 1.3rem; flex-shrink: 0; margin-top: .1rem; }
+  .callout-body { flex: 1; }
+  .callout-title { font-weight: 800; font-size: 1rem; margin-bottom: .4rem; }
+  .callout-text { font-size: .92rem; color: #334155; line-height: 1.65; margin: 0; }
+  .callout-navy  { background: var(--blue-bg);          border-left: 4px solid var(--navy); }
+  .callout-navy .callout-icon { color: var(--navy); }
+  .callout-navy .callout-title { color: var(--navy); }
+  .callout-red   { background: #fef2f2;                 border-left: 4px solid #ef4444; }
+  .callout-red .callout-icon { color: #ef4444; }
+  .callout-red .callout-title { color: #991b1b; }
+  .callout-green { background: #f0fdf4;                 border-left: 4px solid #10b981; }
+  .callout-green .callout-icon { color: #10b981; }
+  .callout-green .callout-title { color: #065f46; }
+  .callout-amber { background: #fffbeb;                 border-left: 4px solid #f59e0b; }
+  .callout-amber .callout-icon { color: #f59e0b; }
+  .callout-amber .callout-title { color: #92400e; }
+
+  /* ===== COMPONENT CARDS ===== */
+  .component-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin: 2rem 0;
+  }
+  .component-card {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.75rem;
+    transition: all .3s;
+    position: relative;
+    overflow: hidden;
+  }
+  .component-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--navy), var(--blue));
+  }
+  .component-card:hover { transform: translateY(-3px); box-shadow: 0 12px 30px -8px rgba(30,64,175,.15); border-color: var(--blue); }
+  .component-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    color: white;
+    font-weight: 900;
+    font-size: .9rem;
+    margin-bottom: 1rem;
+  }
+  .component-name { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin-bottom: .3rem; }
+  .component-weight { font-size: .75rem; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .75rem; }
+  .component-desc { font-size: .88rem; color: #475569; line-height: 1.6; margin-bottom: 1rem; }
+  .score-levels { display: flex; flex-direction: column; gap: .4rem; }
+  .score-level {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: .4rem .75rem;
+    border-radius: 8px;
+    font-size: .8rem;
+    font-weight: 600;
+  }
+  .score-level.on    { background: rgba(16,185,129,.08);  color: #065f46; }
+  .score-level.mid   { background: rgba(245,158,11,.08);  color: #92400e; }
+  .score-level.off   { background: rgba(239,68,68,.08);   color: #991b1b; }
+  .score-pill {
+    font-weight: 900;
+    font-size: .78rem;
+    padding: .15rem .5rem;
+    border-radius: 6px;
+  }
+  .score-pill.on  { background: rgba(16,185,129,.15);  color: #10b981; }
+  .score-pill.mid { background: rgba(245,158,11,.15);  color: #f59e0b; }
+  .score-pill.off { background: rgba(239,68,68,.15);   color: #ef4444; }
+
+  /* ===== REGIME TABLE ===== */
+  .regime-table-wrap {
+    overflow-x: auto;
+    margin: 2rem 0;
+    border-radius: 16px;
+    border: 1.5px solid #e2e8f0;
+  }
+  .regime-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+  }
+  .regime-table thead th {
+    background: #0f172a;
+    color: white;
+    padding: 1rem 1.25rem;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    text-align: left;
+    white-space: nowrap;
+  }
+  .regime-table thead th:first-child { border-radius: 0; }
+  .regime-table tbody tr { border-bottom: 1px solid #f1f5f9; transition: background .2s; }
+  .regime-table tbody tr:last-child { border-bottom: none; }
+  .regime-table tbody tr:hover { background: #f8fafc; }
+  .regime-table td { padding: .9rem 1.25rem; color: #334155; vertical-align: top; }
+  .regime-name-cell { font-weight: 800; white-space: nowrap; }
+  .regime-dot {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    margin-right: .5rem;
+    vertical-align: middle;
+  }
+  .strategy-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .2rem .6rem;
+    border-radius: 6px;
+    font-size: .75rem;
+    font-weight: 700;
+    margin: .15rem .15rem .15rem 0;
+  }
+
+  /* ===== WEIGHT TABLE ===== */
+  .weight-table-wrap {
+    overflow-x: auto;
+    margin: 2rem 0;
+    border-radius: 16px;
+    border: 1.5px solid #e2e8f0;
+  }
+  .weight-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+  }
+  .weight-table thead th {
+    background: var(--navy);
+    color: white;
+    padding: .9rem 1.1rem;
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    text-align: center;
+  }
+  .weight-table thead th:first-child { text-align: left; }
+  .weight-table tbody tr { border-bottom: 1px solid #f1f5f9; }
+  .weight-table tbody tr:last-child { border-bottom: none; }
+  .weight-table tbody tr:hover { background: #f8fafc; }
+  .weight-table td { padding: .8rem 1.1rem; text-align: center; color: #334155; }
+  .weight-table td:first-child { text-align: left; font-weight: 700; color: #0f172a; }
+  .weight-bar-cell { min-width: 80px; }
+  .weight-bar-wrap { display: flex; align-items: center; gap: .5rem; justify-content: center; }
+  .weight-bar { height: 8px; border-radius: 4px; min-width: 4px; }
+  .weight-pct { font-size: .82rem; font-weight: 800; }
+  .weight-zero { color: #cbd5e1; font-size: .8rem; font-weight: 500; }
+
+  /* ===== MORNING CHECKLIST ===== */
+  .morning-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 2rem 0;
+  }
+  .morning-card {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1.5rem;
+    transition: all .3s;
+  }
+  .morning-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 8px 20px -5px rgba(59,130,246,.12); }
+  .morning-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: .9rem;
+    font-size: 1.1rem;
+  }
+  .morning-icon-navy { background: rgba(30,64,175,.1); color: var(--navy); }
+  .morning-icon-red   { background: rgba(239,68,68,.1);  color: #ef4444; }
+  .morning-icon-green { background: rgba(16,185,129,.1); color: #10b981; }
+  .morning-icon-amber { background: rgba(245,158,11,.1); color: #d97706; }
+  .morning-icon-purple{ background: rgba(139,92,246,.1); color: #7c3aed; }
+  .morning-name { font-size: .95rem; font-weight: 800; color: #0f172a; margin-bottom: .3rem; }
+  .morning-desc { font-size: .82rem; color: #64748b; line-height: 1.55; }
+  .morning-signal {
+    margin-top: .75rem;
+    font-size: .75rem;
+    font-weight: 700;
+    padding: .25rem .65rem;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .morning-signal-red   { background: rgba(239,68,68,.08);  color: #ef4444; }
+  .morning-signal-green { background: rgba(16,185,129,.08); color: #10b981; }
+  .morning-signal-amber { background: rgba(245,158,11,.08); color: #d97706; }
+
+  /* ===== CASE STUDY ===== */
+  .case-study {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 20px;
+    padding: 2.5rem;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .case-study::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+  }
+  .case-study.cs-red::before    { background: linear-gradient(90deg, #ef4444, #7f1d1d); }
+  .case-study.cs-amber::before  { background: linear-gradient(90deg, #f59e0b, #d97706); }
+  .case-study.cs-navy::before   { background: linear-gradient(90deg, var(--navy), var(--blue)); }
+  .case-date {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    padding: .35rem .85rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+  }
+  .case-date-red   { background: rgba(239,68,68,.1);  color: #ef4444; }
+  .case-date-amber { background: rgba(245,158,11,.1); color: #d97706; }
+  .case-date-navy  { background: rgba(30,64,175,.1);  color: var(--navy); }
+  .case-title { font-size: 1.4rem; font-weight: 900; color: #0f172a; margin-bottom: .5rem; }
+  .case-score { font-size: 2.5rem; font-weight: 900; margin: 1rem 0 .25rem; }
+  .case-score-red   { color: #ef4444; }
+  .case-score-amber { color: #f59e0b; }
+  .case-score-navy  { color: var(--navy); }
+  .case-metrics { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.25rem 0; }
+  .case-metric {
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: .75rem 1rem;
+    min-width: 100px;
+  }
+  .case-metric-label { font-size: .72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .2rem; }
+  .case-metric-value { font-size: 1.05rem; font-weight: 800; color: #0f172a; }
+  .case-metric-value.up   { color: #10b981; }
+  .case-metric-value.down { color: #ef4444; }
+  .case-action {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    font-size: .9rem;
+    font-weight: 600;
+    color: #334155;
+    line-height: 1.6;
+  }
+  .case-action-red   { background: rgba(239,68,68,.06);  border-left: 3px solid #ef4444; }
+  .case-action-amber { background: rgba(245,158,11,.06); border-left: 3px solid #f59e0b; }
+
+  /* ===== CHART CONTAINERS ===== */
+  .chart-container {
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+  }
+  .chart-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin-bottom: .25rem;
+  }
+  .chart-subtitle {
+    font-size: .82rem;
+    color: #64748b;
+    margin-bottom: 1.25rem;
+  }
+  #gauge-regime { height: 360px; }
+  #bar-components { height: 340px; }
+
+  /* ===== NEXT CTA ===== */
+  .next-cta {
+    background: linear-gradient(135deg, var(--navy), var(--blue));
+    border-radius: 20px;
+    padding: 3rem 2rem;
+    text-align: center;
+    color: white;
+    margin: 3rem 0;
+  }
+  .next-cta h3 { font-size: 1.4rem; font-weight: 900; margin: 0 0 .5rem; }
+  .next-cta p  { opacity: .85; margin: 0 0 1.5rem; font-size: 1rem; }
+  .next-cta a {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    background: white;
+    color: var(--navy);
+    padding: .85rem 2rem;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: all .3s;
+  }
+  .next-cta a:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,0,0,.2); }
+
+  /* ===== SERIES NAV BOTTOM ===== */
+  .series-nav-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 2rem;
+    flex-wrap: wrap;
+  }
+  .series-nav-bottom a {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .65rem 1.25rem;
+    border-radius: 10px;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    text-decoration: none;
+    color: var(--navy);
+    font-weight: 700;
+    font-size: .88rem;
+    transition: all .2s;
+  }
+  .series-nav-bottom a:hover { border-color: var(--blue); box-shadow: 0 4px 12px rgba(59,130,246,.12); }
+  .series-nav-bottom .nav-label { font-size: .72rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: .1rem; }
+  .series-nav-bottom .nav-disabled { color: #cbd5e1; cursor: default; pointer-events: none; }
+
+  /* ===== CHECKLIST UL ===== */
+  .check-list { list-style: none; padding: 0; margin: 1rem 0; }
+  .check-list li { display: flex; align-items: flex-start; gap: .75rem; padding: .55rem 0; font-size: .92rem; color: #334155; line-height: 1.55; }
+  .check-list li i { flex-shrink: 0; margin-top: .2rem; }
+  .ci-blue   { color: var(--blue); }
+  .ci-green  { color: #10b981; }
+  .ci-red    { color: #ef4444; }
+  .ci-amber  { color: #f59e0b; }
+
+  @media (max-width: 640px) {
+    .hero-section { padding: 2.5rem 1rem 5rem; }
+    .case-study { padding: 1.5rem; }
+    .next-cta { padding: 2rem 1.25rem; }
+  }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/" class="logo">
+      <img src="/favicon.ico" alt="MarketWatch" style="width:24px;height:24px;border-radius:4px;">
+      <span>Market Watch</span>
+    </a>
+    <nav class="header-nav">
+      <a href="/analyses/">Analyses</a>
+      <a href="/series/">Séries</a>
+      <a href="/scanner/">Scanner</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div style="max-width:760px;margin:0 auto;">
+
+    <!-- Series nav top -->
+    <div class="series-nav-top">
+      <a href="/series/marketwatch-checklist/"><i class="fa fa-list"></i> Index Série</a>
+      <span class="nav-sep">|</span>
+      <span>Partie 1 / 7</span>
+      <span class="nav-sep">|</span>
+      <a href="/series/marketwatch-checklist/part2-momentum/">Part 2 — Momentum <i class="fa fa-arrow-right"></i></a>
+    </div>
+
+    <div class="hero-date">La Checklist MarketWatch &mdash; Partie 1</div>
+    <h1 style="font-size:clamp(2rem,5vw,3.2rem);font-weight:900;color:#0f172a;line-height:1.15;margin:0 0 1rem;">
+      Lire le<br><span style="color:var(--navy);">Régime de Marché</span>
+    </h1>
+    <p style="font-size:1.1rem;color:#475569;line-height:1.7;max-width:620px;margin:0 auto 1.5rem;">
+      La première décision de chaque séance n'est pas de choisir un trade — c'est de savoir dans quel régime on se trouve. Un Régime Score erroné, et tout le reste de la checklist devient du bruit.
+    </p>
+
+    <div class="hero-badges">
+      <span class="hero-badge hero-badge-navy"><i class="fa fa-chart-line"></i> Macro</span>
+      <span class="hero-badge hero-badge-blue"><i class="fa fa-gauge"></i> Régime Score</span>
+      <span class="hero-badge hero-badge-red"><i class="fa fa-triangle-exclamation"></i> Risk-Off</span>
+      <span class="hero-badge hero-badge-amber"><i class="fa fa-clock"></i> 15 min/matin</span>
+      <span class="hero-badge hero-badge-green"><i class="fa fa-calendar"></i> Mis à jour mars 2026</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="article-body">
+
+  <!-- ===== 1. POURQUOI LE RÉGIME ===== -->
+  <div class="section-divider"><i class="fa fa-compass"></i> Pourquoi le régime est la première décision</div>
+
+  <p>
+    Il existe une erreur fondamentale que commettent la plupart des traders particuliers : ils lisent un setup technique, estiment que le risk/reward est favorable, et ils entrent. Sans avoir regardé une seule fois l'état macroéconomique du marché ce jour-là. C'est trader dans le brouillard.
+  </p>
+  <p>
+    Le régime de marché, c'est la <strong>météo financière</strong> de l'environnement dans lequel vont se passer tous vos trades. Un breakout haussier en Risk-On a une probabilité de succès radicalement différente du même setup en Risk-Off. La même chandelle, le même volume, le même RSI — mais un contexte macro différent — peut produire des résultats diamétralement opposés.
+  </p>
+
+  <div class="callout callout-red">
+    <i class="fa fa-triangle-exclamation callout-icon"></i>
+    <div class="callout-body">
+      <div class="callout-title">Cas réel — 13 mars 2026</div>
+      <p class="callout-text">
+        CPI à +3,1% publié à 14h30 UTC. Réaction immédiate : VIX monte à <strong>29,4</strong>, TLT vend massivement, le dollar rebondit. Régime Score calculé à <strong>0,31/1,0</strong>. Résultat : le playbook bascule en <strong>max defensiveness</strong> — zéro exposition croissance, hedges activés (SH, SQQQ), cash sur le reste. Les traders qui avaient ignoré le contexte macro et avaient des positions momentum tech ouverts ce jour-là ont encaissé des drawdowns significatifs.
+      </p>
+    </div>
+  </div>
+
+  <p>
+    La lecture du régime prend 15 minutes chaque matin. Elle détermine <em>quelle partie du playbook</em> on applique ce jour-là. Sans elle, on applique aveuglément des stratégies calibrées pour des conditions qui n'existent peut-être plus.
+  </p>
+
+  <!-- ===== 2. LES 6 COMPOSANTES ===== -->
+  <div class="section-divider"><i class="fa fa-sliders"></i> Les 6 composantes du Régime Score</div>
+
+  <p>
+    Le Régime Score est un indice composite de 0 à 100, calculé à partir de six composantes de poids égal (≈16,7% chacune). Un score &gt;70 = Risk-On, &lt;30 = Risk-Off. Voici comment interpréter chaque signal.
+  </p>
+
+  <div class="component-grid">
+
+    <!-- VIX -->
+    <div class="component-card">
+      <div class="component-number">1</div>
+      <div class="component-name">VIX</div>
+      <div class="component-weight">Volatilité implicite — 16,7%</div>
+      <div class="component-desc">
+        L'indice de volatilité implicite du S&amp;P 500 sur 30 jours. Mesure directe de la prime de risque que le marché exige. En-dessous de 15, les market makers sont sereins. Au-dessus de 28, l'aversion au risque domine.
+      </div>
+      <div class="score-levels">
+        <div class="score-level on">VIX &lt; 15 — Risk-On <span class="score-pill on">100</span></div>
+        <div class="score-level mid">VIX 15–25 — Early <span class="score-pill mid">50</span></div>
+        <div class="score-level off">VIX &gt; 28 — Risk-Off <span class="score-pill off">0</span></div>
+      </div>
+    </div>
+
+    <!-- SPX Trend -->
+    <div class="component-card">
+      <div class="component-number">2</div>
+      <div class="component-name">SPX Trend</div>
+      <div class="component-weight">Position vs moyennes mobiles — 16,7%</div>
+      <div class="component-desc">
+        La position du S&amp;P 500 par rapport à ses SMA50 et SMA200 jours. La SMA200 est la frontière bull/bear. La SMA50 filtre les dynamiques de moyen terme. Un SPX entre les deux SMAs signale une transition, pas une tendance claire.
+      </div>
+      <div class="score-levels">
+        <div class="score-level on">SPX &gt; SMA50 — Haussier <span class="score-pill on">100</span></div>
+        <div class="score-level mid">SMA200 &lt; SPX &lt; SMA50 — Neutre <span class="score-pill mid">50</span></div>
+        <div class="score-level off">SPX &lt; SMA200 — Baissier <span class="score-pill off">0</span></div>
+      </div>
+    </div>
+
+    <!-- Credit Spreads -->
+    <div class="component-card">
+      <div class="component-number">3</div>
+      <div class="component-name">Crédit Spreads</div>
+      <div class="component-weight">HYG / LQD ratio — 16,7%</div>
+      <div class="component-desc">
+        Rapport entre HYG (high yield corporate bonds) et LQD (investment grade). Quand les marchés anticipent une hausse des défauts, ils vendent HYG avant de vendre les actions. Ce ratio détecte la détérioration du crédit <em>avant</em> que le SPX ne réagisse.
+      </div>
+      <div class="score-levels">
+        <div class="score-level on">Ratio en hausse / stable — OK <span class="score-pill on">100</span></div>
+        <div class="score-level mid">Légère baisse — Vigilance <span class="score-pill mid">50</span></div>
+        <div class="score-level off">Chute soutenue — Danger <span class="score-pill off">0</span></div>
+      </div>
+    </div>
+
+    <!-- DXY -->
+    <div class="component-card">
+      <div class="component-number">4</div>
+      <div class="component-name">DXY (Dollar Index)</div>
+      <div class="component-weight">Force relative du dollar — 16,7%</div>
+      <div class="component-desc">
+        Un dollar fort est paradoxalement un signal Risk-Off : les capitaux fuient les actifs risqués vers la sécurité du dollar américain. Un dollar en baisse reflète un appétit pour le risque global et favorise les commodities, les émergents et les actifs libellés en devises étrangères.
+      </div>
+      <div class="score-levels">
+        <div class="score-level on">DXY faible / en baisse — Risk-On <span class="score-pill on">100</span></div>
+        <div class="score-level mid">DXY stable — Neutre <span class="score-pill mid">50</span></div>
+        <div class="score-level off">DXY fort / en hausse — Risk-Off <span class="score-pill off">0</span></div>
+      </div>
+    </div>
+
+    <!-- TLT -->
+    <div class="component-card">
+      <div class="component-number">5</div>
+      <div class="component-name">TLT (Obligations 20 ans)</div>
+      <div class="component-weight">Flight to safety — 16,7%</div>
+      <div class="component-desc">
+        Les bons du Trésor américains à 20 ans sont l'actif refuge par excellence. Quand les institutions veulent sortir du risque, elles achètent TLT — ce qui fait monter son prix. TLT en hausse = les pros fuient. TLT en baisse dans un contexte de Risk-Off signifie une crise de liquidité, encore plus grave.
+      </div>
+      <div class="score-levels">
+        <div class="score-level on">TLT en baisse (taux en hausse) — Risk-On <span class="score-pill on">100</span></div>
+        <div class="score-level mid">TLT stable — Neutre <span class="score-pill mid">50</span></div>
+        <div class="score-level off">TLT en forte hausse — Flight to safety <span class="score-pill off">0</span></div>
+      </div>
+    </div>
+
+    <!-- Liquidité -->
+    <div class="component-card">
+      <div class="component-number">6</div>
+      <div class="component-name">Liquidité</div>
+      <div class="component-weight">Repo / Fed Balance Sheet — 16,7%</div>
+      <div class="component-desc">
+        La liquidité globale — mesurée via le bilan de la Fed (QE/QT), les repo overnight et le Reverse Repo Facility — est le carburant des marchés. Un resserrement de la liquidité comprime les multiples de valorisation bien avant que les fondamentaux ne se dégradent.
+      </div>
+      <div class="score-levels">
+        <div class="score-level on">Expansion — Fed accommodante <span class="score-pill on">100</span></div>
+        <div class="score-level mid">Stable — Neutre <span class="score-pill mid">50</span></div>
+        <div class="score-level off">Contraction / QT actif <span class="score-pill off">0</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== GAUGE CHART ===== -->
+  <div class="chart-container">
+    <div class="chart-title">Régime Score — Simulation interactive</div>
+    <div class="chart-subtitle">Valeur du 13 mars 2026 : 31/100 — deepened Risk-Off</div>
+    <div id="gauge-regime"></div>
+  </div>
+
+  <!-- ===== BAR CHART COMPOSANTES ===== -->
+  <div class="chart-container">
+    <div class="chart-title">Scores des 6 composantes — 13 mars 2026</div>
+    <div class="chart-subtitle">CPI +3,1% — VIX 29,4 — SPX sous SMA50</div>
+    <div id="bar-components"></div>
+  </div>
+
+  <!-- ===== 3. LES 5 RÉGIMES ===== -->
+  <div class="section-divider"><i class="fa fa-layer-group"></i> Les 5 régimes et leur playbook</div>
+
+  <p>
+    La lecture du score brut n'est pas suffisante — il faut comprendre ce que chaque régime implique concrètement en termes de comportement des classes d'actifs et d'allocation de stratégies.
+  </p>
+
+  <div class="regime-table-wrap">
+    <table class="regime-table">
+      <thead>
+        <tr>
+          <th>Régime</th>
+          <th>Score</th>
+          <th>Signaux caractéristiques</th>
+          <th>Actifs favorisés</th>
+          <th>À éviter</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="regime-name-cell">
+            <span class="regime-dot" style="background:#10b981;"></span>
+            Risk-On
+          </td>
+          <td><span style="font-weight:800;color:#10b981;">&gt; 70</span></td>
+          <td>VIX &lt;15, SPX &gt;SMA50, spreads serrés, dollar faible</td>
+          <td>
+            <span class="strategy-tag" style="background:rgba(16,185,129,.1);color:#10b981;">Tech / Semis</span>
+            <span class="strategy-tag" style="background:rgba(16,185,129,.1);color:#10b981;">Small Caps</span>
+            <span class="strategy-tag" style="background:rgba(16,185,129,.1);color:#10b981;">Momentum Growth</span>
+          </td>
+          <td style="color:#94a3b8;font-size:.82rem;">Positions défensives longues, hedges coûteux</td>
+        </tr>
+        <tr>
+          <td class="regime-name-cell">
+            <span class="regime-dot" style="background:#3b82f6;"></span>
+            Neutral
+          </td>
+          <td><span style="font-weight:800;color:#3b82f6;">50 – 70</span></td>
+          <td>VIX 15–20, SPX autour SMA50, signaux mixtes</td>
+          <td>
+            <span class="strategy-tag" style="background:rgba(59,130,246,.1);color:#3b82f6;">Large Caps Value</span>
+            <span class="strategy-tag" style="background:rgba(59,130,246,.1);color:#3b82f6;">Diversification</span>
+          </td>
+          <td style="color:#94a3b8;font-size:.82rem;">Concentration sectorielle, levier élevé</td>
+        </tr>
+        <tr>
+          <td class="regime-name-cell">
+            <span class="regime-dot" style="background:#f59e0b;"></span>
+            Early Risk-Off
+          </td>
+          <td><span style="font-weight:800;color:#f59e0b;">30 – 50</span></td>
+          <td>VIX 20–28, SPX entre SMA50 et SMA200, spreads crédit élargissent</td>
+          <td>
+            <span class="strategy-tag" style="background:rgba(245,158,11,.1);color:#d97706;">Défensifs (XLU/XLP)</span>
+            <span class="strategy-tag" style="background:rgba(245,158,11,.1);color:#d97706;">Healthcare</span>
+            <span class="strategy-tag" style="background:rgba(245,158,11,.1);color:#d97706;">Réduire Growth</span>
+          </td>
+          <td style="color:#94a3b8;font-size:.82rem;">Small caps spéculatives, biotech, crypto leveragée</td>
+        </tr>
+        <tr>
+          <td class="regime-name-cell">
+            <span class="regime-dot" style="background:#ef4444;"></span>
+            Risk-Off
+          </td>
+          <td><span style="font-weight:800;color:#ef4444;">10 – 30</span></td>
+          <td>VIX &gt;28, SPX &lt;SMA200, TLT en hausse, dollar fort</td>
+          <td>
+            <span class="strategy-tag" style="background:rgba(239,68,68,.1);color:#ef4444;">Énergie / Défense</span>
+            <span class="strategy-tag" style="background:rgba(239,68,68,.1);color:#ef4444;">Or (GLD)</span>
+            <span class="strategy-tag" style="background:rgba(239,68,68,.1);color:#ef4444;">Hedges SH/SQQQ</span>
+          </td>
+          <td style="color:#94a3b8;font-size:.82rem;">Toute position momentum long non hédgée</td>
+        </tr>
+        <tr>
+          <td class="regime-name-cell">
+            <span class="regime-dot" style="background:#7f1d1d;"></span>
+            Crisis
+          </td>
+          <td><span style="font-weight:800;color:#7f1d1d;">&lt; 10</span></td>
+          <td>VIX &gt;40, flash crash, crise systémique, liquidité gelée</td>
+          <td>
+            <span class="strategy-tag" style="background:rgba(127,29,29,.1);color:#7f1d1d;">Cash USD</span>
+            <span class="strategy-tag" style="background:rgba(127,29,29,.1);color:#7f1d1d;">Or physique</span>
+            <span class="strategy-tag" style="background:rgba(127,29,29,.1);color:#7f1d1d;">TLT</span>
+          </td>
+          <td style="color:#94a3b8;font-size:.82rem;">Zéro actions cycliques — zéro levier</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== 4. PONDÉRATION STRATÉGIES ===== -->
+  <div class="section-divider"><i class="fa fa-chart-pie"></i> Pondération des stratégies par régime</div>
+
+  <p>
+    Chaque régime ne change pas seulement quels actifs on trade — il change la <em>proportion</em> du capital alloué à chaque type de stratégie. Le tableau ci-dessous est le résultat de l'ajustement du playbook MarketWatch aux conditions macro.
+  </p>
+
+  <div class="weight-table-wrap">
+    <table class="weight-table">
+      <thead>
+        <tr>
+          <th>Stratégie</th>
+          <th>Risk-On (&gt;70)</th>
+          <th>Neutral (50–70)</th>
+          <th>Early Risk-Off (30–50)</th>
+          <th>Risk-Off (10–30)</th>
+          <th>Crisis (&lt;10)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Momentum</td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:50px;background:#10b981;"></div>
+              <span class="weight-pct" style="color:#10b981;">50%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:30px;background:#3b82f6;"></div>
+              <span class="weight-pct" style="color:#3b82f6;">30%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:20px;background:#f59e0b;"></div>
+              <span class="weight-pct" style="color:#f59e0b;">20%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:10px;background:#ef4444;"></div>
+              <span class="weight-pct" style="color:#ef4444;">10%</span>
+            </div>
+          </td>
+          <td><span class="weight-zero">—</span></td>
+        </tr>
+        <tr>
+          <td>Breakout</td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:30px;background:#10b981;"></div>
+              <span class="weight-pct" style="color:#10b981;">30%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:30px;background:#3b82f6;"></div>
+              <span class="weight-pct" style="color:#3b82f6;">30%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:25px;background:#f59e0b;"></div>
+              <span class="weight-pct" style="color:#f59e0b;">25%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:35px;background:#ef4444;"></div>
+              <span class="weight-pct" style="color:#ef4444;">35%</span>
+            </div>
+          </td>
+          <td><span class="weight-zero">—</span></td>
+        </tr>
+        <tr>
+          <td>Pre-Squeeze</td>
+          <td><span class="weight-zero">—</span></td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:20px;background:#3b82f6;"></div>
+              <span class="weight-pct" style="color:#3b82f6;">20%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:35px;background:#f59e0b;"></div>
+              <span class="weight-pct" style="color:#f59e0b;">35%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:40px;background:#ef4444;"></div>
+              <span class="weight-pct" style="color:#ef4444;">40%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:30px;background:#7f1d1d;"></div>
+              <span class="weight-pct" style="color:#7f1d1d;">30%</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Oversold Bounce</td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:20px;background:#10b981;"></div>
+              <span class="weight-pct" style="color:#10b981;">20%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:20px;background:#3b82f6;"></div>
+              <span class="weight-pct" style="color:#3b82f6;">20%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:20px;background:#f59e0b;"></div>
+              <span class="weight-pct" style="color:#f59e0b;">20%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:15px;background:#ef4444;"></div>
+              <span class="weight-pct" style="color:#ef4444;">15%</span>
+            </div>
+          </td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:20px;background:#7f1d1d;"></div>
+              <span class="weight-pct" style="color:#7f1d1d;">20%</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td>Cash / Hedge</td>
+          <td><span class="weight-zero">—</span></td>
+          <td><span class="weight-zero">—</span></td>
+          <td><span class="weight-zero">—</span></td>
+          <td><span class="weight-zero">—</span></td>
+          <td class="weight-bar-cell">
+            <div class="weight-bar-wrap">
+              <div class="weight-bar" style="width:50px;background:#7f1d1d;"></div>
+              <span class="weight-pct" style="color:#7f1d1d;">50%</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-navy">
+    <i class="fa fa-lightbulb callout-icon"></i>
+    <div class="callout-body">
+      <div class="callout-title">Lecture du tableau</div>
+      <p class="callout-text">
+        En Risk-Off (score 10–30), le Pre-Squeeze domine à 40% car les compressions de volatilité persistent même en conditions baissières — les stocks survendus offrent des rebonds techniques exploitables avec des stop serrés. La stratégie Momentum tombe à 10% car les tendances haussières n'ont plus de carburant institutionnel.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== 5. INDICATEURS DU MATIN ===== -->
+  <div class="section-divider"><i class="fa fa-sun"></i> Les indicateurs pratiques à surveiller chaque matin</div>
+
+  <p>
+    Voici les cinq lectures quotidiennes qui permettent de calculer le Régime Score en moins de 15 minutes. L'objectif n'est pas de lire chaque chiffre à la décimale près — c'est de détecter les changements de direction et les signaux de divergence.
+  </p>
+
+  <div class="morning-grid">
+    <div class="morning-card">
+      <div class="morning-icon morning-icon-red"><i class="fa fa-fire"></i></div>
+      <div class="morning-name">VIX Spot vs VIX3M</div>
+      <div class="morning-desc">
+        Comparer le VIX spot au VIX à 3 mois (VIX3M). Si VIX spot &gt; VIX3M (term structure inversée), le marché est en stress aigu. C'est plus informatif que le niveau absolu du VIX.
+      </div>
+      <span class="morning-signal morning-signal-red">13 mars 2026 : VIX 29,4 — inversé</span>
+    </div>
+
+    <div class="morning-card">
+      <div class="morning-icon morning-icon-amber"><i class="fa fa-credit-card"></i></div>
+      <div class="morning-name">Ratio HYG / LQD</div>
+      <div class="morning-desc">
+        Le ratio High Yield / Investment Grade est un leading indicator des actions. Quand il baisse, les institutionnels réduisent leur appétit pour le risque — souvent avant que le SPX ne réagisse.
+      </div>
+      <span class="morning-signal morning-signal-amber">Surveiller sur 5 jours glissants</span>
+    </div>
+
+    <div class="morning-card">
+      <div class="morning-icon morning-icon-navy"><i class="fa fa-dollar-sign"></i></div>
+      <div class="morning-name">DXY Chart 4H</div>
+      <div class="morning-desc">
+        Ne pas regarder le DXY en daily uniquement — le chart 4H donne la direction intraday. Un DXY qui casse à la hausse en cours de séance peut retourner un régime Neutral en Early Risk-Off.
+      </div>
+      <span class="morning-signal morning-signal-amber">Attention aux fakeouts autour de données macro</span>
+    </div>
+
+    <div class="morning-card">
+      <div class="morning-icon morning-icon-green"><i class="fa fa-chart-line"></i></div>
+      <div class="morning-name">SPX vs SMA50 / SMA200</div>
+      <div class="morning-desc">
+        Position du SPX par rapport aux deux moyennes mobiles majeures. La zone entre SMA50 et SMA200 est une zone de décision — les breakouts dans cette zone ont un taux d'échec élevé.
+      </div>
+      <span class="morning-signal morning-signal-amber">13 mars : SPX sous SMA50, proche SMA200</span>
+    </div>
+
+    <div class="morning-card">
+      <div class="morning-icon morning-icon-purple"><i class="fa fa-shield"></i></div>
+      <div class="morning-name">Direction TLT</div>
+      <div class="morning-desc">
+        TLT en tendance haussière = flight to safety actif. TLT en baisse malgré des marchés actions négatifs = crise de liquidité (plus rare, plus grave). La divergence TLT/SPX est le signal le plus important.
+      </div>
+      <span class="morning-signal morning-signal-red">13 mars : TLT sell-off — signal liquidité</span>
+    </div>
+  </div>
+
+  <!-- ===== 6. CAS RÉELS ===== -->
+  <div class="section-divider"><i class="fa fa-calendar-check"></i> Le Régime Score en pratique : mars 2026</div>
+
+  <p>
+    Voici trois lectures réelles du Régime Score sur une fenêtre de deux semaines — une période qui illustre bien comment le régime peut évoluer rapidement autour d'un événement macro majeur.
+  </p>
+
+  <!-- Cas 1 -->
+  <div class="case-study cs-red">
+    <span class="case-date case-date-red"><i class="fa fa-triangle-exclamation"></i> 13 mars 2026</span>
+    <div class="case-title">Deepened Risk-Off — CPI choc</div>
+    <div class="case-score case-score-red">Score : 0,31 / 1,0</div>
+    <div class="case-metrics">
+      <div class="case-metric">
+        <span class="case-metric-label">VIX</span>
+        <span class="case-metric-value down">29,4</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">CPI</span>
+        <span class="case-metric-value down">+3,1%</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">SPX vs SMA50</span>
+        <span class="case-metric-value down">En dessous</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">TLT</span>
+        <span class="case-metric-value down">Sell-off</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">HYG/LQD</span>
+        <span class="case-metric-value down">En baisse</span>
+      </div>
+    </div>
+    <div class="case-action case-action-red">
+      <strong>Action playbook :</strong> Max defensiveness activé. Toutes les positions momentum croissance fermées ou hédgées. Capital rotaté vers SH (inverse SPX), GLD (or), cash USD. Zéro nouvelles entrées long non défensives jusqu'à confirmation de stabilisation du VIX sous 25.
+    </div>
+  </div>
+
+  <!-- Cas 2 -->
+  <div class="case-study cs-amber">
+    <span class="case-date case-date-amber"><i class="fa fa-circle-exclamation"></i> 10 mars 2026</span>
+    <div class="case-title">Early Risk-Off — Signal mixte</div>
+    <div class="case-score case-score-amber">Score : 0,52 / 1,0</div>
+    <div class="case-metrics">
+      <div class="case-metric">
+        <span class="case-metric-label">VIX</span>
+        <span class="case-metric-value down">22,8</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">SPX</span>
+        <span class="case-metric-value down">Entre SMAs</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">DXY</span>
+        <span class="case-metric-value down">En hausse</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">TLT</span>
+        <span class="case-metric-value">Stable</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">Crédit</span>
+        <span class="case-metric-value down">Légère tension</span>
+      </div>
+    </div>
+    <div class="case-action case-action-amber">
+      <strong>Action playbook :</strong> Réduction de l'exposition growth de 50% à 20%. Rotation partielle vers défensifs (XLU, XLP). Stratégies Pre-Squeeze montées à 35%. Stop-loss resserrés sur toutes les positions ouvertes. Pas de nouvelles entrées momentum.
+    </div>
+  </div>
+
+  <!-- Cas 3 -->
+  <div class="case-study cs-navy">
+    <span class="case-date case-date-navy"><i class="fa fa-circle-info"></i> Fin février 2026</span>
+    <div class="case-title">Early Risk-Off — Dégradation progressive</div>
+    <div class="case-score" style="color:var(--navy);font-size:2.5rem;font-weight:900;margin:1rem 0 .25rem;">Score : 0,46 / 1,0</div>
+    <div class="case-metrics">
+      <div class="case-metric">
+        <span class="case-metric-label">VIX</span>
+        <span class="case-metric-value down">24,1</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">SPX</span>
+        <span class="case-metric-value down">Proche SMA50</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">DXY</span>
+        <span class="case-metric-value down">Neutre/léger +</span>
+      </div>
+      <div class="case-metric">
+        <span class="case-metric-label">Liquidité</span>
+        <span class="case-metric-value down">Contraction</span>
+      </div>
+    </div>
+    <div class="case-action" style="background:rgba(30,64,175,.06);border-left:3px solid var(--navy);">
+      <strong>Contexte :</strong> Trois semaines de dégradation progressive du score — de 0,68 fin janvier à 0,46 fin février. Aucun événement brutal, mais une accumulation de signaux négatifs (DXY qui monte, liquidité Fed qui se contracte, VIX qui monte lentement). Ce type de dégradation lente est souvent plus dangereux que le choc soudain — il permet aux biais cognitifs de s'installer ("c'est juste une correction temporaire").
+    </div>
+  </div>
+
+  <div class="callout callout-amber">
+    <i class="fa fa-brain callout-icon"></i>
+    <div class="callout-body">
+      <div class="callout-title">Biais à surveiller</div>
+      <p class="callout-text">
+        Le principal ennemi de la lecture du régime est le biais de confirmation. Quand on a des positions ouvertes, on a naturellement tendance à interpréter les signaux en faveur de sa position. La solution : calculer le score <em>avant</em> d'ouvrir les positions du matin, jamais après. Et le noter — même dans un simple fichier texte — pour garder une trace.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== RÉCAPITULATIF MATIN ===== -->
+  <div class="section-divider"><i class="fa fa-list-check"></i> La routine des 15 minutes</div>
+
+  <p>La lecture du régime ne devrait pas prendre plus de 15 minutes. Voici l'ordre de lecture optimal :</p>
+
+  <ul class="check-list">
+    <li><i class="fa fa-circle-check ci-blue"></i> <strong>1. VIX spot</strong> — noter le niveau absolu et comparer au VIX3M (term structure inversée ou normale ?)</li>
+    <li><i class="fa fa-circle-check ci-blue"></i> <strong>2. SPX daily chart</strong> — position par rapport à SMA50 et SMA200. Clôture du jour précédent.</li>
+    <li><i class="fa fa-circle-check ci-blue"></i> <strong>3. HYG/LQD ratio</strong> — tendance sur 5 jours. Le sens compte plus que le niveau absolu.</li>
+    <li><i class="fa fa-circle-check ci-blue"></i> <strong>4. DXY 4H</strong> — direction intraday. Surveiller les cassures autour des données macro du calendrier du jour.</li>
+    <li><i class="fa fa-circle-check ci-blue"></i> <strong>5. TLT direction</strong> — en hausse (flight to safety), stable, ou en baisse (appétit risque).</li>
+    <li><i class="fa fa-circle-check ci-blue"></i> <strong>6. Calcul du score</strong> — assigner 0, 50 ou 100 à chaque composante. Moyenne = Régime Score.</li>
+    <li><i class="fa fa-circle-check ci-green"></i> <strong>7. Sélectionner le playbook</strong> — Risk-On / Neutral / Early Risk-Off / Risk-Off / Crisis. Adapter les allocations de stratégies.</li>
+  </ul>
+
+  <!-- ===== NEXT CTA ===== -->
+  <div class="next-cta">
+    <p style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;opacity:.7;margin-bottom:.5rem;">La Checklist MarketWatch — Partie 2</p>
+    <h3>Identifier le Momentum Sectoriel</h3>
+    <p>Une fois le régime défini, l'étape suivante est de trouver quels secteurs portent le flow institutionnel ce jour-là. Rotation sectorielle, relative strength, et signaux de momentum.</p>
+    <a href="/series/marketwatch-checklist/part2-momentum/">
+      Lire la Partie 2 <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <!-- ===== NAV BOTTOM ===== -->
+  <div class="series-nav-bottom">
+    <a href="/series/marketwatch-checklist/" class="nav-prev">
+      <i class="fa fa-arrow-left"></i>
+      <span>
+        <span class="nav-label">Index</span>
+        La Checklist MarketWatch
+      </span>
+    </a>
+    <a href="/series/marketwatch-checklist/part2-momentum/" class="nav-next">
+      <span>
+        <span class="nav-label">Partie 2</span>
+        Momentum Sectoriel
+      </span>
+      <i class="fa fa-arrow-right"></i>
+    </a>
+  </div>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 Market Watch &mdash; <a href="/mentions-legales/">Mentions légales</a> &mdash; <a href="/a-propos/">À propos</a></p>
+  </div>
+</footer>
+
+<!-- ===== ECHARTS ===== -->
+<script>
+
+// ===== GAUGE — RÉGIME SCORE =====
+(function() {
+  var dom = document.getElementById('gauge-regime');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var option = {
+    backgroundColor: 'transparent',
+    series: [
+      {
+        type: 'gauge',
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 100,
+        splitNumber: 5,
+        radius: '85%',
+        center: ['50%', '60%'],
+        axisLine: {
+          lineStyle: {
+            width: 28,
+            color: [
+              [0.10, '#7f1d1d'],
+              [0.30, '#ef4444'],
+              [0.50, '#f59e0b'],
+              [0.70, '#3b82f6'],
+              [1.00, '#10b981']
+            ]
+          }
+        },
+        pointer: {
+          icon: 'path://M2090.36389,615.30999 L2090.36389,615.30999 C2091.48372,615.30999 2092.40383,616.23010 2092.40383,617.34993 L2092.40383,619.38987 C2092.40383,620.50970 2091.48372,621.42981 2090.36389,621.42981 L2074.78525,627.51989 C2073.66542,627.51989 2072.74531,626.59978 2072.74531,625.47995 L2072.74531,611.21002 C2072.74531,610.09019 2073.66542,609.17008 2074.78525,609.17008 L2090.36389,615.30999 Z',
+          length: '75%',
+          width: 10,
+          offsetCenter: [0, '10%'],
+          itemStyle: { color: '#1e40af' }
+        },
+        axisTick: { show: false },
+        splitLine: {
+          length: 14,
+          lineStyle: { width: 2, color: '#fff' }
+        },
+        axisLabel: {
+          color: '#64748b',
+          fontSize: 13,
+          fontWeight: '600',
+          distance: -50,
+          formatter: function(v) {
+            if (v === 0)   return 'Crisis';
+            if (v === 20)  return 'Risk-\nOff';
+            if (v === 40)  return 'Early';
+            if (v === 60)  return 'Neutre';
+            if (v === 80)  return 'Risk-\nOn';
+            if (v === 100) return 'Full\nOn';
+            return '';
+          }
+        },
+        detail: {
+          valueAnimation: true,
+          offsetCenter: [0, '-15%'],
+          fontSize: 42,
+          fontWeight: 900,
+          color: '#ef4444',
+          formatter: function(v) { return v.toFixed(0) + '/100'; }
+        },
+        title: {
+          offsetCenter: [0, '20%'],
+          fontSize: 14,
+          color: '#64748b',
+          fontWeight: '600'
+        },
+        data: [{
+          value: 31,
+          name: 'Régime Score — 13 mars 2026'
+        }],
+        animation: true,
+        animationDuration: 2000,
+        animationEasing: 'bounceOut'
+      }
+    ]
+  };
+
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+
+// ===== BAR CHART — 6 COMPOSANTES =====
+(function() {
+  var dom = document.getElementById('bar-components');
+  if (!dom) return;
+  var chart = echarts.init(dom);
+
+  var components = ['VIX', 'SPX Trend', 'Crédit (HYG/LQD)', 'DXY', 'TLT', 'Liquidité'];
+  var scores     = [0, 25, 35, 20, 30, 55];
+  var colors     = scores.map(function(s) {
+    if (s < 30)  return '#ef4444';
+    if (s < 50)  return '#f59e0b';
+    if (s < 70)  return '#3b82f6';
+    return '#10b981';
+  });
+
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: function(params) {
+        var p = params[0];
+        var label = p.value < 30 ? 'Risk-Off' : p.value < 50 ? 'Early Risk-Off' : p.value < 70 ? 'Neutral' : 'Risk-On';
+        return '<b>' + p.name + '</b><br/>Score : <b>' + p.value + '/100</b><br/>Régime : ' + label;
+      }
+    },
+    grid: { left: '20%', right: '8%', top: '5%', bottom: '12%' },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLabel: { color: '#94a3b8', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    yAxis: {
+      type: 'category',
+      data: components,
+      axisLabel: { color: '#334155', fontSize: 12, fontWeight: '600' },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    series: [{
+      type: 'bar',
+      data: scores.map(function(v, i) {
+        return { value: v, itemStyle: { color: colors[i], borderRadius: [0, 8, 8, 0] } };
+      }),
+      barWidth: '55%',
+      label: {
+        show: true,
+        position: 'right',
+        formatter: function(params) { return params.value + '/100'; },
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#334155'
+      }
+    },
+    {
+      type: 'bar',
+      data: scores.map(function(v) { return { value: 100 - v, itemStyle: { color: '#f1f5f9', borderRadius: [0, 8, 8, 0] } }; }),
+      stack: 'bg',
+      barWidth: '55%',
+      tooltip: { show: false },
+      label: { show: false }
+    }]
+  };
+
+  // Fix: use non-stacked approach
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      formatter: function(params) {
+        var p = params[0];
+        var label = p.value < 30 ? 'Risk-Off' : p.value < 50 ? 'Early Risk-Off' : p.value < 70 ? 'Neutral' : 'Risk-On';
+        return '<b>' + p.name + '</b><br/>Score : <b>' + p.value + '/100</b><br/>Régime : ' + label;
+      }
+    },
+    grid: { left: '22%', right: '10%', top: '5%', bottom: '10%' },
+    xAxis: {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLabel: { color: '#94a3b8', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9', type: 'dashed' } },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    yAxis: {
+      type: 'category',
+      data: components,
+      inverse: false,
+      axisLabel: { color: '#334155', fontSize: 12, fontWeight: '600' },
+      axisLine: { show: false },
+      axisTick: { show: false }
+    },
+    series: [{
+      type: 'bar',
+      data: scores.map(function(v, i) {
+        return {
+          value: v,
+          itemStyle: {
+            color: colors[i],
+            borderRadius: [0, 6, 6, 0]
+          }
+        };
+      }),
+      barWidth: '52%',
+      label: {
+        show: true,
+        position: 'insideRight',
+        formatter: function(params) { return params.value; },
+        fontSize: 13,
+        fontWeight: '800',
+        color: '#fff',
+        distance: 8
+      },
+      markLine: {
+        silent: true,
+        symbol: 'none',
+        lineStyle: { type: 'dashed', color: '#94a3b8', width: 1 },
+        data: [
+          { xAxis: 30, label: { formatter: '30', position: 'end', color: '#94a3b8', fontSize: 10 } },
+          { xAxis: 70, label: { formatter: '70', position: 'end', color: '#94a3b8', fontSize: 10 } }
+        ]
+      }
+    }]
+  });
+
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+</script>
+
+</body>
+</html>

@@ -3229,24 +3229,11 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Le Framework Systématique",
-    "desc": "MarketWatch Checklist series — Part 1/8: Why systematic trading beats discretionary, how cognitive biases destroy returns, the checklist approach applied to trading, and the 8-step workflow overview.",
-    "tags": "formation,trade-idea,macro,technique",
+    "title": "MarketWatch Checklist — Redirecting...",
+    "desc": "",
+    "tags": "",
     "grade": "",
-    "href": "/series/marketwatch-checklist/part1-framework/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Philosophie & Régimes de Marché",
-    "desc": "Série MarketWatch Checklist — Partie 1/8 : Comprendre la philosophie du trading systématique, les 5 régimes de marché, les 6 indicateurs macro clés, et comment adapter sa stratégie à chaque régime.",
-    "tags": "us,eu,asia,finance,macro,formation,technique,trade-idea",
-    "grade": "",
-    "href": "/series/marketwatch-checklist/part1-philosophie/",
+    "href": "/series/marketwatch-checklist/",
     "date": ""
   },
   {
