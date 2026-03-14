@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,timing,entree,sortie,ordres" data-tab="analyses">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timing d'Entrée &amp; de Sortie — La Checklist MarketWatch Partie 6 | Market Watch</title>
+  <meta name="description" content="Série La Checklist MarketWatch — Partie 6 : zones d'entrée, types d'ordres, catalyseurs, TP1/TP2, trailing stop, timing par régime, pièges FOMO.">
+  <meta property="og:title" content="Timing d'Entrée &amp; de Sortie — La Checklist MarketWatch 6 | Market Watch">
+  <meta property="og:description" content="Zone d'entrée, limit vs market order, catalyseur obligatoire, TP1/TP2 avec exemples réels Mar 13, trailing stop ATR, pièges du timing.">
+  <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+  <meta property="og:url" content="https://articles.market-watch.xyz/series/marketwatch-checklist/part6-timing/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="/favicon.ico">
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="/assets/report.css">
+  <style>
+  /* ===== HERO ===== */
+  .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#fffbeb 0%,#f8fafc 100%);text-align:center}
+  .hero-date{font-size:.85rem;font-weight:700;color:#d97706;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+  .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+  .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+  .hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+  .hero-badge-orange{background:rgba(234,88,12,.1);color:#ea580c;border:1px solid rgba(234,88,12,.2)}
+  .hero-badge-yellow{background:rgba(234,179,8,.1);color:#ca8a04;border:1px solid rgba(234,179,8,.2)}
+  .hero-badge-green{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)}
+  .hero-badge-slate{background:rgba(71,85,105,.1);color:#475569;border:1px solid rgba(71,85,105,.2)}
+
+  /* ===== SECTION DIVIDERS ===== */
+  .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem auto 2rem;max-width:960px;padding:0 1rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+  .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+
+  /* ===== ORDER CARDS ===== */
+  .order-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin:1.75rem 0}
+  .order-card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:1.5rem;position:relative;overflow:hidden;transition:all .2s}
+  .order-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.08)}
+  .order-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+  .order-card.limit::before{background:linear-gradient(90deg,#d97706,#f59e0b)}
+  .order-card.market::before{background:linear-gradient(90deg,#ea580c,#fb923c)}
+  .order-card.stop-limit::before{background:linear-gradient(90deg,#ca8a04,#facc15)}
+  .order-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-bottom:1rem}
+  .order-card.limit .order-icon{background:rgba(217,119,6,.1)}
+  .order-card.market .order-icon{background:rgba(234,88,12,.1)}
+  .order-card.stop-limit .order-icon{background:rgba(202,138,4,.1)}
+  .order-icon i{font-size:1.1rem}
+  .order-card.limit .order-icon i{color:#d97706}
+  .order-card.market .order-icon i{color:#ea580c}
+  .order-card.stop-limit .order-icon i{color:#ca8a04}
+  .order-name{font-size:1rem;font-weight:800;color:#0f172a;margin-bottom:.4rem}
+  .order-when{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.2rem .55rem;border-radius:5px;display:inline-block;margin-bottom:.75rem}
+  .order-card.limit .order-when{background:rgba(217,119,6,.1);color:#d97706}
+  .order-card.market .order-when{background:rgba(234,88,12,.1);color:#ea580c}
+  .order-card.stop-limit .order-when{background:rgba(202,138,4,.1);color:#ca8a04}
+  .order-desc{font-size:.85rem;color:#475569;line-height:1.6}
+
+  /* ===== CATALYST GRID ===== */
+  .catalyst-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1.5rem 0}
+  .catalyst-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;display:flex;gap:.75rem;align-items:flex-start;transition:all .2s}
+  .catalyst-card:hover{border-color:#f59e0b;box-shadow:0 4px 12px rgba(245,158,11,.1)}
+  .catalyst-icon{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,#d97706,#f59e0b);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .catalyst-icon i{color:white;font-size:.9rem}
+  .catalyst-title{font-size:.88rem;font-weight:700;color:#0f172a;margin-bottom:.25rem}
+  .catalyst-desc{font-size:.8rem;color:#64748b;line-height:1.5}
+
+  /* ===== TP CARDS ===== */
+  .tp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;margin:1.75rem 0}
+  .tp-card{background:white;border:1px solid #e2e8f0;border-radius:14px;padding:1.5rem;text-align:center;position:relative;overflow:hidden}
+  .tp-card.tp1{border-top:4px solid #d97706}
+  .tp-card.tp2{border-top:4px solid #16a34a}
+  .tp-card.trailing{border-top:4px solid #2563eb}
+  .tp-label{font-size:.75rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem}
+  .tp-card.tp1 .tp-label{color:#d97706}
+  .tp-card.tp2 .tp-label{color:#16a34a}
+  .tp-card.trailing .tp-label{color:#2563eb}
+  .tp-ratio{font-size:2rem;font-weight:900;margin-bottom:.25rem;color:#0f172a}
+  .tp-desc{font-size:.83rem;color:#64748b;line-height:1.5}
+  .tp-example{margin-top:.75rem;background:#f8fafc;border-radius:8px;padding:.5rem .75rem;font-size:.8rem;color:#475569}
+  .tp-example strong{color:#0f172a}
+
+  /* ===== TIMING TABLE ===== */
+  .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+  .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left}
+  .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.88rem;color:#334155;vertical-align:middle}
+  .compare-table tr:nth-child(even) td{background:#f8fafc}
+  .compare-table tr:last-child td{border-bottom:none}
+  .badge-pill{display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;font-weight:700;padding:.2rem .55rem;border-radius:5px;white-space:nowrap}
+
+  /* ===== ALERT BOXES ===== */
+  .alert-amber{display:flex;align-items:flex-start;gap:.75rem;background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.25);border-radius:12px;padding:1rem 1.25rem;margin:1rem 0;color:#78350f;font-size:.88rem;line-height:1.55}
+  .alert-amber i{color:#d97706;flex-shrink:0;margin-top:.1rem;font-size:1rem}
+  .alert-red{display:flex;align-items:flex-start;gap:.75rem;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.25);border-radius:12px;padding:1rem 1.25rem;margin:1rem 0;color:#7f1d1d;font-size:.88rem;line-height:1.55}
+  .alert-red i{color:#dc2626;flex-shrink:0;margin-top:.1rem;font-size:1rem}
+
+  /* ===== FORMULA BOX ===== */
+  .formula-box{background:linear-gradient(135deg,#1e293b,#0f172a);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.1rem;font-weight:700;letter-spacing:.02em}
+  .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+  .formula-box .formula-highlight{color:#fde68a}
+  .formula-box .formula-good{color:#86efac}
+
+  /* ===== TRAP CARDS ===== */
+  .trap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin:1.5rem 0}
+  .trap-card{background:white;border:1px solid #fecaca;border-radius:12px;padding:1.25rem;display:flex;gap:.75rem;align-items:flex-start}
+  .trap-icon{width:38px;height:38px;border-radius:9px;background:linear-gradient(135deg,#dc2626,#ef4444);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .trap-icon i{color:white;font-size:.9rem}
+  .trap-title{font-size:.88rem;font-weight:700;color:#0f172a;margin-bottom:.3rem}
+  .trap-desc{font-size:.8rem;color:#64748b;line-height:1.5}
+
+  /* ===== TAKEAWAY ===== */
+  .takeaway-box{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #d97706;border-radius:16px;padding:2rem;margin:2rem 0}
+  .takeaway-box h3{color:#d97706;margin-top:0}
+  .takeaway-list{list-style:none;padding:0;margin:0}
+  .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(217,119,6,.15)}
+  .takeaway-list li:last-child{border-bottom:none}
+  .takeaway-list li i{color:#d97706;margin-top:.2rem;flex-shrink:0}
+
+  /* ===== NAV ARROWS ===== */
+  .part-nav{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:960px;margin:3rem auto;padding:0 1rem}
+  .part-nav-btn{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;background:white;border:1px solid #e2e8f0;border-radius:14px;text-decoration:none;transition:all .2s;color:#0f172a}
+  .part-nav-btn:hover{border-color:#d97706;box-shadow:0 6px 20px rgba(217,119,6,.12);transform:translateY(-2px)}
+  .part-nav-btn.prev{flex-direction:row}
+  .part-nav-btn.next{flex-direction:row-reverse;text-align:right}
+  .part-nav-btn i{font-size:1.25rem;color:#d97706;flex-shrink:0}
+  .part-nav-label{font-size:.7rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.2rem}
+  .part-nav-title{font-size:1rem;font-weight:800;color:#0f172a}
+
+  /* ===== RESPONSIVE ===== */
+  @media(max-width:768px){
+    .hero-section{padding:2.5rem 1rem 5rem}
+    .hero-section h1{font-size:1.8rem!important}
+    .part-nav{grid-template-columns:1fr}
+  }
+  @media(max-width:480px){
+    .hero-section h1{font-size:1.4rem!important}
+    .hero-section{padding:2rem 1rem 4rem}
+    .part-nav-title{font-size:.9rem}
+  }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">Séries</a>
+    </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-clock"></i> Série La Checklist MarketWatch — Partie 6 sur 7</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:880px; margin:0 auto 1.5rem;">Timing d'Entrée &amp; de Sortie</h1>
+  <p class="hero-subtitle" style="max-width:680px; margin:0 auto;">Le bon setup au mauvais moment reste une perte. Zone d'entrée, catalyseur obligatoire, TP1/TP2, trailing stop — la mécanique précise pour entrer et sortir sans laisser de performance sur la table.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-map-pin"></i> Zone d'Entrée</span>
+    <span class="hero-badge hero-badge-orange"><i class="fa-solid fa-bolt"></i> Catalyseur</span>
+    <span class="hero-badge hero-badge-yellow"><i class="fa-solid fa-bullseye"></i> TP1 / TP2</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Trailing Stop</span>
+    <span class="hero-badge hero-badge-slate"><i class="fa-solid fa-layer-group"></i> Série 6/7</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<!-- ===== SERIES BAR ===== -->
+<div class="series-bar"><div class="series-bar-inner">
+  <a href="/series/marketwatch-checklist/part5-risk/" class="series-arrow" title="Risque"><i class="fas fa-chevron-left"></i></a>
+  <span class="series-title">La Checklist MarketWatch</span>
+  <div class="series-steps">
+    <a href="/series/marketwatch-checklist/part1-regime/" class="series-step" title="Régime de Marché"><span class="series-num">1</span><span class="series-label">Régime</span></a>
+    <a href="/series/marketwatch-checklist/part2-scanner/" class="series-step" title="Scanner"><span class="series-num">2</span><span class="series-label">Scanner</span></a>
+    <a href="/series/marketwatch-checklist/part3-scoring/" class="series-step" title="Scoring"><span class="series-num">3</span><span class="series-label">Scoring</span></a>
+    <a href="/series/marketwatch-checklist/part4-execution/" class="series-step" title="Exécution"><span class="series-num">4</span><span class="series-label">Exécution</span></a>
+    <a href="/series/marketwatch-checklist/part5-risk/" class="series-step" title="Risque"><span class="series-num">5</span><span class="series-label">Risque</span></a>
+    <a href="/series/marketwatch-checklist/part6-timing/" class="series-step current" title="Timing"><span class="series-num">6</span><span class="series-label">Timing</span></a>
+    <a href="/series/marketwatch-checklist/part7-retrospective/" class="series-step" title="Rétrospective"><span class="series-num">7</span><span class="series-label">Rétro</span></a>
+  </div>
+  <span class="series-counter">6/7</span>
+  <a href="/series/marketwatch-checklist/part7-retrospective/" class="series-arrow" title="Rétrospective"><i class="fas fa-chevron-right"></i></a>
+</div></div>
+
+<!-- ===== FLOATING NAV ===== -->
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a href="#zone-entree" class="fnav-item" data-section="zone-entree"><i class="fas fa-map-pin"></i><span>Zone</span></a>
+  <a href="#ordres" class="fnav-item" data-section="ordres"><i class="fas fa-list-check"></i><span>Ordres</span></a>
+  <a href="#catalyseur" class="fnav-item" data-section="catalyseur"><i class="fas fa-bolt"></i><span>Catalyseur</span></a>
+  <a href="#targets" class="fnav-item" data-section="targets"><i class="fas fa-bullseye"></i><span>TP1/TP2</span></a>
+  <a href="#regime-timing" class="fnav-item" data-section="regime-timing"><i class="fas fa-clock"></i><span>Régime</span></a>
+  <a href="#pieges" class="fnav-item" data-section="pieges"><i class="fas fa-triangle-exclamation"></i><span>Pièges</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-30% 0px -60% 0px'});sections.forEach(function(s){observer.observe(s.el);});})();
+</script>
+
+<!-- ===== INTRO ===== -->
+<div class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-clock" style="color:#d97706; margin-right:.5rem;"></i> Le timing change tout</h2>
+  <p>Un setup A+ entré au mauvais moment est une perte planifiée. Le timing ne concerne pas la prédiction exacte du prix — il concerne la discipline de n'entrer qu'aux conditions définies : bonne zone, bon catalyseur, bon régime.</p>
+  <p>Cette partie couvre la mécanique complète : où entrer, quel ordre utiliser, comment identifier le catalyseur, où placer TP1 et TP2, comment gérer le trailing stop, et les pièges classiques que même les traders expérimentés commettent.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">La règle fondamentale du timing</div>
+    <span class="formula-highlight">Zone basse</span> + <span class="formula-good">catalyseur identifié</span> = entrée valide<br>
+    <span style="font-size:.85rem;color:#94a3b8;font-weight:400;margin-top:.5rem;display:block;">Si l'un des deux manque, ce n'est pas un setup — c'est un pari.</span>
+  </div>
+</div>
+
+<!-- ===== ZONE D'ENTRÉE ===== -->
+<div class="section-divider"><i class="fa-solid fa-map-pin" style="color:#d97706;"></i> La Zone d'Entrée</div>
+
+<div id="zone-entree" class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-map-pin" style="color:#d97706; margin-right:.5rem;"></i> La Zone d'Entrée — Pas le Prix Exact</h2>
+  <p>Le scanner publie des zones, pas des prix exacts. "$165-168" signifie que n'importe quel fill dans cette fourchette est acceptable. Vouloir entrer à "$166.43" exactement crée soit des ordres manqués, soit des décisions émotionnelles.</p>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;margin:1.5rem 0;">
+    <div style="background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.3);border-radius:12px;padding:1.25rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#d97706;margin-bottom:.5rem;"><i class="fas fa-circle-check" style="margin-right:.3rem;"></i> Zone basse — optimal</div>
+      <div style="font-size:.88rem;color:#334155;line-height:1.6;">Pullback intraday vers le bas de la zone. Meilleur R/R, stop plus proche. C'est l'entrée à chercher en priorité.</div>
+    </div>
+    <div style="background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:12px;padding:1.25rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#2563eb;margin-bottom:.5rem;"><i class="fas fa-circle-check" style="margin-right:.3rem;"></i> Zone haute — acceptable</div>
+      <div style="font-size:.88rem;color:#334155;line-height:1.6;">Fill en haut de la zone si le momentum est fort. R/R légèrement dégradé mais toujours valide si le catalyseur tient.</div>
+    </div>
+    <div style="background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.2);border-radius:12px;padding:1.25rem;">
+      <div style="font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#dc2626;margin-bottom:.5rem;"><i class="fas fa-circle-xmark" style="margin-right:.3rem;"></i> +5% au-dessus — SKIP</div>
+      <div style="font-size:.88rem;color:#334155;line-height:1.6;">Momentum épuisé pour ce setup. La zone n'est plus valide. Le prochain scan aura de nouveaux setups — pas besoin de forcer.</div>
+    </div>
+  </div>
+
+  <div class="alert-amber">
+    <i class="fas fa-triangle-exclamation"></i>
+    <div><strong>Règle du retard :</strong> si tu arrives en retard, tu passes. Ce n'est pas une défaite — c'est de la discipline. Un scanner hebdomadaire publie ~10 setups. En manquer un et en sauter un autre parce qu'il a déjà trop monté, c'est de la gestion, pas de la faiblesse.</div>
+  </div>
+
+  <div id="timingChart" style="width:100%;height:340px;margin:2rem 0;"></div>
+  <p style="font-size:.82rem;color:#64748b;text-align:center;margin-top:-.75rem;">Exemple CVX Mar 13 — Zone d'entrée $165-168, TP1 $180, TP2 $188, Stop $160.40, Trailing actif &agrave; +15% MtM</p>
+</div>
+
+<!-- ===== TYPES D'ORDRES ===== -->
+<div class="section-divider"><i class="fa-solid fa-list-check" style="color:#d97706;"></i> Types d'Ordres</div>
+
+<div id="ordres" class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-list-check" style="color:#d97706; margin-right:.5rem;"></i> Quel Ordre Pour Quelle Situation</h2>
+  <p>Le choix de l'ordre détermine le slippage, la certitude d'exécution, et parfois la survie de la position. Il n'y a pas d'ordre universel — il y a le bon outil pour chaque situation.</p>
+
+  <div class="order-grid">
+    <div class="order-card limit">
+      <div class="order-icon"><i class="fas fa-hand-holding-dollar"></i></div>
+      <div class="order-name">Limit Order</div>
+      <div class="order-when">Usage standard</div>
+      <div class="order-desc">Entrée en zone basse avec pullback intraday vers support. Meilleur fill garanti, slippage nul. Si le prix ne descend pas au niveau, l'ordre n'est pas exécuté — ce qui est parfois le bon résultat.</div>
+    </div>
+    <div class="order-card market">
+      <div class="order-icon"><i class="fas fa-bolt"></i></div>
+      <div class="order-name">Market Order</div>
+      <div class="order-when">Breakout actif uniquement</div>
+      <div class="order-desc">Uniquement si breakout en cours avec volume &gt;3x la moyenne. L'opportunité disparaît dans les minutes qui suivent. Accepter le slippage pour ne pas rater le momentum initial.</div>
+    </div>
+    <div class="order-card stop-limit">
+      <div class="order-icon"><i class="fas fa-flag-checkered"></i></div>
+      <div class="order-name">Stop Limit</div>
+      <div class="order-when">Breakout anticipé</div>
+      <div class="order-desc">Déclenché quand le prix dépasse le niveau X, exécuté à Y. Idéal pour les breakouts sur résistance connue — permet d'entrer automatiquement dès la cassure sans surveiller l'écran en permanence.</div>
+    </div>
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Ordre</th><th>Slippage</th><th>Certitude</th><th>Idéal pour</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Limit</strong></td>
+        <td><span class="badge-pill" style="background:rgba(16,185,129,.1);color:#059669;">Nul</span></td>
+        <td><span class="badge-pill" style="background:rgba(217,119,6,.1);color:#d97706;">Conditionnel</span></td>
+        <td>Zone basse, pullback, entrée standard</td>
+      </tr>
+      <tr>
+        <td><strong>Market</strong></td>
+        <td><span class="badge-pill" style="background:rgba(239,68,68,.1);color:#dc2626;">Variable</span></td>
+        <td><span class="badge-pill" style="background:rgba(16,185,129,.1);color:#059669;">Garantie</span></td>
+        <td>Breakout sur volume &gt;3x, urgence</td>
+      </tr>
+      <tr>
+        <td><strong>Stop Limit</strong></td>
+        <td><span class="badge-pill" style="background:rgba(37,99,235,.1);color:#2563eb;">Contrôlé</span></td>
+        <td><span class="badge-pill" style="background:rgba(217,119,6,.1);color:#d97706;">Conditionnel</span></td>
+        <td>Breakout résistance, setup automatique</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== CATALYSEUR ===== -->
+<div class="section-divider"><i class="fa-solid fa-bolt" style="color:#d97706;"></i> Le Catalyseur — Élément Déclencheur</div>
+
+<div id="catalyseur" class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-bolt" style="color:#d97706; margin-right:.5rem;"></i> Pas de Catalyseur = Gambling</h2>
+  <p>Un setup technique sans catalyseur identifié est un pari sur le momentum pur. Le catalyseur est ce qui transforme une pattern graphique en opportunité avec une logique sous-jacente. Sans lui, il n'y a pas de "pourquoi ça va monter".</p>
+
+  <div class="catalyst-grid">
+    <div class="catalyst-card">
+      <div class="catalyst-icon"><i class="fas fa-chart-bar"></i></div>
+      <div>
+        <div class="catalyst-title">Earnings beat surprise</div>
+        <div class="catalyst-desc">Résultats supérieurs au consensus avec révision guidances. Post-earnings momentum — entrer le lendemain après assessment du gap.</div>
+      </div>
+    </div>
+    <div class="catalyst-card">
+      <div class="catalyst-icon"><i class="fas fa-earth-europe"></i></div>
+      <div>
+        <div class="catalyst-title">News géopolitique / sectoriel</div>
+        <div class="catalyst-desc">Pétrole sur tensions OPEC, défense sur budget US, santé sur approbation FDA. News qui change l'équation sectorielle.</div>
+      </div>
+    </div>
+    <div class="catalyst-card">
+      <div class="catalyst-icon"><i class="fas fa-chart-line"></i></div>
+      <div>
+        <div class="catalyst-title">Breakout technique pur</div>
+        <div class="catalyst-desc">Cassure résistance majeure sur volume significatif (&gt;2x). Le catalyseur est le volume — il confirme que ce n'est pas une fausse cassure.</div>
+      </div>
+    </div>
+    <div class="catalyst-card">
+      <div class="catalyst-icon"><i class="fas fa-landmark"></i></div>
+      <div>
+        <div class="catalyst-title">Données macro alignées</div>
+        <div class="catalyst-desc">CPI sous consensus en Risk-Off, NFP fort en Risk-On, Fed dovish surprise. Le régime macro amplifie le setup technique.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="alert-amber">
+    <i class="fas fa-triangle-exclamation"></i>
+    <div><strong>Entrer sans catalyseur identifié = gambling, pas trading.</strong> "Je pense que ça va monter" n'est pas un catalyseur. "Les résultats Q4 étaient +12% vs consensus et la guidance a été relevée" en est un.</div>
+  </div>
+</div>
+
+<!-- ===== TP1 / TP2 ===== -->
+<div class="section-divider"><i class="fa-solid fa-bullseye" style="color:#d97706;"></i> Targets TP1 / TP2</div>
+
+<div id="targets" class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-bullseye" style="color:#d97706; margin-right:.5rem;"></i> TP1, TP2 et Trailing Stop</h2>
+  <p>La stratégie de sortie se définit au moment de l'entrée, pas quand le prix approche de la cible. Sortir 50% à TP1, laisser courir le reste avec trailing — c'est la mécanique standard.</p>
+
+  <div class="tp-grid">
+    <div class="tp-card tp1">
+      <div class="tp-label"><i class="fas fa-bullseye" style="margin-right:.3rem;"></i> TP1</div>
+      <div class="tp-ratio">R/R 1:1.5+</div>
+      <div class="tp-desc">Résistance immédiate identifiée sur le graphique. Objectif raisonnable et atteignable dans le cycle du setup. Sortie 50% de la position.</div>
+      <div class="tp-example"><strong>CVX Mar 13 :</strong> entrée $166 &rarr; TP1 $180 &rarr; R/R 1:1.6 (&darr; Stop $160.40)</div>
+      <div class="tp-example"><strong>COP Mar 13 :</strong> entrée $124 &rarr; TP1 $132 &rarr; R/R 1:1.7</div>
+    </div>
+    <div class="tp-card tp2">
+      <div class="tp-label"><i class="fas fa-flag" style="margin-right:.3rem;"></i> TP2</div>
+      <div class="tp-ratio">R/R 1:2.5+</div>
+      <div class="tp-desc">Extension ATR ou objectif chartiste plus ambitieux. Se réalise sur 50% de la position restante, protégée par trailing stop au breakeven après TP1.</div>
+      <div class="tp-example"><strong>CVX Mar 13 :</strong> TP2 $188 &rarr; R/R 1:2.8 (trailing actif depuis TP1)</div>
+      <div class="tp-example"><strong>HAL Mar 13 :</strong> entrée $35 &rarr; TP1 $39 (1:1.8) &rarr; TP2 $43 (1:2.7)</div>
+    </div>
+    <div class="tp-card trailing">
+      <div class="tp-label"><i class="fas fa-shield-halved" style="margin-right:.3rem;"></i> Trailing Stop</div>
+      <div class="tp-ratio">High &minus; 1.2&times; ATR</div>
+      <div class="tp-desc">Activé après TP1 touché. Stop remonte au breakeven d'abord, puis suit le high journalier minus 1.2&times; ATR14, mis à jour chaque soir.</div>
+      <div class="tp-example">Exit signal fort : clôture sous SMA20 sur volume &gt;1.5x = sortie 100% immédiate</div>
+    </div>
+  </div>
+
+  <div class="formula-box" style="margin-top:2rem;">
+    <div class="formula-label">Mécanique de sortie standard</div>
+    TP1 touché &rarr; <span class="formula-highlight">Sortie 50%</span> &rarr; Stop au <span class="formula-good">Breakeven</span> &rarr; Trailing = High &minus; 1.2&times; ATR &rarr; TP2 ou sortie sur SMA20
+  </div>
+</div>
+
+<!-- ===== TIMING PAR RÉGIME ===== -->
+<div class="section-divider"><i class="fa-solid fa-clock" style="color:#d97706;"></i> Timing par Régime</div>
+
+<div id="regime-timing" class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-clock" style="color:#d97706; margin-right:.5rem;"></i> Timing par Régime de Marché</h2>
+  <p>L'heure d'entrée optimale n'est pas la même en Risk-Off et en Risk-On. Les sessions EU et US ont des dynamiques différentes selon le contexte macro.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Régime</th><th>Session optimale</th><th>Logique</th><th>À éviter</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="badge-pill" style="background:rgba(220,38,38,.1);color:#dc2626;">Risk-Off</span></td>
+        <td><strong>Ouverture EU 9h Paris</strong></td>
+        <td>Régime confirmé la veille, volatilité US prévisible, fills meilleurs avant la ruée</td>
+        <td>Entrée après 16h — volatilité de clôture US imprévisible</td>
+      </tr>
+      <tr>
+        <td><span class="badge-pill" style="background:rgba(16,185,129,.1);color:#059669;">Risk-On</span></td>
+        <td><strong>US Open +30min (16h Paris)</strong></td>
+        <td>Laisser les 30 premières minutes passer — les premiers moves sont souvent faux. Attendre la direction confirmée.</td>
+        <td>Pré-market et 15h30-16h — gaps d'ouverture trompeurs</td>
+      </tr>
+      <tr>
+        <td><span class="badge-pill" style="background:rgba(148,163,184,.1);color:#64748b;">Earnings</span></td>
+        <td><strong>J+1 après annonce</strong></td>
+        <td>Entrer le lendemain après assessment du gap. Évite le gap risk overnight.</td>
+        <td>Entrer le jour même avant résultats — pur gambling</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ===== PIÈGES ===== -->
+<div class="section-divider"><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> Les Pièges du Timing</div>
+
+<div id="pieges" class="content-card" style="max-width:960px; margin:2rem auto; padding:2rem;">
+  <h2><i class="fa-solid fa-triangle-exclamation" style="color:#d97706; margin-right:.5rem;"></i> Les Pièges à Éviter</h2>
+  <p>Ces pièges ne viennent pas d'un manque d'analyse — ils viennent d'états émotionnels qui court-circuitent le système. Les reconnaître au moment où ils se produisent est la seule façon de les éviter.</p>
+
+  <div class="trap-grid">
+    <div class="trap-card">
+      <div class="trap-icon"><i class="fas fa-fire"></i></div>
+      <div>
+        <div class="trap-title">FOMO Entry</div>
+        <div class="trap-desc">+10% déjà fait depuis la zone. Le momentum est visible, la tentation forte. Règle : si &gt;5% au-dessus de la zone, le setup est invalidé. Skipp &mdash; le prochain scan arrive dans 48h.</div>
+      </div>
+    </div>
+    <div class="trap-card">
+      <div class="trap-icon"><i class="fas fa-rotate-left"></i></div>
+      <div>
+        <div class="trap-title">Revenge Trade</div>
+        <div class="trap-desc">Stop touché &rarr; envie immédiate de "se refaire" sur le même ticker. Pause obligatoire 2h minimum avant tout nouveau trade. L'état post-perte amplifie les biais.</div>
+      </div>
+    </div>
+    <div class="trap-card">
+      <div class="trap-icon"><i class="fas fa-calendar-week"></i></div>
+      <div>
+        <div class="trap-title">Friday Close</div>
+        <div class="trap-desc">Ouvertures de positions le vendredi après-midi. Gap risk weekend : news de 72h sans possibilité de réagir. Prudence maximale, taille réduite ou abstention.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="takeaway-box" style="margin-top:2rem;">
+    <h3><i class="fa-solid fa-lightbulb" style="margin-right:.5rem;"></i> Les 6 points à retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fas fa-circle-check"></i> Zone d'entrée = fourchette, pas prix exact. +5% au-dessus = skip, pas de négociation.</li>
+      <li><i class="fas fa-circle-check"></i> Limit order par défaut. Market seulement sur breakout volume &gt;3x. Stop limit pour breakouts anticipés.</li>
+      <li><i class="fas fa-circle-check"></i> Catalyseur identifié obligatoire. Sans "pourquoi", il n'y a pas de setup — il y a un pari.</li>
+      <li><i class="fas fa-circle-check"></i> TP1 à R/R 1:1.5+ &rarr; sortie 50%. TP2 à 1:2.5+ &rarr; trailing stop au breakeven sur le reste.</li>
+      <li><i class="fas fa-circle-check"></i> Risk-Off : entrer 9h Paris. Risk-On : attendre US open +30min. Earnings : J+1 uniquement.</li>
+      <li><i class="fas fa-circle-check"></i> FOMO, revenge trade, friday close : reconnaître l'état émotionnel et s'arrêter.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== NAVIGATION ===== -->
+<nav class="part-nav">
+  <a href="/series/marketwatch-checklist/part5-risk/" class="part-nav-btn prev">
+    <i class="fas fa-arrow-left"></i>
+    <div>
+      <div class="part-nav-label">Partie précédente</div>
+      <div class="part-nav-title">Gestion du Risque</div>
+    </div>
+  </a>
+  <a href="/series/marketwatch-checklist/part7-retrospective/" class="part-nav-btn next">
+    <div>
+      <div class="part-nav-label">Partie suivante</div>
+      <div class="part-nav-title">La Rétrospective</div>
+    </div>
+    <i class="fas fa-arrow-right"></i>
+  </a>
+</nav>
+
+<script>
+// ===== TIMING / ANNOTATED LINE CHART =====
+(function(){
+  var dom = document.getElementById('timingChart');
+  if(!dom) return;
+  var chart = echarts.init(dom, null, {renderer:'svg'});
+  var dates = ['Mar 10','Mar 11','Mar 12','Mar 13','Mar 14','Mar 17','Mar 18','Mar 19','Mar 20','Mar 21'];
+  var prices = [158, 160, 163, 166, 170, 173, 176, 180, 183, 188];
+  chart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'axis',
+      formatter: function(p){ return '<b>' + p[0].name + '</b><br>CVX : <b>$' + p[0].value + '</b>'; },
+      textStyle: { fontFamily: 'Inter, sans-serif' }
+    },
+    grid: { left: '3%', right: '8%', bottom: '8%', top: '12%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: dates,
+      axisLabel: { fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#64748b' },
+      axisLine: { lineStyle: { color: '#e2e8f0' } }
+    },
+    yAxis: {
+      type: 'value',
+      min: 155,
+      max: 195,
+      axisLabel: { formatter: '${value}', fontFamily: 'Inter, sans-serif', fontSize: 11, color: '#64748b' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: [
+      {
+        name: 'CVX',
+        type: 'line',
+        data: prices,
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 5,
+        lineStyle: { color: '#d97706', width: 2.5 },
+        itemStyle: { color: '#d97706' },
+        areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(217,119,6,.15)' }, { offset: 1, color: 'rgba(217,119,6,.01)' }] } },
+        markLine: {
+          silent: true,
+          symbol: 'none',
+          data: [
+            { yAxis: 160.40, name: 'Stop $160.40', lineStyle: { color: '#ef4444', type: 'dashed', width: 1.5 }, label: { formatter: 'Stop $160.40', color: '#ef4444', fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: '700' } },
+            { yAxis: 165,    name: 'Zone basse $165', lineStyle: { color: '#10b981', type: 'dotted', width: 1.5 }, label: { formatter: 'Zone bas $165', color: '#10b981', fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: '700' } },
+            { yAxis: 168,    name: 'Zone haute $168', lineStyle: { color: '#10b981', type: 'dotted', width: 1.5 }, label: { formatter: 'Zone haut $168', color: '#10b981', fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: '700' } },
+            { yAxis: 180,    name: 'TP1 $180', lineStyle: { color: '#d97706', type: 'dashed', width: 1.5 }, label: { formatter: 'TP1 $180', color: '#d97706', fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: '700' } },
+            { yAxis: 188,    name: 'TP2 $188', lineStyle: { color: '#2563eb', type: 'dashed', width: 1.5 }, label: { formatter: 'TP2 $188', color: '#2563eb', fontFamily: 'Inter, sans-serif', fontSize: 10, fontWeight: '700' } }
+          ]
+        }
+      }
+    ]
+  });
+  window.addEventListener('resize', function(){ chart.resize(); });
+})();
+</script>
+
+<!-- ===== FOOTER ===== -->
+<footer class="site-footer" style="margin-top:4rem;">
+  <div class="footer-inner">
+    <p class="footer-copy">&copy; 2026 MarketWatch XYZ — La Checklist MarketWatch, Partie 6/7</p>
+    <p class="footer-disclaimer">Contenu éducatif uniquement. Aucun conseil en investissement. Les performances passées ne préjugent pas des performances futures.</p>
+  </div>
+</footer>
+
+</body>
+</html>
