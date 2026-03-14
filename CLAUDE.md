@@ -54,7 +54,7 @@ Intégrer dans **tous les types d'articles** quand pertinent. Signal **compléme
 ### "Nouvelle analyse weekly"
 **Langue par défaut : anglais intermediate.** Voir `weekly/CLAUDE.md` pour le template complet et les 18 sections obligatoires.
 
-1. **Date** : Le weekly couvre la semaine **À VENIR**. Dossier = `weekly/YYYYMMDD/` (YYYYMMDD = lundi). Vérifier anti-doublon avec `ls weekly/`.
+1. **Date** : Le weekly couvre la semaine **À VENIR**. Dossier = `weekly/YYYYMMDD/` (YYYYMMDD = lundi). Vérifier anti-doublon : `ls weekly/` ET `grep "YYYYMMDD" data/weekly.json` — NE PAS ajouter si l'URL existe déjà.
 2. **Référence** : Lire `weekly/20260223/index.html` pour reproduire le layout exact
 3. **Collecte MCP** : `GetMarketOverview` (deep) + `QueryData` (SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (calendrier, géopolitique, earnings)
 4. **Générer** : `weekly/YYYYMMDD/index.html` avec les 18 sections (> 100KB). CSS = `/assets/report.css`. FAB obligatoire, PAS de hero-brand-link.
@@ -98,11 +98,13 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 **Langue par défaut : anglais intermediate.** Voir `daily/CLAUDE.md` pour le template complet et les 17 sections obligatoires.
 
 1. **Collecte MCP** : `GetMarketOverview` (deep) + `QueryData` (SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (calendrier, géopolitique, earnings, Polymarket)
-2. **Générer** `daily/YYYYMMDD/index.html`. CSS = `/assets/report.css`.
-3. **Samedi** = briefing complet (récap vendredi + bilan semaine + preview lundi)
-4. **Dimanche** = crypto-only + géopolitique (marchés fermés)
-5. **Formation progressive** : cursus 4 semaines cyclique (Bases → Technique → Fondamentaux → Avancé)
-6. **Indexer + Push** :
+2. **⚠️ ANTI-DOUBLON OBLIGATOIRE** : Avant de lancer add_card.js, vérifier que l'URL `/daily/YYYYMMDD/` n'existe PAS déjà dans `data/daily.json` avec `grep "YYYYMMDD" data/daily.json`. Si elle existe déjà → NE PAS ajouter, signaler le doublon.
+3. **Générer** `daily/YYYYMMDD/index.html`. CSS = `/assets/report.css`.
+4. **Samedi** = briefing complet (récap vendredi + bilan semaine + preview lundi)
+5. **Dimanche** = crypto-only + géopolitique (marchés fermés)
+6. **Formation progressive** : cursus 4 semaines cyclique (Bases → Technique → Fondamentaux → Avancé)
+7. **Format date obligatoire dans `report-card-meta`** : `DD mois YYYY` en français minuscule (ex: `14 mars 2026`). JAMAIS de format anglais ("March 14"), JAMAIS de majuscule sur le mois ("Mars"), JAMAIS de suffixe ("— Vendredi", "— Tuesday Full Market"), JAMAIS d'espaces superflus.
+8. **Indexer + Push** :
    ```bash
    node tools/add_card.js daily/YYYYMMDD/index.html
    git add daily/YYYYMMDD/ data/daily.json data/search_data.js data/radar.json
@@ -158,6 +160,8 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 6 tabs : **Hebdo**, **Daily**, **Analyses**, **Scanner**, **Radar**, **Séries**. Tech dans le footer (`?tab=tech`).
 - URL state : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — combinables
 - Cartes toujours triées par date décroissante. Exception : bloc "Performance du Scanner" fixe en premier dans le tab Scanner.
+- **⚠️ ANTI-DOUBLON GLOBAL** : Avant tout `add_card.js`, lire le fichier JSON cible (`data/daily.json`, `data/weekly.json`, `data/scanner.json`, `data/analyses.json`) et vérifier que l'URL n'y figure pas déjà. En cas de doublon → ne pas ajouter, signaler.
+- **Format date `report-card-meta`** : TOUJOURS `DD mois YYYY` en français minuscule (`14 mars 2026`). Ni anglais, ni majuscule sur le mois, ni suffixe textuel, ni espaces superflus.
 - Indexation : `node tools/add_card.js chemin/vers/index.html` (JAMAIS modifier index.html à la main pour ajouter une carte)
 
 ## Radar — `data/radar.json`
@@ -230,6 +234,35 @@ Gérées via le **bot Discord** (`claude-discord-bot`), pas via cron.
 | Briefing Daily | Tous les jours 7h | `every day at 07:00 articles analyse daily` |
 | Scanner | Lun-Ven 23h | `every weekday at 23:00 articles scan du jour` |
 | Rétrospective | Vendredi 23h | `every friday at 23:00 articles rétrospective scanner` |
+| Veille Tech | Tous les jours 18h | `every day at 18:00 articles veille tech 18h` |
+
+### "Veille Tech 18h" — Intelligence & Sujets
+Rapport de veille stratégique pour la rédaction de market-watch.xyz. **Pas d'article HTML généré**, rapport Discord uniquement.
+
+1. **Trends du moment** (WebSearch) :
+   - Systematic trading & quant finance : nouvelles stratégies, backtests publiés, librairies open-source
+   - AI agentic pour la finance : agents LLM, copilots trading, tools GenAI en prod
+   - Fintech & finance software : releases, levées de fonds, acquisitions
+   - Cybersécurité : vulnérabilités critiques, attaques notables, outils défensifs
+   - Data science / ML / LLMs : papers arXiv récents, benchmarks, modèles publiés
+
+2. **Veille concurrentielle** (WebSearch) :
+   - Blogs quant : QuantConnect, Alpaca, Man Institute, Two Sigma, Alpha Architect, Quantocracy
+   - Publications tech-finance : Bloomberg, Refinitiv, Morningstar tech
+   - Newsletters & agrégateurs : ML-quant.com, The Gradient, Import AI
+
+3. **Réseaux sociaux & communautés** :
+   - Reddit : r/algotrading, r/MachineLearning, r/datascience, r/netsec (top posts semaine)
+   - HackerNews : fils "Ask HN" et "Show HN" pertinents
+   - GitHub Trending : repos finance/ML/security du jour
+
+4. **Propositions éditoriales** : 5 à 8 sujets d'articles avec :
+   - Titre accrocheur
+   - Angle différenciant (pourquoi nous, pourquoi maintenant)
+   - Tags taxonomie (voir section Tags)
+   - Priorité éditoriale (1 = urgent, 3 = backlog)
+
+Format sortie : sections **gras** Discord, listes concises, aucun HTML.
 
 ### Post-tâche : Commit & Push (OBLIGATOIRE)
 Après chaque tâche réussie : `add_card.js` → vérifier `git status` → `git add` (fichiers spécifiques) → `git commit` → `git push origin main`.
