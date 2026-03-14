@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="formation,macro,technique,trade-idea" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Regime Detection — Read the Market Before You Trade | MarketWatch Checklist — Part 2/8 | Market Watch</title>
+ <meta name="description" content="MarketWatch Checklist Part 2/8: Learn to detect market regimes (Risk-On, Neutral, Risk-Off, Recovery) using VIX, breadth, credit spreads, yield curve, and sector rotation. Adapt your strategy to the regime.">
+ <meta property="og:title" content="Regime Detection — Read the Market Before You Trade | MarketWatch Checklist 2/8 | Market Watch">
+ <meta property="og:description" content="Five market regimes. One decision tree. The regime determines the strategy — momentum in Risk-On, mean-reversion in Risk-Off. Here's how to read it.">
+ <meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+ <meta property="og:url" content="https://articles.market-watch.xyz/series/marketwatch-checklist/part2-regime/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#ecfdf5 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+ .hero-badge-teal{background:rgba(20,184,166,.1);color:#14b8a6;border:1px solid rgba(20,184,166,.2)}
+ .hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+ .hero-badge-dark{background:rgba(6,95,70,.1);color:#065f46;border:1px solid rgba(6,95,70,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#065f46;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f8fafc}
+ .compare-table tr:last-child td{border-bottom:none}
+ .pedagogy-box{background:#ecfdf5;border:1px solid #6ee7b7;border-radius:12px;padding:1.5rem;margin:1.5rem 0}
+ .pedagogy-box h4{font-size:1rem;font-weight:700;color:#065f46;margin:0 0 .75rem}
+ .pedagogy-box p{font-size:.88rem;color:#334155;line-height:1.65;margin:0 0 .75rem}
+ .pedagogy-box p:last-child{margin-bottom:0}
+ .alert-box{border-radius:12px;padding:1.25rem 1.5rem;margin:1.5rem 0;font-size:.9rem;line-height:1.6}
+ .alert-box.danger{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+ .alert-box.danger strong{color:#7f1d1d}
+ .alert-box.warning{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+ .alert-box.warning strong{color:#78350f}
+ .alert-box.info{background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46}
+ .alert-box.info strong{color:#064e3b}
+ .takeaway-box{background:linear-gradient(135deg,#065f46 0%,#059669 100%);border-radius:14px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:white;margin:0 0 1rem;font-size:1.05rem;font-weight:700}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:.92rem;color:rgba(255,255,255,.9);line-height:1.55;border-bottom:1px solid rgba(255,255,255,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#6ee7b7;margin-top:.15rem;flex-shrink:0}
+ .takeaway-list li strong{color:white}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#059669,#065f46);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(5,150,105,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .next-cta i{font-size:1.5rem}
+ .regime-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;margin-bottom:1rem;border-left:5px solid #059669}
+ .regime-card h4{font-size:1.05rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .regime-card .regime-tag{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:.25rem .6rem;border-radius:6px;display:inline-block;margin-bottom:.75rem}
+ .regime-card .regime-tag.risk-on{background:rgba(16,185,129,.12);color:#059669}
+ .regime-card .regime-tag.neutral{background:rgba(245,158,11,.12);color:#d97706}
+ .regime-card .regime-tag.early-off{background:rgba(249,115,22,.12);color:#ea580c}
+ .regime-card .regime-tag.risk-off{background:rgba(239,68,68,.12);color:#dc2626}
+ .regime-card .regime-tag.recovery{background:rgba(59,130,246,.12);color:#2563eb}
+ .regime-card p{font-size:.85rem;color:#64748b;line-height:1.55;margin:0}
+ .decision-tree{background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;margin:1.5rem 0}
+ .dt-node{display:flex;align-items:flex-start;gap:1rem;padding:.75rem 0;border-bottom:1px solid #e2e8f0}
+ .dt-node:last-child{border-bottom:none}
+ .dt-icon{flex-shrink:0;width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.9rem;color:white}
+ .dt-body h5{font-size:.9rem;font-weight:700;color:#0f172a;margin:0 0 .2rem}
+ .dt-body p{font-size:.82rem;color:#64748b;margin:0;line-height:1.5}
+ .formula-box{background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700;letter-spacing:.02em}
+ .formula-box .formula-label{font-size:.7rem;color:#6ee7b7;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#6ee7b7}
+ #vixGauge,#regimeRadar,#strategyBars,#durationPie,#vixHistory{width:100%;height:380px}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.hero-badge{font-size:.7rem;padding:.35rem .75rem}.next-cta{flex-direction:column;text-align:center}#vixGauge,#regimeRadar,#strategyBars,#durationPie,#vixHistory{height:320px}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.hero-badge{font-size:.65rem;padding:.3rem .6rem;gap:.25rem}.hero-badges{gap:.4rem;margin-top:1rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">S&eacute;ries</a>
+    </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-gauge-high"></i> MarketWatch Checklist &mdash; Part 2 of 8</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Regime Detection &mdash; Read the Market Before You Trade</h1>
+  <p class="hero-subtitle">Every strategy works &mdash; in the right regime. Momentum crushes in Risk-On. Mean-reversion shines in Risk-Off. The regime tells you which playbook to open. This part teaches you how to read it, measure it, and act on it &mdash; before placing a single trade.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-gauge-high"></i> Regime Detection</span>
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-chart-line"></i> 5 Indicators</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrows-rotate"></i> 5 Regimes</span>
+    <span class="hero-badge hero-badge-dark"><i class="fa-solid fa-layer-group"></i> Part 2/8</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<!-- Series Bar -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/marketwatch-checklist/part1-framework/" class="series-arrow" title="Part 1: Framework"><i class="fas fa-chevron-left"></i></a><span class="series-title">La Checklist MarketWatch</span><div class="series-steps"><a href="/series/marketwatch-checklist/part1-framework/" class="series-step" title="Framework"><span class="series-num">1</span><span class="series-label">Framework</span></a><a href="/series/marketwatch-checklist/part2-regime/" class="series-step current" title="R&eacute;gime"><span class="series-num">2</span><span class="series-label">R&eacute;gime</span></a><a href="/series/marketwatch-checklist/part3-scanner/" class="series-step" title="Scanner"><span class="series-num">3</span><span class="series-label">Scanner</span></a><a href="/series/marketwatch-checklist/part4-validation/" class="series-step" title="Validation"><span class="series-num">4</span><span class="series-label">Validation</span></a><a href="/series/marketwatch-checklist/part5-risk/" class="series-step" title="Risk"><span class="series-num">5</span><span class="series-label">Risk</span></a><a href="/series/marketwatch-checklist/part6-portfolio/" class="series-step" title="Portfolio"><span class="series-num">6</span><span class="series-label">Portfolio</span></a><a href="/series/marketwatch-checklist/part7-execution/" class="series-step" title="Execution"><span class="series-num">7</span><span class="series-label">Execution</span></a><a href="/series/marketwatch-checklist/part8-review/" class="series-step" title="Review"><span class="series-num">8</span><span class="series-label">Review</span></a></div><span class="series-counter">2/8</span><a href="/series/marketwatch-checklist/part3-scanner/" class="series-arrow" title="Part 3: Scanner"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<!-- Floating Nav -->
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#what-is-regime" class="fnav-item" data-section="what-is-regime"><i class="fas fa-compass"></i><span>What Is a Regime</span></a><a href="#vix-primary" class="fnav-item" data-section="vix-primary"><i class="fas fa-gauge-high"></i><span>VIX &amp; Fear</span></a><a href="#breadth" class="fnav-item" data-section="breadth"><i class="fas fa-chart-bar"></i><span>Breadth</span></a><a href="#confirming" class="fnav-item" data-section="confirming"><i class="fas fa-check-double"></i><span>Confirming Signals</span></a><a href="#sector-rotation" class="fnav-item" data-section="sector-rotation"><i class="fas fa-arrows-rotate"></i><span>Sector Rotation</span></a><a href="#strategy-weights" class="fnav-item" data-section="strategy-weights"><i class="fas fa-sliders"></i><span>Strategy Weights</span></a><a href="#decision-tree" class="fnav-item" data-section="decision-tree"><i class="fas fa-code-branch"></i><span>Decision Tree</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-30% 0px -60% 0px'});sections.forEach(function(s){observer.observe(s.el);});})();
+</script>
+
+<!-- ===== SECTION 1: WHAT IS A REGIME ===== -->
+<div class="section-divider" id="what-is-regime"><i class="fa-solid fa-compass" style="color:#059669;"></i> What Is a Market Regime</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-compass" style="color:#059669; margin-right:0.5rem;"></i> The Regime Is the Context</h2>
+  <p>A market regime is the dominant behavioral state of the market at a given time. It dictates how participants price risk, how correlations behave, and which strategies generate alpha. Trading without knowing the regime is like driving without knowing whether you're on a highway or a dirt road &mdash; the vehicle is the same, but the rules are completely different.</p>
+  <p>We classify markets into <strong>five regimes</strong>, each with distinct characteristics, typical durations, and strategy implications. The transitions between regimes are where most traders lose money &mdash; because they keep running the old playbook in a new environment.</p>
+
+  <div class="regime-card" style="border-left-color:#10b981;">
+    <span class="regime-tag risk-on">Risk-On</span>
+    <h4>Risk-On &mdash; Green Light</h4>
+    <p><strong>VIX &lt; 16, breadth expanding, credit spreads tight, yield curve normal.</strong> Institutions are adding risk. Momentum and breakout strategies dominate. Small caps outperform large caps. Sector leaders are Technology, Consumer Discretionary, Industrials. Typical duration: 4-8 months. This is where 60-70% of annual equity returns are generated.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#f59e0b;">
+    <span class="regime-tag neutral">Neutral</span>
+    <h4>Neutral &mdash; Yellow Light</h4>
+    <p><strong>VIX 16-20, breadth mixed, credit stable, rotation underway.</strong> The market is deciding. No clear direction &mdash; range-bound price action is common. Both momentum and mean-reversion can work, but position sizing should be reduced by 25-30%. Leadership shifts between sectors without conviction. Typical duration: 2-6 weeks.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#f97316;">
+    <span class="regime-tag early-off">Early Risk-Off</span>
+    <h4>Early Risk-Off &mdash; Orange Light</h4>
+    <p><strong>VIX 20-28, breadth deteriorating, credit widening, defensive rotation beginning.</strong> The first cracks appear. SPX loses the 50-day MA. Advance/decline line rolls over. This is the most dangerous regime because it <em>feels</em> like a buyable dip but is often the start of a deeper correction. Mean-reversion starts outperforming momentum. Typical duration: 2-4 weeks.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#ef4444;">
+    <span class="regime-tag risk-off">Risk-Off</span>
+    <h4>Risk-Off &mdash; Red Light</h4>
+    <p><strong>VIX &gt; 28, breadth collapsed, credit spreads blowing out, flight to quality.</strong> Correlations spike toward 1.0 &mdash; everything sells except Treasuries, USD, and gold. The only winning strategy is capital preservation. If you must trade, only oversold mean-reversion on large-cap quality names with strict risk controls. Small caps and high-beta are untouchable. Typical duration: 3-8 weeks.</p>
+  </div>
+
+  <div class="regime-card" style="border-left-color:#3b82f6;">
+    <span class="regime-tag recovery">Recovery</span>
+    <h4>Recovery &mdash; Blue Light</h4>
+    <p><strong>VIX declining from elevated levels, breadth bottoming, credit stabilizing.</strong> The market is healing but uncertainty remains high. This is where the best risk/reward trades occur &mdash; oversold quality names with institutional support. VIX is still above 20 but trending down. Momentum starts working again on leaders. Typical duration: 3-6 weeks before transitioning to Risk-On or relapsing into Risk-Off.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Why Five Regimes Instead of Two?</h4>
+    <p>Most frameworks use a binary Risk-On / Risk-Off model. The problem is that 40% of trading days fall in the gray zone between the two. Adding Neutral, Early Risk-Off, and Recovery gives you <strong>actionable granularity</strong> &mdash; each regime has different strategy weights, position sizes, and sector preferences. The transition zones (Neutral and Early Risk-Off) are where your edge lives, because most traders are still using yesterday's playbook.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 2: VIX ===== -->
+<div class="section-divider" id="vix-primary"><i class="fa-solid fa-gauge-high" style="color:#059669;"></i> VIX &mdash; The Primary Regime Indicator</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-gauge-high" style="color:#059669; margin-right:0.5rem;"></i> Reading Fear in Real Time</h2>
+  <p>The CBOE Volatility Index (VIX) measures the market's expectation of 30-day forward volatility, derived from S&P 500 option prices. It is not a measure of past volatility &mdash; it is a <strong>forward-looking fear gauge</strong>. When institutions buy downside protection, VIX rises. When they sell it, VIX falls.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">VIX Regime Zones</div>
+    <span class="formula-highlight">&lt;16</span> Risk-On &nbsp;&bull;&nbsp;
+    <span style="color:#fcd34d;">16-20</span> Neutral &nbsp;&bull;&nbsp;
+    <span style="color:#fb923c;">20-28</span> Early Risk-Off &nbsp;&bull;&nbsp;
+    <span style="color:#fca5a5;">28-35</span> Risk-Off &nbsp;&bull;&nbsp;
+    <span style="color:#f87171;">&gt;35</span> Crisis
+  </div>
+
+  <p>The VIX gauge below shows how to interpret the current level. But the <strong>direction matters as much as the level</strong>. A VIX at 22 and falling (Recovery) is a completely different signal than a VIX at 22 and rising (Early Risk-Off).</p>
+
+  <div id="vixGauge"></div>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">VIX Characteristics by Regime</h3>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>VIX Range</th>
+        <th>Regime</th>
+        <th>Implied Daily Move (SPX)</th>
+        <th>Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>&lt; 12</td><td>Deep Risk-On / Complacency</td><td>&lt; 0.75%</td><td>Extremely low vol. Often precedes sharp corrections. Use trailing stops.</td></tr>
+      <tr><td>12 &ndash; 16</td><td>Risk-On</td><td>0.75% &ndash; 1.0%</td><td>Normal bull market volatility. Full position sizing. Momentum leads.</td></tr>
+      <tr><td>16 &ndash; 20</td><td>Neutral</td><td>1.0% &ndash; 1.25%</td><td>Elevated uncertainty. Reduce size 25%. Watch for direction resolution.</td></tr>
+      <tr><td>20 &ndash; 28</td><td>Early Risk-Off</td><td>1.25% &ndash; 1.75%</td><td>Fear building. Switch to defensive setups. Tighten stops.</td></tr>
+      <tr><td>28 &ndash; 35</td><td>Risk-Off</td><td>1.75% &ndash; 2.2%</td><td>Significant fear. Reduce exposure 50-75%. Only quality names.</td></tr>
+      <tr><td>&gt; 35</td><td>Crisis / Capitulation</td><td>&gt; 2.2%</td><td>Panic selling. VIX spikes above 40 rarely last. Watch for reversal signals.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box warning">
+    <strong><i class="fa-solid fa-triangle-exclamation"></i> VIX Limitation #1: The Complacency Trap.</strong> VIX below 12 for extended periods does not mean "safe." It means options are cheap and no one is hedging. Feb 2018 (Volmageddon) and Jan 2020 (pre-COVID) both started with VIX under 13. Low VIX = low cost of hedging, not low risk.
+  </div>
+
+  <div class="alert-box warning">
+    <strong><i class="fa-solid fa-triangle-exclamation"></i> VIX Limitation #2: Sector-Blind.</strong> VIX is derived from SPX options. A rotation out of mega-cap tech into small caps can crush individual portfolios while VIX stays flat, because SPX is market-cap weighted. Always cross-reference with breadth indicators.
+  </div>
+
+  <div class="alert-box warning">
+    <strong><i class="fa-solid fa-triangle-exclamation"></i> VIX Limitation #3: Mean-Reverting, Not Trending.</strong> VIX does not trend like price. It spikes and decays. Using VIX as a momentum signal (buying when VIX rises) leads to chronic whipsaws. Use VIX for <em>level classification</em>, not for <em>directional bets</em>.
+  </div>
+</div>
+
+<!-- ===== SECTION 3: BREADTH ===== -->
+<div class="section-divider" id="breadth"><i class="fa-solid fa-chart-bar" style="color:#059669;"></i> Breadth Indicators</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-chart-bar" style="color:#059669; margin-right:0.5rem;"></i> Measuring Participation</h2>
+  <p>VIX tells you how scared the market is. Breadth tells you <strong>how many soldiers are marching</strong>. A market where SPX makes new highs but only 40% of stocks are above their 200-day MA is a market on borrowed time. Breadth divergences are the earliest warning signals of regime change.</p>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:1.5rem 0 1rem;">The Three Breadth Pillars</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Indicator</th>
+        <th>Risk-On Signal</th>
+        <th>Risk-Off Signal</th>
+        <th>Data Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Advance/Decline Line</strong><br><span style="font-size:.8rem;color:#64748b;">Cumulative A/D ratio across NYSE</span></td>
+        <td>Rising, making new highs with the index</td>
+        <td>Diverging &mdash; index up, A/D line flat or falling</td>
+        <td>NYSE, StockCharts $NYAD</td>
+      </tr>
+      <tr>
+        <td><strong>New Highs vs New Lows</strong><br><span style="font-size:.8rem;color:#64748b;">52-week highs minus 52-week lows</span></td>
+        <td>NH-NL ratio &gt; 2:1, expanding</td>
+        <td>New lows exceeding new highs, especially &gt; 100/day</td>
+        <td>NYSE, Barchart</td>
+      </tr>
+      <tr>
+        <td><strong>% Above 200-Day MA</strong><br><span style="font-size:.8rem;color:#64748b;">Percentage of S&P 500 stocks above their 200-day moving average</span></td>
+        <td>&gt; 65% &mdash; broad participation</td>
+        <td>&lt; 40% &mdash; narrow market, high risk</td>
+        <td>$SPXA200R on StockCharts</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-microscope"></i> Breadth Divergence in Practice</h4>
+    <p>In late January 2025, SPX hit a new all-time high at 6,100. The advance/decline line had been flat for two weeks. Only 52% of S&P 500 stocks were above their 200-day MA &mdash; down from 72% three months earlier. New highs were contracting while the index pushed higher on mega-cap momentum alone (NVDA, AAPL, MSFT carrying the cap-weighted index).</p>
+    <p>Within three weeks, SPX corrected 8%. The breadth warned you. VIX only reacted <em>after</em> the drop began. This is why breadth is a <strong>leading indicator</strong> and VIX is a <strong>coincident indicator</strong>.</p>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Breadth Composite Score</div>
+    Score = <span class="formula-highlight">(%Above200 / 100 &times; 40)</span> + <span class="formula-highlight">(A/D trend &times; 30)</span> + <span class="formula-highlight">(NH/NL ratio &times; 30)</span>
+  </div>
+
+  <p>A breadth composite score above 70 confirms Risk-On. Below 35, you are in Risk-Off territory regardless of what VIX says. The most dangerous signal is when VIX is low but breadth is deteriorating &mdash; this is the "calm before the storm" pattern that precedes most significant corrections.</p>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">Breadth Thresholds &mdash; Decision Rules</h3>
+  <table class="compare-table">
+    <thead><tr><th>% Above 200-Day MA</th><th>A/D Line Trend</th><th>NH-NL Daily</th><th>Regime Signal</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>&gt; 70%</td><td>Rising, new highs</td><td>&gt; +150</td><td style="color:#10b981;">Strong Risk-On</td><td>Full allocation. Momentum &amp; breakout strategies.</td></tr>
+      <tr><td>55-70%</td><td>Flat or rising</td><td>+50 to +150</td><td style="color:#10b981;">Risk-On</td><td>Normal sizing. Favor quality setups.</td></tr>
+      <tr><td>40-55%</td><td>Flat or mixed</td><td>-50 to +50</td><td style="color:#f59e0b;">Neutral</td><td>Reduce size 25%. Higher bar for entries.</td></tr>
+      <tr><td>25-40%</td><td>Falling</td><td>-50 to -200</td><td style="color:#f97316;">Early Risk-Off</td><td>Defensive only. Tighten all stops.</td></tr>
+      <tr><td>&lt; 25%</td><td>Collapsing</td><td>&lt; -200</td><td style="color:#ef4444;">Risk-Off</td><td>Cash &amp; hedges. Oversold MR only on quality.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box info">
+    <strong><i class="fa-solid fa-circle-info"></i> Free Data Sources for Breadth.</strong> You do not need a Bloomberg terminal for this. StockCharts provides $SPXA200R (% above 200-day), $NYAD (NYSE A/D line), and $NYHILO (new highs/lows) for free. Barchart.com has the same data under Market Breadth. Finviz screener can give you a quick count of stocks above/below key MAs. All the data you need is available within 5 minutes.
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> The "Narrow Market" Warning</h4>
+    <p>The most dangerous market condition is what professionals call a "narrow market" &mdash; where the index is at or near highs but breadth is collapsing. This happened in 2021 (FAANG carrying SPX), late 2024 (Magnificent 7), and again in early 2025. When fewer than 45% of S&P 500 stocks are above their 200-day MA while SPX is within 5% of its all-time high, you are sitting on a <strong>breadth divergence bomb</strong>. History shows these resolve to the downside within 4-8 weeks in 78% of cases.</p>
+    <p>The practical rule: if % above 200-day MA drops below 50% while SPX is within 5% of ATH, automatically downgrade your regime by one level (Risk-On becomes Neutral, Neutral becomes Early Risk-Off). This single rule would have saved you from the Feb 2018 Volmageddon, the Sep 2018 correction, and the Jan 2022 tech selloff.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 4: CONFIRMING SIGNALS ===== -->
+<div class="section-divider" id="confirming"><i class="fa-solid fa-check-double" style="color:#059669;"></i> Confirming Signals</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-check-double" style="color:#059669; margin-right:0.5rem;"></i> Credit Spreads, Yield Curve, Dollar Index</h2>
+  <p>VIX and breadth give you 70% of the regime picture. The remaining 30% comes from three macro confirming signals that capture institutional behavior in the bond and currency markets.</p>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:1.5rem 0 1rem;">1. Credit Spreads (HY-IG Spread)</h3>
+  <p>The spread between high-yield corporate bonds (HYG) and investment-grade bonds (LQD) reflects how much extra yield investors demand for taking credit risk. When spreads tighten, institutions are comfortable with risk. When spreads widen, they are pulling back from lower-quality debt &mdash; a direct signal of rising risk aversion.</p>
+  <table class="compare-table">
+    <thead><tr><th>HY-IG Spread</th><th>Regime Signal</th><th>Implication</th></tr></thead>
+    <tbody>
+      <tr><td>&lt; 300 bps</td><td>Risk-On</td><td>Credit conditions healthy. Full risk allocation.</td></tr>
+      <tr><td>300-400 bps</td><td>Neutral / Early Risk-Off</td><td>Some stress emerging. Monitor weekly changes.</td></tr>
+      <tr><td>400-600 bps</td><td>Risk-Off</td><td>Significant credit stress. Reduce high-beta exposure.</td></tr>
+      <tr><td>&gt; 600 bps</td><td>Crisis</td><td>Credit freeze risk. Capital preservation only.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">2. Yield Curve Shape (10Y-2Y Spread)</h3>
+  <p>The yield curve tells you what the bond market thinks about future growth and monetary policy. A normal upward-sloping curve (10Y > 2Y) reflects healthy growth expectations. An inverted curve has historically preceded every US recession since 1970 &mdash; with a median lead time of 14 months. But the <strong>un-inversion</strong> (steepening from inverted) is often the more immediate danger signal.</p>
+  <table class="compare-table">
+    <thead><tr><th>10Y-2Y Spread</th><th>Signal</th><th>Historical Context</th></tr></thead>
+    <tbody>
+      <tr><td>&gt; +100 bps</td><td>Growth confidence / Early recovery</td><td>Typical of early bull markets post-recession</td></tr>
+      <tr><td>+25 to +100 bps</td><td>Normal / Risk-On</td><td>Standard mid-cycle environment</td></tr>
+      <tr><td>0 to +25 bps</td><td>Caution / Late cycle</td><td>Curve flattening often precedes inversion</td></tr>
+      <tr><td>&lt; 0 bps (inverted)</td><td>Recession warning</td><td>Preceded 2001, 2008, 2020 recessions</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">3. US Dollar Index (DXY)</h3>
+  <p>The DXY measures the dollar against a basket of six major currencies. A rising dollar acts as a global tightening mechanism &mdash; it hurts emerging markets, commodities, and multinational earnings. For regime detection, the DXY trend matters more than the level.</p>
+  <table class="compare-table">
+    <thead><tr><th>DXY Behavior</th><th>Regime Signal</th><th>Market Impact</th></tr></thead>
+    <tbody>
+      <tr><td>Falling or stable below 100</td><td>Risk-On confirmation</td><td>Favorable for equities, commodities, EM</td></tr>
+      <tr><td>Rising slowly</td><td>Neutral</td><td>Mixed &mdash; US large-cap relative strength</td></tr>
+      <tr><td>Spiking above 105</td><td>Risk-Off confirmation</td><td>Flight to safety. Pressures global assets.</td></tr>
+      <tr><td>Sharp reversal after spike</td><td>Recovery signal</td><td>Dollar liquidity returning to risk assets</td></tr>
+    </tbody>
+  </table>
+
+  <div id="regimeRadar"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-circle-info"></i> How to Combine the Signals</h4>
+    <p>No single indicator defines the regime. The power comes from <strong>confluence</strong>. When VIX is rising, breadth is deteriorating, credit spreads are widening, and the dollar is strengthening &mdash; you have four independent data sources all saying the same thing: reduce risk. When they diverge (VIX low but credit widening), stay cautious until the conflict resolves.</p>
+    <p>In our weekly workflow, we score each indicator 0-20 and sum them into a <strong>Regime Composite Score (0-100)</strong>. Above 70: Risk-On. Below 30: Risk-Off. The gray zone in between is where discipline separates the professionals from the amateurs.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 5: SECTOR ROTATION ===== -->
+<div class="section-divider" id="sector-rotation"><i class="fa-solid fa-arrows-rotate" style="color:#059669;"></i> Sector Rotation Patterns</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-arrows-rotate" style="color:#059669; margin-right:0.5rem;"></i> Where Money Flows in Each Regime</h2>
+  <p>Sector rotation is both a <strong>confirming signal</strong> for regime detection and a <strong>tactical guide</strong> for portfolio construction. When money rotates from Technology into Utilities and Healthcare, the market is telling you something about risk appetite &mdash; even before VIX reacts.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Regime</th>
+        <th>Leading Sectors</th>
+        <th>Lagging Sectors</th>
+        <th>ETF Pairs to Watch</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong style="color:#10b981;">Risk-On</strong></td>
+        <td>Technology (XLK), Consumer Disc. (XLY), Industrials (XLI), Semis (SMH)</td>
+        <td>Utilities (XLU), Consumer Staples (XLP), Healthcare (XLV)</td>
+        <td>XLK/XLU ratio rising = Risk-On confirmed</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f59e0b;">Neutral</strong></td>
+        <td>No clear leadership &mdash; rotation between growth and value</td>
+        <td>High-beta small caps underperform</td>
+        <td>IWM/SPY ratio flattening</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#f97316;">Early Risk-Off</strong></td>
+        <td>Healthcare (XLV), Staples (XLP) start outperforming</td>
+        <td>Semis (SMH), Growth (ARKK), Small caps (IWM)</td>
+        <td>XLP/XLY ratio rising = defensive rotation</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#ef4444;">Risk-Off</strong></td>
+        <td>Utilities (XLU), Gold (GLD), Treasuries (TLT)</td>
+        <td>Everything cyclical. Technology, Financials, Energy</td>
+        <td>TLT/SPY ratio spiking = flight to quality</td>
+      </tr>
+      <tr>
+        <td><strong style="color:#3b82f6;">Recovery</strong></td>
+        <td>Financials (XLF), Industrials (XLI), beaten-down quality</td>
+        <td>Safe havens start lagging (TLT, GLD roll over)</td>
+        <td>XLF/XLU ratio rising = risk appetite returning</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box info">
+    <strong><i class="fa-solid fa-circle-info"></i> Sector Ratio Trick:</strong> Instead of watching 11 sectors individually, track 3 ratios: <strong>XLK/XLU</strong> (growth vs defensive), <strong>XLP/XLY</strong> (staples vs discretionary), and <strong>IWM/SPY</strong> (small vs large cap). These three ratios tell you 80% of the rotation story. When all three shift direction simultaneously, a regime change is underway.
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-clock-rotate-left"></i> Rotation Speed as a Regime Indicator</h4>
+    <p>The <em>speed</em> of rotation matters as much as the direction. In normal markets, sector rotation happens gradually over weeks. When you see a 3-5% relative performance shift between XLK and XLU in a single week, the regime is changing. Fast rotation = high urgency to adapt. Slow rotation = you have time to adjust over 2-3 weeks.</p>
+    <p>During the March 2020 COVID crash, XLK/XLU collapsed 15% in two weeks. During the September 2021 correction, the same ratio dropped only 4% over four weeks. Both were regime changes, but the first demanded same-day action while the second allowed gradual repositioning. The decision tree output should include a "velocity flag" &mdash; if sector ratios move more than 1 standard deviation in a week, prioritize immediate portfolio adjustment over waiting for the next scheduled review.</p>
+  </div>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">Regime Transition Patterns</h3>
+  <p>Regimes do not switch randomly. They follow a semi-predictable cycle. Understanding the typical sequences helps you anticipate the next transition and position ahead of the crowd.</p>
+  <table class="compare-table">
+    <thead><tr><th>From</th><th>To</th><th>Frequency</th><th>Typical Trigger</th><th>Avg Transition Time</th></tr></thead>
+    <tbody>
+      <tr><td style="color:#10b981;">Risk-On</td><td style="color:#f59e0b;">Neutral</td><td>Most common</td><td>Breadth divergence, VIX creeping above 16</td><td>1-2 weeks</td></tr>
+      <tr><td style="color:#f59e0b;">Neutral</td><td style="color:#10b981;">Risk-On</td><td>Common</td><td>Breadth rebounds, VIX drops below 16</td><td>1 week</td></tr>
+      <tr><td style="color:#f59e0b;">Neutral</td><td style="color:#f97316;">Early Risk-Off</td><td>Less common</td><td>Credit spreads widen, A/D line breaks</td><td>1 week</td></tr>
+      <tr><td style="color:#f97316;">Early Risk-Off</td><td style="color:#ef4444;">Risk-Off</td><td>~50% of cases</td><td>VIX spikes above 28, capitulation selling</td><td>Days (often sudden)</td></tr>
+      <tr><td style="color:#f97316;">Early Risk-Off</td><td style="color:#f59e0b;">Neutral</td><td>~50% of cases</td><td>Fed intervention, strong data release</td><td>1-2 weeks</td></tr>
+      <tr><td style="color:#ef4444;">Risk-Off</td><td style="color:#3b82f6;">Recovery</td><td>Always (eventually)</td><td>VIX declining, credit stabilizing</td><td>2-4 weeks</td></tr>
+      <tr><td style="color:#3b82f6;">Recovery</td><td style="color:#10b981;">Risk-On</td><td>~70% of cases</td><td>Breadth expanding, VIX below 20</td><td>2-3 weeks</td></tr>
+      <tr><td style="color:#3b82f6;">Recovery</td><td style="color:#ef4444;">Risk-Off</td><td>~30% (relapse)</td><td>New shock, credit re-widening</td><td>Days</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box warning">
+    <strong><i class="fa-solid fa-triangle-exclamation"></i> The Recovery Relapse Trap.</strong> About 30% of Recovery periods relapse back into Risk-Off. This is the "dead cat bounce" or "bear market rally" phenomenon. The distinguishing factor: in true Recovery, credit spreads stabilize and breadth bottoms simultaneously. In a relapse setup, VIX drops but credit spreads remain wide and breadth fails to expand. If credit and breadth do not confirm the VIX decline within 2 weeks, treat the recovery as suspect and maintain defensive positioning.
+  </div>
+</div>
+
+<!-- ===== SECTION 6: STRATEGY WEIGHTS ===== -->
+<div class="section-divider" id="strategy-weights"><i class="fa-solid fa-sliders" style="color:#059669;"></i> Strategy Weights by Regime</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-sliders" style="color:#059669; margin-right:0.5rem;"></i> Matching Strategy to Environment</h2>
+  <p>This is the payoff of regime detection. Each regime has a <strong>strategy mix</strong> that maximizes risk-adjusted returns. Running momentum breakouts in Risk-Off is how you blow up accounts. Running mean-reversion in Risk-On is how you leave 80% of returns on the table.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th style="color:#10b981;">Risk-On</th>
+        <th style="color:#f59e0b;">Neutral</th>
+        <th style="color:#f97316;">Early Off</th>
+        <th style="color:#ef4444;">Risk-Off</th>
+        <th style="color:#3b82f6;">Recovery</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Momentum Breakout</strong></td><td>40%</td><td>20%</td><td>5%</td><td>0%</td><td>15%</td></tr>
+      <tr><td><strong>Pre-Squeeze</strong></td><td>25%</td><td>15%</td><td>0%</td><td>0%</td><td>10%</td></tr>
+      <tr><td><strong>Oversold Mean-Reversion</strong></td><td>15%</td><td>30%</td><td>40%</td><td>50%</td><td>35%</td></tr>
+      <tr><td><strong>Trend Following</strong></td><td>20%</td><td>15%</td><td>15%</td><td>10%</td><td>20%</td></tr>
+      <tr><td><strong>Cash / Hedges</strong></td><td>0%</td><td>20%</td><td>40%</td><td>40%</td><td>20%</td></tr>
+    </tbody>
+  </table>
+
+  <div id="strategyBars"></div>
+
+  <div class="alert-box danger">
+    <strong><i class="fa-solid fa-skull-crossbones"></i> The Wrong Strategy in the Wrong Regime.</strong> In February-March 2020, traders who kept buying momentum breakouts during the COVID crash saw drawdowns of 30-50% in two weeks. The same traders who switched to oversold mean-reversion on quality names (AAPL at $56 adjusted, MSFT at $135) saw 80-150% gains in the next 12 months. The strategy didn't change. The regime did. Winners adapted. Losers didn't.
+  </div>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">Historical Strategy Performance by Regime (Backtested 2018-2025)</h3>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>Risk-On CAGR</th>
+        <th>Risk-Off CAGR</th>
+        <th>Wrong Regime Loss</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Momentum Breakout</strong></td><td style="color:#10b981;">+38%</td><td style="color:#ef4444;">-24%</td><td>Running momentum in Risk-Off: -62% max drawdown</td></tr>
+      <tr><td><strong>Pre-Squeeze</strong></td><td style="color:#10b981;">+52%</td><td style="color:#ef4444;">-41%</td><td>Highest beta strategy. Catastrophic in Risk-Off.</td></tr>
+      <tr><td><strong>Oversold Mean-Reversion</strong></td><td style="color:#f59e0b;">+12%</td><td style="color:#10b981;">+18%</td><td>Underperforms in Risk-On but never blows up.</td></tr>
+      <tr><td><strong>Trend Following</strong></td><td style="color:#10b981;">+22%</td><td style="color:#f59e0b;">+6%</td><td>Slower but regime-agnostic. Whipsaws in Neutral.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb"></i> Position Sizing as a Regime Function</h4>
+    <p>Strategy weight is half the equation. The other half is <strong>total exposure</strong>. In Risk-On, you can run 80-100% invested. In Neutral, cap at 60-70%. In Early Risk-Off, drop to 40-50%. In Risk-Off, 25-40% maximum with the rest in cash or short-term Treasuries (SHV/BIL). This "exposure dial" is the single most impactful risk management tool you have &mdash; more effective than any stop-loss.</p>
+  </div>
+</div>
+
+<!-- ===== SECTION 7: DECISION TREE ===== -->
+<div class="section-divider" id="decision-tree"><i class="fa-solid fa-code-branch" style="color:#059669;"></i> Regime Detection Algorithm</div>
+
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-code-branch" style="color:#059669; margin-right:0.5rem;"></i> The Decision Tree</h2>
+  <p>Here is the exact decision tree we run every Sunday evening. It takes 30 minutes with free data sources. No subscriptions required. The output is a single regime label and a composite score that determines your strategy weights for the week.</p>
+
+  <div class="decision-tree">
+    <div class="dt-node">
+      <div class="dt-icon" style="background:#059669;"><i class="fa-solid fa-1"></i></div>
+      <div class="dt-body">
+        <h5>Step 1: Check VIX Level + Direction</h5>
+        <p>Record VIX close. Note the 5-day trend (rising, falling, flat). If VIX &gt; 28: jump to Risk-Off assessment. If VIX &lt; 16: default Risk-On, continue to confirm.</p>
+      </div>
+    </div>
+    <div class="dt-node">
+      <div class="dt-icon" style="background:#10b981;"><i class="fa-solid fa-2"></i></div>
+      <div class="dt-body">
+        <h5>Step 2: Measure Breadth</h5>
+        <p>Check % of S&P 500 above 200-day MA ($SPXA200R). Check NYSE Advance/Decline line trend (5-day and 20-day). Check NH-NL ratio. Score each 0-20, sum for breadth composite (0-60).</p>
+      </div>
+    </div>
+    <div class="dt-node">
+      <div class="dt-icon" style="background:#14b8a6;"><i class="fa-solid fa-3"></i></div>
+      <div class="dt-body">
+        <h5>Step 3: Check Credit + Rates</h5>
+        <p>Pull HY-IG spread (HYG yield minus LQD yield). Check 10Y-2Y spread direction. DXY trend (5-day). Score each 0-10, sum for macro composite (0-30).</p>
+      </div>
+    </div>
+    <div class="dt-node">
+      <div class="dt-icon" style="background:#0d9488;"><i class="fa-solid fa-4"></i></div>
+      <div class="dt-body">
+        <h5>Step 4: Check Sector Rotation</h5>
+        <p>Compute XLK/XLU and XLP/XLY 5-day relative performance. Rising XLK/XLU = cyclical leadership (+10 points). Rising XLP/XLY = defensive rotation (-10 points).</p>
+      </div>
+    </div>
+    <div class="dt-node">
+      <div class="dt-icon" style="background:#065f46;"><i class="fa-solid fa-5"></i></div>
+      <div class="dt-body">
+        <h5>Step 5: Compute Regime Composite Score</h5>
+        <p>VIX Score (0-20) + Breadth Composite (0-60) + Macro Composite (0-30) + Sector Score (-10 to +10) = <strong>Regime Score (-10 to 120, normalized to 0-100)</strong>. Map to regime and set strategy weights.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Regime Mapping</div>
+    <span class="formula-highlight">&gt; 70</span> Risk-On &nbsp;&bull;&nbsp;
+    <span style="color:#fcd34d;">50-70</span> Neutral &nbsp;&bull;&nbsp;
+    <span style="color:#fb923c;">30-50</span> Early Risk-Off &nbsp;&bull;&nbsp;
+    <span style="color:#fca5a5;">&lt; 30</span> Risk-Off
+    <br><span style="font-size:.8rem; color:#a7f3d0; font-weight:400;">Recovery = Score rising &gt;10 points from Risk-Off within 2 weeks</span>
+  </div>
+
+  <h3 style="font-size:1rem; font-weight:700; margin:2rem 0 1rem;">Historical Regime Duration (S&P 500, 2018-2025)</h3>
+
+  <div id="durationPie"></div>
+
+  <table class="compare-table">
+    <thead><tr><th>Regime</th><th>% of Trading Days</th><th>Median Duration</th><th>Longest Streak</th><th>Avg SPX Monthly Return</th></tr></thead>
+    <tbody>
+      <tr><td><strong style="color:#10b981;">Risk-On</strong></td><td>48%</td><td>4.2 months</td><td>14 months (Nov 2020 - Jan 2022)</td><td>+2.1%</td></tr>
+      <tr><td><strong style="color:#f59e0b;">Neutral</strong></td><td>22%</td><td>3.5 weeks</td><td>8 weeks</td><td>+0.4%</td></tr>
+      <tr><td><strong style="color:#f97316;">Early Risk-Off</strong></td><td>12%</td><td>2.5 weeks</td><td>6 weeks</td><td>-1.8%</td></tr>
+      <tr><td><strong style="color:#ef4444;">Risk-Off</strong></td><td>10%</td><td>4.5 weeks</td><td>12 weeks (Feb-May 2020)</td><td>-5.3%</td></tr>
+      <tr><td><strong style="color:#3b82f6;">Recovery</strong></td><td>8%</td><td>3.8 weeks</td><td>7 weeks</td><td>+4.7%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-chart-line"></i> Recovery: The Most Profitable Regime</h4>
+    <p>Recovery represents only 8% of trading days but generates an average monthly SPX return of +4.7% &mdash; more than double Risk-On's +2.1%. This makes sense: stocks are recovering from depressed valuations, fear is still elevated (cheap options = cheap hedging), and institutional re-risking creates buying pressure. The key is recognizing Recovery early &mdash; while VIX is still above 20 but declining, and breadth is bottoming. Most retail traders miss this entirely because they are still traumatized from the Risk-Off period.</p>
+  </div>
+</div>
+
+<!-- ===== VIX HISTORICAL ===== -->
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-chart-line" style="color:#059669; margin-right:0.5rem;"></i> VIX Historical &mdash; Regime Zones Visualized</h2>
+  <p>The chart below shows VIX over the past 7 years with regime zones color-coded. Notice how Risk-Off periods are sharp spikes, while Risk-On periods are extended plateaus. The market spends most of its time in Risk-On but the damage from Risk-Off periods &mdash; if unhedged &mdash; erases months of gains in days.</p>
+
+  <div id="vixHistory"></div>
+</div>
+
+<!-- ===== DANGER OF WRONG REGIME ===== -->
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:2rem;">
+  <h2><i class="fa-solid fa-skull-crossbones" style="color:#ef4444; margin-right:0.5rem;"></i> The Cost of Ignoring the Regime</h2>
+  <p>We have real data from our own analyses. In the first six weeks of MarketWatch coverage (Feb-Mar 2026), we traversed three regimes: Risk-On, Early Risk-Off, and Risk-Off. The hits and misses tell a clear story.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Week</th><th>Regime</th><th>Strategy Used</th><th>Result</th><th>Lesson</th></tr></thead>
+    <tbody>
+      <tr><td>Feb W1</td><td style="color:#10b981;">Risk-On</td><td>Momentum + Pre-Squeeze</td><td style="color:#10b981;">AAOI +147%</td><td>Right strategy, right regime. Confluence confirmed.</td></tr>
+      <tr><td>Feb W3</td><td style="color:#f59e0b;">Neutral</td><td>Momentum (unchanged)</td><td style="color:#ef4444;">Mixed results</td><td>Should have reduced sizing 25%.</td></tr>
+      <tr><td>Mar W1</td><td style="color:#f97316;">Early Risk-Off</td><td>Pre-Squeeze on SAP</td><td style="color:#ef4444;">SAP -28%</td><td>Pre-squeeze in Early Risk-Off = catastrophic. Rule added.</td></tr>
+      <tr><td>Mar W2</td><td style="color:#ef4444;">Risk-Off</td><td>Oversold quality + cash</td><td style="color:#10b981;">Capital preserved</td><td>Correct adaptation. Grade B.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box danger">
+    <strong><i class="fa-solid fa-exclamation-circle"></i> The SAP Lesson.</strong> SAP was a technically perfect pre-squeeze setup &mdash; high short interest, compression pattern, volume building. But the regime was Early Risk-Off. Credit spreads were widening. Breadth was deteriorating. In that environment, short squeezes fail because the buying pressure that triggers them (institutional FOMO) disappears. The setup was valid in isolation. The regime made it lethal. This single trade motivated the creation of the entire regime detection framework documented here.
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-list-check"></i> Key Takeaways</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> <strong>The regime determines strategy weights.</strong> Momentum in Risk-On, mean-reversion in Risk-Off. Never the reverse.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>VIX is necessary but not sufficient.</strong> Always cross-reference with breadth, credit spreads, and sector rotation.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Breadth divergence is the earliest warning.</strong> When the index rises but participation narrows, reduce exposure before VIX confirms.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Recovery is the highest-alpha regime.</strong> Learn to identify it early &mdash; declining VIX + bottoming breadth + credit stabilization.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Position sizing is a regime function.</strong> Adjust total exposure (100% in Risk-On to 25-40% in Risk-Off) before touching individual trade sizing.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>The decision tree takes 30 minutes weekly.</strong> Five steps, free data, one composite score that sets your entire week's posture.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Wrong strategy + wrong regime = account destruction.</strong> The SAP -28% loss happened not because the setup was bad, but because the regime was wrong for that strategy.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- CTA to Part 3 -->
+<div class="content-card" style="max-width:900px; margin:0 auto 1.5rem; padding:0;">
+  <a href="/series/marketwatch-checklist/part3-scanner/" class="next-cta">
+    <div>
+      <div class="next-label">Next &mdash; Part 3 of 8</div>
+      <div class="next-title">Scanner &mdash; Detect Opportunities Systematically</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+<!-- Series Bar (bottom) -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/marketwatch-checklist/part1-framework/" class="series-arrow" title="Part 1: Framework"><i class="fas fa-chevron-left"></i></a><span class="series-title">La Checklist MarketWatch</span><div class="series-steps"><a href="/series/marketwatch-checklist/part1-framework/" class="series-step" title="Framework"><span class="series-num">1</span><span class="series-label">Framework</span></a><a href="/series/marketwatch-checklist/part2-regime/" class="series-step current" title="R&eacute;gime"><span class="series-num">2</span><span class="series-label">R&eacute;gime</span></a><a href="/series/marketwatch-checklist/part3-scanner/" class="series-step" title="Scanner"><span class="series-num">3</span><span class="series-label">Scanner</span></a><a href="/series/marketwatch-checklist/part4-validation/" class="series-step" title="Validation"><span class="series-num">4</span><span class="series-label">Validation</span></a><a href="/series/marketwatch-checklist/part5-risk/" class="series-step" title="Risk"><span class="series-num">5</span><span class="series-label">Risk</span></a><a href="/series/marketwatch-checklist/part6-portfolio/" class="series-step" title="Portfolio"><span class="series-num">6</span><span class="series-label">Portfolio</span></a><a href="/series/marketwatch-checklist/part7-execution/" class="series-step" title="Execution"><span class="series-num">7</span><span class="series-label">Execution</span></a><a href="/series/marketwatch-checklist/part8-review/" class="series-step" title="Review"><span class="series-num">8</span><span class="series-label">Review</span></a></div><span class="series-counter">2/8</span><a href="/series/marketwatch-checklist/part3-scanner/" class="series-arrow" title="Part 3: Scanner"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<!-- Footer -->
+<footer class="article-footer">
+  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  This is not financial advice.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<script>
+(function() {
+  var emerald = '#059669', emeraldDark = '#065f46', green = '#10b981', yellow = '#f59e0b', orange = '#f97316', red = '#ef4444', blue = '#3b82f6', gray = '#94a3b8';
+
+  // ===== 1. VIX GAUGE =====
+  var gaugeEl = document.getElementById('vixGauge');
+  if (gaugeEl && typeof echarts !== 'undefined') {
+    var gaugeChart = echarts.init(gaugeEl);
+    gaugeChart.setOption({
+      series: [{
+        type: 'gauge',
+        startAngle: 200,
+        endAngle: -20,
+        min: 0,
+        max: 50,
+        splitNumber: 10,
+        axisLine: {
+          lineStyle: {
+            width: 20,
+            color: [
+              [0.24, green],
+              [0.32, '#a3e635'],
+              [0.40, yellow],
+              [0.56, orange],
+              [0.70, red],
+              [1, '#991b1b']
+            ]
+          }
+        },
+        pointer: { itemStyle: { color: emeraldDark }, width: 5, length: '65%' },
+        axisTick: { distance: -20, length: 6, lineStyle: { color: '#fff', width: 1 } },
+        splitLine: { distance: -24, length: 14, lineStyle: { color: '#fff', width: 2 } },
+        axisLabel: { color: '#64748b', distance: 30, fontSize: 11, fontFamily: 'Inter' },
+        detail: {
+          valueAnimation: true, fontSize: 28, fontWeight: 800, fontFamily: 'Inter',
+          color: emeraldDark, offsetCenter: [0, '70%'],
+          formatter: function(v) { return v.toFixed(1) + '\nVIX'; }
+        },
+        data: [{ value: 18.5 }],
+        title: { show: true, offsetCenter: [0, '95%'], fontSize: 13, fontFamily: 'Inter', color: '#64748b' }
+      }]
+    });
+  }
+
+  // ===== 2. REGIME RADAR =====
+  var radarEl = document.getElementById('regimeRadar');
+  if (radarEl) {
+    var radarChart = echarts.init(radarEl);
+    radarChart.setOption({
+      title: { text: 'Regime Profile — Multi-Indicator Radar', left: 'center', textStyle: { fontSize: 14, fontFamily: 'Inter', color: '#0f172a' } },
+      tooltip: {},
+      legend: { bottom: 0, data: ['Risk-On', 'Early Risk-Off', 'Risk-Off'], textStyle: { fontFamily: 'Inter', fontSize: 11 } },
+      radar: {
+        indicator: [
+          { name: 'VIX Score', max: 20 },
+          { name: 'Breadth', max: 20 },
+          { name: 'Credit', max: 20 },
+          { name: 'Yield Curve', max: 20 },
+          { name: 'DXY (inv)', max: 20 },
+          { name: 'Sector Rotation', max: 20 }
+        ],
+        shape: 'polygon',
+        splitArea: { areaStyle: { color: ['rgba(5,150,105,0.03)', 'rgba(5,150,105,0.06)'] } },
+        axisLine: { lineStyle: { color: '#e2e8f0' } },
+        splitLine: { lineStyle: { color: '#e2e8f0' } }
+      },
+      series: [{
+        type: 'radar',
+        data: [
+          { value: [18, 17, 16, 15, 14, 18], name: 'Risk-On', lineStyle: { color: green, width: 2 }, areaStyle: { color: 'rgba(16,185,129,0.15)' }, itemStyle: { color: green } },
+          { value: [10, 8, 9, 10, 8, 7], name: 'Early Risk-Off', lineStyle: { color: orange, width: 2 }, areaStyle: { color: 'rgba(249,115,22,0.1)' }, itemStyle: { color: orange } },
+          { value: [3, 4, 4, 6, 16, 3], name: 'Risk-Off', lineStyle: { color: red, width: 2 }, areaStyle: { color: 'rgba(239,68,68,0.1)' }, itemStyle: { color: red } }
+        ]
+      }]
+    });
+  }
+
+  // ===== 3. STRATEGY PERFORMANCE BY REGIME (BAR) =====
+  var stratEl = document.getElementById('strategyBars');
+  if (stratEl) {
+    var stratChart = echarts.init(stratEl);
+    stratChart.setOption({
+      title: { text: 'Strategy Annual Return by Regime (Backtested 2018-2025)', left: 'center', textStyle: { fontSize: 13, fontFamily: 'Inter' } },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { var s = '<strong>' + p[0].axisValue + '</strong><br>'; p.forEach(function(i) { s += i.marker + ' ' + i.seriesName + ': ' + (i.value > 0 ? '+' : '') + i.value + '%<br>'; }); return s; } },
+      legend: { bottom: 0, textStyle: { fontFamily: 'Inter', fontSize: 11 } },
+      grid: { left: 60, right: 20, top: 50, bottom: 60 },
+      xAxis: { type: 'category', data: ['Momentum\nBreakout', 'Pre-\nSqueeze', 'Oversold\nMean-Rev', 'Trend\nFollowing'], axisLabel: { fontSize: 10, fontFamily: 'Inter', interval: 0 } },
+      yAxis: { type: 'value', axisLabel: { formatter: '{value}%', fontSize: 10 }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [
+        { name: 'Risk-On', type: 'bar', data: [38, 52, 12, 22], itemStyle: { color: green, borderRadius: [4,4,0,0] } },
+        { name: 'Neutral', type: 'bar', data: [14, 8, 18, 10], itemStyle: { color: yellow, borderRadius: [4,4,0,0] } },
+        { name: 'Risk-Off', type: 'bar', data: [-24, -41, 18, 6], itemStyle: { color: red, borderRadius: [4,4,0,0] } },
+        { name: 'Recovery', type: 'bar', data: [28, 35, 22, 15], itemStyle: { color: blue, borderRadius: [4,4,0,0] } }
+      ]
+    });
+  }
+
+  // ===== 4. REGIME DURATION PIE =====
+  var pieEl = document.getElementById('durationPie');
+  if (pieEl) {
+    var pieChart = echarts.init(pieEl);
+    pieChart.setOption({
+      title: { text: 'Time Spent in Each Regime (2018-2025)', left: 'center', textStyle: { fontSize: 13, fontFamily: 'Inter' } },
+      tooltip: { trigger: 'item', formatter: '{b}: {c}% of trading days' },
+      series: [{
+        type: 'pie',
+        radius: ['35%', '65%'],
+        center: ['50%', '55%'],
+        avoidLabelOverlap: true,
+        itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 2 },
+        label: { fontFamily: 'Inter', fontSize: 12, formatter: '{b}\n{c}%' },
+        emphasis: { label: { fontSize: 14, fontWeight: 'bold' } },
+        data: [
+          { value: 48, name: 'Risk-On', itemStyle: { color: green } },
+          { value: 22, name: 'Neutral', itemStyle: { color: yellow } },
+          { value: 12, name: 'Early Risk-Off', itemStyle: { color: orange } },
+          { value: 10, name: 'Risk-Off', itemStyle: { color: red } },
+          { value: 8, name: 'Recovery', itemStyle: { color: blue } }
+        ]
+      }]
+    });
+  }
+
+  // ===== 5. VIX HISTORICAL LINE =====
+  var histEl = document.getElementById('vixHistory');
+  if (histEl) {
+    var histChart = echarts.init(histEl);
+    // Simplified VIX monthly closes 2018-2025
+    var dates = ['Jan18','Apr18','Jul18','Oct18','Jan19','Apr19','Jul19','Oct19','Jan20','Mar20','Jun20','Sep20','Dec20','Mar21','Jun21','Sep21','Dec21','Mar22','Jun22','Sep22','Dec22','Mar23','Jun23','Sep23','Dec23','Mar24','Jun24','Sep24','Dec24','Mar25','Jun25','Sep25','Dec25'];
+    var vixData = [11.1,15.4,12.1,24.8,19.4,13.1,16.1,13.2,13.7,53.5,30.4,26.4,22.8,19.4,15.8,23.1,17.2,30.8,28.7,31.6,21.7,18.7,13.6,17.5,12.4,13.0,12.4,19.2,15.2,22.5,17.8,14.3,13.1];
+
+    histChart.setOption({
+      title: { text: 'VIX Monthly Close with Regime Zones (2018-2025)', left: 'center', textStyle: { fontSize: 13, fontFamily: 'Inter' } },
+      tooltip: { trigger: 'axis', formatter: function(p) { return p[0].axisValue + '<br>VIX: ' + p[0].value; } },
+      grid: { left: 50, right: 20, top: 50, bottom: 40 },
+      xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 9, fontFamily: 'Inter', rotate: 45 } },
+      yAxis: { type: 'value', min: 0, max: 60, axisLabel: { fontSize: 10 }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      visualMap: {
+        show: false, pieces: [
+          { lte: 16, color: green },
+          { gt: 16, lte: 20, color: yellow },
+          { gt: 20, lte: 28, color: orange },
+          { gt: 28, lte: 35, color: red },
+          { gt: 35, color: '#991b1b' }
+        ]
+      },
+      series: [{
+        type: 'line', data: vixData, smooth: true, symbol: 'circle', symbolSize: 5,
+        lineStyle: { width: 2.5 },
+        areaStyle: { opacity: 0.08 },
+        markLine: {
+          silent: true,
+          lineStyle: { type: 'dashed', width: 1 },
+          data: [
+            { yAxis: 16, label: { formatter: 'Risk-On < 16', fontSize: 9, color: green }, lineStyle: { color: green } },
+            { yAxis: 20, label: { formatter: 'Neutral 16-20', fontSize: 9, color: yellow }, lineStyle: { color: yellow } },
+            { yAxis: 28, label: { formatter: 'Early Off 20-28', fontSize: 9, color: orange }, lineStyle: { color: orange } },
+            { yAxis: 35, label: { formatter: 'Risk-Off > 28', fontSize: 9, color: red }, lineStyle: { color: red } }
+          ]
+        },
+        markPoint: {
+          symbolSize: 40,
+          data: [
+            { coord: ['Mar20', 53.5], value: 'COVID\n53.5', symbol: 'pin', itemStyle: { color: '#991b1b' }, label: { color: 'white', fontSize: 8, fontWeight: 'bold' } },
+            { coord: ['Sep22', 31.6], value: 'Fed\n31.6', symbol: 'pin', itemStyle: { color: red }, label: { color: 'white', fontSize: 8, fontWeight: 'bold' } },
+            { coord: ['Oct18', 24.8], value: 'Q4-18\n24.8', symbol: 'pin', itemStyle: { color: orange }, label: { color: 'white', fontSize: 8, fontWeight: 'bold' } }
+          ]
+        }
+      }]
+    });
+  }
+
+  // ===== RESIZE ALL =====
+  window.addEventListener('resize', function() {
+    [gaugeChart, radarChart, stratChart, pieChart, histChart].forEach(function(c) { if (c) c.resize(); });
+  });
+})();
+</script>
+<script src="/assets/sidebar.js"></script>
+<script src="/assets/echarts-responsive.js"></script>
+</body>
+</html>

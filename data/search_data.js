@@ -2696,12 +2696,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Retrospective",
-    "desc": "Stops trigger in 1–3 days; TP1 targets need 5–15 days. Early scans (Mar 3–5) are the most mature but benefited from energy momentum — later scans still maturing.",
-    "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,energy,defense,commodity,short-squeeze",
+    "title": "Scanner Retrospective — Mar 3 to Mar 13, 2026",
+    "desc": "90 setups across 9 scans — provisional grade B (45.5% HR on 27.5% resolved). Open positions avg +1.5% MtM, 69% positive/flat. AMPX +82%, USO +25.6%, CF +18%. SAP blacklisted after −28% flash crash. Projected final HR: 42–50%.",
+    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective,energy,defense,commodity,short-squeeze",
     "grade": "",
     "href": "/scanner/retrospective/20260313/",
-    "date": "13 mars 2026"
+    "date": "13 March 2026"
   },
   {
     "type": "scanner",
@@ -3221,6 +3221,32 @@ window.searchDataPrebuilt = [
     "tags": "tech,ai",
     "grade": "",
     "href": "tech/anthropic-ecosystem/part1-foundation/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Le Framework Systématique",
+    "desc": "MarketWatch Checklist series — Part 1/8: Why systematic trading beats discretionary, how cognitive biases destroy returns, the checklist approach applied to trading, and the 8-step workflow overview.",
+    "tags": "formation,trade-idea,macro,technique",
+    "grade": "",
+    "href": "/series/marketwatch-checklist/part1-framework/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Philosophie & Régimes de Marché",
+    "desc": "Série MarketWatch Checklist — Partie 1/8 : Comprendre la philosophie du trading systématique, les 5 régimes de marché, les 6 indicateurs macro clés, et comment adapter sa stratégie à chaque régime.",
+    "tags": "us,eu,asia,finance,macro,formation,technique,trade-idea",
+    "grade": "",
+    "href": "/series/marketwatch-checklist/part1-philosophie/",
     "date": ""
   },
   {

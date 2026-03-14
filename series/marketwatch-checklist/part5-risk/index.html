@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="formation,technique,trade-idea,macro" data-tab="analyses">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Risk Management — The Only Edge That Never Expires | MarketWatch Checklist — Part 5/8 | Market Watch</title>
+<meta name="description" content="Position sizing, stop loss placement, portfolio heat, drawdown management, gap risk, and black swan protection. The complete risk management framework for systematic traders.">
+<meta property="og:title" content="Risk Management — The Only Edge That Never Expires | MarketWatch Checklist — Part 5/8 | Market Watch">
+<meta property="og:description" content="Position sizing, stop loss placement, portfolio heat, drawdown management, gap risk, and black swan protection. A complete risk management checklist for every trade.">
+<meta property="og:image" content="https://articles.market-watch.xyz/favicon.ico">
+<meta property="og:url" content="https://articles.market-watch.xyz/series/marketwatch-checklist/part5-risk/">
+<meta property="og:type" content="article">
+<link rel="icon" href="/favicon.ico">
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+<!-- Fonts & Icons -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<!-- Charts -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+<!-- Base CSS -->
+<link rel="stylesheet" href="/assets/report.css">
+
+<style>
+/* -- Theme: Emerald Green -- */
+.hero-section { padding: 4rem 2rem 3rem; background: linear-gradient(180deg, #ecfdf5 0%, #f0fdf4 40%, #f8fafc 100%); text-align: center; }
+.hero-date { font-size: .85rem; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 1rem; }
+.hero-badges { display: flex; gap: .75rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem; }
+.hero-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 99px; font-size: .8rem; font-weight: 700; }
+.hero-badge-emerald { background: rgba(5,150,105,.1); color: #059669; border: 1px solid rgba(5,150,105,.25); }
+.hero-badge-dark { background: rgba(6,95,70,.08); color: #065f46; border: 1px solid rgba(6,95,70,.18); }
+.hero-badge-amber { background: rgba(217,119,6,.1); color: #d97706; border: 1px solid rgba(217,119,6,.2); }
+.hero-badge-red { background: rgba(220,38,38,.08); color: #dc2626; border: 1px solid rgba(220,38,38,.18); }
+
+/* -- Section Dividers -- */
+.section-divider { display: flex; align-items: center; gap: 1rem; margin: 3rem 0 2rem; color: #94a3b8; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; }
+.section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: #e2e8f0; }
+
+/* -- Pedagogy Box (emerald) -- */
+.pedagogy-box { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 1.5rem; margin: 1.25rem 0; }
+.pedagogy-box h4 { font-size: 1rem; font-weight: 700; color: #065f46; margin: 0 0 .75rem; }
+.pedagogy-box p, .pedagogy-box li { font-size: .88rem; color: #334155; line-height: 1.65; }
+.pedagogy-box p { margin: 0 0 .75rem; }
+.pedagogy-box p:last-child { margin-bottom: 0; }
+.pedagogy-box ul { margin: .5rem 0; padding-left: 1.25rem; }
+
+/* -- Alert Box -- */
+.alert-box { background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.25rem 0; }
+.alert-box h4 { font-size: .95rem; font-weight: 700; color: #991b1b; margin: 0 0 .5rem; }
+.alert-box p { font-size: .88rem; color: #7f1d1d; line-height: 1.6; margin: 0; }
+.alert-box-amber { background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #d97706; }
+.alert-box-amber h4 { color: #92400e; }
+.alert-box-amber p { color: #78350f; }
+
+/* -- Formula Box -- */
+.formula-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin: 1.25rem 0; text-align: center; }
+.formula-box .formula { font-size: 1.15rem; font-weight: 800; color: #065f46; font-family: 'Inter', monospace; margin: .75rem 0; letter-spacing: .02em; }
+.formula-box .formula-label { font-size: .82rem; color: #64748b; }
+.formula-box .formula-example { font-size: .85rem; color: #475569; margin-top: .75rem; background: #ecfdf5; border-radius: 8px; padding: .75rem; text-align: left; }
+
+/* -- Compare Table -- */
+.compare-table { width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: .85rem; }
+.compare-table th { background: #065f46; color: white; padding: .7rem .9rem; text-align: left; font-weight: 700; font-size: .8rem; }
+.compare-table th:first-child { border-radius: 8px 0 0 0; }
+.compare-table th:last-child { border-radius: 0 8px 0 0; }
+.compare-table td { padding: .65rem .9rem; border-bottom: 1px solid #e2e8f0; color: #334155; }
+.compare-table tr:nth-child(even) td { background: #f8fafc; }
+.compare-table tr:hover td { background: #ecfdf5; }
+.compare-table .good { color: #059669; font-weight: 600; }
+.compare-table .bad { color: #dc2626; font-weight: 600; }
+.compare-table .neutral { color: #d97706; font-weight: 600; }
+
+/* -- Step Grid -- */
+.step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.step-card { background: white; border: 1px solid #d1fae5; border-radius: 12px; padding: 1.25rem; transition: all .2s; }
+.step-card:hover { border-color: #059669; box-shadow: 0 4px 16px -4px rgba(5,150,105,.12); }
+.step-num { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: 800; font-size: .82rem; margin-bottom: .6rem; }
+.step-card h4 { font-size: .92rem; font-weight: 700; color: #0f172a; margin: 0 0 .35rem; }
+.step-card p { font-size: .83rem; color: #64748b; margin: 0; line-height: 1.5; }
+
+/* -- Checklist -- */
+.checklist { list-style: none; padding: 0; margin: 1rem 0; counter-reset: check; }
+.checklist li { display: flex; gap: .75rem; align-items: flex-start; padding: .7rem 0; border-bottom: 1px solid #f1f5f9; font-size: .88rem; color: #334155; line-height: 1.55; }
+.checklist li:last-child { border-bottom: none; }
+.checklist li .check-num { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #059669; font-weight: 800; font-size: .78rem; margin-top: .05rem; }
+
+/* -- Chart containers -- */
+.chart-box { height: 380px; width: 100%; margin: 1.5rem 0; }
+.chart-box-sm { height: 300px; width: 100%; margin: 1.25rem 0; }
+
+/* -- Takeaway Box (emerald) -- */
+.takeaway-box { background: linear-gradient(135deg, #065f46 0%, #059669 100%); border-radius: 14px; padding: 1.75rem; margin: 1.25rem 0; }
+.takeaway-box h3 { font-size: 1rem; font-weight: 700; color: white; margin: 0 0 1rem; }
+.takeaway-list { list-style: none; padding: 0; margin: 0; }
+.takeaway-list li { display: flex; gap: .75rem; align-items: flex-start; font-size: .88rem; color: rgba(255,255,255,.9); line-height: 1.55; margin-bottom: .65rem; }
+.takeaway-list li:last-child { margin-bottom: 0; }
+.takeaway-list li i { color: #6ee7b7; margin-top: .15rem; flex-shrink: 0; }
+.takeaway-list li strong { color: white; }
+
+/* -- CTA Box -- */
+.cta-box { background: white; border: 2px solid #059669; border-radius: 14px; padding: 2rem; text-align: center; margin: 2rem 0; }
+.cta-box h3 { color: #065f46; font-size: 1.1rem; font-weight: 800; margin: 0 0 .5rem; }
+.cta-box p { color: #475569; font-size: .9rem; margin: 0 0 1.25rem; }
+.cta-btn { display: inline-flex; align-items: center; gap: .5rem; background: linear-gradient(135deg, #059669, #065f46); color: white; font-weight: 700; font-size: .9rem; padding: .75rem 1.75rem; border-radius: 10px; text-decoration: none; transition: all .2s; }
+.cta-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px -4px rgba(5,150,105,.3); }
+
+/* -- Responsive -- */
+@media (max-width: 768px) {
+  .hero-section { padding: 2.5rem 1rem 2rem; }
+  .step-grid { grid-template-columns: 1fr; }
+  .chart-box { height: 320px; }
+  .chart-box-sm { height: 260px; }
+  .compare-table { font-size: .78rem; }
+}
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">S&eacute;ries</a>
+    </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-shield-halved"></i> MarketWatch Checklist &mdash; Part 5 of 8</div>
+  <h1 class="hero-title">Risk Management &mdash; The Only Edge That Never Expires</h1>
+  <p class="hero-subtitle">
+    Strategies decay. Alphas get arbitraged. Markets change regimes.<br>
+    But a trader who masters risk management survives them all.<br>
+    <strong>This is the chapter that separates professionals from gamblers.</strong>
+  </p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-shield-halved"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-dark"><i class="fa-solid fa-chart-line"></i> Drawdown Math</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-triangle-exclamation"></i> Tail Risk</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-bolt"></i> Black Swan</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<!-- Series Bar -->
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/marketwatch-checklist/part4-validation/" class="series-arrow"><i class="fas fa-chevron-left"></i></a><span class="series-title">MarketWatch Checklist</span><div class="series-steps"><a href="/series/marketwatch-checklist/part1-framework/" class="series-step"><span class="series-num">1</span><span class="series-label">Framework</span></a><a href="/series/marketwatch-checklist/part2-regime/" class="series-step"><span class="series-num">2</span><span class="series-label">Regime</span></a><a href="/series/marketwatch-checklist/part3-scanner/" class="series-step"><span class="series-num">3</span><span class="series-label">Scanner</span></a><a href="/series/marketwatch-checklist/part4-validation/" class="series-step"><span class="series-num">4</span><span class="series-label">Validation</span></a><a href="/series/marketwatch-checklist/part5-risk/" class="series-step current"><span class="series-num">5</span><span class="series-label">Risk</span></a><a href="/series/marketwatch-checklist/part6-portfolio/" class="series-step"><span class="series-num">6</span><span class="series-label">Portfolio</span></a><a href="/series/marketwatch-checklist/part7-execution/" class="series-step"><span class="series-num">7</span><span class="series-label">Execution</span></a><a href="/series/marketwatch-checklist/part8-review/" class="series-step"><span class="series-num">8</span><span class="series-label">Review</span></a></div><span class="series-counter">5/8</span><a href="/series/marketwatch-checklist/part6-portfolio/" class="series-arrow"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<!-- Floating Nav -->
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#edge" class="fnav-item" data-section="edge"><i class="fa-solid fa-shield-halved"></i><span>The Edge</span></a><a href="#sizing" class="fnav-item" data-section="sizing"><i class="fa-solid fa-calculator"></i><span>Position Sizing</span></a><a href="#stops" class="fnav-item" data-section="stops"><i class="fa-solid fa-hand"></i><span>Stop Losses</span></a><a href="#portfolio" class="fnav-item" data-section="portfolio"><i class="fa-solid fa-fire"></i><span>Portfolio Heat</span></a><a href="#drawdown" class="fnav-item" data-section="drawdown"><i class="fa-solid fa-chart-line"></i><span>Drawdowns</span></a><a href="#blackswan" class="fnav-item" data-section="blackswan"><i class="fa-solid fa-bolt"></i><span>Black Swans</span></a><a href="#checklist" class="fnav-item" data-section="checklist"><i class="fa-solid fa-list-check"></i><span>Checklist</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<!-- Content -->
+<div class="container">
+
+<!-- ============================== SECTION 1: THE ONLY EDGE ============================== -->
+<div class="section-divider" id="edge"><i class="fa-solid fa-shield-halved"></i> Why risk management is the only sustainable edge</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-infinity"></i> Every Edge Decays &mdash; Except This One</h2>
+
+<p>Here is a fact that most traders learn too late: <strong>every alpha source has a half-life</strong>. The momentum factor that crushed it in the 2010s is getting crowded. The earnings surprise model that worked last quarter is being replicated by a thousand quant funds. The breakout pattern you discovered gets front-run by algorithms faster than you can click "Buy."</p>
+
+<p>But risk management? It worked for Jesse Livermore in the 1920s. It worked for the Turtles in the 1980s. It works for Renaissance Technologies today. It will work in 2030 and 2050. Because risk management is not about predicting what the market will do &mdash; it is about surviving whatever it does.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-book-open"></i> The asymmetry of survival</h4>
+<p>Consider two traders with identical strategies (55% win rate, 1:1.5 R:R). Trader A risks 2% per trade. Trader B risks 10%. After 100 trades, Trader A has a 99.7% probability of surviving. Trader B has a 38% probability of blowing up. <strong>Same edge, same market, same signals.</strong> The only difference is risk management.</p>
+<p>You do not need to be right more often. You need to be right <em>long enough</em>. And that requires surviving every single drawdown the market throws at you &mdash; including the ones you cannot predict.</p>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-skull-crossbones"></i> The trader's paradox</h4>
+<p>The better your recent track record, the more tempted you are to increase position size. But this is precisely when you are most vulnerable &mdash; because mean reversion applies to performance, not just prices. The traders who blow up most spectacularly are those who were on a winning streak and forgot that the market does not owe them anything.</p>
+</div>
+
+<h3>Risk-adjusted returns: the only metric that matters</h3>
+
+<p>Raw returns are meaningless without context. A 40% annual return with 60% drawdown is an inferior result to a 15% return with 8% drawdown. The Sharpe ratio, Sortino ratio, and Calmar ratio all exist because professional allocators understand that <strong>risk-adjusted returns are the only honest measure of skill</strong>.</p>
+
+<div id="riskProfileChart" class="chart-box"></div>
+
+<p>The radar chart above compares two trader profiles. Trader A has higher raw returns but worse risk metrics across the board. Trader B would attract institutional capital because allocators look at drawdown-adjusted returns, not headlines.</p>
+</div>
+
+<!-- ============================== SECTION 2: POSITION SIZING ============================== -->
+<div class="section-divider" id="sizing"><i class="fa-solid fa-calculator"></i> Position sizing &mdash; The 1-2% rule &amp; Kelly Criterion</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-calculator"></i> How Much to Risk Per Trade</h2>
+
+<p>Position sizing is the single most impactful decision you make on every trade &mdash; more important than entry timing, more important than which stock you pick. It answers the question: <strong>"If I am wrong, how much do I lose?"</strong></p>
+
+<h3>The 1-2% Rule</h3>
+
+<p>The professional standard is simple: <strong>never risk more than 1-2% of your total trading capital on any single trade</strong>. This means if you have a $100,000 account, your maximum loss per trade is $1,000 to $2,000. Not the position size &mdash; the risk. The difference is critical.</p>
+
+<div class="formula-box">
+<div class="formula-label">Position Size Formula</div>
+<div class="formula">Position Size = (Account x Risk%) / (Entry - Stop Loss)</div>
+<div class="formula-example">
+<strong>Example:</strong> $100,000 account, 1.5% risk, buying at $50.00 with stop at $47.00<br>
+Position Size = ($100,000 x 0.015) / ($50.00 - $47.00) = $1,500 / $3.00 = <strong>500 shares ($25,000 position)</strong><br>
+You are risking $1,500 (1.5% of capital), but the position is $25,000 (25% of capital). The stop loss distance determines the gap.
+</div>
+</div>
+
+<h3>The Kelly Criterion &mdash; Simplified</h3>
+
+<p>Ed Thorp proved that there exists a mathematically optimal bet size for any edge: the <strong>Kelly fraction</strong>. Betting more than Kelly leads to ruin; betting less is suboptimal but safe. In practice, most professionals use "Half Kelly" or "Quarter Kelly" because real-world edges are uncertain.</p>
+
+<div class="formula-box">
+<div class="formula-label">Kelly Criterion</div>
+<div class="formula">f* = (W x B - L) / B</div>
+<div class="formula-example">
+Where: <strong>f*</strong> = fraction of capital to risk, <strong>W</strong> = win probability, <strong>B</strong> = average win/average loss ratio, <strong>L</strong> = loss probability (1 - W)<br><br>
+<strong>Example:</strong> 55% win rate, average win = $2, average loss = $1 (B = 2)<br>
+f* = (0.55 x 2 - 0.45) / 2 = (1.10 - 0.45) / 2 = 0.325 = <strong>32.5% Kelly</strong><br>
+Half Kelly = 16.25% &mdash; Quarter Kelly = 8.1% &mdash; Most traders should use 1-3% in practice.
+</div>
+</div>
+
+<div class="alert-box alert-box-amber">
+<h4><i class="fa-solid fa-triangle-exclamation"></i> Why full Kelly is dangerous</h4>
+<p>Full Kelly assumes you know your exact edge, that outcomes are independent, and that your statistics are stable. None of these are true in real trading. A slight overestimate of your win rate, combined with full Kelly sizing, can turn a positive-expectancy strategy into a path to ruin. <strong>Half Kelly achieves 75% of the growth rate with dramatically less volatility.</strong></p>
+</div>
+
+<div id="positionSizeChart" class="chart-box"></div>
+
+<p>The chart above shows maximum position size (in dollars) for different account sizes at 1%, 1.5%, and 2% risk levels, assuming a $3 stop distance. Notice how even small changes in risk percentage create significant differences as the account grows.</p>
+
+<table class="compare-table">
+<thead><tr><th>Account Size</th><th>1% Risk ($)</th><th>1.5% Risk ($)</th><th>2% Risk ($)</th><th>Max Shares ($50 stock, $3 stop)</th></tr></thead>
+<tbody>
+<tr><td>$25,000</td><td>$250</td><td>$375</td><td>$500</td><td>83 / 125 / 167</td></tr>
+<tr><td>$50,000</td><td>$500</td><td>$750</td><td>$1,000</td><td>167 / 250 / 333</td></tr>
+<tr><td>$100,000</td><td>$1,000</td><td>$1,500</td><td>$2,000</td><td>333 / 500 / 667</td></tr>
+<tr><td>$250,000</td><td>$2,500</td><td>$3,750</td><td>$5,000</td><td>833 / 1,250 / 1,667</td></tr>
+<tr><td>$500,000</td><td>$5,000</td><td>$7,500</td><td>$10,000</td><td>1,667 / 2,500 / 3,333</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================== SECTION 3: STOP LOSSES ============================== -->
+<div class="section-divider" id="stops"><i class="fa-solid fa-hand"></i> Stop loss placement &mdash; ATR, structure &amp; percentage</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-crosshairs"></i> Where to Place Your Stop Loss</h2>
+
+<p>A stop loss is not an afterthought &mdash; it is the first thing you determine before entering a trade. The stop defines your risk, your position size, and ultimately your survival. There are three major approaches, each with trade-offs.</p>
+
+<h3>Method comparison</h3>
+
+<table class="compare-table">
+<thead><tr><th>Method</th><th>How It Works</th><th>Best For</th><th>Weakness</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>ATR-Based</strong></td>
+<td>Stop = Entry - (N x ATR14). Typical N = 1.5 to 2.5</td>
+<td class="good">Volatile stocks, trend following</td>
+<td class="bad">Can be too wide in low-vol regimes</td>
+</tr>
+<tr>
+<td><strong>Structure-Based</strong></td>
+<td>Stop below key support, below swing low, or below trendline</td>
+<td class="good">Swing trading, breakout strategies</td>
+<td class="bad">Requires chart reading skill</td>
+</tr>
+<tr>
+<td><strong>Percentage-Based</strong></td>
+<td>Fixed % below entry (typically 5-8%)</td>
+<td class="neutral">Simple, beginner-friendly</td>
+<td class="bad">Ignores volatility entirely</td>
+</tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-book-open"></i> ATR-based stops explained</h4>
+<p>The <strong>Average True Range (ATR)</strong> measures how much a stock typically moves in a day. A stock with an ATR of $2 moves roughly $2/day. If you place your stop $1 away (0.5 ATR), you will get stopped out by normal noise. If you place it $5 away (2.5 ATR), you give the trade room to breathe while keeping risk defined.</p>
+<ul>
+<li><strong>Tight stop (1.0-1.5 ATR):</strong> Higher win-rate required, more frequent stops, lower per-trade risk</li>
+<li><strong>Medium stop (1.5-2.0 ATR):</strong> Sweet spot for most swing trades, balances noise vs. risk</li>
+<li><strong>Wide stop (2.0-3.0 ATR):</strong> Position trades, trend following, requires smaller position sizes</li>
+</ul>
+</div>
+
+<div class="formula-box">
+<div class="formula-label">ATR Stop Calculation</div>
+<div class="formula">Stop Price = Entry Price - (ATR Multiplier x ATR14)</div>
+<div class="formula-example">
+<strong>Example:</strong> Buying NVDA at $140, ATR(14) = $5.20, multiplier = 2.0<br>
+Stop Price = $140 - (2.0 x $5.20) = $140 - $10.40 = <strong>$129.60</strong><br>
+Risk per share = $10.40 &mdash; With $100K account at 1.5% risk: $1,500 / $10.40 = <strong>144 shares</strong>
+</div>
+</div>
+
+<h3>The cardinal sin: moving your stop further away</h3>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-ban"></i> Never widen a stop on an active trade</h4>
+<p>If the trade hits your stop, <strong>you were wrong</strong>. Widening the stop does not change this &mdash; it only increases the damage. The stop was placed before the trade for a reason: it represents the point at which your thesis is invalidated. Moving it is not risk management, it is denial.</p>
+</div>
+
+<h3>Risk/Reward Ratio: The 1:1.5 Minimum</h3>
+
+<p>Every trade must offer a <strong>minimum reward of 1.5x the risk</strong> to be worth taking. This is non-negotiable. Here is why: with a 1:1.5 R:R, you only need a 40% win rate to break even. With a 1:1 R:R, you need better than 50% &mdash; and after commissions and slippage, that is extremely hard to maintain.</p>
+
+<table class="compare-table">
+<thead><tr><th>R:R Ratio</th><th>Breakeven Win Rate</th><th>Win Rate Needed (with costs)</th><th>Verdict</th></tr></thead>
+<tbody>
+<tr><td>1:1</td><td>50.0%</td><td>~53%</td><td class="bad">Too tight, no margin of error</td></tr>
+<tr><td>1:1.5</td><td>40.0%</td><td>~43%</td><td class="good">Minimum professional standard</td></tr>
+<tr><td>1:2</td><td>33.3%</td><td>~36%</td><td class="good">Excellent, sweet spot for swing trades</td></tr>
+<tr><td>1:3</td><td>25.0%</td><td>~28%</td><td class="good">Ideal for trend following, lower win rate OK</td></tr>
+<tr><td>1:5</td><td>16.7%</td><td>~19%</td><td class="neutral">Very selective, few setups qualify</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ============================== SECTION 4: PORTFOLIO HEAT ============================== -->
+<div class="section-divider" id="portfolio"><i class="fa-solid fa-fire"></i> Portfolio heat &amp; correlation risk</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-temperature-full"></i> Portfolio Heat: Max 6-8% Total Risk</h2>
+
+<p>Individual position risk means nothing if you are running ten correlated positions at 2% each. <strong>Portfolio heat</strong> is the total amount your portfolio would lose if every open position hit its stop loss simultaneously. Professional traders keep this between 6% and 8% &mdash; never higher.</p>
+
+<div class="formula-box">
+<div class="formula-label">Portfolio Heat Calculation</div>
+<div class="formula">Portfolio Heat = Sum of (Position Risk %) for all open positions</div>
+<div class="formula-example">
+<strong>Example:</strong> 5 open positions, each risking 1.5% of capital<br>
+Portfolio Heat = 5 x 1.5% = <strong>7.5%</strong> &mdash; Within the 6-8% safe zone<br><br>
+<strong>Danger zone:</strong> 6 positions at 2% each = 12% portfolio heat. A single correlated selloff (tech earnings week, Fed announcement) could wipe out 12% of your account in a day.
+</div>
+</div>
+
+<div id="portfolioHeatChart" class="chart-box-sm"></div>
+
+<h3>Correlation Risk: Why 5 Tech Stocks is NOT Diversification</h3>
+
+<p>Owning AAPL, MSFT, NVDA, GOOG, and META feels diversified &mdash; five different companies, five different products. But in a risk-off event, they all drop together because they share the same risk factors: growth premium, multiple compression sensitivity, dollar strength, and AI narrative.</p>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-link-slash"></i> Real diversification requires uncorrelated risks</h4>
+<ul>
+<li><strong>Sector diversification:</strong> Tech + Healthcare + Energy + Financials. Different rate sensitivities, different cycle positions.</li>
+<li><strong>Factor diversification:</strong> Growth + Value + Momentum. They tend to rotate, not crash together.</li>
+<li><strong>Geography diversification:</strong> US + EU + Asia. Different monetary policies, different macro drivers.</li>
+<li><strong>Instrument diversification:</strong> Stocks + Bonds + Commodities. Truly uncorrelated in most regimes (but not all &mdash; 2022 proved it).</li>
+</ul>
+<p><strong>Rule of thumb:</strong> If two positions would lose money for the same reason (e.g., "tech selloff"), count them as one risk unit, not two.</p>
+</div>
+
+<div id="riskBudgetChart" class="chart-box-sm"></div>
+
+<p>The pie chart above shows an example risk budget allocation. Notice how risk is distributed across uncorrelated sectors, not concentrated in a single theme. Each slice represents a risk unit, not a dollar amount.</p>
+</div>
+
+<!-- ============================== SECTION 5: DRAWDOWN MANAGEMENT ============================== -->
+<div class="section-divider" id="drawdown"><i class="fa-solid fa-chart-line"></i> The math of ruin &amp; drawdown management</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-skull"></i> The Asymmetry of Losses</h2>
+
+<p>This is the most important math in all of trading, and most people never internalize it: <strong>losses and gains are not symmetrical</strong>. A 50% loss does not require a 50% gain to recover. It requires a 100% gain. This asymmetry is what makes large drawdowns so devastating &mdash; and why preventing them is more important than maximizing returns.</p>
+
+<div id="drawdownChart" class="chart-box"></div>
+
+<table class="compare-table">
+<thead><tr><th>Drawdown</th><th>Recovery Needed</th><th>Time to Recover (at 15%/yr)</th><th>Difficulty</th></tr></thead>
+<tbody>
+<tr><td>-5%</td><td>+5.3%</td><td>~4 months</td><td class="good">Routine</td></tr>
+<tr><td>-10%</td><td>+11.1%</td><td>~9 months</td><td class="good">Manageable</td></tr>
+<tr><td>-20%</td><td>+25.0%</td><td>~1.6 years</td><td class="neutral">Painful</td></tr>
+<tr><td>-30%</td><td>+42.9%</td><td>~2.6 years</td><td class="neutral">Severe</td></tr>
+<tr><td>-40%</td><td>+66.7%</td><td>~3.6 years</td><td class="bad">Career-threatening</td></tr>
+<tr><td>-50%</td><td>+100.0%</td><td>~4.9 years</td><td class="bad">Near-terminal</td></tr>
+<tr><td>-75%</td><td>+300.0%</td><td>~10.5 years</td><td class="bad">Effectively game over</td></tr>
+</tbody>
+</table>
+
+<h3>When to Reduce Size</h3>
+
+<p>Professional traders use <strong>drawdown-based scaling</strong>: as the equity curve drops, position sizes decrease automatically. This is counter-intuitive because your instinct says "trade bigger to make it back." That instinct is the path to ruin.</p>
+
+<div class="step-grid">
+<div class="step-card">
+<div class="step-num">1</div>
+<h4>0-5% Drawdown: Full Size</h4>
+<p>Normal operation. Trade your standard position sizes. Every system experiences small drawdowns &mdash; this is not a signal to change anything.</p>
+</div>
+<div class="step-card">
+<div class="step-num">2</div>
+<h4>5-10% Drawdown: Reduce to 75%</h4>
+<p>Yellow flag. Cut position sizes by 25%. Review recent trades for pattern &mdash; are you overtrading, chasing, or is the market regime shifting?</p>
+</div>
+<div class="step-card">
+<div class="step-num">3</div>
+<h4>10-15% Drawdown: Reduce to 50%</h4>
+<p>Orange flag. Half your standard size. Consider whether your strategy still fits the current market regime. Increase selectivity significantly.</p>
+</div>
+<div class="step-card">
+<div class="step-num">4</div>
+<h4>15-20% Drawdown: Reduce to 25%</h4>
+<p>Red flag. Minimum size only. Take only the highest-conviction setups. Consider going flat and reassessing your entire approach.</p>
+</div>
+<div class="step-card">
+<div class="step-num">5</div>
+<h4>20%+ Drawdown: Stop Trading</h4>
+<p>Full stop. Go to cash. Something is fundamentally wrong &mdash; either your strategy, the market regime, or your psychology. Do not resume until you have identified and fixed the issue.</p>
+</div>
+</div>
+
+<div class="alert-box">
+<h4><i class="fa-solid fa-circle-exclamation"></i> The "make it back" trap</h4>
+<p>After a 20% drawdown, the emotional pressure to increase size and "win it back quickly" is overwhelming. But the math says the opposite: you need a 25% gain just to get back to even. If you double your risk trying to speed up the recovery and lose again, you go from -20% to -40%, which now requires a +67% gain. This is the exact sequence that ends trading careers. <strong>Scale down, not up, during drawdowns.</strong></p>
+</div>
+</div>
+
+<!-- ============================== SECTION 6: BLACK SWAN ============================== -->
+<div class="section-divider" id="blackswan"><i class="fa-solid fa-bolt"></i> Gap risk &amp; black swan protection</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-explosion"></i> Gap Risk: Overnight, Weekend, Earnings</h2>
+
+<p>Your stop loss at $47 means nothing if the stock opens at $38 on Monday morning. <strong>Gap risk</strong> is the risk that a price moves past your stop between sessions, creating a loss far larger than planned. This is a structural risk that no stop order can protect against.</p>
+
+<h3>Types of gap risk</h3>
+
+<table class="compare-table">
+<thead><tr><th>Gap Type</th><th>Frequency</th><th>Typical Magnitude</th><th>Mitigation</th></tr></thead>
+<tbody>
+<tr>
+<td><strong>Overnight gap</strong></td>
+<td>Daily</td>
+<td>0.5-2% on average, up to 5%</td>
+<td>Reduce size before close, use futures hedge</td>
+</tr>
+<tr>
+<td><strong>Weekend gap</strong></td>
+<td>Weekly</td>
+<td>1-3% on average, up to 8%</td>
+<td>Reduce exposure Friday, carry only highest-conviction</td>
+</tr>
+<tr>
+<td><strong>Earnings gap</strong></td>
+<td>Quarterly per stock</td>
+<td class="bad">5-20% is normal, 30%+ possible</td>
+<td>Close or hedge before earnings, never hold full size</td>
+</tr>
+<tr>
+<td><strong>Macro shock</strong></td>
+<td>1-3x per year</td>
+<td class="bad">3-10% market-wide</td>
+<td>Portfolio hedges, reduced overall exposure</td>
+</tr>
+<tr>
+<td><strong>Black swan</strong></td>
+<td>Once per decade</td>
+<td class="bad">20-40% crash, circuit breakers</td>
+<td>Tail risk hedges, position limits, diversification</td>
+</tr>
+</tbody>
+</table>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-calendar-xmark"></i> The earnings rule</h4>
+<p>Unless you have a specific, tested earnings strategy, <strong>never hold a full position through an earnings announcement</strong>. The binary outcome (beat/miss) combined with the post-earnings gap makes the risk/reward undefined. If you must hold, reduce to 25-50% of normal size, or buy a protective put to cap the downside.</p>
+<p>Historical data shows that single-stock earnings gaps average 5-7% for S&P 500 names and 10-15% for growth/momentum stocks. For a 2% risk position, a 15% adverse gap turns your 2% planned loss into a 6-7% actual loss &mdash; potentially your entire weekly risk budget gone on a single name.</p>
+</div>
+
+<h3>Black Swan Protection: Tail Risk Hedging</h3>
+
+<p>Tail risk hedges are insurance policies. They cost money when markets are calm and pay off massively when markets crash. The goal is not to profit from crashes &mdash; it is to ensure your portfolio survives them.</p>
+
+<div class="step-grid">
+<div class="step-card">
+<div class="step-num"><i class="fa-solid fa-shield"></i></div>
+<h4>Protective Puts (OTM)</h4>
+<p>Buy puts 10-15% below current market on SPY or QQQ. Cost: 0.5-1.5% of portfolio per quarter. Pay off 5-10x in a crash. The simplest and most direct hedge.</p>
+</div>
+<div class="step-card">
+<div class="step-num"><i class="fa-solid fa-chart-area"></i></div>
+<h4>VIX Calls</h4>
+<p>Buy VIX calls at strikes 25-35 when VIX is below 15. Cost: 0.2-0.5% of portfolio. VIX typically spikes 100-300% in a crash, making these calls extremely effective. Use 1-2 month expirations and roll.</p>
+</div>
+<div class="step-card">
+<div class="step-num"><i class="fa-solid fa-arrows-up-down"></i></div>
+<h4>Put Spreads</h4>
+<p>Buy SPY puts at -10% and sell at -25%. Cheaper than naked puts, still provides meaningful protection for the most likely crash scenarios. Less protection in true black swans.</p>
+</div>
+<div class="step-card">
+<div class="step-num"><i class="fa-solid fa-vault"></i></div>
+<h4>Cash Buffer</h4>
+<p>Keep 10-20% in cash or short-term treasuries at all times. Zero cost, provides dry powder to buy the dip, and mechanically reduces portfolio beta. The simplest tail hedge of all.</p>
+</div>
+</div>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-sack-dollar"></i> The cost of insurance</h4>
+<p>A reasonable tail risk hedging budget is <strong>0.5-2% of annual returns</strong>. If your strategy generates 20% per year, spending 0.5-1% on puts and VIX calls is a rounding error in good years and a lifesaver in bad ones. Think of it as the premium you pay to stay in the game.</p>
+<p>Nassim Taleb's Universa fund famously returned 3,612% in March 2020 on its tail hedge book &mdash; while portfolio losses were capped at single digits. You do not need to be that extreme, but allocating even a small budget to convexity can transform your risk profile.</p>
+</div>
+</div>
+
+<!-- ============================== SECTION 7: PRE-TRADE CHECKLIST ============================== -->
+<div class="section-divider" id="checklist"><i class="fa-solid fa-list-check"></i> Pre-trade risk checklist</div>
+
+<div class="content-card">
+<h2><i class="fa-solid fa-clipboard-check"></i> 10 Items to Verify Before Every Trade</h2>
+
+<p>This checklist should become second nature. No trade gets entered without all 10 boxes checked. Print it, pin it next to your monitor, and use it religiously until it becomes automatic.</p>
+
+<ol class="checklist">
+<li>
+<span class="check-num">1</span>
+<div><strong>Position size calculated from stop distance, not conviction.</strong><br>Your entry and stop are defined. Risk per share x shares = risk in dollars. This number must not exceed 1-2% of account equity.</div>
+</li>
+<li>
+<span class="check-num">2</span>
+<div><strong>Stop loss is placed at a technical level, not a round number.</strong><br>The stop is below support, below the ATR band, or below a swing low &mdash; not just "$2 below entry" because it feels right.</div>
+</li>
+<li>
+<span class="check-num">3</span>
+<div><strong>Risk/Reward ratio is at least 1:1.5.</strong><br>Target is at least 1.5x the stop distance. If the setup does not offer this, skip it. There will always be another trade.</div>
+</li>
+<li>
+<span class="check-num">4</span>
+<div><strong>Portfolio heat is below 8% after this trade.</strong><br>Sum all open position risks. If adding this trade pushes total portfolio risk above 8%, either skip it or close an existing position first.</div>
+</li>
+<li>
+<span class="check-num">5</span>
+<div><strong>No earnings within 5 trading days.</strong><br>Check the earnings calendar. If the stock reports within a week, either wait until after earnings or reduce size to 25% and add a protective put.</div>
+</li>
+<li>
+<span class="check-num">6</span>
+<div><strong>Correlation check passed.</strong><br>Is this position materially correlated with existing holdings? If you already hold 3 tech stocks, adding a 4th is not diversification &mdash; it is doubling down on a single bet.</div>
+</li>
+<li>
+<span class="check-num">7</span>
+<div><strong>No major macro events within 48 hours.</strong><br>Fed decisions, CPI prints, jobs reports, and geopolitical events can override any technical setup. Know the calendar before you trade.</div>
+</li>
+<li>
+<span class="check-num">8</span>
+<div><strong>Current drawdown level allows full position size.</strong><br>If you are in a drawdown, have you reduced size according to your scaling rules? Do not trade full size during a losing streak.</div>
+</li>
+<li>
+<span class="check-num">9</span>
+<div><strong>The trade is in your playbook.</strong><br>Is this a setup you have traded before, backtested, and documented? If it is a "gut feeling" trade, it fails the checklist. Walk away.</div>
+</li>
+<li>
+<span class="check-num">10</span>
+<div><strong>You can walk away from the screen.</strong><br>If the trade requires constant monitoring, something is wrong. Your stop is set, your target is set, and the market will do what it does. If you feel compelled to watch every tick, your position is too large.</div>
+</li>
+</ol>
+
+<div class="pedagogy-box">
+<h4><i class="fa-solid fa-brain"></i> Why checklists work</h4>
+<p>Atul Gawande's research showed that surgical checklists reduced deaths by 47%. Aviation checklists have made flying the safest form of transport. The mechanism is the same in trading: <strong>checklists prevent errors of omission under pressure</strong>. When the market is moving fast and your adrenaline is spiking, you will forget something critical. The checklist remembers for you.</p>
+</div>
+</div>
+
+<!-- ============================== TAKEAWAY ============================== -->
+<div class="content-card">
+<div class="takeaway-box">
+<h3><i class="fa-solid fa-shield-halved"></i> Key Takeaways &mdash; Part 5: Risk Management</h3>
+<ul class="takeaway-list">
+<li><i class="fa-solid fa-check"></i><div><strong>Risk management is the only edge that does not decay</strong> &mdash; strategies get crowded, alphas get arbitraged, but disciplined risk control works in every market, every era.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>Never risk more than 1-2% per trade</strong> &mdash; calculate position size from stop distance, not from conviction or portfolio weight.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>Use ATR-based stops for volatile stocks</strong> &mdash; structure-based for swing trades. Never use percentage stops blindly. Never widen a stop on an active trade.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>Portfolio heat must stay below 6-8%</strong> &mdash; five correlated positions at 2% each is 10% concentrated risk, not diversification.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>A 50% loss requires a 100% gain to recover</strong> &mdash; this asymmetry means preventing large drawdowns is exponentially more important than maximizing returns.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>Scale down during drawdowns</strong> &mdash; reduce position sizes at 5%, 10%, 15% drawdown levels. Stop trading entirely at 20%.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>Budget 0.5-2% annually for tail risk hedges</strong> &mdash; OTM puts, VIX calls, or a permanent cash buffer. Insurance is cheap until you need it.</div></li>
+<li><i class="fa-solid fa-check"></i><div><strong>Use the 10-item checklist before every trade</strong> &mdash; no exceptions. The checklist is your defense against emotional decisions under pressure.</div></li>
+</ul>
+</div>
+</div>
+
+<!-- CTA -->
+<div class="cta-box">
+<h3>Next: Part 6 &mdash; Portfolio Construction</h3>
+<p>You know how to size positions and manage risk. Now learn how to combine them into a portfolio that compounds &mdash; sector allocation, rebalancing rules, and portfolio-level optimization.</p>
+<a href="/series/marketwatch-checklist/part6-portfolio/" class="cta-btn"><i class="fa-solid fa-arrow-right"></i> Continue to Part 6</a>
+</div>
+
+</div><!-- /container -->
+
+<!-- Footer -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img src="/logo.svg" alt="" width="28" height="28">
+      <span>MarketWatch</span>
+    </div>
+    <div class="footer-links">
+      <a href="/">Home</a>
+      <a href="/?tab=series">Series</a>
+      <a href="/?tab=analyses">Analyses</a>
+    </div>
+    <div class="footer-copy">&copy; 2026 market-watch.xyz &mdash; All rights reserved</div>
+  </div>
+</footer>
+
+<!-- Scripts: Core -->
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<!-- ECharts -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ==================== 1. Risk Profile Radar ====================
+  var riskProfileChart = echarts.init(document.getElementById('riskProfileChart'));
+  riskProfileChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {},
+    legend: { data: ['Trader A (aggressive)', 'Trader B (disciplined)'], bottom: 0, textStyle: { fontSize: 12 } },
+    radar: {
+      indicator: [
+        { name: 'Annual Return', max: 100 },
+        { name: 'Sharpe Ratio', max: 100 },
+        { name: 'Max Drawdown\n(inverted)', max: 100 },
+        { name: 'Win Rate', max: 100 },
+        { name: 'Recovery Speed', max: 100 },
+        { name: 'Consistency', max: 100 }
+      ],
+      radius: '65%'
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        {
+          value: [85, 35, 25, 58, 30, 20],
+          name: 'Trader A (aggressive)',
+          lineStyle: { color: '#dc2626', width: 2 },
+          itemStyle: { color: '#dc2626' },
+          areaStyle: { color: 'rgba(220,38,38,0.1)' }
+        },
+        {
+          value: [55, 82, 88, 52, 85, 90],
+          name: 'Trader B (disciplined)',
+          lineStyle: { color: '#059669', width: 2 },
+          itemStyle: { color: '#059669' },
+          areaStyle: { color: 'rgba(5,150,105,0.1)' }
+        }
+      ]
+    }]
+  });
+
+  // ==================== 2. Position Size by Account (Bar) ====================
+  var positionSizeChart = echarts.init(document.getElementById('positionSizeChart'));
+  positionSizeChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(p) { var s = '<b>' + p[0].name + '</b><br>'; p.forEach(function(i) { s += i.marker + ' ' + i.seriesName + ': <b>$' + i.value.toLocaleString() + '</b><br>'; }); return s; } },
+    legend: { data: ['1% Risk', '1.5% Risk', '2% Risk'], bottom: 0 },
+    grid: { top: 30, right: 20, bottom: 55, left: 70 },
+    xAxis: { type: 'category', data: ['$25K', '$50K', '$100K', '$250K', '$500K'], axisLabel: { fontSize: 12 } },
+    yAxis: { type: 'value', name: 'Max Risk ($)', axisLabel: { formatter: function(v) { return '$' + (v/1000) + 'K'; } } },
+    series: [
+      { name: '1% Risk', type: 'bar', data: [250, 500, 1000, 2500, 5000], itemStyle: { color: '#a7f3d0', borderRadius: [4,4,0,0] } },
+      { name: '1.5% Risk', type: 'bar', data: [375, 750, 1500, 3750, 7500], itemStyle: { color: '#059669', borderRadius: [4,4,0,0] } },
+      { name: '2% Risk', type: 'bar', data: [500, 1000, 2000, 5000, 10000], itemStyle: { color: '#065f46', borderRadius: [4,4,0,0] } }
+    ]
+  });
+
+  // ==================== 3. Portfolio Heat Gauge ====================
+  var portfolioHeatChart = echarts.init(document.getElementById('portfolioHeatChart'));
+  portfolioHeatChart.setOption({
+    backgroundColor: 'transparent',
+    series: [{
+      type: 'gauge',
+      min: 0,
+      max: 20,
+      startAngle: 200,
+      endAngle: -20,
+      splitNumber: 10,
+      radius: '90%',
+      center: ['50%', '60%'],
+      axisLine: {
+        lineStyle: {
+          width: 20,
+          color: [
+            [0.3, '#059669'],
+            [0.4, '#10b981'],
+            [0.5, '#d97706'],
+            [0.7, '#f59e0b'],
+            [1, '#dc2626']
+          ]
+        }
+      },
+      axisTick: { length: 8, lineStyle: { color: 'auto', width: 1.5 } },
+      splitLine: { length: 14, lineStyle: { color: 'auto', width: 2 } },
+      axisLabel: { distance: 22, fontSize: 11, formatter: function(v) { return v + '%'; } },
+      pointer: { width: 5, length: '65%', itemStyle: { color: '#065f46' } },
+      title: { offsetCenter: [0, '75%'], fontSize: 14, color: '#334155', fontWeight: 700 },
+      detail: {
+        valueAnimation: true,
+        formatter: function(v) { return v.toFixed(1) + '%'; },
+        fontSize: 28,
+        fontWeight: 800,
+        color: '#065f46',
+        offsetCenter: [0, '45%']
+      },
+      data: [{ value: 7.5, name: 'Portfolio Heat' }]
+    }]
+  });
+
+  // ==================== 4. Drawdown Recovery (Line) ====================
+  var drawdownChart = echarts.init(document.getElementById('drawdownChart'));
+  var drawdowns = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90];
+  var recoveries = drawdowns.map(function(d) { return parseFloat(((d / (100 - d)) * 100).toFixed(1)); });
+  drawdownChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'axis', formatter: function(p) { return 'Drawdown: <b>-' + p[0].name + '%</b><br>Recovery needed: <b>+' + p[0].value + '%</b>'; } },
+    grid: { top: 40, right: 30, bottom: 50, left: 65 },
+    xAxis: { type: 'category', data: drawdowns.map(function(d) { return d; }), name: 'Drawdown (%)', nameLocation: 'center', nameGap: 35, axisLabel: { formatter: function(v) { return '-' + v + '%'; } } },
+    yAxis: { type: 'value', name: 'Recovery Needed (%)', axisLabel: { formatter: function(v) { return '+' + v + '%'; } } },
+    series: [{
+      type: 'line',
+      data: recoveries,
+      smooth: true,
+      lineStyle: { color: '#dc2626', width: 3 },
+      itemStyle: { color: '#dc2626' },
+      areaStyle: {
+        color: {
+          type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(220,38,38,0.25)' },
+            { offset: 1, color: 'rgba(220,38,38,0.02)' }
+          ]
+        }
+      },
+      markLine: {
+        silent: true,
+        data: [
+          { xAxis: 9, label: { formatter: '-50% = +100%', position: 'insideEndTop', fontSize: 11, color: '#991b1b', fontWeight: 700 }, lineStyle: { color: '#fca5a5', type: 'dashed' } }
+        ]
+      },
+      markPoint: {
+        data: [
+          { coord: [9, 100], value: '+100%', itemStyle: { color: '#dc2626' }, label: { fontSize: 11, fontWeight: 700 } }
+        ]
+      }
+    }]
+  });
+
+  // ==================== 5. Risk Budget Allocation (Pie) ====================
+  var riskBudgetChart = echarts.init(document.getElementById('riskBudgetChart'));
+  riskBudgetChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: { trigger: 'item', formatter: '{b}: <b>{c}%</b> of risk budget ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontSize: 11 } },
+    series: [{
+      type: 'pie',
+      radius: ['35%', '65%'],
+      center: ['50%', '45%'],
+      avoidLabelOverlap: true,
+      label: { show: true, fontSize: 11, formatter: '{b}\n{c}%' },
+      labelLine: { show: true },
+      data: [
+        { value: 25, name: 'US Growth', itemStyle: { color: '#059669' } },
+        { value: 15, name: 'US Value', itemStyle: { color: '#065f46' } },
+        { value: 15, name: 'EU Quality', itemStyle: { color: '#10b981' } },
+        { value: 10, name: 'Healthcare', itemStyle: { color: '#6ee7b7' } },
+        { value: 10, name: 'Energy', itemStyle: { color: '#d97706' } },
+        { value: 10, name: 'Financials', itemStyle: { color: '#6366f1' } },
+        { value: 10, name: 'Tail Hedges', itemStyle: { color: '#dc2626' } },
+        { value: 5, name: 'Cash Buffer', itemStyle: { color: '#94a3b8' } }
+      ]
+    }]
+  });
+
+  // Resize all charts on window resize
+  window.addEventListener('resize', function() {
+    riskProfileChart.resize();
+    positionSizeChart.resize();
+    portfolioHeatChart.resize();
+    drawdownChart.resize();
+    riskBudgetChart.resize();
+  });
+});
+</script>
+
+<!-- Floating Nav Script -->
+<script>
+(function(){var fab=document.getElementById('fnavBtn');var menu=document.getElementById('fnavMenu');var icon=document.getElementById('fnavIcon');var label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item');var sections=[];var isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section');var el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item});});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}fab.addEventListener('click',function(e){e.stopPropagation();toggle();});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section');var target=document.getElementById(id);if(target){var brandBar=document.querySelector('.brand-bar');var offset=(brandBar?brandBar.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});}if(isOpen)toggle();});});var currentActive=null;var observer=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){var match=sections.find(function(s){return s.el===entry.target;});if(match){if(currentActive)currentActive.item.classList.remove('active');match.item.classList.add('active');currentActive=match;label.textContent=match.item.querySelector('span').textContent;}}});},{rootMargin:'-15% 0px -65% 0px',threshold:0});sections.forEach(function(s){observer.observe(s.el);});if(sections.length>0){sections[0].item.classList.add('active');currentActive=sections[0];label.textContent=sections[0].item.querySelector('span').textContent;}})();
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/sidebar.js"></script>
+</body>
+</html>
