@@ -138,6 +138,14 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 3. Créer `scanner/retrospective/YYYYMMDD/index.html` (note A+ à F, dashboard, tableau, top/flop)
 4. Mettre à jour redirect `scanner/retrospective/index.html`
 5. Mettre à jour le dashboard "Performance du Scanner" dans `index.html` (KPIs + 3 ECharts)
+   - **CONVENTION CUMULÉE** : afficher stats sur **TOUTES les rétros** (pas seulement la dernière)
+   - KPIs : Hit Rate cumulé (`TP1 / (TP1 + stops)` sur résolu uniquement), meilleur pick all-time, nb scans/setups total, pire pick all-time
+   - Période : de la 1ère rétro à la plus récente — label ex: `"Feb 10 – Mar 13, 4 rétros cumulées"`
+   - Rétros provisoires (< 60% résolu) : marquées `*` dans labels charts
+   - Chart "Hit Rate par Rétro" : un point/barre par rétro + barre orange `% résolu` en overlay (yAxis2)
+   - Chart "Top Picks" : best/worst all-time toutes rétros confondues
+   - Chart résultats : stacked bars TP1/Stop/Open par rétro (ne jamais masquer les "open")
+   - Ne pas skiper les positions ouvertes — les afficher explicitement avec leur count
 6. **Indexer + Push** :
    ```bash
    node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html
