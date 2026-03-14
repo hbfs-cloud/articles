@@ -160,9 +160,14 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 6 tabs : **Hebdo**, **Daily**, **Analyses**, **Scanner**, **Radar**, **Séries**. Tech dans le footer (`?tab=tech`).
 - URL state : `?tab=daily`, `?grade=A`, `?tags=crypto,ai` — combinables
 - Cartes toujours triées par date décroissante. Exception : bloc "Performance du Scanner" fixe en premier dans le tab Scanner.
-- **⚠️ ANTI-DOUBLON GLOBAL** : Avant tout `add_card.js`, lire le fichier JSON cible (`data/daily.json`, `data/weekly.json`, `data/scanner.json`, `data/analyses.json`) et vérifier que l'URL n'y figure pas déjà. En cas de doublon → ne pas ajouter, signaler.
-- **Format date `report-card-meta`** : TOUJOURS `DD mois YYYY` en français minuscule (`14 mars 2026`). Ni anglais, ni majuscule sur le mois, ni suffixe textuel, ni espaces superflus.
-- Indexation : `node tools/add_card.js chemin/vers/index.html` (JAMAIS modifier index.html à la main pour ajouter une carte)
+- **⚠️ LECTURE OBLIGATOIRE AVANT GÉNÉRATION** : Avant de générer un article ou d'appeler `add_card.js`, TOUJOURS lire le fichier JSON cible (`data/daily.json`, `data/weekly.json`, etc.) pour :
+  1. Vérifier l'absence de doublon par URL
+  2. Lire les titres existants pour cohérence
+  3. Vérifier le format de date des cartes récentes
+  - **Ne JAMAIS skip cette étape** — les doublons viennent systématiquement d'un `add_card.js` lancé sans lecture préalable
+- **⚠️ ANTI-DOUBLON CODE** : `add_card.js` filtre désormais par URL pour tous les tabs (daily, weekly, scanner, series, analyses). Mais la vérification manuelle reste obligatoire.
+- **Format date `report-card-meta`** : TOUJOURS `DD mois YYYY` en français minuscule (`14 mars 2026`). Ni anglais, ni majuscule sur le mois (`Mars` ❌), ni suffixe textuel (`— Vendredi` ❌), ni espaces superflus.
+- Indexation : `node tools/add_card.js chemin/vers/index.html` (JAMAIS modifier les JSON à la main pour ajouter une carte)
 
 ## Radar — `data/radar.json`
 Mis à jour à chaque publication (daily, weekly, scanner). Rédigé par Claude, pas mécanique.

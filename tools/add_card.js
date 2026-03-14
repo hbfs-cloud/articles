@@ -338,7 +338,8 @@ if (fs.existsSync(jsonFile)) {
 const hrefPattern = `href="${href}"`;
 
 if (tab === 'daily') {
-    // Daily: no dedup, entries just accumulate (one per day)
+    // Daily: dedup by URL (overwrite if same href already exists)
+    cards = cards.filter(c => !c.includes(hrefPattern));
     cards.unshift(cardHtml.trim());
 
 } else if (tab === 'analyses') {
