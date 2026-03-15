@@ -148,12 +148,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Stagflation Week in Review —FOMC Showdown Ahead",
-    "desc": "Saturday Briefing — Stagflation Régime confirmed: CPI +3.1%, Brent $103.86, SPX -0.61% Friday (3rd weekly loss). Weekly recap + FOMC March 18-19 preview. BTC holds $70K.",
-    "tags": "macro,geopolitique,trade-idea,formation,energy,crypto,inflation,weekly",
+    "title": "RISK_OFF Weekend — Bitcoin Holds $71K Before FOMC Mega-Week",
+    "desc": "Sunday briefing: Bitcoin at $71.5K amid RISK_OFF regime. FOMC mega-catalyst this week. BlackRock ETH staking ETF, US-Iran day 14. Deep crypto analysis + Monday preview.",
+    "tags": "crypto,macro,geopolitique,formation,trade-idea",
     "grade": "",
-    "href": "/daily/20260314/",
-    "date": "14 mars 2026"
+    "href": "/daily/20260315/",
+    "date": "15 mars 2026"
   },
   {
     "type": "daily",
@@ -177,32 +177,6 @@ window.searchDataPrebuilt = [
     "title": "CPI Shock: +3.1% YoYStagflation Confirmed",
     "desc": "Sources: Bureau of Labor Statistics (CPI Feb 2026), Federal Reserve (FOMC calendar), MarketWatch Gateway (real-time quotes), Yahoo Finance, Bloomberg consensus (analyst estimates), IEA (oil reserves), World Gold Council (central bank flows), SEC EDGAR (8-K filings RTX), Baker Hughes (rig count).",
     "tags": "macro,geopolitique,trade-idea,formation,energy,healthcare,defense",
-    "grade": "",
-    "href": "/daily/20260313/",
-    "date": "13 mars 2026"
-  },
-  {
-    "type": "daily",
-    "icon": "fa-sun",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Brent Breaks $100 — Strait of Hormuz Crisis & Recession Alarm",
-    "desc": "Brent crude crosses $100 as Iran's new Supreme Leader seals the Strait of Hormuz. S&P 500 at 2026 lows. VIX 24.23. Rate cuts evaporating. CPI +2.4%. Recession odds at 32%.",
-    "tags": "energy,macro,geopolitique,trade-idea,formation,crypto,us,eu,asia,commodity",
-    "grade": "",
-    "href": "/daily/20260313/",
-    "date": "13 mars 2026"
-  },
-  {
-    "type": "daily",
-    "icon": "fa-sun",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Brent Breaks $100 — Strait of Hormuz Crisis & Recession Alarm",
-    "desc": "Brent crude crosses $100 as Iran's new Supreme Leader seals the Strait of Hormuz. S&P 500 at 2026 lows. VIX 24.23. Rate cuts evaporating. CPI +2.4%. Recession odds at 32%.",
-    "tags": "energy,macro,geopolitique,trade-idea,formation,crypto,us,eu,asia,commodity",
     "grade": "",
     "href": "/daily/20260313/",
     "date": "13 mars 2026"
@@ -361,7 +335,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,crypto,macro,tech,earnings,geopolitique,energy,trade-idea,formation",
     "grade": "",
     "href": "/daily/20260227/",
-    "date": "27 Février 2026 — Vendredi PPI Day"
+    "date": "27 février 2026"
   },
   {
     "type": "daily",
@@ -374,7 +348,7 @@ window.searchDataPrebuilt = [
     "tags": "crypto,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260225/",
-    "date": "Février 25, 2026 — Mercredi Marché Complet"
+    "date": "25 février 2026"
   },
   {
     "type": "daily",
@@ -387,7 +361,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260224/",
-    "date": "February 24, 2026 — Tuesday Full Market"
+    "date": "24 février 2026"
   },
   {
     "type": "daily",
@@ -400,7 +374,7 @@ window.searchDataPrebuilt = [
     "tags": "crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260223/",
-    "date": "February 23, 2026 — Sunday Crypto & Geopolitics"
+    "date": "23 février 2026"
   },
   {
     "type": "daily",
@@ -413,7 +387,7 @@ window.searchDataPrebuilt = [
     "tags": "crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260222/",
-    "date": "February 22, 2026 — Sunday Crypto & Geopolitics"
+    "date": "22 février 2026"
   },
   {
     "type": "daily",
@@ -426,7 +400,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,commodity,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260221/",
-    "date": "February 21, 2026 — Saturday Briefing"
+    "date": "21 février 2026"
   },
   {
     "type": "daily",
@@ -439,7 +413,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,crypto,commodity,forex,geopolitique,macro",
     "grade": "",
     "href": "daily/scotus-tariffs/",
-    "date": "20 Février 2026 — Analyse Thématique"
+    "date": "20 février 2026"
   },
   {
     "type": "daily",
@@ -452,7 +426,7 @@ window.searchDataPrebuilt = [
     "tags": "us,commodity,crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260220/",
-    "date": "20 Février 2026 — Vendredi"
+    "date": "20 février 2026"
   },
   {
     "type": "daily",
@@ -465,7 +439,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,financials,earnings,macro,trade-idea,formation",
     "grade": "",
     "href": "daily/20260219/",
-    "date": "19 Février 2026 — Jeudi"
+    "date": "19 février 2026"
   },
   {
     "type": "daily",
@@ -478,7 +452,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,crypto,technique,macro",
     "grade": "",
     "href": "daily/volume-evolution/",
-    "date": "17 Février 2026 — Étude Thématique"
+    "date": "17 février 2026"
   },
   {
     "type": "daily",
@@ -491,7 +465,7 @@ window.searchDataPrebuilt = [
     "tags": "us,crypto,geopolitique,macro,formation",
     "grade": "",
     "href": "daily/20260217/",
-    "date": "17 Février 2026 — Lundi"
+    "date": "17 février 2026"
   },
   {
     "type": "analyse",
