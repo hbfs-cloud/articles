@@ -5,7 +5,8 @@
  * Usage: <script src="/assets/live-tracker.js"></script> (before </body>)
  *
  * Data sources:
- *   - Stocks/ETFs: Yahoo Finance via allorigins.win CORS proxy
+ *   - Stocks/ETFs: Yahoo Finance via allorigins.win CORS proxy (primary)
+ *     Fallback chain P0→P4: query2, corsproxy.io×2, thingproxy, fundamentals quoteSummary
  *   - Crypto (*-USD): Binance REST API (no proxy needed)
  *
  * Cache: sessionStorage, 5-minute TTL
@@ -21,6 +22,35 @@
   var MAX_CONCURRENT = 6;
   var YAHOO_PROXY = 'https://api.allorigins.win/get?url=';
   var BINANCE_API = 'https://api.binance.com/api/v3/ticker/price?symbol=';
+
+  // Fallback proxy chain — only used if primary allorigins call fails
+  // P0: allorigins + query2 (alternate Yahoo host)
+  // P1: corsproxy.io + query1
+  // P2: corsproxy.io + query2
+  // P3: thingproxy (raw, no wrapper)
+  // P4: Yahoo quoteSummary fundamentals via allorigins (last resort)
+  var YAHOO_FALLBACK_PROXIES = [
+    function (ticker) {
+      var u = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
+      return { url: YAHOO_PROXY + encodeURIComponent(u), mode: 'allorigins-chart' };
+    },
+    function (ticker) {
+      var u = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
+      return { url: 'https://corsproxy.io/?' + encodeURIComponent(u), mode: 'raw-chart' };
+    },
+    function (ticker) {
+      var u = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
+      return { url: 'https://corsproxy.io/?' + encodeURIComponent(u), mode: 'raw-chart' };
+    },
+    function (ticker) {
+      var u = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
+      return { url: 'https://thingproxy.freeboard.io/fetch/' + u, mode: 'raw-chart' };
+    },
+    function (ticker) {
+      var u = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/' + encodeURIComponent(ticker) + '?modules=price';
+      return { url: YAHOO_PROXY + encodeURIComponent(u), mode: 'allorigins-fundamentals' };
+    }
+  ];
 
   /* ────────────────────────── page detection ────────────────────── */
 
@@ -188,6 +218,51 @@
       });
   }
 
+  function parseAlloriginsChart(wrapper) {
+    var inner = JSON.parse(wrapper.contents);
+    var result = inner.chart.result;
+    if (!result || !result.length) throw new Error('No Yahoo data');
+    var price = result[0].meta.regularMarketPrice;
+    if (typeof price !== 'number' || isNaN(price)) throw new Error('Bad Yahoo price');
+    return price;
+  }
+
+  function parseRawChart(data) {
+    var result = data.chart && data.chart.result;
+    if (!result || !result.length) throw new Error('No Yahoo data');
+    var price = result[0].meta.regularMarketPrice;
+    if (typeof price !== 'number' || isNaN(price)) throw new Error('Bad Yahoo price');
+    return price;
+  }
+
+  function parseAlloriginsFundamentals(wrapper) {
+    var inner = JSON.parse(wrapper.contents);
+    var res = inner.quoteSummary && inner.quoteSummary.result;
+    if (!res || !res.length) throw new Error('No fundamentals data');
+    var price = res[0].price && res[0].price.regularMarketPrice && res[0].price.regularMarketPrice.raw;
+    if (typeof price !== 'number' || isNaN(price)) throw new Error('Bad fundamentals price');
+    return price;
+  }
+
+  function fetchFallback(ticker, idx) {
+    if (idx >= YAHOO_FALLBACK_PROXIES.length) return Promise.reject(new Error('All fallbacks failed'));
+    var cfg = YAHOO_FALLBACK_PROXIES[idx](ticker);
+    return fetch(cfg.url)
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (data) {
+        if (cfg.mode === 'allorigins-chart') return parseAlloriginsChart(data);
+        if (cfg.mode === 'raw-chart') return parseRawChart(data);
+        if (cfg.mode === 'allorigins-fundamentals') return parseAlloriginsFundamentals(data);
+        throw new Error('Unknown mode');
+      })
+      .catch(function () {
+        return fetchFallback(ticker, idx + 1);
+      });
+  }
+
   function fetchStockPrice(ticker) {
     var yahooUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/' +
       encodeURIComponent(ticker) + '?range=1d&interval=1d';
@@ -198,15 +273,10 @@
         if (!r.ok) throw new Error('Proxy ' + r.status);
         return r.json();
       })
-      .then(function (wrapper) {
-        // allorigins /get wraps in { contents: "..." }
-        var inner = JSON.parse(wrapper.contents);
-        var result = inner.chart.result;
-        if (!result || !result.length) throw new Error('No Yahoo data');
-        var meta = result[0].meta;
-        var price = meta.regularMarketPrice;
-        if (typeof price !== 'number' || isNaN(price)) throw new Error('Bad Yahoo price');
-        return price;
+      .then(parseAlloriginsChart)
+      .catch(function () {
+        // Primary failed — try fallback chain P0→P4
+        return fetchFallback(ticker, 0);
       });
   }
 

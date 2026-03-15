@@ -34,12 +34,30 @@ articles/
 
 ## MCP Gateway
 Outils `mcp__claude_ai_Gateway__*` :
-- **GetMarketOverview**: Snapshot global (indices, commodities, crypto, rates, sentiment, news)
+- **GetMarketOverview**: Snapshot global (indices, commodities, crypto, rates, sentiment, news). Contient aussi : **trending topics**, **sector variations**, **economic calendar**, **earnings calendar** — exploiter ces champs pour enrichir les articles.
 - **QueryData**: 58 types de données (quotes, bars, technicals, sentiment, news, earnings, etc.)
 - **GetInstruments**: Analyse complète d'un symbole (`symbols` requis)
 - **RunAutoScreener**: Screener auto-adaptatif + détection de régime
 - **RunScreener**: Screener DSL personnalisé
 - **CalculateOptionsGreeks** / **AnalyzeOptionsStrategy** / **LLMAnalysis**
+
+### Stratégie Sources de Données (PRIORITÉS)
+
+| Donnée | Source primaire | Fallback |
+|--------|----------------|---------|
+| Prix spot / variation | Yahoo Finance (live-tracker.js) | MCP `QueryData` types=quote |
+| Graphique de prix (chart HTML) | Yahoo Finance `query1/v8/finance/chart/` via proxy | MCP `QueryData` types=bars_daily,bars_intraday |
+| Fondamentaux (PE, EPS, market cap…) | Yahoo Finance `query1/v10/finance/quoteSummary/` via proxy | MCP `QueryData` types=financials,stats |
+| **Socials & flows** | **MCP `QueryData` types=social_sentiment,capital_flow** — **TOUJOURS, dans TOUS les articles** | — |
+| Calendrier éco / earnings | `GetMarketOverview` (champs calendar/earnings) | WebSearch |
+| Trending / rotation sectorielle | `GetMarketOverview` (champs trending/sectors) | WebSearch |
+| Insider transactions | MCP `QueryData` types=insider_transactions | WebSearch SEC |
+
+**Règles clés** :
+- `social_sentiment` et `capital_flow` → **OBLIGATOIRES** dans chaque QueryData pour les tickers analysés (scanner, analyse, daily watch)
+- `bars_daily` / `bars_intraday` → utiliser Yahoo Finance directement dans le HTML pour les charts ECharts. MCP seulement si Yahoo échoue.
+- `financials` / `stats` → idem, Yahoo `quoteSummary` en primaire. MCP en fallback.
+- Calendriers → toujours commencer par `GetMarketOverview` avant WebSearch (évite les appels redondants).
 
 ## Polymarket — Marchés Prédictifs
 Intégrer dans **tous les types d'articles** quand pertinent. Signal **complémentaire**, jamais la base d'une thèse.
@@ -56,7 +74,7 @@ Intégrer dans **tous les types d'articles** quand pertinent. Signal **compléme
 
 1. **Date** : Le weekly couvre la semaine **À VENIR**. Dossier = `weekly/YYYYMMDD/` (YYYYMMDD = lundi). Vérifier anti-doublon : `ls weekly/` ET `grep "YYYYMMDD" data/weekly.json` — NE PAS ajouter si l'URL existe déjà.
 2. **Référence** : Lire `weekly/20260223/index.html` pour reproduire le layout exact
-3. **Collecte MCP** : `GetMarketOverview` (deep) + `QueryData` (SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (calendrier, géopolitique, earnings)
+3. **Collecte MCP** : `GetMarketOverview` (deep — trending, sector variations, economic calendar) + `QueryData` types=quote,**social_sentiment,capital_flow**,trading_signals (SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (géopolitique, earnings clés, Polymarket)
 4. **Générer** : `weekly/YYYYMMDD/index.html` avec les 18 sections (> 100KB). CSS = `/assets/report.css`. FAB obligatoire, PAS de hero-brand-link.
 5. **Indexer + Push** :
    ```bash
@@ -70,7 +88,9 @@ Intégrer dans **tous les types d'articles** quand pertinent. Signal **compléme
 Par défaut, génère **une seule variante** : `intermediate/en`.
 
 1. **Si existe déjà** : archiver dans `analyses/{TICKER}/archive/{YYYYMMDD}/`
-2. **Collecte MCP** : `GetInstruments` + `QueryData` (quote, bars_daily, bars_intraday, financials, earnings_quarterly, holders, stats, support_resistance, volume_profile, sentiment_overall, trading_signals, analyst_actions, insider_transactions, ctb, news, options_chain)
+2. **Collecte MCP** : `GetInstruments` + `QueryData` (quote, **social_sentiment, capital_flow**, sentiment_overall, trading_signals, analyst_actions, insider_transactions, ctb, news, options_chain, support_resistance, volume_profile, earnings_quarterly, holders)
+   - `bars_daily`, `bars_intraday` : utiliser Yahoo Finance directement dans le HTML (`query1.finance.yahoo.com/v8/finance/chart/`). MCP uniquement si Yahoo échoue.
+   - `financials`, `stats` : utiliser Yahoo `quoteSummary?modules=financialData,defaultKeyStatistics,summaryDetail` en primaire. MCP en fallback.
 3. **⚠️ Dilution Check (OBLIGATOIRE)** : `WebSearch "{TICKER} SEC filing S-3 prospectus dilution warrants"` + vérifier `insider_transactions` et `news` pour :
    - Prospectus S-3/shelf registration déposé à la SEC (dilution potentielle)
    - Warrants actifs ou récemment exercés
@@ -97,7 +117,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 ### "Analyse Daily" / "Briefing du jour"
 **Langue par défaut : anglais intermediate.** Voir `daily/CLAUDE.md` pour le template complet et les 17 sections obligatoires.
 
-1. **Collecte MCP** : `GetMarketOverview` (deep) + `QueryData` (SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (calendrier, géopolitique, earnings, Polymarket)
+1. **Collecte MCP** : `GetMarketOverview` (deep — exploiter trending, sector variations, economic calendar, earnings calendar) + `QueryData` types=quote,**social_sentiment,capital_flow**,trading_signals (SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (géopolitique, Polymarket)
 2. **⚠️ ANTI-DOUBLON OBLIGATOIRE** : Avant de lancer add_card.js, vérifier que l'URL `/daily/YYYYMMDD/` n'existe PAS déjà dans `data/daily.json` avec `grep "YYYYMMDD" data/daily.json`. Si elle existe déjà → NE PAS ajouter, signaler le doublon.
 3. **Générer** `daily/YYYYMMDD/index.html`. CSS = `/assets/report.css`.
 4. **Samedi** = briefing complet (récap vendredi + bilan semaine + preview lundi)
@@ -117,7 +137,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 
 1. **Lire TOUTES les rétrospectives** (`scanner/retrospective/YYYYMMDD/`) pour cumuler les enseignements
 2. **Lire le scan précédent** pour filtre anti-doublon (min 70% nouveaux tickers)
-3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `QueryData` (quote, insider_transactions)
+3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `GetMarketOverview` (trending, sectors, calendar) + `QueryData` (quote, **social_sentiment, capital_flow**, insider_transactions) pour les 10 tickers retenus
 4. **⚠️ Dilution Filter (OBLIGATOIRE)** : Pour chaque ticker candidat (surtout small/mid-caps), `WebSearch "{TICKER} dilution warrants SEC S-3"` pour détecter :
    - Shelf registrations / S-3 filings récents
    - Warrants, ATM offerings, fonds toxiques (H.C. Wainwright, Maxim, Roth Capital, etc.)
