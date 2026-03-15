@@ -185,14 +185,77 @@
 
     /* Mobile tabs removed — sidebar is the only navigation */
 
-    /* Radar mode switcher */
-    .radar-mode {
-      padding: 8px 14px; border: 1px solid var(--border); background: var(--bg-panel);
-      border-radius: 8px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem;
-      transition: all 0.15s;
+    /* Radar mode switcher — segmented control */
+    .radar-switcher {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      margin-bottom: 1.25rem;
     }
-    .radar-mode:hover { border-color: var(--accent); color: var(--accent); }
-    .radar-mode.active { background: var(--accent); color: white; border-color: var(--accent); }
+    .radar-switcher-group {
+      display: inline-flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 3px;
+      gap: 2px;
+      border: 1px solid #e2e8f0;
+    }
+    .radar-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.45rem 1rem;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #64748b;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      position: relative;
+    }
+    .radar-mode i {
+      font-size: 0.72rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .radar-mode:hover {
+      color: #334155;
+      background: #e2e8f030;
+    }
+    .radar-mode:hover i { opacity: 1; }
+    .radar-mode.active {
+      background: #fff;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      font-weight: 700;
+    }
+    .radar-mode.active i { opacity: 1; color: var(--accent); }
+    .radar-mode-fs {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border: 1px solid #e2e8f0;
+      background: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      transition: all 0.15s;
+      margin-left: 0.35rem;
+    }
+    .radar-mode-fs:hover { border-color: var(--accent); color: var(--accent); background: #f0f7ff; }
+    @media (max-width: 480px) {
+      .radar-mode { padding: 0.4rem 0.65rem; font-size: 0.72rem; }
+      .radar-mode span.rm-label { display: none; }
+      .radar-mode i { font-size: 0.8rem; opacity: 1; }
+    }
 
     .filter-collapse {
       margin: 1.5rem 0 0.5rem;
@@ -2145,11 +2208,13 @@
       <div id="radarStatus" style="display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;margin:1rem 0 0.75rem;"></div>
 
       <!-- Mode switcher -->
-      <div style="display:flex;justify-content:center;gap:0.25rem;margin-bottom:1rem;">
-        <button class="radar-mode" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i></button>
-        <button class="radar-mode active" data-mode="board" title="Dashboard"><i class="fas fa-columns"></i></button>
-        <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i></button>
-        <button class="radar-mode" id="radarFullscreenBtn" title="Fullscreen" style="margin-left:0.5rem;"><i class="fas fa-expand"></i></button>
+      <div class="radar-switcher">
+        <div class="radar-switcher-group">
+          <button class="radar-mode" data-mode="signals" title="Signal Board"><i class="fas fa-list"></i><span class="rm-label">Signals</span></button>
+          <button class="radar-mode active" data-mode="board" title="Dashboard"><i class="fas fa-th-large"></i><span class="rm-label">Dashboard</span></button>
+          <button class="radar-mode" data-mode="radar" title="Radar"><i class="fas fa-satellite-dish"></i><span class="rm-label">Radar</span></button>
+        </div>
+        <button class="radar-mode-fs" id="radarFullscreenBtn" title="Fullscreen"><i class="fas fa-expand"></i></button>
       </div>
 
       <!-- Render area -->
