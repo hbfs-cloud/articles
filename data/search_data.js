@@ -5,9 +5,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Section 4 — Macro Outlook: The Powell Penultimatum",
-    "desc": "Weekly Briefing — The Hormuz Blockade, Fed Pivot Uncertainty & Nvidia's Next Leap",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "title": "Market Watch Weekly",
+    "desc": "The \"AI Woodstock\" (GTC) meets the \"Energy Shock\" (Hormuz). High stakes for tech growth vs. inflationary reality.",
+    "tags": "us,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260316/",
     "date": "15 mars 2026"
