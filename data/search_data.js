@@ -5,9 +5,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Market Watch Weekly",
-    "desc": "The \"AI Woodstock\" (GTC) meets the \"Energy Shock\" (Hormuz). High stakes for tech growth vs. inflationary reality.",
-    "tags": "us,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "title": "GTC, FOMC & $100 Oil: The Inflection Week",
+    "desc": "Nvidia's GPU Technology Conference kicks off Monday with Jensen Huang's keynote at 11 AM Pacific. This is the most anticipated AI hardware event of the year — dubbed \"AI Woodstock\" by the tech press. Expected announcements include next-generation Blackwell Ultra architecture, new inference chips, an...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260316/",
     "date": "15 mars 2026"
