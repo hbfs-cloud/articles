@@ -5,12 +5,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "GTC, FOMC & $100 Oil: The Inflection Week",
-    "desc": "Nvidia's GPU Technology Conference kicks off Monday with Jensen Huang's keynote at 11 AM Pacific. This is the most anticipated AI hardware event of the year — dubbed \"AI Woodstock\" by the tech press. Expected announcements include next-generation Blackwell Ultra architecture, new inference chips, an...",
+    "title": "The AI Woodstock vs. The Energy Shock: Nvidia GTC & Fed Decision",
+    "desc": "Nvidia GTC keynote, FOMC Interest Rate Decision, and the deepening Energy Crisis as WTI Crude eyes $100. A critical collision of growth technology and inflationary reality in a Risk-Off regime.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260316/",
-    "date": "15 mars 2026"
+    "date": "16 - 20 mars 2026"
   },
   {
     "type": "hebdo",
@@ -154,6 +154,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "weekly/20251229/",
     "date": "29 Décembre 2025 - 3 Janvier 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "FOMC Kicks Off as VIX Plunges 12% — Oil Retreats, Equities Rally",
+    "desc": "FOMC kicks off with dot plot tomorrow. VIX drops 12% to 23.78. Oil pulls back -4% on Hormuz convoy reports. S&P +1%, BTC tops $74K. Sector rotation accelerates into energy & defense.",
+    "tags": "macro,geopolitique,crypto,formation,trade-idea,energy",
+    "grade": "",
+    "href": "/daily/20260317/",
+    "date": "17 mars 2026"
   },
   {
     "type": "daily",
