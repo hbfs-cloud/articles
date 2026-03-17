@@ -44,7 +44,7 @@
   <link rel="stylesheet" href="assets/sidebar.css?v=20260309">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <!-- ECharts lazy-loaded on radar/scanner tab -->
   <script src="/data/search_data.js"></script>
   <style>
     /* Landing Specific Overrides */
@@ -2203,7 +2203,7 @@
     <!-- ============================================================ -->
     <!-- TAB: RADAR -->
     <!-- ============================================================ -->
-    <div class="tab-panel" id="tab-radar">
+    <div class="tab-panel" id="tab-radar" style="background:#fff;">
       <!-- Status bar -->
       <div id="radarStatus" style="display:flex;justify-content:center;gap:0.5rem;flex-wrap:wrap;margin:1rem 0 0.75rem;"></div>
 
@@ -2688,6 +2688,19 @@
     // TABS
     // ===================================================================
     var currentTab = "weekly";
+    // Lazy-load ECharts on first use (scanner/radar tabs)
+    var echartsLoading = false, echartsLoaded = false, echartsCallbacks = [];
+    function ensureECharts(cb) {
+      if (echartsLoaded || (typeof echarts !== 'undefined')) { echartsLoaded = true; cb(); return; }
+      echartsCallbacks.push(cb);
+      if (echartsLoading) return;
+      echartsLoading = true;
+      var s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js';
+      s.onload = function() { echartsLoaded = true; echartsCallbacks.forEach(function(fn) { fn(); }); echartsCallbacks = []; };
+      document.head.appendChild(s);
+    }
+
     function switchTab(tab) {
       currentTab = tab;
       // Sync mobile bottom bar
@@ -3900,17 +3913,19 @@
       // If expanding, give a small delay for the animation then resize charts
       if (card.classList.contains("expanded")) {
         setTimeout(function () {
-          if (typeof initScannerCharts === "function") {
-            initScannerCharts();
-          }
-          // Force resize if already inited
-          var chartIds = ["scannerTopChart", "scannerResultsChart", "scannerScoreChart"];
-          chartIds.forEach(function (id) {
-            var el = document.getElementById(id);
-            if (el) {
-              var instance = echarts.getInstanceByDom(el);
-              if (instance) instance.resize();
+          ensureECharts(function() {
+            if (typeof initScannerCharts === "function") {
+              initScannerCharts();
             }
+            // Force resize if already inited
+            var chartIds = ["scannerTopChart", "scannerResultsChart", "scannerScoreChart"];
+            chartIds.forEach(function (id) {
+              var el = document.getElementById(id);
+              if (el) {
+                var instance = echarts.getInstanceByDom(el);
+                if (instance) instance.resize();
+              }
+            });
           });
         }, 350);
       }
@@ -4002,7 +4017,7 @@
           var panel = document.getElementById('tab-radar');
           if (!document.fullscreenElement) {
             (panel.requestFullscreen || panel.webkitRequestFullscreen || panel.msRequestFullscreen).call(panel);
-            panel.style.background = '#f8fafc';
+            panel.style.background = '#fff';
             panel.style.padding = '1rem';
             panel.style.overflow = 'auto';
             fsBtn.querySelector('i').className = 'fas fa-compress';
@@ -4040,6 +4055,23 @@
       fetch('/data/radar.json?v=' + Date.now())
         .then(function(r) { return r.json(); })
         .then(function(data) {
+          // Auto-clean obsolete items: remove if date is > 7 days old AND importance < 7
+          // High-importance items (>=7) kept longer, low-importance stale items pruned
+          var now = new Date();
+          if (data.items) {
+            data.items = data.items.filter(function(it) {
+              if (!it.date) return true;
+              var d = new Date(it.date);
+              var age = (now - d) / 86400000; // days
+              var imp = it.importance || 5;
+              // Keep if: future event, or recent (<7d), or high importance (<14d)
+              if (age < 0) return true; // future
+              if (age <= 7) return true; // recent
+              if (age <= 14 && imp >= 7) return true; // high importance, <2 weeks
+              if (age <= 21 && imp >= 9) return true; // critical, <3 weeks
+              return false;
+            });
+          }
           RD = data;
           buildStatus();
           var up = document.getElementById('radarUpdated');
@@ -4345,7 +4377,7 @@
       var container = document.getElementById('radarContainer');
       if (!container || !canvas) return;
       var w = container.clientWidth;
-      var h = Math.max(Math.round(w * 0.85), Math.min(w, 780));
+      var h = Math.max(Math.round(w * 0.95), Math.min(w, 920));
       canvas.style.height = h + 'px';
       cw = w * dpr;
       ch = h * dpr;
@@ -4353,7 +4385,7 @@
       canvas.height = ch;
       cx = cw / 2;
       cy = ch / 2;
-      radius = Math.min(cx, cy) * 0.95;
+      radius = Math.min(cx, cy) * 0.97;
     }
 
     function buildBlips() {
@@ -4369,23 +4401,34 @@
         var n = items.length;
         items.forEach(function(it, i) {
           var imp = it.importance||5;
-          // ANGLE: spread items evenly across full quadrant arc (88 degrees)
-          var spread = Math.PI / 2.05;
+          // ANGLE: spread items across nearly full quadrant arc (85 degrees) with jitter
+          var spread = Math.PI / 2.1;
           var angle;
           if (n === 1) { angle = base; }
           else { angle = base - spread/2 + (i/(n-1)) * spread; }
-          // DISTANCE: importance 10 = ring 1 (center), importance 1 = ring 5 (edge)
-          // Map importance to 5 rings: imp 10→ring1(0.20), imp 8→ring2(0.40), imp 5→ring3(0.60), imp 3→ring4(0.75), imp 1→ring5(0.90)
-          var baseDistRatio = 0.15 + 0.75 * (1 - imp/10);
-          // Stagger odd/even items radially to prevent overlap on same ring
-          var stagger = (i % 2 === 0 ? 0.06 : -0.06) * (1 + i*0.01);
-          var distRatio = Math.max(0.12, Math.min(0.93, baseDistRatio + stagger));
+          // Add angular jitter to prevent straight-line alignment
+          var jitter = ((i * 7 + cat.charCodeAt(0)) % 5 - 2) * 0.04;
+          angle += jitter;
+          // DISTANCE: importance 10 = near center, importance 1 = near edge
+          // Use wider range (0.18 to 0.92) and stronger stagger
+          var baseDistRatio = 0.18 + 0.72 * (1 - imp/10);
+          // Alternate radial stagger: even/odd items offset by 12% of radius
+          var stagger = (i % 2 === 0 ? 0.10 : -0.08) * (1 + i*0.02);
+          // Add secondary stagger based on item index for more spread
+          var stagger2 = (i % 3 === 0 ? 0.05 : i % 3 === 1 ? -0.04 : 0);
+          var distRatio = Math.max(0.15, Math.min(0.94, baseDistRatio + stagger + stagger2));
           var dist = radius * distRatio;
           // Blip size
           var sz = Math.max(3, Math.round(imp * imp * 0.18)) * dpr;
           var shouldBlink = imp >= 9;
+          // Freshness: 1.0 = today, fades to 0.35 over 14 days. Future items = 1.0
+          var freshness = 1.0;
+          if (it.date) {
+            var age = (new Date() - new Date(it.date)) / 86400000;
+            if (age > 0) freshness = Math.max(0.35, 1.0 - age / 20);
+          }
           blips.push({ x:cx+Math.cos(angle)*dist, y:cy+Math.sin(angle)*dist, angle:angle, dist:dist,
-            size:sz, color:C[it.category]||C.regime, data:it, pulse:0, blink:shouldBlink, blinkPhase:Math.random()*Math.PI*2 });
+            size:sz, color:C[it.category]||C.regime, data:it, pulse:0, blink:shouldBlink, blinkPhase:Math.random()*Math.PI*2, freshness:freshness });
         });
       });
     }
@@ -4401,8 +4444,8 @@
       frameCount++;
       ctx.clearRect(0,0,cw,ch);
 
-      // === LIGHT BACKGROUND ===
-      ctx.fillStyle = '#f8fafc';
+      // === WHITE BACKGROUND ===
+      ctx.fillStyle = '#ffffff';
       ctx.fillRect(0,0,cw,ch);
 
       // === ZONE RINGS (5 rings) with clear time-proximity labels ===
@@ -4485,8 +4528,8 @@
           blinkAlpha = 0.55 + 0.45 * Math.abs(Math.sin(b.blinkPhase));
         }
 
-        var sz = b.size * (hov ? 1.6 : 1);
-        var alpha = (0.65 + b.pulse*0.35) * blinkAlpha;
+        var sz = b.size * (hov ? 1.6 : 1) * (0.7 + 0.3 * b.freshness);
+        var alpha = (0.65 + b.pulse*0.35) * blinkAlpha * b.freshness;
 
         // Glow
         if (b.pulse > 0.05 || hov || b.blink) {
