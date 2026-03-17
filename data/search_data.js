@@ -161,9 +161,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "FOMC Kicks Off as VIX Plunges 12% — Oil Retreats, Equities Rally",
-    "desc": "FOMC kicks off with dot plot tomorrow. VIX drops 12% to 23.78. Oil pulls back -4% on Hormuz convoy reports. S&P +1%, BTC tops $74K. Sector rotation accelerates into energy & defense.",
-    "tags": "macro,geopolitique,crypto,formation,trade-idea,energy",
+    "title": "FOMC Day 1 · Oil Surges to $97 · Gold Holds $5,024 · BTC $74K",
+    "desc": "Tuesday briefing March 17, 2026. FOMC meeting kicks off, dot plot tomorrow. Oil surges to $97 on Iran escalation. Gold holds $5,024. S&P gained +1% Monday. BTC at $74K. Early Risk-Off regime.",
+    "tags": "us,eu,asia,crypto,geopolitique,macro,energy,commodity,trade-idea,formation",
     "grade": "",
     "href": "/daily/20260317/",
     "date": "17 mars 2026"
