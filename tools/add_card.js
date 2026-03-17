@@ -124,8 +124,8 @@ if (tab === 'analyses') {
     if (ogDesc) {
         const ogText = ogDesc.getAttribute('content');
         // Extract regime from badge or og:description
-        const regimeMatch = ogText.match(/Régime\s+(\S+(?:\s+\S+)?)/i);
-        const regime = regimeMatch ? regimeMatch[1] : '';
+        const regimeMatch = ogText.match(/R[ée]gime\s+(\S+(?:\s+\S+)?)/i);
+        const regime = regimeMatch ? regimeMatch[1].replace(/[.,;:!]+$/, '') : '';
         // Extract tickers from setup cards (id="setup-TICKER")
         const setupCards = Array.from(doc.querySelectorAll('[id^="setup-"]'));
         const tickers = setupCards.map(el => el.id.replace('setup-', '')).filter(Boolean).slice(0, 10);
@@ -264,6 +264,16 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
         // fallback
         date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     }
+    // Strip leading day names (Monday, Tuesday, etc.) and normalize to "DD mois YYYY" french format
+    date = date.replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, '');
+    // Convert English months to French lowercase if present
+    const enToFr = {January:'janvier',February:'février',March:'mars',April:'avril',May:'mai',June:'juin',July:'juillet',August:'août',September:'septembre',October:'octobre',November:'novembre',December:'décembre'};
+    const engMatch = date.match(/^([A-Za-z]+)\s+(\d{1,2}),?\s+(\d{4})$/);
+    if (engMatch && enToFr[engMatch[1]]) {
+        date = `${engMatch[2]} ${enToFr[engMatch[1]]} ${engMatch[3]}`;
+    }
+    // Ensure French months are lowercase (Mars → mars)
+    date = date.replace(/\b(Janvier|Février|Mars|Avril|Mai|Juin|Juillet|Août|Septembre|Octobre|Novembre|Décembre)\b/g, m => m.toLowerCase());
 }
 
 let badgeHtml = '';
