@@ -4365,17 +4365,17 @@
       var qA = { risk:-Math.PI/4, event:Math.PI/4, opportunity:3*Math.PI/4, regime:-3*Math.PI/4 };
       Object.keys(groups).forEach(function(cat) {
         var items = groups[cat], base = qA[cat]||0;
-        // Spread covers most of the quadrant (80°)
-        var spread = Math.PI/2.2;
+        // Spread covers nearly the full quadrant (85°)
+        var spread = Math.PI/2.1;
         // Sort by importance desc
         items.sort(function(a,b) { return (b.importance||5) - (a.importance||5); });
         items.forEach(function(it,i) {
           var imp = it.importance||5;
-          // Distance from center: imp 10 → 18%, imp 1 → 92% (wider spread)
-          var distRatio = 0.18 + 0.74 * (1 - imp/10);
-          // Stagger: alternate items on different radii to avoid overlap
-          var stagger = (i % 2 === 0 ? 0.06 : -0.06) * (1 + i*0.015);
-          distRatio = Math.max(0.15, Math.min(0.94, distRatio + stagger));
+          // Distance from center: imp 10 → 20%, imp 1 → 90%
+          var distRatio = 0.20 + 0.70 * (1 - imp/10);
+          // Stagger: alternate items with stronger separation
+          var stagger = (i % 3 === 0 ? 0.10 : i % 3 === 1 ? -0.10 : 0) * (1 + i*0.02);
+          distRatio = Math.max(0.15, Math.min(0.92, distRatio + stagger));
           var dist = radius * distRatio;
           // Spread items evenly across the quadrant arc
           var angle;
@@ -4384,8 +4384,8 @@
           } else {
             angle = base - spread/2 + (i / (items.length - 1)) * spread;
           }
-          // Blip radius proportional to importance: imp 10 → 30px, imp 5 → 9px, imp 1 → 3px (more contrast)
-          var sz = Math.max(3, Math.round(imp * imp * 0.30)) * dpr;
+          // Blip radius proportional to importance — smaller to reduce overlap
+          var sz = Math.max(3, Math.round(imp * imp * 0.22)) * dpr;
           // Only blink for truly critical items: importance >= 9
           var shouldBlink = imp >= 9;
           blips.push({ x:cx+Math.cos(angle)*dist, y:cy+Math.sin(angle)*dist, angle:angle, dist:dist,
@@ -4416,9 +4416,9 @@
         ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
         // Ring labels on right side
         if (i<=5) {
-          var rlsz=7*dpr; ctx.font='600 '+rlsz+'px "JetBrains Mono",monospace'; ctx.textAlign='left';
-          ctx.fillStyle='rgba(71,85,105,0.55)';
-          ctx.fillText(ringLabels[i-1],cx+r+4*dpr,cy-3*dpr);
+          var rlsz=6*dpr; ctx.font='500 '+rlsz+'px "JetBrains Mono",monospace'; ctx.textAlign='left';
+          ctx.fillStyle='rgba(148,163,184,0.45)';
+          ctx.fillText(ringLabels[i-1],cx+r+3*dpr,cy-2*dpr);
         }
       }
 
@@ -4502,21 +4502,21 @@
           ctx.beginPath(); ctx.arc(b.x,b.y,sz*0.3,0,Math.PI*2); ctx.fill();
         }
 
-        // Labels — always show for imp>=4, bigger text for higher importance
-        if (imp>=4 || hov) {
-          var fs = Math.max(9, Math.min(13, 6+imp*0.7)) * dpr;
-          ctx.font='700 '+fs+'px Inter,system-ui,sans-serif'; ctx.textAlign='center';
+        // Labels — only show for imp>=7 (top signals) or hovered
+        if (imp>=7 || hov) {
+          var fs = Math.max(8, Math.min(11, 5+imp*0.6)) * dpr;
+          ctx.font='600 '+fs+'px Inter,system-ui,sans-serif'; ctx.textAlign='center';
           var t=b.data.short||b.data.label;
           // Truncate long labels
-          if (t.length>18) t=t.substring(0,16)+'…';
+          if (t.length>14) t=t.substring(0,12)+'…';
           var tw=ctx.measureText(t).width;
-          var lx=b.x, ly=b.y-sz-7*dpr;
+          var lx=b.x, ly=b.y-sz-6*dpr;
           // Pill background
-          ctx.globalAlpha = 0.92 * blinkAlpha;
-          ctx.fillStyle='rgba(255,255,255,0.92)';
-          ctx.strokeStyle='rgba(0,0,0,0.06)';
+          ctx.globalAlpha = 0.88 * blinkAlpha;
+          ctx.fillStyle='rgba(255,255,255,0.88)';
+          ctx.strokeStyle='rgba(0,0,0,0.05)';
           ctx.lineWidth=dpr;
-          if(ctx.roundRect) { ctx.beginPath(); ctx.roundRect(lx-tw/2-5*dpr,ly-fs+2*dpr,tw+10*dpr,fs+6*dpr,4*dpr); ctx.fill(); ctx.stroke(); }
+          if(ctx.roundRect) { ctx.beginPath(); ctx.roundRect(lx-tw/2-4*dpr,ly-fs+2*dpr,tw+8*dpr,fs+4*dpr,3*dpr); ctx.fill(); ctx.stroke(); }
           // Text
           ctx.fillStyle = b.color.fill;
           ctx.fillText(t,lx,ly+2*dpr);
