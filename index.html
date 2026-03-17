@@ -4345,7 +4345,7 @@
       var container = document.getElementById('radarContainer');
       if (!container || !canvas) return;
       var w = container.clientWidth;
-      var h = Math.min(w, 680);
+      var h = Math.max(Math.round(w * 0.85), Math.min(w, 780));
       canvas.style.height = h + 'px';
       cw = w * dpr;
       ch = h * dpr;
@@ -4353,7 +4353,7 @@
       canvas.height = ch;
       cx = cw / 2;
       cy = ch / 2;
-      radius = Math.min(cx, cy) * 0.92;
+      radius = Math.min(cx, cy) * 0.95;
     }
 
     function buildBlips() {
@@ -4361,31 +4361,28 @@
       if (!RD) return;
       var groups = { risk:[], event:[], opportunity:[], regime:[] };
       RD.items.forEach(function(it) { (groups[it.category]||groups.regime).push(it); });
-      // Quadrant center angles: risk=top-right, event=bottom-right, opportunity=bottom-left, regime=top-left
+      // Quadrant center angles
       var qA = { risk:-Math.PI/4, event:Math.PI/4, opportunity:3*Math.PI/4, regime:-3*Math.PI/4 };
-      // Golden angle for fibonacci-like distribution within each quadrant
-      var goldenAngle = Math.PI * (3 - Math.sqrt(5));
       Object.keys(groups).forEach(function(cat) {
         var items = groups[cat], base = qA[cat]||0;
         items.sort(function(a,b) { return (b.importance||5) - (a.importance||5); });
+        var n = items.length;
         items.forEach(function(it, i) {
           var imp = it.importance||5;
-          // Fibonacci spiral: each item gets a unique angle offset within the quadrant
-          // Use golden angle * index for even angular distribution
-          var fiboAngle = goldenAngle * i;
-          // Constrain within quadrant arc (~80 degrees = PI/2.25)
-          var spread = Math.PI / 2.25;
-          var angleOffset = ((fiboAngle % spread) - spread/2);
-          var angle = base + angleOffset;
-          // Distance: importance drives proximity to center, with fibonacci radial spacing
-          // Sqrt gives more even area distribution (like sunflower pattern)
-          var baseDistRatio = 0.22 + 0.65 * (1 - imp/10);
-          // Add radial variation based on fibonacci to prevent same-ring clustering
-          var radialVar = (Math.sin(goldenAngle * i * 2.618) * 0.08);
-          var distRatio = Math.max(0.18, Math.min(0.90, baseDistRatio + radialVar));
+          // ANGLE: spread items evenly across full quadrant arc (88 degrees)
+          var spread = Math.PI / 2.05;
+          var angle;
+          if (n === 1) { angle = base; }
+          else { angle = base - spread/2 + (i/(n-1)) * spread; }
+          // DISTANCE: importance 10 = ring 1 (center), importance 1 = ring 5 (edge)
+          // Map importance to 5 rings: imp 10→ring1(0.20), imp 8→ring2(0.40), imp 5→ring3(0.60), imp 3→ring4(0.75), imp 1→ring5(0.90)
+          var baseDistRatio = 0.15 + 0.75 * (1 - imp/10);
+          // Stagger odd/even items radially to prevent overlap on same ring
+          var stagger = (i % 2 === 0 ? 0.06 : -0.06) * (1 + i*0.01);
+          var distRatio = Math.max(0.12, Math.min(0.93, baseDistRatio + stagger));
           var dist = radius * distRatio;
-          // Blip size: importance-driven, compact
-          var sz = Math.max(3, Math.round(imp * imp * 0.20)) * dpr;
+          // Blip size
+          var sz = Math.max(3, Math.round(imp * imp * 0.18)) * dpr;
           var shouldBlink = imp >= 9;
           blips.push({ x:cx+Math.cos(angle)*dist, y:cy+Math.sin(angle)*dist, angle:angle, dist:dist,
             size:sz, color:C[it.category]||C.regime, data:it, pulse:0, blink:shouldBlink, blinkPhase:Math.random()*Math.PI*2 });
