@@ -2722,12 +2722,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Daily Scanner",
-    "desc": "The scanner detects an Early Risk-Off regime heading into a pivotal FOMC week. VIX component scores zero (elevated volatility), SPX at 0.33 (below neutral), while credit remains strong at 1.00. DXY (0.50) and TLT (0.52) hover near equilibrium. This combination favors defensive rotations into energy,...",
-    "tags": "us,eu,asia,energy,materials,healthcare,defense,commodity,etf,technique,trade-idea,macro,geopolitique",
+    "title": "Top 10 A+ EARLY RISK-OFF — GLD, FANG, MPC, XLE, DVN, CF, NEM, KR, ADM, TLT",
+    "desc": "Regime improved from Risk-Off to Early Risk-Off as VIX retreated from 27.2 to 23.8 (-12.5%). The catalyst: a multinational naval convoy to escort tankers through the Strait of Hormuz, de-escalating the most acute supply risk. WTI pulled back to $115.03 (-4.1%) from $120, still 53% above pre-war leve...",
+    "tags": "us,etf,energy,commodity,gold,agriculture,healthcare,defensive,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260317/",
-    "date": "Monday, March 17, 2026"
+    "date": "17 mars 2026"
   },
   {
     "type": "scanner",
