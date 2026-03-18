@@ -2748,9 +2748,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — MU, DVN, AGRO, CVX, XLE, AHG, ESLT, CHCI, GLD, EWJ",
+    "title": "Top 10 A+ EARLY RISK-OFF — MU, DVN, AGRO, CVX, XLE, LMT, ESLT, CHCI, GLD, EWJ",
     "desc": "Regime score 0.41. Strategy mode Early Risk-Off: short_squeeze 40%, pre_squeeze 35%, breakout 15%, momentum 10%. SPX -1.36%, DXY +0.66%, WTI $98.25 (+2.9%), Gold $4,823 (-1.5%), Nikkei +2.87%. Post-FOMC volatility expected — energy leadership continues as oil approaches $100.",
-    "tags": "us,energy,commodity,gold,semis,healthcare,industrials,defense,etf,trade-idea,macro",
+    "tags": "us,energy,commodity,gold,semis,industrials,defense,etf,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260319/",
     "date": "19 mars 2026"
