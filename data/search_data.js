@@ -509,6 +509,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "Analyse ORBS (Eightco Holdings) : Le Proxy OpenAI du NASDAQ",
+    "title": "Analyse ORBS (Eightco Holdings) : Le Proxy OpenAI du NASDAQ",
+    "desc": "",
+    "tags": "",
+    "grade": "",
+    "href": "/analyses/ORBS-20260318/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "FN",
     "exchange": "NYSE • Technology • Electronic Components — Optical Packaging & AI Infrastructure",
     "name": "FN — Optical packaging powerhouse, 35.9% YoY rev growth, 4 consecutive EPS beats. Pullback e...",
