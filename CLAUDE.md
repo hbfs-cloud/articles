@@ -135,6 +135,8 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 ### "Scanner" / "Scan du jour"
 **Langue par défaut : anglais intermediate.** Voir `scanner/CLAUDE.md` pour le template complet, les sections, et la méthodologie.
 
+**⚠️ Convention de date :** Le scanner couvre la **prochaine séance de trading**. Si généré après 22h30 : dossier = D+1 (jour ouvrable suivant). **Vendredi soir → lundi (D+3).**
+
 1. **Lire TOUTES les rétrospectives** (`scanner/retrospective/YYYYMMDD/`) pour cumuler les enseignements
 2. **Lire le scan précédent** pour filtre anti-doublon (min 70% nouveaux tickers)
 3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `GetMarketOverview` (trending, sectors, calendar) + `QueryData` (quote, **social_sentiment, capital_flow**, insider_transactions) pour les 10 tickers retenus

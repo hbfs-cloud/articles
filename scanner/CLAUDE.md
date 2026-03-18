@@ -11,6 +11,20 @@
 Article quotidien généré par le scanner algorithmique. Détecte automatiquement les meilleurs setups du jour en fonction du régime de marché (Risk-On, Neutral, Early Risk-Off, Risk-Off, Recovery). Supporte le multilangue et multi-niveau comme les analyses individuelles.
 **Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
+### Convention de Date (OBLIGATOIRE)
+
+Le scanner tourne le soir pour la **prochaine séance de trading**. La date du dossier `YYYYMMDD` = la date de la séance couverte, PAS la date de génération :
+
+| Génération | Séance couverte | Dossier |
+|------------|----------------|---------|
+| Lundi soir (après 22h30) | **Mardi** (D+1) | `scanner/YYYYMMDD/` du mardi |
+| Mardi soir | **Mercredi** (D+1) | du mercredi |
+| Mercredi soir | **Jeudi** (D+1) | du jeudi |
+| Jeudi soir | **Vendredi** (D+1) | du vendredi |
+| **Vendredi soir** | **Lundi** (**D+3**) | du lundi suivant |
+
+**Règle simple :** Si l'heure locale est ≥ 22h30, le scanner est pour le **prochain jour de trading ouvrable**. Vendredi soir → lundi (weekend = marchés fermés).
+
 ### Structure URL
 ```
 scanner/
