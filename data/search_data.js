@@ -174,6 +174,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "FOMC Decision Day · Oil Drops to $92 · Nikkei Surges +2.9% · BOJ Holds",
+    "desc": "Wednesday briefing March 18, 2026. FOMC decision at 2PM ET with dot plot and Powell presser. Oil drops sharply to $92 (-3.4%). Nikkei surges +2.87%. BOJ holds at 0.5%. S&P futures +0.6%. BTC $74K steady.",
+    "tags": "us,eu,asia,crypto,geopolitique,macro,energy,commodity,trade-idea,formation",
+    "grade": "",
+    "href": "/../daily/20260318/",
+    "date": "18 mars 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "FOMC Day 1 · Oil Surges to $97 · Gold Holds $5,024 · BTC $74K",
     "desc": "Tuesday briefing March 17, 2026. FOMC meeting kicks off, dot plot tomorrow. Oil surges to $97 on Iran escalation. Gold holds $5,024. S&P gained +1% Monday. BTC at $74K. Early Risk-Off regime.",
     "tags": "us,eu,asia,crypto,geopolitique,macro,energy,commodity,trade-idea,formation",
@@ -2740,6 +2753,19 @@ window.searchDataPrebuilt = [
     "tags": "us,etf,energy,commodity,gold,agriculture,healthcare,defensive,trade-idea,macro",
     "grade": "",
     "href": "/../articles/scanner/20260318/",
+    "date": "18 mars 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ EARLY RISK-OFF — EDSA, ANTX, DAWN, DWSN, KORE, BW, ESLT, LMND, BTDR, MU",
+    "desc": "Regime score 0.40. Screener in mode Neutral: pondérations pre_squeeze 30%, momentum 25%, breakout 25%, short squeeze 20%. VIX at 22.37. Gold $5,011, Brent $103.52. High focus on FOMC today.",
+    "tags": "us,etf,energy,commodity,gold,agriculture,healthcare,defensive,trade-idea,macro",
+    "grade": "",
+    "href": "/../scanner/20260318/",
     "date": "18 mars 2026"
   },
   {
