@@ -2748,12 +2748,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — EDSA, ANTX, DAWN, DWSN, KORE, BW, ESLT, LMND, BTDR, MU",
-    "desc": "Regime score 0.40. Screener in mode Neutral: pondérations pre_squeeze 30%, momentum 25%, breakout 25%, short squeeze 20%. VIX at 22.37. Gold $5,011, Brent $103.52. High focus on FOMC today.",
-    "tags": "us,etf,energy,commodity,gold,agriculture,healthcare,defensive,trade-idea,macro",
+    "title": "Top 10 A+ EARLY RISK-OFF — MU, DVN, AGRO, CVX, XLE, AHG, ESLT, CHCI, GLD, EWJ",
+    "desc": "Regime score 0.41. Strategy mode Early Risk-Off: short_squeeze 40%, pre_squeeze 35%, breakout 15%, momentum 10%. SPX -1.36%, DXY +0.66%, WTI $98.25 (+2.9%), Gold $4,823 (-1.5%), Nikkei +2.87%. Post-FOMC volatility expected — energy leadership continues as oil approaches $100.",
+    "tags": "us,energy,commodity,gold,semis,healthcare,industrials,defense,etf,trade-idea,macro",
     "grade": "",
-    "href": "/../articles/scanner/20260318/",
-    "date": "18 mars 2026"
+    "href": "/scanner/20260319/",
+    "date": "19 mars 2026"
   },
   {
     "type": "scanner",
@@ -2765,7 +2765,7 @@ window.searchDataPrebuilt = [
     "desc": "Regime score 0.40. Screener in mode Neutral: pondérations pre_squeeze 30%, momentum 25%, breakout 25%, short squeeze 20%. VIX at 22.37. Gold $5,011, Brent $103.52. High focus on FOMC today.",
     "tags": "us,etf,energy,commodity,gold,agriculture,healthcare,defensive,trade-idea,macro",
     "grade": "",
-    "href": "/../scanner/20260318/",
+    "href": "/scanner/20260318/",
     "date": "18 mars 2026"
   },
   {
