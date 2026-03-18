@@ -165,20 +165,7 @@ window.searchDataPrebuilt = [
     "desc": "Wednesday briefing March 18, 2026. FOMC decision at 2PM ET with dot plot and Powell presser. Oil drops sharply to $92 (-3.4%). Nikkei surges +2.87%. BOJ holds at 0.5%. S&P futures +0.6%. BTC $74K steady.",
     "tags": "us,eu,asia,crypto,geopolitique,macro,energy,commodity,trade-idea,formation",
     "grade": "",
-    "href": "/../articles/daily/20260318/",
-    "date": "18 mars 2026"
-  },
-  {
-    "type": "daily",
-    "icon": "fa-sun",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "FOMC Decision Day · Oil Drops to $92 · Nikkei Surges +2.9% · BOJ Holds",
-    "desc": "Wednesday briefing March 18, 2026. FOMC decision at 2PM ET with dot plot and Powell presser. Oil drops sharply to $92 (-3.4%). Nikkei surges +2.87%. BOJ holds at 0.5%. S&P futures +0.6%. BTC $74K steady.",
-    "tags": "us,eu,asia,crypto,geopolitique,macro,energy,commodity,trade-idea,formation",
-    "grade": "",
-    "href": "/../daily/20260318/",
+    "href": "/daily/20260318/",
     "date": "18 mars 2026"
   },
   {
