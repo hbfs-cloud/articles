@@ -646,3 +646,66 @@ Après génération du fichier HTML, ces 5 étapes sont **BLOQUANTES**. Si l'une
 
 ---
 
+
+---
+
+## 6. SWEEP OPTIMIZER (tools/sweep.js)
+
+### Objectif
+Grid search exhaustif pour trouver les parametres optimaux du scanner. Teste 98 000 combinaisons sur 8 dimensions avec validation walk-forward.
+
+### Dimensions du Grid Search
+
+| Dimension | Valeurs testees |
+|-----------|----------------|
+| Portfolio size | 1, 2, 3, 4, 5, 8, 10, 15, 20 |
+| Top N signaux/scan | 1, 2, 3, 4, 5 |
+| Score minimum | 0, 80, 85, 88, 90, 92, 95 |
+| Horizon (jours) | 5, 10, 15, 20, 30 |
+| Filtre strategie | all, no_sq, no_sq_pb, momentum_only, breakout_only |
+| Rotation | none, daily_max1, daily_max2, aggressive |
+| Partial TP | false, true (50% a TP1, trail le reste) |
+| Trailing Stop | false, true (stop breakeven apres TP1, trail a 1.5R) |
+
+### 3 Modes Optimaux (resultats 20/03/2026)
+
+1. **Maximum Growth** : P4/Top4/all/aggressive/H5 -> +18.88%, DD -1.13%, Sharpe 16.71, 18 trades
+2. **Risk-Adjusted** : P5/Top5/no_sq/daily_max1/H5 -> +13.41%, DD -0.24%, Calmar 542, 19 trades
+3. **Zero Drawdown** : P3/Top2/momentum_only/aggressive/H20/PTP/Trail -> +7.42%, DD 0%, WR 77.8%, 9 trades
+
+### Usage
+
+    node tools/sweep.js          # Full (98k combos, ~5 min)
+    node tools/sweep.js --quick  # Quick (720 combos, ~30s)
+    node tools/sweep.js --verbose # Debug output
+
+### Outputs
+- data/backtest-results.json : Resultats complets (top 20, optimal par metrique)
+- data/portfolio-history.json : Equity curve du combo optimal
+
+### Page publique
+series/scanner-strategy/index.html — Guide des 3 modes avec ECharts, tabs, et instructions.
+
+---
+
+## 7. IMAGE QUOTIDIENNE ET TELEGRAM (tools/generate-scanner-image.js)
+
+### Flux Post-Scan (integre dans le cron scanner-quotidien)
+
+Apres chaque scan publie avec succes (git push OK), le cron execute automatiquement :
+
+    cd /home/ci/projects/articles && ./tools/publish-daily-card.sh
+
+Ce script enchaine :
+1. node tools/update-tracking.js — Met a jour scanner-metrics.json et scanner-positions.json
+2. node tools/generate-scanner-image.js --telegram — Genere le PNG et publie sur Telegram
+
+### Dependances
+
+    npm install puppeteer form-data  # deja installe
+
+### Configuration Telegram
+.env dans la racine articles (gitignored) :
+
+    TELEGRAM_BOT_TOKEN=xxxx:yyyy
+    TELEGRAM_CHAT_ID=-100xxxxxxxxxx
