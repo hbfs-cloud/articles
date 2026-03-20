@@ -709,3 +709,23 @@ Ce script enchaine :
 
     TELEGRAM_BOT_TOKEN=xxxx:yyyy
     TELEGRAM_CHAT_ID=-100xxxxxxxxxx
+
+### Regeneration des 3 images de mode (scanner/status/)
+
+Apres chaque sweep, regenerer les 3 daily-cards par mode :
+
+    node tools/gen-3-cards.js
+
+Ce script :
+1. Lit les resultats optimaux depuis data/backtest-results.json
+2. Pour chaque mode (growth, calmar, zero), ecrit temporairement les metriques dans scanner-metrics.json
+3. Appelle generate-scanner-image.js --dry-run pour generer le HTML
+4. Injecte un bandeau colore identifiant le mode
+5. Rend le PNG via puppeteer
+6. Restaure les metriques originales
+
+Outputs : scanner/status/mode-{growth,calmar,zero}.png
+
+Flux complet apres un sweep :
+
+    node tools/sweep.js && node tools/gen-3-cards.js && git add scanner/status/ data/backtest-results.json data/portfolio-history.json && git commit -m "chore: update sweep + mode cards" && git push origin main
