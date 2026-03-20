@@ -85,14 +85,19 @@ function extractTop3FromHTML(htmlPath) {
       const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
       // Price fields: cells starting with $ followed by digits
       const priceFields = cells.filter(c => /^\$[\d.]/.test(c.trim()));
+      
+      // Strategy extraction
+      const stratMap = ['Momentum', 'Breakout', 'Squeeze', 'Pullback', 'Reversal'];
+      const strategy = cells.find(c => stratMap.some(s => c.includes(s))) || 'Momentum';
+
       if (priceFields.length >= 4) {
         // Full format: entry | stop | tp1 | tp2
-        trades.push({ ticker: ticker.trim(), score: score||85,
+        trades.push({ ticker: ticker.trim(), score: score||85, strategy,
           entry_str: priceFields[0], stop_str: priceFields[1],
           tp1_str: priceFields[2], tp2_str: priceFields[3] });
       } else if (priceFields.length === 3) {
         // entry | stop | tp1 (no tp2)
-        trades.push({ ticker: ticker.trim(), score: score||85,
+        trades.push({ ticker: ticker.trim(), score: score||85, strategy,
           entry_str: priceFields[0], stop_str: priceFields[1],
           tp1_str: priceFields[2], tp2_str: null });
       }
@@ -203,6 +208,7 @@ async function main() {
         rank: i + 1,
         ticker: t.ticker,
         ticker_yahoo: yahooTicker(t.ticker),
+        strategy: t.strategy || 'Momentum',
         chart_url: `https://finviz.com/chart.ashx?t=${t.ticker}&ty=c&ta=1&p=d&s=l`,
         entry: t.entry,
         stop: t.stop,
@@ -281,11 +287,22 @@ async function main() {
   const closed30 = closed.filter(t => t.exit_date && new Date(t.exit_date) >= cutoff30);
   // return_30d = weighted portfolio return: each trade contributes pnl_pct * (1/30)
   // But pnl_pct is already in % (e.g. 8.5 means +8.5%), so portfolio return in % = sum(pnl_pct * 1/30)
-  const return30d = +closed30.reduce((s, t) => s + (t.pnl_pct || 0) / 30, 0).toFixed(2);
+  // return_30d = closed P&L + open MtM (positions ouvertes comptent au prix actuel)
+  const open30 = open.filter(t => t.scan_date && new Date(t.scan_date) >= cutoff30);
+  const return30d = +(
+    closed30.reduce((s, t) => s + (t.pnl_pct || 0) / 30, 0) +
+    open30.reduce((s, t) => s + (t.pnl_pct || 0) / 30, 0)
+  ).toFixed(2);
 
-  // Max drawdown (simplified: cumulative min of running P&L)
+  // return_30d_closed_only = pour référence (stats partielles)
+  const return30d_closed = +closed30.reduce((s, t) => s + (t.pnl_pct || 0) / 30, 0).toFixed(2);
+
+  // Max drawdown — sur tous trades (closed + open MtM), triés par date d'entrée
+  const allSorted = [...allTrades]
+    .filter(t => t.scan_date && t.pnl_pct != null)
+    .sort((a,b) => a.scan_date.localeCompare(b.scan_date));
   let running = 0, peak = 0, maxDD = 0;
-  for (const t of [...closed].sort((a,b) => a.exit_date?.localeCompare(b.exit_date))) {
+  for (const t of allSorted) {
     running += (t.pnl_pct || 0) * FRACTION;
     if (running > peak) peak = running;
     const dd = peak - running;
@@ -310,6 +327,7 @@ async function main() {
     sl_count: slc,
     expired_count: expc,
     return_30d: return30d,
+    return_30d_closed_only: return30d_closed,
     max_drawdown: +(-maxDD).toFixed(2),
     avg_win_pct: wins.length ? +(wins.reduce((s,t)=>s+(t.pnl_pct||0),0)/wins.length).toFixed(2) : 0,
     avg_loss_pct: losses.length ? +(losses.reduce((s,t)=>s+(t.pnl_pct||0),0)/losses.length).toFixed(2) : 0,
@@ -338,6 +356,7 @@ async function main() {
         entry: t.entry, current_price: t.current_price,
         return_pct: ret, stop: t.stop, tp1: t.tp1, tp2: t.tp2,
         days_remaining: daysLeft, expire_date: t.expire_date,
+        strategy: t.strategy,
         chart_url: t.chart_url, signal, status_label,
         to_tp1_pct: toTP1, to_sl_pct: toSL,
         progress_pct: t.tp1 && t.stop ? +Math.min(100,Math.max(0,(t.current_price-t.stop)/(t.tp1-t.stop)*100)).toFixed(0) : 0,

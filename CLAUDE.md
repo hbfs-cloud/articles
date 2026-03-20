@@ -49,19 +49,19 @@ Outils `mcp__claude_ai_Gateway__*` :
 | Graphique de prix (chart HTML) | Yahoo Finance `query1/v8/finance/chart/` via proxy | MCP `QueryData` types=bars_daily,bars_intraday |
 | Fondamentaux (PE, EPS, market cap…) | Yahoo Finance `query1/v10/finance/quoteSummary/` via proxy | MCP `QueryData` types=financials,stats |
 | **Socials & flows** | **MCP `QueryData` types=social_sentiment,capital_flow** — **TOUJOURS, dans TOUS les articles** | — |
-| Calendrier éco / earnings | `GetMarketOverview` (champs calendar/earnings) | WebSearch |
-| Trending / rotation sectorielle | `GetMarketOverview` (champs trending/sectors) | WebSearch |
-| Insider transactions | MCP `QueryData` types=insider_transactions | WebSearch SEC |
+| Calendrier éco / earnings | `GetMarketOverview` (champs calendar/earnings) | Browser (Google) |
+| Trending / rotation sectorielle | `GetMarketOverview` (champs trending/sectors) | Browser (Google) |
+| Insider transactions | MCP `QueryData` types=insider_transactions | Browser (Google) SEC |
 
 **Règles clés** :
 - `social_sentiment` et `capital_flow` → **OBLIGATOIRES** dans chaque QueryData pour les tickers analysés (scanner, analyse, daily watch)
 - `bars_daily` / `bars_intraday` → utiliser Yahoo Finance directement dans le HTML pour les charts ECharts. MCP seulement si Yahoo échoue.
 - `financials` / `stats` → idem, Yahoo `quoteSummary` en primaire. MCP en fallback.
-- Calendriers → toujours commencer par `GetMarketOverview` avant WebSearch (évite les appels redondants).
+- Calendriers → toujours commencer par `GetMarketOverview` avant le browser (évite les appels redondants).
 
 ## Polymarket — Marchés Prédictifs
 Intégrer dans **tous les types d'articles** quand pertinent. Signal **complémentaire**, jamais la base d'une thèse.
-- `WebSearch "polymarket {sujet}" site:polymarket.com`
+- `Browser: rechercher "polymarket {sujet}" site:polymarket.com`
 - Données clés : probabilité (%), volume ($), tendance vs 7j
 - Toujours mentionner le volume et comparer au consensus institutionnel
 - Format : `<div class="didactic-box">` avec lien `source-ref` vers Polymarket
