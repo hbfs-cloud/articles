@@ -459,7 +459,7 @@ async function generatePNG(html, outputPath) {
   await page.setViewport({ width: 1080, height: 1200, deviceScaleFactor: 2 });
   await page.setContent(html, { waitUntil: 'networkidle0' });
   // Wait for images to load
-  await page.waitForTimeout(2000);
+  await new Promise(r => setTimeout(r, 2000));
   const clip = await page.evaluate(() => {
     const el = document.body.firstElementChild;
     const rect = el.getBoundingClientRect();

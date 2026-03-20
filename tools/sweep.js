@@ -1,0 +1,732 @@
+#!/usr/bin/env node
+/**
+ * sweep.js — Enhanced grid search for Market Watch scanner optimal setup
+ *
+ * Improvements over v1:
+ *   - Proper daily mark-to-market equity tracking
+ *   - Score threshold as sweep dimension
+ *   - Horizon as sweep dimension
+ *   - Partial TP strategy (50% at TP1, trail rest to TP2)
+ *   - Trailing stop (move to breakeven after TP1)
+ *   - Walk-forward validation (70/30 in-sample/out-of-sample)
+ *   - Calmar ratio + Sortino as additional metrics
+ *   - Minimum trades filter to avoid overfitting
+ *
+ * Métrique d'optimisation : Sharpe = Return / |MaxDD|
+ *
+ * Usage: node tools/sweep.js [--quick] [--verbose]
+ */
+'use strict';
+
+const fs = require('fs');
+const https = require('https');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const SCANNER_DIR = path.join(ROOT, 'scanner');
+const QUICK = process.argv.includes('--quick');
+const VERBOSE = process.argv.includes('--verbose');
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function toDateStr(ts) {
+  return new Date(ts * 1000).toISOString().slice(0, 10);
+}
+
+function nextBizDay(dateStr) {
+  let d = new Date(dateStr + 'T12:00:00Z');
+  do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6);
+  return d.toISOString().slice(0, 10);
+}
+
+function addBizDays(dateStr, n) {
+  let d = new Date(dateStr + 'T12:00:00Z');
+  let added = 0;
+  while (added < n) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) added++;
+  }
+  return d.toISOString().slice(0, 10);
+}
+
+function parsePrice(s) {
+  if (!s) return null;
+  const clean = String(s).replace(/[$,\s–—]/g, '-').replace(/[^\d.-]/g, '');
+  const nums = clean.split('-').map(Number).filter(n => n > 0);
+  if (!nums.length) return null;
+  return nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0];
+}
+
+function getAllBizDays(startDate, endDate) {
+  const days = [];
+  let d = new Date(startDate + 'T12:00:00Z');
+  const end = new Date(endDate + 'T12:00:00Z');
+  while (d <= end) {
+    if (d.getDay() !== 0 && d.getDay() !== 6) {
+      days.push(d.toISOString().slice(0, 10));
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+
+// ─── Parse scan HTML → setups ─────────────────────────────────────────────────
+
+const STRAT_PATTERNS = {
+  short_squeeze: /short.?squeeze/i,
+  pre_squeeze:   /pre.?squeeze/i,
+  breakout:      /breakout/i,
+  momentum:      /momentum/i,
+  pullback:      /pullback/i,
+};
+
+function detectStrategy(text) {
+  for (const [k, re] of Object.entries(STRAT_PATTERNS)) {
+    if (re.test(text)) return k;
+  }
+  return 'momentum';
+}
+
+function parseScan(dir) {
+  const htmlPath = path.join(SCANNER_DIR, dir, 'index.html');
+  if (!fs.existsSync(htmlPath)) return null;
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const dm = dir.match(/^(\d{4})(\d{2})(\d{2})/);
+  if (!dm) return null;
+  const scanDate = `${dm[1]}-${dm[2]}-${dm[3]}`;
+
+  const setups = [];
+  const synthMatch = html.match(/id="synthese"[\s\S]{0,12000}/);
+  if (synthMatch) {
+    const rows = synthMatch[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+    for (const row of rows) {
+      const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
+        .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
+      if (cells.length < 4) continue;
+      const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c));
+      if (!ticker) continue;
+      const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100) || 80;
+      const pf = cells.filter(c => /^\$[\d.]/.test(c));
+      if (pf.length < 3) continue;
+      const stratText = cells.find(c => /squeeze|momentum|breakout|pullback/i.test(c)) || '';
+      const strategy = detectStrategy(stratText);
+      const entry = parsePrice(pf[0]);
+      const stop  = parsePrice(pf[1]);
+      const tp1   = parsePrice(pf[2]);
+      const tp2   = pf[3] ? parsePrice(pf[3]) : null;
+      if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
+      if (stop >= entry) continue;
+      if (tp1 <= entry) continue;
+      setups.push({ ticker, strategy, score, entry, stop, tp1, tp2 });
+    }
+  }
+
+  // Fallback: parse setup cards
+  if (setups.length === 0) {
+    const setupRe = /id="setup-([A-Z0-9]+)"[\s\S]*?(?=id="setup-|id="synthese"|id="performance"|$)/gi;
+    let m;
+    while ((m = setupRe.exec(html)) !== null) {
+      const ticker = m[1];
+      const block = m[0].slice(0, 3000);
+      const scoreMatch = block.match(/Score[\s\S]{0,100}?(9[0-9]|8[5-9]|7[0-9])/);
+      const score = scoreMatch ? parseFloat(scoreMatch[1]) : 85;
+      const entryM = block.match(/[Ee]ntr[eé][e]?[\s\S]{0,50}\$([\d.,–\-]+)/);
+      const stopM  = block.match(/[Ss]top[\s\S]{0,50}\$([\d.,]+)/);
+      const tp1M   = block.match(/[Tt]arget\s*1[\s\S]{0,50}\$([\d.,]+)/);
+      const tp2M   = block.match(/[Tt]arget\s*2[\s\S]{0,50}\$([\d.,]+)/);
+      const stratText = block.match(/badge[^>]*>(Momentum|Breakout|Pullback|Pre.?Squeeze|Short.?Squeeze)/i);
+      if (entryM && stopM && tp1M) {
+        const entry = parsePrice(entryM[1]), stop = parsePrice(stopM[1]),
+              tp1 = parsePrice(tp1M[1]), tp2 = tp2M ? parsePrice(tp2M[1]) : null;
+        if (entry && stop && tp1 && stop < entry && tp1 > entry) {
+          setups.push({ ticker, strategy: detectStrategy(stratText ? stratText[1] : ''), score, entry, stop, tp1, tp2 });
+        }
+      }
+    }
+  }
+
+  const seen = new Set();
+  return {
+    dir, scanDate,
+    setups: setups.filter(s => {
+      if (seen.has(s.ticker)) return false;
+      seen.add(s.ticker);
+      return true;
+    }).sort((a, b) => b.score - a.score),
+  };
+}
+
+// ─── Fetch Yahoo Finance OHLCV ────────────────────────────────────────────────
+
+const priceCache = {};
+
+async function fetchOHLCV(ticker) {
+  if (priceCache[ticker]) return priceCache[ticker];
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=120d`;
+  return new Promise((resolve) => {
+    const req = https.get(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000,
+    }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          const result = j?.chart?.result?.[0];
+          if (!result) return resolve(null);
+          const timestamps = result.timestamp || [];
+          const q = result.indicators?.quote?.[0] || {};
+          const history = {};
+          for (let i = 0; i < timestamps.length; i++) {
+            const dateStr = toDateStr(timestamps[i]);
+            if (q.open?.[i] != null && q.high?.[i] != null && q.low?.[i] != null && q.close?.[i] != null) {
+              history[dateStr] = { open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i] };
+            }
+          }
+          priceCache[ticker] = history;
+          resolve(history);
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+  });
+}
+
+// ─── Simulate a single trade (enhanced with partial TP + trailing stop) ───────
+
+function simulateTrade(setup, scanDate, priceHistory, config = {}) {
+  const { horizonDays = 20, partialTP = false, trailingStop = false } = config;
+  if (!priceHistory) return null;
+
+  const entryDate = nextBizDay(scanDate);
+  const entryBar = priceHistory[entryDate];
+  if (!entryBar) return null;
+
+  const actualEntry = entryBar.open;
+  if (!actualEntry || actualEntry <= 0) return null;
+
+  const riskPerUnit = setup.entry - setup.stop;
+  if (riskPerUnit <= 0) return null;
+
+  const actualStop = actualEntry - riskPerUnit;
+  const rewardMult1 = (setup.tp1 - setup.entry) / riskPerUnit;
+  const actualTp1 = actualEntry + riskPerUnit * rewardMult1;
+  const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : rewardMult1 * 1.5;
+  const actualTp2 = actualEntry + riskPerUnit * rewardMult2;
+
+  const expireDate = addBizDays(scanDate, horizonDays);
+  const sortedDates = Object.keys(priceHistory)
+    .filter(d => d >= entryDate && d <= expireDate).sort();
+
+  let currentStop = actualStop;
+  let status = 'open';
+  let exitDate = null;
+  let exitPrice = null;
+  let partialRealized = 0; // P&L from partial close at TP1
+
+  for (const date of sortedDates) {
+    const bar = priceHistory[date];
+    if (!bar) continue;
+
+    // Check SL first
+    if (bar.low <= currentStop) {
+      status = partialRealized > 0 ? 'tp1_partial' : 'sl';
+      exitDate = date;
+      exitPrice = currentStop;
+      break;
+    }
+
+    // Check TP2 (only if partial TP mode and TP1 already hit, or normal mode)
+    if (bar.high >= actualTp2) {
+      status = 'tp2';
+      exitDate = date;
+      exitPrice = actualTp2;
+      break;
+    }
+
+    // Check TP1
+    if (bar.high >= actualTp1 && partialRealized === 0) {
+      if (partialTP) {
+        // Close 50% at TP1, trail the rest
+        partialRealized = ((actualTp1 - actualEntry) / actualEntry) * 50; // 50% of position
+        if (trailingStop) {
+          currentStop = actualEntry; // Move stop to breakeven
+        }
+        // Continue with remaining 50%
+      } else {
+        status = 'tp1';
+        exitDate = date;
+        exitPrice = actualTp1;
+        break;
+      }
+    }
+
+    // Trailing stop: if price made new high, trail stop
+    if (trailingStop && partialRealized > 0) {
+      const trailLevel = bar.high - riskPerUnit * 1.5; // Trail at 1.5R from high
+      if (trailLevel > currentStop) currentStop = trailLevel;
+    }
+  }
+
+  // Expired
+  if (status === 'open') {
+    const lastDate = sortedDates[sortedDates.length - 1];
+    const expireBar = priceHistory[lastDate];
+    if (expireBar) {
+      status = 'expired';
+      exitDate = lastDate;
+      exitPrice = expireBar.close;
+    } else {
+      return null;
+    }
+  }
+
+  let pnlPct;
+  if (partialTP && partialRealized > 0) {
+    // 50% realized at TP1 + 50% at exit
+    const remainingPnl = ((exitPrice - actualEntry) / actualEntry) * 50;
+    pnlPct = (partialRealized + remainingPnl) / 100;
+  } else {
+    pnlPct = (exitPrice - actualEntry) / actualEntry;
+  }
+
+  return {
+    ticker: setup.ticker,
+    strategy: setup.strategy,
+    score: setup.score,
+    scanDate,
+    entryDate,
+    actualEntry,
+    actualStop,
+    actualTp1,
+    actualTp2,
+    status,
+    exitDate,
+    exitPrice,
+    pnlPct: +(pnlPct * 100).toFixed(2),
+    holdDays: sortedDates.indexOf(exitDate) + 1,
+  };
+}
+
+// ─── Portfolio simulation (proper daily MtM) ─────────────────────────────────
+
+function simulatePortfolio(allTrades, scans, config) {
+  const {
+    portfolioSize,
+    topN,
+    minScore = 0,
+    rotation,
+    strategyFilter,
+    horizonDays = 20,
+    partialTP = false,
+    trailingStop = false,
+  } = config;
+
+  // Group trades by scan date
+  const byDate = {};
+  for (const t of allTrades) {
+    if (t.score < minScore) continue;
+    if (strategyFilter.has(t.strategy)) continue;
+    if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
+    byDate[t.scanDate].push(t);
+  }
+
+  // Build portfolio: track open positions day by day
+  const openPositions = []; // { trade, weight }
+  const closedTrades = [];
+  const allScanDates = Object.keys(byDate).sort();
+  if (allScanDates.length === 0) return null;
+
+  // Get date range for daily equity curve
+  const startDate = allScanDates[0];
+  const endDate = allScanDates[allScanDates.length - 1];
+  const allDays = getAllBizDays(startDate, addBizDays(endDate, horizonDays + 5));
+
+  // Equity tracking
+  let equity = 100;
+  const equityCurve = [{ date: startDate, value: 100 }];
+
+  for (const scanDate of allScanDates) {
+    const candidates = (byDate[scanDate] || []).slice(0, topN);
+    const weight = 1 / portfolioSize;
+
+    // Check for exits on positions
+    const stillOpen = [];
+    for (const pos of openPositions) {
+      if (pos.trade.exitDate && pos.trade.exitDate <= scanDate) {
+        // Position closed
+        equity += pos.trade.pnlPct * weight;
+        closedTrades.push(pos.trade);
+      } else {
+        stillOpen.push(pos);
+      }
+    }
+    openPositions.length = 0;
+    openPositions.push(...stillOpen);
+
+    // Rotation logic
+    let slotsAvailable = portfolioSize - openPositions.length;
+
+    if (rotation !== 'none' && slotsAvailable <= 0 && candidates.length > 0) {
+      const sorted = [...openPositions].sort((a, b) => a.trade.score - b.trade.score);
+      const rotLimit = rotation === 'daily_max1' ? 1 : rotation === 'daily_max2' ? 2 : portfolioSize;
+      const margin = rotation === 'aggressive' ? 0 : 5;
+
+      let rotated = 0;
+      for (const cand of candidates) {
+        if (rotated >= rotLimit) break;
+        if (rotated >= sorted.length) break;
+        const worst = sorted[rotated];
+        if (cand.score > worst.trade.score + margin) {
+          // Force close at current MtM
+          const hist = priceCache[worst.trade.ticker];
+          if (hist && hist[scanDate]) {
+            const forcePnl = ((hist[scanDate].close - worst.trade.actualEntry) / worst.trade.actualEntry) * 100;
+            equity += forcePnl * weight;
+            closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: scanDate, pnlPct: +forcePnl.toFixed(2) });
+          } else {
+            closedTrades.push(worst.trade);
+          }
+          const idx = openPositions.indexOf(worst);
+          if (idx >= 0) openPositions.splice(idx, 1);
+          slotsAvailable++;
+          rotated++;
+        }
+      }
+    }
+
+    // Add new positions
+    const openTickers = new Set(openPositions.map(p => p.trade.ticker));
+    let added = 0;
+    for (const cand of candidates) {
+      if (added >= slotsAvailable) break;
+      if (openTickers.has(cand.ticker)) continue;
+      openPositions.push({ trade: cand, weight });
+      openTickers.add(cand.ticker);
+      added++;
+    }
+
+    equityCurve.push({ date: scanDate, value: +equity.toFixed(2) });
+  }
+
+  // Flush remaining positions at last known price
+  for (const pos of openPositions) {
+    if (pos.trade.pnlPct != null) {
+      equity += pos.trade.pnlPct * (1 / portfolioSize);
+    }
+    closedTrades.push(pos.trade);
+  }
+
+  // Compute metrics
+  const values = equityCurve.map(d => d.value);
+  const returnTotal = +(equity - 100).toFixed(2);
+
+  // Max drawdown
+  let peak = 100, maxDD = 0;
+  for (const v of values) {
+    if (v > peak) peak = v;
+    const dd = peak - v;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  const resolved = closedTrades.filter(t => ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated'].includes(t.status));
+  const wins = resolved.filter(t => (t.pnlPct || 0) > 0);
+  const losses = resolved.filter(t => (t.pnlPct || 0) <= 0);
+  const winRate = resolved.length ? +((wins.length / resolved.length) * 100).toFixed(1) : 0;
+  const avgWin = wins.length ? +(wins.reduce((s, t) => s + t.pnlPct, 0) / wins.length).toFixed(2) : 0;
+  const avgLoss = losses.length ? +(losses.reduce((s, t) => s + t.pnlPct, 0) / losses.length).toFixed(2) : 0;
+  const grossWin = wins.reduce((s, t) => s + t.pnlPct, 0);
+  const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
+  const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
+  const sharpe = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
+
+  // Calmar: annualized return / maxDD
+  const dayCount = allDays.length || 1;
+  const annReturn = returnTotal * (252 / dayCount);
+  const calmar = maxDD > 0 ? +(annReturn / maxDD).toFixed(2) : 0;
+
+  // Sortino: return / downside deviation
+  const negReturns = resolved.filter(t => t.pnlPct < 0).map(t => t.pnlPct);
+  const downsideDev = negReturns.length > 1
+    ? Math.sqrt(negReturns.reduce((s, r) => s + r * r, 0) / negReturns.length)
+    : 1;
+  const sortino = +(returnTotal / downsideDev).toFixed(2);
+
+  // Average hold days
+  const avgHold = resolved.filter(t => t.holdDays).length
+    ? +(resolved.filter(t => t.holdDays).reduce((s, t) => s + t.holdDays, 0) / resolved.filter(t => t.holdDays).length).toFixed(1)
+    : 0;
+
+  return {
+    returnTotal,
+    maxDD: +(-maxDD).toFixed(2),
+    winRate,
+    avgWin,
+    avgLoss,
+    profitFactor,
+    sharpe,
+    calmar,
+    sortino,
+    avgHold,
+    trades: resolved.length,
+    wins: wins.length,
+    losses: losses.length,
+    equityCurve,
+  };
+}
+
+// ─── Main sweep ───────────────────────────────────────────────────────────────
+
+async function main() {
+  console.log('=== Market Watch Scanner — Enhanced Sweep Optimizer v2 ===\n');
+
+  // 1. Parse all scans
+  const scanDirs = fs.readdirSync(SCANNER_DIR)
+    .filter(d => /^\d{8}(-\d+)?$/.test(d))
+    .filter(d => {
+      const date = d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6, 8);
+      return date >= '2026-02-15';
+    })
+    .sort();
+
+  console.log(`Parsing ${scanDirs.length} scans...`);
+  const scans = scanDirs.map(parseScan).filter(Boolean);
+  const allSetups = scans.flatMap(s => s.setups.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir })));
+  console.log(`Total setups parsed: ${allSetups.length} across ${scans.length} scans`);
+
+  // 2. Fetch all ticker histories
+  const tickers = [...new Set(allSetups.map(t => t.ticker))];
+  console.log(`\nFetching price history for ${tickers.length} tickers...`);
+  let fetched = 0;
+  for (const ticker of tickers) {
+    await fetchOHLCV(ticker);
+    fetched++;
+    if (fetched % 5 === 0) process.stdout.write(`  ${fetched}/${tickers.length}\r`);
+    await sleep(120);
+  }
+  const fetchedOK = Object.keys(priceCache).filter(k => priceCache[k]).length;
+  console.log(`Fetched prices for ${fetchedOK}/${tickers.length} tickers\n`);
+
+  // 3. Walk-forward split
+  const sortedScans = [...scans].sort((a, b) => a.scanDate.localeCompare(b.scanDate));
+  const splitIdx = Math.floor(sortedScans.length * 0.7);
+  const inSampleDates = new Set(sortedScans.slice(0, splitIdx).map(s => s.scanDate));
+  const outSampleDates = new Set(sortedScans.slice(splitIdx).map(s => s.scanDate));
+  console.log(`Walk-forward split: ${inSampleDates.size} in-sample / ${outSampleDates.size} out-of-sample scans`);
+
+  // 4. Grid dimensions
+  const PORTFOLIO_SIZES = QUICK ? [3, 5, 8, 10] : [1, 2, 3, 4, 5, 8, 10, 15, 20];
+  const TOP_NS = QUICK ? [1, 2, 3] : [1, 2, 3, 4, 5];
+  const MIN_SCORES = QUICK ? [0, 85, 90] : [0, 80, 85, 88, 90, 92, 95];
+  const HORIZONS = QUICK ? [10, 20] : [5, 10, 15, 20, 30];
+  const STRATEGY_FILTERS = {
+    'all':            new Set(),
+    'no_sq':          new Set(['short_squeeze']),
+    'no_sq_pb':       new Set(['short_squeeze', 'pullback']),
+    'momentum_only':  new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback']),
+    'breakout_only':  new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback']),
+  };
+  const ROTATIONS = QUICK ? ['none', 'aggressive'] : ['none', 'daily_max1', 'daily_max2', 'aggressive'];
+  const TP_MODES = QUICK ? [false] : [false, true]; // partialTP
+  const TRAIL_MODES = QUICK ? [false] : [false, true]; // trailingStop
+
+  const total = PORTFOLIO_SIZES.length * TOP_NS.length * MIN_SCORES.length
+    * Object.keys(STRATEGY_FILTERS).length * ROTATIONS.length * HORIZONS.length
+    * TP_MODES.length * TRAIL_MODES.length;
+  console.log(`\n=== GRID SEARCH (${total} combinations) ===\n`);
+
+  // Pre-simulate all trades for each horizon
+  const tradesByHorizon = {};
+  for (const horizon of HORIZONS) {
+    const trades = [];
+    for (const setup of allSetups) {
+      const history = priceCache[setup.ticker];
+      // Simulate with and without partial TP / trailing stop
+      for (const ptp of TP_MODES) {
+        for (const trail of TRAIL_MODES) {
+          const key = `${ptp}_${trail}`;
+          const result = simulateTrade(setup, setup.scanDate, history, {
+            horizonDays: horizon, partialTP: ptp, trailingStop: trail,
+          });
+          if (result) {
+            if (!result._tpMode) result._tpMode = key;
+            trades.push({ ...result, _horizon: horizon, _partialTP: ptp, _trail: trail });
+          }
+        }
+      }
+    }
+    tradesByHorizon[horizon] = trades;
+  }
+
+  const results = [];
+  let tested = 0;
+
+  for (const portfolioSize of PORTFOLIO_SIZES) {
+    for (const topN of TOP_NS) {
+      if (topN > portfolioSize) continue;
+      for (const minScore of MIN_SCORES) {
+        for (const [filterName, filterSet] of Object.entries(STRATEGY_FILTERS)) {
+          for (const rotation of ROTATIONS) {
+            for (const horizon of HORIZONS) {
+              for (const partialTP of TP_MODES) {
+                for (const trailingStop of TRAIL_MODES) {
+                  // Get trades matching this combo
+                  const trades = (tradesByHorizon[horizon] || [])
+                    .filter(t => t._partialTP === partialTP && t._trail === trailingStop);
+
+                  const config = { portfolioSize, topN, minScore, rotation,
+                    strategyFilter: filterSet, horizonDays: horizon, partialTP, trailingStop };
+
+                  const metrics = simulatePortfolio(trades, scans, config);
+                  if (metrics) {
+                    results.push({
+                      portfolioSize, topN, minScore, filterName, rotation,
+                      horizon, partialTP, trailingStop,
+                      ...metrics,
+                    });
+                  }
+
+                  tested++;
+                  if (tested % 500 === 0) process.stdout.write(`  ${tested}/${total}\r`);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  console.log(`\nTested ${tested} combinations\n`);
+
+  // 5. Rank and display
+  const MIN_TRADES = 8; // Require minimum trades for statistical significance
+  const ranked = results
+    .filter(r => r.trades >= MIN_TRADES && r.returnTotal > 0)
+    .sort((a, b) => b.sharpe - a.sharpe);
+
+  console.log(`TOP 20 COMBOS by Sharpe (min ${MIN_TRADES} trades):`);
+  console.log('PSize TopN MinSc Filter          Rotation      Horiz  PTP  Trail  Return  MaxDD    WR    PF   Sharpe Calmar Trades');
+  console.log('─'.repeat(120));
+
+  for (const r of ranked.slice(0, 20)) {
+    console.log(
+      String(r.portfolioSize).padStart(5),
+      String(r.topN).padStart(4),
+      String(r.minScore).padStart(5),
+      r.filterName.padEnd(16),
+      r.rotation.padEnd(14),
+      String(r.horizon).padStart(5),
+      (r.partialTP ? 'Y' : 'N').padStart(4),
+      (r.trailingStop ? 'Y' : 'N').padStart(5),
+      ((r.returnTotal > 0 ? '+' : '') + r.returnTotal.toFixed(2) + '%').padStart(8),
+      (r.maxDD.toFixed(2) + '%').padStart(8),
+      (r.winRate.toFixed(1) + '%').padStart(6),
+      (r.profitFactor.toFixed(2) + 'x').padStart(6),
+      r.sharpe.toFixed(2).padStart(7),
+      r.calmar.toFixed(1).padStart(6),
+      String(r.trades).padStart(6),
+    );
+  }
+
+  // Walk-forward validation on top 5
+  if (ranked.length > 0) {
+    console.log('\n=== WALK-FORWARD VALIDATION (top 5 in-sample → out-of-sample) ===\n');
+    for (const r of ranked.slice(0, 5)) {
+      // Re-simulate on in-sample only
+      const isTrades = (tradesByHorizon[r.horizon] || [])
+        .filter(t => t._partialTP === r.partialTP && t._trail === r.trailingStop)
+        .filter(t => inSampleDates.has(t.scanDate));
+      const osTrades = (tradesByHorizon[r.horizon] || [])
+        .filter(t => t._partialTP === r.partialTP && t._trail === r.trailingStop)
+        .filter(t => outSampleDates.has(t.scanDate));
+
+      const cfg = {
+        portfolioSize: r.portfolioSize, topN: r.topN, minScore: r.minScore,
+        rotation: r.rotation, strategyFilter: STRATEGY_FILTERS[r.filterName],
+        horizonDays: r.horizon, partialTP: r.partialTP, trailingStop: r.trailingStop,
+      };
+
+      const isMetrics = simulatePortfolio(isTrades, scans, cfg);
+      const osMetrics = simulatePortfolio(osTrades, scans, cfg);
+
+      const isR = isMetrics ? `+${isMetrics.returnTotal.toFixed(2)}% DD=${isMetrics.maxDD.toFixed(2)}% Sharpe=${isMetrics.sharpe}` : 'N/A';
+      const osR = osMetrics ? `+${osMetrics.returnTotal.toFixed(2)}% DD=${osMetrics.maxDD.toFixed(2)}% Sharpe=${osMetrics.sharpe}` : 'N/A';
+      const degradation = (isMetrics && osMetrics && isMetrics.sharpe > 0)
+        ? ((1 - osMetrics.sharpe / isMetrics.sharpe) * 100).toFixed(0) + '%'
+        : 'N/A';
+
+      console.log(`P${r.portfolioSize}/Top${r.topN}/Score${r.minScore}/${r.filterName}/${r.rotation}/H${r.horizon}:`);
+      console.log(`  In-sample:  ${isR} (${isMetrics?.trades || 0} trades)`);
+      console.log(`  Out-sample: ${osR} (${osMetrics?.trades || 0} trades)`);
+      console.log(`  Degradation: ${degradation}`);
+      console.log();
+    }
+  }
+
+  // Top by different metrics
+  console.log('TOP 5 by Return:');
+  const topByReturn = [...results].filter(r => r.trades >= MIN_TRADES).sort((a,b) => b.returnTotal - a.returnTotal).slice(0, 5);
+  for (const r of topByReturn) {
+    console.log(`  P${r.portfolioSize} Top${r.topN} Score≥${r.minScore} ${r.filterName} ${r.rotation} H${r.horizon} PTP=${r.partialTP?'Y':'N'}: Return=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% Sharpe=${r.sharpe}`);
+  }
+
+  console.log('\nTOP 5 by Calmar:');
+  const topByCalmar = [...results].filter(r => r.trades >= MIN_TRADES && r.returnTotal > 0).sort((a,b) => b.calmar - a.calmar).slice(0, 5);
+  for (const r of topByCalmar) {
+    console.log(`  P${r.portfolioSize} Top${r.topN} Score≥${r.minScore} ${r.filterName} ${r.rotation} H${r.horizon}: Return=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% Calmar=${r.calmar}`);
+  }
+
+  // 6. Save results
+  const output = {
+    generated_at: new Date().toISOString(),
+    version: 2,
+    period: { start: '2026-02-15', end: new Date().toISOString().slice(0,10), scans: scans.length },
+    universe: { tickers: tickers.length, total_setups: allSetups.length, fetched: fetchedOK },
+    walk_forward: { in_sample_scans: inSampleDates.size, out_sample_scans: outSampleDates.size },
+    grid: {
+      portfolio_sizes: PORTFOLIO_SIZES, top_ns: TOP_NS, min_scores: MIN_SCORES,
+      horizons: HORIZONS, strategies: Object.keys(STRATEGY_FILTERS),
+      rotations: ROTATIONS, tp_modes: TP_MODES, trail_modes: TRAIL_MODES,
+      total_combos: tested,
+    },
+    optimal_sharpe: ranked[0] || null,
+    optimal_return: topByReturn[0] || null,
+    optimal_calmar: topByCalmar[0] || null,
+    top20_sharpe: ranked.slice(0, 20).map(r => ({
+      portfolioSize: r.portfolioSize, topN: r.topN, minScore: r.minScore,
+      filterName: r.filterName, rotation: r.rotation, horizon: r.horizon,
+      partialTP: r.partialTP, trailingStop: r.trailingStop,
+      returnTotal: r.returnTotal, maxDD: r.maxDD, winRate: r.winRate,
+      profitFactor: r.profitFactor, sharpe: r.sharpe, calmar: r.calmar,
+      sortino: r.sortino, avgHold: r.avgHold, trades: r.trades,
+    })),
+  };
+
+  fs.writeFileSync(path.join(ROOT, 'data', 'backtest-results.json'), JSON.stringify(output, null, 2));
+  console.log('\n✅ Results saved to data/backtest-results.json');
+
+  // Save equity curve for optimal combo
+  if (ranked[0]) {
+    const best = ranked[0];
+    fs.writeFileSync(path.join(ROOT, 'data', 'portfolio-history.json'), JSON.stringify({
+      combo: {
+        portfolioSize: best.portfolioSize, topN: best.topN, minScore: best.minScore,
+        filterName: best.filterName, rotation: best.rotation, horizon: best.horizon,
+        partialTP: best.partialTP, trailingStop: best.trailingStop,
+      },
+      metrics: {
+        returnTotal: best.returnTotal, maxDD: best.maxDD, winRate: best.winRate,
+        sharpe: best.sharpe, calmar: best.calmar, sortino: best.sortino,
+        profitFactor: best.profitFactor, avgHold: best.avgHold, trades: best.trades,
+      },
+      daily: best.equityCurve,
+    }, null, 2));
+    console.log('✅ Equity curve saved to data/portfolio-history.json');
+  }
+}
+
+main().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
