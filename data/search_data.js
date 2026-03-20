@@ -2787,6 +2787,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Scanner Strategy Guide — 3 Modes Optimisés",
+    "desc": "Les performances passées ne garantissent pas les résultats futurs. Ce guide est à titre éducatif uniquement et ne constitue en aucun cas un conseil financier. Les backtests présentés ne modélisent pas les frais de courtage, le slippage, ni l'impact de marché. La période d'analyse est courte (34 jour...",
+    "tags": "technique,formation,trade-idea,us,eu,asia,etf",
+    "grade": "",
+    "href": "/scanner/status/",
+    "date": "20 mars 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Daily Scanner",
     "desc": "Regime score 0.44. Strategy mode Early Risk-Off: short_squeeze 40%, pre_squeeze 35%, breakout 15%, momentum 10%. The US Dollar Index crashed below 100 for the first time since mid-2025 (99.20, −0.88%), triggering a massive commodity rally: Silver +2.24%, Gold +1.0%, NatGas +2.06%, Copper +0.95%. Glo...",
     "tags": "us,eu,asia,commodity,gold,energy,materials,financials,defense,etf,trade-idea,macro,technique",
@@ -3364,19 +3377,6 @@ window.searchDataPrebuilt = [
     "tags": "tech,ai",
     "grade": "",
     "href": "tech/anthropic-ecosystem/part1-foundation/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Scanner Strategy Guide — 3 Modes Optimisés",
-    "desc": "Guide complet des 3 stratégies optimisées du scanner Market Watch : Maximum Return, Risk-Adjusted, et Zero Drawdown. Basé sur 98 000 backtests.",
-    "tags": "technique,formation,trade-idea,us,eu,asia,etf",
-    "grade": "",
-    "href": "/series/scanner-strategy/",
     "date": ""
   },
   {
