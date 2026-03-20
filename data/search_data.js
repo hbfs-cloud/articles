@@ -535,6 +535,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "INFQ",
+    "exchange": "NYSE",
+    "name": "INFQ — Infleqtion",
+    "title": "INFQ — Infleqtion",
+    "desc": "In-depth analysis of Infleqtion (INFQ) — first neutral-atom quantum company to go public. 100-qubit UK deployment, NVIDIA partnership, $76M cash runway. Is the post-IPO dip a buying opportunity?",
+    "tags": "us,tech,ai,quantum,speculative,trade-idea,small-cap",
+    "grade": "B",
+    "href": "/analyses/INFQ/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ORBS",
     "exchange": "NASDAQ • Tech / AI • Véhicule d'investissement OpenAI",
     "name": "ORBS — proxy OpenAI pré-IPO, $125M de backing institutionnel, 96% d'ownership institutionnel. ...",
