@@ -1,5 +1,84 @@
 # Market Watch - Scanner Instructions
 
+## 🖼️ IMAGE QUOTIDIENNE DISCORD/TELEGRAM — PROCÉDURE COMPLÈTE
+
+### Flux Post-Scan (OBLIGATOIRE après chaque scan publié)
+
+```bash
+# Depuis /home/ci/projects/articles
+node tools/update-tracking.js           # Met à jour métriques + positions
+node tools/generate-scanner-image.js --telegram  # Génère image + publie Telegram
+```
+
+Ou en une commande :
+```bash
+./tools/publish-daily-card.sh
+```
+
+### Configuration Telegram (une seule fois)
+
+Créer `/home/ci/projects/articles/.env` :
+```
+TELEGRAM_BOT_TOKEN=xxxx:yyyy
+TELEGRAM_CHAT_ID=-100xxxxxxxxxx   # ID du groupe (avec le -100 au début)
+```
+
+Pour obtenir le Chat ID : ajoute `@userinfobot` au groupe Telegram, tape `/start`.
+
+### Format de l'image (template validé 20/03/2026)
+
+Structure en 5 blocs verticaux :
+1. **Header brand** : Logo MW + date + régime + macro context + rappel N-1
+2. **Guide lecteurs** : 4 points : Méthode · Rotation · Stats · Signal
+3. **Top 3 signaux** : Charts StockCharts + score + entry/stop/TP1/TP2/RR/horizon
+4. **Portfolio Top 5** + Rotation en cours (J+1/J+2/J+3) + Capital
+5. **Stats D0** : Return total · Max DD · Win Rate · Profit Factor · Equity curve
+6. **Positions ouvertes** : symbole + return%, 5/ligne, fond coloré
+7. **Footer** : disclaimer + URL scan + copyright
+
+### Règles métier intégrées dans l'image
+
+- **Short Squeeze exclu** de tous les signaux
+- **Anti-doublon** : si ticker déjà ouvert → inéligible pour nouvelle entrée
+- **Rotation max 2/j** : exit les 2 plus faibles scores si meilleurs candidats
+- **Contrainte horaire** : exec à l'ouverture J+1 (15h30 Paris) ; sans cash → J+3
+- **Stats depuis D0** (15 fév 2026), pas depuis 30j
+- **MtM inclus** : return = réalisé + positions ouvertes
+
+### Charts
+
+Source : **StockCharts.com** (RSI14, MA50/200, MACD, Volume)
+URL pattern : `https://stockcharts.com/c-sc/sc?s=TICKER&p=D&yr=0&mn=6&dy=0&i=t21846718260`
+Requiert puppeteer pour la capture côté serveur.
+Fallback : placeholder coloré si puppeteer non disponible.
+
+### Open Graph / Partage réseaux sociaux
+
+Chaque page scanner inclut les meta OG :
+```html
+<meta property="og:title" content="Scanner MW — DATE — TOP TICKERS">
+<meta property="og:description" content="Régime + stats clés">
+<meta property="og:image" content="https://articles.market-watch.xyz/scanner-daily-card.png">
+<meta name="twitter:card" content="summary_large_image">
+```
+
+L'image `scanner-daily-card.png` est commitée dans le repo et accessible publiquement.
+Lorsque quelqu'un partage le lien sur Telegram/WhatsApp, l'image s'affiche automatiquement en preview.
+
+Pour ajouter un bouton de partage dans l'article HTML :
+```html
+<a href="https://t.me/share/url?url=URL&text=TEXT" target="_blank">Partager sur Telegram</a>
+<a href="https://wa.me/?text=TEXT%20URL" target="_blank">Partager sur WhatsApp</a>
+```
+
+### Dépendances npm
+
+```bash
+npm install puppeteer form-data
+```
+
+---
+
 ## Article de Référence
 
 **`scanner/20260219/index.html`** est la référence absolue pour le format, la structure HTML, les ECharts, et le style visuel. Tout nouveau scan DOIT suivre ce modèle exactement.
@@ -50,6 +129,27 @@ scanner/
    - Breakout squeeze : `close>sma(close,50) && atr(14)>atr(28)*1.2`
 3. **`QueryData`** types: quote,insider_transactions pour les 10 tickers retenus (validation prix spot + détection achats insiders)
 4. **WebSearch** pour les catalyseurs récents de chaque ticker
+
+### Filtre Anti-Doublon Position Ouverte (OBLIGATOIRE — BLOQUANT)
+
+**Avant de retenir un ticker dans le top scan, vérifier `data/scanner-positions.json` :**
+- Si le ticker est déjà présent dans `open_positions` → **DISQUALIFIER immédiatement**
+- Logique : on ne prend jamais une deuxième entrée sur un ticker déjà en portefeuille
+- Cette règle prévaut sur le score composite — même un score 99 est éliminé si le ticker est déjà ouvert
+- Appliquer aussi aux **scans court terme** (même si l'horizon précédent n'est pas terminé)
+
+**Procédure :**
+```
+1. Lire data/scanner-positions.json → extraire la liste des tickers ouverts
+2. Pour chaque candidat du screening : si ticker dans la liste → SKIP
+3. Continuer avec les candidats restants
+```
+
+### Filtre Stratégie (OBLIGATOIRE)
+
+**Short Squeeze EXCLU** de tous les scans (décision 20/03/2026).
+Stratégies autorisées : **Momentum, Pre-Squeeze, Breakout, Pullback**.
+Si le régime impose Short Squeeze → remplacer par Pre-Squeeze ou Momentum.
 
 ### Filtres Anti-Dilution & Fonds Agressifs (OBLIGATOIRE — BLOQUANT)
 
