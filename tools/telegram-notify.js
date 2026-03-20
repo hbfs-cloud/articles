@@ -68,13 +68,19 @@ function extractScanSummary(dir) {
   
   const html = fs.readFileSync(htmlPath, 'utf8');
   
-  // Try to extract top tickers from meta description or title
+  // Extract top tickers from h2 title (pattern: "Top 10 A+ REGIME — T1, T2, T3...")
   let tickers = [];
-  const metaDesc = html.match(/<meta[^>]*description[^>]*content="([^"]+)"/i);
-  if (metaDesc) {
-    // Extract tickers (uppercase 1-5 chars separated by comma or space)
-    const found = metaDesc[1].match(/\b[A-Z]{1,5}\b/g) || [];
-    tickers = found.slice(0, 5);
+  const h2Match = html.match(/<h2[^>]*>[\s\S]*?—\s*([A-Z][A-Z0-9,\s]+?)<\/h2>/i);
+  if (h2Match) {
+    tickers = h2Match[1].split(',').map(t => t.trim()).filter(t => /^[A-Z]{1,5}$/.test(t)).slice(0, 5);
+  }
+  if (!tickers.length) {
+    // Fallback: og:title
+    const ogTitle = html.match(/og:title.*?content="([^"]+)"/i);
+    if (ogTitle) {
+      const afterDash = ogTitle[1].match(/[—-]\s*(.+)/);
+      if (afterDash) tickers = afterDash[1].split(',').map(t=>t.trim()).filter(t=>/^[A-Z]{1,5}$/.test(t)).slice(0,5);
+    }
   }
   
   // Extract regime
