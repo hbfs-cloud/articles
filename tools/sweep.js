@@ -475,6 +475,12 @@ function simulatePortfolio(allTrades, scans, config) {
     wins: wins.length,
     losses: losses.length,
     equityCurve,
+    closedTrades: resolved.map(t => ({
+      ticker: t.ticker, strategy: t.strategy, score: t.score,
+      scanDate: t.scanDate, entryDate: t.entryDate,
+      actualEntry: t.actualEntry, exitPrice: t.exitPrice,
+      status: t.status, pnlPct: t.pnlPct, holdDays: t.holdDays || 0,
+    })),
   };
 }
 
@@ -708,6 +714,25 @@ async function main() {
 
   fs.writeFileSync(path.join(ROOT, 'data', 'backtest-results.json'), JSON.stringify(output, null, 2));
   console.log('\n✅ Results saved to data/backtest-results.json');
+
+  // Save trade lists for 3 optimal combos
+  const optimalTrades = {};
+  for (const [key, combo] of [["growth", topByReturn[0]], ["calmar", topByCalmar[0]], ["sharpe", ranked[0]]]) {
+    if (!combo) continue;
+    const trades2 = (tradesByHorizon[combo.horizon] || [])
+      .filter(t => t._partialTP === combo.partialTP && t._trail === combo.trailingStop);
+    const cfg2 = {
+      portfolioSize: combo.portfolioSize, topN: combo.topN, minScore: combo.minScore,
+      rotation: combo.rotation, strategyFilter: STRATEGY_FILTERS[combo.filterName],
+      horizonDays: combo.horizon, partialTP: combo.partialTP, trailingStop: combo.trailingStop,
+    };
+    const sim2 = simulatePortfolio(trades2, scans, cfg2);
+    if (sim2 && sim2.closedTrades) {
+      optimalTrades[key] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
+    }
+  }
+  fs.writeFileSync(path.join(ROOT, "data", "backtest-trades.json"), JSON.stringify(optimalTrades, null, 2));
+  console.log("✅ Trade lists saved to data/backtest-trades.json");
 
   // Save equity curve for optimal combo
   if (ranked[0]) {
