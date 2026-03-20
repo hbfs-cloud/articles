@@ -755,3 +755,28 @@ async function main() {
 }
 
 main().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+
+  // ─── Compare with frozen modes ─────────────────────────────────────────────
+  const MODES_CFG = path.join(ROOT, "data", "modes-config.json");
+  if (fs.existsSync(MODES_CFG)) {
+    const config = JSON.parse(fs.readFileSync(MODES_CFG));
+    console.log("\n=== FROZEN MODES vs SWEEP OPTIMAL ===\n");
+    console.log("Les 3 modes sont FIGÉS dans data/modes-config.json.");
+    console.log("Le sweep ne les modifie JAMAIS. Voici la comparaison :\n");
+    
+    const optMap = { growth: topByReturn[0], calmar: topByCalmar[0], zero: ranked[0] };
+    for (const [id, cfg] of Object.entries(config.modes)) {
+      const opt = optMap[id];
+      if (!opt) continue;
+      const same = opt.portfolioSize === cfg.portfolioSize && opt.topN === cfg.topN 
+        && opt.horizon === cfg.horizon && opt.filterName === cfg.filterName 
+        && opt.rotation === cfg.rotation;
+      const frozen = `P${cfg.portfolioSize}/Top${cfg.topN}/H${cfg.horizon}/${cfg.filterName}/${cfg.rotation}`;
+      const sweep = `P${opt.portfolioSize}/Top${opt.topN}/H${opt.horizon}/${opt.filterName}/${opt.rotation}`;
+      console.log(`${id.toUpperCase()} (${cfg.label}):`);
+      console.log(`  Figé  : ${frozen}`);
+      console.log(`  Sweep : ${sweep} (Return=${opt.returnTotal}% Sharpe=${opt.sharpe})`);
+      console.log(`  ${same ? "✅ Identique" : "⚠️  DIFFÉRENT — considérer mise à jour manuelle"}`);
+      console.log();
+    }
+  }
