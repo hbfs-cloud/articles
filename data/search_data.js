@@ -548,6 +548,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "USEG",
+    "exchange": "NASDAQ",
+    "name": "USEG — U.S. Energy Corp",
+    "title": "USEG — U.S. Energy Corp",
+    "desc": "In-depth analysis of U.S. Energy Corp (USEG) — pivot from oil to industrial gas and carbon capture. Big Sky Carbon Hub, Kevin Dome project, dilution risk, March 2026 equity offering.",
+    "tags": "us,energy,speculative,small-cap,trade-idea",
+    "grade": "C",
+    "href": "/analyses/USEG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "INFQ",
     "exchange": "NYSE",
     "name": "INFQ — Infleqtion",
