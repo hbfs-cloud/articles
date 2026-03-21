@@ -597,17 +597,32 @@ La rétrospective utilise le **même template HTML** que le scanner (brand-bar, 
 9. **Historique des Notes** : Tableau des rétrospectives précédentes avec note, hit rate, P&L moyen
 10. **Sources & Disclaimer**
 
-### Notation du Scanner
+### Notation du Scanner (Système Unifié)
 
-| Note | Hit Rate TP1 | P&L Moyen | Critère |
-|------|-------------|-----------|---------|
-| **A+** | > 70% | > +3% | Exceptionnel |
-| **A** | 60-70% | > +2% | Très bon |
-| **B+** | 50-60% | > +1% | Bon |
-| **B** | 40-50% | > 0% | Correct |
-| **C** | 30-40% | -1% à 0% | Médiocre |
-| **D** | 20-30% | < -1% | Mauvais |
-| **F** | < 20% | < -3% | Échec |
+La note combine **2 piliers** en une note composite unique :
+
+**Pilier 1 — Setup Quality (50%)** : Hit Rate TP1 sur positions résolues (le pick individuel est-il bon ?)
+**Pilier 2 — Portfolio Return (50%)** : P&L simulé avec les paramètres optimaux de `sweep.js` sur la période de la rétro (en tradant ces picks avec discipline, quel résultat ?)
+
+Chaque pilier donne un score numérique (1-7), la moyenne arrondie = note finale.
+
+| Note | Score | Setup HR (Pilier 1) | Portfolio Return (Pilier 2) |
+|------|-------|--------------------|-----------------------------|
+| **A+** | 7 | > 70% | > +8% |
+| **A** | 6 | 60-70% | +5% à +8% |
+| **B+** | 5 | 50-60% | +3% à +5% |
+| **B** | 4 | 40-50% | +1% à +3% |
+| **C** | 3 | 30-40% | 0% à +1% |
+| **D** | 2 | 20-30% | -1% à 0% |
+| **F** | 1 | < 20% | < -1% |
+
+**Calcul** : `Note finale = round((score_pilier1 + score_pilier2) / 2)` → lookup dans la table.
+
+**Provisoire** : Si < 50% des positions sont résolues, la note est marquée `*` (provisoire). Le Pilier 2 (portfolio sim) est toujours calculable car sweep.js simule avec horizon fixe + exit à expiration.
+
+**Scans spéciaux** (VIX Deflation, complémentaires soirée, thématiques) : exclus du calcul de la note par défaut. Mentionnés dans la rétro en grisé avec statistiques séparées.
+
+**Données Pilier 2** : Extraire l'equity curve de `data/backtest-results.json` pour la sous-période de la rétro. Le mode utilisé est `optimal_sharpe` (meilleur ratio rendement/risque). Afficher aussi le max drawdown de la période.
 
 ### Gestion des Versions
 - Chaque rétrospective est dans `scanner/retrospective/YYYYMMDD/index.html` (date de publication)

@@ -159,7 +159,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 
 1. Lire tous les scans des 10 derniers jours, extraire les setups
 2. Collecter prix actuels via `QueryData` (quote, bars_daily)
-3. Créer `scanner/retrospective/YYYYMMDD/index.html` (note A+ à F, dashboard, tableau, top/flop)
+3. Créer `scanner/retrospective/YYYYMMDD/index.html` (note unifiée A+ à F = 50% Setup HR + 50% Portfolio Sim via sweep.js, dashboard, tableau, top/flop, equity curve)
 4. Mettre à jour redirect `scanner/retrospective/index.html`
 5. Mettre à jour le dashboard "Performance du Scanner" dans `index.html` (KPIs + 3 ECharts)
    - **CONVENTION CUMULÉE** : afficher stats sur **TOUTES les rétros** (pas seulement la dernière)
