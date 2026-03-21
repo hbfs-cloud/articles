@@ -65,7 +65,7 @@ export async function init(dbPath = './data/journal.db') {
       CREATE INDEX IF NOT EXISTS idx_alert_log_ticker ON alert_log(ticker);
     `);
 
-    console.log('[Journal] Database initialized');
+    console.error('[Journal] Database initialized');
     return true;
   } catch (err) {
     console.warn('[Journal] SQLite not available, using in-memory store:', err.message);

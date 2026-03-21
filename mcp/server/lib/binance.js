@@ -159,7 +159,7 @@ function ensureWebSocket(symbols) {
   ws = new WebSocket(url);
 
   ws.on('open', () => {
-    console.log('[Binance WS] Connected');
+    console.error('[Binance WS] Connected');
   });
 
   ws.on('message', (raw) => {
@@ -189,7 +189,7 @@ function ensureWebSocket(symbols) {
   });
 
   ws.on('close', () => {
-    console.log('[Binance WS] Disconnected, reconnecting in 5s...');
+    console.error('[Binance WS] Disconnected, reconnecting in 5s...');
     setTimeout(() => ensureWebSocket([]), 5000);
   });
 

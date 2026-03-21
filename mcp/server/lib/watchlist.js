@@ -22,7 +22,7 @@ export async function sync(url = 'https://articles.market-watch.xyz/mcp/watchlis
   // Auto-generate alerts from watchlist picks
   alerts.createWatchlistAlerts(currentWatchlist);
 
-  console.log(`[Watchlist] Synced: ${currentWatchlist.picks?.length} picks, regime: ${currentWatchlist.regime}`);
+  console.error(`[Watchlist] Synced: ${currentWatchlist.picks?.length} picks, regime: ${currentWatchlist.regime}`);
   return currentWatchlist;
 }
 
@@ -90,7 +90,7 @@ export async function startMonitoring(intervalMs = 15000) {
       const triggered = await alerts.checkAlerts(quotes);
 
       if (triggered.length > 0) {
-        console.log(`[Monitor] ${triggered.length} alerts triggered:`, triggered.map(t => `${t.ticker}:${t.type}`).join(', '));
+        console.error(`[Monitor] ${triggered.length} alerts triggered:`, triggered.map(t => `${t.ticker}:${t.type}`).join(', '));
       }
     } catch (err) {
       console.error('[Monitor] Error:', err.message);
@@ -100,14 +100,14 @@ export async function startMonitoring(intervalMs = 15000) {
   // Initial check
   await check();
   monitorInterval = setInterval(check, intervalMs);
-  console.log(`[Monitor] Started, checking every ${intervalMs / 1000}s for ${getAllTickers().length} tickers`);
+  console.error(`[Monitor] Started, checking every ${intervalMs / 1000}s for ${getAllTickers().length} tickers`);
 }
 
 export function stopMonitoring() {
   if (monitorInterval) {
     clearInterval(monitorInterval);
     monitorInterval = null;
-    console.log('[Monitor] Stopped');
+    console.error('[Monitor] Stopped');
   }
 }
 
