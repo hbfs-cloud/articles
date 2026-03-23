@@ -587,6 +587,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AXTI",
+    "exchange": "NASDAQ",
+    "name": "AXTI — AXT Inc surged +3722% in 1 year. Now $64. Analysts say $24.50. What's the real story?",
+    "title": "AXTI — AXT Inc surged +3722% in 1 year. Now $64. Analysts say $24.50. What's the real story?",
+    "desc": "AXTI update — AXT Inc at $64 (+3722% in 1 year). InP compound semiconductor substrates for AI data centers. Analyst consensus Hold / $24.5 target — 62% below current price. Valuation vs fundamentals.",
+    "tags": "us,tech,semis,ai,trade-idea",
+    "grade": "B",
+    "href": "/analyses/AXTI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "USEG",
     "exchange": "NASDAQ",
     "name": "USEG — U.S. Energy Corp",
@@ -764,19 +777,6 @@ window.searchDataPrebuilt = [
     "tags": "eu,tech,semis,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/AIXA/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AXTI",
-    "exchange": "NASDAQ • Technology • Semiconductor Equipment & Materials\n    — Compound Substrates (InP / GaAs / Ge)",
-    "name": "AXTI — AXT Inc: compound semiconductor substrates (InP, GaAs, Ge) for fiber optics, 5G, AI. $1...",
-    "title": "AXTI — AXT Inc: compound semiconductor substrates (InP, GaAs, Ge) for fiber optics, 5G, AI. $1...",
-    "desc": "Institutional analysis of AXT Inc (AXTI): compound semiconductor substrate maker for 5G, AI, data centers. InP/GaAs materials play. $32 after 2700% rally from 52W lows.",
-    "tags": "us,tech,semis,ai,trade-idea",
-    "grade": "B+",
-    "href": "/analyses/AXTI/",
     "date": ""
   },
   {
