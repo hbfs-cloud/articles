@@ -152,6 +152,8 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
    git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
    git push origin main
+   # Pipeline post-scan (tracking + image Telegram + sweep + mode cards + status page) :
+   ./tools/publish-daily-card.sh
    ```
 
 ### "Rétrospective Scanner"

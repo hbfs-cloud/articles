@@ -5,15 +5,20 @@
 ### Flux Post-Scan (OBLIGATOIRE après chaque scan publié)
 
 ```bash
-# Depuis /home/ci/projects/articles
-node tools/update-tracking.js           # Met à jour métriques + positions
-node tools/generate-scanner-image.js --telegram  # Génère image + publie Telegram
-```
-
-Ou en une commande :
-```bash
 ./tools/publish-daily-card.sh
 ```
+
+Pipeline complet en 6 étapes (~6 min) :
+1. `update-tracking.js` — Met à jour métriques + positions (prix live Yahoo)
+2. `generate-scanner-image.js --telegram` — Génère image quotidienne + publie Telegram
+3. `sweep.js` — Re-run backtest optimizer (126k combos, ~5 min)
+4. `gen-3-cards.js` — Régénère les 3 PNG de mode (self-contained depuis backtest-trades.json)
+5. `gen-status-page.js` — Régénère scanner/status/index.html (single source of truth)
+6. `git commit + push` — Tout est poussé en un seul commit
+
+Options :
+- `--no-sweep` : skip étapes 3-5 (rapide, tracking + image seulement)
+- `--dry-run` : skip publication Telegram
 
 ### Configuration Telegram (une seule fois)
 
@@ -703,17 +708,9 @@ series/scanner-strategy/index.html — Guide des 3 modes avec ECharts, tabs, et 
 
 ---
 
-## 7. IMAGE QUOTIDIENNE ET TELEGRAM (tools/generate-scanner-image.js)
+## 7. PIPELINE POST-SCAN (tools/publish-daily-card.sh)
 
-### Flux Post-Scan (integre dans le cron scanner-quotidien)
-
-Apres chaque scan publie avec succes (git push OK), le cron execute automatiquement :
-
-    cd /home/ci/projects/articles && ./tools/publish-daily-card.sh
-
-Ce script enchaine :
-1. node tools/update-tracking.js — Met a jour scanner-metrics.json et scanner-positions.json
-2. node tools/generate-scanner-image.js --telegram — Genere le PNG et publie sur Telegram
+Tout est automatise dans `publish-daily-card.sh` (voir section "Flux Post-Scan" en haut).
 
 ### Dependances
 
@@ -725,25 +722,18 @@ Ce script enchaine :
     TELEGRAM_BOT_TOKEN=xxxx:yyyy
     TELEGRAM_CHAT_ID=-100xxxxxxxxxx
 
-### Regeneration des 3 images de mode (scanner/status/)
+### Scripts et source de donnees
 
-Apres chaque sweep, regenerer les 3 daily-cards par mode :
+| Script | Input | Output | Quand |
+|--------|-------|--------|-------|
+| `update-tracking.js` | scans HTML + Yahoo Finance | `scanner-metrics.json`, `scanner-positions.json` | Step 1 |
+| `generate-scanner-image.js` | `scanner-metrics.json`, `scanner-positions.json` | `scanner-daily-card.html` + PNG Telegram | Step 2 |
+| `sweep.js` | tous les scans + Yahoo OHLCV | `backtest-results.json`, `backtest-trades.json`, `portfolio-history.json` | Step 3 |
+| `gen-3-cards.js` | `backtest-trades.json`, `modes-config.json` | `scanner/status/mode-{growth,calmar,zero}.png` | Step 4 |
+| `gen-status-page.js` | `backtest-trades.json`, `modes-config.json`, `backtest-results.json` | `scanner/status/index.html` | Step 5 |
 
-    node tools/gen-3-cards.js
+**Single source of truth** : les images PNG et la page HTML sont toutes generees depuis les memes fichiers JSON. Jamais de valeurs hardcodees.
 
-Ce script :
-1. Lit les resultats optimaux depuis data/backtest-results.json
-2. Pour chaque mode (growth, calmar, zero), ecrit temporairement les metriques dans scanner-metrics.json
-3. Appelle generate-scanner-image.js --dry-run pour generer le HTML
-4. Injecte un bandeau colore identifiant le mode
-5. Rend le PNG via puppeteer
-6. Restaure les metriques originales
+### Lancer manuellement le sweep seul
 
-Outputs : scanner/status/mode-{growth,calmar,zero}.png
-
-Flux complet apres un sweep :
-
-    node tools/sweep.js && node tools/gen-3-cards.js && node tools/gen-status-page.js && git add scanner/status/ data/backtest-results.json data/backtest-trades.json data/portfolio-history.json && git commit -m "chore: update sweep + mode cards" && git push origin main
-
-gen-status-page.js genere scanner/status/index.html depuis les donnees (single source of truth).
-gen-3-cards.js genere les 3 PNG de mode (self-contained, pas de dependance aux donnees live).
+    node tools/sweep.js && node tools/gen-3-cards.js && node tools/gen-status-page.js
