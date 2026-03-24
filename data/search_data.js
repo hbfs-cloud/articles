@@ -600,6 +600,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "PSX",
+    "exchange": "NYSE • Energy • Oil & Gas Refining & Marketing",
+    "name": "PSX — PSX at $184.13 — 52-week high breakout, 17x P/E, 2.87% yield. Refining modernization + ...",
+    "title": "PSX — PSX at $184.13 — 52-week high breakout, 17x P/E, 2.87% yield. Refining modernization + ...",
+    "desc": "Phillips 66 analysis: diversified energy giant at 52-week high, 2.87% dividend yield, strong refining ops, midstream growth path to $4.5B EBITDA. Grade B+.",
+    "tags": "us,energy,trade-idea,dividende",
+    "grade": "B+",
+    "href": "/analyses/PSX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AXTI",
     "exchange": "NASDAQ",
     "name": "AXTI — AXT Inc surged +3722% in 1 year. Now $64. Analysts say $24.50. What's the real story?",
