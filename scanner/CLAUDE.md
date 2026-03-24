@@ -743,4 +743,7 @@ Outputs : scanner/status/mode-{growth,calmar,zero}.png
 
 Flux complet apres un sweep :
 
-    node tools/sweep.js && node tools/gen-3-cards.js && git add scanner/status/ data/backtest-results.json data/portfolio-history.json && git commit -m "chore: update sweep + mode cards" && git push origin main
+    node tools/sweep.js && node tools/gen-3-cards.js && node tools/gen-status-page.js && git add scanner/status/ data/backtest-results.json data/backtest-trades.json data/portfolio-history.json && git commit -m "chore: update sweep + mode cards" && git push origin main
+
+gen-status-page.js genere scanner/status/index.html depuis les donnees (single source of truth).
+gen-3-cards.js genere les 3 PNG de mode (self-contained, pas de dependance aux donnees live).
