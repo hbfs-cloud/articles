@@ -239,6 +239,12 @@ Les templates complets sont dans les sous-CLAUDE.md (daily/, weekly/, scanner/).
 11. **Charts** : ECharts préféré. Ne pas mélanger ApexCharts et ECharts dans un même article.
 12. **Accents français obligatoires** : UTF-8 direct (résultat, bénéfice, marché, première).
 13. **Logo** : brand-bar = logo MW `/logo.svg`. Cartes index.html = logo parqet.com. JAMAIS de logo société dans le ticker-header.
+14. **⚠️ Ticker-header metrics (CRITIQUE)** : Les métriques dans le hero utilisent EXCLUSIVEMENT ces classes définies dans `report.css` :
+    - `<div class="ticker-metric"><div class="tm-value">VALUE</div><div class="tm-label">LABEL</div></div>` (value AVANT label)
+    - **JAMAIS** `metric-value` (font trop grande 1.75rem), **JAMAIS** `metric-label`, **JAMAIS** `ticker-metric-value`/`ticker-metric-label` (n'existent pas)
+    - Structure `ticker-header` plate — PAS de nesting `ticker-header-inner`, `ticker-brand`, `ticker-hero`, `ticker-top` etc.
+    - **Référence** : `analyses/TARA/index.html` = gold standard pour le ticker-header
+15. **Brand-nav** : `<div class="brand-nav">` (PAS `<nav class="brand-nav">`). JAMAIS `class="active"` en dur (CSS gère via `data-tab`).
 
 ### Tags — Taxonomie
 | Catégorie | Tags | Couleur |
