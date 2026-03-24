@@ -422,9 +422,13 @@ ${posGrid.map(row => `
 <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:4px">
   ${row.map(p => {
     const s = sc(p.signal);
-    return `<div style="background:${s.bg};border:1px solid ${s.bdr};border-radius:6px;padding:4px 6px;display:flex;gap:5px;align-items:center;justify-content:center">
-      <span style="font-weight:700;font-size:11px;color:#0f172a">${p.ticker}</span>
-      <span style="font-weight:700;font-size:10px;color:${s.c}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</span>
+    const dateShort = p.scan_date ? p.scan_date.slice(5) : '';
+    return `<div style="background:${s.bg};border:1px solid ${s.bdr};border-radius:6px;padding:4px 6px;text-align:center">
+      <div style="display:flex;gap:4px;align-items:center;justify-content:center">
+        <span style="font-weight:700;font-size:11px;color:#0f172a">${p.ticker}</span>
+        <span style="font-weight:700;font-size:10px;color:${s.c}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</span>
+      </div>
+      ${dateShort ? `<div style="font-size:7px;color:#94a3b8;margin-top:1px">${dateShort}</div>` : ''}
     </div>`;
   }).join('')}
   ${row.length < 5 ? Array(5 - row.length).fill('<div></div>').join('') : ''}

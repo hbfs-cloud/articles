@@ -61,7 +61,7 @@ function buildMetrics(opt, tradeList) {
     avg_win_pct: avgWin, avg_loss_pct: avgLoss,
     profit_factor: pf,
     return_dd_ratio: maxDD > 0 ? (totalReturn/maxDD).toFixed(1) : 'INF',
-    total_days: 34, scans_count: 23,
+    total_days: 37, scans_count: 25,
     working_capital_pct: Math.min(100, tradeList.length*(100/opt.portfolioSize)),
     pending_orders_pct: 0,
     available_cash_pct: Math.max(0, 100 - tradeList.length*(100/opt.portfolioSize)),
@@ -72,14 +72,19 @@ function buildMetrics(opt, tradeList) {
 
 function buildTradeTableHTML(trades, color) {
   if (!trades || !trades.length) return '';
+  // Track re-entries per ticker
+  const seen = {};
   const rows = trades.slice(0, 30).map((t,i) => {
     const bg = i%2===0 ? '#f8fafc' : '#ffffff';
     const pnlColor = t.pnlPct > 0 ? '#059669' : t.pnlPct < 0 ? '#dc2626' : '#64748b';
     const statusIcon = {tp1:'\u2705',tp2:'\uD83C\uDFAF',sl:'\u274C',expired:'\u23F3',rotated:'\uD83D\uDD04',tp1_partial:'\u2705\u00BD'}[t.status]||'\u2014';
+    seen[t.ticker] = (seen[t.ticker] || 0) + 1;
+    const reentry = seen[t.ticker] > 1 ? ` <span style="font-size:8px;color:#f59e0b;font-weight:600">🔁${seen[t.ticker]}e</span>` : '';
+    const dateShort = t.scanDate ? t.scanDate.slice(5) : '\u2014'; // MM-DD
     return `<tr style="background:${bg}">
       <td style="padding:5px 8px;font-size:10px;color:#94a3b8;text-align:center">${i+1}</td>
-      <td style="padding:5px 8px;font-weight:700;font-size:11px;color:#0f172a">${t.ticker}</td>
-      <td style="padding:5px 8px;font-size:10px;color:#64748b">${t.scanDate||'\u2014'}</td>
+      <td style="padding:5px 8px;font-weight:700;font-size:11px;color:#0f172a">${t.ticker}${reentry}</td>
+      <td style="padding:5px 8px;font-size:10px;color:#64748b">${dateShort}</td>
       <td style="padding:5px 8px;font-size:10px;color:#64748b">${t.strategy||'\u2014'}</td>
       <td style="padding:5px 8px;font-size:10px;color:#0f172a;font-weight:600">$${(t.actualEntry||0).toFixed(2)}</td>
       <td style="padding:5px 8px;font-size:10px;color:#0f172a;font-weight:600">$${(t.exitPrice||0).toFixed(2)}</td>
