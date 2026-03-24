@@ -1,12 +1,169 @@
-<!DOCTYPE html>
+#!/usr/bin/env node
+/**
+ * gen-status-page.js — Generates scanner/status/index.html from data.
+ *
+ * Single source of truth: all KPIs, charts, tables, descriptions
+ * are computed from backtest-trades.json + modes-config.json.
+ *
+ * Usage: node tools/gen-status-page.js
+ */
+'use strict';
+const fs = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
+const TRADES = path.join(ROOT, 'data/backtest-trades.json');
+const RESULTS = path.join(ROOT, 'data/backtest-results.json');
+const OUT = path.join(ROOT, 'scanner/status/index.html');
+
+// ─── Compute metrics from trade list ────────────────────────────────────────
+function computeMetrics(trades, portfolioSize) {
+  const wins = trades.filter(t => t.pnlPct > 0);
+  const losses = trades.filter(t => t.pnlPct <= 0);
+  const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize, 0);
+
+  let equity = 0, peak = 0, maxDD = 0;
+  const equityCurve = [{ date: null, value: 100 }];
+  for (const t of trades) {
+    equity += (t.pnlPct || 0) / portfolioSize;
+    if (equity > peak) peak = equity;
+    if (peak - equity > maxDD) maxDD = peak - equity;
+    equityCurve.push({ date: t.scanDate, value: +(100 + equity).toFixed(2) });
+  }
+
+  const grossWin = wins.reduce((s, t) => s + t.pnlPct, 0);
+  const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
+  const pf = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : (grossWin > 0 ? 99 : 0);
+  const wr = trades.length ? +((wins.length / trades.length) * 100).toFixed(1) : 0;
+  const holdDays = trades.filter(t => t.holdDays).map(t => t.holdDays);
+  const avgHold = holdDays.length ? +(holdDays.reduce((a, b) => a + b, 0) / holdDays.length).toFixed(1) : 0;
+  const ret = +totalReturn.toFixed(2);
+  const dd = +maxDD.toFixed(2);
+  const sharpe = dd > 0 ? +(ret / dd).toFixed(2) : (ret > 0 ? 999 : 0);
+  const calmar = dd > 0 ? Math.round(ret / dd) : (ret > 0 ? 999 : 0);
+
+  return { ret, dd: +(-dd).toFixed(2), wr, pf, trades: trades.length, avgHold, sharpe, calmar, equityCurve };
+}
+
+// ─── Unique dates from equity curve ─────────────────────────────────────────
+function equityDatesValues(curve) {
+  const byDate = {};
+  for (const p of curve) {
+    if (p.date) byDate[p.date] = p.value;
+  }
+  const dates = Object.keys(byDate).sort();
+  return { dates: dates.map(d => d.slice(5).replace('-', '/')), values: dates.map(d => byDate[d]) };
+}
+
+// ─── Build HTML ─────────────────────────────────────────────────────────────
+function main() {
+  const config = JSON.parse(fs.readFileSync(MODES_CFG));
+  let allTrades = {};
+  try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) {}
+  let results = {};
+  try { results = JSON.parse(fs.readFileSync(RESULTS)); } catch (_) {}
+
+  const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+  const modes = {};
+  for (const [id, cfg] of Object.entries(config.modes)) {
+    const tradeKey = modeMap[id] || id;
+    const trades = allTrades[tradeKey] || [];
+    modes[id] = { cfg, trades, m: computeMetrics(trades, cfg.portfolioSize) };
+  }
+
+  const g = modes.growth.m, ca = modes.calmar.m, z = modes.zero.m;
+  const totalCombos = results.total_combinations || 126000;
+  const totalScans = results.total_scans || 25;
+  const totalTickers = results.total_tickers || 103;
+  const totalSetups = results.total_setups || 161;
+  const today = new Date().toISOString().slice(0, 10).split('-').reverse().join('/');
+  const todayFr = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+  // Scan date range
+  const allDates = [...(modes.growth.trades), ...(modes.calmar.trades), ...(modes.zero.trades)]
+    .map(t => t.scanDate).filter(Boolean).sort();
+  const firstDate = allDates[0] || '2026-02-15';
+  const lastDate = allDates[allDates.length - 1] || '2026-03-24';
+  const daySpan = Math.round((new Date(lastDate) - new Date(firstDate)) / 86400000);
+
+  // Best values for highlight
+  function best(a, b, c, higher = true) {
+    const vals = [a, b, c];
+    const best = higher ? Math.max(...vals) : Math.min(...vals.map(Math.abs));
+    return vals.map(v => (higher ? v === best : Math.abs(v) === best) ? ' class="best"' : '');
+  }
+
+  const bRet = best(g.ret, ca.ret, z.ret);
+  const bDD = best(Math.abs(g.dd), Math.abs(ca.dd), Math.abs(z.dd), false);
+  const bSharpe = best(g.sharpe, ca.sharpe, z.sharpe);
+  const bCalmar = best(g.calmar, ca.calmar, z.calmar);
+  const bWR = best(g.wr, ca.wr, z.wr);
+  const bPF = best(g.pf, ca.pf, z.pf);
+  const bTrades = best(g.trades, ca.trades, z.trades);
+
+  // Equity curve data for ECharts
+  const gEC = equityDatesValues(g.equityCurve);
+  const caEC = equityDatesValues(ca.equityCurve);
+  const zEC = equityDatesValues(z.equityCurve);
+
+  function modeDesc(id, cfg) {
+    return [`P${cfg.portfolioSize}`, `Top${cfg.topN}`, `H${cfg.horizon}j`, cfg.filterName, cfg.rotation,
+      cfg.partialTP ? 'PTP' : null, cfg.trailingStop ? 'Trail' : null].filter(Boolean).join(' / ');
+  }
+
+  function filterLabel(f) {
+    return { all: 'Toutes', no_sq: 'Toutes sauf Short Squeeze', momentum_only: 'Momentum uniquement', breakout_only: 'Breakout uniquement', no_sq_pb: 'Sans SQ ni PB' }[f] || f;
+  }
+
+  function rotationLabel(r) {
+    return { none: 'Aucune', daily_max1: 'Max 1/jour (marge +5)', daily_max2: 'Max 2/jour', aggressive: 'Agressive' }[r] || r;
+  }
+
+  function kpiTile(value, label, color) {
+    return `<div class="kpi-card"><div class="kpi-value" style="color:${color}">${value}</div><div class="kpi-label">${label}</div></div>`;
+  }
+
+  function kpiGrid(m) {
+    return `<div class="kpi-grid">
+      ${kpiTile(`+${m.ret}%`, 'Return', '#059669')}
+      ${kpiTile(`${m.dd}%`, 'Max DD', '#dc2626')}
+      ${kpiTile(m.sharpe, 'Sharpe', '#2563eb')}
+      ${kpiTile(`${m.wr}%`, 'Win Rate', '#7c3aed')}
+      ${kpiTile(`${m.pf}x`, 'Profit Factor', '#059669')}
+      ${kpiTile(m.trades, 'Trades', '#0891b2')}
+      ${kpiTile(`${m.avgHold}j`, 'Hold Moy.', '#f59e0b')}
+      ${kpiTile(m.calmar, 'Calmar', '#6366f1')}
+    </div>`;
+  }
+
+  function configGrid(cfg) {
+    const ptp = cfg.partialTP ? '<span style="color:#059669"><i class="fas fa-check"></i> Oui (50% TP1)</span>' : 'Non';
+    const trail = cfg.trailingStop ? '<span style="color:#059669"><i class="fas fa-check"></i> Oui (BE apr&egrave;s TP1)</span>' : 'Non';
+    return `<div class="config-box">
+      <h4><i class="fas fa-gear"></i> Configuration</h4>
+      <div class="config-grid">
+        <div class="config-item"><span class="config-key">Portfolio</span><span class="config-val">${cfg.portfolioSize} positions</span></div>
+        <div class="config-item"><span class="config-key">Signaux/Scan</span><span class="config-val">Top ${cfg.topN}</span></div>
+        <div class="config-item"><span class="config-key">Score Min</span><span class="config-val">${cfg.minScore > 0 ? cfg.minScore : 'Aucun'}</span></div>
+        <div class="config-item"><span class="config-key">Strat&eacute;gies</span><span class="config-val">${filterLabel(cfg.filterName)}</span></div>
+        <div class="config-item"><span class="config-key">Rotation</span><span class="config-val">${rotationLabel(cfg.rotation)}</span></div>
+        <div class="config-item"><span class="config-key">Horizon</span><span class="config-val">${cfg.horizon} jours</span></div>
+        <div class="config-item"><span class="config-key">Partial TP</span><span class="config-val">${ptp}</span></div>
+        <div class="config-item"><span class="config-key">Trailing Stop</span><span class="config-val">${trail}</span></div>
+      </div>
+    </div>`;
+  }
+
+  const html = `<!DOCTYPE html>
 <html lang="fr" data-tags="technique,formation,trade-idea,us,eu,asia,etf" data-tab="scanner">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scanner Strategy Guide &mdash; 3 Modes Optimis&eacute;s | Market Watch</title>
-  <meta name="description" content="Guide des 3 strat&eacute;gies optimis&eacute;es du scanner Market Watch. Bas&eacute; sur 126 000 backtests.">
+  <meta name="description" content="Guide des 3 strat&eacute;gies optimis&eacute;es du scanner Market Watch. Bas&eacute; sur ${totalCombos.toLocaleString('fr')} backtests.">
   <meta property="og:title" content="Scanner Strategy Guide &mdash; 3 Modes Optimis&eacute;s">
-  <meta property="og:description" content="3 strat&eacute;gies backtested sur 126 000 combinaisons. Return +20.58%, WR 71.4%.">
+  <meta property="og:description" content="3 strat&eacute;gies backtested sur ${totalCombos.toLocaleString('fr')} combinaisons. Return +${g.ret}%, WR ${g.wr}%.">
   <meta property="og:image" content="https://articles.market-watch.xyz/scanner/status/mode-growth.png">
   <meta name="twitter:card" content="summary_large_image">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
@@ -97,20 +254,20 @@
 <article style="max-width:960px;margin:0 auto;padding:0 1rem 3rem">
 
   <div class="hero-sweep">
-    <span class="updated-badge"><i class="fas fa-clock"></i> Mis &agrave; jour le 24 mars 2026</span>
+    <span class="updated-badge"><i class="fas fa-clock"></i> Mis &agrave; jour le ${todayFr}</span>
     <h1>Scanner Strategy Guide</h1>
-    <p class="subtitle">3 modes optimis&eacute;s &mdash; 126 000 backtests, 25 scans, 103 tickers, 161 setups</p>
+    <p class="subtitle">3 modes optimis&eacute;s &mdash; ${totalCombos.toLocaleString('fr')} backtests, ${totalScans} scans, ${totalTickers} tickers, ${totalSetups} setups</p>
     <div class="hero-badges">
-      <span class="hero-badge badge-green"><i class="fas fa-rocket"></i> Maximum Growth +20.58%</span>
-      <span class="hero-badge badge-blue"><i class="fas fa-shield-halved"></i> Risk-Adjusted +10.61%</span>
-      <span class="hero-badge badge-purple"><i class="fas fa-gem"></i> Conservative +17.69%</span>
+      <span class="hero-badge badge-green"><i class="fas fa-rocket"></i> Maximum Growth +${g.ret}%</span>
+      <span class="hero-badge badge-blue"><i class="fas fa-shield-halved"></i> Risk-Adjusted +${ca.ret}%</span>
+      <span class="hero-badge badge-purple"><i class="fas fa-gem"></i> Conservative +${z.ret}%</span>
       <span class="hero-badge badge-amber"><i class="fas fa-flask-vial"></i> Walk-Forward Valid&eacute;</span>
     </div>
     <div id="article-clickable-tags" class="card-tags"></div>
   </div>
 
   <h2 class="section-title"><i class="fas fa-sliders" style="color:#3b82f6"></i> Choisissez votre mode</h2>
-  <p style="color:#64748b;font-size:.9rem;margin-bottom:1rem">Chaque mode correspond &agrave; un profil de risque diff&eacute;rent. Les param&egrave;tres sont issus d'un grid search sur <strong>126 000 combinaisons</strong> avec validation walk-forward (70% in-sample / 30% out-of-sample).</p>
+  <p style="color:#64748b;font-size:.9rem;margin-bottom:1rem">Chaque mode correspond &agrave; un profil de risque diff&eacute;rent. Les param&egrave;tres sont issus d'un grid search sur <strong>${totalCombos.toLocaleString('fr')} combinaisons</strong> avec validation walk-forward (70% in-sample / 30% out-of-sample).</p>
 
   <div class="mode-tabs">
     <button class="mode-tab active" data-mode="growth" onclick="switchMode('growth')"><i class="fas fa-rocket"></i><br>Maximum Growth</button>
@@ -121,42 +278,21 @@
   <!-- MODE 1: GROWTH -->
   <div class="mode-panel active" id="panel-growth">
     <img src="/scanner/status/mode-growth.png" alt="Maximum Growth mode" class="setup-img" loading="eager">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+20.58%</div><div class="kpi-label">Return</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-1.69%</div><div class="kpi-label">Max DD</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">12.18</div><div class="kpi-label">Sharpe</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">71.4%</div><div class="kpi-label">Win Rate</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">5.87x</div><div class="kpi-label">Profit Factor</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">21</div><div class="kpi-label">Trades</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#f59e0b">3.8j</div><div class="kpi-label">Hold Moy.</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#6366f1">12</div><div class="kpi-label">Calmar</div></div>
-    </div>
-    <div class="config-box">
-      <h4><i class="fas fa-gear"></i> Configuration</h4>
-      <div class="config-grid">
-        <div class="config-item"><span class="config-key">Portfolio</span><span class="config-val">4 positions</span></div>
-        <div class="config-item"><span class="config-key">Signaux/Scan</span><span class="config-val">Top 4</span></div>
-        <div class="config-item"><span class="config-key">Score Min</span><span class="config-val">Aucun</span></div>
-        <div class="config-item"><span class="config-key">Strat&eacute;gies</span><span class="config-val">Toutes</span></div>
-        <div class="config-item"><span class="config-key">Rotation</span><span class="config-val">Agressive</span></div>
-        <div class="config-item"><span class="config-key">Horizon</span><span class="config-val">5 jours</span></div>
-        <div class="config-item"><span class="config-key">Partial TP</span><span class="config-val">Non</span></div>
-        <div class="config-item"><span class="config-key">Trailing Stop</span><span class="config-val">Non</span></div>
-      </div>
-    </div>
+    ${kpiGrid(g)}
+    ${configGrid(modes.growth.cfg)}
     <div class="how-box">
       <h4><i class="fas fa-list-check"></i> Comment appliquer ce mode</h4>
       <ol>
-        <li><strong>Chaque soir</strong> apr&egrave;s le scan (23h), prenez les <strong>4 premiers setups</strong> par score</li>
+        <li><strong>Chaque soir</strong> apr&egrave;s le scan (23h), prenez les <strong>${modes.growth.cfg.topN} premiers setups</strong> par score</li>
         <li><strong>Entr&eacute;e</strong> &agrave; l'ouverture J+1 (15h30 Paris) au prix d'ouverture</li>
         <li><strong>Stop loss</strong> et <strong>Target 1</strong> tels qu'indiqu&eacute;s dans le scan</li>
-        <li><strong>Sortie</strong> : TP1 touch&eacute; OU stop touch&eacute; OU expir&eacute; apr&egrave;s 5 jours ouvrables</li>
+        <li><strong>Sortie</strong> : TP1 touch&eacute; OU stop touch&eacute; OU expir&eacute; apr&egrave;s ${modes.growth.cfg.horizon} jours ouvrables</li>
         <li><strong>Rotation agressive</strong> : si un nouveau signal a un score sup&eacute;rieur &agrave; votre pire position ouverte, fermez-la au march&eacute; et entrez sur le nouveau signal</li>
-        <li><strong>Allocation</strong> : 25% du capital par position (4 positions &times; 25% = 100%)</li>
+        <li><strong>Allocation</strong> : ${Math.round(100/modes.growth.cfg.portfolioSize)}% du capital par position (${modes.growth.cfg.portfolioSize} positions &times; ${Math.round(100/modes.growth.cfg.portfolioSize)}% = 100%)</li>
       </ol>
     </div>
     <div class="disclaimer-sweep">
-      <strong><i class="fas fa-triangle-exclamation"></i> Attention :</strong> Ce mode cherche la performance maximale. Le drawdown de -1.69% est contenu mais le turnover est &eacute;lev&eacute; (3.8 jours de hold moyen). Les frais de courtage r&eacute;els ne sont pas mod&eacute;lis&eacute;s.
+      <strong><i class="fas fa-triangle-exclamation"></i> Attention :</strong> Ce mode cherche la performance maximale. Le drawdown de ${g.dd}% est contenu mais le turnover est &eacute;lev&eacute; (${g.avgHold} jours de hold moyen). Les frais de courtage r&eacute;els ne sont pas mod&eacute;lis&eacute;s.
     </div>
     <div id="chartGrowthEquity" class="echart-box"></div>
   </div>
@@ -164,42 +300,21 @@
   <!-- MODE 2: CALMAR -->
   <div class="mode-panel" id="panel-calmar">
     <img src="/scanner/status/mode-calmar.png" alt="Risk-Adjusted mode" class="setup-img" loading="lazy">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+10.61%</div><div class="kpi-label">Return</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-2.46%</div><div class="kpi-label">Max DD</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">4.31</div><div class="kpi-label">Sharpe</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">70.6%</div><div class="kpi-label">Win Rate</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">2.85x</div><div class="kpi-label">Profit Factor</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">17</div><div class="kpi-label">Trades</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#f59e0b">6.3j</div><div class="kpi-label">Hold Moy.</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#6366f1">4</div><div class="kpi-label">Calmar</div></div>
-    </div>
-    <div class="config-box">
-      <h4><i class="fas fa-gear"></i> Configuration</h4>
-      <div class="config-grid">
-        <div class="config-item"><span class="config-key">Portfolio</span><span class="config-val">5 positions</span></div>
-        <div class="config-item"><span class="config-key">Signaux/Scan</span><span class="config-val">Top 5</span></div>
-        <div class="config-item"><span class="config-key">Score Min</span><span class="config-val">Aucun</span></div>
-        <div class="config-item"><span class="config-key">Strat&eacute;gies</span><span class="config-val">Toutes sauf Short Squeeze</span></div>
-        <div class="config-item"><span class="config-key">Rotation</span><span class="config-val">Max 1/jour (marge +5)</span></div>
-        <div class="config-item"><span class="config-key">Horizon</span><span class="config-val">5 jours</span></div>
-        <div class="config-item"><span class="config-key">Partial TP</span><span class="config-val">Non</span></div>
-        <div class="config-item"><span class="config-key">Trailing Stop</span><span class="config-val">Non</span></div>
-      </div>
-    </div>
+    ${kpiGrid(ca)}
+    ${configGrid(modes.calmar.cfg)}
     <div class="how-box">
       <h4><i class="fas fa-list-check"></i> Comment appliquer ce mode</h4>
       <ol>
-        <li><strong>Chaque soir</strong> apr&egrave;s le scan, prenez les <strong>5 premiers setups</strong> (hors Short Squeeze)</li>
+        <li><strong>Chaque soir</strong> apr&egrave;s le scan, prenez les <strong>${modes.calmar.cfg.topN} premiers setups</strong> (hors Short Squeeze)</li>
         <li><strong>Entr&eacute;e</strong> &agrave; l'ouverture J+1 (15h30 Paris)</li>
         <li><strong>Stop loss</strong> et <strong>Target 1</strong> tels qu'indiqu&eacute;s dans le scan</li>
-        <li><strong>Sortie</strong> : TP1 touch&eacute; OU stop touch&eacute; OU expir&eacute; apr&egrave;s 5 jours ouvrables</li>
+        <li><strong>Sortie</strong> : TP1 touch&eacute; OU stop touch&eacute; OU expir&eacute; apr&egrave;s ${modes.calmar.cfg.horizon} jours ouvrables</li>
         <li><strong>Rotation contr&ocirc;l&eacute;e</strong> : max 1 rotation par jour, marge +5 points de score</li>
-        <li><strong>Allocation</strong> : 20% du capital par position (5 &times; 20% = 100%)</li>
+        <li><strong>Allocation</strong> : ${Math.round(100/modes.calmar.cfg.portfolioSize)}% du capital par position (${modes.calmar.cfg.portfolioSize} &times; ${Math.round(100/modes.calmar.cfg.portfolioSize)}% = 100%)</li>
       </ol>
     </div>
     <div class="disclaimer-sweep">
-      <strong><i class="fas fa-shield-halved"></i> Mode recommand&eacute; :</strong> Meilleur ratio return/risque. Drawdown contenu (-2.46%) avec un return de +10.61%. Le filtre Short Squeeze &eacute;vite les pics de volatilit&eacute; destructeurs.
+      <strong><i class="fas fa-shield-halved"></i> Mode recommand&eacute; :</strong> Meilleur ratio return/risque. Drawdown contenu (${ca.dd}%) avec un return de +${ca.ret}%. Le filtre Short Squeeze &eacute;vite les pics de volatilit&eacute; destructeurs.
     </div>
     <div id="chartCalmarEquity" class="echart-box"></div>
   </div>
@@ -207,43 +322,22 @@
   <!-- MODE 3: CONSERVATIVE (ex-Zero DD) -->
   <div class="mode-panel" id="panel-zero">
     <img src="/scanner/status/mode-zero.png" alt="Conservative mode" class="setup-img" loading="lazy">
-    <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+17.69%</div><div class="kpi-label">Return</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-4.09%</div><div class="kpi-label">Max DD</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">4.33</div><div class="kpi-label">Sharpe</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">70.6%</div><div class="kpi-label">Win Rate</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">2.85x</div><div class="kpi-label">Profit Factor</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">17</div><div class="kpi-label">Trades</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#f59e0b">6.3j</div><div class="kpi-label">Hold Moy.</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#6366f1">4</div><div class="kpi-label">Calmar</div></div>
-    </div>
-    <div class="config-box">
-      <h4><i class="fas fa-gear"></i> Configuration</h4>
-      <div class="config-grid">
-        <div class="config-item"><span class="config-key">Portfolio</span><span class="config-val">3 positions</span></div>
-        <div class="config-item"><span class="config-key">Signaux/Scan</span><span class="config-val">Top 2</span></div>
-        <div class="config-item"><span class="config-key">Score Min</span><span class="config-val">Aucun</span></div>
-        <div class="config-item"><span class="config-key">Strat&eacute;gies</span><span class="config-val">Momentum uniquement</span></div>
-        <div class="config-item"><span class="config-key">Rotation</span><span class="config-val">Agressive</span></div>
-        <div class="config-item"><span class="config-key">Horizon</span><span class="config-val">20 jours</span></div>
-        <div class="config-item"><span class="config-key">Partial TP</span><span class="config-val"><span style="color:#059669"><i class="fas fa-check"></i> Oui (50% TP1)</span></span></div>
-        <div class="config-item"><span class="config-key">Trailing Stop</span><span class="config-val"><span style="color:#059669"><i class="fas fa-check"></i> Oui (BE apr&egrave;s TP1)</span></span></div>
-      </div>
-    </div>
+    ${kpiGrid(z)}
+    ${configGrid(modes.zero.cfg)}
     <div class="how-box">
       <h4><i class="fas fa-list-check"></i> Comment appliquer ce mode</h4>
       <ol>
-        <li><strong>Chaque soir</strong>, ne prenez que les <strong>2 premiers setups Momentum</strong> (ignorez Breakout, Pullback, Squeeze)</li>
+        <li><strong>Chaque soir</strong>, ne prenez que les <strong>${modes.zero.cfg.topN} premiers setups Momentum</strong> (ignorez Breakout, Pullback, Squeeze)</li>
         <li><strong>Entr&eacute;e</strong> &agrave; l'ouverture J+1 (15h30 Paris)</li>
         <li><strong>Quand TP1 est touch&eacute;</strong> : vendez <strong>50% de la position</strong> et d&eacute;placez le stop au <strong>breakeven</strong></li>
         <li>Laissez courir les <strong>50% restants</strong> avec un <strong>trailing stop &agrave; 1.5R</strong> du plus haut</li>
-        <li><strong>Horizon max</strong> : 20 jours. Cl&ocirc;turez si le trade expire</li>
-        <li><strong>Allocation</strong> : 33% du capital par position (3 &times; 33% &cong; 100%)</li>
+        <li><strong>Horizon max</strong> : ${modes.zero.cfg.horizon} jours. Cl&ocirc;turez si le trade expire</li>
+        <li><strong>Allocation</strong> : ${Math.round(100/modes.zero.cfg.portfolioSize)}% du capital par position (${modes.zero.cfg.portfolioSize} &times; ${Math.round(100/modes.zero.cfg.portfolioSize)}% &cong; 100%)</li>
         <li><strong>Rotation</strong> : remplacez la pire position si un meilleur signal Momentum appara&icirc;t</li>
       </ol>
     </div>
     <div class="disclaimer-sweep">
-      <strong><i class="fas fa-gem"></i> Mode conservateur :</strong> Drawdown limit&eacute; (-4.09%) gr&acirc;ce au partial TP (50% &agrave; TP1) et trailing stop (breakeven). 17 trades, WR 70.6%. Id&eacute;al pour d&eacute;buter.
+      <strong><i class="fas fa-gem"></i> Mode conservateur :</strong> Drawdown limit&eacute; (${z.dd}%) gr&acirc;ce au partial TP (50% &agrave; TP1) et trailing stop (breakeven). ${z.trades} trades, WR ${z.wr}%. Id&eacute;al pour d&eacute;buter.
     </div>
     <div id="chartZeroEquity" class="echart-box"></div>
   </div>
@@ -258,17 +352,17 @@
       <th style="background:#7c3aed">Conservative</th>
     </tr></thead>
     <tbody>
-      <tr><td><strong>Return</strong></td><td class="best">+20.58%</td><td>+10.61%</td><td>+17.69%</td></tr>
-      <tr><td><strong>Max Drawdown</strong></td><td class="best">-1.69%</td><td>-2.46%</td><td>-4.09%</td></tr>
-      <tr><td><strong>Sharpe Ratio</strong></td><td class="best">12.18</td><td>4.31</td><td>4.33</td></tr>
-      <tr><td><strong>Calmar Ratio</strong></td><td class="best">12</td><td>4</td><td>4</td></tr>
-      <tr><td><strong>Win Rate</strong></td><td class="best">71.4%</td><td>70.6%</td><td>70.6%</td></tr>
-      <tr><td><strong>Profit Factor</strong></td><td class="best">5.87x</td><td>2.85x</td><td>2.85x</td></tr>
-      <tr><td><strong>Trades</strong></td><td class="best">21</td><td>17</td><td>17</td></tr>
-      <tr><td><strong>Hold Moyen</strong></td><td>3.8j</td><td>6.3j</td><td>6.3j</td></tr>
-      <tr><td><strong>Positions Max</strong></td><td>4</td><td>5</td><td>3</td></tr>
-      <tr><td><strong>Partial TP</strong></td><td>Non</td><td>Non</td><td class="best">Oui (50%)</td></tr>
-      <tr><td><strong>Trailing Stop</strong></td><td>Non</td><td>Non</td><td class="best">Oui (BE)</td></tr>
+      <tr><td><strong>Return</strong></td><td${bRet[0]}>+${g.ret}%</td><td${bRet[1]}>+${ca.ret}%</td><td${bRet[2]}>+${z.ret}%</td></tr>
+      <tr><td><strong>Max Drawdown</strong></td><td${bDD[0]}>${g.dd}%</td><td${bDD[1]}>${ca.dd}%</td><td${bDD[2]}>${z.dd}%</td></tr>
+      <tr><td><strong>Sharpe Ratio</strong></td><td${bSharpe[0]}>${g.sharpe}</td><td${bSharpe[1]}>${ca.sharpe}</td><td${bSharpe[2]}>${z.sharpe}</td></tr>
+      <tr><td><strong>Calmar Ratio</strong></td><td${bCalmar[0]}>${g.calmar}</td><td${bCalmar[1]}>${ca.calmar}</td><td${bCalmar[2]}>${z.calmar}</td></tr>
+      <tr><td><strong>Win Rate</strong></td><td${bWR[0]}>${g.wr}%</td><td${bWR[1]}>${ca.wr}%</td><td${bWR[2]}>${z.wr}%</td></tr>
+      <tr><td><strong>Profit Factor</strong></td><td${bPF[0]}>${g.pf}x</td><td${bPF[1]}>${ca.pf}x</td><td${bPF[2]}>${z.pf}x</td></tr>
+      <tr><td><strong>Trades</strong></td><td${bTrades[0]}>${g.trades}</td><td${bTrades[1]}>${ca.trades}</td><td${bTrades[2]}>${z.trades}</td></tr>
+      <tr><td><strong>Hold Moyen</strong></td><td>${g.avgHold}j</td><td>${ca.avgHold}j</td><td>${z.avgHold}j</td></tr>
+      <tr><td><strong>Positions Max</strong></td><td>${modes.growth.cfg.portfolioSize}</td><td>${modes.calmar.cfg.portfolioSize}</td><td>${modes.zero.cfg.portfolioSize}</td></tr>
+      <tr><td><strong>Partial TP</strong></td><td>Non</td><td>Non</td><td${modes.zero.cfg.partialTP ? ' class="best"' : ''}>Oui (50%)</td></tr>
+      <tr><td><strong>Trailing Stop</strong></td><td>Non</td><td>Non</td><td${modes.zero.cfg.trailingStop ? ' class="best"' : ''}>Oui (BE)</td></tr>
       <tr><td><strong>Id&eacute;al pour</strong></td><td>Traders actifs</td><td><strong>Recommand&eacute;</strong></td><td>D&eacute;butants</td></tr>
     </tbody>
   </table>
@@ -280,7 +374,7 @@
   <div class="methodology-grid">
     <div class="methodology-card">
       <h5><i class="fas fa-cubes" style="color:#3b82f6"></i> Grid Search Exhaustif</h5>
-      <p><strong>126 000 combinaisons</strong> test&eacute;es sur 8 dimensions : taille portfolio (1-20), signaux/scan (1-5), score min (0-95), horizon (5-30j), 5 filtres strat&eacute;gie, 4 modes rotation, partial TP, trailing stop.</p>
+      <p><strong>${totalCombos.toLocaleString('fr')} combinaisons</strong> test&eacute;es sur 8 dimensions : taille portfolio (1-20), signaux/scan (1-5), score min (0-95), horizon (5-30j), 5 filtres strat&eacute;gie, 4 modes rotation, partial TP, trailing stop.</p>
     </div>
     <div class="methodology-card">
       <h5><i class="fas fa-chart-line" style="color:#059669"></i> Simulation R&eacute;aliste</h5>
@@ -301,12 +395,12 @@
   <div class="config-box">
     <h4><i class="fas fa-calendar-check"></i> P&eacute;riode analys&eacute;e</h4>
     <div class="config-grid">
-      <div class="config-item"><span class="config-key">D&eacute;but</span><span class="config-val">2026-02-26</span></div>
-      <div class="config-item"><span class="config-key">Fin</span><span class="config-val">2026-03-23</span></div>
-      <div class="config-item"><span class="config-key">Dur&eacute;e</span><span class="config-val">25 jours (25 scans)</span></div>
-      <div class="config-item"><span class="config-key">Tickers</span><span class="config-val">103</span></div>
-      <div class="config-item"><span class="config-key">Setups</span><span class="config-val">161</span></div>
-      <div class="config-item"><span class="config-key">Combinaisons</span><span class="config-val">126 000</span></div>
+      <div class="config-item"><span class="config-key">D&eacute;but</span><span class="config-val">${firstDate}</span></div>
+      <div class="config-item"><span class="config-key">Fin</span><span class="config-val">${lastDate}</span></div>
+      <div class="config-item"><span class="config-key">Dur&eacute;e</span><span class="config-val">${daySpan} jours (${totalScans} scans)</span></div>
+      <div class="config-item"><span class="config-key">Tickers</span><span class="config-val">${totalTickers}</span></div>
+      <div class="config-item"><span class="config-key">Setups</span><span class="config-val">${totalSetups}</span></div>
+      <div class="config-item"><span class="config-key">Combinaisons</span><span class="config-val">${totalCombos.toLocaleString('fr')}</span></div>
       <div class="config-item"><span class="config-key">Source prix</span><span class="config-val">Yahoo Finance OHLCV</span></div>
       <div class="config-item"><span class="config-key">Slippage</span><span class="config-val">Non (open r&eacute;el)</span></div>
     </div>
@@ -316,7 +410,7 @@
   <div id="disclaimer" class="content-card" style="margin-top:2.5rem;background:#fef2f2;border:2px solid #fecaca;border-radius:14px;padding:1.5rem">
     <h3 style="color:#991b1b;margin:0 0 .8rem"><i class="fas fa-triangle-exclamation"></i> Disclaimer</h3>
     <p style="color:#991b1b;font-size:.85rem;line-height:1.6;margin:0">
-      Les performances pass&eacute;es ne garantissent pas les r&eacute;sultats futurs. Ce guide est &agrave; titre &eacute;ducatif uniquement. Les backtests ne mod&eacute;lisent pas les frais de courtage, le slippage, ni l'impact de march&eacute;. La p&eacute;riode d'analyse est courte (25 jours, 25 scans). Investir comporte des risques de perte en capital.
+      Les performances pass&eacute;es ne garantissent pas les r&eacute;sultats futurs. Ce guide est &agrave; titre &eacute;ducatif uniquement. Les backtests ne mod&eacute;lisent pas les frais de courtage, le slippage, ni l'impact de march&eacute;. La p&eacute;riode d'analyse est courte (${daySpan} jours, ${totalScans} scans). Investir comporte des risques de perte en capital.
     </p>
   </div>
 
@@ -359,30 +453,39 @@ function initCharts() {
   var dk='#334155',gc='#f1f5f9';
 
   // Growth equity curve
-  var gD=["02/26","02/27","03/02","03/05","03/09","03/13","03/17","03/19","03/20","03/23"];
-  var gV=[105.68,104.56,109.47,113.65,118.32,120.15,120.68,118.99,120.33,120.58];
+  var gD=${JSON.stringify(gEC.dates)};
+  var gV=${JSON.stringify(gEC.values)};
   var c1=echarts.init(document.getElementById('chartGrowthEquity'));
   c1.setOption({title:{text:'Equity Curve — Maximum Growth',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>'+p[0].value.toFixed(2)}},xAxis:{type:'category',data:gD,axisLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8',fontSize:11}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,gV))-1,axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{data:gV,type:'line',smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#059669',width:3},itemStyle:{color:'#059669'},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(5,150,105,.25)'},{offset:1,color:'rgba(5,150,105,.02)'}])}}],grid:{left:50,right:20,top:45,bottom:30}});
 
   // Calmar equity curve
-  var caD=["02/26","03/02","03/05","03/09","03/10","03/13","03/17","03/19","03/20","03/23"];
-  var caV=[102.63,105.06,109.01,108.98,107.76,109.19,109.62,108.83,109.9,110.61];
+  var caD=${JSON.stringify(caEC.dates)};
+  var caV=${JSON.stringify(caEC.values)};
   var c2=echarts.init(document.getElementById('chartCalmarEquity'));
   c2.setOption({title:{text:'Equity Curve — Risk-Adjusted',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>'+p[0].value.toFixed(2)}},xAxis:{type:'category',data:caD,axisLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8',fontSize:11}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,caV))-1,axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{data:caV,type:'line',smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#2563eb',width:3},itemStyle:{color:'#2563eb'},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(37,99,235,.25)'},{offset:1,color:'rgba(37,99,235,.02)'}])}}],grid:{left:50,right:20,top:45,bottom:30}});
 
   // Zero equity curve
-  var zD=["02/26","03/02","03/05","03/09","03/10","03/13","03/17","03/19","03/20","03/23"];
-  var zV=[104.39,108.44,115.02,114.97,112.93,115.32,116.03,114.71,116.49,117.69];
+  var zD=${JSON.stringify(zEC.dates)};
+  var zV=${JSON.stringify(zEC.values)};
   var c3=echarts.init(document.getElementById('chartZeroEquity'));
   c3.setOption({title:{text:'Equity Curve — Conservative',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>'+p[0].value.toFixed(2)}},xAxis:{type:'category',data:zD,axisLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8',fontSize:11}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,zV))-1,axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{data:zV,type:'line',smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#7c3aed',width:3},itemStyle:{color:'#7c3aed'},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(124,58,237,.25)'},{offset:1,color:'rgba(124,58,237,.02)'}])}}],grid:{left:50,right:20,top:45,bottom:30}});
 
   // Comparison bar chart
   var c4=echarts.init(document.getElementById('chartCompareReturns'));
-  c4.setOption({title:{text:'Comparaison des 3 modes',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{color:'#64748b'}},xAxis:{type:'category',data:['Return (%)','|MaxDD| (%)','Win Rate (%)','Profit Factor','Trades','Hold (j)'],axisLabel:{color:'#64748b',fontSize:11,rotate:15},axisLine:{lineStyle:{color:gc}}},yAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{name:'Growth',type:'bar',data:[20.58,1.69,71.4,5.87,21,3.8],itemStyle:{color:'#059669',borderRadius:[6,6,0,0]}},{name:'Risk-Adj',type:'bar',data:[10.61,2.46,70.6,2.85,17,6.3],itemStyle:{color:'#2563eb',borderRadius:[6,6,0,0]}},{name:'Conserv.',type:'bar',data:[17.69,4.09,70.6,2.85,17,6.3],itemStyle:{color:'#7c3aed',borderRadius:[6,6,0,0]}}],grid:{left:45,right:20,top:45,bottom:50}});
+  c4.setOption({title:{text:'Comparaison des 3 modes',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{color:'#64748b'}},xAxis:{type:'category',data:['Return (%)','|MaxDD| (%)','Win Rate (%)','Profit Factor','Trades','Hold (j)'],axisLabel:{color:'#64748b',fontSize:11,rotate:15},axisLine:{lineStyle:{color:gc}}},yAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{name:'Growth',type:'bar',data:[${g.ret},${Math.abs(g.dd)},${g.wr},${g.pf},${g.trades},${g.avgHold}],itemStyle:{color:'#059669',borderRadius:[6,6,0,0]}},{name:'Risk-Adj',type:'bar',data:[${ca.ret},${Math.abs(ca.dd)},${ca.wr},${ca.pf},${ca.trades},${ca.avgHold}],itemStyle:{color:'#2563eb',borderRadius:[6,6,0,0]}},{name:'Conserv.',type:'bar',data:[${z.ret},${Math.abs(z.dd)},${z.wr},${z.pf},${z.trades},${z.avgHold}],itemStyle:{color:'#7c3aed',borderRadius:[6,6,0,0]}}],grid:{left:45,right:20,top:45,bottom:50}});
 
   window.addEventListener('resize',function(){c1.resize();c2.resize();c3.resize();c4.resize()});
 }
 document.addEventListener('DOMContentLoaded',initCharts);
 </script>
 </body>
-</html>
+</html>`;
+
+  fs.writeFileSync(OUT, html);
+  console.log(`✅ ${OUT} generated (${(html.length / 1024).toFixed(0)}KB)`);
+  console.log(`   Growth: +${g.ret}%, DD ${g.dd}%, WR ${g.wr}%, PF ${g.pf}x, ${g.trades} trades`);
+  console.log(`   Calmar: +${ca.ret}%, DD ${ca.dd}%, WR ${ca.wr}%, PF ${ca.pf}x, ${ca.trades} trades`);
+  console.log(`   Conservative: +${z.ret}%, DD ${z.dd}%, WR ${z.wr}%, PF ${z.pf}x, ${z.trades} trades`);
+}
+
+main();
