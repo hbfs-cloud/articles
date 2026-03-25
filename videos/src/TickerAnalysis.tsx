@@ -57,11 +57,11 @@ const TRANSITION_FRAMES = 15;
 const PROGRESS_BAR_H = 4;
 
 const CHAPTER_BACKGROUNDS = [
-  'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1920&q=80',
-  'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1920&q=80',
-  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1920&q=80',
-  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80',
-  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80',
+  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1920&q=80', // stock trading screens
+  'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1920&q=80', // corporate skyscraper
+  'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1920&q=80', // data analytics dashboard
+  'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?w=1920&q=80', // stock market chart
+  'https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=1920&q=80', // oil refinery
 ];
 
 const CHAPTER_EMOJIS: Record<string, string> = {
@@ -398,35 +398,31 @@ const TitleSlide: React.FC<{slide: TickerSlide; config: TickerConfig; bgIndex: n
       <KenBurnsBackground imageUrl={CHAPTER_BACKGROUNDS[bgIndex]} overlayOpacity={0.82} />
       <FloatingParticles accent={accent} />
 
-      {/* Company Logo */}
-      {config.tickerLogo && (
+      {/* Ticker Badge */}
+      <div
+        style={{
+          position: 'relative',
+          marginBottom: 32,
+          transform: `scale(${logoScale})`,
+        }}
+      >
         <div
           style={{
-            position: 'relative',
-            marginBottom: 32,
-            transform: `scale(${logoScale})`,
+            width: 120,
+            height: 120,
+            borderRadius: '50%',
+            background: accent,
+            boxShadow: `0 12px 48px ${accent}40`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
-          <div
-            style={{
-              width: 140,
-              height: 140,
-              borderRadius: 28,
-              background: '#fff',
-              boxShadow: '0 12px 48px rgba(0,0,0,0.12)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-            }}
-          >
-            <Img
-              src={config.tickerLogo}
-              style={{width: 110, height: 110, objectFit: 'contain'}}
-            />
-          </div>
+          <span style={{color: '#fff', fontSize: 40, fontWeight: 800, letterSpacing: 2}}>
+            {config.ticker || ''}
+          </span>
         </div>
-      )}
+      </div>
 
       {/* Ticker Symbol */}
       <div
@@ -456,12 +452,30 @@ const TitleSlide: React.FC<{slide: TickerSlide; config: TickerConfig; bgIndex: n
           textAlign: 'center',
           maxWidth: W - MARGIN * 4,
           lineHeight: 1.15,
-          marginBottom: 24,
+          marginBottom: 16,
           ...nameAnim,
         }}
       >
         {config.tickerName || slide.title || ''}
       </div>
+
+      {/* Subtitle */}
+      {slide.text && (
+        <div
+          style={{
+            position: 'relative',
+            fontSize: 36,
+            fontWeight: 500,
+            color: '#64748b',
+            textAlign: 'center',
+            maxWidth: W - MARGIN * 4,
+            marginBottom: 24,
+            ...nameAnim,
+          }}
+        >
+          {slide.text}
+        </div>
+      )}
 
       {/* Grade Badge */}
       {config.tickerGrade && (
@@ -580,8 +594,8 @@ const ChapterIntroSlide: React.FC<{
       <KenBurnsBackground imageUrl={CHAPTER_BACKGROUNDS[bgIndex]} />
       <FloatingParticles accent={accent} />
 
-      {/* Logo small */}
-      {config.tickerLogo && (
+      {/* Ticker Badge small */}
+      {config.ticker && (
         <div
           style={{
             position: 'relative',
@@ -594,19 +608,16 @@ const ChapterIntroSlide: React.FC<{
             style={{
               width: 56,
               height: 56,
-              borderRadius: 14,
-              background: '#fff',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+              borderRadius: '50%',
+              background: accent,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              overflow: 'hidden',
             }}
           >
-            <Img
-              src={config.tickerLogo}
-              style={{width: 44, height: 44, objectFit: 'contain'}}
-            />
+            <span style={{color: '#fff', fontSize: 18, fontWeight: 800}}>
+              {config.ticker}
+            </span>
           </div>
         </div>
       )}
@@ -1255,7 +1266,8 @@ const ConceptSlide: React.FC<{slide: TickerSlide; config: TickerConfig; bgIndex:
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              width: '85%',
+              width: '95%',
+              maxHeight: 600,
               alignSelf: 'center',
               background: '#f8fafc',
               borderRadius: 16,
@@ -1505,7 +1517,7 @@ const TipSlide: React.FC<{slide: TickerSlide; bgIndex: number; config: TickerCon
         </div>
         <p
           style={{
-            fontSize: 30,
+            fontSize: 36,
             color: '#334155',
             lineHeight: 1.6,
             margin: 0,
@@ -1555,9 +1567,9 @@ const WarningSlide: React.FC<{slide: TickerSlide; bgIndex: number; config: Ticke
         style={{
           background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 40%, #fecaca 100%)',
           borderRadius: 24,
-          padding: '56px 64px',
-          maxWidth: 1500,
-          width: '100%',
+          padding: '64px 72px',
+          maxWidth: 1600,
+          width: '90%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -1588,13 +1600,13 @@ const WarningSlide: React.FC<{slide: TickerSlide; bgIndex: number; config: Ticke
         </div>
         <p
           style={{
-            fontSize: 32,
+            fontSize: 36,
             color: '#78350f',
             lineHeight: 1.6,
             margin: 0,
             fontWeight: 600,
             textAlign: 'center',
-            maxWidth: 1200,
+            maxWidth: 1300,
           }}
         >
           {slide.text || ''}
