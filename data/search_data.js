@@ -613,6 +613,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "SRPT",
+    "exchange": "NASDAQ",
+    "name": "SRPT — Sarepta Therapeutics",
+    "title": "SRPT — Sarepta Therapeutics",
+    "desc": "In-depth analysis of Sarepta Therapeutics (SRPT) — Beyond Duchenne: siRNA pipeline validation, Elevidys commercial success, and short squeeze potential.",
+    "tags": "us,biotech,gene-therapy,trade-idea,speculative",
+    "grade": "A-",
+    "href": "/analyses/SRPT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "PSX",
     "exchange": "NYSE • Energy • Oil & Gas Refining & Marketing",
     "name": "PSX — PSX at $184.13 — 52-week high breakout, 17x P/E, 2.87% yield. Refining modernization + ...",
