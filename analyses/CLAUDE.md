@@ -186,6 +186,39 @@ Utiliser des `.risk-card` pour chaque élément :
 - **Historique de dilution** : nb de shares il y a 1/2/5 ans vs aujourd'hui
 - Verdict : risque de dilution faible / modéré / élevé / critique
 
+##### Warrants — Analyse Détaillée (OBLIGATOIRE si warrants détectés)
+**Collecte automatique** : `WebSearch "{TICKER} SEC EDGAR warrants"` + `WebSearch "{TICKER} warrants strike price expiration"` + `QueryData types=flags,sec_filings` + vérifier les prospectus S-1/S-3 pour les conditions exactes.
+
+**Tableau obligatoire** pour chaque série de warrants :
+```html
+<table class="data-table">
+  <thead>
+    <tr><th>Série</th><th>Type</th><th>Strike ($)</th><th>Shares</th><th>Émission</th><th>Expiration</th><th>Dilution %</th><th>Impact</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Series A</td><td>Public</td><td>$11.50</td><td>5,000,000</td><td>Jan 2024</td><td>Jan 2029</td><td>8.2%</td><td class="text-red">Élevé</td></tr>
+    <!-- ... -->
+  </tbody>
+</table>
+```
+
+**Métriques obligatoires par série** :
+- **Type** : Public / Private / Underwriter / Compensation / Pre-funded
+- **Strike price** : prix d'exercice ($) — comparer au cours actuel (ITM/OTM/ATM)
+- **Volume** : nombre de shares sous-jacentes
+- **Date d'émission** : quand les warrants ont été émis
+- **Date d'expiration** : deadline d'exercice
+- **Dilution potentielle (%)** : shares warrants / (outstanding + shares warrants) × 100
+- **Statut** : ITM (In The Money) si strike < cours / OTM / Expiré
+- **Cashless exercise** : oui/non — si oui, dilution réduite mais toujours présente
+- **Acceleration clause** : conditions de forçage d'exercice anticipé (souvent si cours > X$ pendant Y jours)
+
+**ECharts Timeline** (si ≥ 2 séries) : barre horizontale montrant la période de vie de chaque série de warrants (émission → expiration) avec le strike price annoté. Couleur : vert si OTM loin, orange si proche ATM, rouge si ITM.
+
+**Impact global** : calculer la dilution totale si TOUS les warrants sont exercés. Afficher en `.alert-box` rouge si > 15%, orange si 5-15%, vert si < 5%.
+
+**Sources** : SEC EDGAR (S-1, S-3, prospectus), DEF 14A (proxy), 10-K notes (shareholders equity), rapports trimestriels 10-Q.
+
 #### 8. Short Interest & Squeeze
 - Actions short, % du float, days to cover, CTB (cost to borrow)
 - Historique SI sur 3-6 mois (tendance)
