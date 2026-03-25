@@ -231,11 +231,11 @@ async function main() {
 
     const html = buildCardHTML(id, cfg, trades, m);
 
-    const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'], protocolTimeout: 120000 });
+    const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-software-rasterizer'], protocolTimeout: 120000 });
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 3000, deviceScaleFactor: 2 });
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    await new Promise(r => setTimeout(r, 800));
+    await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await new Promise(r => setTimeout(r, 2000));
     const clip = await page.evaluate(() => {
       const el = document.body.firstElementChild;
       return { x: 0, y: 0, width: 1080, height: Math.ceil(el.getBoundingClientRect().height) };
