@@ -632,6 +632,12 @@ body:has(.tape){overflow:hidden}
 
   // ══════ Boot ══════
   fetch(WATCHLIST_URL).then(function(r){ return r.json(); }).then(function(data){
+    // Normalize: watchlist.json uses "symbol" but widget expects "ticker"
+    if (data.picks) {
+      data.picks.forEach(function(p) {
+        if (!p.ticker && p.symbol) p.ticker = p.symbol;
+      });
+    }
     watchlistData = data;
     window._copyChat = function(){ copyForChat(data); };
     if (mode === 'embed') { renderEmbedPage(data); return; }
