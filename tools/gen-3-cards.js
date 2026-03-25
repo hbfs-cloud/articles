@@ -231,7 +231,7 @@ async function main() {
 
     const html = buildCardHTML(id, cfg, trades, m);
 
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'] });
+    const browser = await puppeteer.launch({ headless: 'shell', args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'], protocolTimeout: 120000 });
     const page = await browser.newPage();
     await page.setViewport({ width: 1080, height: 3000, deviceScaleFactor: 2 });
     await page.setContent(html, { waitUntil: 'networkidle0' });
