@@ -12,8 +12,8 @@ Pipeline complet en 6 étapes (~6 min) :
 1. `update-tracking.js` — Met à jour métriques + positions (prix live Yahoo)
 2. `generate-scanner-image.js --telegram` — Génère image quotidienne + publie Telegram
 3. `sweep.js` — Re-run backtest optimizer (126k combos, ~5 min)
-4. `gen-3-cards.js` — Régénère les 3 PNG de mode (self-contained depuis backtest-trades.json)
-5. `gen-status-page.js` — Régénère scanner/status/index.html (single source of truth)
+4. `gen-3-cards.js` — Régénère les 3 PNG de mode avec timestamps (self-contained depuis backtest-trades.json)
+5. `gen-status-page.js` — Régénère scanner/status/index.html (text-only, 3 tabs avec tableaux de trades)
 6. `git commit + push` — Tout est poussé en un seul commit
 
 Options :
@@ -35,7 +35,7 @@ Pour obtenir le Chat ID : ajoute `@userinfobot` au groupe Telegram, tape `/start
 Structure en 5 blocs verticaux :
 1. **Header brand** : Logo MW + date + régime + macro context + rappel N-1
 2. **Guide lecteurs** : 4 points : Méthode · Rotation · Stats · Signal
-3. **Top 3 signaux** : Charts StockCharts + score + entry/stop/TP1/TP2/RR/horizon
+3. **Top 3 signaux** : Charts FinViz + score + entry/stop/TP1/TP2/RR/horizon
 4. **Portfolio Top 5** + Rotation en cours (J+1/J+2/J+3) + Capital
 5. **Stats D0** : Return total · Max DD · Win Rate · Profit Factor · Equity curve
 6. **Positions ouvertes** : symbole + return%, 5/ligne, fond coloré
@@ -52,10 +52,10 @@ Structure en 5 blocs verticaux :
 
 ### Charts
 
-Source : **StockCharts.com** (RSI14, MA50/200, MACD, Volume)
-URL pattern : `https://stockcharts.com/c-sc/sc?s=TICKER&p=D&yr=0&mn=6&dy=0&i=t21846718260`
-Requiert puppeteer pour la capture côté serveur.
-Fallback : placeholder coloré si puppeteer non disponible.
+Source : **FinViz** (candle + SMA50/200, RSI, MACD, Volume)
+URL pattern : `https://finviz.com/chart.ashx?t=TICKER&ty=c&ta=1&p=d&s=l`
+Fetch direct en HTTPS (PNG), pas besoin de Puppeteer pour les charts.
+Fallback : placeholder coloré si le fetch échoue.
 
 ### Open Graph / Partage réseaux sociaux
 
@@ -729,10 +729,26 @@ Tout est automatise dans `publish-daily-card.sh` (voir section "Flux Post-Scan" 
 | `update-tracking.js` | scans HTML + Yahoo Finance | `scanner-metrics.json`, `scanner-positions.json` | Step 1 |
 | `generate-scanner-image.js` | `scanner-metrics.json`, `scanner-positions.json` | `scanner-daily-card.html` + PNG Telegram | Step 2 |
 | `sweep.js` | tous les scans + Yahoo OHLCV | `backtest-results.json`, `backtest-trades.json`, `portfolio-history.json` | Step 3 |
-| `gen-3-cards.js` | `backtest-trades.json`, `modes-config.json` | `scanner/status/mode-{growth,calmar,zero}.png` | Step 4 |
-| `gen-status-page.js` | `backtest-trades.json`, `modes-config.json`, `backtest-results.json` | `scanner/status/index.html` | Step 5 |
+| `gen-3-cards.js` | `backtest-trades.json`, `modes-config.json` | `scanner/status/mode-{id}-{ts}.png` + `manifest.json` | Step 4 |
+| `gen-status-page.js` | `backtest-trades.json`, `modes-config.json`, `backtest-results.json` | `scanner/status/index.html` (text-only, 3 tabs) | Step 5 |
 
-**Single source of truth** : les images PNG et la page HTML sont toutes generees depuis les memes fichiers JSON. Jamais de valeurs hardcodees.
+**Single source of truth** : la page HTML et les tableaux sont generes depuis les memes fichiers JSON. Jamais de valeurs hardcodees.
+
+**scanner/status/index.html** contient :
+- Hero + 3 tabs (Growth, Calmar, Conservative) avec KPIs, config, equity chart ECharts
+- Tableau historique des trades par mode (ticker, date, strategy, entry, exit, P&L, duree, statut)
+- Tableau comparatif des 3 modes
+- Pas d'images (tout en texte/HTML)
+
+**Images PNG** (`gen-3-cards.js`) : utilisees uniquement pour Telegram/Discord, pas affichees sur la page status.
+Noms timestampes (`mode-growth-{ts}.png`) avec `manifest.json` pour le cache busting.
+
+**update-tracking.js** produit dans `scanner-metrics.json` :
+- `return_total`, `profit_factor`, `total_days`, `scans_count`, `return_dd_ratio`
+- `portfolio_history`, `drawdown_history` (arrays pour equity/DD curves)
+- `working_capital_pct`, `pending_orders_pct`, `available_cash_pct`
+
+**Service Worker** : supprime (sw.js = stub auto-unregister). Pas de cache SW.
 
 ### Lancer manuellement le sweep seul
 
