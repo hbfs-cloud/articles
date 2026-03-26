@@ -316,6 +316,35 @@ async function main() {
   const pendingOrdersPct  = +Math.min(100 - workingCapitalPct, +(pending.length * FRACTION * 100).toFixed(1));
   const availableCashPct  = +Math.max(0, 100 - workingCapitalPct - pendingOrdersPct).toFixed(1);
 
+  // ── Return total depuis D0 (all trades, not just 30d) ──
+  const returnTotal = +(allSorted.reduce((s, t) => s + (t.pnl_pct || 0) * FRACTION, 0)).toFixed(2);
+
+  // ── Profit Factor ──
+  const grossWins = closed.filter(t => t.pnl_pct > 0).reduce((s, t) => s + t.pnl_pct, 0);
+  const grossLosses = Math.abs(closed.filter(t => t.pnl_pct < 0).reduce((s, t) => s + t.pnl_pct, 0));
+  const profitFactor = grossLosses > 0 ? +(grossWins / grossLosses).toFixed(1) : (grossWins > 0 ? 99 : 0);
+
+  // ── Total days and scans count ──
+  const scanDates = [...new Set(allTrades.map(t => t.scan_date).filter(Boolean))].sort();
+  const scansCount = scanDates.length;
+  const firstScan = scanDates[0] || '2026-02-15';
+  const totalDays = Math.round((new Date(today) - new Date(firstScan)) / 86400000);
+
+  // ── Return / DD ratio ──
+  const returnDDRatio = maxDD > 0 ? +(returnTotal / maxDD).toFixed(1) : (returnTotal > 0 ? 99 : 0);
+
+  // ── Portfolio history (cumulative return curve) ──
+  const portfolioHistory = [0];
+  const drawdownHistory = [0];
+  let cumReturn = 0, cumPeak = 0;
+  for (const t of allSorted) {
+    cumReturn += (t.pnl_pct || 0) * FRACTION;
+    if (cumReturn > cumPeak) cumPeak = cumReturn;
+    const dd = cumPeak - cumReturn;
+    portfolioHistory.push(+cumReturn.toFixed(2));
+    drawdownHistory.push(+(-dd).toFixed(2));
+  }
+
   const metrics = {
     updated_at: new Date().toISOString(),
     trades_total: allTrades.length,
@@ -328,12 +357,19 @@ async function main() {
     expired_count: expc,
     return_30d: return30d,
     return_30d_closed_only: return30d_closed,
+    return_total: returnTotal,
     max_drawdown: +(-maxDD).toFixed(2),
+    profit_factor: profitFactor,
     avg_win_pct: wins.length ? +(wins.reduce((s,t)=>s+(t.pnl_pct||0),0)/wins.length).toFixed(2) : 0,
     avg_loss_pct: losses.length ? +(losses.reduce((s,t)=>s+(t.pnl_pct||0),0)/losses.length).toFixed(2) : 0,
     working_capital_pct: workingCapitalPct,
     pending_orders_pct: pendingOrdersPct,
     available_cash_pct: availableCashPct,
+    total_days: totalDays,
+    scans_count: scansCount,
+    return_dd_ratio: returnDDRatio,
+    portfolio_history: portfolioHistory,
+    drawdown_history: drawdownHistory,
   };
 
   // ── Positions ──

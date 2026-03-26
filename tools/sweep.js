@@ -715,24 +715,48 @@ async function main() {
   fs.writeFileSync(path.join(ROOT, 'data', 'backtest-results.json'), JSON.stringify(output, null, 2));
   console.log('\n✅ Results saved to data/backtest-results.json');
 
-  // Save trade lists for 3 optimal combos
-  const optimalTrades = {};
-  for (const [key, combo] of [["growth", topByReturn[0]], ["calmar", topByCalmar[0]], ["sharpe", ranked[0]]]) {
-    if (!combo) continue;
-    const trades2 = (tradesByHorizon[combo.horizon] || [])
-      .filter(t => t._partialTP === combo.partialTP && t._trail === combo.trailingStop);
-    const cfg2 = {
-      portfolioSize: combo.portfolioSize, topN: combo.topN, minScore: combo.minScore,
-      rotation: combo.rotation, strategyFilter: STRATEGY_FILTERS[combo.filterName],
-      horizonDays: combo.horizon, partialTP: combo.partialTP, trailingStop: combo.trailingStop,
-    };
-    const sim2 = simulatePortfolio(trades2, scans, cfg2);
-    if (sim2 && sim2.closedTrades) {
-      optimalTrades[key] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
+  // Save trade lists for 3 FROZEN modes (from modes-config.json)
+  const MODES_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
+  const frozenTrades = {};
+  if (fs.existsSync(MODES_CFG_PATH)) {
+    const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
+    const modeTradeKeys = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+    for (const [id, cfg] of Object.entries(modesConfig.modes)) {
+      const trades2 = (tradesByHorizon[cfg.horizon] || [])
+        .filter(t => t._partialTP === (cfg.partialTP || false) && t._trail === (cfg.trailingStop || false));
+      const cfg2 = {
+        portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
+        rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
+        horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false,
+      };
+      const sim2 = simulatePortfolio(trades2, scans, cfg2);
+      const key = modeTradeKeys[id] || id;
+      if (sim2 && sim2.closedTrades) {
+        frozenTrades[key] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
+        console.log(`  ${id} (${cfg.label}): ${sim2.closedTrades.length} trades, return=${sim2.returnTotal}%`);
+      } else {
+        console.log(`  ${id} (${cfg.label}): no trades`);
+      }
+    }
+  } else {
+    // Fallback: use optimal combos if no modes-config
+    for (const [key, combo] of [["growth", topByReturn[0]], ["calmar", topByCalmar[0]], ["sharpe", ranked[0]]]) {
+      if (!combo) continue;
+      const trades2 = (tradesByHorizon[combo.horizon] || [])
+        .filter(t => t._partialTP === combo.partialTP && t._trail === combo.trailingStop);
+      const cfg2 = {
+        portfolioSize: combo.portfolioSize, topN: combo.topN, minScore: combo.minScore,
+        rotation: combo.rotation, strategyFilter: STRATEGY_FILTERS[combo.filterName],
+        horizonDays: combo.horizon, partialTP: combo.partialTP, trailingStop: combo.trailingStop,
+      };
+      const sim2 = simulatePortfolio(trades2, scans, cfg2);
+      if (sim2 && sim2.closedTrades) {
+        frozenTrades[key] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
+      }
     }
   }
-  fs.writeFileSync(path.join(ROOT, "data", "backtest-trades.json"), JSON.stringify(optimalTrades, null, 2));
-  console.log("✅ Trade lists saved to data/backtest-trades.json");
+  fs.writeFileSync(path.join(ROOT, "data", "backtest-trades.json"), JSON.stringify(frozenTrades, null, 2));
+  console.log("✅ Trade lists saved to data/backtest-trades.json (frozen modes)");
 
   // Save equity curve for optimal combo
   if (ranked[0]) {

@@ -68,7 +68,32 @@
     .compare-table td{padding:.7rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem}
     .compare-table tr:nth-child(even){background:#f8fafc}
     .compare-table .best{font-weight:800;color:#059669}
-    @media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.kpi-value{font-size:1.1rem}}
+    .status-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.06);margin:1rem 0;font-size:.85rem}
+    .status-table th{background:#0f172a;color:#e2e8f0;padding:.6rem .8rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;font-weight:700;white-space:nowrap}
+    .status-table td{padding:.5rem .8rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    .status-table tr:nth-child(even){background:#f8fafc}
+    .status-table tr:hover{background:#f1f5f9}
+    .status-table .pnl-pos{color:#059669;font-weight:700}
+    .status-table .pnl-neg{color:#dc2626;font-weight:700}
+    .status-table .ticker-cell{font-weight:800;color:#0f172a;font-size:.9rem}
+    .signal-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;vertical-align:middle}
+    .signal-green{background:#22c55e}
+    .signal-yellow{background:#f59e0b}
+    .signal-red{background:#ef4444}
+    .badge-sm{display:inline-block;padding:.15rem .5rem;border-radius:10px;font-size:.7rem;font-weight:700;white-space:nowrap}
+    .badge-tp1{background:#ecfdf5;color:#059669}
+    .badge-tp2{background:#d1fae5;color:#047857}
+    .badge-sl{background:#fef2f2;color:#dc2626}
+    .badge-expired{background:#fffbeb;color:#d97706}
+    .badge-rotated{background:#ede9fe;color:#6366f1}
+    .badge-open{background:#eff6ff;color:#2563eb}
+    .badge-tp1_partial{background:#ecfdf5;color:#10b981}
+    .ts-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .7rem;border-radius:8px;background:#f1f5f9;font-size:.75rem;color:#64748b;font-weight:600;border:1px solid #e2e8f0}
+    .live-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;animation:livePulse 2s infinite}
+    @keyframes livePulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .progress-bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+    .progress-fill{height:100%;border-radius:3px;transition:width .3s}
+    @media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.kpi-value{font-size:1.1rem}.status-table{font-size:.75rem}.status-table th,.status-table td{padding:.4rem .5rem}}
   </style>
 </head>
 <body>
@@ -102,12 +127,478 @@
     <p class="subtitle">3 modes optimis&eacute;s &mdash; 126 000 backtests, 25 scans, 103 tickers, 161 setups</p>
     <div class="hero-badges">
       <span class="hero-badge badge-green"><i class="fas fa-rocket"></i> Maximum Growth +21.46%</span>
-      <span class="hero-badge badge-blue"><i class="fas fa-shield-halved"></i> Risk-Adjusted +14.02%</span>
-      <span class="hero-badge badge-purple"><i class="fas fa-gem"></i> Conservative +23.37%</span>
+      <span class="hero-badge badge-blue"><i class="fas fa-shield-halved"></i> Risk-Adjusted +16.26%</span>
+      <span class="hero-badge badge-purple"><i class="fas fa-gem"></i> Conservative +3.51%</span>
       <span class="hero-badge badge-amber"><i class="fas fa-flask-vial"></i> Walk-Forward Valid&eacute;</span>
     </div>
     <div id="article-clickable-tags" class="card-tags"></div>
   </div>
+
+  
+
+  <!-- ═══ LIVE METRICS ═══ -->
+  
+  <h2 class="section-title" id="live"><i class="fas fa-satellite-dish" style="color:#22c55e"></i> Donn&eacute;es Live</h2>
+  <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
+    <span class="ts-badge"><span class="live-dot"></span> Mis &agrave; jour : 25 mars 2026 à 20:13</span>
+    <span class="ts-badge"><i class="fas fa-radar"></i> Dernier scan : 20260326</span>
+  </div>
+
+  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi-card"><div class="kpi-value" style="color:#059669">5.16%</div><div class="kpi-label">Return Total</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-1.83%</div><div class="kpi-label">Max DD</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">51.2%</div><div class="kpi-label">Win Rate</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">—x</div><div class="kpi-label">Profit Factor</div></div>
+    <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">29 / 72</div><div class="kpi-label">Open / Total</div></div>
+  </div>
+  
+
+  <!-- ═══ DERNIERS SIGNAUX ═══ -->
+  
+  <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:2rem 0 .5rem"><i class="fas fa-bolt" style="color:#f59e0b"></i> Derniers signaux &mdash; Scan 20260326</h3>
+  <table class="status-table">
+    <thead><tr>
+      <th>#</th><th>Ticker</th><th>Score</th><th>Strat&eacute;gie</th><th>Entry</th><th>Stop</th><th>TP1</th>
+    </tr></thead>
+    <tbody>
+    <tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">1</td>
+      <td class="ticker-cell">HAL</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">89</span></td>
+      <td style="color:#64748b">Breakout</td>
+      <td style="font-weight:600">$38.00–38.80</td>
+      <td style="color:#dc2626;font-weight:600">$36.50</td>
+      <td style="color:#059669;font-weight:600">$42.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">2</td>
+      <td class="ticker-cell">SLB</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">88</span></td>
+      <td style="color:#64748b">Momentum</td>
+      <td style="font-weight:600">$51.00–52.00</td>
+      <td style="color:#dc2626;font-weight:600">$49.00</td>
+      <td style="color:#059669;font-weight:600">$56.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">3</td>
+      <td class="ticker-cell">MPC</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">87</span></td>
+      <td style="color:#64748b">Breakout</td>
+      <td style="font-weight:600">$239.00–242.00</td>
+      <td style="color:#dc2626;font-weight:600">$232.00</td>
+      <td style="color:#059669;font-weight:600">$255.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">4</td>
+      <td class="ticker-cell">CF</td>
+      <td><span style="background:#059669;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">90</span></td>
+      <td style="color:#64748b">Momentum</td>
+      <td style="font-weight:600">$126.00–129.00</td>
+      <td style="color:#dc2626;font-weight:600">$120.00</td>
+      <td style="color:#059669;font-weight:600">$137.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">5</td>
+      <td class="ticker-cell">MRK</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">88</span></td>
+      <td style="color:#64748b">Momentum</td>
+      <td style="font-weight:600">$118.00–120.00</td>
+      <td style="color:#dc2626;font-weight:600">$114.00</td>
+      <td style="color:#059669;font-weight:600">$125.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">6</td>
+      <td class="ticker-cell">EQNR</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">87</span></td>
+      <td style="color:#64748b">Momentum</td>
+      <td style="font-weight:600">$39.80–40.60</td>
+      <td style="color:#dc2626;font-weight:600">$38.00</td>
+      <td style="color:#059669;font-weight:600">$43.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">7</td>
+      <td class="ticker-cell">EWG</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">86</span></td>
+      <td style="color:#64748b">Pullback</td>
+      <td style="font-weight:600">$39.00–39.80</td>
+      <td style="color:#dc2626;font-weight:600">$37.50</td>
+      <td style="color:#059669;font-weight:600">$42.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">8</td>
+      <td class="ticker-cell">EWJ</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">85</span></td>
+      <td style="color:#64748b">Pullback</td>
+      <td style="font-weight:600">$84.00–85.00</td>
+      <td style="color:#dc2626;font-weight:600">$82.00</td>
+      <td style="color:#059669;font-weight:600">$88.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">9</td>
+      <td class="ticker-cell">SLV</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">86</span></td>
+      <td style="color:#64748b">Momentum</td>
+      <td style="font-weight:600">$64.00–66.00</td>
+      <td style="color:#dc2626;font-weight:600">$60.00</td>
+      <td style="color:#059669;font-weight:600">$72.00</td>
+    </tr><tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">10</td>
+      <td class="ticker-cell">GLD</td>
+      <td><span style="background:#2563eb;color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">87</span></td>
+      <td style="color:#64748b">Momentum</td>
+      <td style="font-weight:600">$413.00–418.00</td>
+      <td style="color:#dc2626;font-weight:600">$400.00</td>
+      <td style="color:#059669;font-weight:600">$440.00</td>
+    </tr>
+    </tbody>
+  </table>
+  
+
+  <!-- ═══ POSITIONS OUVERTES ═══ -->
+  
+  <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:2rem 0 .5rem"><i class="fas fa-wallet" style="color:#3b82f6"></i> Positions ouvertes (28)</h3>
+  <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem;flex-wrap:wrap">
+    <span class="ts-badge"><i class="fas fa-clock"></i> 20:13</span>
+    <span class="ts-badge" style="background:#f0fdf4;color:#059669;border-color:#86efac"><i class="fas fa-chart-pie"></i> Capital d&eacute;ploy&eacute; : 60%</span>
+    <span class="ts-badge" style="background:#f0fdf4;color:#059669;border-color:#86efac"><i class="fas fa-coins"></i> Cash libre : 6.7%</span>
+  </div>
+  <table class="status-table">
+    <thead><tr>
+      <th>Ticker</th><th>Signal</th><th>Strat.</th><th>Entr&eacute;e</th><th>Prix actuel</th><th>Return</th><th>Stop</th><th>TP1</th><th>Progression</th><th>Scan</th><th>Expire</th>
+    </tr></thead>
+    <tbody>
+    <tr>
+        <td class="ticker-cell">AAOI</td>
+        <td><span class="signal-dot signal-green"></span>🟢 En route TP1</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$101.50</td>
+        <td style="font-weight:600">$113.00</td>
+        <td class="pnl-pos">+11.33%</td>
+        <td style="color:#dc2626">$84.00</td>
+        <td style="color:#059669">$135.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:57%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">57%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-02</td>
+        <td style="font-size:.8rem;color:#94a3b8">03-29 (4j)</td>
+      </tr><tr>
+        <td class="ticker-cell">AGRO</td>
+        <td><span class="signal-dot signal-green"></span>🟢 En route TP1</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$12.75</td>
+        <td style="font-weight:600">$14.76</td>
+        <td class="pnl-pos">+15.76%</td>
+        <td style="color:#dc2626">$11.50</td>
+        <td style="color:#059669">$16.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:72%;background:#059669"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">72%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-19</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-15 (21j)</td>
+      </tr><tr>
+        <td class="ticker-cell">ANTX</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Vers SL</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$5.00</td>
+        <td style="font-weight:600">$3.80</td>
+        <td class="pnl-neg">-24%</td>
+        <td style="color:#dc2626">$3.70</td>
+        <td style="color:#059669">$7.61</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:3%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">3%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-18</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-14 (20j)</td>
+      </tr><tr>
+        <td class="ticker-cell">AR</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$43.00</td>
+        <td style="font-weight:600">$44.44</td>
+        <td class="pnl-pos">+3.35%</td>
+        <td style="color:#dc2626">$41.00</td>
+        <td style="color:#059669">$47.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:57%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">57%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-25</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-21 (27j)</td>
+      </tr><tr>
+        <td class="ticker-cell">BBIO</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$74.32</td>
+        <td style="font-weight:600">$71.75</td>
+        <td class="pnl-neg">-3.46%</td>
+        <td style="color:#dc2626">$65.00</td>
+        <td style="color:#059669">$82.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:40%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">40%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-10</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-06 (12j)</td>
+      </tr><tr>
+        <td class="ticker-cell">BBVA</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$20.50</td>
+        <td style="font-weight:600">$21.48</td>
+        <td class="pnl-pos">+4.8%</td>
+        <td style="color:#dc2626">$18.80</td>
+        <td style="color:#059669">$23.50</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:57%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">57%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-20</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-16 (22j)</td>
+      </tr><tr>
+        <td class="ticker-cell">BG</td>
+        <td><span class="signal-dot signal-yellow"></span>🟡 Neutre</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$124.00</td>
+        <td style="font-weight:600">$125.56</td>
+        <td class="pnl-pos">+1.26%</td>
+        <td style="color:#dc2626">$120.50</td>
+        <td style="color:#059669">$130.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:53%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">53%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-25</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-21 (27j)</td>
+      </tr><tr>
+        <td class="ticker-cell">COP</td>
+        <td><span class="signal-dot signal-green"></span>🟢 En route TP1</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$120.50</td>
+        <td style="font-weight:600">$129.15</td>
+        <td class="pnl-pos">+7.18%</td>
+        <td style="color:#dc2626">$114.00</td>
+        <td style="color:#059669">$132.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:84%;background:#059669"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">84%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-13</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-09 (15j)</td>
+      </tr><tr>
+        <td class="ticker-cell">CVX</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$196.00</td>
+        <td style="font-weight:600">$205.60</td>
+        <td class="pnl-pos">+4.9%</td>
+        <td style="color:#dc2626">$188.00</td>
+        <td style="color:#059669">$210.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:80%;background:#059669"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">80%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-13</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-09 (15j)</td>
+      </tr><tr>
+        <td class="ticker-cell">DAWN</td>
+        <td><span class="signal-dot signal-yellow"></span>🟡 Neutre</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$21.29</td>
+        <td style="font-weight:600">$21.41</td>
+        <td class="pnl-pos">+0.54%</td>
+        <td style="color:#dc2626">$20.14</td>
+        <td style="color:#059669">$23.59</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:37%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">37%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-18</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-14 (20j)</td>
+      </tr><tr>
+        <td class="ticker-cell">DVN</td>
+        <td><span class="signal-dot signal-green"></span>🟢 En route TP1</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$47.50</td>
+        <td style="font-weight:600">$50.27</td>
+        <td class="pnl-pos">+5.83%</td>
+        <td style="color:#dc2626">$44.50</td>
+        <td style="color:#059669">$53.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:68%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">68%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-19</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-15 (21j)</td>
+      </tr><tr>
+        <td class="ticker-cell">EDSA</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$7.00</td>
+        <td style="font-weight:600">$6.57</td>
+        <td class="pnl-neg">-6.14%</td>
+        <td style="color:#dc2626">$4.88</td>
+        <td style="color:#059669">$11.25</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:27%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">27%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-18</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-14 (20j)</td>
+      </tr><tr>
+        <td class="ticker-cell">EOG</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$137.50</td>
+        <td style="font-weight:600">$142.64</td>
+        <td class="pnl-pos">+3.74%</td>
+        <td style="color:#dc2626">$131.00</td>
+        <td style="color:#059669">$148.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:68%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">68%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-23</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-19 (25j)</td>
+      </tr><tr>
+        <td class="ticker-cell">FCX</td>
+        <td><span class="signal-dot signal-yellow"></span>🟡 Neutre</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$56.00</td>
+        <td style="font-weight:600">$56.97</td>
+        <td class="pnl-pos">+1.73%</td>
+        <td style="color:#dc2626">$53.75</td>
+        <td style="color:#059669">$60.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:52%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">52%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-25</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-21 (27j)</td>
+      </tr><tr>
+        <td class="ticker-cell">GOLD</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$45.00</td>
+        <td style="font-weight:600">$43.33</td>
+        <td class="pnl-neg">-3.71%</td>
+        <td style="color:#dc2626">$41.50</td>
+        <td style="color:#059669">$50.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:22%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">22%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-12</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-08 (14j)</td>
+      </tr><tr>
+        <td class="ticker-cell">HIMS</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$21.75</td>
+        <td style="font-weight:600">$20.77</td>
+        <td class="pnl-neg">-4.53%</td>
+        <td style="color:#dc2626">$18.50</td>
+        <td style="color:#059669">$27.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:27%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">27%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-09</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-05 (11j)</td>
+      </tr><tr>
+        <td class="ticker-cell">LMT</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Vers SL</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$657.50</td>
+        <td style="font-weight:600">$625.52</td>
+        <td class="pnl-neg">-4.86%</td>
+        <td style="color:#dc2626">$625.00</td>
+        <td style="color:#059669">$700.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:1%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">1%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">02-27</td>
+        <td style="font-size:.8rem;color:#94a3b8">03-27 (2j)</td>
+      </tr><tr>
+        <td class="ticker-cell">MRVL</td>
+        <td><span class="signal-dot signal-green"></span>🟢 En route TP1</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$91.50</td>
+        <td style="font-weight:600">$98.66</td>
+        <td class="pnl-pos">+7.83%</td>
+        <td style="color:#dc2626">$84.00</td>
+        <td style="color:#059669">$102.77</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:78%;background:#059669"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">78%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-09</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-05 (11j)</td>
+      </tr><tr>
+        <td class="ticker-cell">NAT</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$5.90</td>
+        <td style="font-weight:600">$5.55</td>
+        <td class="pnl-neg">-5.85%</td>
+        <td style="color:#dc2626">$5.20</td>
+        <td style="color:#059669">$7.20</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:18%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">18%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-02</td>
+        <td style="font-size:.8rem;color:#94a3b8">03-29 (4j)</td>
+      </tr><tr>
+        <td class="ticker-cell">NEM</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$97.50</td>
+        <td style="font-weight:600">$101.47</td>
+        <td class="pnl-pos">+4.07%</td>
+        <td style="color:#dc2626">$88.00</td>
+        <td style="color:#059669">$115.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:50%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">50%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-20</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-16 (22j)</td>
+      </tr><tr>
+        <td class="ticker-cell">NICE</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$112.00</td>
+        <td style="font-weight:600">$109.47</td>
+        <td class="pnl-neg">-2.26%</td>
+        <td style="color:#dc2626">$99.00</td>
+        <td style="color:#059669">$130.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:34%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">34%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">02-19</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-01 (7j)</td>
+      </tr><tr>
+        <td class="ticker-cell">NICE</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$112.00</td>
+        <td style="font-weight:600">$109.47</td>
+        <td class="pnl-neg">-2.26%</td>
+        <td style="color:#dc2626">$99.00</td>
+        <td style="color:#059669">$130.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:34%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">34%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">02-20</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-02 (8j)</td>
+      </tr><tr>
+        <td class="ticker-cell">NOW</td>
+        <td><span class="signal-dot signal-red"></span>🔴 Sous eau</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$109.00</td>
+        <td style="font-weight:600">$102.72</td>
+        <td class="pnl-neg">-5.77%</td>
+        <td style="color:#dc2626">$97.50</td>
+        <td style="color:#059669">$125.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:19%;background:#dc2626"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">19%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">02-26</td>
+        <td style="font-size:.8rem;color:#94a3b8">03-26 (1j)</td>
+      </tr><tr>
+        <td class="ticker-cell">OXY</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$60.25</td>
+        <td style="font-weight:600">$61.88</td>
+        <td class="pnl-pos">+2.7%</td>
+        <td style="color:#dc2626">$56.00</td>
+        <td style="color:#059669">$66.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:59%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">59%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-23</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-19 (25j)</td>
+      </tr><tr>
+        <td class="ticker-cell">PSX</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$177.00</td>
+        <td style="font-weight:600">$181.39</td>
+        <td class="pnl-pos">+2.48%</td>
+        <td style="color:#dc2626">$168.00</td>
+        <td style="color:#059669">$190.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:61%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">61%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-24</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-20 (26j)</td>
+      </tr><tr>
+        <td class="ticker-cell">SM</td>
+        <td><span class="signal-dot signal-green"></span>🟢 Positif</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$29.75</td>
+        <td style="font-weight:600">$31.22</td>
+        <td class="pnl-pos">+4.94%</td>
+        <td style="color:#dc2626">$26.50</td>
+        <td style="color:#059669">$34.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:63%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">63%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-23</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-19 (25j)</td>
+      </tr><tr>
+        <td class="ticker-cell">TTE</td>
+        <td><span class="signal-dot signal-yellow"></span>🟡 Neutre</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$89.50</td>
+        <td style="font-weight:600">$89.29</td>
+        <td class="pnl-neg">-0.23%</td>
+        <td style="color:#dc2626">$83.50</td>
+        <td style="color:#059669">$97.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:43%;background:#f59e0b"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">43%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-20</td>
+        <td style="font-size:.8rem;color:#94a3b8">04-16 (22j)</td>
+      </tr><tr>
+        <td class="ticker-cell">XLE</td>
+        <td><span class="signal-dot signal-green"></span>🟢 En route TP1</td>
+        <td style="color:#64748b;font-size:.8rem">Momentum</td>
+        <td style="font-weight:600">$56.25</td>
+        <td style="font-weight:600">$60.64</td>
+        <td class="pnl-pos">+7.8%</td>
+        <td style="color:#dc2626">$53.00</td>
+        <td style="color:#059669">$63.00</td>
+        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:76%;background:#059669"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">76%</span></td>
+        <td style="font-size:.8rem;color:#94a3b8">03-03</td>
+        <td style="font-size:.8rem;color:#94a3b8">03-30 (5j)</td>
+      </tr>
+    </tbody>
+  </table>
+  
 
   <h2 class="section-title"><i class="fas fa-sliders" style="color:#3b82f6"></i> Choisissez votre mode</h2>
   <p style="color:#64748b;font-size:.9rem;margin-bottom:1rem">Chaque mode correspond &agrave; un profil de risque diff&eacute;rent. Les param&egrave;tres sont issus d'un grid search sur <strong>126 000 combinaisons</strong> avec validation walk-forward (70% in-sample / 30% out-of-sample).</p>
@@ -159,19 +650,253 @@
       <strong><i class="fas fa-triangle-exclamation"></i> Attention :</strong> Ce mode cherche la performance maximale. Le drawdown de -1.69% est contenu mais le turnover est &eacute;lev&eacute; (3.8 jours de hold moyen). Les frais de courtage r&eacute;els ne sont pas mod&eacute;lis&eacute;s.
     </div>
     <div id="chartGrowthEquity" class="echart-box"></div>
+    
+    <details style="margin:1.5rem 0" open>
+      <summary style="cursor:pointer;font-weight:700;font-size:.95rem;color:#334155;padding:.5rem 0">
+        <i class="fas fa-table" style="color:#059669"></i> Historique des trades &mdash; Maximum Growth (22)
+      </summary>
+      <table class="status-table">
+        <thead><tr>
+          <th style="text-align:center">#</th><th>Ticker</th><th>Date Scan</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">1</td>
+            <td class="ticker-cell">UBER</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$73.90</td>
+            <td style="font-weight:600">$75.44</td>
+            <td class="pnl-pos">+2.06%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-rotated">&#x1F504; Rotat&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">2</td>
+            <td class="ticker-cell">SAP</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$200.55</td>
+            <td style="font-weight:600">$199.48</td>
+            <td class="pnl-pos">+0.49%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-rotated">&#x1F504; Rotat&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">3</td>
+            <td class="ticker-cell">CRM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$191.91</td>
+            <td style="font-weight:600">$201.39</td>
+            <td class="pnl-pos">+4.94%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">4</td>
+            <td class="ticker-cell">NOW</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$105.00</td>
+            <td style="font-weight:600">$121.00</td>
+            <td class="pnl-pos">+15.24%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-tp1">&#x2705; TP1</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">5</td>
+            <td class="ticker-cell">LMT</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-27</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$685.50</td>
+            <td style="font-weight:600">$653.00</td>
+            <td class="pnl-neg">-1.28%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-rotated">&#x1F504; Rotat&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">6</td>
+            <td class="ticker-cell">XOM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-27</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$159.35</td>
+            <td style="font-weight:600">$151.35</td>
+            <td class="pnl-neg">-3.22%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-rotated">&#x1F504; Rotat&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">7</td>
+            <td class="ticker-cell">NAT</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-02</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$5.70</td>
+            <td style="font-weight:600">$5.63</td>
+            <td class="pnl-neg">-1.23%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">8</td>
+            <td class="ticker-cell">AAOI</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-02</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$91.50</td>
+            <td style="font-weight:600">$110.62</td>
+            <td class="pnl-pos">+20.9%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">9</td>
+            <td class="ticker-cell">USO</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$105.38</td>
+            <td style="font-weight:600">$119.63</td>
+            <td class="pnl-pos">+13.52%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-tp2">&#x1F3AF; TP2</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">10</td>
+            <td class="ticker-cell">CVX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$190.88</td>
+            <td style="font-weight:600">$196.97</td>
+            <td class="pnl-pos">+3.19%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">11</td>
+            <td class="ticker-cell">CF</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-09</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$110.20</td>
+            <td style="font-weight:600">$127.90</td>
+            <td class="pnl-pos">+16.06%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-tp2">&#x1F3AF; TP2</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">12</td>
+            <td class="ticker-cell">MRVL</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-09</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$92.57</td>
+            <td style="font-weight:600">$91.58</td>
+            <td class="pnl-neg">-1.07%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">13</td>
+            <td class="ticker-cell">HIMS</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-09</td>
+            <td style="font-size:.8rem;color:#64748b">short_squeeze</td>
+            <td style="font-weight:600">$24.00</td>
+            <td style="font-weight:600">$24.88</td>
+            <td class="pnl-pos">+3.67%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">14</td>
+            <td class="ticker-cell">CVX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$196.60</td>
+            <td style="font-weight:600">$201.73</td>
+            <td class="pnl-pos">+2.61%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">15</td>
+            <td class="ticker-cell">COP</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$121.19</td>
+            <td style="font-weight:600">$126.92</td>
+            <td class="pnl-pos">+4.73%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">16</td>
+            <td class="ticker-cell">GLD</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-17</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$446.66</td>
+            <td style="font-weight:600">$431.66</td>
+            <td class="pnl-neg">-3.36%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">17</td>
+            <td class="ticker-cell">FANG</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-17</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$188.11</td>
+            <td style="font-weight:600">$197.06</td>
+            <td class="pnl-pos">+4.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">18</td>
+            <td class="ticker-cell">MU</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-19</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$443.92</td>
+            <td style="font-weight:600">$413.92</td>
+            <td class="pnl-neg">-6.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">19</td>
+            <td class="ticker-cell">TTE</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$86.44</td>
+            <td style="font-weight:600">$89.26</td>
+            <td class="pnl-pos">+3.26%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">20</td>
+            <td class="ticker-cell">NEM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$95.87</td>
+            <td style="font-weight:600">$101.52</td>
+            <td class="pnl-pos">+5.89%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">21</td>
+            <td class="ticker-cell">OXY</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-23</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$60.78</td>
+            <td style="font-weight:600">$61.85</td>
+            <td class="pnl-pos">+1.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">22</td>
+            <td class="ticker-cell">PSX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-24</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$181.90</td>
+            <td style="font-weight:600">$181.29</td>
+            <td class="pnl-neg">-0.34%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">1j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </details>
   </div>
 
   <!-- MODE 2: CALMAR -->
   <div class="mode-panel" id="panel-calmar">
     <img src="/scanner/status/mode-calmar.png" alt="Risk-Adjusted mode" class="setup-img" loading="lazy">
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+14.02%</div><div class="kpi-label">Return</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-2.46%</div><div class="kpi-label">Max DD</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">5.7</div><div class="kpi-label">Sharpe</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">73.7%</div><div class="kpi-label">Win Rate</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">3.82x</div><div class="kpi-label">Profit Factor</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">19</div><div class="kpi-label">Trades</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#f59e0b">6.2j</div><div class="kpi-label">Hold Moy.</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+16.26%</div><div class="kpi-label">Return</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-2.66%</div><div class="kpi-label">Max DD</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">6.11</div><div class="kpi-label">Sharpe</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">69.6%</div><div class="kpi-label">Win Rate</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#059669">5.68x</div><div class="kpi-label">Profit Factor</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">23</div><div class="kpi-label">Trades</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#f59e0b">4j</div><div class="kpi-label">Hold Moy.</div></div>
       <div class="kpi-card"><div class="kpi-value" style="color:#6366f1">6</div><div class="kpi-label">Calmar</div></div>
     </div>
     <div class="config-box">
@@ -199,18 +924,262 @@
       </ol>
     </div>
     <div class="disclaimer-sweep">
-      <strong><i class="fas fa-shield-halved"></i> Mode recommand&eacute; :</strong> Meilleur ratio return/risque. Drawdown contenu (-2.46%) avec un return de +14.02%. Le filtre Short Squeeze &eacute;vite les pics de volatilit&eacute; destructeurs.
+      <strong><i class="fas fa-shield-halved"></i> Mode recommand&eacute; :</strong> Meilleur ratio return/risque. Drawdown contenu (-2.66%) avec un return de +16.26%. Le filtre Short Squeeze &eacute;vite les pics de volatilit&eacute; destructeurs.
     </div>
     <div id="chartCalmarEquity" class="echart-box"></div>
+    
+    <details style="margin:1.5rem 0" open>
+      <summary style="cursor:pointer;font-weight:700;font-size:.95rem;color:#334155;padding:.5rem 0">
+        <i class="fas fa-table" style="color:#2563eb"></i> Historique des trades &mdash; Risk-Adjusted (23)
+      </summary>
+      <table class="status-table">
+        <thead><tr>
+          <th style="text-align:center">#</th><th>Ticker</th><th>Date Scan</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">1</td>
+            <td class="ticker-cell">A</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$119.61</td>
+            <td style="font-weight:600">$118.11</td>
+            <td class="pnl-neg">-1.2%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-rotated">&#x1F504; Rotat&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">2</td>
+            <td class="ticker-cell">CRM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$191.91</td>
+            <td style="font-weight:600">$201.39</td>
+            <td class="pnl-pos">+4.94%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">3</td>
+            <td class="ticker-cell">NOW</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$105.00</td>
+            <td style="font-weight:600">$121.00</td>
+            <td class="pnl-pos">+15.24%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-tp1">&#x2705; TP1</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">4</td>
+            <td class="ticker-cell">SAP</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$200.55</td>
+            <td style="font-weight:600">$199.48</td>
+            <td class="pnl-neg">-0.53%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">5</td>
+            <td class="ticker-cell">UBER</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$73.90</td>
+            <td style="font-weight:600">$75.44</td>
+            <td class="pnl-pos">+2.08%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">6</td>
+            <td class="ticker-cell">NAT</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-02</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$5.70</td>
+            <td style="font-weight:600">$5.63</td>
+            <td class="pnl-neg">-1.23%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">7</td>
+            <td class="ticker-cell">USO</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$105.38</td>
+            <td style="font-weight:600">$119.63</td>
+            <td class="pnl-pos">+13.52%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-tp2">&#x1F3AF; TP2</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">8</td>
+            <td class="ticker-cell">CVX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$190.88</td>
+            <td style="font-weight:600">$196.97</td>
+            <td class="pnl-pos">+3.19%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">9</td>
+            <td class="ticker-cell">MPC</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$217.75</td>
+            <td style="font-weight:600">$235.75</td>
+            <td class="pnl-pos">+8.27%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-tp1">&#x2705; TP1</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">10</td>
+            <td class="ticker-cell">DVN</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$44.93</td>
+            <td style="font-weight:600">$46.19</td>
+            <td class="pnl-pos">+2.8%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">11</td>
+            <td class="ticker-cell">CF</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-09</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$110.20</td>
+            <td style="font-weight:600">$127.90</td>
+            <td class="pnl-pos">+16.06%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-tp2">&#x1F3AF; TP2</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">12</td>
+            <td class="ticker-cell">MRVL</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-09</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$92.57</td>
+            <td style="font-weight:600">$91.58</td>
+            <td class="pnl-neg">-1.07%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">13</td>
+            <td class="ticker-cell">HAL</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$33.82</td>
+            <td style="font-weight:600">$36.82</td>
+            <td class="pnl-pos">+8.87%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">4j</td>
+            <td><span class="badge-sm badge-tp1">&#x2705; TP1</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">14</td>
+            <td class="ticker-cell">CVX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$196.60</td>
+            <td style="font-weight:600">$201.73</td>
+            <td class="pnl-pos">+2.61%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">15</td>
+            <td class="ticker-cell">COP</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$121.19</td>
+            <td style="font-weight:600">$126.92</td>
+            <td class="pnl-pos">+4.73%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">16</td>
+            <td class="ticker-cell">RTX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$204.71</td>
+            <td style="font-weight:600">$198.16</td>
+            <td class="pnl-neg">-3.2%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">5j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">17</td>
+            <td class="ticker-cell">GLD</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-17</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$446.66</td>
+            <td style="font-weight:600">$431.66</td>
+            <td class="pnl-neg">-3.36%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">18</td>
+            <td class="ticker-cell">MU</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-19</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$443.92</td>
+            <td style="font-weight:600">$413.92</td>
+            <td class="pnl-neg">-6.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">19</td>
+            <td class="ticker-cell">DVN</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-19</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$48.72</td>
+            <td style="font-weight:600">$50.41</td>
+            <td class="pnl-pos">+3.47%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">4j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">20</td>
+            <td class="ticker-cell">TTE</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$86.44</td>
+            <td style="font-weight:600">$89.26</td>
+            <td class="pnl-pos">+3.26%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">21</td>
+            <td class="ticker-cell">NEM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$95.87</td>
+            <td style="font-weight:600">$101.52</td>
+            <td class="pnl-pos">+5.89%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">22</td>
+            <td class="ticker-cell">BBVA</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$21.08</td>
+            <td style="font-weight:600">$21.49</td>
+            <td class="pnl-pos">+1.94%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">23</td>
+            <td class="ticker-cell">OXY</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-23</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$60.78</td>
+            <td style="font-weight:600">$61.85</td>
+            <td class="pnl-pos">+1.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </details>
   </div>
 
   <!-- MODE 3: CONSERVATIVE (ex-Zero DD) -->
   <div class="mode-panel" id="panel-zero">
     <img src="/scanner/status/mode-zero.png" alt="Conservative mode" class="setup-img" loading="lazy">
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+23.37%</div><div class="kpi-label">Return</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-4.09%</div><div class="kpi-label">Max DD</div></div>
-      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">5.71</div><div class="kpi-label">Sharpe</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#059669">+3.51%</div><div class="kpi-label">Return</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#dc2626">-0.61%</div><div class="kpi-label">Max DD</div></div>
+      <div class="kpi-card"><div class="kpi-value" style="color:#2563eb">5.75</div><div class="kpi-label">Sharpe</div></div>
       <div class="kpi-card"><div class="kpi-value" style="color:#7c3aed">73.7%</div><div class="kpi-label">Win Rate</div></div>
       <div class="kpi-card"><div class="kpi-value" style="color:#059669">3.82x</div><div class="kpi-label">Profit Factor</div></div>
       <div class="kpi-card"><div class="kpi-value" style="color:#0891b2">19</div><div class="kpi-label">Trades</div></div>
@@ -220,12 +1189,12 @@
     <div class="config-box">
       <h4><i class="fas fa-gear"></i> Configuration</h4>
       <div class="config-grid">
-        <div class="config-item"><span class="config-key">Portfolio</span><span class="config-val">3 positions</span></div>
+        <div class="config-item"><span class="config-key">Portfolio</span><span class="config-val">20 positions</span></div>
         <div class="config-item"><span class="config-key">Signaux/Scan</span><span class="config-val">Top 2</span></div>
-        <div class="config-item"><span class="config-key">Score Min</span><span class="config-val">Aucun</span></div>
-        <div class="config-item"><span class="config-key">Strat&eacute;gies</span><span class="config-val">Momentum uniquement</span></div>
-        <div class="config-item"><span class="config-key">Rotation</span><span class="config-val">Agressive</span></div>
-        <div class="config-item"><span class="config-key">Horizon</span><span class="config-val">20 jours</span></div>
+        <div class="config-item"><span class="config-key">Score Min</span><span class="config-val">92</span></div>
+        <div class="config-item"><span class="config-key">Strat&eacute;gies</span><span class="config-val">Toutes</span></div>
+        <div class="config-item"><span class="config-key">Rotation</span><span class="config-val">Aucune</span></div>
+        <div class="config-item"><span class="config-key">Horizon</span><span class="config-val">15 jours</span></div>
         <div class="config-item"><span class="config-key">Partial TP</span><span class="config-val"><span style="color:#059669"><i class="fas fa-check"></i> Oui (50% TP1)</span></span></div>
         <div class="config-item"><span class="config-key">Trailing Stop</span><span class="config-val"><span style="color:#059669"><i class="fas fa-check"></i> Oui (BE apr&egrave;s TP1)</span></span></div>
       </div>
@@ -237,15 +1206,219 @@
         <li><strong>Entr&eacute;e</strong> &agrave; l'ouverture J+1 (15h30 Paris)</li>
         <li><strong>Quand TP1 est touch&eacute;</strong> : vendez <strong>50% de la position</strong> et d&eacute;placez le stop au <strong>breakeven</strong></li>
         <li>Laissez courir les <strong>50% restants</strong> avec un <strong>trailing stop &agrave; 1.5R</strong> du plus haut</li>
-        <li><strong>Horizon max</strong> : 20 jours. Cl&ocirc;turez si le trade expire</li>
-        <li><strong>Allocation</strong> : 33% du capital par position (3 &times; 33% &cong; 100%)</li>
+        <li><strong>Horizon max</strong> : 15 jours. Cl&ocirc;turez si le trade expire</li>
+        <li><strong>Allocation</strong> : 5% du capital par position (20 &times; 5% &cong; 100%)</li>
         <li><strong>Rotation</strong> : remplacez la pire position si un meilleur signal Momentum appara&icirc;t</li>
       </ol>
     </div>
     <div class="disclaimer-sweep">
-      <strong><i class="fas fa-gem"></i> Mode conservateur :</strong> Drawdown limit&eacute; (-4.09%) gr&acirc;ce au partial TP (50% &agrave; TP1) et trailing stop (breakeven). 19 trades, WR 73.7%. Id&eacute;al pour d&eacute;buter.
+      <strong><i class="fas fa-gem"></i> Mode conservateur :</strong> Drawdown limit&eacute; (-0.61%) gr&acirc;ce au partial TP (50% &agrave; TP1) et trailing stop (breakeven). 19 trades, WR 73.7%. Id&eacute;al pour d&eacute;buter.
     </div>
     <div id="chartZeroEquity" class="echart-box"></div>
+    
+    <details style="margin:1.5rem 0" open>
+      <summary style="cursor:pointer;font-weight:700;font-size:.95rem;color:#334155;padding:.5rem 0">
+        <i class="fas fa-table" style="color:#7c3aed"></i> Historique des trades &mdash; Conservative (19)
+      </summary>
+      <table class="status-table">
+        <thead><tr>
+          <th style="text-align:center">#</th><th>Ticker</th><th>Date Scan</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">1</td>
+            <td class="ticker-cell">CRM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$191.91</td>
+            <td style="font-weight:600">$194.99</td>
+            <td class="pnl-pos">+1.6%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">15j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">2</td>
+            <td class="ticker-cell">NOW</td>
+            <td style="font-size:.8rem;color:#64748b">2026-02-26</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$105.00</td>
+            <td style="font-weight:600">$113.27</td>
+            <td class="pnl-pos">+11.56%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">15j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">3</td>
+            <td class="ticker-cell">NAT</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-02</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$5.70</td>
+            <td style="font-weight:600">$5.00</td>
+            <td class="pnl-neg">-12.28%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">8j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">4</td>
+            <td class="ticker-cell">AAOI</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-02</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$91.50</td>
+            <td style="font-weight:600">$102.71</td>
+            <td class="pnl-pos">+24.43%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">9j</td>
+            <td><span class="badge-sm badge-tp1_partial">&#x2705; TP1&frac12;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">5</td>
+            <td class="ticker-cell">USO</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$105.38</td>
+            <td style="font-weight:600">$119.63</td>
+            <td class="pnl-pos">+13.52%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-tp2">&#x1F3AF; TP2</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">6</td>
+            <td class="ticker-cell">CVX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-05</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$190.88</td>
+            <td style="font-weight:600">$205.13</td>
+            <td class="pnl-pos">+6.22%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">12j</td>
+            <td><span class="badge-sm badge-tp2">&#x1F3AF; TP2</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">7</td>
+            <td class="ticker-cell">MRVL</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-09</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$92.57</td>
+            <td style="font-weight:600">$98.45</td>
+            <td class="pnl-pos">+6.35%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">12j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">8</td>
+            <td class="ticker-cell">BBIO</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-10</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$73.16</td>
+            <td style="font-weight:600">$71.61</td>
+            <td class="pnl-neg">-2.12%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">11j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">9</td>
+            <td class="ticker-cell">COP</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-13</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$121.19</td>
+            <td style="font-weight:600">$128.93</td>
+            <td class="pnl-pos">+6.39%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">8j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">10</td>
+            <td class="ticker-cell">GLD</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-17</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$446.66</td>
+            <td style="font-weight:600">$431.66</td>
+            <td class="pnl-neg">-3.36%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">11</td>
+            <td class="ticker-cell">FANG</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-17</td>
+            <td style="font-size:.8rem;color:#64748b">breakout</td>
+            <td style="font-weight:600">$188.11</td>
+            <td style="font-weight:600">$196.02</td>
+            <td class="pnl-pos">+4.2%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">6j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">12</td>
+            <td class="ticker-cell">MU</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-19</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$443.92</td>
+            <td style="font-weight:600">$413.92</td>
+            <td class="pnl-neg">-6.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-sl">&#x274C; SL</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">13</td>
+            <td class="ticker-cell">DVN</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-19</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$48.72</td>
+            <td style="font-weight:600">$50.41</td>
+            <td class="pnl-pos">+3.47%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">4j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">14</td>
+            <td class="ticker-cell">TTE</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$86.44</td>
+            <td style="font-weight:600">$89.26</td>
+            <td class="pnl-pos">+3.26%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">15</td>
+            <td class="ticker-cell">NEM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-20</td>
+            <td style="font-size:.8rem;color:#64748b">pre_squeeze</td>
+            <td style="font-weight:600">$95.87</td>
+            <td style="font-weight:600">$101.52</td>
+            <td class="pnl-pos">+5.89%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">3j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">16</td>
+            <td class="ticker-cell">OXY</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-23</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$60.78</td>
+            <td style="font-weight:600">$61.85</td>
+            <td class="pnl-pos">+1.76%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">17</td>
+            <td class="ticker-cell">SM</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-23</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$30.10</td>
+            <td style="font-weight:600">$31.50</td>
+            <td class="pnl-pos">+4.65%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">2j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">18</td>
+            <td class="ticker-cell">PSX</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-24</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$181.90</td>
+            <td style="font-weight:600">$181.29</td>
+            <td class="pnl-neg">-0.34%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">1j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr><tr>
+            <td style="text-align:center;color:#94a3b8;font-size:.8rem">19</td>
+            <td class="ticker-cell">HAL</td>
+            <td style="font-size:.8rem;color:#64748b">2026-03-24</td>
+            <td style="font-size:.8rem;color:#64748b">momentum</td>
+            <td style="font-weight:600">$38.00</td>
+            <td style="font-weight:600">$38.63</td>
+            <td class="pnl-pos">+1.66%</td>
+            <td style="font-size:.8rem;color:#64748b;text-align:center">1j</td>
+            <td><span class="badge-sm badge-expired">&#x23F3; Expir&eacute;</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </details>
   </div>
 
   <!-- COMPARAISON -->
@@ -258,15 +1431,15 @@
       <th style="background:#7c3aed">Conservative</th>
     </tr></thead>
     <tbody>
-      <tr><td><strong>Return</strong></td><td>+21.46%</td><td>+14.02%</td><td class="best">+23.37%</td></tr>
-      <tr><td><strong>Max Drawdown</strong></td><td class="best">-1.69%</td><td>-2.46%</td><td>-4.09%</td></tr>
-      <tr><td><strong>Sharpe Ratio</strong></td><td class="best">12.7</td><td>5.7</td><td>5.71</td></tr>
+      <tr><td><strong>Return</strong></td><td class="best">+21.46%</td><td>+16.26%</td><td>+3.51%</td></tr>
+      <tr><td><strong>Max Drawdown</strong></td><td>-1.69%</td><td>-2.66%</td><td class="best">-0.61%</td></tr>
+      <tr><td><strong>Sharpe Ratio</strong></td><td class="best">12.7</td><td>6.11</td><td>5.75</td></tr>
       <tr><td><strong>Calmar Ratio</strong></td><td class="best">13</td><td>6</td><td>6</td></tr>
-      <tr><td><strong>Win Rate</strong></td><td>68.2%</td><td class="best">73.7%</td><td class="best">73.7%</td></tr>
-      <tr><td><strong>Profit Factor</strong></td><td class="best">5.97x</td><td>3.82x</td><td>3.82x</td></tr>
-      <tr><td><strong>Trades</strong></td><td class="best">22</td><td>19</td><td>19</td></tr>
-      <tr><td><strong>Hold Moyen</strong></td><td>3.8j</td><td>6.2j</td><td>6.2j</td></tr>
-      <tr><td><strong>Positions Max</strong></td><td>4</td><td>5</td><td>3</td></tr>
+      <tr><td><strong>Win Rate</strong></td><td>68.2%</td><td>69.6%</td><td class="best">73.7%</td></tr>
+      <tr><td><strong>Profit Factor</strong></td><td class="best">5.97x</td><td>5.68x</td><td>3.82x</td></tr>
+      <tr><td><strong>Trades</strong></td><td>22</td><td class="best">23</td><td>19</td></tr>
+      <tr><td><strong>Hold Moyen</strong></td><td>3.8j</td><td>4j</td><td>6.2j</td></tr>
+      <tr><td><strong>Positions Max</strong></td><td>4</td><td>5</td><td>20</td></tr>
       <tr><td><strong>Partial TP</strong></td><td>Non</td><td>Non</td><td class="best">Oui (50%)</td></tr>
       <tr><td><strong>Trailing Stop</strong></td><td>Non</td><td>Non</td><td class="best">Oui (BE)</td></tr>
       <tr><td><strong>Id&eacute;al pour</strong></td><td>Traders actifs</td><td><strong>Recommand&eacute;</strong></td><td>D&eacute;butants</td></tr>
@@ -325,6 +1498,7 @@
 <!-- FAB -->
 <div class="fnav" id="floatingNav">
   <div class="fnav-menu" id="fnavMenu">
+    <a href="#live" class="fnav-item"><i class="fas fa-satellite-dish"></i><span>Live</span></a>
     <a href="#" class="fnav-item" onclick="switchMode('growth');window.scrollTo({top:document.querySelector('.mode-tabs').offsetTop-80,behavior:'smooth'})"><i class="fas fa-rocket"></i><span>Growth</span></a>
     <a href="#" class="fnav-item" onclick="switchMode('calmar');window.scrollTo({top:document.querySelector('.mode-tabs').offsetTop-80,behavior:'smooth'})"><i class="fas fa-shield-halved"></i><span>Risk-Adj</span></a>
     <a href="#" class="fnav-item" onclick="switchMode('zero');window.scrollTo({top:document.querySelector('.mode-tabs').offsetTop-80,behavior:'smooth'})"><i class="fas fa-gem"></i><span>Conserv.</span></a>
@@ -365,20 +1539,20 @@ function initCharts() {
   c1.setOption({title:{text:'Equity Curve — Maximum Growth',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>'+p[0].value.toFixed(2)}},xAxis:{type:'category',data:gD,axisLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8',fontSize:11}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,gV))-1,axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{data:gV,type:'line',smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#059669',width:3},itemStyle:{color:'#059669'},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(5,150,105,.25)'},{offset:1,color:'rgba(5,150,105,.02)'}])}}],grid:{left:50,right:20,top:45,bottom:30}});
 
   // Calmar equity curve
-  var caD=["02/26","03/02","03/05","03/09","03/10","03/13","03/17","03/19","03/20","03/23","03/24"];
-  var caV=[102.63,105.06,109.01,110.28,109.86,111.13,111.3,110.64,112.47,113.76,114.02];
+  var caD=["02/26","03/02","03/05","03/09","03/13","03/17","03/19","03/20","03/23"];
+  var caV=[104.11,103.86,109.42,112.41,115.02,114.34,113.69,115.9,116.26];
   var c2=echarts.init(document.getElementById('chartCalmarEquity'));
   c2.setOption({title:{text:'Equity Curve — Risk-Adjusted',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>'+p[0].value.toFixed(2)}},xAxis:{type:'category',data:caD,axisLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8',fontSize:11}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,caV))-1,axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{data:caV,type:'line',smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#2563eb',width:3},itemStyle:{color:'#2563eb'},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(37,99,235,.25)'},{offset:1,color:'rgba(37,99,235,.02)'}])}}],grid:{left:50,right:20,top:45,bottom:30}});
 
   // Zero equity curve
   var zD=["02/26","03/02","03/05","03/09","03/10","03/13","03/17","03/19","03/20","03/23","03/24"];
-  var zV=[104.39,108.44,115.02,117.13,116.43,118.56,118.84,117.74,120.79,122.93,123.37];
+  var zV=[100.66,101.27,102.25,102.57,102.46,102.78,102.83,102.66,103.12,103.44,103.5];
   var c3=echarts.init(document.getElementById('chartZeroEquity'));
   c3.setOption({title:{text:'Equity Curve — Conservative',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/>'+p[0].value.toFixed(2)}},xAxis:{type:'category',data:zD,axisLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8',fontSize:11}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,zV))-1,axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{data:zV,type:'line',smooth:true,symbol:'circle',symbolSize:4,lineStyle:{color:'#7c3aed',width:3},itemStyle:{color:'#7c3aed'},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(124,58,237,.25)'},{offset:1,color:'rgba(124,58,237,.02)'}])}}],grid:{left:50,right:20,top:45,bottom:30}});
 
   // Comparison bar chart
   var c4=echarts.init(document.getElementById('chartCompareReturns'));
-  c4.setOption({title:{text:'Comparaison des 3 modes',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{color:'#64748b'}},xAxis:{type:'category',data:['Return (%)','|MaxDD| (%)','Win Rate (%)','Profit Factor','Trades','Hold (j)'],axisLabel:{color:'#64748b',fontSize:11,rotate:15},axisLine:{lineStyle:{color:gc}}},yAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{name:'Growth',type:'bar',data:[21.46,1.69,68.2,5.97,22,3.8],itemStyle:{color:'#059669',borderRadius:[6,6,0,0]}},{name:'Risk-Adj',type:'bar',data:[14.02,2.46,73.7,3.82,19,6.2],itemStyle:{color:'#2563eb',borderRadius:[6,6,0,0]}},{name:'Conserv.',type:'bar',data:[23.37,4.09,73.7,3.82,19,6.2],itemStyle:{color:'#7c3aed',borderRadius:[6,6,0,0]}}],grid:{left:45,right:20,top:45,bottom:50}});
+  c4.setOption({title:{text:'Comparaison des 3 modes',left:'center',textStyle:{fontSize:14,color:dk}},tooltip:{trigger:'axis'},legend:{bottom:0,textStyle:{color:'#64748b'}},xAxis:{type:'category',data:['Return (%)','|MaxDD| (%)','Win Rate (%)','Profit Factor','Trades','Hold (j)'],axisLabel:{color:'#64748b',fontSize:11,rotate:15},axisLine:{lineStyle:{color:gc}}},yAxis:{type:'value',axisLine:{show:false},splitLine:{lineStyle:{color:gc}},axisLabel:{color:'#94a3b8'}},series:[{name:'Growth',type:'bar',data:[21.46,1.69,68.2,5.97,22,3.8],itemStyle:{color:'#059669',borderRadius:[6,6,0,0]}},{name:'Risk-Adj',type:'bar',data:[16.26,2.66,69.6,5.68,23,4],itemStyle:{color:'#2563eb',borderRadius:[6,6,0,0]}},{name:'Conserv.',type:'bar',data:[3.51,0.61,73.7,3.82,19,6.2],itemStyle:{color:'#7c3aed',borderRadius:[6,6,0,0]}}],grid:{left:45,right:20,top:45,bottom:50}});
 
   window.addEventListener('resize',function(){c1.resize();c2.resize();c3.resize();c4.resize()});
 }

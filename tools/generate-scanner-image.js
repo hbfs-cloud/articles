@@ -164,31 +164,51 @@ function extractRegime(scanDir) {
   return { label, color: colors[label] || '#64748b' };
 }
 
-// ─── Fetch StockChart as base64 ───────────────────────────────────────────────
-// Note: Requires puppeteer for cross-origin chart capture
-// Falls back to SVG sparkline if unavailable
+// ─── Fetch FinViz chart as base64 ────────────────────────────────────────────
+// Direct PNG fetch — no Puppeteer needed. FinViz returns a chart image directly.
+// URL pattern: https://finviz.com/chart.ashx?t=TICKER&ty=c&ta=1&p=d&s=l
+// ty=c (candle), ta=1 (with technicals: SMA50/200, RSI, MACD, Volume), p=d (daily), s=l (large)
 
-async function fetchChartBase64(ticker) {
-  try {
-    const puppeteer = require('puppeteer');
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] });
-    const page = await browser.newPage();
-    const url = `https://stockcharts.com/c-sc/sc?s=${ticker}&p=D&yr=0&mn=6&dy=0&i=t21846718260&r=${Date.now()}`;
-    await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
-    const imgSrc = await page.evaluate(() => {
-      const img = document.querySelector('img');
-      if (!img) return null;
-      const c = document.createElement('canvas');
-      c.width = img.naturalWidth; c.height = img.naturalHeight;
-      c.getContext('2d').drawImage(img, 0, 0);
-      return c.toDataURL('image/png');
-    });
-    await browser.close();
-    return imgSrc;
-  } catch (e) {
-    // Fallback: return null (will use SVG sparkline)
-    return null;
-  }
+function fetchChartBase64(ticker) {
+  return new Promise((resolve) => {
+    const url = `https://finviz.com/chart.ashx?t=${ticker}&ty=c&ta=1&p=d&s=l`;
+    const opts = {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://finviz.com/',
+      },
+      timeout: 10000,
+    };
+    https.get(url, opts, (res) => {
+      // Handle redirects
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        https.get(res.headers.location, opts, (res2) => {
+          const chunks = [];
+          res2.on('data', c => chunks.push(c));
+          res2.on('end', () => {
+            const buf = Buffer.concat(chunks);
+            if (buf.length > 1000) {
+              resolve('data:image/png;base64,' + buf.toString('base64'));
+            } else {
+              resolve(null);
+            }
+          });
+        }).on('error', () => resolve(null));
+        return;
+      }
+      const chunks = [];
+      res.on('data', c => chunks.push(c));
+      res.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        // Sanity check: a real chart PNG is > 1KB
+        if (buf.length > 1000) {
+          resolve('data:image/png;base64,' + buf.toString('base64'));
+        } else {
+          resolve(null);
+        }
+      });
+    }).on('error', () => resolve(null)).on('timeout', () => resolve(null));
+  });
 }
 
 // ─── Generate HTML for the image ─────────────────────────────────────────────
@@ -599,6 +619,30 @@ async function main() {
 
   if (!DRY_RUN) {
     await generatePNG(html, pngPath);
+
+    // Also save to scanner/status/ with timestamp for cache busting
+    const statusDir = path.join(SCANNER_DIR, 'status');
+    const ts = Date.now();
+
+    // Clean old daily-card-*.png files
+    try {
+      fs.readdirSync(statusDir)
+        .filter(f => /^daily-card-\d+\.png$/.test(f))
+        .forEach(f => fs.unlinkSync(path.join(statusDir, f)));
+    } catch (_) {}
+
+    const dailyCardFilename = `daily-card-${ts}.png`;
+    const dailyCardPath = path.join(statusDir, dailyCardFilename);
+    fs.copyFileSync(pngPath, dailyCardPath);
+    console.log(`✅ Daily card copied to: ${dailyCardPath}`);
+
+    // Update manifest.json with daily-card entry
+    const manifestPath = path.join(statusDir, 'manifest.json');
+    let manifest = {};
+    try { manifest = JSON.parse(fs.readFileSync(manifestPath)); } catch (_) {}
+    manifest['daily-card'] = dailyCardFilename;
+    fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+    console.log(`✅ Manifest updated with daily-card`);
   } else {
     console.log('Dry run — skipping PNG generation');
   }

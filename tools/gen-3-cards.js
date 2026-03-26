@@ -409,6 +409,16 @@ ${sectionTitle('📑', `HISTORIQUE DÉTAILLÉ (${Math.min(trades.length, 20)} / 
 </body></html>`;
 }
 
+// ─── Clean old timestamped images ───────────────────────────────────────────
+function cleanOldImages(dir, prefix) {
+  const re = new RegExp(`^${prefix}-\\d+\\.png$`);
+  try {
+    fs.readdirSync(dir).filter(f => re.test(f)).forEach(f => {
+      fs.unlinkSync(path.join(dir, f));
+    });
+  } catch (_) {}
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 async function main() {
   const config = JSON.parse(fs.readFileSync(MODES_CFG));
@@ -419,6 +429,15 @@ async function main() {
   const puppeteer = require('puppeteer');
 
   const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+  const ts = Date.now();
+  const manifest = {};
+
+  // Read existing manifest to preserve daily-card entry
+  const manifestPath = path.join(STATUS, 'manifest.json');
+  try {
+    const existing = JSON.parse(fs.readFileSync(manifestPath));
+    if (existing['daily-card']) manifest['daily-card'] = existing['daily-card'];
+  } catch (_) {}
 
   for (const [id, cfg] of Object.entries(config.modes)) {
     const tradeKey = modeMap[id] || id;
@@ -437,11 +456,21 @@ async function main() {
       const el = document.body.firstElementChild;
       return { x: 0, y: 0, width: 1080, height: Math.ceil(el.getBoundingClientRect().height) };
     });
-    const outPath = path.join(STATUS, `mode-${id}.png`);
+
+    // Clean old timestamped files, then write new one
+    cleanOldImages(STATUS, `mode-${id}`);
+    const filename = `mode-${id}-${ts}.png`;
+    const outPath = path.join(STATUS, filename);
     await page.screenshot({ path: outPath, clip, type: 'png' });
     await browser.close();
+
+    manifest[`mode-${id}`] = filename;
     console.log(`✅ ${outPath} (${clip.height}px, ${(fs.statSync(outPath).size / 1024).toFixed(0)}KB)`);
   }
+
+  // Write manifest for gen-status-page.js and other scripts
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+  console.log(`\n✅ Manifest written: ${manifestPath}`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

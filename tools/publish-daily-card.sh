@@ -32,6 +32,9 @@ echo ""
 echo "📊 Step 1: Updating tracking data..."
 node tools/update-tracking.js
 
+# ─── Step 1b: Clean old static-named images (pre-timestamp migration) ────────
+rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/status/mode-zero.png scanner/status/daily-card.png 2>/dev/null
+
 # ─── Step 2: Generate daily card image + Telegram ────────────────────────────
 echo ""
 echo "🖼️  Step 2: Generating daily card image..."
@@ -76,15 +79,21 @@ git add \
   data/scanner-positions.json \
   2>/dev/null || true
 
+git add \
+  scanner/status/daily-card-*.png \
+  scanner/status/manifest.json \
+  2>/dev/null || true
+
 if [ "$SKIP_SWEEP" = false ]; then
   git add \
     data/backtest-results.json \
     data/backtest-trades.json \
     data/portfolio-history.json \
-    scanner/status/mode-growth.png \
-    scanner/status/mode-calmar.png \
-    scanner/status/mode-zero.png \
+    scanner/status/mode-growth-*.png \
+    scanner/status/mode-calmar-*.png \
+    scanner/status/mode-zero-*.png \
     scanner/status/index.html \
+    scanner/status/manifest.json \
     2>/dev/null || true
 fi
 
