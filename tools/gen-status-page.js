@@ -232,7 +232,10 @@ function main() {
     <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="m">${p.days_remaining||0}d</td></tr>`;
+      // Compute days left based on mode horizon, not the raw 30d expire
+      const ageD = p.scan_date ? Math.round((new Date() - new Date(p.scan_date)) / 86400000) : 0;
+      const left = Math.max(0, cfg.horizon - Math.round(ageD * 5/7)); // convert calendar to business days approx
+      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="m">${left}d</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty">No open positions</p>`}
 </div>
