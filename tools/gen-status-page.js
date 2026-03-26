@@ -164,17 +164,20 @@ function main() {
     </div>
     <div class="tbl-wrap">
     <table class="tbl">
-      <thead><tr><th>Ticker</th><th>Strat.</th><th>Entry</th><th>Prix</th><th>Return</th><th>Progr.</th><th>Expire</th></tr></thead>
+      <thead><tr><th>Ticker</th><th>Date achat</th><th>Prix achat</th><th>Prix actuel</th><th>P&amp;L</th><th>Alloc.</th><th>Stop</th><th>TP1</th><th>Progr.</th><th>Jours restants</th></tr></thead>
       <tbody>${positions.map(p => {
         const rc = p.return_pct >= 0 ? 'pos' : 'neg';
         const prog = Math.min(100, Math.max(0, p.progress_pct || 0));
         const pc = prog >= 70 ? '#059669' : prog >= 40 ? '#f59e0b' : '#dc2626';
         return `<tr>
           <td><strong>${p.ticker}</strong></td>
-          <td class="muted">${p.strategy || '—'}</td>
+          <td class="muted">${p.scan_date || '—'}</td>
           <td>$${(p.entry||0).toFixed(2)}</td>
           <td>$${(p.current_price||0).toFixed(2)}</td>
-          <td class="${rc}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
+          <td class="${rc}" style="font-weight:700">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
+          <td class="muted">${alloc}%</td>
+          <td class="neg">$${(p.stop||0).toFixed(2)}</td>
+          <td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td>
           <td><div class="prog"><div class="prog-fill" style="width:${prog}%;background:${pc}"></div></div></td>
           <td class="muted">${p.days_remaining || 0}j</td>
         </tr>`;
