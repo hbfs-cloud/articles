@@ -87,12 +87,18 @@ function main() {
   } catch (_) {}
   signals.sort((a, b) => b.score - a.score);
 
-  // Modes — filter out premature expirations before computing metrics
+  // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
   const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[modeMap[id] || id] || [];
-    const trades = raw.filter(t => !(t.status === 'expired' && t.holdDays < cfg.horizon));
+    // Tag premature expirations but keep them in the dataset
+    const trades = raw.map(t => {
+      if (t.status === 'expired' && t.holdDays < cfg.horizon) {
+        return { ...t, _premature: true };
+      }
+      return t;
+    });
     modes[id] = { cfg, trades, m: computeMetrics(trades, cfg.portfolioSize) };
   }
   const g = modes.growth.m, ca = modes.calmar.m, z = modes.zero.m;
@@ -285,7 +291,7 @@ function main() {
           case 'tp2': statusLabel = 'Target 2 hit'; statusCls = 'pos'; break;
           case 'tp1_partial': statusLabel = 'TP1 partial (50%)'; statusCls = 'pos'; break;
           case 'sl': statusLabel = 'Stop loss hit'; statusCls = 'neg'; break;
-          case 'expired': statusLabel = 'Expired (' + (t.holdDays||0) + 'd limit)'; statusCls = 'am'; break;
+          case 'expired': statusLabel = t._premature ? 'Pending (' + (t.holdDays||0) + 'd/' + cfg.horizon + 'd)' : 'Expired (' + cfg.horizon + 'd limit)'; statusCls = t._premature ? 'pending' : 'am'; break;
           case 'rotated':
             const rep = replacedBy[t.ticker + t.scanDate];
             statusLabel = rep ? 'Replaced by ' + rep : 'Rotated out';
@@ -330,8 +336,8 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .tab{flex:1;padding:.7rem .5rem;text-align:center;cursor:pointer;font-weight:700;font-size:.82rem;border:none;background:#fff;color:#64748b;transition:all .2s}
 .tab:hover{background:#f8fafc}
 .tab.active{color:#fff}
-.tab[data-m="growth"].active{background:#059669}
-.tab[data-m="calmar"].active{background:#2563eb}
+.tab[data-m="growth"].active{background:#dc2626}
+.tab[data-m="calmar"].active{background:#059669}
 .tab[data-m="zero"].active{background:#7c3aed}
 .tab .tab-ret{display:block;font-size:1rem;font-weight:900;margin-top:.15rem}
 .mp{display:none;animation:fadeUp .2s ease}
@@ -370,6 +376,7 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .pill.pos{background:#ecfdf5;color:#059669}
 .pill.neg{background:#fef2f2;color:#dc2626}
 .pill.am{background:#fffbeb;color:#d97706}
+.pill.pending{background:#eff6ff;color:#3b82f6;border:1px dashed #93c5fd}
 .empty{text-align:center;padding:1.5rem;color:#94a3b8;font-size:.85rem}
 
 /* Position bar */
@@ -416,13 +423,13 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
   </div>
 
   <div class="tabs">
-    <button class="tab active" data-m="growth" onclick="sw('growth')"><i class="fas fa-rocket"></i> Growth<span class="tab-ret">+${g.ret}%</span></button>
-    <button class="tab" data-m="calmar" onclick="sw('calmar')"><i class="fas fa-shield-halved"></i> Risk-Adj.<span class="tab-ret">+${ca.ret}%</span></button>
+    <button class="tab" data-m="growth" onclick="sw('growth')"><i class="fas fa-rocket"></i> Aggressive<span class="tab-ret">+${g.ret}%</span></button>
+    <button class="tab active" data-m="calmar" onclick="sw('calmar')"><i class="fas fa-shield-halved"></i> Balanced<span class="tab-ret">+${ca.ret}%</span></button>
     <button class="tab" data-m="zero" onclick="sw('zero')"><i class="fas fa-gem"></i> Conserv.<span class="tab-ret">+${z.ret}%</span></button>
   </div>
 
-  ${panel('growth', modes.growth.cfg, g, modes.growth.trades, gEC, 'cG', true)}
-  ${panel('calmar', modes.calmar.cfg, ca, modes.calmar.trades, caEC, 'cC', false)}
+  ${panel('growth', modes.growth.cfg, g, modes.growth.trades, gEC, 'cG', false)}
+  ${panel('calmar', modes.calmar.cfg, ca, modes.calmar.trades, caEC, 'cC', true)}
   ${panel('zero', modes.zero.cfg, z, modes.zero.trades, zEC, 'cZ', false)}
 
   <div class="disc">

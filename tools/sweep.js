@@ -198,7 +198,7 @@ async function fetchOHLCV(ticker) {
 // ─── Simulate a single trade (enhanced with partial TP + trailing stop) ───────
 
 function simulateTrade(setup, scanDate, priceHistory, config = {}) {
-  const { horizonDays = 20, partialTP = false, trailingStop = false } = config;
+  const { horizonDays = 20, partialTP = false, trailingStop = false, maxStopPct = 0 } = config;
   if (!priceHistory) return null;
 
   const entryDate = nextBizDay(scanDate);
@@ -208,8 +208,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const actualEntry = entryBar.open;
   if (!actualEntry || actualEntry <= 0) return null;
 
-  const riskPerUnit = setup.entry - setup.stop;
+  let riskPerUnit = setup.entry - setup.stop;
   if (riskPerUnit <= 0) return null;
+
+  // Cap the stop loss if maxStopPct > 0
+  if (maxStopPct > 0) {
+    const maxRisk = actualEntry * (maxStopPct / 100);
+    if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
+  }
 
   const actualStop = actualEntry - riskPerUnit;
   const rewardMult1 = (setup.tp1 - setup.entry) / riskPerUnit;
@@ -722,8 +728,24 @@ async function main() {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     const modeTradeKeys = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
     for (const [id, cfg] of Object.entries(modesConfig.modes)) {
-      const trades2 = (tradesByHorizon[cfg.horizon] || [])
-        .filter(t => t._partialTP === (cfg.partialTP || false) && t._trail === (cfg.trailingStop || false));
+      // If mode has maxStopPct, re-simulate trades with the cap (can't use pre-cached)
+      let trades2;
+      if (cfg.maxStopPct > 0) {
+        trades2 = [];
+        for (const setup of allSetups) {
+          const history = priceCache[setup.ticker];
+          const result = simulateTrade(setup, setup.scanDate, history, {
+            horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false,
+            maxStopPct: cfg.maxStopPct,
+          });
+          if (result) {
+            trades2.push({ ...result, _horizon: cfg.horizon, _partialTP: cfg.partialTP || false, _trail: cfg.trailingStop || false });
+          }
+        }
+      } else {
+        trades2 = (tradesByHorizon[cfg.horizon] || [])
+          .filter(t => t._partialTP === (cfg.partialTP || false) && t._trail === (cfg.trailingStop || false));
+      }
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
