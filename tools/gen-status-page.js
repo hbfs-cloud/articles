@@ -15,10 +15,6 @@ const ROOT = path.join(__dirname, '..');
 const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
 const TRADES = path.join(ROOT, 'data/backtest-trades.json');
 const RESULTS = path.join(ROOT, 'data/backtest-results.json');
-const MANIFEST = path.join(ROOT, 'scanner/status/manifest.json');
-const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
-const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
-const SCANNER_DIR = path.join(ROOT, 'scanner');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
 
 // ─── Compute metrics from trade list ────────────────────────────────────────
@@ -67,51 +63,6 @@ function main() {
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) {}
   let results = {};
   try { results = JSON.parse(fs.readFileSync(RESULTS)); } catch (_) {}
-
-  // Read manifest for timestamped image filenames
-  let manifest = {};
-  try { manifest = JSON.parse(fs.readFileSync(MANIFEST)); } catch (_) {}
-  const imgGrowth = manifest['mode-growth'] || 'mode-growth.png';
-  const imgCalmar = manifest['mode-calmar'] || 'mode-calmar.png';
-  const imgZero = manifest['mode-zero'] || 'mode-zero.png';
-  const imgDailyCard = manifest['daily-card'] || null;
-
-  // Load live data (positions + metrics)
-  let liveMetrics = {};
-  try { liveMetrics = JSON.parse(fs.readFileSync(METRICS_FILE)); } catch (_) {}
-  let livePositions = [];
-  try {
-    const posData = JSON.parse(fs.readFileSync(POSITIONS_FILE));
-    livePositions = posData.open_positions || [];
-  } catch (_) {}
-
-  // Extract latest scan signals
-  let latestSignals = [];
-  try {
-    const scanDirs = fs.readdirSync(SCANNER_DIR).filter(d => /^\d{8}(-\d+)?$/.test(d)).sort().reverse();
-    if (scanDirs[0]) {
-      const scanHtml = fs.readFileSync(path.join(SCANNER_DIR, scanDirs[0], 'index.html'), 'utf8');
-      const m = scanHtml.match(/id="synthese"[\s\S]{0,15000}/);
-      if (m) {
-        const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
-        for (const row of rows) {
-          const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
-            .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
-          if (cells.length < 4) continue;
-          const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
-          if (!ticker) continue;
-          const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
-          const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback/i.test(c)) || '';
-          const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
-          latestSignals.push({
-            ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
-            entry: pf[0] || '—', stop: pf[1] || '—', tp1: pf[2] || '—',
-          });
-        }
-      }
-      latestSignals._scanDir = scanDirs[0];
-    }
-  } catch (_) {}
 
   const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
   const modes = {};
@@ -254,7 +205,7 @@ function main() {
   <meta name="description" content="Guide des 3 strat&eacute;gies optimis&eacute;es du scanner Market Watch. Bas&eacute; sur ${totalCombos.toLocaleString('fr')} backtests.">
   <meta property="og:title" content="Scanner Strategy Guide &mdash; 3 Modes Optimis&eacute;s">
   <meta property="og:description" content="3 strat&eacute;gies backtested sur ${totalCombos.toLocaleString('fr')} combinaisons. Return +${g.ret}%, WR ${g.wr}%.">
-  <meta property="og:image" content="https://articles.market-watch.xyz/scanner/status/${imgDailyCard || imgGrowth}">
+  <meta property="og:image" content="https://articles.market-watch.xyz/logo.svg">
   <meta name="twitter:card" content="summary_large_image">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css">
@@ -381,86 +332,6 @@ function main() {
     <div id="article-clickable-tags" class="card-tags"></div>
   </div>
 
-  ${imgDailyCard ? `
-  <h2 class="section-title"><i class="fas fa-chart-line" style="color:#f59e0b"></i> Dashboard du jour</h2>
-  <p style="color:#64748b;font-size:.9rem;margin-bottom:1rem">Top 3 signaux, positions ouvertes, performance depuis D0, rotation et capital disponible.</p>
-  <img src="/scanner/status/${imgDailyCard}" alt="Dashboard quotidien Scanner Market Watch" class="setup-img" loading="eager">
-  ` : ''}
-
-  <!-- ═══ LIVE METRICS ═══ -->
-  ${liveMetrics.updated_at ? `
-  <h2 class="section-title" id="live"><i class="fas fa-satellite-dish" style="color:#22c55e"></i> Donn&eacute;es Live</h2>
-  <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1rem">
-    <span class="ts-badge"><span class="live-dot"></span> Mis &agrave; jour : ${new Date(liveMetrics.updated_at).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
-    ${latestSignals._scanDir ? `<span class="ts-badge"><i class="fas fa-radar"></i> Dernier scan : ${latestSignals._scanDir}</span>` : ''}
-  </div>
-
-  <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr)">
-    ${kpiTile(`${liveMetrics.return_total != null ? (liveMetrics.return_total > 0 ? '+' : '') + liveMetrics.return_total + '%' : liveMetrics.return_30d + '%'}`, 'Return Total', '#059669')}
-    ${kpiTile(`${liveMetrics.max_drawdown || 0}%`, 'Max DD', '#dc2626')}
-    ${kpiTile(`${liveMetrics.win_rate || 0}%`, 'Win Rate', '#7c3aed')}
-    ${kpiTile(`${liveMetrics.profit_factor || '—'}x`, 'Profit Factor', '#2563eb')}
-    ${kpiTile(`${liveMetrics.trades_open || 0} / ${liveMetrics.trades_total || 0}`, 'Open / Total', '#0891b2')}
-  </div>
-  ` : ''}
-
-  <!-- ═══ DERNIERS SIGNAUX ═══ -->
-  ${latestSignals.length ? `
-  <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:2rem 0 .5rem"><i class="fas fa-bolt" style="color:#f59e0b"></i> Derniers signaux &mdash; Scan ${latestSignals._scanDir || ''}</h3>
-  <table class="status-table">
-    <thead><tr>
-      <th>#</th><th>Ticker</th><th>Score</th><th>Strat&eacute;gie</th><th>Entry</th><th>Stop</th><th>TP1</th>
-    </tr></thead>
-    <tbody>
-    ${latestSignals.map((s, i) => `<tr>
-      <td style="text-align:center;color:#94a3b8;font-weight:700">${i + 1}</td>
-      <td class="ticker-cell">${s.ticker}</td>
-      <td><span style="background:${s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b'};color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">${s.score}</span></td>
-      <td style="color:#64748b">${s.strategy}</td>
-      <td style="font-weight:600">${s.entry}</td>
-      <td style="color:#dc2626;font-weight:600">${s.stop}</td>
-      <td style="color:#059669;font-weight:600">${s.tp1}</td>
-    </tr>`).join('')}
-    </tbody>
-  </table>
-  ` : ''}
-
-  <!-- ═══ POSITIONS OUVERTES ═══ -->
-  ${livePositions.length ? `
-  <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:2rem 0 .5rem"><i class="fas fa-wallet" style="color:#3b82f6"></i> Positions ouvertes (${livePositions.length})</h3>
-  <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem;flex-wrap:wrap">
-    <span class="ts-badge"><i class="fas fa-clock"></i> ${liveMetrics.updated_at ? new Date(liveMetrics.updated_at).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) : '—'}</span>
-    <span class="ts-badge" style="background:#f0fdf4;color:#059669;border-color:#86efac"><i class="fas fa-chart-pie"></i> Capital d&eacute;ploy&eacute; : ${liveMetrics.working_capital_pct || 0}%</span>
-    <span class="ts-badge" style="background:${(liveMetrics.available_cash_pct || 0) > 5 ? '#f0fdf4' : '#fef2f2'};color:${(liveMetrics.available_cash_pct || 0) > 5 ? '#059669' : '#dc2626'};border-color:${(liveMetrics.available_cash_pct || 0) > 5 ? '#86efac' : '#fecaca'}"><i class="fas fa-coins"></i> Cash libre : ${liveMetrics.available_cash_pct || 0}%</span>
-  </div>
-  <table class="status-table">
-    <thead><tr>
-      <th>Ticker</th><th>Signal</th><th>Strat.</th><th>Entr&eacute;e</th><th>Prix actuel</th><th>Return</th><th>Stop</th><th>TP1</th><th>Progression</th><th>Scan</th><th>Expire</th>
-    </tr></thead>
-    <tbody>
-    ${[...livePositions].sort((a, b) => a.ticker.localeCompare(b.ticker)).map(p => {
-      const retClass = p.return_pct >= 0 ? 'pnl-pos' : 'pnl-neg';
-      const sigClass = p.signal === 'green' ? 'signal-green' : p.signal === 'red' ? 'signal-red' : 'signal-yellow';
-      const prog = Math.min(100, Math.max(0, p.progress_pct || 0));
-      const progColor = prog >= 70 ? '#059669' : prog >= 40 ? '#f59e0b' : '#dc2626';
-      return `<tr>
-        <td class="ticker-cell">${p.ticker}</td>
-        <td><span class="signal-dot ${sigClass}"></span>${p.status_label || p.signal}</td>
-        <td style="color:#64748b;font-size:.8rem">${p.strategy || '—'}</td>
-        <td style="font-weight:600">$${(p.entry || 0).toFixed(2)}</td>
-        <td style="font-weight:600">$${(p.current_price || 0).toFixed(2)}</td>
-        <td class="${retClass}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
-        <td style="color:#dc2626">$${(p.stop || 0).toFixed(2)}</td>
-        <td style="color:#059669">${p.tp1 ? '$' + p.tp1.toFixed(2) : '—'}</td>
-        <td><div class="progress-bar" style="width:80px"><div class="progress-fill" style="width:${prog}%;background:${progColor}"></div></div><span style="font-size:.7rem;color:#94a3b8;margin-left:4px">${prog}%</span></td>
-        <td style="font-size:.8rem;color:#94a3b8">${p.scan_date ? p.scan_date.slice(5) : '—'}</td>
-        <td style="font-size:.8rem;color:#94a3b8">${p.expire_date ? p.expire_date.slice(5) : '—'} (${p.days_remaining || 0}j)</td>
-      </tr>`;
-    }).join('')}
-    </tbody>
-  </table>
-  ` : ''}
-
   <h2 class="section-title"><i class="fas fa-sliders" style="color:#3b82f6"></i> Choisissez votre mode</h2>
   <p style="color:#64748b;font-size:.9rem;margin-bottom:1rem">Chaque mode correspond &agrave; un profil de risque diff&eacute;rent. Les param&egrave;tres sont issus d'un grid search sur <strong>${totalCombos.toLocaleString('fr')} combinaisons</strong> avec validation walk-forward (70% in-sample / 30% out-of-sample).</p>
 
@@ -472,7 +343,6 @@ function main() {
 
   <!-- MODE 1: GROWTH -->
   <div class="mode-panel active" id="panel-growth">
-    <img src="/scanner/status/${imgGrowth}" alt="Maximum Growth mode" class="setup-img" loading="eager">
     ${kpiGrid(g)}
     ${configGrid(modes.growth.cfg)}
     <div class="how-box">
@@ -495,7 +365,6 @@ function main() {
 
   <!-- MODE 2: CALMAR -->
   <div class="mode-panel" id="panel-calmar">
-    <img src="/scanner/status/${imgCalmar}" alt="Risk-Adjusted mode" class="setup-img" loading="lazy">
     ${kpiGrid(ca)}
     ${configGrid(modes.calmar.cfg)}
     <div class="how-box">
@@ -518,7 +387,6 @@ function main() {
 
   <!-- MODE 3: CONSERVATIVE (ex-Zero DD) -->
   <div class="mode-panel" id="panel-zero">
-    <img src="/scanner/status/${imgZero}" alt="Conservative mode" class="setup-img" loading="lazy">
     ${kpiGrid(z)}
     ${configGrid(modes.zero.cfg)}
     <div class="how-box">
@@ -617,7 +485,6 @@ function main() {
 <!-- FAB -->
 <div class="fnav" id="floatingNav">
   <div class="fnav-menu" id="fnavMenu">
-    <a href="#live" class="fnav-item"><i class="fas fa-satellite-dish"></i><span>Live</span></a>
     <a href="#" class="fnav-item" onclick="switchMode('growth');window.scrollTo({top:document.querySelector('.mode-tabs').offsetTop-80,behavior:'smooth'})"><i class="fas fa-rocket"></i><span>Growth</span></a>
     <a href="#" class="fnav-item" onclick="switchMode('calmar');window.scrollTo({top:document.querySelector('.mode-tabs').offsetTop-80,behavior:'smooth'})"><i class="fas fa-shield-halved"></i><span>Risk-Adj</span></a>
     <a href="#" class="fnav-item" onclick="switchMode('zero');window.scrollTo({top:document.querySelector('.mode-tabs').offsetTop-80,behavior:'smooth'})"><i class="fas fa-gem"></i><span>Conserv.</span></a>
