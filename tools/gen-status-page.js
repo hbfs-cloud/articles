@@ -200,21 +200,22 @@ function main() {
 
 <!-- ══ TRADE HISTORY ══ -->
 <div class="section-card">
-  <div class="sc-head"><h3>Trade History <span class="count">${trades.length}</span></h3></div>
+  <div class="sc-head"><h3>Trade History <span class="count">${trades.filter(t => !(t.status === 'expired' && t.holdDays < cfg.horizon)).length}</span></h3></div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Start</th><th>End</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
-      const sorted = [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
+      // Filter out premature expirations (holdDays < horizon = incomplete data, not real exits)
+      const filtered = trades.filter(t => !(t.status === 'expired' && t.holdDays < cfg.horizon));
+      const sorted = [...filtered].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
       // Build replacement map: for rotated trades, find what replaced them
       const replacedBy = {};
-      for (let i = 0; i < trades.length; i++) {
-        if (trades[i].status === 'rotated') {
-          // Next trade entered around the same exit date is the replacement
-          for (let j = i + 1; j < trades.length; j++) {
-            if (trades[j].entryDate && trades[i].entryDate) {
-              const exitD = new Date(trades[i].entryDate); exitD.setDate(exitD.getDate() + (trades[i].holdDays || 0));
-              const entryD = new Date(trades[j].entryDate);
-              if (Math.abs(entryD - exitD) <= 2 * 86400000) { replacedBy[trades[i].ticker + trades[i].scanDate] = trades[j].ticker; break; }
+      for (let i = 0; i < filtered.length; i++) {
+        if (filtered[i].status === 'rotated') {
+          for (let j = i + 1; j < filtered.length; j++) {
+            if (filtered[j].entryDate && filtered[i].entryDate) {
+              const exitD = new Date(filtered[i].entryDate); exitD.setDate(exitD.getDate() + (filtered[i].holdDays || 0));
+              const entryD = new Date(filtered[j].entryDate);
+              if (Math.abs(entryD - exitD) <= 2 * 86400000) { replacedBy[filtered[i].ticker + filtered[i].scanDate] = filtered[j].ticker; break; }
             }
           }
         }
