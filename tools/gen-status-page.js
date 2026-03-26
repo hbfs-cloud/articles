@@ -107,7 +107,7 @@ function main() {
     momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
   };
-  function filterLabel(f) { return { all:'Toutes strat.', no_sq:'Sans Short Squeeze', momentum_only:'Momentum seulement', breakout_only:'Breakout seulement', no_sq_pb:'Sans SQ/PB' }[f] || f; }
+  function filterLabel(f) { return { all:'All strategies', no_sq:'No Short Squeeze', momentum_only:'Momentum only', breakout_only:'Breakout only', no_sq_pb:'No SQ/PB' }[f] || f; }
 
   function signalsFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
@@ -136,15 +136,15 @@ function main() {
     <div class="ps"><span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span></div>
     <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit F.</span></div>
     <div class="ps"><span class="ps-v">${m.trades}</span><span class="ps-l">Trades</span></div>
-    <div class="ps"><span class="ps-v">${m.avgHold}j</span><span class="ps-l">Hold moy</span></div>
+    <div class="ps"><span class="ps-v">${m.avgHold}j</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
 <!-- ══ SIGNAUX DU JOUR ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3>Signaux du jour</h3>
-    ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link">Scan complet &rarr;</a>` : ''}
+    <h3>Today's Signals</h3>
+    ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link">Full scan &rarr;</a>` : ''}
   </div>
   ${sig.length ? `<table class="t">
     <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>R/R</th></tr></thead>
@@ -152,13 +152,13 @@ function main() {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="am">${s.rr}</td></tr>`;
     }).join('')}</tbody>
-  </table>` : `<p class="empty">Aucun signal pour ce mode aujourd'hui</p>`}
+  </table>` : `<p class="empty">No signals for this mode today</p>`}
 </div>
 
 <!-- ══ POSITIONS EN COURS ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3>Positions en cours <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
+    <h3>Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
     <span class="sc-meta">P&amp;L moy: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b> &middot; ${alloc}%/pos.</span>
   </div>
   ${pos.length ? `
@@ -167,32 +167,32 @@ function main() {
     return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
   }).join('')}</div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Achat</th><th>Prix achat</th><th>Prix actuel</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>Reste</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="m">${p.days_remaining||0}j</td></tr>`;
     }).join('')}</tbody>
-  </table>` : `<p class="empty">Aucune position ouverte</p>`}
+  </table>` : `<p class="empty">No open positions</p>`}
 </div>
 
 <!-- ══ METHODE ══ -->
 <div class="method-card" style="border-color:${cfg.color}30">
-  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> Mode d'emploi</h3>
+  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
   <div class="method-steps">
-    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Chaque soir</b>, regardez les signaux ci-dessus. Ce sont les <b>${cfg.topN} meilleurs</b> du scan${cfg.filterName !== 'all' ? ', filtr&eacute;s ' + filterLabel(cfg.filterName) : ''}.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Le lendemain &agrave; 15h30</b> (ouverture US), achetez au prix du march&eacute;. Mettez <b>${alloc}%</b> de votre capital par position.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Placez imm&eacute;diatement le <b>stop loss</b> et le <b>target</b> indiqu&eacute;s. Ne touchez &agrave; rien.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>La position se ferme <b>automatiquement</b> quand : target atteint, stop touch&eacute;, ou apr&egrave;s <b>${cfg.horizon} jours</b>.${cfg.partialTP ? ' Si target 1 atteint : vendez 50%, d&eacute;placez le stop au prix d\'achat.' : ''}</div></div>
-    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b> : si un nouveau signal est meilleur que votre pire position, remplacez-la.</div></div>` : ''}
+    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals above. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Next day at market open</b> (3:30 PM Paris / 9:30 AM NY), buy at market price. Allocate <b>${alloc}%</b> of capital per position.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>target</b> as indicated. Don't touch anything.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>The position closes <b>automatically</b> when: target hit, stop triggered, or after <b>${cfg.horizon} days</b>.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
+    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal is better than your worst position, replace it.</div></div>` : ''}
   </div>
-  <div class="method-footer">${cfg.portfolioSize} positions max &middot; Horizon ${cfg.horizon}j &middot; ${filterLabel(cfg.filterName)}</div>
+  <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
 </div>
 
 <!-- ══ HISTORIQUE ══ -->
 <details class="trades-detail">
-  <summary>Historique des trades (${trades.length})</summary>
+  <summary>Trade History (${trades.length})</summary>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>D&eacute;but</th><th>Fin</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Start</th><th>End</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Hold</th><th>Status</th></tr></thead>
     <tbody>${[...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || '')).map(t => {
       const pnl = t.pnlPct || 0;
       const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';
@@ -210,12 +210,12 @@ function main() {
 
   // ═══════════════════════════════════════════════════════════════════════════
   const html = `<!DOCTYPE html>
-<html lang="fr" data-tags="technique,formation,trade-idea,us,eu,asia,etf" data-tab="scanner">
+<html lang="en" data-tags="technique,formation,trade-idea,us,eu,asia,etf" data-tab="scanner">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scanner Live &mdash; Market Watch</title>
-  <meta name="description" content="Signaux du jour, positions, performance — 3 modes de trading optimis&eacute;s.">
+  <meta name="description" content="Today's signals, open positions, performance — 3 optimized trading modes.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -324,7 +324,7 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 <div class="w">
   <div class="hero">
     <h1>Scanner Live</h1>
-    <p>Choisissez un mode, voyez quoi acheter, suivez vos positions</p>
+    <p>Pick a mode, see what to buy, track your positions</p>
     <span class="ts"><i class="fas fa-clock"></i> ${updatedAt}</span>
   </div>
 
@@ -339,11 +339,11 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
   ${panel('zero', modes.zero.cfg, z, modes.zero.trades, zEC, 'cZ', false)}
 
   <div class="disc">
-    Performances pass&eacute;es &ne; r&eacute;sultats futurs &middot; Usage &eacute;ducatif &middot; Pas un conseil financier
+    Past performance &ne; future results &middot; Educational only &middot; Not financial advice
   </div>
 </div>
 
-<footer class="article-footer">&copy; 2026 Market Watch &middot; <a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+<footer class="article-footer">&copy; 2026 Market Watch &middot; <a href="/" title="Home"><i class="fas fa-house"></i></a></footer>
 
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
