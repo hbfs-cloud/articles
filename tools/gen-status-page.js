@@ -87,11 +87,12 @@ function main() {
   } catch (_) {}
   signals.sort((a, b) => b.score - a.score);
 
-  // Modes
+  // Modes — filter out premature expirations before computing metrics
   const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
-    const trades = allTrades[modeMap[id] || id] || [];
+    const raw = allTrades[modeMap[id] || id] || [];
+    const trades = raw.filter(t => !(t.status === 'expired' && t.holdDays < cfg.horizon));
     modes[id] = { cfg, trades, m: computeMetrics(trades, cfg.portfolioSize) };
   }
   const g = modes.growth.m, ca = modes.calmar.m, z = modes.zero.m;
@@ -255,22 +256,20 @@ function main() {
 
 <!-- ══ TRADE HISTORY ══ -->
 <div class="section-card">
-  <div class="sc-head"><h3>Trade History <span class="count">${trades.filter(t => !(t.status === 'expired' && t.holdDays < cfg.horizon)).length}</span></h3></div>
+  <div class="sc-head"><h3>Trade History <span class="count">${trades.length}</span></h3></div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Start</th><th>End</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
-      // Filter out premature expirations (holdDays < horizon = incomplete data, not real exits)
-      const filtered = trades.filter(t => !(t.status === 'expired' && t.holdDays < cfg.horizon));
-      const sorted = [...filtered].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
+      const sorted = [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
       // Build replacement map: for rotated trades, find what replaced them
       const replacedBy = {};
-      for (let i = 0; i < filtered.length; i++) {
-        if (filtered[i].status === 'rotated') {
-          for (let j = i + 1; j < filtered.length; j++) {
-            if (filtered[j].entryDate && filtered[i].entryDate) {
-              const exitD = new Date(filtered[i].entryDate); exitD.setDate(exitD.getDate() + (filtered[i].holdDays || 0));
-              const entryD = new Date(filtered[j].entryDate);
-              if (Math.abs(entryD - exitD) <= 2 * 86400000) { replacedBy[filtered[i].ticker + filtered[i].scanDate] = filtered[j].ticker; break; }
+      for (let i = 0; i < sorted.length; i++) {
+        if (sorted[i].status === 'rotated') {
+          for (let j = i + 1; j < sorted.length; j++) {
+            if (sorted[j].entryDate && sorted[i].entryDate) {
+              const exitD = new Date(sorted[i].entryDate); exitD.setDate(exitD.getDate() + (sorted[i].holdDays || 0));
+              const entryD = new Date(sorted[j].entryDate);
+              if (Math.abs(entryD - exitD) <= 2 * 86400000) { replacedBy[sorted[i].ticker + sorted[i].scanDate] = sorted[j].ticker; break; }
             }
           }
         }
