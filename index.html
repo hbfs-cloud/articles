@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202603262149"></script>
+  <script src="/data/search_data.js?v=202603262153"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -4106,15 +4106,21 @@
     function buildStatus() {
       var el = document.getElementById('radarStatus');
       if (!el || !RD) return;
-      var regimeColor = RD.regime === 'RISK-OFF' ? '#ef4444' : RD.regime === 'RISK-ON' ? '#10b981' : '#f59e0b';
-      var fgColor = (RD.fear_greed||50) <= 25 ? '#ef4444' : (RD.fear_greed||50) >= 75 ? '#10b981' : '#f59e0b';
-      var vixColor = (RD.vix||0) >= 25 ? '#ef4444' : (RD.vix||0) >= 18 ? '#f59e0b' : '#10b981';
+      var reg = (RD.regime || '').toUpperCase();
+      var regimeColor = reg.indexOf('RISK-OFF') >= 0 ? '#ef4444' : reg.indexOf('RISK-ON') >= 0 ? '#10b981' : '#f59e0b';
+      var vix = RD.vix || 0;
+      var vixColor = vix >= 25 ? '#ef4444' : vix >= 18 ? '#f59e0b' : '#10b981';
       var p = 'display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:0.75rem;font-weight:700;';
-      el.innerHTML =
-        '<span style="'+p+'background:'+regimeColor+'18;color:'+regimeColor+';border:1px solid '+regimeColor+'30;"><i class="fas fa-shield-halved"></i> '+RD.regime+'</span>' +
-        '<span style="'+p+'background:'+vixColor+'18;color:'+vixColor+';border:1px solid '+vixColor+'30;">VIX '+RD.vix+'</span>' +
-        '<span style="'+p+'background:#3b82f618;color:#60a5fa;border:1px solid #3b82f630;">SPX '+(RD.spx?RD.spx.toLocaleString():'—')+'</span>' +
-        '<span style="'+p+'background:'+fgColor+'18;color:'+fgColor+';border:1px solid '+fgColor+'30;"><i class="fas fa-gauge"></i> F&amp;G '+RD.fear_greed+'</span>';
+      var parts = [
+        '<span style="'+p+'background:'+regimeColor+'18;color:'+regimeColor+';border:1px solid '+regimeColor+'30;"><i class="fas fa-shield-halved"></i> '+(RD.regime||'—')+'</span>',
+        vix ? '<span style="'+p+'background:'+vixColor+'18;color:'+vixColor+';border:1px solid '+vixColor+'30;">VIX '+vix+'</span>' : '',
+        RD.spx ? '<span style="'+p+'background:#3b82f618;color:#60a5fa;border:1px solid #3b82f630;">SPX '+RD.spx.toLocaleString()+'</span>' : ''
+      ];
+      if (RD.fear_greed != null) {
+        var fgColor = RD.fear_greed <= 25 ? '#ef4444' : RD.fear_greed >= 75 ? '#10b981' : '#f59e0b';
+        parts.push('<span style="'+p+'background:'+fgColor+'18;color:'+fgColor+';border:1px solid '+fgColor+'30;"><i class="fas fa-gauge"></i> F&amp;G '+RD.fear_greed+'</span>');
+      }
+      el.innerHTML = parts.filter(Boolean).join('');
     }
 
     function render() {
@@ -4395,7 +4401,7 @@
       var container = document.getElementById('radarContainer');
       if (!container || !canvas) return;
       var w = container.clientWidth;
-      var h = Math.max(Math.round(w * 0.95), Math.min(w, 920));
+      var h = Math.min(Math.round(w * 0.7), 550);
       canvas.style.height = h + 'px';
       cw = w * dpr;
       ch = h * dpr;
