@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202603262135"></script>
+  <script src="/data/search_data.js?v=202603262139"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -1742,8 +1742,8 @@
   <div class="container">
     <!-- Hidden tab state holders for JS compatibility -->
     <div class="main-tabs" style="display:none!important">
-      <button class="main-tab active" data-tab="weekly"><span class="tab-count" id="weeklyCount">10</span></button>
-      <button class="main-tab" data-tab="daily"><span class="tab-count" id="dailyCount">16</span></button>
+      <button class="main-tab" data-tab="weekly"><span class="tab-count" id="weeklyCount">10</span></button>
+      <button class="main-tab active" data-tab="daily"><span class="tab-count" id="dailyCount">16</span></button>
       <button class="main-tab" data-tab="analyses"><span class="tab-count" id="analysesCount"></span></button>
       <button class="main-tab" data-tab="scanner"><span class="tab-count" id="scannerCount">14</span></button>
       <button class="main-tab" data-tab="radar"></button>
@@ -1766,7 +1766,7 @@
     <!-- ============================================================ -->
     <!-- TAB: WEEKLY -->
     <!-- ============================================================ -->
-    <div class="tab-panel active" id="tab-weekly">
+    <div class="tab-panel" id="tab-weekly">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
           <i class="fa-solid fa-calendar-week" style="color: #2563eb; margin-right: 8px"></i><span data-i18n="panel.weekly.title">Rapports Hebdomadaires</span>
@@ -1786,7 +1786,7 @@
     <!-- ============================================================ -->
     <!-- TAB: DAILY BRIEFING -->
     <!-- ============================================================ -->
-    <div class="tab-panel" id="tab-daily">
+    <div class="tab-panel active" id="tab-daily">
       <div style="margin: 2rem 0 1rem; text-align: center">
         <h2 style="font-size: 1.8rem; font-weight: 800; margin: 0">
           <i class="fa-solid fa-sun" style="color: #f59e0b; margin-right: 8px"></i><span data-i18n="panel.daily.title">Briefing Quotidien</span>
@@ -3568,6 +3568,9 @@
       var urlTab = params.get("tab");
       if (urlTab) {
         switchTab(urlTab);
+      } else {
+        // Default tab = daily
+        if (typeof loadTabContent === 'function') loadTabContent('daily');
       }
       var urlGrade = params.get("grade");
       if (urlGrade) {
@@ -4055,20 +4058,35 @@
       fetch('/data/radar.json?v=' + Date.now())
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          // Auto-clean obsolete items: remove if date is > 7 days old AND importance < 7
-          // High-importance items (>=7) kept longer, low-importance stale items pruned
+          // Normalize: merge risks/opportunities/events into items[] if new format
+          if (!data.items && (data.risks || data.opportunities || data.events)) {
+            data.items = [];
+            (data.risks || []).forEach(function(it) { it.category = it.category || 'risk'; data.items.push(it); });
+            (data.opportunities || []).forEach(function(it) { it.category = it.category || 'opportunity'; data.items.push(it); });
+            (data.events || []).forEach(function(it) { it.category = it.category || 'event'; data.items.push(it); });
+          }
+          // Normalize regime: support both string and object format
+          if (data.regime && typeof data.regime === 'object') {
+            data.vix = data.regime.vix || data.vix;
+            data.regime = data.regime.label || 'NEUTRAL';
+          }
+          // Normalize markets into top-level fields
+          if (data.markets) {
+            if (data.markets.sp500) data.spx = data.markets.sp500.price;
+            if (data.markets.vix) data.vix = data.vix || data.markets.vix.price;
+          }
+          // Auto-clean obsolete items
           var now = new Date();
           if (data.items) {
             data.items = data.items.filter(function(it) {
               if (!it.date) return true;
               var d = new Date(it.date);
-              var age = (now - d) / 86400000; // days
+              var age = (now - d) / 86400000;
               var imp = it.importance || 5;
-              // Keep if: future event, or recent (<7d), or high importance (<14d)
-              if (age < 0) return true; // future
-              if (age <= 7) return true; // recent
-              if (age <= 14 && imp >= 7) return true; // high importance, <2 weeks
-              if (age <= 21 && imp >= 9) return true; // critical, <3 weeks
+              if (age < 0) return true;
+              if (age <= 7) return true;
+              if (age <= 14 && imp >= 7) return true;
+              if (age <= 21 && imp >= 9) return true;
               return false;
             });
           }
