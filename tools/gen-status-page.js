@@ -157,10 +157,10 @@ function main() {
     ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link">Full scan &rarr;</a>` : ''}
   </div>
   ${sig.length ? `<table class="t">
-    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>R/R</th></tr></thead>
+    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
     <tbody>${sig.map((s, i) => {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="am">${s.rr}</td></tr>`;
+      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty">No signals for this mode today</p>`}
 </div>
@@ -177,10 +177,10 @@ function main() {
     return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
   }).join('')}</div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="m">${p.days_remaining||0}j</td></tr>`;
+      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="m">${p.days_remaining||0}d</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty">No open positions</p>`}
 </div>
