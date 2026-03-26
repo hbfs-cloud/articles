@@ -115,7 +115,17 @@ function main() {
   }
   function posFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
-    return [...livePositions].filter(p => f(p.strategy || '')).sort((a, b) => b.return_pct - a.return_pct).slice(0, cfg.portfolioSize);
+    const now = new Date();
+    return [...livePositions]
+      .filter(p => f(p.strategy || ''))
+      .filter(p => {
+        // Only keep positions whose age fits the mode's horizon (in business days ≈ horizon * 1.5 calendar days)
+        if (!p.scan_date) return true;
+        const age = Math.round((now - new Date(p.scan_date)) / 86400000);
+        return age <= cfg.horizon * 1.5;
+      })
+      .sort((a, b) => b.return_pct - a.return_pct)
+      .slice(0, cfg.portfolioSize);
   }
 
   // ── Panel builder ──
