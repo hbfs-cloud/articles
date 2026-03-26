@@ -16,8 +16,6 @@ const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
 const TRADES = path.join(ROOT, 'data/backtest-trades.json');
 const RESULTS = path.join(ROOT, 'data/backtest-results.json');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
-const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
-const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
 
 // ─── Compute metrics from trade list ────────────────────────────────────────
@@ -66,12 +64,6 @@ function main() {
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) {}
   let results = {};
   try { results = JSON.parse(fs.readFileSync(RESULTS)); } catch (_) {}
-
-  // Load live positions + metrics
-  let liveMetrics = {};
-  try { liveMetrics = JSON.parse(fs.readFileSync(METRICS_FILE)); } catch (_) {}
-  let livePositions = [];
-  try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) {}
 
   // Extract latest scan signals from synthese table
   let latestSignals = [];
@@ -391,38 +383,6 @@ function main() {
       <td style="color:#047857;font-weight:600">${s.tp2}</td>
       <td style="font-weight:600;color:#d97706">${s.rr}</td>
     </tr>`).join('')}
-    </tbody>
-  </table>
-  ` : ''}
-
-  <!-- ═══ POSITIONS OUVERTES ═══ -->
-  ${livePositions.length ? `
-  <h2 class="section-title" id="positions"><i class="fas fa-wallet" style="color:#3b82f6"></i> Positions ouvertes (${livePositions.length})</h2>
-  <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">
-    Derni&egrave;re MaJ : ${liveMetrics.updated_at ? new Date(liveMetrics.updated_at).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}
-    &mdash; Capital d&eacute;ploy&eacute; : <strong>${liveMetrics.working_capital_pct || 0}%</strong>
-    &mdash; Cash libre : <strong>${liveMetrics.available_cash_pct || 0}%</strong>
-    ${(liveMetrics.available_cash_pct || 0) > 5 ? '(rotation J+1 possible)' : '(0% libre &rarr; rotation J+3)'}
-  </p>
-  <table class="status-table">
-    <thead><tr>
-      <th>Ticker</th><th>Strat.</th><th>Entr&eacute;e</th><th>Prix actuel</th><th>Return</th><th>Stop</th><th>TP1</th><th>Scan</th><th>Expire</th>
-    </tr></thead>
-    <tbody>
-    ${[...livePositions].sort((a, b) => a.ticker.localeCompare(b.ticker)).map(p => {
-      const retClass = p.return_pct >= 0 ? 'pnl-pos' : 'pnl-neg';
-      return `<tr>
-        <td class="ticker-cell">${p.ticker}</td>
-        <td style="color:#64748b;font-size:.8rem">${p.strategy || '—'}</td>
-        <td style="font-weight:600">$${(p.entry || 0).toFixed(2)}</td>
-        <td style="font-weight:600">$${(p.current_price || 0).toFixed(2)}</td>
-        <td class="${retClass}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
-        <td style="color:#dc2626">$${(p.stop || 0).toFixed(2)}</td>
-        <td style="color:#059669">${p.tp1 ? '$' + p.tp1.toFixed(2) : '—'}</td>
-        <td style="font-size:.8rem;color:#94a3b8">${p.scan_date ? p.scan_date.slice(5) : '—'}</td>
-        <td style="font-size:.8rem;color:#94a3b8">${p.days_remaining || 0}j</td>
-      </tr>`;
-    }).join('')}
     </tbody>
   </table>
   ` : ''}
