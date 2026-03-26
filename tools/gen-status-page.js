@@ -145,6 +145,14 @@ function main() {
       .slice(0, cfg.portfolioSize);
   }
 
+  function signalsForMode(cfg) {
+    const filter = STRAT_FILTERS[cfg.filterName] || (() => true);
+    return signals
+      .filter(s => filter(s.strategy || ''))
+      .filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+      .slice(0, cfg.topN);
+  }
+
   function posTableHTML(positions) {
     if (!positions.length) return '<p class="muted" style="text-align:center;padding:1rem">Aucune position</p>';
     const alloc = positions.length ? Math.round(100 / positions.length) : 0;
@@ -187,22 +195,6 @@ function main() {
     </div>`;
   }
 
-  // ── Signals table ──
-  const sigRows = signals.map((s, i) => {
-    const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-    return `<tr>
-      <td class="muted" style="text-align:center">${i + 1}</td>
-      <td><strong>${s.ticker}</strong></td>
-      <td><span class="score-pill" style="background:${bg}">${s.score}</span></td>
-      <td class="muted">${s.strategy}</td>
-      <td>${s.entry}</td>
-      <td class="neg">${s.stop}</td>
-      <td class="pos">${s.tp1}</td>
-      <td class="pos">${s.tp2}</td>
-      <td style="color:#d97706;font-weight:600">${s.rr}</td>
-    </tr>`;
-  }).join('');
-
   // ── Trade table builder ──
   function tradeRows(trades, color) {
     if (!trades.length) return '<tr><td colspan="9" class="muted" style="text-align:center;padding:2rem">Aucun trade</td></tr>';
@@ -236,10 +228,36 @@ function main() {
   function modePanel(id, cfg, m, trades, ec, chartId, isActive) {
     const alloc = Math.round(100 / cfg.portfolioSize);
     const modePos = positionsForMode(cfg);
+    const modeSig = signalsForMode(cfg);
     return `
     <div class="mp${isActive ? ' active' : ''}" id="p-${id}">
 
-      <!-- 1. R&eacute;sum&eacute; rapide -->
+      <!-- 1. Signaux du jour pour ce mode -->
+      ${modeSig.length ? `
+      <h4 class="tbl-title" style="margin-top:.5rem">Signaux du jour (${modeSig.length})</h4>
+      <p style="font-size:.8rem;color:#64748b;margin:0 0 .5rem">Acheter demain &agrave; l'ouverture (15h30 Paris). Stop et target comme indiqu&eacute;. Vendre si target/stop touch&eacute; ou apr&egrave;s ${cfg.horizon}j.${cfg.partialTP ? ' Si target atteint : vendre 50%, stop &rarr; prix d\'achat.' : ''}</p>
+      <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
+        <tbody>${modeSig.map((s, i) => {
+          const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+          return `<tr>
+            <td class="muted" style="text-align:center">${i + 1}</td>
+            <td><strong>${s.ticker}</strong></td>
+            <td><span class="score-pill" style="background:${bg}">${s.score}</span></td>
+            <td class="muted">${s.strategy}</td>
+            <td>${s.entry}</td>
+            <td class="neg">${s.stop}</td>
+            <td class="pos">${s.tp1}</td>
+            <td class="pos">${s.tp2}</td>
+            <td style="color:#d97706;font-weight:600">${s.rr}</td>
+          </tr>`;
+        }).join('')}
+        </tbody>
+      </table>
+      </div>` : `<p class="muted" style="padding:1rem;text-align:center">Aucun signal aujourd'hui pour ce mode</p>`}
+
+      <!-- 2. Stats -->
       <div class="kstrip">
         <div class="k"><span class="kv" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="kl">Return</span></div>
         <div class="k"><span class="kv neg">${m.dd}%</span><span class="kl">Max DD</span></div>
@@ -247,22 +265,6 @@ function main() {
         <div class="k"><span class="kv">${m.pf}x</span><span class="kl">Profit F.</span></div>
         <div class="k"><span class="kv">${m.trades}</span><span class="kl">Trades</span></div>
         <div class="k"><span class="kv">${m.avgHold}j</span><span class="kl">Hold moy</span></div>
-      </div>
-
-      <!-- 2. Comment faire (simple) -->
-      <div class="how-card" style="border-color:${cfg.color}40;margin:1rem 0">
-        <h4 style="color:${cfg.color}">Comment faire ?</h4>
-        <ol>
-          <li>Chaque soir, prendre les <strong>Top ${cfg.topN}</strong> signaux par score${cfg.filterName !== 'all' ? ' (filtre : ' + filterLabel(cfg.filterName) + ')' : ''}</li>
-          <li>Acheter &agrave; l'ouverture du lendemain (<strong>15h30 Paris</strong>)</li>
-          <li>Placer le <strong>stop</strong> et le <strong>target</strong> indiqu&eacute;s dans le scan</li>
-          <li>Vendre quand : target atteint, stop touch&eacute;, ou apr&egrave;s <strong>${cfg.horizon} jours</strong></li>
-          ${cfg.partialTP ? '<li>Si target atteint &rarr; vendre la moiti&eacute;, d&eacute;placer le stop au prix d\'achat</li>' : ''}
-          ${cfg.rotation !== 'none' ? '<li>Rotation : remplacer la pire position si un meilleur signal appara&icirc;t</li>' : ''}
-        </ol>
-        <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid #f1f5f9;font-size:.78rem;color:#94a3b8">
-          ${cfg.portfolioSize} positions max &middot; ${alloc}% du capital par position &middot; Horizon ${cfg.horizon}j &middot; ${filterLabel(cfg.filterName)}
-        </div>
       </div>
 
       <!-- 3. Positions en cours pour ce mode -->
@@ -414,20 +416,6 @@ function main() {
     <p class="sub">Signaux du jour, positions en cours, 3 modes optimis&eacute;s (${totalCombos} backtests)</p>
     <span class="ts"><i class="fas fa-clock"></i> ${updatedAt}</span>
   </div>
-
-  <!-- ═══ SIGNAUX DU JOUR ═══ -->
-  ${signals.length ? `
-  <div class="sh">
-    <h2><i class="fas fa-bolt" style="color:#f59e0b"></i> Signaux du jour</h2>
-    <span class="badge" style="background:#f59e0b">${signals.length} setups</span>
-    <a href="/scanner/${scanDir}/">Voir scan complet &rarr;</a>
-  </div>
-  <div class="tbl-wrap">
-  <table class="tbl">
-    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
-    <tbody>${sigRows}</tbody>
-  </table>
-  </div>` : ''}
 
   <!-- ═══ 3 MODES ═══ -->
   <div class="sh">
