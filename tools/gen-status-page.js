@@ -198,22 +198,50 @@ function main() {
   <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
 </div>
 
-<!-- ══ HISTORIQUE ══ -->
-<details class="trades-detail">
-  <summary>Trade History (${trades.length})</summary>
+<!-- ══ TRADE HISTORY ══ -->
+<div class="section-card">
+  <div class="sc-head"><h3>Trade History <span class="count">${trades.length}</span></h3></div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Start</th><th>End</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Hold</th><th>Status</th></tr></thead>
-    <tbody>${[...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || '')).map(t => {
-      const pnl = t.pnlPct || 0;
-      const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';
-      let exitDate = '—';
-      if (t.entryDate && t.holdDays) { const d = new Date(t.entryDate); d.setDate(d.getDate() + t.holdDays); exitDate = d.toISOString().slice(5, 10); }
-      const sMap = { tp1:'TP1', tp2:'TP2', sl:'SL', expired:'Exp.', rotated:'Rot.', tp1_partial:'TP1½' };
-      const sCls = { tp1:'pos', tp2:'pos', sl:'neg', expired:'am', rotated:'m' };
-      return `<tr><td><b>${t.ticker||'—'}</b></td><td class="m">${t.entryDate ? t.entryDate.slice(5) : '—'}</td><td class="m">${exitDate}</td><td>$${(t.actualEntry||0).toFixed(2)}</td><td>${t.exitPrice ? '$'+t.exitPrice.toFixed(2) : '—'}</td><td class="${cls}"><b>${pnl > 0 ? '+' : ''}${pnl}%</b></td><td class="m">${t.holdDays||0}j</td><td><span class="pill ${sCls[t.status]||'m'}">${sMap[t.status]||t.status||'—'}</span></td></tr>`;
-    }).join('')}</tbody>
+    <thead><tr><th>Ticker</th><th>Start</th><th>End</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Hold</th><th>Result</th></tr></thead>
+    <tbody>${(() => {
+      const sorted = [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
+      // Build replacement map: for rotated trades, find what replaced them
+      const replacedBy = {};
+      for (let i = 0; i < trades.length; i++) {
+        if (trades[i].status === 'rotated') {
+          // Next trade entered around the same exit date is the replacement
+          for (let j = i + 1; j < trades.length; j++) {
+            if (trades[j].entryDate && trades[i].entryDate) {
+              const exitD = new Date(trades[i].entryDate); exitD.setDate(exitD.getDate() + (trades[i].holdDays || 0));
+              const entryD = new Date(trades[j].entryDate);
+              if (Math.abs(entryD - exitD) <= 2 * 86400000) { replacedBy[trades[i].ticker + trades[i].scanDate] = trades[j].ticker; break; }
+            }
+          }
+        }
+      }
+      return sorted.map(t => {
+        const pnl = t.pnlPct || 0;
+        const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';
+        let exitDate = '—';
+        if (t.entryDate && t.holdDays) { const d = new Date(t.entryDate); d.setDate(d.getDate() + t.holdDays); exitDate = d.toISOString().slice(5, 10); }
+        let statusLabel, statusCls;
+        switch (t.status) {
+          case 'tp1': statusLabel = 'Target 1 hit'; statusCls = 'pos'; break;
+          case 'tp2': statusLabel = 'Target 2 hit'; statusCls = 'pos'; break;
+          case 'tp1_partial': statusLabel = 'TP1 partial (50%)'; statusCls = 'pos'; break;
+          case 'sl': statusLabel = 'Stop loss hit'; statusCls = 'neg'; break;
+          case 'expired': statusLabel = 'Expired (' + (t.holdDays||0) + 'd limit)'; statusCls = 'am'; break;
+          case 'rotated':
+            const rep = replacedBy[t.ticker + t.scanDate];
+            statusLabel = rep ? 'Replaced by ' + rep : 'Rotated out';
+            statusCls = 'm'; break;
+          default: statusLabel = t.status || '—'; statusCls = 'm';
+        }
+        return `<tr><td><b>${t.ticker||'—'}</b></td><td class="m">${t.entryDate ? t.entryDate.slice(5) : '—'}</td><td class="m">${exitDate}</td><td>$${(t.actualEntry||0).toFixed(2)}</td><td>${t.exitPrice ? '$'+t.exitPrice.toFixed(2) : '—'}</td><td class="${cls}"><b>${pnl > 0 ? '+' : ''}${pnl}%</b></td><td class="m">${t.holdDays||0}d</td><td><span class="pill ${statusCls}">${statusLabel}</span></td></tr>`;
+      }).join('');
+    })()}</tbody>
   </table>
-</details>
+</div>
 
 </div>`;
   }
@@ -300,12 +328,6 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .step-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:.7rem;flex-shrink:0;margin-top:1px}
 .method-footer{margin-top:.6rem;padding-top:.5rem;border-top:1px solid #f1f5f9;font-size:.72rem;color:#94a3b8}
 
-/* Trades detail */
-.trades-detail{margin-bottom:1rem}
-.trades-detail summary{font-size:.85rem;font-weight:700;color:#475569;cursor:pointer;padding:.6rem 0;list-style:none;display:flex;align-items:center;gap:.4rem}
-.trades-detail summary::before{content:'\\25B6';font-size:.6rem;transition:transform .2s}
-.trades-detail[open] summary::before{transform:rotate(90deg)}
-.trades-detail .t{margin-top:.4rem}
 
 /* Disclaimer */
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
