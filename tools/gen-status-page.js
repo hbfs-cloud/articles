@@ -211,9 +211,17 @@ function main() {
     return [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || '')).map((t, i) => {
       const pnl = t.pnlPct || 0;
       const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'muted';
+      // Compute exit date from entryDate + holdDays
+      let exitDate = '—';
+      if (t.entryDate && t.holdDays) {
+        const d = new Date(t.entryDate);
+        d.setDate(d.getDate() + t.holdDays);
+        exitDate = d.toISOString().slice(5, 10);
+      }
       return `<tr>
         <td><strong>${t.ticker || '—'}</strong></td>
-        <td class="muted">${t.scanDate ? t.scanDate.slice(5) : '—'}</td>
+        <td class="muted">${t.entryDate ? t.entryDate.slice(5) : '—'}</td>
+        <td class="muted">${exitDate}</td>
         <td class="muted">${t.strategy || '—'}</td>
         <td>$${(t.actualEntry||0).toFixed(2)}</td>
         <td>${t.exitPrice ? '$'+t.exitPrice.toFixed(2) : '—'}</td>
@@ -270,7 +278,7 @@ function main() {
         <summary class="tbl-title" style="cursor:pointer">Historique des trades (${trades.length})</summary>
         <div class="tbl-wrap">
         <table class="tbl">
-          <thead><tr><th>Ticker</th><th>Date</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th></tr></thead>
+          <thead><tr><th>Ticker</th><th>D&eacute;but</th><th>Fin</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th></tr></thead>
           <tbody>${tradeRows(trades, cfg.color)}</tbody>
         </table>
         </div>
