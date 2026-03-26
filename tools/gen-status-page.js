@@ -15,6 +15,9 @@ const ROOT = path.join(__dirname, '..');
 const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
 const TRADES = path.join(ROOT, 'data/backtest-trades.json');
 const RESULTS = path.join(ROOT, 'data/backtest-results.json');
+const SCANNER_DIR = path.join(ROOT, 'scanner');
+const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
+const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
 
 // ─── Compute metrics from trade list ────────────────────────────────────────
@@ -63,6 +66,42 @@ function main() {
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) {}
   let results = {};
   try { results = JSON.parse(fs.readFileSync(RESULTS)); } catch (_) {}
+
+  // Load live positions + metrics
+  let liveMetrics = {};
+  try { liveMetrics = JSON.parse(fs.readFileSync(METRICS_FILE)); } catch (_) {}
+  let livePositions = [];
+  try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) {}
+
+  // Extract latest scan signals from synthese table
+  let latestSignals = [];
+  let latestScanDir = '';
+  try {
+    const scanDirs = fs.readdirSync(SCANNER_DIR).filter(d => /^\d{8}(-\d+)?$/.test(d)).sort().reverse();
+    latestScanDir = scanDirs[0] || '';
+    if (latestScanDir) {
+      const scanHtml = fs.readFileSync(path.join(SCANNER_DIR, latestScanDir, 'index.html'), 'utf8');
+      const m = scanHtml.match(/id="synthese"[\s\S]{0,15000}/);
+      if (m) {
+        const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+        for (const row of rows) {
+          const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
+            .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
+          if (cells.length < 4) continue;
+          const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
+          if (!ticker) continue;
+          const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
+          const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback/i.test(c)) || '';
+          const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
+          const rr = cells.find(c => /1:\d/.test(c)) || '';
+          latestSignals.push({
+            ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
+            entry: pf[0] || '—', stop: pf[1] || '—', tp1: pf[2] || '—', tp2: pf[3] || '—', rr,
+          });
+        }
+      }
+    }
+  } catch (_) {}
 
   const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
   const modes = {};
@@ -331,6 +370,62 @@ function main() {
     </div>
     <div id="article-clickable-tags" class="card-tags"></div>
   </div>
+
+  <!-- ═══ SIGNAUX DU JOUR ═══ -->
+  ${latestSignals.length ? `
+  <h2 class="section-title" id="signals"><i class="fas fa-bolt" style="color:#f59e0b"></i> Signaux du jour &mdash; Scan <a href="/scanner/${latestScanDir}/" style="color:#3b82f6">${latestScanDir}</a></h2>
+  <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">Les ${latestSignals.length} setups du dernier scan, tri&eacute;s par score. Chaque mode s&eacute;lectionne ses Top N parmi cette liste (voir &laquo; Comment appliquer &raquo;).</p>
+  <table class="status-table">
+    <thead><tr>
+      <th style="text-align:center">#</th><th>Ticker</th><th>Score</th><th>Strat&eacute;gie</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th>
+    </tr></thead>
+    <tbody>
+    ${latestSignals.sort((a, b) => b.score - a.score).map((s, i) => `<tr>
+      <td style="text-align:center;color:#94a3b8;font-weight:700">${i + 1}</td>
+      <td class="ticker-cell">${s.ticker}</td>
+      <td><span style="background:${s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b'};color:white;padding:2px 8px;border-radius:6px;font-weight:800;font-size:.8rem">${s.score}</span></td>
+      <td style="color:#64748b">${s.strategy}</td>
+      <td style="font-weight:600">${s.entry}</td>
+      <td style="color:#dc2626;font-weight:600">${s.stop}</td>
+      <td style="color:#059669;font-weight:600">${s.tp1}</td>
+      <td style="color:#047857;font-weight:600">${s.tp2}</td>
+      <td style="font-weight:600;color:#d97706">${s.rr}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>
+  ` : ''}
+
+  <!-- ═══ POSITIONS OUVERTES ═══ -->
+  ${livePositions.length ? `
+  <h2 class="section-title" id="positions"><i class="fas fa-wallet" style="color:#3b82f6"></i> Positions ouvertes (${livePositions.length})</h2>
+  <p style="color:#64748b;font-size:.85rem;margin-bottom:.8rem">
+    Derni&egrave;re MaJ : ${liveMetrics.updated_at ? new Date(liveMetrics.updated_at).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}
+    &mdash; Capital d&eacute;ploy&eacute; : <strong>${liveMetrics.working_capital_pct || 0}%</strong>
+    &mdash; Cash libre : <strong>${liveMetrics.available_cash_pct || 0}%</strong>
+    ${(liveMetrics.available_cash_pct || 0) > 5 ? '(rotation J+1 possible)' : '(0% libre &rarr; rotation J+3)'}
+  </p>
+  <table class="status-table">
+    <thead><tr>
+      <th>Ticker</th><th>Strat.</th><th>Entr&eacute;e</th><th>Prix actuel</th><th>Return</th><th>Stop</th><th>TP1</th><th>Scan</th><th>Expire</th>
+    </tr></thead>
+    <tbody>
+    ${[...livePositions].sort((a, b) => a.ticker.localeCompare(b.ticker)).map(p => {
+      const retClass = p.return_pct >= 0 ? 'pnl-pos' : 'pnl-neg';
+      return `<tr>
+        <td class="ticker-cell">${p.ticker}</td>
+        <td style="color:#64748b;font-size:.8rem">${p.strategy || '—'}</td>
+        <td style="font-weight:600">$${(p.entry || 0).toFixed(2)}</td>
+        <td style="font-weight:600">$${(p.current_price || 0).toFixed(2)}</td>
+        <td class="${retClass}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
+        <td style="color:#dc2626">$${(p.stop || 0).toFixed(2)}</td>
+        <td style="color:#059669">${p.tp1 ? '$' + p.tp1.toFixed(2) : '—'}</td>
+        <td style="font-size:.8rem;color:#94a3b8">${p.scan_date ? p.scan_date.slice(5) : '—'}</td>
+        <td style="font-size:.8rem;color:#94a3b8">${p.days_remaining || 0}j</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  ` : ''}
 
   <h2 class="section-title"><i class="fas fa-sliders" style="color:#3b82f6"></i> Choisissez votre mode</h2>
   <p style="color:#64748b;font-size:.9rem;margin-bottom:1rem">Chaque mode correspond &agrave; un profil de risque diff&eacute;rent. Les param&egrave;tres sont issus d'un grid search sur <strong>${totalCombos.toLocaleString('fr')} combinaisons</strong> avec validation walk-forward (70% in-sample / 30% out-of-sample).</p>
