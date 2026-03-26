@@ -113,19 +113,71 @@ function main() {
     const f = SF[cfg.filterName] || (() => true);
     return signals.filter(s => f(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN);
   }
+  // Simulate open positions per mode: replay scan-by-scan selection within horizon window
+  // For each recent scan (within horizon), pick topN signals matching the mode's filter,
+  // then cross-reference with live positions for current prices.
   function posFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
     const now = new Date();
-    return [...livePositions]
-      .filter(p => f(p.strategy || ''))
-      .filter(p => {
-        // Only keep positions whose age fits the mode's horizon (in business days ≈ horizon * 1.5 calendar days)
-        if (!p.scan_date) return true;
-        const age = Math.round((now - new Date(p.scan_date)) / 86400000);
-        return age <= cfg.horizon * 1.5;
-      })
-      .sort((a, b) => b.return_pct - a.return_pct)
-      .slice(0, cfg.portfolioSize);
+    const maxAge = cfg.horizon * 1.5; // calendar days
+
+    // Build a lookup of live positions by ticker for current prices
+    const liveLookup = {};
+    for (const p of livePositions) { liveLookup[p.ticker] = p; }
+
+    // Get all recent scans within the horizon window
+    const recentDirs = fs.readdirSync(SCANNER_DIR)
+      .filter(d => /^\d{8}(-\d+)?$/.test(d))
+      .sort().reverse()
+      .filter(d => {
+        const y = d.slice(0,4), m = d.slice(4,6), day = d.slice(6,8);
+        const age = Math.round((now - new Date(`${y}-${m}-${day}`)) / 86400000);
+        return age >= 0 && age <= maxAge;
+      });
+
+    // For each scan, extract topN signals matching this mode
+    const held = new Set(); // tickers already in portfolio (no duplicates)
+    const positions = [];
+
+    for (const dir of recentDirs) {
+      if (positions.length >= cfg.portfolioSize) break;
+      try {
+        const html = fs.readFileSync(path.join(SCANNER_DIR, dir, 'index.html'), 'utf8');
+        const sm = html.match(/id="synthese"[\s\S]{0,15000}/);
+        if (!sm) continue;
+        const rows = sm[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+        const scanSignals = [];
+        for (const row of rows) {
+          const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
+            .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
+          if (cells.length < 4) continue;
+          const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
+          if (!ticker) continue;
+          const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100) || 0;
+          const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback/i.test(c)) || '';
+          if (!f(stratRaw)) continue;
+          if (cfg.minScore > 0 && score < cfg.minScore) continue;
+          scanSignals.push({ ticker: ticker.trim(), score, scanDir: dir });
+        }
+        scanSignals.sort((a, b) => b.score - a.score);
+
+        let taken = 0;
+        for (const sig of scanSignals) {
+          if (taken >= cfg.topN) break;
+          if (held.has(sig.ticker)) continue; // anti-doublon
+          if (positions.length >= cfg.portfolioSize) break;
+
+          const live = liveLookup[sig.ticker];
+          if (live) {
+            held.add(sig.ticker);
+            positions.push(live);
+            taken++;
+          }
+        }
+      } catch (_) {}
+    }
+
+    return positions.sort((a, b) => b.return_pct - a.return_pct);
   }
 
   // ── Panel builder ──
@@ -190,7 +242,7 @@ function main() {
   <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
   <div class="method-steps">
     <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals above. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Next day at market open</b> (3:30 PM Paris / 9:30 AM NY), buy at market price. Allocate <b>${alloc}%</b> of capital per position.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
     <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>target</b> as indicated. Don't touch anything.</div></div>
     <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>The position closes <b>automatically</b> when: target hit, stop triggered, or after <b>${cfg.horizon} days</b>.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
     ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal is better than your worst position, replace it.</div></div>` : ''}
