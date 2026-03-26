@@ -128,24 +128,61 @@ function main() {
     return { none: 'Aucune', daily_max1: 'Max 1/j', daily_max2: 'Max 2/j', aggressive: 'Agressive' }[r] || r;
   }
 
-  // ── Positions table ──
-  const posTable = livePositions.length ? [...livePositions]
-    .sort((a, b) => a.ticker.localeCompare(b.ticker))
-    .map(p => {
-      const rc = p.return_pct >= 0 ? 'pos' : 'neg';
-      const prog = Math.min(100, Math.max(0, p.progress_pct || 0));
-      const pc = prog >= 70 ? '#059669' : prog >= 40 ? '#f59e0b' : '#dc2626';
-      return `<tr>
-        <td><strong>${p.ticker}</strong></td>
-        <td class="muted">${p.strategy || '—'}</td>
-        <td>$${(p.entry||0).toFixed(2)}</td>
-        <td>$${(p.current_price||0).toFixed(2)}</td>
-        <td class="${rc}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
-        <td class="muted">${p.scan_date ? p.scan_date.slice(5) : '—'}</td>
-        <td><div class="prog"><div class="prog-fill" style="width:${prog}%;background:${pc}"></div></div></td>
-        <td class="muted">${p.days_remaining || 0}j</td>
-      </tr>`;
-    }).join('') : '';
+  // ── Filter positions per mode ──
+  const STRAT_FILTERS = {
+    all: () => true,
+    no_sq: s => !/short.?squeeze/i.test(s),
+    momentum_only: s => /momentum/i.test(s),
+    breakout_only: s => /breakout/i.test(s),
+    no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
+  };
+
+  function positionsForMode(cfg) {
+    const filter = STRAT_FILTERS[cfg.filterName] || (() => true);
+    return [...livePositions]
+      .filter(p => filter(p.strategy || ''))
+      .sort((a, b) => b.return_pct - a.return_pct)
+      .slice(0, cfg.portfolioSize);
+  }
+
+  function posTableHTML(positions) {
+    if (!positions.length) return '<p class="muted" style="text-align:center;padding:1rem">Aucune position</p>';
+    const alloc = positions.length ? Math.round(100 / positions.length) : 0;
+    const deployed = positions.reduce((s, p) => s + (p.return_pct >= 0 ? 1 : 0), 0);
+    const totalRet = positions.reduce((s, p) => s + (p.return_pct || 0), 0) / positions.length;
+    return `
+    <div class="cap-strip" style="margin-bottom:.5rem">
+      ${positions.map(p => {
+        const c = p.return_pct >= 5 ? '#059669' : p.return_pct >= 0 ? '#3b82f6' : p.return_pct >= -3 ? '#f59e0b' : '#dc2626';
+        return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
+      }).join('')}
+    </div>
+    <div class="cap-bar" style="margin-bottom:.6rem">
+      <div class="cap-seg"><strong>${positions.length}</strong> positions</div>
+      <div class="cap-seg">${alloc}% / pos.</div>
+      <div class="cap-seg" style="margin-left:auto">P&amp;L moy : <strong class="${totalRet >= 0 ? 'pos' : 'neg'}" style="color:${totalRet >= 0 ? '#059669' : '#dc2626'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</strong></div>
+    </div>
+    <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Ticker</th><th>Strat.</th><th>Entry</th><th>Prix</th><th>Return</th><th>Progr.</th><th>Expire</th></tr></thead>
+      <tbody>${positions.map(p => {
+        const rc = p.return_pct >= 0 ? 'pos' : 'neg';
+        const prog = Math.min(100, Math.max(0, p.progress_pct || 0));
+        const pc = prog >= 70 ? '#059669' : prog >= 40 ? '#f59e0b' : '#dc2626';
+        return `<tr>
+          <td><strong>${p.ticker}</strong></td>
+          <td class="muted">${p.strategy || '—'}</td>
+          <td>$${(p.entry||0).toFixed(2)}</td>
+          <td>$${(p.current_price||0).toFixed(2)}</td>
+          <td class="${rc}">${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</td>
+          <td><div class="prog"><div class="prog-fill" style="width:${prog}%;background:${pc}"></div></div></td>
+          <td class="muted">${p.days_remaining || 0}j</td>
+        </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+    </div>`;
+  }
 
   // ── Signals table ──
   const sigRows = signals.map((s, i) => {
@@ -186,59 +223,55 @@ function main() {
 
   // ── Mode panel builder ──
   function modePanel(id, cfg, m, trades, ec, chartId, isActive) {
-    const desc = modeDesc(cfg);
     const alloc = Math.round(100 / cfg.portfolioSize);
+    const modePos = positionsForMode(cfg);
     return `
     <div class="mp${isActive ? ' active' : ''}" id="p-${id}">
-      <!-- KPI strip -->
+
+      <!-- 1. R&eacute;sum&eacute; rapide -->
       <div class="kstrip">
         <div class="k"><span class="kv" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="kl">Return</span></div>
         <div class="k"><span class="kv neg">${m.dd}%</span><span class="kl">Max DD</span></div>
         <div class="k"><span class="kv">${m.wr}%</span><span class="kl">Win Rate</span></div>
         <div class="k"><span class="kv">${m.pf}x</span><span class="kl">Profit F.</span></div>
         <div class="k"><span class="kv">${m.trades}</span><span class="kl">Trades</span></div>
-        <div class="k"><span class="kv">${m.calmar}</span><span class="kl">Calmar</span></div>
         <div class="k"><span class="kv">${m.avgHold}j</span><span class="kl">Hold moy</span></div>
       </div>
 
-      <!-- Config + How-to side by side -->
-      <div class="two-col">
-        <div class="cfg-card">
-          <h4>Configuration</h4>
-          <div class="cfg-row"><span>Portfolio</span><strong>${cfg.portfolioSize} pos.</strong></div>
-          <div class="cfg-row"><span>Signaux/Scan</span><strong>Top ${cfg.topN}</strong></div>
-          <div class="cfg-row"><span>Horizon</span><strong>${cfg.horizon}j</strong></div>
-          <div class="cfg-row"><span>Strat&eacute;gies</span><strong>${filterLabel(cfg.filterName)}</strong></div>
-          <div class="cfg-row"><span>Rotation</span><strong>${rotationLabel(cfg.rotation)}</strong></div>
-          <div class="cfg-row"><span>Partial TP</span><strong>${cfg.partialTP ? 'Oui (50%)' : 'Non'}</strong></div>
-          <div class="cfg-row"><span>Trailing Stop</span><strong>${cfg.trailingStop ? 'Oui' : 'Non'}</strong></div>
-          <div class="cfg-row"><span>Allocation</span><strong>${alloc}% / pos.</strong></div>
-        </div>
-        <div class="how-card" style="border-color:${cfg.color}22">
-          <h4>Comment appliquer</h4>
-          <ol>
-            <li>Prenez les <strong>Top ${cfg.topN}</strong> signaux ci-dessus par score${cfg.filterName !== 'all' ? ' (' + filterLabel(cfg.filterName) + ')' : ''}</li>
-            <li>Entr&eacute;e &agrave; l'ouverture <strong>J+1 15h30</strong> Paris</li>
-            <li>Stop &amp; TP1 tels qu'indiqu&eacute;s dans le scan</li>
-            <li>Sortie : TP1/Stop touch&eacute; ou expir&eacute; apr&egrave;s <strong>${cfg.horizon}j</strong></li>
-            ${cfg.partialTP ? '<li>TP1 touch&eacute; &rarr; vendre <strong>50%</strong>, stop &rarr; breakeven</li>' : ''}
-            ${cfg.trailingStop ? '<li>50% restants : <strong>trailing stop 1.5R</strong></li>' : ''}
-            <li>Rotation : ${rotationLabel(cfg.rotation)}</li>
-          </ol>
+      <!-- 2. Comment faire (simple) -->
+      <div class="how-card" style="border-color:${cfg.color}40;margin:1rem 0">
+        <h4 style="color:${cfg.color}">Comment faire ?</h4>
+        <ol>
+          <li>Chaque soir, prendre les <strong>Top ${cfg.topN}</strong> signaux par score${cfg.filterName !== 'all' ? ' (filtre : ' + filterLabel(cfg.filterName) + ')' : ''}</li>
+          <li>Acheter &agrave; l'ouverture du lendemain (<strong>15h30 Paris</strong>)</li>
+          <li>Placer le <strong>stop</strong> et le <strong>target</strong> indiqu&eacute;s dans le scan</li>
+          <li>Vendre quand : target atteint, stop touch&eacute;, ou apr&egrave;s <strong>${cfg.horizon} jours</strong></li>
+          ${cfg.partialTP ? '<li>Si target atteint &rarr; vendre la moiti&eacute;, d&eacute;placer le stop au prix d\'achat</li>' : ''}
+          ${cfg.rotation !== 'none' ? '<li>Rotation : remplacer la pire position si un meilleur signal appara&icirc;t</li>' : ''}
+        </ol>
+        <div style="margin-top:.6rem;padding-top:.6rem;border-top:1px solid #f1f5f9;font-size:.78rem;color:#94a3b8">
+          ${cfg.portfolioSize} positions max &middot; ${alloc}% du capital par position &middot; Horizon ${cfg.horizon}j &middot; ${filterLabel(cfg.filterName)}
         </div>
       </div>
 
-      <!-- Equity chart -->
-      <div id="${chartId}" style="width:100%;height:280px;margin:1.5rem 0;border-radius:12px;background:#fff"></div>
+      <!-- 3. Positions en cours pour ce mode -->
+      <h4 class="tbl-title">Positions en cours (${modePos.length} / ${cfg.portfolioSize} max)</h4>
+      ${posTableHTML(modePos)}
 
-      <!-- Trades -->
-      <h4 class="tbl-title">Historique des trades (${trades.length})</h4>
-      <div class="tbl-wrap">
-      <table class="tbl">
-        <thead><tr><th>Ticker</th><th>Date</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th></tr></thead>
-        <tbody>${tradeRows(trades, cfg.color)}</tbody>
-      </table>
-      </div>
+      <!-- 4. Equity curve -->
+      <h4 class="tbl-title">Performance cumul&eacute;e</h4>
+      <div id="${chartId}" style="width:100%;height:250px;border-radius:12px;background:#fff"></div>
+
+      <!-- 5. Historique trades -->
+      <details style="margin-top:1rem">
+        <summary class="tbl-title" style="cursor:pointer">Historique des trades (${trades.length})</summary>
+        <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Ticker</th><th>Date</th><th>Strat.</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Dur&eacute;e</th><th>Statut</th></tr></thead>
+          <tbody>${tradeRows(trades, cfg.color)}</tbody>
+        </table>
+        </div>
+      </details>
     </div>`;
   }
 
@@ -382,30 +415,6 @@ function main() {
   <table class="tbl">
     <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
     <tbody>${sigRows}</tbody>
-  </table>
-  </div>` : ''}
-
-  <!-- ═══ POSITIONS EN COURS ═══ -->
-  ${livePositions.length ? `
-  <div class="sh">
-    <h2><i class="fas fa-briefcase" style="color:#3b82f6"></i> Positions en cours</h2>
-    <span class="badge" style="background:#3b82f6">${livePositions.length} ouvertes</span>
-  </div>
-  <div class="cap-strip">
-    <div style="width:${wk}%;background:#3b82f6" title="D&eacute;ploy&eacute; ${wk}%"></div>
-    <div style="width:${pd}%;background:#f59e0b" title="En attente ${pd}%"></div>
-    <div style="width:${av}%;background:#e2e8f0" title="Libre ${av}%"></div>
-  </div>
-  <div class="cap-bar">
-    <div class="cap-seg"><span class="cap-dot" style="background:#3b82f6"></span> D&eacute;ploy&eacute; <strong>${wk}%</strong></div>
-    <div class="cap-seg"><span class="cap-dot" style="background:#f59e0b"></span> En attente <strong>${pd}%</strong></div>
-    <div class="cap-seg"><span class="cap-dot" style="background:#cbd5e1"></span> Libre <strong>${av}%</strong></div>
-    <div class="cap-seg" style="margin-left:auto;font-size:.75rem;color:#94a3b8">${av > 5 ? 'Rotation J+1 possible' : 'Rotation J+3 (pas de cash)'}</div>
-  </div>
-  <div class="tbl-wrap" style="margin-top:.8rem">
-  <table class="tbl">
-    <thead><tr><th>Ticker</th><th>Strat.</th><th>Entry</th><th>Prix</th><th>Return</th><th>Scan</th><th>Progr.</th><th>Expire</th></tr></thead>
-    <tbody>${posTable}</tbody>
   </table>
   </div>` : ''}
 
