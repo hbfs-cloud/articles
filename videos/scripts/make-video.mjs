@@ -1,0 +1,331 @@
+#!/usr/bin/env node
+/**
+ * make-video.mjs — CLI entry point for the gamma-style video pipeline
+ *
+ * Usage:
+ *   node scripts/make-video.mjs <series-id> [--skip-tts] [--skip-render] [--upload]
+ *
+ * Series IDs: debuter-trading, ai-singularity-fr, ai-singularity-en,
+ *             swing-trading, maitrise-expert, algo-million, bourses-mena
+ */
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { existsSync, readFileSync, writeFileSync, createReadStream } from 'fs';
+import { generateVideo } from '../src/video/generate.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..');
+const BOT_DIR = '/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video';
+const CREDENTIALS_PATH = join(BOT_DIR, 'youtube-credentials.json');
+const TOKEN_PATH = join(BOT_DIR, 'youtube-token.json');
+
+// ── Args ──────────────────────────────────────────────────────────────
+
+const [,, seriesId, ...flags] = process.argv;
+const skipTts    = flags.includes('--skip-tts');
+const skipRender = flags.includes('--skip-render');
+const doUpload   = flags.includes('--upload');
+
+if (!seriesId) {
+  console.error('Usage: node scripts/make-video.mjs <series-id> [--skip-tts] [--skip-render] [--upload]');
+  console.error('Series IDs: debuter-trading, ai-singularity-fr, ai-singularity-en, swing-trading, maitrise-expert, algo-million, bourses-mena');
+  process.exit(1);
+}
+
+// ── YouTube metadata ──────────────────────────────────────────────────
+
+const YOUTUBE_META = {
+  'debuter-trading': {
+    title: 'Bien Débuter en Trading — Le Guide COMPLET (2h)',
+    playlist: 'Formations Trading FR',
+    description: `🎓 Formation complète pour débuter en bourse et en trading.
+
+📚 Au programme (2h) :
+• Comprendre le marché : acteurs, manipulations, VIX
+• Le stock picking : 4 méthodes éprouvées
+• Construire son portefeuille : ETF, DCA, diversification
+• L'art du all-in intelligent
+• Stratégies avancées : momentum, value, options
+• Psychologie : gérer les pertes et les gains
+
+🧠 7 quizzes interactifs pour tester vos connaissances
+💡 Cas concrets : GameStop, ArcelorMittal, stratégie Barbell de Taleb
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 articles.market-watch.xyz`,
+    tags: ['trading', 'bourse', 'investissement', 'débutant', 'formation', 'stock picking', 'ETF', 'DCA', 'portefeuille', 'VIX', 'options', 'risk management', 'market-watch.xyz'],
+    lang: 'fr',
+  },
+  'ai-singularity-fr': {
+    title: "AI Singularity — L'IA va-t-elle Transformer la Finance ? (3h)",
+    playlist: 'Formations Trading FR',
+    description: `🤖 Série complète sur l'intelligence artificielle et la finance.
+15 chapitres couvrant : fondements de l'IA, trading algorithmique, LLMs en finance, risques systémiques, et l'avenir.
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 articles.market-watch.xyz`,
+    tags: ['AI', 'intelligence artificielle', 'finance', 'trading algorithmique', 'LLM', 'machine learning', 'singularity', 'market-watch.xyz'],
+    lang: 'fr',
+  },
+  'ai-singularity-en': {
+    title: 'AI Singularity — Will AI Transform Finance Forever? (3h)',
+    playlist: 'Trading Education EN',
+    description: `🤖 Complete series on artificial intelligence and finance.
+15 chapters covering: AI foundations, algorithmic trading, LLMs in finance, systemic risks, and the future.
+
+⚠️ This is not financial advice.
+🌐 articles.market-watch.xyz`,
+    tags: ['AI', 'artificial intelligence', 'finance', 'algorithmic trading', 'LLM', 'machine learning', 'singularity', 'market-watch.xyz'],
+    lang: 'en',
+  },
+  'swing-trading': {
+    title: 'Swing Trading Rentable — Du Setup à la Routine (2h)',
+    playlist: 'Formations Trading FR',
+    description: `📈 Maîtrisez le swing trading de A à Z.
+6 chapitres : identification des setups, timing d'entrée, gestion de position, stop-loss dynamiques, et routine quotidienne.
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 articles.market-watch.xyz`,
+    tags: ['swing trading', 'trading', 'bourse', 'setup', 'stop-loss', 'routine trading', 'market-watch.xyz'],
+    lang: 'fr',
+  },
+  'maitrise-expert': {
+    title: 'Maîtrise Expert — Le VIX, Volatilité & Stratégies Avancées (3h)',
+    playlist: 'Formations Trading FR',
+    description: `🎯 Formation expert : maîtriser le VIX et la volatilité pour trader comme un pro.
+5 chapitres de niveau avancé : décoder le VIX, saisonnalité, indicateur de régime, trading de volatilité, stratégies options.
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 articles.market-watch.xyz`,
+    tags: ['VIX', 'volatilité', 'options', 'trading avancé', 'risk management', 'expert', 'market-watch.xyz'],
+    lang: 'fr',
+  },
+  'algo-million': {
+    title: 'De Zéro au Million — Trading Algorithmique (2h)',
+    playlist: 'Formations Trading FR',
+    description: `🤖 Construisez votre système de trading algorithmique de A à Z.
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 articles.market-watch.xyz`,
+    tags: ['trading algorithmique', 'algorithme', 'backtest', 'python', 'quant', 'market-watch.xyz'],
+    lang: 'fr',
+  },
+  'bourses-mena': {
+    title: 'Bourses MENA — Investir au Moyen-Orient & Afrique du Nord',
+    playlist: 'Formations Trading FR',
+    description: `🌍 Guide complet pour investir dans les marchés MENA.
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 articles.market-watch.xyz`,
+    tags: ['MENA', 'Moyen-Orient', 'bourse', 'investissement', 'marchés émergents', 'market-watch.xyz'],
+    lang: 'fr',
+  },
+};
+
+// ── YouTube upload (adapted from pipeline.mjs) ─────────────────────────
+
+function buildChapters(eduData, audioDurations) {
+  const slides = eduData.slides || [];
+  const lines = ['0:00:00 Introduction'];
+  let cursor = 0;
+
+  for (let i = 0; i < slides.length; i++) {
+    const slide = slides[i];
+    const dur = (audioDurations[i] || 5) + 1.5;
+
+    if (slide.type === 'chapter-intro' && i > 0) {
+      const totalSec = Math.round(cursor);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      const ts = `${String(h).padStart(1, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      const ch = slide.chapter || {};
+      lines.push(`${ts} ${ch.title || `Chapitre ${ch.partNumber}`}`);
+    }
+    cursor += dur;
+  }
+
+  return lines.join('\n');
+}
+
+async function uploadToYouTube(videoPath, meta, eduData, audioDurations, thumbnailPath) {
+  const { google } = await import('googleapis');
+
+  const credentials = JSON.parse(readFileSync(CREDENTIALS_PATH, 'utf-8'));
+  const token = JSON.parse(readFileSync(TOKEN_PATH, 'utf-8'));
+  const { client_id, client_secret, redirect_uris } = credentials.installed || credentials.web;
+  const oauth2 = new google.auth.OAuth2(client_id, client_secret, redirect_uris?.[0] || 'http://localhost');
+  oauth2.setCredentials(token);
+
+  if (token.expiry_date && Date.now() > token.expiry_date) {
+    const { credentials: newCreds } = await oauth2.refreshAccessToken();
+    writeFileSync(TOKEN_PATH, JSON.stringify(newCreds, null, 2));
+    oauth2.setCredentials(newCreds);
+  }
+
+  const youtube = google.youtube({ version: 'v3', auth: oauth2 });
+
+  const chapters = buildChapters(eduData, audioDurations);
+  const fullDescription = `${meta.description}\n\n📑 Chapitres :\n${chapters}\n\n#${meta.tags.join(' #')}`;
+
+  console.log(`   Uploading: ${meta.title}`);
+
+  const res = await youtube.videos.insert({
+    part: ['snippet', 'status'],
+    requestBody: {
+      snippet: {
+        title: meta.title.slice(0, 100),
+        description: fullDescription,
+        tags: meta.tags,
+        categoryId: '27', // Education
+        defaultLanguage: meta.lang,
+        defaultAudioLanguage: meta.lang,
+      },
+      status: {
+        privacyStatus: 'public',
+        selfDeclaredMadeForKids: false,
+        license: 'youtube',
+        embeddable: true,
+        publicStatsViewable: true,
+      },
+    },
+    media: {
+      body: createReadStream(videoPath),
+    },
+  });
+
+  const videoId = res.data.id;
+  console.log(`   Uploaded: https://youtu.be/${videoId}`);
+
+  // Set thumbnail
+  if (thumbnailPath && existsSync(thumbnailPath)) {
+    try {
+      await youtube.thumbnails.set({
+        videoId,
+        media: { body: createReadStream(thumbnailPath) },
+      });
+      console.log(`   Thumbnail set`);
+    } catch (err) {
+      console.warn(`   Thumbnail error: ${err.message?.slice(0, 80)}`);
+    }
+  }
+
+  // Add to playlist
+  try {
+    const playlists = await youtube.playlists.list({ part: ['snippet'], mine: true, maxResults: 50 });
+    let playlistId = playlists.data.items?.find(p => p.snippet.title === meta.playlist)?.id;
+
+    if (!playlistId) {
+      const pl = await youtube.playlists.insert({
+        part: ['snippet', 'status'],
+        requestBody: {
+          snippet: {
+            title: meta.playlist,
+            description: `Formations trading — ${meta.lang === 'fr' ? 'Série éducative par market-watch.xyz' : 'Educational series by market-watch.xyz'}`,
+          },
+          status: { privacyStatus: 'public' },
+        },
+      });
+      playlistId = pl.data.id;
+      console.log(`   Created playlist: ${meta.playlist}`);
+    }
+
+    await youtube.playlistItems.insert({
+      part: ['snippet'],
+      requestBody: {
+        snippet: { playlistId, resourceId: { kind: 'youtube#video', videoId } },
+      },
+    });
+    console.log(`   Added to playlist: ${meta.playlist}`);
+  } catch (err) {
+    console.warn(`   Playlist error: ${err.message?.slice(0, 80)}`);
+  }
+
+  return videoId;
+}
+
+// ── Main ──────────────────────────────────────────────────────────────
+
+async function main() {
+  const eduDataPath   = join(ROOT, `public/edu-data-${seriesId}.json`);
+  const narrationPath = join(ROOT, `public/edu-narration-${seriesId}.json`);
+
+  // Fallback to generic names for debuter-trading which has edu-narration.json
+  const narrationFallback = join(ROOT, 'public/edu-narration.json');
+
+  if (!existsSync(eduDataPath)) {
+    console.error(`edu-data not found: ${eduDataPath}`);
+    process.exit(1);
+  }
+
+  const resolvedNarration = existsSync(narrationPath) ? narrationPath : narrationFallback;
+  if (!existsSync(resolvedNarration)) {
+    console.error(`narration not found: ${narrationPath}`);
+    process.exit(1);
+  }
+
+  const meta = YOUTUBE_META[seriesId];
+  if (!meta) {
+    console.error(`Unknown series: ${seriesId}. Available: ${Object.keys(YOUTUBE_META).join(', ')}`);
+    process.exit(1);
+  }
+
+  const outputDir  = join(ROOT, 'output');
+  const outputPath = join(outputDir, `${seriesId}.mp4`);
+
+  const result = await generateVideo({
+    seriesId,
+    eduDataPath,
+    narrationPath: resolvedNarration,
+    outputPath,
+    lang: meta.lang,
+    skipTts,
+    skipRender,
+  });
+
+  // Generate thumbnails (global + per chapter)
+  const eduData = JSON.parse(readFileSync(eduDataPath, 'utf-8'));
+  const thumbDir = join(outputDir, `thumbnails-${seriesId}`);
+  if (!existsSync(thumbDir)) {
+    const { mkdirSync } = await import('fs');
+    mkdirSync(thumbDir, { recursive: true });
+  }
+
+  // Copy chapter-intro slides as chapter thumbnails
+  const slides = eduData.slides || [];
+  const chapterSlides = slides.map((s, i) => ({ ...s, index: i })).filter(s => s.type === 'chapter-intro');
+  const tmpDir = result.tmpDir || join(outputDir, `.video-tmp-${seriesId}`);
+
+  for (const ch of chapterSlides) {
+    const srcPng = join(tmpDir, `slide_${String(ch.index).padStart(3, '0')}.png`);
+    const dstPng = join(thumbDir, `chapter_${ch.chapter?.partNumber || ch.index}.png`);
+    if (existsSync(srcPng)) {
+      const { copyFileSync } = await import('fs');
+      copyFileSync(srcPng, dstPng);
+      console.log(`   Thumbnail: ${dstPng}`);
+    }
+  }
+
+  // Global thumbnail = first slide (chapter-intro of part 1)
+  const globalSrc = join(tmpDir, 'slide_000.png');
+  const globalThumb = join(thumbDir, 'thumbnail.png');
+  if (existsSync(globalSrc)) {
+    const { copyFileSync } = await import('fs');
+    copyFileSync(globalSrc, globalThumb);
+    console.log(`   Global thumbnail: ${globalThumb}`);
+  }
+
+  if (doUpload) {
+    if (!existsSync(CREDENTIALS_PATH) || !existsSync(TOKEN_PATH)) {
+      console.error('YouTube credentials not found. Skipping upload.');
+      process.exit(0);
+    }
+
+    await uploadToYouTube(result.outputPath, meta, eduData, result.audioDurations, globalThumb);
+  }
+}
+
+main().catch(err => {
+  console.error('Fatal error:', err);
+  process.exit(1);
+});

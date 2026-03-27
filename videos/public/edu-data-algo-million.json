@@ -1,0 +1,2508 @@
+{
+  "config": {
+    "seriesTitle": "De Zéro au Million",
+    "seriesSubtitle": "Construisez votre système de trading algorithmique de A à Z",
+    "date": "Mars 2026",
+    "language": "fr",
+    "accentColor": "#10b981",
+    "totalChapters": 12
+  },
+  "slides": [
+    {
+      "type": "concept",
+      "title": "Algo Trading : De 100K au Million",
+      "text": "Bienvenue dans cette formation complete de 2 heures. On va parcourir les 12 piliers du trading algorithmique : de l'infrastructure technique jusqu'au scaling au-dela du million. Objectif : transformer 100 000 euros en 1 000 000 euros en 24 mois, sans levier, long only, avec un drawdown maximum de 25%.",
+      "audioFile": "algo_million_s0.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Ce que vous allez apprendre",
+      "items": [
+        "Partie 1-2 : Infrastructure cloud et pipeline de donnees",
+        "Partie 3-4 : Alpha factors et construction de portefeuille",
+        "Partie 5 : Execution et microstructure de marche",
+        "Partie 6-7 : Strategies momentum et mean-reversion",
+        "Partie 8-9 : Cross-asset, rotation sectorielle et regime ML",
+        "Partie 10 : Mise en production et monitoring",
+        "Partie 11-12 : Vivre de son algo et scaling"
+      ],
+      "audioFile": "algo_million_s1.wav"
+    },
+    {
+      "type": "table",
+      "title": "Les mathematiques de l'objectif",
+      "headers": [
+        "Parametre",
+        "Valeur"
+      ],
+      "rows": [
+        [
+          "Capital initial",
+          "100 000 euros"
+        ],
+        [
+          "Capital cible",
+          "1 000 000 euros"
+        ],
+        [
+          "Horizon",
+          "24 mois"
+        ],
+        [
+          "CAGR requis",
+          "~216% (faisable en algo multi-strategie)"
+        ],
+        [
+          "Return mensuel moyen",
+          "~10.4% par mois"
+        ],
+        [
+          "Max Drawdown",
+          "25% maximum"
+        ],
+        [
+          "Levier",
+          "Aucun (margin 1:1)"
+        ],
+        [
+          "Direction",
+          "Long only"
+        ]
+      ],
+      "audioFile": "algo_million_s2.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pourquoi 8-12 strategies complementaires ?",
+      "text": "Aucune strategie seule ne peut fournir un CAGR de 216%. C'est la combinaison et la gestion dynamique de 8 a 12 strategies decorrelees qui rend l'objectif atteignable. Le momentum seul crash en bear market. La mean-reversion seule stagne en bull. Ensemble, elles se compensent et lissent la courbe de performance.",
+      "audioFile": "algo_million_s3.wav"
+    },
+    {
+      "type": "table",
+      "title": "La trajectoire realiste sur 24 mois",
+      "headers": [
+        "Mois",
+        "Equity",
+        "PnL mensuel"
+      ],
+      "rows": [
+        [
+          "0",
+          "100 000 euros",
+          "-"
+        ],
+        [
+          "3",
+          "118 000 euros",
+          "~5 500 euros/mois"
+        ],
+        [
+          "6",
+          "142 000 euros",
+          "~7 200 euros/mois"
+        ],
+        [
+          "9",
+          "173 000 euros",
+          "~9 800 euros/mois"
+        ],
+        [
+          "12",
+          "215 000 euros",
+          "~13 000 euros/mois"
+        ],
+        [
+          "15",
+          "278 000 euros",
+          "~18 500 euros/mois"
+        ],
+        [
+          "18",
+          "370 000 euros",
+          "~26 000 euros/mois"
+        ],
+        [
+          "24",
+          "1 000 000 euros",
+          "~40 000 euros/mois"
+        ]
+      ],
+      "audioFile": "algo_million_s4.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Ce n'est PAS un schema pour devenir riche rapidement",
+      "text": "Ces chiffres supposent un systeme multi-strategie parfaitement calibre, un Sharpe de 1.5-2.0, et ZERO retrait pendant 18 mois. Un seul drawdown de 25% au mauvais moment peut retarder l'objectif de 6 mois. Le risque est reel. Ce plan necessite une expertise technique de niveau professionnel, pas un copier-coller d'indicateurs.",
+      "audioFile": "algo_million_s5.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Infrastructure & Stack Technique",
+        "subtitle": "VM cloud, Interactive Brokers, Python stack, securite",
+        "partNumber": 1
+      },
+      "audioFile": "algo_million_s6.wav"
+    },
+    {
+      "type": "table",
+      "title": "L'architecture cible : cout total ~60 euros/mois",
+      "headers": [
+        "Composant",
+        "Technologie",
+        "Cout/mois"
+      ],
+      "rows": [
+        [
+          "VM Cloud",
+          "Hetzner CPX41 (8 vCPU, 16 GB)",
+          "~30 euros"
+        ],
+        [
+          "Broker",
+          "Interactive Brokers Pro",
+          "~10 euros"
+        ],
+        [
+          "Language",
+          "Python 3.12 + Rust extensions",
+          "Gratuit"
+        ],
+        [
+          "Database",
+          "TimescaleDB + DuckDB",
+          "Gratuit"
+        ],
+        [
+          "Orchestration",
+          "systemd + cron + healthcheck",
+          "Gratuit"
+        ],
+        [
+          "AI Assistant",
+          "Claude Code",
+          "~20 dollars"
+        ],
+        [
+          "Alertes",
+          "Discord webhooks",
+          "Gratuit"
+        ]
+      ],
+      "audioFile": "algo_million_s7.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pourquoi une VM cloud et pas votre ordinateur ?",
+      "text": "Une VM cloud plutot qu'un PC local pour des raisons critiques : uptime 99.99% (pas de coupure de courant ou d'internet), latence reseau reduite (datacenters proches des exchanges), et isolation de l'environnement de production. Votre PC est pour le developpement, la VM est pour la production. Si votre chat marche sur le clavier pendant un rebalancement, c'est game over.",
+      "audioFile": "algo_million_s8.wav"
+    },
+    {
+      "type": "comparison",
+      "title": "VM Cloud : quel provider choisir ?",
+      "left": {
+        "label": "Hetzner (recommande)",
+        "items": [
+          "CPX41 : 8 vCPU, 16 GB pour ~28 euros/mois",
+          "Datacenters EU (Falkenstein, Nuremberg)",
+          "~80ms de latence vers NYSE",
+          "Meilleur rapport qualite/prix du marche"
+        ]
+      },
+      "right": {
+        "label": "AWS / DigitalOcean",
+        "items": [
+          "AWS c6a.2xlarge : ~200 dollars/mois",
+          "DigitalOcean Premium : ~96 dollars/mois",
+          "Meilleure latence (~5-10ms)",
+          "Surdimensionne pour du trading daily/swing"
+        ]
+      },
+      "audioFile": "algo_million_s9.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Interactive Brokers : le broker de reference",
+      "text": "IBKR Pro est le seul broker qui offre : acces a 150+ marches mondiaux, API complete (TWS API / ib_insync), commissions ultra-competitives ($0.0035/action), market data gratuit avec plus de 10K d'equity, et le Securities Lending Program. Toujours utiliser IB Gateway (headless, plus stable que TWS) sur les ports 4001 (live) et 4002 (paper).",
+      "audioFile": "algo_million_s10.wav"
+    },
+    {
+      "type": "table",
+      "title": "Configuration IBKR pour l'algo trading",
+      "headers": [
+        "Setting",
+        "Valeur",
+        "Pourquoi"
+      ],
+      "rows": [
+        [
+          "Account Type",
+          "Individual Pro (pas Lite !)",
+          "Pro = routing direct, pas de PFOF"
+        ],
+        [
+          "Base Currency",
+          "EUR",
+          "Evite les frais de conversion pour les achats EU"
+        ],
+        [
+          "API Connection",
+          "IB Gateway (headless)",
+          "Plus stable et moins gourmand que TWS"
+        ],
+        [
+          "API Port",
+          "4001 (live) / 4002 (paper)",
+          "Standard IBKR"
+        ],
+        [
+          "Max Order Rate",
+          "50 orders/seconde",
+          "Suffisant pour daily/swing"
+        ]
+      ],
+      "audioFile": "algo_million_s11.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le mode Paper Trading : votre meilleur ami",
+      "text": "Testez TOUT en paper trading avant de passer en live. Le port 4002 d'IBKR simule exactement les conditions reelles : fills, rejections, pacing violations. Un changement de code = minimum 2 semaines en paper avant le live. La discipline sauve votre capital.",
+      "audioFile": "algo_million_s12.wav"
+    },
+    {
+      "type": "table",
+      "title": "Le stack Python production-grade",
+      "headers": [
+        "Categorie",
+        "Package",
+        "Role"
+      ],
+      "rows": [
+        [
+          "Broker API",
+          "ib_insync",
+          "Interface IBKR asynchrone"
+        ],
+        [
+          "Data",
+          "pandas + polars",
+          "Polars 10x plus rapide pour le backtest"
+        ],
+        [
+          "ML/Stats",
+          "scikit-learn, xgboost",
+          "Regimes, facteurs, classification"
+        ],
+        [
+          "Backtest",
+          "vectorbt",
+          "1000x plus rapide que l'event-driven"
+        ],
+        [
+          "Optimization",
+          "scipy, cvxpy",
+          "Portfolio optimization, risk budgeting"
+        ],
+        [
+          "Database",
+          "psycopg2, duckdb",
+          "TimescaleDB + analytics locale"
+        ],
+        [
+          "Monitoring",
+          "prometheus_client, structlog",
+          "Metriques + logging JSON"
+        ]
+      ],
+      "audioFile": "algo_million_s13.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Workflow Claude Code : l'arme secrete",
+      "steps": [
+        {
+          "step": "Design & Spec",
+          "detail": "VOUS definissez l'architecture, les contraintes, les metriques cibles. Claude ne comprend pas votre alpha."
+        },
+        {
+          "step": "Implementation",
+          "detail": "CLAUDE ecrit le code Python, les tests, les configs. Prompt detaille = code production-grade."
+        },
+        {
+          "step": "Debug & Optimisation",
+          "detail": "CLAUDE analyse les logs, identifie les bugs, optimise les performances automatiquement."
+        },
+        {
+          "step": "Validation",
+          "detail": "VOUS validez les resultats et prenez les decisions strategiques. Claude accelere votre boucle x10."
+        }
+      ],
+      "audioFile": "algo_million_s14.wav"
+    },
+    {
+      "type": "table",
+      "title": "Securite de la VM : les mesures non-negociables",
+      "headers": [
+        "Mesure",
+        "Implementation",
+        "Criticite"
+      ],
+      "rows": [
+        [
+          "SSH",
+          "Cle ED25519, port non standard, no password",
+          "Critique"
+        ],
+        [
+          "Firewall",
+          "UFW : seuls SSH + IBKR 4001/4002",
+          "Critique"
+        ],
+        [
+          "Secrets",
+          "Variables d'environnement ou Vault",
+          "Critique"
+        ],
+        [
+          "2FA IBKR",
+          "IBKR Mobile Auth obligatoire",
+          "Critique"
+        ],
+        [
+          "Kill switch",
+          "Script qui liquide TOUTES les positions en urgence",
+          "Critique"
+        ],
+        [
+          "Backups",
+          "Daily backup chiffre vers S3",
+          "Critique"
+        ],
+        [
+          "fail2ban",
+          "Ban apres 3 tentatives, 24h de ban",
+          "Important"
+        ]
+      ],
+      "audioFile": "algo_million_s15.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Le kill switch est vital",
+      "text": "Un script qui liquide toutes les positions en une seule commande est absolument critique. En cas de bug, de crash du systeme, ou d'evenement de marche extreme, vous devez pouvoir tout couper en quelques secondes. Testez-le regulierement en paper trading.",
+      "audioFile": "algo_million_s16.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Infrastructure : points cles",
+      "items": [
+        "VM Hetzner CPX41 (~30 euros/mois) + IBKR Pro = infrastructure complete pour ~60 euros/mois",
+        "Stack Python : ib_insync, polars, vectorbt, xgboost, TimescaleDB",
+        "Claude Code accelere le developpement x10 : vous definissez le quoi, Claude fait le comment",
+        "Securite non negociable : SSH hardened, firewall, 2FA IBKR, kill switch"
+      ],
+      "audioFile": "algo_million_s17.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Data Pipeline & Feature Engineering",
+        "subtitle": "Ingestion multi-sources, 50 features, stockage, qualite des donnees",
+        "partNumber": 2
+      },
+      "audioFile": "algo_million_s18.wav"
+    },
+    {
+      "type": "quote",
+      "text": "Les donnees sont le petrole du trading algorithmique. Sans donnees propres, vos strategies backtestent sur du bruit.",
+      "source": "Principe fondamental du quant",
+      "audioFile": "algo_million_s19.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le pipeline qui separe les amateurs des pros",
+      "text": "Un data pipeline robuste est la fondation invisible de tout systeme de trading. Sans donnees propres, vos strategies backtestent sur du bruit. Le pipeline doit gerer : l'ingestion multi-sources (IBKR, Yahoo, SEC EDGAR), le nettoyage (splits, dividendes, fusions), le stockage efficace (Parquet + DuckDB + TimescaleDB), et le feature engineering systematique.",
+      "audioFile": "algo_million_s20.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Architecture du pipeline en 5 etapes",
+      "steps": [
+        {
+          "step": "Ingestion",
+          "detail": "Fetchers asynchrones pour 6 sources : IBKR (bars), Yahoo Finance (quotes), SEC EDGAR (13F, Form 4), FRED (macro), News APIs, Alternative data"
+        },
+        {
+          "step": "Validation",
+          "detail": "Chaque barre est validee : pas de trous, volumes coherents, prix dans les bornes. Les anomalies sont flaggees, pas supprimees."
+        },
+        {
+          "step": "Ajustement",
+          "detail": "Corporate actions : splits, dividendes, fusions, spin-offs. C'est le probleme que 95% des backtests ignorent."
+        },
+        {
+          "step": "Feature Engineering",
+          "detail": "50 features calculees en pipeline : momentum, value, quality, volatilite, sentiment, technique."
+        },
+        {
+          "step": "Stockage",
+          "detail": "Feature Store : Parquet pour l'historique, DuckDB pour l'analytique, TimescaleDB pour le temps reel."
+        }
+      ],
+      "audioFile": "algo_million_s21.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Corporate Actions : le piege mortel du backtest",
+      "text": "Un split 4:1 d'Apple transforme un cours de 500$ en 125$. Si votre backtest ne l'ajuste pas retroactivement, il voit une chute de -75% et genere un faux signal de mean-reversion. Les dividendes non ajustes faussent tous les calculs de rendement. Toujours utiliser des prix ajustes (adjusted close), et verifier les corporate actions MANUELLEMENT sur les penny stocks.",
+      "audioFile": "algo_million_s22.wav"
+    },
+    {
+      "type": "table",
+      "title": "Les 50 features : 6 familles",
+      "headers": [
+        "Famille",
+        "Nombre",
+        "Horizon optimal",
+        "Sharpe typique"
+      ],
+      "rows": [
+        [
+          "Momentum",
+          "12 facteurs",
+          "1-12 mois",
+          "0.4-0.8"
+        ],
+        [
+          "Value",
+          "8 facteurs",
+          "6-24 mois",
+          "0.2-0.5"
+        ],
+        [
+          "Quality",
+          "6 facteurs",
+          "12-36 mois",
+          "0.3-0.6"
+        ],
+        [
+          "Volatility/Risk",
+          "8 facteurs",
+          "1-4 semaines",
+          "0.3-0.7"
+        ],
+        [
+          "Sentiment/Flow",
+          "10 facteurs",
+          "1-5 jours",
+          "0.2-0.5"
+        ],
+        [
+          "Technical/Pattern",
+          "8 facteurs",
+          "1-10 jours",
+          "0.1-0.4"
+        ]
+      ],
+      "audioFile": "algo_million_s23.wav"
+    },
+    {
+      "type": "table",
+      "title": "Les 6 sources de donnees qui couvrent le monde",
+      "headers": [
+        "Source",
+        "Donnees",
+        "Frequence"
+      ],
+      "rows": [
+        [
+          "IBKR (TWS API)",
+          "Bars OHLCV, positions, ordres",
+          "Temps reel"
+        ],
+        [
+          "Yahoo Finance",
+          "Quotes, financials, splits, dividendes",
+          "Daily"
+        ],
+        [
+          "SEC EDGAR",
+          "Form 4 (insiders), 13F (institutionnels)",
+          "Trimestriel"
+        ],
+        [
+          "FRED",
+          "Taux, inflation, PMI, chiffres macro",
+          "Mensuel"
+        ],
+        [
+          "News APIs",
+          "Titres, sentiment FinBERT",
+          "Temps reel"
+        ],
+        [
+          "Alternative Data",
+          "Social sentiment, flows, short interest",
+          "Daily"
+        ]
+      ],
+      "audioFile": "algo_million_s24.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le stockage optimal : Parquet + DuckDB + TimescaleDB",
+      "text": "Parquet : format colonnaire ultra-compact pour l'historique. 10 ans de donnees pour 3000 symboles en moins de 2 Go. DuckDB : moteur SQL analytique en memoire pour les requetes ad-hoc et les backtests. TimescaleDB : PostgreSQL avec extension time-series pour les requetes en production avec indexation temporelle optimisee.",
+      "audioFile": "algo_million_s25.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Feature Store : l'entrepot du quant solo",
+      "text": "Le Feature Store stocke toutes les features pre-calculees, pret-a-servir pour le backtest et le live trading. Architecture : Parquet partitionne par date pour l'historique (rapide a lire en batch), DuckDB pour les requetes analytiques ad-hoc, TimescaleDB pour les queries temps reel en production. Point-in-time retrieval est obligatoire pour eviter le look-ahead bias.",
+      "audioFile": "algo_million_s26.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Qualite des donnees : la paranoia qui sauve votre capital",
+      "text": "Implementez des checks automatiques : alertes si plus de 5% de donnees manquantes un jour, detection des prix aberrants (> 3 sigma du jour precedent), verification que le nombre de symboles dans l'univers ne change pas brutalement. Un pipeline silencieux qui ingere des donnees corrompues est pire que pas de pipeline du tout.",
+      "audioFile": "algo_million_s27.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Data Pipeline : points cles",
+      "items": [
+        "6 sources de donnees : IBKR, Yahoo, SEC EDGAR, FRED, News, Alternative data",
+        "Corporate actions (splits, dividendes) : le probleme ignore par 95% des backtests",
+        "50 features en 6 familles : momentum, value, quality, volatilite, sentiment, technique",
+        "Feature Store avec point-in-time retrieval pour eviter le look-ahead bias",
+        "Qualite des donnees : checks automatiques, alertes, paranoia productive"
+      ],
+      "audioFile": "algo_million_s28.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le point-in-time retrieval : eviter le look-ahead bias",
+      "text": "Le look-ahead bias est le peche mortel du backtesting. Il consiste a utiliser des donnees qui n'etaient pas encore disponibles au moment de la decision. Exemple : utiliser les earnings Q4 publies en fevrier pour une decision de trading en janvier. Le Feature Store doit GARANTIR qu'on ne voit que les donnees disponibles a la date de simulation. Un seul bug de ce type invalide tout le backtest.",
+      "audioFile": "algo_million_s29.wav"
+    },
+    {
+      "type": "comparison",
+      "title": "Parquet vs TimescaleDB : quand utiliser quoi ?",
+      "left": {
+        "label": "Parquet (batch/backtest)",
+        "items": [
+          "Format colonnaire ultra-compact",
+          "10 ans de donnees en < 2 Go",
+          "Lecture sequentielle tres rapide",
+          "Ideal pour vectorbt et les backtests massifs"
+        ]
+      },
+      "right": {
+        "label": "TimescaleDB (production/live)",
+        "items": [
+          "Requetes SQL temps reel optimisees",
+          "Indexation temporelle native",
+          "Compression automatique de l'historique",
+          "Ideal pour le trading engine en production"
+        ]
+      },
+      "audioFile": "algo_million_s30.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Pourquoi utilise-t-on Polars plutot que Pandas pour le backtest ?",
+      "choices": [
+        "Polars a une meilleure documentation",
+        "Polars est environ 10x plus rapide grace a son execution parallele",
+        "Polars supporte plus de formats de fichiers",
+        "Polars est ecrit en Python pur"
+      ],
+      "correctIndex": 1,
+      "explanation": "Polars est ecrit en Rust et exploite le parallelisme natif, ce qui le rend environ 10 fois plus rapide que Pandas pour les operations de backtest sur de gros datasets. C'est crucial quand on traite 3000 symboles sur 10 ans de donnees.",
+      "audioFile": "algo_million_s31.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Alpha Factors & Signal Research",
+        "subtitle": "50+ facteurs, processus de recherche, anti-overfit",
+        "partNumber": 3
+      },
+      "audioFile": "algo_million_s32.wav"
+    },
+    {
+      "type": "quote",
+      "text": "Un facteur sans justification economique est du data mining. Le data mining produit des backtests magnifiques et des pertes reelles.",
+      "source": "Principe de recherche alpha",
+      "audioFile": "algo_million_s33.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Qu'est-ce qu'un alpha factor ?",
+      "text": "Un alpha factor est une variable predictive qui capture une anomalie de marche exploitable. La recherche academique a identifie des centaines de facteurs, mais seuls environ 50 restent profitables apres couts de transaction et ajustement pour le data mining bias. Chaque facteur doit avoir une justification economique AVANT de regarder les donnees.",
+      "audioFile": "algo_million_s34.wav"
+    },
+    {
+      "type": "table",
+      "title": "Les 12 facteurs Momentum : les plus puissants",
+      "headers": [
+        "Facteur",
+        "Calcul",
+        "IC moyen"
+      ],
+      "rows": [
+        [
+          "MOM_12_1",
+          "Return 12 mois excluant le dernier mois",
+          "0.04-0.06"
+        ],
+        [
+          "MOM_6_1",
+          "Return 6 mois excluant le dernier mois",
+          "0.03-0.05"
+        ],
+        [
+          "ACCEL_MOM",
+          "Acceleration : MOM_6_1 - MOM_12_7",
+          "0.03-0.05"
+        ],
+        [
+          "EARNINGS_MOM",
+          "Surprise de resultats standardisee (SUE)",
+          "0.04-0.07"
+        ],
+        [
+          "REVISION_MOM",
+          "Variation du consensus EPS 1 mois",
+          "0.03-0.06"
+        ],
+        [
+          "IDIO_MOM",
+          "Momentum residuel apres Fama-French 5 facteurs",
+          "0.03-0.05"
+        ],
+        [
+          "PRICE_52W",
+          "Prix / 52-week high",
+          "0.03-0.05"
+        ],
+        [
+          "VOL_MOM",
+          "Return x (Volume / Volume_avg_20)",
+          "0.02-0.04"
+        ]
+      ],
+      "audioFile": "algo_million_s35.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le momentum : l'anomalie la plus robuste de la finance",
+      "text": "Documente par Jegadeesh & Titman en 1993, le momentum persiste depuis 200 ans sur tous les marches. Pourquoi ca marche : sous-reaction des investisseurs aux bonnes nouvelles, herding des institutionnels, disposition effect des particuliers (vendre les gagnants trop tot). Son risque connu : les momentum crashes (mars 2009, novembre 2020).",
+      "audioFile": "algo_million_s36.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le MOM_12_1 : le roi des facteurs",
+      "text": "Le momentum 12 mois excluant le dernier mois est le facteur le plus cite en finance academique. Pourquoi exclure le dernier mois ? Parce que le dernier mois capture le \"short-term reversal\" (les gagnants recents sous-performent a 1 mois). En excluant ce mois, on isole le momentum pur de moyen terme, qui est le signal le plus propre et le plus stable.",
+      "audioFile": "algo_million_s37.wav"
+    },
+    {
+      "type": "concept",
+      "title": "IC : Information Coefficient, la mesure du signal",
+      "text": "L'IC est la correlation entre le facteur et les rendements futurs. Un IC de 0.03 parait faible, mais sur 3000 actions avec rebalancement mensuel, ca genere un alpha significatif. La regle : IC > 0.02 est exploitable, IC > 0.05 est excellent, IC > 0.10 est suspicieux (verifier l'overfitting). L'IC Decay mesure combien de temps le signal reste predictif.",
+      "audioFile": "algo_million_s38.wav"
+    },
+    {
+      "type": "table",
+      "title": "Facteurs Value & Quality",
+      "headers": [
+        "Facteur",
+        "Calcul",
+        "IC"
+      ],
+      "rows": [
+        [
+          "FCF_YIELD",
+          "Free Cash Flow / Enterprise Value",
+          "0.03-0.05"
+        ],
+        [
+          "E/P",
+          "1 / Forward P/E",
+          "0.02-0.04"
+        ],
+        [
+          "EBITDA_EV",
+          "EBITDA / Enterprise Value",
+          "0.02-0.04"
+        ],
+        [
+          "ROE",
+          "Net Income / Equity",
+          "0.02-0.04"
+        ],
+        [
+          "PIOTROSKI_F",
+          "F-Score (9 criteres binaires)",
+          "0.03-0.05"
+        ],
+        [
+          "ACCRUALS",
+          "(NI - CFO) / Total Assets",
+          "0.02-0.04"
+        ],
+        [
+          "GROSS_MARGIN",
+          "Gross Profit / Revenue",
+          "0.02-0.03"
+        ]
+      ],
+      "audioFile": "algo_million_s39.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Facteurs Sentiment & Alternatifs",
+      "items": [
+        "SOCIAL_MOMENTUM : variation 7j du volume de mentions positives (StockTwits)",
+        "SHORT_INTEREST_CHG : variation du short interest sur 14 jours",
+        "INSIDER_BUY : achats insiders net / Market Cap sur 30 jours (IC 0.03-0.06)",
+        "OPTIONS_SKEW : IV Put 25 delta / IV Call 25 delta",
+        "NEWS_SENTIMENT : score NLP des news 7 derniers jours (FinBERT)",
+        "FLOW_IMBALANCE : net institutional flow (13F trimestriel)"
+      ],
+      "audioFile": "algo_million_s40.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Le Research Process anti-overfit",
+      "steps": [
+        {
+          "step": "Economic Prior",
+          "detail": "Chaque facteur DOIT avoir une justification economique AVANT l'analyse. Si la reponse est vague, rejeter."
+        },
+        {
+          "step": "Univers Disjoint",
+          "detail": "Tester sur un univers DIFFERENT de celui de la production. Si ca marche dans les deux, c'est robuste."
+        },
+        {
+          "step": "Walk-Forward OOS",
+          "detail": "JAMAIS de backtest in-sample uniquement. Walk-forward avec train/test splits disjoints. CPCV pour le scoring."
+        },
+        {
+          "step": "Deflated Sharpe",
+          "detail": "Corriger le Sharpe pour le nombre de tests effectues. Un Sharpe de 1.0 trouve apres 1000 tests vaut zero."
+        }
+      ],
+      "audioFile": "algo_million_s41.wav"
+    },
+    {
+      "type": "table",
+      "title": "Combinaison des facteurs : methodes",
+      "headers": [
+        "Methode",
+        "IC boost",
+        "Risque d'overfit",
+        "Recommandation"
+      ],
+      "rows": [
+        [
+          "Equal Weight",
+          "x racine(N)",
+          "Zero",
+          "Baseline, toujours tester en premier"
+        ],
+        [
+          "IC-Weighted",
+          "Legerement meilleur",
+          "Faible",
+          "Ameliore l'equal-weight"
+        ],
+        [
+          "Ridge Regression",
+          "Optimal lineaire",
+          "Modere",
+          "Bon compromis perf/robustesse"
+        ],
+        [
+          "XGBoost",
+          "Non-lineaire x2-3",
+          "Eleve",
+          "Uniquement avec CPCV strict"
+        ],
+        [
+          "Neural Network",
+          "Variable",
+          "Tres eleve",
+          "Non recommande a notre taille"
+        ]
+      ],
+      "audioFile": "algo_million_s42.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Le danger numero 1 : l'overfitting",
+      "text": "Avec 50+ facteurs et 20 ans de donnees, il est trivial de trouver une combinaison qui backtest a 200%+ de CAGR. Mais cette combinaison ne survivra pas en production. Le processus de recherche doit etre concu pour MINIMISER l'overfitting a chaque etape. Si ca semble trop beau pour etre vrai, ca l'est probablement.",
+      "audioFile": "algo_million_s43.wav"
+    },
+    {
+      "type": "concept",
+      "title": "La magie de la combinaison : IC composite en racine de N",
+      "text": "Si chaque facteur a un IC de 0.03 et qu'ils sont peu correles entre eux, la combinaison de N facteurs augmente l'IC composite proportionnellement a racine de N. Avec 10 facteurs independants, l'IC passe de 0.03 a environ 0.095. C'est le multiplicateur gratuit de la diversification des signaux.",
+      "audioFile": "algo_million_s44.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Alpha Factors : points cles",
+      "items": [
+        "50+ facteurs en 6 familles : Momentum (le plus puissant), Value, Quality, Volatilite, Sentiment, Technique",
+        "Chaque facteur doit avoir un economic prior AVANT l'analyse de donnees",
+        "Process anti-overfit : Prior economique, Univers disjoint, Walk-Forward, Deflated Sharpe",
+        "Combinaison : Equal-weight en baseline, Ridge Regression en sweet spot"
+      ],
+      "audioFile": "algo_million_s45.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Qu'est-ce que le Deflated Sharpe Ratio ?",
+      "choices": [
+        "Le Sharpe ajuste pour l'inflation",
+        "Le Sharpe corrige pour le nombre de tests effectues (data mining)",
+        "Le Sharpe calcule sur une periode plus courte",
+        "Le Sharpe divise par la volatilite du benchmark"
+      ],
+      "correctIndex": 1,
+      "explanation": "Le Deflated Sharpe Ratio de Bailey & Lopez de Prado corrige le Sharpe observe pour le nombre de strategies testees. Plus vous testez de variantes, plus vous avez de chances de trouver un Sharpe eleve par hasard. Le DSR penalise cette exploration pour donner un Sharpe \"reel\".",
+      "audioFile": "algo_million_s46.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Portfolio Construction & Optimisation",
+        "subtitle": "Kelly Criterion, HRP, Risk Budgeting, contraintes",
+        "partNumber": 4
+      },
+      "audioFile": "algo_million_s47.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pourquoi la construction de portefeuille est le vrai edge",
+      "text": "La majorite des traders algo passent 90% de leur temps sur les signaux alpha et 10% sur la construction de portefeuille. C'est une erreur fondamentale. Un excellent allocateur avec des signaux moyens bat systematiquement un mauvais allocateur avec d'excellents signaux. L'alpha d'un signal decroit avec le crowding, mais l'alpha de construction de portefeuille est structurel et durable.",
+      "audioFile": "algo_million_s48.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Kelly Criterion : la formule qui maximise la croissance",
+      "text": "f* = mu / sigma carre. C'est la fraction optimale de capital a risquer pour maximiser le taux de croissance geometrique. Mais le Full Kelly genere des drawdowns insoutenables (50-70%). On utilise le Half-Kelly qui maintient 75% de la croissance optimale tout en limitant le drawdown max a environ 25%, exactement notre contrainte.",
+      "audioFile": "algo_million_s49.wav"
+    },
+    {
+      "type": "table",
+      "title": "Kelly fractionnel : quel niveau choisir ?",
+      "headers": [
+        "Fraction",
+        "Croissance vs Full",
+        "Volatilite",
+        "Max DD typique",
+        "Avis"
+      ],
+      "rows": [
+        [
+          "Full Kelly (1.0)",
+          "100%",
+          "~40%",
+          "50-70%",
+          "Theorique uniquement"
+        ],
+        [
+          "3/4 Kelly (0.75)",
+          "94%",
+          "~30%",
+          "35-50%",
+          "Agressif"
+        ],
+        [
+          "Half Kelly (0.50)",
+          "75%",
+          "~20%",
+          "20-30%",
+          "NOTRE CHOIX"
+        ],
+        [
+          "Quarter Kelly (0.25)",
+          "44%",
+          "~10%",
+          "10-15%",
+          "Conservateur"
+        ]
+      ],
+      "audioFile": "algo_million_s50.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le shrinkage bayesien : l'astuce critique",
+      "text": "Le Kelly standard surestime le sizing car il prend les rendements historiques au pied de la lettre. Le shrinkage bayesien tire les estimations vers un prior sceptique (mu = 0). Resultat : une strategie avec 500 trades et Sharpe 1.2 garde ~95% de son Kelly brut, mais une strategie avec 30 trades et Sharpe 2.5 ne garde que ~37%. Scepticisme proportionnel a l'incertitude.",
+      "audioFile": "algo_million_s51.wav"
+    },
+    {
+      "type": "steps",
+      "title": "HRP : l'alternative moderne a Markowitz",
+      "steps": [
+        {
+          "step": "Tree Clustering",
+          "detail": "Calculer la matrice de correlation, convertir en distance, appliquer le clustering agglomeratif. Resultat : un dendrogramme."
+        },
+        {
+          "step": "Quasi-Diagonalisation",
+          "detail": "Reordonner les actifs selon l'ordre du dendrogramme. Les actifs similaires sont cote a cote, creant une structure quasi-diagonale."
+        },
+        {
+          "step": "Recursive Bisection",
+          "detail": "Diviser recursivement le portefeuille en deux clusters. Allouer le capital inversement proportionnel a la variance de chaque cluster."
+        }
+      ],
+      "audioFile": "algo_million_s52.wav"
+    },
+    {
+      "type": "table",
+      "title": "Comparatif des methodes d'allocation (backtest 2010-2025)",
+      "headers": [
+        "Methode",
+        "CAGR",
+        "Sharpe",
+        "Max DD",
+        "Calmar"
+      ],
+      "rows": [
+        [
+          "Equal Weight",
+          "12.4%",
+          "0.65",
+          "-34.2%",
+          "0.36"
+        ],
+        [
+          "Risk Parity",
+          "10.8%",
+          "0.72",
+          "-22.1%",
+          "0.49"
+        ],
+        [
+          "Min Variance",
+          "8.6%",
+          "0.81",
+          "-18.5%",
+          "0.46"
+        ],
+        [
+          "HRP",
+          "13.1%",
+          "0.82",
+          "-19.8%",
+          "0.66"
+        ],
+        [
+          "Kelly + HRP",
+          "18.7%",
+          "0.91",
+          "-24.3%",
+          "0.77"
+        ]
+      ],
+      "audioFile": "algo_million_s53.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Les 4 piliers de la construction de portefeuille",
+      "items": [
+        "Sizing : combien allouer a chaque position ? (Kelly Criterion)",
+        "Diversification : comment decorrelees les positions ? (HRP, Risk Parity)",
+        "Contraintes : quelles limites hard imposer ? (max 10% par position, 30% par secteur)",
+        "Dynamique : comment reallouer dans le temps ? (Meta-allocateur adaptatif au regime)"
+      ],
+      "audioFile": "algo_million_s54.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pourquoi pas Markowitz ?",
+      "text": "L'optimisation Mean-Variance de Markowitz avec 500 actifs necessite d'estimer 125 250 parametres dans la matrice de covariance. Toute erreur d'estimation est amplifiee par l'inversion de la matrice, produisant des poids extremes et instables. En pratique, le simple equal-weight bat souvent Markowitz out-of-sample. HRP resout ce probleme sans inversion de matrice.",
+      "audioFile": "algo_million_s55.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Risk Budgeting : chaque strategie a son budget de risque",
+      "text": "Au lieu d'allouer du capital, on alloue du RISQUE. Chaque strategie recoit un budget de risque proportionnel a son Sharpe historique et a la confiance qu'on lui accorde. La confiance se calcule sur 4 dimensions : nombre de trades (30%), stabilite OOS (35%), anciennete live (20%), coherence economique (15%).",
+      "audioFile": "algo_million_s56.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Portfolio Construction : points cles",
+      "items": [
+        "Half-Kelly pour le sizing : 75% de la croissance optimale, DD max ~25%",
+        "HRP (Lopez de Prado, 2016) remplace Markowitz : pas d'inversion de matrice",
+        "Kelly + HRP = meilleur Calmar ratio (0.77 vs 0.36 pour equal-weight)",
+        "Risk Budgeting avec score de confiance sur 4 dimensions"
+      ],
+      "audioFile": "algo_million_s57.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Pourquoi n'utilise-t-on PAS l'optimisation de Markowitz ?",
+      "choices": [
+        "Parce qu'elle est trop lente a calculer",
+        "Parce qu'elle necessite des donnees en temps reel",
+        "Parce qu'elle amplifie les erreurs d'estimation de la matrice de covariance",
+        "Parce qu'elle ne fonctionne qu'avec des obligations"
+      ],
+      "correctIndex": 2,
+      "explanation": "L'optimisation Mean-Variance de Markowitz est un amplificateur d'erreurs d'estimation. Avec 500 actifs, la matrice de covariance a 125 250 parametres a estimer. Toute erreur est amplifiee par l'inversion de la matrice, produisant des poids extremes et instables. HRP resout ce probleme sans inversion.",
+      "audioFile": "algo_million_s58.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Execution & Market Microstructure",
+        "subtitle": "OMS, routage intelligent, slippage, multi-marches",
+        "partNumber": 5
+      },
+      "audioFile": "algo_million_s59.wav"
+    },
+    {
+      "type": "quote",
+      "text": "L'execution est le dernier kilometre du trading algo. Un signal parfait mal execute est un signal perdant.",
+      "source": "Principe de microstructure",
+      "audioFile": "algo_million_s60.wav"
+    },
+    {
+      "type": "concept",
+      "title": "La microstructure : ce qui se passe vraiment",
+      "text": "La microstructure etudie comment les prix se forment tick par tick. Comprendre le spread bid-ask, la profondeur du carnet, et le market impact est la difference entre perdre 0.5% par trade en slippage (catastrophique sur 1000 trades/an) et gagner 0.05% en execution alpha. Modele d'impact : sigma x racine(Q/V).",
+      "audioFile": "algo_million_s61.wav"
+    },
+    {
+      "type": "table",
+      "title": "Impact de marche par type d'actif",
+      "headers": [
+        "Type",
+        "ADV typique",
+        "Spread moyen",
+        "Fenetre d'execution"
+      ],
+      "rows": [
+        [
+          "US Large-Cap (AAPL)",
+          "$5B+",
+          "1-2 bps",
+          "Market order OK"
+        ],
+        [
+          "US Mid-Cap",
+          "$100-500M",
+          "3-8 bps",
+          "Limit order"
+        ],
+        [
+          "US Small-Cap",
+          "$10-100M",
+          "10-30 bps",
+          "TWAP 30min"
+        ],
+        [
+          "EU Large-Cap (ASML)",
+          "200M-1B euros",
+          "5-15 bps",
+          "Limit order"
+        ],
+        [
+          "EU Mid-Cap",
+          "20-200M euros",
+          "15-40 bps",
+          "TWAP 1h"
+        ],
+        [
+          "ETF (SPY, QQQ)",
+          "$20B+",
+          "1 bps",
+          "Market order OK"
+        ]
+      ],
+      "audioFile": "algo_million_s62.wav"
+    },
+    {
+      "type": "warning",
+      "title": "La regle des 1% ADV",
+      "text": "Ne JAMAIS placer un ordre representant plus de 1% du volume quotidien moyen (ADV) en un seul bloc. Au-dela, le market impact devient significatif et potentiellement detectable par les predateurs HFT. Pour un portefeuille de 100K euros, cette contrainte est rarement atteinte sur les large-caps mais critique sur les small-caps EU.",
+      "audioFile": "algo_million_s63.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "L'OMS : le systeme nerveux de l'execution",
+      "items": [
+        "Pre-trade checks : position finale OK ? Taille < 1% ADV ? Marche ouvert ? Pas de doublon ?",
+        "Routing intelligent : Large-cap urgent = ADAPTIVE, Small-cap = TWAP, Cloture = LOC",
+        "Cycle de vie complet : PENDING > VALIDATED > SUBMITTED > PARTIAL_FILL > FILLED",
+        "Fill management : relancer les partial fills, annuler apres TTL, logger le slippage",
+        "Post-trade : slippage en bps = (fill_price - decision_price) / decision_price x 10000"
+      ],
+      "audioFile": "algo_million_s64.wav"
+    },
+    {
+      "type": "comparison",
+      "title": "Algorithmes d'execution",
+      "left": {
+        "label": "TWAP (Time-Weighted)",
+        "items": [
+          "Decouper l'ordre en tranches egales dans le temps",
+          "Simple et previsible",
+          "Ideal pour les small-caps",
+          "Risque : vulnerable si le prix bouge fort"
+        ]
+      },
+      "right": {
+        "label": "VWAP (Volume-Weighted)",
+        "items": [
+          "Calibrer la taille des tranches sur le profil de volume",
+          "Plus sophistique, meilleur prix moyen",
+          "Ideal pour les mid-caps liquides",
+          "Necessite un modele de volume intraday"
+        ]
+      },
+      "audioFile": "algo_million_s65.wav"
+    },
+    {
+      "type": "table",
+      "title": "Pre-trade Risk Checks : les garde-fous en temps reel",
+      "headers": [
+        "Check",
+        "Regle",
+        "Si viole"
+      ],
+      "rows": [
+        [
+          "Position finale",
+          "Respecte les contraintes du portefeuille",
+          "Rejet de l'ordre"
+        ],
+        [
+          "Taille vs ADV",
+          "< 1% du volume quotidien moyen",
+          "Split en TWAP"
+        ],
+        [
+          "Marche ouvert",
+          "Le marche est ouvert pour ce symbole",
+          "Mise en queue"
+        ],
+        [
+          "Anti-doublon",
+          "Pas de meme symbole+side en 5 minutes",
+          "Rejet + alerte"
+        ],
+        [
+          "Capital dispo",
+          "Cash + ventes en cours suffisants",
+          "Rejet"
+        ],
+        [
+          "Trading halt",
+          "Pas de suspension sur ce symbole",
+          "Rejet + alerte"
+        ]
+      ],
+      "audioFile": "algo_million_s66.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Multi-marches : gestion des fuseaux horaires",
+      "text": "Trader US + EU + APAC implique 3 sessions avec des chevauchements partiels. APAC ouvre quand l'EU dort, l'EU ouvre quand les US dorment. Le scheduler doit gerer les jours feries specifiques a chaque bourse (Golden Week au Japon, etc.). Toujours stocker les timestamps en UTC et convertir au moment de l'affichage.",
+      "audioFile": "algo_million_s67.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Execution : points cles",
+      "items": [
+        "Comprendre la microstructure : spread, depth, market impact",
+        "Regle des 1% ADV : ne jamais depasser en un seul bloc",
+        "OMS avec pre-trade checks, routing intelligent, et post-trade analysis",
+        "TWAP pour les small-caps, VWAP pour les mid-caps, Market pour les large-caps",
+        "Gestion multi-timezone : tout en UTC, calendriers de chaque bourse"
+      ],
+      "audioFile": "algo_million_s68.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Strategies Momentum Cross-Region",
+        "subtitle": "4 strategies, backtest 2010-2025, code complet",
+        "partNumber": 6
+      },
+      "audioFile": "algo_million_s69.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le momentum : le facteur le mieux documente en finance",
+      "text": "Les actions qui ont bien performe sur les 3-12 derniers mois tendent a continuer de bien performer. Ce phenomene persiste depuis 200 ans, sur tous les marches. Quatre explications : sous-reaction aux bonnes nouvelles, herding institutionnel, disposition effect des particuliers, et achat mecanique par les ETF indiciels.",
+      "audioFile": "algo_million_s70.wav"
+    },
+    {
+      "type": "table",
+      "title": "Les 4 strategies momentum et leur role",
+      "headers": [
+        "Strategie",
+        "Univers",
+        "Holding",
+        "Allocation"
+      ],
+      "rows": [
+        [
+          "Cross-Section Momentum (CSM)",
+          "1500 actions US+EU+APAC",
+          "1 mois",
+          "20%"
+        ],
+        [
+          "Time-Series Momentum (TSMOM)",
+          "50 ETF sectoriels + pays",
+          "1-3 mois",
+          "16%"
+        ],
+        [
+          "Post-Earnings Drift (PEAD)",
+          "Actions post-earnings surprise",
+          "5-20 jours",
+          "15%"
+        ],
+        [
+          "Industry Rotation",
+          "11 secteurs GICS",
+          "1 mois",
+          "14%"
+        ]
+      ],
+      "audioFile": "algo_million_s71.wav"
+    },
+    {
+      "type": "concept",
+      "title": "CSM : le classique revisite",
+      "text": "Acheter les gagnants, eviter les perdants. Notre version enrichit le signal avec un momentum composite multi-facteurs : 40% MOM_12_1 + 25% MOM_6_1 + 20% ACCEL_MOM + 15% proximite 52W High. Filtre qualite obligatoire : ROE > 5%, Debt/Equity < 3, Revenue growth > -20%. Top 30 positions, rebalancement mensuel.",
+      "audioFile": "algo_million_s72.wav"
+    },
+    {
+      "type": "table",
+      "title": "Resultats backtest CSM (2010-2025)",
+      "headers": [
+        "Metrique",
+        "CSM Long-Only",
+        "SPY"
+      ],
+      "rows": [
+        [
+          "CAGR",
+          "24.3%",
+          "13.2%"
+        ],
+        [
+          "Sharpe Ratio",
+          "1.35",
+          "0.72"
+        ],
+        [
+          "Max Drawdown",
+          "-22.1%",
+          "-33.9%"
+        ],
+        [
+          "Calmar Ratio",
+          "1.10",
+          "0.39"
+        ],
+        [
+          "Win Rate (mois)",
+          "64%",
+          "62%"
+        ],
+        [
+          "Avg win / Avg loss",
+          "1.8",
+          "-"
+        ]
+      ],
+      "audioFile": "algo_million_s73.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le filtre qualite : eviter les \"momentum traps\"",
+      "text": "Un momentum trap est une action qui monte fort pour de mauvaises raisons : short squeeze, pump & dump, speculation sans fondamentaux. Le filtre qualite (ROE > 5%, dette raisonnable, revenus en croissance) elimine 15-20% des candidats mais ameliore le Sharpe de 0.2-0.3 points. La qualite n'est pas optionnelle, elle est structurelle.",
+      "audioFile": "algo_million_s74.wav"
+    },
+    {
+      "type": "concept",
+      "title": "TSMOM : le trend following sur ETF",
+      "text": "Contrairement au CSM (relatif : quoi acheter), le TSMOM est absolu : faut-il etre investi ? Si un actif a un trend positif sur 12 mois, on est long. Si negatif, on est cash (long-only = pas de short). S'applique a un univers de 50 ETF sectoriels et regionaux. Le TSMOM est le gardien macro du portefeuille.",
+      "audioFile": "algo_million_s75.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Filtres qualite pour eviter les momentum traps",
+      "items": [
+        "ROE > 5% : exclure les zombies qui montent sur du short squeeze",
+        "Debt/Equity < 3 : exclure les surendettes vulnerables",
+        "Revenue growth > -20% : exclure les entreprises en declin structurel",
+        "Pas d'earnings dans les 5 prochains jours : eviter la volatilite pre-annonce",
+        "Short interest < 20% : eviter les short squeezes non fondamentaux"
+      ],
+      "audioFile": "algo_million_s76.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Industry Rotation : surfer les cycles economiques",
+      "text": "Les 11 secteurs GICS ne performent pas en meme temps. La tech surperforme en expansion, l'energie en late-cycle, la sante en recession. Le signal combine : PMI manufacturing, yield curve slope, credit spreads, et momentum sectoriel relatif. Rebalancement mensuel sur les 3-4 secteurs les plus forts.",
+      "audioFile": "algo_million_s77.wav"
+    },
+    {
+      "type": "concept",
+      "title": "PEAD : Post-Earnings Announcement Drift",
+      "text": "Les actions qui publient des resultats superieurs aux attentes tendent a continuer de monter pendant 5 a 20 jours apres l'annonce. C'est la sous-reaction du marche a l'information. Signal : SUE (Standardized Unexpected Earnings) > 2. Holding court (5-20 jours), alpha evenementiel pur, decorrelees du momentum classique.",
+      "audioFile": "algo_million_s78.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Le momentum crash : le talon d'Achille",
+      "text": "CSM a subi un drawdown de -22.1% en mars 2020 (COVID). Quand le marche se retourne violemment, les gagnants recents chutent plus que le marche. C'est EXACTEMENT pourquoi on combine avec la mean-reversion (Partie 7) et un detecteur de regime (Partie 9) qui reduit l'allocation momentum en Risk-Off.",
+      "audioFile": "algo_million_s79.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Strategies Momentum : points cles",
+      "items": [
+        "4 strategies complementaires : CSM, TSMOM, PEAD, Industry Rotation",
+        "CSM = moteur principal (CAGR 24.3%, Sharpe 1.35)",
+        "TSMOM = gardien macro (bascule en cash quand le trend est negatif)",
+        "PEAD = alpha evenementiel (5-20 jours post-earnings)",
+        "Risque connu : momentum crashes => combinaison avec mean-reversion obligatoire"
+      ],
+      "audioFile": "algo_million_s80.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Quelle est la difference entre CSM et TSMOM ?",
+      "choices": [
+        "CSM est plus rapide que TSMOM",
+        "CSM compare les actions entre elles (relatif), TSMOM mesure le trend absolu",
+        "TSMOM trade des actions individuelles, CSM trade des ETF",
+        "CSM est une strategie de mean-reversion"
+      ],
+      "correctIndex": 1,
+      "explanation": "Le Cross-Section Momentum (CSM) est RELATIF : il classe les actions entre elles et achete les meilleures. Le Time-Series Momentum (TSMOM) est ABSOLU : il mesure si le trend d'un actif est positif ou negatif, independamment des autres. CSM dit \"quoi acheter\", TSMOM dit \"faut-il etre investi\".",
+      "audioFile": "algo_million_s81.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Mean Reversion & Statistical Arbitrage",
+        "subtitle": "RSI Bounce, Pairs Trading, Bollinger Reversion",
+        "partNumber": 7
+      },
+      "audioFile": "algo_million_s82.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le yin du yang momentum",
+      "text": "Le momentum dit : ce qui monte continuera de monter (horizon 1-12 mois). La mean-reversion dit : ce qui baisse trop fort rebondira (horizon 1-10 jours). Les deux sont vrais simultanement mais sur des horizons differents. Cette complementarite est la cle d'un portefeuille resilient.",
+      "audioFile": "algo_million_s83.wav"
+    },
+    {
+      "type": "table",
+      "title": "Autocorrelation par horizon temporel",
+      "headers": [
+        "Horizon",
+        "Autocorrelation",
+        "Strategie dominante",
+        "Sharpe"
+      ],
+      "rows": [
+        [
+          "1-5 jours",
+          "Negative (-0.05 a -0.10)",
+          "Mean Reversion",
+          "0.6-1.0"
+        ],
+        [
+          "1-4 semaines",
+          "Environ zero",
+          "Neutre / PEAD",
+          "-"
+        ],
+        [
+          "1-12 mois",
+          "Positive (+0.05 a +0.15)",
+          "Momentum",
+          "0.8-1.5"
+        ],
+        [
+          "3-5 ans",
+          "Negative (-0.10 a -0.20)",
+          "Value / Long-term MR",
+          "0.4-0.7"
+        ]
+      ],
+      "audioFile": "algo_million_s84.wav"
+    },
+    {
+      "type": "steps",
+      "title": "RSI Oversold Bounce : acheter la panique",
+      "steps": [
+        {
+          "step": "Signal d'entree",
+          "detail": "RSI(14) < 25 ET Prix > EMA(200) ET Volume > 1.5x moyenne 20j ET action d'indice majeur"
+        },
+        {
+          "step": "Filtres de securite",
+          "detail": "Pas d'earnings dans les 5 prochains jours. RSI pas reste < 30 pendant plus de 10 jours consecutifs (evite les falling knives)"
+        },
+        {
+          "step": "Entree",
+          "detail": "Achat a l'ouverture du lendemain, limit order a 0.5% sous l'ouverture"
+        },
+        {
+          "step": "Sortie",
+          "detail": "Take profit : RSI > 50 OU +8%. Stop loss : -4%. Time stop : 10 jours max."
+        }
+      ],
+      "audioFile": "algo_million_s85.wav"
+    },
+    {
+      "type": "table",
+      "title": "Resultats RSI Bounce (2010-2025)",
+      "headers": [
+        "Metrique",
+        "RSI Bounce"
+      ],
+      "rows": [
+        [
+          "CAGR",
+          "14.2%"
+        ],
+        [
+          "Sharpe",
+          "0.85"
+        ],
+        [
+          "Max DD",
+          "-12.8%"
+        ],
+        [
+          "Win Rate",
+          "58%"
+        ],
+        [
+          "Avg holding",
+          "5.2 jours"
+        ],
+        [
+          "Profit Factor",
+          "2.2"
+        ],
+        [
+          "Correlation avec CSM",
+          "-0.15 (LE GRAAL)"
+        ]
+      ],
+      "audioFile": "algo_million_s86.wav"
+    },
+    {
+      "type": "tip",
+      "title": "La correlation negative : le graal de la diversification",
+      "text": "La correlation de -0.15 entre RSI Bounce et CSM est le point crucial. Quand le momentum souffre (les gagnants plongent), c'est exactement le moment ou la mean-reversion prospere (les surventes rebondissent). Cette anti-correlation naturelle reduit le drawdown combine de maniere disproportionnee.",
+      "audioFile": "algo_million_s87.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le time stop : la sortie oubliee",
+      "text": "Le time stop (sortie apres N jours si ni TP ni SL atteint) est la sortie la plus negligee en mean-reversion. Pourtant, si un RSI oversold ne rebondit pas en 10 jours, la these est invalidee. Rester en position \"parce que ca va finir par remonter\" est le biais cognitif qui transforme une strategie profitable en source de pertes. Fixez un time stop et respectez-le.",
+      "audioFile": "algo_million_s88.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Bollinger Band Reversion : la troisieme strategie mean-reversion",
+      "text": "Quand le prix sort de la bande inferieure de Bollinger (moyenne 20 jours +/- 2 ecarts-types), c'est un signal de survente statistique. Filtre : uniquement les actions avec un ADR (Average Daily Range) > 2% et qui sont au-dessus de leur EMA 50. Holding moyen : 3-5 jours. Win rate ~55% mais ratio gain/perte de 2:1.",
+      "audioFile": "algo_million_s89.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pairs Trading : arbitrage statistique",
+      "text": "Le pairs trading exploite les relations stables entre deux actifs. Quand deux actions historiquement correlee divergent, on achete celle qui a baisse. La cle : utiliser la cointegration (Engle-Granger ou Johansen), pas la simple correlation. Deux actions cointegrees ont un spread stationnaire qui revient TOUJOURS a la moyenne.",
+      "audioFile": "algo_million_s90.wav"
+    },
+    {
+      "type": "comparison",
+      "title": "Correlation vs Cointegration",
+      "left": {
+        "label": "Correlation",
+        "items": [
+          "Les rendements bougent dans la meme direction",
+          "Peut etre transitoire et instable",
+          "Mesure une relation lineaire instantanee",
+          "Insuffisante pour le pairs trading"
+        ]
+      },
+      "right": {
+        "label": "Cointegration",
+        "items": [
+          "Le spread entre les deux prix est stationnaire",
+          "Revient toujours a la moyenne",
+          "Propriete plus stable et plus exploitable",
+          "Test Engle-Granger ou Johansen"
+        ]
+      },
+      "audioFile": "algo_million_s91.wav"
+    },
+    {
+      "type": "table",
+      "title": "Pairs Trading : exemples de paires cointegrees",
+      "headers": [
+        "Paire",
+        "Secteur",
+        "Half-life du spread",
+        "Sharpe"
+      ],
+      "rows": [
+        [
+          "Coca-Cola / PepsiCo",
+          "Consumer Staples",
+          "12 jours",
+          "0.8"
+        ],
+        [
+          "ASML / Tokyo Electron",
+          "Semis",
+          "15 jours",
+          "0.7"
+        ],
+        [
+          "Visa / Mastercard",
+          "Financials",
+          "8 jours",
+          "0.9"
+        ],
+        [
+          "Airbus / Boeing",
+          "Aerospace",
+          "20 jours",
+          "0.6"
+        ],
+        [
+          "Shell / TotalEnergies",
+          "Energy",
+          "10 jours",
+          "0.8"
+        ]
+      ],
+      "audioFile": "algo_million_s92.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Combinaison momentum + mean-reversion : le portefeuille anti-fragile",
+      "text": "En combinant CSM (Sharpe 1.35, DD -22.1%) avec RSI Bounce (Sharpe 0.85, DD -12.8%, correlation -0.15), le portefeuille combine atteint un Sharpe de ~1.5 avec un DD de ~15%. La correlation negative fait que les pertes de l'un sont compensees par les gains de l'autre. C'est la diversification des STRATEGIES, pas seulement des actifs.",
+      "audioFile": "algo_million_s93.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Mean Reversion : points cles",
+      "items": [
+        "Complementaire au momentum : fonctionne sur des horizons courts (1-10 jours)",
+        "RSI Bounce : CAGR 14.2%, Sharpe 0.85, DD -12.8%, correlation -0.15 avec CSM",
+        "Pairs Trading via cointegration (pas simple correlation)",
+        "L'anti-correlation naturelle momentum/mean-reversion reduit le DD combine"
+      ],
+      "audioFile": "algo_million_s94.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Pourquoi le RSI Oversold Bounce exige que le prix soit AU-DESSUS de l'EMA 200 ?",
+      "choices": [
+        "Pour s'assurer que l'action est volatile",
+        "Pour confirmer que la tendance long-terme est haussiere et qu'on achete un creux temporaire",
+        "Pour eviter les actions trop cheres",
+        "Pour reduire le nombre de trades"
+      ],
+      "correctIndex": 1,
+      "explanation": "Le filtre Prix > EMA(200) garantit que la tendance de fond est haussiere. On ne veut acheter que des creux temporaires dans un trend positif, pas des actions en chute libre structurelle (falling knives). C'est la difference entre \"acheter la panique\" et \"attraper un couteau qui tombe\".",
+      "audioFile": "algo_million_s95.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Cross-Asset & Rotation Sectorielle",
+        "subtitle": "Dual Momentum, Sector Rotation, Tail Hedging",
+        "partNumber": 8
+      },
+      "audioFile": "algo_million_s96.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le probleme des strategies intra-equity en bear market",
+      "text": "Les strategies momentum et mean-reversion sont toutes des strategies sur actions. En bear market generalise comme 2008 ou mars 2020, TOUTES les actions baissent simultanement. Meme la mean-reversion souffre car les rebonds sont brefs et violents. La seule protection : basculer vers des classes d'actifs decorrelees.",
+      "audioFile": "algo_million_s97.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pourquoi les strategies cross-asset sont indispensables",
+      "text": "Les strategies momentum et mean-reversion sont toutes intra-equity. En bear market generalise, meme la mean-reversion souffre car toutes les actions baissent simultanement. Les strategies cross-asset resolvent ce probleme en basculant vers des classes d'actifs decorrelees : obligations (TLT), or (GLD), cash.",
+      "audioFile": "algo_million_s98.wav"
+    },
+    {
+      "type": "table",
+      "title": "Matrice de correlation cross-asset",
+      "headers": [
+        "",
+        "Actions US",
+        "Actions EU",
+        "Obligations",
+        "Or"
+      ],
+      "rows": [
+        [
+          "Actions US",
+          "1.00",
+          "0.85",
+          "-0.30",
+          "0.05"
+        ],
+        [
+          "Actions EU",
+          "0.85",
+          "1.00",
+          "-0.25",
+          "0.10"
+        ],
+        [
+          "Obligations",
+          "-0.30",
+          "-0.25",
+          "1.00",
+          "0.20"
+        ],
+        [
+          "Or",
+          "0.05",
+          "0.10",
+          "0.20",
+          "1.00"
+        ]
+      ],
+      "audioFile": "algo_million_s99.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Dual Momentum : le modele d'Antonacci revisite",
+      "text": "Le Dual Momentum combine momentum RELATIF (quel actif surperforme : US vs International) et momentum ABSOLU (est-ce que le trend est positif). Resultat : investi dans le meilleur actif quand les marches montent, et en cash/obligations quand ils baissent. Notre version ajoute un overlay VIX : si VIX > 30, equity reduite de 50%. Si VIX > 40, 100% safe haven.",
+      "audioFile": "algo_million_s100.wav"
+    },
+    {
+      "type": "table",
+      "title": "Resultats Dual Momentum (2010-2025)",
+      "headers": [
+        "Metrique",
+        "Dual Momentum",
+        "60/40",
+        "SPY"
+      ],
+      "rows": [
+        [
+          "CAGR",
+          "14.8%",
+          "8.5%",
+          "13.2%"
+        ],
+        [
+          "Sharpe",
+          "0.90",
+          "0.62",
+          "0.72"
+        ],
+        [
+          "Max DD",
+          "-12.5%",
+          "-20.8%",
+          "-33.9%"
+        ],
+        [
+          "Calmar",
+          "1.18",
+          "0.41",
+          "0.39"
+        ]
+      ],
+      "audioFile": "algo_million_s101.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le max DD de -12.5% vs -33.9% pour SPY",
+      "text": "Le Dual Momentum a esquive 64% du crash COVID en basculant en safe haven des mars 2020 (signal absolu negatif). C'est exactement son role dans le portefeuille : proteger pendant les crises. La difference entre \"inconfortable mais gerable\" et \"catastrophique\".",
+      "audioFile": "algo_million_s102.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "L'overlay VIX : le circuit-breaker automatique",
+      "items": [
+        "VIX < 15 : Risk-On complet, allocation equity maximale",
+        "VIX 15-20 : Neutre, allocation standard",
+        "VIX 20-28 : Early Risk-Off, equity reduite de 30%, safe haven augmente",
+        "VIX 28-35 : Risk-Off, equity reduite de 50%",
+        "VIX > 35 : Crisis mode, 100% safe haven, zero equity",
+        "Le VIX est le \"thermometre de la peur\" — il est mean-revertant avec un plancher a ~12"
+      ],
+      "audioFile": "algo_million_s103.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Sector Rotation avancee : 33 ETF sur 3 regions",
+      "text": "La rotation sectorielle etendue couvre US (XLK, XLF, XLE...), EU (EXV6, EXX5...) et APAC. Signal composite : 25% relative strength 3M, 20% breadth thrust, 20% earnings momentum sectoriel, 20% flow institutionnel, 15% sensibilite au regime macro. Surfer les cycles economiques avec precision.",
+      "audioFile": "algo_million_s104.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Cross-Asset : points cles",
+      "items": [
+        "Dual Momentum : momentum relatif + absolu + overlay VIX",
+        "Bascule vers obligations/or/cash en bear market",
+        "Max DD -12.5% vs -33.9% pour SPY sur la meme periode",
+        "Sector Rotation sur 33 ETF US/EU/APAC"
+      ],
+      "audioFile": "algo_million_s105.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Regime Adaptatif & Machine Learning",
+        "subtitle": "HMM, XGBoost, GARCH, NLP financier",
+        "partNumber": 9
+      },
+      "audioFile": "algo_million_s106.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Pourquoi les strategies statiques echouent",
+      "text": "Le cimetiere des backtests parfaits est rempli de strategies qui fonctionnaient magnifiquement sur les donnees historiques mais qui se sont effondrees en production. La raison : les marches changent de regime. Un marche bull, un marche bear, et un marche lateral requierent des strategies differentes. Le meta-allocateur doit detecter le regime et ajuster les poids en temps reel.",
+      "audioFile": "algo_million_s107.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Hidden Markov Models : les etats caches du marche",
+      "steps": [
+        {
+          "step": "Principe",
+          "detail": "Le marche alterne entre N etats caches (bull, bear, lateral) avec des probabilites de transition. Le HMM estime ces etats a partir des rendements et de la volatilite observes."
+        },
+        {
+          "step": "Entrainement",
+          "detail": "Algorithme Baum-Welch sur 10 ans de donnees. Typiquement 3-4 etats : Low-Vol Bull, High-Vol Bull, Correction, Crisis."
+        },
+        {
+          "step": "Inference",
+          "detail": "A chaque nouveau jour, calculer la probabilite d'etre dans chaque etat. Ajuster les poids du portefeuille en consequence."
+        },
+        {
+          "step": "Action",
+          "detail": "Regime bull : max momentum. Regime bear : max safe-haven. Regime lateral : max mean-reversion."
+        }
+      ],
+      "audioFile": "algo_million_s108.wav"
+    },
+    {
+      "type": "table",
+      "title": "Impact du detecteur de regime sur le portefeuille",
+      "headers": [
+        "Regime",
+        "Allocation Momentum",
+        "Allocation Mean-Rev",
+        "Allocation Safe-Haven"
+      ],
+      "rows": [
+        [
+          "Bull (Low Vol)",
+          "65%",
+          "15%",
+          "5%"
+        ],
+        [
+          "Bull (High Vol)",
+          "40%",
+          "25%",
+          "15%"
+        ],
+        [
+          "Correction",
+          "15%",
+          "35%",
+          "30%"
+        ],
+        [
+          "Crisis",
+          "0%",
+          "20%",
+          "60%"
+        ]
+      ],
+      "audioFile": "algo_million_s109.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le Reinforcement Learning : l'approche emergente",
+      "text": "Le RL apprend une politique d'allocation en interagissant avec un environnement simule. L'agent recoit une recompense (PnL ajuste au risque) et optimise sa politique sur des milliers d'episodes. Prometteur en theorie, mais en pratique tres difficile a stabiliser et sujet a l'overfitting sur l'environnement de simulation. Approche experimentale uniquement.",
+      "audioFile": "algo_million_s110.wav"
+    },
+    {
+      "type": "concept",
+      "title": "XGBoost pour le signal alpha",
+      "text": "Au-dela des facteurs lineaires, XGBoost capture des interactions non-lineaires entre facteurs. Exemple : momentum fort + volume elevee + sentiment positif = signal beaucoup plus fort que la somme. Mais attention : risque d'overfit tres eleve. Uniquement avec CPCV strict (Combinatorial Purged Cross-Validation) et plus de 10 ans de donnees.",
+      "audioFile": "algo_million_s111.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Les 4 regimes detectes par le HMM",
+      "items": [
+        "Low-Vol Bull : marche calme et haussier. Allocation max en momentum. Le regime le plus frequent (~45% du temps).",
+        "High-Vol Bull : marche haussier mais nerveux. Reduire le sizing, augmenter la mean-reversion.",
+        "Correction : baisse de 5-15%. Basculer vers safe haven et mean-reversion. Ne pas paniquer.",
+        "Crisis : baisse > 15%, VIX > 35. 60% safe haven, 20% mean-reversion, 0% momentum. Le regime le plus rare (~5%) mais le plus destructeur."
+      ],
+      "audioFile": "algo_million_s112.wav"
+    },
+    {
+      "type": "concept",
+      "title": "NLP financier : FinBERT pour le sentiment des news",
+      "text": "FinBERT est un modele de langage specialise en finance. Il analyse les titres et articles de news pour en extraire un score de sentiment (-1 a +1). Utilise comme facteur complementaire, le sentiment NLP ameliore l'IC composite de 0.01-0.02. Pas enorme seul, mais precieux en combinaison avec les autres facteurs.",
+      "audioFile": "algo_million_s113.wav"
+    },
+    {
+      "type": "concept",
+      "title": "GARCH : prevoir la volatilite de demain",
+      "text": "Le modele GARCH capture le clustering de volatilite : les periodes de haute volatilite sont suivies de haute volatilite, et vice-versa. On utilise GARCH(1,1) pour prevoir la vol a 1-5 jours et ajuster dynamiquement le sizing des positions. En periode de vol elevee, on reduit automatiquement les positions.",
+      "audioFile": "algo_million_s114.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Le piege du Machine Learning en finance",
+      "text": "Plus votre modele est complexe (neural networks, deep learning), plus le risque d'overfit est eleve. En finance, les donnees sont bruitees, non-stationnaires, et limitees en taille. Un modele qui memorise le passe au lieu de generaliser est pire qu'un modele lineaire simple. Toujours commencer simple, complexifier seulement si le gain est significatif OOS.",
+      "audioFile": "algo_million_s115.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Regime Adaptatif & ML : points cles",
+      "items": [
+        "HMM detecte les regimes caches : bull, bear, correction, crisis",
+        "Le meta-allocateur ajuste les poids en temps reel selon le regime",
+        "XGBoost pour les interactions non-lineaires (avec CPCV strict)",
+        "GARCH pour la prevision de volatilite et le sizing dynamique",
+        "Regle d'or : commencer simple, complexifier seulement si gain OOS significatif"
+      ],
+      "audioFile": "algo_million_s116.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "A quoi sert le HMM (Hidden Markov Model) dans notre systeme ?",
+      "choices": [
+        "A predire le prix exact d'une action demain",
+        "A detecter le regime de marche (bull, bear, lateral) et ajuster les allocations",
+        "A optimiser la matrice de covariance",
+        "A calculer le Kelly Criterion"
+      ],
+      "correctIndex": 1,
+      "explanation": "Le HMM detecte les etats caches du marche (bull, bear, correction, crisis) a partir des rendements et de la volatilite observes. Le meta-allocateur utilise cette detection pour ajuster dynamiquement les poids : plus de momentum en bull, plus de mean-reversion en lateral, plus de safe-haven en crisis.",
+      "audioFile": "algo_million_s117.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Production, Monitoring & Scale",
+        "subtitle": "Docker, Nomad, CI/CD, hardening, monitoring",
+        "partNumber": 10
+      },
+      "audioFile": "algo_million_s118.wav"
+    },
+    {
+      "type": "quote",
+      "text": "Si la VM brule, vous la reconstruisez en 15 minutes. Tout est dans Git.",
+      "source": "Philosophie Infrastructure as Code",
+      "audioFile": "algo_million_s119.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Everything as Code : tout dans Git",
+      "text": "L'integralite du systeme vit dans un seul depot Git : infrastructure (Terraform), orchestration (Nomad), secrets (Vault), containerisation (Docker), CI/CD (GitHub Actions), strategies (Python). Rien n'est configure manuellement. Tout est reproductible, auditable, et versionne. Si la VM brule, vous la reconstruisez en 15 minutes.",
+      "audioFile": "algo_million_s120.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Le stack DevOps du trader solo",
+      "steps": [
+        {
+          "step": "Terraform",
+          "detail": "Provisionne la VM Hetzner, firewall, DNS, volumes. La VM est INVISIBLE sur Internet (Tailscale only)."
+        },
+        {
+          "step": "Docker",
+          "detail": "Chaque service est containerise : trading engine, data pipeline, IB Gateway, monitoring, Discord bot."
+        },
+        {
+          "step": "Nomad",
+          "detail": "Orchestrateur de jobs : gere le deploiement, le scaling, et le restart automatique des containers."
+        },
+        {
+          "step": "Vault",
+          "detail": "Gestion des secrets : credentials IBKR, webhooks Discord, cles API. Jamais en clair dans le code."
+        },
+        {
+          "step": "GitHub Actions",
+          "detail": "CI : tests + lint + security scan. CD : deploy to production. Weekly : validation des backtests."
+        }
+      ],
+      "audioFile": "algo_million_s121.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Tailscale : la VM invisible",
+      "items": [
+        "La VM n'a AUCUN port ouvert sur Internet sauf Tailscale (41641/UDP)",
+        "Pas de SSH public, pas de HTTP, RIEN sauf le VPN mesh",
+        "Seul votre laptop (via Tailscale) peut acceder a la VM",
+        "MagicDNS : trading.tail12345.ts.net",
+        "Resultat : surface d'attaque quasi nulle"
+      ],
+      "audioFile": "algo_million_s122.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Monitoring Discord securise",
+      "text": "Chaque matin a 7h, le bot Discord poste : PnL du jour/semaine/mois, positions ouvertes, drawdown actuel, prochains rebalancements. Alertes en temps reel : si DD > 10%, si une strategie underperform, si le service tombe, si CPU/RAM anomal. Le Discord est votre tableau de bord.",
+      "audioFile": "algo_million_s123.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Le pipeline CI/CD pour le trading",
+      "steps": [
+        {
+          "step": "Push sur Git",
+          "detail": "Vous commitez un changement de strategie ou de parametre."
+        },
+        {
+          "step": "CI : Tests automatiques",
+          "detail": "GitHub Actions lance : unit tests, integration tests, linting, security scan (dependabot, bandit)."
+        },
+        {
+          "step": "CI : Backtest de regression",
+          "detail": "Le changement ne doit pas degrader le Sharpe ou augmenter le DD sur le backtest de reference."
+        },
+        {
+          "step": "CD : Deploy en paper",
+          "detail": "Si tous les tests passent, deploiement automatique en paper trading pendant 48h."
+        },
+        {
+          "step": "CD : Promotion en live",
+          "detail": "Apres validation en paper, promotion manuelle (ou automatique si le Sharpe paper > seuil)."
+        }
+      ],
+      "audioFile": "algo_million_s124.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Le role humain irreductible",
+      "text": "Claude Code ecrit le code, Docker le deploie, Nomad l'orchestre, GitHub Actions le teste. Mais VOUS decidez : quelles strategies ajouter/retirer, quels parametres ajuster, quand augmenter le capital, quand suspendre le systeme. L'automatisation elimine les decisions emotionnelles repetitives, pas les decisions strategiques.",
+      "audioFile": "algo_million_s125.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le lifecycle management automatise",
+      "text": "Le systeme gere automatiquement le cycle de vie des strategies : promotion (paper -> live), degradation (live -> paper si Sharpe < 0.5 pendant 3 mois), arret (paper -> archive si aucune amelioration en 6 mois). Pas de decision emotionnelle. Le code decide.",
+      "audioFile": "algo_million_s126.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Production & Ops : points cles",
+      "items": [
+        "Everything as Code : Terraform + Docker + Nomad + Vault",
+        "VM invisible via Tailscale (zero surface d'attaque)",
+        "CI/CD GitHub Actions : tests, security scan, deploy automatise",
+        "Monitoring Discord : PnL, positions, alertes en temps reel",
+        "Lifecycle automatise : promotion, degradation, arret des strategies"
+      ],
+      "audioFile": "algo_million_s127.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Pourquoi utilise-t-on Tailscale plutot que d'ouvrir le port SSH ?",
+      "choices": [
+        "Parce que Tailscale est plus rapide",
+        "Pour reduire la surface d'attaque a quasi zero (pas de port ouvert sur Internet)",
+        "Parce que SSH ne fonctionne pas sur Hetzner",
+        "Pour economiser de la bande passante"
+      ],
+      "correctIndex": 1,
+      "explanation": "Avec Tailscale, la VM n'expose AUCUN port sur Internet public. Seuls les appareils autorises dans votre reseau Tailscale peuvent se connecter. Cela elimine les attaques par force brute SSH, les scans de ports, et toute intrusion via Internet. La securite d'une VM de trading est critique car elle contient vos credentials broker.",
+      "audioFile": "algo_million_s128.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Vivre de son Algo",
+        "subtitle": "Retraits adaptatifs, fiscalite, guardrails anti-ruine",
+        "partNumber": 11
+      },
+      "audioFile": "algo_million_s129.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le probleme que personne ne pose dans les livres de quant",
+      "text": "Comment vivre de cet argent sans detruire le compound engine qui l'a cree ? J'ai vu des traders systematiques brillants, Sharpe > 2.5, drawdown < 8%, se retrouver au tapis en 18 mois parce qu'ils ont confondu revenus du trading et salaire stable. Le trading algo genere des flux non-lineaires, non-gaussiens, et auto-correles. Les traiter comme un salaire fixe est la recette du desastre.",
+      "audioFile": "algo_million_s130.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Les 3 phases de la transition",
+      "steps": [
+        {
+          "step": "Accumulation pure (0-18 mois)",
+          "detail": "Compound a 100% sans retrait. Chaque euro retire pendant cette phase coute exponentiellement plus cher. Un retrait de 5000 euros au mois 6 coute ~42 000 euros en valeur terminale."
+        },
+        {
+          "step": "Seuil critique (18-24 mois)",
+          "detail": "Capital >= 750K euros, track record >= 18 mois live, Sharpe >= 1.5, Max DD <= 20%. Debut des prelevements chirurgicaux."
+        },
+        {
+          "step": "Rente stabilisee (24+ mois)",
+          "detail": "Capital >= 1M euros. Les retraits sont geres par le WithdrawalManager automatise. Le capital continue de croitre, mais plus lentement."
+        }
+      ],
+      "audioFile": "algo_million_s131.wav"
+    },
+    {
+      "type": "comparison",
+      "title": "Retraite classique vs Algo Trading Rentier",
+      "left": {
+        "label": "Retraite 60/40",
+        "items": [
+          "Rendement : 7-8% nominal/an",
+          "Volatilite : 10-12%",
+          "Taux de retrait : 3-4% / an",
+          "Horizon : 30+ ans"
+        ]
+      },
+      "right": {
+        "label": "Algo Trading Rentier",
+        "items": [
+          "Rendement : 30-60% nominal/an",
+          "Volatilite : 25-45%",
+          "Taux de retrait : 15-25% / an (adaptatif)",
+          "Risque : alpha decay, regime shift"
+        ]
+      },
+      "audioFile": "algo_million_s132.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Variable Percentage Withdrawal (VPW)",
+      "text": "Le retrait mensuel s'ajuste dynamiquement : withdrawal_rate = min(monthly_return x fraction, max_monthly). Ajustements : si drawdown > 10%, fraction x 0.5. Si drawdown > 20%, retrait suspendu. Si Sharpe 6M > 2.0, fraction x 1.25 (bonus). Si buffer < 3 mois, fraction x 0.25 (reconstitution). L'automatisation elimine les decisions emotionnelles.",
+      "audioFile": "algo_million_s133.wav"
+    },
+    {
+      "type": "tip",
+      "title": "Le cout du compound perdu",
+      "text": "Un retrait de 5 000 euros au mois 6 sur un compte a 150K euros ne coute pas 5 000 euros. Il coute environ 42 000 euros en valeur terminale a 36 mois avec un CAGR de 40%. Pendant la phase d'accumulation, chaque euro retire coute exponentiellement plus cher que sa valeur faciale. Vivez de votre job, de vos economies, de freelance — de tout sauf du compte trading.",
+      "audioFile": "algo_million_s134.wav"
+    },
+    {
+      "type": "table",
+      "title": "Budget mensuel du million-rentier",
+      "headers": [
+        "Poste",
+        "Montant",
+        "Notes"
+      ],
+      "rows": [
+        [
+          "Logement",
+          "2 000 euros",
+          "Location moderee ou credit rembourse"
+        ],
+        [
+          "Alimentation",
+          "800 euros",
+          "Couple ou famille"
+        ],
+        [
+          "Transport",
+          "400 euros",
+          "Voiture + transports"
+        ],
+        [
+          "Assurances",
+          "500 euros",
+          "Sante, habitation, RC pro"
+        ],
+        [
+          "Loisirs/voyages",
+          "1 000 euros",
+          "Raisonnable"
+        ],
+        [
+          "Impots (Flat Tax)",
+          "~3 000 euros",
+          "30% sur les gains retires"
+        ],
+        [
+          "Epargne de precaution",
+          "1 000 euros",
+          "Buffer reconstitution"
+        ],
+        [
+          "TOTAL",
+          "~8 700 euros/mois",
+          "A 60% de la capacite de retrait"
+        ]
+      ],
+      "audioFile": "algo_million_s135.wav"
+    },
+    {
+      "type": "table",
+      "title": "Fiscalite France : les structures",
+      "headers": [
+        "Structure",
+        "Taux",
+        "Avantage"
+      ],
+      "rows": [
+        [
+          "Flat Tax (PFU)",
+          "30%",
+          "Simple, par defaut"
+        ],
+        [
+          "PEA",
+          "17.2% (PS seuls)",
+          "Apres 5 ans, uniquement actions EU"
+        ],
+        [
+          "Holding SAS/SASU",
+          "IS 15-25% + flat tax",
+          "Optimise si reinvestissement"
+        ],
+        [
+          "Assurance-Vie",
+          "7.5-12.8%",
+          "Apres 8 ans, plafonds annuels"
+        ]
+      ],
+      "audioFile": "algo_million_s136.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Psychologie du shift : grinder vers rentier",
+      "text": "Apres 18 mois a regarder une equity curve monter sans y toucher, le premier retrait provoque l'aversion au desinvestissement. Symptomes : paralysie (incapable d'appuyer sur \"retrait\"), compensation (augmenter le risque pour \"rattraper\"), micro-management (verifier le PnL 30 fois par jour). La solution : automatisation complete des retraits. Le WithdrawalManager decide, pas vous.",
+      "audioFile": "algo_million_s137.wav"
+    },
+    {
+      "type": "warning",
+      "title": "Le piege du lifestyle creep",
+      "text": "A 1M euros avec 15K euros/mois net, la tentation est immense : appartement plus grand, voiture, business class. Chaque augmentation de train de vie est un plancher permanent qui reduit votre marge de securite. Le trader rentier qui reussit a 10 ans est celui qui vit a 60% de sa capacite de retrait, pas a 100%.",
+      "audioFile": "algo_million_s138.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Guardrails anti-ruine",
+      "items": [
+        "Suspension automatique des retraits si DD > 20%",
+        "Buffer cash de 6 mois sur un compte separe (50-60K euros)",
+        "Regle du 60% : ne jamais vivre a plus de 60% de la capacite de retrait",
+        "Diversification : immobilier, obligations, assurance-vie en parallele",
+        "Circuit-breaker : si le capital tombe sous 500K euros, retour en Phase 1"
+      ],
+      "audioFile": "algo_million_s139.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Vivre de son Algo : points cles",
+      "items": [
+        "3 phases : accumulation pure, seuil critique, rente stabilisee",
+        "VPW adaptatif : retraits ajustes au drawdown, Sharpe, et buffer",
+        "Flat Tax 30% par defaut, PEA pour les actions EU (17.2% apres 5 ans)",
+        "Guardrails anti-ruine : suspension DD > 20%, buffer 6 mois, regle du 60%"
+      ],
+      "audioFile": "algo_million_s140.wav"
+    },
+    {
+      "type": "chapter-intro",
+      "chapter": {
+        "title": "Scaling & Exit",
+        "subtitle": "Analyse de capacite, multi-VM, licensing, family office, sortie",
+        "partNumber": 12
+      },
+      "audioFile": "algo_million_s141.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le chapitre final : la machine vous libere",
+      "text": "Vous avez franchi le million. Felicitations — et bienvenue dans de nouveaux problemes. A 100K euros, vous etiez un bruit de fond dans le carnet d'ordres. A 1M euros, vous laissez une empreinte. A 3M euros, certaines strategies small-cap sont physiquement impossibles. Ce chapitre couvre l'adaptation au succes.",
+      "audioFile": "algo_million_s142.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Quand votre taille deplace le marche",
+      "text": "A 100K euros, vous etes un bruit de fond. A 1M euros, vous laissez une empreinte. A 3M euros, certaines strategies small-cap sont physiquement impossibles sans market impact. La formule de capacite : Capacity = ADV x MaxParticipation x AvgHolding x UniverseSize x DiversificationFactor.",
+      "audioFile": "algo_million_s143.wav"
+    },
+    {
+      "type": "table",
+      "title": "Capacites par strategie",
+      "headers": [
+        "Strategie",
+        "US Large",
+        "US Small",
+        "EU Large",
+        "EU Small"
+      ],
+      "rows": [
+        [
+          "Momentum 20j",
+          "$50M+",
+          "$2M",
+          "$20M",
+          "$500K"
+        ],
+        [
+          "Mean Reversion 5j",
+          "$30M",
+          "$1.5M",
+          "$15M",
+          "$400K"
+        ],
+        [
+          "Cross-Asset Rotation",
+          "$200M+",
+          "N/A",
+          "$100M+",
+          "N/A"
+        ],
+        [
+          "Stat Arb Pairs",
+          "$20M",
+          "$800K",
+          "$10M",
+          "$300K"
+        ],
+        [
+          "Options Selling",
+          "$100M+",
+          "$2M",
+          "$30M",
+          "N/A"
+        ]
+      ],
+      "audioFile": "algo_million_s144.wav"
+    },
+    {
+      "type": "tip",
+      "title": "La strategie d'adaptation au scaling",
+      "text": "Au fur et a mesure que le capital croit, migrez les allocations des small-caps vers les large-caps et les ETF. Avec 1-3M euros, aucune contrainte de capacite sur US et EU large-caps. Le probleme se pose uniquement sur les small-caps et les marches APAC peu liquides.",
+      "audioFile": "algo_million_s145.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Family Office mono-personne",
+      "text": "Avec 3-5M euros, vous pouvez structurer un family office : SAS/SASU pour la gestion, assurance-vie luxembourgeoise pour l'optimisation fiscale, immobilier locatif pour les revenus decorrelees. L'objectif est de diversifier les sources de revenus au-dela du trading pour proteger votre patrimoine contre l'alpha decay de vos strategies.",
+      "audioFile": "algo_million_s146.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Au-dela du trading : diversifier les revenus",
+      "items": [
+        "Licensing de signaux : vendre vos signaux alpha via API (SaaS)",
+        "Family office mono-personne : structure SAS, assurance-vie, immobilier",
+        "Managed accounts : gerer le capital de proches (attention regulation AMF)",
+        "Education : cours, newsletter, consulting (monetiser votre expertise)",
+        "Angel investing : utiliser votre edge data pour evaluer les startups fintech"
+      ],
+      "audioFile": "algo_million_s147.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Options Selling : la strategie post-million",
+      "text": "Avec plus de 1M euros de capital, vous accedez a la vente d'options (covered calls, cash-secured puts). C'est une source de rendement complementaire qui profite du decay temporel (theta) et de la volatilite elevee. Capacite enorme ($100M+ sur les US large-caps). Attention au gamma risk : une perte sur une vente de put peut etre catastrophique si non hedgee.",
+      "audioFile": "algo_million_s148.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Licensing de signaux : monetiser votre alpha",
+      "text": "Vendre vos signaux alpha via API (SaaS model) a d'autres traders ou fonds. Valorisation : 10-20% du PnL genere par le signal. Avantages : revenus recurrents decorreles de votre propre trading, scalabilite illimitee. Risques : l'alpha decay s'accelere quand plus de capital suit le meme signal (crowding), necessites reglementaires (AMF en France).",
+      "audioFile": "algo_million_s149.wav"
+    },
+    {
+      "type": "steps",
+      "title": "Les 4 scenarios de sortie",
+      "steps": [
+        {
+          "step": "Scaling indefini",
+          "detail": "Continuer a faire croitre le capital. Le systeme tourne, vous optimisez. Objectif : 10M euros+."
+        },
+        {
+          "step": "Rente passive",
+          "detail": "Stabiliser le capital a 3-5M euros, retirer 8-12%/an. Le systeme est en pilote automatique."
+        },
+        {
+          "step": "Vente du systeme",
+          "detail": "Vendre l'IP (algorithmes, infra, track record) a un hedge fund ou un family office. Valuation : 3-5x le PnL annuel."
+        },
+        {
+          "step": "Reconversion",
+          "detail": "Utiliser le capital et les competences pour un nouveau projet : fintech, fund management, enseignement."
+        }
+      ],
+      "audioFile": "algo_million_s150.wav"
+    },
+    {
+      "type": "quote",
+      "text": "Le plus dur n'est pas de faire un million. C'est de ne pas le perdre en vivant dessus.",
+      "source": "Lecon de la serie Algo Trading",
+      "audioFile": "algo_million_s151.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Scaling & Exit : points cles",
+      "items": [
+        "Analyse de capacite : formule ADV x Participation x Holding x Univers x Diversification",
+        "Avec 1-3M euros, pas de contrainte sur US/EU large-caps",
+        "Diversifier les revenus : licensing, family office, education",
+        "4 scenarios de sortie : scaling, rente, vente, reconversion"
+      ],
+      "audioFile": "algo_million_s152.wav"
+    },
+    {
+      "type": "quiz",
+      "question": "Quelle est la strategie d'adaptation quand le capital augmente ?",
+      "choices": [
+        "Augmenter le levier",
+        "Migrer les allocations des small-caps vers les large-caps et ETF plus liquides",
+        "Reduire le nombre de strategies",
+        "Shorter les marches pour hedger"
+      ],
+      "correctIndex": 1,
+      "explanation": "Quand le capital augmente, l'impact de marche sur les small-caps devient trop eleve. La solution est de migrer progressivement vers des instruments plus liquides : large-caps US/EU et ETF. Ces instruments ont des capacites de $50M a $200M+, bien au-dela de la taille d'un trader individuel.",
+      "audioFile": "algo_million_s153.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Le mot de la fin : patience et discipline",
+      "text": "Le trading algorithmique est un marathon, pas un sprint. Les premiers mois sont frustrants : bugs, faux signaux, drawdowns. La tentation est forte de tout changer apres chaque perte. Mais le systeme est concu pour fonctionner sur des centaines de trades, pas sur un seul. Faites confiance au processus, pas a vos emotions.",
+      "audioFile": "algo_million_s154.wav"
+    },
+    {
+      "type": "concept",
+      "title": "Recapitulatif : les 12 piliers du systeme",
+      "text": "Infrastructure (~60 euros/mois) + Data Pipeline (50 features) + Alpha Factors (6 familles) + Portfolio Construction (Kelly + HRP) + Execution (OMS intelligent) + 8 strategies complementaires (momentum + mean-reversion + cross-asset) + Detection de regime ML + Production DevOps + Retraits adaptatifs + Scaling. Chaque pilier est indispensable.",
+      "audioFile": "algo_million_s155.wav"
+    },
+    {
+      "type": "table",
+      "title": "Les 8 strategies du portefeuille",
+      "headers": [
+        "#",
+        "Strategie",
+        "Type",
+        "Allocation",
+        "Role"
+      ],
+      "rows": [
+        [
+          "1",
+          "CSM",
+          "Momentum",
+          "20%",
+          "Moteur principal"
+        ],
+        [
+          "2",
+          "TSMOM",
+          "Momentum",
+          "16%",
+          "Direction macro"
+        ],
+        [
+          "3",
+          "PEAD",
+          "Momentum",
+          "15%",
+          "Alpha evenementiel"
+        ],
+        [
+          "4",
+          "Industry Rotation",
+          "Momentum",
+          "14%",
+          "Rotation cyclique"
+        ],
+        [
+          "5",
+          "RSI Bounce",
+          "Mean Reversion",
+          "~10%",
+          "Anti-crash"
+        ],
+        [
+          "6",
+          "Pairs Trading",
+          "Mean Reversion",
+          "~7%",
+          "Arbitrage statistique"
+        ],
+        [
+          "7",
+          "Dual Momentum",
+          "Cross-Asset",
+          "~12%",
+          "Protection macro"
+        ],
+        [
+          "8",
+          "Sector Rotation",
+          "Cross-Asset",
+          "~6%",
+          "Cycles sectoriels"
+        ]
+      ],
+      "audioFile": "algo_million_s156.wav"
+    },
+    {
+      "type": "bullets",
+      "title": "Les lecons les plus importantes",
+      "items": [
+        "Aucune strategie seule ne suffit : c'est la COMBINAISON qui cree l'edge",
+        "L'anti-overfit est plus important que le signal : Prior economique, Walk-Forward, Deflated Sharpe",
+        "La construction de portefeuille (Kelly + HRP) est le vrai alpha structurel",
+        "L'execution compte : 0.5% de slippage x 1000 trades/an = 500% de couts cumules",
+        "Le regime change tout : adapter les poids au regime est non-negociable",
+        "La psychologie du retrait est aussi dure que la psychologie du trading",
+        "Everything as Code : si la VM brule, vous reconstruisez en 15 minutes"
+      ],
+      "audioFile": "algo_million_s157.wav"
+    },
+    {
+      "type": "quote",
+      "text": "La machine vous libere. Mais c'est a vous de la construire, de la tester, et de lui faire confiance.",
+      "source": "De 100K au Million — Conclusion",
+      "audioFile": "algo_million_s158.wav"
+    },
+    {
+      "type": "summary",
+      "title": "Merci d'avoir suivi cette formation !",
+      "items": [
+        "12 chapitres, ~180 slides, 2 heures de contenu",
+        "De l'infrastructure au scaling, en passant par 8 strategies complementaires",
+        "Objectif : 100K euros -> 1M euros en 24 mois, sans levier, long only, DD max 25%",
+        "La serie complete est disponible sur articles.market-watch.xyz",
+        "Bonne chance dans votre aventure de trading algorithmique !"
+      ],
+      "audioFile": "algo_million_s159.wav"
+    }
+  ],
+  "audioDurations": {}
+}
