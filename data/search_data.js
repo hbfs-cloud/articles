@@ -639,6 +639,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "HAL",
+    "exchange": "NYSE • Energy • Oil & Gas Equipment & Services",
+    "name": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
+    "title": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
+    "desc": "Halliburton breakout analysis: 52-week high breakout, oil services capex tailwind, WTI $91.60. Entry $38-38.80, TP1 $42, TP2 $45. Score 89/100.",
+    "tags": "us,energy,trade-idea,technique",
+    "grade": "A",
+    "href": "/analyses/HAL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "SRPT",
     "exchange": "NASDAQ • Healthcare • Gene Therapy\n            — Duchenne / Neuromuscular Diseases",
     "name": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
