@@ -66,7 +66,7 @@ function main() {
     scanDir = dirs[0] || '';
     if (scanDir) {
       const html = fs.readFileSync(path.join(SCANNER_DIR, scanDir, 'index.html'), 'utf8');
-      const m = html.match(/id="synthese"[\s\S]{0,15000}/);
+      const m = html.match(/id="(?:synthese|summary)"[\s\S]{0,15000}/);
       if (m) {
         const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
         for (const row of rows) {

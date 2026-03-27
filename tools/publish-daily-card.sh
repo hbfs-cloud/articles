@@ -106,5 +106,22 @@ else
   echo "✅ Pushed to main"
 fi
 
+# ─── Step 7: QA Check ────────────────────────────────────────────────────────
+echo ""
+echo "🔍 Step 7: QA Check..."
+node tools/qa-check.js --discord
+# Post QA report to Discord if there are issues
+if [ -f /tmp/qa-discord-report.txt ]; then
+  QA_MSG=$(cat /tmp/qa-discord-report.txt)
+  # Only post if there are errors/warnings (not just the short OK line)
+  if echo "$QA_MSG" | grep -q "❌\|Erreur\|Avertissement\|warning"; then
+    openclaw message send \
+      --channel discord \
+      --target "1483382014588747778" \
+      --message "$QA_MSG" 2>/dev/null || true
+  fi
+  rm -f /tmp/qa-discord-report.txt
+fi
+
 echo ""
 echo "✅ Done: $(date '+%H:%M:%S')"

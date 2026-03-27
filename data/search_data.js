@@ -174,6 +174,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Geopolitics & Macro Risks",
+    "desc": "Friday briefing: Nasdaq officially enters correction territory (-10% from peak). S&P -1.74%, Nasdaq -2.38%, Russell -1.70%. Oil surges past $100 as Trump extends Iran Strait of Hormuz deadline to April 6. Gold rebounds +1.75% to $4,452. BTC slips to $68.5K. VIX at 27.4. Risk-off regime deepening.",
+    "tags": "us,eu,asia,crypto,macro,geopolitique,commodity,energy,trade-idea,formation",
+    "grade": "",
+    "href": "/daily/20260327/",
+    "date": "27 mars 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Iran Peace Hopes Lift Wall Street — Arm’s AI Chip Sparks Semiconductor Rally",
     "desc": "Thursday briefing: Wall Street extends rally as Iran peace talks raise hopes. S&P +0.54%, Nasdaq +0.77%, Russell +1.23%. Arm surges 16% on AI chip reveal. Oil pulls back below $93. Gold drops -1.93%. BTC holds near $70K. VIX at 25.3.",
     "tags": "us,eu,asia,crypto,macro,geopolitique,commodity,energy,trade-idea,formation",
@@ -622,19 +635,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "daily/20260217/",
     "date": "17 février 2026"
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "HAL",
-    "exchange": "NYSE • Energy • Oil & Gas Equipment & Services",
-    "name": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
-    "title": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
-    "desc": "Halliburton breakout analysis: 52-week high breakout, oil services capex tailwind, WTI $91.60. Entry $38-38.80, TP1 $42, TP2 $45. Score 89/100.",
-    "tags": "us,energy,trade-idea,technique",
-    "grade": "A",
-    "href": "/analyses/HAL/",
-    "date": ""
   },
   {
     "type": "analyse",
@@ -2930,12 +2930,25 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "⚡ Scanner Live — Signals, Positions & Performance",
-    "desc": "Today's signals filtered by mode (Growth, Risk-Adjusted, Conservative), open positions with live P&L, equity curves and trade history. 3 strategies optimized across 126,000 backtests.",
+    "title": "⚡ Scanner Live — Signaux, Positions & Performance",
+    "desc": "Signaux du jour filtrés par mode (Growth, Risk-Adjusted, Conservative), positions en cours avec P&L temps réel, equity curves et historique des trades. 3 stratégies optimisées sur 126 000 backtests.",
     "tags": "technique,formation,trade-idea,us,eu,asia,etf",
     "grade": "",
     "href": "/scanner/status/",
-    "date": "Updated continuously"
+    "date": "Mis à jour en continu"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-OFF — MPC, FANG, APA, OVV, VLO, CTRA, LNG, MRK, CAT, JNJ",
+    "desc": "Following 6 retrospectives (latest provisional grade: C):\n    The broad market sold off sharply today — S&P 500 -1.74% to 5,477, NASDAQ -2.38%, DJI -1.01% — but the energy complex delivered a powerful counter-trend rally. E&P names surged (APA +12.5%, FANG +6.2%, OVV +7.5%, CTRA +5.6%) as Brent crud...",
+    "tags": "us,eu,commodity,etf,technique,trade-idea,macro,energy,healthcare,industrials,refining",
+    "grade": "",
+    "href": "/scanner/20260327/",
+    "date": "27 mars 2026"
   },
   {
     "type": "scanner",
