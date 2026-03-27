@@ -478,7 +478,7 @@ Le scanner utilise le **thème light standard** (fond `#f8fafc`, texte `#0f172a`
      ```
    - **4 items min** dans Confirmations ET Invalidations
    - **6 entrées** dans Niveaux Clés (Entrée, Stop, TP1, TP2, R/R, Horizon)
-6. **Synthèse** (`id="synthese"`) :
+6. **Synthèse** (`id="synthese"`) — ⚠️ **NE JAMAIS CHANGER CET ID** (le parser gen-status-page.js en dépend) :
    - Tableau récapitulatif `.data-table` des 10 setups (Ticker, Score, Stratégie, Entry, Stop, TP1, R/R)
    - **ECharts Bar** : Scores composites comparatifs (horizontal bar chart)
    - **ECharts Sankey** (optionnel) : Flux Secteur → Stratégie → Setup
