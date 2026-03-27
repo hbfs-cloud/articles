@@ -17,8 +17,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const EDGE_TTS = '/opt/homebrew/bin/edge-tts';
 
 const VOICES = {
-  fr: { voice: 'fr-FR-HenriNeural', rate: '-5%' },
-  en: { voice: 'en-US-AndrewNeural', rate: '-5%' },
+  fr: { voice: 'fr-FR-RemyMultilingualNeural', rate: '-5%' },
+  en: { voice: 'en-US-AndrewMultilingualNeural', rate: '-5%' },
 };
 
 function now() {

@@ -228,8 +228,8 @@ Ne PAS commiter : .wav, .mp4, thumbnails, youtube credentials.
 | Paramètre | Valeur |
 |-----------|--------|
 | Edge-TTS | `/opt/homebrew/bin/edge-tts` |
-| Voix FR | `fr-FR-HenriNeural` (rate -5%) |
-| Voix EN | `en-US-AndrewNeural` (rate -5%) |
+| Voix FR | `fr-FR-RemyMultilingualNeural` (rate -5%) — gère le code-switching FR↔EN |
+| Voix EN | `en-US-AndrewMultilingualNeural` (rate -5%) |
 | Résolution | 1920x1080 |
 | Codec | H264 CRF 18, AAC 192k, 30fps |
 | YouTube creds | `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/` |
