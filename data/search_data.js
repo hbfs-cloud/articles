@@ -2943,12 +2943,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-OFF — BTU, LNG, EQNR, VLO, OVV, CTRA, MRK, KO, MO, PBR",
-    "desc": "Following 6 retrospectives (latest provisional grade: C):\n    The Iran/Strait of Hormuz crisis escalated dramatically on Friday — WTI crude surged +7.09% to $101.18, breaking above the critical $100 level for the first time in this conflict cycle. Brent hit $106.84 (+4.86%). The S&P 500 dropped -1.6...",
-    "tags": "us,eu,commodity,etf,technique,trade-idea,macro,energy,coal,healthcare,staples,refining,lng",
+    "title": "Scanner Retrospective",
+    "desc": "The grade combines two pillars with equal weight: Pillar 1 (Setup Quality, 50%) measures Hit Rate on resolved positions (TP1 hit vs stop-loss). Pillar 2 (Portfolio Simulation, 50%) uses sweep.js optimal_sharpe mode to simulate portfolio returns over the retro period.",
+    "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,healthcare,industrials",
     "grade": "",
-    "href": "/scanner/20260330/",
-    "date": "30 mars 2026"
+    "href": "/scanner/retrospective/20260327/",
+    "date": "27 mars 2026"
   },
   {
     "type": "scanner",
@@ -2962,6 +2962,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Mis à jour en continu"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-OFF — BTU, LNG, EQNR, VLO, OVV, CTRA, MRK, KO, MO, PBR",
+    "desc": "Following 6 retrospectives (latest provisional grade: C):\n    The Iran/Strait of Hormuz crisis escalated dramatically on Friday — WTI crude surged +7.09% to $101.18, breaking above the critical $100 level for the first time in this conflict cycle. Brent hit $106.84 (+4.86%). The S&P 500 dropped -1.6...",
+    "tags": "us,eu,commodity,etf,technique,trade-idea,macro,energy,coal,healthcare,staples,refining,lng",
+    "grade": "",
+    "href": "/scanner/20260330/",
+    "date": "30 mars 2026"
   },
   {
     "type": "scanner",
