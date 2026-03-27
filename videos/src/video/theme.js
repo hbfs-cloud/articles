@@ -372,5 +372,161 @@ export const tradingTheme = {
       content: ''; flex: 1; height: 2px;
       background: linear-gradient(90deg, rgba(59,130,246,0.5), transparent);
     }
+
+    /* ── Trade Levels (from Remotion TradeLevel) ─────────────────── */
+    .levels-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+      margin-top: 16px;
+    }
+    .trade-level {
+      background: rgba(255,255,255,0.04); border-radius: 10px;
+      padding: 14px 18px; text-align: left;
+    }
+    .trade-level-label {
+      font-size: 0.65em; font-weight: 600; color: #94a3b8;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px;
+    }
+    .trade-level-value { font-size: 1.3em; font-weight: 800; color: #fff; }
+    .ticker-badge {
+      display: inline-block; padding: 4px 16px; border-radius: 8px;
+      background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+      color: #93c5fd; font-size: 0.8em; font-weight: 700; letter-spacing: 0.04em;
+      margin-bottom: 14px;
+    }
+
+    /* ── Didactic Box (from Remotion DidacticBox) ────────────────── */
+    .didactic-box {
+      background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.04));
+      border: 1px solid rgba(59,130,246,0.25); border-radius: 16px;
+      padding: 28px 32px; text-align: left;
+    }
+    .didactic-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+    }
+    .didactic-icon { font-size: 1.6em; }
+    .didactic-label {
+      font-size: 0.75em; font-weight: 700; color: #93c5fd;
+      text-transform: uppercase; letter-spacing: 0.08em;
+    }
+    .didactic-text { color: #cbd5e1; font-size: 0.88em; line-height: 1.7; margin: 0; }
+    .didactic-source {
+      margin-top: 14px; font-size: 0.65em; color: #64748b; font-style: italic;
+    }
+
+    /* ── Chart Image / Finviz ───────────────────────────────────── */
+    .chart-image-wrap { margin-top: 12px; text-align: center; }
+    .chart-image-wrap img {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      border: 1px solid rgba(59,130,246,0.15);
+    }
+    .chart-caption {
+      margin-top: 10px; font-size: 0.6em; color: #64748b;
+      font-style: italic; text-align: center;
+    }
+
+    /* ── Performance Table (from Remotion PerformanceRow) ────────── */
+    .perf-table { margin-top: 12px; }
+    .perf-row {
+      display: flex; align-items: center; gap: 16px;
+      padding: 10px 16px; border-radius: 8px; margin-bottom: 6px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(59,130,246,0.06);
+    }
+    .perf-row:hover { background: rgba(59,130,246,0.06); }
+    .perf-ticker {
+      font-size: 0.85em; font-weight: 800; color: #fff;
+      min-width: 80px; font-family: 'JetBrains Mono', monospace;
+    }
+    .perf-name { flex: 1; font-size: 0.75em; color: #94a3b8; }
+    .perf-value {
+      font-size: 0.85em; font-weight: 700; min-width: 80px; text-align: right;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .perf-value.positive { color: #10b981; }
+    .perf-value.negative { color: #ef4444; }
+
+    /* ── Event Timeline (from Remotion EventItem) ───────────────── */
+    .event-timeline { margin-top: 12px; }
+    .event-item {
+      display: flex; align-items: center; gap: 16px;
+      padding: 12px 16px; border-radius: 10px; margin-bottom: 8px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(59,130,246,0.06);
+    }
+    .event-time {
+      font-size: 0.7em; font-weight: 700; color: #93c5fd;
+      min-width: 80px; font-family: 'JetBrains Mono', monospace;
+    }
+    .event-body { flex: 1; }
+    .event-title { font-size: 0.82em; font-weight: 600; color: #e2e8f0; }
+    .event-desc { font-size: 0.7em; color: #94a3b8; margin-top: 2px; }
+    .event-impact {
+      font-size: 0.6em; font-weight: 700; padding: 3px 10px;
+      border-radius: 6px; text-transform: uppercase; letter-spacing: 0.06em;
+      flex-shrink: 0;
+    }
+
+    /* ── Code Blocks (from Remotion CodeComparison) ──────────────── */
+    .code-comparison {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px;
+    }
+    .code-block {
+      background: #0d1117; border-radius: 12px; padding: 18px;
+      border: 1px solid rgba(59,130,246,0.12); overflow: hidden;
+    }
+    .code-block.full { margin-top: 12px; }
+    .code-block pre {
+      margin: 0; overflow-x: auto;
+    }
+    .code-block code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.65em; color: #e2e8f0; line-height: 1.6;
+      white-space: pre;
+    }
+    .code-label {
+      font-size: 0.6em; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 10px; padding: 3px 10px;
+      border-radius: 4px; display: inline-block;
+    }
+    .code-label.positive { background: rgba(16,185,129,0.15); color: #34d399; }
+    .code-label.negative { background: rgba(239,68,68,0.15); color: #f87171; }
+    .code-lang {
+      font-size: 0.55em; color: #64748b; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 8px; font-weight: 600;
+    }
+
+    /* ── Architecture Flow (from Remotion ArchitectureDiagram) ───── */
+    .arch-flow {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px; margin-top: 16px;
+    }
+    .arch-row {
+      display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;
+    }
+    .arch-node {
+      background: rgba(255,255,255,0.04); border: 2px solid rgba(59,130,246,0.3);
+      border-radius: 14px; padding: 16px 22px; min-width: 160px;
+      text-align: center;
+    }
+    .arch-icon { font-size: 1.5em; display: block; margin-bottom: 6px; }
+    .arch-label { font-size: 0.8em; font-weight: 700; color: #fff; }
+    .arch-detail { font-size: 0.65em; color: #94a3b8; margin-top: 4px; }
+    .arch-hub {
+      background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(16,185,129,0.1));
+      border: 2px solid rgba(59,130,246,0.4); border-radius: 50%;
+      width: 100px; height: 100px; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+    }
+    .arch-hub strong { font-size: 0.7em; color: #93c5fd; }
+
+    /* ── Highlight (fullscreen key insight) ──────────────────────── */
+    .highlight-box {
+      background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.08));
+      border-left: 4px solid #3b82f6; border-radius: 0 16px 16px 0;
+      padding: 32px 40px; text-align: left;
+    }
+    .highlight-icon { font-size: 2.5em; margin-bottom: 12px; }
+    .highlight-title { font-size: 1.4em; font-weight: 800; color: #fff; margin: 0 0 12px; }
+    .highlight-text { font-size: 0.9em; color: #cbd5e1; line-height: 1.7; margin: 0; }
   `
 };

@@ -1,39 +1,61 @@
-# /make-video — Generate a complete YouTube video from a topic
+# /make-video — Produce a complete YouTube video from any topic
 
-End-to-end video production: topic → slides → TTS → render → thumbnails → YouTube upload.
+End-to-end autonomous video production pipeline.
+Input: a topic in natural language. Output: a published YouTube video.
 
 ## Input
 
-The user describes a video topic in natural language, optionally with a language.
+`$ARGUMENTS` — Examples:
+- `une vidéo sur le RSI et les indicateurs techniques`
+- `how options pricing works, in english`
+- `les 10 meilleurs ETF pour 2026`
+- `analyse technique de NVDA et AMD`
+- `debuter-trading` (existing series — skip content generation)
 
-Examples:
-- `/make-video une vidéo sur le RSI et les indicateurs techniques`
-- `/make-video how options pricing works, in english`
-- `/make-video les crypto-monnaies pour débutants en français`
-- `/make-video debuter-trading` (existing series, skip content generation)
-
-## Step 0 — Parse input
+## Step 0 — Parse & research
 
 Extract from `$ARGUMENTS`:
-- **Topic**: the subject of the video
-- **Language**: `fr` (default) or `en` — detect from user's language or explicit mention
-- **Series ID**: slugify the topic (e.g. `rsi-indicateurs-techniques`). If it matches an existing series, reuse its data.
-- **Upload**: default YES. User can say "sans upload" / "no upload" to skip.
-- **Duration target**: ~30-60 min unless user specifies (e.g. "une vidéo courte de 15 min")
+- **Topic**: the video subject
+- **Language**: `fr` (default) or `en`
+- **Series ID**: slugify topic (e.g. `rsi-indicateurs-techniques`)
+- **Upload**: YES by default. "sans upload" / "no upload" to skip.
+- **Duration**: ~30-60 min unless specified
 
-## Step 1 — Generate content (if not existing)
+### Research the topic
 
-Check if `videos/public/edu-data-{seriesId}.json` already exists. If yes, skip to Step 2.
+Before generating content, gather real data:
 
-If not, **generate the content yourself**. Create two JSON files:
+1. **Check existing articles** for relevant content:
+   - `grep -rl "{topic keywords}" daily/ weekly/ scanner/ analyses/ series/ tech/`
+   - Read the most relevant articles to extract data, insights, examples
+   - Reuse real trade setups, market data, and analysis from our publications
+
+2. **MCP Gateway** — pull live market data when the topic involves specific tickers/markets:
+   - `GetMarketOverview` for macro context
+   - `QueryData` types=quote,social_sentiment,capital_flow for specific tickers
+   - `GetInstruments` for deep ticker analysis
+   - `RunAutoScreener` if the topic is about screening/stock picking
+
+3. **Finviz charts** — for any ticker-specific content, note the Finviz chart URLs to reference in slides:
+   ```
+   https://charts2.finviz.com/chart.ashx?t={TICKER}&ty=c&ta=1&p=d&s=l
+   ```
+
+4. **WebSearch** — for recent events, statistics, or data not in our articles/MCP
+
+## Step 1 — Generate content
+
+Check if `videos/public/edu-data-{seriesId}.json` exists. If yes, skip to Step 2.
+
+Create two JSON files using research data:
 
 ### `videos/public/edu-data-{seriesId}.json`
 
 ```json
 {
   "config": {
-    "seriesTitle": "Title of the video",
-    "seriesSubtitle": "One-line subtitle",
+    "seriesTitle": "Title",
+    "seriesSubtitle": "Subtitle",
     "date": "Month Year",
     "language": "fr",
     "accentColor": "#3b82f6",
@@ -43,109 +65,177 @@ If not, **generate the content yourself**. Create two JSON files:
 }
 ```
 
-**Slide types available** (mix them for variety):
+### Slide types (20 types disponibles)
 
-| Type | Required fields | Use for |
-|------|----------------|---------|
-| `chapter-intro` | `chapter: { title, subtitle, partNumber, totalParts }` | Start of each chapter |
-| `bullets` | `title`, `items: [string]` | Key points (4-6 items max) |
-| `table` | `title`, `headers: [string]`, `rows: [[string]]` | Comparisons, data |
-| `concept` | `title`, `definition`, `details` | Key term explanation |
-| `tip` | `title`, `content` | Practical advice |
-| `warning` | `title`, `content` | Risks, pitfalls |
-| `steps` | `title`, `items: [string]` | Numbered process |
-| `quote` | `quote`, `author` | Notable quote |
-| `comparison` | `title`, `left: {label,items}`, `right: {label,items}` | Side by side |
-| `quiz` | `question`, `options: [string]`, `correct: index`, `explanation` | Interactive quiz |
-| `summary` | `title`, `items: [string]` | Chapter recap |
+**Fondamentaux** (contenu texte) :
 
-**Content guidelines** (from user feedback):
-- Style dynamique, abordable, didactique — tout public
-- Ajouter des quizzes pour couper le flux (1-2 par chapitre)
-- Inclure des cas concrets, chiffres, exemples réels
-- Éviter le jargon sans explication
+| Type | Fields | Use for |
+|------|--------|---------|
+| `chapter-intro` | `chapter: { title, subtitle, partNumber, totalParts }` | Début de chapitre |
+| `bullets` | `title`, `items: [string]` | Points clés (4-6 items) |
+| `concept` | `title`, `text` | Explication d'un terme/concept |
+| `tip` | `title`, `text` | Conseil pratique, pro tip |
+| `warning` | `title`, `text` | Risques, pièges, erreurs courantes |
+| `quote` | `text`, `source` | Citation (Buffett, Munger, Taleb...) |
+| `summary` | `title`, `items: [string]` | Récap de chapitre |
+| `highlight` | `title`, `text`, `icon` | Point clé plein écran |
+| `quiz` | `question`, `choices: [string]`, `correctIndex`, `explanation` | Quiz interactif |
+
+**Données & comparaisons** :
+
+| Type | Fields | Use for |
+|------|--------|---------|
+| `table` | `title`, `headers: [string]`, `rows: [[string]]` | Tableau de données |
+| `comparison` | `title`, `left: {label,items}`, `right: {label,items}` | Côte à côte |
+| `metric-row` | `title`, `metrics: [{label,value,delta?,trend?}]` | KPI cards (3-4 métriques) |
+| `trade-levels` | `title`, `ticker?`, `levels: [{type,label,value}]` | Niveaux entry/stop/TP |
+| `performance` | `title`, `tickers: [{symbol,name?,perf}]` | Classement performances |
+| `event-timeline` | `title`, `events: [{time,title,description?,impact}]` | Calendrier événements |
+
+**Visuel & technique** :
+
+| Type | Fields | Use for |
+|------|--------|---------|
+| `steps` | `title`, `steps: [{number?,title,description}]` | Processus numéroté |
+| `didactic` | `title`, `text`, `icon?`, `source?` | Box éducative "Le saviez-vous" |
+| `chart-image` | `title`, `imageUrl`/`finvizUrl`, `caption?` | Chart Finviz ou image externe |
+| `code` | `title`, `code`/`before`+`after`, `language?` | Code ou before/after |
+| `architecture` | `title`, `nodes: [{icon?,label,detail?}]`, `hub?` | Diagramme de flux |
+
+Every slide gets: `"audioFile": "{seriesId}_s{index}.wav"`
+
+### Content quality rules
+
+**Style** (from user feedback):
+- Dynamique, abordable, didactique — tout public
+- Quizzes pour couper le flux (1-2 par chapitre minimum)
+- Cas concrets avec chiffres réels (pas de placeholder)
+- Si ticker mentionné → données réelles via MCP/articles
+- Éviter le jargon sans explication immédiate
+
+**Structure**:
 - 4-6 chapitres pour ~30 min, 6-10 pour ~1h
-- ~30-40 slides par chapitre
-- Each slide gets an `audioFile` field: `"{seriesId}_s{index}.wav"`
+- ~25-35 slides par chapitre
+- Varier les types de slides (pas 10 bullets d'affilée)
+- Commencer chaque chapitre par chapter-intro, finir par summary
+- Au moins 1 quiz par chapitre
+
+**Données réelles obligatoires quand pertinent**:
+- Cours actuels des tickers mentionnés (via MCP QueryData)
+- Performances historiques (articles weekly/daily)
+- Statistiques de marché (VIX, volumes, ratios P/E)
+- Charts Finviz dans les descriptions de slides (mentionner le ticker dans le texte, le chart sera visible via la slide)
+- Setups scanner récents comme exemples concrets
+- Données social sentiment si on parle d'un ticker populaire
+
+### Brand integration dans les slides
+
+Le thème vidéo (`src/video/theme.js`) reprend déjà les codes visuels du site :
+- Background dark : `#0a0e1a` (proche du scanner/analyses dark mode)
+- Primary blue : `#3b82f6` (identique au site)
+- Success green : `#10b981`, Warning amber : `#f59e0b`, Danger red : `#ef4444`
+- Font : Inter (identique au site)
+- Footer bar : `market-watch.xyz` + titre série + numéro slide
+- Logo et trademark Market Watch visibles sur chaque slide
 
 ### `videos/public/edu-narration-{seriesId}.json`
 
-Array of narration segments, one per slide:
 ```json
 [
-  { "key": "{seriesId}_s0", "text": "Narration text spoken aloud...", "audioFile": "{seriesId}_s0.wav" },
+  { "key": "{seriesId}_s0", "text": "Narration text...", "audioFile": "{seriesId}_s0.wav" },
   ...
 ]
 ```
 
-**Narration guidelines**:
-- Write as spoken French/English (natural, not read-aloud)
-- No markdown, no special characters that break TTS
-- Spell out abbreviations on first use
-- ~15-40 seconds of speech per slide (40-100 words FR, 50-120 words EN)
-- Chapter intros: announce chapter title and what will be covered
-- Quiz slides: read the question, options, then reveal the answer with explanation
+**Narration rules**:
+- Écrire comme du parlé naturel (pas du lu)
+- Pas de markdown, pas de caractères spéciaux
+- Épeler les abréviations au premier usage
+- ~15-40s de parole par slide (40-100 mots FR, 50-120 mots EN)
+- Chapter intros : annoncer le titre et ce qu'on va voir
+- Quiz : lire la question, les options, puis révéler la réponse
+- Utiliser des transitions naturelles entre slides ("Passons maintenant à...", "Regardons de plus près...")
+- Voix jeune homme dynamique — pas professoral
 
-## Step 2 — Add YouTube metadata
+**Prononciations** (corrections TTS connues):
+- "ETF" → "É-Té-Effe"
+- "S&P 500" → "S and P 500" (en) / "S and P cinq cent" (fr)
+- "RSI" → "R-S-I"
+- "MACD" → "M-A-C-D"
+- "P/E ratio" → "price to earnings ratio" (en) / "ratio cours sur bénéfice" (fr)
+- Éviter les parenthèses dans le texte TTS — reformuler en phrases
 
-Check if the series ID exists in `videos/scripts/make-video.mjs` YOUTUBE_META. If not, add it:
+## Step 2 — YouTube metadata
+
+Check if the series ID exists in `videos/scripts/make-video.mjs` YOUTUBE_META. If not, add it with:
 
 ```javascript
 '{seriesId}': {
-  title: 'Video Title (Duration)',
-  playlist: 'Formations Trading FR',  // or 'Trading Education EN'
-  description: `Description with emojis and structure...`,
-  tags: ['relevant', 'tags'],
-  lang: 'fr',  // or 'en'
+  title: 'Titre accrocheur (Durée)',
+  playlist: 'Formations Trading FR',  // ou 'Trading Education EN'
+  description: `Description structurée avec emojis...`,
+  tags: ['relevant', 'tags', 'market-watch.xyz'],
+  lang: 'fr',
 },
 ```
 
-## Step 3 — Run the pipeline
+**Description template** :
+```
+🎓 [Accroche 1 ligne]
+
+📚 Au programme :
+• Chapitre 1 : ...
+• Chapitre 2 : ...
+[...]
+
+🧠 X quizzes interactifs
+💡 Cas concrets : [exemples]
+📊 Données de marché en temps réel
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 https://articles.market-watch.xyz
+```
+
+## Step 3 — Run pipeline
 
 ```bash
 cd /Users/marketwatchxyz/GolandProjects/articles/videos
 node scripts/make-video.mjs {seriesId} --upload
 ```
 
-Run in background. Monitor every 5 min with timestamps (HH:MM):
-- Step 1/5: TTS (Edge-TTS, ~1 slide/sec)
-- Step 2/5: Screenshots (Puppeteer, ~1 slide/sec)
-- Step 3/5: FFmpeg segments (~6s per segment)
-- Step 4/5: Concatenation (~5-15 min)
-- Step 5/5: Chapters
+Run in background. Monitor every 5 min with timestamps (HH:MM).
 
 ## Step 4 — Thumbnails
 
-After pipeline completes, extract thumbnails from the video:
+Extract from video at chapter timestamps:
 ```bash
+mkdir -p output/thumbnails-{seriesId}
 ffmpeg -y -ss {timestamp} -i output/{seriesId}.mp4 -frames:v 1 -q:v 2 output/thumbnails-{seriesId}/chapter_N.png
 ```
-One global thumbnail + one per chapter.
 
-## Step 5 — YouTube upload
-
-The pipeline handles upload if `--upload` flag is set. Verify:
-- Video uploaded with title, description, chapters, tags
-- Thumbnail set
-- Added to playlist
-- Report the YouTube URL
-
-## Step 6 — Git commit
+## Step 5 — Git commit & push
 
 ```bash
-git add videos/public/edu-data-{seriesId}.json videos/public/edu-narration-{seriesId}.json videos/scripts/make-video.mjs .claude/commands/make-video.md
-git commit -m "feat: video {seriesId} — {short title}"
+git add videos/public/edu-data-{seriesId}.json videos/public/edu-narration-{seriesId}.json videos/scripts/make-video.mjs
+git commit -m "feat: video {seriesId} — {titre court}"
 git push origin main
 ```
 
-Do NOT commit: .wav files, .mp4 files, thumbnails, youtube credentials.
+Ne PAS commiter : .wav, .mp4, thumbnails, youtube credentials.
 
 ## Technical reference
 
-- Edge-TTS: `/opt/homebrew/bin/edge-tts`
-- Voices: FR `fr-FR-HenriNeural`, EN `en-US-AndrewNeural` (rate: -5%)
-- Video: 1920x1080, CRF 18, H264, 30fps, AAC 192k
-- YouTube credentials: `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/`
-- Output: `videos/output/{seriesId}.mp4`
+| Paramètre | Valeur |
+|-----------|--------|
+| Edge-TTS | `/opt/homebrew/bin/edge-tts` |
+| Voix FR | `fr-FR-HenriNeural` (rate -5%) |
+| Voix EN | `en-US-AndrewNeural` (rate -5%) |
+| Résolution | 1920x1080 |
+| Codec | H264 CRF 18, AAC 192k, 30fps |
+| YouTube creds | `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/` |
+| Output | `videos/output/{seriesId}.mp4` |
+| Brand colors | Primary `#3b82f6`, Success `#10b981`, Warning `#f59e0b`, Danger `#ef4444` |
+| Logo | `/public/logo.svg` — shield Market Watch |
+| Finviz | `https://charts2.finviz.com/chart.ashx?t={TICKER}&ty=c&ta=1&p=d&s=l` |
 
 $ARGUMENTS
