@@ -91,18 +91,19 @@ async function captureScreenshots(htmlPath, slideCount, tmpDir, skipExisting) {
   }
 
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security'],
+    headless: 'shell',
+    protocolTimeout: 120000,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security', '--disable-gpu'],
   });
 
   try {
     const page = await browser.newPage();
     await page.setViewport({ width: 1920, height: 1080 });
-    await page.goto(`file://${htmlPath}`, { waitUntil: 'networkidle0', timeout: 60000 });
+    await page.goto(`file://${htmlPath}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
 
     // Wait for Reveal.js to be ready
-    await page.waitForFunction(() => typeof Reveal !== 'undefined' && Reveal.isReady(), { timeout: 15000 });
-    await new Promise(r => setTimeout(r, 1500));
+    await page.waitForFunction(() => typeof Reveal !== 'undefined' && Reveal.isReady(), { timeout: 30000 });
+    await new Promise(r => setTimeout(r, 2000));
 
     for (let i = 0; i < slideCount; i++) {
       const imgFile = join(tmpDir, `slide_${String(i).padStart(3, '0')}.png`);
@@ -114,7 +115,7 @@ async function captureScreenshots(htmlPath, slideCount, tmpDir, skipExisting) {
 
       await page.evaluate((idx) => Reveal.slide(idx), i);
       await new Promise(r => setTimeout(r, 800));
-      await page.screenshot({ path: imgFile, type: 'png' });
+      await page.screenshot({ path: imgFile, type: 'png', captureBeyondViewport: false });
       log(`  [${i + 1}/${slideCount}] Captured`);
     }
   } finally {

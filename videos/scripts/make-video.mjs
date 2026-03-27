@@ -120,6 +120,28 @@ const YOUTUBE_META = {
     tags: ['MENA', 'Moyen-Orient', 'bourse', 'investissement', 'marchés émergents', 'market-watch.xyz'],
     lang: 'fr',
   },
+  'bilan-hebdo-20260327': {
+    title: 'Bilan Hebdo 27 Mars — Iran, Pétrole $112, S&P en Chute, Risque de Gap',
+    playlist: 'Bilan Hebdo FR',
+    description: `📊 Bilan complet de la semaine du 27 mars 2026 — tous les marchés décryptés.
+
+📚 Au programme :
+• Vue d'ensemble : S&P -2.1%, VIX 27.4, Brent $112
+• Actions USA, Europe, Asie : Dow en correction, rotation énergie
+• Forex & Obligations : dollar affaibli, taux en hausse, 60/40 cassé
+• Commodities : pétrole +50% depuis le blocus, or refuge
+• Crypto : Bitcoin $66K, Extreme Fear, $258M liquidations
+• Iran & Risque de Gap : deadline 6 avril, 4 scénarios, protection
+
+🧠 5 quizzes interactifs
+📊 Données de marché en temps réel via MCP Gateway
+🛢️ Analyse complète du blocus du détroit d'Ormuz
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 https://articles.market-watch.xyz`,
+    tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'VIX', 'market-watch.xyz'],
+    lang: 'fr',
+  },
 };
 
 // ── YouTube upload (adapted from pipeline.mjs) ─────────────────────────
