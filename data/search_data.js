@@ -626,6 +626,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "HAL",
+    "exchange": "NYSE • Energy • Oil & Gas Equipment & Services",
+    "name": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
+    "title": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
+    "desc": "Halliburton breakout analysis: 52-week high breakout, oil services capex tailwind, WTI $91.60. Entry $38-38.80, TP1 $42, TP2 $45. Score 89/100.",
+    "tags": "us,energy,trade-idea,technique",
+    "grade": "A",
+    "href": "/analyses/HAL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "SRPT",
     "exchange": "NASDAQ • Healthcare • Gene Therapy\n            — Duchenne / Neuromuscular Diseases",
     "name": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
@@ -2917,6 +2930,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "⚡ Scanner Live — Signals, Positions & Performance",
+    "desc": "Today's signals filtered by mode (Growth, Risk-Adjusted, Conservative), open positions with live P&L, equity curves and trade history. 3 strategies optimized across 126,000 backtests.",
+    "tags": "technique,formation,trade-idea,us,eu,asia,etf",
+    "grade": "",
+    "href": "/scanner/status/",
+    "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Top 10 A+ EARLY RISK-OFF — HAL, SLB, MPC, CF, MRK, EQNR, EWG, EWJ, SLV, GLD",
     "desc": "Following 5 retrospectives (grades C+, B+, B-, B, C-/D):\n    Energy saturation has been a recurring issue across recent scans. Today we rotate away from integrated majors (XOM, TTE, MRO) toward oil services (HAL, SLB) — a differentiated energy sub-sector benefiting from the capex cycle rather than c...",
     "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,healthcare,materials,agriculture",
@@ -2975,19 +3001,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260323/",
     "date": "23 mars 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Scanner Strategy Guide — 3 Modes Optimisés",
-    "desc": "Les performances passées ne garantissent pas les résultats futurs. Ce guide est à titre éducatif uniquement et ne constitue en aucun cas un conseil financier. Les backtests présentés ne modélisent pas les frais de courtage, le slippage, ni l'impact de marché. La période d'analyse est courte (34 jour...",
-    "tags": "technique,formation,trade-idea,us,eu,asia,etf",
-    "grade": "",
-    "href": "/scanner/status/",
-    "date": "20 mars 2026"
   },
   {
     "type": "scanner",
