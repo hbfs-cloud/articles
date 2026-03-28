@@ -299,6 +299,19 @@ async function renderSlides(slideData, outDir) {
     .map(f => path.join(outDir, f));
 }
 
+// ── TTS generation ────────────────────────────────────────────────────────────
+function runTTS(text, outPath) {
+  const txtPath = outPath.replace('.mp3', '.txt');
+  fs.writeFileSync(txtPath, text, 'utf8');
+  const cmd = `${EDGE_TTS} --voice "${VOICE}" --rate="${RATE}" --pitch="${PITCH}" -f "${txtPath}" --write-media "${outPath}.wav"`;
+  console.log(`  🔊 TTS: ${path.basename(outPath)}`);
+  spawnSync('sh', ['-c', cmd], { stdio: 'inherit' });
+  spawnSync(FFMPEG, ['-y', '-i', `${outPath}.wav`, '-codec:a', 'libmp3lame', '-qscale:a', '4', '-ar', '44100', outPath], { stdio: 'pipe' });
+  try { fs.unlinkSync(`${outPath}.wav`); } catch {}
+  try { fs.unlinkSync(txtPath); } catch {}
+  return outPath;
+}
+
 // ── Build video from slides + audio ──────────────────────────────────────────
 function buildVideo(pngPaths, audioPath, outPath, totalDurationSec) {
   if (!pngPaths.length) { console.log('  ⚠️ No slides, skipping video'); return; }
