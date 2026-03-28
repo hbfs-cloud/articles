@@ -677,11 +677,17 @@ async function main() {
     const caption = buildAudioCaption(modePayload, media.ytUrl);
 
     if (audioOk) {
-      // Send audio with caption
+      // Send audio with full caption
       sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
+      // Always also send video if available (not a fallback — both are sent)
+      if (media.videoPath) {
+        const videoCaption = `📊 <b>Synthèse ${key === 'growth' ? 'Aggressive' : key === 'zero' ? 'Conservative' : 'Balanced'} — ${modePayload.scanDate}</b>\nPortefeuille · Rotations · Setups · Risque`;
+        sendTelegramVideo(media.videoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
+        console.log(`✅ Telegram video [${key}] → topic ${topicId}`);
+      }
     } else if (media.videoPath) {
-      // TTS failed but we have a video — send video instead
+      // TTS failed — send video with full caption instead
       sendTelegramVideo(media.videoPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
       console.log(`✅ Telegram video fallback [${key}] → topic ${topicId}`);
     } else {
