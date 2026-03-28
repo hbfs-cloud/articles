@@ -277,7 +277,11 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
 }
 
 let badgeHtml = '';
-const isRetrospective = tab === 'scanner' && html.includes('RÉTROSPECTIVE');
+const isRetrospective = tab === 'scanner' && (
+    html.includes('RÉTROSPECTIVE') ||
+    html.toLowerCase().includes('retrospective') ||
+    fullPath.includes('/retrospective/')
+);
 if (isRetrospective) {
     badgeHtml += '<span class="badge badge-purple" style="margin-bottom: 0.4rem; display: inline-block">RÉTROSPECTIVE</span>\n';
 }
