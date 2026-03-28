@@ -637,17 +637,19 @@ async function main() {
   const ytDesc  = `${meta.emoji} ${meta.label} — ${dateStr}\n\n${(slides.map(s => s.narration || '').join(' ')).slice(0,2000)}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`;
   const ytId = uploadToYouTube(videoPath, pngPaths[0], ytTitle, ytDesc, meta.ytPlaylist);
 
-  // ── 7. Telegram notification ──
-  const ytLine = ytId ? `\n📺 <a href="https://youtu.be/${ytId}">Watch on YouTube</a>` : '';
+  // ── 7. Telegram notification — ONE message: audio + caption ──
+  // Caption = bold title + AI bullets + YouTube link + article link
+  const ytLine = ytId ? `\n\n📺 <a href="https://youtu.be/${ytId}">Watch on YouTube</a>` : '';
   // Normalize bullets — AI may return strings or objects {emoji, text}
-  const rawBullets = (content.telegramBullets || []).slice(0, 10);
+  const rawBullets = (content.telegramBullets || []).slice(0, 8);
   const bullets = rawBullets.map(b => {
     if (typeof b === 'string') return b;
     if (b && typeof b === 'object') return `${b.emoji || ''} ${b.text || b.content || b.bullet || JSON.stringify(b)}`.trim();
     return String(b);
   }).filter(b => b.length > 2);
   const bulletBlock = bullets.length > 0 ? '\n\n' + bullets.join('\n') : '';
-  const caption = `🎙️ <b>${meta.label}</b> — ${dateStr}${bulletBlock}${ytLine}\n🔗 <a href="${url}">Full article</a>`;
+  // Telegram audio caption max = 1024 chars
+  const caption = `${meta.emoji} <b>${title}</b>${bulletBlock}${ytLine}\n\n🔗 <a href="${url}">Full article →</a>`.slice(0, 1020);
   sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
 
   // ── 8. Result ──
