@@ -328,8 +328,161 @@ ${picksLines}
 🔗 <${STATUS_URL}>`;
 }
 
+// ─── Build compact caption for sendAudio (max 1024 chars) ─────────────────────
+function buildAudioCaption(d, ytUrl) {
+  const sign = n => n >= 0 ? '+' : '';
+  const modeLabel = d.cfg.id === 'growth' ? '📈 Aggressive' : d.cfg.id === 'zero' ? '🛡️ Conservative' : '⚖️ Balanced';
+
+  const closeNow   = d.activePos.filter(p => p.left <= 1);
+  const decideSoon = d.activePos.filter(p => p.left === 2);
+
+  let lines = [];
+  lines.push(`${modeLabel} — ${d.scanDate}`);
+  lines.push(`📈 <b>D0</b> ${sign(d.metrics.ret)}${d.metrics.ret}% · <b>DD</b> ${d.metrics.dd}% · <b>WR</b> ${d.metrics.wr}% · <b>PF</b> ${d.metrics.pf}x`);
+
+  if (closeNow.length || decideSoon.length) {
+    lines.push('');
+    lines.push('🗂 <b>Action required</b>');
+    closeNow.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      lines.push(`⛔ <b>${p.ticker}</b> ${pnl} → <b>CLOSE</b>`);
+    });
+    decideSoon.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      lines.push(`⏰ <b>${p.ticker}</b> ${pnl} TP1 ${p.tp1} → decide in 2d`);
+    });
+  }
+
+  if (d.slotsLeft > 0) {
+    const buyPicks = d.picks.slice(0, d.slotsLeft);
+    lines.push('');
+    lines.push(`📥 <b>New orders</b> — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% each)`);
+    buyPicks.forEach(s => {
+      lines.push(`🟢 <b>${s.symbol}</b> ${s.strategy} ${s.entry} → TP1 ${s.tp1} · R/R ${s.rr}`);
+    });
+  }
+
+  // Top 3 signals
+  lines.push('');
+  lines.push('📡 <b>Top signals</b>');
+  d.picks.slice(0, 5).forEach((s, i) => {
+    lines.push(`${i + 1}. <b>${s.symbol}</b> ${s.score} ${tradStrat(s.strategy)} R/R ${s.rr}`);
+  });
+
+  if (ytUrl) lines.push(`\n📺 <a href="${ytUrl}">Watch on YouTube</a>`);
+  lines.push(`🔗 <a href="${STATUS_URL}">Full status →</a>`);
+
+  return lines.join('\n').slice(0, 1024);
+}
+
+// ─── Build audio narration script (60-80 words, spoken) ──────────────────────
+function buildAudioScript(d) {
+  const sign = n => n >= 0 ? '+' : '';
+  const modeLabel = d.cfg.id === 'growth' ? 'Aggressive Growth' : d.cfg.id === 'zero' ? 'Conservative' : 'Balanced Calmar';
+
+  const closeNow = d.activePos.filter(p => p.left <= 1);
+  const top3 = d.picks.slice(0, 3);
+
+  let script = `${modeLabel} portfolio update for ${d.scanDate}. `;
+  script += `We're at ${sign(d.metrics.ret)}${d.metrics.ret}% total return, win rate ${d.metrics.wr}%, profit factor ${d.metrics.pf}. `;
+
+  if (closeNow.length > 0) {
+    script += `Action needed: ${closeNow.map(p => `${p.ticker} is up ${p.return_pct >= 0 ? '+' : ''}${p.return_pct}% — close it, horizon reached`).join('. ')}. `;
+  }
+
+  if (d.slotsLeft > 0 && top3.length > 0) {
+    const top = top3[0];
+    script += `${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} open. Top signal: ${top.symbol}, score ${top.score}, ${top.strategy} setup, entry ${top.entry}, target ${top.tp1}. `;
+    if (top3[1]) script += `Also watching ${top3[1].symbol} and ${top3[2]?.symbol || ''}. `;
+  } else {
+    script += `Portfolio is full — no new entries today. `;
+  }
+
+  script += `Full details at market watch dot xyz.`;
+  return script.trim();
+}
+
+// ─── Generate audio via Qwen3-TTS (Mac Mini) ──────────────────────────────────
+function generateQwen3Audio(text, outPath) {
+  const SSH_HOST = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
+  const SSH_OPTS = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
+  const VENV = '/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/.venv-mlx';
+  const MODEL = 'mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit';
+  const INSTRUCT = 'A charismatic male podcast host voice, warm and engaging, conversational yet sharp, like a confident fintech YouTuber who knows his stuff';
+  const FFMPEG = '/opt/homebrew/bin/ffmpeg';
+  const tmpId = `scanner-${Date.now()}`;
+
+  const safeText = text.replace(/'/g, "'\\''").replace(/"/g, '\\"');
+  const safeInst = INSTRUCT.replace(/'/g, "'\\''");
+
+  const cmd = `${VENV}/bin/python3 -m mlx_audio.tts.generate --model '${MODEL}' --text '${safeText}' --instruct '${safeInst}' --output /tmp/${tmpId} 2>&1 | tail -2 && ${FFMPEG} -i /tmp/${tmpId}/audio_000.wav -codec:a libmp3lame -qscale:a 3 /tmp/${tmpId}.mp3 -y 2>/dev/null && echo TTS_DONE`;
+
+  const r = require('child_process').spawnSync(
+    'sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST, cmd],
+    { stdio: 'pipe', timeout: 120000 }
+  );
+
+  const out = r.stdout?.toString() || '';
+  if (!out.includes('TTS_DONE')) {
+    console.error('  ⚠️  Qwen3-TTS failed:', out.slice(-200));
+    return false;
+  }
+
+  // SCP back
+  const scp = require('child_process').spawnSync(
+    'sshpass', ['-p', 'Elonux!123', 'scp', ...SSH_OPTS.split(' '),
+      `${SSH_HOST}:/tmp/${tmpId}.mp3`, outPath],
+    { stdio: 'pipe', timeout: 30000 }
+  );
+
+  if (!require('fs').existsSync(outPath)) {
+    console.error('  ⚠️  SCP failed');
+    return false;
+  }
+
+  // Cleanup remote
+  require('child_process').spawnSync('sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST,
+    `rm -rf /tmp/${tmpId} /tmp/${tmpId}.mp3`], { stdio: 'pipe', timeout: 10000 });
+
+  console.log(`  ✅ Audio: ${outPath} (${Math.round(require('fs').statSync(outPath).size / 1024)}KB)`);
+  return true;
+}
+
 // ─── Senders ──────────────────────────────────────────────────────────────────
-function sendTelegram(text, topicId) {
+function sendTelegramAudio(audioPath, caption, topicId, title) {
+  if (!BOT_TOKEN || !CHAT_ID) {
+    console.warn('⚠️  TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID manquants — skip Telegram');
+    return null;
+  }
+  const capFile = audioPath + '.caption.txt';
+  require('fs').writeFileSync(capFile, caption, 'utf8');
+  const curlArgs = [
+    '-s', '-X', 'POST',
+    `https://api.telegram.org/bot${BOT_TOKEN}/sendAudio`,
+    '-F', `chat_id=${CHAT_ID}`,
+    '-F', `message_thread_id=${topicId}`,
+    '-F', `audio=@${audioPath}`,
+    '-F', `title=${(title || 'Portfolio Update').replace(/['"]/g,'').slice(0,60)}`,
+    '-F', 'performer=Market Watch',
+    '-F', `caption=<${capFile}`,
+    '-F', 'parse_mode=HTML',
+  ];
+  const r = require('child_process').spawnSync('curl', curlArgs, { stdio: 'pipe', timeout: 60000 });
+  try { require('fs').unlinkSync(capFile); } catch {}
+  try {
+    const j = JSON.parse(r.stdout?.toString() || '{}');
+    if (j.ok) {
+      console.log(`  ✅ Telegram audio sent (msg_id: ${j.result.message_id})`);
+      return j.result.message_id;
+    } else {
+      console.error('  ❌ Telegram sendAudio:', j.description);
+    }
+  } catch {}
+  return null;
+}
+
+// Fallback: text-only sendMessage
+function sendTelegramText(text, topicId) {
   if (!BOT_TOKEN || !CHAT_ID) {
     console.warn('⚠️  TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID manquants — skip Telegram');
     return Promise.resolve();
@@ -397,22 +550,37 @@ async function main() {
   console.log('\n--- Discord preview ---');
   console.log(dcMsg);
 
-  // Send to 3 portfolio topics
+  // Send to 3 portfolio topics — ONE message per topic: sendAudio + caption
   const modeTopics = [
-    { key: 'growth',  topicEnv: 'TELEGRAM_TOPIC_GROWTH'      },
-    { key: 'calmar',  topicEnv: 'TELEGRAM_TOPIC_CALMAR'       },
-    { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE' },
+    { key: 'growth',  topicEnv: 'TELEGRAM_TOPIC_GROWTH'       },
+    { key: 'calmar',  topicEnv: 'TELEGRAM_TOPIC_CALMAR'        },
+    { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE'  },
   ];
 
   for (const { key, topicEnv } of modeTopics) {
-    try {
-      const modePayload  = buildStatusPayload(scanDir, key);
-      const modeTgMsg    = buildTelegramMessage(modePayload);
-      const topicId      = process.env[topicEnv];
-      const r = await sendTelegram(modeTgMsg, topicId);
-      console.log(`✅ Telegram [${key}] → topic ${topicId} (id: ${r?.message_id})`);
-    } catch (e) {
-      console.error(`❌ Telegram [${key}] failed:`, e.message);
+    const modePayload = buildStatusPayload(scanDir, key);
+    const topicId     = process.env[topicEnv];
+    const modeTgMsg   = buildTelegramMessage(modePayload);
+
+    // Generate audio
+    const audioPath = `/tmp/scanner-${key}-${scanDir}.mp3`;
+    const audioScript = buildAudioScript(modePayload);
+    console.log(`\n🎙️  [${key}] Generating audio...`);
+    const audioOk = generateQwen3Audio(audioScript, audioPath);
+
+    if (audioOk) {
+      // ONE message only: sendAudio with full caption (compact, ≤1024 chars)
+      const caption = buildAudioCaption(modePayload, null);
+      sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
+      console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
+    } else {
+      // Fallback: text-only sendMessage if Qwen3-TTS fails
+      try {
+        const r = await sendTelegramText(modeTgMsg, topicId);
+        console.log(`✅ Telegram text fallback [${key}] → topic ${topicId} (id: ${r?.message_id})`);
+      } catch (e) {
+        console.error(`❌ Telegram [${key}] failed:`, e.message);
+      }
     }
   }
 
