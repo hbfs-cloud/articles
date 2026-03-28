@@ -190,32 +190,34 @@ function buildTelegramMessage(d) {
   const closeNow   = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
 
-  // ── ACTIONS ──
-  let actions = '';
-  if (closeNow.length) {
-    actions += `\n⛔ <b>CLÔTURER à l'ouverture</b>\n`;
+  // ── BLOC 1 : GESTION POSITIONS EXISTANTES ──
+  let manageBlock = '';
+  if (closeNow.length || decideSoon.length) {
+    manageBlock += `\n🗂 <b>Positions à gérer</b>\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      actions += `  🔴 <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  stop ${p.stop}\n`;
+      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  → <b>CLÔTURER</b> (horizon atteint)\n`;
     });
-  }
-  if (decideSoon.length) {
-    actions += `\n⏰ <b>Décision avant clôture (J-2)</b>\n`;
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      actions += `  🟡 <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''}  stop ${p.stop}\n`;
+      manageBlock += `  ⏰ <b>${p.ticker}</b>  ${pnl}  TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''}  stop ${p.stop}  → décision J-2\n`;
     });
   }
+
+  // ── BLOC 2 : NOUVEAUX ORDRES ──
+  let ordersBlock = '';
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    actions += `\n⚡ <b>${d.slotsLeft} ordre${d.slotsLeft > 1 ? 's' : ''} à passer — ${d.alloc}% chacun</b>\n`;
+    ordersBlock += `\n📥 <b>Nouveaux ordres — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% chacun)</b>\n`;
     buyPicks.forEach(s => {
-      actions += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entry ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
+      ordersBlock += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entry ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
     });
   } else {
-    actions += `\n✅ <b>Portfolio plein</b> — aucun ordre à passer\n`;
+    ordersBlock += `\n✅ <b>Portfolio plein</b> — aucun nouvel ordre\n`;
   }
+
+  const actions = manageBlock + ordersBlock;
 
   // ── POSITIONS ──
   const posLines = d.activePos.length
@@ -257,32 +259,34 @@ function buildDiscordMessage(d) {
   const closeNow   = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
 
-  // ── ACTIONS ──
-  let actions = '';
-  if (closeNow.length) {
-    actions += `\n⛔ **CLÔTURER à l'ouverture**\n`;
+  // ── BLOC 1 : GESTION POSITIONS EXISTANTES ──
+  let manageBlock = '';
+  if (closeNow.length || decideSoon.length) {
+    manageBlock += `\n🗂 **Positions à gérer**\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      actions += `> 🔴 **${p.ticker}**  ${pnl}  now \`${p.current_price}\`  stop \`${p.stop}\`\n`;
+      manageBlock += `> ⛔ **${p.ticker}**  ${pnl}  now \`${p.current_price}\`  → **CLÔTURER** (horizon atteint)\n`;
     });
-  }
-  if (decideSoon.length) {
-    actions += `\n⏰ **Décision avant clôture (J-2)**\n`;
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      actions += `> 🟡 **${p.ticker}**  ${pnl}  now \`${p.current_price}\`  TP1 \`${p.tp1}\`${toTp1 ? ` (+${toTp1}%)` : ''}  stop \`${p.stop}\`\n`;
+      manageBlock += `> ⏰ **${p.ticker}**  ${pnl}  TP1 \`${p.tp1}\`${toTp1 ? ` (+${toTp1}%)` : ''}  stop \`${p.stop}\`  → décision J-2\n`;
     });
   }
+
+  // ── BLOC 2 : NOUVEAUX ORDRES ──
+  let ordersBlock = '';
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    actions += `\n⚡ **${d.slotsLeft} ordre${d.slotsLeft > 1 ? 's' : ''} à passer — ${d.alloc}% chacun**\n`;
+    ordersBlock += `\n📥 **Nouveaux ordres — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% chacun)**\n`;
     buyPicks.forEach(s => {
-      actions += `> 🟢 **${s.symbol}**  ${s.strategy}  entry \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
+      ordersBlock += `> 🟢 **${s.symbol}**  ${s.strategy}  entry \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
     });
   } else {
-    actions += `\n✅ **Portfolio plein** — aucun ordre à passer\n`;
+    ordersBlock += `\n✅ **Portfolio plein** — aucun nouvel ordre\n`;
   }
+
+  const actions = manageBlock + ordersBlock;
 
   // ── POSITIONS ──
   const posLines = d.activePos.length
