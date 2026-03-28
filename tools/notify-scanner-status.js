@@ -557,6 +557,21 @@ async function main() {
     { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE'  },
   ];
 
+  // ── YouTube URL: look for latest result.json in /tmp/mw-media ──────────────
+  function getLatestYtUrl() {
+    try {
+      const mediaDir = '/tmp/mw-media';
+      if (!fs.existsSync(mediaDir)) return null;
+      const entries = fs.readdirSync(mediaDir)
+        .map(d => { try { return JSON.parse(fs.readFileSync(path.join(mediaDir, d, 'result.json'))); } catch { return null; } })
+        .filter(r => r && r.youtubeUrl)
+        .sort((a, b) => (b.slug || '').localeCompare(a.slug || ''));
+      return entries[0]?.youtubeUrl || null;
+    } catch { return null; }
+  }
+  const latestYtUrl = getLatestYtUrl();
+  if (latestYtUrl) console.log(`📺 YouTube: ${latestYtUrl}`);
+
   for (const { key, topicEnv } of modeTopics) {
     const modePayload = buildStatusPayload(scanDir, key);
     const topicId     = process.env[topicEnv];
@@ -570,7 +585,7 @@ async function main() {
 
     if (audioOk) {
       // ONE message only: sendAudio with full caption (compact, ≤1024 chars)
-      const caption = buildAudioCaption(modePayload, null);
+      const caption = buildAudioCaption(modePayload, latestYtUrl);
       sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
     } else {
