@@ -123,19 +123,9 @@ if [ -f /tmp/qa-discord-report.txt ]; then
   rm -f /tmp/qa-discord-report.txt
 fi
 
-# ─── Step 8: Scanner Status Notification (Telegram + Discord) ───────────────
+# ─── Step 8: Generate media (audio + video) — Telegram handled by Step 9 ────
 echo ""
-echo "📡 Step 8: Scanner status notification..."
-if [ "$DRY_RUN" = true ]; then
-  echo "   (dry-run: skip notification)"
-else
-  node tools/notify-scanner-status.js 2>&1 || echo "⚠️  notify-scanner-status failed (non-blocking)"
-fi
-
-
-# ─── Step 9: Generate media (audio + video) and send to Telegram + YouTube ──
-echo ""
-echo "🎬 Step 9: Generating media (audio + video)..."
+echo "🎬 Step 8: Generating media (audio + video)..."
 SCAN_PATH="scanner/${TODAY}/index.html"
 if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
   # ANTHROPIC_API_KEY needed for AI script generation
@@ -143,12 +133,21 @@ if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
     source ~/.profile 2>/dev/null || true
     export ANTHROPIC_API_KEY
   fi
-  node tools/generate-media.mjs --type scanner --path "$SCAN_PATH" \
+  node tools/generate-media.mjs --type scanner --path "$SCAN_PATH" --no-telegram \
     > /tmp/mw-media-scanner.log 2>&1 \
     && echo "✅ Media generated (scanner)" \
     || echo "⚠️  Media generation failed (check /tmp/mw-media-scanner.log)"
 else
   echo "   (dry-run or no scanner file: skip media)"
+fi
+
+# ─── Step 9: Scanner Status Notification (sole Telegram sender) ──────────────
+echo ""
+echo "📡 Step 9: Scanner status notification..."
+if [ "$DRY_RUN" = true ]; then
+  echo "   (dry-run: skip notification)"
+else
+  node tools/notify-scanner-status.js 2>&1 || echo "⚠️  notify-scanner-status failed (non-blocking)"
 fi
 
 echo ""

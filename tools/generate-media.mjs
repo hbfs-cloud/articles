@@ -62,6 +62,7 @@ const getArg = (f) => { const i = args.indexOf(f); return i >= 0 ? args[i+1] : n
 const type    = getArg('--type')  || 'daily';
 const artPath = getArg('--path')  || '';
 const DRY_RUN = args.includes('--dry-run');
+const NO_TELEGRAM = args.includes('--no-telegram');
 
 // ── Type metadata ─────────────────────────────────────────────────────────────
 const TYPE_META = {
@@ -650,7 +651,11 @@ async function main() {
   const bulletBlock = bullets.length > 0 ? '\n\n' + bullets.join('\n') : '';
   // Telegram audio caption max = 1024 chars
   const caption = `${meta.emoji} <b>${title}</b>${bulletBlock}${ytLine}\n\n🔗 <a href="${url}">Full article →</a>`.slice(0, 1020);
-  sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
+  if (!NO_TELEGRAM) {
+    sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
+  } else {
+    console.log('  (--no-telegram: skip Telegram send)');
+  }
 
   // ── 8. Result ──
   const result = { audioPath, videoPath, youtubeId: ytId, youtubeUrl: ytId ? `https://youtu.be/${ytId}` : null, title, slug };

@@ -388,31 +388,64 @@ function buildAudioCaption(d, ytUrl) {
   return lines.join('\n').slice(0, 1024);
 }
 
-// ─── Build audio narration script (60-80 words, spoken) ──────────────────────
+// ─── Build audio narration script (60-80 words, analytical) ─────────────────
 function buildAudioScript(d) {
   const sign = n => n >= 0 ? '+' : '';
   const modeLabel = d.cfg.id === 'growth' ? 'Aggressive Growth' : d.cfg.id === 'zero' ? 'Conservative' : 'Balanced Calmar';
 
   const closeNow = d.activePos.filter(p => p.left <= 1);
+  const decideSoon = d.activePos.filter(p => p.left === 2);
   const top3 = d.picks.slice(0, 3);
 
-  let script = `${modeLabel} portfolio update for ${d.scanDate}. `;
-  script += `We're at ${sign(d.metrics.ret)}${d.metrics.ret}% total return, win rate ${d.metrics.wr}%, profit factor ${d.metrics.pf}. `;
+  let parts = [];
 
-  if (closeNow.length > 0) {
-    script += `Action needed: ${closeNow.map(p => `${p.ticker} is up ${p.return_pct >= 0 ? '+' : ''}${p.return_pct}% — close it, horizon reached`).join('. ')}. `;
+  // Context: portfolio state
+  parts.push(`${modeLabel} portfolio, ${d.scanDate}.`);
+
+  if (d.metrics.ret !== 0) {
+    const trend = d.metrics.ret > 0 ? 'up' : 'down';
+    parts.push(`We're ${trend} ${Math.abs(d.metrics.ret)}% overall, win rate ${d.metrics.wr}%, profit factor ${d.metrics.pf}.`);
   }
 
+  // WHY we close positions
+  if (closeNow.length > 0) {
+    closeNow.forEach(p => {
+      const verb = p.return_pct >= 0 ? 'locking in' : 'cutting';
+      parts.push(`${p.ticker} hits its ${d.cfg.horizon}-day horizon — ${verb} ${sign(p.return_pct)}${p.return_pct}%, freeing up ${d.alloc}% capital for fresh setups.`);
+    });
+  }
+
+  // WHY we watch expiring positions
+  if (decideSoon.length > 0) {
+    decideSoon.forEach(p => {
+      const distance = p.tp1 && p.current_price ? ((p.tp1 - p.current_price) / p.current_price * 100).toFixed(1) : null;
+      if (distance && parseFloat(distance) > 0) {
+        parts.push(`${p.ticker} at ${sign(p.return_pct)}${p.return_pct}%, still ${distance}% from TP1 — two days to decide if momentum carries it.`);
+      } else {
+        parts.push(`${p.ticker} needs a decision in two days, sitting at ${sign(p.return_pct)}${p.return_pct}%.`);
+      }
+    });
+  }
+
+  // WHY we enter new positions
   if (d.slotsLeft > 0 && top3.length > 0) {
     const top = top3[0];
-    script += `${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} open. Top signal: ${top.symbol}, score ${top.score}, ${top.strategy} setup, entry ${top.entry}, target ${top.tp1}. `;
-    if (top3[1]) script += `Also watching ${top3[1].symbol} and ${top3[2]?.symbol || ''}. `;
-  } else {
-    script += `Portfolio is full — no new entries today. `;
+    parts.push(`${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} open. Top pick: ${top.symbol}, ${top.strategy} setup with ${top.rr} risk-reward, entry at ${top.entry} targeting ${top.tp1}.`);
+    if (top3.length > 1) {
+      parts.push(`Also watching ${top3.slice(1).map(s => s.symbol).join(' and ')}.`);
+    }
+  } else if (d.slotsLeft === 0) {
+    parts.push(`Portfolio fully allocated — monitoring existing positions, no new entries.`);
   }
 
-  script += `Full details at market watch dot xyz.`;
-  return script.trim();
+  // Risk context
+  if (d.nowPct !== 0) {
+    parts.push(`Risk range ${sign(d.worstPct)}${d.worstPct.toFixed(1)}% to +${d.bestPct.toFixed(1)}%, currently at ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%.`);
+  }
+
+  parts.push(`Full details at market watch dot xyz.`);
+
+  return parts.join(' ').trim();
 }
 
 // ─── Generate audio via Qwen3-TTS (Mac Mini) ──────────────────────────────────
@@ -494,6 +527,37 @@ function sendTelegramAudio(audioPath, caption, topicId, title) {
   return null;
 }
 
+function sendTelegramVideo(videoPath, caption, topicId, title) {
+  if (!BOT_TOKEN || !CHAT_ID) {
+    console.warn('⚠️  TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID manquants — skip Telegram');
+    return null;
+  }
+  const capFile = videoPath + '.caption.txt';
+  require('fs').writeFileSync(capFile, caption, 'utf8');
+  const curlArgs = [
+    '-s', '-X', 'POST',
+    `https://api.telegram.org/bot${BOT_TOKEN}/sendVideo`,
+    '-F', `chat_id=${CHAT_ID}`,
+    '-F', `message_thread_id=${topicId}`,
+    '-F', `video=@${videoPath}`,
+    '-F', `caption=<${capFile}`,
+    '-F', 'parse_mode=HTML',
+    '-F', 'supports_streaming=true',
+  ];
+  const r = require('child_process').spawnSync('curl', curlArgs, { stdio: 'pipe', timeout: 120000 });
+  try { require('fs').unlinkSync(capFile); } catch {}
+  try {
+    const j = JSON.parse(r.stdout?.toString() || '{}');
+    if (j.ok) {
+      console.log(`  ✅ Telegram video sent (msg_id: ${j.result.message_id})`);
+      return j.result.message_id;
+    } else {
+      console.error('  ❌ Telegram sendVideo:', j.description);
+    }
+  } catch {}
+  return null;
+}
+
 // Fallback: text-only sendMessage
 function sendTelegramText(text, topicId) {
   if (!BOT_TOKEN || !CHAT_ID) {
@@ -570,38 +634,59 @@ async function main() {
     { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE'  },
   ];
 
-  // ── YouTube URL: only use a scanner-specific result.json ──────────────────
-  // scanDir-specific result takes priority; fallback = null (no random YT link)
-  function getScannerYtUrl(scanDir) {
+  // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
+  function getScannerMediaPaths(scanDir) {
+    const mediaDir = path.join('/tmp/mw-media', `scanner-${scanDir}`);
+    let ytUrl = null;
+    let videoPath = null;
     try {
-      const f = path.join('/tmp/mw-media', `scanner-${scanDir}`, 'result.json');
-      if (!fs.existsSync(f)) return null;
-      const r = JSON.parse(fs.readFileSync(f));
-      return r.youtubeUrl || null;
-    } catch { return null; }
+      const resultFile = path.join(mediaDir, 'result.json');
+      if (fs.existsSync(resultFile)) {
+        const r = JSON.parse(fs.readFileSync(resultFile));
+        ytUrl = r.youtubeUrl || null;
+        if (r.videoPath && fs.existsSync(r.videoPath)) {
+          videoPath = r.videoPath;
+        }
+      }
+    } catch {}
+    // Also check for video.mp4 directly in media dir
+    if (!videoPath) {
+      const directVideo = path.join(mediaDir, 'video.mp4');
+      if (fs.existsSync(directVideo)) videoPath = directVideo;
+    }
+    return { ytUrl, videoPath };
   }
-  const latestYtUrl = getScannerYtUrl(scanDir);
-  if (latestYtUrl) console.log(`📺 YouTube (scanner): ${latestYtUrl}`);
-  else console.log('📺 YouTube: no scanner video found — skipping YT link');
+
+  const media = getScannerMediaPaths(scanDir);
+  if (media.ytUrl) console.log(`📺 YouTube (scanner): ${media.ytUrl}`);
+  else if (media.videoPath) console.log(`📺 Video found (no YouTube): ${media.videoPath}`);
+  else console.log('📺 No scanner media found');
 
   for (const { key, topicEnv } of modeTopics) {
     const modePayload = buildStatusPayload(scanDir, key);
     const topicId     = process.env[topicEnv];
-    const modeTgMsg   = buildTelegramMessage(modePayload);
 
     // Generate audio
     const audioPath = `/tmp/scanner-${key}-${scanDir}.mp3`;
     const audioScript = buildAudioScript(modePayload);
     console.log(`\n🎙️  [${key}] Generating audio...`);
+    console.log(`  Script: ${audioScript.slice(0, 120)}...`);
     const audioOk = generateQwen3Audio(audioScript, audioPath);
 
+    // Build caption (same for audio or video sends)
+    const caption = buildAudioCaption(modePayload, media.ytUrl);
+
     if (audioOk) {
-      // ONE message only: sendAudio with full caption (compact, ≤1024 chars)
-      const caption = buildAudioCaption(modePayload, latestYtUrl);
+      // Send audio with caption
       sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
+    } else if (media.videoPath) {
+      // TTS failed but we have a video — send video instead
+      sendTelegramVideo(media.videoPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
+      console.log(`✅ Telegram video fallback [${key}] → topic ${topicId}`);
     } else {
-      // Fallback: text-only sendMessage if Qwen3-TTS fails
+      // Last resort: text-only
+      const modeTgMsg = buildTelegramMessage(modePayload);
       try {
         const r = await sendTelegramText(modeTgMsg, topicId);
         console.log(`✅ Telegram text fallback [${key}] → topic ${topicId} (id: ${r?.message_id})`);
