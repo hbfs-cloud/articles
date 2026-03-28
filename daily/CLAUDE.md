@@ -95,8 +95,6 @@ Adapter les 6 items aux sections principales du briefing. Le JS gère toggle, sm
   &copy; 2026 Market Watch. Data via MarketWatch Gateway.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
-  &nbsp;·&nbsp;<a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" style="color:#229ED9"><i class="fab fa-telegram"></i> Telegram</a>
-  &nbsp;·&nbsp;<a href="https://discord.gg/eb4Ack9aPZ" target="_blank" rel="noopener" style="color:#5865F2"><i class="fab fa-discord"></i> Discord</a>
 </footer>
 ```
 **TOUJOURS** `class="article-footer"`. Jamais d'autre classe de footer.
