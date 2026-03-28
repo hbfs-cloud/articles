@@ -373,17 +373,56 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     ${activePosDisplay.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${activePosDisplay.length ? `
+  ${(() => {
+    // Scenario bar: worst (all SL) → current → best (all TP2)
+    // Each position contributes alloc% of portfolio
+    const a = alloc / 100; // weight per position
+    const worstPct = activePosDisplay.reduce((s, p) => {
+      const slPct = p.entry > 0 ? (p.stop - p.entry) / p.entry * 100 : 0;
+      return s + slPct * a;
+    }, 0);
+    const bestPct = activePosDisplay.reduce((s, p) => {
+      const tp = p.tp2 || p.tp1 || p.current_price;
+      const tp2Pct = p.entry > 0 ? (tp - p.entry) / p.entry * 100 : 0;
+      return s + tp2Pct * a;
+    }, 0);
+    const nowPct = activePosDisplay.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
+
+    // Progress bar: worst is left anchor, best is right anchor, now is the cursor
+    const range = bestPct - worstPct;
+    const nowPos = range > 0 ? Math.max(0, Math.min(100, (nowPct - worstPct) / range * 100)) : 50;
+
+    const worstCls = worstPct < 0 ? 'neg' : 'pos';
+    const nowCls = nowPct >= 0 ? 'pos' : 'neg';
+    const bestCls = 'pos';
+
+    // Fill color: red zone (left of now) to green zone (right of now)
+    const barW = nowPos.toFixed(1);
+
+    return `<div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="${worstCls}">⛔ Worst: ${worstPct > 0 ? '+' : ''}${worstPct.toFixed(1)}%</span>
+    <span class="${nowCls}" style="font-weight:700">▼ Now: ${nowPct > 0 ? '+' : ''}${nowPct.toFixed(1)}%</span>
+    <span class="${bestCls}">🎯 Best: +${bestPct.toFixed(1)}%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:${barW}%"></div>
+    <div class="scenario-fill-good" style="width:${(100 - parseFloat(barW)).toFixed(1)}%"></div>
+    <div class="scenario-cursor" style="left:${barW}%"></div>
+  </div>
+</div>`;
+  })()}
   <div class="pos-bar">${activePosDisplay.map(p => {
     const c = p.return_pct >= 5 ? '#059669' : p.return_pct >= 0 ? '#3b82f6' : p.return_pct >= -3 ? '#f59e0b' : '#dc2626';
     return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
   }).join('')}</div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Alloc</th><th class="hide-m">Stop</th><th class="hide-m">TP1</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${activePosDisplay.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       const leftCls = left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m hide-m">${alloc}%</td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="${leftCls}">${left}d</td></tr>`;
+      return `<tr><td><b>${p.ticker}</b></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${left}d</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty">No active positions</p>`}
 </div>
@@ -517,6 +556,12 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 
 /* Position bar */
 .pos-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:1px;margin-bottom:.6rem}
+.scenario-bar-wrap{margin-bottom:.8rem}
+.scenario-labels{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.3rem;gap:.3rem}
+.scenario-bar{position:relative;height:10px;border-radius:5px;overflow:visible;display:flex;background:#f1f5f9;margin-bottom:.2rem}
+.scenario-fill-bad{background:linear-gradient(90deg,#dc2626,#f59e0b);border-radius:5px 0 0 5px;transition:width .3s}
+.scenario-fill-good{background:linear-gradient(90deg,#f59e0b,#059669);border-radius:0 5px 5px 0;transition:width .3s}
+.scenario-cursor{position:absolute;top:-3px;width:3px;height:16px;background:#0f172a;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 0 2px #fff}
 
 /* Method card */
 .method-card{background:#fff;border:1px solid #e2e8f0;border-left:4px solid;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem}
