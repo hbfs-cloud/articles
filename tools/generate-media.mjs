@@ -43,9 +43,9 @@ const EDGE_TTS  = '/home/ci/edge-tts-venv/bin/edge-tts';
 const FFMPEG    = 'ffmpeg';
 const FFPROBE   = 'ffprobe';
 const CHROMIUM  = '/snap/bin/chromium';
-const VOICE     = 'en-US-EricNeural';
-const RATE      = '-8%';
-const PITCH     = '+5Hz';
+const VOICE     = 'en-US-AndrewNeural';  // Young, dynamic, energetic male voice
+const RATE      = '+5%';                 // Slightly faster = punchy analyst delivery
+const PITCH     = '+8Hz';               // Slightly higher = youthful energy
 const BASE_URL  = 'https://articles.market-watch.xyz';
 
 // ── SSH Mac Mini ──────────────────────────────────────────────────────────────
@@ -147,7 +147,7 @@ async function generateAIContent(html, url, dateStr, title, meta) {
     series:   `a 5-minute expert series episode. Structure: context, deep analysis, practical application, key insights. Rich visuals.`,
   };
 
-  const prompt = `You are building slides for a professional financial video for Market Watch. Generate JSON data for a rich video presentation.
+  const prompt = `You are a young, dynamic financial analyst creating an engaging video for Market Watch — think Bloomberg meets TikTok finance. Your voice is confident, direct, fast-paced. You speak like you're explaining a trade to a sharp friend, not reading a report.
 
 ARTICLE: ${title}
 DATE: ${dateStr}
@@ -157,95 +157,97 @@ ${body}
 
 Create ${typeGuide[type] || typeGuide.daily}
 
-OUTPUT: Return ONLY valid JSON in this EXACT format (no markdown, no explanation):
+## TONE & STYLE
+- Narrator: young analyst, 28 years old, sharp, confident, slightly excited when there's a big move
+- Script style: punchy sentences. Short. Hit the why. Show surprise when warranted. "Look at this — S&P down 2% AND yields up? That's a double hit."
+- Slides: visually rich, light theme (white backgrounds), colored data, no dark backgrounds on data slides
+- Each narration: ADDS CONTEXT to what's on screen — don't just read the slide, explain WHY it matters
+- Emotion: if markets crashed, convey the weight. If a stock popped 15%, show the excitement.
+
+## SLIDE NARRATION RULES
+Each narration field must:
+1. Start with a strong opener — never "In this slide..." or "Here we see..."
+2. Add ONE key insight not visible on screen
+3. End with a forward-looking statement or question (keeps viewer watching)
+4. Be 25-45 words — tight and punchy
+
+Good example: "S&P down two-point-four percent — but here's what's really moving markets: the yield curve just inverted again. That's the recession signal everyone's been watching. Does the Fed have room to cut? We'll see next slide."
+
+Bad example: "This slide shows the market metrics for the week. The S&P 500 was down and volatility increased."
+
+## REQUIRED OUTPUT FORMAT
+Return ONLY valid JSON, no markdown fences, no explanation:
 {
-  "audioScript": "90-second punchy audio summary (230 words max). Sharp hook. WHY things happened. 2-3 data points WITH context. Actionable ending. No filler words. Sound like a Bloomberg analyst.",
-  "telegramBullets": ["📉 Dow enters correction — worst 5-week streak since 2022", "🛢️ Iran conflict locks Brent crude above $100 structurally", "up to 10 strings like these"],
+  "audioScript": "90-second punchy audio summary. Sharp hook — start with the biggest number or surprise. WHY things happened, not just what. 2-3 specific data points with context. One forward-looking question or insight at end. 220-240 words. Sound like a 28-year-old Bloomberg analyst on caffeine.",
+  "telegramBullets": ["📉 S&P drops 2.4% — worst week since 2022 selloff", "🔥 VIX spikes to 28 as recession fears return", "put 5-10 punchy bullets here with REAL data from the article"],
   "config": {
     "seriesTitle": "${title}",
     "date": "${dateStr}",
     "language": "en",
-    "accentColor": "#3b82f6",
-    "totalChapters": 4
+    "accentColor": "#2563EB"
   },
   "slides": [
     {
       "type": "chapter-intro",
-      "chapter": { "title": "Chapter title", "subtitle": "One-line description", "partNumber": 1, "totalParts": 4 },
-      "narration": "Narration text for this slide (20-40 words). Punchy, adds context beyond what's on screen."
+      "icon": "📊",
+      "chapter": { "title": "Punchy chapter title", "subtitle": "One bold sentence describing what happened", "partNumber": 1, "totalParts": 4 },
+      "narration": "Hook narration — start with the most dramatic or surprising thing from this article. Make them want to keep watching."
     },
     {
       "type": "metric-row",
-      "title": "Market Snapshot",
+      "title": "This Week — By The Numbers",
       "metrics": [
-        {"label": "S&P 500", "value": "6,369", "delta": "-1.67% Fri", "trend": "down"},
-        {"label": "VIX", "value": "28.5", "delta": "+8% Fear spike", "trend": "up"}
+        {"label": "S&P 500", "value": "-2.4%", "delta": "Worst week in 3 months", "trend": "down", "context": "5th consecutive weekly loss"},
+        {"label": "VIX", "value": "28.5", "delta": "+8.2 spike", "trend": "up", "context": "Fear back at 2022 levels"}
       ],
-      "narration": "Narration for this slide."
-    },
-    {
-      "type": "chart-image",
-      "title": "TICKER — Technical Setup",
-      "imageUrl": "https://finviz.com/chart.ashx?t=TICKER&ty=c&ta=1&p=d&s=l",
-      "caption": "Daily chart — support at $XX, resistance at $YY",
-      "narration": "Narration for this slide."
+      "narration": "25-45 words — explain WHY these numbers matter, what's driving them, and what the viewer should feel about this."
     },
     {
       "type": "event-timeline",
-      "title": "Key Events This Week",
+      "title": "What Drove Markets This Week",
       "events": [
-        {"time": "Mon 24", "title": "Event description", "impact": "High"},
-        {"time": "Tue 25", "title": "Event description", "impact": "Medium"}
+        {"time": "Mon", "title": "Specific real event from article", "impact": "High", "desc": "One sentence context"},
+        {"time": "Wed", "title": "Another real event", "impact": "Medium", "desc": "Context"}
       ],
-      "narration": "Narration for this slide."
+      "narration": "Walk through the week's narrative. What was the turning point? When did sentiment shift?"
     },
     {
       "type": "highlight",
-      "title": "The Core Thesis",
-      "text": "The key insight in 1-2 sentences.",
+      "title": "The Big Picture",
+      "text": "The single most important insight — the thesis an investor needs to understand right now.",
       "icon": "💡",
-      "narration": "Narration for this slide."
-    },
-    {
-      "type": "trade-levels",
-      "title": "TICKER — Trade Setup",
-      "levels": [
-        {"type": "tp2",   "label": "Target 2",   "value": "$XX.XX", "note": "Full target"},
-        {"type": "tp1",   "label": "Target 1",   "value": "$XX.XX", "note": "Partial profit"},
-        {"type": "entry", "label": "Entry Zone", "value": "$XX–$XX", "note": "On pullback"},
-        {"type": "stop",  "label": "Stop Loss",  "value": "$XX.XX", "note": "Below support"}
-      ],
-      "narration": "Narration for this slide."
+      "sentiment": "insight",
+      "narration": "Deliver the core insight like you're letting someone in on a secret. Direct, confident, slightly conspiratorial."
     },
     {
       "type": "performance",
-      "title": "Top Movers",
+      "title": "Winners & Losers",
       "tickers": [
-        {"symbol": "XOM", "name": "Exxon Mobil", "perf": 2.1, "note": "Energy rally on Brent $100+"},
-        {"symbol": "NVDA", "name": "Nvidia", "perf": -3.8, "note": "Yield spike pressure"}
+        {"symbol": "XOM", "name": "Exxon Mobil", "perf": 2.1, "note": "Energy bid on oil supply fears"},
+        {"symbol": "NVDA", "name": "Nvidia", "perf": -3.8, "note": "Rate sensitivity hits growth"}
       ],
-      "narration": "Narration for this slide."
+      "narration": "Name the winners and losers — but more importantly, explain the STORY behind the moves."
     },
     {
       "type": "summary",
-      "title": "Key Takeaways",
-      "items": ["Takeaway 1 — specific and actionable", "Takeaway 2 — specific and actionable"],
-      "narration": "Narration for this slide."
+      "title": "What To Watch Now",
+      "items": ["Specific actionable insight #1 with real data", "Specific actionable insight #2", "What could change the thesis"],
+      "narration": "Land the takeaways with conviction. This is what the viewer remembers. Make it count."
     }
   ]
 }
 
-RULES:
-- audioScript: punchy, fast-paced analyst voice, NO "Welcome to Market Watch", NO "see you next time"
-- slides: 6-10 slides, each slide has a "narration" field (20-50 words, adds insight beyond the visual)
-- chart-image: use real Finviz URLs for real tickers mentioned in the article
-- metric-row: use REAL data from the article content
-- performance: use REAL tickers and REAL numbers from article
-- trade-levels: only if real entry/stop/target data exists in the article
-- For daily/weekly: always include metric-row snapshot + event-timeline
-- For analysis: always include chart-image (Finviz) + trade-levels
-- Keep total video ≤ 5 minutes (sum of narration ~500 words)
-- telegramBullets: 5-10 strings (NOT objects), each "<emoji> <punchy insight 8-12 words>", real data from article, no generic filler`;
+## HARD RULES
+- audioScript: NO "Welcome to Market Watch", NO "Thanks for watching", NO "See you next time", NO "In this video"
+- Start audioScript with the biggest number, surprise, or emotion: "S&P just had its worst week..." or "Something broke in markets this week..."
+- metric-row: use EXACT numbers from the article — no placeholders
+- performance: use REAL tickers and REAL percentage moves from the article
+- trade-levels: ONLY include if real entry/stop/target levels exist in the article text
+- chart-image: use real Finviz URLs: https://finviz.com/chart.ashx?t=TICKER&ty=c&ta=1&p=d&s=l
+- slide narration: NEVER starts with "This slide", "Here we can see", "In this section"
+- Minimum 7 slides, maximum 10 slides
+- Each narration 25-45 words, total narration sum 450-550 words
+- telegramBullets: 5-10 strings, each starts with emoji, 8-15 words, REAL data from article`;
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
@@ -253,7 +255,7 @@ RULES:
     console.log('  🤖 Generating AI content (Haiku)...');
     const response = await client.messages.create({
       model: 'claude-haiku-4-5',
-      max_tokens: 3500,
+      max_tokens: 4000,
       messages: [{ role: 'user', content: prompt }],
     });
     const raw_resp = response.content[0].text.trim();

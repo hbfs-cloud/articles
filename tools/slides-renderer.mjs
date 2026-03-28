@@ -1,7 +1,7 @@
 /**
- * slides-renderer.mjs
- * Renders edu-data slides to 1280x720 PNGs using puppeteer + inline HTML.
- * No CDN dependencies — all styles inline.
+ * slides-renderer.mjs  v2 — LIGHT THEME
+ * Renders edu-data slides to 1280×720 PNGs using puppeteer + inline HTML.
+ * Design: Bloomberg meets Robinhood — white, clean, data-rich, emotional.
  */
 
 import puppeteer from 'puppeteer';
@@ -10,384 +10,620 @@ import path from 'path';
 
 const CHROMIUM = '/snap/bin/chromium';
 
-// ── Theme ──────────────────────────────────────────────────────────────────────
-const THEME = {
-  bg:         '#0a0e1a',
-  surface:    '#111827',
-  surface2:   '#1f2937',
-  border:     '#1e293b',
-  primary:    '#3b82f6',
-  success:    '#10b981',
-  danger:     '#ef4444',
-  warning:    '#f59e0b',
-  info:       '#38bdf8',
-  text:       '#f1f5f9',
-  textMuted:  '#94a3b8',
-  textFaint:  '#475569',
-  font:       "'Inter', 'Helvetica Neue', Arial, sans-serif",
+// ── Light theme palette ────────────────────────────────────────────────────────
+const T = {
+  bg:           '#FFFFFF',
+  bgCard:       '#F8FAFC',
+  bgCardAlt:    '#F1F5F9',
+  border:       '#E2E8F0',
+  borderStrong: '#CBD5E1',
+
+  // Brand
+  primary:      '#2563EB',    // Confident blue
+  primaryLight: '#EFF6FF',
+  primaryMid:   '#BFDBFE',
+
+  // Semantic colors
+  bull:         '#059669',    // Green — gains, bullish
+  bullLight:    '#ECFDF5',
+  bullMid:      '#6EE7B7',
+
+  bear:         '#DC2626',    // Red — losses, bearish
+  bearLight:    '#FEF2F2',
+  bearMid:      '#FECACA',
+
+  warning:      '#D97706',    // Amber — caution
+  warningLight: '#FFFBEB',
+
+  purple:       '#7C3AED',    // Purple — analysis, insight
+  purpleLight:  '#F5F3FF',
+
+  // Text
+  text:         '#0F172A',    // Near black
+  textSub:      '#334155',
+  textMuted:    '#64748B',
+  textFaint:    '#94A3B8',
+  textOnDark:   '#FFFFFF',
+
+  // Gradients
+  gradHero:     'linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 40%, #0891b2 100%)',
+  gradBull:     'linear-gradient(135deg, #065f46 0%, #059669 100%)',
+  gradBear:     'linear-gradient(135deg, #991b1b 0%, #dc2626 100%)',
+  gradPurple:   'linear-gradient(135deg, #4c1d95 0%, #7c3aed 100%)',
+
+  font:         "'Inter', 'Helvetica Neue', Arial, sans-serif",
+  fontMono:     "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
 };
 
+// ── Base CSS ───────────────────────────────────────────────────────────────────
 const BASE_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     width: 1280px; height: 720px; overflow: hidden;
-    background: ${THEME.bg};
-    color: ${THEME.text};
-    font-family: ${THEME.font};
+    background: ${T.bg};
+    color: ${T.text};
+    font-family: ${T.font};
     font-size: 16px;
     line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
   }
+
+  /* ── Slide container ── */
   .slide {
     width: 1280px; height: 720px;
-    display: flex; flex-direction: column;
     position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
   }
+
+  /* ── Top accent bar ── */
   .brand-bar {
-    position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, ${THEME.primary}, ${THEME.success});
+    position: absolute; top: 0; left: 0; right: 0; height: 5px;
+    background: ${T.gradHero};
+    z-index: 10;
   }
+
+  /* ── Footer ── */
   .footer {
-    position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
-    background: rgba(0,0,0,0.4);
+    position: absolute; bottom: 0; left: 0; right: 0; height: 44px;
+    background: ${T.bgCard};
+    border-top: 1px solid ${T.border};
     display: flex; align-items: center; justify-content: space-between;
     padding: 0 40px;
-    font-size: 13px; color: ${THEME.textFaint};
-    border-top: 1px solid ${THEME.border};
+    font-size: 12px; color: ${T.textFaint};
+    z-index: 10;
   }
-  .footer .brand { color: ${THEME.primary}; font-weight: 700; letter-spacing: 1px; font-size: 11px; text-transform: uppercase; }
+  .footer .brand {
+    color: ${T.primary}; font-weight: 800;
+    letter-spacing: 2px; font-size: 11px; text-transform: uppercase;
+  }
+  .footer .slide-num {
+    background: ${T.primary}; color: white;
+    padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;
+  }
+
+  /* ── Content area ── */
   .content {
     flex: 1; display: flex; flex-direction: column;
-    padding: 28px 48px 52px;
+    padding: 28px 44px 56px;
+    margin-top: 5px;
   }
+
+  /* ── Section label ── */
   .section-label {
-    font-size: 11px; font-weight: 700; letter-spacing: 2px;
-    color: ${THEME.primary}; text-transform: uppercase; margin-bottom: 12px;
+    font-size: 11px; font-weight: 700; letter-spacing: 2.5px;
+    color: ${T.primary}; text-transform: uppercase; margin-bottom: 10px;
+    display: flex; align-items: center; gap: 8px;
   }
+  .section-label::before {
+    content: ''; display: block;
+    width: 14px; height: 3px;
+    background: ${T.primary}; border-radius: 2px;
+  }
+
+  /* ── Slide title ── */
   .slide-title {
-    font-size: 26px; font-weight: 800; color: ${THEME.text};
+    font-size: 26px; font-weight: 800; color: ${T.text};
     margin-bottom: 20px; line-height: 1.2;
+    letter-spacing: -0.3px;
   }
+
+  /* ── Cards ── */
   .card {
-    background: ${THEME.surface}; border: 1px solid ${THEME.border};
+    background: ${T.bgCard};
+    border: 1px solid ${T.border};
     border-radius: 12px; padding: 16px 20px;
   }
-  .glass {
-    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 12px; padding: 16px 20px; backdrop-filter: blur(4px);
+  .card-elevated {
+    background: ${T.bg};
+    border: 1px solid ${T.border};
+    border-radius: 14px; padding: 20px 24px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
   }
 `;
+
+// ── Helper ─────────────────────────────────────────────────────────────────────
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function trendColor(trend) {
+  if (!trend) return T.textMuted;
+  const t = String(trend).toLowerCase();
+  if (t === 'up' || t === 'positive' || t === 'bull' || t === 'bullish') return T.bull;
+  if (t === 'down' || t === 'negative' || t === 'bear' || t === 'bearish') return T.bear;
+  if (t === 'warning' || t === 'caution') return T.warning;
+  return T.textMuted;
+}
+
+function trendArrow(trend) {
+  const t = String(trend || '').toLowerCase();
+  if (t === 'up' || t === 'positive' || t === 'bull' || t === 'bullish') return '▲';
+  if (t === 'down' || t === 'negative' || t === 'bear' || t === 'bearish') return '▼';
+  return '';
+}
+
+function trendBg(trend) {
+  const t = String(trend || '').toLowerCase();
+  if (t === 'up' || t === 'positive' || t === 'bull' || t === 'bullish') return T.bullLight;
+  if (t === 'down' || t === 'negative' || t === 'bear' || t === 'bearish') return T.bearLight;
+  return T.bgCardAlt;
+}
+
+function impactColor(impact) {
+  const i = String(impact || '').toLowerCase();
+  if (i === 'high' || i === 'critical') return T.bear;
+  if (i === 'medium' || i === 'moderate') return T.warning;
+  if (i === 'low' || i === 'positive') return T.bull;
+  return T.textMuted;
+}
 
 // ── Slide renderers ────────────────────────────────────────────────────────────
 
 function renderChapterIntro(slide, idx, total, config) {
   const ch = slide.chapter || {};
   const part = ch.partNumber || 1;
-  const totalParts = ch.totalParts || 4;
-  const dots = Array.from({ length: totalParts }, (_, i) =>
-    `<div style="width:8px;height:8px;border-radius:50%;background:${i+1===part ? THEME.primary : THEME.surface2}"></div>`
-  ).join('');
+  const totalParts = ch.totalParts || total;
+  const dots = Array.from({ length: totalParts }, (_, i) => {
+    const active = i + 1 === part;
+    return `<div style="width:${active?28:8}px;height:8px;border-radius:4px;background:${active?'white':'rgba(255,255,255,0.35)'};transition:all 0.3s"></div>`;
+  }).join('');
+
+  const icon = slide.icon || '📊';
 
   return `
-    <div class="slide" style="background:linear-gradient(135deg,#0a0e1a 0%,#0f1f3d 60%,#0a0e1a 100%);justify-content:center;align-items:center;text-align:center">
-      <div class="brand-bar"></div>
-      <div style="display:flex;gap:8px;margin-bottom:28px;justify-content:center">${dots}</div>
-      <div style="font-size:12px;font-weight:700;letter-spacing:3px;color:${THEME.primary};text-transform:uppercase;margin-bottom:16px">
-        MARKET WATCH — Chapter ${part} / ${totalParts}
+    <div class="slide" style="background:${T.gradHero};color:white;justify-content:center;align-items:center;text-align:center">
+      <!-- Background grid pattern -->
+      <div style="position:absolute;inset:0;opacity:0.04;background-image:linear-gradient(rgba(255,255,255,1) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,1) 1px,transparent 1px);background-size:48px 48px"></div>
+
+      <!-- Content -->
+      <div style="position:relative;z-index:2;padding:60px">
+        <div style="font-size:52px;margin-bottom:20px">${icon}</div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:4px;color:rgba(255,255,255,0.65);text-transform:uppercase;margin-bottom:14px">
+          MARKET WATCH — PART ${part} OF ${totalParts}
+        </div>
+        <h1 style="font-size:56px;font-weight:900;line-height:1.05;letter-spacing:-1px;max-width:900px;margin:0 auto 16px;color:white">${esc(ch.title || config.seriesTitle)}</h1>
+        <p style="font-size:22px;color:rgba(255,255,255,0.75);max-width:640px;margin:0 auto 32px;line-height:1.4">${esc(ch.subtitle || config.date || '')}</p>
+        <!-- Progress dots -->
+        <div style="display:flex;gap:8px;justify-content:center">${dots}</div>
       </div>
-      <div style="width:60px;height:3px;background:${THEME.primary};border-radius:2px;margin:0 auto 24px"></div>
-      <h1 style="font-size:52px;font-weight:900;line-height:1.1;max-width:900px;margin:0 auto 20px">${esc(ch.title || config.seriesTitle)}</h1>
-      <p style="font-size:22px;color:${THEME.textMuted};max-width:700px;margin:0 auto">${esc(ch.subtitle || config.date)}</p>
-      <div class="footer">
-        <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
+
+      <div class="footer" style="background:rgba(0,0,0,0.25);border-top:1px solid rgba(255,255,255,0.1)">
+        <span class="brand" style="color:rgba(255,255,255,0.9)">MARKET WATCH</span>
+        <span style="color:rgba(255,255,255,0.55)">${esc(config.seriesTitle)}</span>
+        <span class="slide-num" style="background:rgba(255,255,255,0.2)">${idx+1} / ${total}</span>
       </div>
     </div>`;
 }
 
 function renderMetricRow(slide, idx, total, config) {
   const metrics = (slide.metrics || []).slice(0, 6);
-  const cols = metrics.length <= 3 ? metrics.length : Math.ceil(metrics.length / 2);
+  const mainMetrics = metrics.slice(0, 4);
+  const hasSecondary = metrics.length > 4;
 
-  const cards = metrics.map(m => {
-    const isUp = m.trend === 'up';
-    const isDown = m.trend === 'down';
-    const deltaColor = isUp ? THEME.success : isDown ? THEME.danger : THEME.textMuted;
-    const arrow = isUp ? '▲' : isDown ? '▼' : '';
+  const bigCards = mainMetrics.map(m => {
+    const color = trendColor(m.trend);
+    const arrow = trendArrow(m.trend);
+    const bg = trendBg(m.trend);
+    const border = m.trend === 'up' ? T.bull : m.trend === 'down' ? T.bear : T.border;
     return `
-      <div class="card" style="flex:1;min-width:160px">
-        <div style="font-size:12px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">${esc(m.label)}</div>
-        <div style="font-size:28px;font-weight:800;color:${THEME.text};margin-bottom:4px">${esc(m.value)}</div>
-        ${m.delta ? `<div style="font-size:14px;color:${deltaColor};font-weight:600">${arrow} ${esc(m.delta)}</div>` : ''}
+      <div style="flex:1;background:${bg};border:2px solid ${border};border-radius:16px;padding:20px 22px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${color}"></div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:1.5px;color:${T.textMuted};text-transform:uppercase;margin-bottom:8px">${esc(m.label)}</div>
+        <div style="font-size:36px;font-weight:900;color:${T.text};line-height:1;margin-bottom:6px;letter-spacing:-1px">${esc(m.value)}</div>
+        ${m.delta ? `<div style="font-size:15px;color:${color};font-weight:700">${arrow} ${esc(m.delta)}</div>` : ''}
+        ${m.context ? `<div style="font-size:12px;color:${T.textMuted};margin-top:6px;line-height:1.3">${esc(m.context)}</div>` : ''}
       </div>`;
   }).join('');
 
-  return `
-    <div class="slide">
-      <div class="brand-bar"></div>
-      <div class="content">
-        <div class="section-label">Market Watch</div>
-        <div class="slide-title">${esc(slide.title)}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px;flex:1">${cards}</div>
-      </div>
-      <div class="footer">
-        <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
-      </div>
-    </div>`;
-}
-
-function renderEventTimeline(slide, idx, total, config) {
-  const events = (slide.events || []).slice(0, 5);
-  const impactColors = { high: THEME.danger, medium: THEME.warning, low: THEME.success };
-
-  const items = events.map(e => {
-    const impact = (e.impact || 'medium').toLowerCase();
-    const color = impactColors[impact] || THEME.textMuted;
+  const secondaryCards = hasSecondary ? metrics.slice(4).map(m => {
+    const color = trendColor(m.trend);
     return `
-      <div style="display:flex;gap:16px;align-items:flex-start;padding:10px 0;border-bottom:1px solid ${THEME.border}">
-        <div style="min-width:64px;font-size:13px;font-weight:700;color:${THEME.primary};padding-top:2px">${esc(e.time)}</div>
-        <div style="flex:1">
-          <div style="font-size:16px;font-weight:600;color:${THEME.text}">${esc(e.title)}</div>
-        </div>
-        <div style="min-width:64px;text-align:right;font-size:12px;font-weight:700;color:${color};text-transform:uppercase">${esc(e.impact)}</div>
-      </div>`;
-  }).join('');
-
-  return `
-    <div class="slide">
-      <div class="brand-bar"></div>
-      <div class="content">
-        <div class="section-label">Timeline</div>
-        <div class="slide-title">${esc(slide.title)}</div>
-        <div style="flex:1">${items}</div>
-      </div>
-      <div class="footer">
-        <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
-      </div>
-    </div>`;
-}
-
-function renderHighlight(slide, idx, total, config) {
-  const icon = slide.icon || '💡';
-  return `
-    <div class="slide" style="justify-content:center;align-items:center;background:linear-gradient(135deg,#0a0e1a 0%,#0d1929 100%)">
-      <div class="brand-bar"></div>
-      <div style="max-width:800px;text-align:center;padding:0 60px">
-        <div style="font-size:56px;margin-bottom:24px">${icon}</div>
-        <h2 style="font-size:32px;font-weight:800;color:${THEME.text};margin-bottom:20px;line-height:1.2">${esc(slide.title)}</h2>
-        <div style="width:60px;height:3px;background:${THEME.primary};border-radius:2px;margin:0 auto 24px"></div>
-        <p style="font-size:20px;color:${THEME.textMuted};line-height:1.6">${esc(slide.text)}</p>
-      </div>
-      <div class="footer">
-        <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
-      </div>
-    </div>`;
-}
-
-function renderChartImage(slide, idx, total, config) {
-  // Generate a styled analysis slide with price levels visualization
-  const levels = slide.levels || [];
-  const hasLevels = levels.length > 0;
-  
-  // Extract ticker from title
-  const tickerMatch = slide.title.match(/^([A-Z]{1,5})/);
-  const ticker = tickerMatch ? tickerMatch[1] : '';
-  
-  // Build price levels chart (horizontal bar)
-  const levelBars = hasLevels ? levels.map(l => {
-    const colorMap = { tp2: '#84cc16', tp1: '#22c55e', entry: '#3b82f6', stop: '#ef4444', rr: '#8b5cf6', horizon: '#38bdf8' };
-    const color = colorMap[l.type] || THEME.textMuted;
-    return `
-      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid ${THEME.border}">
-        <div style="width:12px;height:12px;border-radius:50%;background:${color};flex-shrink:0"></div>
-        <div style="flex:1;font-size:14px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px">${esc(l.label)}</div>
-        <div style="font-size:18px;font-weight:800;color:${color}">${esc(l.value)}</div>
-        ${l.note ? `<div style="font-size:12px;color:${THEME.textFaint};min-width:100px;text-align:right">${esc(l.note)}</div>` : ''}
+      <div style="flex:1;background:${T.bgCard};border:1px solid ${T.border};border-radius:10px;padding:12px 16px">
+        <div style="font-size:10px;color:${T.textFaint};text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${esc(m.label)}</div>
+        <div style="font-size:22px;font-weight:800;color:${T.text}">${esc(m.value)}</div>
+        ${m.delta ? `<div style="font-size:12px;color:${color};font-weight:600">${trendArrow(m.trend)} ${esc(m.delta)}</div>` : ''}
       </div>`;
   }).join('') : '';
 
   return `
     <div class="slide">
       <div class="brand-bar"></div>
-      <div class="content" style="flex-direction:row;gap:24px">
-        <div style="flex:1.6;display:flex;flex-direction:column">
-          <div class="section-label">Technical Setup${ticker ? ' — ' + ticker : ''}</div>
-          <div class="slide-title">${esc(slide.title)}</div>
-          <div style="flex:1;background:${THEME.surface};border-radius:12px;border:1px solid ${THEME.border};padding:20px;display:flex;flex-direction:column;justify-content:center">
-            ${slide.caption ? `<div style="font-size:15px;color:${THEME.textMuted};margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid ${THEME.border}">${esc(slide.caption)}</div>` : ''}
-            <div style="font-size:13px;color:${THEME.textFaint};text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Price Structure</div>
-            ${hasLevels ? levelBars : `<div style="font-size:16px;color:${THEME.textMuted}">See full chart at articles.market-watch.xyz</div>`}
-          </div>
-        </div>
-        <div style="flex:0.8;display:flex;flex-direction:column;justify-content:center">
-          <div style="background:${THEME.surface};border-radius:12px;border:1px solid ${THEME.border};padding:20px">
-            <div style="font-size:12px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Signal Type</div>
-            ${slide.signalType ? `<div style="font-size:22px;font-weight:800;color:${THEME.text};margin-bottom:8px">${esc(slide.signalType)}</div>` : ''}
-            <div style="font-size:28px;margin-top:8px">${slide.icon || '📈'}</div>
-            <div style="margin-top:16px;font-size:13px;color:${THEME.primary};font-weight:600">finviz.com/quote.ashx?t=${esc(ticker)}</div>
-          </div>
-        </div>
+      <div class="content">
+        <div class="section-label">Market Snapshot</div>
+        <div class="slide-title">${esc(slide.title)}</div>
+        <div style="display:flex;gap:14px;flex:1">${bigCards}</div>
+        ${hasSecondary ? `<div style="display:flex;gap:12px;margin-top:12px">${secondaryCards}</div>` : ''}
       </div>
       <div class="footer">
         <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
       </div>
     </div>`;
 }
 
-function renderTradeLevelsInline(levels) {
-  const colorMap = { tp2: '#84cc16', tp1: '#22c55e', entry: '#3b82f6', stop: '#ef4444', rr: '#8b5cf6', horizon: '#38bdf8' };
-  const items = levels.map(l => {
-    const color = colorMap[l.type] || THEME.textMuted;
+function renderPerformance(slide, idx, total, config) {
+  const tickers = (slide.tickers || []).slice(0, 7);
+
+  // Split: big winner + big loser shown prominently, rest in a list
+  const sorted = [...tickers].sort((a, b) => (b.perf || 0) - (a.perf || 0));
+  const best = sorted[0];
+  const worst = sorted[sorted.length - 1];
+  const rest = tickers.filter(t => t !== best && t !== worst);
+
+  function heroCard(t, isBull) {
+    const color = isBull ? T.bull : T.bear;
+    const bg = isBull ? T.bullLight : T.bearLight;
+    const arrow = isBull ? '▲' : '▼';
+    const perf = typeof t.perf === 'number' ? Math.abs(t.perf).toFixed(1) + '%' : t.perf;
     return `
-      <div style="background:${THEME.surface};border:1px solid ${THEME.border};border-left:4px solid ${color};border-radius:8px;padding:10px 14px;margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:13px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px">${esc(l.label)}</div>
-          <div style="font-size:18px;font-weight:800;color:${color}">${esc(l.value)}</div>
-        </div>
-        ${l.note ? `<div style="font-size:12px;color:${THEME.textFaint};margin-top:2px">${esc(l.note)}</div>` : ''}
+      <div style="background:${bg};border:2px solid ${color}40;border-radius:16px;padding:20px 22px;flex:1">
+        <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:${color};text-transform:uppercase;margin-bottom:8px">${isBull ? '🏆 TOP GAINER' : '📉 TOP LOSER'}</div>
+        <div style="font-size:32px;font-weight:900;color:${T.text};margin-bottom:4px">${esc(t.symbol)}</div>
+        <div style="font-size:13px;color:${T.textMuted};margin-bottom:10px">${esc(t.name || '')}</div>
+        <div style="font-size:38px;font-weight:900;color:${color}">${arrow} ${perf}</div>
+        ${t.note ? `<div style="font-size:13px;color:${T.textSub};margin-top:8px;line-height:1.3">${esc(t.note)}</div>` : ''}
+      </div>`;
+  }
+
+  const rows = rest.slice(0, 5).map(t => {
+    const isUp = (t.perf || 0) >= 0;
+    const color = isUp ? T.bull : T.bear;
+    const arrow = isUp ? '▲' : '▼';
+    const perf = typeof t.perf === 'number' ? Math.abs(t.perf).toFixed(1) + '%' : t.perf;
+    return `
+      <div style="display:flex;align-items:center;gap:14px;padding:9px 14px;background:${T.bgCard};border-radius:10px;border:1px solid ${T.border}">
+        <div style="font-size:16px;font-weight:800;color:${T.text};min-width:60px">${esc(t.symbol)}</div>
+        <div style="flex:1;font-size:13px;color:${T.textMuted}">${esc(t.name || '')}</div>
+        <div style="font-size:16px;font-weight:700;color:${color}">${arrow} ${perf}</div>
       </div>`;
   }).join('');
-  return `<div style="flex:0.9;display:flex;flex-direction:column;justify-content:center">${items}</div>`;
+
+  return `
+    <div class="slide">
+      <div class="brand-bar"></div>
+      <div class="content" style="flex-direction:row;gap:20px">
+        <div style="display:flex;flex-direction:column;gap:12px;width:240px">
+          ${best ? heroCard(best, true) : ''}
+          ${worst ? heroCard(worst, false) : ''}
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column">
+          <div class="section-label">Performance</div>
+          <div class="slide-title">${esc(slide.title)}</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px">${rows}</div>
+        </div>
+      </div>
+      <div class="footer">
+        <span class="brand">MARKET WATCH</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
+      </div>
+    </div>`;
+}
+
+function renderEventTimeline(slide, idx, total, config) {
+  const events = (slide.events || []).slice(0, 6);
+
+  const items = events.map((e, i) => {
+    const color = impactColor(e.impact);
+    const isLast = i === events.length - 1;
+    return `
+      <div style="display:flex;gap:16px;position:relative">
+        <!-- Timeline line -->
+        ${!isLast ? `<div style="position:absolute;left:15px;top:28px;width:2px;bottom:-8px;background:linear-gradient(${color},${T.border})"></div>` : ''}
+        <!-- Dot -->
+        <div style="width:30px;height:30px;border-radius:50%;background:${color}20;border:2px solid ${color};display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${color}"></div>
+        </div>
+        <!-- Content -->
+        <div style="flex:1;padding-bottom:16px">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+            <span style="font-size:12px;font-weight:700;color:${T.primary};font-family:${T.fontMono}">${esc(e.time || '')}</span>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;padding:2px 8px;border-radius:4px;background:${color}15;color:${color}">${esc(e.impact || '')}</span>
+          </div>
+          <div style="font-size:16px;font-weight:700;color:${T.text};margin-bottom:3px">${esc(e.title)}</div>
+          ${e.desc ? `<div style="font-size:13px;color:${T.textMuted};line-height:1.4">${esc(e.desc)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="slide">
+      <div class="brand-bar"></div>
+      <div class="content" style="flex-direction:row;gap:32px">
+        <div style="flex:1">
+          <div class="section-label">Timeline</div>
+          <div class="slide-title">${esc(slide.title)}</div>
+        </div>
+        <div style="flex:2;overflow:hidden">${items}</div>
+      </div>
+      <div class="footer">
+        <span class="brand">MARKET WATCH</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
+      </div>
+    </div>`;
+}
+
+function renderHighlight(slide, idx, total, config) {
+  const icon = slide.icon || '💡';
+  const sentiment = slide.sentiment || 'neutral'; // bull, bear, warning, insight
+  let accentColor = T.primary;
+  let bg = T.primaryLight;
+  if (sentiment === 'bull' || sentiment === 'bullish') { accentColor = T.bull; bg = T.bullLight; }
+  if (sentiment === 'bear' || sentiment === 'bearish') { accentColor = T.bear; bg = T.bearLight; }
+  if (sentiment === 'warning') { accentColor = T.warning; bg = T.warningLight; }
+  if (sentiment === 'insight') { accentColor = T.purple; bg = T.purpleLight; }
+
+  return `
+    <div class="slide" style="justify-content:center;align-items:center">
+      <div class="brand-bar"></div>
+
+      <!-- Background accent blob -->
+      <div style="position:absolute;top:-100px;right:-100px;width:500px;height:500px;border-radius:50%;background:${accentColor};opacity:0.05"></div>
+
+      <div style="max-width:820px;width:100%;padding:0 60px;text-align:center;position:relative;z-index:2">
+        <!-- Icon bubble -->
+        <div style="width:88px;height:88px;border-radius:50%;background:${accentColor};display:flex;align-items:center;justify-content:center;margin:0 auto 28px;font-size:40px;box-shadow:0 8px 32px ${accentColor}40">
+          ${icon}
+        </div>
+
+        <!-- Title -->
+        <h2 style="font-size:38px;font-weight:900;color:${T.text};margin-bottom:20px;line-height:1.15;letter-spacing:-0.5px">${esc(slide.title)}</h2>
+
+        <!-- Divider -->
+        <div style="width:64px;height:4px;background:${accentColor};border-radius:2px;margin:0 auto 24px"></div>
+
+        <!-- Text -->
+        <p style="font-size:22px;color:${T.textSub};line-height:1.55;font-weight:400">${esc(slide.text || '')}</p>
+
+        ${slide.subtext ? `<p style="font-size:15px;color:${T.textMuted};margin-top:16px;line-height:1.5">${esc(slide.subtext)}</p>` : ''}
+      </div>
+
+      <div class="footer">
+        <span class="brand">MARKET WATCH</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
+      </div>
+    </div>`;
+}
+
+function renderChartImage(slide, idx, total, config) {
+  const levels = slide.levels || [];
+  const ticker = (slide.title.match(/^([A-Z]{1,5})/) || [])[1] || '';
+  const signalType = slide.signalType || '';
+  const sentiment = (signalType || '').toLowerCase().includes('buy') || (signalType || '').toLowerCase().includes('bull') ? 'bull' : 'bear';
+  const sentimentColor = sentiment === 'bull' ? T.bull : T.bear;
+
+  const levelRows = levels.map(l => {
+    const colorMap = {
+      tp2: T.bull, tp1: '#22c55e', entry: T.primary,
+      stop: T.bear, rr: T.purple, horizon: '#0891b2',
+    };
+    const color = colorMap[l.type] || T.textMuted;
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 14px;border-left:4px solid ${color};background:${color}08;border-radius:0 8px 8px 0;margin-bottom:8px">
+        <div style="flex:1">
+          <div style="font-size:11px;font-weight:700;color:${T.textMuted};text-transform:uppercase;letter-spacing:1px">${esc(l.label)}</div>
+          ${l.note ? `<div style="font-size:12px;color:${T.textFaint};margin-top:2px">${esc(l.note)}</div>` : ''}
+        </div>
+        <div style="font-size:22px;font-weight:800;color:${color};font-family:${T.fontMono}">${esc(l.value)}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="slide">
+      <div class="brand-bar"></div>
+      <div class="content" style="flex-direction:row;gap:24px">
+
+        <!-- Left: levels + context -->
+        <div style="flex:1;display:flex;flex-direction:column">
+          <div class="section-label">Technical Setup</div>
+          <div class="slide-title">${esc(slide.title)}</div>
+          ${slide.caption ? `<div style="font-size:14px;color:${T.textMuted};margin-bottom:16px;line-height:1.4">${esc(slide.caption)}</div>` : ''}
+          <div style="flex:1">${levelRows || `<div style="color:${T.textMuted};font-size:15px">See full chart at articles.market-watch.xyz</div>`}</div>
+        </div>
+
+        <!-- Right: signal badge + finviz link -->
+        <div style="width:260px;display:flex;flex-direction:column;gap:14px">
+          ${ticker ? `
+          <div style="background:${T.text};color:white;border-radius:14px;padding:22px 24px;text-align:center">
+            <div style="font-size:36px;font-weight:900;letter-spacing:-1px;margin-bottom:4px">${esc(ticker)}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:1px;text-transform:uppercase">Ticker</div>
+          </div>` : ''}
+          ${signalType ? `
+          <div style="background:${sentimentColor};color:white;border-radius:14px;padding:18px 24px;text-align:center">
+            <div style="font-size:11px;font-weight:700;letter-spacing:2px;opacity:0.8;margin-bottom:6px;text-transform:uppercase">Signal</div>
+            <div style="font-size:22px;font-weight:800">${esc(signalType)}</div>
+          </div>` : ''}
+          <div style="background:${T.bgCard};border:1px solid ${T.border};border-radius:14px;padding:16px;text-align:center">
+            <div style="font-size:11px;color:${T.textFaint};text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Chart</div>
+            <div style="font-size:13px;font-weight:600;color:${T.primary}">finviz.com</div>
+          </div>
+        </div>
+
+      </div>
+      <div class="footer">
+        <span class="brand">MARKET WATCH</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
+      </div>
+    </div>`;
 }
 
 function renderTradeLevels(slide, idx, total, config) {
-  const colorMap = { tp2: '#84cc16', tp1: '#22c55e', entry: '#3b82f6', stop: '#ef4444', rr: '#8b5cf6', horizon: '#38bdf8' };
-  const levels = (slide.levels || []);
+  const colorMap = {
+    tp2: '#16a34a', tp1: '#22c55e', entry: T.primary,
+    stop: T.bear, rr: T.purple, horizon: '#0891b2',
+  };
+  const levels = slide.levels || [];
+
+  // 2-column layout for trade levels
   const items = levels.map(l => {
-    const color = colorMap[l.type] || THEME.textMuted;
+    const color = colorMap[l.type] || T.textMuted;
+    const bg = color + '10';
     return `
-      <div style="background:${THEME.surface};border:1px solid ${THEME.border};border-left:5px solid ${color};border-radius:10px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:13px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${esc(l.label)}</div>
-          ${l.note ? `<div style="font-size:13px;color:${THEME.textFaint}">${esc(l.note)}</div>` : ''}
-        </div>
-        <div style="font-size:26px;font-weight:900;color:${color}">${esc(l.value)}</div>
+      <div style="background:${bg};border:2px solid ${color}30;border-radius:14px;padding:18px 22px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${color}"></div>
+        <div style="font-size:11px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">${esc(l.label)}</div>
+        <div style="font-size:32px;font-weight:900;color:${T.text};font-family:${T.fontMono};letter-spacing:-0.5px">${esc(l.value)}</div>
+        ${l.note ? `<div style="font-size:12px;color:${T.textMuted};margin-top:6px">${esc(l.note)}</div>` : ''}
       </div>`;
   }).join('');
+
+  const cols = levels.length <= 3 ? levels.length : Math.ceil(levels.length / 2);
+
   return `
     <div class="slide">
       <div class="brand-bar"></div>
       <div class="content">
         <div class="section-label">Trade Setup</div>
         <div class="slide-title">${esc(slide.title)}</div>
-        <div style="display:flex;flex-direction:column;gap:10px;flex:1">${items}</div>
+        <div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:12px;flex:1;align-content:start">${items}</div>
       </div>
       <div class="footer">
         <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
-      </div>
-    </div>`;
-}
-
-function renderPerformance(slide, idx, total, config) {
-  const tickers = (slide.tickers || []).slice(0, 8);
-  const rows = tickers.map(t => {
-    const isUp = t.perf >= 0;
-    const color = isUp ? THEME.success : THEME.danger;
-    const arrow = isUp ? '▲' : '▼';
-    return `
-      <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;background:${THEME.surface};border-radius:8px;border:1px solid ${THEME.border}">
-        <div style="min-width:64px;font-weight:800;font-size:18px;color:${THEME.text}">${esc(t.symbol)}</div>
-        <div style="flex:1;font-size:14px;color:${THEME.textMuted}">${esc(t.name)}</div>
-        <div style="font-size:18px;font-weight:700;color:${color};min-width:72px;text-align:right">${arrow} ${Math.abs(t.perf).toFixed(1)}%</div>
-        ${t.note ? `<div style="font-size:13px;color:${THEME.textFaint};min-width:200px;text-align:right">${esc(t.note)}</div>` : ''}
-      </div>`;
-  }).join('');
-  return `
-    <div class="slide">
-      <div class="brand-bar"></div>
-      <div class="content">
-        <div class="section-label">Performance</div>
-        <div class="slide-title">${esc(slide.title)}</div>
-        <div style="display:flex;flex-direction:column;gap:8px;flex:1">${rows}</div>
-      </div>
-      <div class="footer">
-        <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
-      </div>
-    </div>`;
-}
-
-function renderSummary(slide, idx, total, config) {
-  const items = (slide.items || []);
-  const bullets = items.map((item, i) => `
-    <div style="display:flex;align-items:flex-start;gap:14px;padding:12px 16px;background:${THEME.surface};border-radius:10px;border:1px solid ${THEME.border}">
-      <div style="min-width:28px;height:28px;background:${THEME.primary};border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0">${i+1}</div>
-      <div style="font-size:16px;color:${THEME.text};line-height:1.4;padding-top:2px">${esc(item)}</div>
-    </div>`).join('');
-  return `
-    <div class="slide">
-      <div class="brand-bar"></div>
-      <div class="content">
-        <div class="section-label">Key Takeaways</div>
-        <div class="slide-title">${esc(slide.title)}</div>
-        <div style="display:flex;flex-direction:column;gap:10px;flex:1">${bullets}</div>
-      </div>
-      <div class="footer">
-        <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
       </div>
     </div>`;
 }
 
 function renderBullets(slide, idx, total, config) {
   const items = (slide.items || []).slice(0, 6);
-  const bullets = items.map((item, i) => `
-    <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 16px;border-left:3px solid ${THEME.primary};background:${THEME.surface};border-radius:0 8px 8px 0;margin-bottom:8px">
-      <div style="font-size:15px;color:${THEME.text};line-height:1.4">${esc(item)}</div>
-    </div>`).join('');
+  const accents = [T.primary, T.bull, T.bear, T.purple, T.warning, '#0891b2'];
+
+  const bullets = items.map((item, i) => {
+    const color = accents[i % accents.length];
+    return `
+      <div style="display:flex;align-items:flex-start;gap:14px;padding:13px 18px;background:${T.bgCard};border-radius:12px;border:1px solid ${T.border};border-left:4px solid ${color}">
+        <div style="width:24px;height:24px;border-radius:50%;background:${color};color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;margin-top:1px">${i+1}</div>
+        <div style="font-size:16px;color:${T.text};line-height:1.45;padding-top:1px">${esc(item)}</div>
+      </div>`;
+  }).join('');
+
   return `
     <div class="slide">
       <div class="brand-bar"></div>
       <div class="content">
-        <div class="section-label">Analysis</div>
+        <div class="section-label">Key Points</div>
         <div class="slide-title">${esc(slide.title)}</div>
-        <div style="flex:1">${bullets}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex:1">${bullets}</div>
       </div>
       <div class="footer">
         <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
+      </div>
+    </div>`;
+}
+
+function renderSummary(slide, idx, total, config) {
+  const items = (slide.items || []).slice(0, 5);
+
+  const bullets = items.map((item, i) => `
+    <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 18px;background:${T.bgCard};border-radius:12px;border:1px solid ${T.border}">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,${T.primary},${T.bull});color:white;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;flex-shrink:0">✓</div>
+      <div style="font-size:16px;color:${T.text};line-height:1.45;padding-top:5px">${esc(item)}</div>
+    </div>`).join('');
+
+  return `
+    <div class="slide">
+      <div class="brand-bar"></div>
+      <div class="content" style="flex-direction:row;gap:32px">
+        <!-- Left side title -->
+        <div style="width:260px;display:flex;flex-direction:column;justify-content:center">
+          <div style="width:56px;height:56px;border-radius:50%;background:${T.primary};color:white;font-size:26px;display:flex;align-items:center;justify-content:center;margin-bottom:20px">💡</div>
+          <div style="font-size:28px;font-weight:900;color:${T.text};line-height:1.2;margin-bottom:12px">${esc(slide.title)}</div>
+          <div style="font-size:13px;color:${T.textMuted};line-height:1.5">Key takeaways from today's analysis</div>
+        </div>
+        <!-- Right side bullets -->
+        <div style="flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center">
+          ${bullets}
+        </div>
+      </div>
+      <div class="footer">
+        <span class="brand">MARKET WATCH</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
+      </div>
+    </div>`;
+}
+
+function renderOutro(slide, idx, total, config) {
+  return `
+    <div class="slide" style="background:${T.gradHero};color:white;justify-content:center;align-items:center;text-align:center">
+      <div style="position:absolute;inset:0;opacity:0.04;background-image:radial-gradient(circle,rgba(255,255,255,1) 1px,transparent 1px);background-size:32px 32px"></div>
+
+      <div style="position:relative;z-index:2;padding:60px">
+        <div style="font-size:52px;margin-bottom:24px">📊</div>
+        <h2 style="font-size:44px;font-weight:900;color:white;margin-bottom:14px;letter-spacing:-0.5px">Stay Ahead of the Market</h2>
+        <p style="font-size:20px;color:rgba(255,255,255,0.7);max-width:600px;margin:0 auto 36px;line-height:1.5">Daily briefings, stock analysis, and scanner signals — all free.</p>
+
+        <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap">
+          <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:14px 28px;font-size:16px;font-weight:700">
+            🌐 articles.market-watch.xyz
+          </div>
+          <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:14px 28px;font-size:16px;font-weight:700">
+            📱 @MarketWatchXYZ
+          </div>
+        </div>
+      </div>
+
+      <div class="footer" style="background:rgba(0,0,0,0.25);border-top:1px solid rgba(255,255,255,0.1)">
+        <span class="brand" style="color:rgba(255,255,255,0.9)">MARKET WATCH</span>
+        <span style="color:rgba(255,255,255,0.55)">${esc(config.seriesTitle)}</span>
+        <span class="slide-num" style="background:rgba(255,255,255,0.2)">${idx+1} / ${total}</span>
       </div>
     </div>`;
 }
 
 function renderDefault(slide, idx, total, config) {
-  // Generic fallback
+  const items = slide.items || (slide.text ? [slide.text] : []);
+  const bullets = items.slice(0, 5).map((item, i) => `
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:${T.bgCard};border-radius:10px;border:1px solid ${T.border}">
+      <div style="color:${T.primary};font-weight:800;flex-shrink:0;font-size:18px">▸</div>
+      <div style="font-size:16px;color:${T.text};line-height:1.4">${esc(item)}</div>
+    </div>`).join('');
+
   return `
-    <div class="slide" style="justify-content:center;align-items:center">
+    <div class="slide">
       <div class="brand-bar"></div>
-      <div style="max-width:800px;padding:60px;text-align:center">
-        <div class="section-label">${esc(slide.type)}</div>
-        <h2 style="font-size:36px;font-weight:800;margin-bottom:20px">${esc(slide.title||'')}</h2>
-        <p style="font-size:18px;color:${THEME.textMuted}">${esc(slide.text||slide.narration||'')}</p>
+      <div class="content">
+        <div class="section-label">Analysis</div>
+        <div class="slide-title">${esc(slide.title || '')}</div>
+        ${bullets || `<p style="font-size:18px;color:${T.textMuted}">${esc(slide.narration || '')}</p>`}
       </div>
       <div class="footer">
         <span class="brand">MARKET WATCH</span>
-        <span>${esc(config.seriesTitle)}</span>
-        <span>${idx+1} / ${total}</span>
+        <span style="color:${T.textFaint}">${esc(config.seriesTitle)}</span>
+        <span class="slide-num">${idx+1} / ${total}</span>
       </div>
     </div>`;
 }
 
-// ── HTML escape ───────────────────────────────────────────────────────────────
-function esc(str) {
-  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Render one slide to HTML ──────────────────────────────────────────────────
+// ── Route slides ───────────────────────────────────────────────────────────────
 function renderSlide(slide, idx, total, config) {
   switch (slide.type) {
     case 'chapter-intro':  return renderChapterIntro(slide, idx, total, config);
@@ -399,42 +635,45 @@ function renderSlide(slide, idx, total, config) {
     case 'performance':    return renderPerformance(slide, idx, total, config);
     case 'summary':        return renderSummary(slide, idx, total, config);
     case 'bullets':        return renderBullets(slide, idx, total, config);
+    case 'outro':          return renderOutro(slide, idx, total, config);
     default:               return renderDefault(slide, idx, total, config);
   }
 }
 
-// ── Main export ───────────────────────────────────────────────────────────────
+// ── Main export ────────────────────────────────────────────────────────────────
 export async function renderSlidesToPng(slides, config, outDir) {
   const total = slides.length;
 
   const browser = await puppeteer.launch({
     executablePath: CHROMIUM,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+    args: [
+      '--no-sandbox', '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage', '--disable-gpu',
+      '--disable-web-security',
+    ],
     headless: true,
   });
   const page = await browser.newPage();
-  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1 });
+  await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1.5 }); // retina quality
 
   const pngPaths = [];
+
   for (let i = 0; i < slides.length; i++) {
     const slideHtml = renderSlide(slides[i], i, total, config);
-    const fullHtml = `<!DOCTYPE html><html><head>
+    const fullHtml = `<!DOCTYPE html><html lang="en"><head>
       <meta charset="UTF-8">
       <style>${BASE_CSS}</style>
     </head><body>${slideHtml}</body></html>`;
 
-    // For chart-image slides, load but don't block on external images
-    const hasExternal = (slides[i].imageUrl || slides[i].finvizUrl || '').length > 0;
     try {
-      await page.setContent(fullHtml, { waitUntil: hasExternal ? 'networkidle0' : 'domcontentloaded', timeout: 20000 });
+      await page.setContent(fullHtml, { waitUntil: 'domcontentloaded', timeout: 10000 });
     } catch (e) {
-      // Timeout loading external images — use domcontentloaded fallback
-      await page.setContent(fullHtml, { waitUntil: 'domcontentloaded', timeout: 5000 });
+      // ignore timeout
     }
-    await new Promise(r => setTimeout(r, 150));
+    await new Promise(r => setTimeout(r, 200)); // let fonts render
 
     const outPath = path.join(outDir, `slide-${i}.png`);
-    await page.screenshot({ path: outPath, type: 'png', captureBeyondViewport: false });
+    await page.screenshot({ path: outPath, type: 'png', captureBeyondViewport: false, clip: { x: 0, y: 0, width: 1280, height: 720 } });
     const size = Math.round(fs.statSync(outPath).size / 1024);
     console.log(`  ✅ slide-${i}.png (${size}KB) [${slides[i].type}]`);
     pngPaths.push(outPath);
