@@ -697,8 +697,7 @@ details[open] summary::after{content:"▼"}
   <a href="/" title="Home"><i class="fas fa-house"></i></a>
   &nbsp;&middot;&nbsp;
   <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" style="color:#229ED9"><i class="fab fa-telegram"></i> Telegram</a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://discord.com/channels/1426972172915834900/1483382014588747778" target="_blank" rel="noopener" style="color:#5865F2"><i class="fab fa-discord"></i> Discord</a>
+
 </footer>
 
 <script src="/assets/core.js"></script>
