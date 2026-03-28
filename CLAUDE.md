@@ -232,7 +232,7 @@ Les templates complets sont dans les sous-CLAUDE.md (daily/, weekly/, scanner/).
 2. **Brand Bar** : `<nav class="brand-bar">` + `brand-bar-inner` + logo `/logo.svg` + **`brand-nav`** (menu principal : Hebdo, Daily, Analyses, Scanner, Radar, Séries). TOUJOURS présent. Le lien actif est auto-highlight via CSS `data-tab` (pas de `class="active"` en dur).
 3. **Tags** : `<div id="article-clickable-tags" class="card-tags"></div>` dans le hero. Peuplé par `tag-renderer.js`.
 4. **FAB** : `<div class="fnav">` avec 6 items. Obligatoire pour scanner, daily, analyses, tech, series. Pas pour weekly.
-5. **Footer** : `<footer class="article-footer">`. JAMAIS `report-footer`, `site-footer`, etc.
+5. **Footer** : `<footer class="article-footer">`. JAMAIS `report-footer`, `site-footer`, etc. TOUJOURS inclure les liens Telegram + Discord : `<a href="https://t.me/+gl06cNSLV2RiZmE0">Telegram</a>` et `<a href="https://discord.gg/eb4Ack9aPZ">Discord</a>`.
 6. **Scripts** : `core.js` + `tag-renderer.js` avant `</body>`. Ajouter `echarts-responsive.js` si ECharts, `live-tracker.js` si scanner.
 7. **CSS** : EXCLUSIVEMENT `/assets/report.css`. JAMAIS de dossier `assets/` local, JAMAIS `report-dark.css`.
 8. **Pas de CSS inline** sauf conteneurs ECharts et blocs Confirmations/Invalidations scanner.

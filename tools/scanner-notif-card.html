@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scanner Notification</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d1117;
+    --surface:   #161b22;
+    --border:    #21262d;
+    --accent:    #f0a500;
+    --accent2:   #58a6ff;
+    --green:     #3fb950;
+    --red:       #f85149;
+    --amber:     #d29922;
+    --muted:     #8b949e;
+    --text:      #e6edf3;
+    --mono:      'Space Mono', monospace;
+    --sans:      'Syne', sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 0;
+    width: 680px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #161b22 0%, #1c2333 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 24px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(240,165,0,0.12) 0%, transparent 70%);
+  }
+  .header-left { display: flex; flex-direction: column; gap: 4px; }
+  .header-title {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+  .header-title span { color: var(--accent); }
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .header-badge {
+    background: rgba(240,165,0,0.12);
+    border: 1px solid rgba(240,165,0,0.3);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  /* ── PERF ROW ── */
+  .perf-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+  .perf-cell {
+    padding: 14px 18px;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .perf-cell:last-child { border-right: none; }
+  .perf-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .perf-value {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .perf-value.pos { color: var(--green); }
+  .perf-value.neg { color: var(--red); }
+  .perf-value.neutral { color: var(--accent2); }
+
+  /* ── SECTION ── */
+  .section {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section:last-child { border-bottom: none; }
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── ACTIONS ── */
+  .action-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid transparent;
+  }
+  .action-item:last-child { margin-bottom: 0; }
+  .action-item.close {
+    background: rgba(248,81,73,0.06);
+    border-color: rgba(248,81,73,0.2);
+  }
+  .action-item.warn {
+    background: rgba(210,153,34,0.06);
+    border-color: rgba(210,153,34,0.2);
+  }
+  .action-item.buy {
+    background: rgba(63,185,80,0.06);
+    border-color: rgba(63,185,80,0.2);
+  }
+  .action-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .close .action-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .warn  .action-dot { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+  .buy   .action-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .action-body { flex: 1; }
+  .action-ticker {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .action-desc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .action-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 4px;
+    align-self: flex-start;
+    flex-shrink: 0;
+  }
+  .close .action-tag { background: rgba(248,81,73,0.15); color: var(--red); }
+  .warn  .action-tag { background: rgba(210,153,34,0.15); color: var(--amber); }
+  .buy   .action-tag { background: rgba(63,185,80,0.15); color: var(--green); }
+
+  /* ── POSITIONS ── */
+  .pos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .pos-item {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .pos-left { display: flex; flex-direction: column; gap: 2px; }
+  .pos-ticker { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--text); }
+  .pos-meta   { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .pos-right  { text-align: right; }
+  .pos-pnl    { font-family: var(--mono); font-size: 15px; font-weight: 700; }
+  .pos-pnl.pos { color: var(--green); }
+  .pos-pnl.neg { color: var(--red); }
+  .pos-days   { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+  .pos-warn   { color: var(--amber); }
+
+  /* ── RISK BAR ── */
+  .risk-bar-wrap {
+    position: relative;
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: visible;
+    margin: 8px 0 16px;
+  }
+  .risk-bar-fill {
+    position: absolute;
+    left: 0; top: 0; height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(90deg, rgba(248,81,73,0.6) 0%, rgba(240,165,0,0.6) 50%, rgba(63,185,80,0.6) 100%);
+  }
+  .risk-bar-track {
+    position: absolute;
+    left: 0; top: 0; right: 0; height: 100%;
+    background: rgba(255,255,255,0.04);
+    border-radius: 4px;
+  }
+  .risk-bar-now {
+    position: absolute;
+    top: -4px;
+    width: 4px; height: 16px;
+    background: var(--accent);
+    border-radius: 2px;
+    box-shadow: 0 0 8px var(--accent);
+    transform: translateX(-50%);
+  }
+  .risk-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .risk-now-label {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  /* ── SIGNALS TABLE ── */
+  .signals-table { width: 100%; border-collapse: collapse; }
+  .signals-table thead tr {
+    border-bottom: 1px solid var(--border);
+  }
+  .signals-table th {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0 10px 8px 0;
+    text-align: left;
+  }
+  .signals-table tbody tr {
+    border-bottom: 1px solid rgba(33,38,45,0.5);
+    transition: background 0.1s;
+  }
+  .signals-table tbody tr:last-child { border-bottom: none; }
+  .signals-table td {
+    padding: 7px 10px 7px 0;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .sig-rank { color: var(--muted); font-size: 10px; width: 20px; }
+  .sig-ticker { color: var(--text); font-weight: 700; font-size: 13px; }
+  .sig-score {
+    display: inline-block;
+    background: rgba(88,166,255,0.1);
+    color: var(--accent2);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .sig-score.top { background: rgba(240,165,0,0.12); color: var(--accent); }
+  .sig-strategy {
+    color: var(--muted);
+    font-size: 11px;
+  }
+  .sig-rr { color: var(--green); font-size: 11px; font-weight: 700; }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: #0d1117;
+    border-top: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-link {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+  .footer-ts {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--border);
+    letter-spacing: 0.06em;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">Scanner <span>Balanced</span></div>
+      <div class="header-sub" id="scan-date">30/03/2026</div>
+    </div>
+    <div class="header-badge">Daily Report</div>
+  </div>
+
+  <!-- PERF ROW -->
+  <div class="perf-row">
+    <div class="perf-cell">
+      <span class="perf-label">Perf D0</span>
+      <span class="perf-value pos" id="perf-ret">+24.18%</span>
+    </div>
+    <div class="perf-cell">
+      <span class="perf-label">Max DD</span>
+      <span class="perf-value neg" id="perf-dd">-1.69%</span>
+    </div>
+    <div class="perf-cell">
+      <span class="perf-label">Win Rate</span>
+      <span class="perf-value neutral" id="perf-wr">72.7%</span>
+    </div>
+    <div class="perf-cell">
+      <span class="perf-label">Profit Factor</span>
+      <span class="perf-value neutral" id="perf-pf">6.72x</span>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="section" id="actions-section">
+    <div class="section-title">🎯 Actions requises</div>
+    <div id="actions-list">
+      <!-- injected -->
+    </div>
+  </div>
+
+  <!-- POSITIONS -->
+  <div class="section" id="positions-section">
+    <div class="section-title">📂 Positions ouvertes <span style="color:var(--accent);margin-left:4px" id="pos-count">2/4</span></div>
+    <div class="pos-grid" id="pos-grid">
+      <!-- injected -->
+    </div>
+  </div>
+
+  <!-- RISK -->
+  <div class="section">
+    <div class="section-title">⚖️ Risque portefeuille</div>
+    <div class="risk-labels">
+      <span style="color:var(--red)" id="risk-worst">Worst −3.9%</span>
+      <span style="color:var(--muted)">Scénario en cours</span>
+      <span style="color:var(--green)" id="risk-best">Best +7.4%</span>
+    </div>
+    <div class="risk-bar-wrap">
+      <div class="risk-bar-track"></div>
+      <div class="risk-bar-fill" id="risk-fill"></div>
+      <div class="risk-bar-now" id="risk-now-marker"></div>
+    </div>
+    <div class="risk-now-label" id="risk-now-label">▲ Now +2.7%</div>
+  </div>
+
+  <!-- SIGNALS -->
+  <div class="section">
+    <div class="section-title">📡 Top 10 signaux du jour</div>
+    <table class="signals-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Ticker</th>
+          <th>Score</th>
+          <th>Setup</th>
+          <th style="text-align:right">R/R</th>
+        </tr>
+      </thead>
+      <tbody id="signals-body">
+        <!-- injected -->
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <span class="footer-link">articles.market-watch.xyz/scanner/status/</span>
+    <span class="footer-ts" id="footer-ts">Samedi 28/03/2026 · 11:30 UTC</span>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const DATA = {
+  date: '30/03/2026',
+  ret: 24.18, dd: -1.69, wr: 72.7, pf: 6.72,
+  worst: -3.9, now: 2.7, best: 7.4,
+  portfolioSize: 4,
+  alloc: 25,
+  positions: [
+    { ticker: 'OXY', pnl: 7.47, left: 2, alloc: 25 },
+    { ticker: 'PSX', pnl: 3.51, left: 3, alloc: 25 },
+  ],
+  actions: [
+    { type: 'warn', ticker: 'OXY', desc: 'now 65.32 · TP1 66 (+1.0%) · stop 56', tag: 'Décision J-2' },
+    { type: 'buy',  ticker: 'BTU', desc: 'Breakout · entry 39 · stop 35 · TP1 46 · TP2 52 · R/R 1.5', tag: 'Acheter 25%' },
+    { type: 'buy',  ticker: 'LNG', desc: 'Momentum · entry 293 · stop 280 · TP1 320 · TP2 345 · R/R 1.5', tag: 'Acheter 25%' },
+  ],
+  picks: [
+    { symbol:'BTU',  score:94, strategy:'Breakout',  rr:1.5 },
+    { symbol:'LNG',  score:93, strategy:'Momentum',  rr:1.5 },
+    { symbol:'EQNR', score:91, strategy:'Breakout',  rr:1.7 },
+    { symbol:'VLO',  score:90, strategy:'Breakout',  rr:1.6 },
+    { symbol:'OVV',  score:89, strategy:'Breakout',  rr:1.8 },
+    { symbol:'CTRA', score:89, strategy:'Breakout',  rr:2.0 },
+    { symbol:'MRK',  score:88, strategy:'Momentum',  rr:1.6 },
+    { symbol:'KO',   score:87, strategy:'Pullback',  rr:1.3 },
+    { symbol:'MO',   score:86, strategy:'Pullback',  rr:1.4 },
+    { symbol:'PBR',  score:85, strategy:'Momentum',  rr:1.7 },
+  ],
+  ts: 'Samedi 28/03/2026 · 11:30 UTC',
+};
+
+// ── RENDER ──
+document.getElementById('scan-date').textContent = DATA.date;
+document.getElementById('perf-ret').textContent = (DATA.ret >= 0 ? '+' : '') + DATA.ret + '%';
+document.getElementById('perf-dd').textContent  = (DATA.dd >= 0 ? '+' : '') + DATA.dd + '%';
+document.getElementById('perf-wr').textContent  = DATA.wr + '%';
+document.getElementById('perf-pf').textContent  = DATA.pf + 'x';
+document.getElementById('footer-ts').textContent = DATA.ts;
+
+// Actions
+const actionsList = document.getElementById('actions-list');
+DATA.actions.forEach(a => {
+  actionsList.innerHTML += `
+    <div class="action-item ${a.type}">
+      <div class="action-dot"></div>
+      <div class="action-body">
+        <div class="action-ticker">${a.ticker}</div>
+        <div class="action-desc">${a.desc}</div>
+      </div>
+      <div class="action-tag">${a.tag}</div>
+    </div>`;
+});
+
+// Positions
+const posGrid = document.getElementById('pos-grid');
+document.getElementById('pos-count').textContent = DATA.positions.length + '/' + DATA.portfolioSize;
+DATA.positions.forEach(p => {
+  const warn = p.left <= 1 ? '<span class="pos-warn"> ⚠️</span>' : p.left === 2 ? '<span class="pos-warn"> ⏰</span>' : '';
+  posGrid.innerHTML += `
+    <div class="pos-item">
+      <div class="pos-left">
+        <span class="pos-ticker">${p.ticker}</span>
+        <span class="pos-meta">${p.alloc}% · ${p.left}j restant${p.left <= 2 ? warn : ''}</span>
+      </div>
+      <div class="pos-right">
+        <div class="pos-pnl ${p.pnl >= 0 ? 'pos' : 'neg'}">${p.pnl >= 0 ? '+' : ''}${p.pnl}%</div>
+      </div>
+    </div>`;
+});
+
+// Risk bar
+const range = DATA.best - DATA.worst;
+const nowPct = range > 0 ? ((DATA.now - DATA.worst) / range * 100) : 50;
+document.getElementById('risk-fill').style.width = Math.min(100, Math.max(0, nowPct)) + '%';
+document.getElementById('risk-now-marker').style.left = Math.min(100, Math.max(0, nowPct)) + '%';
+document.getElementById('risk-worst').textContent = 'Worst ' + (DATA.worst >= 0 ? '+' : '') + DATA.worst + '%';
+document.getElementById('risk-best').textContent  = 'Best +' + DATA.best + '%';
+document.getElementById('risk-now-label').textContent = '▲ Now ' + (DATA.now >= 0 ? '+' : '') + DATA.now + '%';
+
+// Signals
+const sigBody = document.getElementById('signals-body');
+DATA.picks.forEach((s, i) => {
+  const isTop = s.score >= 92;
+  sigBody.innerHTML += `
+    <tr>
+      <td class="sig-rank">${i + 1}</td>
+      <td class="sig-ticker">${s.symbol}</td>
+      <td><span class="sig-score${isTop ? ' top' : ''}">${s.score}</span></td>
+      <td class="sig-strategy">${s.strategy}</td>
+      <td style="text-align:right" class="sig-rr">${s.rr}</td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
