@@ -54,20 +54,31 @@ function formatDate(yyyymmdd) {
   return `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(0, 4)}`;
 }
 
-// ─── Read metrics from generated status page (source of truth) ───────────────
+// ─── Read metrics + scenario from generated status page (source of truth) ─────
 function readStatusMetrics() {
   const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
-  const section = statusHtml.match(/id="p-calmar"[\s\S]{0,3000}/);
+  const section = statusHtml.match(/id="p-calmar"[\s\S]{0,8000}/);
   if (!section) return null;
-  const nums = section[0].match(/>([+\-]?[\d.]+[%x]?)<\/span/g) || [];
+  const html = section[0];
+
+  // Perf stats (first 4 span numbers in perf-stats)
+  const nums = html.match(/>([+\-]?[\d.]+[%x]?)<\/span/g) || [];
   const extract = s => parseFloat(s.replace(/[><\/span%x]/g, ''));
-  // Order in page: ret, dd, wr, pf
   const vals = nums.map(extract).filter(n => !isNaN(n));
+
+  // Scenario worst/now/best from scenario-labels
+  const worstM = html.match(/Worst:\s*([+\-]?[\d.]+)%/);
+  const nowM   = html.match(/Now:\s*([+\-]?[\d.]+)%/);
+  const bestM  = html.match(/Best:\s*([+\-]?[\d.]+)%/);
+
   return {
-    ret: vals[0] || 0,   // +24.18%
-    dd:  vals[1] || 0,   // -1.69%
-    wr:  vals[2] || 0,   // 72.7%
-    pf:  vals[3] || 0,   // 6.72x
+    ret:   vals[0] || 0,
+    dd:    vals[1] || 0,
+    wr:    vals[2] || 0,
+    pf:    vals[3] || 0,
+    worst: worstM ? parseFloat(worstM[1]) : 0,
+    now:   nowM   ? parseFloat(nowM[1])   : 0,
+    best:  bestM  ? parseFloat(bestM[1])  : 0,
   };
 }
 
@@ -116,8 +127,8 @@ function buildStatusPayload(scanDir) {
   const cfgRaw = modesObj.calmar;
   const cfg = { id: 'calmar', ...cfgRaw };
 
-  // Read metrics from generated status page (source of truth = already computed)
-  const m = readStatusMetrics() || { ret: 0, dd: 0, wr: 0, pf: 0 };
+  // Read metrics + scenario from generated status page (source of truth)
+  const m = readStatusMetrics() || { ret: 0, dd: 0, wr: 0, pf: 0, worst: 0, now: 0, best: 0 };
 
   // Active positions (same logic as gen-status-page.js)
   const activePos = buildPositions(cfg, 'calmar');
@@ -125,18 +136,13 @@ function buildStatusPayload(scanDir) {
   // Expiring soon (left = 1)
   const expiring = activePos.filter(p => p.left === 1);
 
-  // Scenario (weighted by alloc = 1/portfolioSize per position)
-  const n = activePos.length || 1;
-  const a = 1 / n;
-  const worstPct = activePos.reduce((s, p) => s + (p.entry > 0 ? (p.stop - p.entry) / p.entry * 100 : 0) * a, 0);
-  const bestPct = activePos.reduce((s, p) => {
-    const tp = p.tp2 || p.tp1 || p.current_price;
-    return s + (p.entry > 0 ? (tp - p.entry) / p.entry * 100 : 0) * a;
-  }, 0);
-  const nowPct = activePos.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
+  // Scenario from status page (source of truth)
+  const worstPct = m.worst;
+  const nowPct   = m.now;
+  const bestPct  = m.best;
 
-  // All signals for this mode (topN, no Short Squeeze)
-  const picks = (wl.picks || []).filter(s => !/short.?squeeze/i.test(s.strategy)).slice(0, cfg.topN);
+  // All signals (10 max, no Short Squeeze)
+  const picks = (wl.picks || []).filter(s => !/short.?squeeze/i.test(s.strategy)).slice(0, 10);
 
   // Portfolio full?
   const slotsLeft = cfg.portfolioSize - activePos.length;
