@@ -385,14 +385,19 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   ${(() => {
     // Scenario bar: worst (all SL) → current → best (all TP2)
     // Each position contributes alloc% of portfolio
+    // alloc = 100/portfolioSize (e.g. 5% for 20 slots)
     const a = alloc / 100; // weight per position
     const worstPct = activePosDisplay.reduce((s, p) => {
+      // Skip positions with no stop (stop=0) — treat as no downside for scenario
+      if (!p.stop || p.stop <= 0) return s;
       const slPct = p.entry > 0 ? (p.stop - p.entry) / p.entry * 100 : 0;
-      return s + slPct * a;
+      // Cap individual SL at -20% per position (protect against bad data)
+      const capped = Math.max(slPct, -20);
+      return s + capped * a;
     }, 0);
     const bestPct = activePosDisplay.reduce((s, p) => {
       const tp = p.tp2 || p.tp1 || p.current_price;
-      const tp2Pct = p.entry > 0 ? (tp - p.entry) / p.entry * 100 : 0;
+      const tp2Pct = (p.entry > 0 && tp > 0) ? (tp - p.entry) / p.entry * 100 : 0;
       return s + tp2Pct * a;
     }, 0);
     const nowPct = activePosDisplay.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
