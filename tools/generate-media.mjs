@@ -224,177 +224,79 @@ function buildScripts(html, url) {
   return { audioScript, videoScript, title, dateStr, url, meta };
 }
 
-// ── Slide generator (simple HTML slides → PNG via puppeteer/screenshots) ─────
-function buildSlideHtml(scripts) {
-  const { title, dateStr, meta, url, videoScript } = scripts;
-  
+// ── Slide data builder (for make-slides.py) ─────────────────────────────────
+function buildSlideData(scripts) {
+  const { title, dateStr, meta, videoScript } = scripts;
+  const text = artPath ? stripHtml(readHtml(artPath)) : '';
   const slides = [];
 
   // Parse script sections
   const sections = videoScript.split(/\[([A-Z '&]+)\]\n\n/).filter(s => s.trim());
-  
-  // Intro slide
-  slides.push({
-    type: 'intro',
-    html: `
-      <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);width:1280px;height:720px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:white;text-align:center;padding:60px;">
-        <div style="font-size:18px;color:#60a5fa;letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;">MARKET WATCH</div>
-        <div style="font-size:20px;color:#94a3b8;margin-bottom:30px;">${dateStr}</div>
-        <div style="font-size:42px;font-weight:800;line-height:1.2;max-width:900px;">${title}</div>
-        <div style="margin-top:40px;background:#3b82f6;padding:12px 30px;border-radius:50px;font-size:16px;">${meta.emoji} ${meta.label}</div>
-      </div>`
-  });
+
+  // Intro
+  slides.push({ type: 'intro', title, date: dateStr, badge: `${meta.emoji} ${meta.label}` });
+
+  // Market snapshot
+  if (['daily', 'scanner', 'weekly'].includes(type)) {
+    const sp    = text.match(/S[&P\s]*P\s*500[^\d]*([\d,]{4,6})/i);
+    const spPct = text.match(/S[&P\s]*P\s*500[^\n%]{0,40}([−\-+]\s*\d[\d.]+\s*%)/i);
+    const nas   = text.match(/Nasdaq[^\d]*([\d,]{4,6})/i);
+    const nasPct= text.match(/Nasdaq[^\n%]{0,40}([−\-+]\s*\d[\d.]+\s*%)/i);
+    const btc   = text.match(/BTC[^\d$]*\$?([\d,]{4,7})/i) || text.match(/Bitcoin[^\d$]*\$?([\d,]{4,7})/i);
+    const gold  = text.match(/Gold[^\d$]*\$?([\d,]{3,6})/i);
+    const vix   = text.match(/VIX[^\d]*([\d]{1,2}\.[\d]+)/i);
+    const oil   = text.match(/Brent[^\d$]*\$?([\d]{2,3}\.[\d]+)/i);
+    const items = [];
+    if (sp)   items.push({ label: 'S&P 500',    value: sp[1],         change: spPct?.[1]?.trim()||'' });
+    if (nas)  items.push({ label: 'Nasdaq',     value: nas[1],        change: nasPct?.[1]?.trim()||'' });
+    if (btc)  items.push({ label: 'Bitcoin',    value: `$${btc[1]}`,  change: '' });
+    if (gold) items.push({ label: 'Gold',       value: `$${gold[1]}`, change: '' });
+    if (vix)  items.push({ label: 'VIX',        value: vix[1],        change: '' });
+    if (oil)  items.push({ label: 'Oil (Brent)',value: `$${oil[1]}`,  change: '' });
+    if (items.length >= 2) slides.push({ type: 'snapshot', header: 'Market Snapshot', items, footer: 'articles.market-watch.xyz' });
+  }
 
   // Content slides from sections
   for (let i = 0; i < sections.length - 1; i += 2) {
-    const sectionTitle = sections[i];
+    const sectionTitle   = sections[i];
     const sectionContent = sections[i+1];
     if (!sectionTitle || !sectionContent) continue;
-
+    if (/intro|headline/i.test(sectionTitle)) continue;
     const bullets = sectionContent.split('\n')
-      .filter(l => l.trim() && l.length > 10)
-      .slice(0, 6)
-      .map(l => `<div style="margin:8px 0;padding:12px 20px;background:rgba(255,255,255,0.05);border-left:3px solid #3b82f6;border-radius:0 8px 8px 0;font-size:18px;line-height:1.4;">${l.trim().slice(0, 120)}</div>`)
-      .join('');
-
-    slides.push({
-      type: 'content',
-      html: `
-        <div style="background:#0f172a;width:1280px;height:720px;display:flex;flex-direction:column;font-family:system-ui,sans-serif;color:white;padding:60px;">
-          <div style="font-size:12px;color:#60a5fa;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">MARKET WATCH — ${meta.label.toUpperCase()}</div>
-          <div style="font-size:28px;font-weight:700;color:#f1f5f9;margin-bottom:30px;border-bottom:1px solid #334155;padding-bottom:16px;">${sectionTitle}</div>
-          <div style="flex:1;overflow:hidden;">${bullets}</div>
-          <div style="margin-top:auto;font-size:13px;color:#475569;">articles.market-watch.xyz</div>
-        </div>`
-    });
+      .filter(l => l.trim().length > 10)
+      .map(l => l.trim().replace(/^Point\s*\d+:\s*/i, '').slice(0, 120))
+      .slice(0, 5);
+    if (bullets.length) slides.push({ type: 'content', header: sectionTitle, bullets, accent: '#3b82f6', footer: 'articles.market-watch.xyz' });
   }
 
-  // Outro slide
-  slides.push({
-    type: 'outro',
-    html: `
-      <div style="background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);width:1280px;height:720px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:white;text-align:center;padding:60px;">
-        <div style="font-size:48px;margin-bottom:20px;">📊</div>
-        <div style="font-size:36px;font-weight:700;margin-bottom:20px;">Full analysis available</div>
-        <div style="font-size:24px;color:#60a5fa;margin-bottom:40px;">articles.market-watch.xyz</div>
-        <div style="font-size:18px;color:#94a3b8;">Follow us on Telegram for daily signals</div>
-        <div style="margin-top:30px;font-size:14px;color:#475569;">© 2026 Market Watch — Not financial advice</div>
-      </div>`
-  });
-
+  // Outro
+  slides.push({ type: 'outro', url: 'articles.market-watch.xyz', subtitle: 'Follow us on Telegram for daily signals' });
   return slides;
 }
 
-// ── TTS generation ────────────────────────────────────────────────────────────
-function runTTS(text, outPath) {
-  const txtPath = outPath.replace('.mp3', '.txt');
-  fs.writeFileSync(txtPath, text, 'utf8');
-  const cmd = `${EDGE_TTS} --voice "${VOICE}" --rate="${RATE}" --pitch="${PITCH}" -f "${txtPath}" --write-media "${outPath}.wav"`;
-  console.log(`  🔊 TTS: ${path.basename(outPath)}`);
-  spawnSync('sh', ['-c', cmd], { stdio: 'inherit' });
-  // Convert wav → mp3
-  spawnSync(FFMPEG, ['-y', '-i', `${outPath}.wav`, '-codec:a', 'libmp3lame', '-qscale:a', '4', '-ar', '44100', outPath], { stdio: 'pipe' });
-  fs.unlinkSync(`${outPath}.wav`);
-  fs.unlinkSync(txtPath);
-  return outPath;
-}
+// ── Render slides via make-slides.py (Pillow) ─────────────────────────────────
+async function renderSlides(slideData, outDir) {
+  const PYTHON    = '/home/ci/edge-tts-venv/bin/python3';
+  const SCRIPT    = path.join(__dirname, 'make-slides.py');
+  const dataFile  = path.join(outDir, 'slides-data.json');
+  fs.writeFileSync(dataFile, JSON.stringify({ slides: slideData }), 'utf8');
 
-// ── Render slides using ffmpeg drawtext (no browser needed) ──────────────────
-function escapeDrawtext(str) {
-  return (str || '')
-    .replace(/[\\:]/g, '\\$&')   // escape backslash and colon
-    .replace(/'/g, "\u2019")      // replace apostrophes with right single quote
-    .replace(/[&<>"]/g, ' ')      // strip HTML entities
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, 80);
-}
+  const result = spawnSync(PYTHON, [SCRIPT, '--data-file', dataFile, '--outdir', outDir], { stdio: 'pipe' });
+  const stdout = result.stdout?.toString() || '';
+  const stderr = result.stderr?.toString() || '';
+  if (stderr) process.stderr.write(stderr);
 
-async function renderSlides(slides, outDir) {
-  const pngPaths = [];
-  for (let i = 0; i < slides.length; i++) {
-    const pngPath = path.join(outDir, `slide-${i}.png`);
-    const slide   = slides[i];
-
-    // Extract plain text from slide HTML
-    const rawHtml  = slide.html || '';
-    const stripped = rawHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
-    
-    // Determine bg color and accent
-    const isIntro  = slide.type === 'intro';
-    const isOutro  = slide.type === 'outro';
-    const bgColor  = '0x0f172a';
-    const accentR  = isIntro ? '0x60a5fa' : isOutro ? '0x22c55e' : '0x3b82f6';
-
-    // Build text lines (max 6 lines of 60 chars)
-    const lines = stripped.split(/[.!?]|\n/).map(l => l.trim()).filter(l => l.length > 3);
-    
-    let headerText, bodyLines;
-    if (isIntro) {
-      headerText = 'MARKET WATCH';
-      bodyLines  = lines.slice(0, 4);
-    } else if (isOutro) {
-      headerText = 'articles.market-watch.xyz';
-      bodyLines  = ['Full analysis available', 'Follow us on Telegram'];
-    } else {
-      headerText = escapeDrawtext(lines[0] || 'Market Watch');
-      bodyLines  = lines.slice(1, 6);
-    }
-
-    // Build drawtext filter chain
-    const filters = [];
-    // Background
-    filters.push(`color=c=${bgColor}:size=1280x720:rate=1`);
-    
-    // Use ffmpeg lavfi with drawtext
-    const drawtextFilters = [];
-    
-    // Header line
-    drawtextFilters.push(
-      `drawtext=text='${escapeDrawtext(headerText)}':fontsize=42:fontcolor=white:x=80:y=80:box=0`
-    );
-    
-    // Accent bar (simulate with drawbox)
-    drawtextFilters.push(`drawbox=x=80:y=140:w=120:h=4:color=${accentR}@1:t=fill`);
-    
-    // Body lines
-    bodyLines.slice(0, 5).forEach((line, li) => {
-      const safeText = escapeDrawtext(line);
-      if (!safeText) return;
-      const y = 170 + li * 90;
-      drawtextFilters.push(
-        `drawtext=text='${safeText}':fontsize=24:fontcolor=0xCBD5E1:x=80:y=${y}:box=0`
-      );
-    });
-
-    // Footer
-    drawtextFilters.push(
-      `drawtext=text='market-watch.xyz':fontsize=18:fontcolor=0x475569:x=80:y=680:box=0`
-    );
-
-    const vf = drawtextFilters.join(',');
-    
-    const result = spawnSync(FFMPEG, [
-      '-y', '-f', 'lavfi',
-      '-i', `color=c=${bgColor}:size=1280x720:rate=1`,
-      '-vframes', '1',
-      '-vf', vf,
-      pngPath
-    ], { stdio: 'pipe' });
-    
-    if (result.status === 0 && fs.existsSync(pngPath)) {
-      pngPaths.push(pngPath);
-    } else {
-      // Ultra-simple fallback: plain colored frame
-      spawnSync(FFMPEG, [
-        '-y', '-f', 'lavfi',
-        '-i', `color=c=${bgColor}:size=1280x720:rate=1`,
-        '-vframes', '1', pngPath
-      ], { stdio: 'pipe' });
-      if (fs.existsSync(pngPath)) pngPaths.push(pngPath);
-    }
+  // Parse rendered paths from last JSON line
+  const jsonLine = stdout.trim().split('\n').reverse().find(l => l.startsWith('{'));
+  if (jsonLine) {
+    try {
+      const parsed = JSON.parse(jsonLine);
+      return parsed.slides || [];
+    } catch {}
   }
-  return pngPaths;
+  // Fallback: list png files
+  return fs.readdirSync(outDir).filter(f => /^slide-\d+\.png$/.test(f)).sort()
+    .map(f => path.join(outDir, f));
 }
 
 // ── Build video from slides + audio ──────────────────────────────────────────
@@ -586,7 +488,7 @@ async function main() {
 
   // 3. Render slides
   console.log('\n🖼️ Rendering slides...');
-  const slides   = buildSlideHtml(scripts);
+  const slides   = buildSlideData(scripts);
   const pngPaths = await renderSlides(slides, outDir);
   console.log(`  ✅ ${pngPaths.length} slides rendered`);
 
