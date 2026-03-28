@@ -189,7 +189,15 @@ check('scanner/status: pas de "undefined" brut dans le HTML', () => {
   if (badMatches.length > 0) return `"undefined" présent dans le contenu HTML (${badMatches.length}×)`;
 });
 
-// 8. mcp/watchlist.json — picks avec score/strategy valides (bug #1 du 28 mars)
+// 8. scanner/status — pas de cellule stratégie vide (bug du 28 mars — LNG sans strategy)
+check('scanner/status: aucune cellule stratégie vide dans le tableau signaux', () => {
+  const html = readFile('scanner/status/index.html');
+  // Détecter <td class="m"></td> = cellule stratégie vide
+  const empty = (html.match(/<td class="m"><\/td>/g) || []).length;
+  if (empty > 0) return `${empty} cellule(s) stratégie vide — gen-status-page.js regex strategy incomplet`;
+});
+
+// 9. mcp/watchlist.json — picks avec score/strategy valides (bug #1 du 28 mars)
 check('watchlist.json: picks non vides et champs valides (score, strategy, entry)', () => {
   const d = readJSON('mcp/watchlist.json');
   if (!d.picks || d.picks.length === 0) return 'aucun pick dans watchlist.json';
@@ -203,7 +211,7 @@ check('watchlist.json: picks non vides et champs valides (score, strategy, entry
   if (issues.length) return issues.join(', ');
 });
 
-// 9. radar.json — events ET opportunities présents (bug #2 du 28 mars)
+// 10. radar.json — events ET opportunities présents (bug #2 du 28 mars)
 check('radar.json: events et opportunities présents (pas que risks)', () => {
   const d = readJSON('data/radar.json');
   const missing = [];
@@ -212,7 +220,7 @@ check('radar.json: events et opportunities présents (pas que risks)', () => {
   if (missing.length) return missing.join(', ') + ' — radar affichera uniquement les risques';
 });
 
-// 10. scanner.json — tiles retro ont le style purple (bug #3 du 28 mars)
+// 11. scanner.json — tiles retro ont le style purple (bug #3 du 28 mars)
 // Filtre : uniquement les tiles avec le badge "RÉTROSPECTIVE" (les vraies retros)
 // Les tiles normales avec le tag "retrospective" dans data-tags ne sont pas des vraies retros
 check('scanner.json: tiles retrospective ont le style visuel retro', () => {

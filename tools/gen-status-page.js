@@ -76,7 +76,7 @@ function main() {
           const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
           if (!ticker) continue;
           const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
-          const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback/i.test(c)) || '';
+          const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback|trend follow|defensive yield|defensive|reversal/i.test(c)) || '';
           const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
           const rr = cells.find(c => /1:\d/.test(c)) || '';
           signals.push({ ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
