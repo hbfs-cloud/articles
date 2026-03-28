@@ -97,14 +97,11 @@ function extractScanSummary(dir) {
   return { tickers, regime, setupCount };
 }
 
-function sendTelegramMessage(text) {
+function sendTelegramMessage(text, topicId) {
   return new Promise((resolve, reject) => {
-    const payload = JSON.stringify({
-      chat_id: CHAT_ID,
-      text,
-      parse_mode: 'HTML',
-      disable_web_page_preview: false, // allow link preview with OG image
-    });
+    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: false };
+    if (topicId) body.message_thread_id = parseInt(topicId, 10);
+    const payload = JSON.stringify(body);
     
     const opts = {
       hostname: 'api.telegram.org',
@@ -184,7 +181,9 @@ async function main() {
   console.log(message);
   
   try {
-    const result = await sendTelegramMessage(message);
+    // Route to correct topic based on content type
+    const scanTopicId = process.env.TELEGRAM_TOPIC_PORTFOLIO;
+    const result = await sendTelegramMessage(message, scanTopicId);
     console.log(`✅ Message sent (id: ${result.message_id})`);
   } catch (e) {
     console.error(`❌ Failed: ${e.message}`);

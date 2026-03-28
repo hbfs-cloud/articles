@@ -326,13 +326,15 @@ ${picksLines}
 }
 
 // ─── Senders ──────────────────────────────────────────────────────────────────
-function sendTelegram(text) {
+function sendTelegram(text, topicId) {
   if (!BOT_TOKEN || !CHAT_ID) {
     console.warn('⚠️  TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID manquants — skip Telegram');
     return Promise.resolve();
   }
   return new Promise((resolve, reject) => {
-    const payload = JSON.stringify({ chat_id: CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true });
+    const body = { chat_id: CHAT_ID, text, parse_mode: 'HTML', disable_web_page_preview: true };
+    if (topicId) body.message_thread_id = parseInt(topicId, 10);
+    const payload = JSON.stringify(body);
     const opts = {
       hostname: 'api.telegram.org',
       path: `/bot${BOT_TOKEN}/sendMessage`,
@@ -393,7 +395,8 @@ async function main() {
   console.log(dcMsg);
 
   try {
-    const r = await sendTelegram(tgMsg);
+    const portfolioTopicId = process.env.TELEGRAM_TOPIC_PORTFOLIO;
+    const r = await sendTelegram(tgMsg, portfolioTopicId);
     console.log(`✅ Telegram envoyé (id: ${r?.message_id})`);
   } catch (e) {
     console.error('❌ Telegram failed:', e.message);
