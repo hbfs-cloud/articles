@@ -126,6 +126,135 @@ function finvizUrl(ticker, period = 'd') {
   return `https://finviz.com/chart.ashx?t=${ticker}&ty=c&ta=1&p=${period}&s=l`;
 }
 
+// ── Scanner HTML parser → 6 structured slides ───────────────────────────────
+function buildScannerSlides(html, content, dateStr) {
+  // 1. Parse regime
+  const regimeMatch = html.match(/badge[^>]*>(🔴|🟡|🟢|⚪)\s*(RISK-OFF|RISK-ON|EARLY RISK-OFF|NEUTRAL|RECOVERY)/i);
+  const regime = regimeMatch ? regimeMatch[2] : 'Unknown';
+  const regimeEmoji = regimeMatch ? regimeMatch[1] : '📊';
+
+  // 2. Parse title tickers
+  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+  const titleText = titleMatch ? titleMatch[1] : '';
+
+  // 3. Parse regime thesis (2-line summary)
+  const regimeThesisMatch = html.match(/Regime Thesis<\/h4>\s*<p>([\s\S]*?)<\/p>/i);
+  const regimeThesis = regimeThesisMatch
+    ? regimeThesisMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 250)
+    : '';
+
+  // 4. Parse top sectors from setup badges
+  const sectorBadges = [...html.matchAll(/badge badge-orange">([^<]+)<\/span>/g)].map(m => m[1]);
+  const topSectors = [...new Set(sectorBadges)].slice(0, 4);
+
+  // 5. Parse open positions for slide 1 — timeout & watch
+  const openPosMatch = html.match(/tracking\s*<strong>(\d+)\s*open positions/i);
+  const openCount = openPosMatch ? parseInt(openPosMatch[1]) : 0;
+
+  // 6. Parse the synthese table for all 10 setups
+  const setups = [];
+  const tableRows = [...html.matchAll(/<tr><td>\d+<\/td><td><strong>([A-Z.]+)<\/strong><\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>(\d+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><\/tr>/g)];
+  for (const m of tableRows) {
+    setups.push({
+      ticker: m[1], name: m[2].replace(/&amp;/g, '&'), sector: m[3],
+      strategy: m[4], score: parseInt(m[5]),
+      entry: m[6], stop: m[7], tp1: m[8], tp2: m[9], rr: m[10],
+    });
+  }
+
+  // 7. Parse investment thesis per ticker (first 3 setups for slides 4-6)
+  const theses = {};
+  for (const s of setups.slice(0, 3)) {
+    const thesisRe = new RegExp(`id="setup-${s.ticker}"[\\s\\S]*?Investment Thesis<\\/h4>\\s*<p>([\\s\\S]*?)<\\/p>`, 'i');
+    const tm = html.match(thesisRe);
+    if (tm) {
+      theses[s.ticker] = tm[1].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim().slice(0, 200);
+    }
+  }
+
+  // 8. Parse portfolio metrics from intro
+  const spMatch = html.match(/S&amp;P 500[^<]*?(-?\d+\.?\d*%)/);
+  const spChange = spMatch ? spMatch[1] : '';
+  const nasdaqMatch = html.match(/NASDAQ[^<]*?(-?\d+\.?\d*%)/);
+  const nasdaqChange = nasdaqMatch ? nasdaqMatch[1] : '';
+  const wtiMatch = html.match(/WTI[^<]*?\$(\d+\.?\d*)/);
+  const wtiPrice = wtiMatch ? '$' + wtiMatch[1] : '';
+
+  // 9. Parse KPI values
+  const avgScoreMatch = html.match(/Avg Score<\/span>\s*<span[^>]*>(\d+\.?\d*)/);
+  const avgScore = avgScoreMatch ? avgScoreMatch[1] : '';
+
+  // Build 6 slides
+  const slides = [];
+
+  // ── Slide 1: Portfolio Actions (dark urgent)
+  const newOrders = setups.slice(0, 5).map(s =>
+    `${s.ticker} · Entry ${s.entry} · Stop ${s.stop} · TP1 ${s.tp1} · R/R ${s.rr}`
+  ).join('\n');
+  slides.push({
+    type: 'scanner-actions',
+    title: `⚡ Actions du jour — ${dateStr}`,
+    openCount,
+    newSetups: setups.slice(0, 5).map(s => ({
+      ticker: s.ticker, entry: s.entry, stop: s.stop, tp1: s.tp1, rr: s.rr,
+    })),
+    narration: `${setups.length} new A-plus setups today. ${regime} regime — ${topSectors.join(', ')} leading. Here are your orders.`,
+  });
+
+  // ── Slide 2: Portfolio State (dark blue)
+  slides.push({
+    type: 'scanner-portfolio',
+    title: `📂 Portfolio — ${openCount} open positions`,
+    positions: setups.slice(0, 6).map(s => ({
+      ticker: s.ticker, sector: s.sector, strategy: s.strategy, score: s.score,
+    })),
+    metrics: {
+      regime, avgScore,
+      spChange, nasdaqChange, wtiPrice,
+    },
+    narration: `Portfolio running ${openCount} slots. Average score ${avgScore}. S and P ${spChange}, NASDAQ ${nasdaqChange}. Energy dominates the book.`,
+  });
+
+  // ── Slide 3: Market Analysis (neutral)
+  slides.push({
+    type: 'scanner-market',
+    title: `📊 Market Context — ${dateStr}`,
+    regime,
+    regimeEmoji,
+    thesis: regimeThesis,
+    topSectors,
+    metrics: { spChange, nasdaqChange, wtiPrice },
+    narration: `${regime} confirmed. ${regimeThesis.slice(0, 100)}. The scanner leans into ${topSectors.slice(0, 2).join(' and ')}.`,
+  });
+
+  // ── Slides 4-6: Top 3 Setup cards with Finviz
+  const topSetups = setups.slice(0, 3);
+  for (const s of topSetups) {
+    const thesis = theses[s.ticker] || `${s.strategy} setup on ${s.ticker} with score ${s.score}/100.`;
+    slides.push({
+      type: 'scanner-setup',
+      ticker: s.ticker,
+      title: `${s.ticker} — ${s.strategy} · Score ${s.score}/100`,
+      name: s.name,
+      sector: s.sector,
+      strategy: s.strategy,
+      score: s.score,
+      finvizUrl: finvizUrl(s.ticker),
+      thesis: thesis.slice(0, 180),
+      levels: [
+        { label: 'Entry', value: s.entry, type: 'entry' },
+        { label: 'Stop', value: s.stop, type: 'stop' },
+        { label: 'TP1', value: s.tp1, type: 'tp1' },
+        { label: 'TP2', value: s.tp2, type: 'tp2' },
+        { label: 'R/R', value: s.rr, type: 'rr' },
+      ],
+      narration: `${s.ticker} — ${s.strategy} at score ${s.score}. Entry ${s.entry}, stop ${s.stop}, target ${s.tp1}. Risk reward ${s.rr}. ${s.sector} play in this ${regime} regime.`,
+    });
+  }
+
+  return slides;
+}
+
 // ── AI slide + script generation ──────────────────────────────────────────────
 async function generateAIContent(html, url, dateStr, title, meta) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -590,6 +719,17 @@ async function main() {
   // ── 1. Generate AI content ──
   let content = await generateAIContent(html, url, dateStr, title, meta);
   if (!content) content = fallbackContent(html, url, dateStr, title, meta);
+
+  // For scanner: override slides with parsed HTML slides (6 structured slides)
+  // Keep AI audioScript + telegramBullets, replace slides only
+  if (type === 'scanner' && html) {
+    const scannerSlides = buildScannerSlides(html, content, dateStr);
+    if (scannerSlides.length >= 4) {
+      console.log(`  🔍 Scanner: ${scannerSlides.length} slides parsed from HTML (replacing AI slides)`);
+      content.slides = scannerSlides;
+      content.config = { ...content.config, accentColor: '#f0883e' };
+    }
+  }
 
   const { audioScript, slides, config } = content;
 

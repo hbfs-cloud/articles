@@ -623,6 +623,197 @@ function renderDefault(slide, idx, total, config) {
     </div>`;
 }
 
+// ── Scanner slide renderers (dark theme) ──────────────────────────────────────
+const S = {
+  bg:      '#0d1117',
+  bgCard:  '#161b22',
+  border:  '#30363d',
+  text:    '#e6edf3',
+  textSub: '#8b949e',
+  orange:  '#f0883e',
+  green:   '#3fb950',
+  red:     '#f85149',
+  blue:    '#58a6ff',
+  purple:  '#bc8cff',
+  cyan:    '#39d2c0',
+};
+
+function scannerFooter(idx, total, config) {
+  return `
+    <div style="position:absolute;bottom:0;left:0;right:0;height:44px;background:${S.bgCard};border-top:1px solid ${S.border};display:flex;align-items:center;justify-content:space-between;padding:0 40px;font-size:12px;color:${S.textSub};z-index:10">
+      <span style="color:${S.orange};font-weight:800;letter-spacing:2px;font-size:11px;text-transform:uppercase">MARKET WATCH SCANNER</span>
+      <span style="color:${S.textSub}">${esc(config.seriesTitle || config.date || '')}</span>
+      <span style="background:${S.orange};color:${S.bg};padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700">${idx+1} / ${total}</span>
+    </div>`;
+}
+
+function renderScannerActions(slide, idx, total, config) {
+  const orders = (slide.newSetups || []).slice(0, 5);
+  const orderRows = orders.map(o => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:${S.green}12;border:1px solid ${S.green}40;border-radius:10px;margin-bottom:8px">
+      <div style="font-size:20px;font-weight:900;color:${S.green};min-width:64px;font-family:${T.fontMono}">${esc(o.ticker)}</div>
+      <div style="flex:1;display:flex;gap:16px;font-size:13px;color:${S.text}">
+        <span>Entry <strong style="color:${S.blue}">${esc(o.entry)}</strong></span>
+        <span>Stop <strong style="color:${S.red}">${esc(o.stop)}</strong></span>
+        <span>TP1 <strong style="color:${S.green}">${esc(o.tp1)}</strong></span>
+        <span>R/R <strong style="color:${S.purple}">${esc(o.rr)}</strong></span>
+      </div>
+    </div>`).join('');
+
+  return `
+    <div class="slide" style="background:${S.bg};color:${S.text}">
+      <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,${S.red},${S.orange})"></div>
+      <div style="flex:1;display:flex;flex-direction:column;padding:28px 44px 56px;margin-top:5px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:${S.orange};text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <div style="width:14px;height:3px;background:${S.orange};border-radius:2px"></div>
+          PORTFOLIO ACTIONS
+        </div>
+        <div style="font-size:26px;font-weight:800;color:${S.text};margin-bottom:8px;letter-spacing:-0.3px">${esc(slide.title)}</div>
+        <div style="font-size:14px;color:${S.textSub};margin-bottom:20px">${slide.openCount} positions open — new orders below</div>
+
+        <div style="font-size:12px;font-weight:700;color:${S.green};letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">🟢 New Orders</div>
+        <div style="flex:1">${orderRows}</div>
+      </div>
+      ${scannerFooter(idx, total, config)}
+    </div>`;
+}
+
+function renderScannerPortfolio(slide, idx, total, config) {
+  const positions = (slide.positions || []).slice(0, 6);
+  const m = slide.metrics || {};
+
+  const posRows = positions.map(p => `
+    <div style="display:flex;align-items:center;padding:8px 14px;background:${S.bgCard};border:1px solid ${S.border};border-radius:8px">
+      <div style="font-size:15px;font-weight:800;color:${S.text};min-width:60px;font-family:${T.fontMono}">${esc(p.ticker)}</div>
+      <div style="flex:1;font-size:12px;color:${S.textSub}">${esc(p.sector)}</div>
+      <div style="font-size:12px;color:${S.purple};font-weight:600">${esc(p.strategy)}</div>
+      <div style="font-size:14px;font-weight:800;color:${S.orange};min-width:40px;text-align:right">${p.score}</div>
+    </div>`).join('');
+
+  const metricBoxes = [
+    { label: 'Regime', value: m.regime || '—', color: S.red },
+    { label: 'Avg Score', value: m.avgScore || '—', color: S.orange },
+    { label: 'S&P 500', value: m.spChange || '—', color: m.spChange?.startsWith('-') ? S.red : S.green },
+    { label: 'NASDAQ', value: m.nasdaqChange || '—', color: m.nasdaqChange?.startsWith('-') ? S.red : S.green },
+  ].map(b => `
+    <div style="flex:1;background:${S.bgCard};border:1px solid ${S.border};border-radius:10px;padding:12px 14px;text-align:center">
+      <div style="font-size:10px;color:${S.textSub};text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">${esc(b.label)}</div>
+      <div style="font-size:20px;font-weight:800;color:${b.color}">${esc(b.value)}</div>
+    </div>`).join('');
+
+  return `
+    <div class="slide" style="background:${S.bg};color:${S.text}">
+      <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,${S.blue},${S.purple})"></div>
+      <div style="flex:1;display:flex;flex-direction:column;padding:28px 44px 56px;margin-top:5px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:${S.blue};text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+          <div style="width:14px;height:3px;background:${S.blue};border-radius:2px"></div>
+          PORTFOLIO STATE
+        </div>
+        <div style="font-size:26px;font-weight:800;color:${S.text};margin-bottom:16px;letter-spacing:-0.3px">${esc(slide.title)}</div>
+        <div style="display:flex;gap:12px;margin-bottom:16px">${metricBoxes}</div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:6px">${posRows}</div>
+      </div>
+      ${scannerFooter(idx, total, config)}
+    </div>`;
+}
+
+function renderScannerMarket(slide, idx, total, config) {
+  const m = slide.metrics || {};
+  const sectors = (slide.topSectors || []).slice(0, 4);
+
+  const regimeColor = (slide.regime || '').toLowerCase().includes('risk-off') ? S.red
+    : (slide.regime || '').toLowerCase().includes('risk-on') ? S.green : S.orange;
+
+  const sectorTags = sectors.map(s => `
+    <span style="background:${S.bgCard};border:1px solid ${S.border};border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;color:${S.cyan}">${esc(s)}</span>`).join('');
+
+  const metricItems = [
+    { label: 'S&P 500', value: m.spChange, color: m.spChange?.startsWith('-') ? S.red : S.green },
+    { label: 'NASDAQ', value: m.nasdaqChange, color: m.nasdaqChange?.startsWith('-') ? S.red : S.green },
+    { label: 'WTI', value: m.wtiPrice, color: S.green },
+  ].filter(x => x.value).map(x => `
+    <div style="flex:1;text-align:center">
+      <div style="font-size:10px;color:${S.textSub};text-transform:uppercase;letter-spacing:1px">${esc(x.label)}</div>
+      <div style="font-size:24px;font-weight:800;color:${x.color}">${esc(x.value)}</div>
+    </div>`).join('');
+
+  return `
+    <div class="slide" style="background:${S.bg};color:${S.text}">
+      <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,${S.bgCard},${regimeColor},${S.bgCard})"></div>
+      <div style="flex:1;display:flex;flex-direction:row;gap:32px;padding:28px 44px 56px;margin-top:5px">
+        <!-- Left: regime -->
+        <div style="width:340px;display:flex;flex-direction:column;justify-content:center">
+          <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:${regimeColor};text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:8px">
+            <div style="width:14px;height:3px;background:${regimeColor};border-radius:2px"></div>
+            MARKET REGIME
+          </div>
+          <div style="font-size:48px;margin-bottom:8px">${slide.regimeEmoji || '📊'}</div>
+          <div style="font-size:32px;font-weight:900;color:${regimeColor};margin-bottom:12px">${esc(slide.regime)}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px">${sectorTags}</div>
+        </div>
+        <!-- Right: metrics + thesis -->
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+          <div style="display:flex;gap:16px;background:${S.bgCard};border:1px solid ${S.border};border-radius:14px;padding:16px;margin-bottom:20px">${metricItems}</div>
+          <div style="background:${S.bgCard};border:1px solid ${S.border};border-radius:14px;padding:20px">
+            <div style="font-size:12px;font-weight:700;color:${S.orange};text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px">Market Thesis</div>
+            <div style="font-size:15px;color:${S.text};line-height:1.55">${esc(slide.thesis || '')}</div>
+          </div>
+        </div>
+      </div>
+      ${scannerFooter(idx, total, config)}
+    </div>`;
+}
+
+function renderScannerSetup(slide, idx, total, config) {
+  const levels = (slide.levels || []);
+  const scoreColor = slide.score >= 90 ? S.green : slide.score >= 85 ? S.orange : S.blue;
+
+  const levelRows = levels.map(l => {
+    const colorMap = { tp2: S.green, tp1: '#3fb950', entry: S.blue, stop: S.red, rr: S.purple };
+    const color = colorMap[l.type] || S.textSub;
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;border-left:3px solid ${color};background:${color}10;border-radius:0 8px 8px 0;margin-bottom:6px">
+        <div style="font-size:11px;font-weight:700;color:${S.textSub};text-transform:uppercase;letter-spacing:1px;min-width:44px">${esc(l.label)}</div>
+        <div style="font-size:18px;font-weight:800;color:${color};font-family:${T.fontMono}">${esc(l.value)}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="slide" style="background:${S.bg};color:${S.text}">
+      <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,${scoreColor},${S.orange})"></div>
+      <div style="flex:1;display:flex;flex-direction:row;gap:20px;padding:28px 44px 56px;margin-top:5px">
+        <!-- Left: chart + levels -->
+        <div style="flex:1;display:flex;flex-direction:column">
+          <div style="font-size:11px;font-weight:700;letter-spacing:2.5px;color:${S.orange};text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px">
+            <div style="width:14px;height:3px;background:${S.orange};border-radius:2px"></div>
+            SETUP ${esc(slide.strategy || '')}
+          </div>
+          <div style="font-size:24px;font-weight:800;color:${S.text};margin-bottom:4px;letter-spacing:-0.3px">${esc(slide.title)}</div>
+          <div style="font-size:13px;color:${S.textSub};margin-bottom:12px">${esc(slide.name || '')} · ${esc(slide.sector || '')}</div>
+
+          <!-- Finviz chart image -->
+          <div style="flex:1;background:${S.bgCard};border:1px solid ${S.border};border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:220px">
+            <img src="${esc(slide.finvizUrl || '')}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.display='none'" />
+          </div>
+        </div>
+
+        <!-- Right: score + levels + thesis -->
+        <div style="width:280px;display:flex;flex-direction:column;gap:12px">
+          <!-- Score badge -->
+          <div style="background:${scoreColor};border-radius:14px;padding:18px;text-align:center">
+            <div style="font-size:11px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.7);text-transform:uppercase;margin-bottom:4px">Score</div>
+            <div style="font-size:44px;font-weight:900;color:white;line-height:1">${slide.score || '—'}</div>
+          </div>
+          <!-- Levels -->
+          <div style="flex:1">${levelRows}</div>
+          <!-- Thesis snippet -->
+          <div style="background:${S.bgCard};border:1px solid ${S.border};border-radius:10px;padding:12px;font-size:12px;color:${S.textSub};line-height:1.45">${esc(slide.thesis || '')}</div>
+        </div>
+      </div>
+      ${scannerFooter(idx, total, config)}
+    </div>`;
+}
+
 // ── Route slides ───────────────────────────────────────────────────────────────
 function renderSlide(slide, idx, total, config) {
   switch (slide.type) {
@@ -636,6 +827,10 @@ function renderSlide(slide, idx, total, config) {
     case 'summary':        return renderSummary(slide, idx, total, config);
     case 'bullets':        return renderBullets(slide, idx, total, config);
     case 'outro':          return renderOutro(slide, idx, total, config);
+    case 'scanner-actions':   return renderScannerActions(slide, idx, total, config);
+    case 'scanner-portfolio': return renderScannerPortfolio(slide, idx, total, config);
+    case 'scanner-market':    return renderScannerMarket(slide, idx, total, config);
+    case 'scanner-setup':     return renderScannerSetup(slide, idx, total, config);
     default:               return renderDefault(slide, idx, total, config);
   }
 }
