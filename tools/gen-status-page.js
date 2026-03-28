@@ -104,9 +104,14 @@ function main() {
   const g = modes.growth.m, ca = modes.calmar.m, z = modes.zero.m;
   const gEC = equityDV(g.equityCurve), caEC = equityDV(ca.equityCurve), zEC = equityDV(z.equityCurve);
 
-  const updatedAt = liveMetrics.updated_at
-    ? new Date(liveMetrics.updated_at).toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
-    : new Date().toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
+  const _updSrc = liveMetrics.updated_at || results.generated_at;
+  const updatedAt = (() => {
+    const d = _updSrc ? new Date(_updSrc) : new Date();
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const hh = String(d.getUTCHours()).padStart(2, '0');
+    const mm = String(d.getUTCMinutes()).padStart(2, '0');
+    return `${days[d.getUTCDay()]} ${hh}:${mm} UTC`;
+  })();
 
   // Filters
   const SF = {
@@ -487,7 +492,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scanner Live &mdash; Market Watch</title>
+  <title>Portfolio Live &mdash; Market Watch</title>
   <meta name="description" content="Today's signals, open positions, performance — 3 optimized trading modes.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css">
@@ -626,9 +631,9 @@ details[open] summary::after{content:"▼"}
 
 <div class="w">
   <div class="hero">
-    <h1>Scanner Live</h1>
-    <p>Pick a mode, see what to buy, track your positions</p>
-    <span class="ts"><i class="fas fa-clock"></i> ${updatedAt}</span>
+    <h1>Portfolio Live</h1>
+    <p>Signals, open positions &amp; performance — updated 5 days a week</p>
+    <span class="ts"><i class="fas fa-clock"></i> Updated ${updatedAt}</span>
   </div>
 
   <div class="tabs">
