@@ -172,7 +172,7 @@ function buildStatusPayload(scanDir) {
 
 // ─── Scenario bar (ASCII, 20 chars) ──────────────────────────────────────────
 function asciiBar(worstPct, nowPct, bestPct) {
-  const BAR = 16;
+  const BAR = 30;
   const range = bestPct - worstPct;
   const pos = range > 0 ? Math.round((nowPct - worstPct) / range * BAR) : Math.round(BAR / 2);
   const clamped = Math.max(0, Math.min(BAR, pos));
