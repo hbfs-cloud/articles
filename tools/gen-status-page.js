@@ -205,24 +205,6 @@ ${timedOut.length ? `<div class="cta-card cta-close">
   </table>
 </div>` : ''}
 
-${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:2px solid #fcd34d">
-  <div class="cta-header">
-    <span class="cta-icon">⏰</span>
-    <div>
-      <h3 style="color:#b45309">Expires Tomorrow <span class="cta-badge" style="background:#b45309">${expiringSoon.length} position${expiringSoon.length > 1 ? 's' : ''}</span></h3>
-      <p class="cta-sub" style="color:#d97706">Horizon reached at next close — decide: keep or exit at open</p>
-    </div>
-  </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
-    <tbody>${expiringSoon.map(p => {
-      const rc = p.return_pct >= 0 ? 'pos' : 'neg';
-      const held = bizDaysHeld(p.scan_date);
-      return `<tr><td><b>${p.ticker}</b></td><td>$${(p.entry||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
-    }).join('')}</tbody>
-  </table>
-</div>` : ''}
-
 <!-- ══ 3. HOW TO TRADE (method) ══ -->
 <div class="method-card" style="border-color:${cfg.color}30">
   <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
@@ -349,9 +331,27 @@ ${(() => {
 </div>`;
 })()}
 
+${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:2px solid #fcd34d">
+  <div class="cta-header">
+    <span class="cta-icon">⏰</span>
+    <div>
+      <h3 style="color:#b45309">Expires Tomorrow <span class="cta-badge" style="background:#b45309">${expiringSoon.length} position${expiringSoon.length > 1 ? 's' : ''}</span></h3>
+      <p class="cta-sub" style="color:#d97706">Horizon reached at next close — decide: keep or exit at open</p>
+    </div>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
+    <tbody>${expiringSoon.map(p => {
+      const rc = p.return_pct >= 0 ? 'pos' : 'neg';
+      const held = bizDaysHeld(p.scan_date);
+      return `<tr><td><b>${p.ticker}</b></td><td>$${(p.entry||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
+    }).join('')}</tbody>
+  </table>
+</div>` : ''}
+
 <!-- ══ 5. TODAY'S SIGNALS (context — collapsible) ══ -->
 <div class="section-card">
-  <details open>
+  <details>
     <summary class="sc-summary">
       <span class="sc-sum-title">Today's Signals <span class="count">${sig.length} setups</span></span>
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>` : ''}
