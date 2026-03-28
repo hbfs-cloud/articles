@@ -160,6 +160,7 @@ Create ${typeGuide[type] || typeGuide.daily}
 OUTPUT: Return ONLY valid JSON in this EXACT format (no markdown, no explanation):
 {
   "audioScript": "90-second punchy audio summary (230 words max). Sharp hook. WHY things happened. 2-3 data points WITH context. Actionable ending. No filler words. Sound like a Bloomberg analyst.",
+  "telegramBullets": ["📉 Dow enters correction — worst 5-week streak since 2022", "🛢️ Iran conflict locks Brent crude above $100 structurally", "up to 10 strings like these"],
   "config": {
     "seriesTitle": "${title}",
     "date": "${dateStr}",
@@ -243,7 +244,8 @@ RULES:
 - trade-levels: only if real entry/stop/target data exists in the article
 - For daily/weekly: always include metric-row snapshot + event-timeline
 - For analysis: always include chart-image (Finviz) + trade-levels
-- Keep total video ≤ 5 minutes (sum of narration ~500 words)`;
+- Keep total video ≤ 5 minutes (sum of narration ~500 words)
+- telegramBullets: 5-10 strings (NOT objects), each "<emoji> <punchy insight 8-12 words>", real data from article, no generic filler`;
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
@@ -260,7 +262,8 @@ RULES:
     const data = JSON.parse(jsonStr);
     const slideCount = (data.slides || []).length;
     const wc = data.audioScript?.split(/\s+/).length || 0;
-    console.log(`  ✅ AI content: ${slideCount} slides, ${wc}w audio script`);
+    const bc = (data.telegramBullets || []).length;
+    console.log(`  ✅ AI content: ${slideCount} slides, ${wc}w audio script, ${bc} telegram bullets`);
     return data;
   } catch (e) {
     console.error(`  ❌ AI content error: ${e.message?.slice(0,120)}`);
@@ -494,6 +497,9 @@ function sendTelegramAudio(audioPath, threadId, title, caption) {
 
   const capFile = audioPath + '.caption.txt';
   fs.writeFileSync(capFile, caption, 'utf8');
+  console.log('\n─── TELEGRAM CAPTION ───');
+  console.log(caption);
+  console.log('─────────────────────────');
   const curlCmd = [
     `curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendAudio"`,
     `-F "chat_id=${CHAT_ID}"`,
@@ -585,7 +591,15 @@ async function main() {
 
   // ── 7. Telegram notification ──
   const ytLine = ytId ? `\n📺 <a href="https://youtu.be/${ytId}">Watch on YouTube</a>` : '';
-  const caption = `🎙️ <b>${meta.label}</b> — ${dateStr}${ytLine}\n🔗 <a href="${url}">Full article</a>`;
+  // Normalize bullets — AI may return strings or objects {emoji, text}
+  const rawBullets = (content.telegramBullets || []).slice(0, 10);
+  const bullets = rawBullets.map(b => {
+    if (typeof b === 'string') return b;
+    if (b && typeof b === 'object') return `${b.emoji || ''} ${b.text || b.content || b.bullet || JSON.stringify(b)}`.trim();
+    return String(b);
+  }).filter(b => b.length > 2);
+  const bulletBlock = bullets.length > 0 ? '\n\n' + bullets.join('\n') : '';
+  const caption = `🎙️ <b>${meta.label}</b> — ${dateStr}${bulletBlock}${ytLine}\n🔗 <a href="${url}">Full article</a>`;
   sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
 
   // ── 8. Result ──
