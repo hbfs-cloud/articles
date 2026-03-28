@@ -143,18 +143,27 @@ async function fetchFinvizBase64(ticker) {
 
 // ── Scanner HTML parser → 6 structured slides ───────────────────────────────
 function buildScannerSlides(html, content, dateStr) {
-  // 1. Parse regime
-  const regimeMatch = html.match(/badge[^>]*>(🔴|🟡|🟢|⚪)\s*((?:DEEP\s+)?RISK-OFF|(?:EARLY\s+)?RISK-ON|EARLY\s+RISK-OFF|NEUTRAL|RECOVERY)/i)
+  // 1. Parse regime — TAXONOMY: RISK-ON | EARLY RISK-OFF | RISK-OFF | NEUTRAL | RECOVERY only
+  //    Normalize any variant (e.g. "DEEP RISK-OFF", "STRONG RISK-ON") to the official 5 labels
+  const regimeMatch = html.match(/badge[^>]*>(🔴|🟡|🟢|⚪)\s*([^<]{3,40})<\//i)
     || html.match(/kpi-value[^>]*>([^<]*(?:risk-off|risk-on|neutral|recovery)[^<]*)<\/span>/i)
     || html.match(/Market Regime:\s*([^<\n]+)/i);
-  const regime = regimeMatch
-    ? regimeMatch[2] || regimeMatch[1]
-    : (() => {
-        // Fallback: extract from title or meta description
-        const t = html.match(/<title[^>]*>([^<]*(?:RISK-OFF|RISK-ON|NEUTRAL|RECOVERY)[^<]*)<\/title>/i);
-        return t ? (t[1].match(/RISK-OFF|RISK-ON|NEUTRAL|RECOVERY/i) || [''])[0] : 'Unknown';
-      })();
-  const regimeEmoji = regimeMatch ? (regimeMatch[1] && /^[🔴🟡🟢⚪]/.test(regimeMatch[1]) ? regimeMatch[1] : '📊') : '📊';
+  function normalizeRegime(raw) {
+    if (!raw) return 'RISK-OFF'; // safe default
+    const s = raw.toUpperCase().trim();
+    if (s.includes('EARLY RISK-OFF') || s.includes('EARLY-RISK-OFF')) return 'EARLY RISK-OFF';
+    if (s.includes('RISK-OFF') || s.includes('RISK OFF')) return 'RISK-OFF';
+    if (s.includes('EARLY RISK-ON') || s.includes('EARLY-RISK-ON')) return 'RISK-ON';
+    if (s.includes('RISK-ON') || s.includes('RISK ON')) return 'RISK-ON';
+    if (s.includes('RECOVERY')) return 'RECOVERY';
+    if (s.includes('NEUTRAL')) return 'NEUTRAL';
+    return 'RISK-OFF'; // default when unknown
+  }
+  const regimeRaw = regimeMatch ? (regimeMatch[2] || regimeMatch[1]) : null;
+  const regime = normalizeRegime(regimeRaw);
+  const regimeEmoji = regime === 'RISK-OFF' || regime === 'EARLY RISK-OFF' ? '🔴'
+    : regime === 'RISK-ON' ? '🟢'
+    : regime === 'NEUTRAL' ? '🟡' : '⚪';
 
   // 2. Parse title tickers
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);

@@ -308,7 +308,10 @@ Le `<h2>` de chaque carte scanner dans `data/scanner.json` DOIT suivre ce format
 Top 10 A+ {REGIME} — {TICKER1}, {TICKER2}, {TICKER3}, ..., {TICKER10}
 ```
 
-- **{REGIME}** : le régime détecté en MAJUSCULES (`RISK-ON`, `EARLY RISK-OFF`, `RISK-OFF`, `NEUTRAL`, `RECOVERY`)
+- **{REGIME}** : le régime détecté en MAJUSCULES — **UNIQUEMENT ces 5 valeurs** : `RISK-ON`, `EARLY RISK-OFF`, `RISK-OFF`, `NEUTRAL`, `RECOVERY`
+  - ⚠️ **INTERDIT** : `DEEP RISK-OFF`, `STRONG RISK-ON`, `EXTREME RISK-OFF`, `MODERATE NEUTRAL`, ou tout autre label inventé
+  - Si le marché est très baissier → `RISK-OFF` (pas "DEEP RISK-OFF")
+  - Si début de détérioration → `EARLY RISK-OFF`
 - **{TICKERS}** : les 10 tickers séparés par des virgules, dans l'ordre du scan
 - **Jamais** de titre générique ("Daily Scanner", "Scan du jour", etc.)
 
