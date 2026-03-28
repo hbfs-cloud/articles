@@ -21,6 +21,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import https from 'https';
 import { spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
@@ -126,6 +127,20 @@ function finvizUrl(ticker, period = 'd') {
   return `https://finviz.com/chart.ashx?t=${ticker}&ty=c&ta=1&p=${period}&s=l`;
 }
 
+// ── Fetch Finviz chart as base64 data URI ────────────────────────────────────
+async function fetchFinvizBase64(ticker) {
+  // Finviz blocks datacenter IPs — fetch via Mac Mini (residential IP)
+  const url = `https://finviz.com/chart.ashx?t=${ticker}&ty=c&ta=1&p=d&s=l`;
+  const sshCmd = `sshpass -p 'Elonux!123' ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no -o ConnectTimeout=10 marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net "curl -sL -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' --referer 'https://finviz.com/' '${url}' | base64"`;
+  try {
+    const { execSync } = (await import('child_process'));
+    const b64 = execSync(sshCmd, { timeout: 20000, encoding: 'utf8' }).trim().replace(/\s+/g, '');
+    return (b64 && b64.length > 500) ? 'data:image/png;base64,' + b64 : null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Scanner HTML parser → 6 structured slides ───────────────────────────────
 function buildScannerSlides(html, content, dateStr) {
   // 1. Parse regime
@@ -193,7 +208,7 @@ function buildScannerSlides(html, content, dateStr) {
   ).join('\n');
   slides.push({
     type: 'scanner-actions',
-    title: `⚡ Actions du jour — ${dateStr}`,
+    title: `⚡ Today's Actions — ${dateStr}`,
     openCount,
     newSetups: setups.slice(0, 5).map(s => ({
       ticker: s.ticker, entry: s.entry, stop: s.stop, tp1: s.tp1, rr: s.rr,
@@ -732,6 +747,22 @@ async function main() {
   }
 
   const { audioScript, slides, config } = content;
+
+  // ── Pre-fetch Finviz charts as base64 (bypass Finviz User-Agent block) ──
+  const finvizSlides = slides.filter(s => s.finvizUrl && s.finvizUrl.includes('finviz.com'));
+  if (finvizSlides.length > 0) {
+    console.log(`\n📈 Pre-fetching ${finvizSlides.length} Finviz chart(s)...`);
+    for (const s of finvizSlides) {
+      const ticker = s.ticker || s.finvizUrl.match(/t=([A-Z.]+)/)?.[1] || '?';
+      const b64 = await fetchFinvizBase64(ticker);
+      if (b64) {
+        s.finvizUrl = b64;
+        console.log(`  ✅ ${ticker} chart fetched (${Math.round(b64.length / 1024)}KB base64)`);
+      } else {
+        console.log(`  ⚠️  ${ticker} chart fetch failed — slide will show placeholder`);
+      }
+    }
+  }
 
   if (DRY_RUN) {
     console.log('\n─── AUDIO SCRIPT ───');

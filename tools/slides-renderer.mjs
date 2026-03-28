@@ -623,19 +623,19 @@ function renderDefault(slide, idx, total, config) {
     </div>`;
 }
 
-// ── Scanner slide renderers (dark theme) ──────────────────────────────────────
+// ── Scanner slide renderers (light theme) ─────────────────────────────────────
 const S = {
-  bg:      '#0d1117',
-  bgCard:  '#161b22',
-  border:  '#30363d',
-  text:    '#e6edf3',
-  textSub: '#8b949e',
-  orange:  '#f0883e',
-  green:   '#3fb950',
-  red:     '#f85149',
-  blue:    '#58a6ff',
-  purple:  '#bc8cff',
-  cyan:    '#39d2c0',
+  bg:      '#f8f9fa',
+  bgCard:  '#ffffff',
+  border:  '#e2e8f0',
+  text:    '#0f172a',
+  textSub: '#64748b',
+  orange:  '#d97706',
+  green:   '#16a34a',
+  red:     '#dc2626',
+  blue:    '#2563eb',
+  purple:  '#7c3aed',
+  cyan:    '#0891b2',
 };
 
 function scannerFooter(idx, total, config) {
@@ -792,8 +792,13 @@ function renderScannerSetup(slide, idx, total, config) {
           <div style="font-size:13px;color:${S.textSub};margin-bottom:12px">${esc(slide.name || '')} · ${esc(slide.sector || '')}</div>
 
           <!-- Finviz chart image -->
-          <div style="flex:1;background:${S.bgCard};border:1px solid ${S.border};border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:220px">
-            <img src="${esc(slide.finvizUrl || '')}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.display='none'" />
+          <div style="flex:1;background:${S.bgCard};border:1px solid ${S.border};border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;min-height:220px;position:relative">
+            ${slide.finvizUrl ? `<img src="${slide.finvizUrl.startsWith('data:') ? slide.finvizUrl : esc(slide.finvizUrl)}" style="width:100%;height:100%;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />` : ''}
+            <div style="display:${slide.finvizUrl ? 'none' : 'flex'};flex-direction:column;align-items:center;gap:8px;color:${S.textSub}">
+              <div style="font-size:48px">📊</div>
+              <div style="font-size:14px;font-weight:600">${esc(slide.ticker || '')} — Daily Chart</div>
+              <div style="font-size:11px;color:${S.textSub}">finviz.com</div>
+            </div>
           </div>
         </div>
 
