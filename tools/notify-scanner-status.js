@@ -54,27 +54,61 @@ function formatDate(yyyymmdd) {
   return `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(0, 4)}`;
 }
 
+// ─── Reconstruct positions like gen-status-page.js ───────────────────────────
+// Positions = premature (expired but holdDays < horizon) trades, enriched with live prices
+function buildPositions(cfg, modeKey) {
+  const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+  const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
+  const livePositions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json'))).open_positions || [];
+  const liveLookup = {};
+  for (const p of livePositions) liveLookup[p.ticker] = p;
+
+  const raw = allTrades[modeMap[modeKey] || modeKey] || [];
+  const trades = raw.map(t =>
+    (t.status === 'expired' && t.holdDays < cfg.horizon) ? { ...t, _premature: true } : t
+  );
+  const pending = trades.filter(t => t._premature);
+
+  return pending.map(t => {
+    const live = liveLookup[t.ticker];
+    const currentPrice = live ? live.current_price : (t.exitPrice || 0);
+    const entry = t.actualEntry || 0;
+    const ret = entry > 0 ? +((currentPrice - entry) / entry * 100).toFixed(2) : 0;
+    const ageD = t.entryDate ? Math.round((new Date() - new Date(t.entryDate)) / 86400000) : 0;
+    const left = Math.max(0, cfg.horizon - Math.round(ageD * 5 / 7));
+    return {
+      ticker: t.ticker,
+      scan_date: t.scanDate,
+      entry,
+      current_price: currentPrice,
+      return_pct: ret,
+      stop: live ? live.stop : 0,
+      tp1: live ? live.tp1 : 0,
+      tp2: live ? (live.tp2 || null) : null,
+      left,
+    };
+  }).sort((a, b) => b.return_pct - a.return_pct);
+}
+
 // ─── Build payload ────────────────────────────────────────────────────────────
 function buildStatusPayload(scanDir) {
   const modesObj = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes-config.json'))).modes;
-  const positionsData = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json')));
   const metrics = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-metrics.json')));
   const wl = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcp/watchlist.json')));
-  const allPos = positionsData.open_positions || [];
 
   // Balanced = calmar
   const cfgRaw = modesObj.calmar;
   const cfg = { id: 'calmar', ...cfgRaw };
 
-  // Active positions
-  const activePos = allPos.filter(p => Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date)) > 0)
-                          .slice(0, cfg.portfolioSize);
+  // Active positions (same logic as gen-status-page.js)
+  const activePos = buildPositions(cfg, 'calmar');
 
   // Expiring soon (left = 1)
-  const expiring = activePos.filter(p => Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date)) === 1);
+  const expiring = activePos.filter(p => p.left === 1);
 
-  // Scenario
-  const a = 1 / cfg.portfolioSize;
+  // Scenario (weighted by alloc = 1/portfolioSize per position)
+  const n = activePos.length || 1;
+  const a = 1 / n;
   const worstPct = activePos.reduce((s, p) => s + (p.entry > 0 ? (p.stop - p.entry) / p.entry * 100 : 0) * a, 0);
   const bestPct = activePos.reduce((s, p) => {
     const tp = p.tp2 || p.tp1 || p.current_price;
@@ -123,9 +157,8 @@ function asciiBar(worstPct, nowPct, bestPct) {
 function buildTelegramMessage(d) {
   const sign = n => n >= 0 ? '+' : '';
   const posLines = d.activePos.map(p => {
-    const left = Math.max(0, d.cfg.horizon - bizDaysHeld(p.scan_date));
-    const warn = left <= 1 ? ' ⚠️' : '';
-    return `  ${p.ticker.padEnd(5)} ${sign(p.return_pct)}${p.return_pct}%  ${left}j restant${warn}`;
+    const warn = p.left <= 1 ? ' ⚠️' : '';
+    return `  ${p.ticker.padEnd(5)} ${sign(p.return_pct)}${p.return_pct}%  ${p.left}j restant${warn}`;
   }).join('\n');
 
   const picksLines = d.picks.map(s =>
@@ -160,9 +193,8 @@ function buildDiscordMessage(d) {
   const sign = n => n >= 0 ? '+' : '';
 
   const posLines = d.activePos.map(p => {
-    const left = Math.max(0, d.cfg.horizon - bizDaysHeld(p.scan_date));
-    const warn = left <= 1 ? ' ⚠️' : '';
-    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(7)}  ${left}j restant${warn}`;
+    const warn = p.left <= 1 ? ' ⚠️' : '';
+    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(7)}  ${p.left}j restant${warn}`;
   }).join('\n');
 
   const picksLines = d.picks.map(s =>
