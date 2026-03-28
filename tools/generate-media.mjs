@@ -128,10 +128,6 @@ function buildScripts(html, url) {
   const desc   = getDesc(html);
   const meta   = TYPE_META[type] || TYPE_META.daily;
 
-  // Extract key data points
-  const sentences = text.split(/\.\s+/).filter(s => s.length > 40 && s.length < 300);
-
-  // ── Date string ──
   const dateMatch = artPath.match(/(\d{4})(\d{2})(\d{2})/);
   const dateStr = dateMatch
     ? new Date(`${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}`).toLocaleDateString('en-US', {
@@ -139,95 +135,111 @@ function buildScripts(html, url) {
       })
     : new Date().toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 
-  // ── Extract market data ──
-  // Better market data extraction — look for 4-5 digit numbers near ticker names
-  const sp    = text.match(/S[&P\s]*P\s*500[^\d]*([\d,]{4,6})/i);
-  const spPct = text.match(/S[&P\s]*P\s*500[^\n%]{0,40}([−\-+]\s*\d[\d.]+\s*%)/i);
-  const nas   = text.match(/Nasdaq[^\d]*([\d,]{4,6})/i);
-  const nasPct= text.match(/Nasdaq[^\n%]{0,40}([−\-+]\s*\d[\d.]+\s*%)/i);
-  const btc   = text.match(/BTC[^\d$]*\$?([\d,]{4,7})/i) || text.match(/Bitcoin[^\d$]*\$?([\d,]{4,7})/i);
-  const gold  = text.match(/Gold[^\d$]*\$?([\d,]{3,6})/i);
-  const vix   = text.match(/VIX[^\d]*([\d]{1,2}\.[\d]+)/i);
-  const oil   = text.match(/Brent[^\d$]*\$?([\d]{2,3}\.[\d]+)/i) || text.match(/WTI[^\d$]*\$?([\d]{2,3}\.[\d]+)/i);
-
-  // ── Key storylines ──
-  const keyLines = sentences.filter(s =>
-    /correction|bear|rally|surge|plunge|fed|inflation|recession|rate|earnings|guidance|outlook|breakdown|breakout/i.test(s)
-  ).slice(0, 6);
-
-  // ── Headings for structure ──
-  const headings = [...html.matchAll(/<h[23][^>]*>([\s\S]*?)<\/h[23]>/gi)]
-    .map(m => m[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim())
-    .filter(h => h.length > 5 && h.length < 80 && !/menu|nav|footer|header/i.test(h))
-    .slice(0, 5);
-
-  // ── Build audio script (≤250 words, ~90s) ──
-  // Strip date from title if it already contains it (avoid repetition)
-  const titleNoDate = title.replace(/[-—]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s*\d{4}/i, '').replace(/\s+$/, '');
-  // Strip date from desc if it starts with it
-  const descClean = (desc || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+briefing[:\s]*/i, '').slice(0, 180);
-
-  let audioScript = `Welcome to Market Watch. ${dateStr}.\n\n`;
-  audioScript += `${titleNoDate}.\n\n`;
-  if (descClean) audioScript += `${descClean}.\n\n`;
-
-  if (type === 'daily' || type === 'scanner') {
-    audioScript += `Here is your quick market snapshot.\n`;
-    if (sp)   audioScript += `S&P 500 at ${sp[1]}${spPct ? ', ' + spPct[1].trim() : ''}. `;
-    if (nas)  audioScript += `Nasdaq at ${nas[1]}${nasPct ? ', ' + nasPct[1].trim() : ''}. `;
-    if (btc)  audioScript += `Bitcoin at ${btc[1]}. `;
-    if (gold) audioScript += `Gold at ${gold[1]}. `;
-    if (vix)  audioScript += `VIX at ${vix[1]}. `;
-    audioScript += `\n\n`;
-    if (keyLines.length) {
-      audioScript += `Key takeaway: ${keyLines[0]}.\n\n`;
-    }
-  } else if (type === 'weekly') {
-    if (keyLines.length >= 2) {
-      audioScript += `This week's key themes: ${keyLines.slice(0, 2).join('. ')}.\n\n`;
-    }
-  } else {
-    if (keyLines.length) {
-      audioScript += `${keyLines.slice(0, 2).join('. ')}.\n\n`;
-    }
-  }
-  audioScript += `Full article available at articles.market-watch.xyz. See you next time.`;
-
-  // ── Build video script (≤600 words, ~4min) ──
-  let videoScript = `[INTRO]\n\nWelcome to Market Watch. I'm your AI analyst. Today is ${dateStr}.\n\n`;
-  videoScript += `[HEADLINE]\n\n${title}.\n\n`;
-  if (desc) videoScript += `${desc}.\n\n`;
-
-  if (type === 'daily' || type === 'scanner') {
-    videoScript += `[MARKET SNAPSHOT]\n\n`;
-    videoScript += `Let's start with the numbers.\n`;
-    if (sp)   videoScript += `S&P 500: ${sp[1]}${spPct ? ' — ' + spPct[1].trim() : ''}. `;
-    if (nas)  videoScript += `Nasdaq: ${nas[1]}${nasPct ? ' — ' + nasPct[1].trim() : ''}. `;
-    if (btc)  videoScript += `Bitcoin: ${btc[1]}. `;
-    if (gold) videoScript += `Gold: ${gold[1]}. `;
-    if (oil)  videoScript += `Brent crude: ${oil[1]}. `;
-    if (vix)  videoScript += `Volatility index VIX: ${vix[1]}. `;
-    videoScript += `\n\n`;
-  }
-
-  if (headings.length) {
-    videoScript += `[WHAT'S INSIDE]\n\n`;
-    videoScript += `Here's what we're covering today: ${headings.join('. ')}.\n\n`;
-  }
-
-  if (keyLines.length) {
-    videoScript += `[KEY STORIES]\n\n`;
-    keyLines.slice(0, 4).forEach((line, i) => {
-      videoScript += `Point ${i+1}: ${line.trim()}.\n\n`;
-    });
-  }
-
-  videoScript += `[OUTRO]\n\nThat's your ${meta.label} for ${dateStr}. `;
-  videoScript += `For the full in-depth analysis, charts, and data, head to articles.market-watch.xyz. `;
-  videoScript += `Follow us on Telegram for daily alerts and signals. See you next time.`;
+  // Placeholder scripts — will be overwritten by AI generation in generateMedia()
+  const audioScript = `${title}. ${(desc||'').slice(0,100)}. Full article at articles.market-watch.xyz.`;
+  const videoScript = `[INTRO]\n\n${title}.\n\n[OUTRO]\n\nFull article at articles.market-watch.xyz.`;
 
   return { audioScript, videoScript, title, dateStr, url, meta };
 }
+
+/**
+ * Use Claude Haiku to generate punchy, high-value scripts from the article content.
+ * Falls back to template-based scripts if API unavailable.
+ */
+async function generateAIScripts(html, url, dateStr, title, meta) {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.log('  ⚠️  No ANTHROPIC_API_KEY — using template scripts');
+    return null;
+  }
+
+  // Extract the most relevant text from the article
+  const raw   = stripHtml(html);
+  // Take up to 3000 chars of the most meaningful content (skip nav/header boilerplate)
+  const lines = raw.split(/\n+/).map(l => l.trim()).filter(l => l.length > 40);
+  const body  = lines.slice(0, 60).join(' ').slice(0, 3500);
+
+  const typeGuide = {
+    daily: `a punchy 90-second daily market briefing. Hit the biggest market moves, WHY they happened, and what traders need to watch. Numbers WITH context — not just "S&P was down 1.6%" but WHY and what it means.`,
+    weekly: `a compelling weekly market recap. Cover the week's dominant theme, the macro catalyst, and what sets up the week ahead. Narrative-driven, not a list of numbers.`,
+    scanner: `an exciting scanner signal alert. What setups are firing, why the risk/reward is compelling, and a clear trading plan. Action-oriented.`,
+    analysis: `a sharp stock analysis. Investment thesis, key levels, risk/reward, catalyst. Speak to a serious trader — be direct, confident, insightful.`,
+    learning: `an educational deep-dive. Clear, engaging, practical. Use examples. Build conviction in the listener.`,
+    series: `an engaging expert series episode. Structured, insightful, with concrete takeaways.`,
+  };
+
+  const guide = typeGuide[type] || typeGuide.daily;
+
+  const prompt = `You are a sharp, energetic financial analyst for Market Watch. You have a direct, confident voice — like a Bloomberg anchor meets a hedge fund trader. No fluff, no filler words.
+
+Write TWO scripts from this article content:
+
+ARTICLE: ${title}
+DATE: ${dateStr}
+CONTENT: ${body}
+
+---
+SCRIPT 1 — AUDIO SUMMARY (90 seconds, ~230 words MAX)
+This is ${guide}
+Rules:
+- Start with a sharp hook, NOT "Welcome to Market Watch"
+- Drive insight: WHY did this happen? What does it mean for traders?  
+- Include 2-3 specific data points WITH context
+- End with a clear actionable thought or what to watch next
+- Tone: punchy, fast-paced, confident. Zero filler phrases.
+- No "In conclusion", no "Stay tuned", no "See you next time"
+
+SCRIPT 2 — VIDEO NARRATION (4 minutes, ~550 words MAX)
+Same energy but structured in sections using [SECTION NAME] headers:
+[HOOK] — 20-word grabber that makes you stop scrolling
+[MARKET PULSE] — key data WITH analysis (not just numbers)
+[THE BIG STORY] — deep dive on the dominant narrative
+[TRADER'S TAKE] — actionable insight, levels to watch, what to do
+[WHAT'S NEXT] — setup for the coming days/week
+
+Rules:
+- Every sentence must ADD VALUE — no repetition of what was already said
+- Speak to a serious trader: assume they know what an EMA is
+- Be opinionated — this is analysis, not journalism
+
+OUTPUT FORMAT (exactly):
+---AUDIO---
+[audio script here]
+---VIDEO---
+[section headers with video script here]
+---END---`;
+
+  try {
+    // Dynamic import to avoid breaking if SDK not installed
+    const { default: Anthropic } = await import('@anthropic-ai/sdk');
+    const client = new Anthropic({ apiKey });
+    console.log('  🤖 Generating AI scripts (Haiku)...');
+    const response = await client.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 1200,
+      messages: [{ role: 'user', content: prompt }],
+    });
+    const raw_resp = response.content[0].text;
+
+    const audioMatch = raw_resp.match(/---AUDIO---\s*([\s\S]+?)---VIDEO---/);
+    // VIDEO section ends at ---END--- or at end of string
+    const videoMatch = raw_resp.match(/---VIDEO---\s*([\s\S]+?)(?:---END---|$)/);
+    if (audioMatch && videoMatch) {
+      const audioScript = audioMatch[1].trim().replace(/\*\*/g, '');  // strip markdown bold
+      const videoScript = videoMatch[1].trim().replace(/\*\*/g, '');
+      const wc_audio = audioScript.split(/\s+/).length;
+      const wc_video = videoScript.split(/\s+/).length;
+      console.log(`  ✅ AI scripts: audio ${wc_audio}w, video ${wc_video}w`);
+      return { audioScript, videoScript };
+    }
+    console.log('  ⚠️  AI response parsing failed, using template');
+    return null;
+  } catch (e) {
+    console.log(`  ⚠️  AI script error: ${e.message?.slice(0,60)}`);
+    return null;
+  }
+}
+
 
 // ── Slide data builder (for make-slides.py) ─────────────────────────────────
 function buildSlideData(scripts) {
@@ -474,11 +486,18 @@ async function main() {
   console.log(`\n🎬 Generating media for: ${title}`);
   console.log(`   Type: ${type} | Slug: ${slug}`);
 
+  // ── AI script generation ──
+  const aiScripts = await generateAIScripts(html, url, scripts.dateStr, title, meta);
+  if (aiScripts) {
+    scripts.audioScript = aiScripts.audioScript;
+    scripts.videoScript = aiScripts.videoScript;
+  }
+
   if (DRY_RUN) {
     console.log('\n─── AUDIO SCRIPT ───');
     console.log(scripts.audioScript);
-    console.log('\n─── VIDEO SCRIPT (first 500 chars) ───');
-    console.log(scripts.videoScript.slice(0, 500) + '...');
+    console.log('\n─── VIDEO SCRIPT ───');
+    console.log(scripts.videoScript);
     return;
   }
 
@@ -500,7 +519,7 @@ async function main() {
   // 2. Generate video script TTS (longer)
   const videoTtsPath = path.join(outDir, 'video-tts.mp3');
   console.log('\n🎙️ Generating video narration...');
-  runTTS(scripts.videoScript.replace(/\[[A-Z '&]+\]\n\n/g, '. '), videoTtsPath);
+  runTTS(scripts.videoScript.replace(/\[[\w\s'&]+\]\s*/g, '\n\n'), videoTtsPath);
   
   const videoDur = 240; // target ~4 min
 
