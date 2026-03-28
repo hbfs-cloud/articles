@@ -263,7 +263,8 @@ ${(() => {
       <td><b>${s.ticker}</b></td>
       <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
-      <td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td>
+      <td class="neg">${s.stop}</td>
+      <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
       <td><span class="pill pos">BUY</span></td>
     </tr>`);
@@ -274,7 +275,8 @@ ${(() => {
       <td><b>${s.ticker}</b></td>
       <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
-      <td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td>
+      <td class="neg">${s.stop}</td>
+      <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
       <td><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
     </tr>`);
@@ -288,7 +290,8 @@ ${(() => {
       <td><b>${s.ticker}</b></td>
       <td><span class="pill-score" style="background:#94a3b8">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td class="m">${s.entry}</td>
-      <td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td>
+      <td class="neg">${s.stop}</td>
+      <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td>
       <td><span class="pill ${expiredCls}">${expiredLabel}</span></td>
     </tr>`;
@@ -310,13 +313,13 @@ ${(() => {
     <span class="sc-meta">${statusLine}</span>
   </div>
   ${totalActions > 0 ? `<table class="t">
-    <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Stop</th><th>TP1</th><th>TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
   </table>` : ''}
   ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
     <summary class="watch-summary">On watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
     <table class="t" style="margin-top:.5rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Stop</th><th>TP1</th><th>TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
       <tbody>${watchRows.join('')}</tbody>
     </table>
   </details>` : ''}
