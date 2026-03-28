@@ -161,6 +161,11 @@ function main() {
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       return left <= 0;
     });
+    // Expiring soon: left == 1 (expire next trading day)
+    const expiringSoon = pos.filter(p => {
+      const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
+      return left === 1;
+    });
     const activePosDisplay = pos.filter(p => {
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       return left > 0;
@@ -196,6 +201,24 @@ ${timedOut.length ? `<div class="cta-card cta-close">
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const held = bizDaysHeld(p.scan_date);
       return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
+    }).join('')}</tbody>
+  </table>
+</div>` : ''}
+
+${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:2px solid #fcd34d">
+  <div class="cta-header">
+    <span class="cta-icon">⏰</span>
+    <div>
+      <h3 style="color:#b45309">Expires Tomorrow <span class="cta-badge" style="background:#b45309">${expiringSoon.length} position${expiringSoon.length > 1 ? 's' : ''}</span></h3>
+      <p class="cta-sub" style="color:#d97706">Horizon reached at next close — decide: keep or exit at open</p>
+    </div>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
+    <tbody>${expiringSoon.map(p => {
+      const rc = p.return_pct >= 0 ? 'pos' : 'neg';
+      const held = bizDaysHeld(p.scan_date);
+      return `<tr><td><b>${p.ticker}</b></td><td>$${(p.entry||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
     }).join('')}</tbody>
   </table>
 </div>` : ''}
@@ -334,10 +357,10 @@ ${(() => {
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>` : ''}
     </summary>
     ${sig.length ? `<table class="t" style="margin-top:.6rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th class="hide-m">Stop</th><th>TP1</th><th class="hide-m">TP2</th><th class="hide-m">R/R</th></tr></thead>
+      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
       <tbody>${sig.map((s, i) => {
         const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-        return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos hide-m">${s.tp2}</td><td class="am hide-m">${s.rr}</td></tr>`;
+        return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
       }).join('')}</tbody>
     </table>` : `<p class="empty">No signals for this mode today</p>`}
   </details>
@@ -476,6 +499,7 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 /* Tables */
 .t{width:100%;border-collapse:collapse;font-size:.8rem}
 .t th{background:#f8fafc;color:#64748b;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:.45rem .6rem;text-align:left;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+@media(max-width:600px){.t{table-layout:auto;word-break:break-word}.t th,.t td{white-space:normal;padding:.35rem .4rem;font-size:.72rem}}
 .t td{padding:.4rem .6rem;border-bottom:1px solid #f8fafc}
 .t tr:hover{background:#fafbfc}
 .t .pos{color:#059669;font-weight:600}
