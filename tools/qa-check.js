@@ -176,6 +176,24 @@ check(`scan dernier jour ouvré: id="synthese" présent`, () => {
   if (!html.includes('id="synthese"')) return 'id="synthese" absent — parser gen-status-page.js cassé';
 });
 
+// 4b. Scan du dernier jour ouvré — labels de stratégie conformes à la taxonomie
+check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follow/Defensive/etc.)', () => {
+  const FORBIDDEN = ['Trend Follow', 'Defensive Momentum', 'Defensive Yield', 'Defensive', 'Reversal', 'Momentum Breakout'];
+  // Chercher dans les 2 derniers scans
+  const scannerDir = path.join(ROOT, 'scanner');
+  const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse().slice(0, 2);
+  const found = [];
+  for (const d of dirs) {
+    const p = path.join(scannerDir, d, 'index.html');
+    if (!fs.existsSync(p)) continue;
+    const html = fs.readFileSync(p, 'utf8');
+    for (const label of FORBIDDEN) {
+      if (html.includes(label)) found.push(`${d}: "${label}"`);
+    }
+  }
+  if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;
+});
+
 // 5. data/scanner-metrics.json + positions.json — fraîcheur
 warn('scanner-metrics.json: fraîcheur < 48h', () => {
   const d = readJSON('data/scanner-metrics.json');

@@ -153,8 +153,15 @@ scanner/
 ### Filtre Stratégie (OBLIGATOIRE)
 
 **Short Squeeze EXCLU** de tous les scans (décision 20/03/2026).
-Stratégies autorisées : **Momentum, Pre-Squeeze, Breakout, Pullback**.
+Stratégies autorisées : **Momentum, Pre-Squeeze, Breakout, Pullback** — **CES 4 LABELS UNIQUEMENT**.
 Si le régime impose Short Squeeze → remplacer par Pre-Squeeze ou Momentum.
+
+**LABELS INTERDITS** (ne jamais utiliser) : `Trend Follow`, `Defensive`, `Defensive Momentum`, `Defensive Yield`, `Reversal`, `Momentum Breakout`, ou tout autre label inventé.
+- `Trend Follow` → utiliser **Momentum**
+- `Defensive` / `Defensive Momentum` → utiliser **Momentum** (si momentum présent) ou **Pullback** (si repli)
+- `Defensive Yield` → utiliser **Pullback**
+- `Momentum Breakout` → utiliser **Breakout**
+- Tout autre cas → forcer **Momentum** ou **Pullback** selon le profil technique
 
 ### Filtres Anti-Dilution & Fonds Agressifs (OBLIGATOIRE — BLOQUANT)
 
