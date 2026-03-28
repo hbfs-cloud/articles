@@ -238,15 +238,23 @@ check('radar.json: events et opportunities présents (pas que risks)', () => {
   if (missing.length) return missing.join(', ') + ' — radar affichera uniquement les risques';
 });
 
-// 11. scanner.json — tiles retro ont le style purple (bug #3 du 28 mars)
-// Filtre : uniquement les tiles avec le badge "RÉTROSPECTIVE" (les vraies retros)
-// Les tiles normales avec le tag "retrospective" dans data-tags ne sont pas des vraies retros
-check('scanner.json: tiles retrospective ont le style visuel retro', () => {
+// 11. scanner.json — tiles retro : style amber/jaune (f59e0b) + pas de doublons
+// Filtre : uniquement les tiles avec badge "RÉTROSPECTIVE" (les vraies retros, pas les tags data-)
+check('scanner.json: tiles retrospective — style amber (f59e0b) + pas de doublons', () => {
   const d = readJSON('data/scanner.json');
   const retroTiles = d.filter(t => t.includes('RÉTROSPECTIVE'));
-  if (retroTiles.length === 0) return true; // pas de tile retro → skip
-  const noStyle = retroTiles.filter(t => !t.includes('8b5cf6') && !t.includes('badge-purple'));
-  if (noStyle.length) return `${noStyle.length}/${retroTiles.length} tiles retro sans style violet (8b5cf6)`;
+  if (retroTiles.length === 0) return true; // pas de retro indexée → skip
+  // Style amber obligatoire (#f59e0b) — pas violet (#8b5cf6)
+  const noAmber = retroTiles.filter(t => !t.includes('f59e0b'));
+  if (noAmber.length) {
+    const hrefs = noAmber.map(t => { const m = t.match(/href="([^"]+)"/); return m && m[1]; });
+    return `${noAmber.length}/${retroTiles.length} tiles retro sans style amber (f59e0b): ${hrefs.join(', ')}`;
+  }
+  // Doublons par href
+  const hrefs = {};
+  d.forEach(t => { const m = t && t.match(/href="([^"]+)"/); if (m) hrefs[m[1]] = (hrefs[m[1]]||0)+1; });
+  const dups = Object.entries(hrefs).filter(([, c]) => c > 1);
+  if (dups.length) return `${dups.length} tiles en doublon: ${dups.map(([h, c]) => h+'×'+c).join(', ')}`;
 });
 
 // ─── Résumé ──────────────────────────────────────────────────────────────────

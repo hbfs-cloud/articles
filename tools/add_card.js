@@ -283,11 +283,11 @@ const isRetrospective = tab === 'scanner' && (
     fullPath.includes('/retrospective/')
 );
 if (isRetrospective) {
-    badgeHtml += '<span class="badge badge-purple" style="margin-bottom: 0.4rem; display: inline-block">RÉTROSPECTIVE</span>\n';
+    badgeHtml += '<span class="badge badge-amber" style="margin-bottom: 0.4rem; display: inline-block">RÉTROSPECTIVE</span>\n';
 }
 
 const retroStyle = isRetrospective
-    ? ' style="border: 2px solid #8b5cf6; background: linear-gradient(135deg, #f5f3ff, #ffffff);"'
+    ? ' style="border: 2px solid #f59e0b; background: linear-gradient(135deg, #fffbeb, #ffffff);"'
     : '';
 
 let cardHtml = `
@@ -297,7 +297,7 @@ let cardHtml = `
     <h2 style="font-size: 1.3rem; margin: 0.5rem 0 0.75rem">${title}</h2>
     <p style="font-size: 0.85rem; color: var(--text-muted)">${desc}</p>
     <div class="actions" style="flex-direction: column; gap: 0.5rem; margin-top: 1rem">
-    <a href="${href}" class="btn-read-primary" style="width: 100%;${isRetrospective ? ' background: linear-gradient(135deg, #8b5cf6, #7c3aed);' : ''}">Voir l'article</a>
+    <a href="${href}" class="btn-read-primary" style="width: 100%;${isRetrospective ? ' background: linear-gradient(135deg, #f59e0b, #d97706);' : ''}">Voir l'article</a>
     </div>
 </div>
 `;
