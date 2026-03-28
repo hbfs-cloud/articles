@@ -144,9 +144,17 @@ async function fetchFinvizBase64(ticker) {
 // ── Scanner HTML parser → 6 structured slides ───────────────────────────────
 function buildScannerSlides(html, content, dateStr) {
   // 1. Parse regime
-  const regimeMatch = html.match(/badge[^>]*>(🔴|🟡|🟢|⚪)\s*(RISK-OFF|RISK-ON|EARLY RISK-OFF|NEUTRAL|RECOVERY)/i);
-  const regime = regimeMatch ? regimeMatch[2] : 'Unknown';
-  const regimeEmoji = regimeMatch ? regimeMatch[1] : '📊';
+  const regimeMatch = html.match(/badge[^>]*>(🔴|🟡|🟢|⚪)\s*((?:DEEP\s+)?RISK-OFF|(?:EARLY\s+)?RISK-ON|EARLY\s+RISK-OFF|NEUTRAL|RECOVERY)/i)
+    || html.match(/kpi-value[^>]*>([^<]*(?:risk-off|risk-on|neutral|recovery)[^<]*)<\/span>/i)
+    || html.match(/Market Regime:\s*([^<\n]+)/i);
+  const regime = regimeMatch
+    ? regimeMatch[2] || regimeMatch[1]
+    : (() => {
+        // Fallback: extract from title or meta description
+        const t = html.match(/<title[^>]*>([^<]*(?:RISK-OFF|RISK-ON|NEUTRAL|RECOVERY)[^<]*)<\/title>/i);
+        return t ? (t[1].match(/RISK-OFF|RISK-ON|NEUTRAL|RECOVERY/i) || [''])[0] : 'Unknown';
+      })();
+  const regimeEmoji = regimeMatch ? (regimeMatch[1] && /^[🔴🟡🟢⚪]/.test(regimeMatch[1]) ? regimeMatch[1] : '📊') : '📊';
 
   // 2. Parse title tickers
   const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
