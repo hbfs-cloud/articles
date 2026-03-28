@@ -175,7 +175,7 @@ function buildStatusPayload(scanDir, modeKey = 'calmar') {
 
 // ─── Scenario bar (ASCII, 20 chars) ──────────────────────────────────────────
 function asciiBar(worstPct, nowPct, bestPct) {
-  const BAR = 20;
+  const BAR = 12;
   const range = bestPct - worstPct;
   const pos = range > 0 ? Math.round((nowPct - worstPct) / range * BAR) : Math.round(BAR / 2);
   const clamped = Math.max(0, Math.min(BAR, pos));
