@@ -412,10 +412,6 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </div>
 </div>`;
   })()}
-  <div class="pos-bar">${activePosDisplay.map(p => {
-    const c = p.return_pct >= 5 ? '#059669' : p.return_pct >= 0 ? '#3b82f6' : p.return_pct >= -3 ? '#f59e0b' : '#dc2626';
-    return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
-  }).join('')}</div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${activePosDisplay.map(p => {
