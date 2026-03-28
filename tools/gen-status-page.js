@@ -139,9 +139,18 @@ function main() {
       const ret = entry > 0 ? +((currentPrice - entry) / entry * 100).toFixed(2) : 0;
       const ageD = t.entryDate ? Math.round((new Date() - new Date(t.entryDate)) / 86400000) : 0;
       const left = Math.max(0, cfg.horizon - Math.round(ageD * 5/7));
+      // Compute stop: prefer live data > trade's actualStop > mode's maxStopPct fallback
+      const maxStopPct = cfg.maxStopPct || 8; // default 8% if not defined
+      const fallbackStop = entry > 0 ? +(entry * (1 - maxStopPct / 100)).toFixed(2) : 0;
+      const resolvedStop = (live && live.stop > 0) ? live.stop
+        : (t.actualStop > 0) ? t.actualStop
+        : fallbackStop;
+      const resolvedTp1 = (live && live.tp1 > 0) ? live.tp1 : (t.actualTp1 || 0);
+      const resolvedTp2 = (live && live.tp2 > 0) ? live.tp2 : (t.actualTp2 || null);
       return {
         ticker: t.ticker, scan_date: t.scanDate, entry, current_price: currentPrice,
-        return_pct: ret, stop: live ? live.stop : 0, tp1: live ? live.tp1 : 0, tp2: live ? live.tp2 : null,
+        return_pct: ret,
+        stop: resolvedStop, tp1: resolvedTp1, tp2: resolvedTp2,
         days_remaining: left, strategy: t.strategy,
       };
     }).sort((a, b) => b.return_pct - a.return_pct);
