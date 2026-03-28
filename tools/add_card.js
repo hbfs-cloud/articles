@@ -154,14 +154,21 @@ const metaDesc = doc.querySelector('meta[name="description"]') || doc.querySelec
 if (metaDesc) desc = metaDesc.getAttribute('content');
 
 if (tab === 'scanner' || tab === 'daily' || tab === 'weekly') {
-    // If we have a specific overview paragraph, that's much better than the meta desc.
-    // Daily/Scanner typically have a <p> after an h2 in a content-card.
-    // Or we can find the first paragraph inside `.content-card` that has some length.
-    const pEl = Array.from(doc.querySelectorAll('.content-card p')).find(p => p.textContent.trim().length > 50);
-    if (pEl) {
-        desc = pEl.textContent.trim();
-        // Truncate to a reasonable length if too long
-        if (desc.length > 300) desc = desc.substring(0, 300) + '...';
+    if (fullPath.includes('/retrospective/')) {
+        // Pour les retros : og:description contient le résumé de performance — priorité absolue
+        const ogDescEl = doc.querySelector('meta[property="og:description"]');
+        if (ogDescEl) {
+            desc = ogDescEl.getAttribute('content');
+            if (desc.length > 300) desc = desc.substring(0, 300) + '...';
+        }
+    } else {
+        // If we have a specific overview paragraph, that's much better than the meta desc.
+        // Daily/Scanner typically have a <p> after an h2 in a content-card.
+        const pEl = Array.from(doc.querySelectorAll('.content-card p')).find(p => p.textContent.trim().length > 50);
+        if (pEl) {
+            desc = pEl.textContent.trim();
+            if (desc.length > 300) desc = desc.substring(0, 300) + '...';
+        }
     }
 }
 
@@ -435,7 +442,29 @@ if (tab === 'daily') {
     if (removed > 0) {
         console.log(`Dedup: replaced ${removed} existing card(s) for ${href}`);
     }
-    cards.unshift(cardHtml.trim());
+    cards.push(cardHtml.trim());
+
+    // Pour scanner.json : tri chronologique décroissant (LIVE pinned en 0)
+    if (tab === 'scanner') {
+        function extractCardDate(tile) {
+            const m = tile && tile.match(/href="[^"]*?\/(\d{8})\//);
+            return m ? m[1] : null;
+        }
+        const liveTile = cards.find(c => c && c.includes('Scanner Live'));
+        const otherCards = cards.filter(c => c && !c.includes('Scanner Live'));
+        otherCards.sort((a, b) => {
+            const da = extractCardDate(a) || '00000000';
+            const db = extractCardDate(b) || '00000000';
+            if (db !== da) return db.localeCompare(da);
+            // Même date : scans avant retros
+            const aIsRetro = a.includes('RÉTROSPECTIVE');
+            const bIsRetro = b.includes('RÉTROSPECTIVE');
+            if (aIsRetro && !bIsRetro) return 1;
+            if (!aIsRetro && bIsRetro) return -1;
+            return 0;
+        });
+        cards = liveTile ? [liveTile, ...otherCards] : otherCards;
+    }
 }
 
 fs.writeFileSync(jsonFile, JSON.stringify(cards, null, 2));
