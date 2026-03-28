@@ -609,6 +609,13 @@ async function main() {
   const scanDir = process.argv[2] || getLatestScanDir();
   if (!scanDir) { console.error('ERROR: aucun scan trouvé'); process.exit(1); }
 
+  // Anti-doublon: skip if already sent today for this scan
+  const sentFlag = `/tmp/mw-notify-sent-${scanDir}.flag`;
+  if (fs.existsSync(sentFlag) && !process.argv.includes('--force')) {
+    console.log(`⚠️  Already sent for ${scanDir} (${sentFlag}). Use --force to override.`);
+    process.exit(0);
+  }
+
   console.log(`📡 Notification scanner — ${scanDir}`);
 
   let payload;
@@ -703,6 +710,10 @@ async function main() {
   }
 
   sendDiscord(dcMsg);
+
+  // Mark as sent (anti-doublon)
+  fs.writeFileSync(sentFlag, new Date().toISOString(), 'utf8');
+  console.log(`✅ Sent flag written: ${sentFlag}`);
 }
 
 main();
