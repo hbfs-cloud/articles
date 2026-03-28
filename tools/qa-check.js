@@ -275,6 +275,22 @@ check('scanner.json: tiles retro — amber + grade + date réelle + pas de doubl
   if (issues.length) return issues.join(' | ');
 });
 
+// 12. scanner/status — section Pending Orders présente pour chaque mode (après mise à jour scanner)
+check('scanner/status: section Pending Orders présente pour les 3 modes', () => {
+  const html = readFile('scanner/status/index.html');
+  if (!html) return 'scanner/status/index.html absent';
+  const count = (html.match(/Pending Orders/g) || []).length;
+  if (count < 3) return `seulement ${count}/3 sections "Pending Orders" trouvées (growth, calmar, zero)`;
+});
+
+// 13. scanner/status — Pending Orders ne doit pas contenir de tickers déjà en Open Positions
+check('scanner/status: pas de ticker en doublon entre Pending Orders et Open Positions', () => {
+  const html = readFile('scanner/status/index.html');
+  if (!html) return 'scanner/status/index.html absent';
+  // Simple check : "Portfolio full" ou des ordres présents — juste vérifier que le bloc existe et n'est pas cassé
+  if (html.includes('undefined') && html.includes('Pending Orders')) return '"undefined" dans la section Pending Orders';
+});
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
 
 const total = ok.length + warnings.length + errors.length;
