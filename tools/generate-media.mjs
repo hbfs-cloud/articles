@@ -605,6 +605,49 @@ async function main() {
     youtubeId = await uploadToYouTube(videoPath, thumbPath, scripts);
   }
 
+  // 5b. Send audio to Telegram
+  if (fs.existsSync(audioPath)) {
+    try {
+      console.log('\n📱 Sending audio to Telegram...');
+      const topicMap = {
+        daily: 73, weekly: 74, scanner: 89, retro: 89,
+        analysis: 75, series: 76, tech: 76, learning: 76,
+      };
+      const threadId = topicMap[type] || 73;
+      const ytLine   = youtubeId ? `\n📺 Video: https://youtu.be/${youtubeId}` : '';
+      const artUrl   = buildUrl(artPath);
+      const caption  = `🎙️ <b>${meta.label}</b> — ${scripts.dateStr}\n\n2-min audio summary.${ytLine}\n🔗 Full article: ${artUrl}`;
+
+      const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+      const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
+
+      if (BOT_TOKEN && CHAT_ID) {
+        const FormData = await import('form-data').catch(() => null);
+        // Use curl as fallback (always available)
+        const curlCmd = [
+          `curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendAudio"`,
+          `-F "chat_id=${CHAT_ID}"`,
+          `-F "message_thread_id=${threadId}"`,
+          `-F "audio=@${audioPath}"`,
+          `-F "title=${scripts.title.replace(/"/g,'').slice(0,60)}"`,
+          `-F "performer=Market Watch"`,
+          `-F "caption=${caption.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`,
+          `-F "parse_mode=HTML"`,
+        ].join(' ');
+
+        const curlResult = spawnSync('sh', ['-c', curlCmd], { stdio: 'pipe', timeout: 60000 });
+        const curlOut = curlResult.stdout?.toString() || '';
+        try {
+          const j = JSON.parse(curlOut);
+          if (j.ok) console.log(`  ✅ Telegram audio sent (msg_id: ${j.result.message_id})`);
+          else console.error('  ❌ Telegram audio:', j.description);
+        } catch { console.log('  ⚠️ Telegram audio response:', curlOut.slice(0,100)); }
+      }
+    } catch (e) {
+      console.error('  ⚠️ Telegram audio failed:', e.message);
+    }
+  }
+
   // 6. Output result
   const result = {
     audioPath,
