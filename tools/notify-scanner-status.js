@@ -35,6 +35,15 @@ const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const DISCORD_CHANNEL = '1483382014588747778';
 const STATUS_URL = 'https://articles.market-watch.xyz/scanner/status/';
 
+
+// ─── Traduction stratégie EN → FR ────────────────────────────────────────────
+function tradStrat(str) {
+  const map = { breakout:'Cassure', momentum:'Momentum', pullback:'Repli',
+    'trend follow':'Tendance', reversal:'Retournement', 'defensive yield':'Défensif',
+    defensive:'Défensif', squeeze:'Squeeze' };
+  const k = (str||'').toLowerCase().trim();
+  return map[k] || str;
+}
 // ─── Data helpers ─────────────────────────────────────────────────────────────
 function bizDaysHeld(scanDate) {
   if (!scanDate) return 0;
@@ -196,7 +205,7 @@ function buildTelegramMessage(d) {
     manageBlock += `\n🗂 <b>Positions à gérer</b>\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  → <b>CLÔTURER</b> (horizon atteint)\n`;
+      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  cours ${p.current_price}  → <b>CLÔTURER</b> (horizon atteint)\n`;
     });
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
@@ -211,7 +220,7 @@ function buildTelegramMessage(d) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
     ordersBlock += `\n📥 <b>Nouveaux ordres — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% chacun)</b>\n`;
     buyPicks.forEach(s => {
-      ordersBlock += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entry ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
+      ordersBlock += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entrée ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
     });
   } else {
     ordersBlock += `\n✅ <b>Portfolio plein</b> — aucun nouvel ordre\n`;
@@ -230,10 +239,10 @@ function buildTelegramMessage(d) {
 
   // ── SIGNAUX ──
   const picksLines = d.picks.map((s, i) =>
-    `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${s.strategy.padEnd(13)}R/R ${s.rr}`
+    `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  return `📊 <b>Scanner Balanced</b>  —  ${d.scanDate}
+  return `📊 <b>Portfolio Balanced</b>  —  ${d.scanDate}
 <code>${sep}</code>
 📈 <b>Perf D0</b>  ${sign(d.metrics.ret)}${d.metrics.ret}%   <b>DD</b> ${d.metrics.dd}%   <b>WR</b> ${d.metrics.wr}%   <b>PF</b> ${d.metrics.pf}x
 <code>${sep}</code>
@@ -243,7 +252,7 @@ ${actions}
 <pre>${posLines}</pre>
 ⚖️ <b>Risque portefeuille</b>
 <pre>${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
-            ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
+            ▲ Actuel ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
 <code>${sep}</code>
 📡 <b>Top 10 signaux du jour</b>
 <pre>${picksLines}</pre>
@@ -280,7 +289,7 @@ function buildDiscordMessage(d) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
     ordersBlock += `\n📥 **Nouveaux ordres — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% chacun)**\n`;
     buyPicks.forEach(s => {
-      ordersBlock += `> 🟢 **${s.symbol}**  ${s.strategy}  entry \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
+      ordersBlock += `> 🟢 **${s.symbol}**  ${tradStrat(s.strategy)}  entrée \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
     });
   } else {
     ordersBlock += `\n✅ **Portfolio plein** — aucun nouvel ordre\n`;
@@ -299,10 +308,10 @@ function buildDiscordMessage(d) {
 
   // ── SIGNAUX ──
   const picksLines = d.picks.map((s, i) =>
-    `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${s.strategy.padEnd(13)}R/R ${s.rr}`
+    `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  return `## 📊 Scanner Balanced — ${d.scanDate}
+  return `## 📊 Portfolio Balanced — ${d.scanDate}
 > 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
 ${actions}
 ---
@@ -313,7 +322,7 @@ ${posLines}
 **⚖️ Risque portefeuille**
 \`\`\`
 ${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
-              ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
+              ▲ Actuel ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
 \`\`\`
 ---
 **📡 Top 10 signaux du jour**
