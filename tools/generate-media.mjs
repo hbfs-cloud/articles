@@ -578,7 +578,9 @@ async function main() {
   const meta    = TYPE_META[type] || TYPE_META.daily;
   const { dateStr } = getDate(artPath);
 
-  const slug   = slugify(title || type);
+  // For scanner type: use fixed slug scanner-{YYYYMMDD} so notify-scanner-status.js can find result.json
+  const scannerDate = type === 'scanner' && artPath ? artPath.match(/(\d{8})/)?.[1] : null;
+  const slug   = scannerDate ? `scanner-${scannerDate}` : slugify(title || type);
   const outDir = `/tmp/mw-media/${slug}`;
   fs.mkdirSync(outDir, { recursive: true });
 
