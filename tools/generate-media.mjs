@@ -299,49 +299,97 @@ function runTTS(text, outPath) {
   return outPath;
 }
 
-// ── Screenshot slides via browser ────────────────────────────────────────────
+// ── Render slides using ffmpeg drawtext (no browser needed) ──────────────────
+function escapeDrawtext(str) {
+  return (str || '')
+    .replace(/[\\:]/g, '\\$&')   // escape backslash and colon
+    .replace(/'/g, "\u2019")      // replace apostrophes with right single quote
+    .replace(/[&<>"]/g, ' ')      // strip HTML entities
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80);
+}
+
 async function renderSlides(slides, outDir) {
-  // Use puppeteer if available, otherwise use canvas approach
   const pngPaths = [];
   for (let i = 0; i < slides.length; i++) {
-    const htmlPath = path.join(outDir, `slide-${i}.html`);
-    const pngPath  = path.join(outDir, `slide-${i}.png`);
+    const pngPath = path.join(outDir, `slide-${i}.png`);
+    const slide   = slides[i];
+
+    // Extract plain text from slide HTML
+    const rawHtml  = slide.html || '';
+    const stripped = rawHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
     
-    // Write full HTML page
-    fs.writeFileSync(htmlPath, `<!DOCTYPE html><html><head><meta charset="utf-8"><style>*{margin:0;padding:0;box-sizing:border-box;}</style></head><body>${slides[i].html}</body></html>`, 'utf8');
+    // Determine bg color and accent
+    const isIntro  = slide.type === 'intro';
+    const isOutro  = slide.type === 'outro';
+    const bgColor  = '0x0f172a';
+    const accentR  = isIntro ? '0x60a5fa' : isOutro ? '0x22c55e' : '0x3b82f6';
+
+    // Build text lines (max 6 lines of 60 chars)
+    const lines = stripped.split(/[.!?]|\n/).map(l => l.trim()).filter(l => l.length > 3);
     
-    // Use chromium/puppeteer via nodejs
-    const result = spawnSync('node', ['-e', `
-      const { execFileSync } = require('child_process');
-      // Try chromium
-      const browsers = ['chromium-browser', 'chromium', 'google-chrome', 'google-chrome-stable'];
-      let ok = false;
-      for (const b of browsers) {
-        try {
-          execFileSync(b, [
-            '--headless', '--no-sandbox', '--disable-gpu', '--screenshot',
-            '--window-size=1280,720',
-            '--screenshot=${pngPath}',
-            'file://${htmlPath}'
-          ]);
-          ok = true;
-          break;
-        } catch(e) {}
-      }
-      if (!ok) process.exit(1);
-    `], { stdio: 'pipe' });
+    let headerText, bodyLines;
+    if (isIntro) {
+      headerText = 'MARKET WATCH';
+      bodyLines  = lines.slice(0, 4);
+    } else if (isOutro) {
+      headerText = 'articles.market-watch.xyz';
+      bodyLines  = ['Full analysis available', 'Follow us on Telegram'];
+    } else {
+      headerText = escapeDrawtext(lines[0] || 'Market Watch');
+      bodyLines  = lines.slice(1, 6);
+    }
+
+    // Build drawtext filter chain
+    const filters = [];
+    // Background
+    filters.push(`color=c=${bgColor}:size=1280x720:rate=1`);
+    
+    // Use ffmpeg lavfi with drawtext
+    const drawtextFilters = [];
+    
+    // Header line
+    drawtextFilters.push(
+      `drawtext=text='${escapeDrawtext(headerText)}':fontsize=42:fontcolor=white:x=80:y=80:box=0`
+    );
+    
+    // Accent bar (simulate with drawbox)
+    drawtextFilters.push(`drawbox=x=80:y=140:w=120:h=4:color=${accentR}@1:t=fill`);
+    
+    // Body lines
+    bodyLines.slice(0, 5).forEach((line, li) => {
+      const safeText = escapeDrawtext(line);
+      if (!safeText) return;
+      const y = 170 + li * 90;
+      drawtextFilters.push(
+        `drawtext=text='${safeText}':fontsize=24:fontcolor=0xCBD5E1:x=80:y=${y}:box=0`
+      );
+    });
+
+    // Footer
+    drawtextFilters.push(
+      `drawtext=text='market-watch.xyz':fontsize=18:fontcolor=0x475569:x=80:y=680:box=0`
+    );
+
+    const vf = drawtextFilters.join(',');
+    
+    const result = spawnSync(FFMPEG, [
+      '-y', '-f', 'lavfi',
+      '-i', `color=c=${bgColor}:size=1280x720:rate=1`,
+      '-vframes', '1',
+      '-vf', vf,
+      pngPath
+    ], { stdio: 'pipe' });
     
     if (result.status === 0 && fs.existsSync(pngPath)) {
       pngPaths.push(pngPath);
     } else {
-      // Fallback: generate a simple PNG with ffmpeg lavfi
-      const safeTitle = slides[i].type === 'intro' ? 'Market Watch' : slides[i].type;
+      // Ultra-simple fallback: plain colored frame
       spawnSync(FFMPEG, [
         '-y', '-f', 'lavfi',
-        '-i', `color=c=0x0f172a:size=1280x720:rate=1`,
-        '-vframes', '1',
-        '-vf', `drawtext=text='${safeTitle.replace(/'/g, '')}':fontsize=48:fontcolor=white:x=(w-text_w)/2:y=(h-text_h)/2`,
-        pngPath
+        '-i', `color=c=${bgColor}:size=1280x720:rate=1`,
+        '-vframes', '1', pngPath
       ], { stdio: 'pipe' });
       if (fs.existsSync(pngPath)) pngPaths.push(pngPath);
     }
@@ -405,11 +453,28 @@ async function uploadToYouTube(videoPath, thumbPath, scripts) {
   const ytTitle    = `${title.slice(0, 90)} | MarketWatch`.slice(0, 100);
   const ytDesc     = `📊 ${meta.label} — ${dateStr}\n\n${scripts.videoScript.replace(/\[[A-Z '&]+\]\n\n/g, '\n').slice(0, 4000)}\n\n🔗 Full article: ${url}\n\n⚠️ Not financial advice.`;
   
+  // Transfer video + thumb to Mac Mini then upload
+  const remoteDir  = '/tmp/mw-upload';
+  const remoteVideo = `${remoteDir}/video.mp4`;
+  const remoteThumb = `${remoteDir}/thumb.png`;
+  const SSH_OPTS   = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
+  const SSH_HOST   = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
+  const SSHPASS    = `sshpass -p 'Elonux!123'`;
+
+  // Create remote dir + copy files
+  spawnSync('sh', ['-c', `${SSHPASS} ssh ${SSH_OPTS} ${SSH_HOST} "mkdir -p ${remoteDir}"`], { stdio: 'pipe' });
+  spawnSync('sh', ['-c', `${SSHPASS} scp ${SSH_OPTS} '${videoPath}' ${SSH_HOST}:${remoteVideo}`], { stdio: 'pipe', timeout: 120000 });
+  if (thumbPath && fs.existsSync(thumbPath)) {
+    spawnSync('sh', ['-c', `${SSHPASS} scp ${SSH_OPTS} '${thumbPath}' ${SSH_HOST}:${remoteThumb}`], { stdio: 'pipe', timeout: 30000 });
+  }
+
   const uploadScript = `
-import json, sys
+import json, sys, os
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
+import warnings
+warnings.filterwarnings('ignore')
 
 token = json.load(open('${tokenPath}'))
 creds_data = json.load(open('${credsPath}'))['web']
@@ -424,12 +489,12 @@ body = {
     'categoryId': '25',
     'defaultLanguage': 'en',
     'defaultAudioLanguage': 'en',
-    'tags': ['market watch', 'stock market', 'trading', 'finance', 'analysis', 'daily briefing', 'MarketWatch'],
+    'tags': ['market watch', 'stock market', 'trading', 'finance', 'analysis', 'MarketWatch'],
   },
   'status': {'privacyStatus': 'unlisted'}
 }
 
-media = MediaFileUpload('${videoPath}', mimetype='video/mp4', resumable=True)
+media = MediaFileUpload('${remoteVideo}', mimetype='video/mp4', resumable=True)
 req = yt.videos().insert(part='snippet,status', body=body, media_body=media)
 
 print('Uploading...', file=sys.stderr)
@@ -442,27 +507,28 @@ while response is None:
 vid_id = response['id']
 print(f'Uploaded: {vid_id}', file=sys.stderr)
 
-# Add to playlist
 if '${playlistId}':
     yt.playlistItems().insert(part='snippet', body={
         'snippet': {'playlistId': '${playlistId}', 'resourceId': {'kind': 'youtube#video', 'videoId': vid_id}}
     }).execute()
-    print(f'Added to playlist', file=sys.stderr)
+    print('Added to playlist', file=sys.stderr)
 
-# Upload thumbnail
-if '${thumbPath}' and __import__('os').path.exists('${thumbPath}'):
-    yt.thumbnails().set(videoId=vid_id, media_body=MediaFileUpload('${thumbPath}', mimetype='image/png')).execute()
-    print(f'Thumbnail set', file=sys.stderr)
+if os.path.exists('${remoteThumb}'):
+    yt.thumbnails().set(videoId=vid_id, media_body=MediaFileUpload('${remoteThumb}', mimetype='image/png')).execute()
+    print('Thumbnail set', file=sys.stderr)
 
+# cleanup
+os.system('rm -rf ${remoteDir}')
 print(vid_id)
 `;
 
   const scriptPath = '/tmp/yt-upload.py';
   fs.writeFileSync(scriptPath, uploadScript, 'utf8');
   
-  // Run on Mac Mini via SSH
+  // Copy script to Mac Mini and run it there
+  spawnSync('sh', ['-c', `${SSHPASS} scp ${SSH_OPTS} '${scriptPath}' ${SSH_HOST}:/tmp/yt-upload.py`], { stdio: 'pipe' });
   const result = spawnSync('sh', ['-c',
-    `sshpass -p 'Elonux!123' ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net "python3 /dev/stdin" < '${scriptPath}'`
+    `${SSHPASS} ssh ${SSH_OPTS} ${SSH_HOST} "python3 /tmp/yt-upload.py"`
   ], { stdio: ['pipe', 'pipe', 'inherit'], timeout: 300000 });
   
   const videoId = result.stdout?.toString().trim().split('\n').pop();
