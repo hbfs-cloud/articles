@@ -225,9 +225,9 @@ function buildTelegramMessage(d) {
     return `  ${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${d.alloc}% — ${p.left}j restant${warn}`;
   }).join('\n');
 
-  // 3. SIGNAUX (tous les topN du mode)
-  const picksLines = d.picks.map(s =>
-    `  ${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} entry ${s.entry} stop ${s.stop} TP1 ${s.tp1} TP2 ${s.tp2} R/R ${s.rr} (${d.alloc}%)`
+  // 3. SIGNAUX — ticker, score, setup uniquement
+  const picksLines = d.picks.map((s, i) =>
+    `  ${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy}`
   ).join('\n');
 
   return `📊 <b>Scanner Balanced — ${d.scanDate}</b>
@@ -287,9 +287,9 @@ function buildDiscordMessage(d) {
     return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${d.alloc}% — ${p.left}j restant${warn}`;
   }).join('\n');
 
-  // 3. SIGNAUX (tous les topN du mode)
-  const picksLines = d.picks.map(s =>
-    `${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} entry ${s.entry} stop ${s.stop} TP1 ${s.tp1} TP2 ${s.tp2} R/R ${s.rr} (${d.alloc}%)`
+  // 3. SIGNAUX — ticker, score, setup uniquement
+  const picksLines = d.picks.map((s, i) =>
+    `${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy}`
   ).join('\n');
 
   return `📊 **Scanner Balanced — ${d.scanDate}**
