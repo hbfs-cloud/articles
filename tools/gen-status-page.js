@@ -149,9 +149,26 @@ function main() {
     const alloc = Math.round(100 / cfg.portfolioSize);
     const totalRet = pos.length ? pos.reduce((s, p) => s + (p.return_pct || 0), 0) / pos.length : 0;
 
+    // Helper: compute biz days from scan_date
+    function bizDaysHeld(scanDate) {
+      if (!scanDate) return 0;
+      const age = Math.round((Date.now() - new Date(scanDate)) / 86400000);
+      return Math.round(age * 5 / 7);
+    }
+
+    // Timed-out positions: left <= 0 (horizon expired)
+    const timedOut = pos.filter(p => {
+      const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
+      return left <= 0;
+    });
+    const activePosDisplay = pos.filter(p => {
+      const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
+      return left > 0;
+    });
+
     return `<div class="mp${active ? ' active' : ''}" id="p-${id}">
 
-<!-- ══ PERF + STATS ══ -->
+<!-- ══ 1. PERF + STATS ══ -->
 <div class="perf-hero" style="border-left:4px solid ${cfg.color}">
   <div class="perf-chart" id="${chartId}"></div>
   <div class="perf-stats">
@@ -164,22 +181,39 @@ function main() {
   </div>
 </div>
 
-<!-- ══ SIGNAUX DU JOUR ══ -->
-<div class="section-card">
-  <div class="sc-head">
-    <h3>Today's Signals</h3>
-    ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link">Full scan &rarr;</a>` : ''}
+<!-- ══ 2. CLOSE NOW (positions timed-out) ══ -->
+${timedOut.length ? `<div class="cta-card cta-close">
+  <div class="cta-header">
+    <span class="cta-icon">⛔</span>
+    <div>
+      <h3>Close Now <span class="cta-badge">${timedOut.length} position${timedOut.length > 1 ? 's' : ''}</span></h3>
+      <p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>
+    </div>
   </div>
-  ${sig.length ? `<table class="t">
-    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
-    <tbody>${sig.map((s, i) => {
-      const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
+    <tbody>${timedOut.map(p => {
+      const rc = p.return_pct >= 0 ? 'pos' : 'neg';
+      const held = bizDaysHeld(p.scan_date);
+      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
     }).join('')}</tbody>
-  </table>` : `<p class="empty">No signals for this mode today</p>`}
+  </table>
+</div>` : ''}
+
+<!-- ══ 3. HOW TO TRADE (method) ══ -->
+<div class="method-card" style="border-color:${cfg.color}30">
+  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
+  <div class="method-steps">
+    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
+    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score ≥ 88 vs return &lt; 2%), replace it.</div></div>` : ''}
+  </div>
+  <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
 </div>
 
-<!-- ══ ORDERS TO PLACE / ROTATION / WATCHLIST ══ -->
+<!-- ══ 4. ORDERS CTA ══ -->
 ${(() => {
   const alloc = Math.round(100 / cfg.portfolioSize);
   const openTickers = new Set(pos.map(p => p.ticker));
@@ -297,43 +331,44 @@ ${(() => {
 </div>`;
 })()}
 
-<!-- ══ POSITIONS EN COURS ══ -->
+<!-- ══ 5. TODAY'S SIGNALS (context) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3>Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
-    <span class="sc-meta">P&amp;L moy: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b> &middot; ${alloc}%/pos.</span>
+    <h3>📡 Today's Signals <span class="count">${sig.length} setups</span></h3>
+    ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link">Full scan →</a>` : ''}
   </div>
-  ${pos.length ? `
-  <div class="pos-bar">${pos.map(p => {
+  ${sig.length ? `<table class="t">
+    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
+    <tbody>${sig.map((s, i) => {
+      const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
+    }).join('')}</tbody>
+  </table>` : `<p class="empty">No signals for this mode today</p>`}
+</div>
+
+<!-- ══ 6. OPEN POSITIONS (active only, non-expired) ══ -->
+<div class="section-card">
+  <div class="sc-head">
+    <h3>Open Positions <span class="count">${activePosDisplay.length}/${cfg.portfolioSize}</span></h3>
+    ${activePosDisplay.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b> &middot; ${alloc}%/pos.</span>` : ''}
+  </div>
+  ${activePosDisplay.length ? `
+  <div class="pos-bar">${activePosDisplay.map(p => {
     const c = p.return_pct >= 5 ? '#059669' : p.return_pct >= 0 ? '#3b82f6' : p.return_pct >= -3 ? '#f59e0b' : '#dc2626';
     return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
   }).join('')}</div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Left</th></tr></thead>
-    <tbody>${pos.map(p => {
+    <tbody>${activePosDisplay.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
-      // Compute days left based on mode horizon, not the raw 30d expire
-      const ageD = p.scan_date ? Math.round((new Date() - new Date(p.scan_date)) / 86400000) : 0;
-      const left = Math.max(0, cfg.horizon - Math.round(ageD * 5/7)); // convert calendar to business days approx
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="m">${left}d</td></tr>`;
+      const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
+      const leftCls = left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
+      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="${leftCls}">${left}d</td></tr>`;
     }).join('')}</tbody>
-  </table>` : `<p class="empty">No open positions</p>`}
+  </table>` : `<p class="empty">No active positions</p>`}
 </div>
 
-<!-- ══ METHODE ══ -->
-<div class="method-card" style="border-color:${cfg.color}30">
-  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
-  <div class="method-steps">
-    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals above. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>target</b> as indicated. Don't touch anything.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>The position closes <b>automatically</b> when: target hit, stop triggered, or after <b>${cfg.horizon} days</b>.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
-    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal is better than your worst position, replace it.</div></div>` : ''}
-  </div>
-  <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
-</div>
-
-<!-- ══ TRADE HISTORY ══ -->
+<!-- ══ 7. TRADE HISTORY ══ -->
 <div class="section-card">
   <div class="sc-head"><h3>Trade History <span class="count">${trades.length}</span></h3></div>
   <table class="t">
@@ -463,6 +498,14 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .step-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:.7rem;flex-shrink:0;margin-top:1px}
 .method-footer{margin-top:.6rem;padding-top:.5rem;border-top:1px solid #f1f5f9;font-size:.72rem;color:#94a3b8}
 
+/* CTA cards */
+.cta-card{border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem;border:2px solid}
+.cta-close{background:#fef2f2;border-color:#fca5a5}
+.cta-header{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:.8rem}
+.cta-icon{font-size:1.6rem;line-height:1;flex-shrink:0;margin-top:.1rem}
+.cta-header h3{font-size:.95rem;font-weight:800;color:#dc2626;margin:0 0 .2rem}
+.cta-badge{display:inline-block;background:#dc2626;color:#fff;font-size:.68rem;font-weight:800;padding:.1rem .45rem;border-radius:5px;margin-left:.4rem;vertical-align:middle}
+.cta-sub{font-size:.78rem;color:#ef4444;margin:0}
 
 /* Disclaimer */
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
