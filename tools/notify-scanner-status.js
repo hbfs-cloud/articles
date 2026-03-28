@@ -57,9 +57,11 @@ function formatDate(yyyymmdd) {
 }
 
 // ─── Read metrics + scenario from generated status page (source of truth) ─────
-function readStatusMetrics() {
+function readStatusMetrics(modeKey = 'calmar') {
   const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
-  const section = statusHtml.match(/id="p-calmar"[\s\S]{0,8000}/);
+  // Map mode keys to panel IDs in the status page
+  const panelId = modeKey === 'growth' ? 'p-growth' : modeKey === 'zero' ? 'p-zero' : 'p-calmar';
+  const section = statusHtml.match(new RegExp(`id="${panelId}"[\\s\\S]{0,8000}`));
   if (!section) return null;
   const html = section[0];
 
@@ -121,19 +123,18 @@ function buildPositions(cfg, modeKey) {
 }
 
 // ─── Build payload ────────────────────────────────────────────────────────────
-function buildStatusPayload(scanDir) {
+function buildStatusPayload(scanDir, modeKey = 'calmar') {
   const modesObj = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes-config.json'))).modes;
   const wl = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcp/watchlist.json')));
 
-  // Balanced = calmar
-  const cfgRaw = modesObj.calmar;
-  const cfg = { id: 'calmar', ...cfgRaw };
+  const cfgRaw = modesObj[modeKey] || modesObj.calmar;
+  const cfg = { id: modeKey, ...cfgRaw };
 
   // Read metrics + scenario from generated status page (source of truth)
-  const m = readStatusMetrics() || { ret: 0, dd: 0, wr: 0, pf: 0, worst: 0, now: 0, best: 0 };
+  const m = readStatusMetrics(modeKey) || { ret: 0, dd: 0, wr: 0, pf: 0, worst: 0, now: 0, best: 0 };
 
   // Active positions (same logic as gen-status-page.js)
-  const activePos = buildPositions(cfg, 'calmar');
+  const activePos = buildPositions(cfg, modeKey);
 
   // Expiring soon (left = 1)
   const expiring = activePos.filter(p => p.left === 1);
@@ -235,7 +236,9 @@ function buildTelegramMessage(d) {
     `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  return `📊 <b>Portfolio Balanced</b>  —  ${d.scanDate}
+  const modeLabel = d.cfg.id === 'growth' ? '📈 Aggressive (Growth)' : d.cfg.id === 'zero' ? '🛡️ Conservative' : '⚖️ Balanced (Calmar)';
+
+  return `${modeLabel}  —  ${d.scanDate}
 <code>${sep}</code>
 📈 <b>Perf D0</b>  ${sign(d.metrics.ret)}${d.metrics.ret}%   <b>DD</b> ${d.metrics.dd}%   <b>WR</b> ${d.metrics.wr}%   <b>PF</b> ${d.metrics.pf}x
 <code>${sep}</code>
@@ -394,12 +397,23 @@ async function main() {
   console.log('\n--- Discord preview ---');
   console.log(dcMsg);
 
-  try {
-    const portfolioTopicId = process.env.TELEGRAM_TOPIC_PORTFOLIO;
-    const r = await sendTelegram(tgMsg, portfolioTopicId);
-    console.log(`✅ Telegram envoyé (id: ${r?.message_id})`);
-  } catch (e) {
-    console.error('❌ Telegram failed:', e.message);
+  // Send to 3 portfolio topics
+  const modeTopics = [
+    { key: 'growth',  topicEnv: 'TELEGRAM_TOPIC_GROWTH'      },
+    { key: 'calmar',  topicEnv: 'TELEGRAM_TOPIC_CALMAR'       },
+    { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE' },
+  ];
+
+  for (const { key, topicEnv } of modeTopics) {
+    try {
+      const modePayload  = buildStatusPayload(scanDir, key);
+      const modeTgMsg    = buildTelegramMessage(modePayload);
+      const topicId      = process.env[topicEnv];
+      const r = await sendTelegram(modeTgMsg, topicId);
+      console.log(`✅ Telegram [${key}] → topic ${topicId} (id: ${r?.message_id})`);
+    } catch (e) {
+      console.error(`❌ Telegram [${key}] failed:`, e.message);
+    }
   }
 
   sendDiscord(dcMsg);
