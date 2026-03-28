@@ -179,25 +179,121 @@ function main() {
   </table>` : `<p class="empty">No signals for this mode today</p>`}
 </div>
 
-<!-- ══ PENDING ORDERS ══ -->
+<!-- ══ ORDERS TO PLACE / ROTATION / WATCHLIST ══ -->
 ${(() => {
-  const openTickers = new Set(pos.map(p => p.ticker));
-  const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
-  const pendingOrders = sig.filter(s => !openTickers.has(s.ticker)).slice(0, slotsAvailable);
   const alloc = Math.round(100 / cfg.portfolioSize);
-  if (!pendingOrders.length) return `<div class="section-card"><div class="sc-head"><h3>⏳ Orders to Place <span class="count">0/${cfg.portfolioSize}</span></h3><span class="sc-meta">Portfolio full — no new orders</span></div></div>`;
+  const openTickers = new Set(pos.map(p => p.ticker));
+  const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
+  const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
+
+  // BUY orders: signals that fit into available slots
+  const buyOrders = sigFiltered.slice(0, slotsAvailable);
+
+  // ROTATION candidates (only for rotation=aggressive modes):
+  // Signals that could not fit (portfolio full) but score higher than the worst current position
+  const rotationCandidates = [];
+  if (cfg.rotation === 'aggressive' && pos.length > 0 && sigFiltered.length > slotsAvailable) {
+    const worstPos = [...pos].sort((a, b) => a.return_pct - b.return_pct)[0];
+    const overflow = sigFiltered.slice(slotsAvailable);
+    for (const s of overflow) {
+      // Signal worth rotating in if score >= 88 (high conviction) and worst position is losing or flat
+      if (s.score >= 88 && worstPos.return_pct < 2) {
+        rotationCandidates.push({ signal: s, replaces: worstPos });
+        break; // one rotation at a time
+      }
+    }
+  }
+
+  // ON WATCH (timed-out orders): signals that couldn't be placed and don't qualify for rotation
+  // Valid for 2 trading days from scan date; after that they expire
+  const scanDateStr = scanDir ? `${scanDir.slice(0,4)}-${scanDir.slice(4,6)}-${scanDir.slice(6,8)}` : null;
+  const scanAge = scanDateStr ? Math.round((Date.now() - new Date(scanDateStr)) / 86400000) : 0;
+  const timeoutDays = 2; // signals expire after 2 trading days if not placed
+  // Compute expiry date: scanDate + 2 business days
+  function addBizDays(dateStr, n) {
+    const d = new Date(dateStr + 'T12:00:00Z');
+    let added = 0;
+    while (added < n) { d.setDate(d.getDate() + 1); const dow = d.getUTCDay(); if (dow !== 0 && dow !== 6) added++; }
+    return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', timeZone:'UTC' });
+  }
+  const expiryLabel = scanDateStr ? addBizDays(scanDateStr, timeoutDays) : '—';
+  const onWatch = slotsAvailable === 0 && rotationCandidates.length === 0
+    ? sigFiltered.slice(0, 3)  // show top 3 on watch when full and no rotation
+    : sigFiltered.slice(slotsAvailable).filter(s => !rotationCandidates.some(r => r.signal.ticker === s.ticker)).slice(0, 2);
+  const isExpired = scanAge > timeoutDays;
+
+  const hasAnything = buyOrders.length > 0 || rotationCandidates.length > 0 || onWatch.length > 0;
+  if (!hasAnything) return `<div class="section-card"><div class="sc-head"><h3>⏳ Orders <span class="count">0 actions</span></h3><span class="sc-meta">Portfolio full — monitor open positions</span></div></div>`;
+
+  const rows = [];
+
+  // 1. BUY orders
+  for (let i = 0; i < buyOrders.length; i++) {
+    const s = buyOrders[i];
+    const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+    rows.push(`<tr>
+      <td class="c">${i+1}</td>
+      <td><b>${s.ticker}</b></td>
+      <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
+      <td class="m">${s.strategy}</td>
+      <td><b>${s.entry}</b></td>
+      <td class="neg">${s.stop}</td>
+      <td class="pos">${s.tp1}</td>
+      <td class="pos">${s.tp2}</td>
+      <td class="am">${s.rr}</td>
+      <td class="m">${alloc}%</td>
+      <td><span class="pill pos">BUY</span></td>
+    </tr>`);
+  }
+
+  // 2. ROTATION candidates
+  for (const { signal: s, replaces } of rotationCandidates) {
+    const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+    rows.push(`<tr style="background:#fefce8">
+      <td class="c">↔</td>
+      <td><b>${s.ticker}</b></td>
+      <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
+      <td class="m">${s.strategy}</td>
+      <td><b>${s.entry}</b></td>
+      <td class="neg">${s.stop}</td>
+      <td class="pos">${s.tp1}</td>
+      <td class="pos">${s.tp2}</td>
+      <td class="am">${s.rr}</td>
+      <td class="m">${alloc}%</td>
+      <td><span class="pill am" title="Sell ${replaces.ticker} (${replaces.return_pct}%), buy ${s.ticker}">ROTATE ↔ ${replaces.ticker}</span></td>
+    </tr>`);
+  }
+
+  // 3. ON WATCH / timed-out
+  for (const s of onWatch) {
+    const bg = '#94a3b8';
+    const expiredLabel = isExpired ? 'EXPIRED' : `WATCH — exp. ${expiryLabel}`;
+    const expiredCls = isExpired ? 'neg' : 'm';
+    rows.push(`<tr style="opacity:${isExpired ? '0.5' : '0.8'}">
+      <td class="c">👁</td>
+      <td><b>${s.ticker}</b></td>
+      <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
+      <td class="m">${s.strategy}</td>
+      <td class="m">${s.entry}</td>
+      <td class="neg">${s.stop}</td>
+      <td class="pos">${s.tp1}</td>
+      <td class="pos">${s.tp2}</td>
+      <td class="am">${s.rr}</td>
+      <td class="m">—</td>
+      <td><span class="pill ${expiredCls}">${expiredLabel}</span></td>
+    </tr>`);
+  }
+
+  const totalActions = buyOrders.length + rotationCandidates.length;
   return `<div class="section-card">
   <div class="sc-head">
-    <h3>⏳ Orders to Place <span class="count">${pendingOrders.length}/${cfg.portfolioSize}</span></h3>
+    <h3>⏳ Orders <span class="count">${totalActions > 0 ? totalActions + ' action' + (totalActions > 1 ? 's' : '') : 'on watch'}</span></h3>
     <span class="sc-meta">📅 Next open &middot; limit order &middot; ${alloc}%/pos.</span>
   </div>
-  ${pendingOrders.length ? `<table class="t">
-    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th><th>Alloc</th></tr></thead>
-    <tbody>${pendingOrders.map((s, i) => {
-      const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td><b>${s.entry}</b></td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td><td class="m">${alloc}%</td></tr>`;
-    }).join('')}</tbody>
-  </table>` : ''}
+  <table class="t">
+    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th><th>Alloc</th><th>Action</th></tr></thead>
+    <tbody>${rows.join('')}</tbody>
+  </table>
 </div>`;
 })()}
 
