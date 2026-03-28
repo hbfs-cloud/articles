@@ -652,6 +652,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EQNR",
+    "exchange": "NYSE (ADR) • Energy • Oil & Gas Integrated — Stavanger, Norway",
+    "name": "EQNR — Integrated energy leader, $106B revenue, 3.6% yield, buybacks, record production. Techn...",
+    "title": "EQNR — Integrated energy leader, $106B revenue, 3.6% yield, buybacks, record production. Techn...",
+    "desc": "Equinor ASA deep analysis: Norwegian energy giant, $104B market cap, 3.6% dividend yield, record production, trading near 52-week highs. Grade B+.",
+    "tags": "energy,oil-gas,dividend,europe,value",
+    "grade": "B+",
+    "href": "/analyses/EQNR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "HAL",
     "exchange": "NYSE • Energy • Oil & Gas Equipment & Services",
     "name": "HAL — HAL at 52-week high breakout. Oil services capex cycle, WTI $91.60, EMA200 +34.7%. Entr...",
