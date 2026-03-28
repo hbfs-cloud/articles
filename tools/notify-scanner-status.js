@@ -156,76 +156,95 @@ function asciiBar(worstPct, nowPct, bestPct) {
 // ─── Telegram message (HTML) ──────────────────────────────────────────────────
 function buildTelegramMessage(d) {
   const sign = n => n >= 0 ? '+' : '';
+  const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
+
+  // 1. ACTIONS
+  let actionsBlock = '';
+  if (d.expiring.length) {
+    actionsBlock += `\n⚠️ <b>Expire demain :</b> ${d.expiring.map(p => p.ticker).join(', ')} → décider keep ou exit lundi`;
+  }
+  if (d.slotsLeft > 0) {
+    const buyPicks = d.picks.slice(0, d.slotsLeft);
+    actionsBlock += `\n⚡ <b>${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir :</b>`;
+    buyPicks.forEach(s => {
+      actionsBlock += `\n  → <b>${s.symbol}</b> ${s.strategy} | entry ${s.entry} | stop ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2} | R/R ${s.rr}`;
+    });
+  } else {
+    actionsBlock += `\n✅ <b>Portfolio plein</b> — aucun ordre à passer`;
+  }
+
+  // 2. POSITIONS + RISQUE
   const posLines = d.activePos.map(p => {
     const warn = p.left <= 1 ? ' ⚠️' : '';
-    return `  ${p.ticker.padEnd(5)} ${sign(p.return_pct)}${p.return_pct}%  ${p.left}j restant${warn}`;
+    return `  ${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${p.left}j restant${warn}`;
   }).join('\n');
 
+  // 3. SIGNAUX
   const picksLines = d.picks.map(s =>
-    `  ${s.symbol.padEnd(5)} ${s.score}  ${s.strategy.padEnd(12)} ${s.entry}→${s.tp1}/${s.tp2}  R/R ${s.rr}`
+    `  ${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} ${s.entry}→${s.tp1}/${s.tp2}  R/R ${s.rr}`
   ).join('\n');
 
-  const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
-  const expiringWarn = d.expiring.length
-    ? `\n⚠️ <b>Expire demain :</b> ${d.expiring.map(p => p.ticker).join(', ')}`
-    : '';
-
-  const ordersLine = d.slotsLeft > 0
-    ? `\n⚡ <b>Orders :</b> ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} disponible${d.slotsLeft > 1 ? 's' : ''}`
-    : '\n✅ <b>Orders :</b> Portfolio plein';
-
   return `📊 <b>Scanner Balanced — ${d.scanDate}</b>
+📈 Perf 30j : ${sign(d.metrics.return30d)}${d.metrics.return30d}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
+${actionsBlock}
 
-📈 <b>Perf 30j :</b> ${sign(d.metrics.return30d)}${d.metrics.return30d}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x${ordersLine}${expiringWarn}
-
-<b>Positions (${d.activePos.length}/${d.cfg.portfolioSize}) :</b>
-<pre>${posLines}</pre>
-<b>Scénario portefeuille :</b>
+<b>📂 Positions (${d.activePos.length}/${d.cfg.portfolioSize}) :</b>
+<pre>${posLines || '  —'}</pre>
+<b>⚖️ Risque portefeuille :</b>
 <pre>${sign(d.worstPct)}${d.worstPct.toFixed(1)}% ${bar} +${d.bestPct.toFixed(1)}%
-         ▲ Maintenant : ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
-<b>Top 3 signaux :</b>
-<pre>${picksLines}</pre>
+         ▲ Now : ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
+<b>📡 Signaux du jour (top ${d.picks.length}) :</b>
+<pre>${picksLines || '  —'}</pre>
 🔗 ${STATUS_URL}`;
 }
 
 // ─── Discord message (Markdown) ───────────────────────────────────────────────
 function buildDiscordMessage(d) {
   const sign = n => n >= 0 ? '+' : '';
+  const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
+  // 1. ACTIONS
+  let actionsBlock = '';
+  if (d.expiring.length) {
+    actionsBlock += `\n⚠️ **Expire demain** : ${d.expiring.map(p => p.ticker).join(', ')} → décider keep ou exit lundi`;
+  }
+  if (d.slotsLeft > 0) {
+    const buyPicks = d.picks.slice(0, d.slotsLeft);
+    actionsBlock += `\n⚡ **${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir :**`;
+    buyPicks.forEach(s => {
+      actionsBlock += `\n→ **${s.symbol}** ${s.strategy} | entry ${s.entry} | stop ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2} | R/R ${s.rr}`;
+    });
+  } else {
+    actionsBlock += `\n✅ **Portfolio plein** — aucun ordre à passer`;
+  }
+
+  // 2. POSITIONS + RISQUE
   const posLines = d.activePos.map(p => {
     const warn = p.left <= 1 ? ' ⚠️' : '';
-    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(7)}  ${p.left}j restant${warn}`;
+    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${p.left}j restant${warn}`;
   }).join('\n');
 
+  // 3. SIGNAUX
   const picksLines = d.picks.map(s =>
-    `${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)}  ${s.strategy.padEnd(12)} ${String(s.entry).padEnd(6)}→ TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}`
+    `${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} ${String(s.entry).padEnd(6)}→ TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}`
   ).join('\n');
 
-  const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
-  const expiringWarn = d.expiring.length
-    ? `\n⚠️ **Expire demain** : ${d.expiring.map(p => p.ticker).join(', ')}`
-    : '';
-
-  const ordersLine = d.slotsLeft > 0
-    ? `\n⚡ **Orders** : ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} disponible${d.slotsLeft > 1 ? 's' : ''}`
-    : '\n✅ **Orders** : Portfolio plein';
-
   return `📊 **Scanner Balanced — ${d.scanDate}**
+📈 Perf 30j : ${sign(d.metrics.return30d)}${d.metrics.return30d}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
+${actionsBlock}
 
-**Perf 30j** → ${sign(d.metrics.return30d)}${d.metrics.return30d}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x${ordersLine}${expiringWarn}
-
-**Positions (${d.activePos.length}/${d.cfg.portfolioSize})**
+**📂 Positions (${d.activePos.length}/${d.cfg.portfolioSize})**
 \`\`\`
-${posLines}
+${posLines || '—'}
 \`\`\`
-**Scénario portefeuille**
+**⚖️ Risque portefeuille**
 \`\`\`
 ${sign(d.worstPct)}${d.worstPct.toFixed(1)}% ${bar} +${d.bestPct.toFixed(1)}%
-          ▲ Now: ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
+          ▲ Now : ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
 \`\`\`
-**Top 3 signaux**
+**📡 Signaux du jour (top ${d.picks.length})**
 \`\`\`
-${picksLines}
+${picksLines || '—'}
 \`\`\`
 🔗 <${STATUS_URL}>`;
 }
