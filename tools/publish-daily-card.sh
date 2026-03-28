@@ -132,5 +132,24 @@ else
   node tools/notify-scanner-status.js 2>&1 || echo "⚠️  notify-scanner-status failed (non-blocking)"
 fi
 
+
+# ─── Step 9: Generate media (audio + video) and send to Telegram + YouTube ──
+echo ""
+echo "🎬 Step 9: Generating media (audio + video)..."
+SCAN_PATH="scanner/${TODAY}/index.html"
+if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
+  # ANTHROPIC_API_KEY needed for AI script generation
+  if [ -z "$ANTHROPIC_API_KEY" ]; then
+    source ~/.profile 2>/dev/null || true
+    export ANTHROPIC_API_KEY
+  fi
+  node tools/generate-media.mjs --type scanner --path "$SCAN_PATH" \
+    > /tmp/mw-media-scanner.log 2>&1 \
+    && echo "✅ Media generated (scanner)" \
+    || echo "⚠️  Media generation failed (check /tmp/mw-media-scanner.log)"
+else
+  echo "   (dry-run or no scanner file: skip media)"
+fi
+
 echo ""
 echo "✅ Done: $(date '+%H:%M:%S')"

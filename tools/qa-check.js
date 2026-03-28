@@ -343,6 +343,32 @@ check('scanner/status: pas de ticker en doublon entre Pending Orders et Open Pos
   if (html.includes('>undefined<') || html.includes('">undefined"')) return '"undefined" brut trouvé dans le HTML';
 });
 
+// ─── Check 23: Media pipeline — result.json récent pour le dernier article ──
+warn('media pipeline: result.json généré dans les 24h', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const mediaBase = '/tmp/mw-media';
+  if (!fs.existsSync(mediaBase)) return 'répertoire /tmp/mw-media absent (pipeline jamais lancé)';
+  // Find most recent result.json
+  let newest = null;
+  let newestMtime = 0;
+  try {
+    for (const dir of fs.readdirSync(mediaBase)) {
+      const p = path.join(mediaBase, dir, 'result.json');
+      if (fs.existsSync(p)) {
+        const mtime = fs.statSync(p).mtimeMs;
+        if (mtime > newestMtime) { newestMtime = mtime; newest = p; }
+      }
+    }
+  } catch {}
+  if (!newest) return 'aucun result.json trouvé sous /tmp/mw-media';
+  const ageH = (Date.now() - newestMtime) / 3600000;
+  if (ageH > 24) return `result.json trop vieux: ${Math.round(ageH)}h (relancer generate-media.mjs)`;
+  const r = JSON.parse(fs.readFileSync(newest, 'utf8'));
+  if (!r.youtubeId) return `result.json présent mais youtubeId null — upload YouTube a échoué`;
+  if (!r.audioPath || !fs.existsSync(r.audioPath)) return `audioPath absent ou fichier manquant`;
+});
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
 
 const total = ok.length + warnings.length + errors.length;

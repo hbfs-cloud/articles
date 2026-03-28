@@ -16,6 +16,12 @@
 set -e
 cd "$(dirname "$0")/.."
 
+# Ensure ANTHROPIC_API_KEY is available (loaded from ~/.profile in cron)
+if [ -z "$ANTHROPIC_API_KEY" ]; then
+  source ~/.profile 2>/dev/null || true
+  export ANTHROPIC_API_KEY
+fi
+
 TYPE=""
 ARTICLE_PATH=""
 TITLE_ARG=""
