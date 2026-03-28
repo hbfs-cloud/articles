@@ -367,10 +367,9 @@ ${(() => {
   <details>
     <summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">${trades.length} closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
-    <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th>Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
       const sorted = [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
-      // Build replacement map: for rotated trades, find what replaced them
       const replacedBy = {};
       for (let i = 0; i < sorted.length; i++) {
         if (sorted[i].status === 'rotated') {
@@ -388,20 +387,26 @@ ${(() => {
         const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';
         let exitDate = '—';
         if (t.entryDate && t.holdDays) { const d = new Date(t.entryDate); d.setDate(d.getDate() + t.holdDays); exitDate = d.toISOString().slice(5, 10); }
-        let statusLabel, statusCls;
+        let statusLabel, statusShort, statusCls;
         switch (t.status) {
-          case 'tp1': statusLabel = 'Target 1 hit'; statusCls = 'pos'; break;
-          case 'tp2': statusLabel = 'Target 2 hit'; statusCls = 'pos'; break;
-          case 'tp1_partial': statusLabel = 'TP1 partial (50%)'; statusCls = 'pos'; break;
-          case 'sl': statusLabel = 'Stop loss hit'; statusCls = 'neg'; break;
-          case 'expired': statusLabel = t._premature ? 'Pending (' + (t.holdDays||0) + 'd/' + cfg.horizon + 'd)' : 'Expired (' + cfg.horizon + 'd limit)'; statusCls = t._premature ? 'pending' : 'am'; break;
-          case 'rotated':
-            const rep = replacedBy[t.ticker + t.scanDate];
-            statusLabel = rep ? 'Replaced by ' + rep : 'Rotated out';
-            statusCls = 'm'; break;
-          default: statusLabel = t.status || '—'; statusCls = 'm';
+          case 'tp1': statusLabel = 'Target 1 hit'; statusShort = 'TP1 ✓'; statusCls = 'pos'; break;
+          case 'tp2': statusLabel = 'Target 2 hit'; statusShort = 'TP2 ✓'; statusCls = 'pos'; break;
+          case 'tp1_partial': statusLabel = 'TP1 partial (50%)'; statusShort = 'TP1 ½'; statusCls = 'pos'; break;
+          case 'sl': statusLabel = 'Stop loss hit'; statusShort = 'SL ✗'; statusCls = 'neg'; break;
+          case 'expired': statusLabel = t._premature ? 'Pending (' + (t.holdDays||0) + 'd/' + cfg.horizon + 'd)' : 'Expired'; statusShort = statusLabel; statusCls = t._premature ? 'pending' : 'am'; break;
+          case 'rotated': { const rep = replacedBy[t.ticker + t.scanDate]; statusLabel = rep ? 'Replaced by ' + rep : 'Rotated out'; statusShort = rep ? '↔ '+rep : 'Rotated'; statusCls = 'm'; break; }
+          default: statusLabel = t.status || '—'; statusShort = statusLabel; statusCls = 'm';
         }
-        return `<tr><td><b>${t.ticker||'—'}</b></td><td class="m">${t.entryDate ? t.entryDate.slice(5) : '—'}</td><td class="m">${exitDate}</td><td>$${(t.actualEntry||0).toFixed(2)}</td><td>${t.exitPrice ? '$'+t.exitPrice.toFixed(2) : '—'}</td><td class="${cls}"><b>${pnl > 0 ? '+' : ''}${pnl}%</b></td><td class="m">${t.holdDays||0}d</td><td><span class="pill ${statusCls}">${statusLabel}</span></td></tr>`;
+        return `<tr>
+          <td><b>${t.ticker||'—'}</b></td>
+          <td class="m hide-m">${t.entryDate ? t.entryDate.slice(5) : '—'}</td>
+          <td class="m hide-m">${exitDate}</td>
+          <td class="hide-m">$${(t.actualEntry||0).toFixed(2)}</td>
+          <td class="hide-m">${t.exitPrice ? '$'+t.exitPrice.toFixed(2) : '—'}</td>
+          <td class="${cls}"><b>${pnl > 0 ? '+' : ''}${pnl}%</b></td>
+          <td class="m hide-m">${t.holdDays||0}d</td>
+          <td><span class="pill ${statusCls}" title="${statusLabel}">${statusShort}</span></td>
+        </tr>`;
       }).join('');
     })()}</tbody>
   </table>
