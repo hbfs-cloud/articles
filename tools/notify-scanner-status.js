@@ -188,9 +188,27 @@ function buildTelegramMessage(d) {
 
   // 1. ACTIONS
   let actionsBlock = '';
-  if (d.expiring.length) {
-    actionsBlock += `\n⚠️ <b>Expire demain :</b> ${d.expiring.map(p => p.ticker).join(', ')} → décider keep ou exit lundi`;
+
+  // Positions proches du timeout (left <= 2)
+  const closeNow   = d.activePos.filter(p => p.left <= 1);
+  const decideSoon = d.activePos.filter(p => p.left === 2);
+
+  if (closeNow.length) {
+    actionsBlock += `\n⛔ <b>CLÔTURER à l'ouverture :</b>`;
+    closeNow.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      actionsBlock += `\n  → <b>${p.ticker}</b> ${pnl} | entry ${p.entry} → now ${p.current_price} | stop ${p.stop} | horizon atteint`;
+    });
   }
+  if (decideSoon.length) {
+    actionsBlock += `\n⏰ <b>Décision requise (expire dans 2j) :</b>`;
+    decideSoon.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
+      actionsBlock += `\n  → <b>${p.ticker}</b> ${pnl} | now ${p.current_price} | TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''} | stop ${p.stop} — keep ou exit ?`;
+    });
+  }
+
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
     actionsBlock += `\n⚡ <b>${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir (${d.alloc}% chacun) :</b>`;
@@ -233,9 +251,26 @@ function buildDiscordMessage(d) {
 
   // 1. ACTIONS
   let actionsBlock = '';
-  if (d.expiring.length) {
-    actionsBlock += `\n⚠️ **Expire demain** : ${d.expiring.map(p => p.ticker).join(', ')} → décider keep ou exit lundi`;
+
+  const closeNow   = d.activePos.filter(p => p.left <= 1);
+  const decideSoon = d.activePos.filter(p => p.left === 2);
+
+  if (closeNow.length) {
+    actionsBlock += `\n⛔ **CLÔTURER à l'ouverture :**`;
+    closeNow.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      actionsBlock += `\n→ **${p.ticker}** ${pnl} | entry ${p.entry} → now ${p.current_price} | stop ${p.stop} | horizon atteint`;
+    });
   }
+  if (decideSoon.length) {
+    actionsBlock += `\n⏰ **Décision requise (expire dans 2j) :**`;
+    decideSoon.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
+      actionsBlock += `\n→ **${p.ticker}** ${pnl} | now ${p.current_price} | TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''} | stop ${p.stop} — keep ou exit ?`;
+    });
+  }
+
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
     actionsBlock += `\n⚡ **${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir (${d.alloc}% chacun) :**`;
