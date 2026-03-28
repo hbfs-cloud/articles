@@ -162,9 +162,14 @@ function buildScripts(html, url) {
     .slice(0, 5);
 
   // ── Build audio script (≤250 words, ~90s) ──
+  // Strip date from title if it already contains it (avoid repetition)
+  const titleNoDate = title.replace(/[-—]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s*\d{4}/i, '').replace(/\s+$/, '');
+  // Strip date from desc if it starts with it
+  const descClean = (desc || '').replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s+briefing[:\s]*/i, '').slice(0, 180);
+
   let audioScript = `Welcome to Market Watch. ${dateStr}.\n\n`;
-  audioScript += `${title}.\n\n`;
-  if (desc) audioScript += `${desc.slice(0, 180)}.\n\n`;
+  audioScript += `${titleNoDate}.\n\n`;
+  if (descClean) audioScript += `${descClean}.\n\n`;
 
   if (type === 'daily' || type === 'scanner') {
     audioScript += `Here is your quick market snapshot.\n`;
