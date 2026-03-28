@@ -175,6 +175,19 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Geopolitics & Macro Risks",
+    "desc": "Saturday briefing: Dow joins Nasdaq in correction territory. S&P 500 posts fifth consecutive weekly loss. Brent crude holds above $100. BTC slides to $66K. Michigan sentiment lowest since Dec 2025. OECD slashes growth forecasts. Full weekly recap and Monday preview.",
+    "tags": "us,eu,asia,crypto,macro,geopolitique,commodity,energy,trade-idea,formation",
+    "grade": "",
+    "href": "/daily/20260328/",
+    "date": "28 mars 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Geopolitics & Macro Risks",
     "desc": "Friday briefing: Nasdaq officially enters correction territory (-10% from peak). S&P -1.74%, Nasdaq -2.38%, Russell -1.70%. Oil surges past $100 as Trump extends Iran Strait of Hormuz deadline to April 6. Gold rebounds +1.75% to $4,452. BTC slips to $68.5K. VIX at 27.4. Risk-off regime deepening.",
     "tags": "us,eu,asia,crypto,macro,geopolitique,commodity,energy,trade-idea,formation",
     "grade": "",
@@ -2943,19 +2956,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Retrospective",
-    "desc": "The grade combines two pillars with equal weight: Pillar 1 (Setup Quality, 50%) measures Hit Rate on resolved positions (TP1 hit vs stop-loss). Pillar 2 (Portfolio Simulation, 50%) uses sweep.js optimal_sharpe mode to simulate portfolio returns over the retro period.",
-    "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,healthcare,industrials",
-    "grade": "",
-    "href": "/scanner/retrospective/20260327/",
-    "date": "27 mars 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "⚡ Scanner Live — Signaux, Positions & Performance",
     "desc": "Signaux du jour filtrés par mode (Growth, Risk-Adjusted, Conservative), positions en cours avec P&L temps réel, equity curves et historique des trades. 3 stratégies optimisées sur 126 000 backtests.",
     "tags": "technique,formation,trade-idea,us,eu,asia,etf",
@@ -2988,6 +2988,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260327/",
     "date": "27 mars 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Scanner Retrospective",
+    "desc": "Full review of 60 setups across 6 scans (Mar 20–27, 2026) — Grade B+* provisional (100% HR on 12.5% resolved, +2.10% portfolio sim) — CF +11.7%, APA +9.9% — Energy dominance with 88% win rate across all tracked trades",
+    "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,healthcare,industrials",
+    "grade": "B+",
+    "href": "/scanner/retrospective/20260327/",
+    "date": "Mar 20 – Mar 27, 2026"
   },
   {
     "type": "scanner",
@@ -3034,19 +3047,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Retrospective — Mar 10 to Mar 20, 2026",
-    "desc": "60 setups across 6 regular scans — unified grade C* (Setup HR: D at 20% + Portfolio Sim: B at +0.90%). 3 special scans excluded. New unified grading merges individual pick accuracy (Pillar 1) with portfolio simulation performance (Pillar 2). Energy rotation trending +5-8%. Expected to improve as 55 open positions mature.",
-    "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,speculative",
-    "grade": "",
-    "href": "/scanner/retrospective/20260320/",
-    "date": "20 mars 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "Daily Scanner",
     "desc": "Regime score 0.44. Strategy mode Early Risk-Off (adjusted: short squeeze excluded per policy). Working weights: Momentum 40%, Breakout 35%, Pullback 25%. Friday’s session confirmed the defensive rotation: SPX −1.51%, NASDAQ −2.01%, Russell 2000 −2.26%. Global equities hammered: Nikkei −3.38%, DAX −2...",
     "tags": "us,eu,asia,commodity,energy,etf,trade-idea,macro,technique,agriculture",
@@ -3066,6 +3066,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260320/",
     "date": "20 mars 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Scanner Retrospective",
+    "desc": "Full review of 60 setups across 6 regular scans (Mar 12–20, 2026) — Provisional grade C- (20% HR on 8.3% resolved) — TTE +8.1% — 3 special/complementary scans excluded (35 setups), energy rotation showing promise",
+    "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,speculative",
+    "grade": "C",
+    "href": "/scanner/retrospective/20260320/",
+    "date": "Mar 10 – Mar 20, 2026"
   },
   {
     "type": "scanner",
@@ -3112,19 +3125,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Retrospective — Mar 3 to Mar 13, 2026",
-    "desc": "90 setups across 9 scans — provisional grade B (45.5% HR on 27.5% resolved). Open positions avg +1.5% MtM, 69% positive/flat. AMPX +82%, USO +25.6%, CF +18%. SAP blacklisted after −28% flash crash. Projected final HR: 42–50%.",
-    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective,energy,defense,commodity,short-squeeze",
-    "grade": "",
-    "href": "/scanner/retrospective/20260313/",
-    "date": "13 March 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "Top 10 A+ RISK-OFF. 10 — CVX, COP, HAL, RTX, ABBV, UNH, CAT, TLT, EWD, BITO",
     "desc": "Risk-Off deepens as Brent crude surges to $103.86 (+3.4%), now firmly above $100 for the second straight session. Iran’s Strait of Hormuz threats continue to dominate headlines. VIX elevated at ~29.4. S&P -0.61%, NASDAQ -0.93%, Nikkei -1.16%. DXY strengthening to 100.50 as dollar safety bids intensi...",
     "tags": "us,eu,etf,energy,defense,healthcare,industrials,commodity,geopolitique,trade-idea,macro",
@@ -3138,12 +3138,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ Early Risk-Off — AXTI, SNDK, GLXY, RXT, IBRX, SEDG, MARA, AA, CLF, TERN",
-    "desc": "This is the 23h Friday scan, complementary to the morning scan (CVX, COP, HAL, RTX, ABBV, UNH, CAT, TLT, EWD, BITO). 100% new tickers. Key shift since 9h: (1) Regime improved from 0.28 to 0.42 (early risk-off, not deep risk-off anymore); (2) France & Italy opened diplomatic talks with Iran for Hormu...",
-    "tags": "us,tech,semis,crypto,biotech,materials,energy,short-squeeze,momentum,technique,trade-idea,macro",
-    "grade": "",
-    "href": "/scanner/20260313-2300/",
-    "date": "Friday Evening, March 13, 2026"
+    "title": "Scanner Retrospective",
+    "desc": "Full review of 80 setups across 8 scans (Mar 3–13, 2026) — Provisional grade B (45.5% HR on 27.5% resolved) — AMPX +82%, USO +25.6%, CF +18% — SAP permanently blacklisted after -28% crash",
+    "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,energy,defense,commodity,short-squeeze",
+    "grade": "B",
+    "href": "/scanner/retrospective/20260313/",
+    "date": "Mar 3 – Mar 13, 2026"
   },
   {
     "type": "scanner",
@@ -3157,19 +3157,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260312/",
     "date": "Wednesday, March 12, 2026"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — NEM, ADM, BBIO, AMZN, KR, ARGX, RIO, EWJ, GDX, XLP",
-    "desc": "The regime detector confirms Early Risk-Off with a composite score of 0.52/1.0. VIX elevated at 24.93 (component score 1.0), TLT under pressure at $88.28 (score 0.77), SPX struggling at 6,781 below its 50DMA (score 0.48). Gold is surging as the ultimate safe haven — GLD +1.1%, silver +2.3%. Followin...",
-    "tags": "us,eu,asia,etf,materials,healthcare,consumer,energy,commodity,technique,trade-idea,macro",
-    "grade": "",
-    "href": "/scanner/20260310-2300/",
-    "date": "Monday, March 10, 2026"
   },
   {
     "type": "scanner",
@@ -3203,12 +3190,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner Retrospective — Feb 24 to Mar 5, 2026",
-    "desc": "70 setups across 7 scans — provisional grade B- (69% still open, 27% HR on 31% resolved). Open positions averaging +0.4% MtM, 63% in positive/flat territory. AAOI +19%, NOW +14%, USO +14%. Projected final HR: 37-43%.",
-    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
+    "title": "Top 10 A+ RISK-OFF — XOM, EQNR, RTX, KR, ADM, TTE, GLD, EWY, SH, UNG",
+    "desc": "RISK-OFF regime — VIX 29.49, WTI $91/bbl (+12%), Gold $5,179 ATH. Iran/Hormuz crisis escalation. Energy + defense + safe havens dominate. Score moyen 90.1/100. 100% nouveaux tickers vs scan précédent.",
+    "tags": "us,eu,asia,etf,energy,defense,commodity,geopolitique,trade-idea,macro",
     "grade": "",
-    "href": "/scanner/retrospective/20260306/",
-    "date": "6 March 2026"
+    "href": "/scanner/20260306/",
+    "date": "Friday, March 6, 2026"
   },
   {
     "type": "scanner",
@@ -3216,12 +3203,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-OFF — XOM, EQNR, RTX, KR, ADM, TTE, GLD, EWY, SH, UNG",
-    "desc": "RISK-OFF regime — VIX 29.49, WTI $91/bbl (+12%), Gold $5,179 ATH. Iran/Hormuz crisis escalation. Energy + defense + safe havens dominate. Score moyen 90.1/100. 100% nouveaux tickers vs scan précédent.",
-    "tags": "us,eu,asia,etf,energy,defense,commodity,geopolitique,trade-idea,macro",
-    "grade": "",
-    "href": "/scanner/20260306/",
-    "date": "Friday, March 6, 2026"
+    "title": "Scanner Retrospective",
+    "desc": "Full review of 70 setups scanned from Feb 24 to Mar 5, 2026 — Provisional grade B- (69% still open, 27% HR on 31% resolved) — AAOI +19%, NOW +14%, USO +14%",
+    "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
+    "grade": "B-",
+    "href": "/scanner/retrospective/20260306/",
+    "date": "Feb 24 – Mar 5, 2026"
   },
   {
     "type": "scanner",
@@ -3281,12 +3268,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Rétrospective Scanner — 15-27 Février 2026",
-    "desc": "7 scans analysés, 70 setups évalués. 50% hit rate sur scans matures. Mouvements explosifs sur ACMR (+147%), JNJ (+63%) et VGK (+6%). Les setups sur métaux précieux (GLD) et indices européens ont particulièrement bien fonctionné en régime Early Risk-Off.",
+    "title": "Rétrospective Scanner Hebdomadaire",
+    "desc": "Bilan complet des 70 setups scannés du 15 au 27 février 2026 — Hit rate TP1 50% (scans matures), note B+ — ACMR +147%, JNJ +63%, AAOI +57%",
     "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
-    "grade": "",
+    "grade": "B+",
     "href": "/scanner/retrospective/20260228/",
-    "date": "28 Février 2026"
+    "date": "Semaine du 28 février 2026"
   },
   {
     "type": "scanner",
@@ -3346,11 +3333,11 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Rétrospective Scanner — 10-20 Février 2026",
-    "desc": "4 scans analysés, 40 setups évalués. Hit rate 62.5% (setups\n    valides). Problème critique : 25% d'entrées avec prix obsolètes.\n    Top : ACMR +184%, AA +53%. Flop : ACHC -42%. Duplication 60% entre\n    scans consécutifs.",
-    "tags": "us,retrospective,technique",
+    "title": "Top 10 A+ Relief Rally SCOTUS Tariffs — COLD, OMC, NICE, DE, AG,\n    ETSY, LITE, FIX, GEV, CAT",
+    "desc": "SCOTUS 6-3 invalide les tarifs IEEPA, relief rally SPY +0.72%. AG\n    +11.18% (52W high silver), ETSY +8.39% (Depop $1.2B), FIX +6.46%\n    (52W high infra), NICE +5.50%, LITE +5.05% (AI infra). GEV -0.51%,\n    CAT -0.10% consolident. Régime Early Risk-Off. VIX 19.28. NVDA\n    earnings 26 fév.",
+    "tags": "us,commodity,materials,industrials,trade-idea",
     "grade": "",
-    "href": "/scanner/retrospective/20260220/",
+    "href": "/scanner/20260220/",
     "date": "20 Février 2026"
   },
   {
@@ -3359,12 +3346,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ Relief Rally SCOTUS Tariffs — COLD, OMC, NICE, DE, AG,\n    ETSY, LITE, FIX, GEV, CAT",
-    "desc": "SCOTUS 6-3 invalide les tarifs IEEPA, relief rally SPY +0.72%. AG\n    +11.18% (52W high silver), ETSY +8.39% (Depop $1.2B), FIX +6.46%\n    (52W high infra), NICE +5.50%, LITE +5.05% (AI infra). GEV -0.51%,\n    CAT -0.10% consolident. Régime Early Risk-Off. VIX 19.28. NVDA\n    earnings 26 fév.",
-    "tags": "us,commodity,materials,industrials,trade-idea",
-    "grade": "",
-    "href": "/scanner/20260220/",
-    "date": "20 Février 2026"
+    "title": "Rétrospective Scanner Hebdomadaire",
+    "desc": "Bilan complet des 40 setups scannés du 10 au 20 février 2026 — Hit rate 62.5%, note C+ — Audit qualité des données",
+    "tags": "",
+    "grade": "C+",
+    "href": "/scanner/retrospective/20260220/",
+    "date": "Semaine du 20 février 2026"
   },
   {
     "type": "scanner",
@@ -3404,6 +3391,32 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260215/",
     "date": "15 Février 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ Early Risk-Off — AXTI, SNDK, GLXY, RXT, IBRX, SEDG, MARA, AA, CLF, TERN",
+    "desc": "This is the 23h Friday scan, complementary to the morning scan (CVX, COP, HAL, RTX, ABBV, UNH, CAT, TLT, EWD, BITO). 100% new tickers. Key shift since 9h: (1) Regime improved from 0.28 to 0.42 (early risk-off, not deep risk-off anymore); (2) France & Italy opened diplomatic talks with Iran for Hormu...",
+    "tags": "us,tech,semis,crypto,biotech,materials,energy,short-squeeze,momentum,technique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260313-2300/",
+    "date": "Friday Evening, March 13, 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ EARLY RISK-OFF — NEM, ADM, BBIO, AMZN, KR, ARGX, RIO, EWJ, GDX, XLP",
+    "desc": "The regime detector confirms Early Risk-Off with a composite score of 0.52/1.0. VIX elevated at 24.93 (component score 1.0), TLT under pressure at $88.28 (score 0.77), SPX struggling at 6,781 below its 50DMA (score 0.48). Gold is surging as the ultimate safe haven — GLD +1.1%, silver +2.3%. Followin...",
+    "tags": "us,eu,asia,etf,materials,healthcare,consumer,energy,commodity,technique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260310-2300/",
+    "date": "Monday, March 10, 2026"
   },
   {
     "type": "tech",
