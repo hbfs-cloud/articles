@@ -677,14 +677,14 @@ async function main() {
     const caption = buildAudioCaption(modePayload, media.ytUrl);
 
     if (audioOk) {
-      // Send audio with full caption
+      // Send audio with full caption (includes YT link if available)
       sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
-      // Always also send video if available (not a fallback — both are sent)
-      if (media.videoPath) {
+      // Embed video only if no YouTube link (quota exceeded fallback)
+      if (!media.ytUrl && media.videoPath) {
         const videoCaption = `📊 <b>Synthèse ${key === 'growth' ? 'Aggressive' : key === 'zero' ? 'Conservative' : 'Balanced'} — ${modePayload.scanDate}</b>\nPortefeuille · Rotations · Setups · Risque`;
         sendTelegramVideo(media.videoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
-        console.log(`✅ Telegram video [${key}] → topic ${topicId}`);
+        console.log(`✅ Telegram video embedded [${key}] (no YT quota) → topic ${topicId}`);
       }
     } else if (media.videoPath) {
       // TTS failed — send video with full caption instead
