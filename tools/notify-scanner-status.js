@@ -212,7 +212,7 @@ function buildTelegramMessage(d) {
   let ordersBlock = '';
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    ordersBlock += `\n📥 <b>New orders — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% each)</b>\n`;
+    ordersBlock += `\n📥 <b>New orders — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} free (${d.alloc}% each)</b>\n`;
     buyPicks.forEach(s => {
       ordersBlock += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entry ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
     });
@@ -283,9 +283,9 @@ function buildDiscordMessage(d) {
   let ordersBlock = '';
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    ordersBlock += `\n📥 **New orders — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} libre${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% each)**\n`;
+    ordersBlock += `\n📥 **New orders — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} free (${d.alloc}% each)**\n`;
     buyPicks.forEach(s => {
-      ordersBlock += `> 🟢 **${s.symbol}**  ${tradStrat(s.strategy)}  entrée \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
+      ordersBlock += `> 🟢 **${s.symbol}**  ${tradStrat(s.strategy)}  entry \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
     });
   } else {
     ordersBlock += `\n✅ **Portfolio full** — no new orders\n`;
@@ -682,7 +682,7 @@ async function main() {
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
       // Embed video only if no YouTube link (quota exceeded fallback)
       if (!media.ytUrl && media.videoPath) {
-        const videoCaption = `📊 <b>Synthèse ${key === 'growth' ? 'Aggressive' : key === 'zero' ? 'Conservative' : 'Balanced'} — ${modePayload.scanDate}</b>\nPortefeuille · Rotations · Setups · Risque`;
+        const videoCaption = `📊 <b>${key === 'growth' ? 'Aggressive' : key === 'zero' ? 'Conservative' : 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
         sendTelegramVideo(media.videoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
         console.log(`✅ Telegram video embedded [${key}] (no YT quota) → topic ${topicId}`);
       }
