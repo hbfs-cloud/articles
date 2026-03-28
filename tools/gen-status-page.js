@@ -616,6 +616,22 @@ details[open] summary::after{content:"▼"}
   .t th,.t td{padding:.35rem .4rem}
   .tab{font-size:.72rem;padding:.5rem .3rem}
 }
+/* ── Community CTA ── */
+.community-cta{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:2rem 1rem;margin-top:2rem}
+.community-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
+.community-text{flex:1;min-width:220px;color:#e2e8f0}
+.community-text h3{font-size:1.2rem;font-weight:800;margin:0 0 .4rem;color:#fff}
+.community-text p{font-size:.88rem;color:#94a3b8;margin:0;line-height:1.5}
+.community-links{display:flex;gap:.8rem;flex-wrap:wrap}
+.cta-btn{display:flex;align-items:center;gap:.7rem;padding:.75rem 1.2rem;border-radius:10px;text-decoration:none;transition:opacity .15s;min-width:200px}
+.cta-btn:hover{opacity:.9}
+.cta-btn i{font-size:1.6rem;flex-shrink:0}
+.cta-btn span{display:flex;flex-direction:column;gap:1px}
+.cta-btn strong{font-size:.92rem;font-weight:700;line-height:1.2}
+.cta-btn small{font-size:.73rem;opacity:.75;line-height:1.2}
+.tg-btn{background:#229ED9;color:#fff}
+.dc-btn{background:#5865F2;color:#fff}
+@media(max-width:600px){.community-inner{flex-direction:column;align-items:flex-start}.cta-btn{min-width:unset;width:100%}}
   </style>
 </head>
 <body>
@@ -651,13 +667,38 @@ details[open] summary::after{content:"▼"}
   </div>
 </div>
 
+<div class="community-cta">
+  <div class="community-inner">
+    <div class="community-text">
+      <h3>Stay in the loop</h3>
+      <p>New scan every weekday evening. Follow the signals, track positions, and learn systematic trading — all free.</p>
+    </div>
+    <div class="community-links">
+      <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" class="cta-btn tg-btn">
+        <i class="fab fa-telegram"></i>
+        <span>
+          <strong>Join on Telegram</strong>
+          <small>Daily News · Portfolio Live · Learning</small>
+        </span>
+      </a>
+      <a href="https://discord.com/channels/1426972172915834900/1483382014588747778" target="_blank" rel="noopener" class="cta-btn dc-btn">
+        <i class="fab fa-discord"></i>
+        <span>
+          <strong>View on Discord</strong>
+          <small>#analyse-scanner · read-only</small>
+        </span>
+      </a>
+    </div>
+  </div>
+</div>
+
 <footer class="article-footer">
   &copy; 2026 Market Watch &middot;
   <a href="/" title="Home"><i class="fas fa-house"></i></a>
   &nbsp;&middot;&nbsp;
-  <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" title="Join Telegram channel" style="color:#229ED9;font-weight:600"><i class="fab fa-telegram"></i> Telegram</a>
+  <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" style="color:#229ED9"><i class="fab fa-telegram"></i> Telegram</a>
   &nbsp;&middot;&nbsp;
-  <a href="https://discord.com/channels/1426972172915834900/1483382014588747778" target="_blank" rel="noopener" title="Discord #analyse-scanner (read-only)" style="color:#5865F2;font-weight:600"><i class="fab fa-discord"></i> Discord</a>
+  <a href="https://discord.com/channels/1426972172915834900/1483382014588747778" target="_blank" rel="noopener" style="color:#5865F2"><i class="fab fa-discord"></i> Discord</a>
 </footer>
 
 <script src="/assets/core.js"></script>
