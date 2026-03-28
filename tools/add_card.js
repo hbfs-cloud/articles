@@ -255,14 +255,54 @@ if (href.startsWith('//')) href = href.substring(1);
 
 // Date extraction for non-analyses tabs
 if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
-    const tickerNameEl = doc.querySelector('.ticker-name'); // This is usually in the hero-title or similar
-    if (tickerNameEl && tickerNameEl.textContent.includes('—')) {
-        date = tickerNameEl.textContent.split('—')[1].trim();
-    } else if (tickerNameEl) {
-        date = tickerNameEl.textContent.trim();
+    // Pour les rétrospectives : extraire la date depuis le titre (ex: "Mar 20 - Mar 27, 2026")
+    // et le grade depuis .retro-grade
+    if (fullPath.includes('/retrospective/')) {
+        const titleEl = doc.querySelector('title');
+        const titleText = titleEl ? titleEl.textContent : '';
+        // "Scanner Retrospective | Mar 20 - Mar 27, 2026 | Market Watch"
+        const rangeMatch = titleText.match(/([A-Za-z]+ \d+)\s*[-–]\s*([A-Za-z]+ \d+,?\s*\d{4})/);
+        if (rangeMatch) {
+            date = `${rangeMatch[1]} – ${rangeMatch[2]}`;
+        } else {
+            // Fallback: extract from folder path YYYYMMDD
+            const folderMatch = fullPath.match(/(\d{8})/);
+            if (folderMatch) {
+                const ds = folderMatch[1];
+                const d = new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`);
+                if (!isNaN(d)) {
+                    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                    date = `Semaine du ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                }
+            }
+        }
+        // Grade : .retro-grade element
+        if (!finalGrade) {
+            const retroGradeEl = doc.querySelector('.retro-grade');
+            if (retroGradeEl) finalGrade = retroGradeEl.textContent.trim().replace(/\s+/g, '');
+        }
     } else {
-        // fallback
-        date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        const tickerNameEl = doc.querySelector('.ticker-name'); // This is usually in the hero-title or similar
+        if (tickerNameEl && tickerNameEl.textContent.includes('—')) {
+            date = tickerNameEl.textContent.split('—')[1].trim();
+        } else if (tickerNameEl) {
+            date = tickerNameEl.textContent.trim();
+        } else {
+            // fallback: extract from folder path YYYYMMDD
+            const folderMatch = fullPath.match(/(\d{8})/);
+            if (folderMatch) {
+                const ds = folderMatch[1];
+                const d = new Date(`${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`);
+                if (!isNaN(d)) {
+                    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+                    date = `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+                } else {
+                    date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                }
+            } else {
+                date = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+            }
+        }
     }
     // Strip leading day names (Monday, Tuesday, etc.) and normalize to "DD mois YYYY" french format
     date = date.replace(/^(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, '');

@@ -238,23 +238,41 @@ check('radar.json: events et opportunities présents (pas que risks)', () => {
   if (missing.length) return missing.join(', ') + ' — radar affichera uniquement les risques';
 });
 
-// 11. scanner.json — tiles retro : style amber/jaune (f59e0b) + pas de doublons
-// Filtre : uniquement les tiles avec badge "RÉTROSPECTIVE" (les vraies retros, pas les tags data-)
-check('scanner.json: tiles retrospective — style amber (f59e0b) + pas de doublons', () => {
+// 11. scanner.json — tiles retro : style amber (f59e0b) + grade présent + date non-fallback + pas de doublons
+check('scanner.json: tiles retro — amber + grade + date réelle + pas de doublons', () => {
   const d = readJSON('data/scanner.json');
   const retroTiles = d.filter(t => t.includes('RÉTROSPECTIVE'));
   if (retroTiles.length === 0) return true; // pas de retro indexée → skip
-  // Style amber obligatoire (#f59e0b) — pas violet (#8b5cf6)
+  const issues = [];
+
+  // Style amber obligatoire (#f59e0b)
   const noAmber = retroTiles.filter(t => !t.includes('f59e0b'));
   if (noAmber.length) {
     const hrefs = noAmber.map(t => { const m = t.match(/href="([^"]+)"/); return m && m[1]; });
-    return `${noAmber.length}/${retroTiles.length} tiles retro sans style amber (f59e0b): ${hrefs.join(', ')}`;
+    issues.push(`${noAmber.length} sans style amber: ${hrefs.join(', ')}`);
   }
+
+  // Grade présent (data-grade="B+" etc.)
+  const noGrade = retroTiles.filter(t => !t.match(/data-grade="[A-F][+-]?"/));
+  if (noGrade.length) {
+    const hrefs = noGrade.map(t => { const m = t.match(/href="([^"]+)"/); return m && m[1]; });
+    issues.push(`${noGrade.length} sans grade: ${hrefs.join(', ')}`);
+  }
+
+  // Date non-fallback (ne doit pas afficher aujourd'hui)
+  const today = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const badDate = retroTiles.filter(t => t.includes(`>${today}<`));
+  if (badDate.length) {
+    issues.push(`${badDate.length} tiles retro avec date fallback (aujourd'hui)`);
+  }
+
   // Doublons par href
   const hrefs = {};
   d.forEach(t => { const m = t && t.match(/href="([^"]+)"/); if (m) hrefs[m[1]] = (hrefs[m[1]]||0)+1; });
   const dups = Object.entries(hrefs).filter(([, c]) => c > 1);
-  if (dups.length) return `${dups.length} tiles en doublon: ${dups.map(([h, c]) => h+'×'+c).join(', ')}`;
+  if (dups.length) issues.push(`${dups.length} tiles en doublon: ${dups.map(([h, c]) => h+'×'+c).join(', ')}`);
+
+  if (issues.length) return issues.join(' | ');
 });
 
 // ─── Résumé ──────────────────────────────────────────────────────────────────
