@@ -286,24 +286,70 @@ function fallbackContent(html, url, dateStr, title, meta) {
   };
 }
 
-// ── TTS ───────────────────────────────────────────────────────────────────────
+// ── TTS — Qwen3-TTS via Mac Mini (SSH) ───────────────────────────────────────
+const QWEN3_VOICE_INSTRUCT = 'A charismatic male podcast host voice, warm and engaging, conversational yet sharp, like a confident fintech YouTuber who knows his stuff';
+const QWEN3_VENV = '/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/.venv-mlx';
+const QWEN3_MODEL = 'mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit';
+
 function runTTS(text, outPath) {
-  const txtPath = outPath + '.txt';
-  fs.writeFileSync(txtPath, text, 'utf8');
-  // edge-tts writes .mp3 directly
-  const r = spawnSync(EDGE_TTS, ['--voice', VOICE, `--rate=${RATE}`, `--pitch=${PITCH}`, '-f', txtPath, '--write-media', outPath], { stdio: 'pipe', timeout: 120000 });
-  try { fs.unlinkSync(txtPath); } catch {}
-  if (!fs.existsSync(outPath)) {
-    // Try with wav then convert
-    const wavPath = outPath.replace('.mp3', '.wav');
-    spawnSync(EDGE_TTS, ['--voice', VOICE, `--rate=${RATE}`, `--pitch=${PITCH}`, '-f', txtPath + '.2', '--write-media', wavPath], { stdio: 'pipe', timeout: 120000 });
-    if (fs.existsSync(wavPath)) {
-      spawnSync(FFMPEG, ['-y', '-i', wavPath, '-codec:a', 'libmp3lame', '-qscale:a', '4', outPath], { stdio: 'pipe' });
-      try { fs.unlinkSync(wavPath); } catch {}
-    }
+  const tmpId = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const remoteDir = `/tmp/qwen3-${tmpId}`;
+  const remoteWav = `${remoteDir}/audio_000.wav`;
+  const remoteMp3 = `/tmp/qwen3-${tmpId}.mp3`;
+
+  // Escape text for shell
+  const safeText = text.replace(/'/g, "'\\''").replace(/\n/g, ' ').replace(/"/g, '\\"');
+  const safeInstruct = QWEN3_VOICE_INSTRUCT.replace(/'/g, "'\\''");
+
+  const sshCmd = [
+    `${QWEN3_VENV}/bin/python3 -m mlx_audio.tts.generate`,
+    `--model '${QWEN3_MODEL}'`,
+    `--text '${safeText}'`,
+    `--instruct '${safeInstruct}'`,
+    `--output '${remoteDir}'`,
+    `2>&1 | tail -2`,
+    `&& /opt/homebrew/bin/ffmpeg -i '${remoteWav}' -codec:a libmp3lame -qscale:a 3 '${remoteMp3}' -y 2>/dev/null`,
+    `&& echo DONE`,
+  ].join(' ');
+
+  const r = spawnSync('sshpass', [
+    '-p', 'Elonux!123',
+    'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'PubkeyAuthentication=no',
+    'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net',
+    sshCmd,
+  ], { stdio: 'pipe', timeout: 180000 });
+
+  const stdout = r.stdout?.toString() || '';
+  if (!stdout.includes('DONE')) {
+    console.error('  ⚠️  Qwen3 TTS failed:', stdout.slice(-200));
+    // Fallback to edge-tts
+    const txtPath = outPath + '.txt';
+    fs.writeFileSync(txtPath, text, 'utf8');
+    spawnSync(EDGE_TTS, ['--voice', 'en-US-GuyNeural', '--rate=+8%', '--pitch=+10Hz', '-f', txtPath, '--write-media', outPath], { stdio: 'pipe', timeout: 120000 });
+    try { fs.unlinkSync(txtPath); } catch {}
+    const size2 = fs.existsSync(outPath) ? Math.round(fs.statSync(outPath).size / 1024) : 0;
+    console.log(`  ✅ ${path.basename(outPath)} (${size2}KB) [edge-tts fallback]`);
+    return;
   }
+
+  // SCP mp3 back
+  const scp = spawnSync('sshpass', [
+    '-p', 'Elonux!123',
+    'scp', '-o', 'StrictHostKeyChecking=no', '-o', 'PubkeyAuthentication=no',
+    `marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net:${remoteMp3}`,
+    outPath,
+  ], { stdio: 'pipe', timeout: 60000 });
+
+  // Cleanup remote
+  spawnSync('sshpass', [
+    '-p', 'Elonux!123',
+    'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'PubkeyAuthentication=no',
+    'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net',
+    `rm -rf '${remoteDir}' '${remoteMp3}'`,
+  ], { stdio: 'pipe', timeout: 15000 });
+
   const size = fs.existsSync(outPath) ? Math.round(fs.statSync(outPath).size / 1024) : 0;
-  console.log(`  ✅ ${path.basename(outPath)} (${size}KB)`);
+  console.log(`  ✅ ${path.basename(outPath)} (${size}KB) [Qwen3-TTS]`);
 }
 
 function audioDuration(mp3Path) {
