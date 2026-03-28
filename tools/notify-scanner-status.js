@@ -227,7 +227,7 @@ function buildTelegramMessage(d) {
 
   // 3. SIGNAUX — ticker, score, setup uniquement
   const picksLines = d.picks.map((s, i) =>
-    `  ${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy}`
+    `  ${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy.padEnd(12)} R/R ${s.rr}`
   ).join('\n');
 
   return `📊 <b>Scanner Balanced — ${d.scanDate}</b>
@@ -289,7 +289,7 @@ function buildDiscordMessage(d) {
 
   // 3. SIGNAUX — ticker, score, setup uniquement
   const picksLines = d.picks.map((s, i) =>
-    `${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy}`
+    `${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy.padEnd(12)} R/R ${s.rr}`
   ).join('\n');
 
   return `📊 **Scanner Balanced — ${d.scanDate}**
