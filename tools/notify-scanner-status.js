@@ -116,16 +116,19 @@ function buildStatusPayload(scanDir) {
   }, 0);
   const nowPct = activePos.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
 
-  // Top signals (top 3, no Short Squeeze)
-  const picks = (wl.picks || []).filter(s => !/short.?squeeze/i.test(s.strategy)).slice(0, 3);
+  // All signals for this mode (topN, no Short Squeeze)
+  const picks = (wl.picks || []).filter(s => !/short.?squeeze/i.test(s.strategy)).slice(0, cfg.topN);
 
   // Portfolio full?
   const slotsLeft = cfg.portfolioSize - activePos.length;
+
+  const alloc = Math.round(100 / cfg.portfolioSize);
 
   return {
     scanDir,
     scanDate: formatDate(scanDir),
     cfg,
+    alloc,
     metrics: {
       return30d: metrics.return_30d,
       dd: metrics.max_drawdown,
@@ -165,7 +168,7 @@ function buildTelegramMessage(d) {
   }
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    actionsBlock += `\n⚡ <b>${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir :</b>`;
+    actionsBlock += `\n⚡ <b>${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir (${d.alloc}% chacun) :</b>`;
     buyPicks.forEach(s => {
       actionsBlock += `\n  → <b>${s.symbol}</b> ${s.strategy} | entry ${s.entry} | stop ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2} | R/R ${s.rr}`;
     });
@@ -179,9 +182,9 @@ function buildTelegramMessage(d) {
     return `  ${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${p.left}j restant${warn}`;
   }).join('\n');
 
-  // 3. SIGNAUX
+  // 3. SIGNAUX (tous les topN du mode)
   const picksLines = d.picks.map(s =>
-    `  ${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} ${s.entry}→${s.tp1}/${s.tp2}  R/R ${s.rr}`
+    `  ${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} entry ${s.entry} stop ${s.stop} TP1 ${s.tp1} TP2 ${s.tp2} R/R ${s.rr} (${d.alloc}%)`
   ).join('\n');
 
   return `📊 <b>Scanner Balanced — ${d.scanDate}</b>
@@ -210,7 +213,7 @@ function buildDiscordMessage(d) {
   }
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    actionsBlock += `\n⚡ **${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir :**`;
+    actionsBlock += `\n⚡ **${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir (${d.alloc}% chacun) :**`;
     buyPicks.forEach(s => {
       actionsBlock += `\n→ **${s.symbol}** ${s.strategy} | entry ${s.entry} | stop ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2} | R/R ${s.rr}`;
     });
@@ -224,9 +227,9 @@ function buildDiscordMessage(d) {
     return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${p.left}j restant${warn}`;
   }).join('\n');
 
-  // 3. SIGNAUX
+  // 3. SIGNAUX (tous les topN du mode)
   const picksLines = d.picks.map(s =>
-    `${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} ${String(s.entry).padEnd(6)}→ TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}`
+    `${s.symbol.padEnd(5)} ${String(s.score).padEnd(3)} ${s.strategy.padEnd(12)} entry ${s.entry} stop ${s.stop} TP1 ${s.tp1} TP2 ${s.tp2} R/R ${s.rr} (${d.alloc}%)`
   ).join('\n');
 
   return `📊 **Scanner Balanced — ${d.scanDate}**
