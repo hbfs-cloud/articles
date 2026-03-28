@@ -54,6 +54,24 @@ function formatDate(yyyymmdd) {
   return `${yyyymmdd.slice(6, 8)}/${yyyymmdd.slice(4, 6)}/${yyyymmdd.slice(0, 4)}`;
 }
 
+// ─── Compute metrics like gen-status-page.js ─────────────────────────────────
+function computeMetrics(trades, portfolioSize) {
+  const wins = trades.filter(t => !t._premature && (t.pnlPct || 0) > 0);
+  const losses = trades.filter(t => !t._premature && (t.pnlPct || 0) <= 0);
+  const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize, 0);
+  let equity = 0, peak = 0, maxDD = 0;
+  for (const t of trades) {
+    equity += (t.pnlPct || 0) / portfolioSize;
+    if (equity > peak) peak = equity;
+    if (peak - equity > maxDD) maxDD = peak - equity;
+  }
+  const wr = trades.length > 0 ? Math.round(wins.length / trades.filter(t => !t._premature).length * 100) || 0 : 0;
+  const grossWin = wins.reduce((s, t) => s + (t.pnlPct || 0), 0);
+  const grossLoss = Math.abs(losses.reduce((s, t) => s + (t.pnlPct || 0), 0));
+  const pf = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : 0;
+  return { ret: +totalReturn.toFixed(2), dd: +(-maxDD).toFixed(2), wr, pf };
+}
+
 // ─── Reconstruct positions like gen-status-page.js ───────────────────────────
 // Positions = premature (expired but holdDays < horizon) trades, enriched with live prices
 function buildPositions(cfg, modeKey) {
@@ -93,12 +111,20 @@ function buildPositions(cfg, modeKey) {
 // ─── Build payload ────────────────────────────────────────────────────────────
 function buildStatusPayload(scanDir) {
   const modesObj = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes-config.json'))).modes;
-  const metrics = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-metrics.json')));
   const wl = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcp/watchlist.json')));
 
   // Balanced = calmar
   const cfgRaw = modesObj.calmar;
   const cfg = { id: 'calmar', ...cfgRaw };
+
+  // Compute metrics from backtest trades (same as gen-status-page.js)
+  const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+  const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
+  const rawTrades = allTrades[modeMap['calmar']] || [];
+  const trades = rawTrades.map(t =>
+    (t.status === 'expired' && t.holdDays < cfg.horizon) ? { ...t, _premature: true } : t
+  );
+  const m = computeMetrics(trades, cfg.portfolioSize);
 
   // Active positions (same logic as gen-status-page.js)
   const activePos = buildPositions(cfg, 'calmar');
@@ -130,10 +156,10 @@ function buildStatusPayload(scanDir) {
     cfg,
     alloc,
     metrics: {
-      return30d: metrics.return_30d,
-      dd: metrics.max_drawdown,
-      wr: metrics.win_rate,
-      pf: metrics.profit_factor,
+      ret: m.ret,   // return total depuis D0 (= ce qu'affiche gen-status-page)
+      dd: m.dd,
+      wr: m.wr,
+      pf: m.pf,
     },
     activePos,
     expiring,
@@ -188,7 +214,7 @@ function buildTelegramMessage(d) {
   ).join('\n');
 
   return `📊 <b>Scanner Balanced — ${d.scanDate}</b>
-📈 Perf 30j : ${sign(d.metrics.return30d)}${d.metrics.return30d}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
+📈 Perf D0 : ${sign(d.metrics.ret)}${d.metrics.ret}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
 ${actionsBlock}
 
 <b>📂 Positions (${d.activePos.length}/${d.cfg.portfolioSize}) :</b>
@@ -233,7 +259,7 @@ function buildDiscordMessage(d) {
   ).join('\n');
 
   return `📊 **Scanner Balanced — ${d.scanDate}**
-📈 Perf 30j : ${sign(d.metrics.return30d)}${d.metrics.return30d}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
+📈 Perf D0 : ${sign(d.metrics.ret)}${d.metrics.ret}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
 ${actionsBlock}
 
 **📂 Positions (${d.activePos.length}/${d.cfg.portfolioSize})**
