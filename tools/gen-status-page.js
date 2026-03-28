@@ -181,7 +181,7 @@ function main() {
     <div class="ps"><span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max DD</span></div>
     <div class="ps"><span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span></div>
     <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit F.</span></div>
-    <div class="ps"><span class="ps-v">${m.trades}</span><span class="ps-l">Trades</span></div>
+    <div class="ps"><span class="ps-v">${m.trades - trades.filter(t=>t._premature).length}</span><span class="ps-l">Closed</span></div>
     <div class="ps"><span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
