@@ -332,42 +332,55 @@ ${picksLines}
 function buildAudioCaption(d, ytUrl) {
   const sign = n => n >= 0 ? '+' : '';
   const modeLabel = d.cfg.id === 'growth' ? '📈 Aggressive' : d.cfg.id === 'zero' ? '🛡️ Conservative' : '⚖️ Balanced';
+  const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
   const closeNow   = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
 
   let lines = [];
-  lines.push(`${modeLabel} — ${d.scanDate}`);
-  lines.push(`📈 <b>D0</b> ${sign(d.metrics.ret)}${d.metrics.ret}% · <b>DD</b> ${d.metrics.dd}% · <b>WR</b> ${d.metrics.wr}% · <b>PF</b> ${d.metrics.pf}x`);
+  lines.push(`<b>${modeLabel} — ${d.scanDate}</b>`);
+  lines.push(`📈 D0 ${sign(d.metrics.ret)}${d.metrics.ret}%  DD ${d.metrics.dd}%  WR ${d.metrics.wr}%  PF ${d.metrics.pf}x`);
 
+  // Actions required
   if (closeNow.length || decideSoon.length) {
     lines.push('');
     lines.push('🗂 <b>Action required</b>');
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      lines.push(`⛔ <b>${p.ticker}</b> ${pnl} → <b>CLOSE</b>`);
+      lines.push(`⛔ <b>${p.ticker}</b> ${pnl} → CLOSE`);
     });
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      lines.push(`⏰ <b>${p.ticker}</b> ${pnl} TP1 ${p.tp1} → decide in 2d`);
+      lines.push(`⏰ <b>${p.ticker}</b> ${pnl} TP1 ${p.tp1} · 2d left`);
     });
   }
 
+  // New orders
   if (d.slotsLeft > 0) {
-    const buyPicks = d.picks.slice(0, d.slotsLeft);
+    const buyPicks = d.picks.slice(0, Math.min(d.slotsLeft, 3));
     lines.push('');
-    lines.push(`📥 <b>New orders</b> — ${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} (${d.alloc}% each)`);
+    lines.push(`📥 <b>${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} open</b> (${d.alloc}% each)`);
     buyPicks.forEach(s => {
-      lines.push(`🟢 <b>${s.symbol}</b> ${s.strategy} ${s.entry} → TP1 ${s.tp1} · R/R ${s.rr}`);
+      lines.push(`🟢 <b>${s.symbol}</b> ${s.entry}→TP1 ${s.tp1} R/R ${s.rr}`);
+    });
+  } else {
+    lines.push('✅ Portfolio full');
+  }
+
+  // Open positions
+  if (d.activePos.length > 0) {
+    lines.push('');
+    lines.push(`📂 <b>Positions (${d.activePos.length}/${d.cfg.portfolioSize})</b>`);
+    d.activePos.forEach(p => {
+      const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+      const warn = p.left <= 1 ? '⚠️' : p.left === 2 ? '⏰' : '';
+      lines.push(`  ${p.ticker} ${pnl} · ${p.left}d ${warn}`);
     });
   }
 
-  // Top 3 signals
+  // Risk view
   lines.push('');
-  lines.push('📡 <b>Top signals</b>');
-  d.picks.slice(0, 5).forEach((s, i) => {
-    lines.push(`${i + 1}. <b>${s.symbol}</b> ${s.score} ${tradStrat(s.strategy)} R/R ${s.rr}`);
-  });
+  lines.push(`⚖️ Risk: ${sign(d.worstPct)}${d.worstPct.toFixed(1)}% ${bar} +${d.bestPct.toFixed(1)}%  ▲ now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%`);
 
   if (ytUrl) lines.push(`\n📺 <a href="${ytUrl}">Watch on YouTube</a>`);
   lines.push(`🔗 <a href="${STATUS_URL}">Full status →</a>`);
@@ -557,20 +570,19 @@ async function main() {
     { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE'  },
   ];
 
-  // ── YouTube URL: look for latest result.json in /tmp/mw-media ──────────────
-  function getLatestYtUrl() {
+  // ── YouTube URL: only use a scanner-specific result.json ──────────────────
+  // scanDir-specific result takes priority; fallback = null (no random YT link)
+  function getScannerYtUrl(scanDir) {
     try {
-      const mediaDir = '/tmp/mw-media';
-      if (!fs.existsSync(mediaDir)) return null;
-      const entries = fs.readdirSync(mediaDir)
-        .map(d => { try { return JSON.parse(fs.readFileSync(path.join(mediaDir, d, 'result.json'))); } catch { return null; } })
-        .filter(r => r && r.youtubeUrl)
-        .sort((a, b) => (b.slug || '').localeCompare(a.slug || ''));
-      return entries[0]?.youtubeUrl || null;
+      const f = path.join('/tmp/mw-media', `scanner-${scanDir}`, 'result.json');
+      if (!fs.existsSync(f)) return null;
+      const r = JSON.parse(fs.readFileSync(f));
+      return r.youtubeUrl || null;
     } catch { return null; }
   }
-  const latestYtUrl = getLatestYtUrl();
-  if (latestYtUrl) console.log(`📺 YouTube: ${latestYtUrl}`);
+  const latestYtUrl = getScannerYtUrl(scanDir);
+  if (latestYtUrl) console.log(`📺 YouTube (scanner): ${latestYtUrl}`);
+  else console.log('📺 YouTube: no scanner video found — skipping YT link');
 
   for (const { key, topicEnv } of modeTopics) {
     const modePayload = buildStatusPayload(scanDir, key);
