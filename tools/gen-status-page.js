@@ -331,10 +331,10 @@ ${(() => {
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>` : ''}
     </summary>
     ${sig.length ? `<table class="t" style="margin-top:.6rem">
-      <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th class="hide-m">Stop</th><th>TP1</th><th class="hide-m">TP2</th><th class="hide-m">R/R</th></tr></thead>
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Stop</th><th>TP1</th><th class="hide-m">TP2</th><th class="hide-m">R/R</th></tr></thead>
       <tbody>${sig.map((s, i) => {
         const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-        return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos hide-m">${s.tp2}</td><td class="am hide-m">${s.rr}</td></tr>`;
+        return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m hide-m">${s.strategy}</td><td>${s.entry}</td><td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos hide-m">${s.tp2}</td><td class="am hide-m">${s.rr}</td></tr>`;
       }).join('')}</tbody>
     </table>` : `<p class="empty">No signals for this mode today</p>`}
   </details>
