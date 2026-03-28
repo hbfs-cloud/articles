@@ -275,7 +275,40 @@ check('scanner.json: tiles retro — amber + grade + date réelle + pas de doubl
   if (issues.length) return issues.join(' | ');
 });
 
-// 12. scanner/status — section Pending Orders présente pour chaque mode (après mise à jour scanner)
+// 12. index.html — bloc "Performance du Scanner" à jour avec la dernière rétro
+check('index.html: Performance du Scanner — Updated date en phase avec dernière rétro', () => {
+  const html = readFile('index.html');
+  if (!html) return 'index.html absent';
+  // Extraire la date "Updated: DD Mon YYYY" du bloc scanner-perf
+  const updatedMatch = html.match(/Updated:\s*([A-Za-z]+\s+\d+\s+\d{4})\s*—\s*Period:/);
+  if (!updatedMatch) return 'Bloc "Performance du Scanner" introuvable dans index.html';
+
+  // Trouver la date de la dernière rétro dans scanner/retrospective/
+  const retroDir = path.join(ROOT, 'scanner', 'retrospective');
+  if (!fs.existsSync(retroDir)) return 'Dossier scanner/retrospective/ absent';
+  const retroDates = fs.readdirSync(retroDir).filter(d => /^\d{8}$/.test(d)).sort();
+  if (!retroDates.length) return 'Aucune rétro trouvée';
+  const lastRetroDate = retroDates[retroDates.length - 1]; // ex: "20260327"
+  const lastRetroYear = lastRetroDate.slice(0, 4);
+  const lastRetroMonth = parseInt(lastRetroDate.slice(4, 6)) - 1;
+  const lastRetroDay = parseInt(lastRetroDate.slice(6, 8));
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const expectedYear = lastRetroYear;
+  const expectedMonth = months[lastRetroMonth];
+  const expectedDay = lastRetroDay;
+  // Le bloc doit mentionner l'année + le mois de la dernière rétro
+  const updatedStr = updatedMatch[1]; // ex: "Mar 27 2026"
+  if (!updatedStr.includes(expectedMonth) || !updatedStr.includes(expectedYear)) {
+    return `Performance du Scanner affiche "${updatedStr}" mais dernière rétro = ${expectedMonth} ${expectedDay} ${expectedYear} — relancer tools/update-scanner-perf.js`;
+  }
+  // Le nombre de rétros doit correspondre
+  const nRetrosMatch = html.match(/\((\d+) rétros cumulées\)/);
+  if (nRetrosMatch && parseInt(nRetrosMatch[1]) !== retroDates.length) {
+    return `${nRetrosMatch[1]} rétros cumulées dans index.html mais ${retroDates.length} dans scanner/retrospective/`;
+  }
+});
+
+// 14. scanner/status — section Pending Orders présente pour chaque mode (après mise à jour scanner)
 check('scanner/status: section Pending Orders présente pour les 3 modes', () => {
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
@@ -283,7 +316,7 @@ check('scanner/status: section Pending Orders présente pour les 3 modes', () =>
   if (count < 3) return `seulement ${count}/3 sections "Pending Orders" trouvées (growth, calmar, zero)`;
 });
 
-// 13. scanner/status — Pending Orders ne doit pas contenir de tickers déjà en Open Positions
+// 14. scanner/status — Pending Orders ne doit pas contenir de tickers déjà en Open Positions
 check('scanner/status: pas de ticker en doublon entre Pending Orders et Open Positions', () => {
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
