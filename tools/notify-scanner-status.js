@@ -179,7 +179,7 @@ function buildTelegramMessage(d) {
   // 2. POSITIONS + RISQUE
   const posLines = d.activePos.map(p => {
     const warn = p.left <= 1 ? ' ⚠️' : '';
-    return `  ${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${p.left}j restant${warn}`;
+    return `  ${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${d.alloc}% — ${p.left}j restant${warn}`;
   }).join('\n');
 
   // 3. SIGNAUX (tous les topN du mode)
@@ -224,7 +224,7 @@ function buildDiscordMessage(d) {
   // 2. POSITIONS + RISQUE
   const posLines = d.activePos.map(p => {
     const warn = p.left <= 1 ? ' ⚠️' : '';
-    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${p.left}j restant${warn}`;
+    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${d.alloc}% — ${p.left}j restant${warn}`;
   }).join('\n');
 
   // 3. SIGNAUX (tous les topN du mode)

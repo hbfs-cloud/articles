@@ -35,13 +35,13 @@ node tools/update-tracking.js
 # ─── Step 1b: Clean old static-named images (pre-timestamp migration) ────────
 rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/status/mode-zero.png scanner/status/daily-card.png 2>/dev/null
 
-# ─── Step 2: Generate daily card image + Telegram ────────────────────────────
+# ─── Step 2: Generate daily card image (Discord only — Telegram via Step 8) ──
 echo ""
 echo "🖼️  Step 2: Generating daily card image..."
 if [ "$DRY_RUN" = true ]; then
   node tools/generate-scanner-image.js --dry-run
 else
-  node tools/generate-scanner-image.js --telegram
+  node tools/generate-scanner-image.js
 fi
 
 # ─── Step 3: Re-run sweep (backtest all scans with current prices) ───────────
