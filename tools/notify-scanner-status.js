@@ -185,62 +185,67 @@ function asciiBar(worstPct, nowPct, bestPct) {
 function buildTelegramMessage(d) {
   const sign = n => n >= 0 ? '+' : '';
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
+  const sep = '──────────────────────────────';
 
-  // 1. ACTIONS
-  let actionsBlock = '';
-
-  // Positions proches du timeout (left <= 2)
   const closeNow   = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
 
+  // ── ACTIONS ──
+  let actions = '';
   if (closeNow.length) {
-    actionsBlock += `\n⛔ <b>CLÔTURER à l'ouverture :</b>`;
+    actions += `\n⛔ <b>CLÔTURER à l'ouverture</b>\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      actionsBlock += `\n  → <b>${p.ticker}</b> ${pnl} | entry ${p.entry} → now ${p.current_price} | stop ${p.stop} | horizon atteint`;
+      actions += `  🔴 <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  stop ${p.stop}\n`;
     });
   }
   if (decideSoon.length) {
-    actionsBlock += `\n⏰ <b>Décision requise (expire dans 2j) :</b>`;
+    actions += `\n⏰ <b>Décision avant clôture (J-2)</b>\n`;
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      actionsBlock += `\n  → <b>${p.ticker}</b> ${pnl} | now ${p.current_price} | TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''} | stop ${p.stop} — keep ou exit ?`;
+      actions += `  🟡 <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''}  stop ${p.stop}\n`;
     });
   }
-
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    actionsBlock += `\n⚡ <b>${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir (${d.alloc}% chacun) :</b>`;
+    actions += `\n⚡ <b>${d.slotsLeft} ordre${d.slotsLeft > 1 ? 's' : ''} à passer — ${d.alloc}% chacun</b>\n`;
     buyPicks.forEach(s => {
-      actionsBlock += `\n  → <b>${s.symbol}</b> ${s.strategy} | entry ${s.entry} | stop ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2} | R/R ${s.rr}`;
+      actions += `  🟢 <b>${s.symbol}</b>  ${s.strategy}  entry ${s.entry}  stop ${s.stop}  TP1 ${s.tp1}  TP2 ${s.tp2}  R/R ${s.rr}\n`;
     });
   } else {
-    actionsBlock += `\n✅ <b>Portfolio plein</b> — aucun ordre à passer`;
+    actions += `\n✅ <b>Portfolio plein</b> — aucun ordre à passer\n`;
   }
 
-  // 2. POSITIONS + RISQUE
-  const posLines = d.activePos.map(p => {
-    const warn = p.left <= 1 ? ' ⚠️' : '';
-    return `  ${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${d.alloc}% — ${p.left}j restant${warn}`;
-  }).join('\n');
+  // ── POSITIONS ──
+  const posLines = d.activePos.length
+    ? d.activePos.map(p => {
+        const pnl = (p.return_pct >= 0 ? '📈 +' : '📉 ') + p.return_pct + '%';
+        const warn = p.left <= 1 ? ' ⚠️' : p.left === 2 ? ' ⏰' : '';
+        return `  ${p.ticker.padEnd(6)} ${pnl.padEnd(12)}  ${d.alloc}%  ${p.left}j${warn}`;
+      }).join('\n')
+    : '  Aucune position ouverte';
 
-  // 3. SIGNAUX — ticker, score, setup uniquement
+  // ── SIGNAUX ──
   const picksLines = d.picks.map((s, i) =>
-    `  ${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy.padEnd(12)} R/R ${s.rr}`
+    `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${s.strategy.padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  return `📊 <b>Scanner Balanced — ${d.scanDate}</b>
-📈 Perf D0 : ${sign(d.metrics.ret)}${d.metrics.ret}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
-${actionsBlock}
-
-<b>📂 Positions (${d.activePos.length}/${d.cfg.portfolioSize}) :</b>
-<pre>${posLines || '  —'}</pre>
-<b>⚖️ Risque portefeuille :</b>
-<pre>${sign(d.worstPct)}${d.worstPct.toFixed(1)}% ${bar} +${d.bestPct.toFixed(1)}%
-         ▲ Now : ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
-<b>📡 Signaux du jour (top ${d.picks.length}) :</b>
-<pre>${picksLines || '  —'}</pre>
+  return `📊 <b>Scanner Balanced</b>  —  ${d.scanDate}
+<code>${sep}</code>
+📈 <b>Perf D0</b>  ${sign(d.metrics.ret)}${d.metrics.ret}%   <b>DD</b> ${d.metrics.dd}%   <b>WR</b> ${d.metrics.wr}%   <b>PF</b> ${d.metrics.pf}x
+<code>${sep}</code>
+${actions}
+<code>${sep}</code>
+📂 <b>Positions ouvertes  (${d.activePos.length}/${d.cfg.portfolioSize})</b>
+<pre>${posLines}</pre>
+⚖️ <b>Risque portefeuille</b>
+<pre>${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
+            ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
+<code>${sep}</code>
+📡 <b>Top 10 signaux du jour</b>
+<pre>${picksLines}</pre>
+<code>${sep}</code>
 🔗 ${STATUS_URL}`;
 }
 
@@ -249,65 +254,67 @@ function buildDiscordMessage(d) {
   const sign = n => n >= 0 ? '+' : '';
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
-  // 1. ACTIONS
-  let actionsBlock = '';
-
   const closeNow   = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
 
+  // ── ACTIONS ──
+  let actions = '';
   if (closeNow.length) {
-    actionsBlock += `\n⛔ **CLÔTURER à l'ouverture :**`;
+    actions += `\n⛔ **CLÔTURER à l'ouverture**\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      actionsBlock += `\n→ **${p.ticker}** ${pnl} | entry ${p.entry} → now ${p.current_price} | stop ${p.stop} | horizon atteint`;
+      actions += `> 🔴 **${p.ticker}**  ${pnl}  now \`${p.current_price}\`  stop \`${p.stop}\`\n`;
     });
   }
   if (decideSoon.length) {
-    actionsBlock += `\n⏰ **Décision requise (expire dans 2j) :**`;
+    actions += `\n⏰ **Décision avant clôture (J-2)**\n`;
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      actionsBlock += `\n→ **${p.ticker}** ${pnl} | now ${p.current_price} | TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''} | stop ${p.stop} — keep ou exit ?`;
+      actions += `> 🟡 **${p.ticker}**  ${pnl}  now \`${p.current_price}\`  TP1 \`${p.tp1}\`${toTp1 ? ` (+${toTp1}%)` : ''}  stop \`${p.stop}\`\n`;
     });
   }
-
   if (d.slotsLeft > 0) {
     const buyPicks = d.picks.slice(0, d.slotsLeft);
-    actionsBlock += `\n⚡ **${d.slotsLeft} slot${d.slotsLeft > 1 ? 's' : ''} à ouvrir (${d.alloc}% chacun) :**`;
+    actions += `\n⚡ **${d.slotsLeft} ordre${d.slotsLeft > 1 ? 's' : ''} à passer — ${d.alloc}% chacun**\n`;
     buyPicks.forEach(s => {
-      actionsBlock += `\n→ **${s.symbol}** ${s.strategy} | entry ${s.entry} | stop ${s.stop} | TP1 ${s.tp1} | TP2 ${s.tp2} | R/R ${s.rr}`;
+      actions += `> 🟢 **${s.symbol}**  ${s.strategy}  entry \`${s.entry}\`  stop \`${s.stop}\`  TP1 \`${s.tp1}\`  TP2 \`${s.tp2}\`  R/R ${s.rr}\n`;
     });
   } else {
-    actionsBlock += `\n✅ **Portfolio plein** — aucun ordre à passer`;
+    actions += `\n✅ **Portfolio plein** — aucun ordre à passer\n`;
   }
 
-  // 2. POSITIONS + RISQUE
-  const posLines = d.activePos.map(p => {
-    const warn = p.left <= 1 ? ' ⚠️' : '';
-    return `${p.ticker.padEnd(5)} ${(sign(p.return_pct) + p.return_pct + '%').padEnd(8)} ${d.alloc}% — ${p.left}j restant${warn}`;
-  }).join('\n');
+  // ── POSITIONS ──
+  const posLines = d.activePos.length
+    ? d.activePos.map(p => {
+        const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
+        const warn = p.left <= 1 ? ' ⚠️' : p.left === 2 ? ' ⏰' : '';
+        return `${p.ticker.padEnd(6)} ${pnl.padEnd(9)}  ${d.alloc}%   ${p.left}j restant${warn}`;
+      }).join('\n')
+    : 'Aucune position ouverte';
 
-  // 3. SIGNAUX — ticker, score, setup uniquement
+  // ── SIGNAUX ──
   const picksLines = d.picks.map((s, i) =>
-    `${String(i + 1).padEnd(2)} ${s.symbol.padEnd(6)} ${String(s.score).padEnd(4)} ${s.strategy.padEnd(12)} R/R ${s.rr}`
+    `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${s.strategy.padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  return `📊 **Scanner Balanced — ${d.scanDate}**
-📈 Perf D0 : ${sign(d.metrics.ret)}${d.metrics.ret}% | DD ${d.metrics.dd}% | WR ${d.metrics.wr}% | PF ${d.metrics.pf}x
-${actionsBlock}
-
-**📂 Positions (${d.activePos.length}/${d.cfg.portfolioSize})**
+  return `## 📊 Scanner Balanced — ${d.scanDate}
+> 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
+${actions}
+---
+**📂 Positions ouvertes  ${d.activePos.length}/${d.cfg.portfolioSize}**
 \`\`\`
-${posLines || '—'}
+${posLines}
 \`\`\`
 **⚖️ Risque portefeuille**
 \`\`\`
-${sign(d.worstPct)}${d.worstPct.toFixed(1)}% ${bar} +${d.bestPct.toFixed(1)}%
-          ▲ Now : ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
+${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
+              ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
 \`\`\`
-**📡 Signaux du jour (top ${d.picks.length})**
+---
+**📡 Top 10 signaux du jour**
 \`\`\`
-${picksLines || '—'}
+${picksLines}
 \`\`\`
 🔗 <${STATUS_URL}>`;
 }
