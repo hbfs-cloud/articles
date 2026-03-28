@@ -209,6 +209,10 @@ ${timedOut.length ? `<div class="cta-card cta-close">
 <div class="method-card" style="border-color:${cfg.color}30">
   <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
   <div class="method-steps">
+    <div class="step" style="background:${cfg.color}10;border:1px solid ${cfg.color}30;border-radius:8px;padding:10px 14px;margin-bottom:10px">
+      <span class="step-n" style="background:${cfg.color};opacity:0.7">★</span>
+      <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (≈ ${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
+    </div>
     <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
     <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
     <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
