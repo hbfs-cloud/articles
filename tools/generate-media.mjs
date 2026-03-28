@@ -542,20 +542,24 @@ async function main() {
       const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
 
       if (BOT_TOKEN && CHAT_ID) {
-        const FormData = await import('form-data').catch(() => null);
-        // Use curl as fallback (always available)
+        // Write caption to tmp file to avoid shell escaping issues with newlines
+        const captionFile = path.join(outDir, 'caption.txt');
+        fs.writeFileSync(captionFile, caption, 'utf8');
+
+        // Use curl with @file for caption to preserve real newlines
         const curlCmd = [
           `curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendAudio"`,
           `-F "chat_id=${CHAT_ID}"`,
           `-F "message_thread_id=${threadId}"`,
           `-F "audio=@${audioPath}"`,
-          `-F "title=${scripts.title.replace(/"/g,'').slice(0,60)}"`,
+          `-F "title=${scripts.title.replace(/['"]/g,'').slice(0,60)}"`,
           `-F "performer=Market Watch"`,
-          `-F "caption=${caption.replace(/"/g, '\\"').replace(/\n/g, '\\n')}"`,
+          `-F "caption=<${captionFile}"`,
           `-F "parse_mode=HTML"`,
         ].join(' ');
 
         const curlResult = spawnSync('sh', ['-c', curlCmd], { stdio: 'pipe', timeout: 60000 });
+        try { fs.unlinkSync(captionFile); } catch {}
         const curlOut = curlResult.stdout?.toString() || '';
         try {
           const j = JSON.parse(curlOut);
