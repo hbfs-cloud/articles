@@ -123,5 +123,14 @@ if [ -f /tmp/qa-discord-report.txt ]; then
   rm -f /tmp/qa-discord-report.txt
 fi
 
+# ─── Step 8: Scanner Status Notification (Telegram + Discord) ───────────────
+echo ""
+echo "📡 Step 8: Scanner status notification..."
+if [ "$DRY_RUN" = true ]; then
+  echo "   (dry-run: skip notification)"
+else
+  node tools/notify-scanner-status.js 2>&1 || echo "⚠️  notify-scanner-status failed (non-blocking)"
+fi
+
 echo ""
 echo "✅ Done: $(date '+%H:%M:%S')"
