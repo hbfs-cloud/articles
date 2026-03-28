@@ -65,12 +65,12 @@ const DRY_RUN = args.includes('--dry-run');
 
 // ── Type metadata ─────────────────────────────────────────────────────────────
 const TYPE_META = {
-  daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtVF6M5mAuFfhFDfcqEf3YRG' },
-  weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 74, ytPlaylist: 'PLv96IetLrmtVpbkC2c4qQ-wQg5Wng6AjL' },
-  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtVUlRLkB-lIV0gELPz1LoHG' },
+  daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtWfdEl9tObkSLaw_HFt39me' },
+  weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 74, ytPlaylist: 'PLv96IetLrmtWXigx6hLMoABNWsVhli2Vv' },
+  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
   analysis: { label: 'Stock Analysis',    emoji: '🔬', telegramTopic: 75, ytPlaylist: 'PLv96IetLrmtU4Yff6kHAvSr3wJNYgXQ3R' },
-  learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtVkDgxN4kJwuVMVq0YDjbMU' },
-  series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtVkDgxN4kJwuVMVq0YDjbMU' },
+  learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

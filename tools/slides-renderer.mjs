@@ -192,22 +192,48 @@ function renderHighlight(slide, idx, total, config) {
 }
 
 function renderChartImage(slide, idx, total, config) {
-  const imageUrl = slide.imageUrl || slide.finvizUrl || '';
+  // Generate a styled analysis slide with price levels visualization
+  const levels = slide.levels || [];
+  const hasLevels = levels.length > 0;
+  
+  // Extract ticker from title
+  const tickerMatch = slide.title.match(/^([A-Z]{1,5})/);
+  const ticker = tickerMatch ? tickerMatch[1] : '';
+  
+  // Build price levels chart (horizontal bar)
+  const levelBars = hasLevels ? levels.map(l => {
+    const colorMap = { tp2: '#84cc16', tp1: '#22c55e', entry: '#3b82f6', stop: '#ef4444', rr: '#8b5cf6', horizon: '#38bdf8' };
+    const color = colorMap[l.type] || THEME.textMuted;
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid ${THEME.border}">
+        <div style="width:12px;height:12px;border-radius:50%;background:${color};flex-shrink:0"></div>
+        <div style="flex:1;font-size:14px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px">${esc(l.label)}</div>
+        <div style="font-size:18px;font-weight:800;color:${color}">${esc(l.value)}</div>
+        ${l.note ? `<div style="font-size:12px;color:${THEME.textFaint};min-width:100px;text-align:right">${esc(l.note)}</div>` : ''}
+      </div>`;
+  }).join('') : '';
+
   return `
     <div class="slide">
       <div class="brand-bar"></div>
       <div class="content" style="flex-direction:row;gap:24px">
-        <div style="flex:1.8;display:flex;flex-direction:column">
-          <div class="section-label">Technical Analysis</div>
+        <div style="flex:1.6;display:flex;flex-direction:column">
+          <div class="section-label">Technical Setup${ticker ? ' — ' + ticker : ''}</div>
           <div class="slide-title">${esc(slide.title)}</div>
-          <div style="flex:1;background:${THEME.surface};border-radius:12px;overflow:hidden;border:1px solid ${THEME.border}">
-            ${imageUrl
-              ? `<img src="${imageUrl}" style="width:100%;height:100%;object-fit:contain" />`
-              : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:${THEME.textFaint}">Chart loading...</div>`}
+          <div style="flex:1;background:${THEME.surface};border-radius:12px;border:1px solid ${THEME.border};padding:20px;display:flex;flex-direction:column;justify-content:center">
+            ${slide.caption ? `<div style="font-size:15px;color:${THEME.textMuted};margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid ${THEME.border}">${esc(slide.caption)}</div>` : ''}
+            <div style="font-size:13px;color:${THEME.textFaint};text-transform:uppercase;letter-spacing:2px;margin-bottom:8px">Price Structure</div>
+            ${hasLevels ? levelBars : `<div style="font-size:16px;color:${THEME.textMuted}">See full chart at articles.market-watch.xyz</div>`}
           </div>
-          ${slide.caption ? `<div style="font-size:13px;color:${THEME.textMuted};margin-top:8px;text-align:center">${esc(slide.caption)}</div>` : ''}
         </div>
-        ${slide.levels ? renderTradeLevelsInline(slide.levels) : ''}
+        <div style="flex:0.8;display:flex;flex-direction:column;justify-content:center">
+          <div style="background:${THEME.surface};border-radius:12px;border:1px solid ${THEME.border};padding:20px">
+            <div style="font-size:12px;color:${THEME.textMuted};text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Signal Type</div>
+            ${slide.signalType ? `<div style="font-size:22px;font-weight:800;color:${THEME.text};margin-bottom:8px">${esc(slide.signalType)}</div>` : ''}
+            <div style="font-size:28px;margin-top:8px">${slide.icon || '📈'}</div>
+            <div style="margin-top:16px;font-size:13px;color:${THEME.primary};font-weight:600">finviz.com/quote.ashx?t=${esc(ticker)}</div>
+          </div>
+        </div>
       </div>
       <div class="footer">
         <span class="brand">MARKET WATCH</span>
@@ -397,10 +423,15 @@ export async function renderSlidesToPng(slides, config, outDir) {
       <style>${BASE_CSS}</style>
     </head><body>${slideHtml}</body></html>`;
 
-    // For chart-image slides with external images, use networkidle0
+    // For chart-image slides, load but don't block on external images
     const hasExternal = (slides[i].imageUrl || slides[i].finvizUrl || '').length > 0;
-    await page.setContent(fullHtml, { waitUntil: hasExternal ? 'networkidle0' : 'domcontentloaded', timeout: 15000 });
-    await new Promise(r => setTimeout(r, 200));
+    try {
+      await page.setContent(fullHtml, { waitUntil: hasExternal ? 'networkidle0' : 'domcontentloaded', timeout: 20000 });
+    } catch (e) {
+      // Timeout loading external images — use domcontentloaded fallback
+      await page.setContent(fullHtml, { waitUntil: 'domcontentloaded', timeout: 5000 });
+    }
+    await new Promise(r => setTimeout(r, 150));
 
     const outPath = path.join(outDir, `slide-${i}.png`);
     await page.screenshot({ path: outPath, type: 'png', captureBeyondViewport: false });
