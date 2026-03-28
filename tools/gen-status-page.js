@@ -105,8 +105,8 @@ function main() {
   const gEC = equityDV(g.equityCurve), caEC = equityDV(ca.equityCurve), zEC = equityDV(z.equityCurve);
 
   const updatedAt = liveMetrics.updated_at
-    ? new Date(liveMetrics.updated_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
-    : new Date().toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' });
+    ? new Date(liveMetrics.updated_at).toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })
+    : new Date().toLocaleDateString('en-US', { day:'numeric', month:'long', year:'numeric' });
 
   // Filters
   const SF = {
@@ -160,7 +160,7 @@ function main() {
     <div class="ps"><span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span></div>
     <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit F.</span></div>
     <div class="ps"><span class="ps-v">${m.trades}</span><span class="ps-l">Trades</span></div>
-    <div class="ps"><span class="ps-v">${m.avgHold}j</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
