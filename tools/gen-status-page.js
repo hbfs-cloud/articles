@@ -688,6 +688,13 @@ details[open] summary::after{content:"▼"}
           <small>Daily Briefing · Weekly Review · Analysis</small>
         </span>
       </a>
+      <a href="https://discord.gg/eb4Ack9aPZ" target="_blank" rel="noopener" class="cta-btn dc-btn">
+        <i class="fab fa-discord"></i>
+        <span>
+          <strong>Join Discord</strong>
+          <small>Read-only · Live updates</small>
+        </span>
+      </a>
     </div>
   </div>
 </div>
@@ -699,6 +706,8 @@ details[open] summary::after{content:"▼"}
   <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" style="color:#229ED9"><i class="fab fa-telegram"></i> Telegram</a>
   &nbsp;&middot;&nbsp;
   <a href="https://www.youtube.com/@marketwatchxyz" target="_blank" rel="noopener" style="color:#94a3b8"><i class="fab fa-youtube"></i> YouTube</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://discord.gg/eb4Ack9aPZ" target="_blank" rel="noopener" style="color:#5865F2"><i class="fab fa-discord"></i> Discord</a>
 </footer>
 
 <script src="/assets/core.js"></script>
