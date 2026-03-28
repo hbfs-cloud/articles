@@ -181,26 +181,23 @@ function main() {
 
 <!-- ══ PENDING ORDERS ══ -->
 ${(() => {
-  // Slots disponibles = max(0, portfolioSize - positions ouvertes)
   const openTickers = new Set(pos.map(p => p.ticker));
   const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
-  // Filtrer les signaux qui ne sont pas déjà en position
   const pendingOrders = sig.filter(s => !openTickers.has(s.ticker)).slice(0, slotsAvailable);
-  if (!pendingOrders.length) return `<div class="section-card"><div class="sc-head"><h3>⏳ Pending Orders <span class="count">0 slots</span></h3></div><p class="empty">Portfolio full — no new orders to place</p></div>`;
   const alloc = Math.round(100 / cfg.portfolioSize);
-  return `<div class="section-card" style="border-left:3px solid #f59e0b">
+  if (!pendingOrders.length) return `<div class="section-card"><div class="sc-head"><h3>⏳ Orders to Place <span class="count">0/${cfg.portfolioSize}</span></h3><span class="sc-meta">Portfolio full — no new orders</span></div></div>`;
+  return `<div class="section-card">
   <div class="sc-head">
-    <h3>⏳ Pending Orders <span class="count">${pendingOrders.length} ordre${pendingOrders.length > 1 ? 's' : ''} à placer</span></h3>
-    <span class="sc-meta" style="color:#92400e;background:#fef3c7;padding:.15rem .5rem;border-radius:6px;font-size:.7rem;font-weight:700">📅 Lundi à l'ouverture</span>
+    <h3>⏳ Orders to Place <span class="count">${pendingOrders.length}/${cfg.portfolioSize}</span></h3>
+    <span class="sc-meta">📅 Next open &middot; limit order &middot; ${alloc}%/pos.</span>
   </div>
-  <table class="t">
-    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Range d'entrée</th><th class="neg">Stop</th><th class="pos">TP1</th><th class="pos">TP2</th><th>R/R</th><th>Alloc</th></tr></thead>
+  ${pendingOrders.length ? `<table class="t">
+    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th><th>Alloc</th></tr></thead>
     <tbody>${pendingOrders.map((s, i) => {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-      return `<tr style="background:#fffbeb"><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td style="font-weight:700">${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td><td class="m">${alloc}%</td></tr>`;
+      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td><b>${s.entry}</b></td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td><td class="m">${alloc}%</td></tr>`;
     }).join('')}</tbody>
-  </table>
-  <div style="font-size:.72rem;color:#92400e;margin-top:.5rem;padding:.4rem .6rem;background:#fef3c7;border-radius:6px">💡 Placer un ordre limite dans le range d'entrée à l'ouverture du marché (15h30 Paris). Allouer ${alloc}% du capital par position.</div>
+  </table>` : ''}
 </div>`;
 })()}
 
