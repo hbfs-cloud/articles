@@ -143,17 +143,35 @@ check('scanner.json: tile LIVE en position 0', () => {
   if (!d[0].includes('#059669') && !d[0].includes('059669')) return 'tile LIVE sans couleur verte (#059669)';
 });
 
-// 4. Scan du jour
+// 4. Scan du dernier jour ouvré (lun-ven uniquement — pas de scan le week-end)
+function lastWeekdayStr() {
+  const d = new Date();
+  // Reculer jusqu'au dernier jour ouvré (vendredi si sam/dim)
+  while (d.getDay() === 0 || d.getDay() === 6) {
+    d.setDate(d.getDate() - 1);
+  }
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function isWeekend() {
+  const day = new Date().getDay();
+  return day === 0 || day === 6;
+}
+
 const today = todayStr();
-const scanPath = `scanner/${today}/index.html`;
-warn(`scan du jour (${today}): fichier généré > 30KB`, () => {
+const lastWeekday = lastWeekdayStr();
+const scanDay = lastWeekday; // le scan attendu = dernier jour ouvré
+const scanPath = `scanner/${scanDay}/index.html`;
+const weekendNote = isWeekend() ? ` (week-end — dernier scan ouvré attendu: ${scanDay})` : '';
+
+check(`scan dernier jour ouvré (${scanDay})${weekendNote}: fichier > 30KB`, () => {
   const size = fileSize(scanPath);
-  if (size === 0) return `scanner/${today}/index.html manquant`;
+  if (size === 0) return `scanner/${scanDay}/index.html manquant`;
   if (size < 30000) return `taille ${Math.round(size/1024)}KB < 30KB`;
 });
 
-check(`scan du jour: id="synthese" présent`, () => {
-  if (!fs.existsSync(path.join(ROOT, scanPath))) return true; // skip si pas de scan du jour (week-end)
+check(`scan dernier jour ouvré: id="synthese" présent`, () => {
+  if (!fs.existsSync(path.join(ROOT, scanPath))) return `scanner/${scanDay}/index.html absent`;
   const html = readFile(scanPath);
   if (!html.includes('id="synthese"')) return 'id="synthese" absent — parser gen-status-page.js cassé';
 });
