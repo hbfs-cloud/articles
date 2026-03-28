@@ -220,30 +220,26 @@ ${(() => {
   const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
   const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
 
-  // BUY orders: signals that fit into available slots
+  // BUY orders: signals that fit into available slots (max = free slots)
   const buyOrders = sigFiltered.slice(0, slotsAvailable);
 
-  // ROTATION candidates (only for rotation=aggressive modes):
-  // Signals that could not fit (portfolio full) but score higher than the worst current position
+  // ROTATION candidates (only for rotation=aggressive modes, when portfolio full):
   const rotationCandidates = [];
-  if (cfg.rotation === 'aggressive' && pos.length > 0 && sigFiltered.length > slotsAvailable) {
+  if (cfg.rotation === 'aggressive' && slotsAvailable === 0 && pos.length > 0 && sigFiltered.length > 0) {
     const worstPos = [...pos].sort((a, b) => a.return_pct - b.return_pct)[0];
-    const overflow = sigFiltered.slice(slotsAvailable);
-    for (const s of overflow) {
-      // Signal worth rotating in if score >= 88 (high conviction) and worst position is losing or flat
+    for (const s of sigFiltered.slice(0, 5)) {
       if (s.score >= 88 && worstPos.return_pct < 2) {
         rotationCandidates.push({ signal: s, replaces: worstPos });
-        break; // one rotation at a time
+        break;
       }
     }
   }
 
-  // ON WATCH (timed-out orders): signals that couldn't be placed and don't qualify for rotation
-  // Valid for 2 trading days from scan date; after that they expire
+  // WATCH: signals that could not be placed and don't qualify for rotation.
+  // Only shown if portfolio is full and there are remaining signals worth monitoring.
   const scanDateStr = scanDir ? `${scanDir.slice(0,4)}-${scanDir.slice(4,6)}-${scanDir.slice(6,8)}` : null;
   const scanAge = scanDateStr ? Math.round((Date.now() - new Date(scanDateStr)) / 86400000) : 0;
-  const timeoutDays = 2; // signals expire after 2 trading days if not placed
-  // Compute expiry date: scanDate + 2 business days
+  const timeoutDays = 2;
   function addBizDays(dateStr, n) {
     const d = new Date(dateStr + 'T12:00:00Z');
     let added = 0;
@@ -251,106 +247,104 @@ ${(() => {
     return d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', timeZone:'UTC' });
   }
   const expiryLabel = scanDateStr ? addBizDays(scanDateStr, timeoutDays) : '—';
-  const onWatch = slotsAvailable === 0 && rotationCandidates.length === 0
-    ? sigFiltered.slice(0, 3)  // show top 3 on watch when full and no rotation
-    : sigFiltered.slice(slotsAvailable).filter(s => !rotationCandidates.some(r => r.signal.ticker === s.ticker)).slice(0, 2);
   const isExpired = scanAge > timeoutDays;
 
-  const hasAnything = buyOrders.length > 0 || rotationCandidates.length > 0 || onWatch.length > 0;
-  if (!hasAnything) return `<div class="section-card"><div class="sc-head"><h3>⏳ Orders <span class="count">0 actions</span></h3><span class="sc-meta">Portfolio full — monitor open positions</span></div></div>`;
+  // Watch = overflow signals when portfolio is full and no rotation triggered
+  const watchPool = slotsAvailable === 0
+    ? sigFiltered.filter(s => !rotationCandidates.some(r => r.signal.ticker === s.ticker)).slice(0, 3)
+    : [];
 
-  const rows = [];
-
-  // 1. BUY orders
+  // ── Render: BUY + ROTATE as primary CTA ──
+  const actionRows = [];
   for (let i = 0; i < buyOrders.length; i++) {
     const s = buyOrders[i];
     const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-    rows.push(`<tr>
-      <td class="c">${i+1}</td>
-      <td><b>${s.ticker}</b></td>
+    actionRows.push(`<tr>
+      <td class="c">${i+1}</td><td><b>${s.ticker}</b></td>
       <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
-      <td class="m">${s.strategy}</td>
-      <td><b>${s.entry}</b></td>
-      <td class="neg">${s.stop}</td>
-      <td class="pos">${s.tp1}</td>
-      <td class="pos">${s.tp2}</td>
-      <td class="am">${s.rr}</td>
-      <td class="m">${alloc}%</td>
+      <td class="m">${s.strategy}</td><td><b>${s.entry}</b></td>
+      <td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td>
+      <td class="am">${s.rr}</td><td class="m">${alloc}%</td>
       <td><span class="pill pos">BUY</span></td>
     </tr>`);
   }
-
-  // 2. ROTATION candidates
   for (const { signal: s, replaces } of rotationCandidates) {
     const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-    rows.push(`<tr style="background:#fefce8">
-      <td class="c">↔</td>
-      <td><b>${s.ticker}</b></td>
+    actionRows.push(`<tr style="background:#fefce8">
+      <td class="c">↔</td><td><b>${s.ticker}</b></td>
       <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
-      <td class="m">${s.strategy}</td>
-      <td><b>${s.entry}</b></td>
-      <td class="neg">${s.stop}</td>
-      <td class="pos">${s.tp1}</td>
-      <td class="pos">${s.tp2}</td>
-      <td class="am">${s.rr}</td>
-      <td class="m">${alloc}%</td>
-      <td><span class="pill am" title="Sell ${replaces.ticker} (${replaces.return_pct}%), buy ${s.ticker}">ROTATE ↔ ${replaces.ticker}</span></td>
+      <td class="m">${s.strategy}</td><td><b>${s.entry}</b></td>
+      <td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td>
+      <td class="am">${s.rr}</td><td class="m">${alloc}%</td>
+      <td><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
     </tr>`);
   }
 
-  // 3. ON WATCH / timed-out
-  for (const s of onWatch) {
-    const bg = '#94a3b8';
-    const expiredLabel = isExpired ? 'EXPIRED' : `WATCH — exp. ${expiryLabel}`;
+  // ── Render: WATCH as secondary collapsible ──
+  const watchRows = watchPool.map(s => {
+    const expiredLabel = isExpired ? 'Expired' : `Valid until ${expiryLabel}`;
     const expiredCls = isExpired ? 'neg' : 'm';
-    rows.push(`<tr style="opacity:${isExpired ? '0.5' : '0.8'}">
-      <td class="c">👁</td>
-      <td><b>${s.ticker}</b></td>
-      <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
-      <td class="m">${s.strategy}</td>
-      <td class="m">${s.entry}</td>
-      <td class="neg">${s.stop}</td>
-      <td class="pos">${s.tp1}</td>
-      <td class="pos">${s.tp2}</td>
-      <td class="am">${s.rr}</td>
-      <td class="m">—</td>
+    return `<tr style="opacity:${isExpired ? '0.45' : '0.75'}">
+      <td class="c">👁</td><td><b>${s.ticker}</b></td>
+      <td><span class="pill-score" style="background:#94a3b8">${s.score}</span></td>
+      <td class="m">${s.strategy}</td><td class="m">${s.entry}</td>
+      <td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td>
+      <td class="am">${s.rr}</td><td class="m">—</td>
       <td><span class="pill ${expiredCls}">${expiredLabel}</span></td>
-    </tr>`);
+    </tr>`;
+  });
+
+  const totalActions = actionRows.length;
+  const occupied = pos.length;
+  const statusLine = slotsAvailable > 0
+    ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
+    : `${occupied}/${cfg.portfolioSize} open — portfolio full${rotationCandidates.length ? ' — rotation opportunity' : ''}`;
+
+  if (totalActions === 0 && watchPool.length === 0) {
+    return `<div class="section-card"><div class="sc-head"><h3>Orders</h3><span class="sc-meta">Portfolio full — no action needed</span></div></div>`;
   }
 
-  const totalActions = buyOrders.length + rotationCandidates.length;
-  return `<div class="section-card">
+  return `<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}">
   <div class="sc-head">
-    <h3>⏳ Orders <span class="count">${totalActions > 0 ? totalActions + ' action' + (totalActions > 1 ? 's' : '') : 'on watch'}</span></h3>
-    <span class="sc-meta">📅 Next open &middot; limit order &middot; ${alloc}%/pos.</span>
+    <h3>${totalActions > 0 ? '⚡' : '👁'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
+    <span class="sc-meta">${statusLine}</span>
   </div>
-  <table class="t">
+  ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th><th>Alloc</th><th>Action</th></tr></thead>
-    <tbody>${rows.join('')}</tbody>
-  </table>
+    <tbody>${actionRows.join('')}</tbody>
+  </table>` : ''}
+  ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
+    <summary class="watch-summary">On watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th><th>Alloc</th><th>Status</th></tr></thead>
+      <tbody>${watchRows.join('')}</tbody>
+    </table>
+  </details>` : ''}
 </div>`;
 })()}
 
-<!-- ══ 5. TODAY'S SIGNALS (context) ══ -->
+<!-- ══ 5. TODAY'S SIGNALS (context — collapsible) ══ -->
 <div class="section-card">
-  <div class="sc-head">
-    <h3>📡 Today's Signals <span class="count">${sig.length} setups</span></h3>
-    ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link">Full scan →</a>` : ''}
-  </div>
-  ${sig.length ? `<table class="t">
-    <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th>Stop</th><th>TP1</th><th>TP2</th><th>R/R</th></tr></thead>
-    <tbody>${sig.map((s, i) => {
-      const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-      return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos">${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
-    }).join('')}</tbody>
-  </table>` : `<p class="empty">No signals for this mode today</p>`}
+  <details open>
+    <summary class="sc-summary">
+      <span class="sc-sum-title">Today's Signals <span class="count">${sig.length} setups</span></span>
+      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>` : ''}
+    </summary>
+    ${sig.length ? `<table class="t" style="margin-top:.6rem">
+      <thead><tr><th>#</th><th>Ticker</th><th>Score</th><th>Strat.</th><th>Entry</th><th class="hide-m">Stop</th><th>TP1</th><th class="hide-m">TP2</th><th class="hide-m">R/R</th></tr></thead>
+      <tbody>${sig.map((s, i) => {
+        const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+        return `<tr><td class="c">${i+1}</td><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg hide-m">${s.stop}</td><td class="pos">${s.tp1}</td><td class="pos hide-m">${s.tp2}</td><td class="am hide-m">${s.rr}</td></tr>`;
+      }).join('')}</tbody>
+    </table>` : `<p class="empty">No signals for this mode today</p>`}
+  </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (active only, non-expired) ══ -->
 <div class="section-card">
   <div class="sc-head">
     <h3>Open Positions <span class="count">${activePosDisplay.length}/${cfg.portfolioSize}</span></h3>
-    ${activePosDisplay.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b> &middot; ${alloc}%/pos.</span>` : ''}
+    ${activePosDisplay.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${activePosDisplay.length ? `
   <div class="pos-bar">${activePosDisplay.map(p => {
@@ -358,21 +352,22 @@ ${(() => {
     return `<div style="flex:1;background:${c}" title="${p.ticker} ${p.return_pct > 0 ? '+' : ''}${p.return_pct}%"></div>`;
   }).join('')}</div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Alloc</th><th>Stop</th><th>TP1</th><th>TP2</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Alloc</th><th class="hide-m">Stop</th><th class="hide-m">TP1</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${activePosDisplay.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       const leftCls = left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m">${alloc}%</td><td class="neg">$${(p.stop||0).toFixed(2)}</td><td class="pos">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="${leftCls}">${left}d</td></tr>`;
+      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="m hide-m">${alloc}%</td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp1 ? '$'+p.tp1.toFixed(2) : '—'}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : '—'}</td><td class="${leftCls}">${left}d</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty">No active positions</p>`}
 </div>
 
-<!-- ══ 7. TRADE HISTORY ══ -->
+<!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
-  <div class="sc-head"><h3>Trade History <span class="count">${trades.length}</span></h3></div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th>Start</th><th>End</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Hold</th><th>Result</th></tr></thead>
+  <details>
+    <summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">${trades.length} closed</span></span></summary>
+  <table class="t" style="margin-top:.6rem">
+    <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th>Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
       const sorted = [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
       // Build replacement map: for rotated trades, find what replaced them
@@ -410,6 +405,7 @@ ${(() => {
       }).join('');
     })()}</tbody>
   </table>
+  </details>
 </div>
 
 </div>`;
@@ -501,11 +497,31 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 /* CTA cards */
 .cta-card{border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem;border:2px solid}
 .cta-close{background:#fef2f2;border-color:#fca5a5}
+.cta-orders{border-left:3px solid #059669;background:#f0fdf4}
 .cta-header{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:.8rem}
 .cta-icon{font-size:1.6rem;line-height:1;flex-shrink:0;margin-top:.1rem}
 .cta-header h3{font-size:.95rem;font-weight:800;color:#dc2626;margin:0 0 .2rem}
 .cta-badge{display:inline-block;background:#dc2626;color:#fff;font-size:.68rem;font-weight:800;padding:.1rem .45rem;border-radius:5px;margin-left:.4rem;vertical-align:middle}
 .cta-sub{font-size:.78rem;color:#ef4444;margin:0}
+
+/* Collapsible details */
+details{margin-top:.2rem}
+details summary{cursor:pointer;font-size:.8rem;font-weight:600;color:#475569;padding:.25rem 0;user-select:none;list-style:none;display:flex;align-items:center;justify-content:space-between}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"▶";font-size:.6rem;color:#94a3b8;flex-shrink:0;margin-left:.5rem}
+details[open] summary::after{content:"▼"}
+.sc-summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.95rem;font-weight:800;color:#0f172a;padding:.1rem 0}
+.sc-sum-title{display:flex;align-items:center;gap:.3rem}
+.watch-summary{color:#94a3b8;font-weight:500;font-size:.78rem}
+
+/* Responsive — hide secondary cols on mobile */
+@media(max-width:600px){
+  .t .hide-m{display:none}
+  .perf-stats{grid-template-columns:repeat(3,1fr)}
+  .perf-chart{min-height:130px}
+  .tab .tab-ret{font-size:.85rem}
+  .w{padding:0 .5rem 2rem}
+}
 
 /* Disclaimer */
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}

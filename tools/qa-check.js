@@ -330,9 +330,9 @@ check('index.html: Performance du Scanner — Updated date en phase avec derniè
 check('scanner/status: section Pending Orders présente pour les 3 modes', () => {
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
-  // Section peut s'appeler "Orders to Place" ou "Orders <span" (nouveau format)
-  const count = (html.match(/⏳ Orders/g) || []).length;
-  if (count < 3) return `seulement ${count}/3 sections "⏳ Orders" trouvées (growth, calmar, zero)`;
+  // Section orders: "Orders to Place" ou "Order to Place" ou "On Watch" ou "no action needed"
+  const count = (html.match(/Order[s]? to Place|On Watch|no action needed/g) || []).length;
+  if (count < 3) return `seulement ${count}/3 sections "Orders" trouvées (growth, calmar, zero)`;
 });
 
 // 14. scanner/status — Pending Orders ne doit pas contenir de tickers déjà en Open Positions
@@ -340,7 +340,7 @@ check('scanner/status: pas de ticker en doublon entre Pending Orders et Open Pos
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
   // Simple check : "Portfolio full" ou des ordres présents — juste vérifier que le bloc existe et n'est pas cassé
-  if (html.includes('undefined') && html.includes('⏳ Orders')) return '"undefined" dans la section ⏳ Orders';
+  if (html.includes('>undefined<') || html.includes('">undefined"')) return '"undefined" brut trouvé dans le HTML';
 });
 
 // ─── Résumé ──────────────────────────────────────────────────────────────────
