@@ -189,6 +189,40 @@ check('scanner/status: pas de "undefined" brut dans le HTML', () => {
   if (badMatches.length > 0) return `"undefined" présent dans le contenu HTML (${badMatches.length}×)`;
 });
 
+// 8. mcp/watchlist.json — picks avec score/strategy valides (bug #1 du 28 mars)
+check('watchlist.json: picks non vides et champs valides (score, strategy, entry)', () => {
+  const d = readJSON('mcp/watchlist.json');
+  if (!d.picks || d.picks.length === 0) return 'aucun pick dans watchlist.json';
+  const nullScore = d.picks.filter(p => p.score === null || p.score === undefined);
+  const noStrat  = d.picks.filter(p => !p.strategy);
+  const noEntry  = d.picks.filter(p => !p.entry && p.entry !== 0);
+  const issues = [];
+  if (nullScore.length) issues.push(`${nullScore.length} picks avec score null`);
+  if (noStrat.length)  issues.push(`${noStrat.length} picks sans strategy`);
+  if (noEntry.length)  issues.push(`${noEntry.length} picks sans entry`);
+  if (issues.length) return issues.join(', ');
+});
+
+// 9. radar.json — events ET opportunities présents (bug #2 du 28 mars)
+check('radar.json: events et opportunities présents (pas que risks)', () => {
+  const d = readJSON('data/radar.json');
+  const missing = [];
+  if (!d.events || d.events.length === 0) missing.push('events vide');
+  if (!d.opportunities || d.opportunities.length === 0) missing.push('opportunities vide');
+  if (missing.length) return missing.join(', ') + ' — radar affichera uniquement les risques';
+});
+
+// 10. scanner.json — tiles retro ont le style purple (bug #3 du 28 mars)
+// Filtre : uniquement les tiles avec le badge "RÉTROSPECTIVE" (les vraies retros)
+// Les tiles normales avec le tag "retrospective" dans data-tags ne sont pas des vraies retros
+check('scanner.json: tiles retrospective ont le style visuel retro', () => {
+  const d = readJSON('data/scanner.json');
+  const retroTiles = d.filter(t => t.includes('RÉTROSPECTIVE'));
+  if (retroTiles.length === 0) return true; // pas de tile retro → skip
+  const noStyle = retroTiles.filter(t => !t.includes('8b5cf6') && !t.includes('badge-purple'));
+  if (noStyle.length) return `${noStyle.length}/${retroTiles.length} tiles retro sans style violet (8b5cf6)`;
+});
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
 
 const total = ok.length + warnings.length + errors.length;
