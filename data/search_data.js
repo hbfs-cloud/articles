@@ -182,6 +182,19 @@ window.searchDataPrebuilt = [
     "date": "30 mars 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Iran Deadline, Q1 Earnings Kickoff & The $100 Oil Regime",
+    "desc": "This week is dominated by the Iran geopolitical trigger (Monday), Fed speakers, CPI data (Wednesday), PPI (Thursday), and the University of Michigan Consumer Sentiment (Friday). Q1 earnings from big banks start the following week.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260406/",
+    "date": "6 avril 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
