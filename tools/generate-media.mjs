@@ -665,8 +665,9 @@ function uploadToYouTube(videoPath, thumbPath, title, description, playlistId) {
     'from google.oauth2.credentials import Credentials',
     'from googleapiclient.discovery import build',
     'from googleapiclient.http import MediaFileUpload',
-    `t=json.load(open('${YT_TOKEN}'))`,
-    `c=json.load(open('${YT_CREDS}'))['web']`,
+    // Always use Mac Mini paths in the remote Python script
+    `t=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json'))`,
+    `c=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json'))['web']`,
     'creds=Credentials(token=t["access_token"],refresh_token=t["refresh_token"],token_uri=c["token_uri"],client_id=c["client_id"],client_secret=c["client_secret"])',
     'yt=build("youtube","v3",credentials=creds)',
     'meta=json.load(open("/tmp/mw-yt-meta.json"))',
