@@ -26,9 +26,22 @@ cd "$(dirname "$0")/.."
 
 # Ensure ANTHROPIC_API_KEY is available (loaded from ~/.profile in cron)
 if [ -z "$ANTHROPIC_API_KEY" ]; then
+  # Try multiple sources
   source ~/.profile 2>/dev/null || true
-  export ANTHROPIC_API_KEY
+  source ~/.bashrc 2>/dev/null || true
+  source ~/.bash_profile 2>/dev/null || true
+  # Explicit grep fallback from ~/.profile
+  if [ -z "$ANTHROPIC_API_KEY" ]; then
+    export ANTHROPIC_API_KEY=$(grep -m1 'ANTHROPIC_API_KEY' ~/.profile 2>/dev/null | cut -d= -f2- | tr -d '"' | tr -d "'")
+  fi
 fi
+
+if [ -z "$ANTHROPIC_API_KEY" ]; then
+  echo "⚠️ ANTHROPIC_API_KEY not found — AI slides will use fallback (limited quality)"
+else
+  echo "  ✅ ANTHROPIC_API_KEY loaded (${#ANTHROPIC_API_KEY} chars)"
+fi
+export ANTHROPIC_API_KEY
 
 TYPE=""
 ARTICLE_PATH=""
