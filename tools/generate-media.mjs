@@ -54,8 +54,13 @@ const SSH_HOST  = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
 const SSH_OPTS  = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
 const SSHPASS   = 'sshpass';
 const SSH_PASS  = 'Elonux!123';
-const YT_TOKEN  = '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json';
-const YT_CREDS  = '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json';
+// YouTube credentials — prefer local CI copy, fallback to Mac Mini path
+const YT_TOKEN  = fs.existsSync(path.join(ROOT, 'credentials/youtube-token.json'))
+  ? path.join(ROOT, 'credentials/youtube-token.json')
+  : '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json';
+const YT_CREDS  = fs.existsSync(path.join(ROOT, 'credentials/youtube-credentials.json'))
+  ? path.join(ROOT, 'credentials/youtube-credentials.json')
+  : '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json';
 
 // ── Args ──────────────────────────────────────────────────────────────────────
 const args   = process.argv.slice(2);
@@ -730,6 +735,42 @@ function sendTelegramAudio(audioPath, threadId, title, caption) {
   return null;
 }
 
+// Send video as Telegram video message (fallback when YouTube quota exceeded)
+function sendTelegramVideo(videoPath, threadId, title, caption) {
+  const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
+  if (!BOT_TOKEN || !CHAT_ID) { console.log('  ⚠️  No Telegram env vars'); return null; }
+  if (!videoPath || !fs.existsSync(videoPath)) { console.log('  ⚠️  No video file'); return null; }
+
+  const videoSize = Math.round(fs.statSync(videoPath).size / 1024 / 1024 * 10) / 10;
+  // Telegram video limit: 50MB
+  if (videoSize > 48) { console.log(`  ⚠️  Video too large (${videoSize}MB), skipping embed`); return null; }
+
+  const capFile = videoPath + '.caption.txt';
+  // Video caption + remove YouTube line since we're embedding directly
+  const videoCaption = caption.slice(0, 1020);
+  fs.writeFileSync(capFile, videoCaption, 'utf8');
+  console.log(`\n📹 Sending video embed to Telegram (${videoSize}MB)...`);
+
+  const curlCmd = [
+    `curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendVideo"`,
+    `-F "chat_id=${CHAT_ID}"`,
+    `-F "message_thread_id=${threadId}"`,
+    `-F "video=@${videoPath}"`,
+    `-F "caption=<${capFile}"`,
+    `-F "parse_mode=HTML"`,
+    `-F "supports_streaming=true"`,
+  ].join(' ');
+  const r = spawnSync('sh', ['-c', curlCmd], { stdio: 'pipe', timeout: 120000 });
+  try { fs.unlinkSync(capFile); } catch {}
+  try {
+    const j = JSON.parse(r.stdout?.toString() || '{}');
+    if (j.ok) { console.log(`  ✅ Telegram video sent (msg_id: ${j.result.message_id})`); return j.result.message_id; }
+    else console.error('  ❌ Telegram video:', j.description);
+  } catch {}
+  return null;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   const html    = artPath ? readHtml(artPath) : '';
@@ -828,9 +869,7 @@ async function main() {
   const ytDesc  = `${meta.emoji} ${meta.label} — ${dateStr}\n\n${(slides.map(s => s.narration || '').join(' ')).slice(0,2000)}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`;
   const ytId = uploadToYouTube(videoPath, pngPaths[0], ytTitle, ytDesc, meta.ytPlaylist);
 
-  // ── 7. Telegram notification — ONE message: audio + caption ──
-  // Caption = bold title + AI bullets + YouTube link + article link
-  const ytLine = ytId ? `\n\n📺 <a href="https://youtu.be/${ytId}">Watch on YouTube</a>` : '';
+  // ── 7. Telegram notification ──
   // Normalize bullets — AI may return strings or objects {emoji, text}
   const rawBullets = (content.telegramBullets || []).slice(0, 8);
   const bullets = rawBullets.map(b => {
@@ -839,10 +878,18 @@ async function main() {
     return String(b);
   }).filter(b => b.length > 2);
   const bulletBlock = bullets.length > 0 ? '\n\n' + bullets.join('\n') : '';
-  // Telegram audio caption max = 1024 chars
+  const ytLine = ytId ? `\n\n📺 <a href="https://youtu.be/${ytId}">Watch on YouTube</a>` : '';
   const caption = `${meta.emoji} <b>${title}</b>${bulletBlock}${ytLine}\n\n🔗 <a href="${url}">Full article →</a>`.slice(0, 1020);
+
   if (!NO_TELEGRAM) {
+    // Send audio first (always)
     sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
+
+    // If no YouTube ID (quota exceeded or upload failed), embed video directly in Telegram
+    if (!ytId && fs.existsSync(videoPath)) {
+      const videoCaption = `${meta.emoji} <b>${title}</b> — Vidéo\n\n🔗 <a href="${url}">Full article →</a>`;
+      sendTelegramVideo(videoPath, meta.telegramTopic, title, videoCaption);
+    }
   } else {
     console.log('  (--no-telegram: skip Telegram send)');
   }
