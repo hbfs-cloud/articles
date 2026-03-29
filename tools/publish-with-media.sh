@@ -67,8 +67,16 @@ while kill -0 $MEDIA_PID 2>/dev/null && [ $WAITED -lt 1200 ]; do
 done
 
 if kill -0 $MEDIA_PID 2>/dev/null; then
-  echo "⚠️ Media generation timed out after ${WAITED}s"
+  echo "⚠️ Media generation timed out after ${WAITED}s — killing and sending text fallback"
   kill $MEDIA_PID 2>/dev/null || true
+
+  # Fallback: send text-only Telegram notification so the article is always announced
+  if [ -n "$ARTICLE_PATH" ]; then
+    echo "📡 Sending fallback text notification via telegram-publish-notify.js..."
+    node tools/telegram-publish-notify.js --type "$TYPE" --path "$ARTICLE_PATH" \
+      && echo "  ✅ Fallback text notification sent" \
+      || echo "  ❌ Fallback text notification failed"
+  fi
   exit 0
 fi
 
@@ -79,4 +87,11 @@ if [ -n "$RESULT" ]; then
 else
   echo "⚠️ No result.json — check $LOG_FILE"
   tail -20 "$LOG_FILE" 2>/dev/null || true
+  # Fallback: send text-only notification if media failed but article exists
+  if [ -n "$ARTICLE_PATH" ]; then
+    echo "📡 Sending fallback text notification (media failed)..."
+    node tools/telegram-publish-notify.js --type "$TYPE" --path "$ARTICLE_PATH" \
+      && echo "  ✅ Fallback text notification sent" \
+      || echo "  ❌ Fallback text notification failed"
+  fi
 fi

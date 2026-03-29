@@ -302,3 +302,63 @@ Format sortie : sections **gras** Discord, listes concises, aucun HTML.
 ### Post-tâche : Commit & Push (OBLIGATOIRE)
 Après chaque tâche réussie : `add_card.js` → vérifier `git status` → `git add` (fichiers spécifiques) → `git commit` → `git push origin main`.
 **Ne PAS push si** : HTML < 10KB, `add_card.js` échoué, génération incomplète.
+
+## Notification Telegram — Règles QA (CRITIQUE, NE JAMAIS SKIP)
+
+### Principe général
+**La notification Telegram est LA vitrine publique de chaque publication. Une notif erronée = mauvaise image.**
+
+### Pipeline correct (dans cet ordre)
+1. Générer + indexer + push l'article HTML
+2. Lancer le pipeline media : `bash tools/publish-with-media.sh --type TYPE --path PATH`
+   - Si timeout video → fallback text automatique (patch implémenté)
+   - **JAMAIS** appeler `telegram-publish-notify.js` sans `--path`
+   - **JAMAIS** appeler `telegram-publish-notify.js --help` en production
+
+### QA Checklist par type d'article
+
+#### Daily Briefing
+- [ ] Titre contient la date du jour (ex: "March 29, 2026") — PAS une date passée
+- [ ] Snapshot marché contient ≥ 4 indices réels avec % de variation
+- [ ] Lien pointe vers `/daily/YYYYMMDD/` correct (pas un autre slug)
+- [ ] Audio ou vidéo joint si disponible — sinon notification text seule (pas de silence)
+- [ ] Topic Telegram : 73 (Daily News)
+
+#### Weekly Review
+- [ ] Titre contient la semaine couverte (ex: "Week of March 24")
+- [ ] Performance 5 jours des indices incluse
+- [ ] Lien vers `/weekly/YYYYMMDD/`
+- [ ] Topic Telegram : 74 (Weekly Review)
+
+#### Scanner
+- [ ] Top 3 setups avec ticker + score dans la notif
+- [ ] Régime du marché (risk-on/off) mentionné
+- [ ] Lien vers `/scanner/YYYYMMDD/`
+- [ ] Topic Telegram : 72 (Portfolio Live)
+- [ ] Pas de Short Squeeze dans le top 3
+
+#### Stock Analysis
+- [ ] Ticker et nom de la société en titre
+- [ ] Thèse de trade en 1 ligne
+- [ ] Lien vers `/analyses/TICKER/`
+- [ ] Topic Telegram : 75 (Stock Analysis)
+
+#### Series / Learning / Tech
+- [ ] Sujet clairement identifiable en titre
+- [ ] Lien correct
+- [ ] Topic Telegram : 76 (Learning)
+
+### Erreurs qui ne doivent JAMAIS se reproduire
+- ❌ Notif envoyée avec `artPath = ''` → message fallback générique
+- ❌ `telegram-publish-notify.js` appelé sans `--path` (maintenant bloqué par guard)
+- ❌ Article daté J publié avec contenu de J-1
+- ❌ Notification envoyée avant le push Git
+- ❌ Notification en doublon (deux messages pour le même article)
+
+### Commande manuelle de re-notification (si notif ratée)
+```bash
+cd /home/ci/projects/articles
+node tools/telegram-publish-notify.js --type daily --path daily/YYYYMMDD/index.html --dry-run
+# Vérifier le preview, puis sans --dry-run
+node tools/telegram-publish-notify.js --type daily --path daily/YYYYMMDD/index.html
+```

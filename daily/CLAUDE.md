@@ -224,5 +224,16 @@ Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une
 
 **Si `add_card.js` échoue** : vérifier que le HTML est valide, que le `<html>` a `data-tab="daily"` et `data-tags`, et que le hero contient un `<h1>`.
 
+5. **Notification Telegram** (OBLIGATOIRE, APRÈS le push) :
+   ```bash
+   bash tools/publish-with-media.sh --type daily --path daily/YYYYMMDD/index.html
+   ```
+   - Ce script génère l'audio + vidéo puis envoie la notification Telegram unifiée
+   - Si timeout vidéo → fallback text automatique
+   - **JAMAIS** appeler `telegram-publish-notify.js` sans `--path`
+   - **JAMAIS** appeler `telegram-publish-notify.js --help` en production
+   - Vérifier dans le log que `✅ Telegram → Daily Briefing` apparaît
+   - Si échec : réessayer manuellement avec `node tools/telegram-publish-notify.js --type daily --path daily/YYYYMMDD/index.html`
+
 ---
 

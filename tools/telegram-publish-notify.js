@@ -66,9 +66,26 @@ const TOPICS = {
 const args   = process.argv.slice(2);
 const getArg = (flag) => { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : null; };
 
+// --help
+if (args.includes('--help') || args.includes('-h')) {
+  console.log(`Usage: node tools/telegram-publish-notify.js --type <daily|weekly|scanner|retro|analysis|series|tech|learning> --path <relative/path/to/article> [--title "Override"] [--dry-run]`);
+  process.exit(0);
+}
+
 const type     = getArg('--type')  || 'daily';
 const artPath  = getArg('--path')  || '';
 const titleArg = getArg('--title') || '';
+
+// ─── Guard: --path is mandatory for production sends ─────────────────────────
+if (!artPath && !DRY_RUN) {
+  console.error('❌ --path is required. Example: --path daily/20260329/index.html');
+  console.error('   Run with --dry-run to test without a real article.');
+  process.exit(1);
+}
+if (artPath && !fs.existsSync(path.join(path.join(__dirname, '..'), artPath))) {
+  console.error(`❌ Article not found: ${artPath}`);
+  process.exit(1);
+}
 
 const TYPE_MAP = {
   daily    : { topicId: TOPICS.daily,     section: 'Daily Briefing',  emoji: '📰' },
