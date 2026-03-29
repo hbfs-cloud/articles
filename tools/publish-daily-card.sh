@@ -123,9 +123,9 @@ if [ -f /tmp/qa-discord-report.txt ]; then
   rm -f /tmp/qa-discord-report.txt
 fi
 
-# ─── Step 8: Generate media (audio + video) — Telegram handled by Step 9 ────
+# ─── Step 8: Generate media (audio + video + Telegram to Portfolio Live) ─────
 echo ""
-echo "🎬 Step 8: Generating media (audio + video)..."
+echo "🎬 Step 8: Generating media (audio + video + Telegram)..."
 SCAN_PATH="scanner/${TODAY}/index.html"
 if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
   # ANTHROPIC_API_KEY needed for AI script generation
@@ -133,15 +133,15 @@ if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
     source ~/.profile 2>/dev/null || true
     export ANTHROPIC_API_KEY
   fi
-  node tools/generate-media.mjs --type scanner --path "$SCAN_PATH" --no-telegram \
+  node tools/generate-media.mjs --type scanner --path "$SCAN_PATH" \
     > /tmp/mw-media-scanner.log 2>&1 \
-    && echo "✅ Media generated (scanner)" \
+    && echo "✅ Media generated + Telegram audio/video sent (scanner)" \
     || echo "⚠️  Media generation failed (check /tmp/mw-media-scanner.log)"
 else
   echo "   (dry-run or no scanner file: skip media)"
 fi
 
-# ─── Step 9: Scanner Status Notification (sole Telegram sender) ──────────────
+# ─── Step 9: Scanner Status Notification (text per portfolio mode: 89/90/91) ─
 echo ""
 echo "📡 Step 9: Scanner status notification..."
 if [ "$DRY_RUN" = true ]; then

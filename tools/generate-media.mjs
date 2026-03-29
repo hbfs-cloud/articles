@@ -41,15 +41,17 @@ if (fs.existsSync(envPath)) {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const EDGE_TTS  = '/home/ci/edge-tts-venv/bin/edge-tts';
+const PIPER_TTS = '/home/ci/edge-tts-venv/bin/piper';
+const PIPER_MODEL = '/home/ci/piper-voices/en_US-ryan-high.onnx';
 const FFMPEG    = 'ffmpeg';
 const FFPROBE   = 'ffprobe';
 const CHROMIUM  = '/snap/bin/chromium';
-const VOICE     = 'en-US-AndrewNeural';  // Young, dynamic, energetic male voice
-const RATE      = '+5%';                 // Slightly faster = punchy analyst delivery
-const PITCH     = '+8Hz';               // Slightly higher = youthful energy
+const VOICE     = 'en-US-AndrewNeural';  // edge-tts fallback voice
+const RATE      = '+5%';
+const PITCH     = '+8Hz';
 const BASE_URL  = 'https://articles.market-watch.xyz';
 
-// ── SSH Mac Mini ──────────────────────────────────────────────────────────────
+// ── SSH Mac Mini (YouTube upload only — TTS is now local) ─────────────────────
 const SSH_HOST  = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
 const SSH_OPTS  = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
 const SSHPASS   = 'sshpass';
@@ -74,10 +76,12 @@ const NO_TELEGRAM = args.includes('--no-telegram');
 const TYPE_META = {
   daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtWfdEl9tObkSLaw_HFt39me' },
   weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 74, ytPlaylist: 'PLv96IetLrmtWXigx6hLMoABNWsVhli2Vv' },
-  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
+  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 72, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
   analysis: { label: 'Stock Analysis',    emoji: '🔬', telegramTopic: 75, ytPlaylist: 'PLv96IetLrmtU4Yff6kHAvSr3wJNYgXQ3R' },
   learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
   series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  retro:    { label: 'Scanner Retrospective', emoji: '🔁', telegramTopic: 72, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
+  tech:     { label: 'Tech Watch',       emoji: '💻', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -292,9 +296,30 @@ function buildScannerSlides(html, content, dateStr) {
   return slides;
 }
 
+// ── Resolve API key: env var → Claude OAuth token from credentials ───────────
+function resolveApiKey() {
+  // 1. Environment variable (set by cron or shell)
+  if (process.env.ANTHROPIC_API_KEY) {
+    // Validate it's not an expired OAuth token by checking freshness
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (key.startsWith('sk-ant-api')) return key; // Real API key, always valid
+  }
+  // 2. Fresh OAuth token from Claude Code credentials
+  try {
+    const credsPath = path.join(require('os').homedir(), '.claude', '.credentials.json');
+    const creds = JSON.parse(fs.readFileSync(credsPath, 'utf8'));
+    const oauth = creds.claudeAiOauth;
+    if (oauth?.accessToken && oauth.expiresAt > Date.now()) {
+      return oauth.accessToken;
+    }
+  } catch {}
+  // 3. Fallback to env var even if OAuth (might work if recently refreshed)
+  return process.env.ANTHROPIC_API_KEY || null;
+}
+
 // ── AI slide + script generation ──────────────────────────────────────────────
 async function generateAIContent(html, url, dateStr, title, meta) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = resolveApiKey();
   if (!apiKey) { console.log('  ⚠️  No ANTHROPIC_API_KEY'); return null; }
 
   const raw  = stripHtml(html);
@@ -443,80 +468,89 @@ Return ONLY valid JSON, no markdown fences, no explanation:
 // ── Fallback slide data ───────────────────────────────────────────────────────
 function fallbackContent(html, url, dateStr, title, meta) {
   const raw = stripHtml(html);
+  const desc = getDesc(html) || raw.slice(0, 300);
+
+  // Extract key points from HTML sections (h2/h3 headings + first paragraph)
+  const headings = [...html.matchAll(/<h[23][^>]*>([^<]+)<\/h[23]>/gi)]
+    .map(m => m[1].replace(/&[a-z]+;/g, ' ').trim())
+    .filter(h => h.length > 3 && h.length < 80)
+    .slice(0, 8);
+
+  // Extract key metrics (numbers with % or $)
+  const metrics = [...raw.matchAll(/(?:S&P|NASDAQ|BTC|ETH|Gold|Oil|VIX|DXY|WTI)[^.]*?(-?\d+\.?\d*%|\$[\d,.]+)/gi)]
+    .map(m => m[0].trim().slice(0, 60))
+    .slice(0, 5);
+
+  // Build meaningful audio script from description
+  const audioScript = desc.length > 50
+    ? `${title}. ${desc.slice(0, 500)}. Full analysis at articles.market-watch.xyz.`
+    : `${title}. Full analysis at articles.market-watch.xyz.`;
+
+  // Build telegram bullets from headings + metrics
+  const telegramBullets = [];
+  if (metrics.length > 0) telegramBullets.push(`📊 ${metrics.join(' | ')}`);
+  for (const h of headings.slice(0, 6)) {
+    const emoji = h.match(/risk|alert|warning/i) ? '⚠️' : h.match(/crypto|bitcoin/i) ? '₿' : h.match(/oil|energy|commodity/i) ? '🛢️' : h.match(/outlook|forecast/i) ? '🔮' : '📌';
+    telegramBullets.push(`${emoji} ${h}`);
+  }
+  if (telegramBullets.length === 0) telegramBullets.push(`📌 ${desc.slice(0, 100)}`);
+
+  // Build richer slides
+  const slides = [
+    { type: 'chapter-intro', chapter: { title, subtitle: dateStr, partNumber: 1, totalParts: 1 }, narration: title },
+  ];
+  if (metrics.length > 0) {
+    slides.push({ type: 'metric-row', title: 'Market Snapshot', metrics: metrics.map(m => ({ label: m.split(/[-+$]/)[0].trim(), value: m.match(/[-+]?\d+\.?\d*%|\$[\d,.]+/)?.[0] || '', delta: '' })), narration: `Key numbers: ${metrics.join('. ')}.` });
+  }
+  for (const h of headings.slice(0, 4)) {
+    slides.push({ type: 'summary', title: h, items: [desc.slice(0, 120)], narration: h });
+  }
+  slides.push({ type: 'summary', title: 'Read More', items: [`Full article at ${url}`], narration: 'Full article available online at articles.market-watch.xyz.' });
+
   return {
-    audioScript: `${title}. Full analysis at articles.market-watch.xyz.`,
-    config: { seriesTitle: title, date: dateStr, language: 'en', accentColor: '#3b82f6', totalChapters: 2 },
-    slides: [
-      { type: 'chapter-intro', chapter: { title: title, subtitle: dateStr, partNumber: 1, totalParts: 1 }, narration: title },
-      { type: 'summary', title: 'Key Points', items: ['Full article at articles.market-watch.xyz'], narration: 'Full article available online.' },
-    ],
+    audioScript,
+    telegramBullets,
+    config: { seriesTitle: title, date: dateStr, language: 'en', accentColor: '#3b82f6', totalChapters: slides.length },
+    slides,
   };
 }
 
-// ── TTS — Qwen3-TTS via Mac Mini (SSH) ───────────────────────────────────────
-const QWEN3_VOICE_INSTRUCT = 'A charismatic male podcast host voice, warm and engaging, conversational yet sharp, like a confident fintech YouTuber who knows his stuff';
-const QWEN3_VENV = '/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/.venv-mlx';
-const QWEN3_MODEL = 'mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit';
-
+// ── TTS — Piper TTS (local, ARM64 optimized) with edge-tts fallback ──────────
 function runTTS(text, outPath) {
-  const tmpId = Date.now() + '_' + Math.random().toString(36).slice(2, 7);
-  const remoteDir = `/tmp/qwen3-${tmpId}`;
-  const remoteWav = `${remoteDir}/audio_000.wav`;
-  const remoteMp3 = `/tmp/qwen3-${tmpId}.mp3`;
+  const wavPath = outPath.replace(/\.mp3$/, '.wav');
+  const cleanText = text.replace(/\n/g, ' ').trim();
+  if (!cleanText) { console.log(`  ⚠️  Empty text, skipping TTS for ${path.basename(outPath)}`); return; }
 
-  // Escape text for shell
-  const safeText = text.replace(/'/g, "'\\''").replace(/\n/g, ' ').replace(/"/g, '\\"');
-  const safeInstruct = QWEN3_VOICE_INSTRUCT.replace(/'/g, "'\\''");
-
-  const sshCmd = [
-    `${QWEN3_VENV}/bin/python3 -m mlx_audio.tts.generate`,
-    `--model '${QWEN3_MODEL}'`,
-    `--text '${safeText}'`,
-    `--instruct '${safeInstruct}'`,
-    `--output '${remoteDir}'`,
-    `2>&1 | tail -2`,
-    `&& /opt/homebrew/bin/ffmpeg -i '${remoteWav}' -codec:a libmp3lame -qscale:a 3 '${remoteMp3}' -y 2>/dev/null`,
-    `&& echo DONE`,
-  ].join(' ');
-
-  const r = spawnSync('sshpass', [
-    '-p', 'Elonux!123',
-    'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'PubkeyAuthentication=no',
-    'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net',
-    sshCmd,
-  ], { stdio: 'pipe', timeout: 180000 });
-
-  const stdout = r.stdout?.toString() || '';
-  if (!stdout.includes('DONE')) {
-    console.error('  ⚠️  Qwen3 TTS failed:', stdout.slice(-200));
-    // Fallback to edge-tts
-    const txtPath = outPath + '.txt';
-    fs.writeFileSync(txtPath, text, 'utf8');
-    spawnSync(EDGE_TTS, ['--voice', 'en-US-GuyNeural', '--rate=+8%', '--pitch=+10Hz', '-f', txtPath, '--write-media', outPath], { stdio: 'pipe', timeout: 120000 });
-    try { fs.unlinkSync(txtPath); } catch {}
-    const size2 = fs.existsSync(outPath) ? Math.round(fs.statSync(outPath).size / 1024) : 0;
-    console.log(`  ✅ ${path.basename(outPath)} (${size2}KB) [edge-tts fallback]`);
-    return;
+  // Primary: Piper TTS (100% local, ~0.5s per sentence)
+  try {
+    const r = spawnSync('sh', ['-c', `echo '${cleanText.replace(/'/g, "'\\''")}' | '${PIPER_TTS}' --model '${PIPER_MODEL}' --output_file '${wavPath}'`], { stdio: 'pipe', timeout: 60000 });
+    if (fs.existsSync(wavPath) && fs.statSync(wavPath).size > 1000) {
+      // Convert WAV → MP3
+      spawnSync(FFMPEG, ['-y', '-i', wavPath, '-codec:a', 'libmp3lame', '-qscale:a', '3', outPath], { stdio: 'pipe', timeout: 30000 });
+      try { fs.unlinkSync(wavPath); } catch {}
+      if (fs.existsSync(outPath) && fs.statSync(outPath).size > 500) {
+        const size = Math.round(fs.statSync(outPath).size / 1024);
+        console.log(`  ✅ ${path.basename(outPath)} (${size}KB) [Piper TTS]`);
+        return;
+      }
+    }
+    console.error('  ⚠️  Piper TTS failed, trying edge-tts fallback...');
+  } catch (e) {
+    console.error(`  ⚠️  Piper TTS error: ${e.message?.slice(0, 80)}, trying edge-tts fallback...`);
   }
+  try { fs.unlinkSync(wavPath); } catch {}
 
-  // SCP mp3 back
-  const scp = spawnSync('sshpass', [
-    '-p', 'Elonux!123',
-    'scp', '-o', 'StrictHostKeyChecking=no', '-o', 'PubkeyAuthentication=no',
-    `marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net:${remoteMp3}`,
-    outPath,
-  ], { stdio: 'pipe', timeout: 60000 });
-
-  // Cleanup remote
-  spawnSync('sshpass', [
-    '-p', 'Elonux!123',
-    'ssh', '-o', 'StrictHostKeyChecking=no', '-o', 'PubkeyAuthentication=no',
-    'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net',
-    `rm -rf '${remoteDir}' '${remoteMp3}'`,
-  ], { stdio: 'pipe', timeout: 15000 });
-
+  // Fallback: edge-tts (Microsoft free API)
+  const txtPath = outPath + '.txt';
+  fs.writeFileSync(txtPath, cleanText, 'utf8');
+  spawnSync(EDGE_TTS, ['--voice', VOICE, `--rate=${RATE}`, `--pitch=${PITCH}`, '-f', txtPath, '--write-media', outPath], { stdio: 'pipe', timeout: 60000 });
+  try { fs.unlinkSync(txtPath); } catch {}
   const size = fs.existsSync(outPath) ? Math.round(fs.statSync(outPath).size / 1024) : 0;
-  console.log(`  ✅ ${path.basename(outPath)} (${size}KB) [Qwen3-TTS]`);
+  if (size > 0) {
+    console.log(`  ✅ ${path.basename(outPath)} (${size}KB) [edge-tts fallback]`);
+  } else {
+    console.error(`  ❌ Both Piper and edge-tts failed for ${path.basename(outPath)}`);
+  }
 }
 
 function audioDuration(mp3Path) {
@@ -772,6 +806,124 @@ function sendTelegramVideo(videoPath, threadId, title, caption) {
   return null;
 }
 
+// ── gamma-slides integration ─────────────────────────────────────────────────
+const GAMMA_SLIDES = path.join('/home/ci/projects/gamma-slides/bin/gamma-slides.js');
+
+// Theme mapping per article type
+const TYPE_THEME = {
+  daily: 'corporate', weekly: 'corporate', scanner: 'dark',
+  analysis: 'startup', learning: 'minimal', series: 'startup',
+  retro: 'dark', tech: 'neon',
+};
+
+// Convert AI slides to gamma-slides YAML deck
+function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta: artMeta, finvizPngs }) {
+  const { slides, config, audioScript } = content;
+  const theme = TYPE_THEME[artType] || 'corporate';
+
+  const gammaSlides = slides.map(s => {
+    const narration = s.narration || s.title || '';
+
+    switch (s.type) {
+      case 'chapter-intro':
+        return { layout: 'title', title: s.chapter?.title || config.seriesTitle || title, subtitle: s.chapter?.subtitle || dateStr, badge: `${artMeta.emoji} ${artMeta.label}`, narration };
+
+      case 'metric-row':
+        return { layout: 'metrics', title: s.title || 'Market Snapshot', columns: Math.min((s.metrics||[]).length, 4),
+          metrics: (s.metrics||[]).slice(0, 6).map(m => ({
+            label: m.label || '', value: m.value || '', delta: m.delta || '',
+            trend: m.trend || (String(m.delta||'').startsWith('-') ? 'down' : String(m.delta||'').startsWith('+') ? 'up' : 'neutral'),
+          })), narration };
+
+      case 'event-timeline':
+        return { layout: 'timeline', title: s.title || 'Timeline',
+          items: (s.events||[]).slice(0, 6).map(e => ({ title: e.title || '', description: e.desc || '', icon: e.impact === 'high' ? '🔴' : e.impact === 'low' ? '🟢' : '🟡' })),
+          narration };
+
+      case 'highlight':
+        return { layout: 'quote', quote: s.text || s.title || '', author: 'Market Watch Analysis', narration };
+
+      case 'performance':
+        return { layout: 'table', title: s.title || 'Performance',
+          headers: ['Symbol', 'Name', 'Performance'],
+          rows: (s.tickers||[]).slice(0, 8).map(t => [t.symbol, t.name || '', typeof t.perf === 'number' ? `${t.perf > 0 ? '+' : ''}${t.perf.toFixed(1)}%` : String(t.perf || '')]),
+          narration };
+
+      case 'summary':
+      case 'bullets':
+        return { layout: 'bullets', title: s.title || '',
+          items: (s.items||[]).map(item => ({ text: typeof item === 'string' ? item : item.text || '', icon: '→' })),
+          narration };
+
+      case 'chart-image':
+      case 'scanner-setup': {
+        const ticker = s.ticker || s.title?.match(/^([A-Z]{1,5})/)?.[1] || '';
+        const pngPath = finvizPngs?.[ticker];
+        if (pngPath) {
+          // Split layout: chart image + trade levels
+          const levels = (s.levels||[]).map(l => `${l.label}: ${l.value}`).join(' | ');
+          return { layout: 'split',
+            left: { type: 'image', image: { src: `file://${pngPath}`, alt: `${ticker} chart`, fit: 'contain' } },
+            right: { type: 'text', title: s.title || ticker, body: levels || s.narration || '' },
+            narration };
+        }
+        // No chart image — use metrics/bullets fallback
+        return { layout: 'bullets', title: s.title || ticker,
+          items: (s.levels||[]).map(l => ({ text: `${l.label}: ${l.value}`, icon: l.type === 'tp1' || l.type === 'tp2' ? '🎯' : l.type === 'stop' ? '🛑' : '📊' })),
+          narration };
+      }
+
+      case 'scanner-actions':
+        return { layout: 'bullets', title: s.title || 'Actions',
+          items: (s.orders||s.items||[]).slice(0, 8).map(o => ({ text: typeof o === 'string' ? o : `${o.ticker || ''} · ${o.action || o.text || ''}`, icon: '⚡' })),
+          narration };
+
+      case 'scanner-portfolio':
+        return { layout: 'metrics', title: s.title || 'Portfolio', columns: 4,
+          metrics: (s.metrics||[]).slice(0, 6).map(m => ({ label: m.label || '', value: m.value || '', delta: '', trend: 'neutral' })),
+          narration };
+
+      case 'scanner-market':
+        return { layout: 'metrics', title: s.title || 'Market Context', columns: 3,
+          metrics: (s.metrics||[]).slice(0, 6).map(m => ({ label: m.label || '', value: m.value || '', delta: '', trend: 'neutral' })),
+          narration };
+
+      case 'chapter-outro':
+        return { layout: 'closing', title: s.title || 'Follow Market Watch',
+          metrics: [{ label: 'Telegram', value: '@MarketWatchXYZ' }, { label: 'Web', value: 'articles.market-watch.xyz' }],
+          narration };
+
+      default:
+        // Fallback: treat as bullets
+        return { layout: 'bullets', title: s.title || '',
+          items: [{ text: s.text || s.narration || s.title || '', icon: '📌' }],
+          narration };
+    }
+  });
+
+  // Always add a closing slide if not present
+  const hasClosing = gammaSlides.some(s => s.layout === 'closing');
+  if (!hasClosing) {
+    gammaSlides.push({
+      layout: 'closing',
+      title: 'Market Watch',
+      subtitle: `${artMeta.emoji} ${artMeta.label} — ${dateStr}`,
+      metrics: [{ label: 'Full Article', value: url.replace('https://', '') }],
+      narration: 'Full article available at articles.market-watch.xyz. Follow us on Telegram for daily signals.',
+    });
+  }
+
+  return {
+    version: '1',
+    meta: { title, author: 'Market Watch', company: 'Market Watch', date: dateStr, language: 'en', tags: [artType, 'finance', 'markets'], description: audioScript?.slice(0, 200) || '' },
+    branding: { watermark: 'MARKET WATCH', company_url: 'articles.market-watch.xyz' },
+    theme,
+    narration: { voice: 'en-US-AndrewNeural', rate: '+5%', pitch: '+0Hz' },
+    video: { subtitles: true, youtube: { title: `${title} | Market Watch`, description: `${artMeta.emoji} ${artMeta.label} — ${dateStr}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`, tags: ['Market Watch', 'finance', 'trading', artType], category: 'Education' } },
+    slides: gammaSlides,
+  };
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   const html    = artPath ? readHtml(artPath) : '';
@@ -794,8 +946,7 @@ async function main() {
   let content = await generateAIContent(html, url, dateStr, title, meta);
   if (!content) content = fallbackContent(html, url, dateStr, title, meta);
 
-  // For scanner: override slides with parsed HTML slides (6 structured slides)
-  // Keep AI audioScript + telegramBullets, replace slides only
+  // For scanner: override slides with parsed HTML slides
   if (type === 'scanner' && html) {
     const scannerSlides = buildScannerSlides(html, content, dateStr);
     if (scannerSlides.length >= 4) {
@@ -807,7 +958,8 @@ async function main() {
 
   const { audioScript, slides, config } = content;
 
-  // ── Pre-fetch Finviz charts as base64 (bypass Finviz User-Agent block) ──
+  // ── 2. Pre-fetch Finviz charts as PNG files ──
+  const finvizPngs = {};
   const finvizSlides = slides.filter(s => s.finvizUrl && s.finvizUrl.includes('finviz.com'));
   if (finvizSlides.length > 0) {
     console.log(`\n📈 Pre-fetching ${finvizSlides.length} Finviz chart(s)...`);
@@ -815,63 +967,70 @@ async function main() {
       const ticker = s.ticker || s.finvizUrl.match(/t=([A-Z.]+)/)?.[1] || '?';
       const b64 = await fetchFinvizBase64(ticker);
       if (b64) {
-        s.finvizUrl = b64;
-        console.log(`  ✅ ${ticker} chart fetched (${Math.round(b64.length / 1024)}KB base64)`);
+        // Save base64 as PNG file for gamma-slides image layout
+        const pngPath = path.join(outDir, `finviz-${ticker}.png`);
+        const b64Data = b64.replace(/^data:image\/\w+;base64,/, '');
+        fs.writeFileSync(pngPath, Buffer.from(b64Data, 'base64'));
+        finvizPngs[ticker] = pngPath;
+        console.log(`  ✅ ${ticker} chart saved (${Math.round(fs.statSync(pngPath).size / 1024)}KB)`);
       } else {
-        console.log(`  ⚠️  ${ticker} chart fetch failed — slide will show placeholder`);
+        console.log(`  ⚠️  ${ticker} chart fetch failed — slide will show text fallback`);
       }
     }
   }
 
+  // ── 3. Convert to gamma-slides YAML deck ──
+  const deck = convertToGammaDeck(content, { title, dateStr, url, type, meta, finvizPngs });
+  const deckPath = path.join(outDir, 'deck.yaml');
+  // Write as JSON (gamma-slides accepts both YAML and JSON)
+  fs.writeFileSync(deckPath, JSON.stringify(deck, null, 2), 'utf8');
+  console.log(`\n📋 Deck: ${deck.slides.length} slides (${deck.theme} theme)`);
+
   if (DRY_RUN) {
     console.log('\n─── AUDIO SCRIPT ───');
     console.log(audioScript);
-    console.log('\n─── SLIDES ───');
-    slides.forEach((s, i) => console.log(`  [${i}] ${s.type}: ${s.title || s.chapter?.title || ''}`));
-    console.log(`       narrations: ${slides.map(s => (s.narration||'').split(' ').length).join(', ')} words`);
+    console.log('\n─── DECK SLIDES ───');
+    deck.slides.forEach((s, i) => console.log(`  [${i}] ${s.layout}: ${s.title || ''}`));
+    console.log(`\n─── TELEGRAM BULLETS ───`);
+    (content.telegramBullets || []).forEach(b => console.log(`  ${typeof b === 'string' ? b : b.text || JSON.stringify(b)}`));
     return;
   }
 
-  // ── 2. Audio summary ──
+  // ── 4. Audio summary (Piper TTS, for Telegram) ──
   const audioPath = path.join(outDir, 'audio.mp3');
-  console.log('\n📢 Generating audio summary...');
+  console.log('\n📢 Generating Telegram audio summary...');
   runTTS(audioScript, audioPath);
   const audioDur = audioDuration(audioPath);
   console.log(`  ⏱  Duration: ${Math.round(audioDur)}s`);
 
-  // ── 3. Per-slide narration audio ──
-  console.log('\n🎙️  Generating per-slide narration...');
-  const segAudios = generateSegmentAudio(slides, outDir);
-
-  // ── 4. Slide screenshots ──
-  console.log('\n🖼️  Rendering slides...');
-  let pngPaths = [];
-  try {
-    pngPaths = await screenshotSlides(slides, config, outDir);
-  } catch (e) {
-    console.error(`  ⚠️  puppeteer failed: ${e.message?.slice(0,80)}, falling back to Pillow`);
-    pngPaths = await screenshotFallback(slides, config, outDir);
-  }
-
-  if (pngPaths.length === 0) {
-    console.error('  ❌ No slides generated. Aborting video.');
-    return;
-  }
-
-  // ── 5. Build video ──
+  // ── 5. Generate video via gamma-slides ──
   const videoPath = path.join(outDir, 'video.mp4');
-  console.log('\n🎬 Building video...');
-  buildVideo(pngPaths, segAudios, videoPath);
-  const videoSize = fs.existsSync(videoPath) ? Math.round(fs.statSync(videoPath).size / 1024 / 1024 * 10) / 10 : 0;
-  console.log(`  ✅ Video: ${videoPath} (${videoSize}MB)`);
+  console.log('\n🎬 Generating video via gamma-slides...');
+  const gammaEnv = { ...process.env, PUPPETEER_EXECUTABLE_PATH: '/snap/bin/chromium', PATH: `/home/ci/edge-tts-venv/bin:${process.env.PATH}` };
+  const gammaResult = spawnSync('node', [GAMMA_SLIDES, 'video', '-f', deckPath, '-o', videoPath], {
+    stdio: 'pipe', timeout: 600000, env: gammaEnv, cwd: '/home/ci/projects/gamma-slides',
+  });
+  const gammaOut = gammaResult.stdout?.toString() || '';
+  const gammaErr = gammaResult.stderr?.toString() || '';
+  if (gammaResult.status === 0 && fs.existsSync(videoPath)) {
+    const videoSize = Math.round(fs.statSync(videoPath).size / 1024 / 1024 * 10) / 10;
+    console.log(`  ✅ Video: ${videoPath} (${videoSize}MB)`);
+    console.log(gammaOut.split('\n').filter(l => l.includes('✓') || l.includes('slides')).join('\n  '));
+  } else {
+    console.error(`  ❌ gamma-slides failed (exit ${gammaResult.status}):`);
+    console.error(gammaErr.slice(-300) || gammaOut.slice(-300));
+    console.log('  ⚠️  Continuing without video...');
+  }
 
   // ── 6. YouTube upload ──
-  const ytTitle = `${title} | Market Watch`;
-  const ytDesc  = `${meta.emoji} ${meta.label} — ${dateStr}\n\n${(slides.map(s => s.narration || '').join(' ')).slice(0,2000)}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`;
-  const ytId = uploadToYouTube(videoPath, pngPaths[0], ytTitle, ytDesc, meta.ytPlaylist);
+  let ytId = null;
+  if (fs.existsSync(videoPath)) {
+    const ytTitle = `${title} | Market Watch`;
+    const ytDesc = `${meta.emoji} ${meta.label} — ${dateStr}\n\n${(audioScript || '').slice(0,2000)}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`;
+    ytId = uploadToYouTube(videoPath, null, ytTitle, ytDesc, meta.ytPlaylist);
+  }
 
   // ── 7. Telegram notification ──
-  // Normalize bullets — AI may return strings or objects {emoji, text}
   const rawBullets = (content.telegramBullets || []).slice(0, 8);
   const bullets = rawBullets.map(b => {
     if (typeof b === 'string') return b;
@@ -883,10 +1042,7 @@ async function main() {
   const caption = `${meta.emoji} <b>${title}</b>${bulletBlock}${ytLine}\n\n🔗 <a href="${url}">Full article →</a>`.slice(0, 1020);
 
   if (!NO_TELEGRAM) {
-    // Send audio first (always)
     sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
-
-    // If no YouTube ID (quota exceeded or upload failed), embed video directly in Telegram
     if (!ytId && fs.existsSync(videoPath)) {
       const videoCaption = `${meta.emoji} <b>${title}</b> — Vidéo\n\n🔗 <a href="${url}">Full article →</a>`;
       sendTelegramVideo(videoPath, meta.telegramTopic, title, videoCaption);
@@ -896,7 +1052,7 @@ async function main() {
   }
 
   // ── 8. Result ──
-  const result = { audioPath, videoPath, youtubeId: ytId, youtubeUrl: ytId ? `https://youtu.be/${ytId}` : null, title, slug };
+  const result = { audioPath, videoPath: fs.existsSync(videoPath) ? videoPath : null, youtubeId: ytId, youtubeUrl: ytId ? `https://youtu.be/${ytId}` : null, title, slug };
   fs.writeFileSync(path.join(outDir, 'result.json'), JSON.stringify(result, null, 2), 'utf8');
   console.log('\n✅ Media generation complete:');
   console.log(JSON.stringify(result, null, 2));
