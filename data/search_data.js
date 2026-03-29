@@ -169,6 +169,19 @@ window.searchDataPrebuilt = [
     "date": "29 Décembre 2025 - 3 Janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Oil $100, NFP & Q1 Closing: The Stagflation Endgame",
+    "desc": "WTI crude surged +5.46% to $99.64, sitting just $0.36 from the psychologically devastating $100 barrier. Brent crude at $105.32 (+3.37%). The Strait of Hormuz situation has escalated with IRGC naval forces conducting live-fire exercises near the Musandam Peninsula. Insurance premiums for tanker traf...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260330/",
+    "date": "30 mars 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
