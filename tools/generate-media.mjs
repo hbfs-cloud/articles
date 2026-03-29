@@ -705,7 +705,7 @@ function uploadToYouTube(videoPath, thumbPath, title, description, playlistId) {
     'creds=Credentials(token=t["access_token"],refresh_token=t["refresh_token"],token_uri=c["token_uri"],client_id=c["client_id"],client_secret=c["client_secret"])',
     'yt=build("youtube","v3",credentials=creds)',
     'meta=json.load(open("/tmp/mw-yt-meta.json"))',
-    'body={"snippet":{"title":meta["title"],"description":meta["description"],"categoryId":"25","defaultLanguage":"en","tags":["Market Watch","finance","trading"]},"status":{"privacyStatus":"unlisted"}}',
+    'body={"snippet":{"title":meta["title"],"description":meta["description"],"categoryId":"25","defaultLanguage":"en","tags":["Market Watch","finance","trading"]},"status":{"privacyStatus":"public"}}',
     'media=MediaFileUpload("/tmp/mw-upload/video.mp4",mimetype="video/mp4",resumable=True)',
     'req=yt.videos().insert(part="snippet,status",body=body,media_body=media)',
     'resp=None',
