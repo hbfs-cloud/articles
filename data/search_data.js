@@ -3021,9 +3021,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — GLD, MRK, EQNR, LMT, PG, NEM, RTX, XLP, SAP, EWJ",
-    "desc": "Following 6 retrospectives (latest provisional grade: B+):\n    Trump’s “reciprocal tariffs” are set to be formally announced on April 2 (“Liberation Day”), creating the most significant trade policy uncertainty since 2019. Markets are pricing in broad-based tariffs of 10-25% across most trading part...",
-    "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,healthcare,defense,materials,staples",
+    "title": "Top 10 A+ RISK-OFF — XOM, CF, EQNR, SHEL, NEM, GLD, MRK, KO, TLT, EWA",
+    "desc": "Following retrospectives (latest provisional grade: C):\n    Monday’s session confirmed the ongoing Risk-Off regime with a notable nuance: equity losses were contained (-0.39% S&P 500) while oil surged again to $105.01 (+5.39%), the highest WTI level in over two years. The divergence between containe...",
+    "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,healthcare,staples,materials",
     "grade": "",
     "href": "/scanner/20260331/",
     "date": "31 mars 2026"
