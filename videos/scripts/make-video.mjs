@@ -142,6 +142,49 @@ const YOUTUBE_META = {
     tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'VIX', 'market-watch.xyz'],
     lang: 'fr',
   },
+  'presentation-en': {
+    title: 'Who is Behind Market Watch? 25 Years in Trading Infrastructure',
+    playlist: 'Trading Education EN',
+    description: `Almost 25 years building trading systems at Thomson Reuters, Euronext, Societe Generale, and Brevan Howard. This is the story behind Market Watch - from institutional infrastructure to independent analysis tools.
+
+4 Chapters:
+- Who's Behind Market Watch - the person behind the data
+- The Professional Journey - Thomson Reuters, Euronext, SocGen, Brevan Howard
+- From Infrastructure to Trading - how building systems creates a unique edge
+- Market Watch Vision - institutional tools, accessible to everyone
+
+2 interactive quizzes
+Free tools and transparent track record
+
+This is not financial advice.
+https://articles.market-watch.xyz`,
+    tags: ['trading', 'market watch', 'trading infrastructure', 'hedge fund', 'exchange', 'investment bank', 'about', 'market-watch.xyz'],
+    lang: 'en',
+  },
+  'scanner-diy-en': {
+    title: 'DIY Scanner - Replicate Our Trading System for Free, No Coding Required',
+    playlist: 'Trading Education EN',
+    description: `Build your own stock scanner using free tools only - same results as our automated system.
+
+7 Chapters:
+- What We're Building - toolkit overview (Finviz, Google Sheets, Yahoo/Webull)
+- Step 1: Check Market Regime - 30-second VIX check
+- Strategy 1: Oversold Bounce - RSI + high relative volume
+- Strategy 2: Momentum Expansion - SMA20 + volume surge
+- Strategy 3: Breakout Squeeze - new highs + volatility expansion
+- Scoring and Selection - 3-factor manual scoring + dilution check
+- Google Sheets Tracker - position management, alerts, daily routine
+
+5 interactive quizzes
+Real Finviz screener setups you can bookmark
+15-minute daily routine, zero cost
+Includes the INDO dilution lesson
+
+This is not financial advice.
+https://articles.market-watch.xyz`,
+    tags: ['trading', 'scanner', 'DIY', 'Finviz', 'free tools', 'stock screener', 'RSI', 'momentum', 'breakout', 'position sizing', 'Google Sheets', 'market-watch.xyz'],
+    lang: 'en',
+  },
   'scanner-guide-en': {
     title: 'The Scanner Guide — Your Complete Playbook for Automated Trading Signals',
     playlist: 'Trading Education EN',
