@@ -70,7 +70,20 @@ fi
 # ─── Step 6: Commit & push everything ────────────────────────────────────────
 echo ""
 echo "📤 Step 6: Committing..."
-TODAY=$(date '+%Y%m%d')
+# Convention: scanner du soir = séance J+1 (prochain jour de trading ouvrable)
+# Lundi→Mardi, Mardi→Mercredi, ..., Vendredi→Lundi (skip weekend)
+_DOW=$(date '+%u')  # 1=Mon, 5=Fri, 6=Sat, 7=Sun
+if [ "$_DOW" -eq 5 ]; then
+  SCAN_DATE=$(date -d '+3 days' '+%Y%m%d')  # Vendredi soir → lundi
+elif [ "$_DOW" -eq 6 ]; then
+  SCAN_DATE=$(date -d '+2 days' '+%Y%m%d')  # Samedi → lundi
+elif [ "$_DOW" -eq 7 ]; then
+  SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')   # Dimanche → lundi
+else
+  SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')   # Lun-Jeu → J+1
+fi
+TODAY=$(date '+%Y%m%d')  # Date réelle (pour commits/logs)
+echo "   Scan date (séance): $SCAN_DATE | Today: $TODAY"
 
 # Stage all potentially changed files (ignore errors for missing files)
 git add \
@@ -126,7 +139,7 @@ fi
 # ─── Step 8: Generate media (audio + video + Telegram to Portfolio Live) ─────
 echo ""
 echo "🎬 Step 8: Generating media (audio + video + Telegram)..."
-SCAN_PATH="scanner/${TODAY}/index.html"
+SCAN_PATH="scanner/${SCAN_DATE}/index.html"
 if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
   # ANTHROPIC_API_KEY needed for AI script generation
   if [ -z "$ANTHROPIC_API_KEY" ]; then
