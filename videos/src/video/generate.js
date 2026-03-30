@@ -8,7 +8,7 @@
 import puppeteer from 'puppeteer';
 import { execSync } from 'child_process';
 import { resolve, join, dirname } from 'path';
-import { existsSync, mkdirSync, readdirSync, unlinkSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readdirSync, unlinkSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { slidesToHtml } from './slides-to-html.js';
 import { tradingTheme } from './theme.js';
@@ -39,12 +39,18 @@ function generateAudio(narrationData, tmpDir, voiceOpts, skipExisting) {
     const audioFile = join(tmpDir, `slide_${String(i).padStart(3, '0')}.mp3`);
 
     if (skipExisting && existsSync(audioFile)) {
-      const dur = parseFloat(
-        execSync(`ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${audioFile}"`, { encoding: 'utf-8' }).trim()
-      );
-      durations.push(dur);
-      log(`  [${i + 1}/${narrationData.length}] SKIP (exists) ${dur.toFixed(1)}s`);
-      continue;
+      // Skip only if file is non-empty
+      const fsize = statSync(audioFile).size;
+      if (fsize > 0) {
+        const dur = parseFloat(
+          execSync(`ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${audioFile}"`, { encoding: 'utf-8' }).trim()
+        );
+        durations.push(dur);
+        log(`  [${i + 1}/${narrationData.length}] SKIP (exists) ${dur.toFixed(1)}s`);
+        continue;
+      }
+      // Empty file — remove and regenerate
+      unlinkSync(audioFile);
     }
 
     const entry = narrationData[i];
@@ -54,11 +60,26 @@ function generateAudio(narrationData, tmpDir, voiceOpts, skipExisting) {
     const textFile = join(tmpDir, `text_${String(i).padStart(3, '0')}.txt`);
     writeFileSync(textFile, text);
 
-    execSync(
-      `${EDGE_TTS} --voice "${voiceOpts.voice}" --rate="${voiceOpts.rate}" --pitch="+0Hz" ` +
-      `-f "${textFile}" --write-media "${audioFile}" 2>/dev/null`,
-      { stdio: 'pipe', shell: true }
-    );
+    // Retry up to 3 times with 60s timeout to handle edge-tts hangs
+    let ttsOk = false;
+    for (let attempt = 0; attempt < 3 && !ttsOk; attempt++) {
+      try {
+        if (attempt > 0) log(`  [${i + 1}/${narrationData.length}] retry #${attempt}...`);
+        execSync(
+          `${EDGE_TTS} --voice "${voiceOpts.voice}" --rate="${voiceOpts.rate}" --pitch="+0Hz" ` +
+          `-f "${textFile}" --write-media "${audioFile}" 2>/dev/null`,
+          { stdio: 'pipe', shell: true, timeout: 60000 }
+        );
+        // Verify non-empty
+        const sz = statSync(audioFile).size;
+        if (sz > 0) ttsOk = true;
+        else { unlinkSync(audioFile); }
+      } catch (e) {
+        // Timeout or error — clean up and retry
+        if (existsSync(audioFile)) unlinkSync(audioFile);
+      }
+    }
+    if (!ttsOk) throw new Error(`TTS failed after 3 attempts for slide ${i}`);
 
     const dur = parseFloat(
       execSync(`ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${audioFile}"`, { encoding: 'utf-8' }).trim()
