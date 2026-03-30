@@ -691,6 +691,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "SRPT",
+    "exchange": "NASDAQ • Healthcare • Gene Therapy\n            — Duchenne / Neuromuscular Diseases",
+    "name": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
+    "title": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
+    "desc": "Institutional analysis of Sarepta Therapeutics (SRPT): gene therapy leader, Elevidys blockbuster, siRNA platform validation. +35% today on Phase 1/2 data. Short squeeze setup with 23% short float.",
+    "tags": "us,healthcare,biotech,gene-therapy,trade-idea,speculative",
+    "grade": "B",
+    "href": "/analyses/SRPT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQNR",
     "exchange": "NYSE • Energy • Oil & Gas Integrated — Norway / International",
     "name": "EQNR — EQNR +94% en 3 mois. LNG Qatar shock + Raia Brazil $9B. RSI 83, EMA200 +53%. Trade idea...",
@@ -712,19 +725,6 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,trade-idea,technique",
     "grade": "A",
     "href": "/analyses/HAL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "SRPT",
-    "exchange": "NASDAQ • Healthcare • Gene Therapy\n            — Duchenne / Neuromuscular Diseases",
-    "name": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
-    "title": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
-    "desc": "Institutional analysis of Sarepta Therapeutics (SRPT): gene therapy leader, Elevidys blockbuster, siRNA platform validation. +35% today on Phase 1/2 data. Short squeeze setup with 23% short float.",
-    "tags": "us,healthcare,biotech,gene-therapy,trade-idea,speculative",
-    "grade": "B",
-    "href": "/analyses/SRPT/",
     "date": ""
   },
   {
