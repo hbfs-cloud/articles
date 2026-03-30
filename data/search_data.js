@@ -691,6 +691,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
+    "name": "IOVA — AMTAGVI revenue $264M, pullback -24% post-rally, RSI 44, SI baisse  30%, entre $3.28 — ...",
+    "title": "IOVA — AMTAGVI revenue $264M, pullback -24% post-rally, RSI 44, SI baisse  30%, entre $3.28 — ...",
+    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, pullback vers $3.28, RSI 44, SI en baisse 30%, zone d'entre optimale atteinte. Thrapie cellulaire TIL leader.",
+    "tags": "us,healthcare,biotech,trade-idea,speculative",
+    "grade": "B+",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALT",
     "exchange": "NASDAQ • Healthcare • Biotechnology\n            — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
     "name": "ALT — pemvidutide Phase 3 MASH 2026, cash $340M mais ATM $200M + shelf $400M, RSI 28 survendu...",
@@ -699,19 +712,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,biotech,trade-idea,speculative",
     "grade": "B+",
     "href": "/analyses/ALT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
-    "name": "IOVA — AMTAGVI revenue $264M, real-world 44% ORR, Fast Track NSCLC, SI 30% en baisse, RSI 44 —...",
-    "title": "IOVA — AMTAGVI revenue $264M, real-world 44% ORR, Fast Track NSCLC, SI 30% en baisse, RSI 44 —...",
-    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, +61% YoY, 35% SI, RSI 80, path to profitability. Thérapie cellulaire TIL leader.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative",
-    "grade": "B+",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
