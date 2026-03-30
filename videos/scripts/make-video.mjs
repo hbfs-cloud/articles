@@ -142,6 +142,31 @@ const YOUTUBE_META = {
     tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'VIX', 'market-watch.xyz'],
     lang: 'fr',
   },
+  'scanner-guide-en': {
+    title: 'The Scanner Guide — Your Complete Playbook for Automated Trading Signals',
+    playlist: 'Trading Education EN',
+    description: `📊 Complete guide to the Market Watch Scanner — automated trading signals explained.
+
+📚 8 Chapters:
+• What Is the Scanner? — why automated screening works
+• Reading a Scan — anatomy, scoring system, safety filters
+• The 3 Portfolio Modes — Growth, Calmar, Conservative
+• Signal Lifecycle — TP1, TP2, Stop Loss, Timeout, Rotation
+• Position Sizing & Risk — what "25% allocation" really means
+• Market Regime — 5 regimes, strategy adaptation
+• Getting Started & Convergence — day 1 to full alignment
+• Your Dashboard — Status Page, Telegram, YouTube tools
+
+🧠 8 interactive quizzes
+📈 Real trade examples with actual P&L numbers
+💡 98,000 backtested parameter combinations
+📊 Live portfolio tracking: +5.46% return, -1.63% max drawdown
+
+⚠️ This is not financial advice.
+🌐 https://articles.market-watch.xyz/scanner/status/`,
+    tags: ['trading', 'scanner', 'automated trading', 'signals', 'portfolio', 'risk management', 'position sizing', 'market regime', 'VIX', 'backtesting', 'market-watch.xyz'],
+    lang: 'en',
+  },
 };
 
 // ── YouTube upload (adapted from pipeline.mjs) ─────────────────────────
