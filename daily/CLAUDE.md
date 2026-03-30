@@ -237,3 +237,20 @@ Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une
 
 ---
 
+
+## Règle OBLIGATOIRE — Prix crypto en temps réel
+
+**Ne JAMAIS inventer ou estimer les prix crypto.** Toujours vérifier via :
+```bash
+# BTC en temps réel
+curl -s "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'BTC: \${float(d[\"lastPrice\"]):,.0f} | 24h: {float(d[\"priceChangePercent\"]):+.2f}%')"
+
+# ETH en temps réel
+curl -s "https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'ETH: \${float(d[\"lastPrice\"]):,.2f} | 24h: {float(d[\"priceChangePercent\"]):+.2f}%')"
+```
+Ou via MCP GetMarketOverview (section market_crypto).
+
+**Erreurs interdites :**
+- ❌ "Bitcoin drops below $65K" si BTC est à $67K au moment de la publication
+- ❌ Prix de la veille présentés comme prix actuels
+- ❌ Scénarios intraday passés écrits au présent
