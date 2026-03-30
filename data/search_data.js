@@ -691,6 +691,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALT",
+    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
+    "name": "ALT — pemvidutide Phase 3 MASH 2026, cash $340M mais ATM $200M + shelf $400M, RSI 28 survendu...",
+    "title": "ALT — pemvidutide Phase 3 MASH 2026, cash $340M mais ATM $200M + shelf $400M, RSI 28 survendu...",
+    "desc": "Analyse experte Altimmune : pemvidutide Phase 3 MASH 2026, FDA Breakthrough Therapy, cash $340M, dual GLP-1/glucagon. Obésité & MASH leader émergent.",
+    "tags": "us,healthcare,biotech,trade-idea,speculative",
+    "grade": "B+",
+    "href": "/analyses/ALT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
+    "name": "IOVA — AMTAGVI revenue $264M, real-world 44% ORR, Fast Track NSCLC, SI 30% en baisse, RSI 44 —...",
+    "title": "IOVA — AMTAGVI revenue $264M, real-world 44% ORR, Fast Track NSCLC, SI 30% en baisse, RSI 44 —...",
+    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, +61% YoY, 35% SI, RSI 80, path to profitability. Thérapie cellulaire TIL leader.",
+    "tags": "us,healthcare,biotech,trade-idea,speculative",
+    "grade": "B+",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQNR",
     "exchange": "NYSE • Energy • Oil & Gas Integrated — Norway / International",
     "name": "EQNR — EQNR +94% en 3 mois. LNG Qatar shock + Raia Brazil $9B. RSI 83, EMA200 +53%. Trade idea...",
@@ -1081,19 +1107,6 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "ALT",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n    — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
-    "name": "ALT — pemvidutide BTD MASH, Phase 3 en 2026, cash $340M, beta 0.17 — biotech pure-play obésit...",
-    "title": "ALT — pemvidutide BTD MASH, Phase 3 en 2026, cash $340M, beta 0.17 — biotech pure-play obésit...",
-    "desc": "Analyse experte Altimmune : pemvidutide Phase 3 MASH 2026, FDA Breakthrough Therapy, cash $340M, dual GLP-1/glucagon. Obésité & MASH leader émergent.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative",
-    "grade": "B+",
-    "href": "/analyses/ALT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
     "ticker": "INDO",
     "exchange": "NYSE American • Energy • Oil & Gas E&P",
     "name": "INDO — Proxy pétrolier géopolitique Iran. Kruh Block Indonésie, 580 bpd, MCap $68M. Float <10M...",
@@ -1102,19 +1115,6 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,geopolitique,trade-idea,speculative",
     "grade": "C+",
     "href": "/analyses/INDO/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n    — Thérapie Cellulaire TIL / Oncologie",
-    "name": "IOVA — AMTAGVI revenue $264M, +30% QoQ en Q4, Fast Track NSCLC, 35% SI — setup squeeze ou piège ?",
-    "title": "IOVA — AMTAGVI revenue $264M, +30% QoQ en Q4, Fast Track NSCLC, 35% SI — setup squeeze ou piège ?",
-    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, +61% YoY, 35% SI, RSI 80, path to profitability. Thérapie cellulaire TIL leader.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative",
-    "grade": "B+",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
