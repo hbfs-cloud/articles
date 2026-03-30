@@ -182,17 +182,17 @@ window.searchDataPrebuilt = [
     "date": "30 mars 2026"
   },
   {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
+    "type": "daily",
+    "icon": "fa-sun",
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Iran Deadline, Q1 Earnings Kickoff & The $100 Oil Regime",
-    "desc": "This week is dominated by the Iran geopolitical trigger (Monday), Fed speakers, CPI data (Wednesday), PPI (Thursday), and the University of Michigan Consumer Sentiment (Friday). Q1 earnings from big banks start the following week.",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "title": "Strait of Hormuz Blockade:Markets Brace for Impact",
+    "desc": "Monday briefing: Iran blocks Strait of Hormuz, oil surges past $101, Dow enters correction, Bitcoin drops below $65K. Full market analysis and trading ideas.",
+    "tags": "macro,geopolitique,crypto,trade-idea,formation,energy",
     "grade": "",
-    "href": "/weekly/20260406/",
-    "date": "6 avril 2026"
+    "href": "/daily/20260330/",
+    "date": "30 mars 2026"
   },
   {
     "type": "daily",
