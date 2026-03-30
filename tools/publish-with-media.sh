@@ -45,42 +45,18 @@ export ANTHROPIC_API_KEY
 TYPE=""
 ARTICLE_PATH=""
 TITLE_ARG=""
-FORCE=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --type)  TYPE="$2"; shift 2;;
     --path)  ARTICLE_PATH="$2"; shift 2;;
     --title) TITLE_ARG="$2"; shift 2;;
-    --force) FORCE=1; shift;;
     *)       shift;;
   esac
 done
 
 if [ -z "$TYPE" ]; then echo "❌ --type required"; exit 1; fi
 if [ -z "$ARTICLE_PATH" ]; then echo "❌ --path required"; exit 1; fi
-
-# ── Dedup lock — one notification per article per day ──
-# Extract date from path (e.g. daily/20260330/index.html → 20260330)
-ARTICLE_DATE=$(echo "$ARTICLE_PATH" | grep -oE '[0-9]{8}' | head -1)
-if [ -z "$ARTICLE_DATE" ]; then ARTICLE_DATE=$(date +%Y%m%d); fi
-
-LOCK_FILE="/tmp/mw-publish-lock-${TYPE}-${ARTICLE_DATE}"
-
-if [ -f "$LOCK_FILE" ] && [ "$FORCE" -eq 0 ]; then
-  LOCK_AGE=$(( $(date +%s) - $(stat -c %Y "$LOCK_FILE" 2>/dev/null || echo 0) ))
-  if [ "$LOCK_AGE" -lt 21600 ]; then  # 6h
-    LOCK_MIN=$(( LOCK_AGE / 60 ))
-    echo "⚠️  DEDUP: notification already sent for ${TYPE}/${ARTICLE_DATE} (${LOCK_MIN}min ago)."
-    echo "   Use --force to bypass. Lock file: $LOCK_FILE"
-    echo "   This prevents duplicate Telegram notifications and YouTube uploads."
-    exit 0
-  fi
-fi
-
-# Acquire lock immediately
-echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) PID=$$" > "$LOCK_FILE"
-echo "🔒 Lock acquired: $LOCK_FILE"
 
 echo "📣 [publish-with-media] type=$TYPE path=$ARTICLE_PATH"
 
