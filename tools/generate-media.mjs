@@ -939,6 +939,17 @@ async function main() {
   const outDir = `/tmp/mw-media/${slug}`;
   fs.mkdirSync(outDir, { recursive: true });
 
+  // ── Dedup guard — prevent double notifications ──
+  const sentFlagPath = path.join(outDir, '.notif-sent');
+  if (fs.existsSync(sentFlagPath)) {
+    const flagAge = Date.now() - fs.statSync(sentFlagPath).mtimeMs;
+    if (flagAge < 6 * 60 * 60 * 1000) { // 6h window
+      console.log(`⚠️  Notification already sent for "${slug}" (${Math.round(flagAge/60000)}min ago). Skipping to prevent duplicate.`);
+      console.log('   Delete /tmp/mw-media/' + slug + '/.notif-sent to force resend.');
+      process.exit(0);
+    }
+  }
+
   console.log(`\n🎬 Generating media for: ${title}`);
   console.log(`   Type: ${type} | Slug: ${slug}`);
 
@@ -1042,6 +1053,9 @@ async function main() {
   const caption = `${meta.emoji} <b>${title}</b>${bulletBlock}${ytLine}\n\n🔗 <a href="${url}">Full article →</a>`.slice(0, 1020);
 
   if (!NO_TELEGRAM) {
+    // Write dedup flag before sending to prevent concurrent/repeated duplicates
+    try { fs.writeFileSync(sentFlagPath, new Date().toISOString()); } catch {}
+
     sendTelegramAudio(audioPath, meta.telegramTopic, title, caption);
     if (!ytId && fs.existsSync(videoPath)) {
       const videoCaption = `${meta.emoji} <b>${title}</b> — Vidéo\n\n🔗 <a href="${url}">Full article →</a>`;
