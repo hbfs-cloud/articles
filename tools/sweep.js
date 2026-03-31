@@ -226,9 +226,19 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let riskPerUnit = setup.entry - setup.stop;
   if (riskPerUnit <= 0) return null;
 
-  // Cap the stop loss if maxStopPct > 0
-  if (maxStopPct > 0) {
-    const maxRisk = actualEntry * (maxStopPct / 100);
+  // Per-strategy stop cap: tighter for volatile strategies
+  const STRATEGY_STOP_CAP = {
+    'pre_squeeze': 5,   // volatile, tighter leash
+    'breakout': 7,
+    'momentum': 7,
+    'pullback': 5,
+  };
+  const effectiveMaxStop = Math.min(
+    maxStopPct > 0 ? maxStopPct : 100,
+    STRATEGY_STOP_CAP[setup.strategy] || (maxStopPct > 0 ? maxStopPct : 100),
+  );
+  if (effectiveMaxStop < 100) {
+    const maxRisk = actualEntry * (effectiveMaxStop / 100);
     if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
   }
 
@@ -857,8 +867,8 @@ async function main() {
   if (fs.existsSync(MODES_CFG)) {
     const config = JSON.parse(fs.readFileSync(MODES_CFG));
     console.log("\n=== FROZEN MODES vs SWEEP OPTIMAL ===\n");
-    console.log("Le mode Balanced (calmar) est FIGÉ dans data/modes-config.json.");
-    console.log("Le sweep ne les modifie JAMAIS. Voici la comparaison :\n");
+    console.log("Balanced mode (calmar) is FROZEN in data/modes-config.json.");
+    console.log("The sweep NEVER modifies them. Comparison below:\n");
 
     const optMap = { growth: topByReturn[0], calmar: topByCalmar[0], zero: ranked[0] };
     for (const [id, cfg] of Object.entries(config.modes)) {
@@ -871,9 +881,9 @@ async function main() {
       const frozen = `P${cfg.portfolioSize}/Top${cfg.topN}/H${cfg.horizon}/${cfg.filterName}/${cfg.rotation}/MaxSt=${cfg.maxStopPct||0}%/ATR=${cfg.atrStopMult||0}x/Trail=${cfg.dailyTrailPct||0}%`;
       const sweep = `P${opt.portfolioSize}/Top${opt.topN}/H${opt.horizon}/${opt.filterName}/${opt.rotation}/MaxSt=${opt.maxStopPct||0}%/ATR=${opt.atrStopMult||0}x/Trail=${opt.dailyTrailPct||0}%`;
       console.log(`${id.toUpperCase()} (${cfg.label}):`);
-      console.log(`  Figé  : ${frozen}`);
+      console.log(`  Frozen: ${frozen}`);
       console.log(`  Sweep : ${sweep} (Return=${opt.returnTotal}% Sharpe=${opt.sharpe})`);
-      console.log(`  ${same ? "✅ Identique" : "⚠️  DIFFÉRENT — considérer mise à jour manuelle"}`);
+      console.log(`  ${same ? "✅ Match" : "⚠️  DIFFERENT — consider manual update"}`);
       console.log();
     }
   }
