@@ -194,39 +194,27 @@ function main() {
     return `<div id="p-${id}">
 
 <!-- ══ 1. PERF + STATS ══ -->
-<div class="perf-hero" style="border-left:4px solid ${cfg.color}">
-  <div class="perf-chart" id="${chartId}"></div>
+<div class="perf-hero" style="border-left:3px solid ${cfg.color}">
+  <div class="perf-chart-wrap">
+    <div class="perf-hero-left">
+      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
+    </div>
+    <div class="perf-chart" id="${chartId}"></div>
+  </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max DD</span></div>
+    <div class="ps"><span class="ps-v" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Total Return</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max Drawdown</span></div>
     <div class="ps"><span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit F.</span></div>
-    <div class="ps"><span class="ps-v">${m.trades - trades.filter(t=>t._premature).length}</span><span class="ps-l">Closed</span></div>
+    <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">${m.trades - trades.filter(t=>t._premature).length}</span><span class="ps-l">Closed Trades</span></div>
     <div class="ps"><span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
-<!-- ══ 2. HOW TO TRADE (method) ══ -->
-<div class="method-card" style="border-color:${cfg.color}30">
-  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
-  <div class="method-steps">
-    <div class="step" style="background:${cfg.color}10;border:1px solid ${cfg.color}30;border-radius:8px;padding:10px 14px;margin-bottom:10px">
-      <span class="step-n" style="background:${cfg.color};opacity:0.7">★</span>
-      <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (≈ ${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
-    </div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
-    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score ≥ 88 vs return &lt; 2%), replace it.</div></div>` : ''}
-  </div>
-  <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
-</div>
-
-<!-- ══ 3. CLOSE NOW (positions timed-out) ══ -->
+<!-- ══ 2. CLOSE NOW (positions timed-out) ══ -->
 ${timedOut.length ? `<div class="cta-card cta-close">
   <div class="cta-header">
-    <span class="cta-icon">⛔</span>
+    <span class="cta-icon"><i class="fas fa-ban"></i></span>
     <div>
       <h3>Close Now <span class="cta-badge">${timedOut.length} position${timedOut.length > 1 ? 's' : ''}</span></h3>
       <p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>
@@ -333,12 +321,12 @@ ${(() => {
     : `${occupied}/${cfg.portfolioSize} open — portfolio full${rotationCandidates.length ? ' — rotation opportunity' : ''}`;
 
   if (totalActions === 0 && watchPool.length === 0) {
-    return `<div class="section-card"><div class="sc-head"><h3>Orders</h3><span class="sc-meta">Portfolio full — no action needed</span></div></div>`;
+    return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
   }
 
   return `<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}">
   <div class="sc-head">
-    <h3>${totalActions > 0 ? '⚡' : '👁'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
+    <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
     <span class="sc-meta">${statusLine}</span>
   </div>
   ${totalActions > 0 ? `<table class="t">
@@ -355,12 +343,12 @@ ${(() => {
 </div>`;
 })()}
 
-${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:2px solid #fcd34d">
+${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
   <div class="cta-header">
-    <span class="cta-icon">⏰</span>
+    <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
     <div>
-      <h3 style="color:#b45309">Expires Tomorrow <span class="cta-badge" style="background:#b45309">${expiringSoon.length} position${expiringSoon.length > 1 ? 's' : ''}</span></h3>
-      <p class="cta-sub" style="color:#d97706">Horizon reached at next close — decide: keep or exit at open</p>
+      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">${expiringSoon.length} position${expiringSoon.length > 1 ? 's' : ''}</span></h3>
+      <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
     </div>
   </div>
   <table class="t">
@@ -377,23 +365,23 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 <div class="section-card">
   <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title">Today's Signals <span class="count">${sig.length} setups</span></span>
-      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>` : ''}
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setups</span></span>
+      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
     </summary>
-    ${sig.length ? `<table class="t" style="margin-top:.6rem">
+    ${sig.length ? `<table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
       <tbody>${sig.map((s, i) => {
         const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
         return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
       }).join('')}</tbody>
-    </table>` : `<p class="empty">No signals for this mode today</p>`}
+    </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No signals for this mode today</p>`}
   </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3>Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
     ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${pos.length ? `
@@ -430,9 +418,9 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 
     return `<div class="scenario-bar-wrap">
   <div class="scenario-labels">
-    <span class="${worstCls}">⛔ Worst: ${worstPct > 0 ? '+' : ''}${worstPct.toFixed(1)}%</span>
-    <span class="${nowCls}" style="font-weight:700">▼ Now: ${nowPct > 0 ? '+' : ''}${nowPct.toFixed(1)}%</span>
-    <span class="${bestCls}">🎯 Best: +${bestPct.toFixed(1)}%</span>
+    <span class="${worstCls}"><i class="fas fa-shield-halved"></i> Worst: ${worstPct > 0 ? '+' : ''}${worstPct.toFixed(1)}%</span>
+    <span class="${nowCls}"><i class="fas fa-circle-dot"></i> Now: ${nowPct > 0 ? '+' : ''}${nowPct.toFixed(1)}%</span>
+    <span class="${bestCls}"><i class="fas fa-bullseye"></i> Best: +${bestPct.toFixed(1)}%</span>
   </div>
   <div class="scenario-bar">
     <div class="scenario-fill-bad" style="width:${barW}%"></div>
@@ -452,13 +440,13 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
       const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
       return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>`;
     }).join('')}</tbody>
-  </table>` : `<p class="empty">No active positions</p>`}
+  </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">${trades.length} closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${trades.length} closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
@@ -507,6 +495,31 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </details>
 </div>
 
+<!-- ══ 8. HOW TO TRADE (method — collapsed by default) ══ -->
+<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
+    </summary>
+    <div class="method-steps" style="margin-top:.85rem">
+      <div class="step" style="background:${cfg.color}08;border:1px solid ${cfg.color}20;border-radius:8px;padding:.65rem .9rem">
+        <span class="step-n" style="background:${cfg.color}"><i class="fas fa-star" style="font-size:.5rem"></i></span>
+        <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (&#8776;&nbsp;${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
+      </div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30&thinsp;PM Paris / 9:30&thinsp;AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
+      ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score &#8805; 88 vs return &lt; 2%), replace it.</div></div>` : ''}
+    </div>
+    <div class="method-footer">
+      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} positions max</span>
+      <span><i class="fas fa-calendar-days"></i> ${cfg.horizon}-day horizon</span>
+      <span><i class="fas fa-filter"></i> ${filterLabel(cfg.filterName)}</span>
+    </div>
+  </details>
+</div>
+
 </div>`;
   }
 
@@ -517,7 +530,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portfolio Live &mdash; Market Watch</title>
-  <meta name="description" content="Today's signals, open positions, performance — 3 optimized trading modes.">
+  <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -528,161 +541,192 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .w{max-width:1000px;margin:0 auto;padding:0 1rem 3rem}
 
-/* Hero */
-.hero{text-align:center;padding:2rem 1rem 1.5rem;border-bottom:1px solid #e2e8f0}
-.hero h1{font-size:1.6rem;font-weight:900;margin:0 0 .25rem}
-.hero p{color:#64748b;font-size:.9rem;margin:0}
-.hero .ts{display:inline-block;margin-top:.6rem;font-size:.72rem;color:#94a3b8;background:#f1f5f9;padding:.2rem .7rem;border-radius:12px}
+/* ── Hero ── */
+.hero{padding:2rem 1rem 1.75rem;border-bottom:1px solid #e2e8f0;position:relative}
+.hero-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.hero-left{flex:1;min-width:0}
+.hero h1{font-size:1.55rem;font-weight:900;margin:0 0 .3rem;display:flex;align-items:center;gap:.55rem}
+.hero h1 .live-dot{width:8px;height:8px;border-radius:50%;background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.18);flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(16,185,129,.18)}50%{box-shadow:0 0 0 6px rgba(16,185,129,.06)}}
+.hero p{color:#64748b;font-size:.88rem;margin:0}
+.hero-meta{display:flex;align-items:center;gap:.6rem;margin-top:.65rem;flex-wrap:wrap}
+.hero .ts{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;color:#64748b;background:#f1f5f9;padding:.25rem .75rem;border-radius:20px;font-weight:500}
+.hero .ts i{color:#94a3b8;font-size:.68rem}
+/* Time Machine trigger in hero */
+.tm-hero-btn{display:none;align-items:center;gap:.4rem;padding:.25rem .75rem;border-radius:20px;border:1px solid #e2e8f0;background:#fff;color:#475569;font-size:.72rem;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
+.tm-hero-btn i{font-size:.68rem}
+.tm-hero-btn:hover{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
+.tm-hero-btn.viewing{color:#f59e0b;border-color:#f59e0b20;background:#fffbeb}
 
-/* Inline TM button */
-.tm-btn-inline{display:none;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#475569;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s}
-.tm-btn-inline:hover{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
-.tm-btn-inline.viewing{color:#f59e0b;border-color:#f59e0b;background:#fffbeb}
+/* ── Perf hero = chart left + stats right ── */
+.perf-hero{display:flex;gap:1.2rem;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:1.2rem;margin-bottom:1.25rem;overflow:hidden}
+.perf-hero-left{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem}
+.perf-hero-label{font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em}
+.perf-chart-wrap{flex:1;min-width:0;display:flex;flex-direction:column}
+.perf-chart{flex:1;min-height:200px}
+.perf-stats{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .6rem;align-content:center;min-width:170px}
+.ps{text-align:center;padding:.4rem .3rem;border-radius:8px;background:#f8fafc}
+.ps-v{display:block;font-size:1.1rem;font-weight:800;color:#0f172a;line-height:1.2}
+.ps-l{display:block;font-size:.58rem;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-top:.15rem;font-weight:600}
 
-/* Perf hero = chart left + stats right */
-.perf-hero{display:flex;gap:1rem;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-bottom:1.2rem;overflow:hidden}
-.perf-chart{flex:1;min-height:200px;min-width:0}
-.perf-stats{display:grid;grid-template-columns:1fr 1fr;gap:.4rem .8rem;align-content:center;min-width:180px}
-.ps{text-align:center;padding:.35rem .2rem}
-.ps-v{display:block;font-size:1.15rem;font-weight:800;color:#0f172a}
-.ps-l{font-size:.6rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.3px}
-
-/* Section cards */
+/* ── Section cards ── */
 .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem}
-.sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem;flex-wrap:wrap;gap:.4rem}
-.sc-head h3{font-size:.95rem;font-weight:800;color:#0f172a;margin:0}
-.sc-link{font-size:.78rem;color:#3b82f6;text-decoration:none;font-weight:600}
+.sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:.4rem}
+.sc-head h3{font-size:.9rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:.4rem}
+.sc-head h3 i{font-size:.78rem;color:#94a3b8}
+.sc-link{font-size:.78rem;color:#3b82f6;text-decoration:none;font-weight:600;display:inline-flex;align-items:center;gap:.25rem}
 .sc-link:hover{text-decoration:underline}
-.sc-meta{font-size:.75rem;color:#94a3b8}
-.count{font-size:.75rem;color:#94a3b8;font-weight:500;margin-left:.3rem}
+.sc-meta{font-size:.75rem;color:#64748b}
+.count{font-size:.73rem;color:#94a3b8;font-weight:500;margin-left:.35rem;background:#f1f5f9;padding:.05rem .4rem;border-radius:10px}
 
-/* Tables */
+/* ── Tables ── */
 .t{width:100%;border-collapse:collapse;font-size:.8rem}
-.t th{background:#f8fafc;color:#64748b;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:.45rem .6rem;text-align:left;border-bottom:1px solid #e2e8f0;white-space:nowrap}
-@media(max-width:600px){.t{table-layout:auto;word-break:break-word}.t th,.t td{white-space:normal;padding:.35rem .4rem;font-size:.72rem}}
-.t td{padding:.4rem .6rem;border-bottom:1px solid #f8fafc}
-.t tr:hover{background:#fafbfc}
+.t th{background:#f8fafc;color:#64748b;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.5rem .7rem;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap}
+.t td{padding:.45rem .7rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.t tr:last-child td{border-bottom:none}
+.t tr:hover td{background:#fafbfc}
 .t .pos{color:#059669;font-weight:600}
 .t .neg{color:#dc2626;font-weight:600}
 .t .am{color:#d97706;font-weight:600}
-.t .m{color:#94a3b8;font-size:.75rem}
+.t .m{color:#64748b;font-size:.75rem}
 .t .c{color:#94a3b8;text-align:center;font-weight:700}
-.pill-score{display:inline-block;color:#fff;font-weight:800;font-size:.72rem;padding:.1rem .45rem;border-radius:5px;min-width:26px;text-align:center}
-.pill{display:inline-block;font-size:.68rem;font-weight:700;padding:.12rem .4rem;border-radius:5px;background:#f1f5f9;color:#64748b}
+.pill-score{display:inline-block;color:#fff;font-weight:800;font-size:.72rem;padding:.15rem .5rem;border-radius:5px;min-width:30px;text-align:center;letter-spacing:.01em}
+.pill{display:inline-block;font-size:.68rem;font-weight:700;padding:.15rem .45rem;border-radius:5px;background:#f1f5f9;color:#64748b;white-space:nowrap}
 .pill.pos{background:#ecfdf5;color:#059669}
 .pill.neg{background:#fef2f2;color:#dc2626}
 .pill.am{background:#fffbeb;color:#d97706}
+.pill.m{background:#f1f5f9;color:#475569}
 .pill.pending{background:#eff6ff;color:#3b82f6;border:1px dashed #93c5fd}
-.empty{text-align:center;padding:1.5rem;color:#94a3b8;font-size:.85rem}
+.empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
+.empty i{font-size:1.4rem;opacity:.4}
+@media(max-width:600px){
+  .t{table-layout:auto;word-break:break-word}
+  .t th,.t td{white-space:normal;padding:.35rem .45rem;font-size:.72rem}
+}
 
-/* Position bar */
-.pos-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:1px;margin-bottom:.6rem}
-.scenario-bar-wrap{margin-bottom:.8rem}
-.scenario-labels{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.3rem;gap:.3rem}
-.scenario-bar{position:relative;height:10px;border-radius:5px;overflow:visible;display:flex;background:#f1f5f9;margin-bottom:.2rem}
-.scenario-fill-bad{background:linear-gradient(90deg,#dc2626,#f59e0b);border-radius:5px 0 0 5px;transition:width .3s}
-.scenario-fill-good{background:linear-gradient(90deg,#f59e0b,#059669);border-radius:0 5px 5px 0;transition:width .3s}
-.scenario-cursor{position:absolute;top:-3px;width:3px;height:16px;background:#0f172a;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 0 2px #fff}
+/* ── Scenario bar ── */
+.scenario-bar-wrap{margin-bottom:1rem;padding:.75rem 1rem;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0}
+.scenario-labels{display:flex;justify-content:space-between;font-size:.72rem;margin-bottom:.5rem;gap:.3rem;font-weight:600}
+.scenario-bar{position:relative;height:8px;border-radius:4px;overflow:visible;display:flex;background:#e2e8f0;margin-bottom:.15rem}
+.scenario-fill-bad{background:linear-gradient(90deg,#dc2626,#f59e0b);border-radius:4px 0 0 4px;transition:width .3s}
+.scenario-fill-good{background:linear-gradient(90deg,#f59e0b,#059669);border-radius:0 4px 4px 0;transition:width .3s}
+.scenario-cursor{position:absolute;top:-4px;width:4px;height:16px;background:#0f172a;border-radius:2px;transform:translateX(-50%);box-shadow:0 0 0 2px #fff,0 1px 4px rgba(0,0,0,.2)}
 
-/* Method card */
-.method-card{background:#fff;border:1px solid #e2e8f0;border-left:4px solid;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem}
-.method-card h3{font-size:.9rem;font-weight:800;margin:0 0 .8rem;display:flex;align-items:center;gap:.4rem}
-.method-steps{display:flex;flex-direction:column;gap:.5rem}
-.step{display:flex;align-items:flex-start;gap:.6rem;font-size:.82rem;color:#475569;line-height:1.5}
-.step-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:.7rem;flex-shrink:0;margin-top:1px}
-.method-footer{margin-top:.6rem;padding-top:.5rem;border-top:1px solid #f1f5f9;font-size:.72rem;color:#94a3b8}
+/* ── Method card ── */
+.method-card{background:#fff;border:1px solid #e2e8f0;border-left:3px solid;border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem}
+.method-card h3{font-size:.88rem;font-weight:800;margin:0 0 .85rem;display:flex;align-items:center;gap:.45rem}
+.method-steps{display:flex;flex-direction:column;gap:.55rem}
+.step{display:flex;align-items:flex-start;gap:.65rem;font-size:.82rem;color:#475569;line-height:1.55}
+.step-n{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;color:#fff;font-weight:800;font-size:.68rem;flex-shrink:0;margin-top:1px}
+.method-footer{margin-top:.7rem;padding-top:.55rem;border-top:1px solid #f1f5f9;font-size:.7rem;color:#94a3b8;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}
+.method-footer span{display:inline-flex;align-items:center;gap:.25rem}
+.method-footer i{font-size:.6rem}
 
-/* CTA cards */
+/* ── CTA cards ── */
 .cta-card{border-radius:12px;padding:1rem 1.2rem;margin-bottom:1rem;border:2px solid}
 .cta-close{background:#fef2f2;border-color:#fca5a5}
-.cta-orders{border-left:3px solid #059669;background:#f0fdf4}
-.cta-header{display:flex;align-items:flex-start;gap:.8rem;margin-bottom:.8rem}
-.cta-icon{font-size:1.6rem;line-height:1;flex-shrink:0;margin-top:.1rem}
+.cta-orders{background:#f0fdf4;border:1.5px solid #bbf7d0;border-left:4px solid #059669}
+.cta-header{display:flex;align-items:flex-start;gap:.85rem;margin-bottom:.85rem}
+.cta-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;font-size:1.1rem;flex-shrink:0;background:rgba(220,38,38,.1)}
+.cta-close .cta-icon{background:rgba(220,38,38,.1)}
+.cta-orders .cta-icon{background:rgba(5,150,105,.1)}
 .cta-header h3{font-size:.95rem;font-weight:800;color:#dc2626;margin:0 0 .2rem}
-.cta-badge{display:inline-block;background:#dc2626;color:#fff;font-size:.68rem;font-weight:800;padding:.1rem .45rem;border-radius:5px;margin-left:.4rem;vertical-align:middle}
-.cta-sub{font-size:.78rem;color:#ef4444;margin:0}
+.cta-orders .cta-header h3{color:#065f46}
+.cta-badge{display:inline-block;background:#dc2626;color:#fff;font-size:.65rem;font-weight:800;padding:.1rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle}
+.cta-orders .cta-badge{background:#059669}
+.cta-sub{font-size:.78rem;color:#b91c1c;margin:0}
+.cta-orders .cta-sub{color:#047857}
 
-/* Collapsible details */
+/* ── Collapsible details ── */
 details{margin-top:.2rem}
-details summary{cursor:pointer;font-size:.8rem;font-weight:600;color:#475569;padding:.25rem 0;user-select:none;list-style:none;display:flex;align-items:center;justify-content:space-between}
+details summary{cursor:pointer;font-size:.8rem;font-weight:600;color:#475569;padding:.3rem 0;user-select:none;list-style:none;display:flex;align-items:center;justify-content:space-between}
 details summary::-webkit-details-marker{display:none}
-details summary::after{content:"▶";font-size:.6rem;color:#94a3b8;flex-shrink:0;margin-left:.5rem}
-details[open] summary::after{content:"▼"}
-.sc-summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.95rem;font-weight:800;color:#0f172a;padding:.1rem 0}
-.sc-sum-title{display:flex;align-items:center;gap:.3rem}
-.watch-summary{color:#94a3b8;font-weight:500;font-size:.78rem}
+details summary::after{content:"\\f054";font-family:"Font Awesome 6 Free";font-weight:900;font-size:.55rem;color:#94a3b8;flex-shrink:0;margin-left:.5rem;transition:transform .2s}
+details[open] summary::after{transform:rotate(90deg)}
+.sc-summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.9rem;font-weight:800;color:#0f172a;padding:.1rem 0}
+.sc-sum-title{display:flex;align-items:center;gap:.35rem}
+.watch-summary{color:#64748b;font-weight:600;font-size:.78rem}
 
-/* Responsive — hide secondary cols on mobile */
+/* ── Responsive ── */
+@media(max-width:700px){
+  .perf-hero{flex-direction:column;gap:1rem}
+  .perf-stats{grid-template-columns:repeat(3,1fr)}
+  .perf-chart{min-height:180px}
+  .t{font-size:.72rem}
+  .t th,.t td{padding:.35rem .4rem}
+  .hero-inner{flex-direction:column;align-items:flex-start}
+}
 @media(max-width:600px){
   .t .hide-m{display:none}
   .perf-stats{grid-template-columns:repeat(3,1fr)}
-  .perf-chart{min-height:130px}
-  .tab .tab-ret{font-size:.85rem}
-  .w{padding:0 .5rem 2rem}
+  .w{padding:0 .75rem 2rem}
 }
 
-/* Disclaimer */
-.disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
+/* ── Disclaimer ── */
+.disc{text-align:center;font-size:.7rem;color:#94a3b8;margin-top:2rem;padding:1.25rem 1rem;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;gap:.4rem;flex-wrap:wrap}
+.disc i{font-size:.68rem;opacity:.6}
 
-/* Panel */
-.tm-panel{position:fixed;bottom:8.75rem;right:1.75rem;z-index:999;width:300px;background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden;transform:translateY(8px) scale(.97);opacity:0;transition:opacity .2s ease,transform .2s ease}
-.tm-panel.open{display:flex;animation:tmSlideIn .2s ease forwards}
-@keyframes tmSlideIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
-.tm-panel-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem .7rem;border-bottom:1px solid rgba(255,255,255,.06)}
-.tm-panel-title{font-size:.72rem;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:.4rem;text-transform:uppercase;letter-spacing:.08em}
+/* ── Time Machine floating trigger (FAB) ── */
+.tm-fab{position:fixed;bottom:1.75rem;right:1.75rem;z-index:998;display:none;align-items:center;gap:.5rem;padding:.65rem 1.1rem;background:#0f172a;color:#e2e8f0;border:none;border-radius:50px;box-shadow:0 4px 20px rgba(15,23,42,.35),0 1px 4px rgba(0,0,0,.15);font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:.01em}
+.tm-fab i{font-size:.8rem}
+.tm-fab:hover{background:#1e293b;box-shadow:0 6px 28px rgba(15,23,42,.4)}
+.tm-fab.viewing{background:#b45309;box-shadow:0 4px 20px rgba(180,83,9,.35)}
+.tm-fab.viewing i{animation:spin 2s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@media(max-width:400px){.tm-fab{bottom:1.25rem;right:1rem;padding:.55rem .9rem;font-size:.72rem}}
+
+/* ── Time Machine panel ── */
+.tm-panel{position:fixed;bottom:4.75rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
+.tm-panel.open{display:flex;animation:tmSlideIn .18s ease forwards}
+@keyframes tmSlideIn{from{opacity:0;transform:translateY(10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+.tm-panel-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(255,255,255,.07)}
+.tm-panel-title{font-size:.7rem;font-weight:700;color:#cbd5e1;display:flex;align-items:center;gap:.45rem;text-transform:uppercase;letter-spacing:.1em}
 .tm-panel-title i{color:#3b82f6;font-size:.8rem}
-.tm-panel-close{border:none;background:none;color:#475569;cursor:pointer;font-size:.85rem;padding:0;line-height:1;transition:color .15s}
-.tm-panel-close:hover{color:#94a3b8}
+.tm-panel-close{border:none;background:rgba(255,255,255,.06);color:#94a3b8;cursor:pointer;font-size:.75rem;padding:.3rem .4rem;line-height:1;border-radius:5px;transition:all .15s}
+.tm-panel-close:hover{background:rgba(255,255,255,.1);color:#e2e8f0}
 /* Date display */
-.tm-date-display{padding:.85rem 1rem .5rem;text-align:center}
-.tm-date-display .date-val{font-size:1.05rem;font-weight:700;color:#f1f5f9;letter-spacing:.01em;font-variant-numeric:tabular-nums}
-.tm-date-display .live-badge{display:inline-flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.15);color:#10b981;font-size:.58rem;padding:.18rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border:1px solid rgba(16,185,129,.25)}
-.tm-date-display .live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:#10b981;box-shadow:0 0 4px #10b981}
-.tm-date-display .hist-badge{display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;font-size:.58rem;padding:.18rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border:1px solid rgba(245,158,11,.2)}
-/* Slider area */
-.tm-slider-row{display:flex;align-items:center;gap:.6rem;padding:.2rem 1rem}
-.tm-slider{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;outline:none}
-.tm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2);cursor:pointer;transition:box-shadow .15s}
-.tm-slider::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(59,130,246,.25)}
-.tm-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#3b82f6;border:none;cursor:pointer}
-.tm-btn{border:none;background:rgba(255,255,255,.06);border-radius:6px;padding:.3rem .45rem;cursor:pointer;color:#64748b;font-size:.7rem;line-height:1;transition:background .15s,color .15s;flex-shrink:0}
-.tm-btn:hover{background:rgba(255,255,255,.1);color:#94a3b8}
-.tm-btn:disabled{opacity:.3;cursor:not-allowed}
-.tm-range-labels{display:flex;justify-content:space-between;padding:.1rem 1rem .75rem;font-size:.6rem;color:#334155;font-weight:600;font-variant-numeric:tabular-nums}
+.tm-date-display{padding:.9rem 1rem .55rem;text-align:center}
+.tm-date-display .date-val{font-size:1.1rem;font-weight:700;color:#f1f5f9;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.tm-date-display .live-badge{display:inline-flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.15);color:#10b981;font-size:.58rem;padding:.18rem .5rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border:1px solid rgba(16,185,129,.25)}
+.tm-date-display .live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:#10b981;box-shadow:0 0 5px #10b981;flex-shrink:0}
+.tm-date-display .hist-badge{display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;font-size:.58rem;padding:.18rem .5rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border:1px solid rgba(245,158,11,.2)}
+/* Slider */
+.tm-slider-row{display:flex;align-items:center;gap:.65rem;padding:.3rem 1rem}
+.tm-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:rgba(255,255,255,.12);border-radius:2px;cursor:pointer;outline:none}
+.tm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.25);cursor:pointer;transition:box-shadow .15s}
+.tm-slider::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(59,130,246,.3)}
+.tm-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#3b82f6;border:none;cursor:pointer}
+.tm-btn{border:none;background:rgba(255,255,255,.07);border-radius:6px;padding:.35rem .5rem;cursor:pointer;color:#64748b;font-size:.72rem;line-height:1;transition:background .15s,color .15s;flex-shrink:0}
+.tm-btn:hover{background:rgba(255,255,255,.12);color:#cbd5e1}
+.tm-btn:disabled{opacity:.25;cursor:not-allowed}
+.tm-range-labels{display:flex;justify-content:space-between;padding:.1rem 1rem .8rem;font-size:.6rem;color:#475569;font-weight:600;font-variant-numeric:tabular-nums}
 /* Live button */
-.tm-live-btn{border:none;background:rgba(16,185,129,.12);color:#10b981;border-bottom-left-radius:16px;border-bottom-right-radius:16px;padding:.7rem 1rem;font-size:.73rem;font-weight:700;cursor:pointer;width:100%;display:none;align-items:center;justify-content:center;gap:.4rem;letter-spacing:.02em;border-top:1px solid rgba(16,185,129,.15);transition:background .15s}
-.tm-live-btn:hover{background:rgba(16,185,129,.2)}
+.tm-live-btn{border:none;background:rgba(16,185,129,.12);color:#10b981;border-bottom-left-radius:16px;border-bottom-right-radius:16px;padding:.75rem 1rem;font-size:.73rem;font-weight:700;cursor:pointer;width:100%;display:none;align-items:center;justify-content:center;gap:.45rem;letter-spacing:.02em;border-top:1px solid rgba(16,185,129,.15);transition:background .15s;font-family:inherit}
+.tm-live-btn:hover{background:rgba(16,185,129,.22)}
 .tm-live-btn.show{display:flex}
 /* Banner */
-.tm-banner{display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;font-size:.8rem;color:#d97706;text-align:center;backdrop-filter:blur(4px)}
+.tm-banner{display:none;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:.65rem 1rem;margin-bottom:1rem;font-size:.8rem;color:#92400e;text-align:center}
 .tm-banner.show{display:flex;align-items:center;justify-content:center;gap:.5rem}
-.tm-banner i{font-size:.85rem;color:#f59e0b}
-.tm-banner a{color:#f59e0b;font-weight:700;cursor:pointer;text-decoration:none;margin-left:.3rem}
+.tm-banner i{font-size:.85rem;color:#f59e0b;flex-shrink:0}
+.tm-banner a{color:#b45309;font-weight:700;cursor:pointer;text-decoration:none;margin-left:.3rem}
 .tm-banner a:hover{text-decoration:underline}
-@media(max-width:400px){.tm-panel{width:calc(100vw - 2.5rem);right:1.25rem}}
+@media(max-width:400px){.tm-panel{width:calc(100vw - 2rem);right:1rem}.tm-fab{right:1rem}}
 
-@media(max-width:700px){
-  .perf-hero{flex-direction:column}
-  .perf-stats{grid-template-columns:repeat(3,1fr)}
-  .perf-chart{min-height:160px}
-  .t{font-size:.72rem}
-  .t th,.t td{padding:.35rem .4rem}
-  .tab{font-size:.72rem;padding:.5rem .3rem}
-}
 /* ── Community CTA ── */
-.community-cta{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:2rem 1rem;margin-top:2rem}
+.community-cta{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);padding:2.25rem 1rem;margin-top:0}
 .community-inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:2rem;flex-wrap:wrap}
 .community-text{flex:1;min-width:220px;color:#e2e8f0}
-.community-text h3{font-size:1.2rem;font-weight:800;margin:0 0 .4rem;color:#fff}
-.community-text p{font-size:.88rem;color:#94a3b8;margin:0;line-height:1.5}
-.community-links{display:flex;gap:.8rem;flex-wrap:wrap}
-.cta-btn{display:flex;align-items:center;gap:.7rem;padding:.75rem 1.2rem;border-radius:10px;text-decoration:none;transition:opacity .15s;min-width:200px}
-.cta-btn:hover{opacity:.9}
-.cta-btn i{font-size:1.6rem;flex-shrink:0}
+.community-text h3{font-size:1.15rem;font-weight:800;margin:0 0 .4rem;color:#fff}
+.community-text p{font-size:.86rem;color:#94a3b8;margin:0;line-height:1.55}
+.community-links{display:flex;gap:.75rem;flex-wrap:wrap}
+.cta-btn{display:flex;align-items:center;gap:.7rem;padding:.75rem 1.2rem;border-radius:10px;text-decoration:none;transition:opacity .15s,transform .15s;min-width:200px}
+.cta-btn:hover{opacity:.92;transform:translateY(-1px)}
+.cta-btn i{font-size:1.5rem;flex-shrink:0}
 .cta-btn span{display:flex;flex-direction:column;gap:1px}
-.cta-btn strong{font-size:.92rem;font-weight:700;line-height:1.2}
-.cta-btn small{font-size:.73rem;opacity:.75;line-height:1.2}
-.tg-btn{background:#229ED9;color:#fff}.yt-btn{background:#1e293b;color:#fff;border:1px solid #334155}
+.cta-btn strong{font-size:.9rem;font-weight:700;line-height:1.2}
+.cta-btn small{font-size:.72rem;opacity:.75;line-height:1.2}
+.tg-btn{background:#229ED9;color:#fff}
+.yt-btn{background:#1e293b;color:#fff;border:1px solid #334155}
 .dc-btn{background:#5865F2;color:#fff}
 @media(max-width:600px){.community-inner{flex-direction:column;align-items:flex-start}.cta-btn{min-width:unset;width:100%}}
   </style>
@@ -700,10 +744,15 @@ details[open] summary::after{content:"▼"}
 
 <div class="w">
   <div class="hero">
-    <h1>Portfolio Live</h1>
-    <p>Signals, open positions &amp; performance — updated 5 days a week</p>
-    <span class="ts"><i class="fas fa-clock"></i> Updated ${updatedAt}</span>
-    <br><button class="tm-btn-inline" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button>
+    <div class="hero-inner">
+      <div class="hero-left">
+        <h1><span class="live-dot"></span>Portfolio Live</h1>
+        <p>Signals, open positions &amp; performance &mdash; updated every weekday</p>
+        <div class="hero-meta">
+          <span class="ts"><i class="fas fa-clock-rotate-left"></i> ${updatedAt}</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="tm-banner" id="tmBanner"></div>
@@ -711,7 +760,8 @@ details[open] summary::after{content:"▼"}
   ${panel('calmar', modes.calmar.cfg, ca, modes.calmar.trades, caEC, 'cC', true)}
 
   <div class="disc">
-    Past performance &ne; future results &middot; Educational only &middot; Not financial advice
+    <i class="fas fa-circle-info"></i>
+    Past performance &ne; future results &nbsp;&middot;&nbsp; Educational only &nbsp;&middot;&nbsp; Not financial advice
   </div>
 </div>
 
@@ -767,7 +817,8 @@ document.addEventListener('DOMContentLoaded',function(){
   function tmInit(){
     fetch('/scanner/status/history/dates.json').then(function(r){return r.json()}).then(function(dates){
       tmDates=dates;if(dates.length<1)return;
-      document.getElementById('tmFab').style.display='flex';
+      var fab=document.getElementById('tmFab');
+      if(fab)fab.style.display='flex';
       var slider=document.getElementById('timeSlider');
       slider.max=dates.length-1;
       slider.value=dates.length-1;
@@ -787,8 +838,24 @@ document.addEventListener('DOMContentLoaded',function(){
   // Exposed globally so inline onclick handlers can reach them
   window.tmToggle=function(){
     var p=document.getElementById('tmPanel');
+    var isOpen=p.classList.contains('open');
     p.classList.toggle('open');
+    // Keep FAB highlighted while panel is open
+    var fab=document.getElementById('tmFab');
+    if(fab){
+      if(!isOpen)fab.style.boxShadow='0 0 0 3px rgba(59,130,246,.35)';
+      else fab.style.boxShadow='';
+    }
   };
+  // Close panel when clicking outside
+  document.addEventListener('click',function(e){
+    var p=document.getElementById('tmPanel');
+    var fab=document.getElementById('tmFab');
+    if(p&&p.classList.contains('open')&&!p.contains(e.target)&&fab&&!fab.contains(e.target)){
+      p.classList.remove('open');
+      fab.style.boxShadow='';
+    }
+  });
   function tmUpdateLabel(){
     var el=document.getElementById('tmDateLabel');
     var d=tmDates[tmCurrentIdx];
@@ -840,6 +907,8 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     document.getElementById('tmBanner').className='tm-banner';
     document.getElementById('tmPanel').classList.remove('open');
+    var fab=document.getElementById('tmFab');
+    if(fab)fab.style.boxShadow='';
     location.reload();
   };
   function tmRender(snap){
@@ -893,7 +962,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(d.closeNow&&d.closeNow.length>0){
         var cn=document.createElement('div');
         cn.className='cta-card cta-close';cn.setAttribute('data-tm','1');
-        var cnh='<div class="cta-header"><span class="cta-icon">⛔</span><div>'
+        var cnh='<div class="cta-header"><span class="cta-icon"><i class="fas fa-ban"></i></span><div>'
           +'<h3>Close Now <span class="cta-badge">'+d.closeNow.length+' position'+(d.closeNow.length>1?'s':'')+'</span></h3>'
           +'<p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>'
           +'</div></div>'
@@ -918,7 +987,7 @@ document.addEventListener('DOMContentLoaded',function(){
         var hasRotate=d.orders.some(function(o){return o.action==='ROTATE'});
         var statusLine=slots>0?posCount+'/'+ps+' open — <b>'+slots+' slot'+(slots>1?'s':'')+' free</b> — place at next open':posCount+'/'+ps+' open — portfolio full'+(hasRotate?' — rotation opportunity':'');
         var alloc=Math.round(100/(cfg.portfolioSize||1));
-        var odh='<div class="sc-head"><h3>⚡ '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
+        var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
           +'<table class="t"><thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead><tbody>';
         d.orders.forEach(function(o){
           var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
@@ -937,9 +1006,9 @@ document.addEventListener('DOMContentLoaded',function(){
         var et=document.createElement('div');
         et.className='cta-card';et.setAttribute('data-tm','1');
         et.setAttribute('style','background:#fffbeb;border:2px solid #fcd34d');
-        var eth='<div class="cta-header"><span class="cta-icon">⏰</span><div>'
-          +'<h3 style="color:#b45309">Expires Tomorrow <span class="cta-badge" style="background:#b45309">'+d.expiresTomorrow.length+' position'+(d.expiresTomorrow.length>1?'s':'')+'</span></h3>'
-          +'<p class="cta-sub" style="color:#d97706">Horizon reached at next close — decide: keep or exit at open</p>'
+        var eth='<div class="cta-header"><span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span><div>'
+          +'<h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">'+d.expiresTomorrow.length+' position'+(d.expiresTomorrow.length>1?'s':'')+'</span></h3>'
+          +'<p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>'
           +'</div></div>'
           +'<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead><tbody>';
         d.expiresTomorrow.forEach(function(p){
@@ -987,9 +1056,9 @@ document.addEventListener('DOMContentLoaded',function(){
         var cursorPos=range>0?Math.max(0,Math.min(100,(nowPct-worstPct)/range*100)):50;
         var wCls=worstPct<0?'neg':'pos';var nCls=nowPct>=0?'pos':'neg';
         psh+='<div class="scenario-bar-wrap"><div class="scenario-labels">'
-          +'<span class="'+wCls+'">⛔ Worst: '+(worstPct>0?'+':'')+worstPct.toFixed(1)+'%</span>'
-          +'<span class="'+nCls+'" style="font-weight:700">▼ Now: '+(nowPct>0?'+':'')+nowPct.toFixed(1)+'%</span>'
-          +'<span class="pos">🎯 Best: +'+bestPct.toFixed(1)+'%</span>'
+          +'<span class="'+wCls+'"><i class="fas fa-shield-halved"></i> Worst: '+(worstPct>0?'+':'')+worstPct.toFixed(1)+'%</span>'
+          +'<span class="'+nCls+'"><i class="fas fa-circle-dot"></i> Now: '+(nowPct>0?'+':'')+nowPct.toFixed(1)+'%</span>'
+          +'<span class="pos"><i class="fas fa-bullseye"></i> Best: +'+bestPct.toFixed(1)+'%</span>'
           +'</div><div class="scenario-bar">'
           +'<div class="scenario-fill-bad" style="width:'+cursorPos.toFixed(1)+'%"></div>'
           +'<div class="scenario-fill-good" style="width:'+(100-cursorPos).toFixed(1)+'%"></div>'
@@ -1053,6 +1122,10 @@ document.addEventListener('DOMContentLoaded',function(){
   tmInit();
 });
 </script>
+<button class="tm-fab" id="tmFab" onclick="tmToggle()" title="Time Machine — view historical snapshots">
+  <i class="fas fa-clock-rotate-left"></i> Time Machine
+</button>
+
 <div class="tm-panel" id="tmPanel">
   <div class="tm-panel-head">
     <span class="tm-panel-title"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
