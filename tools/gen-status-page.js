@@ -107,7 +107,9 @@ function main() {
       }
       return t;
     });
-    modes[id] = { cfg, trades, m: computeMetrics(trades, cfg.portfolioSize) };
+    // Stats computed from CLOSED trades only (non-premature) — matches backfill convention
+    const closedTrades = trades.filter(t => !t._premature);
+    modes[id] = { cfg, trades, m: computeMetrics(closedTrades, cfg.portfolioSize) };
   }
   const g = modes.growth.m, ca = modes.calmar.m, z = modes.zero.m;
   const gEC = equityDV(g.equityCurve), caEC = equityDV(ca.equityCurve), zEC = equityDV(z.equityCurve);
