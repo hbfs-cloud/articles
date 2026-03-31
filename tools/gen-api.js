@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const OUT = path.join(ROOT, 'api', 'v1');
+const OUT = path.join(ROOT, 'portfolio', 'v1');
 
 // Ensure output directory exists
 fs.mkdirSync(OUT, { recursive: true });
@@ -119,7 +119,7 @@ if (backtestTrades) {
   }
   write('trades.json', {
     updatedAt: now,
-    _note: 'Primary mode: calmar=Balanced. Legacy keys preserved for backwards compat: growth=Aggressive, zero=Conservative (source key "sharpe").',
+    _note: 'Single mode: calmar (Balanced). 4 positions, 5-day horizon, aggressive rotation.',
     defaultMode: 'calmar',
     tradesByMode
   });
@@ -221,7 +221,7 @@ if (scannerCards) {
     <description>Daily scanner picks, weekly market reviews, and stock analyses from Market Watch.</description>
     <language>en</language>
     <lastBuildDate>${now}</lastBuildDate>
-    <atom:link href="${BASE}/api/v1/feed.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${BASE}/portfolio/v1/feed.xml" rel="self" type="application/rss+xml"/>
     <image>
       <url>${BASE}/logo.svg</url>
       <title>Market Watch</title>
@@ -234,4 +234,4 @@ ${items}
   write('feed.xml', rss);
 }
 
-console.log(`\nDone. All endpoints written to api/v1/ at ${now}`);
+console.log(`\nDone. All endpoints written to portfolio/v1/ at ${now}`);

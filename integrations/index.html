@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Integrations &amp; API — Market Watch</title>
-  <meta name="description" content="JSON and RSS endpoints for portfolio replication across 3 scanner modes: Growth, Balanced, and Conservative. No auth, no rate limit.">
+  <title>Integrations — Market Watch</title>
+  <meta name="description" content="Connect to Market Watch data — portfolio replication, MCP Gateway, RSS feeds, and browser extension.">
   <!-- GTM -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="icon" href="/favicon.ico">
@@ -12,54 +12,21 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    .api-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f2d40 100%); color: #fff; padding: 3.5rem 1.5rem 2.5rem; text-align: center; }
-    .api-hero h1 { font-size: 2.1rem; font-weight: 800; margin: 0 0 0.5rem; }
-    .api-hero p { font-size: 1rem; color: #94a3b8; max-width: 620px; margin: 0 auto 1.5rem; }
-    .api-hero .hero-badges { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
-    .api-hero .hero-badge { font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.1); color: #e2e8f0; letter-spacing: 0.04em; }
-
-    .api-container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
-
-    .api-section { margin: 2.5rem 0 1rem; }
-    .api-section-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; margin: 0 0 1rem; }
-    .api-section-title i { color: #6366f1; font-size: 1rem; }
-
-    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .step-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.25rem 1rem; position: relative; }
-    .step-num { width: 28px; height: 28px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
-    .step-card h4 { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 0 0 0.4rem; }
-    .step-card p { font-size: 0.82rem; color: #64748b; margin: 0; line-height: 1.5; }
-
-    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-    .mode-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; border-left-width: 4px; }
-    .mode-card h4 { font-size: 0.95rem; font-weight: 800; margin: 0 0 0.6rem; }
-    .mode-card .mode-params { display: flex; flex-direction: column; gap: 0.3rem; }
-    .mode-param { display: flex; justify-content: space-between; font-size: 0.78rem; }
-    .mode-param .pk { color: #64748b; }
-    .mode-param .pv { font-weight: 600; color: #0f172a; font-family: monospace; }
-
-    .code-block { background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 1.25rem 1.5rem; font-size: 0.8rem; line-height: 1.7; overflow-x: auto; margin: 0.75rem 0 1.25rem; font-family: 'SFMono-Regular', 'Consolas', monospace; }
-    .code-block .cm { color: #64748b; }
-    .code-block .ck { color: #93c5fd; }
-    .code-block .cs { color: #86efac; }
-    .code-block .cn { color: #fca5a5; }
-
-    .endpoint-url { font-family: monospace; font-size: 0.82rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #0f172a; }
-    .badge-live { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; }
-    .badge-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-    .rss-box { display: flex; align-items: flex-start; gap: 1.25rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
-    .rss-icon { font-size: 2rem; color: #ea580c; flex-shrink: 0; margin-top: 2px; }
-    .rss-box h4 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.3rem; }
-    .rss-box p { font-size: 0.82rem; color: #64748b; margin: 0 0 0.6rem; line-height: 1.5; }
-    .rss-box a { font-size: 0.82rem; font-weight: 700; color: #ea580c; text-decoration: none; }
-    .rss-box a:hover { text-decoration: underline; }
-
-    @media(max-width:600px) {
-      .steps-grid, .mode-grid { grid-template-columns: 1fr; }
-      .api-hero h1 { font-size: 1.6rem; }
-    }
+    .int-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f2d40 100%); color: #fff; padding: 3.5rem 1.5rem 2.5rem; text-align: center; }
+    .int-hero h1 { font-size: 2.1rem; font-weight: 800; margin: 0 0 0.6rem; }
+    .int-hero p { font-size: 1rem; color: #94a3b8; max-width: 620px; margin: 0 auto; }
+    .int-container { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 3rem; }
+    .int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+    .int-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.75rem 1.5rem; transition: box-shadow 0.2s, border-color 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
+    .int-card:hover { border-color: #6366f1; box-shadow: 0 4px 20px rgba(99,102,241,0.1); }
+    .int-card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
+    .int-card h3 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem; }
+    .int-card p { font-size: 0.85rem; color: #64748b; margin: 0 0 1rem; line-height: 1.6; flex: 1; }
+    .int-card-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .int-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.03em; }
+    .int-card-arrow { font-size: 0.82rem; font-weight: 700; color: #6366f1; margin-left: auto; }
+    .updated-ts { font-size: 0.72rem; color: #94a3b8; text-align: center; margin-top: 0.5rem; }
+    @media(max-width:600px) { .int-grid { grid-template-columns: 1fr; } .int-hero h1 { font-size: 1.6rem; } }
   </style>
 </head>
 <body>
@@ -85,258 +52,101 @@
 </nav>
 
 <!-- Hero -->
-<div class="api-hero">
-  <h1><i class="fas fa-plug" style="opacity:0.55;margin-right:0.4rem;"></i>Integrations &amp; API</h1>
-  <p>Static JSON and RSS endpoints for portfolio replication across 3 scanner modes. No authentication, no rate limits — updated every trading session.</p>
-  <div class="hero-badges">
-    <span class="hero-badge"><i class="fas fa-circle-dot" style="color:#10b981;margin-right:4px;"></i>Live endpoints</span>
-    <span class="hero-badge">No auth</span>
-    <span class="hero-badge">3 modes</span>
-    <span class="hero-badge">JSON &amp; RSS</span>
-    <span class="hero-badge">Updated nightly</span>
-  </div>
+<div class="int-hero">
+  <h1><i class="fas fa-plug" style="opacity:0.55;margin-right:0.4rem;"></i>Integrations</h1>
+  <p>Connect to Market Watch data programmatically. Portfolio replication, live market data, and content feeds &mdash; all open, no auth required.</p>
 </div>
 
-<div class="api-container">
+<div class="int-container">
 
-  <!-- ── Quick Start ─────────────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-bolt"></i>Quick Start</h2>
-  </div>
-  <div class="steps-grid">
-    <div class="step-card">
-      <div class="step-num">1</div>
-      <h4>Pick a mode</h4>
-      <p>Choose Growth, Balanced, or Conservative depending on your risk tolerance and holding horizon.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">2</div>
-      <h4>Fetch the endpoint</h4>
-      <p>Call <code>/api/v1/signals.json</code> or <code>/api/v1/positions.json</code> to get live signals and open positions.</p>
-    </div>
-    <div class="step-card">
-      <div class="step-num">3</div>
-      <h4>Replicate the portfolio</h4>
-      <p>Use entry, stop, and TP levels from <code>positions.json</code> to size positions. Equal-weight by default.</p>
-    </div>
-  </div>
+  <div class="int-grid">
 
-  <!-- ── Available Endpoints ────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-server"></i>Available Endpoints</h2>
-  </div>
-  <div class="content-card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
-    <div class="data-table">
-      <table>
-        <thead>
-          <tr>
-            <th>File</th>
-            <th>URL</th>
-            <th>Description</th>
-            <th>Updated</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>modes.json</code></td>
-            <td><span class="endpoint-url">/api/v1/modes.json</span></td>
-            <td>Mode configurations — portfolio size, horizon, filter, rotation</td>
-            <td>On config change</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-          <tr>
-            <td><code>signals.json</code></td>
-            <td><span class="endpoint-url">/api/v1/signals.json</span></td>
-            <td>Latest scanner signals per mode (score, strategy, entry price)</td>
-            <td>Every scan (~23:00 UTC)</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-          <tr>
-            <td><code>positions.json</code></td>
-            <td><span class="endpoint-url">/api/v1/positions.json</span></td>
-            <td>Current open positions with P&amp;L, stop, TP1/TP2, days remaining</td>
-            <td>Every scan (~23:00 UTC)</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-          <tr>
-            <td><code>trades.json</code></td>
-            <td><span class="endpoint-url">/api/v1/trades.json</span></td>
-            <td>Full closed-trade history per mode (pnlPct, status, holdDays)</td>
-            <td>Every scan</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-          <tr>
-            <td><code>equity.json</code></td>
-            <td><span class="endpoint-url">/api/v1/equity.json</span></td>
-            <td>Equity curves and backtest stats per mode (Sharpe, Calmar, drawdown)</td>
-            <td>After each backtest run</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-          <tr>
-            <td><code>feed.xml</code></td>
-            <td><span class="endpoint-url">/api/v1/feed.xml</span></td>
-            <td>RSS 2.0 feed — last 20 scanner publications</td>
-            <td>Every scan</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ── Mode Reference ─────────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-sliders"></i>Mode Reference</h2>
-    <p style="font-size:0.85rem;color:#64748b;margin:0 0 1rem;">Three modes optimised across 126,000 backtest combinations. Mode IDs in the API match <code>modes.json</code>.</p>
-  </div>
-  <div class="mode-grid">
-    <!-- Growth -->
-    <div class="mode-card" style="border-left-color:#dc2626;">
-      <h4 style="color:#dc2626;"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Growth <code style="font-size:0.7rem;background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:4px;">growth</code></h4>
-      <div class="mode-params">
-        <div class="mode-param"><span class="pk">Label</span><span class="pv">Aggressive</span></div>
-        <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">3 positions</span></div>
-        <div class="mode-param"><span class="pk">Horizon</span><span class="pv">5 days</span></div>
-        <div class="mode-param"><span class="pk">Filter</span><span class="pv">all strategies</span></div>
-        <div class="mode-param"><span class="pk">Rotation</span><span class="pv">aggressive</span></div>
-        <div class="mode-param"><span class="pk">Partial TP</span><span class="pv">false</span></div>
+    <!-- Portfolio -->
+    <a href="/integrations/portfolio/" class="int-card">
+      <div class="int-card-icon" style="background:#ecfdf5;color:#059669;"><i class="fas fa-chart-line"></i></div>
+      <h3>Portfolio</h3>
+      <p>Replicate the scanner portfolio via JSON endpoints. Open positions, signals, trade history, and equity curve &mdash; updated every trading session at ~23:00 UTC.</p>
+      <div class="int-card-meta">
+        <span class="int-badge" style="background:#ecfdf5;color:#059669;">6 endpoints</span>
+        <span class="int-badge" style="background:#f1f5f9;color:#475569;">JSON</span>
+        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
       </div>
-    </div>
-    <!-- Calmar / Balanced -->
-    <div class="mode-card" style="border-left-color:#059669;">
-      <h4 style="color:#059669;"><i class="fas fa-scale-balanced" style="margin-right:6px;"></i>Balanced <code style="font-size:0.7rem;background:#d1fae5;color:#059669;padding:2px 6px;border-radius:4px;">calmar</code></h4>
-      <div class="mode-params">
-        <div class="mode-param"><span class="pk">Label</span><span class="pv">Balanced</span></div>
-        <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">4 positions</span></div>
-        <div class="mode-param"><span class="pk">Horizon</span><span class="pv">5 days</span></div>
-        <div class="mode-param"><span class="pk">Filter</span><span class="pv">all strategies</span></div>
-        <div class="mode-param"><span class="pk">Rotation</span><span class="pv">aggressive</span></div>
-        <div class="mode-param"><span class="pk">Partial TP</span><span class="pv">false</span></div>
+    </a>
+
+    <!-- MCP Gateway -->
+    <a href="/mcp/" class="int-card">
+      <div class="int-card-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-bolt"></i></div>
+      <h3>MCP Gateway</h3>
+      <p>Live market data, screener, options Greeks, and LLM-powered analysis via MCP tools. Real-time quotes, technicals, sentiment, and capital flows for any ticker.</p>
+      <div class="int-card-meta">
+        <span class="int-badge" style="background:#ede9fe;color:#7c3aed;">15+ tools</span>
+        <span class="int-badge" style="background:#f1f5f9;color:#475569;">MCP</span>
+        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
       </div>
-    </div>
-    <!-- Conservative / Zero -->
-    <div class="mode-card" style="border-left-color:#7c3aed;">
-      <h4 style="color:#7c3aed;"><i class="fas fa-shield-halved" style="margin-right:6px;"></i>Conservative <code style="font-size:0.7rem;background:#ede9fe;color:#7c3aed;padding:2px 6px;border-radius:4px;">zero</code></h4>
-      <div class="mode-params">
-        <div class="mode-param"><span class="pk">Label</span><span class="pv">Conservative</span></div>
-        <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">20 positions</span></div>
-        <div class="mode-param"><span class="pk">Horizon</span><span class="pv">10 days</span></div>
-        <div class="mode-param"><span class="pk">Filter</span><span class="pv">no_sq (no short squeeze)</span></div>
-        <div class="mode-param"><span class="pk">Rotation</span><span class="pv">none</span></div>
-        <div class="mode-param"><span class="pk">Max stop</span><span class="pv">8%</span></div>
+    </a>
+
+    <!-- RSS -->
+    <a href="/portfolio/v1/feed.xml" class="int-card">
+      <div class="int-card-icon" style="background:#fff7ed;color:#ea580c;"><i class="fas fa-rss"></i></div>
+      <h3>RSS Feed</h3>
+      <p>Subscribe to scanner publications via RSS 2.0. Last 20 entries with title, description, and direct link. Compatible with Feedly, Inoreader, NetNewsWire.</p>
+      <div class="int-card-meta">
+        <span class="int-badge" style="background:#fff7ed;color:#ea580c;">RSS 2.0</span>
+        <span class="int-badge" style="background:#f1f5f9;color:#475569;">XML</span>
+        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
       </div>
-    </div>
+    </a>
+
+    <!-- Widgets -->
+    <a href="/widget/gallery.html" class="int-card">
+      <div class="int-card-icon" style="background:#eff6ff;color:#3b82f6;"><i class="fas fa-window-restore"></i></div>
+      <h3>Widgets</h3>
+      <p>Embeddable iframes for your site or dashboard. 6 widget types: picks, dashboard, regime, sector rotation, movers, and radar. Dark/light theme, responsive.</p>
+      <div class="int-card-meta">
+        <span class="int-badge" style="background:#eff6ff;color:#3b82f6;">6 types</span>
+        <span class="int-badge" style="background:#f1f5f9;color:#475569;">iframe</span>
+        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+    </a>
+
+    <!-- Browser Extension -->
+    <a href="/mcp/extension/" class="int-card">
+      <div class="int-card-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-puzzle-piece"></i></div>
+      <h3>Browser Extension</h3>
+      <p>Chrome/Firefox extension for quick access to scanner picks, regime status, and portfolio performance directly from your browser toolbar.</p>
+      <div class="int-card-meta">
+        <span class="int-badge" style="background:#fef3c7;color:#d97706;">Chrome</span>
+        <span class="int-badge" style="background:#f1f5f9;color:#475569;">Firefox</span>
+        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+    </a>
+
+    <!-- Portfolio Live -->
+    <a href="/scanner/status/" class="int-card">
+      <div class="int-card-icon" style="background:#fef2f2;color:#dc2626;"><i class="fas fa-heartbeat"></i></div>
+      <h3>Portfolio Live</h3>
+      <p>Real-time dashboard with equity curve, open positions, signals, orders, and full trade history. Time machine to review any past trading day.</p>
+      <div class="int-card-meta">
+        <span class="int-badge" style="background:#fef2f2;color:#dc2626;">Dashboard</span>
+        <span class="int-badge" style="background:#f1f5f9;color:#475569;">HTML</span>
+        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+    </a>
+
   </div>
 
-  <div class="didactic-box" style="margin-bottom:1.5rem;">
-    <strong><i class="fas fa-circle-info"></i> Mode ID mapping note</strong><br>
-    In <code>trades.json</code> the source key <code>"sharpe"</code> maps to mode <code>"zero"</code> (Conservative). In all other endpoints the canonical IDs <code>growth</code>, <code>calmar</code>, and <code>zero</code> are used consistently.
+  <!-- Disclaimer -->
+  <div class="didactic-box" style="border-color:#f59e0b;background:#fffbeb;">
+    <strong>For informational purposes only.</strong> Nothing on this site constitutes financial advice. Past scanner performance is not indicative of future results. Always conduct your own due diligence before trading.
   </div>
 
-  <!-- ── Code Examples ─────────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-code"></i>Code Examples</h2>
-  </div>
-
-  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">JavaScript (fetch)</h4>
-  <div class="code-block"><span class="cm">// Fetch current open positions</span>
-<span class="ck">const</span> res = <span class="ck">await</span> fetch(<span class="cs">'/api/v1/positions.json'</span>);
-<span class="ck">const</span> data = <span class="ck">await</span> res.json();
-
-<span class="cm">// data.openPositions is an array of all open positions</span>
-data.openPositions.forEach(pos =&gt; {
-  console.log(pos.ticker, pos.return_pct + <span class="cs">'%'</span>, pos.status_label);
-});</div>
-
-  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">JavaScript — signals by mode</h4>
-  <div class="code-block"><span class="ck">const</span> { signalsByMode } = <span class="ck">await</span> fetch(<span class="cs">'/api/v1/signals.json'</span>).then(r =&gt; r.json());
-
-<span class="cm">// Latest signals for the Balanced mode</span>
-<span class="ck">const</span> balanced = signalsByMode[<span class="cs">'calmar'</span>];
-balanced.forEach(s =&gt; console.log(s.ticker, s.score, s.strategy));</div>
-
-  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">Python (requests)</h4>
-  <div class="code-block"><span class="ck">import</span> requests
-
-BASE = <span class="cs">"https://articles.market-watch.xyz"</span>
-
-<span class="cm"># Equity curves and backtest stats</span>
-equity = requests.get(f<span class="cs">"{BASE}/api/v1/equity.json"</span>).json()
-growth_stats = equity[<span class="cs">"equity"</span>][<span class="cs">"growth"</span>][<span class="cs">"stats"</span>]
-print(f"Growth win rate: {growth_stats['winRate']}%")
-print(f"Growth Sharpe:   {growth_stats['sharpe']}")
-
-<span class="cm"># All closed trades for the Conservative mode</span>
-trades = requests.get(f<span class="cs">"{BASE}/api/v1/trades.json"</span>).json()
-conservative = trades[<span class="cs">"tradesByMode"</span>][<span class="cs">"zero"</span>]
-wins = [t <span class="ck">for</span> t <span class="ck">in</span> conservative <span class="ck">if</span> t[<span class="cs">"pnlPct"</span>] &gt; 0]
-print(f"Conservative wins: {len(wins)} / {len(conservative)}")</div>
-
-  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">curl</h4>
-  <div class="code-block"><span class="cm"># Download all endpoints</span>
-curl -s https://articles.market-watch.xyz/api/v1/modes.json     | jq .modes
-curl -s https://articles.market-watch.xyz/api/v1/signals.json   | jq .signalsByMode.calmar
-curl -s https://articles.market-watch.xyz/api/v1/positions.json | jq .openPositions[0]
-curl -s https://articles.market-watch.xyz/api/v1/equity.json    | jq .equity.zero.stats</div>
-
-  <!-- ── RSS Feed ────────────────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-rss"></i>RSS Feed</h2>
-  </div>
-  <div class="rss-box">
-    <div class="rss-icon"><i class="fas fa-rss"></i></div>
-    <div>
-      <h4>Subscribe to scanner publications</h4>
-      <p>Standard RSS 2.0 feed updated after each scan. Contains the last 20 scanner entries with title, description, and direct link. Compatible with all feed readers.</p>
-      <a href="/api/v1/feed.xml" target="_blank"><i class="fas fa-arrow-up-right-from-square" style="margin-right:4px;"></i>/api/v1/feed.xml</a>
-      &nbsp;&middot;&nbsp;
-      <a href="/feed.xml" target="_blank">Also at /feed.xml</a>
-    </div>
-  </div>
-  <p style="font-size:0.83rem;color:#64748b;margin:0 0 0.5rem;">Subscribe in your reader:</p>
-  <div class="content-card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
-    <div class="data-table">
-      <table>
-        <thead><tr><th>Reader</th><th>How to subscribe</th></tr></thead>
-        <tbody>
-          <tr><td>Feedly</td><td>Add feed → paste <code>https://articles.market-watch.xyz/api/v1/feed.xml</code></td></tr>
-          <tr><td>Inoreader</td><td>New subscription → URL → paste the feed URL</td></tr>
-          <tr><td>NetNewsWire</td><td>File → New Web Feed → paste the URL</td></tr>
-          <tr><td>Thunderbird</td><td>Account Settings → RSS → Manage Subscriptions → Add</td></tr>
-          <tr><td>Apple News</td><td>Not supported (no RSS import)</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- ── Rate Limits & Usage ────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-gauge-high"></i>Rate Limits &amp; Usage</h2>
-  </div>
-  <div class="pedagogy-box" style="margin-bottom:1.5rem;">
-    <strong>These are static files served via GitHub Pages — there are no server-side rate limits.</strong>
-    <ul style="margin:0.6rem 0 0;padding-left:1.2rem;font-size:0.85rem;line-height:1.8;">
-      <li>Files are regenerated once per trading day after the evening scan (~23:00 UTC weekdays).</li>
-      <li>Polling more than once per minute is wasteful — the data changes at most once a day.</li>
-      <li>For real-time prices, use the <a href="/mcp/" style="color:#6366f1;font-weight:600;">MCP Gateway</a> tools (<code>QueryData</code>, <code>GetInstruments</code>) which proxy live market data.</li>
-      <li>CORS headers are served by GitHub Pages. You can fetch these endpoints client-side from any origin.</li>
-    </ul>
-  </div>
-
-  <!-- ── Disclaimer ─────────────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-triangle-exclamation"></i>Disclaimer</h2>
-  </div>
-  <div class="didactic-box" style="border-color:#f59e0b;background:#fffbeb;margin-bottom:2rem;">
-    <strong>For informational purposes only.</strong> Nothing on this page or in these endpoints constitutes financial advice, investment advice, or a solicitation to buy or sell any financial instrument. Past scanner performance is not indicative of future results. All backtest statistics are based on historical data with inherent look-ahead limitations. Always conduct your own due diligence before trading.
-  </div>
+  <p class="updated-ts">Last updated: March 31, 2026</p>
 
 </div>
 
 <!-- Footer -->
 <footer class="article-footer">
-  &copy; 2026 Market Watch &mdash; All endpoints are free, static, and open.
+  &copy; 2026 Market Watch
   &nbsp;&middot;&nbsp;<a href="/integrations/">Integrations</a>
   &nbsp;&middot;&nbsp;<a href="/mcp/">MCP Gateway</a>
   &nbsp;&middot;&nbsp;<a href="/">Home</a>
