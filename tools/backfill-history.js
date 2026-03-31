@@ -123,6 +123,9 @@ function main() {
   fs.mkdirSync(HISTORY_DIR, { recursive: true });
   let count = 0;
 
+  // Track cumulative mark-to-market equity curves per mode across all dates
+  const modeEquityCurves = {};
+
   for (const dateISO of sortedDates) {
     const snapshot = { date: dateISO, updatedAt: 'backfill', modes: {} };
 
@@ -130,6 +133,7 @@ function main() {
       const modeId = MODE_MAP[tradeKey] || tradeKey;
       const cfg = modesCfg.modes[modeId];
       if (!cfg) continue;
+      if (!modeEquityCurves[modeId]) modeEquityCurves[modeId] = [];
 
       // Exit date for a trade: use holdDays if the trade actually completed (tp/sl),
       // otherwise use cfg.horizon (trade was "premature"/expired early by rotation).
@@ -154,9 +158,8 @@ function main() {
         return exitDate <= dateISO;
       });
 
-      // 2. Stats from closed trades
+      // 2. Stats from closed trades (realized only for stats)
       const stats = computeStatsUpTo(closedByDate, cfg.portfolioSize);
-      const ec = equityDV(stats.equityCurve);
 
       // 3. Open positions on this date (entered but not yet fully exited)
       let openPositions = [];
@@ -239,10 +242,36 @@ function main() {
         .slice(0, availableSlots)
         .map(s => ({ ...s, action: 'BUY' }));
 
+      // Mark-to-market equity: realized (closed) + unrealized (open positions)
+      const realized = stats.ret; // cumulative realized return %
+      const unrealized = openPositions.reduce((s, p) => s + (p.return_pct || 0), 0) / cfg.portfolioSize;
+      const mtmEquity = +(100 + realized + unrealized).toFixed(2);
+
+      // Only add equity points once the mode has actual activity
+      const hasActivity = closedByDate.length > 0 || openPositions.length > 0;
+      const curveStarted = modeEquityCurves[modeId].length > 0;
+      if (hasActivity || curveStarted) {
+        modeEquityCurves[modeId].push({ date: dateISO, value: mtmEquity });
+      }
+
+      // Build equity { d, v } from cumulative curve
+      const ec = {
+        d: modeEquityCurves[modeId].map(p => p.date.slice(5).replace('-', '/')),
+        v: modeEquityCurves[modeId].map(p => p.value)
+      };
+
+      // Compute MtM drawdown from the full curve
+      let mtmPeak = 100, mtmMaxDD = 0;
+      for (const p of modeEquityCurves[modeId]) {
+        if (p.value > mtmPeak) mtmPeak = p.value;
+        const dd = mtmPeak - p.value;
+        if (dd > mtmMaxDD) mtmMaxDD = dd;
+      }
+
       snapshot.modes[modeId] = {
         stats: {
-          ret: stats.ret,
-          dd: stats.dd,
+          ret: +(realized + unrealized).toFixed(2),
+          dd: +(-mtmMaxDD).toFixed(2),
           wr: stats.wr,
           pf: stats.pf,
           trades: stats.trades,
