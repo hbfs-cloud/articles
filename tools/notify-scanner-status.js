@@ -33,7 +33,7 @@ if (fs.existsSync(envPath)) {
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const DISCORD_CHANNEL = '1483382014588747778';
-const STATUS_URL = 'https://articles.market-watch.xyz/scanner/status/';
+const STATUS_URL = 'https://articles.dailytickers.com/scanner/status/';
 
 
 function tradStrat(str) { return str || ''; }
@@ -57,10 +57,10 @@ function formatDate(yyyymmdd) {
 }
 
 // ─── Read metrics + scenario from generated status page (source of truth) ─────
-function readStatusMetrics(modeKey = 'calmar') {
+function readStatusMetrics(modeKey = 'balanced') {
   const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
   // Map mode keys to panel IDs in the status page
-  const panelId = modeKey === 'growth' ? 'p-growth' : modeKey === 'zero' ? 'p-zero' : 'p-calmar';
+  const panelId = `p-${modeKey}`;
   const section = statusHtml.match(new RegExp(`id="${panelId}"[\\s\\S]{0,8000}`));
   if (!section) return null;
   const html = section[0];
@@ -89,7 +89,7 @@ function readStatusMetrics(modeKey = 'calmar') {
 // ─── Reconstruct positions like gen-status-page.js ───────────────────────────
 // Positions = premature (expired but holdDays < horizon) trades, enriched with live prices
 function buildPositions(cfg, modeKey) {
-  const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+  const modeMap = { dynamic: 'dynamic', balanced: 'balanced', secured: 'secured' };
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
   const livePositions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json'))).open_positions || [];
   const liveLookup = {};
@@ -123,11 +123,11 @@ function buildPositions(cfg, modeKey) {
 }
 
 // ─── Build payload ────────────────────────────────────────────────────────────
-function buildStatusPayload(scanDir, modeKey = 'calmar') {
+function buildStatusPayload(scanDir, modeKey = 'balanced') {
   const modesObj = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes-config.json'))).modes;
   const wl = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcp/watchlist.json')));
 
-  const cfgRaw = modesObj[modeKey] || modesObj.calmar;
+  const cfgRaw = modesObj[modeKey] || modesObj.balanced;
   const cfg = { id: modeKey, ...cfgRaw };
 
   // Read metrics + scenario from generated status page (source of truth)
@@ -236,7 +236,7 @@ function buildTelegramMessage(d) {
     `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const modeLabel = d.cfg.id === 'growth' ? '📈 Aggressive (Growth)' : d.cfg.id === 'zero' ? '🛡️ Conservative' : '⚖️ Balanced (Calmar)';
+  const modeLabel = d.cfg.id === 'dynamic' ? '🔥 Dynamic' : d.cfg.id === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
 
   return `${modeLabel}  —  ${d.scanDate}
 <code>${sep}</code>
@@ -307,7 +307,8 @@ function buildDiscordMessage(d) {
     `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  return `## 📊 Portfolio Balanced — ${d.scanDate}
+  const dcLabel = d.cfg.id === 'dynamic' ? 'Dynamic' : d.cfg.id === 'secured' ? 'Secured' : 'Balanced';
+  return `## 📊 Portfolio ${dcLabel} — ${d.scanDate}
 > 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
 ${actions}
 ---
@@ -331,7 +332,7 @@ ${picksLines}
 // ─── Build compact caption for sendAudio (max 1024 chars) ─────────────────────
 function buildAudioCaption(d, ytUrl) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabel = d.cfg.id === 'growth' ? '📈 Aggressive' : d.cfg.id === 'zero' ? '🛡️ Conservative' : '⚖️ Balanced';
+  const modeLabel = d.cfg.id === 'dynamic' ? '🔥 Dynamic' : d.cfg.id === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
   const closeNow   = d.activePos.filter(p => p.left <= 1);
@@ -391,7 +392,7 @@ function buildAudioCaption(d, ytUrl) {
 // ─── Build audio narration script (60-80 words, analytical) ─────────────────
 function buildAudioScript(d) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabel = d.cfg.id === 'growth' ? 'Aggressive Growth' : d.cfg.id === 'zero' ? 'Conservative' : 'Balanced Calmar';
+  const modeLabel = d.cfg.id === 'dynamic' ? 'Dynamic' : d.cfg.id === 'secured' ? 'Secured' : 'Balanced';
 
   const closeNow = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
@@ -492,6 +493,101 @@ function generateQwen3Audio(text, outPath) {
 
   console.log(`  ✅ Audio: ${outPath} (${Math.round(require('fs').statSync(outPath).size / 1024)}KB)`);
   return true;
+}
+
+// ─── Generate video from mode card image + audio ─────────────────────────────
+function generateModeVideo(modeKey, audioPath, scanDir) {
+  // Find mode card image from manifest
+  const manifestPath = path.join(ROOT, 'scanner/status/manifest.json');
+  if (!fs.existsSync(manifestPath)) {
+    console.error(`  ⚠️  No manifest.json — skip video for ${modeKey}`);
+    return null;
+  }
+  const manifest = JSON.parse(fs.readFileSync(manifestPath));
+  const imgFile = manifest[`mode-${modeKey}`];
+  if (!imgFile) {
+    console.error(`  ⚠️  No card image for mode-${modeKey} in manifest`);
+    return null;
+  }
+  const imgPath = path.join(ROOT, 'scanner/status', imgFile);
+  if (!fs.existsSync(imgPath)) {
+    console.error(`  ⚠️  Card image not found: ${imgPath}`);
+    return null;
+  }
+
+  const videoPath = `/tmp/scanner-${modeKey}-${scanDir}.mp4`;
+  // ffmpeg: static image + audio → video
+  const r = execSync(
+    `ffmpeg -y -loop 1 -i "${imgPath}" -i "${audioPath}" ` +
+    `-c:v libx264 -tune stillimage -c:a aac -b:a 192k ` +
+    `-vf "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0a0e1a" ` +
+    `-pix_fmt yuv420p -shortest -movflags +faststart "${videoPath}"`,
+    { stdio: 'pipe', timeout: 60000 }
+  );
+  if (fs.existsSync(videoPath)) {
+    const size = Math.round(fs.statSync(videoPath).size / 1024);
+    console.log(`  ✅ Video: ${videoPath} (${size}KB)`);
+    return videoPath;
+  }
+  return null;
+}
+
+// ─── Upload to YouTube via Mac Mini ──────────────────────────────────────────
+function uploadToYouTube(videoPath, title, description, modeKey) {
+  const SSH_HOST = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
+  const SSH_OPTS = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
+  const tmpId = `yt-${modeKey}-${Date.now()}`;
+
+  // SCP video to Mac Mini
+  const scpR = require('child_process').spawnSync(
+    'sshpass', ['-p', 'Elonux!123', 'scp', ...SSH_OPTS.split(' '), videoPath, `${SSH_HOST}:/tmp/${tmpId}.mp4`],
+    { stdio: 'pipe', timeout: 120000 }
+  );
+  if (scpR.status !== 0) {
+    console.error(`  ⚠️  SCP upload failed for ${modeKey}`);
+    return null;
+  }
+
+  // Safe strings for Python
+  const safeTitle = title.replace(/'/g, "\\'").slice(0, 95);
+  const safeDesc = description.replace(/'/g, "\\'").replace(/\n/g, '\\n').slice(0, 4900);
+  const playlist = 'Portfolio Updates';
+
+  const pyCmd = [
+    `import json,sys`,
+    `from googleapiclient.discovery import build`,
+    `from googleapiclient.http import MediaFileUpload`,
+    `from google.oauth2.credentials import Credentials`,
+    `t=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json'))`,
+    `c=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json'))['web']`,
+    `creds=Credentials(t['access_token'],refresh_token=t['refresh_token'],token_uri=c['token_uri'],client_id=c['client_id'],client_secret=c['client_secret'])`,
+    `yt=build('youtube','v3',credentials=creds)`,
+    `meta={'title':'${safeTitle}','description':'${safeDesc}','tags':['Market Watch','portfolio','${modeKey}','trading'],'categoryId':'22'}`,
+    `media=MediaFileUpload('/tmp/${tmpId}.mp4',mimetype='video/mp4',resumable=True)`,
+    `r=yt.videos().insert(part='snippet,status',body={'snippet':meta,'status':{'privacyStatus':'public'}},media_body=media).execute()`,
+    `vid=r['id']`,
+    `print(f'YTID:{vid}')`,
+  ].join(';');
+
+  const r = require('child_process').spawnSync(
+    'sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST,
+      `/Users/marketwatchxyz/GolandProjects/video-factory/.venv/bin/python3 -c "${pyCmd}" 2>&1`],
+    { stdio: 'pipe', timeout: 180000 }
+  );
+  const out = r.stdout?.toString() || '';
+  const ytMatch = out.match(/YTID:([a-zA-Z0-9_-]+)/);
+
+  // Cleanup remote
+  require('child_process').spawnSync('sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST,
+    `rm -f /tmp/${tmpId}.mp4`], { stdio: 'pipe', timeout: 10000 });
+
+  if (ytMatch) {
+    const ytId = ytMatch[1];
+    console.log(`  ✅ YouTube: https://youtu.be/${ytId} [${modeKey}]`);
+    return ytId;
+  }
+  console.error(`  ⚠️  YouTube upload failed for ${modeKey}:`, out.slice(-200));
+  return null;
 }
 
 // ─── Senders ──────────────────────────────────────────────────────────────────
@@ -621,7 +717,7 @@ async function main() {
 
   let payload;
   try {
-    payload = buildStatusPayload(scanDir);
+    payload = buildStatusPayload(scanDir, 'balanced');
   } catch (e) {
     console.error('ERROR building payload:', e.message);
     process.exit(1);
@@ -635,9 +731,11 @@ async function main() {
   console.log('\n--- Discord preview ---');
   console.log(dcMsg);
 
-  // Send to Balanced (calmar) topic only
+  // Send to all 3 mode topics
   const modeTopics = [
-    { key: 'calmar',  topicEnv: 'TELEGRAM_TOPIC_CALMAR' },
+    { key: 'dynamic',  topicEnv: 'TELEGRAM_TOPIC_DYNAMIC' },
+    { key: 'balanced', topicEnv: 'TELEGRAM_TOPIC_BALANCED' },
+    { key: 'secured',  topicEnv: 'TELEGRAM_TOPIC_SECURED' },
   ];
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
@@ -679,25 +777,49 @@ async function main() {
     console.log(`  Script: ${audioScript.slice(0, 120)}...`);
     const audioOk = generateQwen3Audio(audioScript, audioPath);
 
-    // Build caption (same for audio or video sends)
-    const caption = buildAudioCaption(modePayload, media.ytUrl);
+    // Generate mode-specific video (card image + audio)
+    let modeVideoPath = null;
+    let modeYtUrl = null;
+    if (audioOk) {
+      try {
+        modeVideoPath = generateModeVideo(key, audioPath, scanDir);
+      } catch (e) {
+        console.error(`  ⚠️  Video generation failed for ${key}:`, e.message);
+      }
+      // Upload to YouTube
+      if (modeVideoPath) {
+        const modeLabel = key === 'dynamic' ? '🔥 Dynamic' : key === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
+        const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | Market Watch`;
+        const ytDesc = `${modeLabel} Portfolio Update\n\n` +
+          `📈 Return: ${(modePayload.metrics.ret >= 0 ? '+' : '')}${modePayload.metrics.ret}%\n` +
+          `📉 Max DD: ${modePayload.metrics.dd}%\n` +
+          `🎯 Win Rate: ${modePayload.metrics.wr}%\n` +
+          `📊 Profit Factor: ${modePayload.metrics.pf}x\n\n` +
+          `🔗 Full status: ${STATUS_URL}\n` +
+          `📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`;
+        try {
+          const ytId = uploadToYouTube(modeVideoPath, ytTitle, ytDesc, key);
+          if (ytId) modeYtUrl = `https://youtu.be/${ytId}`;
+        } catch (e) {
+          console.error(`  ⚠️  YouTube upload failed for ${key}:`, e.message);
+        }
+      }
+    }
+
+    // Build caption with mode-specific YT link
+    const caption = buildAudioCaption(modePayload, modeYtUrl);
 
     if (audioOk) {
-      // Send audio with full caption (includes YT link if available)
       sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
-      // Embed video only if no YouTube link (quota exceeded fallback)
-      if (!media.ytUrl && media.videoPath) {
-        const videoCaption = `📊 <b>${key === 'growth' ? 'Aggressive' : key === 'zero' ? 'Conservative' : 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
-        sendTelegramVideo(media.videoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
-        console.log(`✅ Telegram video embedded [${key}] (no YT quota) → topic ${topicId}`);
+      // Send video if no YouTube (fallback: embed directly)
+      if (!modeYtUrl && modeVideoPath) {
+        const videoCaption = `📊 <b>${key === 'dynamic' ? 'Dynamic' : key === 'secured' ? 'Secured' : 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
+        sendTelegramVideo(modeVideoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
+        console.log(`✅ Telegram video embedded [${key}] → topic ${topicId}`);
       }
-    } else if (media.videoPath) {
-      // TTS failed — send video with full caption instead
-      sendTelegramVideo(media.videoPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
-      console.log(`✅ Telegram video fallback [${key}] → topic ${topicId}`);
     } else {
-      // Last resort: text-only
+      // No audio — text-only fallback
       const modeTgMsg = buildTelegramMessage(modePayload);
       try {
         const r = await sendTelegramText(modeTgMsg, topicId);

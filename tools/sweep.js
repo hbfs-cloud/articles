@@ -234,7 +234,12 @@ function computeATR(priceHistory, beforeDate, periods = 14) {
 }
 
 function simulateTrade(setup, scanDate, priceHistory, config = {}) {
-  const { horizonDays = 20, partialTP = false, trailingStop = false, maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0 } = config;
+  const {
+    horizonDays = 20, partialTP = false, partialTPPct = 0.5, trailingStop = false,
+    maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0,
+    breakevenPct = 0, // after +X% gain, move stop to entry (0 = disabled)
+    staleDays = 0,    // exit if no new high for N days (0 = disabled)
+  } = config;
   if (!priceHistory) return null;
 
   // Scanner folder IS the entry day (generated D-1 at 23h, folder = D+1 = entry day)
@@ -291,6 +296,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let exitDate = null;
   let exitPrice = null;
   let partialRealized = 0; // P&L from partial close at TP1
+  let highWaterMark = actualEntry;
+  let daysSinceNewHigh = 0;
+  let breakevenActivated = false;
 
   for (const date of sortedDates) {
     const bar = priceHistory[date];
@@ -315,12 +323,13 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     // Check TP1
     if (bar.high >= actualTp1 && partialRealized === 0) {
       if (partialTP) {
-        // Close 50% at TP1, trail the rest
-        partialRealized = ((actualTp1 - actualEntry) / actualEntry) * 50; // 50% of position
+        // Close partialTPPct at TP1, trail the rest
+        const tpFrac = partialTPPct * 100; // e.g. 0.5 → 50
+        partialRealized = ((actualTp1 - actualEntry) / actualEntry) * tpFrac;
         if (trailingStop) {
           currentStop = actualEntry; // Move stop to breakeven
         }
-        // Continue with remaining 50%
+        // Continue with remaining fraction
       } else {
         status = 'tp1';
         exitDate = date;
@@ -340,6 +349,31 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       const trailLevel = bar.close * (1 - dailyTrailPct / 100);
       if (trailLevel > currentStop) currentStop = trailLevel;
     }
+
+    // Breakeven stop: after +X% gain, move stop to entry (no loss possible)
+    if (breakevenPct > 0 && !breakevenActivated) {
+      const currentGain = (bar.high - actualEntry) / actualEntry * 100;
+      if (currentGain >= breakevenPct) {
+        breakevenActivated = true;
+        if (actualEntry > currentStop) currentStop = actualEntry;
+      }
+    }
+
+    // Stale exit: track high water mark, tighten stop if stale
+    if (staleDays > 0) {
+      if (bar.high > highWaterMark) {
+        highWaterMark = bar.high;
+        daysSinceNewHigh = 0;
+      } else {
+        daysSinceNewHigh++;
+      }
+      // After staleDays without new high, progressively tighten stop
+      if (daysSinceNewHigh >= staleDays) {
+        const staleRaise = (daysSinceNewHigh - staleDays + 1) * 0.002 * actualEntry; // 0.2% per day
+        const tightenedStop = currentStop + staleRaise;
+        if (tightenedStop > currentStop && tightenedStop < bar.close) currentStop = tightenedStop;
+      }
+    }
   }
 
   // Expired
@@ -357,8 +391,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   let pnlPct;
   if (partialTP && partialRealized > 0) {
-    // 50% realized at TP1 + 50% at exit
-    const remainingPnl = ((exitPrice - actualEntry) / actualEntry) * 50;
+    const tpFrac = partialTPPct * 100;
+    const remainingPnl = ((exitPrice - actualEntry) / actualEntry) * (100 - tpFrac);
     pnlPct = (partialRealized + remainingPnl) / 100;
   } else {
     pnlPct = (exitPrice - actualEntry) / actualEntry;
@@ -594,11 +628,11 @@ async function main() {
   const outSampleDates = new Set(sortedScans.slice(splitIdx).map(s => s.scanDate));
   console.log(`Walk-forward split: ${inSampleDates.size} in-sample / ${outSampleDates.size} out-of-sample scans`);
 
-  // 4. Grid dimensions
-  const PORTFOLIO_SIZES = QUICK ? [3, 5, 8, 10] : [1, 2, 3, 4, 5, 8, 10, 15, 20];
-  const TOP_NS = QUICK ? [1, 2, 3] : [1, 2, 3, 4, 5];
-  const MIN_SCORES = QUICK ? [0, 85, 90] : [0, 80, 85, 88, 90, 92, 95];
-  const HORIZONS = QUICK ? [10, 20] : [5, 10, 15, 20, 30];
+  // 4. Grid dimensions — ~500K combos, covers all meaningful axes
+  const PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8, 10];
+  const TOP_NS = QUICK ? [1, 2] : [1, 2, 3, 4];
+  const MIN_SCORES = QUICK ? [0, 85, 90] : [0, 80, 85, 90, 95];
+  const HORIZONS = QUICK ? [5, 20] : [3, 5, 10, 20];
   const STRATEGY_FILTERS = {
     'all':            new Set(),
     'no_sq':          new Set(['short_squeeze']),
@@ -606,42 +640,58 @@ async function main() {
     'momentum_only':  new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback']),
     'breakout_only':  new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback']),
   };
-  const ROTATIONS = QUICK ? ['none', 'aggressive'] : ['none', 'daily_max1', 'daily_max2', 'aggressive'];
-  const TP_MODES = QUICK ? [false] : [false, true]; // partialTP
-  const TRAIL_MODES = QUICK ? [false] : [false, true]; // trailingStop
-  const MAX_STOP_PCTS = QUICK ? [0, 7] : [0, 7, 10]; // 0 = no cap
-  const ATR_STOP_MULTS = QUICK ? [0, 2] : [0, 2, 3]; // 0 = disabled
-  const DAILY_TRAIL_PCTS = QUICK ? [0, 3] : [0, 3, 5]; // 0 = disabled, trail below daily close
+  const ROTATIONS = ['none', 'daily_max1', 'aggressive'];
+  const TP_MODES = [false, true]; // partialTP
+  const TP_PCTS = QUICK ? [0.5] : [0.3, 0.5, 0.7]; // partial TP fraction
+  const TRAIL_MODES = [false, true]; // trailingStop
+  const MAX_STOP_PCTS = [0, 7]; // 0 = no cap
+  const ATR_STOP_MULTS = [0, 2]; // 0 = disabled
+  const DAILY_TRAIL_PCTS = [0, 3, 5]; // 0 = disabled
+  const BREAKEVEN_PCTS = [0, 2]; // 0 = disabled, after +X% move stop to entry
+  const STALE_DAYS = [0, 5]; // 0 = disabled, progressive stop tighten after N days no new high
+
+  // TP_PCTS only matter when partialTP=true, so effective count = (1 + TP_PCTS.length) for TP dimension
+  const tpCombos = [[false, 0.5], ...TP_PCTS.map(p => [true, p])]; // [partialTP, partialTPPct]
 
   const total = PORTFOLIO_SIZES.length * TOP_NS.length * MIN_SCORES.length
     * Object.keys(STRATEGY_FILTERS).length * ROTATIONS.length * HORIZONS.length
-    * TP_MODES.length * TRAIL_MODES.length * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length * DAILY_TRAIL_PCTS.length;
+    * tpCombos.length * TRAIL_MODES.length * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length
+    * DAILY_TRAIL_PCTS.length * BREAKEVEN_PCTS.length * STALE_DAYS.length;
   console.log(`\n=== GRID SEARCH (${total} combinations) ===\n`);
 
-  // Pre-simulate all trades for each (horizon, partialTP, trailingStop, maxStopPct, atrStopMult, dailyTrailPct)
+  // Pre-simulate all trades for each unique trade-level config
   const tradesByKey = {};
-  const preSimTotal = HORIZONS.length * TP_MODES.length * TRAIL_MODES.length * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length * DAILY_TRAIL_PCTS.length;
+  const preSimTotal = HORIZONS.length * tpCombos.length * TRAIL_MODES.length
+    * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length * DAILY_TRAIL_PCTS.length
+    * BREAKEVEN_PCTS.length * STALE_DAYS.length;
+  console.log(`Pre-simulating ${preSimTotal} trade sets...`);
   let preSimDone = 0;
   for (const horizon of HORIZONS) {
-    for (const ptp of TP_MODES) {
+    for (const [ptp, ptpPct] of tpCombos) {
       for (const trail of TRAIL_MODES) {
         for (const maxStop of MAX_STOP_PCTS) {
           for (const atrMult of ATR_STOP_MULTS) {
             for (const dailyTrail of DAILY_TRAIL_PCTS) {
-              const key = `${horizon}_${ptp}_${trail}_${maxStop}_${atrMult}_${dailyTrail}`;
-              const trades = [];
-              for (const setup of allSetups) {
-                const history = priceCache[setup.ticker];
-                const result = simulateTrade(setup, setup.scanDate, history, {
-                  horizonDays: horizon, partialTP: ptp, trailingStop: trail, maxStopPct: maxStop, atrStopMult: atrMult, dailyTrailPct: dailyTrail,
-                });
-                if (result) {
-                  trades.push({ ...result, _horizon: horizon, _partialTP: ptp, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail });
+              for (const bePct of BREAKEVEN_PCTS) {
+                for (const stale of STALE_DAYS) {
+                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${stale}`;
+                  const trades = [];
+                  for (const setup of allSetups) {
+                    const history = priceCache[setup.ticker];
+                    const result = simulateTrade(setup, setup.scanDate, history, {
+                      horizonDays: horizon, partialTP: ptp, partialTPPct: ptpPct, trailingStop: trail,
+                      maxStopPct: maxStop, atrStopMult: atrMult, dailyTrailPct: dailyTrail,
+                      breakevenPct: bePct, staleDays: stale,
+                    });
+                    if (result) {
+                      trades.push({ ...result, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct, _stale: stale });
+                    }
+                  }
+                  tradesByKey[key] = trades;
+                  preSimDone++;
+                  if (preSimDone % 200 === 0) process.stdout.write(`  Pre-sim ${preSimDone}/${preSimTotal}\r`);
                 }
               }
-              tradesByKey[key] = trades;
-              preSimDone++;
-              if (preSimDone % 50 === 0) process.stdout.write(`  Pre-sim ${preSimDone}/${preSimTotal}\r`);
             }
           }
         }
@@ -657,6 +707,11 @@ async function main() {
   const topByReturn = [];
   const topByCalmar = [];
   const topByComposite = [];
+  const topByLowestDD = []; // sorted ascending by |DD| (lowest first)
+  // Mode-specific trackers with constraints
+  const advDynamic = [];   // P2-4, max return, any DD
+  const advBalanced = [];  // P3-5, best risk-adjusted (return - 2*|DD|)
+  const advSecured = [];   // any P, lowest |DD|, return≥3%
 
   function insertTop(arr, item, compareFn) {
     if (arr.length < TOP_K) { arr.push(item); arr.sort(compareFn); return; }
@@ -672,12 +727,14 @@ async function main() {
         for (const [filterName, filterSet] of Object.entries(STRATEGY_FILTERS)) {
           for (const rotation of ROTATIONS) {
             for (const horizon of HORIZONS) {
-              for (const partialTP of TP_MODES) {
+              for (const [partialTP, partialTPPct] of tpCombos) {
                 for (const trailingStop of TRAIL_MODES) {
                   for (const maxStopPct of MAX_STOP_PCTS) {
                     for (const atrStopMult of ATR_STOP_MULTS) {
                       for (const dailyTrailPct of DAILY_TRAIL_PCTS) {
-                        const key = `${horizon}_${partialTP}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}`;
+                        for (const breakevenPct of BREAKEVEN_PCTS) {
+                          for (const staleDays of STALE_DAYS) {
+                        const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_${staleDays}`;
                         const trades = tradesByKey[key] || [];
 
                         const config = { portfolioSize, topN, minScore, rotation,
@@ -687,7 +744,8 @@ async function main() {
                         if (metrics && metrics.trades >= MIN_TRADES && metrics.returnTotal > 0) {
                           const r = {
                             portfolioSize, topN, minScore, filterName, rotation,
-                            horizon, partialTP, trailingStop, maxStopPct, atrStopMult, dailyTrailPct,
+                            horizon, partialTP, partialTPPct, trailingStop, maxStopPct, atrStopMult, dailyTrailPct,
+                            breakevenPct, staleDays,
                             ...metrics,
                           };
                           r.composite = (r.returnTotal / 30) + (1 / Math.max(0.5, Math.abs(r.maxDD))) + (r.winRate / 100) + (r.calmar / 10) + (r.profitFactor / 5);
@@ -695,10 +753,26 @@ async function main() {
                           insertTop(topByReturn, r, (a, b) => b.returnTotal - a.returnTotal);
                           insertTop(topByCalmar, r, (a, b) => b.calmar - a.calmar);
                           insertTop(topByComposite, r, (a, b) => b.composite - a.composite);
+                          insertTop(topByLowestDD, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
+                          // Mode advisors: maximize return within DD constraints
+                          // DYNAMIC: concentrated (P1-2), max return, DD < 5%, min 8 trades
+                          if (r.portfolioSize <= 2 && Math.abs(r.maxDD) < 5 && r.trades >= 8) {
+                            insertTop(advDynamic, r, (a, b) => b.returnTotal - a.returnTotal);
+                          }
+                          // BALANCED: diversified (P3-5), max return, DD < 3%, min 10 trades
+                          if (r.portfolioSize >= 3 && r.portfolioSize <= 5 && Math.abs(r.maxDD) < 3 && r.trades >= 10) {
+                            insertTop(advBalanced, r, (a, b) => b.returnTotal - a.returnTotal);
+                          }
+                          // SECURED: any size, min DD, return >= 5%, min 8 trades
+                          if (r.returnTotal >= 5 && r.trades >= 8) {
+                            insertTop(advSecured, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
+                          }
                         }
 
                         tested++;
                         if (tested % 5000 === 0) process.stdout.write(`  ${tested}/${total}\r`);
+                          }
+                        }
                       }
                     }
                   }
@@ -778,7 +852,7 @@ async function main() {
   }
 
   // Top by different metrics
-  const fmtR = r => `P${r.portfolioSize} Top${r.topN} Score≥${r.minScore} ${r.filterName} ${r.rotation} H${r.horizon} MaxSt=${r.maxStopPct||0}% ATR=${r.atrStopMult||0}x Trail=${r.dailyTrailPct||0}%`;
+  const fmtR = r => `P${r.portfolioSize} Top${r.topN} Score≥${r.minScore} ${r.filterName} ${r.rotation} H${r.horizon} MaxSt=${r.maxStopPct||0}% ATR=${r.atrStopMult||0}x Trail=${r.dailyTrailPct||0}% BE=${r.breakevenPct||0}% Stale=${r.staleDays||0}d${r.partialTP ? ' PTP='+((r.partialTPPct||0.5)*100)+'%' : ''}`;
 
   console.log('TOP 5 by Composite (return + low DD + high WR + calmar + PF):');
   for (const r of topByComposite.slice(0, 5)) {
@@ -795,6 +869,27 @@ async function main() {
     console.log(`  ${fmtR(r)}: Return=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% Calmar=${r.calmar}`);
   }
 
+  // ─── MODE ADVISOR: find best config for each objective ───────────────────
+  console.log('\n═══ MODE ADVISOR ═══\n');
+
+  console.log('DYNAMIC (max return, P2-4):');
+  for (const r of advDynamic.slice(0, 10)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nBALANCED (best return - 2*|DD|, P3-5):');
+  for (const r of advBalanced.slice(0, 10)) {
+    const riskAdj = (r.returnTotal - 2 * Math.abs(r.maxDD)).toFixed(2);
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% RiskAdj=${riskAdj} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nSECURED (lowest |DD|, ret≥3%):');
+  for (const r of advSecured.slice(0, 10)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} Calmar=${r.calmar} trades=${r.trades}`);
+  }
+
+  console.log();
+
   // 6. Save results
   const output = {
     generated_at: new Date().toISOString(),
@@ -805,17 +900,20 @@ async function main() {
     grid: {
       portfolio_sizes: PORTFOLIO_SIZES, top_ns: TOP_NS, min_scores: MIN_SCORES,
       horizons: HORIZONS, strategies: Object.keys(STRATEGY_FILTERS),
-      rotations: ROTATIONS, tp_modes: TP_MODES, trail_modes: TRAIL_MODES, max_stop_pcts: MAX_STOP_PCTS, atr_stop_mults: ATR_STOP_MULTS, daily_trail_pcts: DAILY_TRAIL_PCTS,
+      rotations: ROTATIONS, tp_modes: TP_MODES, trail_modes: TRAIL_MODES, max_stop_pcts: MAX_STOP_PCTS, atr_stop_mults: ATR_STOP_MULTS, daily_trail_pcts: DAILY_TRAIL_PCTS, breakeven_pcts: BREAKEVEN_PCTS, stale_days: STALE_DAYS, tp_pcts: TP_PCTS,
       total_combos: tested,
     },
     optimal_sharpe: ranked[0] || null,
     optimal_return: topByReturn[0] || null,
     optimal_calmar: topByCalmar[0] || null,
     optimal_composite: topByComposite[0] || null,
+    advisor_dynamic: advDynamic[0] || null,
+    advisor_balanced: advBalanced[0] || null,
+    advisor_secured: advSecured[0] || null,
     top20_sharpe: ranked.slice(0, 20).map(r => ({
       portfolioSize: r.portfolioSize, topN: r.topN, minScore: r.minScore,
       filterName: r.filterName, rotation: r.rotation, horizon: r.horizon,
-      partialTP: r.partialTP, trailingStop: r.trailingStop, maxStopPct: r.maxStopPct || 0, atrStopMult: r.atrStopMult || 0, dailyTrailPct: r.dailyTrailPct || 0,
+      partialTP: r.partialTP, partialTPPct: r.partialTPPct, trailingStop: r.trailingStop, maxStopPct: r.maxStopPct || 0, atrStopMult: r.atrStopMult || 0, dailyTrailPct: r.dailyTrailPct || 0, breakevenPct: r.breakevenPct || 0, staleDays: r.staleDays || 0,
       returnTotal: r.returnTotal, maxDD: r.maxDD, winRate: r.winRate,
       profitFactor: r.profitFactor, sharpe: r.sharpe, calmar: r.calmar,
       sortino: r.sortino, avgHold: r.avgHold, trades: r.trades,
@@ -831,7 +929,7 @@ async function main() {
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     for (const [id, cfg] of Object.entries(modesConfig.modes)) {
-      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}`;
+      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}`;
       const trades2 = tradesByKey[frozenKey] || [];
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
@@ -850,7 +948,7 @@ async function main() {
     // Fallback: use optimal combos if no modes-config
     for (const [key, combo] of [["dynamic", topByReturn[0]], ["balanced", topByCalmar[0]], ["secured", ranked[0]]]) {
       if (!combo) continue;
-      const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}`;
+      const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.partialTPPct || 0.5}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}_${combo.breakevenPct || 0}_${combo.staleDays || 0}`;
       const trades2 = tradesByKey[fbKey] || [];
       const cfg2 = {
         portfolioSize: combo.portfolioSize, topN: combo.topN, minScore: combo.minScore,
@@ -873,7 +971,7 @@ async function main() {
       combo: {
         portfolioSize: best.portfolioSize, topN: best.topN, minScore: best.minScore,
         filterName: best.filterName, rotation: best.rotation, horizon: best.horizon,
-        partialTP: best.partialTP, trailingStop: best.trailingStop, maxStopPct: best.maxStopPct || 0, atrStopMult: best.atrStopMult || 0, dailyTrailPct: best.dailyTrailPct || 0,
+        partialTP: best.partialTP, partialTPPct: best.partialTPPct, trailingStop: best.trailingStop, maxStopPct: best.maxStopPct || 0, atrStopMult: best.atrStopMult || 0, dailyTrailPct: best.dailyTrailPct || 0, breakevenPct: best.breakevenPct || 0, staleDays: best.staleDays || 0,
       },
       metrics: {
         returnTotal: best.returnTotal, maxDD: best.maxDD, winRate: best.winRate,
@@ -900,9 +998,10 @@ async function main() {
       const same = opt.portfolioSize === cfg.portfolioSize && opt.topN === cfg.topN
         && opt.horizon === cfg.horizon && opt.filterName === cfg.filterName
         && opt.rotation === cfg.rotation && (opt.maxStopPct || 0) === (cfg.maxStopPct || 0)
-        && (opt.atrStopMult || 0) === (cfg.atrStopMult || 0) && (opt.dailyTrailPct || 0) === (cfg.dailyTrailPct || 0);
-      const frozen = `P${cfg.portfolioSize}/Top${cfg.topN}/H${cfg.horizon}/${cfg.filterName}/${cfg.rotation}/MaxSt=${cfg.maxStopPct||0}%/ATR=${cfg.atrStopMult||0}x/Trail=${cfg.dailyTrailPct||0}%`;
-      const sweep = `P${opt.portfolioSize}/Top${opt.topN}/H${opt.horizon}/${opt.filterName}/${opt.rotation}/MaxSt=${opt.maxStopPct||0}%/ATR=${opt.atrStopMult||0}x/Trail=${opt.dailyTrailPct||0}%`;
+        && (opt.atrStopMult || 0) === (cfg.atrStopMult || 0) && (opt.dailyTrailPct || 0) === (cfg.dailyTrailPct || 0)
+        && (opt.breakevenPct || 0) === (cfg.breakevenPct || 0) && (opt.staleDays || 0) === (cfg.staleDays || 0);
+      const frozen = `P${cfg.portfolioSize}/Top${cfg.topN}/H${cfg.horizon}/${cfg.filterName}/${cfg.rotation}/MaxSt=${cfg.maxStopPct||0}%/ATR=${cfg.atrStopMult||0}x/Trail=${cfg.dailyTrailPct||0}%/BE=${cfg.breakevenPct||0}%/Stale=${cfg.staleDays||0}d`;
+      const sweep = `P${opt.portfolioSize}/Top${opt.topN}/H${opt.horizon}/${opt.filterName}/${opt.rotation}/MaxSt=${opt.maxStopPct||0}%/ATR=${opt.atrStopMult||0}x/Trail=${opt.dailyTrailPct||0}%/BE=${opt.breakevenPct||0}%/Stale=${opt.staleDays||0}d`;
       console.log(`${id.toUpperCase()} (${cfg.label}):`);
       console.log(`  Frozen: ${frozen}`);
       console.log(`  Sweep : ${sweep} (Return=${opt.returnTotal}% Sharpe=${opt.sharpe})`);
