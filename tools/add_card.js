@@ -90,7 +90,7 @@ let title = doc.querySelector('title') ? doc.querySelector('title').textContent.
 
 // For analyses: build a better title from ticker + og:title or description
 if (tab === 'analyses') {
-    // Try og:title first (often has "Market Watch — Analyse TICKER Expert")
+    // Try og:title first (often has "DailyTickers — Analyse TICKER Expert")
     const ogTitle = doc.querySelector('meta[property="og:title"]');
     const ogDesc = doc.querySelector('meta[property="og:description"]');
     const tickerSym = doc.querySelector('.ticker-symbol');
@@ -105,11 +105,11 @@ if (tab === 'analyses') {
         if (shortDesc.length > 90) shortDesc = shortDesc.substring(0, 87) + '...';
         title = `${sym} — ${shortDesc}`;
     } else if (ogTitle && sym) {
-        title = ogTitle.getAttribute('content').replace(/Market Watch\s*[—–-]\s*/i, '').trim();
+        title = ogTitle.getAttribute('content').replace(/DailyTickers\s*[—–-]\s*/i, '').trim();
         if (!title.includes(sym)) title = `${sym} — ${title}`;
     }
-    // Fallback: if title is still generic like "Market Watch Expert", use ticker + company
-    if (/^Market Watch/i.test(title) && sym) {
+    // Fallback: if title is still generic like "DailyTickers Expert", use ticker + company
+    if (/^DailyTickers/i.test(title) && sym) {
         const nameEl = doc.querySelector('.ticker-name');
         if (nameEl) {
             const dashIdx = nameEl.textContent.indexOf('—');
@@ -267,7 +267,7 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
     if (fullPath.includes('/retrospective/')) {
         const titleEl = doc.querySelector('title');
         const titleText = titleEl ? titleEl.textContent : '';
-        // "Scanner Retrospective | Mar 20 - Mar 27, 2026 | Market Watch"
+        // "Scanner Retrospective | Mar 20 - Mar 27, 2026 | DailyTickers"
         const rangeMatch = titleText.match(/([A-Za-z]+ \d+)\s*[-–]\s*([A-Za-z]+ \d+,?\s*\d{4})/);
         if (rangeMatch) {
             date = `${rangeMatch[1]} – ${rangeMatch[2]}`;

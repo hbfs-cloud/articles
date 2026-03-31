@@ -1,4 +1,4 @@
-# Market Watch - Daily Instructions
+# DailyTickers - Daily Instructions
 
 ## 2bis. BRIEFING QUOTIDIEN (Daily Briefing)
 
@@ -31,7 +31,7 @@ Le daily du **25 février 2026** (`daily/20260225/`) est la référence pour la 
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo">
       <img src="/logo.svg" alt="" width="36" height="36">
-      <span class="brand-title">MarketWatch</span>
+      <span class="brand-title">DailyTickers</span>
     </a>
     <div class="brand-nav">
       <a href="/?tab=weekly">Hebdo</a>
@@ -92,7 +92,7 @@ Adapter les 6 items aux sections principales du briefing. Le JS gère toggle, sm
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  &copy; 2026 DailyTickers. Data via DailyTickers Gateway.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>

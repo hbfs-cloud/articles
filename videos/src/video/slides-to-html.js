@@ -422,7 +422,7 @@ export function slidesToHtml(eduData, narrationData, theme) {
   <section data-slide-index="${idx}">
     ${inner}
     <div class="footer-bar">
-      <span class="footer-brand">market-watch.xyz</span>
+      <span class="footer-brand">dailytickers.com</span>
       <span>${escapeHtml(seriesTitle)}</span>
       <span class="footer-slide">${idx + 1} / ${total}</span>
     </div>

@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 def build_sitemap():
     dirs = ['analyses', 'daily', 'scanner', 'weekly', 'portfolio']
-    DOMAIN = "https://articles.market-watch.xyz"
+    DOMAIN = "https://articles.dailytickers.com"
     urls = []
     
     for d in dirs:

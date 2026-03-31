@@ -673,7 +673,7 @@ const HUD: React.FC<{
         {/* Brand strip */}
         <div style={{display: 'flex', justifyContent: 'space-between', padding: '11px 56px', background: 'rgba(0,0,0,0.35)'}}>
           <span style={{fontFamily: FONT, fontSize: '14px', fontWeight: 500, color: 'rgba(255,255,255,0.2)'}}>
-            market-watch<span style={{color: 'rgba(80,180,238,0.35)'}}>.xyz</span>
+            dailytickers<span style={{color: 'rgba(80,180,238,0.35)'}}>.xyz</span>
           </span>
           <span style={{fontFamily: FONT, fontSize: '12px', fontWeight: 500, color: 'rgba(255,255,255,0.14)'}}>
             {cfg.language === 'fr' ? 'Pas un conseil financier' : 'Not financial advice'}
@@ -1678,7 +1678,7 @@ const OutroSlide: React.FC<{cfg: SeriesConfig}> = ({cfg}) => {
           </div>
         </Anim>
         <Anim type="fade" delay={fps * 2}>
-          <span style={{color: '#50b4ee', fontSize: '30px', fontWeight: 700}}>articles.market-watch.xyz</span>
+          <span style={{color: '#50b4ee', fontSize: '30px', fontWeight: 700}}>articles.dailytickers.com</span>
         </Anim>
       </div>
     </div>

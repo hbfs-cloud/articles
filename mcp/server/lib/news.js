@@ -25,7 +25,7 @@ export async function getRecentFilings(ticker, types = ['10-K', '10-Q', '8-K', '
 
     const url = `${EDGAR_FILINGS}/CIK${cik.padStart(10, '0')}.json`;
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'MarketWatch MCP contact@market-watch.xyz' }
+      headers: { 'User-Agent': 'DailyTickers MCP contact@dailytickers.com' }
     });
     if (!res.ok) return { ticker, filings: [] };
 
@@ -66,7 +66,7 @@ async function getCIK(ticker) {
 
   try {
     const res = await fetch('https://www.sec.gov/files/company_tickers.json', {
-      headers: { 'User-Agent': 'MarketWatch MCP contact@market-watch.xyz' }
+      headers: { 'User-Agent': 'DailyTickers MCP contact@dailytickers.com' }
     });
     const data = await res.json();
 

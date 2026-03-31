@@ -1,4 +1,4 @@
-# Market Watch - Lab-src Instructions
+# DailyTickers - Lab-src Instructions
 
 ## 8. LAB — Evidence.dev Interactive Dashboard
 

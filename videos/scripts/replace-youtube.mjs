@@ -81,7 +81,7 @@ ${scanData.setups.map((s, i) => `${i + 1}. ${s.ticker} (${s.companyName}) — Sc
 • Best Pick All-Time: ACMR +147%
 • Grade: B
 
-🌐 Full Analysis: https://articles.market-watch.xyz/scanner/20260317/
+🌐 Full Analysis: https://articles.dailytickers.com/scanner/20260317/
 🔔 Subscribe for daily scanner videos!
 
 ⚠️ DISCLAIMER: This is NOT financial advice. Past performance does not guarantee future results. Always do your own research and manage your risk. The information presented is for educational and entertainment purposes only.
@@ -93,7 +93,7 @@ ${scanData.setups.map((s, i) => `${i + 1}. ${s.ticker} (${s.companyName}) — Sc
     "trade setups", "technical analysis", data.regime.toLowerCase(),
     ...scanData.setups.map(s => s.ticker),
     ...scanData.setups.map(s => s.companyName),
-    "market-watch.xyz", "algorithmic trading", "swing trading",
+    "dailytickers.com", "algorithmic trading", "swing trading",
   ];
 
   console.log(`[YT] Uploading: ${title}`);

@@ -111,7 +111,7 @@ export const BrandLogo: React.FC<{size?: number}> = ({size = 60}) => (
       fontWeight: 600,
       color: '#f8fafc',
       letterSpacing: '0.02em',
-    }}>market-watch<span style={{color: '#50b4ee'}}>.xyz</span></span>
+    }}>dailytickers<span style={{color: '#50b4ee'}}>.xyz</span></span>
   </div>
 );
 

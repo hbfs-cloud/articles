@@ -45,7 +45,7 @@ def split_prompt():
         if os.path.exists(folder):
             filepath = os.path.join(folder, 'CLAUDE.md')
             with open(filepath, 'w', encoding='utf-8') as f:
-                f.write(f"# Market Watch - {folder.capitalize()} Instructions\n\n")
+                f.write(f"# DailyTickers - {folder.capitalize()} Instructions\n\n")
                 f.write("".join(texts))
             print(f"Created {filepath}")
 

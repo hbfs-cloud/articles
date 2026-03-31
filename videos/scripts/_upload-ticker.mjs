@@ -13,8 +13,8 @@ const cfg = eduData.config;
 const meta = {
   title: `${cfg.ticker} (${cfg.tickerName}) — ${cfg.seriesSubtitle}`,
   playlist: 'Analyses EN',
-  description: `📊 ${cfg.seriesTitle}\n${cfg.seriesSubtitle}\n\n📈 Complete 5-minute analysis covering verdict, fundamentals, technical setup, risks & catalysts, and trade idea.\n\n⚠️ This is not financial advice.\n🌐 articles.market-watch.xyz/analyses/${cfg.ticker}/`,
-  tags: [cfg.ticker, cfg.tickerName, 'stock analysis', 'energy', 'refining', 'dividend', 'trade-idea', 'market-watch.xyz'],
+  description: `📊 ${cfg.seriesTitle}\n${cfg.seriesSubtitle}\n\n📈 Complete 5-minute analysis covering verdict, fundamentals, technical setup, risks & catalysts, and trade idea.\n\n⚠️ This is not financial advice.\n🌐 articles.dailytickers.com/analyses/${cfg.ticker}/`,
+  tags: [cfg.ticker, cfg.tickerName, 'stock analysis', 'energy', 'refining', 'dividend', 'trade-idea', 'dailytickers.com'],
   lang: cfg.language || 'en',
 };
 

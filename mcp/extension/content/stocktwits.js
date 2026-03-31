@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — StockTwits Content Script
+ * DailyTickers MCP — StockTwits Content Script
  *
  * Injected on stocktwits.com pages.
  * - Scrapes sentiment data for current ticker

@@ -1,10 +1,10 @@
-# CLAUDE.md - Market Watch Articles Project
+# CLAUDE.md - DailyTickers Articles Project
 
 ## Project Overview
 Site de publication d'analyses financières institutionnelles, hébergé sur GitHub Pages.
-- **URL articles** : `https://articles.market-watch.xyz/` (CNAME = `articles.market-watch.xyz`)
-- **Landing marketing** : `https://market-watch.xyz/` (site séparé, ne sert PAS les articles)
-- **IMPORTANT** : Toujours utiliser `articles.market-watch.xyz` pour les URLs d'articles
+- **URL articles** : `https://articles.dailytickers.com/` (CNAME = `articles.dailytickers.com`)
+- **Landing marketing** : `https://dailytickers.com/` (site séparé, ne sert PAS les articles)
+- **IMPORTANT** : Toujours utiliser `articles.dailytickers.com` pour les URLs d'articles
 
 ## Structure du Projet
 ```
@@ -272,7 +272,7 @@ Gérées via le **bot Discord** (`claude-discord-bot`), pas via cron.
 | Veille Tech | Tous les jours 18h | `every day at 18:00 articles veille tech 18h` |
 
 ### "Veille Tech 18h" — Intelligence & Sujets
-Rapport de veille stratégique pour la rédaction de market-watch.xyz. **Pas d'article HTML généré**, rapport Discord uniquement.
+Rapport de veille stratégique pour la rédaction de dailytickers.com. **Pas d'article HTML généré**, rapport Discord uniquement.
 
 1. **Trends du moment** (WebSearch) :
    - Systematic trading & quant finance : nouvelles stratégies, backtests publiés, librairies open-source

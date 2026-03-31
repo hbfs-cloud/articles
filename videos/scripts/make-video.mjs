@@ -52,8 +52,8 @@ const YOUTUBE_META = {
 💡 Cas concrets : GameStop, ArcelorMittal, stratégie Barbell de Taleb
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['trading', 'bourse', 'investissement', 'débutant', 'formation', 'stock picking', 'ETF', 'DCA', 'portefeuille', 'VIX', 'options', 'risk management', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['trading', 'bourse', 'investissement', 'débutant', 'formation', 'stock picking', 'ETF', 'DCA', 'portefeuille', 'VIX', 'options', 'risk management', 'dailytickers.com'],
     lang: 'fr',
   },
   'ai-singularity-fr': {
@@ -63,8 +63,8 @@ const YOUTUBE_META = {
 15 chapitres couvrant : fondements de l'IA, trading algorithmique, LLMs en finance, risques systémiques, et l'avenir.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['AI', 'intelligence artificielle', 'finance', 'trading algorithmique', 'LLM', 'machine learning', 'singularity', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['AI', 'intelligence artificielle', 'finance', 'trading algorithmique', 'LLM', 'machine learning', 'singularity', 'dailytickers.com'],
     lang: 'fr',
   },
   'ai-singularity-en': {
@@ -74,8 +74,8 @@ const YOUTUBE_META = {
 15 chapters covering: AI foundations, algorithmic trading, LLMs in finance, systemic risks, and the future.
 
 ⚠️ This is not financial advice.
-🌐 articles.market-watch.xyz`,
-    tags: ['AI', 'artificial intelligence', 'finance', 'algorithmic trading', 'LLM', 'machine learning', 'singularity', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['AI', 'artificial intelligence', 'finance', 'algorithmic trading', 'LLM', 'machine learning', 'singularity', 'dailytickers.com'],
     lang: 'en',
   },
   'swing-trading': {
@@ -85,8 +85,8 @@ const YOUTUBE_META = {
 6 chapitres : identification des setups, timing d'entrée, gestion de position, stop-loss dynamiques, et routine quotidienne.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['swing trading', 'trading', 'bourse', 'setup', 'stop-loss', 'routine trading', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['swing trading', 'trading', 'bourse', 'setup', 'stop-loss', 'routine trading', 'dailytickers.com'],
     lang: 'fr',
   },
   'maitrise-expert': {
@@ -96,8 +96,8 @@ const YOUTUBE_META = {
 5 chapitres de niveau avancé : décoder le VIX, saisonnalité, indicateur de régime, trading de volatilité, stratégies options.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['VIX', 'volatilité', 'options', 'trading avancé', 'risk management', 'expert', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['VIX', 'volatilité', 'options', 'trading avancé', 'risk management', 'expert', 'dailytickers.com'],
     lang: 'fr',
   },
   'algo-million': {
@@ -106,8 +106,8 @@ const YOUTUBE_META = {
     description: `🤖 Construisez votre système de trading algorithmique de A à Z.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['trading algorithmique', 'algorithme', 'backtest', 'python', 'quant', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['trading algorithmique', 'algorithme', 'backtest', 'python', 'quant', 'dailytickers.com'],
     lang: 'fr',
   },
   'bourses-mena': {
@@ -116,8 +116,8 @@ const YOUTUBE_META = {
     description: `🌍 Guide complet pour investir dans les marchés MENA.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['MENA', 'Moyen-Orient', 'bourse', 'investissement', 'marchés émergents', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['MENA', 'Moyen-Orient', 'bourse', 'investissement', 'marchés émergents', 'dailytickers.com'],
     lang: 'fr',
   },
   'bilan-hebdo-20260331': {
@@ -138,8 +138,8 @@ const YOUTUBE_META = {
 🛢️ Détroit d'Ormuz toujours fermé — impact sur tous les marchés
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 https://articles.market-watch.xyz`,
-    tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'obligations', 'forex', 'market-watch.xyz'],
+🌐 https://articles.dailytickers.com`,
+    tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'obligations', 'forex', 'dailytickers.com'],
     lang: 'fr',
   },
   'bilan-hebdo-20260327': {
@@ -160,27 +160,27 @@ const YOUTUBE_META = {
 🛢️ Analyse complète du blocus du détroit d'Ormuz
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 https://articles.market-watch.xyz`,
-    tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'VIX', 'market-watch.xyz'],
+🌐 https://articles.dailytickers.com`,
+    tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'VIX', 'dailytickers.com'],
     lang: 'fr',
   },
   'presentation-en': {
-    title: 'Who is Behind Market Watch? 25 Years in Trading Infrastructure',
+    title: 'Who is Behind DailyTickers? 25 Years in Trading Infrastructure',
     playlist: 'Trading Education EN',
-    description: `Almost 25 years building trading systems at Thomson Reuters, Euronext, Societe Generale, and Brevan Howard. This is the story behind Market Watch - from institutional infrastructure to independent analysis tools.
+    description: `Almost 25 years building trading systems at Thomson Reuters, Euronext, Societe Generale, and Brevan Howard. This is the story behind DailyTickers - from institutional infrastructure to independent analysis tools.
 
 4 Chapters:
-- Who's Behind Market Watch - the person behind the data
+- Who's Behind DailyTickers - the person behind the data
 - The Professional Journey - Thomson Reuters, Euronext, SocGen, Brevan Howard
 - From Infrastructure to Trading - how building systems creates a unique edge
-- Market Watch Vision - institutional tools, accessible to everyone
+- DailyTickers Vision - institutional tools, accessible to everyone
 
 2 interactive quizzes
 Free tools and transparent track record
 
 This is not financial advice.
-https://articles.market-watch.xyz`,
-    tags: ['trading', 'market watch', 'trading infrastructure', 'hedge fund', 'exchange', 'investment bank', 'about', 'market-watch.xyz'],
+https://articles.dailytickers.com`,
+    tags: ['trading', 'market watch', 'trading infrastructure', 'hedge fund', 'exchange', 'investment bank', 'about', 'dailytickers.com'],
     lang: 'en',
   },
   'scanner-diy-en': {
@@ -203,14 +203,14 @@ Real Finviz screener setups you can bookmark
 Includes the INDO dilution lesson
 
 This is not financial advice.
-https://articles.market-watch.xyz`,
-    tags: ['trading', 'scanner', 'DIY', 'Finviz', 'free tools', 'stock screener', 'RSI', 'momentum', 'breakout', 'position sizing', 'Google Sheets', 'market-watch.xyz'],
+https://articles.dailytickers.com`,
+    tags: ['trading', 'scanner', 'DIY', 'Finviz', 'free tools', 'stock screener', 'RSI', 'momentum', 'breakout', 'position sizing', 'Google Sheets', 'dailytickers.com'],
     lang: 'en',
   },
   'scanner-guide-en': {
     title: 'The Scanner Guide — Your Complete Playbook for Automated Trading Signals',
     playlist: 'Trading Education EN',
-    description: `📊 Complete guide to the Market Watch Scanner — automated trading signals explained.
+    description: `📊 Complete guide to the DailyTickers Scanner — automated trading signals explained.
 
 📚 8 Chapters:
 • What Is the Scanner? — why automated screening works
@@ -228,8 +228,8 @@ https://articles.market-watch.xyz`,
 📊 Live portfolio tracking: +5.46% return, -1.63% max drawdown
 
 ⚠️ This is not financial advice.
-🌐 https://articles.market-watch.xyz/scanner/status/`,
-    tags: ['trading', 'scanner', 'automated trading', 'signals', 'portfolio', 'risk management', 'position sizing', 'market regime', 'VIX', 'backtesting', 'market-watch.xyz'],
+🌐 https://articles.dailytickers.com/scanner/status/`,
+    tags: ['trading', 'scanner', 'automated trading', 'signals', 'portfolio', 'risk management', 'position sizing', 'market regime', 'VIX', 'backtesting', 'dailytickers.com'],
     lang: 'en',
   },
 };
@@ -333,7 +333,7 @@ async function uploadToYouTube(videoPath, meta, eduData, audioDurations, thumbna
         requestBody: {
           snippet: {
             title: meta.playlist,
-            description: `Formations trading — ${meta.lang === 'fr' ? 'Série éducative par market-watch.xyz' : 'Educational series by market-watch.xyz'}`,
+            description: `Formations trading — ${meta.lang === 'fr' ? 'Série éducative par dailytickers.com' : 'Educational series by dailytickers.com'}`,
           },
           status: { privacyStatus: 'public' },
         },

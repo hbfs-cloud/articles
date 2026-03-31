@@ -51,7 +51,7 @@ loadProfile();
 const BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID      = process.env.TELEGRAM_CHAT_ID;
 const ANTHROPIC_KEY= process.env.ANTHROPIC_API_KEY;
-const BASE_URL     = 'https://articles.market-watch.xyz';
+const BASE_URL     = 'https://articles.dailytickers.com';
 const DRY_RUN      = process.argv.includes('--dry-run');
 
 const TOPICS = {
@@ -126,7 +126,7 @@ function getMeta(html, prop) {
 function getTitle(html) {
   if (titleArg) return titleArg;
   const og = getMeta(html, 'og:title');
-  if (og) return og.replace(/\s*[–|]\s*Market Watch.*$/i, '').trim()
+  if (og) return og.replace(/\s*[–|]\s*DailyTickers.*$/i, '').trim()
                    .replace(/&mdash;/g,'—').replace(/&ndash;/g,'–').replace(/&amp;/g,'&');
   const t = html.match(/<title>([^<]+)/i);
   if (t) return t[1].replace(/\s*[–|—].*$/, '').trim();
@@ -213,7 +213,7 @@ Structure:
 3. Key risk to watch
 4. CTA link`,
 
-    default: `You are writing a TELEGRAM notification for a financial article on Market Watch. Make it engaging and informative — the kind of message that makes people want to read the full article.
+    default: `You are writing a TELEGRAM notification for a financial article on DailyTickers. Make it engaging and informative — the kind of message that makes people want to read the full article.
 
 Structure:
 1. Bold headline
@@ -248,7 +248,7 @@ RULES:
 - Maximum 35 lines total (phone-readable)
 - End with: 🔗 <a href="${url}">Read full ${meta.section.toLowerCase()} →</a>
 - DO NOT use markdown (no **, no ##, no ---)
-- DO NOT include "Market Watch" in the opening line (it's in the topic name already)`;
+- DO NOT include "DailyTickers" in the opening line (it's in the topic name already)`;
 
   try {
     const { default: Anthropic } = await import('@anthropic-ai/sdk');
@@ -290,7 +290,7 @@ function buildFallbackMessage(html, url) {
   let msg = `${meta.emoji} <b>${title}</b>\n`;
   msg += `<i>${dateStr}</i>\n\n`;
   if (desc) msg += `${desc.slice(0, 280)}${desc.length > 280 ? '…' : ''}\n\n`;
-  msg += `🔗 <a href="${url}">Read on Market Watch →</a>`;
+  msg += `🔗 <a href="${url}">Read on DailyTickers →</a>`;
   return msg;
 }
 
@@ -340,7 +340,7 @@ function send(text, topicId) {
   if (html) {
     msg = await buildAINotification(html, url);
   } else {
-    msg = `${meta.emoji} <b>New ${meta.section}</b>\n\nNew content published on Market Watch.\n🔗 <a href="${url}">${url}</a>`;
+    msg = `${meta.emoji} <b>New ${meta.section}</b>\n\nNew content published on DailyTickers.\n🔗 <a href="${url}">${url}</a>`;
   }
 
   if (DRY_RUN) {

@@ -43,7 +43,7 @@
 
 # 📋 SYNTHÈSE EXÉCUTIVE
 
-## Régime de Marché (MarketWatch MCP Data - 3 jan 2026 11:09 UTC)
+## Régime de Marché (DailyTickers MCP Data - 3 jan 2026 11:09 UTC)
 
 | Indicateur | Valeur | Interprétation |
 |------------|--------|----------------|
@@ -249,7 +249,7 @@
 
 ## 📊 Rotations Sectorielles
 
-### Analyse MarketWatch MCP
+### Analyse DailyTickers MCP
 
 **Stratégies Automatiques Pondérées (Early Risk-Off Regime):**
 
@@ -633,7 +633,7 @@ Le Venezuela représente le premier "Black Swan" de 2026, survenant alors que:
 
 | Source | Données | Date |
 |--------|---------|------|
-| **MarketWatch MCP** | Indices, Régime, Screener | 3 jan 2026 11:09 UTC |
+| **DailyTickers MCP** | Indices, Régime, Screener | 3 jan 2026 11:09 UTC |
 | **Yahoo Finance** | Indices US, Crypto | 3 jan 2026 |
 | **TradingEconomics** | Commodities, FX | 3 jan 2026 |
 | **CME FedWatch** | Probabilités Fed | 3 jan 2026 |
@@ -674,9 +674,9 @@ Le Venezuela représente le premier "Black Swan" de 2026, survenant alors que:
 *Disclaimer: Ce rapport est fourni à titre éducatif et informatif uniquement. Il ne constitue pas un conseil en investissement personnalisé. Les marchés financiers comportent des risques significatifs de perte en capital. Les performances passées ne préjugent pas des performances futures. Consultez un conseiller financier agréé avant toute décision d'investissement.*
 
 *Rapport généré le 3 janvier 2026 à 12:15 UTC*
-*Données MarketWatch MCP: 3 janvier 2026 11:09 UTC*
+*Données DailyTickers MCP: 3 janvier 2026 11:09 UTC*
 *Prochaine mise à jour: 10 janvier 2026*
 
 ---
 
-**Version:** 2.0 | **Classification:** Institutionnel Retail | **Auteur:** MarketWatch AI Assistant
+**Version:** 2.0 | **Classification:** Institutionnel Retail | **Auteur:** DailyTickers AI Assistant

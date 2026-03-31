@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Market Watch — A+ Picks Widget</title>
+<title>DailyTickers — A+ Picks Widget</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -181,7 +181,7 @@ body:has(.tape){overflow:hidden}
 
 <script>
 (function(){
-  var WATCHLIST_URL = 'https://articles.market-watch.xyz/mcp/watchlist.json';
+  var WATCHLIST_URL = 'https://articles.dailytickers.com/mcp/watchlist.json';
   var YAHOO_PROXY = 'https://api.allorigins.win/get?url=';
   var YAHOO_PROXY_FALLBACK = 'https://corsproxy.io/?url=';
   var BINANCE_API = 'https://api.binance.com/api/v3/ticker/price';
@@ -381,7 +381,7 @@ body:has(.tape){overflow:hidden}
     var icons = { 'entry-zone':'\ud83d\udfe1', 'near-stop':'\ud83d\udd34', 'stopped':'\u26d4', 'tp1-hit':'\u2705', 'tp2-hit':'\ud83c\udfc6' };
     var body = icons[st.status]+' '+pick.ticker+' — '+st.label+' at $'+fmt(lp.price);
     if (Notification.permission === 'granted') {
-      new Notification('Market Watch Alert', { body: body, icon: 'https://articles.market-watch.xyz/logo.svg' });
+      new Notification('DailyTickers Alert', { body: body, icon: 'https://articles.dailytickers.com/logo.svg' });
     }
   }
 
@@ -408,7 +408,7 @@ body:has(.tape){overflow:hidden}
   function copyForChat(data) {
     var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
     var lines = [];
-    lines.push('\ud83c\udfaf *Market Watch A+ Picks*');
+    lines.push('\ud83c\udfaf *DailyTickers A+ Picks*');
     lines.push('\ud83d\udcc5 ' + new Date(data.updated).toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'}));
     lines.push('');
     lines.push('\ud83c\udf21\ufe0f Regime: *' + data.regime + '* | VIX: ' + data.vix + ' | SPX: ' + (data.spx||'').toLocaleString() + ' | F&G: ' + data.fear_greed + '/100');
@@ -423,8 +423,8 @@ body:has(.tape){overflow:hidden}
       if (p.catalyst) lines.push('   \u26a1 ' + p.catalyst);
       lines.push('');
     });
-    lines.push('\ud83d\udd17 Full report: ' + (data.url || 'https://articles.market-watch.xyz/scanner/'));
-    lines.push('\u00a9 Market Watch \u2014 articles.market-watch.xyz');
+    lines.push('\ud83d\udd17 Full report: ' + (data.url || 'https://articles.dailytickers.com/scanner/'));
+    lines.push('\u00a9 DailyTickers \u2014 articles.dailytickers.com');
     navigator.clipboard.writeText(lines.join('\n')).then(function(){ toast('Copied! Paste in Telegram / Discord'); });
   }
 
@@ -443,8 +443,8 @@ body:has(.tape){overflow:hidden}
     var h = '<div class="tape ' + themeClass + '"';
     if (bg) h += ' style="background:#' + bg + '"';
     h += '>';
-    h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="tape-brand">';
-    h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW">';
+    h += '<a href="https://articles.dailytickers.com/" target="_blank" class="tape-brand">';
+    h += '<img src="https://articles.dailytickers.com/logo.svg" alt="MW">';
     h += '<span>MARKET WATCH</span></a>';
     h += '<div class="tape-regime">';
     h += '<div class="tape-regime-dot" style="background:' + regimeColor(data.regime) + '"></div>';
@@ -470,7 +470,7 @@ body:has(.tape){overflow:hidden}
     h += '<div class="tape-actions">';
     h += '<button class="tape-btn" title="Copy for Telegram/Discord" onclick="window._copyChat()"><i class="fa-solid fa-copy"></i></button>';
     h += '<button class="tape-btn" title="Embed" onclick="window._openEmbed()"><i class="fa-solid fa-code"></i></button>';
-    h += '<a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank" class="tape-btn" title="Full Report"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
+    h += '<a href="' + (data.url || 'https://articles.dailytickers.com/scanner/') + '" target="_blank" class="tape-btn" title="Full Report"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>';
     h += '</div></div>';
     root.innerHTML = h;
     var scrollEl = root.querySelector('.tape-scroll');
@@ -483,8 +483,8 @@ body:has(.tape){overflow:hidden}
     var sorted = data.picks.slice().sort(function(a,b){ return b.score - a.score; });
     var h = '<div class="vlist">';
     h += '<div class="vlist-header">';
-    h += '<a href="https://articles.market-watch.xyz/" target="_blank" class="vlist-brand">';
-    h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW"><span>A+ PICKS</span></a>';
+    h += '<a href="https://articles.dailytickers.com/" target="_blank" class="vlist-brand">';
+    h += '<img src="https://articles.dailytickers.com/logo.svg" alt="MW"><span>A+ PICKS</span></a>';
     h += '<div class="vlist-meta">';
     h += '<span class="vlist-regime" style="background:' + regimeColor(data.regime) + '22;color:' + regimeColor(data.regime) + '">' + (data.regime || '?') + '</span>';
     h += '<div class="vlist-actions">';
@@ -524,9 +524,9 @@ body:has(.tape){overflow:hidden}
       h += '</a>';
     });
     h += '</div>';
-    h += '<div class="vlist-footer"><a href="' + (data.url || 'https://articles.market-watch.xyz/scanner/') + '" target="_blank"><i class="fa-solid fa-chart-line"></i> Full Scanner Report</a>';
+    h += '<div class="vlist-footer"><a href="' + (data.url || 'https://articles.dailytickers.com/scanner/') + '" target="_blank"><i class="fa-solid fa-chart-line"></i> Full Scanner Report</a>';
     if (showPrice) h += ' &nbsp;\u00b7&nbsp; <span style="font-size:.42rem;color:#94a3b8"><i class="fa-solid fa-bolt"></i> Live prices</span>';
-    h += ' &nbsp;\u00b7&nbsp; <span style="font-size:.48rem;color:#94a3b8">\u00a9 Market Watch</span></div>';
+    h += ' &nbsp;\u00b7&nbsp; <span style="font-size:.48rem;color:#94a3b8">\u00a9 DailyTickers</span></div>';
     h += '</div>';
     root.innerHTML = h;
   }
@@ -535,15 +535,15 @@ body:has(.tape){overflow:hidden}
   function renderEmbedPage(data) {
     document.body.style.overflow = 'auto';
     var root = document.getElementById('root');
-    var base = 'https://articles.market-watch.xyz/widget/';
-    var tapeCodeDark  = '<iframe src="'+base+'?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
-    var tapeCodeLight = '<iframe src="'+base+'?mode=tape&theme=light" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
-    var verticalCode  = '<iframe src="'+base+'?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
+    var base = 'https://articles.dailytickers.com/widget/';
+    var tapeCodeDark  = '<iframe src="'+base+'?mode=tape&theme=dark" style="width:100%;height:38px;border:none;" title="DailyTickers A+ Picks"></iframe>';
+    var tapeCodeLight = '<iframe src="'+base+'?mode=tape&theme=light" style="width:100%;height:38px;border:none;" title="DailyTickers A+ Picks"></iframe>';
+    var verticalCode  = '<iframe src="'+base+'?mode=vertical" style="width:380px;height:600px;border:none;border-radius:12px;" title="DailyTickers A+ Picks"></iframe>';
 
     var h = '<div class="embed-page">';
     h += '<div class="embed-box">';
     h += '<h2><i class="fa-solid fa-code" style="color:#6366f1"></i> Embed A+ Picks Widget</h2>';
-    h += '<p class="embed-sub">Add the Market Watch A+ Picks widget to your website. Live prices update every 30s (stocks) / 15s (crypto).</p>';
+    h += '<p class="embed-sub">Add the DailyTickers A+ Picks widget to your website. Live prices update every 30s (stocks) / 15s (crypto).</p>';
 
     h += '<div class="embed-options">';
     h += '<div class="embed-opt active" id="optTape" onclick="selectLayout(\'tape\')">';
@@ -584,8 +584,8 @@ body:has(.tape){overflow:hidden}
     h += '<button class="embed-copy-btn" onclick="copyEmbedCode()"><i class="fa-solid fa-copy"></i> Copy Code</button>';
     h += '</div>';
 
-    h += '<div class="embed-brand"><a href="https://articles.market-watch.xyz/" target="_blank">';
-    h += '<img src="https://articles.market-watch.xyz/logo.svg" alt="MW"> Market Watch</a></div>';
+    h += '<div class="embed-brand"><a href="https://articles.dailytickers.com/" target="_blank">';
+    h += '<img src="https://articles.dailytickers.com/logo.svg" alt="MW"> DailyTickers</a></div>';
     h += '</div></div>';
     root.innerHTML = h;
 
@@ -618,11 +618,11 @@ body:has(.tape){overflow:hidden}
       if (currentLayout === 'tape') {
         previewSrc = '/widget/?mode=tape&theme='+currentTheme+extraParams;
         previewStyle = 'width:100%;height:38px;border:none;';
-        code = '<iframe src="'+base+'?mode=tape&theme='+currentTheme+extraParams+'" style="width:100%;height:38px;border:none;" title="Market Watch A+ Picks"></iframe>';
+        code = '<iframe src="'+base+'?mode=tape&theme='+currentTheme+extraParams+'" style="width:100%;height:38px;border:none;" title="DailyTickers A+ Picks"></iframe>';
       } else {
         previewSrc = '/widget/?mode=vertical'+extraParams;
         previewStyle = 'width:100%;height:400px;border:none;border-radius:8px;';
-        code = '<iframe src="'+base+'?mode=vertical'+extraParams+'" style="width:380px;height:600px;border:none;border-radius:12px;" title="Market Watch A+ Picks"></iframe>';
+        code = '<iframe src="'+base+'?mode=vertical'+extraParams+'" style="width:380px;height:600px;border:none;border-radius:12px;" title="DailyTickers A+ Picks"></iframe>';
       }
       document.getElementById('embedCode').value = code;
       document.getElementById('previewFrame').src = previewSrc;

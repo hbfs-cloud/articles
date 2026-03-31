@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — Reddit Content Script
+ * DailyTickers MCP — Reddit Content Script
  *
  * Injected on reddit.com/r/wallstreetbets and reddit.com/r/stocks.
  * - Scrapes post titles mentioning watchlist tickers

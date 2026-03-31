@@ -562,7 +562,7 @@ function uploadToYouTube(videoPath, title, description, modeKey) {
     `c=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json'))['web']`,
     `creds=Credentials(t['access_token'],refresh_token=t['refresh_token'],token_uri=c['token_uri'],client_id=c['client_id'],client_secret=c['client_secret'])`,
     `yt=build('youtube','v3',credentials=creds)`,
-    `meta={'title':'${safeTitle}','description':'${safeDesc}','tags':['Market Watch','portfolio','${modeKey}','trading'],'categoryId':'22'}`,
+    `meta={'title':'${safeTitle}','description':'${safeDesc}','tags':['DailyTickers','portfolio','${modeKey}','trading'],'categoryId':'22'}`,
     `media=MediaFileUpload('/tmp/${tmpId}.mp4',mimetype='video/mp4',resumable=True)`,
     `r=yt.videos().insert(part='snippet,status',body={'snippet':meta,'status':{'privacyStatus':'public'}},media_body=media).execute()`,
     `vid=r['id']`,
@@ -605,7 +605,7 @@ function sendTelegramAudio(audioPath, caption, topicId, title) {
     '-F', `message_thread_id=${topicId}`,
     '-F', `audio=@${audioPath}`,
     '-F', `title=${(title || 'Portfolio Update').replace(/['"]/g,'').slice(0,60)}`,
-    '-F', 'performer=Market Watch',
+    '-F', 'performer=DailyTickers',
     '-F', `caption=<${capFile}`,
     '-F', 'parse_mode=HTML',
   ];
@@ -789,7 +789,7 @@ async function main() {
       // Upload to YouTube
       if (modeVideoPath) {
         const modeLabel = key === 'dynamic' ? '🔥 Dynamic' : key === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
-        const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | Market Watch`;
+        const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | DailyTickers`;
         const ytDesc = `${modeLabel} Portfolio Update\n\n` +
           `📈 Return: ${(modePayload.metrics.ret >= 0 ? '+' : '')}${modePayload.metrics.ret}%\n` +
           `📉 Max DD: ${modePayload.metrics.dd}%\n` +

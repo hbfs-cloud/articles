@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Market Watch Video Pipeline (2026 Edition)
+DailyTickers Video Pipeline (2026 Edition)
 Automated generation of scrolling video, audio, thumbnail, and metadata.
 
 Usage:
@@ -150,7 +150,7 @@ def generate_metadata(script: dict, output_dir: Path, html_path: Path):
     meta_path = output_dir / "youtube_metadata.md"
     title = script['title']
     desc = f"""
-{title} | Market Watch
+{title} | DailyTickers
 
 Dans cette vidéo, nous explorons : {script['title']}.
 Une analyse détaillée pour les investisseurs {script.get('level', 'experts')}.
@@ -169,10 +169,10 @@ Chapitres :
              topic = scene['narration'].split('.')[0]
              desc += f"- {topic}\n"
     
-    desc += "\n\nRetrouvez l'article complet sur : https://market-watch.xyz"
+    desc += "\n\nRetrouvez l'article complet sur : https://dailytickers.com"
     
     with open(meta_path, "w") as f:
-        f.write(f"# TITRE\n{title}\n\n# DESCRIPTION\n{desc}\n\n# TAGS\nBourse, Finance, Investissement, Market Watch")
+        f.write(f"# TITRE\n{title}\n\n# DESCRIPTION\n{desc}\n\n# TAGS\nBourse, Finance, Investissement, DailyTickers")
     
     print(f"  [Done] Metadata saved to {meta_path}")
 
@@ -180,7 +180,7 @@ Chapitres :
 # Main Orchestrator
 # ---------------------------------------------------------------------------
 def main():
-    parser = argparse.ArgumentParser(description="Generate Market Watch Video")
+    parser = argparse.ArgumentParser(description="Generate DailyTickers Video")
     parser.add_argument("--slug", required=True, help="Article slug (e.g. se-remettre-dune-perte)")
     parser.add_argument("--lang", default="fr", help="Language (fr/en)")
     parser.add_argument("--level", default="expert", help="Level (beginner/expert)")

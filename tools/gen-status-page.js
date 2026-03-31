@@ -130,7 +130,14 @@ function main() {
     });
     // Stats computed from CLOSED trades only (non-premature) — matches backfill convention
     const closedTrades = trades.filter(t => !t._premature);
-    modes[id] = { cfg, trades, m: computeMetrics(closedTrades, cfg.portfolioSize), ec: equityDV(computeMetrics(closedTrades, cfg.portfolioSize).equityCurve) };
+    const m = computeMetrics(closedTrades, cfg.portfolioSize);
+    // Override DD with daily MtM DD from sweep.js if available
+    const frozenKey = `frozen_${id}`;
+    if (results[frozenKey]) {
+      m.dd = results[frozenKey].maxDD;
+      m.ret = results[frozenKey].returnTotal;
+    }
+    modes[id] = { cfg, trades, m, ec: equityDV(m.equityCurve) };
   }
   // Default mode for API/telegram = balanced
   const defaultMode = modes.balanced || modes[Object.keys(modes)[0]];
@@ -557,7 +564,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Live &mdash; Market Watch</title>
+  <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="stylesheet" href="/assets/report.css">
@@ -788,7 +795,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
 <nav class="brand-bar">
   <div class="brand-bar-inner">
-    <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a>
+    <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a>
     <div class="brand-nav"><a href="/?tab=weekly">Weekly</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Series</a></div>
     <div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div>
   </div>
@@ -848,7 +855,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 
 <footer class="article-footer">
-  &copy; 2026 Market Watch &middot;
+  &copy; 2026 DailyTickers &middot;
   <a href="/" title="Home"><i class="fas fa-house"></i></a>
   &nbsp;&middot;&nbsp;
   <a href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener" style="color:#229ED9"><i class="fab fa-telegram"></i> Telegram</a>

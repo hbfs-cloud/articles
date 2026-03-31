@@ -1,5 +1,5 @@
 /**
- * sidebar.js — Global sidebar navigation for Market Watch articles.
+ * sidebar.js — Global sidebar navigation for DailyTickers articles.
  * Include via <script src="/assets/sidebar.js"></script> before </body>.
  * Loads /assets/sidebar.css and injects a sidebar identical to the landing page.
  */
@@ -110,7 +110,7 @@
       '<aside class="sidebar open" id="sidebar">',
       '  <a href="/" class="sidebar-brand">',
       '    <img src="/logo.svg" alt="MW" width="24" height="24">',
-      '    Market Watch',
+      '    DailyTickers',
       '  </a>',
       '  <div class="sidebar-top">',
       '    <a href="/?search=1" class="sidebar-search-btn"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="search.trigger">' + t('search.trigger') + '</span><kbd>\u2318K</kbd></a>',

@@ -59,8 +59,8 @@ const YOUTUBE_META = {
 💡 Cas concrets : GameStop, ArcelorMittal, stratégie Barbell de Taleb
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['trading', 'bourse', 'investissement', 'débutant', 'formation', 'stock picking', 'ETF', 'DCA', 'portefeuille', 'VIX', 'options', 'risk management', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['trading', 'bourse', 'investissement', 'débutant', 'formation', 'stock picking', 'ETF', 'DCA', 'portefeuille', 'VIX', 'options', 'risk management', 'dailytickers.com'],
     lang: 'fr',
   },
   'ai-singularity-fr': {
@@ -70,8 +70,8 @@ const YOUTUBE_META = {
 15 chapitres couvrant : fondements de l'IA, trading algorithmique, LLMs en finance, risques systémiques, et l'avenir.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['AI', 'intelligence artificielle', 'finance', 'trading algorithmique', 'LLM', 'machine learning', 'singularity', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['AI', 'intelligence artificielle', 'finance', 'trading algorithmique', 'LLM', 'machine learning', 'singularity', 'dailytickers.com'],
     lang: 'fr',
   },
   'ai-singularity-en': {
@@ -81,8 +81,8 @@ const YOUTUBE_META = {
 15 chapters covering: AI foundations, algorithmic trading, LLMs in finance, systemic risks, and the future.
 
 ⚠️ This is not financial advice.
-🌐 articles.market-watch.xyz`,
-    tags: ['AI', 'artificial intelligence', 'finance', 'algorithmic trading', 'LLM', 'machine learning', 'singularity', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['AI', 'artificial intelligence', 'finance', 'algorithmic trading', 'LLM', 'machine learning', 'singularity', 'dailytickers.com'],
     lang: 'en',
   },
   'swing-trading': {
@@ -92,8 +92,8 @@ const YOUTUBE_META = {
 6 chapitres : identification des setups, timing d'entrée, gestion de position, stop-loss dynamiques, et routine quotidienne.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['swing trading', 'trading', 'bourse', 'setup', 'stop-loss', 'routine trading', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['swing trading', 'trading', 'bourse', 'setup', 'stop-loss', 'routine trading', 'dailytickers.com'],
     lang: 'fr',
   },
   'maitrise-expert': {
@@ -110,8 +110,8 @@ const YOUTUBE_META = {
 • Stratégies options avancées : straddles, strangles, iron condors sur le VIX
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['VIX', 'volatilité', 'options', 'trading avancé', 'risk management', 'expert', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['VIX', 'volatilité', 'options', 'trading avancé', 'risk management', 'expert', 'dailytickers.com'],
     lang: 'fr',
   },
   'algo-million': {
@@ -121,8 +121,8 @@ const YOUTUBE_META = {
 12 chapitres : infrastructure, données, stratégies, backtesting, exécution, scaling.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['algo trading', 'trading algorithmique', 'backtesting', 'quantitative', 'python', 'finance', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['algo trading', 'trading algorithmique', 'backtesting', 'quantitative', 'python', 'finance', 'dailytickers.com'],
     lang: 'fr',
   },
   'bourses-mena': {
@@ -132,8 +132,8 @@ const YOUTUBE_META = {
 6 chapitres : panorama, Arabie Saoudite, EAU, Égypte, Maroc/Tunisie, crypto & fintech.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz`,
-    tags: ['MENA', 'Moyen-Orient', 'bourse', 'Arabie Saoudite', 'EAU', 'Dubai', 'investissement', 'market-watch.xyz'],
+🌐 articles.dailytickers.com`,
+    tags: ['MENA', 'Moyen-Orient', 'bourse', 'Arabie Saoudite', 'EAU', 'Dubai', 'investissement', 'dailytickers.com'],
     lang: 'fr',
   },
   // ── Article-based videos ──
@@ -143,8 +143,8 @@ const YOUTUBE_META = {
     description: `🤖 Guide expert de Claude Code : architecture, MCP servers, hooks, skills, subagents, worktrees, budget optimization.
 Tout ce qu'il faut savoir pour maîtriser l'outil de coding AI le plus avancé.
 
-🌐 articles.market-watch.xyz/tech/claude-code-avance/`,
-    tags: ['Claude Code', 'AI', 'coding', 'MCP', 'hooks', 'subagents', 'tech', 'market-watch.xyz'],
+🌐 articles.dailytickers.com/tech/claude-code-avance/`,
+    tags: ['Claude Code', 'AI', 'coding', 'MCP', 'hooks', 'subagents', 'tech', 'dailytickers.com'],
     lang: 'fr',
   },
   'signal-vs-noise': {
@@ -153,8 +153,8 @@ Tout ce qu'il faut savoir pour maîtriser l'outil de coding AI le plus avancé.
     description: `📡 Comment distinguer le signal du bruit dans un monde saturé d'information.
 5 filtres pour identifier ce qui compte vraiment : Lindy, douleur, irréversibilité, et plus.
 
-🌐 articles.market-watch.xyz/tech/signal-vs-noise/`,
-    tags: ['signal', 'bruit', 'information', 'AI', 'éducation', 'tech', 'market-watch.xyz'],
+🌐 articles.dailytickers.com/tech/signal-vs-noise/`,
+    tags: ['signal', 'bruit', 'information', 'AI', 'éducation', 'tech', 'dailytickers.com'],
     lang: 'fr',
   },
   'orbs-analysis': {
@@ -164,8 +164,8 @@ Tout ce qu'il faut savoir pour maîtriser l'outil de coding AI le plus avancé.
 Crypto mining + AI + speculative play.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz/analyses/ORBS/`,
-    tags: ['ORBS', 'analyse', 'crypto', 'AI', 'speculative', 'trade-idea', 'market-watch.xyz'],
+🌐 articles.dailytickers.com/analyses/ORBS/`,
+    tags: ['ORBS', 'analyse', 'crypto', 'AI', 'speculative', 'trade-idea', 'dailytickers.com'],
     lang: 'fr',
   },
   'daily-20260319': {
@@ -175,8 +175,8 @@ Crypto mining + AI + speculative play.
 Analyse complète de la journée avec trade ideas et formation.
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 articles.market-watch.xyz/daily/20260319/`,
-    tags: ['daily', 'marché', 'briefing', 'trading', 'analyse', 'market-watch.xyz'],
+🌐 articles.dailytickers.com/daily/20260319/`,
+    tags: ['daily', 'marché', 'briefing', 'trading', 'analyse', 'dailytickers.com'],
     lang: 'fr',
   },
   'psx-analysis': {
@@ -192,8 +192,8 @@ Analyse complète de la journée avec trade ideas et formation.
 • Trade Idea: Entry $175-178 / Stop $165 / TP1 $190 / TP2 $200
 
 ⚠️ This is not financial advice.
-🌐 articles.market-watch.xyz/analyses/PSX/`,
-    tags: ['PSX', 'Phillips 66', 'stock analysis', 'energy', 'refining', 'midstream', 'dividend', 'trade-idea', 'market-watch.xyz'],
+🌐 articles.dailytickers.com/analyses/PSX/`,
+    tags: ['PSX', 'Phillips 66', 'stock analysis', 'energy', 'refining', 'midstream', 'dividend', 'trade-idea', 'dailytickers.com'],
     lang: 'en',
   },
 };
@@ -365,7 +365,7 @@ async function uploadToYouTube(videoPath, thumbPath, meta) {
         requestBody: {
           snippet: {
             title: meta.playlist,
-            description: `Formations et tutoriels trading — ${meta.lang === 'fr' ? 'Série éducative par market-watch.xyz' : 'Educational series by market-watch.xyz'}`,
+            description: `Formations et tutoriels trading — ${meta.lang === 'fr' ? 'Série éducative par dailytickers.com' : 'Educational series by dailytickers.com'}`,
           },
           status: { privacyStatus: 'public' },
         },

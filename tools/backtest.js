@@ -4,7 +4,7 @@
 /**
  * tools/backtest.js
  * 
- * Corrected backtest engine for Market Watch Scanner:
+ * Corrected backtest engine for DailyTickers Scanner:
  * 1. Fetches historical OHLCV from Yahoo Finance
  * 2. Simulates trades entering at Open(T+1)
  * 3. Uses R-multiples for robust stop/target calculation relative to actual entry

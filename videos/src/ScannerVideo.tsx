@@ -268,7 +268,7 @@ const OutroSlide: React.FC<{regime: string; setupCount: number}> = ({regime, set
       </Motion>
       <Motion type="fade" delay={50}>
         <Text style={{color: '#50b4ee', fontSize: '28px'}}>
-          articles.market-watch.xyz
+          articles.dailytickers.com
         </Text>
       </Motion>
     </div>

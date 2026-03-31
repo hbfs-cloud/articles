@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Market Watch MCP Setup Wizard
+ * DailyTickers MCP Setup Wizard
  * Interactive setup for config.yaml
  */
 
@@ -18,7 +18,7 @@ const rl = createInterface({ input: process.stdin, output: process.stdout });
 const ask = (q) => new Promise(r => rl.question(q, r));
 
 async function main() {
-  console.log('\n  Market Watch MCP — Setup Wizard\n');
+  console.log('\n  DailyTickers MCP — Setup Wizard\n');
   console.log('  This will create your config.yaml with your preferences.\n');
 
   if (existsSync(configPath)) {
@@ -77,7 +77,7 @@ async function main() {
   console.log('    1. Start the MCP server:  node index.js');
   console.log('    2. Start the dashboard:   node dashboard.js');
   console.log('    3. Add to Claude Code:');
-  console.log(`       "mcpServers": { "market-watch": { "command": "node", "args": ["${resolve(__dirname, 'index.js')}"] } }`);
+  console.log(`       "mcpServers": { "dailytickers": { "command": "node", "args": ["${resolve(__dirname, 'index.js')}"] } }`);
   console.log('    4. Install the browser extension from mcp/extension/');
   console.log('');
 

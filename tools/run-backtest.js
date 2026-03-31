@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * Backtest complet du scanner Market Watch depuis D0 (2026-02-15)
+ * Backtest complet du scanner DailyTickers depuis D0 (2026-02-15)
  * 
  * Flux:
  * 1. Parse tous les scans HTML → setups
@@ -798,7 +798,7 @@ function computeMaxDrawdown(dailyHistory) {
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('=== Backtest complet scanner Market Watch ===\n');
+  console.log('=== Backtest complet scanner DailyTickers ===\n');
   
   // 1. Parse all scans
   console.log('Step 1: Parsing scan HTML files...');

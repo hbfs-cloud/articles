@@ -293,7 +293,7 @@ async function notifyDiscord(alert) {
           { name: 'Change', value: `${alert.changePct?.toFixed(2)}%`, inline: true }
         ],
         timestamp: alert.triggeredAt,
-        footer: { text: 'Market Watch MCP' }
+        footer: { text: 'DailyTickers MCP' }
       }]
     })
   });

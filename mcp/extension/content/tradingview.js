@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — TradingView Content Script
+ * DailyTickers MCP — TradingView Content Script
  *
  * Injected on tradingview.com pages.
  * - Detects current ticker from URL and page elements
@@ -154,7 +154,7 @@
         if (btn) { btn.innerHTML = '&#10003;'; btn.disabled = true; btn.style.opacity = '0.6'; }
         return;
       }
-      window.open(`https://articles.market-watch.xyz/analyses/${currentTicker}/`, '_blank');
+      window.open(`https://articles.dailytickers.com/analyses/${currentTicker}/`, '_blank');
     });
 
     // Load levels

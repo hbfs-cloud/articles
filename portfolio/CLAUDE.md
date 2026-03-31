@@ -1,4 +1,4 @@
-# Market Watch - Portfolio Instructions
+# DailyTickers - Portfolio Instructions
 
 ## 6. PORTFOLIO (Stratégies Systématiques)
 

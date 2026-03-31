@@ -1,6 +1,6 @@
 /**
  * Watchlist sync + monitoring
- * Downloads scanner picks from Market Watch, monitors prices in realtime
+ * Downloads scanner picks from DailyTickers, monitors prices in realtime
  */
 
 import * as yahoo from './yahoo.js';
@@ -14,7 +14,7 @@ let monitorInterval = null;
 // SYNC FROM MARKET WATCH
 // ══════════════════════════════════════
 
-export async function sync(url = 'https://articles.market-watch.xyz/mcp/watchlist.json') {
+export async function sync(url = 'https://articles.dailytickers.com/mcp/watchlist.json') {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Watchlist sync failed: ${res.status}`);
   currentWatchlist = await res.json();

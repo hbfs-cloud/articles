@@ -1,4 +1,4 @@
-# Market Watch - Tech Instructions
+# DailyTickers - Tech Instructions
 
 ## Articles Techniques
 
@@ -30,7 +30,7 @@ Guides techniques approfondis sur le trading, la finance, l'IA, les outils, et l
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo">
       <img src="/logo.svg" alt="" width="36" height="36">
-      <span class="brand-title">MarketWatch</span>
+      <span class="brand-title">DailyTickers</span>
     </a>
     <div class="brand-actions">
       <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
@@ -73,7 +73,7 @@ Le nombre d'items FAB correspond aux sections principales du guide (6-10 items t
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
   Ceci n'est pas un conseil financier.
   <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
 </footer>

@@ -56,7 +56,7 @@ export const Root: React.FC = () => {
   return (
     <>
       <Composition
-        id="MarketWatchScanner"
+        id="DailyTickersScanner"
         component={ScannerVideo as any}
         durationInFrames={Math.max(scannerDuration, 30)}
         fps={scannerFps}

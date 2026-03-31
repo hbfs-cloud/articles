@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — Yahoo Finance Content Script
+ * DailyTickers MCP — Yahoo Finance Content Script
  *
  * Injected on finance.yahoo.com pages.
  * - Detects current ticker from URL
@@ -179,7 +179,7 @@
         overlayBadge.classList.add('mw-hidden');
         return;
       }
-      window.open(`https://articles.market-watch.xyz/analyses/${currentTicker}/`, '_blank');
+      window.open(`https://articles.dailytickers.com/analyses/${currentTicker}/`, '_blank');
     });
 
     // Load watchlist data to populate levels

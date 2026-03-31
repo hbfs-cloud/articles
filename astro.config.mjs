@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 
 export default defineConfig({
-  site: 'https://articles.market-watch.xyz',
+  site: 'https://articles.dailytickers.com',
   integrations: [mdx()],
   output: 'static',
   build: {

@@ -1,4 +1,4 @@
-# Market Watch - Weekly Instructions
+# DailyTickers - Weekly Instructions
 
 ## Article de Référence
 
@@ -55,7 +55,7 @@ Rapport de niveau institutionnel à destination de retail qui couvre tous les gr
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo">
       <img src="/logo.svg" alt="" width="36" height="36">
-      <span class="brand-title">MarketWatch</span>
+      <span class="brand-title">DailyTickers</span>
     </a>
     <div class="brand-nav">
       <a href="/?tab=weekly">Hebdo</a>
@@ -102,7 +102,7 @@ Le weekly utilise le FAB flottant comme tous les autres types d'articles. 6 item
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  &copy; 2026 DailyTickers. Data via DailyTickers Gateway.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>
@@ -224,7 +224,7 @@ Voir section Polymarket dans le CLAUDE.md racine. Intégrer dans : Géopolitique
 ---
 
 ### Directives
-- Utiliser des données à jour via le MCP Gateway MarketWatch
+- Utiliser des données à jour via le MCP Gateway DailyTickers
 - Ne pas se focaliser uniquement sur le dernier prix mais l'évolution (barres 15m/daily)
 - Les sujets de la semaine dernière ne sont pas forcément les plus importants à venir: être proactif
 - Chaque section doit contenir des phrases explicatives et didactiques

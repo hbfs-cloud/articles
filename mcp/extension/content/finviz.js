@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — Finviz Content Script
+ * DailyTickers MCP — Finviz Content Script
  *
  * Injected on finviz.com pages.
  * - Scrapes screener results from screener pages
@@ -281,7 +281,7 @@
         badge.classList.add('mw-hidden');
         return;
       }
-      window.open(`https://articles.market-watch.xyz/analyses/${currentTicker}/`, '_blank');
+      window.open(`https://articles.dailytickers.com/analyses/${currentTicker}/`, '_blank');
     });
 
     // Load levels from storage

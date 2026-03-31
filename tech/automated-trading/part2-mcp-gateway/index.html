@@ -4,12 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-Time Market Intelligence — Mastering the MCP Gateway | Automated Trading 2/6 | Market Watch</title>
-    <meta name="description" content="Part 2/6 — Deep dive into the MarketWatch MCP Gateway: 58 data types, custom screening DSL, auto-adaptive regime detection, and real-time market data mastery.">
+    <title>Real-Time Market Intelligence — Mastering the MCP Gateway | Automated Trading 2/6 | DailyTickers</title>
+    <meta name="description" content="Part 2/6 — Deep dive into the DailyTickers MCP Gateway: 58 data types, custom screening DSL, auto-adaptive regime detection, and real-time market data mastery.">
     <meta property="og:title" content="Real-Time Market Intelligence — Mastering the MCP Gateway">
     <meta property="og:description" content="58 data types, custom screening DSL, and auto-adaptive regime detection — your market data superpower.">
     <meta property="og:image" content="/logo.svg">
-    <meta property="og:url" content="https://articles.market-watch.xyz/tech/automated-trading/part2-mcp-gateway/">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/automated-trading/part2-mcp-gateway/">
     <meta property="og:type" content="article">
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
     <link rel="icon" href="/favicon.ico">
@@ -63,7 +63,7 @@
     <div class="brand-bar-inner">
       <a href="/" class="brand-logo">
         <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
+        <span class="brand-title">DailyTickers</span>
       </a>
       <div class="brand-nav">
         <a href="/?tab=weekly">Hebdo</a>
@@ -137,24 +137,24 @@
             <p>The architecture follows a client-server model:</p>
             <ol>
                 <li><strong>MCP Client</strong> (Claude Code) discovers available tools by querying the MCP server</li>
-                <li><strong>MCP Server</strong> (MarketWatch Gateway) exposes a catalog of tools with JSON Schema definitions</li>
+                <li><strong>MCP Server</strong> (DailyTickers Gateway) exposes a catalog of tools with JSON Schema definitions</li>
                 <li>Claude Code calls tools by name with typed parameters</li>
                 <li>The server executes the request and returns structured results</li>
                 <li>Claude Code processes the results and can chain additional tool calls</li>
             </ol>
 
             <h3>Configuration</h3>
-            <p>MCP servers are declared in your Claude Code settings. The MarketWatch Gateway connects via stdio transport:</p>
+            <p>MCP servers are declared in your Claude Code settings. The DailyTickers Gateway connects via stdio transport:</p>
 
             <div class="code-label">~/.claude/settings.json</div>
 <pre><code>{
   "mcpServers": {
-    "market-watch": {
+    "dailytickers": {
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-market-watch"],
+      "args": ["-y", "@anthropic/mcp-dailytickers"],
       "env": {
         "MW_API_KEY": "your-api-key",
-        "MW_ENDPOINT": "https://gateway.market-watch.xyz"
+        "MW_ENDPOINT": "https://gateway.dailytickers.com"
       }
     },
     "market-alerts": {
@@ -171,7 +171,7 @@
 
             <div class="code-label">Shell</div>
 <pre><code>$ claude --mcp-debug
-MCP Server: market-watch (connected)
+MCP Server: dailytickers (connected)
   Tools: 15 available
   - GetMarketOverview
   - QueryData
@@ -235,9 +235,9 @@ MCP Server: market-alerts (connected)
 
         <!-- Section 2: Gateway Overview -->
         <div id="gateway-overview" class="content-card">
-            <h2><i class="fa-solid fa-server" style="color:#3b82f6"></i> The MarketWatch Gateway</h2>
+            <h2><i class="fa-solid fa-server" style="color:#3b82f6"></i> The DailyTickers Gateway</h2>
 
-            <p>The MarketWatch MCP Gateway is a comprehensive financial data service exposing 15 tools. Here's the complete catalog with use cases:</p>
+            <p>The DailyTickers MCP Gateway is a comprehensive financial data service exposing 15 tools. Here's the complete catalog with use cases:</p>
 
             <div class="metric-grid">
                 <div class="metric-card"><div class="metric-value">15</div><div class="metric-label">MCP Tools</div></div>
@@ -301,7 +301,7 @@ MCP Server: market-alerts (connected)
 
             <div class="tool-card">
                 <h4><i class="fa-solid fa-code"></i> RunScreener <span class="tool-tag">CUSTOM DSL</span></h4>
-                <p>Run custom screening queries using the MarketWatch DSL. Full control over conditions, universe, and sorting. This is how you build strategy-specific screens.</p>
+                <p>Run custom screening queries using the DailyTickers DSL. Full control over conditions, universe, and sorting. This is how you build strategy-specific screens.</p>
             </div>
 
             <h3>Options Tools</h3>
@@ -1032,7 +1032,7 @@ When calling MCP tools, follow this error handling pattern:
     </div></div>
 
     <footer class="article-footer">
-        &copy; 2026 Market Watch. Data via MarketWatch Gateway. Not financial advice.
+        &copy; 2026 DailyTickers. Data via DailyTickers Gateway. Not financial advice.
         <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
     </footer>
 

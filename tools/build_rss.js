@@ -7,8 +7,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const BASE_URL = 'https://articles.market-watch.xyz';
-const FEED_TITLE = 'Market Watch — Financial Intelligence';
+const BASE_URL = 'https://articles.dailytickers.com';
+const FEED_TITLE = 'DailyTickers — Financial Intelligence';
 const FEED_DESC = 'Daily briefings, weekly reports, ticker analyses, and scanner picks. Institutional-grade financial research powered by AI.';
 const MAX_ITEMS = 50;
 
@@ -89,7 +89,7 @@ for (const src of SOURCES) {
 
     // Extract title
     const titleMatch = cardHtml.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
-    const title = titleMatch ? stripHtml(titleMatch[1]) : 'Market Watch Article';
+    const title = titleMatch ? stripHtml(titleMatch[1]) : 'DailyTickers Article';
 
     // Extract description
     const descMatch = cardHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/);

@@ -135,8 +135,8 @@ Le thème vidéo (`src/video/theme.js`) reprend déjà les codes visuels du site
 - Primary blue : `#3b82f6` (identique au site)
 - Success green : `#10b981`, Warning amber : `#f59e0b`, Danger red : `#ef4444`
 - Font : Inter (identique au site)
-- Footer bar : `market-watch.xyz` + titre série + numéro slide
-- Logo et trademark Market Watch visibles sur chaque slide
+- Footer bar : `dailytickers.com` + titre série + numéro slide
+- Logo et trademark DailyTickers visibles sur chaque slide
 
 ### `videos/public/edu-narration-{seriesId}.json`
 
@@ -174,7 +174,7 @@ Check if the series ID exists in `videos/scripts/make-video.mjs` YOUTUBE_META. I
   title: 'Titre accrocheur (Durée)',
   playlist: 'Formations Trading FR',  // ou 'Trading Education EN'
   description: `Description structurée avec emojis...`,
-  tags: ['relevant', 'tags', 'market-watch.xyz'],
+  tags: ['relevant', 'tags', 'dailytickers.com'],
   lang: 'fr',
 },
 ```
@@ -193,7 +193,7 @@ Check if the series ID exists in `videos/scripts/make-video.mjs` YOUTUBE_META. I
 📊 Données de marché en temps réel
 
 ⚠️ Ceci n'est pas un conseil financier.
-🌐 https://articles.market-watch.xyz
+🌐 https://articles.dailytickers.com
 ```
 
 ## Step 3 — Run pipeline
@@ -235,7 +235,7 @@ Ne PAS commiter : .wav, .mp4, thumbnails, youtube credentials.
 | YouTube creds | `/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/` |
 | Output | `videos/output/{seriesId}.mp4` |
 | Brand colors | Primary `#3b82f6`, Success `#10b981`, Warning `#f59e0b`, Danger `#ef4444` |
-| Logo | `/public/logo.svg` — shield Market Watch |
+| Logo | `/public/logo.svg` — shield DailyTickers |
 | Finviz | `https://charts2.finviz.com/chart.ashx?t={TICKER}&ty=c&ta=1&p=d&s=l` |
 
 $ARGUMENTS

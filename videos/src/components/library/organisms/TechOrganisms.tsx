@@ -35,7 +35,7 @@ export const ArchitectureDiagram: React.FC<{nodes: any[]; delay?: number}> = ({n
       {nodes.slice(0, 3).map((n, i) => <TechNode key={i} {...n} delay={delay + (i * 10)} />)}
     </div>
     <Motion type="fade" delay={delay + 30}><div style={{width: '2px', height: '60px', background: 'rgba(255,255,255,0.2)'}} /></Motion>
-    <TechNode label="MarketWatch Gateway" sublabel="Central Hub" color={theme.colors.info} delay={delay + 40} />
+    <TechNode label="DailyTickers Gateway" sublabel="Central Hub" color={theme.colors.info} delay={delay + 40} />
     <Motion type="fade" delay={delay + 50}><div style={{width: '2px', height: '60px', background: 'rgba(255,255,255,0.2)'}} /></Motion>
     <div style={{display: 'flex', gap: '40px'}}>
       {nodes.slice(3).map((n, i) => <TechNode key={i} {...n} delay={delay + 60 + (i * 10)} />)}

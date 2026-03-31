@@ -444,7 +444,7 @@ function renderChartImage(slide, idx, total, config) {
           <div class="section-label">Technical Setup</div>
           <div class="slide-title">${esc(slide.title)}</div>
           ${slide.caption ? `<div style="font-size:35px;color:${T.textMuted};margin-bottom:24px;line-height:1.4">${esc(slide.caption)}</div>` : ''}
-          <div style="flex:1">${levelRows || `<div style="color:${T.textMuted};font-size:38px">See full chart at articles.market-watch.xyz</div>`}</div>
+          <div style="flex:1">${levelRows || `<div style="color:${T.textMuted};font-size:38px">See full chart at articles.dailytickers.com</div>`}</div>
         </div>
 
         <!-- Right: signal badge + finviz link -->
@@ -585,10 +585,10 @@ function renderOutro(slide, idx, total, config) {
 
         <div style="display:flex;gap:30px;justify-content:center;flex-wrap:wrap">
           <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:21px 42px;font-size:40px;font-weight:700">
-            🌐 articles.market-watch.xyz
+            🌐 articles.dailytickers.com
           </div>
           <div style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.25);border-radius:14px;padding:21px 42px;font-size:40px;font-weight:700">
-            📱 @MarketWatchXYZ
+            📱 @DailyTickersXYZ
           </div>
         </div>
       </div>

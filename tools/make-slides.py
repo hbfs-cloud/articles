@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-make-slides.py — Generate slide PNGs for Market Watch videos using Pillow.
+make-slides.py — Generate slide PNGs for DailyTickers videos using Pillow.
 No chromium, no drawtext. Pure Python.
 
 Usage:
@@ -108,7 +108,7 @@ def render_intro(slide, outpath):
         draw.text(((W - (dbbox[2] - dbbox[0])) // 2, 210), date_str, font=df, fill=TEXT_HEADER)
 
     # Title
-    title    = slide.get("title", "Market Watch")
+    title    = slide.get("title", "DailyTickers")
     tf       = font(44, bold=True)
     t_lines  = wrap(title, tf, W - 200, draw)
     t_y      = 280 - (len(t_lines) - 1) * 28
@@ -119,7 +119,7 @@ def render_intro(slide, outpath):
         t_y  += 58
 
     # Badge
-    badge    = slide.get("badge", "Market Watch")
+    badge    = slide.get("badge", "DailyTickers")
     bf       = font(15, bold=True)
     bbbox    = draw.textbbox((0, 0), badge, font=bf)
     bw       = bbbox[2] - bbbox[0]
@@ -177,7 +177,7 @@ def render_content(slide, outpath):
         by += block_h + 10
 
     # Footer
-    footer = slide.get("footer", "articles.market-watch.xyz")
+    footer = slide.get("footer", "articles.dailytickers.com")
     ff     = font(14)
     draw.text((60, H - 36), footer, font=ff, fill=TEXT_MUTED)
 
@@ -213,7 +213,7 @@ def render_outro(slide, outpath):
 
     # URL
     uf    = font(28)
-    url   = slide.get("url", "articles.market-watch.xyz")
+    url   = slide.get("url", "articles.dailytickers.com")
     ubbox = draw.textbbox((0, 0), url, font=uf)
     uw    = ubbox[2] - ubbox[0]
     draw.text(((W - uw) // 2, 360), url, font=uf, fill=ACCENT_SKY)
@@ -227,7 +227,7 @@ def render_outro(slide, outpath):
 
     # Disclaimer
     df    = font(14)
-    disc  = "© 2026 Market Watch — Not financial advice"
+    disc  = "© 2026 DailyTickers — Not financial advice"
     dbbox = draw.textbbox((0, 0), disc, font=df)
     dw    = dbbox[2] - dbbox[0]
     draw.text(((W - dw) // 2, H - 50), disc, font=df, fill=TEXT_MUTED)
@@ -282,7 +282,7 @@ def render_market_snapshot(slide, outpath):
             draw.text((x + pad + 12, y + 72), chg, font=cf, fill=color)
 
     ff = font(14)
-    draw.text((60, H - 36), slide.get("footer", "articles.market-watch.xyz"), font=ff, fill=TEXT_MUTED)
+    draw.text((60, H - 36), slide.get("footer", "articles.dailytickers.com"), font=ff, fill=TEXT_MUTED)
 
     img.save(outpath, "PNG")
 

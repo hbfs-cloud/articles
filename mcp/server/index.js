@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 /**
- * Market Watch MCP Server v2.0
+ * DailyTickers MCP Server v2.0
  *
  * Full-featured MCP server for AI-powered trading:
  * - Yahoo Finance: quotes, bars, options, financials, news
  * - Binance: crypto bars, WebSocket realtime
  * - Smart alerts: multi-channel (Slack, Discord, Telegram, Desktop)
  * - Trade journal: SQLite with stats
- * - Watchlist sync: auto-download scanner picks from Market Watch
+ * - Watchlist sync: auto-download scanner picks from DailyTickers
  * - Regime detection: automatic market regime classification
  * - SEC EDGAR: filings, insider transactions
  * - News monitoring: real-time alerts on watchlist tickers
@@ -20,7 +20,7 @@
  *
  * Claude Code config (~/.claude/settings.json):
  *   "mcpServers": {
- *     "market-watch": {
+ *     "dailytickers": {
  *       "command": "node",
  *       "args": ["/path/to/mcp/server/index.js"]
  *     }
@@ -79,7 +79,7 @@ alertEngine.configure(config);
 await journal.init(config.journal?.db_path || resolve(__dirname, 'data/journal.db'));
 
 // Static data fallback
-const BASE_URL = 'https://articles.market-watch.xyz';
+const BASE_URL = 'https://articles.dailytickers.com';
 async function fetchJSON(url) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
@@ -103,7 +103,7 @@ function extractCardInfo(html) {
 // ═══════════════════════════════════════
 
 const server = new McpServer({
-  name: 'market-watch',
+  name: 'dailytickers',
   version: '2.0.0'
 });
 
@@ -228,7 +228,7 @@ server.tool(
 
 server.tool(
   'get_watchlist',
-  'Get today\'s Market Watch A+ scanner picks with entry/stop/TP levels, regime, and alerts. Synced from articles.market-watch.xyz.',
+  'Get today\'s DailyTickers A+ scanner picks with entry/stop/TP levels, regime, and alerts. Synced from articles.dailytickers.com.',
   {},
   async () => {
     let wl = watchlist.get();
@@ -239,7 +239,7 @@ server.tool(
 
 server.tool(
   'sync_watchlist',
-  'Force sync watchlist from Market Watch scanner. Downloads latest picks and creates alerts.',
+  'Force sync watchlist from DailyTickers scanner. Downloads latest picks and creates alerts.',
   {},
   async () => {
     const wl = await watchlist.sync(config.watchlist?.sync_url);
@@ -600,7 +600,7 @@ server.tool(
 
 server.tool(
   'search_articles',
-  'Search Market Watch published articles by ticker or keyword.',
+  'Search DailyTickers published articles by ticker or keyword.',
   {
     query: z.string().describe('Search query'),
     tab: z.string().optional().describe('Tab filter: daily, weekly, analyses, scanner, tech, series')
@@ -625,7 +625,7 @@ server.tool(
 
 server.tool(
   'get_article_list',
-  'List latest Market Watch articles by type.',
+  'List latest DailyTickers articles by type.',
   {
     tab: z.enum(['daily', 'weekly', 'analyses', 'scanner', 'tech', 'series']).describe('Article type'),
     limit: z.number().optional().describe('Max results (default: 10)')
@@ -657,7 +657,7 @@ try {
 
 server.tool(
   'get_prompts',
-  `List or search the Market Watch Prompt Library (${promptLibrary.length} expert prompts for trading/investing). Categories: essential, stock, portfolio, macro, crypto, special. Each prompt is a battle-tested template you can fill in with your ticker/data and use directly.`,
+  `List or search the DailyTickers Prompt Library (${promptLibrary.length} expert prompts for trading/investing). Categories: essential, stock, portfolio, macro, crypto, special. Each prompt is a battle-tested template you can fill in with your ticker/data and use directly.`,
   {
     category: z.string().optional().describe('Filter by category: essential, stock, portfolio, macro, crypto, special'),
     search:   z.string().optional().describe('Search prompts by keyword (matches title and description)'),
@@ -690,7 +690,7 @@ server.tool(
 
 server.tool(
   'get_prompt',
-  'Get a specific prompt from the Market Watch Prompt Library by number. Returns the full prompt template ready to use — just fill in the [PLACEHOLDERS] with your data.',
+  'Get a specific prompt from the DailyTickers Prompt Library by number. Returns the full prompt template ready to use — just fill in the [PLACEHOLDERS] with your data.',
   {
     num:  z.number().describe('Prompt number (1-50)'),
     lang: z.string().optional().describe('Language: en (default), fr, ar')
@@ -1145,7 +1145,7 @@ server.tool(
 
 server.tool(
   'mw_status',
-  'Get Market Watch MCP server status: version, modules, watchlist, alerts, journal stats.',
+  'Get DailyTickers MCP server status: version, modules, watchlist, alerts, journal stats.',
   {},
   async () => {
     const wlStatus = watchlist.status();

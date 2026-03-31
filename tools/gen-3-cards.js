@@ -402,7 +402,7 @@ ${sectionTitle('📑', `HISTORIQUE DÉTAILLÉ (${Math.min(trades.length, 20)} / 
   </div>
   <div style="text-align:right;flex-shrink:0;margin-left:10px">
     <div style="font-size:10px;font-weight:700;color:#374151">articles.dailytickers.com/scanner/status/</div>
-    <div style="font-size:8px;color:#94a3b8">© 2026 Market Watch™</div>
+    <div style="font-size:8px;color:#94a3b8">© 2026 DailyTickers™</div>
   </div>
 </div>
 

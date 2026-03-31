@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Market Watch MCP Dashboard
+ * DailyTickers MCP Dashboard
  * Local admin UI served on localhost:3847
  * Serves dashboard/index.html + API endpoints for the UI
  */
@@ -62,7 +62,7 @@ async function handleAPI(req, res, url) {
   try {
     // Proxy to MCP watchlist
     if (url.pathname === '/api/watchlist') {
-      const data = await fetch('https://articles.market-watch.xyz/mcp/watchlist.json').then(r => r.json());
+      const data = await fetch('https://articles.dailytickers.com/mcp/watchlist.json').then(r => r.json());
       res.writeHead(200);
       res.end(JSON.stringify(data));
       return;
@@ -84,7 +84,7 @@ async function handleAPI(req, res, url) {
 }
 
 server.listen(PORT, () => {
-  console.log(`\n  Market Watch Dashboard: http://localhost:${PORT}\n`);
+  console.log(`\n  DailyTickers Dashboard: http://localhost:${PORT}\n`);
 
   // Auto-open browser
   try {

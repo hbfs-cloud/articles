@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — DeepSeek Content Script
+ * DailyTickers MCP — DeepSeek Content Script
  *
  * Injected on chat.deepseek.com pages.
  * - Detects when on DeepSeek chat page

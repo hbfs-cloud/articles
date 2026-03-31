@@ -28,12 +28,12 @@
       tickersLabel: 'Custom tickers',
       tickersOpt: 'optional — defaults to scanner picks',
       helpTitle: 'How does this work?',
-      helpBody: '<p>This generates a <strong>complete project folder</strong> that transforms your AI coding tool into a financial assistant.</p><h4>What you get:</h4><ul><li><strong>CLAUDE.md / .cursorrules / GEMINI.md</strong> — Instructions that tell the AI what to do</li><li><strong>MCP Server</strong> — A local server that connects your AI to <strong>live Market Watch data</strong> (A+ picks, regime, VIX, 250+ articles)</li><li><strong>.mcp.json</strong> — Auto-configuration. Claude Code detects it instantly.</li></ul><h4>What it actually does:</h4><ul><li><strong>Morning Briefing:</strong> Run <code>claude</code> and say "morning scan" — the AI fetches today\'s picks and gives you a 30-second briefing</li><li><strong>Deep Analysis:</strong> Say "analyze AVGO" — multi-source research with trade plan</li><li><strong>Custom Alerts:</strong> Say "check alert conditions" — the AI checks your rules against live data</li></ul><h4>Be honest about limits:</h4><ul><li>The AI checks data <strong>when you ask it to</strong>, not continuously in the background</li><li>Market Watch data updates <strong>daily at 23:00 UTC</strong>, not in real-time</li><li>For real-time alerts, you need a proper alerting service — this is an <strong>analysis assistant</strong></li></ul><h4>Compatible with:</h4><p><strong>Claude Code</strong> (best — full MCP), <strong>Cursor</strong>, <strong>Windsurf</strong>, <strong>Gemini CLI</strong>, <strong>Codex CLI</strong>. For ChatGPT/Gemini web: copy CLAUDE.md as system prompt.</p>',
+      helpBody: '<p>This generates a <strong>complete project folder</strong> that transforms your AI coding tool into a financial assistant.</p><h4>What you get:</h4><ul><li><strong>CLAUDE.md / .cursorrules / GEMINI.md</strong> — Instructions that tell the AI what to do</li><li><strong>MCP Server</strong> — A local server that connects your AI to <strong>live DailyTickers data</strong> (A+ picks, regime, VIX, 250+ articles)</li><li><strong>.mcp.json</strong> — Auto-configuration. Claude Code detects it instantly.</li></ul><h4>What it actually does:</h4><ul><li><strong>Morning Briefing:</strong> Run <code>claude</code> and say "morning scan" — the AI fetches today\'s picks and gives you a 30-second briefing</li><li><strong>Deep Analysis:</strong> Say "analyze AVGO" — multi-source research with trade plan</li><li><strong>Custom Alerts:</strong> Say "check alert conditions" — the AI checks your rules against live data</li></ul><h4>Be honest about limits:</h4><ul><li>The AI checks data <strong>when you ask it to</strong>, not continuously in the background</li><li>DailyTickers data updates <strong>daily at 23:00 UTC</strong>, not in real-time</li><li>For real-time alerts, you need a proper alerting service — this is an <strong>analysis assistant</strong></li></ul><h4>Compatible with:</h4><p><strong>Claude Code</strong> (best — full MCP), <strong>Cursor</strong>, <strong>Windsurf</strong>, <strong>Gemini CLI</strong>, <strong>Codex CLI</strong>. For ChatGPT/Gemini web: copy CLAUDE.md as system prompt.</p>',
       helpClose: 'Got it',
       noData: 'Loading live data...',
       errorData: 'Could not load live data',
       extTitle: 'Chrome Extension',
-      extSub: 'Inject live Market Watch data directly into your browser — A+ picks, regime, VIX overlaid on Yahoo Finance, TradingView, Finviz and more.',
+      extSub: 'Inject live DailyTickers data directly into your browser — A+ picks, regime, VIX overlaid on Yahoo Finance, TradingView, Finviz and more.',
       extStep1: 'Go to <code>chrome://extensions</code> → enable <strong>Developer Mode</strong>',
       extStep2: 'Click <strong>Load unpacked</strong>',
       extStep3: 'Select the <code>mcp/extension/</code> folder',
@@ -58,12 +58,12 @@
       tickersLabel: 'Tickers personnalisés',
       tickersOpt: 'optionnel — par défaut les picks du scanner',
       helpTitle: 'Comment ça marche ?',
-      helpBody: '<p>Ceci génère un <strong>dossier projet complet</strong> qui transforme ton outil IA en assistant financier.</p><h4>Ce que tu obtiens :</h4><ul><li><strong>CLAUDE.md / .cursorrules / GEMINI.md</strong> — Instructions qui disent à l\'IA quoi faire</li><li><strong>Serveur MCP</strong> — Un serveur local qui connecte ton IA aux <strong>données live Market Watch</strong> (picks A+, régime, VIX, 250+ articles)</li><li><strong>.mcp.json</strong> — Auto-configuration. Claude Code le détecte instantanément.</li></ul><h4>Ce que ça fait concrètement :</h4><ul><li><strong>Briefing matinal :</strong> Lance <code>claude</code> et dis "scan du matin" — l\'IA fetch les picks du jour et te brief en 30 secondes</li><li><strong>Analyse approfondie :</strong> Dis "analyse AVGO" — recherche multi-source avec plan de trade</li><li><strong>Alertes personnalisées :</strong> Dis "vérifie les conditions d\'alerte" — l\'IA vérifie tes règles contre les données live</li></ul><h4>Soyons honnêtes :</h4><ul><li>L\'IA vérifie les données <strong>quand tu le demandes</strong>, pas en continu en arrière-plan</li><li>Les données Market Watch sont mises à jour <strong>quotidiennement à 23:00 UTC</strong>, pas en temps réel</li><li>Pour des alertes temps réel, il faut un service d\'alertes dédié — ceci est un <strong>assistant d\'analyse</strong></li></ul><h4>Compatible avec :</h4><p><strong>Claude Code</strong> (idéal — MCP complet), <strong>Cursor</strong>, <strong>Windsurf</strong>, <strong>Gemini CLI</strong>, <strong>Codex CLI</strong>. Pour ChatGPT/Gemini web : copie le CLAUDE.md comme prompt système.</p>',
+      helpBody: '<p>Ceci génère un <strong>dossier projet complet</strong> qui transforme ton outil IA en assistant financier.</p><h4>Ce que tu obtiens :</h4><ul><li><strong>CLAUDE.md / .cursorrules / GEMINI.md</strong> — Instructions qui disent à l\'IA quoi faire</li><li><strong>Serveur MCP</strong> — Un serveur local qui connecte ton IA aux <strong>données live DailyTickers</strong> (picks A+, régime, VIX, 250+ articles)</li><li><strong>.mcp.json</strong> — Auto-configuration. Claude Code le détecte instantanément.</li></ul><h4>Ce que ça fait concrètement :</h4><ul><li><strong>Briefing matinal :</strong> Lance <code>claude</code> et dis "scan du matin" — l\'IA fetch les picks du jour et te brief en 30 secondes</li><li><strong>Analyse approfondie :</strong> Dis "analyse AVGO" — recherche multi-source avec plan de trade</li><li><strong>Alertes personnalisées :</strong> Dis "vérifie les conditions d\'alerte" — l\'IA vérifie tes règles contre les données live</li></ul><h4>Soyons honnêtes :</h4><ul><li>L\'IA vérifie les données <strong>quand tu le demandes</strong>, pas en continu en arrière-plan</li><li>Les données DailyTickers sont mises à jour <strong>quotidiennement à 23:00 UTC</strong>, pas en temps réel</li><li>Pour des alertes temps réel, il faut un service d\'alertes dédié — ceci est un <strong>assistant d\'analyse</strong></li></ul><h4>Compatible avec :</h4><p><strong>Claude Code</strong> (idéal — MCP complet), <strong>Cursor</strong>, <strong>Windsurf</strong>, <strong>Gemini CLI</strong>, <strong>Codex CLI</strong>. Pour ChatGPT/Gemini web : copie le CLAUDE.md comme prompt système.</p>',
       helpClose: 'Compris',
       noData: 'Chargement des données live...',
       errorData: 'Impossible de charger les données live',
       extTitle: 'Extension Chrome',
-      extSub: 'Injecte les données live Market Watch dans ton navigateur — picks A+, régime, VIX directement sur Yahoo Finance, TradingView, Finviz et plus.',
+      extSub: 'Injecte les données live DailyTickers dans ton navigateur — picks A+, régime, VIX directement sur Yahoo Finance, TradingView, Finviz et plus.',
       extStep1: 'Va sur <code>chrome://extensions</code> → active le <strong>Mode développeur</strong>',
       extStep2: 'Clique sur <strong>Charger l\'extension non empaquetée</strong>',
       extStep3: 'Sélectionne le dossier <code>mcp/extension/</code>',
@@ -88,12 +88,12 @@
       tickersLabel: '\u0631\u0645\u0648\u0632 \u0645\u062e\u0635\u0635\u0629',
       tickersOpt: '\u0627\u062e\u062a\u064a\u0627\u0631\u064a \u2014 \u0627\u0641\u062a\u0631\u0627\u0636\u064a\u0627\u064b \u0627\u062e\u062a\u064a\u0627\u0631\u0627\u062a \u0627\u0644\u0645\u0627\u0633\u062d',
       helpTitle: '\u0643\u064a\u0641 \u064a\u0639\u0645\u0644\u061f',
-      helpBody: '<p>\u064a\u0646\u0634\u0626 <strong>\u0645\u062c\u0644\u062f \u0645\u0634\u0631\u0648\u0639 \u0643\u0627\u0645\u0644</strong> \u064a\u062d\u0648\u0651\u0644 \u0623\u062f\u0627\u0629 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0625\u0644\u0649 \u0645\u0633\u0627\u0639\u062f \u0645\u0627\u0644\u064a.</p><h4>\u0645\u0627 \u062a\u062d\u0635\u0644 \u0639\u0644\u064a\u0647:</h4><ul><li><strong>CLAUDE.md</strong> \u2014 \u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0644\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a</li><li><strong>\u062e\u0627\u062f\u0645 MCP</strong> \u2014 \u064a\u0631\u0628\u0637 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0628\u0628\u064a\u0627\u0646\u0627\u062a Market Watch \u0627\u0644\u062d\u064a\u0629</li></ul><h4>\u0645\u0627 \u064a\u0641\u0639\u0644\u0647 \u0641\u0639\u0644\u064a\u0627\u064b:</h4><ul><li><strong>\u0645\u0644\u062e\u0635 \u0635\u0628\u0627\u062d\u064a:</strong> \u0634\u063a\u0651\u0644 <code>claude</code> \u0648\u0642\u0644 "\u0645\u0633\u062d \u0627\u0644\u0635\u0628\u0627\u062d" \u2014 \u0645\u0644\u062e\u0635 \u0641\u064a 30 \u062b\u0627\u0646\u064a\u0629</li><li><strong>\u062a\u062d\u0644\u064a\u0644 \u0639\u0645\u064a\u0642:</strong> \u0642\u0644 "analyze AVGO" \u2014 \u0628\u062d\u062b \u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0645\u0635\u0627\u062f\u0631</li></ul><h4>\u0627\u0644\u062d\u062f\u0648\u062f:</h4><ul><li>\u0627\u0644\u0630\u0643\u0627\u0621 \u064a\u062a\u062d\u0642\u0642 <strong>\u0639\u0646\u062f\u0645\u0627 \u062a\u0637\u0644\u0628</strong>\u060c \u0644\u064a\u0633 \u0628\u0627\u0633\u062a\u0645\u0631\u0627\u0631</li><li>\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u062a\u062a\u062d\u062f\u062b <strong>\u064a\u0648\u0645\u064a\u0627\u064b \u0627\u0644\u0633\u0627\u0639\u0629 23:00 UTC</strong></li></ul>',
+      helpBody: '<p>\u064a\u0646\u0634\u0626 <strong>\u0645\u062c\u0644\u062f \u0645\u0634\u0631\u0648\u0639 \u0643\u0627\u0645\u0644</strong> \u064a\u062d\u0648\u0651\u0644 \u0623\u062f\u0627\u0629 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0625\u0644\u0649 \u0645\u0633\u0627\u0639\u062f \u0645\u0627\u0644\u064a.</p><h4>\u0645\u0627 \u062a\u062d\u0635\u0644 \u0639\u0644\u064a\u0647:</h4><ul><li><strong>CLAUDE.md</strong> \u2014 \u062a\u0639\u0644\u064a\u0645\u0627\u062a \u0644\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a</li><li><strong>\u062e\u0627\u062f\u0645 MCP</strong> \u2014 \u064a\u0631\u0628\u0637 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0628\u0628\u064a\u0627\u0646\u0627\u062a DailyTickers \u0627\u0644\u062d\u064a\u0629</li></ul><h4>\u0645\u0627 \u064a\u0641\u0639\u0644\u0647 \u0641\u0639\u0644\u064a\u0627\u064b:</h4><ul><li><strong>\u0645\u0644\u062e\u0635 \u0635\u0628\u0627\u062d\u064a:</strong> \u0634\u063a\u0651\u0644 <code>claude</code> \u0648\u0642\u0644 "\u0645\u0633\u062d \u0627\u0644\u0635\u0628\u0627\u062d" \u2014 \u0645\u0644\u062e\u0635 \u0641\u064a 30 \u062b\u0627\u0646\u064a\u0629</li><li><strong>\u062a\u062d\u0644\u064a\u0644 \u0639\u0645\u064a\u0642:</strong> \u0642\u0644 "analyze AVGO" \u2014 \u0628\u062d\u062b \u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0645\u0635\u0627\u062f\u0631</li></ul><h4>\u0627\u0644\u062d\u062f\u0648\u062f:</h4><ul><li>\u0627\u0644\u0630\u0643\u0627\u0621 \u064a\u062a\u062d\u0642\u0642 <strong>\u0639\u0646\u062f\u0645\u0627 \u062a\u0637\u0644\u0628</strong>\u060c \u0644\u064a\u0633 \u0628\u0627\u0633\u062a\u0645\u0631\u0627\u0631</li><li>\u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a \u062a\u062a\u062d\u062f\u062b <strong>\u064a\u0648\u0645\u064a\u0627\u064b \u0627\u0644\u0633\u0627\u0639\u0629 23:00 UTC</strong></li></ul>',
       helpClose: '\u0641\u0647\u0645\u062a',
       noData: '\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a...',
       errorData: '\u062a\u0639\u0630\u0651\u0631 \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a',
       extTitle: '\u0625\u0636\u0627\u0641\u064a\u0629 Chrome',
-      extSub: '\u0623\u062f\u062e\u0644 \u0628\u064a\u0627\u0646\u0627\u062a Market Watch \u0627\u0644\u062d\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629\u064b \u0641\u064a \u0645\u062a\u0635\u0641\u062d\u0643 \u2014 Yahoo Finance \u0648TradingView \u0648Finviz \u0648\u063a\u064a\u0631\u0647\u0627.',
+      extSub: '\u0623\u062f\u062e\u0644 \u0628\u064a\u0627\u0646\u0627\u062a DailyTickers \u0627\u0644\u062d\u064a\u0629 \u0645\u0628\u0627\u0634\u0631\u0629\u064b \u0641\u064a \u0645\u062a\u0635\u0641\u062d\u0643 \u2014 Yahoo Finance \u0648TradingView \u0648Finviz \u0648\u063a\u064a\u0631\u0647\u0627.',
       extStep1: '\u0627\u0630\u0647\u0628 \u0625\u0644\u0649 <code>chrome://extensions</code> \u2190 \u0641\u0639\u0651\u0644 <strong>\u0648\u0636\u0639 \u0627\u0644\u0645\u0637\u0648\u0651\u0631</strong>',
       extStep2: '\u0627\u0636\u063a\u0637 <strong>\u062a\u062d\u0645\u064a\u0644 \u063a\u064a\u0631 \u0645\u062d\u0632\u0648\u0645</strong>',
       extStep3: '\u062d\u062f\u062f \u0645\u062c\u0644\u062f <code>mcp/extension/</code>',
@@ -118,12 +118,12 @@
       tickersLabel: 'Tickers personalizados',
       tickersOpt: 'opcional — por defecto los picks del scanner',
       helpTitle: '¿Cómo funciona?',
-      helpBody: '<p>Genera una <strong>carpeta de proyecto completa</strong> que transforma tu herramienta IA en asistente financiero.</p><h4>Lo que obtienes:</h4><ul><li><strong>CLAUDE.md</strong> — Instrucciones para la IA</li><li><strong>Servidor MCP</strong> — Conecta la IA a datos en vivo de Market Watch</li></ul><h4>Lo que hace:</h4><ul><li><strong>Briefing matutino:</strong> Ejecuta <code>claude</code> y di "morning scan" — resumen en 30 segundos</li><li><strong>Análisis profundo:</strong> Di "analyze AVGO" — investigación multi-fuente</li></ul><h4>Limitaciones:</h4><ul><li>La IA verifica <strong>cuando tú lo pides</strong>, no continuamente</li><li>Datos actualizados <strong>diariamente a las 23:00 UTC</strong></li></ul>',
+      helpBody: '<p>Genera una <strong>carpeta de proyecto completa</strong> que transforma tu herramienta IA en asistente financiero.</p><h4>Lo que obtienes:</h4><ul><li><strong>CLAUDE.md</strong> — Instrucciones para la IA</li><li><strong>Servidor MCP</strong> — Conecta la IA a datos en vivo de DailyTickers</li></ul><h4>Lo que hace:</h4><ul><li><strong>Briefing matutino:</strong> Ejecuta <code>claude</code> y di "morning scan" — resumen en 30 segundos</li><li><strong>Análisis profundo:</strong> Di "analyze AVGO" — investigación multi-fuente</li></ul><h4>Limitaciones:</h4><ul><li>La IA verifica <strong>cuando tú lo pides</strong>, no continuamente</li><li>Datos actualizados <strong>diariamente a las 23:00 UTC</strong></li></ul>',
       helpClose: 'Entendido',
       noData: 'Cargando datos en vivo...',
       errorData: 'No se pudieron cargar los datos',
       extTitle: 'Extensión de Chrome',
-      extSub: 'Inyecta datos en vivo de Market Watch en tu navegador — picks A+, régimen, VIX en Yahoo Finance, TradingView, Finviz y más.',
+      extSub: 'Inyecta datos en vivo de DailyTickers en tu navegador — picks A+, régimen, VIX en Yahoo Finance, TradingView, Finviz y más.',
       extStep1: 'Ve a <code>chrome://extensions</code> → activa el <strong>Modo desarrollador</strong>',
       extStep2: 'Haz clic en <strong>Cargar descomprimida</strong>',
       extStep3: 'Selecciona la carpeta <code>mcp/extension/</code>',
@@ -148,12 +148,12 @@
       tickersLabel: '\u81ea\u5b9a\u4e49\u80a1\u7968',
       tickersOpt: '\u53ef\u9009 \u2014 \u9ed8\u8ba4\u4f7f\u7528\u626b\u63cf\u5668\u7cbe\u9009',
       helpTitle: '\u8fd9\u662f\u5982\u4f55\u5de5\u4f5c\u7684\uff1f',
-      helpBody: '<p>\u751f\u6210\u4e00\u4e2a<strong>\u5b8c\u6574\u7684\u9879\u76ee\u6587\u4ef6\u5939</strong>\uff0c\u5c06\u4f60\u7684 AI \u5de5\u5177\u53d8\u6210\u91d1\u878d\u52a9\u624b\u3002</p><h4>\u4f60\u5c06\u83b7\u5f97\uff1a</h4><ul><li><strong>CLAUDE.md</strong> \u2014 AI \u6307\u4ee4\u6587\u4ef6</li><li><strong>MCP \u670d\u52a1\u5668</strong> \u2014 \u8fde\u63a5 AI \u5230 Market Watch \u5b9e\u65f6\u6570\u636e</li></ul><h4>\u5b9e\u9645\u529f\u80fd\uff1a</h4><ul><li><strong>\u665a\u95f4\u7b80\u62a5\uff1a</strong>\u8fd0\u884c <code>claude</code> \u8bf4 "morning scan" \u2014 30\u79d2\u7b80\u62a5</li><li><strong>\u6df1\u5ea6\u5206\u6790\uff1a</strong>\u8bf4 "analyze AVGO" \u2014 \u591a\u6e90\u7814\u7a76</li></ul><h4>\u9650\u5236\uff1a</h4><ul><li>AI <strong>\u5728\u4f60\u8981\u6c42\u65f6</strong>\u68c0\u67e5\uff0c\u4e0d\u662f\u6301\u7eed\u76d1\u63a7</li><li>\u6570\u636e<strong>\u6bcf\u65e5 23:00 UTC \u66f4\u65b0</strong></li></ul>',
+      helpBody: '<p>\u751f\u6210\u4e00\u4e2a<strong>\u5b8c\u6574\u7684\u9879\u76ee\u6587\u4ef6\u5939</strong>\uff0c\u5c06\u4f60\u7684 AI \u5de5\u5177\u53d8\u6210\u91d1\u878d\u52a9\u624b\u3002</p><h4>\u4f60\u5c06\u83b7\u5f97\uff1a</h4><ul><li><strong>CLAUDE.md</strong> \u2014 AI \u6307\u4ee4\u6587\u4ef6</li><li><strong>MCP \u670d\u52a1\u5668</strong> \u2014 \u8fde\u63a5 AI \u5230 DailyTickers \u5b9e\u65f6\u6570\u636e</li></ul><h4>\u5b9e\u9645\u529f\u80fd\uff1a</h4><ul><li><strong>\u665a\u95f4\u7b80\u62a5\uff1a</strong>\u8fd0\u884c <code>claude</code> \u8bf4 "morning scan" \u2014 30\u79d2\u7b80\u62a5</li><li><strong>\u6df1\u5ea6\u5206\u6790\uff1a</strong>\u8bf4 "analyze AVGO" \u2014 \u591a\u6e90\u7814\u7a76</li></ul><h4>\u9650\u5236\uff1a</h4><ul><li>AI <strong>\u5728\u4f60\u8981\u6c42\u65f6</strong>\u68c0\u67e5\uff0c\u4e0d\u662f\u6301\u7eed\u76d1\u63a7</li><li>\u6570\u636e<strong>\u6bcf\u65e5 23:00 UTC \u66f4\u65b0</strong></li></ul>',
       helpClose: '\u660e\u767d\u4e86',
       noData: '\u6b63\u5728\u52a0\u8f7d\u5b9e\u65f6\u6570\u636e...',
       errorData: '\u65e0\u6cd5\u52a0\u8f7d\u5b9e\u65f6\u6570\u636e',
       extTitle: 'Chrome \u6269\u5c55\u7a0b\u5e8f',
-      extSub: '\u5c06 Market Watch \u5b9e\u65f6\u6570\u636e\u76f4\u63a5\u6ce8\u5165\u6d4f\u89c8\u5668 \u2014 Yahoo Finance\u3001TradingView\u3001Finviz \u7b49\u3002',
+      extSub: '\u5c06 DailyTickers \u5b9e\u65f6\u6570\u636e\u76f4\u63a5\u6ce8\u5165\u6d4f\u89c8\u5668 \u2014 Yahoo Finance\u3001TradingView\u3001Finviz \u7b49\u3002',
       extStep1: '\u524d\u5f80 <code>chrome://extensions</code> \u2192 \u5f00\u542f<strong>\u5f00\u53d1\u8005\u6a21\u5f0f</strong>',
       extStep2: '\u70b9\u51fb<strong>\u52a0\u8f7d\u5df2\u89e3\u538b\u7684\u6269\u5c55\u7a0b\u5e8f</strong>',
       extStep3: '\u9009\u62e9 <code>mcp/extension/</code> \u6587\u4ef6\u5939',
@@ -213,7 +213,7 @@
   // WORKFLOW TEMPLATES
   // ═══════════════════════════════════════
   function tplMorningBriefing(tickers) {
-    return '# Market Watch \u2014 Morning Briefing \u2615\n\n' +
+    return '# DailyTickers \u2014 Morning Briefing \u2615\n\n' +
       '## Your Role\n' +
       'You are a concise morning market analyst. When the user says "morning scan" or "scan du matin",\n' +
       'you fetch live data and deliver a 30-second actionable briefing.\n\n' +
@@ -226,7 +226,7 @@
       '- `search_articles` \u2014 Find relevant published analyses\n\n' +
       '### Supplementary\n' +
       '- WebSearch for breaking news (if available)\n' +
-      '- `https://articles.market-watch.xyz/mcp/watchlist.json` (direct fetch fallback)\n\n' +
+      '- `https://articles.dailytickers.com/mcp/watchlist.json` (direct fetch fallback)\n\n' +
       (tickers ? '## Custom Watchlist\n' + tickers + '\n\n' : '') +
       '## Morning Scan Workflow\n' +
       'When the user says "morning scan":\n\n' +
@@ -265,7 +265,7 @@
   }
 
   function tplDeepAnalysis(tickers) {
-    return '# Market Watch \u2014 Deep Analysis \ud83d\udd2c\n\n' +
+    return '# DailyTickers \u2014 Deep Analysis \ud83d\udd2c\n\n' +
       '## Your Role\n' +
       'You are an institutional-grade equity analyst. When the user says "analyze [TICKER]",\n' +
       'you run a comprehensive multi-source analysis and generate a detailed trade plan.\n\n' +
@@ -279,7 +279,7 @@
       '- `search_articles` \u2014 Find our published analysis on this ticker\n\n' +
       '### Supplementary\n' +
       '- WebSearch for recent news, analyst ratings, insider transactions\n' +
-      '- `https://articles.market-watch.xyz/mcp/watchlist.json` (direct fetch fallback)\n\n' +
+      '- `https://articles.dailytickers.com/mcp/watchlist.json` (direct fetch fallback)\n\n' +
       (tickers ? '## Default Watchlist\n' + tickers + '\n\n' : '') +
       '## Analysis Framework\n' +
       'For each ticker, analyze:\n\n' +
@@ -355,7 +355,7 @@
   var MCP_DOT_JSON = function(serverPath) {
     return JSON.stringify({
       mcpServers: {
-        "market-watch": {
+        "dailytickers": {
           command: "node",
           args: [serverPath]
         }
@@ -368,7 +368,7 @@
   // ═══════════════════════════════════════
   function generateReadme(workflow, tickers) {
     var wf = WORKFLOWS.find(function(w) { return w.id === workflow; });
-    return '# ' + wf.icon + ' ' + wf.title + ' \u2014 Market Watch AI Agent\n\n' +
+    return '# ' + wf.icon + ' ' + wf.title + ' \u2014 DailyTickers AI Agent\n\n' +
       wf.desc + '\n\n' +
       '## Quick Start (3 steps)\n\n' +
       '```bash\n' +
@@ -392,8 +392,8 @@
       '| `search_articles` | Search 250+ published analyses |\n' +
       '| `get_article_list` | List latest articles by type |\n\n' +
       '## Data Updates\n' +
-      'Market Watch data updates **daily at 23:00 UTC**. The MCP server fetches live from\n' +
-      '`articles.market-watch.xyz` — no API key needed.\n\n' +
+      'DailyTickers data updates **daily at 23:00 UTC**. The MCP server fetches live from\n' +
+      '`articles.dailytickers.com` — no API key needed.\n\n' +
       '## Compatible Tools\n' +
       '- **Claude Code** — `.mcp.json` + `CLAUDE.md` (best experience)\n' +
       '- **Cursor** — `.cursorrules`\n' +
@@ -468,7 +468,7 @@
   var liveData = null;
 
   function fetchLiveData() {
-    var url = 'https://articles.market-watch.xyz/mcp/watchlist.json';
+    var url = 'https://articles.dailytickers.com/mcp/watchlist.json';
     fetch(url).then(function(res) {
       if (!res.ok) throw new Error('HTTP ' + res.status);
       return res.json();

@@ -1,4 +1,4 @@
-# Market Watch - Scanner Instructions
+# DailyTickers - Scanner Instructions
 
 ## 🖼️ IMAGE QUOTIDIENNE DISCORD/TELEGRAM — PROCÉDURE COMPLÈTE
 
@@ -63,7 +63,7 @@ Chaque page scanner inclut les meta OG :
 ```html
 <meta property="og:title" content="Scanner MW — DATE — TOP TICKERS">
 <meta property="og:description" content="Régime + stats clés">
-<meta property="og:image" content="https://articles.market-watch.xyz/scanner-daily-card.png">
+<meta property="og:image" content="https://articles.dailytickers.com/scanner-daily-card.png">
 <meta name="twitter:card" content="summary_large_image">
 ```
 
@@ -358,7 +358,7 @@ Chaque scanner DOIT suivre exactement cette structure HTML. Référence : `scann
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo">
       <img src="/logo.svg" alt="" width="36" height="36">
-      <span class="brand-title">MarketWatch</span>
+      <span class="brand-title">DailyTickers</span>
     </a>
     <div class="brand-nav">
       <a href="/?tab=weekly">Hebdo</a>
@@ -380,7 +380,7 @@ Chaque scanner DOIT suivre exactement cette structure HTML. Référence : `scann
 Le hero du scanner utilise `ticker-header` (pas `hero-section`) :
 - Logo MW (jamais logo société)
 - Switcher langue (drapeaux FR/EN/AR) + niveau (Expert/Beginner)
-- Titre : "Scanner Market Watch — {Date}"
+- Titre : "Scanner DailyTickers — {Date}"
 - Métriques : Régime, Score Moyen, Nb Setups, Stratégie Dominante
 - Badges : régime couleur, stratégies
 - Tags cliquables : `<div id="article-clickable-tags" class="card-tags"></div>`
@@ -413,7 +413,7 @@ Placé dans le hero. Peuplé par `/assets/tag-renderer.js`.
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 Market Watch. Données via MarketWatch Gateway.
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
   Ceci n'est pas un conseil financier.
   <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
 </footer>

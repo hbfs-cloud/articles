@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — Background Service Worker
+ * DailyTickers MCP — Background Service Worker
  *
  * Responsibilities:
  * - WebSocket connection to MCP dashboard (configurable host)
@@ -374,7 +374,7 @@ function triggerAlert(alert) {
     chrome.notifications.create(alert.key || `mw_${Date.now()}`, {
       type: 'basic',
       iconUrl: 'icons/icon128.png',
-      title: `Market Watch${iconSuffix}`,
+      title: `DailyTickers${iconSuffix}`,
       message: alert.message,
       priority: alert.type === 'stop' ? 2 : 1
     });
@@ -481,7 +481,7 @@ function handleAnalyzeTicker(msg) {
 
   // Open MW analysis page
   chrome.tabs.create({
-    url: `https://articles.market-watch.xyz/analyses/${ticker}/`
+    url: `https://articles.dailytickers.com/analyses/${ticker}/`
   });
 }
 

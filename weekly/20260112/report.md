@@ -45,7 +45,7 @@
 
 # 📋 SYNTHÈSE EXÉCUTIVE
 
-## Régime de Marché (MarketWatch MCP Data - 11 jan 2026 20:23 UTC)
+## Régime de Marché (DailyTickers MCP Data - 11 jan 2026 20:23 UTC)
 
 | Indicateur | Valeur | Interprétation |
 |------------|--------|----------------|
@@ -252,7 +252,7 @@
 
 ## 📊 Rotations Sectorielles
 
-### Analyse MarketWatch MCP
+### Analyse DailyTickers MCP
 
 **Top Industries (+):**
 
@@ -920,7 +920,7 @@ Les indices sont à des records historiques avec:
 
 | Source | Données | Date |
 |--------|---------|------|
-| **MarketWatch MCP** | Indices, Régime, Screener | 11 jan 2026 20:23 UTC |
+| **DailyTickers MCP** | Indices, Régime, Screener | 11 jan 2026 20:23 UTC |
 | **Yahoo Finance** | Indices US, Crypto | 11 jan 2026 |
 | **CME FedWatch** | Probabilités Fed | 11 jan 2026 |
 
@@ -958,9 +958,9 @@ Les indices sont à des records historiques avec:
 *Disclaimer: Ce rapport est fourni à titre éducatif et informatif uniquement. Il ne constitue pas un conseil en investissement personnalisé. Les marchés financiers comportent des risques significatifs de perte en capital. Les performances passées ne préjugent pas des performances futures. Consultez un conseiller financier agréé avant toute décision d'investissement.*
 
 *Rapport généré le 12 janvier 2026 à 08:00 UTC*  
-*Données MarketWatch MCP: 11 janvier 2026 20:23 UTC*  
+*Données DailyTickers MCP: 11 janvier 2026 20:23 UTC*  
 *Prochaine mise à jour: 19 janvier 2026*
 
 ---
 
-**Version:** 3.0 | **Classification:** Institutionnel Retail | **Auteur:** MarketWatch AI Assistant
+**Version:** 3.0 | **Classification:** Institutionnel Retail | **Auteur:** DailyTickers AI Assistant

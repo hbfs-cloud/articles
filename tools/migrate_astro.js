@@ -6,7 +6,7 @@
  * (which reformats HTML and breaks inline styles). Never remove inline CSS.
  *
  * What it fixes:
- *   1. Broken links (/articles/ prefix, external articles.market-watch.xyz)
+ *   1. Broken links (/articles/ prefix, external articles.dailytickers.com)
  *   2. External logo URLs → /logo.svg
  *   3. Missing GTM tags (head script + body noscript)
  *   4. Missing/broken brand-bar (adds standard nav if missing)
@@ -48,7 +48,7 @@ const STANDARD_BRAND_BAR = `\n  <nav class="brand-bar">
     <div class="brand-bar-inner">
       <a href="/" class="brand-logo">
         <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
+        <span class="brand-title">DailyTickers</span>
       </a>
       <div class="brand-nav">
         <a href="/?tab=weekly">Hebdo</a>
@@ -65,7 +65,7 @@ const STANDARD_BRAND_BAR = `\n  <nav class="brand-bar">
   </nav>\n`;
 
 const STANDARD_FOOTER = `\n  <footer class="article-footer">
-    &copy; 2026 Market Watch. Donn&eacute;es via MarketWatch Gateway.
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
     Ceci n'est pas un conseil financier.
     <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
   </footer>`;
@@ -114,9 +114,9 @@ function fixBrokenLinks(html) {
     fixes.push('links: removed /articles/ prefix');
   }
 
-  // Fix external articles.market-watch.xyz URLs
-  if (/href="https?:\/\/articles\.market-watch\.xyz\//.test(out)) {
-    out = out.replace(/href="https?:\/\/articles\.market-watch\.xyz\//g, 'href="/');
+  // Fix external articles.dailytickers.com URLs
+  if (/href="https?:\/\/articles\.dailytickers\.xyz\//.test(out)) {
+    out = out.replace(/href="https?:\/\/articles\.dailytickers\.xyz\//g, 'href="/');
     fixes.push('links: converted external articles URLs to relative');
   }
 
@@ -127,8 +127,8 @@ function fixLogoRefs(html) {
   const fixes = [];
   let out = html;
 
-  if (/https?:\/\/(?:articles\.)?market-watch\.xyz\/logo\.svg/.test(out)) {
-    out = out.replace(/https?:\/\/(?:articles\.)?market-watch\.xyz\/logo\.svg/g, '/logo.svg');
+  if (/https?:\/\/(?:articles\.)?dailytickers\.xyz\/logo\.svg/.test(out)) {
+    out = out.replace(/https?:\/\/(?:articles\.)?dailytickers\.xyz\/logo\.svg/g, '/logo.svg');
     fixes.push('logo: replaced external URL with /logo.svg');
   }
 
@@ -1534,7 +1534,7 @@ function validateFile(fileMeta) {
   if (!html.includes('Inter'))
     issues.push({ severity: 'warn', msg: 'Missing Inter font' });
 
-  if (/https?:\/\/(?:articles\.)?market-watch\.xyz\/logo\.svg/.test(html))
+  if (/https?:\/\/(?:articles\.)?dailytickers\.xyz\/logo\.svg/.test(html))
     issues.push({ severity: 'warn', msg: 'External logo URL (should be /logo.svg)' });
 
   if (!html.includes('core.js') && !html.includes('tag-renderer.js'))
@@ -1666,7 +1666,7 @@ function generateReport(articles) {
 // ─── Main ───────────────────────────────────────────────────────────
 
 function main() {
-  console.log('\n  Market Watch — Article Fixer (v3 — FAB + footer + tags)');
+  console.log('\n  DailyTickers — Article Fixer (v3 — FAB + footer + tags)');
   console.log('  ' + '-'.repeat(45));
   console.log(`  Mode: ${APPLY ? 'APPLY' : REPORT_ONLY ? 'REPORT' : 'DRY-RUN'}`);
   console.log(`  Dirs: ${ARTICLE_DIRS.join(', ')}\n`);

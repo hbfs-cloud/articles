@@ -532,7 +532,7 @@ async function notifyDiscord(ev) {
         description: ev.message,
         color,
         fields,
-        footer:      { text: `Market Watch Alert · ${ev.when}` },
+        footer:      { text: `DailyTickers Alert · ${ev.when}` },
         timestamp:   ev.triggeredAt,
       }]
     })
@@ -578,7 +578,7 @@ async function notifySlack(ev) {
           { title: 'RVOL',   value: `${ev.rvol?.toFixed(2) ?? '—'}`,  short: true },
           { title: 'DSL',    value: `\`${ev.when}\``,                 short: false },
         ],
-        footer: 'Market Watch Alert',
+        footer: 'DailyTickers Alert',
         ts:     Math.floor(Date.now() / 1000),
       }]
     })

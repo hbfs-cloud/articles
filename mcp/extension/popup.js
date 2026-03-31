@@ -1,5 +1,5 @@
 /**
- * Market Watch MCP — Popup Controller
+ * DailyTickers MCP — Popup Controller
  *
  * Manages the popup UI: watchlist table, alerts feed, quick actions,
  * settings panel, and communication with the background service worker.

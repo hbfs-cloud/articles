@@ -15,8 +15,8 @@ Arguments: `<TICKER>` (e.g., `FCX`, `AAPL`, `TSLA`)
 ### Step 1: Data Collection
 Use MCP tools to gather all data for the ticker:
 ```
-mcp__market-watch__QueryData types=quote,stats,earnings_quarterly,holders,sentiment_overall,trading_signals,analyst_actions,insider_transactions,support_resistance,options_chain symbols={TICKER}
-mcp__market-watch__QueryData types=bars_daily symbols={TICKER} limit=90
+mcp__dailytickers__QueryData types=quote,stats,earnings_quarterly,holders,sentiment_overall,trading_signals,analyst_actions,insider_transactions,support_resistance,options_chain symbols={TICKER}
+mcp__dailytickers__QueryData types=bars_daily symbols={TICKER} limit=90
 WebSearch "{TICKER} {COMPANY} latest earnings revenue analysis 2026"
 WebSearch "{TICKER} SEC filing S-3 prospectus dilution warrants"
 ```
@@ -71,7 +71,7 @@ Renders at 1920x1080, 30fps using TickerAnalysis component (light mode, Ken Burn
 ### Step 7: Upload to YouTube
 Create upload script or use `scripts/_upload-ticker.mjs` pattern:
 - Title: `{TICKER} — {Company} | {Grade} Analysis | {Price}`
-- Tags: ticker, company name, stock analysis, sector, trade idea, marketwatchxyz, market-watch.xyz
+- Tags: ticker, company name, stock analysis, sector, trade idea, marketwatchxyz, dailytickers.com
 - Chapters from slide data (chapter-intro timestamps)
 - Playlist: "Analyses EN"
 - Privacy: public

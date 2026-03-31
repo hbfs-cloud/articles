@@ -235,8 +235,8 @@ const nextIso = nextDate.toISOString().split('T')[0] + 'T23:00:00Z';
 // --- Build watchlist.json ---
 const watchlist = {
   updated: isoDate,
-  source: 'Market Watch Scanner',
-  url: `https://articles.market-watch.xyz/scanner/${dateStr}/`,
+  source: 'DailyTickers Scanner',
+  url: `https://articles.dailytickers.com/scanner/${dateStr}/`,
   regime: regime,
   vix: vix,
   dxy: dxy,

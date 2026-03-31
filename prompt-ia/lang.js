@@ -3,11 +3,11 @@
 // ═══════════════════════════════════════════════════════
 var LANG = {
   meta: {
-    fr: { title:'Prompt IA | Market Watch', desc:'Generateur de mega-prompts d\'analyse financiere — Collez le prompt dans ChatGPT, Claude, Grok ou Perplexity et obtenez une analyse institutionnelle complete.', ogTitle:'Prompt IA | Market Watch', ogDesc:'Generez un mega-prompt d\'analyse financiere adapte a votre IA, langue et niveau.' },
-    en: { title:'AI Prompt | Market Watch', desc:'Financial analysis mega-prompt generator — Paste the prompt into ChatGPT, Claude, Grok or Perplexity and get a complete institutional-grade analysis.', ogTitle:'AI Prompt | Market Watch', ogDesc:'Generate a financial analysis mega-prompt tailored to your AI, language and skill level.' },
-    ar: { title:'\u0628\u0631\u0648\u0645\u064a\u062a IA | Market Watch', desc:'\u0645\u0648\u0644\u0651\u062f \u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0642\u062f\u0651\u0645\u0629 \u2014 \u0627\u0644\u0635\u0642 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a \u0641\u064a ChatGPT \u0623\u0648 Claude \u0623\u0648 Grok \u0623\u0648 Perplexity \u0648\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u062a\u062d\u0644\u064a\u0644 \u0645\u0624\u0633\u0633\u064a \u0634\u0627\u0645\u0644.', ogTitle:'\u0628\u0631\u0648\u0645\u064a\u062a IA | Market Watch', ogDesc:'\u0623\u0646\u0634\u0626 \u0628\u0631\u0648\u0645\u0628\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u064f\u062d\u0633\u064e\u0646 \u062d\u0633\u0628 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0648\u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0633\u062a\u0648\u0649.' },
-    es: { title:'Prompt IA | Market Watch', desc:'Generador de mega-prompts de análisis financiero — Pega el prompt en ChatGPT, Claude, Grok o Perplexity y obtén un análisis institucional completo.', ogTitle:'Prompt IA | Market Watch', ogDesc:'Genera un mega-prompt de análisis financiero adaptado a tu IA, idioma y nivel.' },
-    zh: { title:'AI 提示词 | Market Watch', desc:'金融分析超级提示词生成器 — 将提示词粘贴到 ChatGPT、Claude、Grok 或 Perplexity，获取机构级完整分析。', ogTitle:'AI 提示词 | Market Watch', ogDesc:'生成适合您的AI、语言和水平的金融分析超级提示词。' }
+    fr: { title:'Prompt IA | DailyTickers', desc:'Generateur de mega-prompts d\'analyse financiere — Collez le prompt dans ChatGPT, Claude, Grok ou Perplexity et obtenez une analyse institutionnelle complete.', ogTitle:'Prompt IA | DailyTickers', ogDesc:'Generez un mega-prompt d\'analyse financiere adapte a votre IA, langue et niveau.' },
+    en: { title:'AI Prompt | DailyTickers', desc:'Financial analysis mega-prompt generator — Paste the prompt into ChatGPT, Claude, Grok or Perplexity and get a complete institutional-grade analysis.', ogTitle:'AI Prompt | DailyTickers', ogDesc:'Generate a financial analysis mega-prompt tailored to your AI, language and skill level.' },
+    ar: { title:'\u0628\u0631\u0648\u0645\u064a\u062a IA | DailyTickers', desc:'\u0645\u0648\u0644\u0651\u062f \u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u062a\u0642\u062f\u0651\u0645\u0629 \u2014 \u0627\u0644\u0635\u0642 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a \u0641\u064a ChatGPT \u0623\u0648 Claude \u0623\u0648 Grok \u0623\u0648 Perplexity \u0648\u0627\u062d\u0635\u0644 \u0639\u0644\u0649 \u062a\u062d\u0644\u064a\u0644 \u0645\u0624\u0633\u0633\u064a \u0634\u0627\u0645\u0644.', ogTitle:'\u0628\u0631\u0648\u0645\u064a\u062a IA | DailyTickers', ogDesc:'\u0623\u0646\u0634\u0626 \u0628\u0631\u0648\u0645\u0628\u062a \u062a\u062d\u0644\u064a\u0644 \u0645\u0627\u0644\u064a \u0645\u064f\u062d\u0633\u064e\u0646 \u062d\u0633\u0628 \u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0648\u0627\u0644\u0644\u063a\u0629 \u0648\u0627\u0644\u0645\u0633\u062a\u0648\u0649.' },
+    es: { title:'Prompt IA | DailyTickers', desc:'Generador de mega-prompts de análisis financiero — Pega el prompt en ChatGPT, Claude, Grok o Perplexity y obtén un análisis institucional completo.', ogTitle:'Prompt IA | DailyTickers', ogDesc:'Genera un mega-prompt de análisis financiero adaptado a tu IA, idioma y nivel.' },
+    zh: { title:'AI 提示词 | DailyTickers', desc:'金融分析超级提示词生成器 — 将提示词粘贴到 ChatGPT、Claude、Grok 或 Perplexity，获取机构级完整分析。', ogTitle:'AI 提示词 | DailyTickers', ogDesc:'生成适合您的AI、语言和水平的金融分析超级提示词。' }
   },
   ui: {
     fr: {
@@ -52,7 +52,7 @@ var LANG = {
       compTitle: 'Prompts compl\u00e9mentaires',
       disclaimer: 'L\'IA est un assistant, pas un oracle. V\u00e9rifiez toujours sur les sources primaires.',
       learnMore: 'En savoir plus',
-      footer: '&copy; 2026 Market Watch. Donn\u00e9es via MarketWatch Gateway. Ceci n\'est pas un conseil financier.',
+      footer: '&copy; 2026 DailyTickers. Donn\u00e9es via DailyTickers Gateway. Ceci n\'est pas un conseil financier.',
       truncNote: '[Prompt tronqu\u00e9 \u2014 collez la version compl\u00e8te via le bouton Copier]',
       heroToolLabel: 'Outil interactif',
       badgeMulti: 'Multi-actifs',
@@ -129,7 +129,7 @@ var LANG = {
       compTitle: 'Complementary prompts',
       disclaimer: 'AI is an assistant, not an oracle. Always verify on primary sources.',
       learnMore: 'Learn more',
-      footer: '&copy; 2026 Market Watch. Data via MarketWatch Gateway. This is not financial advice.',
+      footer: '&copy; 2026 DailyTickers. Data via DailyTickers Gateway. This is not financial advice.',
       truncNote: '[Prompt truncated \u2014 paste the full version via the Copy button]',
       heroToolLabel: 'Interactive Tool',
       badgeMulti: 'Multi-asset',
@@ -206,7 +206,7 @@ var LANG = {
       compTitle: '\u0628\u0631\u0648\u0645\u0628\u062a\u0627\u062a \u062a\u0643\u0645\u064a\u0644\u064a\u0629',
       disclaimer: '\u0627\u0644\u0630\u0643\u0627\u0621 \u0627\u0644\u0627\u0635\u0637\u0646\u0627\u0639\u064a \u0645\u0633\u0627\u0639\u062f\u060c \u0644\u064a\u0633 \u0648\u062d\u064a\u064b\u0627. \u062a\u062d\u0642\u0642 \u062f\u0627\u0626\u0645\u064b\u0627 \u0645\u0646 \u0627\u0644\u0645\u0635\u0627\u062f\u0631 \u0627\u0644\u0623\u0635\u0644\u064a\u0629.',
       learnMore: '\u0627\u0639\u0631\u0641 \u0623\u0643\u062b\u0631',
-      footer: '&copy; 2026 Market Watch. \u0628\u064a\u0627\u0646\u0627\u062a \u0639\u0628\u0631 MarketWatch Gateway. \u0647\u0630\u0627 \u0644\u064a\u0633 \u0646\u0635\u064a\u062d\u0629 \u0645\u0627\u0644\u064a\u0629.',
+      footer: '&copy; 2026 DailyTickers. \u0628\u064a\u0627\u0646\u0627\u062a \u0639\u0628\u0631 DailyTickers Gateway. \u0647\u0630\u0627 \u0644\u064a\u0633 \u0646\u0635\u064a\u062d\u0629 \u0645\u0627\u0644\u064a\u0629.',
       truncNote: '[\u062a\u0645 \u0627\u0642\u062a\u0637\u0627\u0639 \u0627\u0644\u0628\u0631\u0648\u0645\u0628\u062a \u2014 \u0627\u0644\u0635\u0642 \u0627\u0644\u0646\u0633\u062e\u0629 \u0627\u0644\u0643\u0627\u0645\u0644\u0629 \u0639\u0628\u0631 \u0632\u0631 \u0646\u0633\u062e]',
       heroToolLabel: '\u0623\u062f\u0627\u0629 \u062a\u0641\u0627\u0639\u0644\u064a\u0629',
       badgeMulti: '\u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0623\u0635\u0648\u0644',
@@ -283,7 +283,7 @@ var LANG = {
       compTitle: 'Prompts complementarios',
       disclaimer: 'La IA es un asistente, no un oráculo. Siempre verifique en fuentes primarias.',
       learnMore: 'Saber más',
-      footer: '&copy; 2026 Market Watch. Datos vía MarketWatch Gateway. Esto no es asesoría financiera.',
+      footer: '&copy; 2026 DailyTickers. Datos vía DailyTickers Gateway. Esto no es asesoría financiera.',
       truncNote: '[Prompt truncado — pegue la versión completa con el botón Copiar]',
       heroToolLabel: 'Herramienta interactiva',
       badgeMulti: 'Multi-activo',
@@ -360,7 +360,7 @@ var LANG = {
       compTitle: '补充提示词',
       disclaimer: 'AI是助手，不是神谕。请始终在一手来源上核实。',
       learnMore: '了解更多',
-      footer: '&copy; 2026 Market Watch. 数据来自 MarketWatch Gateway. 本内容不构成投资建议。',
+      footer: '&copy; 2026 DailyTickers. 数据来自 DailyTickers Gateway. 本内容不构成投资建议。',
       truncNote: '[提示词已截断 — 请通过复制按钮粘贴完整版]',
       heroToolLabel: '互动工具',
       badgeMulti: '多资产',

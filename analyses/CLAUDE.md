@@ -1,4 +1,4 @@
-# Market Watch - Analyses Instructions
+# DailyTickers - Analyses Instructions
 
 ## 2. ANALYSE INDIVIDUELLE (Ticker Analysis)
 
@@ -31,7 +31,7 @@
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo">
       <img src="/logo.svg" alt="" width="36" height="36">
-      <span class="brand-title">MarketWatch</span>
+      <span class="brand-title">DailyTickers</span>
     </a>
     <div class="brand-actions">
       <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
@@ -78,7 +78,7 @@ Adapter les items aux sections de l'analyse. ~6-12 items selon la complexité. J
 #### Footer (OBLIGATOIRE)
 ```html
 <footer class="article-footer">
-  &copy; 2026 Market Watch. Data via MarketWatch Gateway.
+  &copy; 2026 DailyTickers. Data via DailyTickers Gateway.
   Not financial advice.
   <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>
@@ -122,9 +122,9 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 ### 17 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
-- **IMPORTANT** : Le brand link doit **TOUJOURS** utiliser le logo Market Watch (`https://market-watch.xyz/logo.svg`), **JAMAIS** le logo de la société (parqet.com). Le logo société est réservé aux cartes de listing dans index.html uniquement.
+- **IMPORTANT** : Le brand link doit **TOUJOURS** utiliser le logo DailyTickers (`https://dailytickers.com/logo.svg`), **JAMAIS** le logo de la société (parqet.com). Le logo société est réservé aux cartes de listing dans index.html uniquement.
 - Ticker, exchange, date, lien retour site (`href="/"`)
-- Brand link : `<img src="https://market-watch.xyz/logo.svg" alt="MW">` + texte "MARKET WATCH", `color:#0f172a`, pas de `filter:brightness` sur le logo
+- Brand link : `<img src="https://dailytickers.com/logo.svg" alt="MW">` + texte "MARKET WATCH", `color:#0f172a`, pas de `filter:brightness` sur le logo
 - Prix actuel, variation jour, variation semaine
 - Métriques clés en `.ticker-metrics` : MCap, Volume, Float, Short Interest, Beta, 52W Range
 - Badges : secteur, exchange, thème
@@ -804,7 +804,7 @@ Intégrer les données Polymarket dans les sections Macro, Risques, ou Social Ra
   - **Non-US Stocks** → Yahoo Finance chart (pas de Finviz)
   - **Modal** : fond dark #0f172a, 3 liens externes (Finviz/TradingView/Yahoo Finance)
 - **Weekly : metric-cards cliquables** : chaque metric-card avec un ticker doit avoir `onclick="openChartModal('SYMBOL','Label')"` et `cursor:pointer`
-- **Logos tickers (index.html uniquement)** : utiliser `https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg` avec fallback gradient+initiales — **NE PAS** utiliser le logo société dans le header des pages d'analyses individuelles (toujours logo MW : `market-watch.xyz/logo.svg`)
+- **Logos tickers (index.html uniquement)** : utiliser `https://assets.parqet.com/logos/symbol/{TICKER}?format=jpg` avec fallback gradient+initiales — **NE PAS** utiliser le logo société dans le header des pages d'analyses individuelles (toujours logo MW : `dailytickers.com/logo.svg`)
 - **Liens** : jamais de `/index.html` — GitHub Pages résout automatiquement
 - **Landing page** : chaque nouvelle analyse doit être ajoutée dans index.html avec logo, chart button, et lien
 - **Alert-banner** : toujours forcer `color: white !important` sur le texte et les `<p>` internes
@@ -890,7 +890,7 @@ Ajouter dans `report.css` :
 | **Chiffre clé dans un paragraphe** | Inline, juste après le chiffre | "Revenue $298K `[source-ref]`" |
 | **Tableau de données** | `.source-refs` sous le tableau | Sources: SEC EDGAR, Yahoo Finance |
 | **Fait d'actualité / News** | Inline dans le texte de la news | "Partenariat avec Mitsubishi `[source-ref]`" |
-| **Données techniques** (S/R, volume) | `.source-refs` sous le chart | Sources: MarketWatch Gateway |
+| **Données techniques** (S/R, volume) | `.source-refs` sous le chart | Sources: DailyTickers Gateway |
 | **SEC Filings** | Inline dans chaque ligne du tableau | Lien vers le filing exact sur SEC.gov |
 | **Sentiment social** | Inline ou sous la carte plateforme | Lien vers StockTwits, Reddit, etc. |
 | **Données institutionnelles (13F)** | Inline dans le tableau | Lien vers Fintel, WhaleWisdom |

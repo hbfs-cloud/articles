@@ -39,7 +39,7 @@ if (!BOT_TOKEN || !CHAT_ID) {
 }
 
 const SCANNER_DIR = path.join(ROOT, 'scanner');
-const BASE_URL = 'https://articles.market-watch.xyz/scanner';
+const BASE_URL = 'https://articles.dailytickers.com/scanner';
 
 const MONTHS_FR = {
   '01': 'Janvier', '02': 'Février', '03': 'Mars', '04': 'Avril',
@@ -171,11 +171,11 @@ async function main() {
     setupLine = `\n🎯 <b>Setups A+ :</b> ${summary.setupCount}`;
   }
   
-  const message = `📊 <b>Scanner Market Watch — ${dateFR}</b>${regimeLine}${setupLine}${topTickers}
+  const message = `📊 <b>Scanner DailyTickers — ${dateFR}</b>${regimeLine}${setupLine}${topTickers}
 
 🔗 ${pageUrl}
 
-<i>Top setups algorithmiques du jour — Market Watch</i>`;
+<i>Top setups algorithmiques du jour — DailyTickers</i>`;
   
   console.log('Sending Telegram message...');
   console.log(message);

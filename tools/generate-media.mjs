@@ -62,7 +62,7 @@ const CHROMIUM  = '/snap/bin/chromium';
 const VOICE     = 'en-US-AndrewNeural';  // edge-tts fallback voice
 const RATE      = '+5%';
 const PITCH     = '+8Hz';
-const BASE_URL  = 'https://articles.market-watch.xyz';
+const BASE_URL  = 'https://articles.dailytickers.com';
 
 // ── SSH Mac Mini (YouTube upload only — TTS is now local) ─────────────────────
 const SSH_HOST  = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
@@ -117,7 +117,7 @@ function getTitle(html) {
   const m = html.match(/<title[^>]*>([^<]+)<\/title>/i);
   if (m) return m[1].split('|')[0].trim().replace(/&mdash;/g,'—').replace(/&amp;/g,'&').replace(/&[a-z]+;/g,' ');
   const h = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-  return h ? h[1].trim().replace(/&mdash;/g,'—').replace(/&amp;/g,'&').replace(/&[a-z]+;/g,' ') : 'Market Watch';
+  return h ? h[1].trim().replace(/&mdash;/g,'—').replace(/&amp;/g,'&').replace(/&[a-z]+;/g,' ') : 'DailyTickers';
 }
 
 function getDesc(html) {
@@ -361,7 +361,7 @@ async function generateAIContent(html, url, dateStr, title, meta) {
     series:   `a 5-minute expert series episode. Structure: context, deep analysis, practical application, key insights. Rich visuals.`,
   };
 
-  const prompt = `You are a young, dynamic financial analyst creating an engaging video for Market Watch — think Bloomberg meets TikTok finance. Your voice is confident, direct, fast-paced. You speak like you're explaining a trade to a sharp friend, not reading a report.
+  const prompt = `You are a young, dynamic financial analyst creating an engaging video for DailyTickers — think Bloomberg meets TikTok finance. Your voice is confident, direct, fast-paced. You speak like you're explaining a trade to a sharp friend, not reading a report.
 
 ARTICLE: ${title}
 DATE: ${dateStr}
@@ -452,7 +452,7 @@ Return ONLY valid JSON, no markdown fences, no explanation:
 }
 
 ## HARD RULES
-- audioScript: NO "Welcome to Market Watch", NO "Thanks for watching", NO "See you next time", NO "In this video"
+- audioScript: NO "Welcome to DailyTickers", NO "Thanks for watching", NO "See you next time", NO "In this video"
 - Start audioScript with the biggest number, surprise, or emotion: "S&P just had its worst week..." or "Something broke in markets this week..."
 - metric-row: use EXACT numbers from the article — no placeholders
 - performance: use REAL tickers and REAL percentage moves from the article
@@ -505,8 +505,8 @@ function fallbackContent(html, url, dateStr, title, meta) {
 
   // Build meaningful audio script from description
   const audioScript = desc.length > 50
-    ? `${title}. ${desc.slice(0, 500)}. Full analysis at articles.market-watch.xyz.`
-    : `${title}. Full analysis at articles.market-watch.xyz.`;
+    ? `${title}. ${desc.slice(0, 500)}. Full analysis at articles.dailytickers.com.`
+    : `${title}. Full analysis at articles.dailytickers.com.`;
 
   // Build telegram bullets from headings + metrics
   const telegramBullets = [];
@@ -527,7 +527,7 @@ function fallbackContent(html, url, dateStr, title, meta) {
   for (const h of headings.slice(0, 4)) {
     slides.push({ type: 'summary', title: h, items: [desc.slice(0, 120)], narration: h });
   }
-  slides.push({ type: 'summary', title: 'Read More', items: [`Full article at ${url}`], narration: 'Full article available online at articles.market-watch.xyz.' });
+  slides.push({ type: 'summary', title: 'Read More', items: [`Full article at ${url}`], narration: 'Full article available online at articles.dailytickers.com.' });
 
   return {
     audioScript,
@@ -598,9 +598,9 @@ async function screenshotFallback(slides, config, outDir) {
     if (s.type === 'summary') return { type: 'content', header: s.title, bullets: s.items || [] };
     if (s.type === 'highlight') return { type: 'content', header: s.title, bullets: [s.text || ''] };
     if (s.type === 'bullets') return { type: 'content', header: s.title, bullets: s.items || [] };
-    return { type: 'outro', url: 'articles.market-watch.xyz', subtitle: 'Follow us on Telegram for daily signals' };
+    return { type: 'outro', url: 'articles.dailytickers.com', subtitle: 'Follow us on Telegram for daily signals' };
   });
-  pillowSlides.push({ type: 'outro', url: 'articles.market-watch.xyz', subtitle: 'Follow us on Telegram — @MarketWatchXYZ' });
+  pillowSlides.push({ type: 'outro', url: 'articles.dailytickers.com', subtitle: 'Follow us on Telegram — @DailyTickersXYZ' });
 
   const dataFile = path.join(outDir, 'slides-data.json');
   fs.writeFileSync(dataFile, JSON.stringify({ slides: pillowSlides }), 'utf8');
@@ -733,7 +733,7 @@ function uploadToYouTube(videoPath, thumbPath, title, description, playlistId) {
     'creds=Credentials(token=t["access_token"],refresh_token=t["refresh_token"],token_uri=c["token_uri"],client_id=c["client_id"],client_secret=c["client_secret"])',
     'yt=build("youtube","v3",credentials=creds)',
     'meta=json.load(open("/tmp/mw-yt-meta.json"))',
-    'body={"snippet":{"title":meta["title"],"description":meta["description"],"categoryId":"25","defaultLanguage":"en","tags":["Market Watch","finance","trading"]},"status":{"privacyStatus":"public"}}',
+    'body={"snippet":{"title":meta["title"],"description":meta["description"],"categoryId":"25","defaultLanguage":"en","tags":["DailyTickers","finance","trading"]},"status":{"privacyStatus":"public"}}',
     'media=MediaFileUpload("/tmp/mw-upload/video.mp4",mimetype="video/mp4",resumable=True)',
     'req=yt.videos().insert(part="snippet,status",body=body,media_body=media)',
     'resp=None',
@@ -784,7 +784,7 @@ function sendTelegramAudio(audioPath, threadId, title, caption) {
     `-F "message_thread_id=${threadId}"`,
     `-F "audio=@${audioPath}"`,
     `-F "title=${title.replace(/['"]/g,'').slice(0,60)}"`,
-    `-F "performer=Market Watch"`,
+    `-F "performer=DailyTickers"`,
     `-F "caption=<${capFile}"`,
     `-F "parse_mode=HTML"`,
   ].join(' ');
@@ -876,7 +876,7 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
           narration };
 
       case 'highlight':
-        return { layout: 'quote', quote: s.text || s.title || '', author: 'Market Watch Analysis', narration };
+        return { layout: 'quote', quote: s.text || s.title || '', author: 'DailyTickers Analysis', narration };
 
       case 'performance':
         return { layout: 'table', title: s.title || 'Performance',
@@ -934,8 +934,8 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
       }
 
       case 'chapter-outro':
-        return { layout: 'closing', title: s.title || 'Follow Market Watch',
-          metrics: [{ label: 'Telegram', value: '@MarketWatchXYZ' }, { label: 'Web', value: 'articles.market-watch.xyz' }],
+        return { layout: 'closing', title: s.title || 'Follow DailyTickers',
+          metrics: [{ label: 'Telegram', value: '@DailyTickersXYZ' }, { label: 'Web', value: 'articles.dailytickers.com' }],
           narration };
 
       default:
@@ -951,20 +951,20 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
   if (!hasClosing) {
     gammaSlides.push({
       layout: 'closing',
-      title: 'Market Watch',
+      title: 'DailyTickers',
       subtitle: `${artMeta.emoji} ${artMeta.label} — ${dateStr}`,
       metrics: [{ label: 'Full Article', value: url.replace('https://', '') }],
-      narration: 'Full article available at articles.market-watch.xyz. Follow us on Telegram for daily signals.',
+      narration: 'Full article available at articles.dailytickers.com. Follow us on Telegram for daily signals.',
     });
   }
 
   return {
     version: '1',
-    meta: { title, author: 'Market Watch', company: 'Market Watch', date: dateStr, language: 'en', tags: [artType, 'finance', 'markets'], description: audioScript?.slice(0, 200) || '' },
-    branding: { watermark: 'MARKET WATCH', company_url: 'articles.market-watch.xyz' },
+    meta: { title, author: 'DailyTickers', company: 'DailyTickers', date: dateStr, language: 'en', tags: [artType, 'finance', 'markets'], description: audioScript?.slice(0, 200) || '' },
+    branding: { watermark: 'MARKET WATCH', company_url: 'articles.dailytickers.com' },
     theme,
     narration: { voice: 'en-US-AndrewNeural', rate: '+5%', pitch: '+0Hz' },
-    video: { subtitles: true, youtube: { title: `${title} | Market Watch`, description: `${artMeta.emoji} ${artMeta.label} — ${dateStr}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`, tags: ['Market Watch', 'finance', 'trading', artType], category: 'Education' } },
+    video: { subtitles: true, youtube: { title: `${title} | DailyTickers`, description: `${artMeta.emoji} ${artMeta.label} — ${dateStr}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`, tags: ['DailyTickers', 'finance', 'trading', artType], category: 'Education' } },
     slides: gammaSlides,
   };
 }
@@ -1079,7 +1079,7 @@ async function main() {
   // ── 6. YouTube upload ──
   let ytId = null;
   if (fs.existsSync(videoPath)) {
-    const ytTitle = `${title} | Market Watch`;
+    const ytTitle = `${title} | DailyTickers`;
     const ytDesc = `${meta.emoji} ${meta.label} — ${dateStr}\n\n${(audioScript || '').slice(0,2000)}\n\n🔗 Full article: ${url}\n📱 Telegram: https://t.me/+gl06cNSLV2RiZmE0\n\n⚠️ Not financial advice.`;
     ytId = uploadToYouTube(videoPath, null, ytTitle, ytDesc, meta.ytPlaylist);
   }

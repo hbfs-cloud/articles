@@ -56,7 +56,7 @@
 
 # 📋 SYNTHÈSE EXÉCUTIVE
 
-## Régime de Marché (MarketWatch MCP - 17 jan 2026 20:30 UTC)
+## Régime de Marché (DailyTickers MCP - 17 jan 2026 20:30 UTC)
 
 | Indicateur | Valeur | Interprétation |
 |------------|--------|----------------|
@@ -598,7 +598,7 @@ La semaine s'annonce chargée avec:
 
 | Source | Type | Timestamp |
 |--------|------|-----------|
-| **MarketWatch MCP** | Indices, Régime, Sentiment | 20:30 UTC |
+| **DailyTickers MCP** | Indices, Régime, Sentiment | 20:30 UTC |
 | **Yahoo Finance** | Quotes, News | Real-time |
 | **CME FedWatch** | Probabilités Fed | 17 jan |
 
@@ -633,9 +633,9 @@ La semaine s'annonce chargée avec:
 *Disclaimer: Ce rapport est fourni à titre éducatif et informatif uniquement. Il ne constitue pas un conseil en investissement personnalisé. Les marchés financiers comportent des risques significatifs de perte en capital. Les performances passées ne préjugent pas des performances futures. Consultez un conseiller financier agréé avant toute décision d'investissement.*
 
 *Rapport généré le 18 janvier 2026 à 00:00 UTC*  
-*Données MarketWatch MCP: 17 janvier 2026 20:30 UTC*  
+*Données DailyTickers MCP: 17 janvier 2026 20:30 UTC*  
 *Prochaine mise à jour: 26 janvier 2026*
 
 ---
 
-**Version:** 4.0 | **Classification:** Institutionnel Retail | **Auteur:** MarketWatch AI Assistant
+**Version:** 4.0 | **Classification:** Institutionnel Retail | **Auteur:** DailyTickers AI Assistant

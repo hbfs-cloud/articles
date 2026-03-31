@@ -16,7 +16,7 @@ export const Slide: React.FC<{children: React.ReactNode; style?: React.CSSProper
     {children}
     <div style={{position: 'absolute', bottom: '40px', left: '60px', right: '60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
        <BrandLogo size={40} />
-       <Caption style={{fontSize: '18px'}}>© 2026 MarketWatch Articles. Not Financial Advice.</Caption>
+       <Caption style={{fontSize: '18px'}}>© 2026 DailyTickers Articles. Not Financial Advice.</Caption>
     </div>
   </div>
 );

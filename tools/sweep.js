@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * sweep.js — Enhanced grid search for Market Watch scanner optimal setup
+ * sweep.js — Enhanced grid search for DailyTickers scanner optimal setup
  *
  * Improvements over v1:
  *   - Proper daily mark-to-market equity tracking
@@ -604,7 +604,7 @@ function simulatePortfolio(allTrades, scans, config) {
 // ─── Main sweep ───────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log('=== Market Watch Scanner — Enhanced Sweep Optimizer v2 ===\n');
+  console.log('=== DailyTickers Scanner — Enhanced Sweep Optimizer v2 ===\n');
 
   // 1. Parse all scans
   const scanDirs = fs.readdirSync(SCANNER_DIR)
@@ -767,16 +767,16 @@ async function main() {
                           insertTop(topByComposite, r, (a, b) => b.composite - a.composite);
                           insertTop(topByLowestDD, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                           // Mode advisors: maximize return within DD constraints
-                          // DYNAMIC: concentrated (P1-2), max return, DD < 5%, min 8 trades
-                          if (r.portfolioSize <= 2 && Math.abs(r.maxDD) < 5 && r.trades >= 8) {
+                          // DYNAMIC: concentrated (P1-2), max return, DD < 8%, 8-20 trades
+                          if (r.portfolioSize <= 2 && Math.abs(r.maxDD) < 8 && r.trades >= 8 && r.trades <= 20) {
                             insertTop(advDynamic, r, (a, b) => b.returnTotal - a.returnTotal);
                           }
-                          // BALANCED: diversified (P3-5), max return, DD < 3%, min 10 trades
-                          if (r.portfolioSize >= 3 && r.portfolioSize <= 5 && Math.abs(r.maxDD) < 3 && r.trades >= 10) {
-                            insertTop(advBalanced, r, (a, b) => b.returnTotal - a.returnTotal);
+                          // BALANCED: diversified (P3-5), best risk-adjusted, DD < 6%, 15-30 trades
+                          if (r.portfolioSize >= 3 && r.portfolioSize <= 5 && Math.abs(r.maxDD) < 6 && r.trades >= 15 && r.trades <= 30) {
+                            insertTop(advBalanced, r, (a, b) => (b.returnTotal - 2*Math.abs(b.maxDD)) - (a.returnTotal - 2*Math.abs(a.maxDD)));
                           }
-                          // SECURED: any size, min DD, return >= 5%, min 8 trades
-                          if (r.returnTotal >= 5 && r.trades >= 8) {
+                          // SECURED: any size, min DD, return >= 5%, 8-20 trades
+                          if (r.returnTotal >= 5 && r.trades >= 8 && r.trades <= 20) {
                             insertTop(advSecured, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                           }
                         }
@@ -884,12 +884,12 @@ async function main() {
   // ─── MODE ADVISOR: find best config for each objective ───────────────────
   console.log('\n═══ MODE ADVISOR ═══\n');
 
-  console.log('DYNAMIC (max return, P2-4):');
+  console.log('DYNAMIC (max return, P1-2, 8-20 trades):');
   for (const r of advDynamic.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nBALANCED (best return - 2*|DD|, P3-5):');
+  console.log('\nBALANCED (best risk-adjusted, P3-5, 15-30 trades):');
   for (const r of advBalanced.slice(0, 10)) {
     const riskAdj = (r.returnTotal - 2 * Math.abs(r.maxDD)).toFixed(2);
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% RiskAdj=${riskAdj} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
@@ -951,6 +951,12 @@ async function main() {
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
       if (sim2 && sim2.closedTrades) {
         frozenTrades[id] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
+        // Save MtM metrics for gen-status-page.js
+        output[`frozen_${id}`] = {
+          returnTotal: sim2.returnTotal, maxDD: sim2.maxDD, winRate: sim2.winRate,
+          profitFactor: sim2.profitFactor, trades: sim2.closedTrades.length,
+          equityCurve: sim2.equityCurve,
+        };
         console.log(`  ${id} (${cfg.label}): ${sim2.closedTrades.length} trades, return=${sim2.returnTotal}%, DD=${sim2.maxDD}%`);
       } else {
         console.log(`  ${id} (${cfg.label}): no trades`);

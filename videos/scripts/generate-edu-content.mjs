@@ -5453,7 +5453,7 @@ function generateAlgoMillion() {
     '12 chapitres, ~180 slides, 2 heures de contenu',
     'De l\'infrastructure au scaling, en passant par 8 strategies complementaires',
     'Objectif : 100K euros -> 1M euros en 24 mois, sans levier, long only, DD max 25%',
-    'La serie complete est disponible sur articles.market-watch.xyz',
+    'La serie complete est disponible sur articles.dailytickers.com',
     'Bonne chance dans votre aventure de trading algorithmique !'
   ]));
 
@@ -6208,13 +6208,13 @@ function generateBoursesMENA() {
   ));
 
   add(quote('Les marchés les plus rentables sont ceux que les autres ignorent. La région MENA est l\'un des derniers continents financiers inexplorés.',
-    'Série Bourses MENA — Market Watch'));
+    'Série Bourses MENA — DailyTickers'));
 
   add(warning('Rappel final — Avertissement',
     'Ce contenu est strictement éducatif et ne constitue pas un conseil en investissement. Les marchés MENA comportent des risques spécifiques (géopolitique, change, liquidité) qui peuvent entraîner des pertes significatives. Consultez un conseiller financier agréé avant toute décision d\'investissement.'));
 
   add(tip('Pour aller plus loin',
-    'Retrouvez la série complète en 6 parties sur articles.market-watch.xyz/series/bourses-mena/. Chaque article contient des tableaux de données, des graphiques ECharts interactifs, et des quiz pour tester vos connaissances. Abonnez-vous au briefing quotidien pour suivre l\'actualité des marchés MENA.'));
+    'Retrouvez la série complète en 6 parties sur articles.dailytickers.com/series/bourses-mena/. Chaque article contient des tableaux de données, des graphiques ECharts interactifs, et des quiz pour tester vos connaissances. Abonnez-vous au briefing quotidien pour suivre l\'actualité des marchés MENA.'));
 
   // Quiz final 8 (~slide 180)
   add(quiz(

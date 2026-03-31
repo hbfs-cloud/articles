@@ -2,7 +2,7 @@
 /**
  * generate-scanner-image.js
  * 
- * Génère l'image quotidienne du scanner Market Watch et la publie sur Telegram.
+ * Génère l'image quotidienne du scanner DailyTickers et la publie sur Telegram.
  * 
  * Usage:
  *   node tools/generate-scanner-image.js [YYYYMMDD]
@@ -243,7 +243,7 @@ function generateHTML({ top3, metrics, positions, portfolio, regime, scanDir, ye
   const ddHist = metrics.drawdown_history || [0, -0.1, -0.2, -0.5, -0.8, -1.0, -0.8, -0.6, -0.4, -0.2, -0.3, -0.2, -0.1, -0.2, -0.1, -0.1, 0, 0, 0, metrics.max_drawdown || -1.0];
 
   const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  const scanUrl = `https://articles.market-watch.xyz/scanner/${scanDir}/`;
+  const scanUrl = `https://articles.dailytickers.com/scanner/${scanDir}/`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -462,8 +462,8 @@ ${posGrid.map(row => `
     Charts: StockCharts.com · Données: Yahoo Finance · Modèle: Top 5 · Rotation max 2/j · Sans SQ · Anti-doublon
   </div>
   <div style="text-align:right;flex-shrink:0;margin-left:10px">
-    <div style="font-size:9px;font-weight:700;color:#374151">articles.market-watch.xyz/scanner/${scanDir}/</div>
-    <div style="font-size:7px;color:#94a3b8">© 2026 Market Watch™ · All rights reserved</div>
+    <div style="font-size:9px;font-weight:700;color:#374151">articles.dailytickers.com/scanner/${scanDir}/</div>
+    <div style="font-size:7px;color:#94a3b8">© 2026 DailyTickers™ · All rights reserved</div>
   </div>
 </div>
 
@@ -649,12 +649,12 @@ async function main() {
 
   // Publish to Telegram
   if (PUBLISH_TELEGRAM && !DRY_RUN && fs.existsSync(pngPath)) {
-    const scanUrl = `https://articles.market-watch.xyz/scanner/${scanDir}/`;
-    const caption = `📡 *Scanner Market Watch* — ${new Date().toLocaleDateString('fr-FR')}
+    const scanUrl = `https://articles.dailytickers.com/scanner/${scanDir}/`;
+    const caption = `📡 *Scanner DailyTickers* — ${new Date().toLocaleDateString('fr-FR')}
 Régime : *${regime.label}* | Top 5 + Rotation | Sans Short Squeeze
 
 🔗 [Voir l'analyse complète](${scanUrl})
-_articles.market-watch.xyz_`;
+_articles.dailytickers.com_`;
     await publishTelegram(pngPath, caption);
   }
 

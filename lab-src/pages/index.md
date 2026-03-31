@@ -2,7 +2,7 @@
 title: Dashboard Global
 ---
 
-<a href="/" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; color:#475569; text-decoration:none; font-size:0.85rem; margin-bottom:1rem;">← Retour Market Watch</a>
+<a href="/" style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; color:#475569; text-decoration:none; font-size:0.85rem; margin-bottom:1rem;">← Retour DailyTickers</a>
 
 <!-- ============================================================ -->
 <!-- STATIC QUERIES (no ${inputs}) — pre-rendered with data       -->
@@ -276,7 +276,7 @@ order by median_pe desc
 # Radiographie des 145 Plus Grandes Capitalisations Mondiales
 
 <Alert status=info>
-Laboratoire financier interactif Market Watch — {total_stats[0].total_stocks} actions, 11 secteurs, 4 zones geographiques. Toutes les donnees sont pre-calculees pour un chargement instantane.
+Laboratoire financier interactif DailyTickers — {total_stats[0].total_stocks} actions, 11 secteurs, 4 zones geographiques. Toutes les donnees sont pre-calculees pour un chargement instantane.
 </Alert>
 
 ## Metriques Cles

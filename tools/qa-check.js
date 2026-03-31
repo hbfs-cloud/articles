@@ -376,7 +376,7 @@ const hasErrors = errors.length > 0;
 
 console.log('');
 console.log('╔══════════════════════════════════════════════════╗');
-console.log('║        QA Check — articles.market-watch.xyz      ║');
+console.log('║        QA Check — articles.dailytickers.com      ║');
 console.log('╚══════════════════════════════════════════════════╝');
 console.log(`  Date: ${new Date().toISOString()}`);
 console.log(`  Checks: ${total} | ✅ ${ok.length} | ⚠️  ${warnings.length} | ❌ ${errors.length}`);

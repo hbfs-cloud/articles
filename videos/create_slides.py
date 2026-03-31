@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Hand-crafted slide generator for Market Watch YouTube videos.
+Hand-crafted slide generator for DailyTickers YouTube videos.
 Generates pixel-perfect infographic slides using Pillow + Inter font.
-Design system matches https://articles.market-watch.xyz/
+Design system matches https://articles.dailytickers.com/
 """
 
 from PIL import Image, ImageDraw, ImageFont
@@ -39,7 +39,7 @@ AMBER_BG   = "#fffbeb"
 
 
 class SlideRenderer:
-    """Generates premium infographic slides matching Market Watch design."""
+    """Generates premium infographic slides matching DailyTickers design."""
 
     def __init__(self):
         self.fonts = self._load_fonts()
@@ -101,7 +101,7 @@ class SlideRenderer:
         if self.logo:
             s = self.logo.resize((26, 26), Image.Resampling.LANCZOS)
             img.paste(s, (W - 228, H - 37), s)
-        draw.text((W - 195, H - 38), "market-watch.xyz", fill=TEAL, font=self.fonts["medium_18"])
+        draw.text((W - 195, H - 38), "dailytickers.com", fill=TEAL, font=self.fonts["medium_18"])
         return img
 
     def _arrow_r(self, draw, x, y, length=50, color=TEAL):
@@ -147,7 +147,7 @@ class SlideRenderer:
         self._center(draw, "Bien Débuter en Bourse  —  Partie 6", self.fonts["regular_24"], 505, fill=GRAY)
 
         # Bottom
-        self._center(draw, "market-watch.xyz", self.fonts["medium_20"], H - 80, fill=TEAL)
+        self._center(draw, "dailytickers.com", self.fonts["medium_20"], H - 80, fill=TEAL)
 
         return img
 
@@ -945,7 +945,7 @@ class SlideRenderer:
         draw.rectangle([(W - lw) // 2, 435, (W + lw) // 2, 439], fill=TEAL)
 
         # URL
-        self._center(draw, "market-watch.xyz", self.fonts["medium_28"], 465, fill=TEAL)
+        self._center(draw, "dailytickers.com", self.fonts["medium_28"], 465, fill=TEAL)
 
         # CTA button
         cta = "Abonnez-vous pour plus d'analyses"
