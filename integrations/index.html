@@ -1,190 +1,348 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="ai,tech,architecture" data-tab="tech">
+<html lang="en" data-tags="tech,ai,formation" data-tab="series">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Integrations — Market Watch</title>
-  <meta name="description" content="Connect Market Watch to your workflow: MCP Server for AI agents, embeddable widgets with live prices, RSS feed, Chrome Extension, and Watchlist API.">
+  <title>Integrations &amp; API — Market Watch</title>
+  <meta name="description" content="JSON and RSS endpoints for portfolio replication across 3 scanner modes: Growth, Balanced, and Conservative. No auth, no rate limit.">
   <!-- GTM -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="icon" href="/favicon.ico">
   <link rel="stylesheet" href="/assets/report.css">
-  <link rel="stylesheet" href="/assets/sidebar.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Inter', sans-serif; margin: 0; background: #f8fafc; }
-    .int-hero { text-align: center; padding: 3rem 1.5rem 2rem; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: white; }
-    .int-hero h1 { font-size: 2rem; font-weight: 800; margin: 0.5rem 0; }
-    .int-hero p { font-size: 1rem; color: #94a3b8; max-width: 600px; margin: 0.5rem auto; }
-    .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
-    .int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin: 2rem 0; }
-    .int-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; transition: all 0.2s; position: relative; overflow: hidden; }
-    .int-card:hover { border-color: #a5b4fc; box-shadow: 0 8px 24px rgba(99,102,241,0.08); transform: translateY(-2px); }
-    .int-card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
-    .int-card h3 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 0.4rem; }
-    .int-card p { font-size: 0.85rem; color: #64748b; line-height: 1.5; margin: 0 0 1rem; }
-    .int-card .int-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 1rem; }
-    .int-card .int-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; color: #475569; }
-    .int-card .int-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #6366f1; text-decoration: none; transition: gap 0.2s; }
-    .int-card .int-btn:hover { gap: 10px; }
-    .int-card .int-btn i { font-size: 0.7rem; }
-    .int-status { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px; position: absolute; top: 1rem; right: 1rem; }
-    .int-status.live { background: #ecfdf5; color: #059669; }
-    .int-status.live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: pulse-dot 2s infinite; }
-    .int-status.soon { background: #fffbeb; color: #d97706; }
-    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
-    .int-section { margin: 2.5rem 0 1rem; }
-    .int-section h2 { font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
-    .int-section h2 i { color: #6366f1; }
-    @media(max-width:600px) { .int-grid { grid-template-columns: 1fr; } }
+    .api-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f2d40 100%); color: #fff; padding: 3.5rem 1.5rem 2.5rem; text-align: center; }
+    .api-hero h1 { font-size: 2.1rem; font-weight: 800; margin: 0 0 0.5rem; }
+    .api-hero p { font-size: 1rem; color: #94a3b8; max-width: 620px; margin: 0 auto 1.5rem; }
+    .api-hero .hero-badges { display: flex; justify-content: center; gap: 0.6rem; flex-wrap: wrap; }
+    .api-hero .hero-badge { font-size: 0.7rem; font-weight: 700; padding: 4px 12px; border-radius: 20px; background: rgba(255,255,255,0.1); color: #e2e8f0; letter-spacing: 0.04em; }
+
+    .api-container { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 3rem; }
+
+    .api-section { margin: 2.5rem 0 1rem; }
+    .api-section-title { font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; margin: 0 0 1rem; }
+    .api-section-title i { color: #6366f1; font-size: 1rem; }
+
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .step-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem 1.25rem 1rem; position: relative; }
+    .step-num { width: 28px; height: 28px; border-radius: 50%; background: #6366f1; color: #fff; font-size: 0.8rem; font-weight: 800; display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
+    .step-card h4 { font-size: 0.9rem; font-weight: 700; color: #0f172a; margin: 0 0 0.4rem; }
+    .step-card p { font-size: 0.82rem; color: #64748b; margin: 0; line-height: 1.5; }
+
+    .mode-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .mode-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; border-left-width: 4px; }
+    .mode-card h4 { font-size: 0.95rem; font-weight: 800; margin: 0 0 0.6rem; }
+    .mode-card .mode-params { display: flex; flex-direction: column; gap: 0.3rem; }
+    .mode-param { display: flex; justify-content: space-between; font-size: 0.78rem; }
+    .mode-param .pk { color: #64748b; }
+    .mode-param .pv { font-weight: 600; color: #0f172a; font-family: monospace; }
+
+    .code-block { background: #0f172a; color: #e2e8f0; border-radius: 10px; padding: 1.25rem 1.5rem; font-size: 0.8rem; line-height: 1.7; overflow-x: auto; margin: 0.75rem 0 1.25rem; font-family: 'SFMono-Regular', 'Consolas', monospace; }
+    .code-block .cm { color: #64748b; }
+    .code-block .ck { color: #93c5fd; }
+    .code-block .cs { color: #86efac; }
+    .code-block .cn { color: #fca5a5; }
+
+    .endpoint-url { font-family: monospace; font-size: 0.82rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #0f172a; }
+    .badge-live { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; }
+    .badge-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .rss-box { display: flex; align-items: flex-start; gap: 1.25rem; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
+    .rss-icon { font-size: 2rem; color: #ea580c; flex-shrink: 0; margin-top: 2px; }
+    .rss-box h4 { font-size: 0.95rem; font-weight: 700; color: #0f172a; margin: 0 0 0.3rem; }
+    .rss-box p { font-size: 0.82rem; color: #64748b; margin: 0 0 0.6rem; line-height: 1.5; }
+    .rss-box a { font-size: 0.82rem; font-weight: 700; color: #ea580c; text-decoration: none; }
+    .rss-box a:hover { text-decoration: underline; }
+
+    @media(max-width:600px) {
+      .steps-grid, .mode-grid { grid-template-columns: 1fr; }
+      .api-hero h1 { font-size: 1.6rem; }
+    }
   </style>
 </head>
 <body>
-  <!-- Brand Bar -->
-  <nav class="brand-bar">
-    <div class="brand-bar-inner">
-      <a href="/" class="brand-logo">
-        <img src="/logo.svg" alt="" width="36" height="36">
-        <span class="brand-title">MarketWatch</span>
-      </a>
-      <div class="brand-actions">
-        <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
-      </div>
-    </div>
-  </nav>
+<!-- GTM noscript -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-  <!-- Hero -->
-  <div class="int-hero">
-    <h1><i class="fas fa-plug" style="opacity:0.6;"></i> Integrations</h1>
-    <p>Connect Market Watch to your tools. AI agents, websites, readers, browsers — pick what works for you.</p>
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">MarketWatch</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">S&eacute;ries</a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<div class="api-hero">
+  <h1><i class="fas fa-plug" style="opacity:0.55;margin-right:0.4rem;"></i>Integrations &amp; API</h1>
+  <p>Static JSON and RSS endpoints for portfolio replication across 3 scanner modes. No authentication, no rate limits — updated every trading session.</p>
+  <div class="hero-badges">
+    <span class="hero-badge"><i class="fas fa-circle-dot" style="color:#10b981;margin-right:4px;"></i>Live endpoints</span>
+    <span class="hero-badge">No auth</span>
+    <span class="hero-badge">3 modes</span>
+    <span class="hero-badge">JSON &amp; RSS</span>
+    <span class="hero-badge">Updated nightly</span>
+  </div>
+</div>
+
+<div class="api-container">
+
+  <!-- ── Quick Start ─────────────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-bolt"></i>Quick Start</h2>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <h4>Pick a mode</h4>
+      <p>Choose Growth, Balanced, or Conservative depending on your risk tolerance and holding horizon.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <h4>Fetch the endpoint</h4>
+      <p>Call <code>/api/v1/signals.json</code> or <code>/api/v1/positions.json</code> to get live signals and open positions.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <h4>Replicate the portfolio</h4>
+      <p>Use entry, stop, and TP levels from <code>positions.json</code> to size positions. Equal-weight by default.</p>
+    </div>
   </div>
 
-  <div class="container">
-
-    <!-- ═══════ Main Integrations Grid ═══════ -->
-    <div class="int-grid">
-
-      <!-- MCP Server -->
-      <div class="int-card">
-        <span class="int-status live">Live</span>
-        <div class="int-card-icon" style="background:#eef2ff;color:#6366f1;"><i class="fas fa-robot"></i></div>
-        <h3>MCP Server</h3>
-        <p>37 tools for AI agents. Live scanner, screener, backtest, bars, quotes, options Greeks — all via natural language. Works with Claude Code, Cursor, Gemini CLI.</p>
-        <div class="int-tags">
-          <span class="int-tag">Claude Code</span>
-          <span class="int-tag">Cursor</span>
-          <span class="int-tag">Gemini CLI</span>
-          <span class="int-tag">15,000+ symbols</span>
-        </div>
-        <a href="/mcp/" class="int-btn">Full documentation <i class="fas fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Embeddable Widgets -->
-      <div class="int-card">
-        <span class="int-status live">Live</span>
-        <div class="int-card-icon" style="background:#f0fdf4;color:#059669;"><i class="fas fa-window-restore"></i></div>
-        <h3>Embeddable Widgets</h3>
-        <p>6 widget types for any website: A+ Picks (tape/cards), Market Dashboard, Regime Indicator, Sector Rotation, Top Movers, Risk Radar. Live prices via Yahoo Finance + Binance.</p>
-        <div class="int-tags">
-          <span class="int-tag">6 widget types</span>
-          <span class="int-tag">Live prices</span>
-          <span class="int-tag">Dark/Light</span>
-          <span class="int-tag">Browser alerts</span>
-        </div>
-        <a href="/widget/gallery.html" class="int-btn">Widget gallery <i class="fas fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Watchlist API -->
-      <div class="int-card">
-        <span class="int-status live">Live</span>
-        <div class="int-card-icon" style="background:#fffbeb;color:#d97706;"><i class="fas fa-database"></i></div>
-        <h3>Watchlist API</h3>
-        <p>Free static JSON endpoint. The 10 best daily picks with entry/stop/TP levels, regime, macro alerts. No auth, no rate limit. Updated every trading day at 23:00 UTC.</p>
-        <div class="int-tags">
-          <span class="int-tag">JSON</span>
-          <span class="int-tag">No auth</span>
-          <span class="int-tag">Daily refresh</span>
-        </div>
-        <a href="/mcp/#watchlist-api" class="int-btn">API docs <i class="fas fa-arrow-right"></i></a>
-      </div>
-
-      <!-- RSS Feed -->
-      <div class="int-card">
-        <span class="int-status live">Live</span>
-        <div class="int-card-icon" style="background:#fff7ed;color:#ea580c;"><i class="fas fa-rss"></i></div>
-        <h3>RSS Feed</h3>
-        <p>Subscribe to get daily briefings, scanner picks, weekly reports, and analyses in your favorite reader. Auto-updated on every publication.</p>
-        <div class="int-tags">
-          <span class="int-tag">Feedly</span>
-          <span class="int-tag">Inoreader</span>
-          <span class="int-tag">NetNewsWire</span>
-          <span class="int-tag">Thunderbird</span>
-        </div>
-        <a href="/feed.xml" class="int-btn" target="_blank">feed.xml <i class="fas fa-arrow-up-right-from-square"></i></a>
-      </div>
-
-      <!-- Chrome Extension -->
-      <div class="int-card">
-        <span class="int-status live">Live</span>
-        <div class="int-card-icon" style="background:#faf5ff;color:#7c3aed;"><i class="fab fa-chrome"></i></div>
-        <h3>Chrome Extension</h3>
-        <p>One-click access to A+ picks, regime status, and scanner alerts from your browser toolbar. Badge updates with the current regime color. Auto-syncs with the daily watchlist.</p>
-        <div class="int-tags">
-          <span class="int-tag">Chromium</span>
-          <span class="int-tag">Badge alerts</span>
-          <span class="int-tag">Auto-update</span>
-        </div>
-        <a href="/mcp/#extension" class="int-btn">Install guide <i class="fas fa-arrow-right"></i></a>
-      </div>
-
-      <!-- Coming Soon: Discord Bot -->
-      <div class="int-card" style="opacity:0.7;">
-        <span class="int-status soon">Coming soon</span>
-        <div class="int-card-icon" style="background:#eef2ff;color:#5865F2;"><i class="fab fa-discord"></i></div>
-        <h3>Discord Bot</h3>
-        <p>Get daily scanner picks, regime changes, and price alerts delivered to your Discord server. Slash commands for on-demand scans and analyses.</p>
-        <div class="int-tags">
-          <span class="int-tag">Daily picks</span>
-          <span class="int-tag">Price alerts</span>
-          <span class="int-tag">Slash commands</span>
-        </div>
-        <span class="int-btn" style="color:#94a3b8;">In development <i class="fas fa-clock"></i></span>
-      </div>
-
-    </div>
-
-    <!-- ═══════ Quick Reference ═══════ -->
-    <div class="int-section">
-      <h2><i class="fas fa-link"></i> Quick Links</h2>
-    </div>
-    <div class="data-table" style="margin-bottom:2rem;">
+  <!-- ── Available Endpoints ────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-server"></i>Available Endpoints</h2>
+  </div>
+  <div class="content-card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
+    <div class="data-table">
       <table>
         <thead>
-          <tr><th>Integration</th><th>URL</th><th>Auth</th></tr>
+          <tr>
+            <th>File</th>
+            <th>URL</th>
+            <th>Description</th>
+            <th>Updated</th>
+            <th>Status</th>
+          </tr>
         </thead>
         <tbody>
-          <tr><td><strong>MCP Server</strong></td><td><code>npx market-watch-mcp</code></td><td>None</td></tr>
-          <tr><td><strong>Watchlist JSON</strong></td><td><code>articles.market-watch.xyz/mcp/watchlist.json</code></td><td>None</td></tr>
-          <tr><td><strong>Widget (tape)</strong></td><td><code>articles.market-watch.xyz/widget/?mode=tape</code></td><td>None</td></tr>
-          <tr><td><strong>Widget (cards)</strong></td><td><code>articles.market-watch.xyz/widget/?mode=vertical</code></td><td>None</td></tr>
-          <tr><td><strong>Widget Gallery</strong></td><td><code>articles.market-watch.xyz/widget/gallery.html</code></td><td>None</td></tr>
-          <tr><td><strong>RSS Feed</strong></td><td><code>articles.market-watch.xyz/feed.xml</code></td><td>None</td></tr>
-          <tr><td><strong>Chrome Extension</strong></td><td><code>/mcp/extension/</code> (sideload)</td><td>None</td></tr>
+          <tr>
+            <td><code>modes.json</code></td>
+            <td><span class="endpoint-url">/api/v1/modes.json</span></td>
+            <td>Mode configurations — portfolio size, horizon, filter, rotation</td>
+            <td>On config change</td>
+            <td><span class="badge-live">Live</span></td>
+          </tr>
+          <tr>
+            <td><code>signals.json</code></td>
+            <td><span class="endpoint-url">/api/v1/signals.json</span></td>
+            <td>Latest scanner signals per mode (score, strategy, entry price)</td>
+            <td>Every scan (~23:00 UTC)</td>
+            <td><span class="badge-live">Live</span></td>
+          </tr>
+          <tr>
+            <td><code>positions.json</code></td>
+            <td><span class="endpoint-url">/api/v1/positions.json</span></td>
+            <td>Current open positions with P&amp;L, stop, TP1/TP2, days remaining</td>
+            <td>Every scan (~23:00 UTC)</td>
+            <td><span class="badge-live">Live</span></td>
+          </tr>
+          <tr>
+            <td><code>trades.json</code></td>
+            <td><span class="endpoint-url">/api/v1/trades.json</span></td>
+            <td>Full closed-trade history per mode (pnlPct, status, holdDays)</td>
+            <td>Every scan</td>
+            <td><span class="badge-live">Live</span></td>
+          </tr>
+          <tr>
+            <td><code>equity.json</code></td>
+            <td><span class="endpoint-url">/api/v1/equity.json</span></td>
+            <td>Equity curves and backtest stats per mode (Sharpe, Calmar, drawdown)</td>
+            <td>After each backtest run</td>
+            <td><span class="badge-live">Live</span></td>
+          </tr>
+          <tr>
+            <td><code>feed.xml</code></td>
+            <td><span class="endpoint-url">/api/v1/feed.xml</span></td>
+            <td>RSS 2.0 feed — last 20 scanner publications</td>
+            <td>Every scan</td>
+            <td><span class="badge-live">Live</span></td>
+          </tr>
         </tbody>
       </table>
     </div>
-
   </div>
 
-  <!-- Footer -->
-  <footer class="article-footer">
-    &copy; 2026 Market Watch. All integrations are free and open.
-    <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
-  </footer>
+  <!-- ── Mode Reference ─────────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-sliders"></i>Mode Reference</h2>
+    <p style="font-size:0.85rem;color:#64748b;margin:0 0 1rem;">Three modes optimised across 126,000 backtest combinations. Mode IDs in the API match <code>modes.json</code>.</p>
+  </div>
+  <div class="mode-grid">
+    <!-- Growth -->
+    <div class="mode-card" style="border-left-color:#dc2626;">
+      <h4 style="color:#dc2626;"><i class="fas fa-chart-line" style="margin-right:6px;"></i>Growth <code style="font-size:0.7rem;background:#fee2e2;color:#dc2626;padding:2px 6px;border-radius:4px;">growth</code></h4>
+      <div class="mode-params">
+        <div class="mode-param"><span class="pk">Label</span><span class="pv">Aggressive</span></div>
+        <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">3 positions</span></div>
+        <div class="mode-param"><span class="pk">Horizon</span><span class="pv">5 days</span></div>
+        <div class="mode-param"><span class="pk">Filter</span><span class="pv">all strategies</span></div>
+        <div class="mode-param"><span class="pk">Rotation</span><span class="pv">aggressive</span></div>
+        <div class="mode-param"><span class="pk">Partial TP</span><span class="pv">false</span></div>
+      </div>
+    </div>
+    <!-- Calmar / Balanced -->
+    <div class="mode-card" style="border-left-color:#059669;">
+      <h4 style="color:#059669;"><i class="fas fa-scale-balanced" style="margin-right:6px;"></i>Balanced <code style="font-size:0.7rem;background:#d1fae5;color:#059669;padding:2px 6px;border-radius:4px;">calmar</code></h4>
+      <div class="mode-params">
+        <div class="mode-param"><span class="pk">Label</span><span class="pv">Balanced</span></div>
+        <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">4 positions</span></div>
+        <div class="mode-param"><span class="pk">Horizon</span><span class="pv">5 days</span></div>
+        <div class="mode-param"><span class="pk">Filter</span><span class="pv">all strategies</span></div>
+        <div class="mode-param"><span class="pk">Rotation</span><span class="pv">aggressive</span></div>
+        <div class="mode-param"><span class="pk">Partial TP</span><span class="pv">false</span></div>
+      </div>
+    </div>
+    <!-- Conservative / Zero -->
+    <div class="mode-card" style="border-left-color:#7c3aed;">
+      <h4 style="color:#7c3aed;"><i class="fas fa-shield-halved" style="margin-right:6px;"></i>Conservative <code style="font-size:0.7rem;background:#ede9fe;color:#7c3aed;padding:2px 6px;border-radius:4px;">zero</code></h4>
+      <div class="mode-params">
+        <div class="mode-param"><span class="pk">Label</span><span class="pv">Conservative</span></div>
+        <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">20 positions</span></div>
+        <div class="mode-param"><span class="pk">Horizon</span><span class="pv">10 days</span></div>
+        <div class="mode-param"><span class="pk">Filter</span><span class="pv">no_sq (no short squeeze)</span></div>
+        <div class="mode-param"><span class="pk">Rotation</span><span class="pv">none</span></div>
+        <div class="mode-param"><span class="pk">Max stop</span><span class="pv">8%</span></div>
+      </div>
+    </div>
+  </div>
 
-  <script src="/assets/core.js"></script>
-  <script src="/assets/tag-renderer.js"></script>
-  <script src="/assets/sidebar.js"></script>
+  <div class="didactic-box" style="margin-bottom:1.5rem;">
+    <strong><i class="fas fa-circle-info"></i> Mode ID mapping note</strong><br>
+    In <code>trades.json</code> the source key <code>"sharpe"</code> maps to mode <code>"zero"</code> (Conservative). In all other endpoints the canonical IDs <code>growth</code>, <code>calmar</code>, and <code>zero</code> are used consistently.
+  </div>
+
+  <!-- ── Code Examples ─────────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-code"></i>Code Examples</h2>
+  </div>
+
+  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">JavaScript (fetch)</h4>
+  <div class="code-block"><span class="cm">// Fetch current open positions</span>
+<span class="ck">const</span> res = <span class="ck">await</span> fetch(<span class="cs">'/api/v1/positions.json'</span>);
+<span class="ck">const</span> data = <span class="ck">await</span> res.json();
+
+<span class="cm">// data.openPositions is an array of all open positions</span>
+data.openPositions.forEach(pos =&gt; {
+  console.log(pos.ticker, pos.return_pct + <span class="cs">'%'</span>, pos.status_label);
+});</div>
+
+  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">JavaScript — signals by mode</h4>
+  <div class="code-block"><span class="ck">const</span> { signalsByMode } = <span class="ck">await</span> fetch(<span class="cs">'/api/v1/signals.json'</span>).then(r =&gt; r.json());
+
+<span class="cm">// Latest signals for the Balanced mode</span>
+<span class="ck">const</span> balanced = signalsByMode[<span class="cs">'calmar'</span>];
+balanced.forEach(s =&gt; console.log(s.ticker, s.score, s.strategy));</div>
+
+  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">Python (requests)</h4>
+  <div class="code-block"><span class="ck">import</span> requests
+
+BASE = <span class="cs">"https://articles.market-watch.xyz"</span>
+
+<span class="cm"># Equity curves and backtest stats</span>
+equity = requests.get(f<span class="cs">"{BASE}/api/v1/equity.json"</span>).json()
+growth_stats = equity[<span class="cs">"equity"</span>][<span class="cs">"growth"</span>][<span class="cs">"stats"</span>]
+print(f"Growth win rate: {growth_stats['winRate']}%")
+print(f"Growth Sharpe:   {growth_stats['sharpe']}")
+
+<span class="cm"># All closed trades for the Conservative mode</span>
+trades = requests.get(f<span class="cs">"{BASE}/api/v1/trades.json"</span>).json()
+conservative = trades[<span class="cs">"tradesByMode"</span>][<span class="cs">"zero"</span>]
+wins = [t <span class="ck">for</span> t <span class="ck">in</span> conservative <span class="ck">if</span> t[<span class="cs">"pnlPct"</span>] &gt; 0]
+print(f"Conservative wins: {len(wins)} / {len(conservative)}")</div>
+
+  <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">curl</h4>
+  <div class="code-block"><span class="cm"># Download all endpoints</span>
+curl -s https://articles.market-watch.xyz/api/v1/modes.json     | jq .modes
+curl -s https://articles.market-watch.xyz/api/v1/signals.json   | jq .signalsByMode.calmar
+curl -s https://articles.market-watch.xyz/api/v1/positions.json | jq .openPositions[0]
+curl -s https://articles.market-watch.xyz/api/v1/equity.json    | jq .equity.zero.stats</div>
+
+  <!-- ── RSS Feed ────────────────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-rss"></i>RSS Feed</h2>
+  </div>
+  <div class="rss-box">
+    <div class="rss-icon"><i class="fas fa-rss"></i></div>
+    <div>
+      <h4>Subscribe to scanner publications</h4>
+      <p>Standard RSS 2.0 feed updated after each scan. Contains the last 20 scanner entries with title, description, and direct link. Compatible with all feed readers.</p>
+      <a href="/api/v1/feed.xml" target="_blank"><i class="fas fa-arrow-up-right-from-square" style="margin-right:4px;"></i>/api/v1/feed.xml</a>
+      &nbsp;&middot;&nbsp;
+      <a href="/feed.xml" target="_blank">Also at /feed.xml</a>
+    </div>
+  </div>
+  <p style="font-size:0.83rem;color:#64748b;margin:0 0 0.5rem;">Subscribe in your reader:</p>
+  <div class="content-card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
+    <div class="data-table">
+      <table>
+        <thead><tr><th>Reader</th><th>How to subscribe</th></tr></thead>
+        <tbody>
+          <tr><td>Feedly</td><td>Add feed → paste <code>https://articles.market-watch.xyz/api/v1/feed.xml</code></td></tr>
+          <tr><td>Inoreader</td><td>New subscription → URL → paste the feed URL</td></tr>
+          <tr><td>NetNewsWire</td><td>File → New Web Feed → paste the URL</td></tr>
+          <tr><td>Thunderbird</td><td>Account Settings → RSS → Manage Subscriptions → Add</td></tr>
+          <tr><td>Apple News</td><td>Not supported (no RSS import)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Rate Limits & Usage ────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-gauge-high"></i>Rate Limits &amp; Usage</h2>
+  </div>
+  <div class="pedagogy-box" style="margin-bottom:1.5rem;">
+    <strong>These are static files served via GitHub Pages — there are no server-side rate limits.</strong>
+    <ul style="margin:0.6rem 0 0;padding-left:1.2rem;font-size:0.85rem;line-height:1.8;">
+      <li>Files are regenerated once per trading day after the evening scan (~23:00 UTC weekdays).</li>
+      <li>Polling more than once per minute is wasteful — the data changes at most once a day.</li>
+      <li>For real-time prices, use the <a href="/mcp/" style="color:#6366f1;font-weight:600;">MCP Gateway</a> tools (<code>QueryData</code>, <code>GetInstruments</code>) which proxy live market data.</li>
+      <li>CORS headers are served by GitHub Pages. You can fetch these endpoints client-side from any origin.</li>
+    </ul>
+  </div>
+
+  <!-- ── Disclaimer ─────────────────────────────────────────────────── -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-triangle-exclamation"></i>Disclaimer</h2>
+  </div>
+  <div class="didactic-box" style="border-color:#f59e0b;background:#fffbeb;margin-bottom:2rem;">
+    <strong>For informational purposes only.</strong> Nothing on this page or in these endpoints constitutes financial advice, investment advice, or a solicitation to buy or sell any financial instrument. Past scanner performance is not indicative of future results. All backtest statistics are based on historical data with inherent look-ahead limitations. Always conduct your own due diligence before trading.
+  </div>
+
+</div>
+
+<!-- Footer -->
+<footer class="article-footer">
+  &copy; 2026 Market Watch &mdash; All endpoints are free, static, and open.
+  &nbsp;&middot;&nbsp;<a href="/integrations/">Integrations</a>
+  &nbsp;&middot;&nbsp;<a href="/mcp/">MCP Gateway</a>
+  &nbsp;&middot;&nbsp;<a href="/">Home</a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
 </body>
 </html>
