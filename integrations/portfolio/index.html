@@ -53,13 +53,10 @@
     .step-card p { font-size: 0.82rem; color: #64748b; margin: 0; line-height: 1.5; }
 
     .oas-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
-    .oas-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 10px; }
-    .oas-header img { height: 22px; }
+    .oas-header { padding: 1rem 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .oas-header span { font-size: 0.88rem; font-weight: 700; color: #0f172a; }
-    .oas-header .oas-v { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; margin-left: auto; }
-    .oas-body { background: #0f172a; color: #e2e8f0; padding: 1rem 1.25rem; font-family: 'SFMono-Regular','Consolas',monospace; font-size: 0.72rem; line-height: 1.55; max-height: 400px; overflow: auto; white-space: pre; }
-    .oas-body::-webkit-scrollbar { width: 6px; }
-    .oas-body::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    .oas-header .oas-v { font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; }
+    .oas-header a:hover { background: #6366f1; color: #fff !important; }
 
     .badge-live { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; }
     .badge-live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: pulse 2s infinite; }
@@ -101,7 +98,7 @@
   <div class="hero-badges">
     <span class="hero-badge"><i class="fas fa-circle-dot" style="color:#10b981;margin-right:4px;"></i>Live</span>
     <span class="hero-badge">No auth</span>
-    <span class="hero-badge">6 endpoints</span>
+    <span class="hero-badge">7 endpoints</span>
     <span class="hero-badge">Nightly refresh</span>
   </div>
 </div>
@@ -213,6 +210,19 @@
     </div>
   </div>
 
+  <div class="ep-card" id="ep-all" style="border-color:#a5b4fc;border-width:2px;">
+    <div class="ep-header" onclick="toggleEp('ep-all')">
+      <span class="ep-method" style="background:#eef2ff;color:#4f46e5;">GET</span>
+      <span class="ep-path">/portfolio/v1/all.json</span>
+      <span class="ep-desc">Full state — feed to any LLM</span>
+      <i class="fas fa-chevron-right ep-chevron"></i>
+    </div>
+    <div class="ep-body">
+      <div class="ep-status"><span class="dot" id="dot-all"></span><span id="status-all">Loading...</span></div>
+      <div class="ep-json" id="json-all" style="max-height:420px;"></div>
+    </div>
+  </div>
+
   <!-- ══ OpenAPI ══ -->
   <div class="api-section">
     <h2 class="api-section-title"><i class="fas fa-file-code"></i>OpenAPI 3.0</h2>
@@ -222,201 +232,14 @@
       <i class="fas fa-file-code" style="color:#6366f1;font-size:1.1rem;"></i>
       <span>openapi.yaml</span>
       <span class="oas-v">3.0.3</span>
+      <a href="/portfolio/v1/openapi.yaml" download style="margin-left:auto;font-size:0.8rem;font-weight:700;color:#6366f1;text-decoration:none;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border:1.5px solid #6366f1;border-radius:8px;transition:all .15s;">
+        <i class="fas fa-download" style="font-size:.7rem"></i> Download
+      </a>
     </div>
-    <div class="oas-body">openapi: "3.0.3"
-info:
-  title: Market Watch Portfolio API
-  version: "1.0.0"
-  description: Free JSON endpoints to replicate the scanner portfolio.
-servers:
-  - url: https://articles.market-watch.xyz/portfolio/v1
-
-paths:
-  /signals.json:
-    get:
-      summary: Latest scanner signals
-      responses:
-        "200":
-          description: Current scan picks with levels
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  updatedAt: { type: string, format: date-time }
-                  date: { type: string, format: date }
-                  signals:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        ticker: { type: string }
-                        score: { type: integer }
-                        strategy: { type: string }
-                        entry: { type: string }
-                        stop: { type: string }
-                        tp1: { type: string }
-                        tp2: { type: string }
-                        rr: { type: string }
-                        thesis: { type: string }
-
-  /positions.json:
-    get:
-      summary: Open positions with live P&amp;L
-      responses:
-        "200":
-          description: Current open positions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  updatedAt: { type: string, format: date-time }
-                  date: { type: string, format: date }
-                  positions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        ticker: { type: string }
-                        entry: { type: number }
-                        currentPrice: { type: number }
-                        returnPct: { type: number }
-                        stop: { type: number }
-                        tp1: { type: number }
-                        tp2: { type: number }
-                        scanDate: { type: string, format: date }
-                        daysRemaining: { type: integer }
-
-  /trades.json:
-    get:
-      summary: Closed trade history
-      responses:
-        "200":
-          description: All closed trades
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  updatedAt: { type: string, format: date-time }
-                  trades:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        ticker: { type: string }
-                        scanDate: { type: string, format: date }
-                        entryDate: { type: string, format: date }
-                        entry: { type: number }
-                        exitPrice: { type: number }
-                        pnlPct: { type: number }
-                        holdDays: { type: integer }
-                        status: { type: string }
-                        strategy: { type: string }
-
-  /equity.json:
-    get:
-      summary: Portfolio stats and equity curve
-      responses:
-        "200":
-          description: Backtest statistics and equity curve
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  updatedAt: { type: string, format: date-time }
-                  config:
-                    type: object
-                    properties:
-                      portfolioSize: { type: integer }
-                      horizon: { type: integer }
-                      filterName: { type: string }
-                      rotation: { type: string }
-                  stats:
-                    type: object
-                    properties:
-                      ret: { type: number }
-                      dd: { type: number }
-                      wr: { type: number }
-                      pf: { type: number }
-                      trades: { type: integer }
-                      avgHold: { type: number }
-                  equityCurve:
-                    type: object
-                    properties:
-                      d: { type: array, items: { type: string } }
-                      v: { type: array, items: { type: number } }
-
-  /orders.json:
-    get:
-      summary: Buy/rotate orders to place
-      responses:
-        "200":
-          description: Orders to execute at next market open
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  updatedAt: { type: string, format: date-time }
-                  date: { type: string, format: date }
-                  orders:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        ticker: { type: string }
-                        action: { type: string, enum: [BUY, ROTATE] }
-                        score: { type: integer }
-                        strategy: { type: string }
-                        entry: { type: string }
-                        stop: { type: string }
-                        tp1: { type: string }
-                        tp2: { type: string }
-                        rr: { type: string }
-                        replaces: { type: string, nullable: true }
-                        thesis: { type: string }
-
-  /actions.json:
-    get:
-      summary: Positions requiring action (close or check)
-      responses:
-        "200":
-          description: Expired and expiring positions
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  updatedAt: { type: string, format: date-time }
-                  date: { type: string, format: date }
-                  closeNow:
-                    type: array
-                    description: Horizon expired — exit at market open
-                    items:
-                      type: object
-                      properties:
-                        ticker: { type: string }
-                        scanDate: { type: string, format: date }
-                        entry: { type: number }
-                        currentPrice: { type: number }
-                        returnPct: { type: number }
-                        daysHeld: { type: integer }
-                        horizon: { type: integer }
-                  expiresTomorrow:
-                    type: array
-                    description: Horizon reached at next close — decide keep or exit
-                    items:
-                      type: object
-                      properties:
-                        ticker: { type: string }
-                        entry: { type: number }
-                        returnPct: { type: number }
-                        stop: { type: number }
-                        daysHeld: { type: integer }
-                        horizon: { type: integer }</div>
+    <p style="padding:0 1.25rem 1rem;margin:0;font-size:.82rem;color:#64748b;line-height:1.5;">
+      Full OpenAPI 3.0.3 specification with schemas, examples, and descriptions for all 7 endpoints.
+      Import into Swagger UI, Postman, or any OpenAPI-compatible tool.
+    </p>
   </div>
 
   <!-- ══ Related ══ -->
@@ -477,7 +300,7 @@ function syntaxHL(json) {
 }
 
 var BASE = '/portfolio/v1/';
-var endpoints = ['signals', 'positions', 'trades', 'equity', 'orders', 'actions'];
+var endpoints = ['signals', 'positions', 'trades', 'equity', 'orders', 'actions', 'all'];
 
 endpoints.forEach(function(ep) {
   fetch(BASE + ep + '.json')

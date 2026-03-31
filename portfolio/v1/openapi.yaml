@@ -1,0 +1,259 @@
+openapi: "3.0.3"
+info:
+  title: Market Watch Portfolio API
+  version: "1.0.0"
+  description: >
+    Free JSON endpoints to replicate the Market Watch scanner portfolio.
+    Updated every trading session (~23:00 UTC weekdays). No authentication required.
+  contact:
+    url: https://articles.market-watch.xyz/integrations/portfolio/
+servers:
+  - url: https://articles.market-watch.xyz/portfolio/v1
+
+paths:
+  /signals.json:
+    get:
+      summary: Latest scanner signals
+      description: Current scan picks with entry, stop, and target levels.
+      responses:
+        "200":
+          description: Current scan picks with levels
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  date: { type: string, format: date }
+                  signals:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Signal"
+
+  /positions.json:
+    get:
+      summary: Open positions with live P&L
+      description: Current open positions with entry, current price, return %, and days remaining.
+      responses:
+        "200":
+          description: Current open positions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  date: { type: string, format: date }
+                  positions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Position"
+
+  /trades.json:
+    get:
+      summary: Closed trade history
+      description: All closed trades with P&L%, hold days, and exit reason.
+      responses:
+        "200":
+          description: All closed trades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  trades:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Trade"
+
+  /equity.json:
+    get:
+      summary: Portfolio stats and equity curve
+      description: Backtest statistics (return, drawdown, win rate, profit factor) and equity curve data points.
+      responses:
+        "200":
+          description: Backtest statistics and equity curve
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  config:
+                    $ref: "#/components/schemas/Config"
+                  stats:
+                    $ref: "#/components/schemas/Stats"
+                  equityCurve:
+                    $ref: "#/components/schemas/EquityCurve"
+
+  /orders.json:
+    get:
+      summary: Buy/rotate orders to place
+      description: Orders to execute at next market open based on available portfolio slots and signal strength.
+      responses:
+        "200":
+          description: Orders to execute at next market open
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  date: { type: string, format: date }
+                  orders:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Order"
+
+  /actions.json:
+    get:
+      summary: Positions requiring action (close or check)
+      description: Positions that have exceeded their horizon (close now) or expire tomorrow (review needed).
+      responses:
+        "200":
+          description: Expired and expiring positions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  date: { type: string, format: date }
+                  closeNow:
+                    type: array
+                    description: Horizon expired — exit at market open
+                    items:
+                      $ref: "#/components/schemas/CloseAction"
+                  expiresTomorrow:
+                    type: array
+                    description: Horizon reached at next close — decide keep or exit
+                    items:
+                      $ref: "#/components/schemas/ExpiresAction"
+
+  /all.json:
+    get:
+      summary: Full portfolio state (all data in one call)
+      description: >
+        Single endpoint for LLM analysis — combines signals, orders, positions,
+        actions, trades, equity, and config in one response.
+      responses:
+        "200":
+          description: Complete portfolio snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  date: { type: string, format: date }
+                  config: { $ref: "#/components/schemas/Config" }
+                  stats: { $ref: "#/components/schemas/Stats" }
+                  equityCurve: { $ref: "#/components/schemas/EquityCurve" }
+                  signals: { type: array, items: { $ref: "#/components/schemas/Signal" } }
+                  orders: { type: array, items: { $ref: "#/components/schemas/Order" } }
+                  positions: { type: array, items: { $ref: "#/components/schemas/Position" } }
+                  closeNow: { type: array, items: { $ref: "#/components/schemas/CloseAction" } }
+                  expiresTomorrow: { type: array, items: { $ref: "#/components/schemas/ExpiresAction" } }
+                  closedTrades: { type: array, items: { $ref: "#/components/schemas/Trade" } }
+
+components:
+  schemas:
+    Signal:
+      type: object
+      properties:
+        ticker: { type: string, example: "XOM" }
+        score: { type: integer, example: 93 }
+        strategy: { type: string, example: "Momentum" }
+        entry: { type: string, example: "$170-$173" }
+        stop: { type: string, example: "$162" }
+        tp1: { type: string, example: "$185" }
+        tp2: { type: string, example: "$195" }
+        rr: { type: string, example: "1:1.6" }
+        thesis: { type: string }
+
+    Position:
+      type: object
+      properties:
+        ticker: { type: string, example: "PSX" }
+        entry: { type: number, example: 181.9 }
+        currentPrice: { type: number, example: 184.81 }
+        returnPct: { type: number, example: 1.6 }
+        stop: { type: number, example: 168 }
+        tp1: { type: number }
+        tp2: { type: number }
+        scanDate: { type: string, format: date }
+        daysRemaining: { type: integer, example: 0 }
+
+    Trade:
+      type: object
+      properties:
+        ticker: { type: string, example: "UBER" }
+        scanDate: { type: string, format: date }
+        entryDate: { type: string, format: date }
+        entry: { type: number, example: 73.9 }
+        exitPrice: { type: number, example: 75.44 }
+        pnlPct: { type: number, example: 2.06 }
+        holdDays: { type: integer, example: 5 }
+        status: { type: string, enum: [tp1, tp2, sl, expired, rotated] }
+        strategy: { type: string }
+
+    Order:
+      type: object
+      properties:
+        ticker: { type: string, example: "XOM" }
+        action: { type: string, enum: [BUY, ROTATE] }
+        score: { type: integer }
+        strategy: { type: string }
+        entry: { type: string }
+        stop: { type: string }
+        tp1: { type: string }
+        tp2: { type: string }
+        rr: { type: string }
+        replaces: { type: string, nullable: true }
+        thesis: { type: string }
+
+    CloseAction:
+      type: object
+      properties:
+        ticker: { type: string }
+        scanDate: { type: string, format: date }
+        entry: { type: number }
+        currentPrice: { type: number }
+        returnPct: { type: number }
+        daysHeld: { type: integer }
+        horizon: { type: integer }
+
+    ExpiresAction:
+      type: object
+      properties:
+        ticker: { type: string }
+        entry: { type: number }
+        returnPct: { type: number }
+        stop: { type: number }
+        daysHeld: { type: integer }
+        horizon: { type: integer }
+
+    Config:
+      type: object
+      properties:
+        portfolioSize: { type: integer, example: 4 }
+        horizon: { type: integer, example: 5 }
+        filterName: { type: string, example: "all" }
+        rotation: { type: string, example: "aggressive" }
+
+    Stats:
+      type: object
+      properties:
+        ret: { type: number, description: "Total return %", example: 21.08 }
+        dd: { type: number, description: "Max drawdown %", example: -2.72 }
+        wr: { type: number, description: "Win rate %", example: 68.2 }
+        pf: { type: number, description: "Profit factor", example: 4.03 }
+        trades: { type: integer, example: 22 }
+        avgHold: { type: number, description: "Average hold days", example: 4.2 }
+
+    EquityCurve:
+      type: object
+      properties:
+        d: { type: array, items: { type: string }, description: "Dates (MM/DD format)" }
+        v: { type: array, items: { type: number }, description: "Equity values (base 100)" }

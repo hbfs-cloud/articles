@@ -135,4 +135,41 @@ write('actions.json', {
   }))
 });
 
-console.log(`\nDone. 6 endpoints written to portfolio/v1/ at ${now}`);
+// ─── 7. all.json — full portfolio state for LLM analysis ────────────────────
+write('all.json', {
+  updatedAt: now,
+  date: snap.date,
+  config: cal.config || {},
+  stats: cal.stats || {},
+  equityCurve: cal.equity || {},
+  signals: (cal.signals || []).map(s => ({
+    ticker: s.ticker, score: s.score, strategy: s.strategy,
+    entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || ''
+  })),
+  orders: (cal.orders || []).map(o => ({
+    ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
+    entry: o.entry, stop: o.stop, tp1: o.tp1, tp2: o.tp2, rr: o.rr,
+    replaces: o.replaces || null, thesis: o.thesis || ''
+  })),
+  positions: (cal.positions || []).map(p => ({
+    ticker: p.ticker, entry: p.entry, currentPrice: p.current_price,
+    returnPct: p.return_pct, stop: p.stop, tp1: p.tp1, tp2: p.tp2,
+    scanDate: p.scan_date, daysRemaining: p.days_remaining
+  })),
+  closeNow: (cal.closeNow || []).map(p => ({
+    ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
+    currentPrice: p.current_price, returnPct: p.return_pct,
+    daysHeld: p.days_held, horizon: p.horizon
+  })),
+  expiresTomorrow: (cal.expiresTomorrow || []).map(p => ({
+    ticker: p.ticker, entry: p.entry, returnPct: p.return_pct,
+    stop: p.stop, daysHeld: p.days_held, horizon: p.horizon
+  })),
+  closedTrades: (cal.closedTrades || []).map(t => ({
+    ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
+    entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
+    holdDays: t.holdDays, status: t.status, strategy: t.strategy
+  }))
+});
+
+console.log(`\nDone. 7 endpoints written to portfolio/v1/ at ${now}`);
