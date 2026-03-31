@@ -1117,12 +1117,44 @@ document.addEventListener('DOMContentLoaded',function(){
   const historyDir = path.join(ROOT, 'scanner/status/history');
   fs.mkdirSync(historyDir, { recursive: true });
 
+  // Build MtM equity curves from historical backfill snapshots + today's live data
+  // This ensures the live snapshot's equity curve is consistent with backfill snapshots
+  const modeEquityHistory = {};
+  try {
+    const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f) && f.replace('.json', '') < todayKey).sort();
+    for (const f of histFiles) {
+      const snap = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
+      for (const [mId, mData] of Object.entries(snap.modes || {})) {
+        if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
+        if (mData.equity && mData.equity.d && mData.equity.v) {
+          // Take the LAST point from each snapshot (the point for that date)
+          const lastIdx = mData.equity.d.length - 1;
+          if (lastIdx >= 0) {
+            modeEquityHistory[mId].push({ d: mData.equity.d[lastIdx], v: mData.equity.v[lastIdx] });
+          }
+        }
+      }
+    }
+  } catch (e) {}
+
   const snapshot = { date: todayISO, updatedAt, scanDir };
   snapshot.modes = {};
   for (const [id, { cfg, trades: mTrades, m: mM }] of Object.entries(modes)) {
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, mTrades);
-    const ec = equityDV(mM.equityCurve);
+
+    // MtM equity for today: realized + unrealized (matching backfill logic)
+    const realized = mM.ret;
+    const unrealized = pos.reduce((s, p) => s + (p.return_pct || 0), 0) / cfg.portfolioSize;
+    const todayMtm = +(100 + realized + unrealized).toFixed(2);
+    const todayLabel = todayISO.slice(5).replace('-', '/');
+
+    // Build continuous MtM curve: historical points + today
+    const hist = modeEquityHistory[id] || [];
+    const ec = {
+      d: [...hist.map(p => p.d), todayLabel],
+      v: [...hist.map(p => p.v), todayMtm]
+    };
     // Compute orders for snapshot (same logic as panel)
     const openTickers = new Set(pos.map(p => p.ticker));
     const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
