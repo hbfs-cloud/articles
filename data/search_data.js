@@ -691,6 +691,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALT",
+    "exchange": "NASDAQ • Healthcare • Biotechnologie\n            — Agoniste Dual GLP-1/Glucagon / Obésité & MASH",
+    "name": "ALT — ALT trade au prix de sa trésorerie nette ($2.71/sh vs cours $2.88). Phase 3 MASH immine...",
+    "title": "ALT — ALT trade au prix de sa trésorerie nette ($2.71/sh vs cours $2.88). Phase 3 MASH immine...",
+    "desc": "Analyse experte Altimmune : pemvidutide Phase 3 MASH 2026, FDA Breakthrough Therapy, cash net $271M (~$2.71/action), RSI 26.6 extrême survente, 52W low. Conviction B+ — accumuler au prix cash.",
+    "tags": "us,healthcare,biotech,trade-idea,speculative,glp1,mash,obesity",
+    "grade": "B+",
+    "href": "/analyses/ALT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "SRPT",
     "exchange": "NASDAQ • Healthcare • Gene Therapy\n            — Duchenne / Neuromuscular Diseases",
     "name": "SRPT — siRNA platform validated (SRP-1001/SRP-1003), 23% short float, 1.1x P/S deep value. CEO...",
@@ -712,19 +725,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,biotech,trade-idea,speculative",
     "grade": "B+",
     "href": "/analyses/IOVA/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALT",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — GLP-1/Glucagon Dual Agonist / Obésité & MASH",
-    "name": "ALT — pemvidutide Phase 3 MASH 2026, cash $340M mais ATM $200M + shelf $400M, RSI 28 survendu...",
-    "title": "ALT — pemvidutide Phase 3 MASH 2026, cash $340M mais ATM $200M + shelf $400M, RSI 28 survendu...",
-    "desc": "Analyse experte Altimmune : pemvidutide Phase 3 MASH 2026, FDA Breakthrough Therapy, cash $340M, dual GLP-1/glucagon. Obésité & MASH leader émergent.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative",
-    "grade": "B+",
-    "href": "/analyses/ALT/",
     "date": ""
   },
   {
