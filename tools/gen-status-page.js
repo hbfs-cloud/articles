@@ -883,13 +883,34 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   };
+  // Save original live content on first TM use
+  var tmLiveHTML=null;
+  function tmSaveLive(){
+    if(tmLiveHTML!==null)return;
+    var panel=document.getElementById('p-calmar');
+    if(panel)tmLiveHTML=panel.innerHTML;
+  }
+  function tmRestoreLive(){
+    var panel=document.getElementById('p-calmar');
+    if(panel&&tmLiveHTML!==null){
+      panel.innerHTML=tmLiveHTML;
+      // Re-init ECharts (innerHTML destroys instances)
+      var chartEl=document.getElementById('cC');
+      if(chartEl){
+        mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb');
+      }
+    }
+    document.getElementById('tmBanner').className='tm-banner';
+    var fab=document.getElementById('tmFab');
+    if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
+  }
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){
-      banner.className='tm-banner';
-      location.reload();
+      tmRestoreLive();
       return;
     }
+    tmSaveLive();
     var dateStr=tmDates[idx];
     fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
       banner.className='tm-banner show';
@@ -905,11 +926,8 @@ document.addEventListener('DOMContentLoaded',function(){
     tmCurrentIdx=tmDates.length-1;
     document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
-    document.getElementById('tmBanner').className='tm-banner';
     document.getElementById('tmPanel').classList.remove('open');
-    var fab=document.getElementById('tmFab');
-    if(fab)fab.style.boxShadow='';
-    location.reload();
+    tmRestoreLive();
   };
   function tmRender(snap){
     var id='calmar';
@@ -918,6 +936,10 @@ document.addEventListener('DOMContentLoaded',function(){
     (function(){
       var panel=document.getElementById('p-'+id);
       if(!panel)return;
+      // Freeze panel height to prevent layout shift during DOM updates
+      panel.style.minHeight=panel.offsetHeight+'px';
+      panel.style.opacity='0.6';
+      panel.style.transition='opacity .15s';
       var cfg=d.config||{};
       // Update stats
       var stats=panel.querySelectorAll('.ps-v');
@@ -1117,6 +1139,11 @@ document.addEventListener('DOMContentLoaded',function(){
         empty.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No signals, positions, or trades recorded for this date.</p>';
         tmInsertAfter(empty,insertAfter);
       }
+      // Release height lock and fade back in
+      requestAnimationFrame(function(){
+        panel.style.opacity='1';
+        setTimeout(function(){panel.style.minHeight='';},200);
+      });
     })();
   }
   tmInit();
