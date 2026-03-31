@@ -13,7 +13,7 @@ const cfg = eduData.config;
 const meta = {
   title: `${cfg.ticker} — ${cfg.tickerName} | ${cfg.tickerGrade} Analysis | ${cfg.tickerPrice}`,
   description: `📊 ${cfg.tickerName} (${cfg.ticker}) — Complete Stock Analysis\n${cfg.seriesSubtitle}\n\n📈 In this 5-minute breakdown:\n• Verdict & conviction score\n• Business segments & key fundamentals\n• Technical setup with Finviz chart\n• Risks, catalysts & options flow\n• Trade idea with entry, stop & targets\n\n⚠️ This is not financial advice.\n🌐 https://articles.dailytickers.com/analyses/${cfg.ticker}/`,
-  tags: [cfg.ticker, cfg.tickerName, 'stock analysis', 'energy', 'refining', 'midstream', 'dividend', 'trade idea', 'technical analysis', 'fundamental analysis', 'marketwatchxyz', 'dailytickers.com', 'PSX stock', 'Phillips 66 stock', 'stock market', 'investing', 'trading'],
+  tags: [cfg.ticker, cfg.tickerName, 'stock analysis', 'energy', 'refining', 'midstream', 'dividend', 'trade idea', 'technical analysis', 'fundamental analysis', 'dailytickers', 'dailytickers.com', 'PSX stock', 'Phillips 66 stock', 'stock market', 'investing', 'trading'],
   lang: cfg.language || 'en',
 };
 

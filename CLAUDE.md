@@ -3,7 +3,7 @@
 ## Project Overview
 Site de publication d'analyses financières institutionnelles, hébergé sur GitHub Pages.
 - **URL articles** : `https://articles.dailytickers.com/` (CNAME = `articles.dailytickers.com`)
-- **Landing marketing** : `https://dailytickers.com/` (site séparé, ne sert PAS les articles)
+- **Landing marketing** : `https://articles.dailytickers.com/` (site séparé, ne sert PAS les articles)
 - **IMPORTANT** : Toujours utiliser `articles.dailytickers.com` pour les URLs d'articles
 
 ## Structure du Projet

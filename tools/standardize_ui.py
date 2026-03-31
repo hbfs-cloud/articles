@@ -14,12 +14,12 @@ def standardize():
 
                 # Fix header link
                 original_link_pattern = r'<img src="https://assets\.parqet\.com[^>]*>\s*MARKET WATCH'
-                new_link = '<img src="https://dailytickers.com/logo.svg" alt="MW" style="height:28px;"> MARKET WATCH'
+                new_link = '<img src="https://articles.dailytickers.com/logo.svg" alt="MW" style="height:28px;"> MARKET WATCH'
                 content = re.sub(original_link_pattern, new_link, content)
                 
                 # Fix another header pattern possibility
                 original_title_pattern = r'<img[^>]*logo\.svg[^>]*>\s*MARKET WATCH\s*</a>'
-                new_title = '<img src="https://dailytickers.com/logo.svg" alt="MW" style="height:28px;"> MARKET WATCH\n        </a>'
+                new_title = '<img src="https://articles.dailytickers.com/logo.svg" alt="MW" style="height:28px;"> MARKET WATCH\n        </a>'
                 content = re.sub(original_title_pattern, new_title, content)
                 
                 # Standardize footer

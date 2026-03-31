@@ -122,9 +122,9 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 ### 17 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
-- **IMPORTANT** : Le brand link doit **TOUJOURS** utiliser le logo DailyTickers (`https://dailytickers.com/logo.svg`), **JAMAIS** le logo de la société (parqet.com). Le logo société est réservé aux cartes de listing dans index.html uniquement.
+- **IMPORTANT** : Le brand link doit **TOUJOURS** utiliser le logo DailyTickers (`https://articles.dailytickers.com/logo.svg`), **JAMAIS** le logo de la société (parqet.com). Le logo société est réservé aux cartes de listing dans index.html uniquement.
 - Ticker, exchange, date, lien retour site (`href="/"`)
-- Brand link : `<img src="https://dailytickers.com/logo.svg" alt="MW">` + texte "MARKET WATCH", `color:#0f172a`, pas de `filter:brightness` sur le logo
+- Brand link : `<img src="https://articles.dailytickers.com/logo.svg" alt="MW">` + texte "MARKET WATCH", `color:#0f172a`, pas de `filter:brightness` sur le logo
 - Prix actuel, variation jour, variation semaine
 - Métriques clés en `.ticker-metrics` : MCap, Volume, Float, Short Interest, Beta, 52W Range
 - Badges : secteur, exchange, thème

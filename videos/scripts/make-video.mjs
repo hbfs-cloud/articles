@@ -180,7 +180,7 @@ Free tools and transparent track record
 
 This is not financial advice.
 https://articles.dailytickers.com`,
-    tags: ['trading', 'market watch', 'trading infrastructure', 'hedge fund', 'exchange', 'investment bank', 'about', 'dailytickers.com'],
+    tags: ['trading', 'daily tickers', 'trading infrastructure', 'hedge fund', 'exchange', 'investment bank', 'about', 'dailytickers.com'],
     lang: 'en',
   },
   'scanner-diy-en': {
