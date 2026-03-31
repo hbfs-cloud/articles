@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio Endpoints — Market Watch</title>
-  <meta name="description" content="Portfolio endpoints for replication — JSON and RSS feeds updated every trading session.">
+  <title>Portfolio Replication — Market Watch</title>
+  <meta name="description" content="Replicate the Market Watch scanner portfolio via free JSON endpoints. Signals, positions, trades, equity curve.">
   <!-- GTM -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="icon" href="/favicon.ico">
@@ -34,7 +34,6 @@
     .code-block .cm { color: #64748b; }
     .code-block .ck { color: #93c5fd; }
     .code-block .cs { color: #86efac; }
-    .code-block .cn { color: #fca5a5; }
 
     .endpoint-url { font-family: monospace; font-size: 0.82rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; color: #0f172a; }
     .badge-live { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #ecfdf5; color: #059669; }
@@ -47,13 +46,6 @@
     .rss-box p { font-size: 0.82rem; color: #64748b; margin: 0 0 0.6rem; line-height: 1.5; }
     .rss-box a { font-size: 0.82rem; font-weight: 700; color: #ea580c; text-decoration: none; }
     .rss-box a:hover { text-decoration: underline; }
-
-    .mode-highlight { background: #fff; border: 1px solid #e2e8f0; border-left: 4px solid #059669; border-radius: 12px; padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; }
-    .mode-highlight h4 { font-size: 0.95rem; font-weight: 800; color: #059669; margin: 0 0 0.75rem; display: flex; align-items: center; gap: 8px; }
-    .mode-params { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.5rem; }
-    .mode-param { display: flex; justify-content: space-between; font-size: 0.82rem; padding: 0.3rem 0; border-bottom: 1px solid #f1f5f9; }
-    .mode-param .pk { color: #64748b; }
-    .mode-param .pv { font-weight: 600; color: #0f172a; font-family: monospace; }
 
     @media(max-width:600px) {
       .steps-grid { grid-template-columns: 1fr; }
@@ -85,13 +77,13 @@
 
 <!-- Hero -->
 <div class="api-hero">
-  <h1><i class="fas fa-plug" style="opacity:0.55;margin-right:0.4rem;"></i>Integrations</h1>
-  <p>Portfolio endpoints for replication &mdash; JSON and RSS feeds updated every trading session (~23:00 UTC weekdays).</p>
+  <h1><i class="fas fa-chart-line" style="opacity:0.55;margin-right:0.4rem;"></i>Portfolio Replication</h1>
+  <p>Free JSON endpoints to replicate the scanner portfolio. Updated every trading session (~23:00 UTC weekdays).</p>
   <div class="hero-badges">
     <span class="hero-badge"><i class="fas fa-circle-dot" style="color:#10b981;margin-right:4px;"></i>Live</span>
     <span class="hero-badge">No auth</span>
-    <span class="hero-badge">JSON &amp; RSS</span>
-    <span class="hero-badge">Updated nightly</span>
+    <span class="hero-badge">4 endpoints + RSS</span>
+    <span class="hero-badge">Nightly refresh</span>
   </div>
 </div>
 
@@ -115,23 +107,7 @@
     <div class="step-card">
       <div class="step-num">3</div>
       <h4>Replicate</h4>
-      <p>Equal-weight allocation (25% per position). Follow the entry range, set stop and TP as indicated. Close after 5 trading days max.</p>
-    </div>
-  </div>
-
-  <!-- ── Trading Mode ─────────────────────────────────────────────── -->
-  <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-scale-balanced"></i>Trading Mode &mdash; Balanced</h2>
-  </div>
-  <div class="mode-highlight">
-    <h4><i class="fas fa-scale-balanced"></i> Balanced <code style="font-size:0.7rem;background:#d1fae5;color:#059669;padding:2px 6px;border-radius:4px;">calmar</code></h4>
-    <div class="mode-params">
-      <div class="mode-param"><span class="pk">Portfolio size</span><span class="pv">4 positions</span></div>
-      <div class="mode-param"><span class="pk">Horizon</span><span class="pv">5 trading days</span></div>
-      <div class="mode-param"><span class="pk">Filter</span><span class="pv">all strategies</span></div>
-      <div class="mode-param"><span class="pk">Rotation</span><span class="pv">aggressive</span></div>
-      <div class="mode-param"><span class="pk">Allocation</span><span class="pv">25% per slot</span></div>
-      <div class="mode-param"><span class="pk">Partial TP</span><span class="pv">no</span></div>
+      <p>Equal-weight allocation (25% per position, 4 slots). Follow the entry range, set stop and TP as indicated. Close after 5 trading days max.</p>
     </div>
   </div>
 
@@ -152,12 +128,6 @@
         </thead>
         <tbody>
           <tr>
-            <td><code>modes.json</code></td>
-            <td><span class="endpoint-url">/portfolio/v1/modes.json</span></td>
-            <td>Mode configuration &mdash; portfolio size, horizon, filter, rotation</td>
-            <td><span class="badge-live">Live</span></td>
-          </tr>
-          <tr>
             <td><code>signals.json</code></td>
             <td><span class="endpoint-url">/portfolio/v1/signals.json</span></td>
             <td>Latest scanner signals &mdash; score, strategy, entry price, scan date</td>
@@ -172,13 +142,13 @@
           <tr>
             <td><code>trades.json</code></td>
             <td><span class="endpoint-url">/portfolio/v1/trades.json</span></td>
-            <td>Full closed-trade history &mdash; P&amp;L%, status, hold days</td>
+            <td>Full closed-trade history &mdash; P&amp;L%, hold days, exit reason</td>
             <td><span class="badge-live">Live</span></td>
           </tr>
           <tr>
             <td><code>equity.json</code></td>
             <td><span class="endpoint-url">/portfolio/v1/equity.json</span></td>
-            <td>Equity curve and backtest stats &mdash; Sharpe, Calmar, drawdown, win rate</td>
+            <td>Equity curve + backtest stats (Sharpe, Calmar, win rate, drawdown)</td>
             <td><span class="badge-live">Live</span></td>
           </tr>
           <tr>
@@ -198,31 +168,19 @@
   </div>
 
   <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">JavaScript &mdash; open positions</h4>
-  <div class="code-block"><span class="cm">// 2026-03-31T12:22 — fetch current open positions</span>
-<span class="ck">const</span> res = <span class="ck">await</span> fetch(<span class="cs">'https://articles.market-watch.xyz/portfolio/v1/positions.json'</span>);
-<span class="ck">const</span> { openPositions, updatedAt } = <span class="ck">await</span> res.json();
+  <div class="code-block"><span class="ck">const</span> { openPositions, updatedAt } = <span class="ck">await</span> fetch(
+  <span class="cs">'https://articles.market-watch.xyz/portfolio/v1/positions.json'</span>
+).then(r =&gt; r.json());
 
-<span class="cm">// updatedAt: "2026-03-31T12:22:46.024Z"</span>
-<span class="cm">// openPositions:</span>
-<span class="cm">//   AGRO: +19.61% (En route TP1)</span>
-<span class="cm">//   XLE:  +10.15% (En route TP1)</span>
-<span class="cm">//   DVN:   +8.46% (En route TP1)</span>
-<span class="cm">//   AXTI:  +8.16% (En route TP1)</span>
-
-openPositions.forEach(pos =&gt; {
-  console.log(pos.ticker, pos.return_pct + <span class="cs">'%'</span>, pos.status_label);
+openPositions.forEach(p =&gt; {
+  console.log(p.ticker, p.return_pct + <span class="cs">'%'</span>, p.status_label);
 });</div>
 
   <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">JavaScript &mdash; latest signals</h4>
-  <div class="code-block"><span class="cm">// 2026-03-31 — tonight's scan signals</span>
-<span class="ck">const</span> { signalsByMode, latestScanDate } = <span class="ck">await</span> fetch(
+  <div class="code-block"><span class="ck">const</span> { signals, latestScanDate } = <span class="ck">await</span> fetch(
   <span class="cs">'https://articles.market-watch.xyz/portfolio/v1/signals.json'</span>
 ).then(r =&gt; r.json());
 
-<span class="cm">// latestScanDate: "2026-03-31"</span>
-<span class="cm">// BTU: score=94, momentum</span>
-
-<span class="ck">const</span> signals = signalsByMode[<span class="cs">'calmar'</span>];
 signals.forEach(s =&gt; console.log(s.ticker, s.score, s.strategy));</div>
 
   <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">Python &mdash; equity and backtest stats</h4>
@@ -230,25 +188,20 @@ signals.forEach(s =&gt; console.log(s.ticker, s.score, s.strategy));</div>
 
 BASE = <span class="cs">"https://articles.market-watch.xyz"</span>
 
-<span class="cm"># 2026-03-31 — equity curve and backtest stats</span>
 equity = requests.get(f<span class="cs">"{BASE}/portfolio/v1/equity.json"</span>).json()
-stats = equity[<span class="cs">"equity"</span>][<span class="cs">"calmar"</span>][<span class="cs">"stats"</span>]
-print(f"Win rate: {stats['winRate']}%")    <span class="cm"># 70%</span>
-print(f"Sharpe:   {stats['sharpe']}")      <span class="cm"># 192.5</span>
-print(f"Return:   {stats['returnTotal']}%") <span class="cm"># 3.85%</span>
+print(f"Win rate: {equity['stats']['winRate']}%")
+print(f"Sharpe:   {equity['stats']['sharpe']}")
+print(f"Return:   {equity['stats']['returnTotal']}%")
 
-<span class="cm"># Closed trades</span>
+<span class="cm"># Trade history</span>
 trades = requests.get(f<span class="cs">"{BASE}/portfolio/v1/trades.json"</span>).json()
-closed = trades[<span class="cs">"tradesByMode"</span>][<span class="cs">"calmar"</span>]
-wins = [t <span class="ck">for</span> t <span class="ck">in</span> closed <span class="ck">if</span> t[<span class="cs">"pnlPct"</span>] &gt; 0]
-print(f"Wins: {len(wins)} / {len(closed)}")</div>
+wins = [t <span class="ck">for</span> t <span class="ck">in</span> trades[<span class="cs">"trades"</span>] <span class="ck">if</span> t[<span class="cs">"pnlPct"</span>] &gt; 0]
+print(f"Wins: {len(wins)} / {len(trades['trades'])}")</div>
 
   <h4 style="font-size:0.88rem;font-weight:700;color:#0f172a;margin:0 0 0.4rem;">curl</h4>
-  <div class="code-block"><span class="cm"># 2026-03-31 — quick check from terminal</span>
-curl -s https://articles.market-watch.xyz/portfolio/v1/modes.json     | jq .modes.calmar
-curl -s https://articles.market-watch.xyz/portfolio/v1/signals.json   | jq .signalsByMode.calmar
+  <div class="code-block">curl -s https://articles.market-watch.xyz/portfolio/v1/signals.json   | jq .signals
 curl -s https://articles.market-watch.xyz/portfolio/v1/positions.json | jq '.openPositions[] | {ticker, return_pct, status_label}'
-curl -s https://articles.market-watch.xyz/portfolio/v1/equity.json    | jq .equity.calmar.stats</div>
+curl -s https://articles.market-watch.xyz/portfolio/v1/equity.json    | jq .stats</div>
 
   <!-- ── RSS Feed ────────────────────────────────────────────────────── -->
   <div class="api-section">
@@ -262,20 +215,6 @@ curl -s https://articles.market-watch.xyz/portfolio/v1/equity.json    | jq .equi
       <a href="/portfolio/v1/feed.xml" target="_blank"><i class="fas fa-arrow-up-right-from-square" style="margin-right:4px;"></i>/portfolio/v1/feed.xml</a>
       &nbsp;&middot;&nbsp;
       <a href="/feed.xml" target="_blank">Also at /feed.xml</a>
-    </div>
-  </div>
-  <p style="font-size:0.83rem;color:#64748b;margin:0 0 0.5rem;">Compatible with all major readers:</p>
-  <div class="content-card" style="padding:0;overflow:hidden;margin-bottom:1.5rem;">
-    <div class="data-table">
-      <table>
-        <thead><tr><th>Reader</th><th>How to subscribe</th></tr></thead>
-        <tbody>
-          <tr><td>Feedly</td><td>Add feed &rarr; paste <code>https://articles.market-watch.xyz/portfolio/v1/feed.xml</code></td></tr>
-          <tr><td>Inoreader</td><td>New subscription &rarr; URL &rarr; paste the feed URL</td></tr>
-          <tr><td>NetNewsWire</td><td>File &rarr; New Web Feed &rarr; paste the URL</td></tr>
-          <tr><td>Thunderbird</td><td>Account Settings &rarr; RSS &rarr; Manage Subscriptions &rarr; Add</td></tr>
-        </tbody>
-      </table>
     </div>
   </div>
 
@@ -298,9 +237,9 @@ curl -s https://articles.market-watch.xyz/portfolio/v1/equity.json    | jq .equi
     </div>
     <div class="step-card">
       <div class="step-num"><i class="fas fa-plug" style="font-size:0.7rem"></i></div>
-      <h4>MCP Gateway</h4>
-      <p>Live market data, screener, options Greeks, and LLM analysis via MCP tools.</p>
-      <a href="/mcp/" style="font-size:0.82rem;font-weight:700;color:#6366f1;text-decoration:none;margin-top:0.5rem;display:inline-block;">/mcp/ &rarr;</a>
+      <h4>All Integrations</h4>
+      <p>MCP Server, embeddable widgets, RSS, Chrome Extension, and more.</p>
+      <a href="/integrations/" style="font-size:0.82rem;font-weight:700;color:#6366f1;text-decoration:none;margin-top:0.5rem;display:inline-block;">/integrations/ &rarr;</a>
     </div>
   </div>
 
@@ -318,7 +257,6 @@ curl -s https://articles.market-watch.xyz/portfolio/v1/equity.json    | jq .equi
 <footer class="article-footer">
   &copy; 2026 Market Watch
   &nbsp;&middot;&nbsp;<a href="/integrations/">Integrations</a>
-  &nbsp;&middot;&nbsp;<a href="/mcp/">MCP Gateway</a>
   &nbsp;&middot;&nbsp;<a href="/">Home</a>
 </footer>
 

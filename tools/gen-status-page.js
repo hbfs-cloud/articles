@@ -320,6 +320,7 @@ ${(() => {
     const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
     actionRows.push(`<tr>
       <td><b>${s.ticker}</b></td>
+      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="neg">${s.stop}</td>
@@ -332,6 +333,7 @@ ${(() => {
     const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
     actionRows.push(`<tr style="background:#fefce8">
       <td><b>${s.ticker}</b></td>
+      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="neg">${s.stop}</td>
@@ -366,25 +368,7 @@ ${(() => {
     return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
   }
 
-  return `<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}">
-  <div class="sc-head">
-    <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
-    <span class="sc-meta">${statusLine}</span>
-  </div>
-  ${totalActions > 0 ? `<table class="t">
-    <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody>${actionRows.join('')}</tbody>
-  </table>` : ''}
-  ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
-    <summary class="watch-summary">On watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
-    <table class="t" style="margin-top:.5rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
-      <tbody>${watchRows.join('')}</tbody>
-    </table>
-  </details>` : ''}
-</div>`;
-})()}
-
+  return `
 ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
   <div class="cta-header">
     <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
@@ -402,6 +386,25 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     }).join('')}</tbody>
   </table>
 </div>` : ''}
+
+<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}">
+  <div class="sc-head">
+    <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
+    <span class="sc-meta">${statusLine}</span>
+  </div>
+  ${totalActions > 0 ? `<table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
+    <tbody>${actionRows.join('')}</tbody>
+  </table>` : ''}
+  ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
+    <summary class="watch-summary">On watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <tbody>${watchRows.join('')}</tbody>
+    </table>
+  </details>` : ''}
+</div>`;
+})()}
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
@@ -455,7 +458,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 </div>`;
   })()}
   <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
@@ -463,7 +466,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
       const leftCls = isExpired ? 'neg' : left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
       const leftLabel = isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
       const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
-      return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>`;
+      return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>
@@ -662,6 +665,20 @@ details[open] summary::after{transform:rotate(90deg)}
   .w{padding:0 .75rem 2rem}
 }
 
+/* ── Finviz thumbnails ── */
+.fv-thumb{width:56px;height:32px;border-radius:4px;border:1px solid #e2e8f0;cursor:pointer;object-fit:cover;transition:transform .15s,box-shadow .15s;background:#f8fafc}
+.fv-thumb:hover{transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.12);border-color:#94a3b8}
+/* ── Finviz fullscreen dialog ── */
+.fv-dialog{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,.7);backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.fv-dialog.open{opacity:1;visibility:visible}
+.fv-dialog-inner{position:relative;max-width:min(960px,94vw);max-height:92vh;background:#fff;border-radius:14px;padding:1rem;box-shadow:0 24px 64px rgba(0,0,0,.25)}
+.fv-dialog-inner img{width:100%;height:auto;border-radius:8px;display:block}
+.fv-dialog-ticker{font-size:.85rem;font-weight:800;color:#0f172a;margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.fv-dialog-ticker a{font-size:.72rem;font-weight:600;color:#3b82f6;text-decoration:none}
+.fv-dialog-ticker a:hover{text-decoration:underline}
+.fv-dialog-close{position:absolute;top:.6rem;right:.75rem;width:30px;height:30px;border-radius:50%;border:none;background:#f1f5f9;color:#64748b;font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.fv-dialog-close:hover{background:#e2e8f0;color:#0f172a}
+
 /* ── Disclaimer ── */
 .disc{text-align:center;font-size:.7rem;color:#94a3b8;margin-top:2rem;padding:1.25rem 1rem;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;gap:.4rem;flex-wrap:wrap}
 .disc i{font-size:.68rem;opacity:.6}
@@ -798,6 +815,30 @@ details[open] summary::after{transform:rotate(90deg)}
   &nbsp;&middot;&nbsp;
   <a href="https://www.youtube.com/@marketwatchxyz" target="_blank" rel="noopener" style="color:#94a3b8"><i class="fab fa-youtube"></i> YouTube</a>
 </footer>
+
+<!-- Finviz fullscreen dialog -->
+<div class="fv-dialog" id="fvDialog" onclick="if(event.target===this)fvClose()">
+  <div class="fv-dialog-inner">
+    <button class="fv-dialog-close" onclick="fvClose()"><i class="fas fa-xmark"></i></button>
+    <div class="fv-dialog-ticker"><span id="fvTicker"></span><a id="fvLink" href="#" target="_blank">Open on Finviz <i class="fas fa-arrow-up-right-from-square" style="font-size:.6rem"></i></a></div>
+    <img id="fvImg" src="" alt="">
+  </div>
+</div>
+<script>
+function fvOpen(ticker){
+  var d=document.getElementById('fvDialog');
+  document.getElementById('fvTicker').textContent=ticker;
+  document.getElementById('fvImg').src='https://charts2.finviz.com/chart.ashx?t='+ticker+'&ty=c&ta=1&p=d&s=l';
+  document.getElementById('fvLink').href='https://finviz.com/quote.ashx?t='+ticker;
+  d.classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function fvClose(){
+  document.getElementById('fvDialog').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
+</script>
 
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
@@ -1002,30 +1043,6 @@ document.addEventListener('DOMContentLoaded',function(){
         insertAfter=tmInsertAfter(cn,insertAfter);
       }
 
-      // ══ ORDERS TO PLACE (section-card cta-orders) ══
-      if(d.orders&&d.orders.length>0){
-        var od=document.createElement('div');
-        od.className='section-card cta-orders';od.setAttribute('data-tm','1');
-        var posCount=d.positions?d.positions.length:0;
-        var ps=cfg.portfolioSize||'?';
-        var slots=Math.max(0,(cfg.portfolioSize||0)-posCount);
-        var hasRotate=d.orders.some(function(o){return o.action==='ROTATE'});
-        var statusLine=slots>0?posCount+'/'+ps+' open — <b>'+slots+' slot'+(slots>1?'s':'')+' free</b> — place at next open':posCount+'/'+ps+' open — portfolio full'+(hasRotate?' — rotation opportunity':'');
-        var alloc=Math.round(100/(cfg.portfolioSize||1));
-        var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead><tbody>';
-        d.orders.forEach(function(o){
-          var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
-          var isRot=o.action==='ROTATE';
-          var rowStyle=isRot?' style="background:#fefce8"':'';
-          var actionPill=isRot?'<span class="pill am">ROTATE'+(o.replaces?' ↔ '+o.replaces:'')+'</span>':'<span class="pill pos">BUY</span>';
-          odh+='<tr'+rowStyle+'><td><b>'+o.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td><b>'+o.entry+'</b></td><td class="neg">'+o.stop+'</td><td class="pos">'+o.tp1+'<span class="hide-m"> / '+o.tp2+'</span></td><td class="am hide-m">'+(o.rr||'')+'</td><td class="m hide-m">'+alloc+'%</td><td>'+actionPill+'</td></tr>';
-        });
-        odh+='</tbody></table>';
-        od.innerHTML=odh;
-        insertAfter=tmInsertAfter(od,insertAfter);
-      }
-
       // ══ EXPIRES TOMORROW (cta-card yellow) ══
       if(d.expiresTomorrow&&d.expiresTomorrow.length>0){
         var et=document.createElement('div');
@@ -1043,6 +1060,30 @@ document.addEventListener('DOMContentLoaded',function(){
         eth+='</tbody></table>';
         et.innerHTML=eth;
         insertAfter=tmInsertAfter(et,insertAfter);
+      }
+
+      // ══ ORDERS TO PLACE (section-card cta-orders) ══
+      if(d.orders&&d.orders.length>0){
+        var od=document.createElement('div');
+        od.className='section-card cta-orders';od.setAttribute('data-tm','1');
+        var posCount=d.positions?d.positions.length:0;
+        var ps=cfg.portfolioSize||'?';
+        var slots=Math.max(0,(cfg.portfolioSize||0)-posCount);
+        var hasRotate=d.orders.some(function(o){return o.action==='ROTATE'});
+        var statusLine=slots>0?posCount+'/'+ps+' open — <b>'+slots+' slot'+(slots>1?'s':'')+' free</b> — place at next open':posCount+'/'+ps+' open — portfolio full'+(hasRotate?' — rotation opportunity':'');
+        var alloc=Math.round(100/(cfg.portfolioSize||1));
+        var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
+          +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead><tbody>';
+        d.orders.forEach(function(o){
+          var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
+          var isRot=o.action==='ROTATE';
+          var rowStyle=isRot?' style="background:#fefce8"':'';
+          var actionPill=isRot?'<span class="pill am">ROTATE'+(o.replaces?' ↔ '+o.replaces:'')+'</span>':'<span class="pill pos">BUY</span>';
+          odh+='<tr'+rowStyle+'><td><b>'+o.ticker+'</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t='+o.ticker+'&ty=c&ta=1&p=d&s=l" alt="'+o.ticker+'" class="fv-thumb" onclick="fvOpen(\''+o.ticker+'\')"></td><td><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td><b>'+o.entry+'</b></td><td class="neg">'+o.stop+'</td><td class="pos">'+o.tp1+'<span class="hide-m"> / '+o.tp2+'</span></td><td class="am hide-m">'+(o.rr||'')+'</td><td class="m hide-m">'+alloc+'%</td><td>'+actionPill+'</td></tr>';
+        });
+        odh+='</tbody></table>';
+        od.innerHTML=odh;
+        insertAfter=tmInsertAfter(od,insertAfter);
       }
 
       // ══ TODAY'S SIGNALS (collapsible details) ══
@@ -1089,7 +1130,7 @@ document.addEventListener('DOMContentLoaded',function(){
           +'<div class="scenario-fill-good" style="width:'+(100-cursorPos).toFixed(1)+'%"></div>'
           +'<div class="scenario-cursor" style="left:'+cursorPos.toFixed(1)+'%"></div>'
           +'</div></div>';
-        psh+='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
+        psh+='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
         d.positions.forEach(function(p){
           var rc=p.return_pct>=0?'pos':'neg';
           var left=p.days_remaining||0;
@@ -1097,7 +1138,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var leftCls=isExp?'neg':left<=1?'neg':left<=2?'am':'m';
           var leftLabel=isExp?'<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>':left+'d';
           var rowStyle=isExp?' style="opacity:.6;background:#fef2f2"':'';
-          psh+='<tr'+rowStyle+'><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg hide-m">$'+(p.stop||0).toFixed(2)+'</td><td class="pos hide-m">'+(p.tp2?'$'+p.tp2.toFixed(2):(p.tp1?'$'+p.tp1.toFixed(2):'—'))+'</td><td class="'+leftCls+'">'+leftLabel+'</td></tr>';
+          psh+='<tr'+rowStyle+'><td><b>'+p.ticker+'</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t='+p.ticker+'&ty=c&ta=1&p=d&s=l" alt="'+p.ticker+'" class="fv-thumb" onclick="fvOpen(\''+p.ticker+'\')"></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg hide-m">$'+(p.stop||0).toFixed(2)+'</td><td class="pos hide-m">'+(p.tp2?'$'+p.tp2.toFixed(2):(p.tp1?'$'+p.tp1.toFixed(2):'—'))+'</td><td class="'+leftCls+'">'+leftLabel+'</td></tr>';
         });
         psh+='</tbody></table>';
         posSection.innerHTML=psh;

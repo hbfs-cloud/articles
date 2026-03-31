@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en" data-tags="tech,ai,formation" data-tab="series">
+<html lang="en" data-tags="ai,tech,architecture" data-tab="tech">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Integrations — Market Watch</title>
-  <meta name="description" content="Connect to Market Watch data — portfolio replication, MCP Gateway, RSS feeds, and browser extension.">
+  <meta name="description" content="Connect Market Watch to your workflow: MCP Server, portfolio replication, embeddable widgets, RSS feed, Chrome Extension, and Discord Bot.">
   <!-- GTM -->
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
   <link rel="icon" href="/favicon.ico">
@@ -12,21 +12,31 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    .int-hero { background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 60%, #0f2d40 100%); color: #fff; padding: 3.5rem 1.5rem 2.5rem; text-align: center; }
-    .int-hero h1 { font-size: 2.1rem; font-weight: 800; margin: 0 0 0.6rem; }
-    .int-hero p { font-size: 1rem; color: #94a3b8; max-width: 620px; margin: 0 auto; }
-    .int-container { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 3rem; }
-    .int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
-    .int-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.75rem 1.5rem; transition: box-shadow 0.2s, border-color 0.2s; text-decoration: none; color: inherit; display: flex; flex-direction: column; }
-    .int-card:hover { border-color: #6366f1; box-shadow: 0 4px 20px rgba(99,102,241,0.1); }
+    body { font-family: 'Inter', sans-serif; margin: 0; background: #f8fafc; }
+    .int-hero { text-align: center; padding: 3rem 1.5rem 2rem; background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); color: white; }
+    .int-hero h1 { font-size: 2rem; font-weight: 800; margin: 0.5rem 0; }
+    .int-hero p { font-size: 1rem; color: #94a3b8; max-width: 600px; margin: 0.5rem auto; }
+    .container { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+    .int-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.25rem; margin: 2rem 0; }
+    .int-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; transition: all 0.2s; position: relative; overflow: hidden; }
+    .int-card:hover { border-color: #a5b4fc; box-shadow: 0 8px 24px rgba(99,102,241,0.08); transform: translateY(-2px); }
     .int-card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-bottom: 1rem; }
-    .int-card h3 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 0.5rem; }
-    .int-card p { font-size: 0.85rem; color: #64748b; margin: 0 0 1rem; line-height: 1.6; flex: 1; }
-    .int-card-meta { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
-    .int-badge { font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.03em; }
-    .int-card-arrow { font-size: 0.82rem; font-weight: 700; color: #6366f1; margin-left: auto; }
-    .updated-ts { font-size: 0.72rem; color: #94a3b8; text-align: center; margin-top: 0.5rem; }
-    @media(max-width:600px) { .int-grid { grid-template-columns: 1fr; } .int-hero h1 { font-size: 1.6rem; } }
+    .int-card h3 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 0.4rem; }
+    .int-card p { font-size: 0.85rem; color: #64748b; line-height: 1.5; margin: 0 0 1rem; }
+    .int-card .int-tags { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 1rem; }
+    .int-card .int-tag { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; color: #475569; }
+    .int-card .int-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; font-weight: 700; color: #6366f1; text-decoration: none; transition: gap 0.2s; }
+    .int-card .int-btn:hover { gap: 10px; }
+    .int-card .int-btn i { font-size: 0.7rem; }
+    .int-status { display: inline-flex; align-items: center; gap: 4px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px; position: absolute; top: 1rem; right: 1rem; }
+    .int-status.live { background: #ecfdf5; color: #059669; }
+    .int-status.live::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #10b981; animation: pulse-dot 2s infinite; }
+    .int-status.soon { background: #fffbeb; color: #d97706; }
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .int-section { margin: 2.5rem 0 1rem; }
+    .int-section h2 { font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px; }
+    .int-section h2 i { color: #6366f1; }
+    @media(max-width:600px) { .int-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -48,108 +58,140 @@
       <a href="/?tab=radar">Radar</a>
       <a href="/?tab=series">S&eacute;ries</a>
     </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
+    </div>
   </div>
 </nav>
 
 <!-- Hero -->
 <div class="int-hero">
-  <h1><i class="fas fa-plug" style="opacity:0.55;margin-right:0.4rem;"></i>Integrations</h1>
-  <p>Connect to Market Watch data programmatically. Portfolio replication, live market data, and content feeds &mdash; all open, no auth required.</p>
+  <h1><i class="fas fa-plug" style="opacity:0.6;"></i> Integrations</h1>
+  <p>Connect Market Watch to your tools. AI agents, portfolio replication, websites, readers, browsers &mdash; pick what works for you.</p>
 </div>
 
-<div class="int-container">
+<div class="container">
 
+  <!-- ═══════ Main Integrations Grid ═══════ -->
   <div class="int-grid">
 
-    <!-- Portfolio -->
-    <a href="/integrations/portfolio/" class="int-card">
+    <!-- Portfolio Replication -->
+    <div class="int-card">
+      <span class="int-status live">Live</span>
       <div class="int-card-icon" style="background:#ecfdf5;color:#059669;"><i class="fas fa-chart-line"></i></div>
-      <h3>Portfolio</h3>
-      <p>Replicate the scanner portfolio via JSON endpoints. Open positions, signals, trade history, and equity curve &mdash; updated every trading session at ~23:00 UTC.</p>
-      <div class="int-card-meta">
-        <span class="int-badge" style="background:#ecfdf5;color:#059669;">6 endpoints</span>
-        <span class="int-badge" style="background:#f1f5f9;color:#475569;">JSON</span>
-        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+      <h3>Portfolio Replication</h3>
+      <p>JSON endpoints to replicate the scanner portfolio. Signals, open positions with live P&amp;L, closed trade history, and equity curve. Balanced mode: 4 positions, 5-day horizon.</p>
+      <div class="int-tags">
+        <span class="int-tag">JSON</span>
+        <span class="int-tag">No auth</span>
+        <span class="int-tag">6 endpoints</span>
+        <span class="int-tag">Nightly refresh</span>
       </div>
-    </a>
+      <a href="/integrations/portfolio/" class="int-btn">Full documentation <i class="fas fa-arrow-right"></i></a>
+    </div>
 
-    <!-- MCP Gateway -->
-    <a href="/mcp/" class="int-card">
-      <div class="int-card-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-bolt"></i></div>
-      <h3>MCP Gateway</h3>
-      <p>Live market data, screener, options Greeks, and LLM-powered analysis via MCP tools. Real-time quotes, technicals, sentiment, and capital flows for any ticker.</p>
-      <div class="int-card-meta">
-        <span class="int-badge" style="background:#ede9fe;color:#7c3aed;">15+ tools</span>
-        <span class="int-badge" style="background:#f1f5f9;color:#475569;">MCP</span>
-        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+    <!-- MCP Server -->
+    <div class="int-card">
+      <span class="int-status live">Live</span>
+      <div class="int-card-icon" style="background:#eef2ff;color:#6366f1;"><i class="fas fa-robot"></i></div>
+      <h3>MCP Server</h3>
+      <p>37 tools for AI agents. Live scanner, screener, backtest, bars, quotes, options Greeks &mdash; all via natural language. Works with Claude Code, Cursor, Gemini CLI.</p>
+      <div class="int-tags">
+        <span class="int-tag">Claude Code</span>
+        <span class="int-tag">Cursor</span>
+        <span class="int-tag">Gemini CLI</span>
+        <span class="int-tag">15,000+ symbols</span>
       </div>
-    </a>
+      <a href="/mcp/" class="int-btn">Full documentation <i class="fas fa-arrow-right"></i></a>
+    </div>
 
-    <!-- RSS -->
-    <a href="/portfolio/v1/feed.xml" class="int-card">
+    <!-- Embeddable Widget -->
+    <div class="int-card">
+      <span class="int-status live">Live</span>
+      <div class="int-card-icon" style="background:#f0fdf4;color:#059669;"><i class="fas fa-window-restore"></i></div>
+      <h3>Embeddable Widget</h3>
+      <p>Add the A+ Picks widget to any website. Ticker tape or watchlist cards. Live prices via Yahoo Finance + Binance with visual status indicators (trending, entry zone, stopped).</p>
+      <div class="int-tags">
+        <span class="int-tag">Tape mode</span>
+        <span class="int-tag">Vertical mode</span>
+        <span class="int-tag">Live prices</span>
+        <span class="int-tag">Browser alerts</span>
+      </div>
+      <a href="/widget/?mode=embed" class="int-btn">Widget configurator <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+    <!-- Watchlist API -->
+    <div class="int-card">
+      <span class="int-status live">Live</span>
+      <div class="int-card-icon" style="background:#fffbeb;color:#d97706;"><i class="fas fa-database"></i></div>
+      <h3>Watchlist API</h3>
+      <p>Free JSON endpoint with the 10 best daily picks: entry/stop/TP levels, regime, macro alerts. Updated every trading day at ~23:00 UTC.</p>
+      <div class="int-tags">
+        <span class="int-tag">JSON</span>
+        <span class="int-tag">No auth</span>
+        <span class="int-tag">Daily refresh</span>
+      </div>
+      <a href="/mcp/#watchlist-api" class="int-btn">API docs <i class="fas fa-arrow-right"></i></a>
+    </div>
+
+    <!-- RSS Feed -->
+    <div class="int-card">
+      <span class="int-status live">Live</span>
       <div class="int-card-icon" style="background:#fff7ed;color:#ea580c;"><i class="fas fa-rss"></i></div>
       <h3>RSS Feed</h3>
-      <p>Subscribe to scanner publications via RSS 2.0. Last 20 entries with title, description, and direct link. Compatible with Feedly, Inoreader, NetNewsWire.</p>
-      <div class="int-card-meta">
-        <span class="int-badge" style="background:#fff7ed;color:#ea580c;">RSS 2.0</span>
-        <span class="int-badge" style="background:#f1f5f9;color:#475569;">XML</span>
-        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+      <p>Subscribe to get daily briefings, scanner picks, weekly reports, and analyses in your favorite reader. Auto-updated on every publication.</p>
+      <div class="int-tags">
+        <span class="int-tag">Feedly</span>
+        <span class="int-tag">Inoreader</span>
+        <span class="int-tag">NetNewsWire</span>
+        <span class="int-tag">Thunderbird</span>
       </div>
-    </a>
+      <a href="/feed.xml" class="int-btn" target="_blank">feed.xml <i class="fas fa-arrow-up-right-from-square"></i></a>
+    </div>
 
-    <!-- Widgets -->
-    <a href="/widget/gallery.html" class="int-card">
-      <div class="int-card-icon" style="background:#eff6ff;color:#3b82f6;"><i class="fas fa-window-restore"></i></div>
-      <h3>Widgets</h3>
-      <p>Embeddable iframes for your site or dashboard. 6 widget types: picks, dashboard, regime, sector rotation, movers, and radar. Dark/light theme, responsive.</p>
-      <div class="int-card-meta">
-        <span class="int-badge" style="background:#eff6ff;color:#3b82f6;">6 types</span>
-        <span class="int-badge" style="background:#f1f5f9;color:#475569;">iframe</span>
-        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
+    <!-- Chrome Extension -->
+    <div class="int-card">
+      <span class="int-status live">Live</span>
+      <div class="int-card-icon" style="background:#faf5ff;color:#7c3aed;"><i class="fab fa-chrome"></i></div>
+      <h3>Chrome Extension</h3>
+      <p>One-click access to A+ picks, regime status, and scanner alerts from your browser toolbar. Badge updates with the current regime color. Auto-syncs with the daily watchlist.</p>
+      <div class="int-tags">
+        <span class="int-tag">Chromium</span>
+        <span class="int-tag">Badge alerts</span>
+        <span class="int-tag">Auto-update</span>
       </div>
-    </a>
-
-    <!-- Browser Extension -->
-    <a href="/mcp/extension/" class="int-card">
-      <div class="int-card-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-puzzle-piece"></i></div>
-      <h3>Browser Extension</h3>
-      <p>Chrome/Firefox extension for quick access to scanner picks, regime status, and portfolio performance directly from your browser toolbar.</p>
-      <div class="int-card-meta">
-        <span class="int-badge" style="background:#fef3c7;color:#d97706;">Chrome</span>
-        <span class="int-badge" style="background:#f1f5f9;color:#475569;">Firefox</span>
-        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
-      </div>
-    </a>
-
-    <!-- Portfolio Live -->
-    <a href="/scanner/status/" class="int-card">
-      <div class="int-card-icon" style="background:#fef2f2;color:#dc2626;"><i class="fas fa-heartbeat"></i></div>
-      <h3>Portfolio Live</h3>
-      <p>Real-time dashboard with equity curve, open positions, signals, orders, and full trade history. Time machine to review any past trading day.</p>
-      <div class="int-card-meta">
-        <span class="int-badge" style="background:#fef2f2;color:#dc2626;">Dashboard</span>
-        <span class="int-badge" style="background:#f1f5f9;color:#475569;">HTML</span>
-        <span class="int-card-arrow"><i class="fas fa-arrow-right"></i></span>
-      </div>
-    </a>
+      <a href="/mcp/#extension" class="int-btn">Install guide <i class="fas fa-arrow-right"></i></a>
+    </div>
 
   </div>
 
-  <!-- Disclaimer -->
-  <div class="didactic-box" style="border-color:#f59e0b;background:#fffbeb;">
-    <strong>For informational purposes only.</strong> Nothing on this site constitutes financial advice. Past scanner performance is not indicative of future results. Always conduct your own due diligence before trading.
+  <!-- ═══════ Quick Reference ═══════ -->
+  <div class="int-section">
+    <h2><i class="fas fa-link"></i> Quick Links</h2>
   </div>
-
-  <p class="updated-ts">Last updated: March 31, 2026</p>
+  <div class="data-table" style="margin-bottom:2rem;">
+    <table>
+      <thead>
+        <tr><th>Integration</th><th>URL</th><th>Auth</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Portfolio endpoints</strong></td><td><code>articles.market-watch.xyz/portfolio/v1/</code></td><td>None</td></tr>
+        <tr><td><strong>MCP Server</strong></td><td><code>npx market-watch-mcp</code></td><td>None</td></tr>
+        <tr><td><strong>Watchlist JSON</strong></td><td><code>articles.market-watch.xyz/mcp/watchlist.json</code></td><td>None</td></tr>
+        <tr><td><strong>Widget (tape)</strong></td><td><code>articles.market-watch.xyz/widget/?mode=tape</code></td><td>None</td></tr>
+        <tr><td><strong>Widget (cards)</strong></td><td><code>articles.market-watch.xyz/widget/?mode=vertical</code></td><td>None</td></tr>
+        <tr><td><strong>RSS Feed</strong></td><td><code>articles.market-watch.xyz/feed.xml</code></td><td>None</td></tr>
+        <tr><td><strong>Chrome Extension</strong></td><td><code>/mcp/extension/</code> (sideload)</td><td>None</td></tr>
+      </tbody>
+    </table>
+  </div>
 
 </div>
 
 <!-- Footer -->
 <footer class="article-footer">
-  &copy; 2026 Market Watch
-  &nbsp;&middot;&nbsp;<a href="/integrations/">Integrations</a>
-  &nbsp;&middot;&nbsp;<a href="/mcp/">MCP Gateway</a>
-  &nbsp;&middot;&nbsp;<a href="/">Home</a>
+  &copy; 2026 Market Watch. All integrations are free and open.
+  <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
 </footer>
 
 <script src="/assets/core.js"></script>
