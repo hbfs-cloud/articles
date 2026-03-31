@@ -200,7 +200,24 @@ function main() {
   </div>
 </div>
 
-<!-- ══ 2. CLOSE NOW (positions timed-out) ══ -->
+<!-- ══ 2. HOW TO TRADE (method) ══ -->
+<div class="method-card" style="border-color:${cfg.color}30">
+  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
+  <div class="method-steps">
+    <div class="step" style="background:${cfg.color}10;border:1px solid ${cfg.color}30;border-radius:8px;padding:10px 14px;margin-bottom:10px">
+      <span class="step-n" style="background:${cfg.color};opacity:0.7">★</span>
+      <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (≈ ${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
+    </div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
+    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
+    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score ≥ 88 vs return &lt; 2%), replace it.</div></div>` : ''}
+  </div>
+  <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
+</div>
+
+<!-- ══ 3. CLOSE NOW (positions timed-out) ══ -->
 ${timedOut.length ? `<div class="cta-card cta-close">
   <div class="cta-header">
     <span class="cta-icon">⛔</span>
@@ -218,23 +235,6 @@ ${timedOut.length ? `<div class="cta-card cta-close">
     }).join('')}</tbody>
   </table>
 </div>` : ''}
-
-<!-- ══ 3. HOW TO TRADE (method) ══ -->
-<div class="method-card" style="border-color:${cfg.color}30">
-  <h3 style="color:${cfg.color}"><i class="fas fa-book-open"></i> How to trade this mode</h3>
-  <div class="method-steps">
-    <div class="step" style="background:${cfg.color}10;border:1px solid ${cfg.color}30;border-radius:8px;padding:10px 14px;margin-bottom:10px">
-      <span class="step-n" style="background:${cfg.color};opacity:0.7">★</span>
-      <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (≈ ${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
-    </div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30 PM Paris / 9:30 AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
-    <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
-    ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score ≥ 88 vs return &lt; 2%), replace it.</div></div>` : ''}
-  </div>
-  <div class="method-footer">${cfg.portfolioSize} positions max &middot; ${cfg.horizon}-day horizon &middot; ${filterLabel(cfg.filterName)}</div>
-</div>
 
 <!-- ══ 4. ORDERS CTA ══ -->
 ${(() => {
@@ -623,6 +623,20 @@ details[open] summary::after{content:"▼"}
 /* Disclaimer */
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
 
+/* Time Machine */
+.tm-bar{display:flex;align-items:center;gap:.5rem;margin:1rem 0;padding:.5rem .8rem;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+.tm-label{font-size:.72rem;font-weight:700;color:#475569;white-space:nowrap;display:flex;align-items:center;gap:.3rem}
+.tm-btn{border:none;background:#f1f5f9;border-radius:6px;padding:.35rem .55rem;cursor:pointer;color:#475569;font-size:.75rem}
+.tm-btn:hover{background:#e2e8f0}
+.tm-dates{display:flex;gap:.25rem;overflow-x:auto;flex:1;padding:.2rem 0;scrollbar-width:none}
+.tm-dates::-webkit-scrollbar{display:none}
+.tm-date{border:none;background:#f8fafc;border-radius:6px;padding:.25rem .5rem;cursor:pointer;font-size:.7rem;color:#64748b;white-space:nowrap;font-weight:600;transition:all .15s}
+.tm-date:hover{background:#e2e8f0}
+.tm-date.active{background:#3b82f6;color:#fff}
+.tm-banner{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:.6rem 1rem;margin-bottom:1rem;font-size:.82rem;color:#1d4ed8;text-align:center}
+.tm-banner.show{display:block}
+.tm-banner a{color:#2563eb;font-weight:700}
+
 @media(max-width:700px){
   .perf-hero{flex-direction:column}
   .perf-stats{grid-template-columns:repeat(3,1fr)}
@@ -666,6 +680,14 @@ details[open] summary::after{content:"▼"}
     <p>Signals, open positions &amp; performance — updated 5 days a week</p>
     <span class="ts"><i class="fas fa-clock"></i> Updated ${updatedAt}</span>
   </div>
+
+  <div class="tm-bar" id="timeMachine">
+    <span class="tm-label"><i class="fas fa-clock-rotate-left"></i> History</span>
+    <button class="tm-btn" onclick="tmNav(-1)"><i class="fas fa-chevron-left"></i></button>
+    <div class="tm-dates" id="tmDates"></div>
+    <button class="tm-btn" onclick="tmNav(1)"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <div class="tm-banner" id="tmBanner"></div>
 
   <div class="tabs">
     <button class="tab" data-m="growth" onclick="sw('growth')"><i class="fas fa-rocket"></i> Aggressive<span class="tab-ret">+${g.ret}%</span></button>
@@ -735,6 +757,85 @@ document.addEventListener('DOMContentLoaded',function(){
   }
   var ch=[mk('cG',${JSON.stringify(gEC.d)},${JSON.stringify(gEC.v)},'#059669'),mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb'),mk('cZ',${JSON.stringify(zEC.d)},${JSON.stringify(zEC.v)},'#7c3aed')];
   window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
+
+  // ── Time Machine ──
+  var tmDates=[], tmLive={};
+  function tmInit(){
+    fetch('/scanner/status/history/dates.json').then(function(r){return r.json()}).then(function(dates){
+      tmDates=dates;if(!dates.length)return;
+      var container=document.getElementById('tmDates');
+      dates.forEach(function(d){
+        var btn=document.createElement('button');
+        btn.className='tm-date'+(d===dates[dates.length-1]?' active':'');
+        btn.textContent=d.slice(4,6)+'/'+d.slice(6,8);
+        btn.setAttribute('data-d',d);
+        btn.onclick=function(){tmLoad(d)};
+        container.appendChild(btn);
+      });
+      container.scrollLeft=container.scrollWidth;
+    }).catch(function(){});
+  }
+  function tmNav(dir){var c=document.getElementById('tmDates');c.scrollBy({left:dir*200,behavior:'smooth'})}
+  function tmLoad(dateStr){
+    document.querySelectorAll('.tm-date').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-d')===dateStr)});
+    var banner=document.getElementById('tmBanner');
+    if(dateStr===tmDates[tmDates.length-1]){
+      banner.className='tm-banner';
+      document.querySelectorAll('[data-tm-live]').forEach(function(el){el.style.display=''});
+      document.querySelectorAll('[data-tm-hist]').forEach(function(el){el.remove()});
+      return;
+    }
+    fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
+      banner.className='tm-banner show';
+      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing <b>'+snap.date+'</b> snapshot — <a href="javascript:tmLoad(\\''+tmDates[tmDates.length-1]+'\\')">Back to live</a>';
+      tmRender(snap);
+    }).catch(function(){
+      banner.className='tm-banner show';
+      banner.textContent='Snapshot not available for '+dateStr;
+    });
+  }
+  function tmRender(snap){
+    var modeColors={growth:'#dc2626',calmar:'#059669',zero:'#7c3aed'};
+    for(var id in snap.modes){
+      var d=snap.modes[id],panel=document.getElementById('p-'+id);
+      if(!panel)continue;
+      var stats=panel.querySelectorAll('.ps-v');
+      if(stats.length>=6){
+        stats[0].textContent=(d.stats.ret>0?'+':'')+d.stats.ret+'%';
+        stats[1].textContent=d.stats.dd+'%';
+        stats[2].textContent=d.stats.wr+'%';
+        stats[3].textContent=d.stats.pf+'x';
+        stats[4].textContent=d.stats.trades;
+        stats[5].textContent=d.stats.avgHold+'d';
+      }
+      var tabs=document.querySelectorAll('.tab');
+      tabs.forEach(function(t){
+        var m=t.getAttribute('data-m');
+        if(snap.modes[m]){var r=snap.modes[m].stats.ret;t.querySelector('.tab-ret').textContent=(r>0?'+':'')+r+'%'}
+      });
+      var chartId={growth:'cG',calmar:'cC',zero:'cZ'}[id];
+      var chartEl=document.getElementById(chartId);
+      if(chartEl&&d.equity){
+        var c=echarts.getInstanceByDom(chartEl);
+        if(c)c.setOption({xAxis:{data:d.equity.d},series:[{data:d.equity.v}]});
+      }
+      // Render positions
+      var posSection=panel.querySelectorAll('.section-card')[2];
+      if(posSection&&d.positions){
+        var h='<div class="sc-head"><h3>Open Positions <span class="count">'+d.positions.length+'/'+d.config.portfolioSize+'</span></h3></div>';
+        if(d.positions.length){
+          h+='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Price</th><th>P&L</th><th>Left</th></tr></thead><tbody>';
+          d.positions.forEach(function(p){
+            var cls=p.return_pct>=0?'pos':'neg';
+            h+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+          });
+          h+='</tbody></table>';
+        }else{h+='<p class="empty">No active positions</p>'}
+        posSection.innerHTML=h;
+      }
+    }
+  }
+  tmInit();
 });
 </script>
 </body>
@@ -745,6 +846,50 @@ document.addEventListener('DOMContentLoaded',function(){
   console.log(`   Growth: +${g.ret}%, DD ${g.dd}%, WR ${g.wr}%, PF ${g.pf}x, ${g.trades} trades`);
   console.log(`   Calmar: +${ca.ret}%, DD ${ca.dd}%, WR ${ca.wr}%, PF ${ca.pf}x, ${ca.trades} trades`);
   console.log(`   Conservative: +${z.ret}%, DD ${z.dd}%, WR ${z.wr}%, PF ${z.pf}x, ${z.trades} trades`);
+
+  // ── Save daily snapshot for time machine ──
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const todayKey = todayISO.replace(/-/g, '');
+  const historyDir = path.join(ROOT, 'scanner/status/history');
+  fs.mkdirSync(historyDir, { recursive: true });
+
+  const snapshot = { date: todayISO, updatedAt, scanDir };
+  snapshot.modes = {};
+  for (const [id, { cfg, trades: mTrades, m: mM }] of Object.entries(modes)) {
+    const sig = signalsFor(cfg);
+    const pos = posFor(cfg, mTrades);
+    const ec = equityDV(mM.equityCurve);
+    // Compute orders for snapshot (same logic as panel)
+    const openTickers = new Set(pos.map(p => p.ticker));
+    const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
+    const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
+    const buyOrders = sigFiltered.slice(0, slotsAvailable).map(s => ({ ...s, action: 'BUY' }));
+    const rotCands = [];
+    if (cfg.rotation === 'aggressive' && slotsAvailable === 0 && pos.length > 0 && sigFiltered.length > 0) {
+      const worst = [...pos].sort((a, b) => a.return_pct - b.return_pct)[0];
+      for (const s of sigFiltered.slice(0, 5)) {
+        if (s.score >= 88 && worst.return_pct < 2) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker }); break; }
+      }
+    }
+    function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
+    const timedOutSnap = pos.filter(p => Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);
+
+    snapshot.modes[id] = {
+      stats: { ret: mM.ret, dd: mM.dd, wr: mM.wr, pf: mM.pf, trades: mM.trades, avgHold: mM.avgHold },
+      equity: ec,
+      signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr })),
+      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy })),
+      orders: [...buyOrders, ...rotCands],
+      closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct })),
+      closedTrades: mTrades.filter(t => !t._premature).map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
+      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color }
+    };
+  }
+
+  fs.writeFileSync(path.join(historyDir, todayKey + '.json'), JSON.stringify(snapshot));
+  const existingDates = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).map(f => f.replace('.json', '')).sort();
+  fs.writeFileSync(path.join(historyDir, 'dates.json'), JSON.stringify(existingDates));
+  console.log(`   Snapshot: history/${todayKey}.json (${existingDates.length} dates)`);
 }
 
 main();
