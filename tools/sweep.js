@@ -830,7 +830,6 @@ async function main() {
   const frozenTrades = {};
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
-    const modeTradeKeys = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
     for (const [id, cfg] of Object.entries(modesConfig.modes)) {
       const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}`;
       const trades2 = tradesByKey[frozenKey] || [];
@@ -840,17 +839,16 @@ async function main() {
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false,
       };
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
-      const key = modeTradeKeys[id] || id;
       if (sim2 && sim2.closedTrades) {
-        frozenTrades[key] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
-        console.log(`  ${id} (${cfg.label}): ${sim2.closedTrades.length} trades, return=${sim2.returnTotal}%`);
+        frozenTrades[id] = sim2.closedTrades.sort((a,b) => (a.scanDate||"").localeCompare(b.scanDate||""));
+        console.log(`  ${id} (${cfg.label}): ${sim2.closedTrades.length} trades, return=${sim2.returnTotal}%, DD=${sim2.maxDD}%`);
       } else {
         console.log(`  ${id} (${cfg.label}): no trades`);
       }
     }
   } else {
     // Fallback: use optimal combos if no modes-config
-    for (const [key, combo] of [["growth", topByReturn[0]], ["calmar", topByCalmar[0]], ["sharpe", ranked[0]]]) {
+    for (const [key, combo] of [["dynamic", topByReturn[0]], ["balanced", topByCalmar[0]], ["secured", ranked[0]]]) {
       if (!combo) continue;
       const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}`;
       const trades2 = tradesByKey[fbKey] || [];
@@ -892,10 +890,10 @@ async function main() {
   if (fs.existsSync(MODES_CFG)) {
     const config = JSON.parse(fs.readFileSync(MODES_CFG));
     console.log("\n=== FROZEN MODES vs SWEEP OPTIMAL ===\n");
-    console.log("Balanced mode (calmar) is FROZEN in data/modes-config.json.");
+    console.log("All modes are FROZEN in data/modes-config.json.");
     console.log("The sweep NEVER modifies them. Comparison below:\n");
 
-    const optMap = { growth: topByReturn[0], calmar: topByCalmar[0], zero: ranked[0] };
+    const optMap = { dynamic: topByReturn[0], balanced: topByCalmar[0], secured: ranked[0] };
     for (const [id, cfg] of Object.entries(config.modes)) {
       const opt = optMap[id];
       if (!opt) continue;

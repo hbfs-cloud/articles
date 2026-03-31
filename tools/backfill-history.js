@@ -19,9 +19,9 @@ const MODES_FILE = path.join(ROOT, 'data/modes-config.json');
 const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
 const HISTORY_DIR = path.join(ROOT, 'scanner/status/history');
 
-// Mode ID mapping: backtest-trades.json uses 'sharpe', modes-config uses 'zero'
-const MODE_MAP = { growth: 'growth', calmar: 'calmar', sharpe: 'zero' };
-const REVERSE_MAP = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
+// Mode IDs match directly between backtest-trades.json and modes-config.json
+const MODE_MAP = { dynamic: 'dynamic', balanced: 'balanced', secured: 'secured' };
+const REVERSE_MAP = { dynamic: 'dynamic', balanced: 'balanced', secured: 'secured' };
 
 function addBizDays(dateStr, n) {
   const d = new Date(dateStr + 'T12:00:00Z');

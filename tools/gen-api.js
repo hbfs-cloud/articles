@@ -30,7 +30,7 @@ if (!snapshots.length) {
 }
 const latestFile = path.join(HISTORY, snapshots[snapshots.length - 1]);
 const snap = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
-const cal = snap.modes.calmar;
+const cal = snap.modes.balanced || snap.modes.calmar;
 const now = new Date().toISOString();
 
 console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})`);

@@ -118,10 +118,9 @@ function main() {
   signals.sort((a, b) => b.score - a.score);
 
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
-  const modeMap = { growth: 'growth', calmar: 'calmar', zero: 'sharpe' };
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
-    const raw = allTrades[modeMap[id] || id] || [];
+    const raw = allTrades[id] || [];
     // Tag premature expirations but keep them in the dataset
     const trades = raw.map(t => {
       if (t.status === 'expired' && t.holdDays < cfg.horizon) {
@@ -131,10 +130,12 @@ function main() {
     });
     // Stats computed from CLOSED trades only (non-premature) — matches backfill convention
     const closedTrades = trades.filter(t => !t._premature);
-    modes[id] = { cfg, trades, m: computeMetrics(closedTrades, cfg.portfolioSize) };
+    modes[id] = { cfg, trades, m: computeMetrics(closedTrades, cfg.portfolioSize), ec: equityDV(computeMetrics(closedTrades, cfg.portfolioSize).equityCurve) };
   }
-  const ca = modes.calmar.m;
-  const caEC = equityDV(ca.equityCurve);
+  // Default mode for API/telegram = balanced
+  const defaultMode = modes.balanced || modes[Object.keys(modes)[0]];
+  const ca = defaultMode.m;
+  const caEC = defaultMode.ec;
 
   const _updSrc = liveMetrics.updated_at || results.generated_at;
   const updatedAt = (() => {
@@ -213,7 +214,7 @@ function main() {
       return left === 1;
     });
 
-    return `<div id="p-${id}">
+    return `<div id="p-${id}" class="mode-panel" style="${active ? '' : 'display:none'}">
 
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card">
@@ -567,6 +568,11 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 *{box-sizing:border-box}
 body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .w{max-width:1080px;margin:0 auto;padding:0 1.5rem 4rem}
+.mode-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;padding:.25rem;background:#f1f5f9;border-radius:12px}
+.mode-tab{flex:1;padding:.65rem 1rem;border:none;background:transparent;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;color:#64748b;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:all .2s}
+.mode-tab:hover{background:#e2e8f0;color:#334155}
+.mode-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* ── Hero ── */
 .hero{padding:2.5rem 1.5rem 2rem;border-bottom:1px solid #e2e8f0;position:relative}
@@ -803,7 +809,12 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <div class="tm-banner" id="tmBanner"></div>
 
-  ${panel('calmar', modes.calmar.cfg, ca, modes.calmar.trades, caEC, 'cC', true)}
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    ${Object.entries(modes).map(([id, m]) => `<button class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}</button>`).join('')}
+  </div>
+
+  ${Object.entries(modes).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-'+id, id === 'balanced')).join('\n')}
 
   <div class="disc">
     <i class="fas fa-circle-info"></i>
@@ -879,7 +890,9 @@ document.addEventListener('DOMContentLoaded',function(){
     c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:color+'05'}])}}],grid:{left:40,right:10,top:10,bottom:22}});
     return c;
   }
-  var ch=[mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb')];
+  // Init charts for all modes (only active one renders immediately, others on tab switch)
+  var ch=[];
+  ${Object.entries(modes).map(([id, m]) => `ch.push(mk('chart-${id}',${JSON.stringify(m.ec.d)},${JSON.stringify(m.ec.v)},'${m.cfg.color}'));`).join('\n  ')}
   window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
 
   // ── Time Machine (FAB + slider panel) ──
@@ -953,26 +966,42 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   };
+  // Mode switcher
+  var activeMode='balanced';
+  window.switchMode=function(id){
+    activeMode=id;
+    document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.dataset.mode===id)});
+    document.querySelectorAll('.mode-panel').forEach(function(p){p.style.display=p.id==='p-'+id?'':'none'});
+    // Init chart if not yet rendered
+    var chartEl=document.getElementById('chart-'+id);
+    if(chartEl&&!echarts.getInstanceByDom(chartEl)){
+      var cfg=modeCharts[id];
+      if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);
+    }
+  };
+  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   // Save original live content on first TM use
-  var tmLiveHTML=null;
+  var tmLiveHTML={};
   function tmSaveLive(){
-    if(tmLiveHTML!==null)return;
-    var panel=document.getElementById('p-calmar');
-    if(panel)tmLiveHTML=panel.innerHTML;
+    document.querySelectorAll('.mode-panel').forEach(function(p){
+      var id=p.id.replace('p-','');
+      if(!tmLiveHTML[id])tmLiveHTML[id]=p.innerHTML;
+    });
   }
   function tmRestoreLive(){
-    var panel=document.getElementById('p-calmar');
-    if(panel&&tmLiveHTML!==null){
-      panel.innerHTML=tmLiveHTML;
-      // Re-init ECharts (innerHTML destroys instances)
-      var chartEl=document.getElementById('cC');
-      if(chartEl){
-        // Dispose any stale instance on the new DOM element
-        var old=echarts.getInstanceByDom(chartEl);
-        if(old)old.dispose();
-        ch[0]=mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb');
+    document.querySelectorAll('.mode-panel').forEach(function(p){
+      var id=p.id.replace('p-','');
+      if(tmLiveHTML[id]){
+        p.innerHTML=tmLiveHTML[id];
+        var chartEl=document.getElementById('chart-'+id);
+        if(chartEl){
+          var old=echarts.getInstanceByDom(chartEl);
+          if(old)old.dispose();
+          var cfg=modeCharts[id];
+          if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);
+        }
       }
-    }
+    });
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
@@ -1003,7 +1032,7 @@ document.addEventListener('DOMContentLoaded',function(){
     tmRestoreLive();
   };
   function tmRender(snap){
-    var id='calmar';
+    var id=activeMode;
     var d=snap.modes[id];
     if(!d)return;
     (function(){
@@ -1025,7 +1054,7 @@ document.addEventListener('DOMContentLoaded',function(){
         stats[5].textContent=d.stats.avgHold+'d';
       }
       // Update equity chart
-      var chartId='cC';
+      var chartId='chart-'+id;
       var chartEl=document.getElementById(chartId);
       if(chartEl){
         var c=echarts.getInstanceByDom(chartEl);
@@ -1246,7 +1275,9 @@ document.addEventListener('DOMContentLoaded',function(){
 
   fs.writeFileSync(OUT, html);
   console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB)`);
-  console.log(`   Balanced: +${ca.ret}%, DD ${ca.dd}%, WR ${ca.wr}%, PF ${ca.pf}x, ${ca.trades} trades`);
+  for (const [id, m] of Object.entries(modes)) {
+    console.log(`   ${m.cfg.label}: +${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf}x, ${m.m.trades} trades`);
+  }
 
   // ── Save daily snapshot for time machine ──
   const todayISO = new Date().toISOString().slice(0, 10);
