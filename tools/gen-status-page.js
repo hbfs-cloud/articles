@@ -624,18 +624,17 @@ details[open] summary::after{content:"▼"}
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
 
 /* Time Machine */
-.tm-bar{display:flex;align-items:center;gap:.5rem;margin:1rem 0;padding:.5rem .8rem;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+.tm-bar{display:flex;align-items:center;gap:.75rem;margin:1rem 0;padding:.65rem 1rem;background:#fff;border:1px solid #e2e8f0;border-radius:10px;flex-wrap:wrap}
 .tm-label{font-size:.72rem;font-weight:700;color:#475569;white-space:nowrap;display:flex;align-items:center;gap:.3rem}
+.tm-label{font-size:.75rem;color:#64748b;font-weight:600;white-space:nowrap}
+.tm-date-display{font-size:.82rem;font-weight:700;color:#1e293b;min-width:8rem;text-align:center}
+.tm-date-display .live-badge{background:#10b981;color:#fff;font-size:.6rem;padding:.1rem .35rem;border-radius:4px;margin-left:.35rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.5px}
+.tm-slider{flex:1;min-width:120px;height:6px;accent-color:#3b82f6;cursor:pointer}
 .tm-btn{border:none;background:#f1f5f9;border-radius:6px;padding:.35rem .55rem;cursor:pointer;color:#475569;font-size:.75rem}
 .tm-btn:hover{background:#e2e8f0}
-.tm-dates{display:flex;gap:.25rem;overflow-x:auto;flex:1;padding:.2rem 0;scrollbar-width:none}
-.tm-dates::-webkit-scrollbar{display:none}
-.tm-date{border:none;background:#f8fafc;border-radius:6px;padding:.25rem .5rem;cursor:pointer;font-size:.7rem;color:#64748b;white-space:nowrap;font-weight:600;transition:all .15s}
-.tm-date:hover{background:#e2e8f0}
-.tm-date.active{background:#3b82f6;color:#fff}
 .tm-banner{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:.6rem 1rem;margin-bottom:1rem;font-size:.82rem;color:#1d4ed8;text-align:center}
 .tm-banner.show{display:block}
-.tm-banner a{color:#2563eb;font-weight:700}
+.tm-banner a{color:#2563eb;font-weight:700;cursor:pointer}
 
 @media(max-width:700px){
   .perf-hero{flex-direction:column}
@@ -681,11 +680,13 @@ details[open] summary::after{content:"▼"}
     <span class="ts"><i class="fas fa-clock"></i> Updated ${updatedAt}</span>
   </div>
 
-  <div class="tm-bar" id="timeMachine">
+  <div class="tm-bar" id="timeMachine" style="display:none">
     <span class="tm-label"><i class="fas fa-clock-rotate-left"></i> History</span>
+    <span class="tm-label"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
     <button class="tm-btn" onclick="tmNav(-1)"><i class="fas fa-chevron-left"></i></button>
-    <div class="tm-dates" id="tmDates"></div>
+    <input type="range" id="timeSlider" class="tm-slider" min="0" max="0" value="0">
     <button class="tm-btn" onclick="tmNav(1)"><i class="fas fa-chevron-right"></i></button>
+    <span class="tm-date-display" id="tmDateLabel"></span>
   </div>
   <div class="tm-banner" id="tmBanner"></div>
 
@@ -758,44 +759,69 @@ document.addEventListener('DOMContentLoaded',function(){
   var ch=[mk('cG',${JSON.stringify(gEC.d)},${JSON.stringify(gEC.v)},'#059669'),mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb'),mk('cZ',${JSON.stringify(zEC.d)},${JSON.stringify(zEC.v)},'#7c3aed')];
   window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
 
-  // ── Time Machine ──
-  var tmDates=[], tmLive={};
+  // ── Time Machine (slider — same pattern as systematic-tss) ──
+  var tmDates=[], tmCurrentIdx=0, tmLiveSnap=null;
   function tmInit(){
     fetch('/scanner/status/history/dates.json').then(function(r){return r.json()}).then(function(dates){
-      tmDates=dates;if(!dates.length)return;
-      var container=document.getElementById('tmDates');
-      dates.forEach(function(d){
-        var btn=document.createElement('button');
-        btn.className='tm-date'+(d===dates[dates.length-1]?' active':'');
-        btn.textContent=d.slice(4,6)+'/'+d.slice(6,8);
-        btn.setAttribute('data-d',d);
-        btn.onclick=function(){tmLoad(d)};
-        container.appendChild(btn);
+      tmDates=dates;if(dates.length<2)return;
+      var bar=document.getElementById('timeMachine');bar.style.display='flex';
+      var slider=document.getElementById('timeSlider');
+      slider.max=dates.length-1;
+      slider.value=dates.length-1; // rightmost = live
+      tmCurrentIdx=dates.length-1;
+      tmUpdateLabel();
+      slider.addEventListener('input',function(){
+        tmCurrentIdx=parseInt(this.value);
+        tmUpdateLabel();
+        tmLoadIdx(tmCurrentIdx);
       });
-      container.scrollLeft=container.scrollWidth;
     }).catch(function(){});
   }
-  function tmNav(dir){var c=document.getElementById('tmDates');c.scrollBy({left:dir*200,behavior:'smooth'})}
-  function tmLoad(dateStr){
-    document.querySelectorAll('.tm-date').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-d')===dateStr)});
+  function tmUpdateLabel(){
+    var el=document.getElementById('tmDateLabel');
+    if(tmCurrentIdx===tmDates.length-1){
+      var d=tmDates[tmCurrentIdx];
+      el.innerHTML=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+' <span class="live-badge">live</span>';
+    }else{
+      var d=tmDates[tmCurrentIdx];
+      el.textContent=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
+    }
+  }
+  function tmNav(dir){
+    var slider=document.getElementById('timeSlider');
+    var newIdx=tmCurrentIdx+dir;
+    if(newIdx<0||newIdx>=tmDates.length)return;
+    tmCurrentIdx=newIdx;
+    slider.value=tmCurrentIdx;
+    tmUpdateLabel();
+    tmLoadIdx(tmCurrentIdx);
+  }
+  function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
-    if(dateStr===tmDates[tmDates.length-1]){
+    if(idx===tmDates.length-1){
       banner.className='tm-banner';
-      document.querySelectorAll('[data-tm-live]').forEach(function(el){el.style.display=''});
-      document.querySelectorAll('[data-tm-hist]').forEach(function(el){el.remove()});
+      location.reload(); // simplest way to restore live state
       return;
     }
+    var dateStr=tmDates[idx];
     fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
       banner.className='tm-banner show';
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing <b>'+snap.date+'</b> snapshot — <a href="javascript:tmLoad(\\''+tmDates[tmDates.length-1]+'\\')">Back to live</a>';
+      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing <b>'+snap.date+'</b> snapshot <a onclick="tmGoLive()" style="cursor:pointer">— Back to live</a>';
       tmRender(snap);
     }).catch(function(){
       banner.className='tm-banner show';
       banner.textContent='Snapshot not available for '+dateStr;
     });
   }
+  function tmGoLive(){
+    var slider=document.getElementById('timeSlider');
+    tmCurrentIdx=tmDates.length-1;
+    slider.value=tmCurrentIdx;
+    tmUpdateLabel();
+    document.getElementById('tmBanner').className='tm-banner';
+    location.reload();
+  }
   function tmRender(snap){
-    var modeColors={growth:'#dc2626',calmar:'#059669',zero:'#7c3aed'};
     for(var id in snap.modes){
       var d=snap.modes[id],panel=document.getElementById('p-'+id);
       if(!panel)continue;
@@ -832,6 +858,47 @@ document.addEventListener('DOMContentLoaded',function(){
           h+='</tbody></table>';
         }else{h+='<p class="empty">No active positions</p>'}
         posSection.innerHTML=h;
+      }
+      // Render signals
+      var sigSection=panel.querySelectorAll('.section-card')[0];
+      if(sigSection&&d.signals){
+        var sh='<div class="sc-head"><h3>Today\'s Signals <span class="count">'+d.signals.length+'</span></h3></div>';
+        if(d.signals.length){
+          sh+='<table class="t"><thead><tr><th>Ticker</th><th>Score</th><th>Strategy</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
+          d.signals.forEach(function(s){
+            sh+='<tr><td><b>'+s.ticker+'</b></td><td>'+s.score+'</td><td>'+s.strategy+'</td><td>'+s.entry+'</td><td>'+s.stop+'</td><td>'+s.tp1+'</td></tr>';
+          });
+          sh+='</tbody></table>';
+        }else{sh+='<p class="empty">No signals</p>'}
+        sigSection.innerHTML=sh;
+      }
+      // Render orders
+      var ordSection=panel.querySelectorAll('.section-card')[1];
+      if(ordSection&&d.orders){
+        var oh='<div class="sc-head"><h3>Orders to Execute <span class="count">'+d.orders.length+'</span></h3></div>';
+        if(d.orders.length){
+          oh+='<table class="t"><thead><tr><th>Action</th><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th></tr></thead><tbody>';
+          d.orders.forEach(function(o){
+            oh+='<tr><td><span class="badge '+(o.action==='ROTATE'?'rot':'buy')+'">'+o.action+'</span></td><td><b>'+o.ticker+'</b></td><td>'+o.score+'</td><td>'+o.entry+'</td><td>'+o.stop+'</td></tr>';
+          });
+          oh+='</tbody></table>';
+        }else{oh+='<p class="empty">No orders</p>'}
+        ordSection.innerHTML=oh;
+      }
+      // Render closed trades (last section)
+      var sections=panel.querySelectorAll('.section-card');
+      var tradeSection=sections[sections.length-1];
+      if(tradeSection&&d.closedTrades){
+        var th='<div class="sc-head"><h3>Trade History <span class="count">'+d.closedTrades.length+'</span></h3></div>';
+        if(d.closedTrades.length){
+          th+='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Days</th><th>Status</th></tr></thead><tbody>';
+          d.closedTrades.forEach(function(t){
+            var cls=t.pnlPct>=0?'pos':'neg';
+            th+='<tr><td><b>'+t.ticker+'</b></td><td>$'+(t.actualEntry||0).toFixed(2)+'</td><td>$'+(t.exitPrice||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(t.pnlPct>0?'+':'')+t.pnlPct.toFixed(1)+'%</b></td><td>'+(t.holdDays||0)+'d</td><td>'+t.status+'</td></tr>';
+          });
+          th+='</tbody></table>';
+        }else{th+='<p class="empty">No closed trades</p>'}
+        tradeSection.innerHTML=th;
       }
     }
   }
