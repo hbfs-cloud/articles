@@ -807,7 +807,14 @@ function sendTelegramVideo(videoPath, threadId, title, caption) {
 }
 
 // ── gamma-slides integration ─────────────────────────────────────────────────
-const GAMMA_SLIDES = path.join('/home/ci/projects/gamma-slides/bin/gamma-slides.js');
+// Dynamic path: CI server vs Mac Mini
+const _GAMMA_CANDIDATES = [
+  '/home/ci/projects/gamma-slides/bin/gamma-slides.js',
+  path.join(process.env.HOME || '/root', 'GolandProjects/gamma-slides/bin/gamma-slides.js'),
+  path.join(process.env.HOME || '/root', 'projects/gamma-slides/bin/gamma-slides.js'),
+];
+const GAMMA_SLIDES = _GAMMA_CANDIDATES.find(p => fs.existsSync(p)) || _GAMMA_CANDIDATES[0];
+const GAMMA_CWD = path.dirname(path.dirname(GAMMA_SLIDES));
 
 // Theme mapping per article type
 const TYPE_THEME = {
@@ -1018,7 +1025,7 @@ async function main() {
   console.log('\n🎬 Generating video via gamma-slides...');
   const gammaEnv = { ...process.env, PUPPETEER_EXECUTABLE_PATH: '/snap/bin/chromium', PATH: `/home/ci/edge-tts-venv/bin:${process.env.PATH}` };
   const gammaResult = spawnSync('node', [GAMMA_SLIDES, 'video', '-f', deckPath, '-o', videoPath], {
-    stdio: 'pipe', timeout: 600000, env: gammaEnv, cwd: '/home/ci/projects/gamma-slides',
+    stdio: 'pipe', timeout: 600000, env: gammaEnv, cwd: GAMMA_CWD,
   });
   const gammaOut = gammaResult.stdout?.toString() || '';
   const gammaErr = gammaResult.stderr?.toString() || '';
