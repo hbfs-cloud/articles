@@ -131,10 +131,26 @@ function main() {
       const cfg = modesCfg.modes[modeId];
       if (!cfg) continue;
 
-      // 1. Closed trades up to this date (trades whose exit happened on or before dateISO)
+      // Exit date for a trade: use holdDays if the trade actually completed (tp/sl),
+      // otherwise use cfg.horizon (trade was "premature"/expired early by rotation).
+      // This aligns with gen-status-page.js _premature logic.
+      function tradeExitDate(t) {
+        // holdDays=0 means same-day exit (e.g. stop loss) — NOT falsy
+        if (t.status === 'tp' || t.status === 'sl' || t.holdDays === 0) {
+          return addBizDays(t.entryDate, t.holdDays != null ? t.holdDays : cfg.horizon);
+        }
+        // expired with holdDays < horizon = premature (rotation), use full horizon
+        if (t.status === 'expired' && t.holdDays != null && t.holdDays < cfg.horizon) {
+          return addBizDays(t.entryDate, cfg.horizon);
+        }
+        return addBizDays(t.entryDate, t.holdDays != null ? t.holdDays : cfg.horizon);
+      }
+
+      // 1. Closed trades up to this date (trades fully exited on or before dateISO)
       const closedByDate = trades.filter(t => {
-        if (!t.entryDate || !t.holdDays) return false;
-        const exitDate = addBizDays(t.entryDate, t.holdDays);
+        if (!t.entryDate) return false;
+        if (t.holdDays == null) return false; // no hold info
+        const exitDate = tradeExitDate(t);
         return exitDate <= dateISO;
       });
 
@@ -142,17 +158,14 @@ function main() {
       const stats = computeStatsUpTo(closedByDate, cfg.portfolioSize);
       const ec = equityDV(stats.equityCurve);
 
-      // 3. Open positions on this date (entered but not yet exited)
-      const openPositions = [];
+      // 3. Open positions on this date (entered but not yet fully exited)
+      let openPositions = [];
       for (const t of trades) {
         if (!t.entryDate) continue;
-        const exitDate = addBizDays(t.entryDate, t.holdDays || cfg.horizon);
+        const exitDate = tradeExitDate(t);
         if (t.entryDate <= dateISO && exitDate > dateISO) {
           const daysHeld = bizDaysBetween(t.entryDate, dateISO);
           const daysRemaining = Math.max(0, cfg.horizon - daysHeld);
-
-          // For current price on that date, use exit price as approximation
-          // (we don't have intraday data, so this is the best we can do)
           const currentPrice = t.exitPrice || t.actualEntry;
           const returnPct = t.actualEntry > 0 ? +((currentPrice - t.actualEntry) / t.actualEntry * 100).toFixed(1) : 0;
 
@@ -171,12 +184,45 @@ function main() {
         }
       }
 
-      // 4. New signals for this date (trades that were scanned on this date)
-      const signals = trades
-        .filter(t => t.scanDate === dateISO)
+      // 3b. Close Now: positions expiring TODAY (exitDate === dateISO)
+      const closeNow = [];
+      for (const t of trades) {
+        if (!t.entryDate) continue;
+        const exitDate = tradeExitDate(t);
+        if (exitDate === dateISO && t.entryDate < dateISO) {
+          const currentPrice = t.exitPrice || t.actualEntry;
+          const returnPct = t.actualEntry > 0 ? +((currentPrice - t.actualEntry) / t.actualEntry * 100).toFixed(1) : 0;
+          closeNow.push({
+            ticker: t.ticker,
+            scan_date: t.scanDate,
+            entry: t.actualEntry,
+            current_price: currentPrice,
+            return_pct: returnPct
+          });
+        }
+      }
+
+      // 3c. Cap open positions at portfolioSize (newest/highest-score first)
+      openPositions.sort((a, b) => (b.scan_date || '').localeCompare(a.scan_date || ''));
+      if (openPositions.length > cfg.portfolioSize) {
+        openPositions = openPositions.slice(0, cfg.portfolioSize);
+      }
+
+      // 4. New signals for this date — collect from ALL modes for this scanDate
+      // to show the full scanner output, not just per-mode filtered trades
+      const allSignalsForDate = [];
+      for (const [mk, mt] of Object.entries(allTrades)) {
+        for (const t of mt) {
+          if (t.scanDate === dateISO && !allSignalsForDate.find(s => s.ticker === t.ticker)) {
+            allSignalsForDate.push(t);
+          }
+        }
+      }
+      const signals = allSignalsForDate
+        .sort((a, b) => (b.score || 0) - (a.score || 0))
         .map(t => ({
           ticker: t.ticker,
-          score: t.score || 0,
+          score: t.score || 85,
           strategy: t.strategy,
           entry: '$' + (t.actualEntry || 0).toFixed(2),
           stop: '$' + (t.actualEntry * (1 - (cfg.maxStopPct || 8) / 100)).toFixed(2),
@@ -185,23 +231,13 @@ function main() {
           rr: '1:1.5'
         }));
 
-      // 5. Orders (new entries for this date)
+      // 5. Orders (new entries for this date, respecting portfolio capacity)
       const openTickers = new Set(openPositions.map(p => p.ticker));
+      const availableSlots = Math.max(0, cfg.portfolioSize - openPositions.length);
       const orders = signals
         .filter(s => !openTickers.has(s.ticker))
-        .slice(0, Math.max(0, cfg.portfolioSize - openPositions.length))
+        .slice(0, availableSlots)
         .map(s => ({ ...s, action: 'BUY' }));
-
-      // 6. Close Now (positions past horizon)
-      const closeNow = openPositions
-        .filter(p => p.days_remaining <= 0)
-        .map(p => ({
-          ticker: p.ticker,
-          scan_date: p.scan_date,
-          entry: p.entry,
-          current_price: p.current_price,
-          return_pct: p.return_pct
-        }));
 
       snapshot.modes[modeId] = {
         stats: {
