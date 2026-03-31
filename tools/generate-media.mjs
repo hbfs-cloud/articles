@@ -693,10 +693,16 @@ function buildSilentVideo(pngPaths, durations, outPath) {
   try { fs.unlinkSync(concatTxt); } catch {}
 }
 
-// ── YouTube upload via Mac Mini ───────────────────────────────────────────────
+// ── YouTube upload via Mac Mini (or locally if already on Mac Mini) ───────────
 function uploadToYouTube(videoPath, thumbPath, title, description, playlistId) {
-  const sshCmd = (cmd) => spawnSync('bash', ['-c', `${SSHPASS} -p '${SSH_PASS}' ssh ${SSH_OPTS} ${SSH_HOST} '${cmd}'`], { stdio: 'pipe', timeout: 30000 });
-  const scpCmd = (local, remote) => spawnSync('bash', ['-c', `${SSHPASS} -p '${SSH_PASS}' scp ${SSH_OPTS} '${local}' ${SSH_HOST}:${remote}`], { stdio: 'pipe', timeout: 300000 });
+  const isMacMini = process.platform === 'darwin' || (process.env.HOME || '').includes('marketwatchxyz');
+  // On CI: relay via sshpass to Mac Mini. On Mac Mini: run Python upload script directly.
+  const sshCmd = isMacMini
+    ? (cmd) => spawnSync('bash', ['-c', cmd], { stdio: 'pipe', timeout: 60000 })
+    : (cmd) => spawnSync('bash', ['-c', `${SSHPASS} -p '${SSH_PASS}' ssh ${SSH_OPTS} ${SSH_HOST} '${cmd}'`], { stdio: 'pipe', timeout: 30000 });
+  const scpCmd = isMacMini
+    ? (local, remote) => { fs.copyFileSync(local, remote); return { status: 0 }; }
+    : (local, remote) => spawnSync('bash', ['-c', `${SSHPASS} -p '${SSH_PASS}' scp ${SSH_OPTS} '${local}' ${SSH_HOST}:${remote}`], { stdio: 'pipe', timeout: 300000 });
 
   console.log('\n📤 Uploading to YouTube...');
   sshCmd('mkdir -p /tmp/mw-upload');
