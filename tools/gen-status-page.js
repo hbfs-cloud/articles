@@ -470,7 +470,8 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
         const pnl = t.pnlPct || 0;
         const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';
         let exitDate = '—';
-        if (t.entryDate && t.holdDays) { const d = new Date(t.entryDate); d.setDate(d.getDate() + t.holdDays); exitDate = d.toISOString().slice(5, 10); }
+        if (t.exitDate) { exitDate = t.exitDate.slice(5, 10); }
+        else if (t.entryDate && t.holdDays) { const d = new Date(t.entryDate); d.setDate(d.getDate() + t.holdDays); exitDate = d.toISOString().slice(5, 10); }
         let statusLabel, statusShort, statusCls;
         switch (t.status) {
           case 'tp1': statusLabel = 'Target 1 hit'; statusShort = 'TP1 ✓'; statusCls = 'pos'; break;
