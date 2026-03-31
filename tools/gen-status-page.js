@@ -623,18 +623,31 @@ details[open] summary::after{content:"▼"}
 /* Disclaimer */
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
 
-/* Time Machine */
-.tm-bar{display:flex;align-items:center;gap:.75rem;margin:1rem 0;padding:.65rem 1rem;background:#fff;border:1px solid #e2e8f0;border-radius:10px;flex-wrap:wrap}
-.tm-label{font-size:.72rem;font-weight:700;color:#475569;white-space:nowrap;display:flex;align-items:center;gap:.3rem}
-.tm-label{font-size:.75rem;color:#64748b;font-weight:600;white-space:nowrap}
-.tm-date-display{font-size:.82rem;font-weight:700;color:#1e293b;min-width:8rem;text-align:center}
-.tm-date-display .live-badge{background:#10b981;color:#fff;font-size:.6rem;padding:.1rem .35rem;border-radius:4px;margin-left:.35rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.5px}
-.tm-slider{flex:1;min-width:120px;height:6px;accent-color:#3b82f6;cursor:pointer}
+/* Time Machine FAB */
+.tm-fab{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.4);transition:all .2s;display:none}
+.tm-fab:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(59,130,246,.5)}
+.tm-fab.viewing{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 16px rgba(245,158,11,.4)}
+.tm-panel{position:fixed;bottom:5rem;right:1.5rem;z-index:999;width:320px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);padding:1rem;display:none;flex-direction:column;gap:.75rem}
+.tm-panel.open{display:flex}
+.tm-panel-head{display:flex;align-items:center;justify-content:space-between}
+.tm-panel-title{font-size:.82rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:.4rem}
+.tm-panel-close{border:none;background:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:0}
+.tm-panel-close:hover{color:#475569}
+.tm-date-display{font-size:.92rem;font-weight:700;color:#1e293b;text-align:center;padding:.4rem 0}
+.tm-date-display .live-badge{background:#10b981;color:#fff;font-size:.6rem;padding:.12rem .4rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.5px}
+.tm-date-display .hist-date{color:#d97706}
+.tm-slider-row{display:flex;align-items:center;gap:.5rem}
+.tm-slider{flex:1;height:6px;accent-color:#3b82f6;cursor:pointer}
 .tm-btn{border:none;background:#f1f5f9;border-radius:6px;padding:.35rem .55rem;cursor:pointer;color:#475569;font-size:.75rem}
 .tm-btn:hover{background:#e2e8f0}
+.tm-range-labels{display:flex;justify-content:space-between;font-size:.65rem;color:#94a3b8;font-weight:600}
+.tm-live-btn{border:none;background:#10b981;color:#fff;border-radius:8px;padding:.4rem .8rem;font-size:.78rem;font-weight:700;cursor:pointer;width:100%;display:none}
+.tm-live-btn:hover{background:#059669}
+.tm-live-btn.show{display:block}
 .tm-banner{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:.6rem 1rem;margin-bottom:1rem;font-size:.82rem;color:#1d4ed8;text-align:center}
 .tm-banner.show{display:block}
 .tm-banner a{color:#2563eb;font-weight:700;cursor:pointer}
+@media(max-width:400px){.tm-panel{width:calc(100vw - 2rem);right:1rem}}
 
 @media(max-width:700px){
   .perf-hero{flex-direction:column}
@@ -680,14 +693,6 @@ details[open] summary::after{content:"▼"}
     <span class="ts"><i class="fas fa-clock"></i> Updated ${updatedAt}</span>
   </div>
 
-  <div class="tm-bar" id="timeMachine" style="display:none">
-    <span class="tm-label"><i class="fas fa-clock-rotate-left"></i> History</span>
-    <span class="tm-label"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
-    <button class="tm-btn" onclick="tmNav(-1)"><i class="fas fa-chevron-left"></i></button>
-    <input type="range" id="timeSlider" class="tm-slider" min="0" max="0" value="0">
-    <button class="tm-btn" onclick="tmNav(1)"><i class="fas fa-chevron-right"></i></button>
-    <span class="tm-date-display" id="tmDateLabel"></span>
-  </div>
   <div class="tm-banner" id="tmBanner"></div>
 
   <div class="tabs">
@@ -759,17 +764,21 @@ document.addEventListener('DOMContentLoaded',function(){
   var ch=[mk('cG',${JSON.stringify(gEC.d)},${JSON.stringify(gEC.v)},'#059669'),mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb'),mk('cZ',${JSON.stringify(zEC.d)},${JSON.stringify(zEC.v)},'#7c3aed')];
   window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
 
-  // ── Time Machine (slider — same pattern as systematic-tss) ──
-  var tmDates=[], tmCurrentIdx=0, tmLiveSnap=null;
+  // ── Time Machine (FAB + slider panel) ──
+  var tmDates=[], tmCurrentIdx=0;
   function tmInit(){
     fetch('/scanner/status/history/dates.json').then(function(r){return r.json()}).then(function(dates){
-      tmDates=dates;if(dates.length<2)return;
-      var bar=document.getElementById('timeMachine');bar.style.display='flex';
+      tmDates=dates;if(dates.length<1)return;
+      document.getElementById('tmFab').style.display='flex';
       var slider=document.getElementById('timeSlider');
       slider.max=dates.length-1;
-      slider.value=dates.length-1; // rightmost = live
+      slider.value=dates.length-1;
       tmCurrentIdx=dates.length-1;
       tmUpdateLabel();
+      // Range labels
+      var fmt=function(d){return d.slice(4,6)+'/'+d.slice(6,8)};
+      document.getElementById('tmFirstDate').textContent=fmt(dates[0]);
+      document.getElementById('tmLastDate').textContent=fmt(dates[dates.length-1])+' (live)';
       slider.addEventListener('input',function(){
         tmCurrentIdx=parseInt(this.value);
         tmUpdateLabel();
@@ -777,22 +786,29 @@ document.addEventListener('DOMContentLoaded',function(){
       });
     }).catch(function(){});
   }
+  function tmToggle(){
+    var p=document.getElementById('tmPanel');
+    p.classList.toggle('open');
+  }
   function tmUpdateLabel(){
     var el=document.getElementById('tmDateLabel');
+    var d=tmDates[tmCurrentIdx];
+    var formatted=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
     if(tmCurrentIdx===tmDates.length-1){
-      var d=tmDates[tmCurrentIdx];
-      el.innerHTML=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8)+' <span class="live-badge">live</span>';
+      el.innerHTML=formatted+' <span class="live-badge">live</span>';
+      document.getElementById('tmLiveBtn').className='tm-live-btn';
+      document.getElementById('tmFab').classList.remove('viewing');
     }else{
-      var d=tmDates[tmCurrentIdx];
-      el.textContent=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
+      el.innerHTML='<span class="hist-date">'+formatted+'</span>';
+      document.getElementById('tmLiveBtn').className='tm-live-btn show';
+      document.getElementById('tmFab').classList.add('viewing');
     }
   }
   function tmNav(dir){
-    var slider=document.getElementById('timeSlider');
     var newIdx=tmCurrentIdx+dir;
     if(newIdx<0||newIdx>=tmDates.length)return;
     tmCurrentIdx=newIdx;
-    slider.value=tmCurrentIdx;
+    document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   }
@@ -800,13 +816,14 @@ document.addEventListener('DOMContentLoaded',function(){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){
       banner.className='tm-banner';
-      location.reload(); // simplest way to restore live state
+      location.reload();
       return;
     }
     var dateStr=tmDates[idx];
     fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
       banner.className='tm-banner show';
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing <b>'+snap.date+'</b> snapshot <a onclick="tmGoLive()" style="cursor:pointer">— Back to live</a>';
+      var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
+      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b>';
       tmRender(snap);
     }).catch(function(){
       banner.className='tm-banner show';
@@ -814,11 +831,11 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   function tmGoLive(){
-    var slider=document.getElementById('timeSlider');
     tmCurrentIdx=tmDates.length-1;
-    slider.value=tmCurrentIdx;
+    document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
     document.getElementById('tmBanner').className='tm-banner';
+    document.getElementById('tmPanel').classList.remove('open');
     location.reload();
   }
   function tmRender(snap){
@@ -905,6 +922,21 @@ document.addEventListener('DOMContentLoaded',function(){
   tmInit();
 });
 </script>
+<button class="tm-fab" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i></button>
+<div class="tm-panel" id="tmPanel">
+  <div class="tm-panel-head">
+    <span class="tm-panel-title"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
+    <button class="tm-panel-close" onclick="tmToggle()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="tm-date-display" id="tmDateLabel"></div>
+  <div class="tm-slider-row">
+    <button class="tm-btn" onclick="tmNav(-1)"><i class="fas fa-chevron-left"></i></button>
+    <input type="range" id="timeSlider" class="tm-slider" min="0" max="0" value="0">
+    <button class="tm-btn" onclick="tmNav(1)"><i class="fas fa-chevron-right"></i></button>
+  </div>
+  <div class="tm-range-labels"><span id="tmFirstDate"></span><span id="tmLastDate"></span></div>
+  <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-broadcast-tower"></i> Back to Live</button>
+</div>
 </body>
 </html>`;
 
