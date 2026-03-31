@@ -158,12 +158,32 @@ function parseScan(dir) {
   };
 }
 
-// ─── Fetch Yahoo Finance OHLCV ────────────────────────────────────────────────
+// ─── Fetch Yahoo Finance OHLCV (file-cached) ─────────────────────────────────
+
+const PRICE_CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+fs.mkdirSync(PRICE_CACHE_DIR, { recursive: true });
 
 const priceCache = {};
 
+function loadCachedPrice(ticker) {
+  const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
+  if (!fs.existsSync(fp)) return null;
+  const stat = fs.statSync(fp);
+  // Cache valid for 12 hours (today's bar may update during session)
+  if (Date.now() - stat.mtimeMs > 12 * 3600 * 1000) return null;
+  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
+}
+
+function saveCachedPrice(ticker, history) {
+  const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
+  fs.writeFileSync(fp, JSON.stringify(history));
+}
+
 async function fetchOHLCV(ticker) {
   if (priceCache[ticker]) return priceCache[ticker];
+  // Try file cache first
+  const cached = loadCachedPrice(ticker);
+  if (cached) { priceCache[ticker] = cached; return cached; }
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=120d`;
   return new Promise((resolve) => {
     const req = https.get(url, {
@@ -186,6 +206,7 @@ async function fetchOHLCV(ticker) {
             }
           }
           priceCache[ticker] = history;
+          saveCachedPrice(ticker, history);
           resolve(history);
         } catch { resolve(null); }
       });

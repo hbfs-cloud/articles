@@ -270,7 +270,7 @@ function main() {
     <div class="ps"><span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max Drawdown</span></div>
     <div class="ps"><span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span></div>
     <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">${m.trades - trades.filter(t=>t._premature).length}</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">${m.trades}</span><span class="ps-l">Closed Trades</span></div>
     <div class="ps"><span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
@@ -783,8 +783,8 @@ details[open] summary::after{transform:rotate(90deg)}
 <nav class="brand-bar">
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">MarketWatch</span></a>
-    <div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">S&eacute;ries</a></div>
-    <div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div>
+    <div class="brand-nav"><a href="/?tab=weekly">Weekly</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Series</a></div>
+    <div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div>
   </div>
 </nav>
 
