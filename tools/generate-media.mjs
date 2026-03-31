@@ -87,14 +87,14 @@ const NO_TELEGRAM = args.includes('--no-telegram');
 
 // ── Type metadata ─────────────────────────────────────────────────────────────
 const TYPE_META = {
-  daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 90, ytPlaylist: 'PLv96IetLrmtWfdEl9tObkSLaw_HFt39me' },
-  weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 90, ytPlaylist: 'PLv96IetLrmtWXigx6hLMoABNWsVhli2Vv' },
-  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 89, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
-  analysis: { label: 'Stock Analysis',    emoji: '🔬', telegramTopic: 90, ytPlaylist: 'PLv96IetLrmtU4Yff6kHAvSr3wJNYgXQ3R' },
-  learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 91, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
-  series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 91, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
-  retro:    { label: 'Scanner Retrospective', emoji: '🔁', telegramTopic: 89, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
-  tech:     { label: 'Tech Watch',       emoji: '💻', telegramTopic: 91, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtWfdEl9tObkSLaw_HFt39me' },
+  weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 74, ytPlaylist: 'PLv96IetLrmtWXigx6hLMoABNWsVhli2Vv' },
+  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
+  analysis: { label: 'Stock Analysis',    emoji: '🔬', telegramTopic: 75, ytPlaylist: 'PLv96IetLrmtU4Yff6kHAvSr3wJNYgXQ3R' },
+  learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  retro:    { label: 'Scanner Retrospective', emoji: '🔁', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
+  tech:     { label: 'Tech Watch',       emoji: '💻', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
