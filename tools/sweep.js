@@ -258,7 +258,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   // Per-strategy stop cap: tighter for volatile strategies
   const STRATEGY_STOP_CAP = {
-    'pre_squeeze': 5,   // volatile, tighter leash
+    'pre_squeeze': 5,      // volatile, tighter leash
+    'short_squeeze': 5,    // volatile, tighter leash
     'breakout': 7,
     'momentum': 7,
     'pullback': 5,
@@ -450,20 +451,18 @@ function simulatePortfolio(allTrades, scans, config) {
   const endDate = allScanDates[allScanDates.length - 1];
   const allDays = getAllBizDays(startDate, addBizDays(endDate, horizonDays + 5));
 
-  // Equity tracking
-  let equity = 100;
+  // Equity tracking — daily mark-to-market
+  let realizedPnl = 0; // cumulative realized P&L (%)
+  const weight = 1 / portfolioSize;
   const equityCurve = [{ date: startDate, value: 100 }];
+  const scanDateSet = new Set(allScanDates);
 
-  for (const scanDate of allScanDates) {
-    const candidates = (byDate[scanDate] || []).slice(0, topN);
-    const weight = 1 / portfolioSize;
-
-    // Check for exits on positions
+  for (const day of allDays) {
+    // ─── Close expired/exited positions ───────────────────────────────
     const stillOpen = [];
     for (const pos of openPositions) {
-      if (pos.trade.exitDate && pos.trade.exitDate <= scanDate) {
-        // Position closed
-        equity += pos.trade.pnlPct * weight;
+      if (pos.trade.exitDate && pos.trade.exitDate <= day) {
+        realizedPnl += pos.trade.pnlPct * weight;
         closedTrades.push(pos.trade);
       } else {
         stillOpen.push(pos);
@@ -472,64 +471,77 @@ function simulatePortfolio(allTrades, scans, config) {
     openPositions.length = 0;
     openPositions.push(...stillOpen);
 
-    // Rotation logic
-    let slotsAvailable = portfolioSize - openPositions.length;
+    // ─── On scan dates: rotation + new entries ────────────────────────
+    if (scanDateSet.has(day)) {
+      const candidates = (byDate[day] || []).slice(0, topN);
+      let slotsAvailable = portfolioSize - openPositions.length;
 
-    if (rotation !== 'none' && slotsAvailable <= 0 && candidates.length > 0) {
-      const sorted = [...openPositions].sort((a, b) => a.trade.score - b.trade.score);
-      const rotLimit = rotation === 'daily_max1' ? 1 : rotation === 'daily_max2' ? 2 : portfolioSize;
-      const margin = rotation === 'aggressive' ? 0 : 5;
+      // Rotation logic
+      if (rotation !== 'none' && slotsAvailable <= 0 && candidates.length > 0) {
+        const sorted = [...openPositions].sort((a, b) => a.trade.score - b.trade.score);
+        const rotLimit = rotation === 'daily_max1' ? 1 : rotation === 'daily_max2' ? 2 : portfolioSize;
+        const margin = rotation === 'aggressive' ? 0 : 5;
 
-      let rotated = 0;
-      for (const cand of candidates) {
-        if (rotated >= rotLimit) break;
-        if (rotated >= sorted.length) break;
-        const worst = sorted[rotated];
-        if (cand.score > worst.trade.score + margin) {
-          // Force close at current MtM
-          const hist = priceCache[worst.trade.ticker];
-          if (hist && hist[scanDate]) {
-            const forcePnl = ((hist[scanDate].close - worst.trade.actualEntry) / worst.trade.actualEntry) * 100;
-            equity += forcePnl * weight;
-            closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: scanDate, pnlPct: +forcePnl.toFixed(2) });
-          } else {
-            closedTrades.push(worst.trade);
+        let rotated = 0;
+        for (const cand of candidates) {
+          if (rotated >= rotLimit) break;
+          if (rotated >= sorted.length) break;
+          const worst = sorted[rotated];
+          if (cand.score > worst.trade.score + margin) {
+            const hist = priceCache[worst.trade.ticker];
+            if (hist && hist[day]) {
+              const forcePnl = ((hist[day].close - worst.trade.actualEntry) / worst.trade.actualEntry) * 100;
+              realizedPnl += forcePnl * weight;
+              closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: day, pnlPct: +forcePnl.toFixed(2) });
+            } else {
+              closedTrades.push(worst.trade);
+            }
+            const idx = openPositions.indexOf(worst);
+            if (idx >= 0) openPositions.splice(idx, 1);
+            slotsAvailable++;
+            rotated++;
           }
-          const idx = openPositions.indexOf(worst);
-          if (idx >= 0) openPositions.splice(idx, 1);
-          slotsAvailable++;
-          rotated++;
         }
+      }
+
+      // Add new positions
+      const openTickers = new Set(openPositions.map(p => p.trade.ticker));
+      let added = 0;
+      for (const cand of candidates) {
+        if (added >= slotsAvailable) break;
+        if (openTickers.has(cand.ticker)) continue;
+        openPositions.push({ trade: cand, weight });
+        openTickers.add(cand.ticker);
+        added++;
       }
     }
 
-    // Add new positions
-    const openTickers = new Set(openPositions.map(p => p.trade.ticker));
-    let added = 0;
-    for (const cand of candidates) {
-      if (added >= slotsAvailable) break;
-      if (openTickers.has(cand.ticker)) continue;
-      openPositions.push({ trade: cand, weight });
-      openTickers.add(cand.ticker);
-      added++;
+    // ─── Daily MtM: realized + unrealized at close ───────────────────
+    let unrealizedPnl = 0;
+    for (const pos of openPositions) {
+      const hist = priceCache[pos.trade.ticker];
+      if (hist && hist[day]) {
+        unrealizedPnl += ((hist[day].close - pos.trade.actualEntry) / pos.trade.actualEntry) * 100 * weight;
+      }
     }
-
-    equityCurve.push({ date: scanDate, value: +equity.toFixed(2) });
+    const dailyEquity = 100 + realizedPnl + unrealizedPnl;
+    equityCurve.push({ date: day, value: +dailyEquity.toFixed(2) });
   }
 
   // Flush remaining positions at last known price
   for (const pos of openPositions) {
     if (pos.trade.pnlPct != null) {
-      equity += pos.trade.pnlPct * (1 / portfolioSize);
+      realizedPnl += pos.trade.pnlPct * weight;
     }
     closedTrades.push(pos.trade);
   }
+  const equity = 100 + realizedPnl;
 
   // Compute metrics
   const values = equityCurve.map(d => d.value);
   const returnTotal = +(equity - 100).toFixed(2);
 
-  // Max drawdown
+  // Max drawdown (from daily MtM curve)
   let peak = 100, maxDD = 0;
   for (const v of values) {
     if (v > peak) peak = v;
