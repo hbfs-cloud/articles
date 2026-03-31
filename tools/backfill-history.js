@@ -126,8 +126,44 @@ function main() {
   // Track cumulative mark-to-market equity curves per mode across all dates
   const modeEquityCurves = {};
 
+  // Pre-load live snapshots (from gen-status-page.js) — never overwrite these
+  const liveSnapshots = new Set();
+  try {
+    const files = fs.readdirSync(HISTORY_DIR).filter(f => /^\d{8}\.json$/.test(f));
+    for (const f of files) {
+      const snap = JSON.parse(fs.readFileSync(path.join(HISTORY_DIR, f), 'utf8'));
+      if (snap.updatedAt && snap.updatedAt !== 'backfill') {
+        liveSnapshots.add(f.replace('.json', ''));
+      }
+    }
+  } catch (e) {}
+  if (liveSnapshots.size) console.log(`🔒 ${liveSnapshots.size} live snapshots protected: ${[...liveSnapshots].join(', ')}`);
+
   for (const dateISO of sortedDates) {
     const dateKey = dateISO.replace(/-/g, '');
+
+    // Never overwrite snapshots saved by gen-status-page.js (live ground truth)
+    if (liveSnapshots.has(dateKey)) {
+      // Still compute equity curves so the MtM curve stays continuous
+      for (const [tradeKey, trades] of Object.entries(allTrades)) {
+        const modeId = MODE_MAP[tradeKey] || tradeKey;
+        const cfg = modesCfg.modes[modeId];
+        if (!cfg) continue;
+        if (!modeEquityCurves[modeId]) modeEquityCurves[modeId] = [];
+        // Read the live snapshot's equity value for this date
+        try {
+          const liveSnap = JSON.parse(fs.readFileSync(path.join(HISTORY_DIR, dateKey + '.json'), 'utf8'));
+          if (liveSnap.modes[modeId] && liveSnap.modes[modeId].equity) {
+            const ec = liveSnap.modes[modeId].equity;
+            if (ec.v && ec.v.length > 0) {
+              modeEquityCurves[modeId].push({ date: dateISO, value: ec.v[ec.v.length - 1] });
+            }
+          }
+        } catch (e) {}
+      }
+      continue;
+    }
+
     const snapshot = { date: dateISO, updatedAt: 'backfill', scanDir: dateKey, modes: {} };
 
     for (const [tradeKey, trades] of Object.entries(allTrades)) {
