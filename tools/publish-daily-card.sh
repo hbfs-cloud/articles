@@ -58,10 +58,11 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "🖼️  Step 4: Generating mode card images..."
   node tools/gen-3-cards.js
 
-  # ─── Step 5: Regenerate scanner/status page (from backtest data) ───────────
+  # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
-  echo "📄 Step 5: Generating scanner/status page..."
+  echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."
   node tools/gen-status-page.js
+  node tools/gen-api.js
 else
   echo ""
   echo "⏭️  Steps 3-5: Skipped (--no-sweep)"
@@ -105,6 +106,7 @@ if [ "$SKIP_SWEEP" = false ]; then
     scanner/status/mode-calmar-*.png \
     scanner/status/index.html \
     scanner/status/manifest.json \
+    portfolio/v1/ \
     2>/dev/null || true
 fi
 
