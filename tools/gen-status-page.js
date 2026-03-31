@@ -623,30 +623,46 @@ details[open] summary::after{content:"▼"}
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
 
 /* Time Machine FAB */
-.tm-fab{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;width:52px;height:52px;border-radius:50%;border:none;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;font-size:1.2rem;cursor:pointer;box-shadow:0 4px 16px rgba(59,130,246,.4);transition:all .2s;display:none}
-.tm-fab:hover{transform:scale(1.08);box-shadow:0 6px 20px rgba(59,130,246,.5)}
-.tm-fab.viewing{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 16px rgba(245,158,11,.4)}
-.tm-panel{position:fixed;bottom:5rem;right:1.5rem;z-index:999;width:320px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,.12);padding:1rem;display:none;flex-direction:column;gap:.75rem}
-.tm-panel.open{display:flex}
-.tm-panel-head{display:flex;align-items:center;justify-content:space-between}
-.tm-panel-title{font-size:.82rem;font-weight:700;color:#1e293b;display:flex;align-items:center;gap:.4rem}
-.tm-panel-close{border:none;background:none;color:#94a3b8;cursor:pointer;font-size:1rem;padding:0}
-.tm-panel-close:hover{color:#475569}
-.tm-date-display{font-size:.92rem;font-weight:700;color:#1e293b;text-align:center;padding:.4rem 0}
-.tm-date-display .live-badge{background:#10b981;color:#fff;font-size:.6rem;padding:.12rem .4rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.5px}
-.tm-date-display .hist-date{color:#d97706}
-.tm-slider-row{display:flex;align-items:center;gap:.5rem}
-.tm-slider{flex:1;height:6px;accent-color:#3b82f6;cursor:pointer}
-.tm-btn{border:none;background:#f1f5f9;border-radius:6px;padding:.35rem .55rem;cursor:pointer;color:#475569;font-size:.75rem}
-.tm-btn:hover{background:#e2e8f0}
-.tm-range-labels{display:flex;justify-content:space-between;font-size:.65rem;color:#94a3b8;font-weight:600}
-.tm-live-btn{border:none;background:#10b981;color:#fff;border-radius:8px;padding:.4rem .8rem;font-size:.78rem;font-weight:700;cursor:pointer;width:100%;display:none}
-.tm-live-btn:hover{background:#059669}
-.tm-live-btn.show{display:block}
-.tm-banner{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:.6rem 1rem;margin-bottom:1rem;font-size:.82rem;color:#1d4ed8;text-align:center}
-.tm-banner.show{display:block}
-.tm-banner a{color:#2563eb;font-weight:700;cursor:pointer}
-@media(max-width:400px){.tm-panel{width:calc(100vw - 2rem);right:1rem}}
+.tm-fab{position:fixed;bottom:1.75rem;right:1.75rem;z-index:1000;width:48px;height:48px;border-radius:50%;border:none;background:#0f172a;color:#94a3b8;font-size:1rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.06);transition:color .2s,box-shadow .2s,transform .2s;display:none;align-items:center;justify-content:center}
+.tm-fab:hover{color:#e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.10);transform:translateY(-1px)}
+.tm-fab.viewing{color:#f59e0b;box-shadow:0 2px 8px rgba(245,158,11,.25),0 0 0 1px rgba(245,158,11,.3)}
+.tm-fab.viewing::after{content:'';position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 2px #0f172a}
+/* Panel */
+.tm-panel{position:fixed;bottom:5.5rem;right:1.75rem;z-index:999;width:300px;background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden;transform:translateY(8px) scale(.97);opacity:0;transition:opacity .2s ease,transform .2s ease}
+.tm-panel.open{display:flex;animation:tmSlideIn .2s ease forwards}
+@keyframes tmSlideIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.tm-panel-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem .7rem;border-bottom:1px solid rgba(255,255,255,.06)}
+.tm-panel-title{font-size:.72rem;font-weight:700;color:#e2e8f0;display:flex;align-items:center;gap:.4rem;text-transform:uppercase;letter-spacing:.08em}
+.tm-panel-title i{color:#3b82f6;font-size:.8rem}
+.tm-panel-close{border:none;background:none;color:#475569;cursor:pointer;font-size:.85rem;padding:0;line-height:1;transition:color .15s}
+.tm-panel-close:hover{color:#94a3b8}
+/* Date display */
+.tm-date-display{padding:.85rem 1rem .5rem;text-align:center}
+.tm-date-display .date-val{font-size:1.05rem;font-weight:700;color:#f1f5f9;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+.tm-date-display .live-badge{display:inline-flex;align-items:center;gap:.25rem;background:rgba(16,185,129,.15);color:#10b981;font-size:.58rem;padding:.18rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border:1px solid rgba(16,185,129,.25)}
+.tm-date-display .live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:#10b981;box-shadow:0 0 4px #10b981}
+.tm-date-display .hist-badge{display:inline-block;background:rgba(245,158,11,.12);color:#f59e0b;font-size:.58rem;padding:.18rem .45rem;border-radius:4px;margin-left:.4rem;vertical-align:middle;text-transform:uppercase;letter-spacing:.08em;font-weight:700;border:1px solid rgba(245,158,11,.2)}
+/* Slider area */
+.tm-slider-row{display:flex;align-items:center;gap:.6rem;padding:.2rem 1rem}
+.tm-slider{flex:1;-webkit-appearance:none;appearance:none;height:3px;background:rgba(255,255,255,.1);border-radius:2px;cursor:pointer;outline:none}
+.tm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.2);cursor:pointer;transition:box-shadow .15s}
+.tm-slider::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px rgba(59,130,246,.25)}
+.tm-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#3b82f6;border:none;cursor:pointer}
+.tm-btn{border:none;background:rgba(255,255,255,.06);border-radius:6px;padding:.3rem .45rem;cursor:pointer;color:#64748b;font-size:.7rem;line-height:1;transition:background .15s,color .15s;flex-shrink:0}
+.tm-btn:hover{background:rgba(255,255,255,.1);color:#94a3b8}
+.tm-btn:disabled{opacity:.3;cursor:not-allowed}
+.tm-range-labels{display:flex;justify-content:space-between;padding:.1rem 1rem .75rem;font-size:.6rem;color:#334155;font-weight:600;font-variant-numeric:tabular-nums}
+/* Live button */
+.tm-live-btn{border:none;background:rgba(16,185,129,.12);color:#10b981;border-bottom-left-radius:16px;border-bottom-right-radius:16px;padding:.7rem 1rem;font-size:.73rem;font-weight:700;cursor:pointer;width:100%;display:none;align-items:center;justify-content:center;gap:.4rem;letter-spacing:.02em;border-top:1px solid rgba(16,185,129,.15);transition:background .15s}
+.tm-live-btn:hover{background:rgba(16,185,129,.2)}
+.tm-live-btn.show{display:flex}
+/* Banner */
+.tm-banner{display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;font-size:.8rem;color:#d97706;text-align:center;backdrop-filter:blur(4px)}
+.tm-banner.show{display:flex;align-items:center;justify-content:center;gap:.5rem}
+.tm-banner i{font-size:.85rem;color:#f59e0b}
+.tm-banner a{color:#f59e0b;font-weight:700;cursor:pointer;text-decoration:none;margin-left:.3rem}
+.tm-banner a:hover{text-decoration:underline}
+@media(max-width:400px){.tm-panel{width:calc(100vw - 2.5rem);right:1.25rem}}
 
 @media(max-width:700px){
   .perf-hero{flex-direction:column}
@@ -777,7 +793,7 @@ document.addEventListener('DOMContentLoaded',function(){
       // Range labels
       var fmt=function(d){return d.slice(4,6)+'/'+d.slice(6,8)};
       document.getElementById('tmFirstDate').textContent=fmt(dates[0]);
-      document.getElementById('tmLastDate').textContent=fmt(dates[dates.length-1])+' (live)';
+      document.getElementById('tmLastDate').textContent=fmt(dates[dates.length-1]);
       slider.addEventListener('input',function(){
         tmCurrentIdx=parseInt(this.value);
         tmUpdateLabel();
@@ -785,32 +801,38 @@ document.addEventListener('DOMContentLoaded',function(){
       });
     }).catch(function(){});
   }
-  function tmToggle(){
+  // Exposed globally so inline onclick handlers can reach them
+  window.tmToggle=function(){
     var p=document.getElementById('tmPanel');
     p.classList.toggle('open');
-  }
+  };
   function tmUpdateLabel(){
     var el=document.getElementById('tmDateLabel');
     var d=tmDates[tmCurrentIdx];
     var formatted=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
-    if(tmCurrentIdx===tmDates.length-1){
-      el.innerHTML=formatted+' <span class="live-badge">live</span>';
+    var isLive=tmCurrentIdx===tmDates.length-1;
+    if(isLive){
+      el.innerHTML='<span class="date-val">'+formatted+'<span class="live-badge">live</span></span>';
       document.getElementById('tmLiveBtn').className='tm-live-btn';
       document.getElementById('tmFab').classList.remove('viewing');
     }else{
-      el.innerHTML='<span class="hist-date">'+formatted+'</span>';
+      el.innerHTML='<span class="date-val">'+formatted+'<span class="hist-badge">snapshot</span></span>';
       document.getElementById('tmLiveBtn').className='tm-live-btn show';
       document.getElementById('tmFab').classList.add('viewing');
     }
+    // Update nav button states
+    var btnPrev=document.getElementById('tmBtnPrev'),btnNext=document.getElementById('tmBtnNext');
+    if(btnPrev)btnPrev.disabled=tmCurrentIdx===0;
+    if(btnNext)btnNext.disabled=tmCurrentIdx===tmDates.length-1;
   }
-  function tmNav(dir){
+  window.tmNav=function(dir){
     var newIdx=tmCurrentIdx+dir;
     if(newIdx<0||newIdx>=tmDates.length)return;
     tmCurrentIdx=newIdx;
     document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
-  }
+  };
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){
@@ -822,21 +844,21 @@ document.addEventListener('DOMContentLoaded',function(){
     fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
       banner.className='tm-banner show';
       var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b>';
+      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
       tmRender(snap);
     }).catch(function(){
       banner.className='tm-banner show';
-      banner.textContent='Snapshot not available for '+dateStr;
+      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
     });
   }
-  function tmGoLive(){
+  window.tmGoLive=function(){
     tmCurrentIdx=tmDates.length-1;
     document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
     document.getElementById('tmBanner').className='tm-banner';
     document.getElementById('tmPanel').classList.remove('open');
     location.reload();
-  }
+  };
   function tmRender(snap){
     for(var id in snap.modes){
       var d=snap.modes[id],panel=document.getElementById('p-'+id);
@@ -925,16 +947,16 @@ document.addEventListener('DOMContentLoaded',function(){
 <div class="tm-panel" id="tmPanel">
   <div class="tm-panel-head">
     <span class="tm-panel-title"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
-    <button class="tm-panel-close" onclick="tmToggle()"><i class="fas fa-xmark"></i></button>
+    <button class="tm-panel-close" onclick="tmToggle()" aria-label="Close"><i class="fas fa-xmark"></i></button>
   </div>
   <div class="tm-date-display" id="tmDateLabel"></div>
   <div class="tm-slider-row">
-    <button class="tm-btn" onclick="tmNav(-1)"><i class="fas fa-chevron-left"></i></button>
+    <button class="tm-btn" id="tmBtnPrev" onclick="tmNav(-1)" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
     <input type="range" id="timeSlider" class="tm-slider" min="0" max="0" value="0">
-    <button class="tm-btn" onclick="tmNav(1)"><i class="fas fa-chevron-right"></i></button>
+    <button class="tm-btn" id="tmBtnNext" onclick="tmNav(1)" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
   </div>
   <div class="tm-range-labels"><span id="tmFirstDate"></span><span id="tmLastDate"></span></div>
-  <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-broadcast-tower"></i> Back to Live</button>
+  <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-satellite-dish"></i> Back to Live</button>
 </div>
 </body>
 </html>`;
