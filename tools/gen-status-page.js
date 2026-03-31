@@ -285,11 +285,11 @@ ${timedOut.length ? `<div class="cta-card cta-close">
     </div>
   </div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
     <tbody>${timedOut.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const held = bizDaysHeld(p.scan_date);
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
+      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry||0).toFixed(2)}</td><td class="hide-m">$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
     }).join('')}</tbody>
   </table>
 </div>` : ''}
@@ -344,12 +344,12 @@ ${(() => {
     actionRows.push(`<tr>
       <td><b>${s.ticker}</b></td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
-      <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
+      <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
-      <td><span class="pill pos">BUY</span></td>
+      <td class="hide-m"><span class="pill pos">BUY</span></td>
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
   }
   for (const { signal: s, replaces } of rotationCandidates) {
@@ -357,12 +357,12 @@ ${(() => {
     actionRows.push(`<tr style="background:#fefce8">
       <td><b>${s.ticker}</b></td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
-      <td><span class="pill-score" style="background:${bg}">${s.score}</span></td>
+      <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
-      <td><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
+      <td class="hide-m"><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
   }
 
@@ -416,7 +416,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     <span class="sc-meta">${statusLine}</span>
   </div>
   ${totalActions > 0 ? `<table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
   </table>` : ''}
   ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
@@ -481,7 +481,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 </div>`;
   })()}
   <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
@@ -490,7 +490,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
       const leftLabel = isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
       const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
       const posCols = 9; // columns in Open Positions table
-      return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+      return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry||0).toFixed(2)}</td><td class="hide-m">$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
     }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>
@@ -1061,11 +1061,11 @@ document.addEventListener('DOMContentLoaded',function(){
           +'<h3>Close Now <span class="cta-badge">'+d.closeNow.length+' position'+(d.closeNow.length>1?'s':'')+'</span></h3>'
           +'<p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>'
           +'</div></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead><tbody>';
+          +'<table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead><tbody>';
         d.closeNow.forEach(function(p){
           var rc=p.return_pct>=0?'pos':'neg';
           var heldStr=(p.days_held||cfg.horizon||'?')+'d / '+(p.horizon||cfg.horizon||'?')+'d';
-          cnh+='<tr><td><b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="am">'+heldStr+'</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>';
+          cnh+='<tr><td><b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="am">'+heldStr+'</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>';
         });
         cnh+='</tbody></table>';
         cn.innerHTML=cnh;
@@ -1103,13 +1103,13 @@ document.addEventListener('DOMContentLoaded',function(){
         var alloc=Math.round(100/(cfg.portfolioSize||1));
         var tmOrdCols=9; // no Chart column in Time Machine (would leak future data)
         var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead><tbody>';
+          +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead><tbody>';
         d.orders.forEach(function(o){
           var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
           var isRot=o.action==='ROTATE';
           var rowStyle=isRot?' style="background:#fefce8"':'';
           var actionPill=isRot?'<span class="pill am">ROTATE'+(o.replaces?' ↔ '+o.replaces:'')+'</span>':'<span class="pill pos">BUY</span>';
-          odh+='<tr'+rowStyle+'><td><b>'+o.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td><b>'+o.entry+'</b></td><td class="neg">'+o.stop+'</td><td class="pos">'+o.tp1+'<span class="hide-m"> / '+o.tp2+'</span></td><td class="am hide-m">'+(o.rr||'')+'</td><td class="m hide-m">'+alloc+'%</td><td>'+actionPill+'</td></tr>';
+          odh+='<tr'+rowStyle+'><td><b>'+o.ticker+'</b></td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td><b>'+o.entry+'</b></td><td class="neg">'+o.stop+'</td><td class="pos">'+o.tp1+'<span class="hide-m"> / '+o.tp2+'</span></td><td class="am hide-m">'+(o.rr||'')+'</td><td class="m hide-m">'+alloc+'%</td><td class="hide-m">'+actionPill+'</td></tr>';
           if(o.thesis)odh+='<tr class="thesis-row"><td colspan="'+tmOrdCols+'"><div class="thesis-text">'+o.thesis+'</div></td></tr>';
         });
         odh+='</tbody></table>';
@@ -1162,7 +1162,7 @@ document.addEventListener('DOMContentLoaded',function(){
           +'<div class="scenario-cursor" style="left:'+cursorPos.toFixed(1)+'%"></div>'
           +'</div></div>';
         var tmPosCols=8; // no Chart column in Time Machine
-        psh+='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
+        psh+='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
         d.positions.forEach(function(p){
           var rc=p.return_pct>=0?'pos':'neg';
           var left=p.days_remaining||0;
@@ -1170,7 +1170,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var leftCls=isExp?'neg':left<=1?'neg':left<=2?'am':'m';
           var leftLabel=isExp?'<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>':left+'d';
           var rowStyle=isExp?' style="opacity:.6;background:#fef2f2"':'';
-          psh+='<tr'+rowStyle+'><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg hide-m">$'+(p.stop||0).toFixed(2)+'</td><td class="pos hide-m">'+(p.tp2?'$'+p.tp2.toFixed(2):(p.tp1?'$'+p.tp1.toFixed(2):'—'))+'</td><td class="'+leftCls+'">'+leftLabel+'</td></tr>';
+          psh+='<tr'+rowStyle+'><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg hide-m">$'+(p.stop||0).toFixed(2)+'</td><td class="pos hide-m">'+(p.tp2?'$'+p.tp2.toFixed(2):(p.tp1?'$'+p.tp1.toFixed(2):'—'))+'</td><td class="'+leftCls+'">'+leftLabel+'</td></tr>';
           if(p.thesis)psh+='<tr class="thesis-row"'+rowStyle+'><td colspan="'+tmPosCols+'"><div class="thesis-text">'+p.thesis+'</div></td></tr>';
         });
         psh+='</tbody></table>';

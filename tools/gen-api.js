@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * gen-api.js — Portfolio endpoint generator
- * Reads source data and writes flat JSON/XML to portfolio/v1/
+ * Reads the latest scanner status snapshot and writes flat JSON to portfolio/v1/
+ * This ensures API endpoints match exactly what the scanner status page shows.
  *
  * Usage: node tools/gen-api.js
  */
@@ -11,159 +12,127 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
+const HISTORY = path.join(ROOT, 'scanner', 'status', 'history');
 
 fs.mkdirSync(OUT, { recursive: true });
 
-function readJSON(relPath) {
-  const abs = path.join(ROOT, relPath);
-  if (!fs.existsSync(abs)) {
-    console.warn(`  [warn] Missing source: ${relPath}`);
-    return null;
-  }
-  return JSON.parse(fs.readFileSync(abs, 'utf8'));
-}
-
 function write(filename, content) {
   const outPath = path.join(OUT, filename);
-  fs.writeFileSync(outPath, typeof content === 'string' ? content : JSON.stringify(content, null, 2));
+  fs.writeFileSync(outPath, JSON.stringify(content, null, 2));
   console.log(`  [ok]   ${path.relative(ROOT, outPath)}`);
 }
 
+// Find latest snapshot
+const snapshots = fs.readdirSync(HISTORY).filter(f => /^\d{8}\.json$/.test(f)).sort();
+if (!snapshots.length) {
+  console.error('  [err]  No snapshots found in scanner/status/history/');
+  process.exit(1);
+}
+const latestFile = path.join(HISTORY, snapshots[snapshots.length - 1]);
+const snap = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
+const cal = snap.modes.calmar;
 const now = new Date().toISOString();
 
-// ─── Load source files ────────────────────────────────────────────────────────
-const backtestTrades = readJSON('data/backtest-trades.json');
-const positions      = readJSON('data/scanner-positions.json');
-const backtestRes    = readJSON('data/backtest-results.json');
-const scannerCards   = readJSON('data/scanner.json');
+console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})`);
 
-// ─── 1. signals.json — latest scan signals (flat array) ─────────────────────
-if (backtestTrades) {
-  // Use calmar trades; fallback to first available key
-  const trades = backtestTrades.calmar || Object.values(backtestTrades)[0] || [];
-  const latestScan = trades.reduce((acc, t) => (!acc || t.scanDate > acc) ? t.scanDate : acc, null);
+// ─── 1. signals.json — current scanner signals ─────────────────────────────
+write('signals.json', {
+  updatedAt: now,
+  date: snap.date,
+  signals: (cal.signals || []).map(s => ({
+    ticker: s.ticker,
+    score: s.score,
+    strategy: s.strategy,
+    entry: s.entry,
+    stop: s.stop,
+    tp1: s.tp1,
+    tp2: s.tp2,
+    rr: s.rr,
+    thesis: s.thesis || ''
+  }))
+});
 
-  const signals = trades
-    .filter(t => t.scanDate === latestScan)
-    .map(t => ({
-      ticker: t.ticker,
-      strategy: t.strategy,
-      score: t.score,
-      scanDate: t.scanDate,
-      entryDate: t.entryDate,
-      entry: t.actualEntry,
-      exitPrice: t.exitPrice,
-      status: t.status,
-      pnlPct: t.pnlPct,
-      holdDays: t.holdDays
-    }));
+// ─── 2. positions.json — current open positions ────────────────────────────
+write('positions.json', {
+  updatedAt: now,
+  date: snap.date,
+  positions: (cal.positions || []).map(p => ({
+    ticker: p.ticker,
+    entry: p.entry,
+    currentPrice: p.current_price,
+    returnPct: p.return_pct,
+    stop: p.stop,
+    tp1: p.tp1,
+    tp2: p.tp2,
+    scanDate: p.scan_date,
+    daysRemaining: p.days_remaining
+  }))
+});
 
-  write('signals.json', { updatedAt: now, latestScanDate: latestScan, signals });
-}
+// ─── 3. trades.json — closed trade history ──────────────────────────────────
+write('trades.json', {
+  updatedAt: now,
+  trades: (cal.closedTrades || []).map(t => ({
+    ticker: t.ticker,
+    scanDate: t.scanDate,
+    entryDate: t.entryDate,
+    entry: t.actualEntry,
+    exitPrice: t.exitPrice,
+    pnlPct: t.pnlPct,
+    holdDays: t.holdDays,
+    status: t.status,
+    strategy: t.strategy
+  }))
+});
 
-// ─── 2. positions.json — current open positions ─────────────────────────────
-if (positions) {
-  write('positions.json', {
-    updatedAt: now,
-    sourceUpdatedAt: positions.updated_at || null,
-    openPositions: positions.open_positions || []
-  });
-}
+// ─── 4. equity.json — stats + equity curve ──────────────────────────────────
+write('equity.json', {
+  updatedAt: now,
+  config: cal.config || {},
+  stats: cal.stats || {},
+  equityCurve: cal.equity || {}
+});
 
-// ─── 3. trades.json — full trade history (flat array) ───────────────────────
-if (backtestTrades) {
-  const trades = backtestTrades.calmar || Object.values(backtestTrades)[0] || [];
-  write('trades.json', { updatedAt: now, trades });
-}
+// ─── 5. orders.json — buy/rotate orders to place ────────────────────────────
+write('orders.json', {
+  updatedAt: now,
+  date: snap.date,
+  orders: (cal.orders || []).map(o => ({
+    ticker: o.ticker,
+    action: o.action || 'BUY',
+    score: o.score,
+    strategy: o.strategy,
+    entry: o.entry,
+    stop: o.stop,
+    tp1: o.tp1,
+    tp2: o.tp2,
+    rr: o.rr,
+    replaces: o.replaces || null,
+    thesis: o.thesis || ''
+  }))
+});
 
-// ─── 4. equity.json — backtest stats + equity curve ─────────────────────────
-if (backtestRes) {
-  const res = backtestRes.optimal_calmar;
-  if (res) {
-    write('equity.json', {
-      updatedAt: now,
-      period: backtestRes.period || null,
-      config: {
-        portfolioSize: res.portfolioSize,
-        topN: res.topN,
-        minScore: res.minScore,
-        filterName: res.filterName,
-        rotation: res.rotation,
-        horizon: res.horizon,
-        partialTP: res.partialTP,
-        trailingStop: res.trailingStop
-      },
-      stats: {
-        returnTotal: res.returnTotal,
-        maxDD: res.maxDD,
-        winRate: res.winRate,
-        avgWin: res.avgWin,
-        avgLoss: res.avgLoss,
-        profitFactor: res.profitFactor,
-        sharpe: res.sharpe,
-        calmar: res.calmar,
-        sortino: res.sortino,
-        avgHold: res.avgHold,
-        trades: res.trades,
-        wins: res.wins,
-        losses: res.losses
-      },
-      equityCurve: res.equityCurve || []
-    });
-  }
-}
+// ─── 6. actions.json — positions requiring action (close/check) ─────────────
+write('actions.json', {
+  updatedAt: now,
+  date: snap.date,
+  closeNow: (cal.closeNow || []).map(p => ({
+    ticker: p.ticker,
+    scanDate: p.scan_date,
+    entry: p.entry,
+    currentPrice: p.current_price,
+    returnPct: p.return_pct,
+    daysHeld: p.days_held,
+    horizon: p.horizon
+  })),
+  expiresTomorrow: (cal.expiresTomorrow || []).map(p => ({
+    ticker: p.ticker,
+    entry: p.entry,
+    returnPct: p.return_pct,
+    stop: p.stop,
+    daysHeld: p.days_held,
+    horizon: p.horizon
+  }))
+});
 
-// ─── 5. feed.xml — RSS 2.0 from last 20 scanner cards ──────────────────────
-if (scannerCards) {
-  const BASE = 'https://articles.market-watch.xyz';
-
-  function parseCard(cardHtml) {
-    const hrefMatch = cardHtml.match(/href="([^"]+)"/);
-    const h2Match   = cardHtml.match(/<h2[^>]*>([\s\S]*?)<\/h2>/);
-    const pMatch    = cardHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/);
-    const metaMatch = cardHtml.match(/report-card-meta"[^>]*>([\s\S]*?)<\/div>/);
-    return {
-      href:  hrefMatch  ? hrefMatch[1]  : '/scanner/',
-      title: h2Match    ? h2Match[1].replace(/<[^>]+>/g, '').trim() : 'Scanner',
-      desc:  pMatch     ? pMatch[1].replace(/<[^>]+>/g, '').trim()  : '',
-      date:  metaMatch  ? metaMatch[1].replace(/<[^>]+>/g, '').trim() : ''
-    };
-  }
-
-  const items = (Array.isArray(scannerCards) ? scannerCards : [])
-    .slice(0, 20)
-    .map(parseCard)
-    .map(item => {
-      const url   = item.href.startsWith('http') ? item.href : `${BASE}${item.href}`;
-      const title = item.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      const desc  = item.desc.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      return `    <item>
-      <title>${title}</title>
-      <link>${url}</link>
-      <guid isPermaLink="true">${url}</guid>
-      <description>${desc}</description>
-      <pubDate>${item.date}</pubDate>
-    </item>`;
-    })
-    .join('\n');
-
-  write('feed.xml', `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
-  <channel>
-    <title>Market Watch — Scanner &amp; Publications</title>
-    <link>${BASE}/</link>
-    <description>Daily scanner picks, weekly market reviews, and stock analyses from Market Watch.</description>
-    <language>en</language>
-    <lastBuildDate>${now}</lastBuildDate>
-    <atom:link href="${BASE}/portfolio/v1/feed.xml" rel="self" type="application/rss+xml"/>
-    <image>
-      <url>${BASE}/logo.svg</url>
-      <title>Market Watch</title>
-      <link>${BASE}/</link>
-    </image>
-${items}
-  </channel>
-</rss>`);
-}
-
-console.log(`\nDone. Endpoints written to portfolio/v1/ at ${now}`);
+console.log(`\nDone. 6 endpoints written to portfolio/v1/ at ${now}`);
