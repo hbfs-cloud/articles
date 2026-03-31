@@ -606,7 +606,8 @@ function sendDiscord(text) {
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
-  const scanDir = process.argv[2] || getLatestScanDir();
+  const positionalArgs = process.argv.slice(2).filter(a => !a.startsWith('--'));
+  const scanDir = positionalArgs[0] || getLatestScanDir();
   if (!scanDir) { console.error('ERROR: aucun scan trouvé'); process.exit(1); }
 
   // Anti-doublon: skip if already sent today for this scan
