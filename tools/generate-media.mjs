@@ -40,8 +40,21 @@ if (fs.existsSync(envPath)) {
 }
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const EDGE_TTS  = '/home/ci/edge-tts-venv/bin/edge-tts';
-const PIPER_TTS = '/home/ci/edge-tts-venv/bin/piper';
+// Dynamic TTS paths: CI vs Mac Mini
+const _EDGE_TTS_CANDIDATES = [
+  '/home/ci/edge-tts-venv/bin/edge-tts',
+  '/home/ci/tts-venv/bin/edge-tts',
+  '/opt/homebrew/bin/edge-tts',  // Mac Mini (Homebrew Python)
+  path.join(process.env.HOME || '/root', '.venv/bin/edge-tts'),
+  path.join(process.env.HOME || '/root', 'edge-tts-venv/bin/edge-tts'),
+  'edge-tts',  // system PATH fallback
+];
+const EDGE_TTS  = _EDGE_TTS_CANDIDATES.find(p => { try { return p === 'edge-tts' || fs.existsSync(p); } catch { return false; } }) || '/home/ci/edge-tts-venv/bin/edge-tts';
+const _PIPER_CANDIDATES = [
+  '/home/ci/edge-tts-venv/bin/piper',
+  path.join(process.env.HOME || '/root', 'edge-tts-venv/bin/piper'),
+];
+const PIPER_TTS = _PIPER_CANDIDATES.find(p => { try { return fs.existsSync(p); } catch { return false; } }) || '/home/ci/edge-tts-venv/bin/piper';
 const PIPER_MODEL = '/home/ci/piper-voices/en_US-ryan-high.onnx';
 const FFMPEG    = 'ffmpeg';
 const FFPROBE   = 'ffprobe';
@@ -1040,7 +1053,7 @@ async function main() {
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
   ];
-  const _chromePath = _chromePaths.find(p => { try { return require('fs').existsSync(p); } catch { return false; } }) || '/snap/bin/chromium';
+  const _chromePath = _chromePaths.find(p => { try { return fs.existsSync(p); } catch { return false; } }) || '/snap/bin/chromium';
   const gammaEnv = { ...process.env, PUPPETEER_EXECUTABLE_PATH: _chromePath, PATH: `/home/ci/edge-tts-venv/bin:/opt/homebrew/bin:${process.env.PATH}` };
   const gammaResult = spawnSync('node', [GAMMA_SLIDES, 'video', '-f', deckPath, '-o', videoPath], {
     stdio: 'pipe', timeout: 600000, env: gammaEnv, cwd: GAMMA_CWD,
