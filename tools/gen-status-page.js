@@ -193,7 +193,49 @@ function main() {
 
     return `<div id="p-${id}">
 
-<!-- ══ 1. PERF + STATS ══ -->
+<!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
+<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
+    </summary>
+    <div class="method-steps" style="margin-top:.85rem">
+      <div class="step" style="background:${cfg.color}08;border:1px solid ${cfg.color}20;border-radius:8px;padding:.65rem .9rem">
+        <span class="step-n" style="background:${cfg.color}"><i class="fas fa-star" style="font-size:.5rem"></i></span>
+        <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (&#8776;&nbsp;${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
+      </div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30&thinsp;PM Paris / 9:30&thinsp;AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
+      ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score &#8805; 88 vs return &lt; 2%), replace it.</div></div>` : ''}
+    </div>
+    <div class="method-footer">
+      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} positions max</span>
+      <span><i class="fas fa-calendar-days"></i> ${cfg.horizon}-day horizon</span>
+      <span><i class="fas fa-filter"></i> ${filterLabel(cfg.filterName)}</span>
+    </div>
+  </details>
+</div>
+
+<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setups</span></span>
+      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
+    </summary>
+    ${sig.length ? `<table class="t" style="margin-top:.75rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
+      <tbody>${sig.map((s, i) => {
+        const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+        return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
+      }).join('')}</tbody>
+    </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No signals for this mode today</p>`}
+  </details>
+</div>
+
+<!-- ══ 3. PERF + STATS (equity curve) ══ -->
 <div class="perf-hero" style="border-left:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
@@ -211,7 +253,7 @@ function main() {
   </div>
 </div>
 
-<!-- ══ 2. CLOSE NOW (positions timed-out) ══ -->
+<!-- ══ 4. CLOSE NOW ══ -->
 ${timedOut.length ? `<div class="cta-card cta-close">
   <div class="cta-header">
     <span class="cta-icon"><i class="fas fa-ban"></i></span>
@@ -230,7 +272,7 @@ ${timedOut.length ? `<div class="cta-card cta-close">
   </table>
 </div>` : ''}
 
-<!-- ══ 4. ORDERS CTA ══ -->
+<!-- ══ 5. ORDERS CTA ══ -->
 ${(() => {
   const alloc = Math.round(100 / cfg.portfolioSize);
   const openTickers = new Set(pos.map(p => p.ticker));
@@ -361,23 +403,6 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </table>
 </div>` : ''}
 
-<!-- ══ 5. TODAY'S SIGNALS (context — collapsible) ══ -->
-<div class="section-card">
-  <details>
-    <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setups</span></span>
-      ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
-    </summary>
-    ${sig.length ? `<table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody>${sig.map((s, i) => {
-        const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-        return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
-      }).join('')}</tbody>
-    </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No signals for this mode today</p>`}
-  </details>
-</div>
-
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
@@ -446,7 +471,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${trades.length} closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${trades.filter(t=>!t._premature).length} closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
@@ -492,31 +517,6 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
       }).join('');
     })()}</tbody>
   </table>
-  </details>
-</div>
-
-<!-- ══ 8. HOW TO TRADE (method — collapsed by default) ══ -->
-<div class="section-card">
-  <details>
-    <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
-    </summary>
-    <div class="method-steps" style="margin-top:.85rem">
-      <div class="step" style="background:${cfg.color}08;border:1px solid ${cfg.color}20;border-radius:8px;padding:.65rem .9rem">
-        <span class="step-n" style="background:${cfg.color}"><i class="fas fa-star" style="font-size:.5rem"></i></span>
-        <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (&#8776;&nbsp;${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
-      </div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30&thinsp;PM Paris / 9:30&thinsp;AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
-      ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score &#8805; 88 vs return &lt; 2%), replace it.</div></div>` : ''}
-    </div>
-    <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} positions max</span>
-      <span><i class="fas fa-calendar-days"></i> ${cfg.horizon}-day horizon</span>
-      <span><i class="fas fa-filter"></i> ${filterLabel(cfg.filterName)}</span>
-    </div>
   </details>
 </div>
 
@@ -667,16 +667,16 @@ details[open] summary::after{transform:rotate(90deg)}
 .disc i{font-size:.68rem;opacity:.6}
 
 /* ── Time Machine floating trigger (FAB) ── */
-.tm-fab{position:fixed;top:4.5rem;right:1.75rem;z-index:998;display:none;align-items:center;gap:.5rem;padding:.65rem 1.1rem;background:#0f172a;color:#e2e8f0;border:none;border-radius:50px;box-shadow:0 4px 20px rgba(15,23,42,.35),0 1px 4px rgba(0,0,0,.15);font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:.01em}
-.tm-fab i{font-size:.8rem}
-.tm-fab:hover{background:#1e293b;box-shadow:0 6px 28px rgba(15,23,42,.4)}
-.tm-fab.viewing{background:#b45309;box-shadow:0 4px 20px rgba(180,83,9,.35)}
-.tm-fab.viewing i{animation:spin 2s linear infinite}
+.tm-btn-header{display:none;align-items:center;gap:.35rem;padding:.3rem .7rem;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;vertical-align:middle;margin-left:.5rem}
+.tm-btn-header i{font-size:.7rem}
+.tm-btn-header:hover{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
+.tm-btn-header.viewing{background:#fffbeb;color:#b45309;border-color:#f59e0b}
+.tm-btn-header.viewing i{animation:spin 2s linear infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@media(max-width:400px){.tm-fab{top:4.5rem;right:1rem;padding:.55rem .9rem;font-size:.72rem}}
+@media(max-width:400px){.tm-btn-header{padding:.25rem .5rem;font-size:.65rem}}
 
 /* ── Time Machine panel ── */
-.tm-panel{position:fixed;top:7.5rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
+.tm-panel{position:fixed;top:7rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
 .tm-panel.open{display:flex;animation:tmSlideIn .18s ease forwards}
 @keyframes tmSlideIn{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .tm-panel-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -746,7 +746,7 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-left">
-        <h1><span class="live-dot"></span>Portfolio Live</h1>
+        <h1><span class="live-dot"></span>Portfolio Live <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button></h1>
         <p>Signals, open positions &amp; performance &mdash; updated every weekday</p>
         <div class="hero-meta">
           <span class="ts"><i class="fas fa-clock-rotate-left"></i> ${updatedAt}</span>
@@ -1152,9 +1152,6 @@ document.addEventListener('DOMContentLoaded',function(){
   tmInit();
 });
 </script>
-<button class="tm-fab" id="tmFab" onclick="tmToggle()" title="Time Machine — view historical snapshots">
-  <i class="fas fa-clock-rotate-left"></i> Time Machine
-</button>
 
 <div class="tm-panel" id="tmPanel">
   <div class="tm-panel-head">

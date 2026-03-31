@@ -141,16 +141,16 @@ details[open] summary::after{transform:rotate(90deg)}
 .disc i{font-size:.68rem;opacity:.6}
 
 /* ── Time Machine floating trigger (FAB) ── */
-.tm-fab{position:fixed;top:4.5rem;right:1.75rem;z-index:998;display:none;align-items:center;gap:.5rem;padding:.65rem 1.1rem;background:#0f172a;color:#e2e8f0;border:none;border-radius:50px;box-shadow:0 4px 20px rgba(15,23,42,.35),0 1px 4px rgba(0,0,0,.15);font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;letter-spacing:.01em}
-.tm-fab i{font-size:.8rem}
-.tm-fab:hover{background:#1e293b;box-shadow:0 6px 28px rgba(15,23,42,.4)}
-.tm-fab.viewing{background:#b45309;box-shadow:0 4px 20px rgba(180,83,9,.35)}
-.tm-fab.viewing i{animation:spin 2s linear infinite}
+.tm-btn-header{display:none;align-items:center;gap:.35rem;padding:.3rem .7rem;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;vertical-align:middle;margin-left:.5rem}
+.tm-btn-header i{font-size:.7rem}
+.tm-btn-header:hover{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
+.tm-btn-header.viewing{background:#fffbeb;color:#b45309;border-color:#f59e0b}
+.tm-btn-header.viewing i{animation:spin 2s linear infinite}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@media(max-width:400px){.tm-fab{top:4.5rem;right:1rem;padding:.55rem .9rem;font-size:.72rem}}
+@media(max-width:400px){.tm-btn-header{padding:.25rem .5rem;font-size:.65rem}}
 
 /* ── Time Machine panel ── */
-.tm-panel{position:fixed;top:7.5rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
+.tm-panel{position:fixed;top:7rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
 .tm-panel.open{display:flex;animation:tmSlideIn .18s ease forwards}
 @keyframes tmSlideIn{from{opacity:0;transform:translateY(-10px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
 .tm-panel-head{display:flex;align-items:center;justify-content:space-between;padding:.9rem 1rem .75rem;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -220,7 +220,7 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="hero">
     <div class="hero-inner">
       <div class="hero-left">
-        <h1><span class="live-dot"></span>Portfolio Live</h1>
+        <h1><span class="live-dot"></span>Portfolio Live <button class="tm-btn-header" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button></h1>
         <p>Signals, open positions &amp; performance &mdash; updated every weekday</p>
         <div class="hero-meta">
           <span class="ts"><i class="fas fa-clock-rotate-left"></i> Tue 05:41 UTC</span>
@@ -233,7 +233,46 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <div id="p-calmar">
 
-<!-- ══ 1. PERF + STATS ══ -->
+<!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
+<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:#059669;font-size:.78rem"></i> How to trade this mode</span>
+    </summary>
+    <div class="method-steps" style="margin-top:.85rem">
+      <div class="step" style="background:#05966908;border:1px solid #05966920;border-radius:8px;padding:.65rem .9rem">
+        <span class="step-n" style="background:#059669"><i class="fas fa-star" style="font-size:.5rem"></i></span>
+        <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within 5 trading days</b> (&#8776;&nbsp;7 calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
+      </div>
+      <div class="step"><span class="step-n" style="background:#059669">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top 4</b> from today's scan.</div></div>
+      <div class="step"><span class="step-n" style="background:#059669">2</span><div><b>At market open</b> (3:30&thinsp;PM Paris / 9:30&thinsp;AM NY), place a <b>limit order</b> within the entry range. Allocate <b>25%</b> of capital per position.</div></div>
+      <div class="step"><span class="step-n" style="background:#059669">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
+      <div class="step"><span class="step-n" style="background:#059669">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>5 trading days</b> — whichever comes first.</div></div>
+      <div class="step"><span class="step-n" style="background:#059669">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score &#8805; 88 vs return &lt; 2%), replace it.</div></div>
+    </div>
+    <div class="method-footer">
+      <span><i class="fas fa-layer-group"></i> 4 positions max</span>
+      <span><i class="fas fa-calendar-days"></i> 5-day horizon</span>
+      <span><i class="fas fa-filter"></i> All strategies</span>
+    </div>
+  </details>
+</div>
+
+<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<div class="section-card">
+  <details>
+    <summary class="sc-summary">
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">4 setups</span></span>
+      <a href="/scanner/20260331/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+    </summary>
+    <table class="t" style="margin-top:.75rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
+      <tbody><tr><td><b>XOM</b></td><td><span class="pill-score" style="background:#059669">93</span></td><td class="m">Momentum</td><td>$170&ndash;$173</td><td class="neg">$162</td><td class="pos">$185 / $195</td><td class="am">1:1.6</td></tr><tr><td><b>CF</b></td><td><span class="pill-score" style="background:#059669">92</span></td><td class="m">Breakout</td><td>$135&ndash;$139</td><td class="neg">$128</td><td class="pos">$150 / $165</td><td class="am">1:1.6</td></tr><tr><td><b>EQNR</b></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Momentum</td><td>$41.50&ndash;$43</td><td class="neg">$38.50</td><td class="pos">$48 / $53</td><td class="am">1:1.6</td></tr><tr><td><b>SHEL</b></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Momentum</td><td>$91&ndash;$94</td><td class="neg">$87</td><td class="pos">$100 / $108</td><td class="am">1:1.5</td></tr></tbody>
+    </table>
+  </details>
+</div>
+
+<!-- ══ 3. PERF + STATS (equity curve) ══ -->
 <div class="perf-hero" style="border-left:3px solid #059669">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
@@ -251,7 +290,7 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
 </div>
 
-<!-- ══ 2. CLOSE NOW (positions timed-out) ══ -->
+<!-- ══ 4. CLOSE NOW ══ -->
 <div class="cta-card cta-close">
   <div class="cta-header">
     <span class="cta-icon"><i class="fas fa-ban"></i></span>
@@ -262,11 +301,11 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Bought</th><th>Entry $</th><th>Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
-    <tbody><tr><td><b>PSX</b></td><td class="m">03-24</td><td>$181.90</td><td>$184.81</td><td class="pos"><b>+1.6%</b></td><td class="am">5d / 5d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr></tbody>
+    <tbody><tr><td><b>PSX</b></td><td class="m">03-24</td><td>$181.90</td><td>$184.81</td><td class="pos"><b>+1.6%</b></td><td class="am">6d / 5d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr></tbody>
   </table>
 </div>
 
-<!-- ══ 4. ORDERS CTA ══ -->
+<!-- ══ 5. ORDERS CTA ══ -->
 <div class="section-card cta-orders">
   <div class="sc-head">
     <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
@@ -287,20 +326,18 @@ details[open] summary::after{transform:rotate(90deg)}
   
 </div>
 
-
-
-<!-- ══ 5. TODAY'S SIGNALS (context — collapsible) ══ -->
-<div class="section-card">
-  <details>
-    <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">4 setups</span></span>
-      <a href="/scanner/20260331/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
-    </summary>
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>XOM</b></td><td><span class="pill-score" style="background:#059669">93</span></td><td class="m">Momentum</td><td>$170&ndash;$173</td><td class="neg">$162</td><td class="pos">$185 / $195</td><td class="am">1:1.6</td></tr><tr><td><b>CF</b></td><td><span class="pill-score" style="background:#059669">92</span></td><td class="m">Breakout</td><td>$135&ndash;$139</td><td class="neg">$128</td><td class="pos">$150 / $165</td><td class="am">1:1.6</td></tr><tr><td><b>EQNR</b></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Momentum</td><td>$41.50&ndash;$43</td><td class="neg">$38.50</td><td class="pos">$48 / $53</td><td class="am">1:1.6</td></tr><tr><td><b>SHEL</b></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Momentum</td><td>$91&ndash;$94</td><td class="neg">$87</td><td class="pos">$100 / $108</td><td class="am">1:1.5</td></tr></tbody>
-    </table>
-  </details>
+<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+  <div class="cta-header">
+    <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
+    <div>
+      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">2 positions</span></h3>
+      <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
+    </div>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
+    <tbody><tr><td><b>FANG</b></td><td>$203.91</td><td class="neg"><b>-2.58%</b></td><td class="neg">$190.00</td><td class="am">4d/5d</td></tr><tr><td><b>MPC</b></td><td>$254.00</td><td class="neg"><b>-3.48%</b></td><td class="neg">$235.00</td><td class="am">4d/5d</td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
@@ -324,14 +361,14 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr style="opacity:.6;background:#fef2f2"><td><b>PSX</b></td><td class="m hide-m">03-24</td><td>$181.90</td><td>$184.81</td><td class="pos"><b>+1.6%</b></td><td class="neg hide-m">$168.00</td><td class="pos hide-m">$202.00</td><td class="neg"><span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span></td></tr><tr><td><b>FANG</b></td><td class="m hide-m">03-27</td><td>$203.91</td><td>$198.65</td><td class="neg"><b>-2.58%</b></td><td class="neg hide-m">$190.00</td><td class="pos hide-m">$240.00</td><td class="am">2d</td></tr><tr><td><b>MPC</b></td><td class="m hide-m">03-27</td><td>$254.00</td><td>$245.16</td><td class="neg"><b>-3.48%</b></td><td class="neg hide-m">$235.00</td><td class="pos hide-m">$290.00</td><td class="am">2d</td></tr></tbody>
+    <tbody><tr style="opacity:.6;background:#fef2f2"><td><b>PSX</b></td><td class="m hide-m">03-24</td><td>$181.90</td><td>$184.81</td><td class="pos"><b>+1.6%</b></td><td class="neg hide-m">$168.00</td><td class="pos hide-m">$202.00</td><td class="neg"><span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span></td></tr><tr><td><b>FANG</b></td><td class="m hide-m">03-27</td><td>$203.91</td><td>$198.65</td><td class="neg"><b>-2.58%</b></td><td class="neg hide-m">$190.00</td><td class="pos hide-m">$240.00</td><td class="neg">1d</td></tr><tr><td><b>MPC</b></td><td class="m hide-m">03-27</td><td>$254.00</td><td>$245.16</td><td class="neg"><b>-3.48%</b></td><td class="neg hide-m">$235.00</td><td class="pos hide-m">$290.00</td><td class="neg">1d</td></tr></tbody>
   </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">25 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">22 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody><tr>
@@ -561,31 +598,6 @@ details[open] summary::after{transform:rotate(90deg)}
           <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
         </tr></tbody>
   </table>
-  </details>
-</div>
-
-<!-- ══ 8. HOW TO TRADE (method — collapsed by default) ══ -->
-<div class="section-card">
-  <details>
-    <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-book-open" style="color:#059669;font-size:.78rem"></i> How to trade this mode</span>
-    </summary>
-    <div class="method-steps" style="margin-top:.85rem">
-      <div class="step" style="background:#05966908;border:1px solid #05966920;border-radius:8px;padding:.65rem .9rem">
-        <span class="step-n" style="background:#059669"><i class="fas fa-star" style="font-size:.5rem"></i></span>
-        <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within 5 trading days</b> (&#8776;&nbsp;7 calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
-      </div>
-      <div class="step"><span class="step-n" style="background:#059669">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top 4</b> from today's scan.</div></div>
-      <div class="step"><span class="step-n" style="background:#059669">2</span><div><b>At market open</b> (3:30&thinsp;PM Paris / 9:30&thinsp;AM NY), place a <b>limit order</b> within the entry range. Allocate <b>25%</b> of capital per position.</div></div>
-      <div class="step"><span class="step-n" style="background:#059669">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
-      <div class="step"><span class="step-n" style="background:#059669">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>5 trading days</b> — whichever comes first.</div></div>
-      <div class="step"><span class="step-n" style="background:#059669">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score &#8805; 88 vs return &lt; 2%), replace it.</div></div>
-    </div>
-    <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> 4 positions max</span>
-      <span><i class="fas fa-calendar-days"></i> 5-day horizon</span>
-      <span><i class="fas fa-filter"></i> All strategies</span>
-    </div>
   </details>
 </div>
 
@@ -984,9 +996,6 @@ document.addEventListener('DOMContentLoaded',function(){
   tmInit();
 });
 </script>
-<button class="tm-fab" id="tmFab" onclick="tmToggle()" title="Time Machine — view historical snapshots">
-  <i class="fas fa-clock-rotate-left"></i> Time Machine
-</button>
 
 <div class="tm-panel" id="tmPanel">
   <div class="tm-panel-head">
