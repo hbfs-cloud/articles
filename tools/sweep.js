@@ -237,7 +237,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const { horizonDays = 20, partialTP = false, trailingStop = false, maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0 } = config;
   if (!priceHistory) return null;
 
-  const entryDate = nextBizDay(scanDate);
+  // Scanner folder IS the entry day (generated D-1 at 23h, folder = D+1 = entry day)
+  const entryDate = scanDate;
   const entryBar = priceHistory[entryDate];
   if (!entryBar) return null;
 
