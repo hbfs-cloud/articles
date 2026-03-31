@@ -198,14 +198,25 @@ function main() {
       // 2. Stats from closed trades (realized only for stats)
       const stats = computeStatsUpTo(closedByDate, cfg.portfolioSize);
 
+      // Approximate bizDaysHeld matching gen-status-page.js (uses scanDate, not entryDate)
+      function bizDaysHeldApprox(scanDate) {
+        if (!scanDate) return 0;
+        const sd = new Date(scanDate + 'T12:00:00Z');
+        const rd = new Date(dateISO + 'T12:00:00Z');
+        const age = Math.round((rd - sd) / 86400000);
+        return Math.round(age * 5 / 7);
+      }
+
       // 3. Open positions on this date (entered but not yet fully exited)
+      // Matching gen-status-page.js posFor(): trades still within their holding period
       let openPositions = [];
       for (const t of trades) {
         if (!t.entryDate) continue;
         const exitDate = tradeExitDate(t);
         if (t.entryDate <= dateISO && exitDate > dateISO) {
-          const daysHeld = bizDaysBetween(t.entryDate, dateISO);
-          const daysRemaining = Math.max(0, cfg.horizon - daysHeld);
+          // Use scanDate-based held days (matching gen-status-page.js)
+          const held = bizDaysHeldApprox(t.scanDate);
+          const daysRemaining = Math.max(0, cfg.horizon - held);
           const currentPrice = t.exitPrice || t.actualEntry;
           const returnPct = t.actualEntry > 0 ? +((currentPrice - t.actualEntry) / t.actualEntry * 100).toFixed(1) : 0;
 
@@ -224,32 +235,21 @@ function main() {
         }
       }
 
-      // 3b. Close Now: positions expiring TODAY (exitDate === dateISO)
-      const closeNow = [];
-      for (const t of trades) {
-        if (!t.entryDate) continue;
-        const exitDate = tradeExitDate(t);
-        if (exitDate === dateISO && t.entryDate < dateISO) {
-          const currentPrice = t.exitPrice || t.actualEntry;
-          const returnPct = t.actualEntry > 0 ? +((currentPrice - t.actualEntry) / t.actualEntry * 100).toFixed(1) : 0;
-          const daysHeld = bizDaysBetween(t.entryDate, dateISO);
-          closeNow.push({
-            ticker: t.ticker,
-            scan_date: t.scanDate,
-            entry: t.actualEntry,
-            current_price: currentPrice,
-            return_pct: returnPct,
-            days_held: daysHeld,
-            horizon: cfg.horizon
-          });
-        }
-      }
-
-      // 3c. Cap open positions at portfolioSize (newest/highest-score first)
+      // 3b. Cap open positions at portfolioSize (newest/highest-score first)
       openPositions.sort((a, b) => (b.scan_date || '').localeCompare(a.scan_date || ''));
       if (openPositions.length > cfg.portfolioSize) {
         openPositions = openPositions.slice(0, cfg.portfolioSize);
       }
+
+      // 3c. Close Now: positions where scanDate-based held >= horizon
+      // (matching gen-status-page.js timedOut logic — computed FROM openPositions)
+      const closeNow = openPositions
+        .filter(p => bizDaysHeldApprox(p.scan_date) >= cfg.horizon)
+        .map(p => ({
+          ticker: p.ticker, scan_date: p.scan_date, entry: p.entry,
+          current_price: p.current_price, return_pct: p.return_pct,
+          days_held: bizDaysHeldApprox(p.scan_date), horizon: cfg.horizon
+        }));
 
       // 4. New signals for this date — collect from ALL modes for this scanDate
       // to show the full scanner output, not just per-mode filtered trades
@@ -315,10 +315,12 @@ function main() {
         positions: openPositions,
         orders,
         closeNow,
-        expiresTomorrow: openPositions.filter(p => p.days_remaining === 1).map(p => ({
-          ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop,
-          days_held: cfg.horizon - 1, horizon: cfg.horizon
-        })),
+        expiresTomorrow: openPositions
+          .filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldApprox(p.scan_date)); return left === 1; })
+          .map(p => ({
+            ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop,
+            days_held: bizDaysHeldApprox(p.scan_date), horizon: cfg.horizon
+          })),
         closedTrades: closedByDate.map(t => ({
           ticker: t.ticker,
           scanDate: t.scanDate,
