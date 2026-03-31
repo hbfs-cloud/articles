@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /**
- * gen-3-cards.js — Generates 3 rich mode-card PNG images for scanner/status/.
+ * gen-3-cards.js — Generates mode-card PNG image(s) for scanner/status/.
  *
  * Self-contained: builds HTML from backtest-trades.json + modes-config.json.
  * Does NOT use generate-scanner-image.js or scanner-metrics.json.
+ * Currently generates 1 card: Balanced (calmar).
  *
  * Usage: node tools/gen-3-cards.js
  */

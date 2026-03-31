@@ -49,6 +49,7 @@ if (modesConfig) {
   write('modes.json', {
     updatedAt: now,
     _comment: modesConfig._comment || '',
+    defaultMode: 'calmar',
     modes
   });
 }
@@ -118,7 +119,8 @@ if (backtestTrades) {
   }
   write('trades.json', {
     updatedAt: now,
-    _note: 'Mode IDs: growth=Aggressive, calmar=Balanced, zero=Conservative. Source key "sharpe" maps to mode "zero".',
+    _note: 'Primary mode: calmar=Balanced. Legacy keys preserved for backwards compat: growth=Aggressive, zero=Conservative (source key "sharpe").',
+    defaultMode: 'calmar',
     tradesByMode
   });
 }

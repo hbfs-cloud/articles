@@ -102,9 +102,7 @@ if [ "$SKIP_SWEEP" = false ]; then
     data/backtest-results.json \
     data/backtest-trades.json \
     data/portfolio-history.json \
-    scanner/status/mode-growth-*.png \
     scanner/status/mode-calmar-*.png \
-    scanner/status/mode-zero-*.png \
     scanner/status/index.html \
     scanner/status/manifest.json \
     2>/dev/null || true

@@ -804,7 +804,7 @@ async function main() {
   if (fs.existsSync(MODES_CFG)) {
     const config = JSON.parse(fs.readFileSync(MODES_CFG));
     console.log("\n=== FROZEN MODES vs SWEEP OPTIMAL ===\n");
-    console.log("Les 3 modes sont FIGÉS dans data/modes-config.json.");
+    console.log("Le mode Balanced (calmar) est FIGÉ dans data/modes-config.json.");
     console.log("Le sweep ne les modifie JAMAIS. Voici la comparaison :\n");
 
     const optMap = { growth: topByReturn[0], calmar: topByCalmar[0], zero: ranked[0] };

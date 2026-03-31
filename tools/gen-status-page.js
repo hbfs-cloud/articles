@@ -111,8 +111,8 @@ function main() {
     const closedTrades = trades.filter(t => !t._premature);
     modes[id] = { cfg, trades, m: computeMetrics(closedTrades, cfg.portfolioSize) };
   }
-  const g = modes.growth.m, ca = modes.calmar.m, z = modes.zero.m;
-  const gEC = equityDV(g.equityCurve), caEC = equityDV(ca.equityCurve), zEC = equityDV(z.equityCurve);
+  const ca = modes.calmar.m;
+  const caEC = equityDV(ca.equityCurve);
 
   const _updSrc = liveMetrics.updated_at || results.generated_at;
   const updatedAt = (() => {
@@ -191,7 +191,7 @@ function main() {
       return left === 1;
     });
 
-    return `<div class="mp${active ? ' active' : ''}" id="p-${id}">
+    return `<div id="p-${id}">
 
 <!-- ══ 1. PERF + STATS ══ -->
 <div class="perf-hero" style="border-left:4px solid ${cfg.color}">
@@ -534,18 +534,10 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .hero p{color:#64748b;font-size:.9rem;margin:0}
 .hero .ts{display:inline-block;margin-top:.6rem;font-size:.72rem;color:#94a3b8;background:#f1f5f9;padding:.2rem .7rem;border-radius:12px}
 
-/* Mode tabs */
-.tabs{display:flex;border-radius:10px;overflow:hidden;margin:1.5rem 0;border:1px solid #e2e8f0;background:#fff}
-.tab{flex:1;padding:.7rem .5rem;text-align:center;cursor:pointer;font-weight:700;font-size:.82rem;border:none;background:#fff;color:#64748b;transition:all .2s}
-.tab:hover{background:#f8fafc}
-.tab.active{color:#fff}
-.tab[data-m="growth"].active{background:#dc2626}
-.tab[data-m="calmar"].active{background:#059669}
-.tab[data-m="zero"].active{background:#7c3aed}
-.tab .tab-ret{display:block;font-size:1rem;font-weight:900;margin-top:.15rem}
-.mp{display:none;animation:fadeUp .2s ease}
-.mp.active{display:block}
-@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* Inline TM button */
+.tm-btn-inline{display:none;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#475569;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s}
+.tm-btn-inline:hover{background:#f1f5f9;color:#0f172a;border-color:#cbd5e1}
+.tm-btn-inline.viewing{color:#f59e0b;border-color:#f59e0b;background:#fffbeb}
 
 /* Perf hero = chart left + stats right */
 .perf-hero{display:flex;gap:1rem;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-bottom:1.2rem;overflow:hidden}
@@ -632,11 +624,6 @@ details[open] summary::after{content:"▼"}
 /* Disclaimer */
 .disc{text-align:center;font-size:.72rem;color:#94a3b8;margin-top:1.5rem;padding:1rem;border-top:1px solid #e2e8f0}
 
-/* Time Machine FAB */
-.tm-fab{position:fixed;bottom:5rem;right:1.75rem;z-index:1000;width:48px;height:48px;border-radius:50%;border:none;background:#0f172a;color:#94a3b8;font-size:1rem;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18),0 0 0 1px rgba(255,255,255,.06);transition:color .2s,box-shadow .2s,transform .2s;display:none;align-items:center;justify-content:center}
-.tm-fab:hover{color:#e2e8f0;box-shadow:0 4px 16px rgba(0,0,0,.28),0 0 0 1px rgba(255,255,255,.10);transform:translateY(-1px)}
-.tm-fab.viewing{color:#f59e0b;box-shadow:0 2px 8px rgba(245,158,11,.25),0 0 0 1px rgba(245,158,11,.3)}
-.tm-fab.viewing::after{content:'';position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:#f59e0b;box-shadow:0 0 0 2px #0f172a}
 /* Panel */
 .tm-panel{position:fixed;bottom:8.75rem;right:1.75rem;z-index:999;width:300px;background:#0f172a;border:1px solid rgba(255,255,255,.08);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden;transform:translateY(8px) scale(.97);opacity:0;transition:opacity .2s ease,transform .2s ease}
 .tm-panel.open{display:flex;animation:tmSlideIn .2s ease forwards}
@@ -716,19 +703,12 @@ details[open] summary::after{content:"▼"}
     <h1>Portfolio Live</h1>
     <p>Signals, open positions &amp; performance — updated 5 days a week</p>
     <span class="ts"><i class="fas fa-clock"></i> Updated ${updatedAt}</span>
+    <br><button class="tm-btn-inline" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i> Time Machine</button>
   </div>
 
   <div class="tm-banner" id="tmBanner"></div>
 
-  <div class="tabs">
-    <button class="tab" data-m="growth" onclick="sw('growth')"><i class="fas fa-rocket"></i> Aggressive<span class="tab-ret">+${g.ret}%</span></button>
-    <button class="tab active" data-m="calmar" onclick="sw('calmar')"><i class="fas fa-shield-halved"></i> Balanced<span class="tab-ret">+${ca.ret}%</span></button>
-    <button class="tab" data-m="zero" onclick="sw('zero')"><i class="fas fa-gem"></i> Conserv.<span class="tab-ret">+${z.ret}%</span></button>
-  </div>
-
-  ${panel('growth', modes.growth.cfg, g, modes.growth.trades, gEC, 'cG', false)}
   ${panel('calmar', modes.calmar.cfg, ca, modes.calmar.trades, caEC, 'cC', true)}
-  ${panel('zero', modes.zero.cfg, z, modes.zero.trades, zEC, 'cZ', false)}
 
   <div class="disc">
     Past performance &ne; future results &middot; Educational only &middot; Not financial advice
@@ -772,13 +752,6 @@ details[open] summary::after{content:"▼"}
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
 <script>
-function sw(m){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
-  document.querySelectorAll('.mp').forEach(function(p){p.classList.remove('active')});
-  document.querySelector('[data-m="'+m+'"]').classList.add('active');
-  document.getElementById('p-'+m).classList.add('active');
-  setTimeout(function(){window.dispatchEvent(new Event('resize'))},100);
-}
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
@@ -786,7 +759,7 @@ document.addEventListener('DOMContentLoaded',function(){
     c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:color+'05'}])}}],grid:{left:40,right:10,top:10,bottom:22}});
     return c;
   }
-  var ch=[mk('cG',${JSON.stringify(gEC.d)},${JSON.stringify(gEC.v)},'#059669'),mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb'),mk('cZ',${JSON.stringify(zEC.d)},${JSON.stringify(zEC.v)},'#7c3aed')];
+  var ch=[mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb')];
   window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
 
   // ── Time Machine (FAB + slider panel) ──
@@ -862,29 +835,20 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   window.tmGoLive=function(){
-    // Preserve the active tab when returning to live
-    var activeTab='calmar';
-    document.querySelectorAll('.tab').forEach(function(t){if(t.classList.contains('active'))activeTab=t.getAttribute('data-m')});
     tmCurrentIdx=tmDates.length-1;
     document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
     document.getElementById('tmBanner').className='tm-banner';
     document.getElementById('tmPanel').classList.remove('open');
-    // Reload then restore tab
-    sessionStorage.setItem('tmRestoreTab',activeTab);
     location.reload();
   };
-  // On load, restore tab if coming back from time machine
-  (function(){var rt=sessionStorage.getItem('tmRestoreTab');if(rt){sessionStorage.removeItem('tmRestoreTab');setTimeout(function(){sw(rt)},50)}})();
   function tmRender(snap){
-    // Update tab returns
-    document.querySelectorAll('.tab').forEach(function(t){
-      var m=t.getAttribute('data-m');
-      if(snap.modes[m]){var r=snap.modes[m].stats.ret;t.querySelector('.tab-ret').textContent=(r>0?'+':'')+r+'%'}
-    });
-    for(var id in snap.modes){
-      var d=snap.modes[id],panel=document.getElementById('p-'+id);
-      if(!panel)continue;
+    var id='calmar';
+    var d=snap.modes[id];
+    if(!d)return;
+    (function(){
+      var panel=document.getElementById('p-'+id);
+      if(!panel)return;
       var cfg=d.config||{};
       // Update stats
       var stats=panel.querySelectorAll('.ps-v');
@@ -897,7 +861,7 @@ document.addEventListener('DOMContentLoaded',function(){
         stats[5].textContent=d.stats.avgHold+'d';
       }
       // Update equity chart
-      var chartId={growth:'cG',calmar:'cC',zero:'cZ'}[id];
+      var chartId='cC';
       var chartEl=document.getElementById(chartId);
       if(chartEl){
         var c=echarts.getInstanceByDom(chartEl);
@@ -1084,12 +1048,11 @@ document.addEventListener('DOMContentLoaded',function(){
         empty.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No signals, positions, or trades recorded for this date.</p>';
         tmInsertAfter(empty,insertAfter);
       }
-    }
+    })();
   }
   tmInit();
 });
 </script>
-<button class="tm-fab" id="tmFab" onclick="tmToggle()" title="Time Machine"><i class="fas fa-clock-rotate-left"></i></button>
 <div class="tm-panel" id="tmPanel">
   <div class="tm-panel-head">
     <span class="tm-panel-title"><i class="fas fa-clock-rotate-left"></i> Time Machine</span>
@@ -1109,9 +1072,7 @@ document.addEventListener('DOMContentLoaded',function(){
 
   fs.writeFileSync(OUT, html);
   console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB)`);
-  console.log(`   Growth: +${g.ret}%, DD ${g.dd}%, WR ${g.wr}%, PF ${g.pf}x, ${g.trades} trades`);
-  console.log(`   Calmar: +${ca.ret}%, DD ${ca.dd}%, WR ${ca.wr}%, PF ${ca.pf}x, ${ca.trades} trades`);
-  console.log(`   Conservative: +${z.ret}%, DD ${z.dd}%, WR ${z.wr}%, PF ${z.pf}x, ${z.trades} trades`);
+  console.log(`   Balanced: +${ca.ret}%, DD ${ca.dd}%, WR ${ca.wr}%, PF ${ca.pf}x, ${ca.trades} trades`);
 
   // ── Save daily snapshot for time machine ──
   const todayISO = new Date().toISOString().slice(0, 10);

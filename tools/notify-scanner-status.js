@@ -635,11 +635,9 @@ async function main() {
   console.log('\n--- Discord preview ---');
   console.log(dcMsg);
 
-  // Send to 3 portfolio topics — ONE message per topic: sendAudio + caption
+  // Send to Balanced (calmar) topic only
   const modeTopics = [
-    { key: 'growth',  topicEnv: 'TELEGRAM_TOPIC_GROWTH'       },
-    { key: 'calmar',  topicEnv: 'TELEGRAM_TOPIC_CALMAR'        },
-    { key: 'zero',    topicEnv: 'TELEGRAM_TOPIC_CONSERVATIVE'  },
+    { key: 'calmar',  topicEnv: 'TELEGRAM_TOPIC_CALMAR' },
   ];
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
