@@ -138,12 +138,21 @@ function finvizUrl(ticker, period = 'd') {
 
 // ── Fetch Finviz chart as base64 data URI ────────────────────────────────────
 async function fetchFinvizBase64(ticker) {
-  // Finviz blocks datacenter IPs — fetch via Mac Mini (residential IP)
+  // Finviz blocks datacenter IPs — fetch via Mac Mini (residential IP) when on CI
+  // On Mac Mini itself, fetch directly
   const url = `https://finviz.com/chart.ashx?t=${ticker}&ty=c&ta=1&p=d&s=l`;
-  const sshCmd = `sshpass -p 'Elonux!123' ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no -o ConnectTimeout=10 marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net "curl -sL -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' --referer 'https://finviz.com/' '${url}' | base64"`;
+  const isMacMini = process.platform === 'darwin' || (process.env.HOME || '').includes('marketwatchxyz');
   try {
     const { execSync } = (await import('child_process'));
-    const b64 = execSync(sshCmd, { timeout: 20000, encoding: 'utf8' }).trim().replace(/\s+/g, '');
+    let b64;
+    if (isMacMini) {
+      // Mac Mini: fetch directly (residential IP, no block)
+      b64 = execSync(`curl -sL -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' --referer 'https://finviz.com/' '${url}' | base64`, { timeout: 20000, encoding: 'utf8' }).trim().replace(/\s+/g, '');
+    } else {
+      // CI server: relay via Mac Mini (datacenter IP blocked by Finviz)
+      const sshCmd = `sshpass -p 'Elonux!123' ssh -o StrictHostKeyChecking=no -o PubkeyAuthentication=no -o ConnectTimeout=10 marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net "curl -sL -A 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' --referer 'https://finviz.com/' '${url}' | base64"`;
+      b64 = execSync(sshCmd, { timeout: 20000, encoding: 'utf8' }).trim().replace(/\s+/g, '');
+    }
     return (b64 && b64.length > 500) ? 'data:image/png;base64,' + b64 : null;
   } catch {
     return null;
@@ -1023,7 +1032,16 @@ async function main() {
   // ── 5. Generate video via gamma-slides ──
   const videoPath = path.join(outDir, 'video.mp4');
   console.log('\n🎬 Generating video via gamma-slides...');
-  const gammaEnv = { ...process.env, PUPPETEER_EXECUTABLE_PATH: '/snap/bin/chromium', PATH: `/home/ci/edge-tts-venv/bin:${process.env.PATH}` };
+  // Chromium/Chrome path: detect platform
+  const _chromePaths = [
+    '/snap/bin/chromium',                                    // CI Ubuntu snap (broken on ARM, kept for legacy)
+    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Mac Mini
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium',
+  ];
+  const _chromePath = _chromePaths.find(p => { try { return require('fs').existsSync(p); } catch { return false; } }) || '/snap/bin/chromium';
+  const gammaEnv = { ...process.env, PUPPETEER_EXECUTABLE_PATH: _chromePath, PATH: `/home/ci/edge-tts-venv/bin:/opt/homebrew/bin:${process.env.PATH}` };
   const gammaResult = spawnSync('node', [GAMMA_SLIDES, 'video', '-f', deckPath, '-o', videoPath], {
     stdio: 'pipe', timeout: 600000, env: gammaEnv, cwd: GAMMA_CWD,
   });
