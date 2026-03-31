@@ -1155,20 +1155,23 @@ document.addEventListener('DOMContentLoaded',function(){
       d: [...hist.map(p => p.d), todayLabel],
       v: [...hist.map(p => p.v), todayMtm]
     };
-    // Compute orders for snapshot (same logic as panel)
-    const openTickers = new Set(pos.map(p => p.ticker));
+    // Compute closeNow (timed out positions) first — they free slots for orders
+    function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
+    const timedOutSnap = pos.filter(p => Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);
+    // Compute orders for snapshot — closeNow positions free their slots
+    const closeNowTickers = new Set(timedOutSnap.map(p => p.ticker));
+    const activePos = pos.filter(p => !closeNowTickers.has(p.ticker));
+    const openTickers = new Set(activePos.map(p => p.ticker));
     const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
-    const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
+    const slotsAvailable = Math.max(0, cfg.portfolioSize - activePos.length);
     const buyOrders = sigFiltered.slice(0, slotsAvailable).map(s => ({ ...s, action: 'BUY' }));
     const rotCands = [];
-    if (cfg.rotation === 'aggressive' && slotsAvailable === 0 && pos.length > 0 && sigFiltered.length > 0) {
-      const worst = [...pos].sort((a, b) => a.return_pct - b.return_pct)[0];
+    if (cfg.rotation === 'aggressive' && slotsAvailable === 0 && activePos.length > 0 && sigFiltered.length > 0) {
+      const worst = [...activePos].sort((a, b) => a.return_pct - b.return_pct)[0];
       for (const s of sigFiltered.slice(0, 5)) {
         if (s.score >= 88 && worst.return_pct < 2) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker }); break; }
       }
     }
-    function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
-    const timedOutSnap = pos.filter(p => Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);
 
     snapshot.modes[id] = {
       stats: { ret: mM.ret, dd: mM.dd, wr: mM.wr, pf: mM.pf, trades: mM.trades, avgHold: mM.avgHold },

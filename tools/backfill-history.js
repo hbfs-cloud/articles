@@ -296,8 +296,11 @@ function main() {
         }));
 
       // 5. Orders (new entries for this date, respecting portfolio capacity)
-      const openTickers = new Set(openPositions.map(p => p.ticker));
-      const availableSlots = Math.max(0, cfg.portfolioSize - openPositions.length);
+      // closeNow positions are being closed today, freeing their slots
+      const closeNowTickers = new Set(closeNow.map(c => c.ticker));
+      const activePositions = openPositions.filter(p => !closeNowTickers.has(p.ticker));
+      const openTickers = new Set(activePositions.map(p => p.ticker));
+      const availableSlots = Math.max(0, cfg.portfolioSize - activePositions.length);
       const orders = signals
         .filter(s => !openTickers.has(s.ticker))
         .slice(0, availableSlots)
