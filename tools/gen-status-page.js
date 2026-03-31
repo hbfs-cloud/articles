@@ -860,9 +860,15 @@ document.addEventListener('DOMContentLoaded',function(){
     location.reload();
   };
   function tmRender(snap){
+    // Update tab returns
+    document.querySelectorAll('.tab').forEach(function(t){
+      var m=t.getAttribute('data-m');
+      if(snap.modes[m]){var r=snap.modes[m].stats.ret;t.querySelector('.tab-ret').textContent=(r>0?'+':'')+r+'%'}
+    });
     for(var id in snap.modes){
       var d=snap.modes[id],panel=document.getElementById('p-'+id);
       if(!panel)continue;
+      // Update stats
       var stats=panel.querySelectorAll('.ps-v');
       if(stats.length>=6){
         stats[0].textContent=(d.stats.ret>0?'+':'')+d.stats.ret+'%';
@@ -872,71 +878,92 @@ document.addEventListener('DOMContentLoaded',function(){
         stats[4].textContent=d.stats.trades;
         stats[5].textContent=d.stats.avgHold+'d';
       }
-      var tabs=document.querySelectorAll('.tab');
-      tabs.forEach(function(t){
-        var m=t.getAttribute('data-m');
-        if(snap.modes[m]){var r=snap.modes[m].stats.ret;t.querySelector('.tab-ret').textContent=(r>0?'+':'')+r+'%'}
-      });
+      // Update equity chart (hide if no data)
       var chartId={growth:'cG',calmar:'cC',zero:'cZ'}[id];
       var chartEl=document.getElementById(chartId);
-      if(chartEl&&d.equity){
+      if(chartEl){
         var c=echarts.getInstanceByDom(chartEl);
-        if(c)c.setOption({xAxis:{data:d.equity.d},series:[{data:d.equity.v}]});
+        if(d.equity&&d.equity.d&&d.equity.d.length>0){
+          chartEl.parentElement.style.display='';
+          if(c)c.setOption({xAxis:{data:d.equity.d},series:[{data:d.equity.v}]});
+        }else{
+          chartEl.parentElement.style.display='none';
+        }
       }
-      // Render positions
-      var posSection=panel.querySelectorAll('.section-card')[2];
-      if(posSection&&d.positions){
-        var h='<div class="sc-head"><h3>Open Positions <span class="count">'+d.positions.length+'/'+d.config.portfolioSize+'</span></h3></div>';
-        if(d.positions.length){
-          h+='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Price</th><th>P&L</th><th>Left</th></tr></thead><tbody>';
-          d.positions.forEach(function(p){
-            var cls=p.return_pct>=0?'pos':'neg';
-            h+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
-          });
-          h+='</tbody></table>';
-        }else{h+='<p class="empty">No active positions</p>'}
-        posSection.innerHTML=h;
+      // Hide/show all section-cards, CTA cards, and details based on data
+      var allSections=panel.querySelectorAll('.section-card, .cta-card, .cta-close');
+      allSections.forEach(function(s){s.style.display='none'});
+      // Rebuild visible sections dynamically
+      var container=panel.querySelector('.section-card');
+      if(!container)continue;
+      var parent=container.parentElement;
+      // Remove old tm-injected sections
+      parent.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
+      // Helper to create a section
+      function tmSection(title,count,html){
+        var div=document.createElement('div');
+        div.className='section-card';
+        div.setAttribute('data-tm','1');
+        div.innerHTML='<div class="sc-head"><h3>'+title+' <span class="count">'+count+'</span></h3></div>'+html;
+        return div;
       }
-      // Render signals
-      var sigSection=panel.querySelectorAll('.section-card')[0];
-      if(sigSection&&d.signals){
-        var sh='<div class="sc-head"><h3>Today\\\'s Signals <span class="count">'+d.signals.length+'</span></h3></div>';
-        if(d.signals.length){
-          sh+='<table class="t"><thead><tr><th>Ticker</th><th>Score</th><th>Strategy</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
-          d.signals.forEach(function(s){
-            sh+='<tr><td><b>'+s.ticker+'</b></td><td>'+s.score+'</td><td>'+s.strategy+'</td><td>'+s.entry+'</td><td>'+s.stop+'</td><td>'+s.tp1+'</td></tr>';
-          });
-          sh+='</tbody></table>';
-        }else{sh+='<p class="empty">No signals</p>'}
-        sigSection.innerHTML=sh;
+      var insertBefore=panel.querySelector('.section-card');
+      // Signals
+      if(d.signals&&d.signals.length>0){
+        var sh='<table class="t"><thead><tr><th>Ticker</th><th>Score</th><th>Strategy</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
+        d.signals.forEach(function(s){
+          var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
+          sh+='<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+s.score+'</span></td><td class="m">'+s.strategy+'</td><td>'+s.entry+'</td><td class="neg">'+s.stop+'</td><td class="pos">'+s.tp1+'</td></tr>';
+        });
+        sh+='</tbody></table>';
+        parent.insertBefore(tmSection('Signals',d.signals.length,sh),insertBefore);
       }
-      // Render orders
-      var ordSection=panel.querySelectorAll('.section-card')[1];
-      if(ordSection&&d.orders){
-        var oh='<div class="sc-head"><h3>Orders to Execute <span class="count">'+d.orders.length+'</span></h3></div>';
-        if(d.orders.length){
-          oh+='<table class="t"><thead><tr><th>Action</th><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th></tr></thead><tbody>';
-          d.orders.forEach(function(o){
-            oh+='<tr><td><span class="badge '+(o.action==='ROTATE'?'rot':'buy')+'">'+o.action+'</span></td><td><b>'+o.ticker+'</b></td><td>'+o.score+'</td><td>'+o.entry+'</td><td>'+o.stop+'</td></tr>';
-          });
-          oh+='</tbody></table>';
-        }else{oh+='<p class="empty">No orders</p>'}
-        ordSection.innerHTML=oh;
+      // Orders
+      if(d.orders&&d.orders.length>0){
+        var oh='<table class="t"><thead><tr><th>Action</th><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th></tr></thead><tbody>';
+        d.orders.forEach(function(o){
+          oh+='<tr><td><span class="pill '+(o.action==='ROTATE'?'am':'pos')+'">'+o.action+'</span></td><td><b>'+o.ticker+'</b></td><td>'+o.score+'</td><td>'+o.entry+'</td><td>'+o.stop+'</td></tr>';
+        });
+        oh+='</tbody></table>';
+        parent.insertBefore(tmSection('Orders',d.orders.length,oh),insertBefore);
       }
-      // Render closed trades (last section)
-      var sections=panel.querySelectorAll('.section-card');
-      var tradeSection=sections[sections.length-1];
-      if(tradeSection&&d.closedTrades){
-        var th='<div class="sc-head"><h3>Trade History <span class="count">'+d.closedTrades.length+'</span></h3></div>';
-        if(d.closedTrades.length){
-          th+='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Days</th><th>Status</th></tr></thead><tbody>';
-          d.closedTrades.forEach(function(t){
-            var cls=t.pnlPct>=0?'pos':'neg';
-            th+='<tr><td><b>'+t.ticker+'</b></td><td>$'+(t.actualEntry||0).toFixed(2)+'</td><td>$'+(t.exitPrice||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(t.pnlPct>0?'+':'')+t.pnlPct.toFixed(1)+'%</b></td><td>'+(t.holdDays||0)+'d</td><td>'+t.status+'</td></tr>';
-          });
-          th+='</tbody></table>';
-        }else{th+='<p class="empty">No closed trades</p>'}
-        tradeSection.innerHTML=th;
+      // Positions
+      if(d.positions&&d.positions.length>0){
+        var ph='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Price</th><th>P&L</th><th>Left</th></tr></thead><tbody>';
+        d.positions.forEach(function(p){
+          var cls=p.return_pct>=0?'pos':'neg';
+          ph+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+        });
+        ph+='</tbody></table>';
+        parent.insertBefore(tmSection('Open Positions',d.positions.length+'/'+(d.config?d.config.portfolioSize:'?'),ph),insertBefore);
+      }
+      // Close Now
+      if(d.closeNow&&d.closeNow.length>0){
+        var ch='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Price</th><th>P&L</th></tr></thead><tbody>';
+        d.closeNow.forEach(function(p){
+          var cls=p.return_pct>=0?'pos':'neg';
+          ch+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td>$'+(p.current_price||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td></tr>';
+        });
+        ch+='</tbody></table>';
+        parent.insertBefore(tmSection('Close Now (Expired)',d.closeNow.length,ch),insertBefore);
+      }
+      // Closed trades
+      if(d.closedTrades&&d.closedTrades.length>0){
+        var th='<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>Exit</th><th>P&L</th><th>Days</th><th>Status</th></tr></thead><tbody>';
+        d.closedTrades.forEach(function(t){
+          var cls=(t.pnlPct||0)>=0?'pos':'neg';
+          th+='<tr><td><b>'+t.ticker+'</b></td><td>$'+(t.actualEntry||0).toFixed(2)+'</td><td>$'+(t.exitPrice||0).toFixed(2)+'</td><td class="'+cls+'"><b>'+(t.pnlPct>0?'+':'')+(t.pnlPct||0).toFixed(1)+'%</b></td><td>'+(t.holdDays||0)+'d</td><td>'+t.status+'</td></tr>';
+        });
+        th+='</tbody></table>';
+        parent.insertBefore(tmSection('Trade History',d.closedTrades.length,th),insertBefore);
+      }
+      // If nothing to show at all for this date
+      if((!d.signals||!d.signals.length)&&(!d.positions||!d.positions.length)&&(!d.closedTrades||!d.closedTrades.length)){
+        var empty=document.createElement('div');
+        empty.className='section-card';
+        empty.setAttribute('data-tm','1');
+        empty.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No signals, positions, or trades recorded for this date.</p>';
+        parent.insertBefore(empty,insertBefore);
       }
     }
   }

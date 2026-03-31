@@ -238,6 +238,17 @@ function main() {
       };
     }
 
+    // Skip dates with zero data across all modes
+    let hasData = false;
+    for (const modeId of Object.keys(snapshot.modes)) {
+      const md = snapshot.modes[modeId];
+      if ((md.signals || []).length || (md.positions || []).length ||
+          (md.closedTrades || []).length || (md.orders || []).length) {
+        hasData = true; break;
+      }
+    }
+    if (!hasData) continue;
+
     const dateKey = dateISO.replace(/-/g, '');
     fs.writeFileSync(path.join(HISTORY_DIR, dateKey + '.json'), JSON.stringify(snapshot));
     count++;

@@ -66,10 +66,14 @@ function renderTable(slide, idx, total) {
 }
 
 function renderConcept(slide, idx, total) {
+  const logoHtml = slide.logoUrl
+    ? `<img src="${escapeHtml(slide.logoUrl)}" alt="" style="height:80px;max-width:300px;object-fit:contain;margin:0 auto 20px;display:block;border-radius:8px;">`
+    : '';
   return `
     <div class="concept-wrap">
       <div class="section-title animate d1">${escapeHtml(slide.title)}</div>
-      <div class="concept-text animate d2">${escapeHtml(slide.text)}</div>
+      ${logoHtml ? `<div class="animate d2">${logoHtml}</div>` : ''}
+      <div class="concept-text animate d${logoHtml ? '3' : '2'}">${escapeHtml(slide.text)}</div>
     </div>`;
 }
 
