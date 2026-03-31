@@ -74,14 +74,14 @@ const NO_TELEGRAM = args.includes('--no-telegram');
 
 // ── Type metadata ─────────────────────────────────────────────────────────────
 const TYPE_META = {
-  daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 73, ytPlaylist: 'PLv96IetLrmtWfdEl9tObkSLaw_HFt39me' },
-  weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 74, ytPlaylist: 'PLv96IetLrmtWXigx6hLMoABNWsVhli2Vv' },
-  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 72, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
-  analysis: { label: 'Stock Analysis',    emoji: '🔬', telegramTopic: 75, ytPlaylist: 'PLv96IetLrmtU4Yff6kHAvSr3wJNYgXQ3R' },
-  learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
-  series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
-  retro:    { label: 'Scanner Retrospective', emoji: '🔁', telegramTopic: 72, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
-  tech:     { label: 'Tech Watch',       emoji: '💻', telegramTopic: 76, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  daily:    { label: 'Daily Briefing',    emoji: '📰', telegramTopic: 90, ytPlaylist: 'PLv96IetLrmtWfdEl9tObkSLaw_HFt39me' },
+  weekly:   { label: 'Weekly Review',     emoji: '📊', telegramTopic: 90, ytPlaylist: 'PLv96IetLrmtWXigx6hLMoABNWsVhli2Vv' },
+  scanner:  { label: 'Scanner Signals',   emoji: '🔍', telegramTopic: 89, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
+  analysis: { label: 'Stock Analysis',    emoji: '🔬', telegramTopic: 90, ytPlaylist: 'PLv96IetLrmtU4Yff6kHAvSr3wJNYgXQ3R' },
+  learning: { label: 'Trading Education', emoji: '🎓', telegramTopic: 91, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  series:   { label: 'Expert Series',     emoji: '🎯', telegramTopic: 91, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
+  retro:    { label: 'Scanner Retrospective', emoji: '🔁', telegramTopic: 89, ytPlaylist: 'PLv96IetLrmtVZZpO-M1Y6NDJETXw9zrU9' },
+  tech:     { label: 'Tech Watch',       emoji: '💻', telegramTopic: 91, ytPlaylist: 'PLv96IetLrmtV0UT9I-V95wPvXs9crtbyL' },
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -861,10 +861,11 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
         const pngPath = finvizPngs?.[ticker];
         if (pngPath) {
           // Split layout: chart image + trade levels
-          const levels = (s.levels||[]).map(l => `${l.label}: ${l.value}`).join(' | ');
+          // right.type must be one of: table|chart|bullets|image|metrics
+          const levelItems = (s.levels||[]).map(l => ({ text: `${l.label}: ${l.value}`, icon: l.type === 'stop' ? '🛑' : l.type === 'tp1' || l.type === 'tp2' ? '🎯' : '📊' }));
           return { layout: 'split',
             left: { type: 'image', image: { src: `file://${pngPath}`, alt: `${ticker} chart`, fit: 'contain' } },
-            right: { type: 'text', title: s.title || ticker, body: levels || s.narration || '' },
+            right: { type: 'bullets', title: s.title || ticker, items: levelItems.length ? levelItems : [{ text: s.narration || '', icon: '📊' }] },
             narration };
         }
         // No chart image — use metrics/bullets fallback
@@ -878,15 +879,24 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
           items: (s.orders||s.items||[]).slice(0, 8).map(o => ({ text: typeof o === 'string' ? o : `${o.ticker || ''} · ${o.action || o.text || ''}`, icon: '⚡' })),
           narration };
 
-      case 'scanner-portfolio':
+      case 'scanner-portfolio': {
+        // metrics can be an object {regime, avgScore, spChange...} or array
+        const pm = Array.isArray(s.metrics)
+          ? s.metrics
+          : Object.entries(s.metrics || {}).map(([k, v]) => ({ label: k, value: String(v ?? '') }));
         return { layout: 'metrics', title: s.title || 'Portfolio', columns: 4,
-          metrics: (s.metrics||[]).slice(0, 6).map(m => ({ label: m.label || '', value: m.value || '', delta: '', trend: 'neutral' })),
+          metrics: pm.slice(0, 6).map(m => ({ label: m.label || '', value: m.value || '', delta: '', trend: 'neutral' })),
           narration };
+      }
 
-      case 'scanner-market':
+      case 'scanner-market': {
+        const mm = Array.isArray(s.metrics)
+          ? s.metrics
+          : Object.entries(s.metrics || {}).map(([k, v]) => ({ label: k, value: String(v ?? '') }));
         return { layout: 'metrics', title: s.title || 'Market Context', columns: 3,
-          metrics: (s.metrics||[]).slice(0, 6).map(m => ({ label: m.label || '', value: m.value || '', delta: '', trend: 'neutral' })),
+          metrics: mm.slice(0, 6).map(m => ({ label: m.label || '', value: m.value || '', delta: '', trend: 'neutral' })),
           narration };
+      }
 
       case 'chapter-outro':
         return { layout: 'closing', title: s.title || 'Follow Market Watch',
