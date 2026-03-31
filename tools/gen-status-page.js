@@ -897,7 +897,10 @@ document.addEventListener('DOMContentLoaded',function(){
       // Re-init ECharts (innerHTML destroys instances)
       var chartEl=document.getElementById('cC');
       if(chartEl){
-        mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb');
+        // Dispose any stale instance on the new DOM element
+        var old=echarts.getInstanceByDom(chartEl);
+        if(old)old.dispose();
+        ch[0]=mk('cC',${JSON.stringify(caEC.d)},${JSON.stringify(caEC.v)},'#2563eb');
       }
     }
     document.getElementById('tmBanner').className='tm-banner';

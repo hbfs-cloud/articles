@@ -729,7 +729,10 @@ document.addEventListener('DOMContentLoaded',function(){
       // Re-init ECharts (innerHTML destroys instances)
       var chartEl=document.getElementById('cC');
       if(chartEl){
-        mk('cC',["02/26","02/27","03/02","03/05","03/09","03/13","03/17","03/19","03/20","03/23","03/30"],[105.68,104.56,109.47,113.65,118.32,119.31,118.81,117.62,121.43,123.8,121.08],'#2563eb');
+        // Dispose any stale instance on the new DOM element
+        var old=echarts.getInstanceByDom(chartEl);
+        if(old)old.dispose();
+        ch[0]=mk('cC',["02/26","02/27","03/02","03/05","03/09","03/13","03/17","03/19","03/20","03/23","03/30"],[105.68,104.56,109.47,113.65,118.32,119.31,118.81,117.62,121.43,123.8,121.08],'#2563eb');
       }
     }
     document.getElementById('tmBanner').className='tm-banner';
