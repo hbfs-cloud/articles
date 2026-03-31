@@ -180,10 +180,6 @@ function main() {
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       return left === 1;
     });
-    const activePosDisplay = pos.filter(p => {
-      const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
-      return left > 0;
-    });
 
     return `<div class="mp${active ? ' active' : ''}" id="p-${id}">
 
@@ -384,19 +380,19 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </details>
 </div>
 
-<!-- ══ 6. OPEN POSITIONS (active only, non-expired) ══ -->
+<!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3>Open Positions <span class="count">${activePosDisplay.length}/${cfg.portfolioSize}</span></h3>
-    ${activePosDisplay.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
+    <h3>Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
+    ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
-  ${activePosDisplay.length ? `
+  ${pos.length ? `
   ${(() => {
     // Scenario bar: worst (all SL) → current → best (all TP2)
     // Each position contributes alloc% of portfolio
     // alloc = 100/portfolioSize (e.g. 5% for 20 slots)
     const a = alloc / 100; // weight per position
-    const worstPct = activePosDisplay.reduce((s, p) => {
+    const worstPct = pos.reduce((s, p) => {
       // Skip positions with no stop (stop=0) — treat as no downside for scenario
       if (!p.stop || p.stop <= 0) return s;
       const slPct = p.entry > 0 ? (p.stop - p.entry) / p.entry * 100 : 0;
@@ -404,12 +400,12 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
       const capped = Math.max(slPct, -20);
       return s + capped * a;
     }, 0);
-    const bestPct = activePosDisplay.reduce((s, p) => {
+    const bestPct = pos.reduce((s, p) => {
       const tp = p.tp2 || p.tp1 || p.current_price;
       const tp2Pct = (p.entry > 0 && tp > 0) ? (tp - p.entry) / p.entry * 100 : 0;
       return s + tp2Pct * a;
     }, 0);
-    const nowPct = activePosDisplay.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
+    const nowPct = pos.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
 
     // Progress bar: worst is left anchor, best is right anchor, now is the cursor
     const range = bestPct - worstPct;
@@ -437,11 +433,14 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   })()}
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th>Entry</th><th>Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody>${activePosDisplay.map(p => {
+    <tbody>${pos.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
-      const leftCls = left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
-      return `<tr><td><b>${p.ticker}</b></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${left}d</td></tr>`;
+      const isExpired = left <= 0;
+      const leftCls = isExpired ? 'neg' : left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
+      const leftLabel = isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
+      const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
+      return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td>$${(p.entry||0).toFixed(2)}</td><td>$${(p.current_price||0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop||0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$'+p.tp2.toFixed(2) : (p.tp1 ? '$'+p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>`;
     }).join('')}</tbody>
   </table>` : `<p class="empty">No active positions</p>`}
 </div>
