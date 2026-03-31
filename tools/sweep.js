@@ -244,6 +244,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const actualEntry = entryBar.open;
   if (!actualEntry || actualEntry <= 0) return null;
 
+  // Reject trade if entry gaps below stop level (e.g. BTU 03-31: open $34.52 < stop $35)
+  if (actualEntry <= setup.stop) return null;
+
   let riskPerUnit = setup.entry - setup.stop;
   if (riskPerUnit <= 0) return null;
 
