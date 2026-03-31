@@ -932,8 +932,6 @@ async function main() {
     })),
   };
 
-  fs.writeFileSync(path.join(ROOT, 'data', 'backtest-results.json'), JSON.stringify(output, null, 2));
-  console.log('\n✅ Results saved to data/backtest-results.json');
 
   // Save trade lists for 3 FROZEN modes (from modes-config.json)
   const MODES_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
@@ -946,7 +944,8 @@ async function main() {
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
-        horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false,
+        horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
+        trailingStop: cfg.trailingStop || false,
       };
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
       if (sim2 && sim2.closedTrades) {
@@ -1000,6 +999,10 @@ async function main() {
     }, null, 2));
     console.log('✅ Equity curve saved to data/portfolio-history.json');
   }
+  
+  fs.writeFileSync(path.join(ROOT, 'data', 'backtest-results.json'), JSON.stringify(output, null, 2));
+  console.log('\n✅ Results saved to data/backtest-results.json');
+
 
   // ─── Compare with frozen modes ─────────────────────────────────────────────
   const MODES_CFG = path.join(ROOT, "data", "modes-config.json");
