@@ -23,7 +23,15 @@ function computeMetrics(trades, portfolioSize) {
   const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize, 0);
   let equity = 0, peak = 0, maxDD = 0;
   const equityCurve = [{ date: null, value: 100 }];
-  for (const t of trades) {
+  // Sort by approximate exit date to ensure correct path-dependent DD computation
+  // Exit ≈ entryDate + holdDays calendar days (good enough for ordering)
+  const sorted = [...trades].sort((a, b) => {
+    const ea = new Date(a.entryDate || a.scanDate || '2000-01-01').getTime() + (a.holdDays || 0) * 86400000;
+    const eb = new Date(b.entryDate || b.scanDate || '2000-01-01').getTime() + (b.holdDays || 0) * 86400000;
+    if (ea !== eb) return ea - eb;
+    return (a.entryDate || '') < (b.entryDate || '') ? -1 : 1;
+  });
+  for (const t of sorted) {
     equity += (t.pnlPct || 0) / portfolioSize;
     if (equity > peak) peak = equity;
     if (peak - equity > maxDD) maxDD = peak - equity;

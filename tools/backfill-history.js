@@ -126,6 +126,9 @@ function main() {
   // Track cumulative mark-to-market equity curves per mode across all dates
   const modeEquityCurves = {};
 
+  // Forward DD accumulation: DD can only get worse (more negative) or stay the same
+  const worstDD = {};
+
   // Pre-load live snapshots (from gen-status-page.js) — never overwrite these
   const liveSnapshots = new Set();
   try {
@@ -195,8 +198,24 @@ function main() {
         return exitDate <= dateISO;
       });
 
+      // Sort closedByDate chronologically by exit date before computing stats.
+      // Without this, trades in raw array order can insert a profitable trade
+      // BEFORE a losing one in the equity loop, pushing the peak higher and
+      // artificially shrinking maxDD — causing DD to improve (go less negative)
+      // as new trades close, which is physically impossible for a running max DD.
+      closedByDate.sort((a, b) => {
+        const ea = tradeExitDate(a), eb = tradeExitDate(b);
+        if (ea !== eb) return ea < eb ? -1 : 1;
+        return (a.entryDate || '') < (b.entryDate || '') ? -1 : 1;
+      });
+
       // 2. Stats from closed trades (realized only for stats)
       const stats = computeStatsUpTo(closedByDate, cfg.portfolioSize);
+
+      // Forward DD accumulation: DD can only get worse (more negative) over time
+      if (!(modeId in worstDD)) worstDD[modeId] = 0;
+      worstDD[modeId] = Math.min(worstDD[modeId], stats.dd);
+      stats.dd = worstDD[modeId];
 
       // Approximate bizDaysHeld matching gen-status-page.js (uses scanDate, not entryDate)
       function bizDaysHeldApprox(scanDate) {
@@ -217,7 +236,9 @@ function main() {
           // Use scanDate-based held days (matching gen-status-page.js)
           const held = bizDaysHeldApprox(t.scanDate);
           const daysRemaining = Math.max(0, cfg.horizon - held);
-          const currentPrice = t.exitPrice || t.actualEntry;
+          // Don't use exitPrice for open positions — that's future data!
+          // For open positions, best we can do is entry price (no live data in backfill)
+          const currentPrice = t.actualEntry || 0;
           const returnPct = t.actualEntry > 0 ? +((currentPrice - t.actualEntry) / t.actualEntry * 100).toFixed(1) : 0;
 
           openPositions.push({
