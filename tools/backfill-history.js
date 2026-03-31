@@ -127,7 +127,8 @@ function main() {
   const modeEquityCurves = {};
 
   for (const dateISO of sortedDates) {
-    const snapshot = { date: dateISO, updatedAt: 'backfill', modes: {} };
+    const dateKey = dateISO.replace(/-/g, '');
+    const snapshot = { date: dateISO, updatedAt: 'backfill', scanDir: dateKey, modes: {} };
 
     for (const [tradeKey, trades] of Object.entries(allTrades)) {
       const modeId = MODE_MAP[tradeKey] || tradeKey;
@@ -195,12 +196,15 @@ function main() {
         if (exitDate === dateISO && t.entryDate < dateISO) {
           const currentPrice = t.exitPrice || t.actualEntry;
           const returnPct = t.actualEntry > 0 ? +((currentPrice - t.actualEntry) / t.actualEntry * 100).toFixed(1) : 0;
+          const daysHeld = bizDaysBetween(t.entryDate, dateISO);
           closeNow.push({
             ticker: t.ticker,
             scan_date: t.scanDate,
             entry: t.actualEntry,
             current_price: currentPrice,
-            return_pct: returnPct
+            return_pct: returnPct,
+            days_held: daysHeld,
+            horizon: cfg.horizon
           });
         }
       }
@@ -254,24 +258,17 @@ function main() {
         modeEquityCurves[modeId].push({ date: dateISO, value: mtmEquity });
       }
 
-      // Build equity { d, v } from cumulative curve
+      // Build equity { d, v } from cumulative MtM curve
       const ec = {
         d: modeEquityCurves[modeId].map(p => p.date.slice(5).replace('-', '/')),
         v: modeEquityCurves[modeId].map(p => p.value)
       };
 
-      // Compute MtM drawdown from the full curve
-      let mtmPeak = 100, mtmMaxDD = 0;
-      for (const p of modeEquityCurves[modeId]) {
-        if (p.value > mtmPeak) mtmPeak = p.value;
-        const dd = mtmPeak - p.value;
-        if (dd > mtmMaxDD) mtmMaxDD = dd;
-      }
-
+      // Stats use REALIZED values only (matching live page gen-status-page.js)
       snapshot.modes[modeId] = {
         stats: {
-          ret: +(realized + unrealized).toFixed(2),
-          dd: +(-mtmMaxDD).toFixed(2),
+          ret: stats.ret,
+          dd: stats.dd,
           wr: stats.wr,
           pf: stats.pf,
           trades: stats.trades,
@@ -282,6 +279,10 @@ function main() {
         positions: openPositions,
         orders,
         closeNow,
+        expiresTomorrow: openPositions.filter(p => p.days_remaining === 1).map(p => ({
+          ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop,
+          days_held: cfg.horizon - 1, horizon: cfg.horizon
+        })),
         closedTrades: closedByDate.map(t => ({
           ticker: t.ticker,
           scanDate: t.scanDate,
@@ -314,7 +315,6 @@ function main() {
     }
     if (!hasData) continue;
 
-    const dateKey = dateISO.replace(/-/g, '');
     fs.writeFileSync(path.join(HISTORY_DIR, dateKey + '.json'), JSON.stringify(snapshot));
     count++;
   }
