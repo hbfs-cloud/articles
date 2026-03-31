@@ -120,6 +120,28 @@ const YOUTUBE_META = {
     tags: ['MENA', 'Moyen-Orient', 'bourse', 'investissement', 'marchés émergents', 'market-watch.xyz'],
     lang: 'fr',
   },
+  'bilan-hebdo-20260331': {
+    title: 'Bilan Hebdo 31 Mars — Iran Jour 29, S&P 5ème Semaine de Baisse, Or $4592',
+    playlist: 'Bilan Hebdo FR',
+    description: `📊 Bilan complet de la semaine du 31 mars 2026 — tous les marchés décryptés.
+
+📚 Au programme :
+• Vue d'ensemble : S&P -2.1% (5ème semaine), STOXX 600 pire mois depuis 2020
+• Actions USA, Europe, Asie : Dow en correction, Nikkei +6% YTD
+• Forex : dollar perd sa prime refuge, yen frôle les 160
+• Commodities : pétrole $107, or record $4 592, argent +3.8%
+• Crypto : Bitcoin -47% depuis le sommet, bear market confirmé
+• Iran Jour 29 & Risque de Gap : proposition US 15 points, 4 scénarios lundi
+
+🧠 6 quizzes interactifs
+📊 Données de marché en temps réel via MCP Gateway
+🛢️ Détroit d'Ormuz toujours fermé — impact sur tous les marchés
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 https://articles.market-watch.xyz`,
+    tags: ['bilan hebdo', 'bourse', 'Iran', 'pétrole', 'Ormuz', 'gap risk', 'S&P 500', 'crypto', 'bitcoin', 'or', 'obligations', 'forex', 'market-watch.xyz'],
+    lang: 'fr',
+  },
   'bilan-hebdo-20260327': {
     title: 'Bilan Hebdo 27 Mars — Iran, Pétrole $112, S&P en Chute, Risque de Gap',
     playlist: 'Bilan Hebdo FR',
