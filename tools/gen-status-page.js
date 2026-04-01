@@ -911,18 +911,12 @@ document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
     var c=echarts.init(document.getElementById(el));
-    c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:color+'05'}])}}],grid:{left:40,right:10,top:10,bottom:22}});
-    return c;
-  }
-  // Init charts for all modes (only active one renders immediately, others on tab switch)
-  var ch=[];
-  ${Object.entries(modes).map(([id, m]) => `ch.push(mk('chart-${id}',${JSON.stringify(m.ec.d)},${JSON.stringify(m.ec.v)},'${m.cfg.color}'));`).join('\n  ')}
-  window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
-
-  // ── Time Machine (FAB + slider panel) ──
-  var tmDates=[], tmCurrentIdx=0;
+    c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:c  var tmDates=[], tmCurrentIdx=0, tmModesCfg={};
   function tmInit(){
-    fetch('/scanner/status/history/dates.json').then(function(r){return r.json()}).then(function(dates){
+    fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
+      tmModesCfg = cfg;
+      return fetch('/scanner/status/history/dates.json');
+    }).then(function(r){return r.json()}).then(function(dates){
       tmDates=dates;if(dates.length<1)return;
       var fab=document.getElementById('tmFab');
       if(fab)fab.style.display='flex';
@@ -931,7 +925,6 @@ document.addEventListener('DOMContentLoaded',function(){
       slider.value=dates.length-1;
       tmCurrentIdx=dates.length-1;
       tmUpdateLabel();
-      // Range labels
       var fmt=function(d){return d.slice(4,6)+'/'+d.slice(6,8)};
       document.getElementById('tmFirstDate').textContent=fmt(dates[0]);
       document.getElementById('tmLastDate').textContent=fmt(dates[dates.length-1]);
@@ -947,14 +940,12 @@ document.addEventListener('DOMContentLoaded',function(){
     var p=document.getElementById('tmPanel');
     var isOpen=p.classList.contains('open');
     p.classList.toggle('open');
-    // Keep FAB highlighted while panel is open
     var fab=document.getElementById('tmFab');
     if(fab){
       if(!isOpen)fab.style.boxShadow='0 0 0 3px rgba(59,130,246,.35)';
       else fab.style.boxShadow='';
     }
   };
-  // Close panel when clicking outside
   document.addEventListener('click',function(e){
     var p=document.getElementById('tmPanel');
     var fab=document.getElementById('tmFab');
@@ -977,7 +968,6 @@ document.addEventListener('DOMContentLoaded',function(){
       document.getElementById('tmLiveBtn').className='tm-live-btn show';
       document.getElementById('tmFab').classList.add('viewing');
     }
-    // Update nav button states
     var btnPrev=document.getElementById('tmBtnPrev'),btnNext=document.getElementById('tmBtnNext');
     if(btnPrev)btnPrev.disabled=tmCurrentIdx===0;
     if(btnNext)btnNext.disabled=tmCurrentIdx===tmDates.length-1;
@@ -990,7 +980,6 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   };
-  // Mode switcher
   var activeMode='balanced';
   window.switchMode=function(id){
     activeMode=id;
@@ -1002,12 +991,9 @@ document.addEventListener('DOMContentLoaded',function(){
       if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
       else{inst.resize();}
     }
-    // Update alerts (Raise SL) on current live panel
     updateLiveActions(id);
-    // If Time Machine is active, reload snapshot for new mode
     if(tmDates.length&&tmCurrentIdx<tmDates.length-1){tmLoadIdx(tmCurrentIdx);}
   };
-  
   function updateLiveActions(modeId){
     fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
       document.querySelectorAll(modeId ? '#p-'+modeId : '.mode-panel').forEach(function(p){
@@ -1052,9 +1038,7 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   setTimeout(updateLiveActions, 800);
-
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
-  // Save original live content on first TM use
   var tmLiveHTML={};
   function tmSaveLive(){
     document.querySelectorAll('.mode-panel').forEach(function(p){
@@ -1082,7 +1066,6 @@ document.addEventListener('DOMContentLoaded',function(){
     var fab=document.getElementById('tmFab');
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
   }
-
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){
@@ -1109,19 +1092,150 @@ document.addEventListener('DOMContentLoaded',function(){
     tmRestoreLive();
   };
   function tmRender(snap){
-
-      // If nothing at all
-      if((!d.signals||!d.signals.length)&&(!d.positions||!d.positions.length)&&(!d.closedTrades||!d.closedTrades.length)&&(!d.closeNow||!d.closeNow.length)&&(!d.orders||!d.orders.length)){
-        var empty=document.createElement('div');
-        empty.className='section-card';empty.setAttribute('data-tm','1');
-        empty.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No signals, positions, or trades recorded for this date.</p>';
-        tmInsertAfter(empty,insertAfter);
-      }
-      // Release height lock and fade back in
-      requestAnimationFrame(function(){
-        panel.style.opacity='1';
-        setTimeout(function(){panel.style.minHeight='';},200);
-      });
+    var id=activeMode;
+    var d=snap.modes[id];
+    if(!d)return;
+    var mCfg = tmModesCfg.modes ? tmModesCfg.modes[id] : {};
+    (function(){
+      var panel=document.getElementById('p-'+id);
+      if(!panel)return;
+      panel.style.transition='opacity .2s ease-in-out';
+      panel.style.opacity='0.4';
+      setTimeout(function(){
+        var cfg=d.config||{};
+        var stats=panel.querySelectorAll('.ps-v');
+        if(stats.length>=6){
+          stats[0].textContent=(d.stats.ret>0?'+':'')+d.stats.ret.toFixed(2)+'%';
+          stats[1].textContent=d.stats.dd.toFixed(2)+'%';
+          stats[2].textContent=d.stats.wr.toFixed(1)+'%';
+          stats[3].textContent=d.stats.pf.toFixed(2)+'x';
+          stats[4].textContent=d.stats.trades;
+          stats[5].textContent=d.stats.avgHold.toFixed(1)+'d';
+        }
+        var chartId='chart-'+id;
+        var chartEl=document.getElementById(chartId);
+        if(chartEl){
+          var c=echarts.getInstanceByDom(chartEl);
+          if(d.equity&&d.equity.d&&d.equity.d.length>0){
+            chartEl.parentElement.style.display='';
+            var minV=Math.min.apply(null,d.equity.v);
+            if(c)c.setOption({xAxis:{data:d.equity.d},yAxis:{min:Math.floor(minV)-1},series:[{data:d.equity.v}]});
+          }else{ chartEl.parentElement.style.display='none'; }
+        }
+        var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
+        allSections.forEach(function(s){s.style.display='none'});
+        panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
+        var perfHero=panel.querySelector('.perf-hero');
+        var insertAfter=perfHero||panel.firstElementChild;
+        function tmInsertAfter(newEl,ref){
+          if(ref.nextSibling)ref.parentNode.insertBefore(newEl,ref.nextSibling);
+          else ref.parentNode.appendChild(newEl);
+          return newEl;
+        }
+        var raiseSL = (d.positions||[]).filter(function(p){ 
+          var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
+          return pnl >= (mCfg.breakevenPct || 999);
+        });
+        if(d.closeNow&&d.closeNow.length>0){
+          var cn=document.createElement('div'); cn.className='cta-card cta-close'; cn.setAttribute('data-tm','1');
+          var cnh='<div class="cta-header"><span class="cta-icon"><i class="fas fa-ban"></i></span>'
+            +'<div><h3>Close Now <span class="cta-badge">'+d.closeNow.length+' targets</span></h3>'
+            +'<p class="cta-sub">Horizon expired — exit at market open</p></div></div>'
+            +'<table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th>P&L</th><th>Held</th><th>Action</th></tr></thead><tbody>';
+          d.closeNow.forEach(function(p){
+            var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
+            cnh+='<tr><td><b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="am">'+(p.days_held||'?')+'d</td><td><span class="pill neg">CLOSE</span></td></tr>';
+          });
+          cnh+='</tbody></table>'; cn.innerHTML=cnh; insertAfter=tmInsertAfter(cn,insertAfter);
+        }
+        if(raiseSL.length > 0){
+          var rs=document.createElement('div'); rs.className='cta-card'; rs.setAttribute('data-tm','1'); rs.style='background:#f0f9ff;border:1.5px solid #bae6fd;border-left:4px solid #0284c7';
+          var rsh='<div class="cta-header"><span class="cta-icon" style="background:rgba(2,132,199,0.1)"><i class="fas fa-arrow-up-right-dots" style="color:#0284c7"></i></span>'
+            +'<div><h3 style="color:#0284c7">Raise Stop Loss <span class="cta-badge" style="background:#0284c7">'+raiseSL.length+' targets</span></h3>'
+            +'<p class="cta-sub" style="color:#0284c7dd">Break-even triggered — move stop to entry</p></div></div>'
+            +'<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&L</th><th>Stop</th><th>Held</th></tr></thead><tbody>';
+          raiseSL.forEach(function(p){
+            var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
+            rsh+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td class="pos"><b>+'+pnl.toFixed(2)+'%</b></td><td><span class="pill pos" style="background:#0284c7;color:#fff">B.EVEN</span></td><td>Trailing</td></tr>';
+          });
+          rsh+='</tbody></table>'; rs.innerHTML=rsh; insertAfter=tmInsertAfter(rs,insertAfter);
+        }
+        if(d.expiresTomorrow&&d.expiresTomorrow.length>0){
+          var et=document.createElement('div'); et.className='cta-card'; et.setAttribute('data-tm','1'); et.style='background:#fffbeb;border:2px solid #fcd34d;border-left:4px solid #f59e0b';
+          var eth='<div class="cta-header"><span class="cta-icon" style="background:rgba(245,158,11,.15)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span><div>'
+            +'<h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">'+d.expiresTomorrow.length+' targets</span></h3>'
+            +'<p class="cta-sub" style="color:#b45309">Horizon reached at next close</p></div></div>'
+            +'<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&L</th><th>Stop</th><th>Held</th></tr></thead><tbody>';
+          d.expiresTomorrow.forEach(function(p){
+            var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
+            eth+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="neg">'+(p.stop && p.stop!==0?'$'+p.stop.toFixed(2):'EXIT')+'</td><td class="am">'+(p.days_held||'?')+'d</td></tr>';
+          });
+          eth+='</tbody></table>'; et.innerHTML=eth; insertAfter=tmInsertAfter(et,insertAfter);
+        }
+        if(d.orders&&d.orders.length>0){
+          var od=document.createElement('div'); od.className='section-card cta-orders'; od.setAttribute('data-tm','1');
+          var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Orders to Place</h3></div>'
+            +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Score</th><th>Entry</th><th>Stop/TP1</th><th class="hide-m">Action</th></tr></thead><tbody>';
+          d.orders.forEach(function(o){
+            var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
+            odh+='<tr><td><b>'+o.ticker+'</b></td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td><b>'+o.entry+'</b></td><td>'+o.stop+' / '+o.tp1+'</td><td class="hide-m">'+(o.action==='ROTATE'?'<span class="pill am">ROTATE</span>':'<span class="pill pos">BUY</span>')+'</td></tr>';
+          });
+          odh+='</tbody></table>'; od.innerHTML=odh; insertAfter=tmInsertAfter(od,insertAfter);
+        }
+        if(d.signals&&d.signals.length>0){
+          var sg=document.createElement('div'); sg.className='section-card'; sg.setAttribute('data-tm','1');
+          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\'s Signals <span class="count">'+d.signals.length+' setups</span></span></summary>'
+            +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
+          d.signals.forEach(function(s){
+            var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
+            sgh+='<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+s.score+'</span></td><td>'+s.entry+'</td><td class="neg">'+s.stop+'</td><td class="pos">'+s.tp1+'</td></tr>';
+          });
+          sgh+='</tbody></table></details>'; sg.innerHTML=sgh; insertAfter=tmInsertAfter(sg,insertAfter);
+        }
+        var posSection=document.createElement('div'); posSection.className='section-card'; posSection.setAttribute('data-tm','1');
+        if(d.positions&&d.positions.length>0){
+          var avgPnl=d.positions.reduce(function(s,p){return s+(p.pnlPct!==undefined?p.pnlPct:(p.return_pct||0))},0)/d.positions.length;
+          var psh='<div class="sc-head"><h3>Open Positions <span class="count">'+d.positions.length+'/'+(mCfg.portfolioSize||'?')+'</span></h3><span class="sc-meta">avg P&L: <b class="'+(avgPnl>=0?'pos':'neg')+'">'+(avgPnl>0?'+':'')+avgPnl.toFixed(2)+'%</b></span></div>';
+          var allocPct=(mCfg.portfolioSize?100/mCfg.portfolioSize:100)/100;
+          var worstPct=0,bestPct=0,nowPct=0;
+          d.positions.forEach(function(p){
+            var pnl=p.pnlPct!==undefined?p.pnlPct:(p.return_pct||0); var entry=p.entry||0; var stop=p.stop||0;
+            if(stop>0 && entry>0){worstPct+=(stop-entry)/entry*100*allocPct}
+            var tp=p.tp2||p.tp1||p.current_price||entry;
+            if(entry>0&&tp>0){bestPct+=(tp-entry)/entry*100*allocPct}
+            nowPct+=pnl*allocPct;
+          });
+          var r=bestPct-worstPct; var cp=r>0?Math.max(0,Math.min(100,(nowPct-worstPct)/r*100)):50;
+          psh+='<div class="scenario-bar-wrap"><div class="scenario-labels">'
+            +'<span class="'+(worstPct<0?'neg':'pos')+'">Worst: '+(worstPct>0?'+':'')+worstPct.toFixed(1)+'%</span>'
+            +'<span class="'+(nowPct>=0?'pos':'neg')+'">Now: '+(nowPct>0?'+':'')+nowPct.toFixed(1)+'%</span>'
+            +'<span class="pos">Best: +'+bestPct.toFixed(1)+'%</span>'
+            +'</div><div class="scenario-bar"><div class="scenario-fill-bad" style="width:'+cp.toFixed(1)+'%"></div><div class="scenario-fill-good" style="width:'+(100-cp).toFixed(1)+'%"></div><div class="scenario-cursor" style="left:'+cp.toFixed(1)+'%"></div></div></div>'
+            +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th>P&L</th><th class="hide-m">Stop</th><th>Left</th></tr></thead><tbody>';
+          d.positions.forEach(function(p){
+            var pnl=p.pnlPct!==undefined?p.pnlPct:(p.return_pct||0);
+            psh+='<tr><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="neg hide-m">'+(p.stop && p.stop!==0?'$'+p.stop.toFixed(2):'N/A')+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+          });
+          psh+='</tbody></table>'; posSection.innerHTML=psh;
+        }else{ posSection.innerHTML='<div class="sc-head"><h3>Open Positions</h3></div><p class="empty">No active positions</p>'; }
+        insertAfter=tmInsertAfter(posSection,insertAfter);
+        if(d.closedTrades&&d.closedTrades.length>0){
+          var th=document.createElement('div'); th.className='section-card'; th.setAttribute('data-tm','1');
+          var thh='<details><summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">'+d.closedTrades.length+' closed</span></span></summary>'
+            +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th class="hide-m">End</th><th>P&L</th><th>Result</th></tr></thead><tbody>';
+          d.closedTrades.slice().sort(function(a,b){return(b.scanDate||'').localeCompare(a.scanDate||'')}).forEach(function(t){
+            var pnl=t.pnlPct||0;
+            thh+='<tr><td><b>'+t.ticker+'</b></td><td class="m hide-m">'+(t.scanDate?t.scanDate.slice(5):'—')+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td><span class="pill '+(pnl>=0?'pos':'neg')+'">'+(t.status||'CLOSED').toUpperCase()+'</span></td></tr>';
+          });
+          thh+='</tbody></table></details>'; th.innerHTML=thh; insertAfter=tmInsertAfter(th,insertAfter);
+        }
+        if((!d.signals||!d.signals.length)&&(!d.positions||!d.positions.length)&&(!d.closedTrades||!d.closedTrades.length)&&(!d.closeNow||!d.closeNow.length)&&(!d.orders||!d.orders.length)){
+          var em=document.createElement('div'); em.className='section-card'; em.setAttribute('data-tm','1');
+          em.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No data for this date.</p>';
+          tmInsertAfter(em,insertAfter);
+        }
+        panel.style.minHeight=''; panel.style.opacity='1';
+      }, 150);
     })();
   }
   tmInit();
