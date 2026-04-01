@@ -675,7 +675,7 @@ async function main() {
   const TP_MODES = [false, true]; // partialTP
   const TP_PCTS = [0.5]; // partial TP fraction (0.5 is the balanced default)
   const TRAIL_MODES = [false]; // trailingStop disabled (rarely wins, adds 2× combos)
-  const MAX_STOP_PCTS = [0, 5, 7]; // 0 = no cap
+  const MAX_STOP_PCTS = [0, 3, 5, 7]; // 0 = no cap
   const ATR_STOP_MULTS = [0, 1, 2]; // 0 = disabled
   const DAILY_TRAIL_PCTS = [0, 3]; // 0 = disabled, 3% is the proven sweet spot
   const BREAKEVEN_PCTS = [0, 1]; // 0 = disabled, 1% is the standard
