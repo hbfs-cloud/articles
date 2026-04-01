@@ -234,7 +234,7 @@ function main() {
     return `<div id="p-${id}" class="mode-panel" style="${active ? '' : 'display:none'}">
 
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
-<div class="section-card">
+<div class="section-card" data-static="1">
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
@@ -1093,8 +1093,8 @@ document.addEventListener('DOMContentLoaded',function(){
           chartEl.parentElement.style.display='none';
         }
       }
-      // Hide all live sections (section-card, cta-card, method-card)
-      var allSections=panel.querySelectorAll('.section-card, .cta-card, .method-card');
+      // Hide all live sections (section-card, cta-card, method-card) except static ones (How To)
+      var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
       allSections.forEach(function(s){s.style.display='none'});
       // Remove old tm-injected sections
       panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
@@ -1376,7 +1376,7 @@ document.addEventListener('DOMContentLoaded',function(){
       orders: [...buyOrders, ...rotCands],
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
-      closedTrades: mTrades.filter(t => !t._premature).map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
+      closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
       config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color }
     };
   }
