@@ -1390,9 +1390,65 @@ document.addEventListener('DOMContentLoaded',function(){
 // ─── Backfill: regenerate all history snapshots with current configs ──────────
 function backfillHistory() {
   const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
+  const SCANNER_DIR_BF = path.join(ROOT, 'scanner');
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8'));
   const modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes;
   const results  = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
+
+  function addBizDaysBF(dateStr, n) {
+    let d = new Date(dateStr + 'T12:00:00Z');
+    let added = 0;
+    while (added < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) added++; }
+    return d.toISOString().slice(0, 10);
+  }
+  function bizDaysBetweenBF(from, to) {
+    let d = new Date(from + 'T12:00:00Z'), count = 0;
+    const end = new Date(to + 'T12:00:00Z');
+    while (d < end) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) count++; }
+    return count;
+  }
+
+  // Parse signals from scanner HTML for a given dateKey (YYYYMMDD)
+  const SF_BF = {
+    all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
+    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
+    no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
+  };
+  function parseScannerSignalsBF(dateKey) {
+    const htmlPath = path.join(SCANNER_DIR_BF, dateKey, 'index.html');
+    if (!fs.existsSync(htmlPath)) return [];
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    const signals = [];
+    const thesisMap = {};
+    const setupBlocks = html.match(/id="setup-([A-Z]{1,5})"[\s\S]*?(?=id="setup-[A-Z]|id="synthese|id="summary|$)/gi) || [];
+    for (const block of setupBlocks) {
+      const tm = block.match(/id="setup-([A-Z]{1,5})"/i);
+      const thM = block.match(/Investment Thesis<\/h4>\s*<p>([\s\S]*?)<\/p>/i);
+      if (tm && thM) {
+        let thesis = thM[1].replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+        if (thesis.length > 140) thesis = thesis.slice(0, 137).replace(/\s+\S*$/, '') + '…';
+        thesisMap[tm[1].toUpperCase()] = thesis;
+      }
+    }
+    const m = html.match(/id="(?:synthese|summary)"[\s\S]{0,15000}/);
+    if (m) {
+      const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+      for (const row of rows) {
+        const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || []).map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
+        if (cells.length < 4) continue;
+        const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
+        if (!ticker) continue;
+        const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
+        const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback|trend follow|defensive/i.test(c)) || '';
+        const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
+        const rr = cells.find(c => /1:\d/.test(c)) || '';
+        signals.push({ ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
+          entry: pf[0] || '—', stop: pf[1] || '—', tp1: pf[2] || '—', tp2: pf[3] || '—', rr,
+          thesis: thesisMap[ticker.trim()] || '' });
+      }
+    }
+    return signals.sort((a, b) => b.score - a.score);
+  }
 
   const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
   console.log(`Backfilling ${histFiles.length} history snapshots with current configs...`);
@@ -1414,19 +1470,19 @@ function backfillHistory() {
     const dateISO = `${dateKey.slice(0,4)}-${dateKey.slice(4,6)}-${dateKey.slice(6,8)}`;
     const existing = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
 
+    // Parse scanner signals for this date
+    const rawSignals = parseScannerSignalsBF(dateKey);
+
     const newModes = {};
     for (const [id, cfg] of Object.entries(modesCfg)) {
-      // Trades closed on or before this date
       const modeTrades = (allTrades[id] || []).filter(t => (t.scanDate || '') <= dateISO);
       if (!modeTrades.length) continue;
 
-      // Equity curve sliced to this date from frozen_ sweep data
+      // ── Equity curve sliced to this date from frozen_ sweep data ──
       const fullEC = frozenEC[id] || [];
       const slicedEC = fullEC.filter(pt => pt.date <= dateISO);
       const ecDates = slicedEC.map(pt => pt.date.slice(5).replace('-','/'));
       const ecVals  = slicedEC.map(pt => +pt.value.toFixed(2));
-
-      // Stats from sliced equity curve endpoint
       const retAtDate = slicedEC.length ? +(slicedEC[slicedEC.length-1].value - 100).toFixed(2) : 0;
       let peakEC = 100, maxDDEC = 0;
       for (const pt of slicedEC) {
@@ -1435,7 +1491,7 @@ function backfillHistory() {
         if (dd < maxDDEC) maxDDEC = dd;
       }
 
-      // Trade-level stats (WR, PF, trades, avgHold) from filtered backtest-trades
+      // ── Trade-level stats ──
       const wins   = modeTrades.filter(t => (t.pnlPct||0) > 0).length;
       const grossW = modeTrades.filter(t=>(t.pnlPct||0)>0).reduce((s,t)=>s+(t.pnlPct||0),0);
       const grossL = Math.abs(modeTrades.filter(t=>(t.pnlPct||0)<0).reduce((s,t)=>s+(t.pnlPct||0),0));
@@ -1443,11 +1499,57 @@ function backfillHistory() {
       const pf     = grossL > 0 ? +(grossW / grossL).toFixed(2) : 99;
       const avgHold= modeTrades.length ? +(modeTrades.reduce((s,t)=>s+(t.holdDays||0),0)/modeTrades.length).toFixed(1) : 0;
 
+      // ── Open positions on this date ──
+      // A trade is open if: scanDate <= D AND exitDate > D
+      const openTrades = modeTrades.filter(t => {
+        const exitDate = addBizDaysBF(t.scanDate, t.holdDays || cfg.horizon);
+        return exitDate > dateISO;
+      }).slice(-cfg.portfolioSize); // max portfolioSize most recent
+
+      const positions = openTrades.map(t => {
+        const daysHeld = bizDaysBetweenBF(t.scanDate, dateISO);
+        const daysRemaining = Math.max(0, cfg.horizon - daysHeld);
+        return {
+          ticker: t.ticker, scan_date: t.scanDate,
+          entry: +(t.actualEntry || 0), current_price: +(t.actualEntry || 0), // no historical prices
+          return_pct: 0, // can't compute without historical OHLC
+          stop: 0, tp1: 0, tp2: null,
+          days_remaining: daysRemaining, strategy: t.strategy, thesis: ''
+        };
+      });
+
+      // ── Signals for this mode (filtered + topN) ──
+      const filterFn = SF_BF[cfg.filterName] || (() => true);
+      const filteredSignals = rawSignals
+        .filter(s => filterFn(s.strategy || ''))
+        .filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+        .slice(0, cfg.topN)
+        .map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' }));
+
+      // ── Orders: signals not already in open positions, up to available slots ──
+      const openTickers = new Set(positions.map(p => p.ticker));
+      const timedOut = positions.filter(p => p.days_remaining <= 0);
+      const activePos = positions.filter(p => p.days_remaining > 0);
+      const slots = Math.max(0, cfg.portfolioSize - activePos.length);
+      const buyOrders = filteredSignals.filter(s => !openTickers.has(s.ticker)).slice(0, slots).map(s => ({ ...s, action: 'BUY' }));
+      const rotCands = [];
+      if (cfg.rotation === 'aggressive' && slots === 0 && activePos.length > 0 && filteredSignals.length > 0) {
+        const worst = [...activePos].sort((a, b) => a.return_pct - b.return_pct)[0];
+        for (const s of filteredSignals.filter(x => !openTickers.has(x.ticker)).slice(0, 5)) {
+          if (s.score >= 88) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker }); break; }
+        }
+      }
+
       const existing_mode = (existing.modes || {})[id] || {};
       newModes[id] = {
         ...existing_mode,
         stats: { ret: retAtDate, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold },
         equity: { d: ecDates, v: ecVals },
+        positions,
+        orders: [...buyOrders, ...rotCands],
+        closeNow: timedOut.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
+        expiresTomorrow: activePos.filter(p => p.days_remaining === 1).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
+        signals: filteredSignals,
         closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
         config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color },
       };
