@@ -864,7 +864,7 @@ async function main() {
     console.log('\n=== WALK-FORWARD VALIDATION (top 5 in-sample → out-of-sample) ===\n');
     for (const r of ranked.slice(0, 5)) {
       // Re-simulate on in-sample only
-      const wfKey = `${r.horizon}_${r.partialTP}_${r.trailingStop}_${r.maxStopPct || 0}_${r.atrStopMult || 0}_${r.dailyTrailPct || 0}`;
+      const wfKey = `${r.horizon}_${r.partialTP}_${r.partialTPPct || 0.5}_${r.trailingStop}_${r.maxStopPct || 0}_${r.atrStopMult || 0}_${r.dailyTrailPct || 0}_${r.breakevenPct || 0}_${r.staleDays || 0}`;
       const isTrades = (tradesByKey[wfKey] || [])
         .filter(t => inSampleDates.has(t.scanDate));
       const osTrades = (tradesByKey[wfKey] || [])

@@ -74,14 +74,24 @@ echo "📤 Step 6: Committing..."
 # Convention: scanner du soir = séance J+1 (prochain jour de trading ouvrable)
 # Lundi→Mardi, Mardi→Mercredi, ..., Vendredi→Lundi (skip weekend)
 _DOW=$(date '+%u')  # 1=Mon, 5=Fri, 6=Sat, 7=Sun
-if [ "$_DOW" -eq 5 ]; then
-  SCAN_DATE=$(date -d '+3 days' '+%Y%m%d')  # Vendredi soir → lundi
-elif [ "$_DOW" -eq 6 ]; then
-  SCAN_DATE=$(date -d '+2 days' '+%Y%m%d')  # Samedi → lundi
-elif [ "$_DOW" -eq 7 ]; then
-  SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')   # Dimanche → lundi
+if [[ "$(uname)" == "Darwin" ]]; then
+  if [ "$_DOW" -eq 5 ]; then
+    SCAN_DATE=$(date -v+3d '+%Y%m%d')
+  elif [ "$_DOW" -eq 6 ]; then
+    SCAN_DATE=$(date -v+2d '+%Y%m%d')
+  else
+    SCAN_DATE=$(date -v+1d '+%Y%m%d')
+  fi
 else
-  SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')   # Lun-Jeu → J+1
+  if [ "$_DOW" -eq 5 ]; then
+    SCAN_DATE=$(date -d '+3 days' '+%Y%m%d')
+  elif [ "$_DOW" -eq 6 ]; then
+    SCAN_DATE=$(date -d '+2 days' '+%Y%m%d')
+  elif [ "$_DOW" -eq 7 ]; then
+    SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')
+  else
+    SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')
+  fi
 fi
 TODAY=$(date '+%Y%m%d')  # Date réelle (pour commits/logs)
 echo "   Scan date (séance): $SCAN_DATE | Today: $TODAY"

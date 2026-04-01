@@ -9,6 +9,7 @@ const ROOT = path.join(__dirname, '..');
 const METRICS_FILE = path.join(ROOT, 'data', 'scanner-metrics.json');
 const POSITIONS_FILE = path.join(ROOT, 'data', 'scanner-positions.json');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
+const MODES_CONFIG_FILE = path.join(ROOT, 'data', 'modes-config.json');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -125,15 +126,21 @@ function extractTop3FromHTML(htmlPath) {
       const tp2M   = block.match(/[Tt]arget\s*2[\s\S]{0,50}\$([\d.,]+)/);
       const horizM = block.match(/[Hh]orizon[\s\S]{0,50}(\d+)[–\-](\d+)\s*[jd]/);
 
+      // Extract strategy
+      const stratMatch = block.match(/Strategy[\s\S]{0,50}?>([A-Za-z\s]+)</i) || 
+                         block.match(/class="[^"]*strategy[^"]*"[^>]*>([A-Za-z\s]+)</i);
+      const strategy = stratMatch ? stratMatch[1].trim() : 'Momentum';
+
       if (entryM && stopM && tp1M) {
         trades.push({
           ticker,
           score,
+          strategy,
           entry_str: entryM[1],
           stop_str: stopM[1],
           tp1_str: tp1M[1],
           tp2_str: tp2M ? tp2M[1] : null,
-          horizon_max: horizM ? parseInt(horizM[2]) : 20,
+          horizon_max: horizM ? parseInt(horizM[2]) : null,
         });
       }
     }
@@ -146,11 +153,12 @@ function extractTop3FromHTML(htmlPath) {
     .map(t => ({
       ticker: t.ticker,
       score: t.score,
+      strategy: t.strategy,
       entry: parseMidpoint(t.entry_str),
       stop: parseNumber(t.stop_str),
       tp1: parseNumber(t.tp1_str),
       tp2: parseNumber(t.tp2_str),
-      horizon_days: t.horizon_max || 20,
+      horizon_days: t.horizon_max, // Keep original if found
     }));
 }
 
@@ -169,6 +177,30 @@ function yahooTicker(t) {
 
 async function main() {
   const today = new Date().toISOString().slice(0, 10);
+
+  // Load config for default horizon (use max found in modes, usually 10)
+  let defaultHorizon = 10;
+  if (fs.existsSync(MODES_CONFIG_FILE)) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(MODES_CONFIG_FILE, 'utf8'));
+      const horizons = Object.values(cfg.modes).map(m => m.horizon).filter(Boolean);
+      if (horizons.length > 0) defaultHorizon = Math.max(...horizons);
+    } catch (e) { console.error('Error reading modes-config:', e.message); }
+  }
+  console.log(`Using default horizon: ${defaultHorizon} days`);
+
+  // Load existing positions to preserve status
+  const existingPositions = {};
+  if (fs.existsSync(POSITIONS_FILE)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(POSITIONS_FILE, 'utf8'));
+      if (data.open_positions) { // Named incorrectly in output but we track everything
+        data.open_positions.forEach(p => { existingPositions[p.id] = p; });
+      }
+    } catch (e) {}
+  }
+  // Try loading metrics too just in case it has un-filtered trades
+  const closedHistory = {}; // Store known exits
 
   // Get all scan dirs (YYYYMMDD, not retrospective)
   const scanDirs = fs.readdirSync(SCANNER_DIR)
@@ -200,9 +232,25 @@ async function main() {
 
     for (let i = 0; i < top3.length; i++) {
       const t = top3[i];
-      const expireDate = addBusinessDays(scanDate, t.horizon_days || 20);
+      const h = t.horizon_days || defaultHorizon;
+      const expireDate = addBusinessDays(scanDate, h);
+      const id = `${dir}-${t.ticker}-${i+1}`;
+      
+      // Preserve existing status if already closed
+      const existing = existingPositions[id];
+      if (existing && ['tp1', 'tp2', 'sl', 'expired'].includes(existing.status)) {
+        allTrades.push({
+          ...existing,
+          scan_date: scanDate, scan: dir, rank: i + 1,
+          strategy: t.strategy || existing.strategy || 'Momentum',
+          chart_url: `https://finviz.com/chart.ashx?t=${t.ticker}&ty=c&ta=1&p=d&s=l`,
+          horizon_days: h,
+        });
+        continue;
+      }
+
       allTrades.push({
-        id: `${dir}-${t.ticker}-${i+1}`,
+        id,
         scan_date: scanDate,
         scan: dir,
         rank: i + 1,
@@ -214,13 +262,13 @@ async function main() {
         stop: t.stop,
         tp1: t.tp1,
         tp2: t.tp2,
-        horizon_days: t.horizon_days || 20,
+        horizon_days: h,
         expire_date: expireDate,
-        status: 'open',
-        current_price: null,
-        exit_price: null,
-        exit_date: null,
-        pnl_pct: null,
+        status: existing ? existing.status : 'open',
+        current_price: existing ? existing.current_price : null,
+        exit_price: existing ? existing.exit_price : null,
+        exit_date: existing ? existing.exit_date : null,
+        pnl_pct: existing ? existing.pnl_pct : null,
       });
     }
   }
@@ -236,8 +284,13 @@ async function main() {
     console.log(`  ${tkr}: ${prices[tkr]}`);
   }
 
-  // Determine status for each trade
+  // Determine status for each trade (only if not already permanently closed)
   for (const trade of allTrades) {
+    // If already closed, don't re-calculate against current price
+    if (['tp1', 'tp2', 'sl', 'expired'].includes(trade.status) && trade.exit_price != null) {
+      continue;
+    }
+
     const price = prices[trade.ticker_yahoo];
     trade.current_price = price;
 
@@ -268,7 +321,8 @@ async function main() {
       trade.pnl_pct = +((price - trade.entry) / trade.entry * 100).toFixed(2);
     } else {
       trade.status = 'open';
-      trade.pnl_pct = +((price - trade.entry) / trade.entry * 100).toFixed(2);
+      const pnl = (price - trade.entry) / trade.entry * 100;
+      trade.pnl_pct = +pnl.toFixed(2);
     }
   }
 
