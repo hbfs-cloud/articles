@@ -131,11 +131,21 @@ function main() {
     // Stats computed from CLOSED trades only (non-premature) — matches backfill convention
     const closedTrades = trades.filter(t => !t._premature);
     const m = computeMetrics(closedTrades, cfg.portfolioSize);
-    // Override DD with daily MtM DD from sweep.js if available
+    // Override all stats with authoritative frozen_ values from sweep (daily MtM)
     const frozenKey = `frozen_${id}`;
-    if (results[frozenKey]) {
-      m.dd = results[frozenKey].maxDD;
-      m.ret = results[frozenKey].returnTotal;
+    const frozen = results[frozenKey];
+    if (frozen) {
+      m.ret = frozen.returnTotal;
+      m.dd = frozen.maxDD;
+      if (frozen.winRate !== undefined) m.wr = frozen.winRate;
+      if (frozen.profitFactor !== undefined) m.pf = frozen.profitFactor;
+      if (frozen.trades !== undefined) m.trades = frozen.trades;
+      if (frozen.equityCurve && frozen.equityCurve.length > 0) {
+        // Trim flat tail (post-backtest plateau where price data ran out)
+        const ec = [...frozen.equityCurve];
+        while (ec.length > 1 && ec[ec.length - 1].value === ec[ec.length - 2].value) ec.pop();
+        m.equityCurve = ec;
+      }
     }
     modes[id] = { cfg, trades, m, ec: equityDV(m.equityCurve) };
   }
@@ -228,22 +238,24 @@ function main() {
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
+      <span style="font-size:.72rem;color:#64748b;margin-left:.5rem">${cfg.goal}${cfg.riskProfile ? ' · ' + cfg.riskProfile + ' risk' : ''}</span>
     </summary>
+    <div style="margin-top:.75rem;padding:.6rem .85rem;background:${cfg.color}08;border-left:3px solid ${cfg.color};border-radius:0 6px 6px 0;font-size:.82rem;color:#334155">
+      ${cfg.tagline || ''}
+    </div>
     <div class="method-steps" style="margin-top:.85rem">
-      <div class="step" style="background:${cfg.color}08;border:1px solid ${cfg.color}20;border-radius:8px;padding:.65rem .9rem">
-        <span class="step-n" style="background:${cfg.color}"><i class="fas fa-star" style="font-size:.5rem"></i></span>
-        <div><b>Starting today?</b> Follow the new signals from tonight's scan — you'll hold the <b>same positions as the system within ${cfg.horizon} trading days</b> (&#8776;&nbsp;${Math.ceil(cfg.horizon * 1.4)} calendar days). Until then, skip positions you don't hold and focus only on open slots.</div>
-      </div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div><b>Every evening</b>, check the signals below. These are the <b>top ${cfg.topN}</b> from today's scan${cfg.filterName !== 'all' ? ', filtered to ' + filterLabel(cfg.filterName) : ''}.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At market open</b> (3:30&thinsp;PM Paris / 9:30&thinsp;AM NY), place a <b>limit order</b> within the entry range. Allocate <b>${alloc}%</b> of capital per position.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set the <b>stop loss</b> and <b>take profit</b> as indicated. Don't touch anything.</div></div>
-      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>Close when: <b>TP hit</b>, <b>stop triggered</b>, or after <b>${cfg.horizon} trading days</b> — whichever comes first.${cfg.partialTP ? ' If TP1 hit: sell 50%, move stop to breakeven.' : ''}</div></div>
-      ${cfg.rotation !== 'none' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div><b>Rotation</b>: if a new signal scores higher than your weakest position (score &#8805; 88 vs return &lt; 2%), replace it.</div></div>` : ''}
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName !== 'all' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div>Next morning at market open (<b>9:30 AM New York / 3:30 PM Paris</b>), buy the stock. Put <b>${alloc}% of your total money</b> into each trade. You can have up to <b>${cfg.portfolioSize} trades open at the same time</b>.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>As soon as your order fills, set two orders: a <b>stop loss</b> (to limit your loss if the trade goes wrong) and a <b>take profit</b> (to lock in gains). The levels are shown on the signal card.${cfg.maxStopPct > 0 ? ` Your stop is always within <b>${cfg.maxStopPct}%</b> of your entry price — that's your worst-case loss per trade.` : cfg.atrStopMult > 0 ? ' Your stop adapts to each stock\'s volatility (wider for volatile stocks, tighter for calm ones).' : ''}</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct||0.7)*100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1-(cfg.partialTPPct||0.7))*100)}% run toward TP2. Move your stop to your entry price (you can't lose money on this trade anymore).` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7/5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.</div></div>
+      ${cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ 88) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : ''}
     </div>
     <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} positions max</span>
-      <span><i class="fas fa-calendar-days"></i> ${cfg.horizon}-day horizon</span>
-      <span><i class="fas fa-filter"></i> ${filterLabel(cfg.filterName)}</span>
+      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} trades max · ${alloc}% each</span>
+      <span><i class="fas fa-calendar-days"></i> Close after ${cfg.horizon} trading days</span>
+      ${cfg.maxStopPct > 0 ? `<span><i class="fas fa-shield-halved"></i> Hard stop at −${cfg.maxStopPct}%</span>` : ''}
+      ${cfg.partialTP ? `<span><i class="fas fa-scissors"></i> Sell ${Math.round((cfg.partialTPPct||0.7)*100)}% at TP1</span>` : ''}
     </div>
   </details>
 </div>
@@ -979,12 +991,14 @@ document.addEventListener('DOMContentLoaded',function(){
     activeMode=id;
     document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.dataset.mode===id)});
     document.querySelectorAll('.mode-panel').forEach(function(p){p.style.display=p.id==='p-'+id?'':'none'});
-    // Init chart if not yet rendered
     var chartEl=document.getElementById('chart-'+id);
-    if(chartEl&&!echarts.getInstanceByDom(chartEl)){
-      var cfg=modeCharts[id];
-      if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);
+    if(chartEl){
+      var inst=echarts.getInstanceByDom(chartEl);
+      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
+      else{inst.resize();}
     }
+    // If Time Machine is active, reload snapshot for new mode
+    if(tmDates.length&&tmCurrentIdx<tmDates.length-1){tmLoadIdx(tmCurrentIdx);}
   };
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   // Save original live content on first TM use
@@ -1000,6 +1014,7 @@ document.addEventListener('DOMContentLoaded',function(){
       var id=p.id.replace('p-','');
       if(tmLiveHTML[id]){
         p.innerHTML=tmLiveHTML[id];
+        p.style.minHeight='';p.style.opacity='';p.style.transition='';
         var chartEl=document.getElementById('chart-'+id);
         if(chartEl){
           var old=echarts.getInstanceByDom(chartEl);
