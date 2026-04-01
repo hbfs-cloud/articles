@@ -9,7 +9,6 @@ const ROOT = path.join(__dirname, '..');
 const METRICS_FILE = path.join(ROOT, 'data', 'scanner-metrics.json');
 const POSITIONS_FILE = path.join(ROOT, 'data', 'scanner-positions.json');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
-const MODES_CONFIG_FILE = path.join(ROOT, 'data', 'modes-config.json');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -70,7 +69,7 @@ function extractTop3FromHTML(htmlPath) {
   // The table has pattern: rank ticker strategy region score entry stop tp1 rr
   // Using a broad regex to find setup blocks
   const synthMatch = html.match(/id="synthese"[\s\S]*?<\/section>/i) ||
-                     html.match(/id="synthese"[\s\S]{0,20000}/i);
+    html.match(/id="synthese"[\s\S]{0,20000}/i);
 
   if (synthMatch) {
     const synthHtml = synthMatch[0];
@@ -86,21 +85,25 @@ function extractTop3FromHTML(htmlPath) {
       const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
       // Price fields: cells starting with $ followed by digits
       const priceFields = cells.filter(c => /^\$[\d.]/.test(c.trim()));
-      
+
       // Strategy extraction
       const stratMap = ['Momentum', 'Breakout', 'Squeeze', 'Pullback', 'Reversal'];
       const strategy = cells.find(c => stratMap.some(s => c.includes(s))) || 'Momentum';
 
       if (priceFields.length >= 4) {
         // Full format: entry | stop | tp1 | tp2
-        trades.push({ ticker: ticker.trim(), score: score||85, strategy,
+        trades.push({
+          ticker: ticker.trim(), score: score || 85, strategy,
           entry_str: priceFields[0], stop_str: priceFields[1],
-          tp1_str: priceFields[2], tp2_str: priceFields[3] });
+          tp1_str: priceFields[2], tp2_str: priceFields[3]
+        });
       } else if (priceFields.length === 3) {
         // entry | stop | tp1 (no tp2)
-        trades.push({ ticker: ticker.trim(), score: score||85, strategy,
+        trades.push({
+          ticker: ticker.trim(), score: score || 85, strategy,
           entry_str: priceFields[0], stop_str: priceFields[1],
-          tp1_str: priceFields[2], tp2_str: null });
+          tp1_str: priceFields[2], tp2_str: null
+        });
       }
       // Skip rows with only 2 price fields (entry+tp1, no stop) — untrackable
     }
@@ -116,31 +119,25 @@ function extractTop3FromHTML(htmlPath) {
 
       // Extract score from gauge
       const scoreMatch = block.match(/["']score["'][\s\S]{0,200}?([\d]{2,3})/i) ||
-                         block.match(/Score[\s\S]{0,100}?(9[0-9]|8[5-9]|7[0-9])/);
+        block.match(/Score[\s\S]{0,100}?(9[0-9]|8[5-9]|7[0-9])/);
       const score = scoreMatch ? parseFloat(scoreMatch[1]) : 85;
 
       // Extract levels
       const entryM = block.match(/[Ee]ntr[eé][e]?[\s\S]{0,50}\$([\d.,–\-]+)/);
-      const stopM  = block.match(/[Ss]top[\s\S]{0,50}\$([\d.,]+)/);
-      const tp1M   = block.match(/[Tt]arget\s*1[\s\S]{0,50}\$([\d.,]+)/);
-      const tp2M   = block.match(/[Tt]arget\s*2[\s\S]{0,50}\$([\d.,]+)/);
+      const stopM = block.match(/[Ss]top[\s\S]{0,50}\$([\d.,]+)/);
+      const tp1M = block.match(/[Tt]arget\s*1[\s\S]{0,50}\$([\d.,]+)/);
+      const tp2M = block.match(/[Tt]arget\s*2[\s\S]{0,50}\$([\d.,]+)/);
       const horizM = block.match(/[Hh]orizon[\s\S]{0,50}(\d+)[–\-](\d+)\s*[jd]/);
-
-      // Extract strategy
-      const stratMatch = block.match(/Strategy[\s\S]{0,50}?>([A-Za-z\s]+)</i) || 
-                         block.match(/class="[^"]*strategy[^"]*"[^>]*>([A-Za-z\s]+)</i);
-      const strategy = stratMatch ? stratMatch[1].trim() : 'Momentum';
 
       if (entryM && stopM && tp1M) {
         trades.push({
           ticker,
           score,
-          strategy,
           entry_str: entryM[1],
           stop_str: stopM[1],
           tp1_str: tp1M[1],
           tp2_str: tp2M ? tp2M[1] : null,
-          horizon_max: horizM ? parseInt(horizM[2]) : null,
+          horizon_max: horizM ? parseInt(horizM[2]) : 20,
         });
       }
     }
@@ -153,12 +150,11 @@ function extractTop3FromHTML(htmlPath) {
     .map(t => ({
       ticker: t.ticker,
       score: t.score,
-      strategy: t.strategy,
       entry: parseMidpoint(t.entry_str),
       stop: parseNumber(t.stop_str),
       tp1: parseNumber(t.tp1_str),
       tp2: parseNumber(t.tp2_str),
-      horizon_days: t.horizon_max, // Keep original if found
+      horizon_days: t.horizon_max || 20,
     }));
 }
 
@@ -178,36 +174,12 @@ function yahooTicker(t) {
 async function main() {
   const today = new Date().toISOString().slice(0, 10);
 
-  // Load config for default horizon (use max found in modes, usually 10)
-  let defaultHorizon = 10;
-  if (fs.existsSync(MODES_CONFIG_FILE)) {
-    try {
-      const cfg = JSON.parse(fs.readFileSync(MODES_CONFIG_FILE, 'utf8'));
-      const horizons = Object.values(cfg.modes).map(m => m.horizon).filter(Boolean);
-      if (horizons.length > 0) defaultHorizon = Math.max(...horizons);
-    } catch (e) { console.error('Error reading modes-config:', e.message); }
-  }
-  console.log(`Using default horizon: ${defaultHorizon} days`);
-
-  // Load existing positions to preserve status
-  const existingPositions = {};
-  if (fs.existsSync(POSITIONS_FILE)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(POSITIONS_FILE, 'utf8'));
-      if (data.open_positions) { // Named incorrectly in output but we track everything
-        data.open_positions.forEach(p => { existingPositions[p.id] = p; });
-      }
-    } catch (e) {}
-  }
-  // Try loading metrics too just in case it has un-filtered trades
-  const closedHistory = {}; // Store known exits
-
   // Get all scan dirs (YYYYMMDD, not retrospective)
   const scanDirs = fs.readdirSync(SCANNER_DIR)
     .filter(d => /^\d{8}(-\d+)?$/.test(d))
     .filter(d => {
       const dateStr = d.slice(0, 8);
-      const scanDate = new Date(dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8));
+      const scanDate = new Date(dateStr.slice(0, 4) + '-' + dateStr.slice(4, 6) + '-' + dateStr.slice(6, 8));
       const cutoff = new Date(today);
       cutoff.setDate(cutoff.getDate() - 35);
       return scanDate >= cutoff;
@@ -221,7 +193,7 @@ async function main() {
   for (const dir of scanDirs) {
     const htmlPath = path.join(SCANNER_DIR, dir, 'index.html');
     const dateStr = dir.slice(0, 8);
-    const scanDate = `${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}`;
+    const scanDate = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 
     const top3 = extractTop3FromHTML(htmlPath);
     if (top3.length === 0) {
@@ -232,25 +204,9 @@ async function main() {
 
     for (let i = 0; i < top3.length; i++) {
       const t = top3[i];
-      const h = t.horizon_days || defaultHorizon;
-      const expireDate = addBusinessDays(scanDate, h);
-      const id = `${dir}-${t.ticker}-${i+1}`;
-      
-      // Preserve existing status if already closed
-      const existing = existingPositions[id];
-      if (existing && ['tp1', 'tp2', 'sl', 'expired'].includes(existing.status)) {
-        allTrades.push({
-          ...existing,
-          scan_date: scanDate, scan: dir, rank: i + 1,
-          strategy: t.strategy || existing.strategy || 'Momentum',
-          chart_url: `https://finviz.com/chart.ashx?t=${t.ticker}&ty=c&ta=1&p=d&s=l`,
-          horizon_days: h,
-        });
-        continue;
-      }
-
+      const expireDate = addBusinessDays(scanDate, t.horizon_days || 20);
       allTrades.push({
-        id,
+        id: `${dir}-${t.ticker}-${i + 1}`,
         scan_date: scanDate,
         scan: dir,
         rank: i + 1,
@@ -262,13 +218,13 @@ async function main() {
         stop: t.stop,
         tp1: t.tp1,
         tp2: t.tp2,
-        horizon_days: h,
+        horizon_days: t.horizon_days || 20,
         expire_date: expireDate,
-        status: existing ? existing.status : 'open',
-        current_price: existing ? existing.current_price : null,
-        exit_price: existing ? existing.exit_price : null,
-        exit_date: existing ? existing.exit_date : null,
-        pnl_pct: existing ? existing.pnl_pct : null,
+        status: 'open',
+        current_price: null,
+        exit_price: null,
+        exit_date: null,
+        pnl_pct: null,
       });
     }
   }
@@ -284,13 +240,8 @@ async function main() {
     console.log(`  ${tkr}: ${prices[tkr]}`);
   }
 
-  // Determine status for each trade (only if not already permanently closed)
+  // Determine status for each trade
   for (const trade of allTrades) {
-    // If already closed, don't re-calculate against current price
-    if (['tp1', 'tp2', 'sl', 'expired'].includes(trade.status) && trade.exit_price != null) {
-      continue;
-    }
-
     const price = prices[trade.ticker_yahoo];
     trade.current_price = price;
 
@@ -321,22 +272,21 @@ async function main() {
       trade.pnl_pct = +((price - trade.entry) / trade.entry * 100).toFixed(2);
     } else {
       trade.status = 'open';
-      const pnl = (price - trade.entry) / trade.entry * 100;
-      trade.pnl_pct = +pnl.toFixed(2);
+      trade.pnl_pct = +((price - trade.entry) / trade.entry * 100).toFixed(2);
     }
   }
 
   // ── Metrics ──
-  const closed = allTrades.filter(t => ['tp1','tp2','sl','expired'].includes(t.status));
-  const open   = allTrades.filter(t => t.status === 'open');
-  const tp1c   = allTrades.filter(t => t.status === 'tp1').length;
-  const tp2c   = allTrades.filter(t => t.status === 'tp2').length;
-  const slc    = allTrades.filter(t => t.status === 'sl').length;
-  const expc   = allTrades.filter(t => t.status === 'expired').length;
-  const wins   = closed.filter(t => ['tp1','tp2'].includes(t.status));
-  const losses = closed.filter(t => ['sl','expired'].includes(t.status) && t.pnl_pct < 0);
+  const closed = allTrades.filter(t => ['tp1', 'tp2', 'sl', 'expired'].includes(t.status));
+  const open = allTrades.filter(t => t.status === 'open');
+  const tp1c = allTrades.filter(t => t.status === 'tp1').length;
+  const tp2c = allTrades.filter(t => t.status === 'tp2').length;
+  const slc = allTrades.filter(t => t.status === 'sl').length;
+  const expc = allTrades.filter(t => t.status === 'expired').length;
+  const wins = closed.filter(t => ['tp1', 'tp2'].includes(t.status));
+  const losses = closed.filter(t => ['sl', 'expired'].includes(t.status) && t.pnl_pct < 0);
 
-  const FRACTION = 1/30;
+  const FRACTION = 1 / 30;
   const cutoff30 = new Date(today); cutoff30.setDate(cutoff30.getDate() - 30);
   const closed30 = closed.filter(t => t.exit_date && new Date(t.exit_date) >= cutoff30);
   // return_30d = weighted portfolio return: each trade contributes pnl_pct * (1/30)
@@ -354,7 +304,7 @@ async function main() {
   // Max drawdown — sur tous trades (closed + open MtM), triés par date d'entrée
   const allSorted = [...allTrades]
     .filter(t => t.scan_date && t.pnl_pct != null)
-    .sort((a,b) => a.scan_date.localeCompare(b.scan_date));
+    .sort((a, b) => a.scan_date.localeCompare(b.scan_date));
   let running = 0, peak = 0, maxDD = 0;
   for (const t of allSorted) {
     running += (t.pnl_pct || 0) * FRACTION;
@@ -367,8 +317,8 @@ async function main() {
   const entered = open.filter(t => t.current_price && t.entry && t.current_price >= t.entry * 0.98);
   const pending = open.filter(t => t.current_price && t.entry && t.current_price < t.entry * 0.98);
   const workingCapitalPct = +Math.min(100, +(entered.length * FRACTION * 100).toFixed(1));
-  const pendingOrdersPct  = +Math.min(100 - workingCapitalPct, +(pending.length * FRACTION * 100).toFixed(1));
-  const availableCashPct  = +Math.max(0, 100 - workingCapitalPct - pendingOrdersPct).toFixed(1);
+  const pendingOrdersPct = +Math.min(100 - workingCapitalPct, +(pending.length * FRACTION * 100).toFixed(1));
+  const availableCashPct = +Math.max(0, 100 - workingCapitalPct - pendingOrdersPct).toFixed(1);
 
   // ── Return total depuis D0 (all trades, not just 30d) ──
   const returnTotal = +(allSorted.reduce((s, t) => s + (t.pnl_pct || 0) * FRACTION, 0)).toFixed(2);
@@ -414,8 +364,8 @@ async function main() {
     return_total: returnTotal,
     max_drawdown: +(-maxDD).toFixed(2),
     profit_factor: profitFactor,
-    avg_win_pct: wins.length ? +(wins.reduce((s,t)=>s+(t.pnl_pct||0),0)/wins.length).toFixed(2) : 0,
-    avg_loss_pct: losses.length ? +(losses.reduce((s,t)=>s+(t.pnl_pct||0),0)/losses.length).toFixed(2) : 0,
+    avg_win_pct: wins.length ? +(wins.reduce((s, t) => s + (t.pnl_pct || 0), 0) / wins.length).toFixed(2) : 0,
+    avg_loss_pct: losses.length ? +(losses.reduce((s, t) => s + (t.pnl_pct || 0), 0) / losses.length).toFixed(2) : 0,
     working_capital_pct: workingCapitalPct,
     pending_orders_pct: pendingOrdersPct,
     available_cash_pct: availableCashPct,
@@ -433,14 +383,14 @@ async function main() {
       const ret = +((t.current_price - t.entry) / t.entry * 100).toFixed(2);
       const daysLeft = Math.max(0, Math.ceil((new Date(t.expire_date) - new Date(today)) / 86400000));
       const toTP1 = t.tp1 ? +((t.tp1 - t.current_price) / t.current_price * 100).toFixed(1) : null;
-      const toSL  = t.stop ? +((t.current_price - t.stop) / t.current_price * 100).toFixed(1) : null;
+      const toSL = t.stop ? +((t.current_price - t.stop) / t.current_price * 100).toFixed(1) : null;
       let signal, status_label;
-      if (ret >= 5)          { signal = 'green';  status_label = '🟢 En route TP1'; }
-      else if (ret >= 2)     { signal = 'green';  status_label = '🟢 Positif'; }
+      if (ret >= 5) { signal = 'green'; status_label = '🟢 En route TP1'; }
+      else if (ret >= 2) { signal = 'green'; status_label = '🟢 Positif'; }
       else if (toTP1 && toTP1 < 3) { signal = 'green'; status_label = '🎯 TP1 proche'; }
-      else if (toSL && toSL < 3)   { signal = 'red';   status_label = '🔴 Vers SL'; }
-      else if (ret < -2)     { signal = 'red';    status_label = '🔴 Sous eau'; }
-      else                   { signal = 'yellow'; status_label = '🟡 Neutre'; }
+      else if (toSL && toSL < 3) { signal = 'red'; status_label = '🔴 Vers SL'; }
+      else if (ret < -2) { signal = 'red'; status_label = '🔴 Sous eau'; }
+      else { signal = 'yellow'; status_label = '🟡 Neutre'; }
       return {
         id: t.id, ticker: t.ticker, scan_date: t.scan_date,
         entry: t.entry, current_price: t.current_price,
@@ -449,7 +399,7 @@ async function main() {
         strategy: t.strategy,
         chart_url: t.chart_url, signal, status_label,
         to_tp1_pct: toTP1, to_sl_pct: toSL,
-        progress_pct: t.tp1 && t.stop ? +Math.min(100,Math.max(0,(t.current_price-t.stop)/(t.tp1-t.stop)*100)).toFixed(0) : 0,
+        progress_pct: t.tp1 && t.stop ? +Math.min(100, Math.max(0, (t.current_price - t.stop) / (t.tp1 - t.stop) * 100)).toFixed(0) : 0,
       };
     })
     .sort((a, b) => b.return_pct - a.return_pct);

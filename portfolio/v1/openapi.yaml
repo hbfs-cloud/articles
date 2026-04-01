@@ -3,18 +3,28 @@ info:
   title: DailyTickers Portfolio API
   version: "1.0.0"
   description: >
-    Free JSON endpoints to replicate the DailyTickers scanner portfolio.
+    Free JSON endpoints to replicate the DailyTickers 3 specialized scanner portfolios (Balanced, Dynamic, Secured).
     Updated every trading session (~23:00 UTC weekdays). No authentication required.
   contact:
     url: https://articles.dailytickers.com/integrations/portfolio/
 servers:
-  - url: https://articles.dailytickers.com/portfolio/v1
+  - url: https://articles.dailytickers.com/portfolio/v1/{mode}
+    description: Mode-specific endpoints
+    variables:
+      mode:
+        default: ""
+        enum:
+          - ""
+          - "balanced"
+          - "dynamic"
+          - "secured"
+        description: Portfolio mode (leave empty for balanced/default)
 
 paths:
   /signals.json:
     get:
       summary: Latest scanner signals
-      description: Current scan picks with entry, stop, and target levels.
+      description: Current scan picks with entry, stop, and target levels for the selected mode.
       responses:
         "200":
           description: Current scan picks with levels
@@ -25,6 +35,7 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
+                  mode: { type: string, example: "balanced" }
                   signals:
                     type: array
                     items:
@@ -33,7 +44,7 @@ paths:
   /positions.json:
     get:
       summary: Open positions with live P&L
-      description: Current open positions with entry, current price, return %, and days remaining.
+      description: Current open positions for the selected mode with entry, current price, return %, and days remaining.
       responses:
         "200":
           description: Current open positions
@@ -44,6 +55,7 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
+                  mode: { type: string, example: "balanced" }
                   positions:
                     type: array
                     items:
@@ -52,7 +64,7 @@ paths:
   /trades.json:
     get:
       summary: Closed trade history
-      description: All closed trades with P&L%, hold days, and exit reason.
+      description: All closed trades for the selected mode with P&L%, hold days, and exit reason.
       responses:
         "200":
           description: All closed trades
@@ -62,6 +74,7 @@ paths:
                 type: object
                 properties:
                   updatedAt: { type: string, format: date-time }
+                  mode: { type: string, example: "balanced" }
                   trades:
                     type: array
                     items:
@@ -70,16 +83,17 @@ paths:
   /equity.json:
     get:
       summary: Portfolio stats and equity curve
-      description: Backtest statistics (return, drawdown, win rate, profit factor) and equity curve data points.
+      description: Simulation statistics (return, drawdown, win rate, profit factor) and equity curve data points for the selected mode.
       responses:
         "200":
-          description: Backtest statistics and equity curve
+          description: Statistics and equity curve
           content:
             application/json:
               schema:
                 type: object
                 properties:
                   updatedAt: { type: string, format: date-time }
+                  mode: { type: string, example: "balanced" }
                   config:
                     $ref: "#/components/schemas/Config"
                   stats:
@@ -90,7 +104,7 @@ paths:
   /orders.json:
     get:
       summary: Buy/rotate orders to place
-      description: Orders to execute at next market open based on available portfolio slots and signal strength.
+      description: Orders to execute at next market open for the selected mode based on available slots and signal strength.
       responses:
         "200":
           description: Orders to execute at next market open
@@ -101,6 +115,7 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
+                  mode: { type: string, example: "balanced" }
                   orders:
                     type: array
                     items:
@@ -109,7 +124,7 @@ paths:
   /actions.json:
     get:
       summary: Positions requiring action (close or check)
-      description: Positions that have exceeded their horizon (close now) or expire tomorrow (review needed).
+      description: Positions in the selected mode that have exceeded their horizon (close now) or expire tomorrow (review needed).
       responses:
         "200":
           description: Expired and expiring positions
@@ -120,6 +135,7 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
+                  mode: { type: string, example: "balanced" }
                   closeNow:
                     type: array
                     description: Horizon expired — exit at market open
@@ -147,6 +163,7 @@ paths:
                 properties:
                   updatedAt: { type: string, format: date-time }
                   date: { type: string, format: date }
+                  mode: { type: string, example: "balanced" }
                   config: { $ref: "#/components/schemas/Config" }
                   stats: { $ref: "#/components/schemas/Stats" }
                   equityCurve: { $ref: "#/components/schemas/EquityCurve" }
@@ -237,20 +254,37 @@ components:
     Config:
       type: object
       properties:
-        portfolioSize: { type: integer, example: 4 }
+        label: { type: string, example: "Balanced" }
+        color: { type: string, example: "#059669" }
+        goal: { type: string, example: "Risk-Adjusted Growth" }
+        riskProfile: { type: string, enum: [Low, Medium, High] }
+        portfolioSize: { type: integer, example: 2 }
+        topN: { type: integer, example: 1 }
+        minScore: { type: integer, example: 85 }
         horizon: { type: integer, example: 5 }
-        filterName: { type: string, example: "all" }
-        rotation: { type: string, example: "aggressive" }
+        filterName: { type: string, example: "breakout_only" }
+        rotation: { type: string, example: "daily_max1" }
+        partialTP: { type: boolean }
+        trailingStop: { type: boolean }
+        maxStopPct: { type: number }
+        atrStopMult: { type: number }
+        dailyTrailPct: { type: number }
+        breakevenPct: { type: number }
 
     Stats:
       type: object
       properties:
-        ret: { type: number, description: "Total return %", example: 21.08 }
-        dd: { type: number, description: "Max drawdown %", example: -2.72 }
+        ret: { type: number, description: "Total cumulative return %", example: 45.2 }
+        dd: { type: number, description: "Max drawdown %", example: -3.8 }
         wr: { type: number, description: "Win rate %", example: 68.2 }
-        pf: { type: number, description: "Profit factor", example: 4.03 }
+        pf: { type: number, description: "Profit factor", example: 2.15 }
+        rr: { type: number, description: "Reward/Risk ratio", example: 1.6 }
         trades: { type: integer, example: 22 }
+        avgWin: { type: number }
+        avgLoss: { type: number }
         avgHold: { type: number, description: "Average hold days", example: 4.2 }
+        score: { type: number, description: "Composite score (0-100)", example: 88.5 }
+        r2: { type: number, description: "Linearity (equity curve quality)", example: 0.94 }
 
     EquityCurve:
       type: object

@@ -94,12 +94,12 @@
 <!-- Hero -->
 <div class="api-hero">
   <h1><i class="fas fa-chart-line" style="opacity:0.55;margin-right:0.4rem;"></i>Portfolio Replication</h1>
-  <p>Free JSON endpoints to replicate the scanner portfolio. Updated every trading session (~23:00 UTC weekdays).</p>
+  <p>Free JSON endpoints to replicate our 3 specialized scanner strategies. Updated every trading session (~23:00 UTC weekdays).</p>
   <div class="hero-badges">
     <span class="hero-badge"><i class="fas fa-circle-dot" style="color:#10b981;margin-right:4px;"></i>Live</span>
     <span class="hero-badge">No auth</span>
-    <span class="hero-badge">7 endpoints</span>
-    <span class="hero-badge">Nightly refresh</span>
+    <span class="hero-badge">22 endpoints</span>
+    <span class="hero-badge">Multi-mode</span>
   </div>
 </div>
 
@@ -113,23 +113,31 @@
     <div class="step-card">
       <div class="step-num">1</div>
       <h4>Fetch signals</h4>
-      <p>Call <code>/portfolio/v1/signals.json</code> after each evening scan to get the latest picks with entry, stop, and target levels.</p>
+      <p>Call <code>/portfolio/v1/{mode}/signals.json</code> after the scan to get picks with entry, stop, and target levels.</p>
     </div>
     <div class="step-card">
       <div class="step-num">2</div>
       <h4>Track positions</h4>
-      <p>Use <code>/portfolio/v1/positions.json</code> to see current open positions with live P&amp;L and days remaining.</p>
+      <p>Use <code>/portfolio/v1/{mode}/positions.json</code> to see current open positions with live P&amp;L and days remaining.</p>
     </div>
     <div class="step-card">
       <div class="step-num">3</div>
-      <h4>Replicate</h4>
-      <p>Equal-weight allocation (25% per position, 4 slots). Follow entry range, set stop and TP. Close after 5 trading days max.</p>
+      <h4>Allocation</h4>
+      <p><b>Dynamic</b>: 1 slot (100%).<br><b>Balanced</b>: 2 slots (50% ea).<br><b>Secured</b>: 10 slots (10% ea).</p>
     </div>
   </div>
 
   <!-- ══ Live Endpoints ══ -->
   <div class="api-section">
-    <h2 class="api-section-title"><i class="fas fa-server"></i>Endpoints <span style="font-size:.72rem;font-weight:400;color:#64748b;margin-left:4px;">(live data)</span></h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:1rem;">
+      <h2 class="api-section-title" style="margin:0;"><i class="fas fa-server"></i>Endpoints</h2>
+      <div class="mode-selector" style="display:flex;background:#f1f5f9;padding:4px;border-radius:10px;gap:4px;">
+        <button class="mode-tab active" data-mode="balanced" onclick="setMode('balanced')" style="border:none;background:transparent;padding:6px 14px;border-radius:7px;font-size:0.75rem;font-weight:700;color:#64748b;cursor:pointer;transition:all .2s;">Balanced</button>
+        <button class="mode-tab" data-mode="dynamic" onclick="setMode('dynamic')" style="border:none;background:transparent;padding:6px 14px;border-radius:7px;font-size:0.75rem;font-weight:700;color:#64748b;cursor:pointer;transition:all .2s;">Dynamic</button>
+        <button class="mode-tab" data-mode="secured" onclick="setMode('secured')" style="border:none;background:transparent;padding:6px 14px;border-radius:7px;font-size:0.75rem;font-weight:700;color:#64748b;cursor:pointer;transition:all .2s;">Secured</button>
+      </div>
+    </div>
+    <p id="mode-desc" style="font-size:0.82rem;color:#64748b;margin:-0.5rem 0 1.5rem;">Default conservative strategy with 2 slots and balanced risk/reward parameters.</p>
   </div>
 
   <div class="ep-card" id="ep-signals">
@@ -300,33 +308,58 @@ function syntaxHL(json) {
 }
 
 var BASE = '/portfolio/v1/';
+var activeMode = 'balanced';
 var endpoints = ['signals', 'positions', 'trades', 'equity', 'orders', 'actions', 'all'];
 
-endpoints.forEach(function(ep) {
-  fetch(BASE + ep + '.json')
-    .then(function(r) {
-      var dot = document.getElementById('dot-' + ep);
-      var st = document.getElementById('status-' + ep);
-      if (!r.ok) {
+function setMode(mode) {
+  activeMode = mode;
+  document.querySelectorAll('.mode-tab').forEach(function(t) {
+    t.classList.toggle('active', t.dataset.mode === mode);
+    if(t.classList.contains('active')) t.style.background = '#fff', t.style.color = '#0f172a', t.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+    else t.style.background = 'transparent', t.style.color = '#64748b', t.style.boxShadow = 'none';
+  });
+  
+  var descs = {
+    balanced: 'Default conservative strategy with 2 slots and balanced risk/reward parameters.',
+    dynamic: 'Aggressive growth strategy with 1 slot (100% allocation per setup) and tighter stops.',
+    secured: 'Capital preservation strategy with 10 slots (10% allocation) and wide-basket diversification.'
+  };
+  document.getElementById('mode-desc').textContent = descs[mode];
+
+  var prefix = mode === 'balanced' ? '' : mode + '/';
+  
+  endpoints.forEach(function(ep) {
+    var pathEl = document.querySelector('#ep-' + ep + ' .ep-path');
+    if(pathEl) pathEl.textContent = BASE + prefix + ep + '.json';
+    
+    fetch(BASE + prefix + ep + '.json')
+      .then(function(r) {
+        var dot = document.getElementById('dot-' + ep);
+        var st = document.getElementById('status-' + ep);
+        if (!r.ok) {
+          dot.className = 'dot err';
+          st.textContent = r.status + ' ' + r.statusText;
+          return null;
+        }
+        dot.className = 'dot ok';
+        st.textContent = '200 OK — ' + (r.headers.get('content-length') || '?') + ' bytes';
+        return r.json();
+      })
+      .then(function(data) {
+        if (!data) return;
+        document.getElementById('json-' + ep).innerHTML = syntaxHL(data);
+      })
+      .catch(function(err) {
+        var dot = document.getElementById('dot-' + ep);
+        var st = document.getElementById('status-' + ep);
         dot.className = 'dot err';
-        st.textContent = r.status + ' ' + r.statusText;
-        return null;
-      }
-      dot.className = 'dot ok';
-      st.textContent = '200 OK — ' + (r.headers.get('content-length') || '?') + ' bytes';
-      return r.json();
-    })
-    .then(function(data) {
-      if (!data) return;
-      document.getElementById('json-' + ep).innerHTML = syntaxHL(data);
-    })
-    .catch(function(err) {
-      var dot = document.getElementById('dot-' + ep);
-      var st = document.getElementById('status-' + ep);
-      dot.className = 'dot err';
-      st.textContent = 'Error: ' + err.message;
-    });
-});
+        st.textContent = 'Error: ' + err.message;
+      });
+  });
+}
+
+// Initial mode load
+setMode('balanced');
 
 // Auto-open first endpoint
 document.getElementById('ep-signals').classList.add('open');
