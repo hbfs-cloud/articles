@@ -377,6 +377,7 @@ ${(() => {
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
   }
   for (const { signal: s, replaces } of rotationCandidates) {
+    const thesisCols = 10;
     const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
     actionRows.push(`<tr style="background:#fefce8">
       <td><b>${s.ticker}</b></td>
