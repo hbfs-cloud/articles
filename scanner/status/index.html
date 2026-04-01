@@ -1191,24 +1191,72 @@ document.addEventListener('DOMContentLoaded',function(){
     panel.querySelector('.live-content').style.display = 'none';
     tm.style.display = 'block';
     let retCls = d.stats.ret>=0 ? (id==='dynamic'?'#dc2626':id==='balanced'?'#059669':'#2563eb') : '#dc2626';
+    
     let html = `<div class="dist-hero" id="dist-tm-${id}"></div>
-    <div class="perf-hero" style="border-left:3px solid ${retCls}"><div class="perf-chart-wrap"><div class="perf-chart" id="chart-tm-${id}"></div></div>
+    <div class="perf-hero" style="border-left:4px solid ${retCls}"><div class="perf-chart-wrap"><div class="perf-chart" id="chart-tm-${id}"></div></div>
     <div class="perf-stats">
       <div class="ps"><span class="ps-v" style="color:${retCls}">${d.stats.ret}%</span><span class="ps-l">Total Return</span></div>
       <div class="ps"><span class="ps-v" style="color:#dc2626">${d.stats.dd}%</span><span class="ps-l">Max DD</span></div>
       <div class="ps"><span class="ps-v">${d.stats.wr}%</span><span class="ps-l">Win Rate</span></div>
+      <div class="ps"><span class="ps-v">${d.stats.pf}x</span><span class="ps-l">Profit Factor</span></div>
+      <div class="ps"><span class="ps-v">${d.stats.trades}</span><span class="ps-l">Trades</span></div>
+      <div class="ps"><span class="ps-v">${d.stats.avgHold}d</span><span class="ps-l">Avg Hold</span></div>
     </div></div>`;
-    
-    if(d.positions && d.positions.length > 0){
-      html += `<div class="section-card"><div class="sc-head"><h3>Positions (${d.positions.length})</h3></div><table class="t"><thead><tr><th>Ticker</th><th>P&L</th><th>Held</th></tr></thead><tbody>`;
-      d.positions.forEach(p => {
-        let pnl = p.return_pct !== undefined ? p.return_pct : (p.pnlPct !== undefined ? p.pnlPct : 0);
-        let held = p.days_held !== undefined ? p.days_held : (d.config && p.days_remaining !== undefined ? d.config.horizon - p.days_remaining : 0);
-        html += `<tr><td><b>${p.ticker}</b></td><td class="${pnl>=0?'pos':'neg'}">${pnl}%</td><td>${held}d</td></tr>`;
+
+    // 1. Today's Signals
+    if(d.signals && d.signals.length > 0){
+      html += `<div class="section-card"><details><summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${d.signals.length} setups</span></span></summary>
+      <table class="t" style="margin-top:.75rem"><thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead><tbody>`;
+      d.signals.forEach(s => html += `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${s.score>=90?'#059669':s.score>=85?'#10b981':'#f59e0b'}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1}${s.tp2?' / '+s.tp2:''}</td><td class="am">${s.rr}</td></tr>`);
+      html += `</tbody></table></details></div>`;
+    }
+
+    // 2. Actions (Close Now / Expires Tomorrow)
+    if((d.closeNow && d.closeNow.length > 0) || (d.expiresTomorrow && d.expiresTomorrow.length > 0)){
+      let isH = (d.expiresTomorrow && d.expiresTomorrow.length > 0);
+      html += `<div class="cta-card" style="background:${isH?'#fffbeb':'#fef2f2'};border:1.5px solid ${isH?'#fde68a':'#fca5a5'};border-left:4px solid ${isH?'#f59e0b':'#dc2626'}">
+      <div class="cta-header"><span class="cta-icon" style="background:${isH?'rgba(245,158,11,.1)':'rgba(220,38,38,.1)'}"><i class="fas fa-${isH?'hourglass-half':'triangle-exclamation'}" style="color:${isH?'#d97706':'#dc2626'}"></i></span>
+      <div><h3 style="color:${isH?'#92400e':'#991b1b'}">${isH?'Expires Soon':'Close Immediately'} <span class="cta-badge" style="background:${isH?'#d97706':'#dc2626'}">${(d.closeNow||[]).length+(d.expiresTomorrow||[]).length} targets</span></h3>
+      <p class="cta-sub" style="color:${isH?'#b45309':'#b91c1c'}">${isH?'Horizon reached — decide: keep or exit at open':'Risk/Signal alert — exit at next market open'}</p></div></div>
+      <table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&L</th><th>Status</th><th>Action</th></tr></thead><tbody>`;
+      (d.closeNow||[]).forEach(x => html += `<tr><td><b>${x.ticker}</b></td><td>$${x.entry}</td><td class="${x.return_pct>=0?'pos':'neg'}"><b>${x.return_pct}%</b></td><td><span class="pill neg">SELL</span></td><td>Market Open</td></tr>`);
+      (d.expiresTomorrow||[]).forEach(x => html += `<tr><td><b>${x.ticker}</b></td><td>$${x.entry}</td><td class="${x.return_pct>=0?'pos':'neg'}"><b>${x.return_pct}%</b></td><td><span class="pill am">EXPIRES</span></td><td>Next Close</td></tr>`);
+      html += `</tbody></table></div>`;
+    }
+
+    // 3. Orders to Place
+    if(d.orders && d.orders.length > 0){
+      html += `<div class="section-card cta-orders"><div class="sc-head"><h3><i class="fas fa-bolt"></i> ${d.orders.length} Order${d.orders.length>1?'s':''} to Place</h3></div><table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Score</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">Action</th></tr></thead><tbody>`;
+      d.orders.forEach(o => {
+        html += `<tr><td><b>${o.ticker}</b></td><td class="hide-m"><span class="pill-score" style="background:#059669">${o.score}</span></td><td><b>${o.entry}</b></td><td class="neg">${o.stop}</td><td class="pos">${o.tp1} / ${o.tp2}</td><td class="hide-m"><span class="pill pos">BUY</span></td></tr>`;
+        if(o.thesis) html += `<tr class="thesis-row"><td colspan="6"><div class="thesis-text">${o.thesis}</div></td></tr>`;
       });
       html += `</tbody></table></div>`;
     }
-    tm.innerHTML = html;
+
+    // 4. Open Positions
+    if(d.positions && d.positions.length > 0){
+      html += `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${d.positions.length} active</span></h3></div><table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th class="hide-m">Now</th><th>P&L</th><th class="hide-m">Stop</th><th>Wait</th></tr></thead><tbody>`;
+      d.positions.forEach(p => {
+        let pnl = p.return_pct !== undefined ? p.return_pct : (p.pnlPct !== undefined ? p.pnlPct : 0);
+        let wait = p.days_held !== undefined ? p.days_held + 'd' : (d.config && p.days_remaining !== undefined ? (d.config.horizon - p.days_remaining) + 'd' : p.days_remaining + ' left');
+        html += `<tr><td><b>${p.ticker}</b></td><td>$${p.entry}</td><td class="hide-m">$${p.current_price}</td><td class="${pnl>=0?'pos':'neg'}"><b>${pnl}%</b></td><td class="neg hide-m">$${p.stop}</td><td>${wait}</td></tr>`;
+      });
+      html += `</tbody></table></div>`;
+    }
+
+    // 5. Trade History
+    if(d.closedTrades && d.closedTrades.length > 0){
+      html += `<div class="section-card"><details><summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${d.closedTrades.length} closed</span></span></summary>
+      <table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th class="hide-m">Dates</th><th>P&L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead><tbody>`;
+      d.closedTrades.forEach(t => {
+        let resCls = t.status === 'tp1' || t.status === 'tp2' ? 'pos' : (t.status === 'sl' ? 'neg' : 'am');
+        html += `<tr><td><b>${t.ticker}</b></td><td class="m hide-m" style="font-size:.65rem">${t.scanDate} &rarr; ${t.exitDate||'Snap'}</td><td class="${t.pnlPct>=0?'pos':'neg'}"><b>${t.pnlPct}%</b></td><td class="m hide-m">${t.holdDays}d</td><td><span class="pill ${resCls}">${t.status.toUpperCase()}</span></td></tr>`;
+      });
+      html += `</tbody></table></details></div>`;
+    }
+
+    tm.innerHTML = html || `<p class="empty"><i class="fas fa-inbox"></i> No data for this snapshot</p>`;
     setTimeout(() => {
       if(d.equity) mk(`chart-tm-${id}`, d.equity.d, d.equity.v, retCls);
       updateDistHero(document.getElementById(`dist-tm-${id}`), (d.positions||[]).concat(d.orders||[]));
