@@ -1387,4 +1387,81 @@ document.addEventListener('DOMContentLoaded',function(){
   console.log(`   Snapshot: history/${todayKey}.json (${existingDates.length} dates)`);
 }
 
-main();
+// ─── Backfill: regenerate all history snapshots with current configs ──────────
+function backfillHistory() {
+  const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
+  const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8'));
+  const modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes;
+  const results  = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
+
+  const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
+  console.log(`Backfilling ${histFiles.length} history snapshots with current configs...`);
+
+  // Build full equity curve per mode from frozen_ data (sweep's daily MtM — source of truth)
+  const frozenEC = {};
+  for (const id of Object.keys(modesCfg)) {
+    const frozen = results[`frozen_${id}`];
+    if (frozen && frozen.equityCurve && frozen.equityCurve.length) {
+      // Trim flat tail
+      const ec = [...frozen.equityCurve];
+      while (ec.length > 1 && ec[ec.length-1].value === ec[ec.length-2].value) ec.pop();
+      frozenEC[id] = ec; // [{date:"YYYY-MM-DD", value:X}, ...]
+    }
+  }
+
+  for (const f of histFiles) {
+    const dateKey = f.replace('.json', '');
+    const dateISO = `${dateKey.slice(0,4)}-${dateKey.slice(4,6)}-${dateKey.slice(6,8)}`;
+    const existing = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
+
+    const newModes = {};
+    for (const [id, cfg] of Object.entries(modesCfg)) {
+      // Trades closed on or before this date
+      const modeTrades = (allTrades[id] || []).filter(t => (t.scanDate || '') <= dateISO);
+      if (!modeTrades.length) continue;
+
+      // Equity curve sliced to this date from frozen_ sweep data
+      const fullEC = frozenEC[id] || [];
+      const slicedEC = fullEC.filter(pt => pt.date <= dateISO);
+      const ecDates = slicedEC.map(pt => pt.date.slice(5).replace('-','/'));
+      const ecVals  = slicedEC.map(pt => +pt.value.toFixed(2));
+
+      // Stats from sliced equity curve endpoint
+      const retAtDate = slicedEC.length ? +(slicedEC[slicedEC.length-1].value - 100).toFixed(2) : 0;
+      let peakEC = 100, maxDDEC = 0;
+      for (const pt of slicedEC) {
+        if (pt.value > peakEC) peakEC = pt.value;
+        const dd = +((pt.value - peakEC) / peakEC * 100).toFixed(2);
+        if (dd < maxDDEC) maxDDEC = dd;
+      }
+
+      // Trade-level stats (WR, PF, trades, avgHold) from filtered backtest-trades
+      const wins   = modeTrades.filter(t => (t.pnlPct||0) > 0).length;
+      const grossW = modeTrades.filter(t=>(t.pnlPct||0)>0).reduce((s,t)=>s+(t.pnlPct||0),0);
+      const grossL = Math.abs(modeTrades.filter(t=>(t.pnlPct||0)<0).reduce((s,t)=>s+(t.pnlPct||0),0));
+      const wr     = modeTrades.length ? +(wins / modeTrades.length * 100).toFixed(1) : 0;
+      const pf     = grossL > 0 ? +(grossW / grossL).toFixed(2) : 99;
+      const avgHold= modeTrades.length ? +(modeTrades.reduce((s,t)=>s+(t.holdDays||0),0)/modeTrades.length).toFixed(1) : 0;
+
+      const existing_mode = (existing.modes || {})[id] || {};
+      newModes[id] = {
+        ...existing_mode,
+        stats: { ret: retAtDate, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold },
+        equity: { d: ecDates, v: ecVals },
+        closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
+        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color },
+      };
+    }
+
+    const updated = { ...existing, modes: { ...existing.modes, ...newModes } };
+    fs.writeFileSync(path.join(historyDir, f), JSON.stringify(updated));
+    process.stdout.write(`  ${dateKey} `);
+  }
+  console.log(`\n✅ Backfill complete — ${histFiles.length} snapshots updated`);
+}
+
+if (process.argv.includes('--backfill')) {
+  backfillHistory();
+} else {
+  main();
+}
