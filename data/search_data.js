@@ -3047,9 +3047,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RECOVERY — NVDA, BA, ASML, COST, JPM, XOM, CF, RTX, AMGN, EWZ",
-    "desc": "Regime shift detected — Risk-Off → Recovery:\n    Tuesday’s session delivered the best single-day rally since May 2025, driven by a seismic geopolitical catalyst: reports that Iran signaled “conditional restraint” in the Strait of Hormuz crisis, combined with U.S.-brokered ceasefire framework discuss...",
-    "tags": "us,eu,em,tech,semis,defense,energy,healthcare,financials,consumer,etf,technique,trade-idea,macro",
+    "title": "Top 10 A+ (score 0.505) — NVDA, BA, ASML, COST, JPM, XOM, EWY, RTX, AMGN, EWZ",
+    "desc": "Regime: Early Risk-Off (score 0.505) —\n    Tuesday delivered a powerful rally across all asset classes: S&P 500 +2.91% to 6,528, Nasdaq +3.83%, Dow +2.49% (+1,125 pts), Russell 2000 +3.41%. The VIX dropped to 24.38 but remains elevated — the regime score sits at 0.505, still classified as Early Risk...",
+    "tags": "us,eu,asia,em,tech,semis,defense,energy,healthcare,financials,consumer,etf,technique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260401/",
     "date": "1 avril 2026"
