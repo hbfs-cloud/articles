@@ -234,7 +234,7 @@ function main() {
     return `<div id="p-${id}" class="mode-panel" style="${active ? '' : 'display:none'}">
 
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
-<div class="section-card">
+<div class="section-card" data-static="1">
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-book-open" style="color:${cfg.color};font-size:.78rem"></i> How to trade this mode</span>
@@ -244,7 +244,7 @@ function main() {
       ${cfg.tagline || ''}
     </div>
     <div class="method-steps" style="margin-top:.85rem">
-      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName !== 'all' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
       ${id === 'dynamic' ? `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At 9:30 AM New York (3:30 PM Paris) — market open</b>: watch the stock for the first 15 minutes. Wait for a 5-minute candle to close <b>above the entry range</b> before buying — this confirms the breakout is real. Don't buy if the stock gaps way above the entry zone.</div></div>
       <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Once in the trade, set your <b>stop loss</b> at −${cfg.maxStopPct}% from your entry and your <b>take profit</b> at TP1. You can monitor intraday: if the stock spikes +10% in the first hour, consider taking profit early rather than waiting for the close.</div></div>` : `
@@ -253,7 +253,7 @@ function main() {
       <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct||0.7)*100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1-(cfg.partialTPPct||0.7))*100)}% run toward TP2. Move your stop to your entry price (you can't lose money on this trade anymore).` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
       <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7/5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.</div></div>
       ${cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ 88) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
-      ${id === 'secured' ? `<div class="step" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#64748b"><i class="fas fa-gauge" style="font-size:.5rem"></i></span><div><b>Adapt to the market regime:</b> check the VIX level before placing orders. <b>VIX &lt; 15 (calm market)</b>: you can run with 4–5 positions instead of 8 — concentration is fine. <b>VIX 15–20 (neutral)</b>: aim for 6 positions. <b>VIX &gt; 20 (stressed market)</b>: go to full 8 positions — maximum diversification is your shield. Never hold fewer than 4 positions in this mode.</div></div>` : ''}
+      ${id === 'secured' ? `<div class="step" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#64748b"><i class="fas fa-gauge" style="font-size:.5rem"></i></span><div><b>Adapt to the market regime:</b> check the VIX level before placing orders. <b>VIX &lt; 15 (calm market)</b>: you can run with ${Math.round(cfg.portfolioSize * 0.6)}–${Math.round(cfg.portfolioSize * 0.7)} positions instead of ${cfg.portfolioSize} — concentration is fine. <b>VIX 15–20 (neutral)</b>: aim for ${Math.round(cfg.portfolioSize * 0.8)} positions. <b>VIX &gt; 20 (stressed market)</b>: go to full ${cfg.portfolioSize} positions — maximum diversification is your shield. Never hold fewer than ${Math.round(cfg.portfolioSize * 0.4)} positions in this mode.</div></div>` : ''}
     </div>
     <div class="method-footer">
       <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} trades max · ${alloc}% each</span>
@@ -377,6 +377,7 @@ ${(() => {
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
   }
   for (const { signal: s, replaces } of rotationCandidates) {
+    const thesisCols = 10;
     const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
     actionRows.push(`<tr style="background:#fefce8">
       <td><b>${s.ticker}</b></td>
@@ -1092,8 +1093,8 @@ document.addEventListener('DOMContentLoaded',function(){
           chartEl.parentElement.style.display='none';
         }
       }
-      // Hide all live sections (section-card, cta-card, method-card)
-      var allSections=panel.querySelectorAll('.section-card, .cta-card, .method-card');
+      // Hide all live sections (section-card, cta-card, method-card) except static ones (How To)
+      var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
       allSections.forEach(function(s){s.style.display='none'});
       // Remove old tm-injected sections
       panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
@@ -1375,7 +1376,7 @@ document.addEventListener('DOMContentLoaded',function(){
       orders: [...buyOrders, ...rotCands],
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
-      closedTrades: mTrades.filter(t => !t._premature).map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
+      closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
       config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color }
     };
   }
@@ -1386,4 +1387,183 @@ document.addEventListener('DOMContentLoaded',function(){
   console.log(`   Snapshot: history/${todayKey}.json (${existingDates.length} dates)`);
 }
 
-main();
+// ─── Backfill: regenerate all history snapshots with current configs ──────────
+function backfillHistory() {
+  const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
+  const SCANNER_DIR_BF = path.join(ROOT, 'scanner');
+  const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8'));
+  const modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes;
+  const results  = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
+
+  function addBizDaysBF(dateStr, n) {
+    let d = new Date(dateStr + 'T12:00:00Z');
+    let added = 0;
+    while (added < n) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) added++; }
+    return d.toISOString().slice(0, 10);
+  }
+  function bizDaysBetweenBF(from, to) {
+    let d = new Date(from + 'T12:00:00Z'), count = 0;
+    const end = new Date(to + 'T12:00:00Z');
+    while (d < end) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0 && d.getDay() !== 6) count++; }
+    return count;
+  }
+
+  // Parse signals from scanner HTML for a given dateKey (YYYYMMDD)
+  const SF_BF = {
+    all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
+    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
+    no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
+  };
+  function parseScannerSignalsBF(dateKey) {
+    const htmlPath = path.join(SCANNER_DIR_BF, dateKey, 'index.html');
+    if (!fs.existsSync(htmlPath)) return [];
+    const html = fs.readFileSync(htmlPath, 'utf8');
+    const signals = [];
+    const thesisMap = {};
+    const setupBlocks = html.match(/id="setup-([A-Z]{1,5})"[\s\S]*?(?=id="setup-[A-Z]|id="synthese|id="summary|$)/gi) || [];
+    for (const block of setupBlocks) {
+      const tm = block.match(/id="setup-([A-Z]{1,5})"/i);
+      const thM = block.match(/Investment Thesis<\/h4>\s*<p>([\s\S]*?)<\/p>/i);
+      if (tm && thM) {
+        let thesis = thM[1].replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+        if (thesis.length > 140) thesis = thesis.slice(0, 137).replace(/\s+\S*$/, '') + '…';
+        thesisMap[tm[1].toUpperCase()] = thesis;
+      }
+    }
+    const m = html.match(/id="(?:synthese|summary)"[\s\S]{0,15000}/);
+    if (m) {
+      const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+      for (const row of rows) {
+        const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || []).map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
+        if (cells.length < 4) continue;
+        const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
+        if (!ticker) continue;
+        const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
+        const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback|trend follow|defensive/i.test(c)) || '';
+        const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
+        const rr = cells.find(c => /1:\d/.test(c)) || '';
+        signals.push({ ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
+          entry: pf[0] || '—', stop: pf[1] || '—', tp1: pf[2] || '—', tp2: pf[3] || '—', rr,
+          thesis: thesisMap[ticker.trim()] || '' });
+      }
+    }
+    return signals.sort((a, b) => b.score - a.score);
+  }
+
+  const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
+  console.log(`Backfilling ${histFiles.length} history snapshots with current configs...`);
+
+  // Build full equity curve per mode from frozen_ data (sweep's daily MtM — source of truth)
+  const frozenEC = {};
+  for (const id of Object.keys(modesCfg)) {
+    const frozen = results[`frozen_${id}`];
+    if (frozen && frozen.equityCurve && frozen.equityCurve.length) {
+      // Trim flat tail
+      const ec = [...frozen.equityCurve];
+      while (ec.length > 1 && ec[ec.length-1].value === ec[ec.length-2].value) ec.pop();
+      frozenEC[id] = ec; // [{date:"YYYY-MM-DD", value:X}, ...]
+    }
+  }
+
+  for (const f of histFiles) {
+    const dateKey = f.replace('.json', '');
+    const dateISO = `${dateKey.slice(0,4)}-${dateKey.slice(4,6)}-${dateKey.slice(6,8)}`;
+    const existing = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
+
+    // Parse scanner signals for this date
+    const rawSignals = parseScannerSignalsBF(dateKey);
+
+    const newModes = {};
+    for (const [id, cfg] of Object.entries(modesCfg)) {
+      const modeTrades = (allTrades[id] || []).filter(t => (t.scanDate || '') <= dateISO);
+      if (!modeTrades.length) continue;
+
+      // ── Equity curve sliced to this date from frozen_ sweep data ──
+      const fullEC = frozenEC[id] || [];
+      const slicedEC = fullEC.filter(pt => pt.date <= dateISO);
+      const ecDates = slicedEC.map(pt => pt.date.slice(5).replace('-','/'));
+      const ecVals  = slicedEC.map(pt => +pt.value.toFixed(2));
+      const retAtDate = slicedEC.length ? +(slicedEC[slicedEC.length-1].value - 100).toFixed(2) : 0;
+      let peakEC = 100, maxDDEC = 0;
+      for (const pt of slicedEC) {
+        if (pt.value > peakEC) peakEC = pt.value;
+        const dd = +((pt.value - peakEC) / peakEC * 100).toFixed(2);
+        if (dd < maxDDEC) maxDDEC = dd;
+      }
+
+      // ── Trade-level stats ──
+      const wins   = modeTrades.filter(t => (t.pnlPct||0) > 0).length;
+      const grossW = modeTrades.filter(t=>(t.pnlPct||0)>0).reduce((s,t)=>s+(t.pnlPct||0),0);
+      const grossL = Math.abs(modeTrades.filter(t=>(t.pnlPct||0)<0).reduce((s,t)=>s+(t.pnlPct||0),0));
+      const wr     = modeTrades.length ? +(wins / modeTrades.length * 100).toFixed(1) : 0;
+      const pf     = grossL > 0 ? +(grossW / grossL).toFixed(2) : 99;
+      const avgHold= modeTrades.length ? +(modeTrades.reduce((s,t)=>s+(t.holdDays||0),0)/modeTrades.length).toFixed(1) : 0;
+
+      // ── Open positions on this date ──
+      // A trade is open if: scanDate <= D AND exitDate > D
+      const openTrades = modeTrades.filter(t => {
+        const exitDate = addBizDaysBF(t.scanDate, t.holdDays || cfg.horizon);
+        return exitDate > dateISO;
+      }).slice(-cfg.portfolioSize); // max portfolioSize most recent
+
+      const positions = openTrades.map(t => {
+        const daysHeld = bizDaysBetweenBF(t.scanDate, dateISO);
+        const daysRemaining = Math.max(0, cfg.horizon - daysHeld);
+        return {
+          ticker: t.ticker, scan_date: t.scanDate,
+          entry: +(t.actualEntry || 0), current_price: +(t.actualEntry || 0), // no historical prices
+          return_pct: 0, // can't compute without historical OHLC
+          stop: 0, tp1: 0, tp2: null,
+          days_remaining: daysRemaining, strategy: t.strategy, thesis: ''
+        };
+      });
+
+      // ── Signals for this mode (filtered + topN) ──
+      const filterFn = SF_BF[cfg.filterName] || (() => true);
+      const filteredSignals = rawSignals
+        .filter(s => filterFn(s.strategy || ''))
+        .filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+        .slice(0, cfg.topN)
+        .map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' }));
+
+      // ── Orders: signals not already in open positions, up to available slots ──
+      const openTickers = new Set(positions.map(p => p.ticker));
+      const timedOut = positions.filter(p => p.days_remaining <= 0);
+      const activePos = positions.filter(p => p.days_remaining > 0);
+      const slots = Math.max(0, cfg.portfolioSize - activePos.length);
+      const buyOrders = filteredSignals.filter(s => !openTickers.has(s.ticker)).slice(0, slots).map(s => ({ ...s, action: 'BUY' }));
+      const rotCands = [];
+      if (cfg.rotation === 'aggressive' && slots === 0 && activePos.length > 0 && filteredSignals.length > 0) {
+        const worst = [...activePos].sort((a, b) => a.return_pct - b.return_pct)[0];
+        for (const s of filteredSignals.filter(x => !openTickers.has(x.ticker)).slice(0, 5)) {
+          if (s.score >= 88) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker }); break; }
+        }
+      }
+
+      const existing_mode = (existing.modes || {})[id] || {};
+      newModes[id] = {
+        ...existing_mode,
+        stats: { ret: retAtDate, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold },
+        equity: { d: ecDates, v: ecVals },
+        positions,
+        orders: [...buyOrders, ...rotCands],
+        closeNow: timedOut.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
+        expiresTomorrow: activePos.filter(p => p.days_remaining === 1).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
+        signals: filteredSignals,
+        closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
+        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color },
+      };
+    }
+
+    const updated = { ...existing, modes: { ...existing.modes, ...newModes } };
+    fs.writeFileSync(path.join(historyDir, f), JSON.stringify(updated));
+    process.stdout.write(`  ${dateKey} `);
+  }
+  console.log(`\n✅ Backfill complete — ${histFiles.length} snapshots updated`);
+}
+
+if (process.argv.includes('--backfill')) {
+  backfillHistory();
+} else {
+  main();
+}

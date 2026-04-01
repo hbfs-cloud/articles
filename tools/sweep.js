@@ -659,8 +659,8 @@ async function main() {
   console.log(`Walk-forward split: ${inSampleDates.size} in-sample / ${outSampleDates.size} out-of-sample scans`);
 
   // 4. Grid dimensions — ~311K combos, ~5 min nightly run
-  const PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8];
-  const TOP_NS = QUICK ? [1, 2] : [1, 2, 3, 4];
+  const PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8, 10];
+  const TOP_NS = QUICK ? [1, 2] : [1, 2, 3, 4, 5, 8, 10];
   const MIN_SCORES = QUICK ? [85] : [85, 90];
   const HORIZONS = QUICK ? [5, 15] : [3, 5, 8, 10, 15];
   const STRATEGY_FILTERS = {
@@ -675,7 +675,7 @@ async function main() {
   const TP_MODES = [false, true]; // partialTP
   const TP_PCTS = [0.5]; // partial TP fraction (0.5 is the balanced default)
   const TRAIL_MODES = [false]; // trailingStop disabled (rarely wins, adds 2× combos)
-  const MAX_STOP_PCTS = [0, 5, 7]; // 0 = no cap
+  const MAX_STOP_PCTS = [0, 3, 5, 7]; // 0 = no cap
   const ATR_STOP_MULTS = [0, 1, 2]; // 0 = disabled
   const DAILY_TRAIL_PCTS = [0, 3]; // 0 = disabled, 3% is the proven sweet spot
   const BREAKEVEN_PCTS = [0, 1]; // 0 = disabled, 1% is the standard
@@ -740,9 +740,12 @@ async function main() {
   const topByComposite = [];
   const topByLowestDD = []; // sorted ascending by |DD| (lowest first)
   // Mode-specific trackers with constraints
-  const advDynamic = [];   // P2-4, max return, any DD
-  const advBalanced = [];  // P3-5, best risk-adjusted (return - 2*|DD|)
-  const advSecured = [];   // any P, lowest |DD|, return≥3%
+  const advDynamic = [];         // strict: Return≥35%, DD≤6%, WR≥60%, trades≥10
+  const advBalanced = [];        // strict: Return≥24%, DD≤4%, WR≥60%, trades≥10
+  const advSecured = [];         // strict: Return≥12%, DD≤2%, WR≥75%, trades≥10
+  const advDynamicRelaxed = [];  // relaxed: Return≥30%, DD≤10%, WR≥55%, trades≥10
+  const advBalancedRelaxed = []; // relaxed: Return≥20%, DD≤5%, WR≥55%, trades≥10
+  const advSecuredRelaxed = [];  // relaxed: Return≥10%, DD≤2.5%, WR≥65%, trades≥10
 
   function insertTop(arr, item, compareFn) {
     if (arr.length < TOP_K) { arr.push(item); arr.sort(compareFn); return; }
@@ -785,16 +788,25 @@ async function main() {
                           insertTop(topByCalmar, r, (a, b) => b.calmar - a.calmar);
                           insertTop(topByComposite, r, (a, b) => b.composite - a.composite);
                           insertTop(topByLowestDD, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
-                          // Mode advisors: maximize return within DD constraints and MIN TRADES = 12 (8/month)
-                          // DYNAMIC: concentrated (P1-3), max return, DD < 6%, trades >= 12, r2 > 0.8
-                          if (r.portfolioSize <= 3 && Math.abs(r.maxDD) <= 6 && r.trades >= 12 && r.r2 >= 0.6) {
+                          // Mode advisors — strict targets (aspirational)
+                          if (r.returnTotal >= 35 && Math.abs(r.maxDD) <= 6 && r.winRate >= 60 && r.trades >= 10) {
                             insertTop(advDynamic, r, (a, b) => b.returnTotal - a.returnTotal);
                           }
-                          if (r.portfolioSize >= 3 && r.portfolioSize <= 6 && Math.abs(r.maxDD) <= 4 && r.trades >= 12 && r.r2 >= 0.65) {
+                          if (r.returnTotal >= 24 && Math.abs(r.maxDD) <= 4 && r.winRate >= 60 && r.trades >= 10) {
                             insertTop(advBalanced, r, (a, b) => b.returnTotal - a.returnTotal);
                           }
-                          if (Math.abs(r.maxDD) <= 2 && r.trades >= 12 && r.r2 >= 0.7) {
+                          if (r.returnTotal >= 12 && Math.abs(r.maxDD) <= 2 && r.winRate >= 75 && r.trades >= 10) {
                             insertTop(advSecured, r, (a, b) => b.returnTotal - a.returnTotal);
+                          }
+                          // Near-miss advisors — best achievable with relaxed constraints
+                          if (r.returnTotal >= 30 && Math.abs(r.maxDD) <= 10 && r.winRate >= 55 && r.trades >= 10) {
+                            insertTop(advDynamicRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
+                          }
+                          if (r.returnTotal >= 20 && Math.abs(r.maxDD) <= 5 && r.winRate >= 55 && r.trades >= 10) {
+                            insertTop(advBalancedRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
+                          }
+                          if (r.returnTotal >= 10 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 65 && r.trades >= 10) {
+                            insertTop(advSecuredRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                           }
                         }
 
@@ -902,19 +914,39 @@ async function main() {
   // ─── MODE ADVISOR: find best config for each objective ───────────────────
   console.log('\n═══ MODE ADVISOR ═══\n');
 
-  console.log('DYNAMIC (max return, P1-3, trades≥12, DD<6%, R2>0.7):');
+  console.log('DYNAMIC (Return≥35%, DD≤6%, WR≥60%, trades≥10 — sweep finds optimal P/filter/exit):');
   for (const r of advDynamic.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nBALANCED (best risk-adjusted, P3-6, trades≥12, DD<4%, R2>0.75):');
+  console.log('\nBALANCED (Return≥24%, DD≤4%, WR≥60%, trades≥10 — sweep finds optimal P/filter/exit):');
   for (const r of advBalanced.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nSECURED (trades≥12, DD<2%, R2>0.8):');
+  console.log('\nSECURED (Return≥12%, DD≤2%, WR≥75%, trades≥10 — sweep finds optimal P/filter/exit):');
   for (const r of advSecured.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\n─── NEAR-MISS (relaxed constraints — best achievable) ───\n');
+
+  console.log('DYNAMIC near-miss (Return≥30%, DD≤10%, WR≥55%, trades≥10):');
+  if (advDynamicRelaxed.length === 0) console.log('  (none found)');
+  for (const r of advDynamicRelaxed.slice(0, 5)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nBALANCED near-miss (Return≥20%, DD≤5%, WR≥55%, trades≥10):');
+  if (advBalancedRelaxed.length === 0) console.log('  (none found)');
+  for (const r of advBalancedRelaxed.slice(0, 5)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nSECURED near-miss (Return≥10%, DD≤2.5%, WR≥65%, trades≥10):');
+  if (advSecuredRelaxed.length === 0) console.log('  (none found)');
+  for (const r of advSecuredRelaxed.slice(0, 5)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
   console.log();
@@ -939,6 +971,9 @@ async function main() {
     advisor_dynamic: advDynamic[0] || null,
     advisor_balanced: advBalanced[0] || null,
     advisor_secured: advSecured[0] || null,
+    advisor_dynamic_relaxed: advDynamicRelaxed[0] || null,
+    advisor_balanced_relaxed: advBalancedRelaxed[0] || null,
+    advisor_secured_relaxed: advSecuredRelaxed[0] || null,
     top20_sharpe: ranked.slice(0, 20).map(r => ({
       portfolioSize: r.portfolioSize, topN: r.topN, minScore: r.minScore,
       filterName: r.filterName, rotation: r.rotation, horizon: r.horizon,

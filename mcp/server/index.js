@@ -1421,7 +1421,7 @@ const barsIntervalMs     = config.bars?.worker_interval_ms     || 6 * 3600_000;
 // Pre-seed enricher with watchlist tickers
 {
   const wl = watchlist.get();
-  const wlTickers = (wl?.picks || []).map(p => p.ticker).concat(wl?.custom?.map(c => c.ticker) || []);
+  const wlTickers = (wl?.picks || []).map(p => p.symbol || p.ticker).concat(wl?.custom?.map(c => c.symbol || c.ticker) || []).filter(Boolean);
   if (wlTickers.length) tickEnricher.track(wlTickers);
 }
 
