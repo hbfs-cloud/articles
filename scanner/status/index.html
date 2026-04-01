@@ -227,6 +227,44 @@ details[open] summary::after{transform:rotate(90deg)}
 .yt-btn{background:#1e293b;color:#fff;border:1px solid #334155}
 .dc-btn{background:#5865F2;color:#fff}
 @media(max-width:600px){.community-inner{flex-direction:column;align-items:flex-start}.cta-btn{min-width:unset;width:100%}}
+
+/* ── Distribution Hero (Preview) ── */
+.dist-hero{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:.75rem}
+.dist-header{display:flex;align-items:center;justify-content:space-between;padding:0 .25rem}
+.dist-title{font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:.4rem}
+.dist-title i{color:#94a3b8}
+.dist-mini-charts{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem}
+.dist-mini-box{background:#f8fafc;border-radius:10px;padding:.5rem;cursor:pointer;transition:all .2s;border:1px solid transparent;position:relative}
+.dist-mini-box:hover{background:#fff;border-color:#3b82f6;box-shadow:0 4px 12px rgba(59,130,246,.08);transform:translateY(-1px)}
+.dist-mini-label{font-size:.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;text-align:center;margin-bottom:.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dist-mini-chart{height:70px;width:100%}
+
+/* ── Distribution Modal ── */
+.dist-modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.8);backdrop-filter:blur(8px);padding:1rem}
+.dist-modal.open{display:flex;animation:tmFadeIn .2s ease forwards}
+.dist-modal-inner{background:#fff;width:100%;max-width:800px;border-radius:20px;overflow:hidden;box-shadow:0 32px 84px rgba(0,0,0,.4)}
+.dist-modal-head{padding:1.25rem 1.5rem;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.dist-modal-title{font-size:1.1rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:.6rem}
+.dist-modal-close{width:34px;height:34px;border-radius:50%;border:none;background:#f1f5f9;color:#64748b;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.dist-modal-close:hover{background:#0f172a;color:#fff}
+.dist-modal-body{padding:1.5rem}
+.dist-full-chart{width:100%;height:450px}
+
+@keyframes tmFadeIn{from{opacity:0}to{opacity:1}}
+
+@media(max-width:900px){
+  .dist-mini-charts{grid-template-columns:repeat(3,1fr)}
+  .dist-mini-box:nth-child(n+4){display:none}
+}
+@media(max-width:600px){
+  .dist-mini-charts{grid-template-columns:repeat(2,1fr)}
+  .dist-mini-box:nth-child(n+3){display:none}
+  .dist-full-chart{height:350px}
+}
+
+/* ── UI Logic for TM ── */
+.live-content.hidden{display:none}
+.tm-content{animation:tmFadeIn .2s ease forwards}
   </style>
 </head>
 <body>
@@ -323,13 +361,7 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
 </div>
 
-<!-- ══ 4. CLOSE NOW ══ -->
-
-
 <!-- ══ 5. ORDERS CTA ══ -->
-
-
-
 <div class="section-card cta-orders">
   <div class="sc-head">
     <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
@@ -348,14 +380,12 @@ details[open] summary::after{transform:rotate(90deg)}
       <td class="hide-m"><span class="pill pos">BUY</span></td>
     </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Boeing presents a compelling Breakout setup at a critical inflection point. Tuesday s +3.62% rally to $196.05 broke above the $190 $195…</div></td></tr></tbody>
   </table>
-  
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">0/1</span></h3>
-    
   </div>
   <p class="empty"><i class="fas fa-inbox"></i>No active positions</p>
 </div>
@@ -479,8 +509,8 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-</div>
-<div id="p-balanced" class="mode-panel" style="">
+  </div>
+  <div id="p-balanced" class="mode-panel">
 
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
@@ -543,11 +573,7 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
 </div>
 
-<!-- ══ 4. CLOSE NOW ══ -->
-
-
-<!-- ══ 5. ORDERS CTA ══ -->
-
+<!-- ══ 4. EXPIRES TOMORROW ══ -->
 <div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
   <div class="cta-header">
     <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
@@ -562,6 +588,7 @@ details[open] summary::after{transform:rotate(90deg)}
   </table>
 </div>
 
+<!-- ══ 5. ORDERS CTA ══ -->
 <div class="section-card cta-orders">
   <div class="sc-head">
     <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
@@ -580,7 +607,6 @@ details[open] summary::after{transform:rotate(90deg)}
       <td class="hide-m"><span class="pill pos">BUY</span></td>
     </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Boeing presents a compelling Breakout setup at a critical inflection point. Tuesday s +3.62% rally to $196.05 broke above the $190 $195…</div></td></tr></tbody>
   </table>
-  
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
@@ -754,33 +780,33 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-</div>
-<div id="p-secured" class="mode-panel" style="display:none">
+  </div>
+  <div id="p-secured" class="mode-panel" style="display:none">
 
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-book-open" style="color:#2563eb;font-size:.78rem"></i> How to trade this mode</span>
-      <span style="font-size:.72rem;color:#64748b;margin-left:.5rem">Capital Preservation · Low risk</span>
+      <span style="font-size:.72rem;color:#64748b;margin-left:.5rem">Wealth Preservation · Low risk</span>
     </summary>
     <div style="margin-top:.75rem;padding:.6rem .85rem;background:#2563eb08;border-left:3px solid #2563eb;border-radius:0 6px 6px 0;font-size:.82rem;color:#334155">
-      Protect capital first. Parameters optimized by sweep to minimize MaxDD while staying profitable.
+      Focus on stability. Parameters optimized by sweep to minimize drawdown and maximize win rate.
     </div>
     <div class="method-steps" style="margin-top:.85rem">
-      <div class="step"><span class="step-n" style="background:#2563eb">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best 8 setups from tonight's scan (no Short Squeeze plays). These are the ones you can act on tomorrow.</div></div>
+      <div class="step"><span class="step-n" style="background:#2563eb">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best 1 setup from tonight's scan (breakout setups only). These are the ones you can act on tomorrow.</div></div>
       
-      <div class="step"><span class="step-n" style="background:#2563eb">2</span><div><b>Before market open</b> (set your orders the evening before, or before 9:25 AM New York / 3:25 PM Paris), place a <b>limit buy order</b> at the entry price shown. Put <b>10% of your total money</b> into each trade. You can have up to <b>10 trades open at the same time</b>. No need to watch the market during the day.</div></div>
-      <div class="step"><span class="step-n" style="background:#2563eb">3</span><div>At the same time, set your <b>stop loss</b> and <b>take profit</b> as bracket orders (OCO). The levels are shown on the signal card. Hard stop at −<b>7%</b> from entry — this is your maximum loss per trade, no exceptions.</div></div>
+      <div class="step"><span class="step-n" style="background:#2563eb">2</span><div><b>Before market open</b> (set your orders the evening before, or before 9:25 AM New York / 3:25 PM Paris), place a <b>limit buy order</b> at the entry price shown. Put <b>33.3% of your total money</b> into each trade. You can have up to <b>3 trades open at the same time</b>. No need to watch the market during the day.</div></div>
+      <div class="step"><span class="step-n" style="background:#2563eb">3</span><div>At the same time, set your <b>stop loss</b> and <b>take profit</b> as bracket orders (OCO). The levels are shown on the signal card. Hard stop at −<b>3%</b> from entry — this is your maximum loss per trade, no exceptions.</div></div>
       <div class="step"><span class="step-n" style="background:#2563eb">4</span><div>Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.</div></div>
       <div class="step"><span class="step-n" style="background:#2563eb">5</span><div>Close everything after <b>10 trading days</b> (about 14 calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.</div></div>
-      <div class="step"><span class="step-n" style="background:#2563eb">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ 88) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>
-      <div class="step" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#64748b"><i class="fas fa-gauge" style="font-size:.5rem"></i></span><div><b>Adapt to the market regime:</b> check the VIX level before placing orders. <b>VIX &lt; 15 (calm market)</b>: you can run with 6–7 positions instead of 10 — concentration is fine. <b>VIX 15–20 (neutral)</b>: aim for 8 positions. <b>VIX &gt; 20 (stressed market)</b>: go to full 10 positions — maximum diversification is your shield. Never hold fewer than 4 positions in this mode.</div></div>
+      <div class="step"><span class="step-n" style="background:#2563eb">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one. This keeps your portfolio fresh without turning everything over at once.</div></div>
+      
     </div>
     <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> 10 trades max · 10% each</span>
+      <span><i class="fas fa-layer-group"></i> 3 trades max · 33% each</span>
       <span><i class="fas fa-calendar-days"></i> Close after 10 trading days</span>
-      <span><i class="fas fa-shield-halved"></i> Hard stop at −7%</span>
+      <span><i class="fas fa-shield-halved"></i> Hard stop at −3%</span>
       
     </div>
   </details>
@@ -790,12 +816,12 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">8 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setups</span></span>
       <a href="/scanner/20260401/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>NVDA</b></td><td><span class="pill-score" style="background:#059669">95</span></td><td class="m">Momentum</td><td>$168&ndash;$172</td><td class="neg">$160</td><td class="pos">$190 / $210</td><td class="am">1:2.0</td></tr><tr><td><b>BA</b></td><td><span class="pill-score" style="background:#059669">93</span></td><td class="m">Breakout</td><td>$194&ndash;$198</td><td class="neg">$185</td><td class="pos">$220 / $245</td><td class="am">1:2.0</td></tr><tr><td><b>ASML</b></td><td><span class="pill-score" style="background:#059669">92</span></td><td class="m">Momentum</td><td>$1.280&ndash;$1.300</td><td class="neg">$1.220</td><td class="pos">$1.420 / $1.500</td><td class="am">1:1.8</td></tr><tr><td><b>COST</b></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Breakout</td><td>$985&ndash;$1.000</td><td class="neg">$955</td><td class="pos">$1.060 / $1.120</td><td class="am">1:1.7</td></tr><tr><td><b>JPM</b></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Breakout</td><td>$255&ndash;$262</td><td class="neg">$245</td><td class="pos">$285 / $305</td><td class="am">1:1.8</td></tr><tr><td><b>XOM</b></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Momentum</td><td>$166&ndash;$170</td><td class="neg">$158</td><td class="pos">$182 / $195</td><td class="am">1:1.5</td></tr><tr><td><b>CF</b></td><td><span class="pill-score" style="background:#2563eb">89</span></td><td class="m">Momentum</td><td>$120&ndash;$125</td><td class="neg">$114</td><td class="pos">$138 / $150</td><td class="am">1:1.6</td></tr><tr><td><b>RTX</b></td><td><span class="pill-score" style="background:#2563eb">88</span></td><td class="m">Pullback</td><td>$132&ndash;$137</td><td class="neg">$126</td><td class="pos">$150 / $162</td><td class="am">1:1.7</td></tr></tbody>
+      <tbody><tr><td><b>BA</b></td><td><span class="pill-score" style="background:#059669">93</span></td><td class="m">Breakout</td><td>$194&ndash;$198</td><td class="neg">$185</td><td class="pos">$220 / $245</td><td class="am">1:2.0</td></tr></tbody>
     </table>
   </details>
 </div>
@@ -810,661 +836,141 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
   <div class="perf-stats">
     <div class="ps"><span class="ps-v" style="color:#2563eb">+17.29%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">-2.14%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">65%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">3.24x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">60</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">6.2d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">-2.11%</span><span class="ps-l">Max Drawdown</span></div>
+    <div class="ps"><span class="ps-v">70.6%</span><span class="ps-l">Win Rate</span></div>
+    <div class="ps"><span class="ps-v">5.12x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">17</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">5.8d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
-<!-- ══ 4. CLOSE NOW ══ -->
-
-
-<!-- ══ 5. ORDERS CTA ══ -->
-
-<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+<!-- ══ 4. EXPIRES TOMORROW ══ -->
+<div class="cta-card" style="background:#f0f9ff;border:1.5px solid #bae6fd;border-left:4px solid #0284c7">
   <div class="cta-header">
-    <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
+    <span class="cta-icon" style="background:rgba(2,132,199,.12)"><i class="fas fa-hourglass-half" style="color:#0284c7"></i></span>
     <div>
-      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">3 positions</span></h3>
-      <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
+      <h3 style="color:#075985">Expires in 2 days <span class="cta-badge" style="background:#0284c7">1 position</span></h3>
+      <p class="cta-sub" style="color:#0369a1">Standard exit at next close — monitor for extension</p>
     </div>
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
-    <tbody><tr><td><b>AGRO</b></td><td>$13.54</td><td class="pos"><b>+12.63%</b></td><td class="neg">$11.50</td><td class="am">9d/10d</td></tr><tr><td><b>DVN</b></td><td>$48.38</td><td class="pos"><b>+6.49%</b></td><td class="neg">$44.50</td><td class="am">9d/10d</td></tr><tr><td><b>TTE</b></td><td>$89.29</td><td class="pos"><b>+2.53%</b></td><td class="neg">$83.50</td><td class="am">9d/10d</td></tr></tbody>
+    <tbody><tr><td><b>MA</b></td><td>$540.85</td><td class="pos"><b>+2.5%</b></td><td class="neg">$525.00</td><td class="am">8d/10d</td></tr></tbody>
   </table>
 </div>
 
+<!-- ══ 5. ORDERS CTA ══ -->
 <div class="section-card cta-orders">
   <div class="sc-head">
     <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">16/10 open — portfolio full — rotation opportunity</span>
+    <span class="sc-meta">2/3 open — <b>1 slot free</b> — place at next open</span>
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
-    <tbody><tr style="background:#fefce8">
-      <td><b>NVDA</b></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NVDA&ty=c&ta=1&p=d&s=l" alt="NVDA" class="fv-thumb" onclick="fvOpen('NVDA')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#059669">95</span></td>
-      <td class="m hide-m">Momentum</td><td><b>$168&ndash;$172</b></td>
-      <td class="neg">$160</td>
-      <td class="pos">$190<span class="hide-m"> / $210</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">10%</td>
-      <td class="hide-m"><span class="pill am">ROTATE ↔ FANG</span></td>
-    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">NVIDIA is the single most important stock in the current AI infrastructure buildout. Tuesday s +4.80% surge to $170.70 was driven by two…</div></td></tr></tbody>
-  </table>
-  <details>
-    <summary class="watch-summary">On watch — 3 signals (portfolio full, valid until Fri, Apr 3)</summary>
-    <table class="t" style="margin-top:.5rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
-      <tbody><tr style="opacity:0.75">
+    <tbody><tr>
       <td><b>BA</b></td>
-      <td><span class="pill-score" style="background:#94a3b8">93</span></td>
-      <td class="m hide-m">Breakout</td><td class="m">$194&ndash;$198</td>
+      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=BA&ty=c&ta=1&p=d&s=l" alt="BA" class="fv-thumb" onclick="fvOpen('BA')"></td>
+      <td class="hide-m"><span class="pill-score" style="background:#059669">93</span></td>
+      <td class="m hide-m">Breakout</td><td><b>$194&ndash;$198</b></td>
       <td class="neg">$185</td>
       <td class="pos">$220<span class="hide-m"> / $245</span></td>
-      <td class="am hide-m">1:2.0</td>
-      <td><span class="pill m">Valid until Fri, Apr 3</span></td>
-    </tr><tr style="opacity:0.75">
-      <td><b>ASML</b></td>
-      <td><span class="pill-score" style="background:#94a3b8">92</span></td>
-      <td class="m hide-m">Momentum</td><td class="m">$1.280&ndash;$1.300</td>
-      <td class="neg">$1.220</td>
-      <td class="pos">$1.420<span class="hide-m"> / $1.500</span></td>
-      <td class="am hide-m">1:1.8</td>
-      <td><span class="pill m">Valid until Fri, Apr 3</span></td>
-    </tr><tr style="opacity:0.75">
-      <td><b>COST</b></td>
-      <td><span class="pill-score" style="background:#94a3b8">91</span></td>
-      <td class="m hide-m">Breakout</td><td class="m">$985&ndash;$1.000</td>
-      <td class="neg">$955</td>
-      <td class="pos">$1.060<span class="hide-m"> / $1.120</span></td>
-      <td class="am hide-m">1:1.7</td>
-      <td><span class="pill m">Valid until Fri, Apr 3</span></td>
-    </tr></tbody>
-    </table>
-  </details>
+      <td class="am hide-m">1:2.0</td><td class="m hide-m">33.3%</td>
+      <td class="hide-m"><span class="pill pos">BUY</span></td>
+    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Boeing presents a compelling Breakout setup at a critical inflection point. Tuesday s +3.62% rally to $196.05 broke above the $190 $195…</div></td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">16/10</span></h3>
-    <span class="sc-meta">avg P&amp;L: <b class="pos">+0.9%</b></span>
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">2/3</span></h3>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+1.45%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
-    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -11.5%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +1.5%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +17.2%</span>
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -3.0%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +1.45%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +5.5%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:45.2%"></div>
-    <div class="scenario-fill-good" style="width:54.8%"></div>
-    <div class="scenario-cursor" style="left:45.2%"></div>
+    <div class="scenario-fill-bad" style="width:32.5%"></div>
+    <div class="scenario-fill-good" style="width:67.5%"></div>
+    <div class="scenario-cursor" style="left:47.5%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><b>AGRO</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AGRO&ty=c&ta=1&p=d&s=l" alt="AGRO" class="fv-thumb" onclick="fvOpen('AGRO')"></td><td class="m hide-m">03-19</td><td class="hide-m">$13.54</td><td class="hide-m">$15.25</td><td class="pos"><b>+12.63%</b></td><td class="neg hide-m">$11.50</td><td class="pos hide-m">$16.00</td><td class="neg">1d</td></tr><tr><td><b>DVN</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=DVN&ty=c&ta=1&p=d&s=l" alt="DVN" class="fv-thumb" onclick="fvOpen('DVN')"></td><td class="m hide-m">03-19</td><td class="hide-m">$48.38</td><td class="hide-m">$51.52</td><td class="pos"><b>+6.49%</b></td><td class="neg hide-m">$44.50</td><td class="pos hide-m">$53.00</td><td class="neg">1d</td></tr><tr><td><b>PSX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=PSX&ty=c&ta=1&p=d&s=l" alt="PSX" class="fv-thumb" onclick="fvOpen('PSX')"></td><td class="m hide-m">03-24</td><td class="hide-m">$178.78</td><td class="hide-m">$184.81</td><td class="pos"><b>+3.37%</b></td><td class="neg hide-m">$168.00</td><td class="pos hide-m">$202.00</td><td class="m">4d</td></tr><tr><td><b>TTE</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=TTE&ty=c&ta=1&p=d&s=l" alt="TTE" class="fv-thumb" onclick="fvOpen('TTE')"></td><td class="m hide-m">03-20</td><td class="hide-m">$89.29</td><td class="hide-m">$91.55</td><td class="pos"><b>+2.53%</b></td><td class="neg hide-m">$83.50</td><td class="pos hide-m">$97.00</td><td class="neg">1d</td></tr><tr><td><b>MPC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=MPC&ty=c&ta=1&p=d&s=l" alt="MPC" class="fv-thumb" onclick="fvOpen('MPC')"></td><td class="m hide-m">03-26</td><td class="hide-m">$241.89</td><td class="hide-m">$245.16</td><td class="pos"><b>+1.35%</b></td><td class="neg hide-m">$235.00</td><td class="pos hide-m">$290.00</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Marathon Petroleum surged +5.31% today to $248.31, approaching its 52-week high of $252.40 on a day when the broad market collapsed.…</div></td></tr><tr><td><b>HAL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=HAL&ty=c&ta=1&p=d&s=l" alt="HAL" class="fv-thumb" onclick="fvOpen('HAL')"></td><td class="m hide-m">03-26</td><td class="hide-m">$38.87</td><td class="hide-m">$39.26</td><td class="pos"><b>+1%</b></td><td class="neg hide-m">$36.50</td><td class="pos hide-m">$45.00</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Halliburton is knocking on the door of its 52-week high at $38.83, trading at $38.63 — a near-breakout setup with strong technical and…</div></td></tr><tr><td><b>SLB</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SLB&ty=c&ta=1&p=d&s=l" alt="SLB" class="fv-thumb" onclick="fvOpen('SLB')"></td><td class="m hide-m">03-26</td><td class="hide-m">$51.55</td><td class="hide-m">$51.53</td><td class="neg"><b>-0.04%</b></td><td class="neg hide-m">$49.00</td><td class="pos hide-m">$60.00</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">SLB is the world's largest oilfield services company with $55B+ market cap and operations in 120+ countries. Today's +2.7% session move…</div></td></tr><tr><td><b>KO</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=KO&ty=c&ta=1&p=d&s=l" alt="KO" class="fv-thumb" onclick="fvOpen('KO')"></td><td class="m hide-m">03-31</td><td class="hide-m">$76.53</td><td class="hide-m">$76.05</td><td class="neg"><b>-0.63%</b></td><td class="neg hide-m">$71.17</td><td class="pos hide-m">—</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Coca-Cola is sitting at a technically perfect entry: at $76.27, KO is sitting almost exactly at its MA50 ($76.23) a textbook support…</div></td></tr><tr><td><b>MRK</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=MRK&ty=c&ta=1&p=d&s=l" alt="MRK" class="fv-thumb" onclick="fvOpen('MRK')"></td><td class="m hide-m">03-26</td><td class="hide-m">$118.96</td><td class="hide-m">$118.10</td><td class="neg"><b>-0.72%</b></td><td class="neg hide-m">$113.00</td><td class="pos hide-m">$132.00</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Merck is anchored by Keytruda the world s best-selling drug ($25B+ annual revenue) with expanding oncology indications. MRK sits 2%…</div></td></tr><tr><td><b>MRK</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=MRK&ty=c&ta=1&p=d&s=l" alt="MRK" class="fv-thumb" onclick="fvOpen('MRK')"></td><td class="m hide-m">03-31</td><td class="hide-m">$119.03</td><td class="hide-m">$118.10</td><td class="neg"><b>-0.78%</b></td><td class="neg hide-m">$113.00</td><td class="pos hide-m">$132.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Merck is anchored by Keytruda the world s best-selling drug ($25B+ annual revenue) with expanding oncology indications. MRK sits 2%…</div></td></tr><tr><td><b>EQNR</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=EQNR&ty=c&ta=1&p=d&s=l" alt="EQNR" class="fv-thumb" onclick="fvOpen('EQNR')"></td><td class="m hide-m">03-31</td><td class="hide-m">$42.90</td><td class="hide-m">$42.40</td><td class="neg"><b>-1.17%</b></td><td class="neg hide-m">$40.00</td><td class="pos hide-m">$50.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Equinor is Norway s state-controlled energy giant and the defining European energy security play of 2026. At $42.40, EQNR is just 1.9%…</div></td></tr><tr><td><b>GLD</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GLD&ty=c&ta=1&p=d&s=l" alt="GLD" class="fv-thumb" onclick="fvOpen('GLD')"></td><td class="m hide-m">03-31</td><td class="hide-m">$420.08</td><td class="hide-m">$414.58</td><td class="neg"><b>-1.31%</b></td><td class="neg hide-m">$402.00</td><td class="pos hide-m">$460.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GLD provides the purest direct expression of gold exposure at $414.58. With gold at $4,540 near ATH, GLD has pulled back roughly 9% from…</div></td></tr><tr><td><b>SHEL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SHEL&ty=c&ta=1&p=d&s=l" alt="SHEL" class="fv-thumb" onclick="fvOpen('SHEL')"></td><td class="m hide-m">03-31</td><td class="hide-m">$94.48</td><td class="hide-m">$93.00</td><td class="neg"><b>-1.57%</b></td><td class="neg hide-m">$87.87</td><td class="pos hide-m">—</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Shell is Europe s largest energy company by revenue and the only true global LNG trading powerhouse outside the US. At $92.74, SHEL is…</div></td></tr><tr><td><b>XOM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=XOM&ty=c&ta=1&p=d&s=l" alt="XOM" class="fv-thumb" onclick="fvOpen('XOM')"></td><td class="m hide-m">03-31</td><td class="hide-m">$172.67</td><td class="hide-m">$169.66</td><td class="neg"><b>-1.74%</b></td><td class="neg hide-m">$160.58</td><td class="pos hide-m">—</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Carryover from the March 31 scan (previously #1). XOM dipped -2.24% to $167.15 as oil pulled back on Iran de-escalation, but the…</div></td></tr><tr><td><b>NEM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NEM&ty=c&ta=1&p=d&s=l" alt="NEM" class="fv-thumb" onclick="fvOpen('NEM')"></td><td class="m hide-m">03-31</td><td class="hide-m">$105.15</td><td class="hide-m">$103.12</td><td class="neg"><b>-1.93%</b></td><td class="neg hide-m">$88.00</td><td class="pos hide-m">$115.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Newmont is the world s largest gold miner by production and it has a compelling disconnect from its underlying commodity. Gold spot is…</div></td></tr><tr><td><b>FANG</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=FANG&ty=c&ta=1&p=d&s=l" alt="FANG" class="fv-thumb" onclick="fvOpen('FANG')"></td><td class="m hide-m">03-27</td><td class="hide-m">$204.21</td><td class="hide-m">$198.65</td><td class="neg"><b>-2.72%</b></td><td class="neg hide-m">$190.00</td><td class="pos hide-m">$240.00</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Diamondback Energy exploded +6.24% to $202.19 — a monster move on a deeply red tape. FANG is the premier pure-play Permian Basin E P,…</div></td></tr></tbody>
+    <tbody><tr><td><b>MA</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=MA&ty=c&ta=1&p=d&s=l" alt="MA" class="fv-thumb" onclick="fvOpen('MA')"></td><td class="m hide-m">03-19</td><td class="hide-m">$540.85</td><td class="hide-m">$554.37</td><td class="pos"><b>+2.5%</b></td><td class="neg hide-m">$525.00</td><td class="pos hide-m">$585.00</td><td class="neg">2d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Mastercard is forming a tight bullish flag just below all-time highs. Low volatility and rising relative strength suggest an imminent…</div></td></tr><tr><td><b>AMZN</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AMZN&ty=c&ta=1&p=d&s=l" alt="AMZN" class="fv-thumb" onclick="fvOpen('AMZN')"></td><td class="m hide-m">03-24</td><td class="hide-m">$188.14</td><td class="hide-m">$188.89</td><td class="pos"><b>+0.4%</b></td><td class="neg hide-m">$182.50</td><td class="pos hide-m">$210.00</td><td class="am">5d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">Amazon is breaking out from a 4-week consolidation pattern. Volume is supporting the move, and the RSI remains in the bullish zone without…</div></td></tr></tbody>
   </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">44 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">17 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody><tr>
-          <td><b>XOM</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$172.67</td>
-          <td class="hide-m">$169.66</td>
-          <td class="neg"><b>-1.74%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
           <td><b>CF</b></td>
           <td class="m hide-m">03-31</td>
           <td class="m hide-m">04-01</td>
           <td class="hide-m">$135.91</td>
-          <td class="hide-m">$126.91</td>
-          <td class="neg"><b>-6.62%</b></td>
+          <td class="hide-m">$131.83</td>
+          <td class="neg"><b>-3%</b></td>
           <td class="m hide-m">1d</td>
           <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
         </tr><tr>
-          <td><b>EQNR</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$42.90</td>
-          <td class="hide-m">$42.20</td>
-          <td class="neg"><b>-1.63%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
-          <td><b>SHEL</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$94.48</td>
-          <td class="hide-m">$93.00</td>
-          <td class="neg"><b>-1.57%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
-          <td><b>NEM</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$105.15</td>
-          <td class="hide-m">$108.25</td>
-          <td class="pos"><b>+2.95%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
-          <td><b>GLD</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$420.08</td>
-          <td class="hide-m">$430.29</td>
-          <td class="pos"><b>+2.43%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
-          <td><b>MRK</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$119.03</td>
-          <td class="hide-m">$120.29</td>
-          <td class="pos"><b>+1.06%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
-          <td><b>KO</b></td>
-          <td class="m hide-m">03-31</td>
-          <td class="m hide-m">04-01</td>
-          <td class="hide-m">$76.53</td>
-          <td class="hide-m">$76.05</td>
-          <td class="neg"><b>-0.63%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
-        </tr><tr>
-          <td><b>BTU</b></td>
-          <td class="m hide-m">03-30</td>
-          <td class="m hide-m">03-31</td>
-          <td class="hide-m">$39.27</td>
-          <td class="hide-m">$36.52</td>
-          <td class="neg"><b>-7%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>FANG</b></td>
-          <td class="m hide-m">03-27</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$204.21</td>
-          <td class="hide-m">$197.79</td>
-          <td class="neg"><b>-3.14%</b></td>
-          <td class="m hide-m">3d</td>
-          <td><span class="pill pending" title="Pending (3d/10d)">Pending (3d/10d)</span></td>
-        </tr><tr>
-          <td><b>CF</b></td>
+          <td><b>LVMH</b></td>
+          <td class="m hide-m">03-12</td>
           <td class="m hide-m">03-26</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$130.12</td>
-          <td class="hide-m">$139.62</td>
-          <td class="pos"><b>+7.3%</b></td>
-          <td class="m hide-m">3d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>HAL</b></td>
-          <td class="m hide-m">03-26</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$38.87</td>
-          <td class="hide-m">$38.99</td>
-          <td class="pos"><b>+0.31%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pending" title="Pending (4d/10d)">Pending (4d/10d)</span></td>
-        </tr><tr>
-          <td><b>SLB</b></td>
-          <td class="m hide-m">03-26</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$51.55</td>
-          <td class="hide-m">$51.39</td>
-          <td class="neg"><b>-0.31%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pending" title="Pending (4d/10d)">Pending (4d/10d)</span></td>
-        </tr><tr>
-          <td><b>MRK</b></td>
-          <td class="m hide-m">03-26</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$118.96</td>
-          <td class="hide-m">$120.29</td>
-          <td class="pos"><b>+1.12%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pending" title="Pending (4d/10d)">Pending (4d/10d)</span></td>
-        </tr><tr>
-          <td><b>MPC</b></td>
-          <td class="m hide-m">03-26</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$241.89</td>
-          <td class="hide-m">$244.18</td>
-          <td class="pos"><b>+0.95%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pending" title="Pending (4d/10d)">Pending (4d/10d)</span></td>
-        </tr><tr>
-          <td><b>FCX</b></td>
-          <td class="m hide-m">03-25</td>
-          <td class="m hide-m">03-27</td>
-          <td class="hide-m">$57.83</td>
-          <td class="hide-m">$55.58</td>
-          <td class="neg"><b>-3.89%</b></td>
-          <td class="m hide-m">2d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>APA</b></td>
-          <td class="m hide-m">03-24</td>
-          <td class="m hide-m">03-28</td>
-          <td class="hide-m">$39.72</td>
-          <td class="hide-m">$43.72</td>
-          <td class="pos"><b>+4.03%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>PSX</b></td>
-          <td class="m hide-m">03-24</td>
-          <td class="m hide-m">03-29</td>
-          <td class="hide-m">$178.78</td>
-          <td class="hide-m">$182.18</td>
-          <td class="pos"><b>+1.9%</b></td>
-          <td class="m hide-m">6d</td>
-          <td><span class="pill pending" title="Pending (6d/10d)">Pending (6d/10d)</span></td>
-        </tr><tr>
-          <td><b>OXY</b></td>
-          <td class="m hide-m">03-23</td>
-          <td class="m hide-m">03-27</td>
-          <td class="hide-m">$58.50</td>
-          <td class="hide-m">$64.25</td>
-          <td class="pos"><b>+9.83%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>SM</b></td>
-          <td class="m hide-m">03-23</td>
-          <td class="m hide-m">03-27</td>
-          <td class="hide-m">$28.80</td>
-          <td class="hide-m">$33.05</td>
-          <td class="pos"><b>+14.76%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>EOG</b></td>
-          <td class="m hide-m">03-23</td>
-          <td class="m hide-m">03-27</td>
-          <td class="hide-m">$135.85</td>
-          <td class="hide-m">$146.35</td>
-          <td class="pos"><b>+7.73%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>TTE</b></td>
-          <td class="m hide-m">03-20</td>
-          <td class="m hide-m">03-28</td>
-          <td class="hide-m">$89.29</td>
-          <td class="hide-m">$90.98</td>
-          <td class="pos"><b>+1.89%</b></td>
-          <td class="m hide-m">8d</td>
-          <td><span class="pill pending" title="Pending (8d/10d)">Pending (8d/10d)</span></td>
-        </tr><tr>
-          <td><b>XLE</b></td>
-          <td class="m hide-m">03-19</td>
-          <td class="m hide-m">03-28</td>
-          <td class="hide-m">$58.87</td>
-          <td class="hide-m">$61.26</td>
-          <td class="pos"><b>+3.35%</b></td>
-          <td class="m hide-m">9d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>DVN</b></td>
-          <td class="m hide-m">03-19</td>
-          <td class="m hide-m">03-28</td>
-          <td class="hide-m">$48.38</td>
-          <td class="hide-m">$50.32</td>
-          <td class="pos"><b>+4.01%</b></td>
-          <td class="m hide-m">9d</td>
-          <td><span class="pill pending" title="Pending (9d/10d)">Pending (9d/10d)</span></td>
-        </tr><tr>
-          <td><b>AGRO</b></td>
-          <td class="m hide-m">03-19</td>
-          <td class="m hide-m">03-28</td>
-          <td class="hide-m">$13.54</td>
-          <td class="hide-m">$15.02</td>
-          <td class="pos"><b>+10.93%</b></td>
-          <td class="m hide-m">9d</td>
-          <td><span class="pill pending" title="Pending (9d/10d)">Pending (9d/10d)</span></td>
-        </tr><tr>
-          <td><b>ANTX</b></td>
-          <td class="m hide-m">03-18</td>
-          <td class="m hide-m">03-19</td>
-          <td class="hide-m">$4.85</td>
-          <td class="hide-m">$4.51</td>
-          <td class="neg"><b>-7%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>DAWN</b></td>
-          <td class="m hide-m">03-18</td>
-          <td class="m hide-m">03-28</td>
-          <td class="hide-m">$21.31</td>
-          <td class="hide-m">$21.44</td>
-          <td class="pos"><b>+0.35%</b></td>
+          <td class="hide-m">$824.10</td>
+          <td class="hide-m">$846.35</td>
+          <td class="pos"><b>+2.7%</b></td>
           <td class="m hide-m">10d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
         </tr><tr>
-          <td><b>GLD</b></td>
-          <td class="m hide-m">03-17</td>
+          <td><b>ASML</b></td>
+          <td class="m hide-m">03-10</td>
+          <td class="m hide-m">03-13</td>
+          <td class="hide-m">$942.50</td>
+          <td class="hide-m">$914.22</td>
+          <td class="neg"><b>-3%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>IBM</b></td>
+          <td class="m hide-m">03-05</td>
           <td class="m hide-m">03-19</td>
-          <td class="hide-m">$460.51</td>
-          <td class="hide-m">$445.51</td>
-          <td class="neg"><b>-3.26%</b></td>
-          <td class="m hide-m">2d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>ABBV</b></td>
-          <td class="m hide-m">03-13</td>
-          <td class="m hide-m">03-17</td>
-          <td class="hide-m">$226.89</td>
-          <td class="hide-m">$216.89</td>
-          <td class="neg"><b>-4.41%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>HAL</b></td>
-          <td class="m hide-m">03-13</td>
-          <td class="m hide-m">03-20</td>
-          <td class="hide-m">$34.53</td>
-          <td class="hide-m">$37.53</td>
-          <td class="pos"><b>+8.69%</b></td>
-          <td class="m hide-m">7d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>RTX</b></td>
-          <td class="m hide-m">03-13</td>
-          <td class="m hide-m">03-20</td>
-          <td class="hide-m">$204.46</td>
-          <td class="hide-m">$195.46</td>
-          <td class="neg"><b>-4.4%</b></td>
-          <td class="m hide-m">7d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>COP</b></td>
-          <td class="m hide-m">03-13</td>
-          <td class="m hide-m">03-23</td>
-          <td class="hide-m">$119.68</td>
-          <td class="hide-m">$131.18</td>
-          <td class="pos"><b>+9.61%</b></td>
+          <td class="hide-m">$192.34</td>
+          <td class="hide-m">$198.88</td>
+          <td class="pos"><b>+3.4%</b></td>
           <td class="m hide-m">10d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>CVX</b></td>
-          <td class="m hide-m">03-13</td>
-          <td class="m hide-m">03-24</td>
-          <td class="hide-m">$196.00</td>
-          <td class="hide-m">$210.00</td>
-          <td class="pos"><b>+7.14%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>BBIO</b></td>
-          <td class="m hide-m">03-10</td>
-          <td class="m hide-m">03-11</td>
-          <td class="hide-m">$66.12</td>
-          <td class="hide-m">$73.80</td>
-          <td class="pos"><b>+11.62%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>NEM</b></td>
-          <td class="m hide-m">03-10</td>
-          <td class="m hide-m">03-14</td>
-          <td class="hide-m">$118.02</td>
-          <td class="hide-m">$111.12</td>
-          <td class="neg"><b>-5.85%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>MRVL</b></td>
-          <td class="m hide-m">03-09</td>
-          <td class="m hide-m">03-20</td>
-          <td class="hide-m">$87.93</td>
-          <td class="hide-m">$90.16</td>
-          <td class="pos"><b>+2.54%</b></td>
-          <td class="m hide-m">11d</td>
           <td><span class="pill am" title="Expired">Expired</span></td>
         </tr><tr>
-          <td><b>ADM</b></td>
-          <td class="m hide-m">03-06</td>
-          <td class="m hide-m">03-10</td>
-          <td class="hide-m">$66.94</td>
-          <td class="hide-m">$70.93</td>
-          <td class="pos"><b>+3.66%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>UNG</b></td>
-          <td class="m hide-m">03-06</td>
-          <td class="m hide-m">03-17</td>
-          <td class="hide-m">$12.53</td>
-          <td class="hide-m">$12.39</td>
-          <td class="neg"><b>-1.12%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill am" title="Expired">Expired</span></td>
-        </tr><tr>
-          <td><b>USO</b></td>
-          <td class="m hide-m">03-05</td>
-          <td class="m hide-m">03-07</td>
-          <td class="hide-m">$94.46</td>
-          <td class="hide-m">$108.71</td>
-          <td class="pos"><b>+15.09%</b></td>
-          <td class="m hide-m">2d</td>
-          <td><span class="pill pos" title="Target 2 hit">TP2 ✓</span></td>
-        </tr><tr>
-          <td><b>CVX</b></td>
-          <td class="m hide-m">03-05</td>
-          <td class="m hide-m">03-11</td>
-          <td class="hide-m">$186.60</td>
-          <td class="hide-m">$196.10</td>
-          <td class="pos"><b>+5.09%</b></td>
-          <td class="m hide-m">6d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>MPC</b></td>
-          <td class="m hide-m">03-05</td>
-          <td class="m hide-m">03-16</td>
-          <td class="hide-m">$224.90</td>
-          <td class="hide-m">$242.90</td>
-          <td class="pos"><b>+8%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>DVN</b></td>
-          <td class="m hide-m">03-05</td>
-          <td class="m hide-m">03-16</td>
-          <td class="hide-m">$44.16</td>
-          <td class="hide-m">$48.41</td>
-          <td class="pos"><b>+9.62%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>AMPX</b></td>
-          <td class="m hide-m">03-04</td>
-          <td class="m hide-m">03-07</td>
-          <td class="hide-m">$12.13</td>
-          <td class="hide-m">$15.88</td>
-          <td class="pos"><b>+22.75%</b></td>
-          <td class="m hide-m">3d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>CHRD</b></td>
-          <td class="m hide-m">03-04</td>
-          <td class="m hide-m">03-08</td>
-          <td class="hide-m">$110.39</td>
-          <td class="hide-m">$124.39</td>
-          <td class="pos"><b>+8.06%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>TTE</b></td>
-          <td class="m hide-m">03-04</td>
-          <td class="m hide-m">03-15</td>
-          <td class="hide-m">$78.68</td>
-          <td class="hide-m">$86.18</td>
-          <td class="neg"><b>-2.1%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>CF</b></td>
-          <td class="m hide-m">03-04</td>
-          <td class="m hide-m">03-07</td>
-          <td class="hide-m">$106.00</td>
-          <td class="hide-m">$116.00</td>
-          <td class="pos"><b>+9.43%</b></td>
-          <td class="m hide-m">3d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>AAOI</b></td>
-          <td class="m hide-m">03-03</td>
-          <td class="m hide-m">03-07</td>
-          <td class="hide-m">$91.50</td>
-          <td class="hide-m">$109.50</td>
-          <td class="pos"><b>+10.54%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>GLD</b></td>
-          <td class="m hide-m">03-03</td>
-          <td class="m hide-m">03-14</td>
-          <td class="hide-m">$472.83</td>
-          <td class="hide-m">$459.27</td>
-          <td class="pos"><b>+1.06%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>XLE</b></td>
-          <td class="m hide-m">03-03</td>
-          <td class="m hide-m">03-14</td>
-          <td class="hide-m">$57.39</td>
-          <td class="hide-m">$58.51</td>
-          <td class="pos"><b>+1.95%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill am" title="Expired">Expired</span></td>
-        </tr><tr>
-          <td><b>NAT</b></td>
+          <td><b>MSFT</b></td>
           <td class="m hide-m">03-02</td>
-          <td class="m hide-m">03-03</td>
-          <td class="hide-m">$6.34</td>
-          <td class="hide-m">$5.90</td>
-          <td class="neg"><b>-7%</b></td>
-          <td class="m hide-m">1d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+          <td class="m hide-m">03-16</td>
+          <td class="hide-m">$415.20</td>
+          <td class="hide-m">$438.05</td>
+          <td class="pos"><b>+5.5%</b></td>
+          <td class="m hide-m">10d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
         </tr><tr>
-          <td><b>LMT</b></td>
+          <td><b>NVDA</b></td>
           <td class="m hide-m">02-27</td>
           <td class="m hide-m">03-01</td>
-          <td class="hide-m">$648.09</td>
-          <td class="hide-m">$690.59</td>
-          <td class="pos"><b>+6.56%</b></td>
-          <td class="m hide-m">2d</td>
+          <td class="hide-m">$785.30</td>
+          <td class="hide-m">$824.56</td>
+          <td class="pos"><b>+5%</b></td>
+          <td class="m hide-m">3d</td>
           <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>XOM</b></td>
-          <td class="m hide-m">02-27</td>
-          <td class="m hide-m">03-10</td>
-          <td class="hide-m">$151.00</td>
-          <td class="hide-m">$156.12</td>
-          <td class="pos"><b>+3.39%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill am" title="Expired">Expired</span></td>
-        </tr><tr>
-          <td><b>SAP</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-02</td>
-          <td class="hide-m">$202.36</td>
-          <td class="hide-m">$189.36</td>
-          <td class="neg"><b>-6.42%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>EWQ</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-02</td>
-          <td class="hide-m">$48.13</td>
-          <td class="hide-m">$45.38</td>
-          <td class="neg"><b>-5.71%</b></td>
-          <td class="m hide-m">4d</td>
-          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
-        </tr><tr>
-          <td><b>DKNG</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-09</td>
-          <td class="hide-m">$23.24</td>
-          <td class="hide-m">$25.56</td>
-          <td class="pos"><b>+9.42%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>EWH</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-09</td>
-          <td class="hide-m">$23.84</td>
-          <td class="hide-m">$22.88</td>
-          <td class="neg"><b>-2.22%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>A</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-06</td>
-          <td class="hide-m">$121.89</td>
-          <td class="hide-m">$113.89</td>
-          <td class="neg"><b>-1.11%</b></td>
-          <td class="m hide-m">8d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>UBER</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-09</td>
-          <td class="hide-m">$73.15</td>
-          <td class="hide-m">$72.97</td>
-          <td class="pos"><b>+4.78%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill m" title="Rotated out">Rotated</span></td>
-        </tr><tr>
-          <td><b>NOW</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-05</td>
-          <td class="hide-m">$107.45</td>
-          <td class="hide-m">$123.45</td>
-          <td class="pos"><b>+14.89%</b></td>
-          <td class="m hide-m">7d</td>
-          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
-        </tr><tr>
-          <td><b>CRM</b></td>
-          <td class="m hide-m">02-26</td>
-          <td class="m hide-m">03-09</td>
-          <td class="hide-m">$196.76</td>
-          <td class="hide-m">$199.28</td>
-          <td class="pos"><b>+1.28%</b></td>
-          <td class="m hide-m">11d</td>
-          <td><span class="pill am" title="Expired">Expired</span></td>
         </tr></tbody>
   </table>
   </details>
 </div>
 
-</div>
+  </div>
 
   <div class="disc">
     <i class="fas fa-circle-info"></i>
@@ -1514,6 +1020,20 @@ details[open] summary::after{transform:rotate(90deg)}
     <img id="fvImg" src="" alt="">
   </div>
 </div>
+
+<!-- Distribution Detailed Modal -->
+<div class="dist-modal" id="distModal" onclick="if(event.target===this)distClose()">
+  <div class="dist-modal-inner">
+    <div class="dist-modal-head">
+      <div class="dist-modal-title"><i class="fas fa-chart-pie"></i> <span id="distModalTitle">Distribution</span></div>
+      <button class="dist-modal-close" onclick="distClose()"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="dist-modal-body">
+      <div id="distFullChart" class="dist-full-chart"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 function fvOpen(ticker){
   var d=document.getElementById('fvDialog');
@@ -1540,374 +1060,184 @@ document.addEventListener('DOMContentLoaded',function(){
     c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:color+'05'}])}}],grid:{left:40,right:10,top:10,bottom:22}});
     return c;
   }
-  // Init charts for all modes (only active one renders immediately, others on tab switch)
+  
   var ch=[];
-  ch.push(mk('chart-dynamic',["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"],[101.15,101.54,108.47,111.02,110.63,114.66,127.79,124.84,126.1,128.21,130.79,131.21,131.22,131.8,132.14,132.52,132.75,135.2,137.3,137.8,139.9,144.1,141.11,136.51,137.98],'#dc2626'));
-  ch.push(mk('chart-balanced',["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"],[100.57,100.57,102.86,102.68,104.11,108.53,116.03,115.92,116.56,117.61,118.9,119.11,119.11,120.54,121.38,122.27,122.19,122.66,124.82,125.33,126.78,128.83,128.28,125.38,126.12],'#059669'));
-  ch.push(mk('chart-secured',["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"],[100.74,100.79,99.99,100.05,101.16,105.45,108.19,107.97,108.74,110.21,110.92,110.05,110.63,111.38,111.12,112.74,111.82,112.46,115.23,116.13,117.75,119.43,118.28,117.51,117.29],'#2563eb'));
-  window.addEventListener('resize',function(){ch.forEach(function(c){if(c)c.resize()})});
+  const mD = ["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"];
+  const mC = {
+    d: [101.15,101.54,108.47,111.02,110.63,114.66,127.79,124.84,126.1,128.21,130.79,131.21,131.22,131.8,132.14,132.52,132.75,135.2,137.3,137.8,139.9,144.1,141.11,136.51,137.98],
+    b: [100.57,100.57,102.86,102.68,104.11,108.53,116.03,115.92,116.56,117.61,118.9,119.11,119.11,120.54,121.38,122.27,122.19,122.66,124.82,125.33,126.78,128.83,128.28,125.38,126.12],
+    s: [100.74,100.79,99.99,100.05,101.16,105.45,108.19,107.97,108.74,110.21,110.92,110.05,110.63,111.38,111.12,112.74,111.82,112.46,115.23,116.13,117.75,119.43,118.28,117.51,117.29]
+  };
+  ch.push(mk('chart-dynamic', mD, mC.d, '#dc2626'));
+  ch.push(mk('chart-balanced', mD, mC.b, '#059669'));
+  ch.push(mk('chart-secured', mD, mC.s, '#2563eb'));
+  window.addEventListener('resize', () => ch.forEach(c => c && c.resize()));
 
-  // ── Time Machine (FAB + slider panel) ──
-  var tmDates=[], tmCurrentIdx=0;
-  function tmInit(){
-    fetch('/scanner/status/history/dates.json').then(function(r){return r.json()}).then(function(dates){
-      tmDates=dates;if(dates.length<1)return;
-      var fab=document.getElementById('tmFab');
-      if(fab)fab.style.display='flex';
-      var slider=document.getElementById('timeSlider');
-      slider.max=dates.length-1;
-      slider.value=dates.length-1;
-      tmCurrentIdx=dates.length-1;
-      tmUpdateLabel();
-      // Range labels
-      var fmt=function(d){return d.slice(4,6)+'/'+d.slice(6,8)};
-      document.getElementById('tmFirstDate').textContent=fmt(dates[0]);
-      document.getElementById('tmLastDate').textContent=fmt(dates[dates.length-1]);
-      slider.addEventListener('input',function(){
-        tmCurrentIdx=parseInt(this.value);
-        tmUpdateLabel();
-        tmLoadIdx(tmCurrentIdx);
+  const TICKER_META = {
+    "NVDA": {r:"US", s:"Tech", sz:"Mega", c:"USD"}, "AAPL": {r:"US", s:"Tech", sz:"Mega", c:"USD"}, "MSFT": {r:"US", s:"Tech", sz:"Mega", c:"USD"},
+    "GOOGL": {r:"US", s:"Tech", sz:"Mega", c:"USD"}, "AMZN": {r:"US", s:"Consumer", sz:"Mega", c:"USD"}, "META": {r:"US", s:"Tech", sz:"Mega", c:"USD"},
+    "ASML": {r:"EU", s:"Tech", sz:"Mega", c:"EUR"}, "ASML.AS": {r:"EU", s:"Tech", sz:"Mega", c:"EUR"}, "MC.PA": {r:"EU", s:"Consumer", sz:"Mega", c:"EUR"},
+    "SAP.DE": {r:"EU", s:"Tech", sz:"Mega", c:"EUR"}, "TSLA": {r:"US", s:"Consumer", sz:"Mega", c:"USD"}, "XOM": {r:"US", s:"Energy", sz:"Mega", c:"USD"},
+    "CVX": {r:"US", s:"Energy", sz:"Large", c:"USD"}, "TTE.PA": {r:"EU", s:"Energy", sz:"Mega", c:"EUR"}, "BP.L": {r:"EU", s:"Energy", sz:"Large", c:"GBP"},
+    "SHEL.L": {r:"EU", s:"Energy", sz:"Large", c:"GBP"}, "JPM": {r:"US", s:"Financials", sz:"Mega", c:"USD"}, "V": {r:"US", s:"Financials", sz:"Mega", c:"USD"},
+    "MA": {r:"US", s:"Financials", sz:"Mega", c:"USD"}, "COST": {r:"US", s:"Consumer", sz:"Large", c:"USD"}, "WMT": {r:"US", s:"Consumer", sz:"Mega", c:"USD"},
+    "BA": {r:"US", s:"Industrials", sz:"Large", c:"USD"}, "RTX": {r:"US", s:"Industrials", sz:"Large", c:"USD"}, "LMT": {r:"US", s:"Industrials", sz:"Large", c:"USD"},
+    "CAT": {r:"US", s:"Industrials", sz:"Large", c:"USD"}, "HAL": {r:"US", s:"Energy", sz:"Mid", c:"USD"}, "SLB": {r:"US", s:"Energy", sz:"Large", c:"USD"},
+    "EOG": {r:"US", s:"Energy", sz:"Large", c:"USD"}, "FANG": {r:"US", s:"Energy", sz:"Large", c:"USD"}, "MPC": {r:"US", s:"Energy", sz:"Large", c:"USD"},
+    "PSX": {r:"US", s:"Energy", sz:"Large", c:"USD"}, "DVN": {r:"US", s:"Energy", sz:"Large", c:"USD"}, "APA": {r:"US", s:"Energy", sz:"Mid", c:"USD"},
+    "BTC-USD": {r:"Crypto", s:"Crypto", sz:"Mega", c:"USD"}, "ETH-USD": {r:"Crypto", s:"Crypto", sz:"Mega", c:"USD"}, "GLD": {r:"Commodities", s:"Gold", sz:"Large", c:"USD"},
+    "SLV": {r:"Commodities", s:"Silver", sz:"Mid", c:"USD"}, "USO": {r:"Commodities", s:"Oil", sz:"Mid", c:"USD"}
+  };
+  function getMeta(t){
+    if(!t) return {r:"Other", s:"Other", sz:"Other", c:"USD"};
+    t = t.toUpperCase();
+    if(TICKER_META[t]) return TICKER_META[t];
+    if(t.includes(".PA") || t.includes(".AS") || t.includes(".DE")) return {r:"EU", s:"Other", sz:"Large", c:"EUR"};
+    if(t.includes(".L")) return {r:"EU", s:"Other", sz:"Large", c:"GBP"};
+    if(t.includes("-USD")) return {r:"Crypto", s:"Crypto", sz:"Mega", c:"USD"};
+    return {r:"US", s:"Other", sz:"Large", c:"USD"};
+  }
+
+  function updateDistHero(container, items){
+    if(!container) return;
+    if(!items || items.length === 0){ container.style.display='none'; return; }
+    container.style.display='flex';
+    let data = {region:{}, sector:{}, size:{}, currency:{}, strategy:{}};
+    items.forEach(it => {
+      let m = getMeta(it.ticker);
+      data.region[m.r] = (data.region[m.r]||0)+1;
+      data.sector[m.s] = (data.sector[m.s]||0)+1;
+      data.size[m.sz] = (data.size[m.sz]||0)+1;
+      data.currency[m.c] = (data.currency[m.c]||0)+1;
+      let s = it.strategy || it.strat || "Breakout";
+      data.strategy[s] = (data.strategy[s]||0)+1;
+    });
+
+    const types = ["region", "sector", "size", "currency", "strategy"];
+    const labels = ["Region", "Sector", "Cap Size", "Currency", "Strategy"];
+    container.innerHTML = `<div class="dist-header"><span class="dist-title"><i class="fas fa-chart-pie"></i> Portfolio Distribution</span></div><div class="dist-mini-charts"></div>`;
+    let grid = container.querySelector('.dist-mini-charts');
+    types.forEach((t, i) => {
+      let box = document.createElement('div');
+      box.className = 'dist-mini-box';
+      box.onclick = () => window.distShowFull(labels[i], data[t]);
+      box.innerHTML = `<div class="dist-mini-label">${labels[i]}</div><div id="mini-${t}-${container.id}" class="dist-mini-chart"></div>`;
+      grid.appendChild(box);
+      let el = box.querySelector('.dist-mini-chart');
+      let inst = echarts.getInstanceByDom(el) || echarts.init(el);
+      inst.setOption({
+        series: [{type:'pie', radius:['60%','90%'], label:{show:false}, data:Object.entries(data[t]).map(([name,value])=>({name,value})), color:['#3b82f6','#10b981','#f59e0b','#dc2626','#8b5cf6']}]
       });
-    }).catch(function(){});
-  }
-  // Exposed globally so inline onclick handlers can reach them
-  window.tmToggle=function(){
-    var p=document.getElementById('tmPanel');
-    var isOpen=p.classList.contains('open');
-    p.classList.toggle('open');
-    // Keep FAB highlighted while panel is open
-    var fab=document.getElementById('tmFab');
-    if(fab){
-      if(!isOpen)fab.style.boxShadow='0 0 0 3px rgba(59,130,246,.35)';
-      else fab.style.boxShadow='';
-    }
-  };
-  // Close panel when clicking outside
-  document.addEventListener('click',function(e){
-    var p=document.getElementById('tmPanel');
-    var fab=document.getElementById('tmFab');
-    if(p&&p.classList.contains('open')&&!p.contains(e.target)&&fab&&!fab.contains(e.target)){
-      p.classList.remove('open');
-      fab.style.boxShadow='';
-    }
-  });
-  function tmUpdateLabel(){
-    var el=document.getElementById('tmDateLabel');
-    var d=tmDates[tmCurrentIdx];
-    var formatted=d.slice(0,4)+'-'+d.slice(4,6)+'-'+d.slice(6,8);
-    var isLive=tmCurrentIdx===tmDates.length-1;
-    if(isLive){
-      el.innerHTML='<span class="date-val">'+formatted+'<span class="live-badge">live</span></span>';
-      document.getElementById('tmLiveBtn').className='tm-live-btn';
-      document.getElementById('tmFab').classList.remove('viewing');
-    }else{
-      el.innerHTML='<span class="date-val">'+formatted+'<span class="hist-badge">snapshot</span></span>';
-      document.getElementById('tmLiveBtn').className='tm-live-btn show';
-      document.getElementById('tmFab').classList.add('viewing');
-    }
-    // Update nav button states
-    var btnPrev=document.getElementById('tmBtnPrev'),btnNext=document.getElementById('tmBtnNext');
-    if(btnPrev)btnPrev.disabled=tmCurrentIdx===0;
-    if(btnNext)btnNext.disabled=tmCurrentIdx===tmDates.length-1;
-  }
-  window.tmNav=function(dir){
-    var newIdx=tmCurrentIdx+dir;
-    if(newIdx<0||newIdx>=tmDates.length)return;
-    tmCurrentIdx=newIdx;
-    document.getElementById('timeSlider').value=tmCurrentIdx;
-    tmUpdateLabel();
-    tmLoadIdx(tmCurrentIdx);
-  };
-  // Mode switcher
-  var activeMode='balanced';
-  window.switchMode=function(id){
-    activeMode=id;
-    document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.dataset.mode===id)});
-    document.querySelectorAll('.mode-panel').forEach(function(p){p.style.display=p.id==='p-'+id?'':'none'});
-    var chartEl=document.getElementById('chart-'+id);
-    if(chartEl){
-      var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
-      else{inst.resize();}
-    }
-    // If Time Machine is active, reload snapshot for new mode
-    if(tmDates.length&&tmCurrentIdx<tmDates.length-1){tmLoadIdx(tmCurrentIdx);}
-  };
-  var modeCharts={"dynamic":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,127.79,124.84,126.1,128.21,130.79,131.21,131.22,131.8,132.14,132.52,132.75,135.2,137.3,137.8,139.9,144.1,141.11,136.51,137.98],"c":"#dc2626"},"balanced":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"],"v":[100.57,100.57,102.86,102.68,104.11,108.53,116.03,115.92,116.56,117.61,118.9,119.11,119.11,120.54,121.38,122.27,122.19,122.66,124.82,125.33,126.78,128.83,128.28,125.38,126.12],"c":"#059669"},"secured":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01"],"v":[100.74,100.79,99.99,100.05,101.16,105.45,108.19,107.97,108.74,110.21,110.92,110.05,110.63,111.38,111.12,112.74,111.82,112.46,115.23,116.13,117.75,119.43,118.28,117.51,117.29],"c":"#2563eb"}};
-  // Save original live content on first TM use
-  var tmLiveHTML={};
-  function tmSaveLive(){
-    document.querySelectorAll('.mode-panel').forEach(function(p){
-      var id=p.id.replace('p-','');
-      if(!tmLiveHTML[id])tmLiveHTML[id]=p.innerHTML;
     });
   }
-  function tmRestoreLive(){
-    document.querySelectorAll('.mode-panel').forEach(function(p){
-      var id=p.id.replace('p-','');
-      if(tmLiveHTML[id]){
-        p.innerHTML=tmLiveHTML[id];
-        p.style.minHeight='';p.style.opacity='';p.style.transition='';
-        var chartEl=document.getElementById('chart-'+id);
-        if(chartEl){
-          var old=echarts.getInstanceByDom(chartEl);
-          if(old)old.dispose();
-          var cfg=modeCharts[id];
-          if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);
-        }
-      }
+
+  window.distShowFull = function(title, dict){
+    let modal = document.getElementById('distModal');
+    document.getElementById('distModalTitle').textContent = title;
+    modal.classList.add('open');
+    let el = document.getElementById('distFullChart');
+    let inst = echarts.getInstanceByDom(el) || echarts.init(el);
+    inst.setOption({
+      tooltip: {trigger:'item'}, legend:{orient:'vertical', left:'left', top:'middle'},
+      series: [{name:title, type:'pie', radius:['40%','70%'], label:{show:true, formatter:'{b}: {d}%'}, data:Object.entries(dict).map(([name,value])=>({name,value})), color:['#3b82f6','#10b981','#f59e0b','#dc2626','#8b5cf6','#ec4899']}]
+    }, true); // Use true to merge/refresh
+  };
+  window.distClose = () => document.getElementById('distModal').classList.remove('open');
+
+  function tmInitUI(){
+    document.querySelectorAll('.mode-panel').forEach(p => {
+      let live = document.createElement('div'); live.className = 'live-content';
+      while(p.firstChild) live.appendChild(p.firstChild);
+      let tm = document.createElement('div'); tm.className = 'tm-content'; tm.style.display = 'none';
+      p.appendChild(live); p.appendChild(tm);
+      
+      let dist = document.createElement('div'); dist.className = 'dist-hero'; dist.id = 'dist-live-' + p.id;
+      let perf = live.querySelector('.perf-hero');
+      if(perf) perf.parentNode.insertBefore(dist, perf.nextSibling);
+    });
+  }
+  tmInitUI();
+
+  function updateLiveDist(){
+    document.querySelectorAll('.mode-panel').forEach(p => {
+      let tickers = [];
+      p.querySelectorAll('.cta-orders b, .section-card .t tr:not(.thesis-row) td:first-child b').forEach(b => tickers.push({ticker:b.textContent.trim()}));
+      updateDistHero(p.querySelector('.live-content .dist-hero'), tickers);
+    });
+  }
+  setTimeout(updateLiveDist, 500);
+
+  var tmDates=[], tmIdx=0, activeMode='balanced';
+  function tmUpdateLabel(){
+    let d=tmDates[tmIdx], isLive=tmIdx===tmDates.length-1;
+    document.getElementById('tmDateLabel').innerHTML = `<span class="date-val">${d.slice(0,4)}-${d.slice(4,6)}-${d.slice(6,8)} ${isLive?'<span class="live-badge">live</span>':'<span class="hist-badge">snapshot</span>'}</span>`;
+    document.getElementById('tmLiveBtn').classList.toggle('show', !isLive);
+    document.getElementById('tmFab').classList.toggle('viewing', !isLive);
+    document.getElementById('tmBtnPrev').disabled = tmIdx===0;
+    document.getElementById('tmBtnNext').disabled = isLive;
+  }
+  window.tmRestoreLive = function(){
+    document.querySelectorAll('.mode-panel').forEach(p => {
+      p.querySelector('.live-content').style.display = '';
+      p.querySelector('.tm-content').style.display = 'none';
+      let id = p.id.replace('p-',''), chart=document.getElementById('chart-'+id);
+      if(chart){ let inst=echarts.getInstanceByDom(chart); if(inst) inst.resize(); }
     });
     document.getElementById('tmBanner').className='tm-banner';
-    var fab=document.getElementById('tmFab');
-    if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
-  }
-  function tmLoadIdx(idx){
-    var banner=document.getElementById('tmBanner');
-    if(idx===tmDates.length-1){
-      tmRestoreLive();
-      return;
-    }
-    tmSaveLive();
-    var dateStr=tmDates[idx];
-    fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
-      banner.className='tm-banner show';
-      var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
-      tmRender(snap);
-    }).catch(function(){
-      banner.className='tm-banner show';
-      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
-    });
-  }
-  window.tmGoLive=function(){
-    tmCurrentIdx=tmDates.length-1;
-    document.getElementById('timeSlider').value=tmCurrentIdx;
-    tmUpdateLabel();
-    document.getElementById('tmPanel').classList.remove('open');
-    tmRestoreLive();
+    document.getElementById('tmFab').style.boxShadow='';
   };
-  function tmRender(snap){
-    var id=activeMode;
-    var d=snap.modes[id];
-    if(!d)return;
-    (function(){
-      var panel=document.getElementById('p-'+id);
-      if(!panel)return;
-      // Freeze panel height to prevent layout shift during DOM updates
-      panel.style.minHeight=panel.offsetHeight+'px';
-      panel.style.opacity='0.6';
-      panel.style.transition='opacity .15s';
-      var cfg=d.config||{};
-      // Update stats
-      var stats=panel.querySelectorAll('.ps-v');
-      if(stats.length>=6){
-        stats[0].textContent=(d.stats.ret>0?'+':'')+d.stats.ret+'%';
-        stats[1].textContent=d.stats.dd+'%';
-        stats[2].textContent=d.stats.wr+'%';
-        stats[3].textContent=d.stats.pf+'x';
-        stats[4].textContent=d.stats.trades;
-        stats[5].textContent=d.stats.avgHold+'d';
-      }
-      // Update equity chart
-      var chartId='chart-'+id;
-      var chartEl=document.getElementById(chartId);
-      if(chartEl){
-        var c=echarts.getInstanceByDom(chartEl);
-        if(d.equity&&d.equity.d&&d.equity.d.length>0){
-          chartEl.parentElement.style.display='';
-          var minV=Math.min.apply(null,d.equity.v);
-          if(c)c.setOption({xAxis:{data:d.equity.d},yAxis:{min:Math.floor(minV)-1},series:[{data:d.equity.v}]});
-        }else{
-          chartEl.parentElement.style.display='none';
-        }
-      }
-      // Hide all live sections (section-card, cta-card, method-card) except static ones (How To)
-      var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
-      allSections.forEach(function(s){s.style.display='none'});
-      // Remove old tm-injected sections
-      panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
-      // Find insertion point (after perf-hero)
-      var perfHero=panel.querySelector('.perf-hero');
-      var insertAfter=perfHero||panel.firstElementChild;
+  window.tmRender = function(snap){
+    let id=activeMode, d=snap.modes[id]||{}, panel=document.getElementById('p-'+id), tm=panel.querySelector('.tm-content');
+    panel.querySelector('.live-content').style.display = 'none';
+    tm.style.display = 'block';
+    let retCls = d.stats.ret>=0 ? (activeMode==='dynamic'?'#dc2626':activeMode==='balanced'?'#059669':'#2563eb') : '#dc2626';
+    let html = `<div class="dist-hero" id="dist-tm-${id}"></div>
+    <div class="perf-hero" style="border-left:3px solid ${retCls}"><div class="perf-chart-wrap"><div class="perf-chart" id="chart-tm-${id}"></div></div>
+    <div class="perf-stats">
+      <div class="ps"><span class="ps-v" style="color:${retCls}">${d.stats.ret}%</span><span class="ps-l">Return</span></div>
+      <div class="ps"><span class="ps-v" style="color:#dc2626">${d.stats.dd}%</span><span class="ps-l">DD</span></div>
+      <div class="ps"><span class="ps-v">${d.stats.wr}%</span><span class="ps-l">WR</span></div>
+    </div></div>`;
+    
+    if(d.positions && d.positions.length > 0){
+      html += `<div class="section-card"><div class="sc-head"><h3>Positions (${d.positions.length})</h3></div><table class="t"><thead><tr><th>Ticker</th><th>P&L</th><th>Held</th></tr></thead><tbody>`;
+      d.positions.forEach(p => html += `<tr><td><b>${p.ticker}</b></td><td class="${p.return_pct>=0?'pos':'neg'}">${p.return_pct}%</td><td>${p.days_held}d</td></tr>`);
+      html += `</tbody></table></div>`;
+    }
+    tm.innerHTML = html;
+    setTimeout(() => {
+      if(d.equity) mk(`chart-tm-${id}`, d.equity.d, d.equity.v, retCls);
+      updateDistHero(document.getElementById(`dist-tm-${id}`), (d.positions||[]).concat(d.orders||[]));
+    }, 50);
+  };
+  window.tmLoadIdx = function(idx){
+    if(idx===tmDates.length-1) return window.tmGoLive();
+    fetch('/scanner/status/history/'+tmDates[idx]+'.json').then(r=>r.json()).then(snap => {
+      document.getElementById('tmBanner').className='tm-banner show';
+      document.getElementById('tmBanner').innerHTML = `<i class="fas fa-clock-rotate-left"></i> Snapshot: <b>${tmDates[idx]}</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>`;
+      window.tmRender(snap);
+    });
+  };
+  window.tmGoLive = function(){ tmIdx=tmDates.length-1; document.getElementById('timeSlider').value=tmIdx; tmUpdateLabel(); window.tmRestoreLive(); document.getElementById('tmPanel').classList.remove('open'); };
+  window.tmNav = function(dir){ tmIdx+=dir; document.getElementById('timeSlider').value=tmIdx; tmUpdateLabel(); window.tmLoadIdx(tmIdx); };
+  window.tmToggle = () => document.getElementById('tmPanel').classList.toggle('open');
+  window.switchMode = function(id){
+    activeMode=id;
+    document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode===id));
+    document.querySelectorAll('.mode-panel').forEach(p => p.style.display = p.id==='p-'+id?'':'none');
+    let chart=document.getElementById('chart-'+id); if(chart){ let inst=echarts.getInstanceByDom(chart); if(inst) inst.resize(); }
+    if(tmIdx<tmDates.length-1) window.tmLoadIdx(tmIdx);
+  };
 
-      // Helper: insert after a reference node
-      function tmInsertAfter(newEl,ref){
-        if(ref.nextSibling)ref.parentNode.insertBefore(newEl,ref.nextSibling);
-        else ref.parentNode.appendChild(newEl);
-        return newEl;
-      }
-
-      // ══ CLOSE NOW (cta-card cta-close) ══
-      if(d.closeNow&&d.closeNow.length>0){
-        var cn=document.createElement('div');
-        cn.className='cta-card cta-close';cn.setAttribute('data-tm','1');
-        var cnh='<div class="cta-header"><span class="cta-icon"><i class="fas fa-ban"></i></span><div>'
-          +'<h3>Close Now <span class="cta-badge">'+d.closeNow.length+' position'+(d.closeNow.length>1?'s':'')+'</span></h3>'
-          +'<p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>'
-          +'</div></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead><tbody>';
-        d.closeNow.forEach(function(p){
-          var rc=p.return_pct>=0?'pos':'neg';
-          var heldStr=(p.days_held||cfg.horizon||'?')+'d / '+(p.horizon||cfg.horizon||'?')+'d';
-          cnh+='<tr><td><b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="am">'+heldStr+'</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>';
-        });
-        cnh+='</tbody></table>';
-        cn.innerHTML=cnh;
-        insertAfter=tmInsertAfter(cn,insertAfter);
-      }
-
-      // ══ EXPIRES TOMORROW (cta-card yellow) ══
-      if(d.expiresTomorrow&&d.expiresTomorrow.length>0){
-        var et=document.createElement('div');
-        et.className='cta-card';et.setAttribute('data-tm','1');
-        et.setAttribute('style','background:#fffbeb;border:2px solid #fcd34d');
-        var eth='<div class="cta-header"><span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span><div>'
-          +'<h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">'+d.expiresTomorrow.length+' position'+(d.expiresTomorrow.length>1?'s':'')+'</span></h3>'
-          +'<p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>'
-          +'</div></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead><tbody>';
-        d.expiresTomorrow.forEach(function(p){
-          var rc=p.return_pct>=0?'pos':'neg';
-          eth+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg">$'+(p.stop||0).toFixed(2)+'</td><td class="am">'+(p.days_held||'?')+'d/'+(p.horizon||cfg.horizon||'?')+'d</td></tr>';
-        });
-        eth+='</tbody></table>';
-        et.innerHTML=eth;
-        insertAfter=tmInsertAfter(et,insertAfter);
-      }
-
-      // ══ ORDERS TO PLACE (section-card cta-orders) ══
-      if(d.orders&&d.orders.length>0){
-        var od=document.createElement('div');
-        od.className='section-card cta-orders';od.setAttribute('data-tm','1');
-        var posCount=d.positions?d.positions.length:0;
-        var ps=cfg.portfolioSize||'?';
-        var slots=Math.max(0,(cfg.portfolioSize||0)-posCount);
-        var hasRotate=d.orders.some(function(o){return o.action==='ROTATE'});
-        var statusLine=slots>0?posCount+'/'+ps+' open — <b>'+slots+' slot'+(slots>1?'s':'')+' free</b> — place at next open':posCount+'/'+ps+' open — portfolio full'+(hasRotate?' — rotation opportunity':'');
-        var alloc=Math.round(100/(cfg.portfolioSize||1));
-        var tmOrdCols=9; // no Chart column in Time Machine (would leak future data)
-        var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead><tbody>';
-        d.orders.forEach(function(o){
-          var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
-          var isRot=o.action==='ROTATE';
-          var rowStyle=isRot?' style="background:#fefce8"':'';
-          var actionPill=isRot?'<span class="pill am">ROTATE'+(o.replaces?' ↔ '+o.replaces:'')+'</span>':'<span class="pill pos">BUY</span>';
-          odh+='<tr'+rowStyle+'><td><b>'+o.ticker+'</b></td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td><b>'+o.entry+'</b></td><td class="neg">'+o.stop+'</td><td class="pos">'+o.tp1+'<span class="hide-m"> / '+o.tp2+'</span></td><td class="am hide-m">'+(o.rr||'')+'</td><td class="m hide-m">'+alloc+'%</td><td class="hide-m">'+actionPill+'</td></tr>';
-          if(o.thesis)odh+='<tr class="thesis-row"><td colspan="'+tmOrdCols+'"><div class="thesis-text">'+o.thesis+'</div></td></tr>';
-        });
-        odh+='</tbody></table>';
-        od.innerHTML=odh;
-        insertAfter=tmInsertAfter(od,insertAfter);
-      }
-
-      // ══ TODAY'S SIGNALS (collapsible details) ══
-      if(d.signals&&d.signals.length>0){
-        var sg=document.createElement('div');
-        sg.className='section-card';sg.setAttribute('data-tm','1');
-        var scanLink=snap.scanDir?'<a href="/scanner/'+snap.scanDir+'/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>':'';
-        var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\'s Signals <span class="count">'+d.signals.length+' setups</span></span>'+scanLink+'</summary>'
-          +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead><tbody>';
-        d.signals.forEach(function(s){
-          var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
-          sgh+='<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+s.score+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+s.entry+'</td><td class="neg">'+s.stop+'</td><td class="pos">'+s.tp1+' / '+s.tp2+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
-        });
-        sgh+='</tbody></table></details>';
-        sg.innerHTML=sgh;
-        insertAfter=tmInsertAfter(sg,insertAfter);
-      }
-
-      // ══ OPEN POSITIONS (with scenario bar) ══
-      var posSection=document.createElement('div');
-      posSection.className='section-card';posSection.setAttribute('data-tm','1');
-      if(d.positions&&d.positions.length>0){
-        var avgPnl=d.positions.reduce(function(s,p){return s+(p.return_pct||0)},0)/d.positions.length;
-        var avgCls=avgPnl>=0?'pos':'neg';
-        var psh='<div class="sc-head"><h3>Open Positions <span class="count">'+d.positions.length+'/'+(cfg.portfolioSize||'?')+'</span></h3><span class="sc-meta">avg P&amp;L: <b class="'+avgCls+'">'+(avgPnl>0?'+':'')+avgPnl.toFixed(1)+'%</b></span></div>';
-        // Scenario bar
-        var allocPct=(cfg.portfolioSize?100/cfg.portfolioSize:100)/100;
-        var worstPct=0,bestPct=0,nowPct=0;
-        d.positions.forEach(function(p){
-          if(p.stop&&p.stop>0&&p.entry>0){worstPct+=(p.stop-p.entry)/p.entry*100*allocPct}
-          var tp=p.tp2||p.tp1||p.current_price||p.entry;
-          if(p.entry>0&&tp>0){bestPct+=(tp-p.entry)/p.entry*100*allocPct}
-          nowPct+=(p.return_pct||0)*allocPct;
-        });
-        var range=bestPct-worstPct;
-        var cursorPos=range>0?Math.max(0,Math.min(100,(nowPct-worstPct)/range*100)):50;
-        var wCls=worstPct<0?'neg':'pos';var nCls=nowPct>=0?'pos':'neg';
-        psh+='<div class="scenario-bar-wrap"><div class="scenario-labels">'
-          +'<span class="'+wCls+'"><i class="fas fa-shield-halved"></i> Worst: '+(worstPct>0?'+':'')+worstPct.toFixed(1)+'%</span>'
-          +'<span class="'+nCls+'"><i class="fas fa-circle-dot"></i> Now: '+(nowPct>0?'+':'')+nowPct.toFixed(1)+'%</span>'
-          +'<span class="pos"><i class="fas fa-bullseye"></i> Best: +'+bestPct.toFixed(1)+'%</span>'
-          +'</div><div class="scenario-bar">'
-          +'<div class="scenario-fill-bad" style="width:'+cursorPos.toFixed(1)+'%"></div>'
-          +'<div class="scenario-fill-good" style="width:'+(100-cursorPos).toFixed(1)+'%"></div>'
-          +'<div class="scenario-cursor" style="left:'+cursorPos.toFixed(1)+'%"></div>'
-          +'</div></div>';
-        var tmPosCols=8; // no Chart column in Time Machine
-        psh+='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
-        d.positions.forEach(function(p){
-          var rc=p.return_pct>=0?'pos':'neg';
-          var left=p.days_remaining||0;
-          var isExp=left<=0;
-          var leftCls=isExp?'neg':left<=1?'neg':left<=2?'am':'m';
-          var leftLabel=isExp?'<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>':left+'d';
-          var rowStyle=isExp?' style="opacity:.6;background:#fef2f2"':'';
-          psh+='<tr'+rowStyle+'><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg hide-m">$'+(p.stop||0).toFixed(2)+'</td><td class="pos hide-m">'+(p.tp2?'$'+p.tp2.toFixed(2):(p.tp1?'$'+p.tp1.toFixed(2):'—'))+'</td><td class="'+leftCls+'">'+leftLabel+'</td></tr>';
-          if(p.thesis)psh+='<tr class="thesis-row"'+rowStyle+'><td colspan="'+tmPosCols+'"><div class="thesis-text">'+p.thesis+'</div></td></tr>';
-        });
-        psh+='</tbody></table>';
-        posSection.innerHTML=psh;
-      }else{
-        posSection.innerHTML='<div class="sc-head"><h3>Open Positions <span class="count">0/'+(cfg.portfolioSize||'?')+'</span></h3></div><p class="empty">No active positions</p>';
-      }
-      insertAfter=tmInsertAfter(posSection,insertAfter);
-
-      // ══ TRADE HISTORY (collapsible details) ══
-      if(d.closedTrades&&d.closedTrades.length>0){
-        var th=document.createElement('div');
-        th.className='section-card';th.setAttribute('data-tm','1');
-        var thh='<details><summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">'+d.closedTrades.length+' closed</span></span></summary>'
-          +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead><tbody>';
-        var sorted=d.closedTrades.slice().sort(function(a,b){return(b.scanDate||'').localeCompare(a.scanDate||'')});
-        sorted.forEach(function(t){
-          var pnl=t.pnlPct||0;
-          var cls=pnl>0?'pos':pnl<0?'neg':'m';
-          var exitDate='—';
-          if(t.entryDate&&t.holdDays!=null){var dd=new Date(t.entryDate);dd.setDate(dd.getDate()+t.holdDays);exitDate=dd.toISOString().slice(5,10)}
-          var statusLabel,statusCls;
-          switch(t.status){
-            case'tp1':statusLabel='TP1 ✓';statusCls='pos';break;
-            case'tp2':statusLabel='TP2 ✓';statusCls='pos';break;
-            case'tp1_partial':statusLabel='TP1 ½';statusCls='pos';break;
-            case'sl':statusLabel='SL ✗';statusCls='neg';break;
-            case'expired':statusLabel='Expired';statusCls='am';break;
-            case'rotated':statusLabel='Rotated';statusCls='m';break;
-            default:statusLabel=t.status||'—';statusCls='m';
-          }
-          thh+='<tr><td><b>'+(t.ticker||'—')+'</b></td><td class="m hide-m">'+(t.entryDate?t.entryDate.slice(5):'—')+'</td><td class="m hide-m">'+exitDate+'</td><td class="hide-m">$'+(t.actualEntry||0).toFixed(2)+'</td><td class="hide-m">'+(t.exitPrice?'$'+t.exitPrice.toFixed(2):'—')+'</td><td class="'+cls+'"><b>'+(pnl>0?'+':'')+pnl+'%</b></td><td class="m hide-m">'+(t.holdDays||0)+'d</td><td><span class="pill '+statusCls+'">'+statusLabel+'</span></td></tr>';
-        });
-        thh+='</tbody></table></details>';
-        th.innerHTML=thh;
-        insertAfter=tmInsertAfter(th,insertAfter);
-      }
-
-      // If nothing at all
-      if((!d.signals||!d.signals.length)&&(!d.positions||!d.positions.length)&&(!d.closedTrades||!d.closedTrades.length)&&(!d.closeNow||!d.closeNow.length)&&(!d.orders||!d.orders.length)){
-        var empty=document.createElement('div');
-        empty.className='section-card';empty.setAttribute('data-tm','1');
-        empty.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No signals, positions, or trades recorded for this date.</p>';
-        tmInsertAfter(empty,insertAfter);
-      }
-      // Release height lock and fade back in
-      requestAnimationFrame(function(){
-        panel.style.opacity='1';
-        setTimeout(function(){panel.style.minHeight='';},200);
-      });
-    })();
-  }
-  tmInit();
+  fetch('/scanner/status/history/dates.json').then(r=>r.json()).then(dates => {
+    tmDates=dates; tmIdx=dates.length-1;
+    document.getElementById('tmFirstDate').textContent = dates[0].slice(0,4)+'/'+dates[0].slice(4,6)+'/'+dates[0].slice(6,8);
+    document.getElementById('tmLastDate').textContent = dates[tmIdx].slice(0,4)+'/'+dates[tmIdx].slice(4,6)+'/'+dates[tmIdx].slice(6,8);
+    document.getElementById('tmFab').style.display='flex';
+    var slider=document.getElementById('timeSlider'); slider.max=dates.length-1; slider.value=tmIdx;
+    tmUpdateLabel();
+    slider.addEventListener('input', function(){ tmIdx=parseInt(this.value); tmUpdateLabel(); window.tmLoadIdx(tmIdx); });
+  });
 });
 </script>
 
