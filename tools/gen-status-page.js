@@ -722,7 +722,7 @@ details[open] summary::after{transform:rotate(90deg)}
 /* ── Thesis subtitle row ── */
 .thesis-row td{padding:.25rem .85rem .5rem!important;border-bottom:1px solid #f1f5f9!important;background:transparent!important}
 .thesis-row:hover td{background:transparent!important}
-.thesis-text{font-size:.72rem;color:#64748b;line-height:1.45;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.thesis-text{font-size:.72rem;color:#64748b;line-height:1.45;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ── Finviz thumbnails ── */
 .fv-thumb{width:110px;height:62px;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;object-fit:cover;transition:transform .15s,box-shadow .15s;background:#f8fafc}
@@ -1002,9 +1002,57 @@ document.addEventListener('DOMContentLoaded',function(){
       if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
       else{inst.resize();}
     }
+    // Update alerts (Raise SL) on current live panel
+    updateLiveActions(id);
     // If Time Machine is active, reload snapshot for new mode
     if(tmDates.length&&tmCurrentIdx<tmDates.length-1){tmLoadIdx(tmCurrentIdx);}
   };
+  
+  function updateLiveActions(modeId){
+    fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
+      document.querySelectorAll(modeId ? '#p-'+modeId : '.mode-panel').forEach(function(p){
+        var id = p.id.replace('p-',''), mCfg = cfg.modes[id]||{};
+        if(!mCfg.breakevenPct) return;
+        var posCard = Array.from(p.querySelectorAll('.section-card')).find(function(c){return c.querySelector('h3')?.textContent.includes('Open Positions')});
+        var posTable = posCard?.querySelector('table');
+        if(!posTable) return;
+        var raised = [];
+        posTable.querySelectorAll('tbody tr:not(.empty-row):not(.thesis-row)').forEach(function(tr){
+          var ticker = tr.querySelector('b')?.textContent;
+          var pnlTr = tr.querySelector('.pos b, .neg b');
+          if(!ticker || !pnlTr) return;
+          var pnl = parseFloat(pnlTr.textContent);
+          if(!isNaN(pnl) && pnl >= mCfg.breakevenPct){
+            raised.push({ticker: ticker, entry: tr.cells[3]?.textContent || tr.cells[1].textContent, pnl: pnlTr.textContent, stop: tr.cells[6]?.textContent || 'B.EVEN'});
+          }
+        });
+        if(raised.length > 0){
+          var actCard = p.querySelector('.live-content .cta-card.cta-raise-sl') || p.querySelector('.live-content .cta-card');
+          if(!actCard || !actCard.innerHTML.includes('Raise Stop Loss')){
+            var firstSec = p.querySelector('.live-content .section-card');
+            actCard = document.createElement('div'); actCard.className = 'cta-card cta-raise-sl';
+            actCard.style = 'background:#f0f9ff;border:1.5px solid #bae6fd;border-left:4px solid #0284c7;margin-bottom:1.5rem';
+            actCard.innerHTML = '<div class="cta-header"><span class="cta-icon" style="background:rgba(2,132,199,0.1)"><i class="fas fa-arrow-up-right-dots" style="color:#0284c7"></i></span>'
+            +'<div><h3 style="color:#0284c7">Raise Stop Loss <span class="cta-badge" style="background:#0284c7">'+raised.length+' targets</span></h3>'
+            +'<p class="cta-sub" style="color:#0284c7dd">Break-even triggered — move stop to entry</p></div></div>'
+            +'<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&L</th><th>Stop</th><th>Held</th></tr></thead><tbody></tbody></table>';
+            if(firstSec) firstSec.parentNode.insertBefore(actCard, firstSec.nextSibling);
+          }
+          var tbody = actCard.querySelector('tbody');
+          raised.forEach(function(r){
+            if(Array.from(tbody.rows).some(function(row){return row.cells[0].textContent === r.ticker})) return;
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><b>'+r.ticker+'</b></td><td>'+r.entry+'</td><td class="pos"><b>'+r.pnl+'</b></td><td><span class="pill pos" style="background:#0284c7;color:#fff">B.EVEN</span></td><td>Trailing</td>';
+            tbody.insertBefore(tr, tbody.firstChild);
+          });
+          var badge = actCard.querySelector('.cta-badge');
+          if(badge) badge.textContent = tbody.rows.length + ' targets';
+        }
+      });
+    });
+  }
+  setTimeout(updateLiveActions, 800);
+
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   // Save original live content on first TM use
   var tmLiveHTML={};
@@ -1029,10 +1077,12 @@ document.addEventListener('DOMContentLoaded',function(){
         }
       }
     });
+    updateLiveActions();
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
   }
+
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){
@@ -1059,211 +1109,6 @@ document.addEventListener('DOMContentLoaded',function(){
     tmRestoreLive();
   };
   function tmRender(snap){
-    var id=activeMode;
-    var d=snap.modes[id];
-    if(!d)return;
-    (function(){
-      var panel=document.getElementById('p-'+id);
-      if(!panel)return;
-      // Freeze panel height to prevent layout shift during DOM updates
-      panel.style.minHeight=panel.offsetHeight+'px';
-      panel.style.opacity='0.6';
-      panel.style.transition='opacity .15s';
-      var cfg=d.config||{};
-      // Update stats
-      var stats=panel.querySelectorAll('.ps-v');
-      if(stats.length>=6){
-        stats[0].textContent=(d.stats.ret>0?'+':'')+d.stats.ret+'%';
-        stats[1].textContent=d.stats.dd+'%';
-        stats[2].textContent=d.stats.wr+'%';
-        stats[3].textContent=d.stats.pf+'x';
-        stats[4].textContent=d.stats.trades;
-        stats[5].textContent=d.stats.avgHold+'d';
-      }
-      // Update equity chart
-      var chartId='chart-'+id;
-      var chartEl=document.getElementById(chartId);
-      if(chartEl){
-        var c=echarts.getInstanceByDom(chartEl);
-        if(d.equity&&d.equity.d&&d.equity.d.length>0){
-          chartEl.parentElement.style.display='';
-          var minV=Math.min.apply(null,d.equity.v);
-          if(c)c.setOption({xAxis:{data:d.equity.d},yAxis:{min:Math.floor(minV)-1},series:[{data:d.equity.v}]});
-        }else{
-          chartEl.parentElement.style.display='none';
-        }
-      }
-      // Hide all live sections (section-card, cta-card, method-card) except static ones (How To)
-      var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
-      allSections.forEach(function(s){s.style.display='none'});
-      // Remove old tm-injected sections
-      panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
-      // Find insertion point (after perf-hero)
-      var perfHero=panel.querySelector('.perf-hero');
-      var insertAfter=perfHero||panel.firstElementChild;
-
-      // Helper: insert after a reference node
-      function tmInsertAfter(newEl,ref){
-        if(ref.nextSibling)ref.parentNode.insertBefore(newEl,ref.nextSibling);
-        else ref.parentNode.appendChild(newEl);
-        return newEl;
-      }
-
-      // ══ CLOSE NOW (cta-card cta-close) ══
-      if(d.closeNow&&d.closeNow.length>0){
-        var cn=document.createElement('div');
-        cn.className='cta-card cta-close';cn.setAttribute('data-tm','1');
-        var cnh='<div class="cta-header"><span class="cta-icon"><i class="fas fa-ban"></i></span><div>'
-          +'<h3>Close Now <span class="cta-badge">'+d.closeNow.length+' position'+(d.closeNow.length>1?'s':'')+'</span></h3>'
-          +'<p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>'
-          +'</div></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead><tbody>';
-        d.closeNow.forEach(function(p){
-          var rc=p.return_pct>=0?'pos':'neg';
-          var heldStr=(p.days_held||cfg.horizon||'?')+'d / '+(p.horizon||cfg.horizon||'?')+'d';
-          cnh+='<tr><td><b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="am">'+heldStr+'</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>';
-        });
-        cnh+='</tbody></table>';
-        cn.innerHTML=cnh;
-        insertAfter=tmInsertAfter(cn,insertAfter);
-      }
-
-      // ══ EXPIRES TOMORROW (cta-card yellow) ══
-      if(d.expiresTomorrow&&d.expiresTomorrow.length>0){
-        var et=document.createElement('div');
-        et.className='cta-card';et.setAttribute('data-tm','1');
-        et.setAttribute('style','background:#fffbeb;border:2px solid #fcd34d');
-        var eth='<div class="cta-header"><span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span><div>'
-          +'<h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">'+d.expiresTomorrow.length+' position'+(d.expiresTomorrow.length>1?'s':'')+'</span></h3>'
-          +'<p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>'
-          +'</div></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead><tbody>';
-        d.expiresTomorrow.forEach(function(p){
-          var rc=p.return_pct>=0?'pos':'neg';
-          eth+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg">$'+(p.stop||0).toFixed(2)+'</td><td class="am">'+(p.days_held||'?')+'d/'+(p.horizon||cfg.horizon||'?')+'d</td></tr>';
-        });
-        eth+='</tbody></table>';
-        et.innerHTML=eth;
-        insertAfter=tmInsertAfter(et,insertAfter);
-      }
-
-      // ══ ORDERS TO PLACE (section-card cta-orders) ══
-      if(d.orders&&d.orders.length>0){
-        var od=document.createElement('div');
-        od.className='section-card cta-orders';od.setAttribute('data-tm','1');
-        var posCount=d.positions?d.positions.length:0;
-        var ps=cfg.portfolioSize||'?';
-        var slots=Math.max(0,(cfg.portfolioSize||0)-posCount);
-        var hasRotate=d.orders.some(function(o){return o.action==='ROTATE'});
-        var statusLine=slots>0?posCount+'/'+ps+' open — <b>'+slots+' slot'+(slots>1?'s':'')+' free</b> — place at next open':posCount+'/'+ps+' open — portfolio full'+(hasRotate?' — rotation opportunity':'');
-        var alloc=Math.round(100/(cfg.portfolioSize||1));
-        var tmOrdCols=9; // no Chart column in Time Machine (would leak future data)
-        var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length>1?'s':'')+' to Place</h3><span class="sc-meta">'+statusLine+'</span></div>'
-          +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead><tbody>';
-        d.orders.forEach(function(o){
-          var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
-          var isRot=o.action==='ROTATE';
-          var rowStyle=isRot?' style="background:#fefce8"':'';
-          var actionPill=isRot?'<span class="pill am">ROTATE'+(o.replaces?' ↔ '+o.replaces:'')+'</span>':'<span class="pill pos">BUY</span>';
-          odh+='<tr'+rowStyle+'><td><b>'+o.ticker+'</b></td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td><b>'+o.entry+'</b></td><td class="neg">'+o.stop+'</td><td class="pos">'+o.tp1+'<span class="hide-m"> / '+o.tp2+'</span></td><td class="am hide-m">'+(o.rr||'')+'</td><td class="m hide-m">'+alloc+'%</td><td class="hide-m">'+actionPill+'</td></tr>';
-          if(o.thesis)odh+='<tr class="thesis-row"><td colspan="'+tmOrdCols+'"><div class="thesis-text">'+o.thesis+'</div></td></tr>';
-        });
-        odh+='</tbody></table>';
-        od.innerHTML=odh;
-        insertAfter=tmInsertAfter(od,insertAfter);
-      }
-
-      // ══ TODAY'S SIGNALS (collapsible details) ══
-      if(d.signals&&d.signals.length>0){
-        var sg=document.createElement('div');
-        sg.className='section-card';sg.setAttribute('data-tm','1');
-        var scanLink=snap.scanDir?'<a href="/scanner/'+snap.scanDir+'/" class="sc-link" onclick="event.stopPropagation()">Full scan →</a>':'';
-        var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\\\'s Signals <span class="count">'+d.signals.length+' setups</span></span>'+scanLink+'</summary>'
-          +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead><tbody>';
-        d.signals.forEach(function(s){
-          var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
-          sgh+='<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+s.score+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+s.entry+'</td><td class="neg">'+s.stop+'</td><td class="pos">'+s.tp1+' / '+s.tp2+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
-        });
-        sgh+='</tbody></table></details>';
-        sg.innerHTML=sgh;
-        insertAfter=tmInsertAfter(sg,insertAfter);
-      }
-
-      // ══ OPEN POSITIONS (with scenario bar) ══
-      var posSection=document.createElement('div');
-      posSection.className='section-card';posSection.setAttribute('data-tm','1');
-      if(d.positions&&d.positions.length>0){
-        var avgPnl=d.positions.reduce(function(s,p){return s+(p.return_pct||0)},0)/d.positions.length;
-        var avgCls=avgPnl>=0?'pos':'neg';
-        var psh='<div class="sc-head"><h3>Open Positions <span class="count">'+d.positions.length+'/'+(cfg.portfolioSize||'?')+'</span></h3><span class="sc-meta">avg P&amp;L: <b class="'+avgCls+'">'+(avgPnl>0?'+':'')+avgPnl.toFixed(1)+'%</b></span></div>';
-        // Scenario bar
-        var allocPct=(cfg.portfolioSize?100/cfg.portfolioSize:100)/100;
-        var worstPct=0,bestPct=0,nowPct=0;
-        d.positions.forEach(function(p){
-          if(p.stop&&p.stop>0&&p.entry>0){worstPct+=(p.stop-p.entry)/p.entry*100*allocPct}
-          var tp=p.tp2||p.tp1||p.current_price||p.entry;
-          if(p.entry>0&&tp>0){bestPct+=(tp-p.entry)/p.entry*100*allocPct}
-          nowPct+=(p.return_pct||0)*allocPct;
-        });
-        var range=bestPct-worstPct;
-        var cursorPos=range>0?Math.max(0,Math.min(100,(nowPct-worstPct)/range*100)):50;
-        var wCls=worstPct<0?'neg':'pos';var nCls=nowPct>=0?'pos':'neg';
-        psh+='<div class="scenario-bar-wrap"><div class="scenario-labels">'
-          +'<span class="'+wCls+'"><i class="fas fa-shield-halved"></i> Worst: '+(worstPct>0?'+':'')+worstPct.toFixed(1)+'%</span>'
-          +'<span class="'+nCls+'"><i class="fas fa-circle-dot"></i> Now: '+(nowPct>0?'+':'')+nowPct.toFixed(1)+'%</span>'
-          +'<span class="pos"><i class="fas fa-bullseye"></i> Best: +'+bestPct.toFixed(1)+'%</span>'
-          +'</div><div class="scenario-bar">'
-          +'<div class="scenario-fill-bad" style="width:'+cursorPos.toFixed(1)+'%"></div>'
-          +'<div class="scenario-fill-good" style="width:'+(100-cursorPos).toFixed(1)+'%"></div>'
-          +'<div class="scenario-cursor" style="left:'+cursorPos.toFixed(1)+'%"></div>'
-          +'</div></div>';
-        var tmPosCols=8; // no Chart column in Time Machine
-        psh+='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
-        d.positions.forEach(function(p){
-          var rc=p.return_pct>=0?'pos':'neg';
-          var left=p.days_remaining||0;
-          var isExp=left<=0;
-          var leftCls=isExp?'neg':left<=1?'neg':left<=2?'am':'m';
-          var leftLabel=isExp?'<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>':left+'d';
-          var rowStyle=isExp?' style="opacity:.6;background:#fef2f2"':'';
-          psh+='<tr'+rowStyle+'><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">$'+(p.current_price||0).toFixed(2)+'</td><td class="'+rc+'"><b>'+(p.return_pct>0?'+':'')+p.return_pct+'%</b></td><td class="neg hide-m">$'+(p.stop||0).toFixed(2)+'</td><td class="pos hide-m">'+(p.tp2?'$'+p.tp2.toFixed(2):(p.tp1?'$'+p.tp1.toFixed(2):'—'))+'</td><td class="'+leftCls+'">'+leftLabel+'</td></tr>';
-          if(p.thesis)psh+='<tr class="thesis-row"'+rowStyle+'><td colspan="'+tmPosCols+'"><div class="thesis-text">'+p.thesis+'</div></td></tr>';
-        });
-        psh+='</tbody></table>';
-        posSection.innerHTML=psh;
-      }else{
-        posSection.innerHTML='<div class="sc-head"><h3>Open Positions <span class="count">0/'+(cfg.portfolioSize||'?')+'</span></h3></div><p class="empty">No active positions</p>';
-      }
-      insertAfter=tmInsertAfter(posSection,insertAfter);
-
-      // ══ TRADE HISTORY (collapsible details) ══
-      if(d.closedTrades&&d.closedTrades.length>0){
-        var th=document.createElement('div');
-        th.className='section-card';th.setAttribute('data-tm','1');
-        var thh='<details><summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">'+d.closedTrades.length+' closed</span></span></summary>'
-          +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead><tbody>';
-        var sorted=d.closedTrades.slice().sort(function(a,b){return(b.scanDate||'').localeCompare(a.scanDate||'')});
-        sorted.forEach(function(t){
-          var pnl=t.pnlPct||0;
-          var cls=pnl>0?'pos':pnl<0?'neg':'m';
-          var exitDate='—';
-          if(t.entryDate&&t.holdDays!=null){var dd=new Date(t.entryDate);dd.setDate(dd.getDate()+t.holdDays);exitDate=dd.toISOString().slice(5,10)}
-          var statusLabel,statusCls;
-          switch(t.status){
-            case'tp1':statusLabel='TP1 ✓';statusCls='pos';break;
-            case'tp2':statusLabel='TP2 ✓';statusCls='pos';break;
-            case'tp1_partial':statusLabel='TP1 ½';statusCls='pos';break;
-            case'sl':statusLabel='SL ✗';statusCls='neg';break;
-            case'expired':statusLabel='Expired';statusCls='am';break;
-            case'rotated':statusLabel='Rotated';statusCls='m';break;
-            default:statusLabel=t.status||'—';statusCls='m';
-          }
-          thh+='<tr><td><b>'+(t.ticker||'—')+'</b></td><td class="m hide-m">'+(t.entryDate?t.entryDate.slice(5):'—')+'</td><td class="m hide-m">'+exitDate+'</td><td class="hide-m">$'+(t.actualEntry||0).toFixed(2)+'</td><td class="hide-m">'+(t.exitPrice?'$'+t.exitPrice.toFixed(2):'—')+'</td><td class="'+cls+'"><b>'+(pnl>0?'+':'')+pnl+'%</b></td><td class="m hide-m">'+(t.holdDays||0)+'d</td><td><span class="pill '+statusCls+'">'+statusLabel+'</span></td></tr>';
-        });
-        thh+='</tbody></table></details>';
-        th.innerHTML=thh;
-        insertAfter=tmInsertAfter(th,insertAfter);
-      }
 
       // If nothing at all
       if((!d.signals||!d.signals.length)&&(!d.positions||!d.positions.length)&&(!d.closedTrades||!d.closedTrades.length)&&(!d.closeNow||!d.closeNow.length)&&(!d.orders||!d.orders.length)){
