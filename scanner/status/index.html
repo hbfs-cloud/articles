@@ -1190,18 +1190,22 @@ document.addEventListener('DOMContentLoaded',function(){
     let id=activeMode, d=snap.modes[id]||{}, panel=document.getElementById('p-'+id), tm=panel.querySelector('.tm-content');
     panel.querySelector('.live-content').style.display = 'none';
     tm.style.display = 'block';
-    let retCls = d.stats.ret>=0 ? (activeMode==='dynamic'?'#dc2626':activeMode==='balanced'?'#059669':'#2563eb') : '#dc2626';
+    let retCls = d.stats.ret>=0 ? (id==='dynamic'?'#dc2626':id==='balanced'?'#059669':'#2563eb') : '#dc2626';
     let html = `<div class="dist-hero" id="dist-tm-${id}"></div>
     <div class="perf-hero" style="border-left:3px solid ${retCls}"><div class="perf-chart-wrap"><div class="perf-chart" id="chart-tm-${id}"></div></div>
     <div class="perf-stats">
-      <div class="ps"><span class="ps-v" style="color:${retCls}">${d.stats.ret}%</span><span class="ps-l">Return</span></div>
-      <div class="ps"><span class="ps-v" style="color:#dc2626">${d.stats.dd}%</span><span class="ps-l">DD</span></div>
-      <div class="ps"><span class="ps-v">${d.stats.wr}%</span><span class="ps-l">WR</span></div>
+      <div class="ps"><span class="ps-v" style="color:${retCls}">${d.stats.ret}%</span><span class="ps-l">Total Return</span></div>
+      <div class="ps"><span class="ps-v" style="color:#dc2626">${d.stats.dd}%</span><span class="ps-l">Max DD</span></div>
+      <div class="ps"><span class="ps-v">${d.stats.wr}%</span><span class="ps-l">Win Rate</span></div>
     </div></div>`;
     
     if(d.positions && d.positions.length > 0){
       html += `<div class="section-card"><div class="sc-head"><h3>Positions (${d.positions.length})</h3></div><table class="t"><thead><tr><th>Ticker</th><th>P&L</th><th>Held</th></tr></thead><tbody>`;
-      d.positions.forEach(p => html += `<tr><td><b>${p.ticker}</b></td><td class="${p.return_pct>=0?'pos':'neg'}">${p.return_pct}%</td><td>${p.days_held}d</td></tr>`);
+      d.positions.forEach(p => {
+        let pnl = p.return_pct !== undefined ? p.return_pct : (p.pnlPct !== undefined ? p.pnlPct : 0);
+        let held = p.days_held !== undefined ? p.days_held : (d.config && p.days_remaining !== undefined ? d.config.horizon - p.days_remaining : 0);
+        html += `<tr><td><b>${p.ticker}</b></td><td class="${pnl>=0?'pos':'neg'}">${pnl}%</td><td>${held}d</td></tr>`;
+      });
       html += `</tbody></table></div>`;
     }
     tm.innerHTML = html;
