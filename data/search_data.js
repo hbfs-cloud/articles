@@ -187,6 +187,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Liberation Day Eve: Asia Surges as Iran Peace Hopes Ignite Global Rally",
+    "desc": "April 1 daily briefing: Asia surges as Trump signals Iran war end in 2-3 weeks. KOSPI +5.5%, Nikkei +4%. ISM Manufacturing PMI, ADP Jobs, Retail Sales all due today. Brent at $110. BTC $68K. Q2 opens with hope.",
+    "tags": "us,eu,asia,crypto,macro,geopolitique,commodity,energy,trade-idea,formation",
+    "grade": "",
+    "href": "/daily/20260401/",
+    "date": "1 avril 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Q1 Ends Under Pressure:Tariff Countdown & Gold Rush",
     "desc": "The Trump administration’s sweeping reciprocal tariffs take effect April 2. Markets are pricing worst-case scenarios with VIX at 30.6 and S&P down ~9% from its February all-time high of 7,002. Quarter-end rebalancing adds to today’s volatility. Brace for impact.",
     "tags": "macro,geopolitique,crypto,trade-idea,formation,tech",
@@ -3026,7 +3039,20 @@ window.searchDataPrebuilt = [
     "tags": "technique,formation,trade-idea,us,eu,asia,etf",
     "grade": "",
     "href": "/scanner/status/",
-    "date": "Mis à jour en continu"
+    "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RECOVERY — NVDA, BA, ASML, COST, JPM, XOM, CF, RTX, AMGN, EWZ",
+    "desc": "Regime shift detected — Risk-Off → Recovery:\n    Tuesday’s session delivered the best single-day rally since May 2025, driven by a seismic geopolitical catalyst: reports that Iran signaled “conditional restraint” in the Strait of Hormuz crisis, combined with U.S.-brokered ceasefire framework discuss...",
+    "tags": "us,eu,em,tech,semis,defense,energy,healthcare,financials,consumer,etf,technique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260401/",
+    "date": "1 avril 2026"
   },
   {
     "type": "scanner",
@@ -3037,9 +3063,9 @@ window.searchDataPrebuilt = [
     "title": "Top 10 A+ RISK-OFF — XOM, CF, EQNR, SHEL, NEM, GLD, MRK, KO, TLT, EWA",
     "desc": "Following retrospectives (latest provisional grade: C):\n    Monday’s session confirmed the ongoing Risk-Off regime with a notable nuance: equity losses were contained (-0.39% S&P 500) while oil surged again to $105.01 (+5.39%), the highest WTI level in over two years. The divergence between containe...",
     "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,healthcare,staples,materials",
-    "grade": "",
+    "grade": "C",
     "href": "/scanner/20260331/",
-    "date": "31 mars 2026"
+    "date": "Mar 24 – Mar 31, 2026"
   },
   {
     "type": "scanner",
