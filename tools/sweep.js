@@ -26,6 +26,7 @@ const ROOT = path.join(__dirname, '..');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
+const FROZEN_ONLY = process.argv.includes('--frozen-only');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -753,8 +754,8 @@ async function main() {
   }
 
   let tested = 0;
-
-  for (const portfolioSize of PORTFOLIO_SIZES) {
+  if (!FROZEN_ONLY) {
+    for (const portfolioSize of PORTFOLIO_SIZES) {
     for (const topN of TOP_NS) {
       if (topN > portfolioSize) continue;
       for (const minScore of MIN_SCORES) {
@@ -826,18 +827,18 @@ async function main() {
         }
       }
     }
+    console.log(`\nTested ${tested} combinations\n`);
   }
-
-  console.log(`\nTested ${tested} combinations\n`);
 
   // 5. Rank and display
   const ranked = topBySharpe;
 
-  console.log(`TOP 20 COMBOS by Sharpe (min ${MIN_TRADES} trades):`);
-  console.log('PSize TopN MinSc Filter          Rotation      Horiz  PTP  Trail MaxSt  ATR Trail  Return  MaxDD    WR    PF   Sharpe Calmar Trades');
-  console.log('─'.repeat(150));
-
-  for (const r of ranked.slice(0, 20)) {
+  if (!FROZEN_ONLY) {
+    console.log(`TOP 20 COMBOS by Sharpe (min ${MIN_TRADES} trades):`);
+    console.log('PSize TopN MinSc Filter          Rotation      Horiz  PTP  Trail MaxSt  ATR Trail  Return  MaxDD    WR    PF   Sharpe Calmar Trades');
+    console.log('─'.repeat(150));
+    
+    for (const r of ranked.slice(0, 20)) {
     console.log(
       String(r.portfolioSize).padStart(5),
       String(r.topN).padStart(4),
@@ -952,6 +953,7 @@ async function main() {
   }
 
   console.log();
+  }
 
   // 6. Save results
   const output = {
