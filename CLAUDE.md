@@ -23,6 +23,7 @@ articles/
 ├── data/                         # Index JSON par tab + search_data.js
 ├── tools/                        # add_card.js, migrate_astro.js, etc.
 ├── widget/                       # Widgets embarquables (iframe)
+├── portfolio/v1/                 # Public JSON API (Balanced, Dynamic, Secured)
 └── mcp/                          # MCP server + watchlist.json
 ```
 
@@ -146,14 +147,25 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    - Serial diluters → **EXCLURE du scan** (leçon INDO : setup technique parfait mais dilution massive non détectée)
 5. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
-6. **Indexer + Push** :
+6. **Pipeline Initial (J0 - Optimisation)** :
+   ```bash
+   node tools/sweep.js                     # Grid search complet (recalcul historique)
+   node tools/gen-status-page.js --backfill # Reset des snapshots historiques
+   ```
+7. **Pipeline Quotidien (Append-only)** :
+   ```bash
+   node tools/update-tracking.js           # Tracking exits (prix Yahoo)
+   node tools/sweep.js --frozen-only       # Update closed trades (without grid search)
+   node tools/gen-status-page.js           # Snapshot J + Dashboard (sans flag)
+   node tools/gen-api.js                   # Refresh public JSONs (29 endpoints)
+   ./tools/publish-daily-card.sh           # Telegram Card + Deployment
+   ```
+8. **Indexer + Push** :
    ```bash
    node tools/add_card.js scanner/YYYYMMDD/index.html
-   git add scanner/YYYYMMDD/ data/scanner.json data/search_data.js mcp/watchlist.json data/radar.json
+   git add scanner/YYYYMMDD/ data/ portfolio/ scanner/status/ history/
    git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
    git push origin main
-   # Pipeline post-scan (tracking + image Telegram + sweep + mode cards + status page) :
-   ./tools/publish-daily-card.sh
    ```
 
 ### "Rétrospective Scanner"
@@ -218,6 +230,13 @@ fetch(url).then(r => r.json()).then(d => {
 });
 ```
 Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
+
+## Portfolio API — `/portfolio/v1/`
+API publique servant les signaux et l'equity des 3 modes.
+- **Modes** : `balanced` (2 slots), `dynamic` (1 slot), `secured` (10 slots).
+- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|stats|all].json`
+- **Documentation** : `https://articles.dailytickers.com/integrations/portfolio/`
+- **Génération** : `node tools/gen-api.js` (dépend de `backtest-trades.json` et `scanner-positions.json`).
 
 ## Widgets (`/widget/`)
 - **Galerie** : `/widget/gallery.html` — 6 types avec previews et embed code
