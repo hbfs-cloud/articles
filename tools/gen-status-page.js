@@ -1242,6 +1242,9 @@ document.addEventListener('DOMContentLoaded',function(){
       }, 150);
     })();
   }
+  // Init chart for the default visible mode
+  var dflt=modeCharts[activeMode];
+  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c);
   tmInit();
 });
 </script>
