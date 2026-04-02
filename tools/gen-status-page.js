@@ -1188,7 +1188,7 @@ document.addEventListener('DOMContentLoaded',function(){
         }
         if(d.signals&&d.signals.length>0){
           var sg=document.createElement('div'); sg.className='section-card'; sg.setAttribute('data-tm','1');
-          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\'s Signals <span class="count">'+d.signals.length+' setups</span></span></summary>'
+          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\\\'s Signals <span class="count">'+d.signals.length+' setups</span></span></summary>'
             +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
           d.signals.forEach(function(s){
             var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
