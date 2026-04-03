@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Oil $100, NFP & Q1 Closing: The Stagflation Endgame",
+    "desc": "WTI crude surged +5.46% to $99.64, sitting just $0.36 from the psychologically devastating $100 barrier. Brent crude at $105.32 (+3.37%). The Strait of Hormuz situation has escalated with IRGC naval forces conducting live-fire exercises near the Musandam Peninsula. Insurance premiums for tanker traf...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260330/",
+    "date": "30 mars 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "PPI Shock, Oil $98 & Stagflation: The Week That Changes Everything",
     "desc": "February PPI came in at +0.7% MoM vs +0.3% consensus — more than double expectations. Core PPI +0.5% vs +0.3%. YoY PPI jumped to 3.4% from 2.9% prior. This is the largest monthly PPI surprise in over two years. Combined with the FOMC hold, markets are now pricing in a stagflationary scenario: higher...",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
@@ -167,19 +180,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "weekly/20251229/",
     "date": "29 Décembre 2025 - 3 Janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Oil $100, NFP & Q1 Closing: The Stagflation Endgame",
-    "desc": "WTI crude surged +5.46% to $99.64, sitting just $0.36 from the psychologically devastating $100 barrier. Brent crude at $105.32 (+3.37%). The Strait of Hormuz situation has escalated with IRGC naval forces conducting live-fire exercises near the Musandam Peninsula. Insurance premiums for tanker traf...",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
-    "grade": "",
-    "href": "/weekly/20260330/",
-    "date": "30 mars 2026"
   },
   {
     "type": "daily",
@@ -3060,7 +3060,20 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ (score 0.423) — LMT, NOC, LLY, NEM, COST, SAP, SHEL, EWJ, XLE, GLD",
+    "title": "Top 10 A+ (score 0.50) — INTC, AMD, MRVL, CEG, ISRG, DASH, BP, ASML, USO, FXI",
+    "desc": "Regime: Early Risk-Off (score 0.50) —\n    A striking split market emerges on Day 34 of the Strait of Hormuz shutdown: semiconductors are surging while geopolitical risk persists. INTC rockets +14% on massive volume (116.8M vs avg 88M), AMD gains +7%, and MRVL attempts a 52-week high breakout at $107...",
+    "tags": "us,eu,asia,semis,energy,healthcare,tech,etf,technique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260403/",
+    "date": "3 avril 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-OFF — LMT, NOC, LLY, NEM, COST, SAP, SHEL, EWJ, XLE, GLD",
     "desc": "Regime: Risk-Off (score 0.423) —\n    War escalation drives a sharp defensive rotation: Trump vowed to hit Iran “extremely hard” within 2–3 weeks as the conflict enters Day 33. The Strait of Hormuz remains shut, sending WTI crude to $107.10 (+6.97%) and Brent to $108.69 (+7.44%) — the biggest single-...",
     "tags": "us,eu,asia,defense,energy,healthcare,materials,consumer,etf,technique,trade-idea,macro",
     "grade": "",
@@ -3073,7 +3086,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ (score 0.505) — NVDA, BA, ASML, COST, JPM, XOM, EWY, RTX, AMGN, EWZ",
+    "title": "Top 10 A+ RISK-OFF — NVDA, BA, ASML, COST, JPM, XOM, EWJ, GLD, TLT, XLE",
     "desc": "Regime: Early Risk-Off (score 0.505) —\n    Tuesday delivered a powerful rally across all asset classes: S&P 500 +2.91% to 6,528, Nasdaq +3.83%, Dow +2.49% (+1,125 pts), Russell 2000 +3.41%. The VIX dropped to 24.38 but remains elevated — the regime score sits at 0.505, still classified as Early Risk...",
     "tags": "us,eu,asia,em,tech,semis,defense,energy,healthcare,financials,consumer,etf,technique,trade-idea,macro",
     "grade": "",
@@ -3089,9 +3102,9 @@ window.searchDataPrebuilt = [
     "title": "Top 10 A+ RISK-OFF — XOM, CF, EQNR, SHEL, NEM, GLD, MRK, KO, TLT, EWA",
     "desc": "Following retrospectives (latest provisional grade: C):\n    Monday’s session confirmed the ongoing Risk-Off regime with a notable nuance: equity losses were contained (-0.39% S&P 500) while oil surged again to $105.01 (+5.39%), the highest WTI level in over two years. The divergence between containe...",
     "tags": "us,eu,asia,commodity,etf,technique,trade-idea,macro,energy,healthcare,staples,materials",
-    "grade": "C",
+    "grade": "",
     "href": "/scanner/20260331/",
-    "date": "Mar 24 – Mar 31, 2026"
+    "date": "31 mars 2026"
   },
   {
     "type": "scanner",

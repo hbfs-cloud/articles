@@ -827,6 +827,7 @@ async function main() {
         }
       }
     }
+    }
     console.log(`\nTested ${tested} combinations\n`);
   }
 
