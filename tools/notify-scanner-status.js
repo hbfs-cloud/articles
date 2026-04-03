@@ -65,9 +65,13 @@ function readStatusMetrics(modeKey = 'balanced') {
   if (!section) return null;
   const html = section[0];
 
-  // Perf stats (first 4 span numbers in perf-stats)
-  const nums = html.match(/>([+\-]?[\d.]+[%x]?)<\/span/g) || [];
-  const extract = s => parseFloat(s.replace(/[><\/span%x]/g, ''));
+  // Extract perf-stats block only (contains ps-v spans with real metrics)
+  const perfBlock = html.match(/class="perf-stats"[\s\S]{0,1500}?<\/div>\s*<\/div>/);
+  const perfHtml = perfBlock ? perfBlock[0] : '';
+
+  // Perf stats from ps-v spans only (Total Return, Max DD, Win Rate, Profit Factor)
+  const nums = perfHtml.match(/class="ps-v"[^>]*>([+\-]?[\d.]+[%x]?)<\/span/g) || [];
+  const extract = s => { const m = s.match(/>([+\-]?[\d.]+)/); return m ? parseFloat(m[1]) : NaN; };
   const vals = nums.map(extract).filter(n => !isNaN(n));
 
   // Scenario worst/now/best from scenario-labels

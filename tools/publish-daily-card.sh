@@ -53,10 +53,7 @@ if [ "$SKIP_SWEEP" = false ]; then
   SWEEP_END=$(date +%s)
   echo "   Sweep done in $((SWEEP_END - SWEEP_START))s"
 
-  # ─── Step 4: Regenerate mode card images (from backtest data) ──────────────
-  echo ""
-  echo "🖼️  Step 4: Generating mode card images..."
-  node tools/gen-3-cards.js
+  # ─── Step 4: (removed — gen-3-cards.js legacy) ───────────────────────────
 
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
