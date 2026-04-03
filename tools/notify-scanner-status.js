@@ -396,8 +396,11 @@ function buildAudioScript(d) {
 
   let parts = [];
 
-  // Context: portfolio state
-  parts.push(`${modeLabel} portfolio, ${d.scanDate}.`);
+  // Context: portfolio state (spell out date for TTS — DD/MM/YYYY → "April 3rd, 2026")
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const [dd, mm, yyyy] = d.scanDate.split('/');
+  const spokenDate = `${MONTHS[parseInt(mm, 10) - 1]} ${parseInt(dd, 10)}, ${yyyy}`;
+  parts.push(`${modeLabel} portfolio, ${spokenDate}.`);
 
   if (d.metrics.ret !== 0) {
     const trend = d.metrics.ret > 0 ? 'up' : 'down';
