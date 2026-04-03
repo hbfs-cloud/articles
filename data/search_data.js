@@ -3073,9 +3073,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ EARLY RISK-OFF — INTC, AMD, MRVL, CEG, ISRG, DASH, BP, ASML, USO, FXI",
-    "desc": "Regime: Early Risk-Off (score 0.50) —\n    A striking split market emerges on Day 34 of the Strait of Hormuz shutdown: semiconductors are surging while geopolitical risk persists. INTC rockets +14% on massive volume (116.8M vs avg 88M), AMD gains +7%, and MRVL attempts a 52-week high breakout at $107...",
-    "tags": "us,eu,asia,semis,energy,healthcare,tech,etf,technique,trade-idea,macro",
+    "title": "Top 10 A+ (score 0.372) — RTX, HII, UNH, KR, ADM, ASML, RIO, EWY, XLV, FNV",
+    "desc": "Regime: Early Risk-Off (score 0.372) —\n    Good Friday brings US equity market closure, but risk assets do not take holidays. The Iran conflict enters Day 33 with the Strait of Hormuz still shut, keeping WTI crude elevated at $112.06 (+0.47%). Gold holds its war premium at $4,702.70 (+0.49%), reflec...",
+    "tags": "us,eu,asia,defense,healthcare,consumer,materials,semis,etf,technique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260403/",
     "date": "3 avril 2026"
