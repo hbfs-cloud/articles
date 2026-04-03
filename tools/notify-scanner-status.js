@@ -254,10 +254,7 @@ ${actions}
 <pre>${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
             ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%</pre>
 <code>${sep}</code>
-📡 <b>Top 10 signals today</b>
-<pre>${picksLines}</pre>
-<code>${sep}</code>
-🔗 ${STATUS_URL}`;
+🔗 <a href="${STATUS_URL}">Full status →</a>${d.ytUrl ? `\n📺 <a href="${d.ytUrl}">Watch on YouTube</a>` : ''}`;
 }
 
 // ─── Discord message (Markdown) ───────────────────────────────────────────────
@@ -324,11 +321,6 @@ ${posLines}
 \`\`\`
 ${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
               ▲ Now ${sign(d.nowPct)}${d.nowPct.toFixed(1)}%
-\`\`\`
----
-**📡 Top 10 signals today**
-\`\`\`
-${picksLines}
 \`\`\`
 🔗 <${STATUS_URL}>`;
 }
@@ -453,49 +445,41 @@ function buildAudioScript(d) {
   return parts.join(' ').trim();
 }
 
-// ─── Generate audio via Qwen3-TTS (Mac Mini) ──────────────────────────────────
+// ─── Generate audio via edge-tts (local, cross-platform) ─────────────────────
 function generateQwen3Audio(text, outPath) {
-  const SSH_HOST = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
-  const SSH_OPTS = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
-  const VENV = '/Users/marketwatchxyz/GolandProjects/claude-discord-bot/scanner-video/.venv-mlx';
-  const MODEL = 'mlx-community/Qwen3-TTS-12Hz-1.7B-VoiceDesign-8bit';
-  const INSTRUCT = 'A charismatic male podcast host voice, warm and engaging, conversational yet sharp, like a confident fintech YouTuber who knows his stuff';
-  const FFMPEG = '/opt/homebrew/bin/ffmpeg';
-  const tmpId = `scanner-${Date.now()}`;
+  const EDGE_TTS_CANDIDATES = [
+    '/opt/homebrew/bin/edge-tts',           // macOS (Homebrew)
+    '/home/ci/edge-tts-venv/bin/edge-tts',  // Linux CI (Hetzner)
+    'edge-tts'                              // system PATH fallback
+  ];
+  const edgeTts = EDGE_TTS_CANDIDATES.find(p =>
+    p === 'edge-tts' || fs.existsSync(p)
+  ) || 'edge-tts';
 
-  const safeText = text.replace(/'/g, "'\\''").replace(/"/g, '\\"');
-  const safeInst = INSTRUCT.replace(/'/g, "'\\''");
+  const VOICE = 'en-US-AndrewNeural';
+  const RATE = '+5%';
+  const PITCH = '+8Hz';
 
-  const cmd = `${VENV}/bin/python3 -m mlx_audio.tts.generate --model '${MODEL}' --text '${safeText}' --instruct '${safeInst}' --output /tmp/${tmpId} 2>&1 | tail -2 && ${FFMPEG} -i /tmp/${tmpId}/audio_000.wav -codec:a libmp3lame -qscale:a 3 /tmp/${tmpId}.mp3 -y 2>/dev/null && echo TTS_DONE`;
+  // Write text to temp file (avoids shell escaping issues)
+  const txtPath = outPath.replace(/\.mp3$/, '.txt');
+  fs.writeFileSync(txtPath, text);
 
   const r = require('child_process').spawnSync(
-    'sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST, cmd],
-    { stdio: 'pipe', timeout: 120000 }
+    edgeTts,
+    ['--voice', VOICE, `--rate=${RATE}`, `--pitch=${PITCH}`, '-f', txtPath, '--write-media', outPath],
+    { stdio: 'pipe', timeout: 60000 }
   );
 
-  const out = r.stdout?.toString() || '';
-  if (!out.includes('TTS_DONE')) {
-    console.error('  ⚠️  Qwen3-TTS failed:', out.slice(-200));
+  // Cleanup temp text file
+  try { fs.unlinkSync(txtPath); } catch (_) {}
+
+  if (!fs.existsSync(outPath) || fs.statSync(outPath).size < 1000) {
+    const stderr = r.stderr?.toString()?.slice(-200) || '';
+    console.error(`  ⚠️  edge-tts failed: ${stderr}`);
     return false;
   }
 
-  // SCP back
-  const scp = require('child_process').spawnSync(
-    'sshpass', ['-p', 'Elonux!123', 'scp', ...SSH_OPTS.split(' '),
-      `${SSH_HOST}:/tmp/${tmpId}.mp3`, outPath],
-    { stdio: 'pipe', timeout: 30000 }
-  );
-
-  if (!require('fs').existsSync(outPath)) {
-    console.error('  ⚠️  SCP failed');
-    return false;
-  }
-
-  // Cleanup remote
-  require('child_process').spawnSync('sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST,
-    `rm -rf /tmp/${tmpId} /tmp/${tmpId}.mp3`], { stdio: 'pipe', timeout: 10000 });
-
-  console.log(`  ✅ Audio: ${outPath} (${Math.round(require('fs').statSync(outPath).size / 1024)}KB)`);
+  console.log(`  ✅ Audio: ${outPath} (${Math.round(fs.statSync(outPath).size / 1024)}KB)`);
   return true;
 }
 
@@ -811,7 +795,7 @@ async function main() {
     }
 
     // Build caption with mode-specific YT link
-    const caption = buildAudioCaption(modePayload, modeYtUrl);
+    const caption = buildAudioCaption(modePayload, modeYtUrl || media.ytUrl);
 
     if (audioOk) {
       sendTelegramAudio(audioPath, caption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
@@ -824,6 +808,7 @@ async function main() {
       }
     } else {
       // No audio — text-only fallback
+      modePayload.ytUrl = modeYtUrl || media.ytUrl || null;
       const modeTgMsg = buildTelegramMessage(modePayload);
       try {
         const r = await sendTelegramText(modeTgMsg, topicId);
