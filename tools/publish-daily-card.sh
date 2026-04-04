@@ -35,11 +35,6 @@ node tools/update-tracking.js
 # ─── Step 1b: Clean old static-named images (pre-timestamp migration) ────────
 rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/status/mode-zero.png scanner/status/mode-dynamic.png scanner/status/mode-balanced.png scanner/status/mode-secured.png scanner/status/daily-card.png 2>/dev/null
 
-# ─── Step 1c: AI Forecast ────────────────────────────────────────────────────
-# Forecasts are fetched via MCP tools (Forecast, ForecastVix) during scanner
-# generation by Claude. Results saved in data/forecast-latest.json and
-# data/regime-forecast.json. gen-api.js reads these to produce forecast.json.
-
 # ─── Step 2: Generate daily card image (site only — notif texte via Step 8) ──
 echo ""
 echo "🖼️  Step 2: Generating daily card image..."
@@ -65,8 +60,6 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."
   node tools/gen-status-page.js
   node tools/gen-api.js
-
-  # ─── Step 5b: (forecast injection handled by MCP during article generation) ──
 else
   echo ""
   echo "⏭️  Steps 3-5: Skipped (--no-sweep)"
@@ -95,8 +88,6 @@ git add \
   scanner-daily-card.html \
   data/scanner-metrics.json \
   data/scanner-positions.json \
-  data/forecast-latest.json \
-  data/regime-forecast.json \
   2>/dev/null || true
 
 git add \

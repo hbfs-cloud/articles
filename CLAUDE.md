@@ -24,7 +24,6 @@ articles/
 ├── tools/                        # add_card.js, migrate_astro.js, etc.
 ├── widget/                       # Widgets embarquables (iframe)
 ├── portfolio/v1/                 # Public JSON API (Balanced, Dynamic, Secured)
-├── forecast/                     # TimesFM 2.0 forecast service (Python)
 └── mcp/                          # MCP server + watchlist.json
 ```
 
@@ -100,11 +99,9 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    - ATM (At-The-Market) offerings en cours
    - Historique de dilutions répétées (serial diluters)
    - **Si risque détecté** : mention obligatoire en rouge dans la section Risks + impact sur le Trade Idea (réduire le score, élargir le stop, ou exclure)
-3. **AI Forecast** : `node tools/run-forecast.js --ticker {TICKER}` → récupérer la prédiction TimesFM pour la section "AI Forecast"
-4. **Générer** `analyses/{TICKER}/index.html` :
+3. **Générer** `analyses/{TICKER}/index.html` :
    - Switcher langue/niveau dans le hero
    - ECharts au maximum (radar, treemap, gauge, bar, pie, heatmap, line)
-   - **Section AI Forecast** entre Technique et Secteur/Pairs : chart ECharts (historique OHLCV 60j + projection pointillée 10j + bande de confiance) + métriques (predicted return, confidence, direction, confluence vs technique)
    - **Section Trade Idea** obligatoire pour tickers tradables (classe `trade-box` + `trade-levels`, R/R ≥ 1:1.5)
    - **Section Social Radar** obligatoire (sentiment StockTwits/Reddit + `socialChart` ECharts)
    - Non pertinent pour indices/thématiques/devises
@@ -148,9 +145,8 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    - Shelf registrations / S-3 filings récents
    - Warrants, ATM offerings, fonds toxiques (H.C. Wainwright, Maxim, Roth Capital, etc.)
    - Serial diluters → **EXCLURE du scan** (leçon INDO : setup technique parfait mais dilution massive non détectée)
-5. **AI Forecast (MCP)** : Appeler `Forecast` (tickers candidats, data_type=price, horizon=10) + `ForecastVix` (horizon=5). Sauver résultats dans `data/forecast-latest.json` et `data/regime-forecast.json`. Confluence scoring : si forecast aligne avec le setup → CONFIRMED (bonus), si oppose → DIVERGENT (warning dans le HTML).
-6. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
-6. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
+5. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
 6. **Pipeline Initial (J0 - Optimisation)** :
    ```bash
    node tools/sweep.js                     # Grid search complet (recalcul historique)
@@ -235,34 +231,12 @@ fetch(url).then(r => r.json()).then(d => {
 ```
 Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
 
-## TimesFM Forecast Service (MCP `forecast`)
-Service de prédiction de séries temporelles basé sur Google TimesFM 2.0 (500M params, zero-shot).
-**Repo** : `hbfs-cloud/forecast-service` (privé). Déployé sur **ser** (Nomad/Docker), auto-deploy sur push main.
-**MCP** : `forecast` dans `.mcp.json` → `http://ser.tail5d09f.ts.net:8400/mcp`
-
-### MCP Tools
-- **`Forecast`** : prédiction multi-ticker, multi-type (price, revenue, earnings, ebitda, volume, etc.), multi-fréquence (daily, weekly, monthly, quarterly)
-- **`ForecastVix`** : prédiction VIX 5j + risque de transition régime (HIGH_SPIKE/MODERATE_SPIKE/STABLE/CALMING)
-- **`ForecastRaw`** : prédiction sur série numérique brute (pas de ticker nécessaire)
-
-### Data types supportés
-`price` (défaut), `ohlcv`, `volume`, `revenue`, `earnings`, `ebitda`, `net_income`, `gross_profit`, `operating_income`, `free_cash_flow`, `market_cap`
-
-### Intégration pipeline
-- **Scanner** : `publish-daily-card.sh` Step 1c fetch via curl → `data/forecast-latest.json` + `data/regime-forecast.json`
-- **Analyses** : appeler MCP `Forecast` pendant la génération pour la section "AI Forecast"
-- **Régime** : `regime.js` utilise le VIX prédit pour anticiper les transitions risk-on/risk-off
-- **Portfolio API** : `gen-api.js` génère `portfolio/v1/{mode}/forecast.json`
-
-### Graceful degradation
-Si le service est down, le pipeline continue sans forecast. Warnings non-bloquants.
-
 ## Portfolio API — `/portfolio/v1/`
 API publique servant les signaux et l'equity des 3 modes.
 - **Modes** : `balanced` (2 slots), `dynamic` (1 slot), `secured` (10 slots).
-- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|stats|all|forecast].json`
+- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|stats|all].json`
 - **Documentation** : `https://articles.dailytickers.com/integrations/portfolio/`
-- **Génération** : `node tools/gen-api.js` (dépend de `backtest-trades.json`, `scanner-positions.json`, `forecast-latest.json`).
+- **Génération** : `node tools/gen-api.js` (dépend de `backtest-trades.json` et `scanner-positions.json`).
 
 ## Widgets (`/widget/`)
 - **Galerie** : `/widget/gallery.html` — 6 types avec previews et embed code
