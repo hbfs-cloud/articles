@@ -136,6 +136,69 @@ function writeMode(mode, prefix) {
   });
 }
 
+// ─── Load forecast data (if available) ──────────────────────────────────────
+const forecastFile = path.join(ROOT, 'data', 'forecast-latest.json');
+let forecastData = null;
+if (fs.existsSync(forecastFile)) {
+  try {
+    forecastData = JSON.parse(fs.readFileSync(forecastFile, 'utf8'));
+    console.log(`  Forecast data loaded (${Object.keys(forecastData.forecasts || {}).length} tickers)`);
+  } catch (e) {
+    console.log(`  [warn] Could not parse forecast data: ${e.message}`);
+  }
+}
+
+const regimeForecastFile = path.join(ROOT, 'data', 'regime-forecast.json');
+let regimeForecast = null;
+if (fs.existsSync(regimeForecastFile)) {
+  try {
+    regimeForecast = JSON.parse(fs.readFileSync(regimeForecastFile, 'utf8'));
+  } catch (_) {}
+}
+
+// ─── Helper: write forecast endpoint for a mode ─────────────────────────────
+function writeForecast(mode, prefix) {
+  if (!forecastData?.forecasts) return;
+  const p = prefix ? `${prefix}/` : '';
+  const positions = mode.positions || [];
+  const positionTickers = new Set(positions.map(p => p.ticker));
+
+  const forecasts = [];
+  for (const [ticker, fc] of Object.entries(forecastData.forecasts)) {
+    if (!positionTickers.has(ticker)) continue;
+    const pos = positions.find(p => p.ticker === ticker);
+    forecasts.push({
+      ticker,
+      currentPrice: pos?.current_price || fc.last_close,
+      forecastedPrice5d: fc.predicted_prices?.[4] || null,
+      forecastedPrice10d: fc.predicted_prices?.[9] || null,
+      predictedReturn5d: fc.predicted_prices?.[4]
+        ? round((fc.predicted_prices[4] - fc.last_close) / fc.last_close * 100)
+        : null,
+      predictedReturn10d: fc.predicted_return_pct,
+      confidence: fc.confidence,
+      direction: fc.predicted_direction,
+      confluence: fc.confluence || null,
+    });
+  }
+
+  write(`${p}forecast.json`, {
+    updatedAt: now,
+    date: snap.date,
+    mode: prefix || 'balanced',
+    model: forecastData.model || 'timesfm-2.0-500m',
+    forecasts,
+    regimeForecast: regimeForecast ? {
+      currentVix: regimeForecast.current_vix,
+      predictedVix5d: regimeForecast.predicted_vix_5d,
+      vixDelta: regimeForecast.vix_delta,
+      transitionRisk: regimeForecast.regime_transition_risk,
+    } : null,
+  });
+}
+
+function round(n) { return Math.round(n * 100) / 100; }
+
 // ─── Write all 3 modes ──────────────────────────────────────────────────────
 const MODE_IDS = ['dynamic', 'balanced', 'secured'];
 let count = 0;
@@ -149,6 +212,10 @@ for (const id of MODE_IDS) {
   console.log(`\n─── Mode: ${id} ───`);
   writeMode(mode, id);
   count += 7;
+  if (forecastData) {
+    writeForecast(mode, id);
+    count += 1;
+  }
 }
 
 // ─── Root endpoints = balanced (backward compat) ───────────────────────────
@@ -157,6 +224,10 @@ if (balanced) {
   console.log(`\n─── Root (= balanced) ───`);
   writeMode(balanced, '');
   count += 7;
+  if (forecastData) {
+    writeForecast(balanced, '');
+    count += 1;
+  }
 }
 
 // ─── Summary endpoint: all modes overview ──────────────────────────────────
