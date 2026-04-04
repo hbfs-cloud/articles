@@ -121,8 +121,8 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 
 ### Règles AI Forecast (CRITIQUE)
 
-1. **NE JAMAIS mentionner le nom du modèle** (TimesFM, etc.) dans l'article. Utiliser "AI model", "AI forecast", "our AI model" — le lecteur ne doit pas voir le nom technique.
-2. **Section AI Forecast** : titre = `AI Price Forecast` (pas "AI Forecast — TimesFM"). Icône `fa-brain`, pas `fa-robot`.
+1. **NE JAMAIS mentionner le nom du modèle** (TimesFM, etc.) NI "AI" dans l'article. Utiliser "forecast", "our model", "price forecast" — le lecteur ne doit voir ni le nom technique ni le terme "AI".
+2. **Section Forecast** : titre = `Price Forecast (10 Days)` (pas "AI Forecast", pas "AI Price Forecast", pas "TimesFM"). Icône `fa-chart-line`.
 3. **Didactique obligatoire** : ajouter un `didactic-box` expliquant en termes simples comment le forecast fonctionne (ex: "Our AI model analyzes X days of price history to project the most likely path over the next Y trading days. The shaded band shows the range where the price is expected to land with 90% confidence.").
 4. **Forecast cross-sections** : Le forecast doit enrichir TOUTES les sections pertinentes :
    - **Performance & Benchmarks** : ajouter une `didactic-box` liant le momentum historique au forecast (ex: "Despite +25% momentum, the AI projects flat consolidation — the rally may need to digest gains.")
