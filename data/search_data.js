@@ -743,6 +743,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "SHEL",
+    "exchange": "NYSE • Energy • Oil & Gas Integrated — London, UK",
+    "name": "SHEL — SHEL near 52W high, strong momentum, dividend play. Entry $91-92, TP1 $95, TP2 $98. R:R...",
+    "title": "SHEL — SHEL near 52W high, strong momentum, dividend play. Entry $91-92, TP1 $95, TP2 $98. R:R...",
+    "desc": "Shell plc (SHEL) analysis: $261B energy giant, +25% in quarter, 3.2% dividend, AI forecast neutral, trade idea entry $91-92. B+ conviction.",
+    "tags": "us,energy,trade-idea,dividende",
+    "grade": "B+",
+    "href": "/analyses/SHEL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALT",
     "exchange": "NASDAQ • Healthcare • Biotechnologie\n            — Agoniste Dual GLP-1/Glucagon / Obésité & MASH",
     "name": "ALT — ALT trade au prix de sa trésorerie nette ($2.71/sh vs cours $2.88). Phase 3 MASH immine...",
