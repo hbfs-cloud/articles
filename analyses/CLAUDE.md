@@ -151,8 +151,8 @@ La section Trade Idea doit être lisible et propre :
 
 Le FAB doit suivre le pattern IOVA (référence) :
 1. **8 items minimum** : Verdict, Fundamentals, Technical, Risks, Social, Options, Trade Idea, Forecast
-2. **JS pattern** : `fnavMenu.style.display = fnavOpen ? 'flex' : 'none'` — JAMAIS `classList.toggle('active')`
-3. **Fermeture** : `fnavMenu.style.display = 'none'` au clic sur un item
+2. **JS pattern** : `fnavMenu.classList.toggle('open', fnavOpen)` — utilise la classe CSS `.fnav-menu.open` de `report.css`. JAMAIS `style.display = 'flex'` (casse le layout vertical).
+3. **Fermeture** : `fnavMenu.classList.remove('open')` au clic sur un item
 4. **Labels en anglais** pour les articles en anglais
 
 ### 17 Sections Obligatoires
