@@ -1171,24 +1171,58 @@
     }
     document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeChartModal(); });
 
-    // --- FAB ---
-    var fnavBtn = document.getElementById('fnavBtn');
-    var fnavMenu = document.getElementById('fnavMenu');
-    var fnavOpen = false;
-    fnavBtn.addEventListener('click', function () {
-        fnavOpen = !fnavOpen;
-        fnavMenu.classList.toggle('open', fnavOpen);
-        document.getElementById('fnavIcon').className = fnavOpen ? 'fas fa-times' : 'fas fa-bars';
-        document.getElementById('fnavLabel').textContent = fnavOpen ? 'Close' : 'Menu';
-    });
-    document.querySelectorAll('.fnav-item').forEach(function (item) {
-        item.addEventListener('click', function () {
-            fnavOpen = false;
-            fnavMenu.classList.remove('open');
-            document.getElementById('fnavIcon').className = 'fas fa-bars';
-            document.getElementById('fnavLabel').textContent = 'Menu';
+    // --- FAB Navigation (AAOI pattern) ---
+    (function(){
+        var fab=document.getElementById('fnavBtn');
+        var menu=document.getElementById('fnavMenu');
+        var icon=document.getElementById('fnavIcon');
+        var label=document.getElementById('fnavLabel');
+        if(!fab||!menu)return;
+        var items=menu.querySelectorAll('.fnav-item');
+        var sections=[];
+        var isOpen=false;
+        items.forEach(function(item){
+            var id=item.getAttribute('data-section');
+            var el=document.getElementById(id);
+            if(el)sections.push({id:id,el:el,item:item});
         });
-    });
+        function toggle(){
+            isOpen=!isOpen;
+            menu.classList.toggle('open',isOpen);
+            fab.classList.toggle('open',isOpen);
+            icon.className=isOpen?'fas fa-times':'fas fa-bars';
+        }
+        fab.addEventListener('click',function(e){e.stopPropagation();toggle();});
+        document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});
+        document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});
+        items.forEach(function(item){
+            item.addEventListener('click',function(e){
+                e.preventDefault();
+                var id=this.getAttribute('data-section');
+                var target=document.getElementById(id);
+                if(target){
+                    var brandBar=document.querySelector('.brand-bar');
+                    var offset=(brandBar?brandBar.offsetHeight:56)+20;
+                    window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'});
+                }
+                if(isOpen)toggle();
+            });
+        });
+        var currentActive=null;
+        var observer=new IntersectionObserver(function(entries){
+            entries.forEach(function(entry){
+                if(entry.isIntersecting){
+                    var id=entry.target.id;
+                    if(currentActive)currentActive.classList.remove('active');
+                    sections.forEach(function(s){
+                        if(s.id===id){s.item.classList.add('active');currentActive=s.item;}
+                    });
+                    if(label)label.textContent=entry.target.querySelector('h2')?entry.target.querySelector('h2').textContent.substring(0,12):'Menu';
+                }
+            });
+        },{rootMargin:'-20% 0px -60% 0px'});
+        sections.forEach(function(s){observer.observe(s.el);});
+    })();
 
     // ============================================================
     // ECHARTS INITIALIZATION
