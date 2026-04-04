@@ -438,7 +438,7 @@
 
             <div class="didactic-box" style="margin-bottom:1.5rem;">
                 <h4><i class="fa-solid fa-circle-info"></i> How the Forecast Works</h4>
-                <p>Our Our model analyzes 120 days of price history to project the most likely path over the next 10 trading days. The shaded band shows the range where the price is expected to land with 90% confidence. A neutral forecast does not mean "stay flat" — it means the model sees balanced forces with no strong directional edge, making pullback entries more attractive than momentum chasing.</p>
+                <p>Our model analyzes 120 days of price history to project the most likely path over the next 10 trading days. The shaded band shows the range where the price is expected to land with 90% confidence. A neutral forecast does not mean "stay flat" — it means the model sees balanced forces with no strong directional edge, making pullback entries more attractive than momentum chasing.</p>
             </div>
 
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem;">
@@ -474,7 +474,7 @@
                 </div>
             </div>
 
-
+            <div id="forecastChart" style="height:360px;margin-bottom:1rem;"></div>
 
             <div class="pedagogy-box" style="margin-top:1rem;">
                 <h4><i class="fa-solid fa-lightbulb"></i> What This Means for the Trade</h4>
@@ -942,8 +942,8 @@
                     <p>SHEL has broken out strongly and is approaching the 52-week high of $94.90. The forecast signals flat action over 10 days — this is not a momentum chase setup. The strategy is to wait for a pullback to the $91–92 zone, which aligns with options max pain ($91), prior resistance turned support, and the natural consolidation area after a +13% 30-day run. Entry here gives a clean 1:1.9 R:R, and the 3.2% dividend provides income while waiting for the May 7 earnings catalyst.</p>
                 </div>
 
-                <div style="margin-top:1.25rem;padding:1rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
-                    <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 0.75rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Catalysts</h4>
+                <div style="margin-top:1.25rem;padding:1rem;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;">
+                    <h4 style="font-size:1rem;font-weight:800;color:#92400e;margin:0 0 0.75rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Catalysts</h4>
                     <ul style="font-size:0.85rem;color:#334155;line-height:1.9;padding-left:1.25rem;margin:0;">
                         <li><strong>Q1 2026 earnings (May 7):</strong> Beat expectations &rarr; potential +5–8% gap up</li>
                         <li><strong>Oil price recovery:</strong> Any crude rebound toward $80/bbl directly boosts upstream earnings</li>
@@ -963,8 +963,8 @@
                     </ul>
                 </div>
 
-                <div style="margin-top:1rem;background:#f8fafc;border:1px solid #e2e8f0;padding:1rem;border-radius:10px;">
-                    <h4 style="font-size:0.9rem;color:#0f172a;margin:0 0 0.75rem;"><i class="fa-solid fa-clock"></i> Timeline &amp; Profile</h4>
+                <div style="margin-top:1rem;background:#f0f9ff;border:1px solid #bae6fd;padding:1rem;border-radius:10px;">
+                    <h4 style="font-size:1rem;font-weight:800;color:#0c4a6e;margin:0 0 0.75rem;"><i class="fa-solid fa-clock" style="color:#0369a1;"></i> Timeline &amp; Profile</h4>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.75rem;font-size:0.84rem;color:#334155;">
                         <div style="display:flex;flex-direction:column;gap:0.2rem;">
                             <span style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Horizon</span>
@@ -1395,6 +1395,74 @@
         ]
     });
 
+    // 4b. Dedicated Forecast Chart (Price Forecast section)
+    var forecastChart = echarts.init(document.getElementById('forecastChart'));
+    forecastChart.setOption({
+        tooltip: { trigger: 'axis', axisPointer: { type: 'cross' }, formatter: function(params) {
+            var s = params[0].axisValue + '<br>';
+            params.forEach(function(p) { if(p.value !== null && p.value !== '-' && p.seriesName !== 'Band High' && p.seriesName !== 'Band Low') s += p.marker + p.seriesName + ': <b>$' + (typeof p.value === 'number' ? p.value.toFixed(2) : p.value) + '</b><br>'; });
+            return s;
+        }},
+        legend: { data: ['Historical', 'Forecast'], top: 8 },
+        grid: { left: 55, right: 20, top: 48, bottom: 40 },
+        xAxis: { type: 'category', data: allDates, axisLabel: { rotate: 30, fontSize: 9 }, boundaryGap: false },
+        yAxis: { type: 'value', name: 'Price ($)', min: 88, max: 101, scale: true },
+        series: [
+            {
+                name: 'Historical',
+                type: 'line',
+                data: histDates.map(function(d,i){ return { name: d, value: histVals[i] }; }),
+                itemStyle: { color: '#0f172a' },
+                lineStyle: { width: 2, color: '#0f172a' },
+                symbol: 'none',
+                z: 10
+            },
+            {
+                name: 'Forecast',
+                type: 'line',
+                data: allDates.map(function(d){
+                    var fi = fcastDates.indexOf(d);
+                    return fi >= 0 ? { name: d, value: fcastVals[fi] } : { name: d, value: null };
+                }),
+                itemStyle: { color: '#6366f1' },
+                lineStyle: { width: 2.5, color: '#6366f1', type: 'dashed' },
+                symbol: 'circle', symbolSize: 6,
+                z: 9,
+                connectNulls: false
+            },
+            {
+                name: 'Band High',
+                type: 'line',
+                data: allDates.map(function(d){
+                    var fi = fcastDates.indexOf(d);
+                    return fi >= 0 ? fcastHigh[fi] : null;
+                }),
+                lineStyle: { opacity: 0 },
+                stack: 'fc-band',
+                symbol: 'none',
+                showInLegend: false
+            },
+            {
+                name: 'Band Low',
+                type: 'line',
+                data: allDates.map(function(d){
+                    var fi = fcastDates.indexOf(d);
+                    return fi >= 0 ? fcastLow[fi] : null;
+                }),
+                lineStyle: { opacity: 0 },
+                areaStyle: { color: 'rgba(99,102,241,0.15)' },
+                stack: 'fc-band',
+                symbol: 'none',
+                showInLegend: false
+            }
+        ],
+        graphic: [{
+            type: 'text',
+            left: '60%', top: 30,
+            style: { text: '90% Confidence Band', fill: '#6366f1', fontSize: 11, fontWeight: 600, opacity: 0.6 }
+        }]
+    });
+
     // 5. Heatmap (performance approximation from price changes)
     var heatDates = histDates.slice(1);
     var heatVals = histVals.slice(1).map(function(v,i){ return parseFloat(((v - histVals[i]) / histVals[i] * 100).toFixed(2)); });
@@ -1544,7 +1612,7 @@
 
     // Responsive resize
     window.addEventListener('resize', function() {
-        [convGauge, vRadar, earningsChart, priceChart, heatChart, perfChart, riskRadar, socialChart, optChart, peerTree, peerBar, cfChart].forEach(function(c){ if(c) c.resize(); });
+        [convGauge, vRadar, earningsChart, priceChart, forecastChart, heatChart, perfChart, riskRadar, socialChart, optChart, peerTree, peerBar, cfChart].forEach(function(c){ if(c) c.resize(); });
     });
     </script>
 </body>

@@ -4,7 +4,8 @@
 
 
 ### Référence
-**L'analyse TARA (`analyses/TARA/`) et CDIO (`analyses/CDIO/`)** sont les références pour la charte graphique, la structure HTML, les classes CSS, les ECharts, le switcher langue/niveau, et les 6 variantes. Toute nouvelle analyse doit suivre ce modèle en termes de qualité, longueur (~1000-1600+ lignes pour expert/fr), structure des sections, et style visuel.
+**L'analyse SHEL (`analyses/SHEL/`)** est la référence principale pour les futures analyses : charte graphique, structure HTML, classes CSS, ECharts (13 charts dont forecast), FAB navigation (IntersectionObserver), Trade Idea (price ladder), Price Forecast section. Toute nouvelle analyse doit suivre ce modèle.
+**Références secondaires** : TARA (`analyses/TARA/`) et CDIO (`analyses/CDIO/`) pour le switcher langue/niveau et les 6 variantes.
 **Langue par défaut : anglais, niveau intermédiaire** (sauf demande contraire).
 
 ### Template HTML Obligatoire (CRITIQUE)
