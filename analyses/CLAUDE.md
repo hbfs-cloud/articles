@@ -119,6 +119,42 @@ Analyse complète d'un ticker, lisible en 2 minutes. Style direct et punchy insp
 
 **Résultat** : ~8-10 charts ECharts par analyse = expérience ultra-visuelle et interactive
 
+### Règles AI Forecast (CRITIQUE)
+
+1. **NE JAMAIS mentionner le nom du modèle** (TimesFM, etc.) dans l'article. Utiliser "AI model", "AI forecast", "our AI model" — le lecteur ne doit pas voir le nom technique.
+2. **Section AI Forecast** : titre = `AI Price Forecast` (pas "AI Forecast — TimesFM"). Icône `fa-brain`, pas `fa-robot`.
+3. **Didactique obligatoire** : ajouter un `didactic-box` expliquant en termes simples comment le forecast fonctionne (ex: "Our AI model analyzes X days of price history to project the most likely path over the next Y trading days. The shaded band shows the range where the price is expected to land with 90% confidence.").
+4. **Forecast cross-sections** : Le forecast doit enrichir TOUTES les sections pertinentes :
+   - **Performance & Benchmarks** : ajouter une `didactic-box` liant le momentum historique au forecast (ex: "Despite +25% momentum, the AI projects flat consolidation — the rally may need to digest gains.")
+   - **Capital Flow** : lier les flux au forecast dans l'alert-box
+   - **Trade Idea** : calibrer les niveaux entry/TP sur les données forecast (bands, direction)
+5. **Disclaimer** : "AI forecast model" (pas de nom de modèle)
+
+### Règles Trade Idea (DESIGN)
+
+La section Trade Idea doit être lisible et propre :
+1. **Price ladder** : grid avec cards à bordure gauche colorée (bleu=entry, rouge=stop, vert=TP, violet=R:R)
+   ```html
+   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;">
+       <div style="border-left:4px solid #3b82f6;padding:1rem;background:#f8fafc;border-radius:0 8px 8px 0;">
+           <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Entry Zone</div>
+           <div style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0.25rem 0;">$91 – $92</div>
+           <div style="font-size:0.78rem;color:#64748b;">Pullback to support</div>
+       </div>
+   </div>
+   ```
+2. **Séparation claire** entre thesis, catalysts, invalidation, timeline
+3. **Pas de `.trade-levels` CSS** — utiliser le pattern grid ci-dessus
+4. **Mobile-first** : minmax(160px, 1fr), font-sizes lisibles
+
+### Règles FAB Navigation (CONFORMITÉ)
+
+Le FAB doit suivre le pattern IOVA (référence) :
+1. **8 items minimum** : Verdict, Fundamentals, Technical, Risks, Social, Options, Trade Idea, Forecast
+2. **JS pattern** : `fnavMenu.style.display = fnavOpen ? 'flex' : 'none'` — JAMAIS `classList.toggle('active')`
+3. **Fermeture** : `fnavMenu.style.display = 'none'` au clic sur un item
+4. **Labels en anglais** pour les articles en anglais
+
 ### 17 Sections Obligatoires
 
 #### 1. Header (`.ticker-header`)
