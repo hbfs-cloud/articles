@@ -182,6 +182,19 @@ window.searchDataPrebuilt = [
     "date": "29 Décembre 2025 - 3 Janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Oil $112, Gold $4,700 & The Tariff Storm: Markets at the Breaking Point",
+    "desc": "WTI crude has surged +18.6% in a single week to $112.06 — the fastest weekly gain since 2022. Simultaneously, new tariff escalation threats are rocking global supply chains. Gold is screaming higher at $4,703 (+7.5% weekly) as markets price in accelerating stagflation. CPI data Thursday will be the ...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260406/",
+    "date": "6 avril 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
