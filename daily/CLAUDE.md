@@ -192,7 +192,7 @@ Le dimanche est le **seul jour** avec format réduit crypto-only :
 - **Heatmap** : Calendrier de la semaine avec performance par jour
 - **Radar** : Profil de risque du marché (6 axes)
 
-### TimesFM Forecast — Signal de Régime Quotidien (OPTIONNEL)
+### MCP Forecast — Signal de Régime Quotidien (OPTIONNEL)
 
 Appeler `ForecastVix` au début de la génération pour calibrer le ton du briefing :
 ```
@@ -202,7 +202,7 @@ ForecastVix(horizon=5) → MCP http://ser.tail5d09f.ts.net:8400/mcp/
 → Régime = "STABLE" + VIX < 25 : conditions normales pour les trades
 ```
 
-**⚠️ Règles TimesFM pour le daily :**
+**⚠️ Règles MCP Forecast pour le daily :**
 - Ne jamais écrire "le modèle prédit une hausse/baisse" → écrire "zone probabiliste 80% sur 5j : [X – Y]"
 - `predicted_direction` sur SPY/QQQ = signal marginal (62% sur SPY) → citer avec précaution
 - Sur tout autre indice ou action : afficher uniquement les bandes CI comme zones de soutien/résistance

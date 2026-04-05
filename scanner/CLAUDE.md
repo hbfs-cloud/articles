@@ -194,11 +194,11 @@ Ce risque n'apparaissait PAS sur la fiche technique classique. Seule la vérific
 
 ---
 
-### TimesFM Forecast — Filtre Post-Screener (OPTIONNEL, après sélection top 10)
+### MCP Forecast — Filtre Post-Screener (OPTIONNEL, après sélection top 10)
 
 Après avoir sélectionné les tickers retenus, utiliser `ForecastRaw` (MCP `http://ser.tail5d09f.ts.net:8400/mcp/`) sur les séries dérivées (PAS le prix brut) pour enrichir chaque setup.
 
-**⚠️ Ne jamais utiliser la direction TimesFM comme signal principal. C'est un filtre de confirmation.**
+**⚠️ Ne jamais utiliser la direction du MCP Forecast comme signal principal. C'est un filtre de confirmation.**
 
 #### Filtre Volume (UC3 — score 8.5/10, précision 69%)
 ```python
