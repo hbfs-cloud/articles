@@ -38,6 +38,65 @@ Outils `mcp__claude_ai_Gateway__*` :
 - **GetMarketOverview**: Snapshot global (indices, commodities, crypto, rates, sentiment, news). Contient aussi : **trending topics**, **sector variations**, **economic calendar**, **earnings calendar** — exploiter ces champs pour enrichir les articles.
 - **QueryData**: 58 types de données (quotes, bars, technicals, sentiment, news, earnings, etc.)
 - **GetInstruments**: Analyse complète d'un symbole (`symbols` requis)
+
+## MCP Forecast — TimesFM 2.5-200M
+
+Serveur : `http://ser.tail5d09f.ts.net:8400/mcp/`
+Headers obligatoires : `Content-Type: application/json` + `Accept: application/json, text/event-stream`
+Outils : `Forecast`, `ForecastVix`, `ForecastRaw`, `Backtest`
+Contraintes : max **10 tickers/call**, `lookback_days` ≤ 60, `context_length` ≤ 200
+
+### ⚠️ RÈGLES D'UTILISATION (validées empiriquement — 120 points, 15 tickers, avril 2026)
+
+**JAMAIS afficher la direction TimesFM comme une prévision certaine.**
+- Direction globale = 44.2% (pire que le hasard) — pas un signal tradable seul
+- Exception : AMZN, META, SPY → 62–75% DIR sur lookback=20j — utilisable comme filtre de confirmation uniquement
+
+**Ce qui marche (≥ 7/10) :**
+- **UC2 — Volatilité** : passer ATR(14) ou RVOL(14) à `ForecastRaw` → DIR 67–73% → sizing dynamique et filtre pre_squeeze
+- **UC3 — Volume** : passer la série de volume à `ForecastRaw` → DIR 69% → filtre breakout/faux-breakout
+- **UC5 — Rotation sectorielle** : `Forecast` sur 10 ETFs sectoriels → ranking relatif valide (0.4s/ticker)
+- **ForecastVix** → sizing et régime de marché ✅
+
+**Ce qui est partiel (5–6/10) :**
+- **UC1 — Prix/Close** : bandes CI [q10–q90] utilisables comme zones TP/SL calibrées (~80% couverture réelle). Direction = non fiable sauf AMZN/META/SPY
+- **UC6 — Scoring setup** : CI_width + vol + secteur combo utile. `confidence` fixe à 0.95 = inutilisable comme filtre
+
+**Ce qui ne marche pas (2/10) :**
+- **UC4 — Earnings/XReg** : XReg non implémenté dans ce wrapper. Le modèle est **pire** autour des earnings (DIR 40% vs 56% hors earnings). → **EXCLURE les fenêtres ±3j autour des earnings dates**
+- Quarterly fundamentals (revenue, earnings) : Yahoo < 10 trimestres → "Insufficient data"
+- Tickers énergie (XOM : 12%), biotech small cap (SRPT : 25%), TSLA (25%) : direction non fiable
+
+### Utilisation correcte par contexte
+
+**Dans une analyse ticker (section Trade Idea) :**
+```
+1. context_length=200, lookback=20j (fenêtre optimale)
+2. Ticker dans {AMZN, META, SPY, NVDA} → direction utilisable comme filtre
+3. Tous tickers → CI [lo–hi] = zones TP/SL calibrées (afficher comme "zone de support/résistance probabiliste")
+4. Vérifier earnings ±3j → si oui, suspendre le forecast prix sur ce ticker
+5. Ne jamais écrire "TimesFM prédit une hausse" → écrire "CI probabiliste : [X – Y]"
+```
+
+**Dans le scanner (post-screener) :**
+```
+1. ForecastRaw(volume[-150:], horizon=10) → pred_avg > avg20 × 1.1 = volume favorable ✅
+2. ForecastRaw(ATR14[-150:], horizon=10) → ATR_forecast > ATR × 1.15 = expansion attendue → éviter
+3. ForecastRaw(RVOL14[-150:], horizon=10) → RVOL < × 0.80 = compression probable → squeeze crédible
+```
+
+**Dans le weekly (rotation sectorielle) :**
+```
+Forecast({'tickers': [10 ETFs], 'context': 200, 'horizon': 10})
+→ Trier par predicted_return_pct → ranking relatif (NE PAS citer les valeurs absolues)
+→ Top 3 = biais long de la semaine | Bottom 3 = biais short / éviter
+```
+
+**ForecastVix :**
+```
+VIX prédit > 30 → doubler les bandes CI sur tous les forecasts prix
+VIX prédit en hausse → réduire les tailles de position (sizing ∝ 1/ATR_forecast)
+```
 - **RunAutoScreener**: Screener auto-adaptatif + détection de régime
 - **RunScreener**: Screener DSL personnalisé
 - **CalculateOptionsGreeks** / **AnalyzeOptionsStrategy** / **LLMAnalysis**

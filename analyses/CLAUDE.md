@@ -733,6 +733,33 @@ Format visuel avec classes CSS dédiées :
 - **Invalidation** en `.alert-box` : conditions qui annulent le trade
 - **Timeline** : horizon du trade (swing, position, long terme)
 
+##### TimesFM Forecast — Intégration dans le Trade Idea (OPTIONNEL mais CALIBRÉ)
+
+Appeler `Forecast` (MCP `http://ser.tail5d09f.ts.net:8400/mcp/`) **uniquement si** le ticker est dans {AMZN, META, SPY, NVDA, QQQ} ou si on veut les bandes CI calibrées pour tous les autres.
+
+**Ce qu'on affiche :**
+- **Bandes CI [q10–q90]** = "Zone probabiliste 5j" → afficher comme `<div class="forecast-band">` avec prix lo/hi
+- **NE PAS afficher la direction** (`predicted_direction`) sauf pour AMZN/META/SPY/NVDA (62–75% précision)
+- **NE PAS écrire** "TimesFM prédit une hausse/baisse" → écrire "Zone probabiliste 80% sur 5j : [X$ – Y$]"
+
+**Format HTML dans la section Trade Idea :**
+```html
+<div class="pedagogy-box" style="margin-top:1rem;">
+  <h4>📊 Forecast Probabiliste — TimesFM 2.5</h4>
+  <p>Zone probabiliste 80% sur 5 jours : <strong>[{CI_LO}$ – {CI_HI}$]</strong></p>
+  <p>Erreur attendue (MAPE historique) : ±{MAPE}% · Modèle : timesfm-2.5-200m</p>
+  <!-- Si ticker = AMZN/META/SPY/NVDA seulement : -->
+  <!-- <p>Signal directionnel : {bullish/bearish} (précision historique ~65–75%)</p> -->
+  <p style="font-size:0.75rem; color:#64748b;">⚠️ Prévision quantitative, pas un signal de trading. Exclure ±3j autour des earnings.</p>
+</div>
+```
+
+**Règles critiques :**
+- `context_length=200`, `lookback_days=20` (fenêtre optimale empirique)
+- Si earnings dans ±3j → **ne pas appeler le forecast** (précision DIR chute à 40%)
+- CI utilisée pour : TP max = CI haute, SL tight si CI étroite (< 5%), taille réduite si CI large (> 10%)
+- `confidence` = 0.95 fixe sur tous les tickers → **ne pas afficher** (non informatif)
+
 #### 17. Note Globale
 - Conviction : A+ (très haute) à D (très faible)
 - Biais : Haussier / Baissier / Neutre

@@ -157,9 +157,13 @@ Table `.data-table` avec colonnes : Thème | #1 Ticker | Perf 1M | #2 Ticker | P
 - Badge vert/rouge pour la tendance du thème
 
 **b) Rotation Sectorielle — Podium (table ultra-compacte)**
-Table `.data-table` avec colonnes : Secteur | Leader | Perf 1W | Perf 1M | Flow (In/Out)
+Table `.data-table` avec colonnes : Secteur | Leader | Perf 1W | Perf 1M | Flow (In/Out) | TFM Signal
 - Top 3 secteurs en inflows + Bottom 3 en outflows
 - Badge 🟢 In / 🔴 Out pour les flux
+- **TimesFM Rotation Signal (OPTIONNEL)** : appeler `Forecast` sur les 10 ETFs sectoriels (XLK, XLF, XLE, XLV, XLI, XLY, XLP, XLC, XLRE, XLU) avec `context_length=200, horizon=10`. Afficher le **ranking relatif** (pas les valeurs absolues) dans la colonne "TFM Signal". Top 3 = ▲, Bottom 3 = ▼, autres = ~.
+  - ⚠️ Afficher uniquement le rang (▲/▼/~), **jamais les % de retour absolus** (non calibrés)
+  - Timing : 10 ETFs en ~8s (2 appels de 5 tickers)
+  - Exemple : "XLF ▲ | XLU ▲ | XLE ▼" dans la colonne TFM Signal
 
 **c) Saisonnalités Actives**
 Table `.data-table` avec colonnes : Ticker | Pattern | Win Rate | Avg Return | Période

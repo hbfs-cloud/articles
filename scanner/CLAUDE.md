@@ -194,6 +194,45 @@ Ce risque n'apparaissait PAS sur la fiche technique classique. Seule la vérific
 
 ---
 
+### TimesFM Forecast — Filtre Post-Screener (OPTIONNEL, après sélection top 10)
+
+Après avoir sélectionné les tickers retenus, utiliser `ForecastRaw` (MCP `http://ser.tail5d09f.ts.net:8400/mcp/`) sur les séries dérivées (PAS le prix brut) pour enrichir chaque setup.
+
+**⚠️ Ne jamais utiliser la direction TimesFM comme signal principal. C'est un filtre de confirmation.**
+
+#### Filtre Volume (UC3 — score 8.5/10, précision 69%)
+```python
+# Pour chaque ticker retenu :
+ForecastRaw(volume_series[-150:], horizon=10)
+→ pred_avg > avg20 × 1.1  → "volume favorable" → confirmer le setup ✅
+→ CI_hi > avg20 × 1.5     → "spike possible dans 10j" → surveiller ⚠️
+→ pred_avg < avg20 × 0.9  → "volume faible attendu → faux breakout probable" → skip ou réduire ❌
+```
+
+#### Filtre Volatilité ATR (UC2 — score 8/10, précision 67–73%)
+```python
+# ATR(14) series[-150:] → ForecastRaw horizon=10
+→ ATR_forecast > ATR_now × 1.15 → expansion vol attendue → éviter les entrées (ou stops larges)
+→ ATR_forecast < ATR_now × 0.85 → contraction vol attendue → setup squeeze crédible
+→ RVOL_forecast < RVOL_now × 0.80 → compression pre_squeeze confirmée par le modèle
+```
+
+#### Signal de régime (ForecastVix — toujours)
+```python
+ForecastVix(horizon=5)
+→ VIX prédit > 30 → réduire les tailles de 50%, élargir tous les stops
+→ VIX prédit en hausse → biais défensif pour la sélection
+→ Régime = "STABLE" + VIX < 25 → conditions normales
+```
+
+#### Ce qu'on N'utilise PAS dans le scanner
+- Direction prix brut (`predicted_direction` de `Forecast`) → 44% global = bruit
+- `confidence` → fixe à 0.95 sur tous, non informatif
+- Quarterly revenue/earnings → données insuffisantes (<10 trimestres Yahoo)
+- Tickers à earnings dans ±3j → exclure du forecast prix (DIR chute à 40%)
+
+---
+
 ### Insider Transactions — Signal Spécial (OBLIGATOIRE)
 
 **Objectif** : Détecter les achats significatifs d'insiders (CEO, CFO, Board) comme signal de conviction supplémentaire.
