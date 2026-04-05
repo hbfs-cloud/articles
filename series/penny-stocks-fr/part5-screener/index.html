@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="fr,small-cap,penny-stocks,formation,debutant,screener" data-tab="analyses">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trouver les Bons Setups — Le Screener | Trader les Penny Stocks — Partie 5/6 | DailyTickers</title>
+  <meta name="description" content="Critères de filtrage, outils gratuits (Finviz, Unusual Whales), calendrier catalyseurs, liste de surveillance pour trouver les meilleures small caps.">
+  <meta property="og:title" content="Trouver les Bons Setups | Penny Stocks FR 5/6 | DailyTickers">
+  <meta property="og:url" content="https://articles.dailytickers.com/series/penny-stocks-fr/part5-screener/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="/favicon.ico">
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="/assets/report.css">
+  <style>
+    .hero-section{padding:4rem 2rem 8rem 2rem;background:linear-gradient(180deg,#fffbeb 0%,#f8fafc 100%);text-align:center;}
+    .hero-date{font-size:0.85rem;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;}
+    .hero-badges{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;}
+    .hero-badge{display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border-radius:99px;font-size:0.8rem;font-weight:700;}
+    .hero-badge-amber{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
+    .hero-badge-red{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);}
+    .hero-badge-green{background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);}
+    .hero-badge-blue{background:rgba(37,99,235,0.1);color:#2563eb;border:1px solid rgba(37,99,235,0.2);}
+    .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;}
+    .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0;}
+    .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0;}
+    .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+    .compare-table td{padding:0.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:0.9rem;color:#334155;}
+    .compare-table tr:nth-child(even) td{background:#f8fafc;}
+    .compare-table tr:last-child td{border-bottom:none;}
+    .checklist{list-style:none;padding:0;margin:1.5rem 0;}
+    .checklist li{display:flex;align-items:flex-start;gap:0.75rem;padding:0.6rem 0;font-size:0.95rem;color:#334155;line-height:1.5;}
+    .checklist li i{margin-top:0.15rem;flex-shrink:0;}
+    .next-cta{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid rgba(245,158,11,0.3);border-radius:16px;padding:2rem;margin:3rem 0;text-align:center;}
+    .next-cta h3{color:#92400e;margin:0 0 0.5rem;font-size:1.1rem;}
+    .next-cta p{color:#78350f;margin:0 0 1.5rem;font-size:0.95rem;}
+    .next-cta a{background:#f59e0b;color:white;padding:0.875rem 2rem;border-radius:12px;font-weight:700;text-decoration:none;font-size:0.95rem;display:inline-flex;align-items:center;gap:0.5rem;}
+    .tool-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;margin:1rem 0;display:flex;gap:1rem;align-items:flex-start;}
+    .tool-card .tool-icon{font-size:2rem;flex-shrink:0;}
+    .tool-card h4{margin:0 0 0.5rem;color:#0f172a;}
+    .tool-card p{margin:0;color:#64748b;font-size:0.875rem;line-height:1.5;}
+    .tool-card .tool-link{display:inline-flex;align-items:center;gap:0.4rem;margin-top:0.75rem;color:#f59e0b;font-weight:700;text-decoration:none;font-size:0.875rem;}
+    .filter-badge{display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.85rem;border-radius:99px;font-size:0.8rem;font-weight:700;background:rgba(245,158,11,0.1);color:#92400e;border:1px solid rgba(245,158,11,0.3);margin:0.25rem;}
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a>
+    <div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-magnifying-glass-chart"></i> Série Penny Stocks — Partie 5 sur 6</div>
+  <h1 class="hero-title">Trouver les Bons Setups</h1>
+  <p class="hero-subtitle">Screener, filtres, outils gratuits et liste de surveillance — la méthode concrète</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-graduation-cap"></i> Débutant</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-magnifying-glass-chart"></i> Screener</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-flag"></i> Français</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar">
+  <div class="series-bar-inner">
+    <a href="/series/penny-stocks-fr/part4-risk/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+    <span class="series-title">Penny Stocks &amp; Small Caps</span>
+    <div class="series-steps">
+      <a href="/series/penny-stocks-fr/part1-cquoi/" class="series-step"><span class="series-num">1</span><span class="series-label">C'est quoi ?</span></a>
+      <a href="/series/penny-stocks-fr/part2-pieges/" class="series-step"><span class="series-num">2</span><span class="series-label">Les Pièges</span></a>
+      <a href="/series/penny-stocks-fr/part3-analyser/" class="series-step"><span class="series-num">3</span><span class="series-label">Analyser</span></a>
+      <a href="/series/penny-stocks-fr/part4-risk/" class="series-step"><span class="series-num">4</span><span class="series-label">Gérer le Risque</span></a>
+      <a href="/series/penny-stocks-fr/part5-screener/" class="series-step current"><span class="series-num">5</span><span class="series-label">Screener</span></a>
+      <a href="/series/penny-stocks-fr/part6-plan/" class="series-step"><span class="series-num">6</span><span class="series-label">Plan Complet</span></a>
+    </div>
+    <span class="series-counter">5/6</span>
+    <a href="/series/penny-stocks-fr/part6-plan/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+  </div>
+</div>
+
+<main class="article-container">
+
+  <div id="criteres" class="content-card">
+    <h2><i class="fas fa-filter" style="color:#f59e0b"></i> Les Critères de Filtrage</h2>
+
+    <div class="pedagogy-box">
+      <p>L'objectif d'un screener : <strong>réduire l'univers des milliers d'actions</strong> à une liste de 5–10 candidats par jour, puis choisir 1–2 trades parmi eux. C'est du filtrage progressif, comme une passoire.</p>
+    </div>
+
+    <div class="section-divider">Les filtres essentiels</div>
+
+    <div style="margin: 1.5rem 0;">
+      <span class="filter-badge"><i class="fas fa-check"></i> Prix : 1$ – 20$</span>
+      <span class="filter-badge"><i class="fas fa-check"></i> Float : 5M – 50M actions</span>
+      <span class="filter-badge"><i class="fas fa-check"></i> RVOL : > 2</span>
+      <span class="filter-badge"><i class="fas fa-check"></i> Volume : > 500K actions/jour</span>
+      <span class="filter-badge"><i class="fas fa-check"></i> Variation jour : > +5% ou &lt; -5%</span>
+      <span class="filter-badge"><i class="fas fa-check"></i> Bourse : NASDAQ / NYSE (pas OTC)</span>
+      <span class="filter-badge"><i class="fas fa-check"></i> Pas de reverse split récent</span>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Critère</th><th>Valeur minimale</th><th>Pourquoi</th></tr></thead>
+      <tbody>
+        <tr><td>Prix minimum</td><td>1,00$</td><td>Éviter les actions à risque de radiation NASDAQ</td></tr>
+        <tr><td>Prix maximum</td><td>20$</td><td>Zone d'explosivité des small caps actives</td></tr>
+        <tr><td>Float</td><td>5M – 50M</td><td>Assez petit pour bouger fort, assez grand pour sortir</td></tr>
+        <tr><td>Volume jour</td><td>500 000 actions</td><td>Liquidité suffisante pour acheter ET vendre</td></tr>
+        <tr><td>RVOL</td><td>&gt; 2×</td><td>Quelque chose se passe — confirmation d'activité</td></tr>
+        <tr><td>Short interest</td><td>&lt; 30%</td><td>Éviter les squeeze wars imprévisibles pour débutants</td></tr>
+        <tr><td>Cap. boursière</td><td>&gt; 50M$</td><td>Nano caps = manipulation trop fréquente</td></tr>
+      </tbody>
+    </table>
+
+    <div id="chart-entonnoir" style="width:100%; height:340px; margin:2rem 0;"></div>
+  </div>
+
+  <div id="outils" class="content-card">
+    <h2><i class="fas fa-toolbox" style="color:#f59e0b"></i> Les Outils Gratuits</h2>
+
+    <div class="tool-card">
+      <div class="tool-icon">📊</div>
+      <div>
+        <h4>Finviz (finviz.com)</h4>
+        <p>Le screener le plus utilisé. Filtres par prix, float, volume, variation, secteur. Gratuit pour les données différées. L'onglet "Screener" → "Descriptive" + "Technical" pour combiner les filtres.</p>
+        <a href="https://finviz.com/screener.ashx" target="_blank" rel="noopener" class="tool-link"><i class="fas fa-external-link-alt"></i> Ouvrir Finviz Screener</a>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-icon">🔍</div>
+      <div>
+        <h4>Unusual Whales (unusualwhales.com)</h4>
+        <p>Excellent pour repérer les flux inhabituels et les options actives sur les small caps. La section "Flow" montre les gros achats d'options — souvent précurseurs d'un mouvement. Gratuit en accès limité.</p>
+        <a href="https://unusualwhales.com" target="_blank" rel="noopener" class="tool-link"><i class="fas fa-external-link-alt"></i> Unusual Whales</a>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-icon">📰</div>
+      <div>
+        <h4>SEC.gov EDGAR</h4>
+        <p>Pour vérifier les dépôts officiels : S-1, S-3, 424B (prospectus de dilution), 8-K (annonces importantes). Indispensable avant d'investir dans une small cap. Gratuit, officiel, fiable.</p>
+        <a href="https://www.sec.gov/cgi-bin/browse-edgar" target="_blank" rel="noopener" class="tool-link"><i class="fas fa-external-link-alt"></i> SEC EDGAR</a>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-icon">🗓️</div>
+      <div>
+        <h4>Earnings Calendar</h4>
+        <p>Les grands mouvements sur les small caps ont souvent lieu autour des publications de résultats. Consulter le calendrier des earnings sur Earnings Whispers ou Yahoo Finance avant chaque semaine.</p>
+        <a href="https://finance.yahoo.com/calendar/earnings/" target="_blank" rel="noopener" class="tool-link"><i class="fas fa-external-link-alt"></i> Yahoo Finance Earnings</a>
+      </div>
+    </div>
+
+    <div class="tool-card">
+      <div class="tool-icon">💊</div>
+      <div>
+        <h4>BioPharma Catalyst (pour les biotechs)</h4>
+        <p>Si tu t'intéresses aux biotechs (source de beaucoup de penny stocks actifs), le calendrier FDA est crucial. Dates PDUFA, résultats d'essais cliniques, réunions comités consultatifs.</p>
+        <a href="https://biopharmacatalyst.com/calendars/fda-calendar" target="_blank" rel="noopener" class="tool-link"><i class="fas fa-external-link-alt"></i> BioPharma Catalyst</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="watchlist" class="content-card">
+    <h2><i class="fas fa-list-check" style="color:#f59e0b"></i> Construire sa Liste de Surveillance</h2>
+
+    <div class="pedagogy-box">
+      <p>Une <strong>watchlist</strong> (liste de surveillance) est la liste de 5–20 actions que tu surveilles activement. L'idée : plutôt que de chasser des opportunités aléatoires, tu es toujours prêt sur des actions que tu connais déjà.</p>
+    </div>
+
+    <div class="section-divider">Méthode de construction</div>
+
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#f59e0b"></i><div><strong>Lundi matin (pre-marché)</strong> : Passer le screener Finviz → noter les 5 tickers les plus actifs avec catalyseur</div></li>
+      <li><i class="fas fa-circle-check" style="color:#f59e0b"></i><div><strong>Vérification SEC</strong> : Pour chaque ticker retenu, check rapide sur EDGAR (2 min max)</div></li>
+      <li><i class="fas fa-circle-check" style="color:#f59e0b"></i><div><strong>Calendrier earnings</strong> : Marquer les dates de publications pour la semaine</div></li>
+      <li><i class="fas fa-circle-check" style="color:#f59e0b"></i><div><strong>Pre-marché quotidien</strong> : Mettre à jour la liste — retirer les actions sans catalyseur actif</div></li>
+      <li><i class="fas fa-circle-check" style="color:#f59e0b"></i><div><strong>Max 10 tickers</strong> dans la watchlist active — au-delà, tu ne peux plus les suivre correctement</div></li>
+    </ul>
+
+    <div id="chart-workflow" style="width:100%; height:320px; margin:2rem 0;"></div>
+
+    <div class="takeaway-box">
+      <h4>🎯 Le setup idéal à chercher</h4>
+      <ul>
+        <li>Prix entre 2$ et 15$</li>
+        <li>Float entre 5M et 30M actions</li>
+        <li>RVOL &gt; 3 dès le pre-marché</li>
+        <li>Catalyseur identifié (earnings surprise, FDA, contrat)</li>
+        <li>Pas de S-3 ou PIPE récent sur SEC.gov</li>
+        <li>Prix au-dessus du VWAP depuis l'ouverture</li>
+        <li>R/R calculé avant entrée : minimum 1:2</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="next-cta">
+    <h3>🏁 Prochaine étape</h3>
+    <p>La dernière partie : <strong>ton plan de trading complet</strong>, ta routine quotidienne et comment journaliser tes trades pour progresser vraiment.</p>
+    <a href="/series/penny-stocks-fr/part6-plan/">Partie 6 : Ton Plan Complet <i class="fas fa-arrow-right"></i></a>
+  </div>
+
+</main>
+
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#criteres" class="fnav-item" data-section="criteres"><i class="fas fa-filter"></i><span>Critères</span></a>
+    <a href="#outils" class="fnav-item" data-section="outils"><i class="fas fa-toolbox"></i><span>Outils</span></a>
+    <a href="#watchlist" class="fnav-item" data-section="watchlist"><i class="fas fa-list-check"></i><span>Watchlist</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Contenu éducatif uniquement. Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Entonnoir de sélection
+  var chartEntonnoir = echarts.init(document.getElementById('chart-entonnoir'));
+  chartEntonnoir.setOption({
+    backgroundColor:'#fff',
+    title:{text:'L\'entonnoir de sélection — de 6000 actions à 1 trade',left:'center',top:10,textStyle:{fontSize:13,fontFamily:'Inter',color:'#0f172a'}},
+    tooltip:{trigger:'item',formatter:'{b}<br/>{c} actions restantes'},
+    series:[{
+      type:'funnel',
+      left:'10%',width:'80%',
+      sort:'descending',
+      gap:2,
+      label:{show:true,position:'inside',formatter:function(p){return p.name+'\n('+p.value+' tickers)';},fontFamily:'Inter',fontSize:11,color:'white',fontWeight:700},
+      data:[
+        {value:6000,name:'Univers total NASDAQ/NYSE',itemStyle:{color:'#cbd5e1'}},
+        {value:800,name:'Prix 1$–20$ + Volume > 500K',itemStyle:{color:'#94a3b8'}},
+        {value:150,name:'RVOL > 2 + Float 5–50M',itemStyle:{color:'#f59e0b'}},
+        {value:20,name:'Catalyseur identifié',itemStyle:{color:'#f97316'}},
+        {value:5,name:'Check SEC (no dilution)',itemStyle:{color:'#ef4444'}},
+        {value:2,name:'R/R ≥ 1:2 + VWAP above',itemStyle:{color:'#dc2626'}},
+        {value:1,name:'Trade sélectionné ✅',itemStyle:{color:'#10b981'}}
+      ]
+    }],
+  });
+
+  // Workflow temporel
+  var chartWorkflow = echarts.init(document.getElementById('chart-workflow'));
+  chartWorkflow.setOption({
+    backgroundColor:'#fff',
+    title:{text:'Répartition du temps — Routine screener quotidienne',left:'center',top:10,textStyle:{fontSize:13,fontFamily:'Inter',color:'#0f172a'}},
+    tooltip:{trigger:'item',formatter:'{b}: {c} min'},
+    series:[{
+      type:'pie',
+      radius:['35%','65%'],
+      data:[
+        {value:15,name:'Screener Finviz',itemStyle:{color:'#f59e0b'}},
+        {value:10,name:'Check SEC (2 min/ticker)',itemStyle:{color:'#f97316'}},
+        {value:10,name:'Calendrier earnings/FDA',itemStyle:{color:'#10b981'}},
+        {value:10,name:'Mise à jour watchlist',itemStyle:{color:'#3b82f6'}},
+        {value:5,name:'Calcul R/R et stops',itemStyle:{color:'#8b5cf6'}}
+      ],
+      label:{formatter:'{b}\n{c} min',fontFamily:'Inter',fontSize:11}
+    }]
+  });
+
+  window.addEventListener('resize',function(){chartEntonnoir.resize();chartWorkflow.resize();});
+});
+</script>
+</body>
+</html>

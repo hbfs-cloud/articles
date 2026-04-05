@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="fr,small-cap,penny-stocks,formation,debutant,technique" data-tab="analyses">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comment Analyser une Small Cap | Trader les Penny Stocks — Partie 3/6 | DailyTickers</title>
+  <meta name="description" content="Float, VWAP, volume relatif (RVOL), catalyseurs, bougies japonaises — les outils concrets pour analyser une small cap avant de trader.">
+  <meta property="og:title" content="Analyser une Small Cap | Penny Stocks FR 3/6 | DailyTickers">
+  <meta property="og:url" content="https://articles.dailytickers.com/series/penny-stocks-fr/part3-analyser/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="/favicon.ico">
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <link rel="stylesheet" href="/assets/report.css">
+  <style>
+    .hero-section{padding:4rem 2rem 8rem 2rem;background:linear-gradient(180deg,#fffbeb 0%,#f8fafc 100%);text-align:center;}
+    .hero-date{font-size:0.85rem;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:1rem;}
+    .hero-badges{display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;}
+    .hero-badge{display:inline-flex;align-items:center;gap:0.4rem;padding:0.5rem 1rem;border-radius:99px;font-size:0.8rem;font-weight:700;}
+    .hero-badge-amber{background:rgba(245,158,11,0.1);color:#f59e0b;border:1px solid rgba(245,158,11,0.2);}
+    .hero-badge-red{background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);}
+    .hero-badge-green{background:rgba(16,185,129,0.1);color:#10b981;border:1px solid rgba(16,185,129,0.2);}
+    .hero-badge-blue{background:rgba(37,99,235,0.1);color:#2563eb;border:1px solid rgba(37,99,235,0.2);}
+    .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;}
+    .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0;}
+    .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0;}
+    .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;}
+    .compare-table td{padding:0.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:0.9rem;color:#334155;}
+    .compare-table tr:nth-child(even) td{background:#f8fafc;}
+    .compare-table tr:last-child td{border-bottom:none;}
+    .checklist{list-style:none;padding:0;margin:1.5rem 0;}
+    .checklist li{display:flex;align-items:flex-start;gap:0.75rem;padding:0.6rem 0;font-size:0.95rem;color:#334155;line-height:1.5;}
+    .checklist li i{margin-top:0.15rem;flex-shrink:0;}
+    .next-cta{background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid rgba(245,158,11,0.3);border-radius:16px;padding:2rem;margin:3rem 0;text-align:center;}
+    .next-cta h3{color:#92400e;margin:0 0 0.5rem;font-size:1.1rem;}
+    .next-cta p{color:#78350f;margin:0 0 1.5rem;font-size:0.95rem;}
+    .next-cta a{background:#f59e0b;color:white;padding:0.875rem 2rem;border-radius:12px;font-weight:700;text-decoration:none;font-size:0.95rem;display:inline-flex;align-items:center;gap:0.5rem;}
+    .metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin:2rem 0;}
+    .metric-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;border-top:3px solid #f59e0b;}
+    .metric-card h4{color:#0f172a;margin:0 0 0.5rem;font-size:1rem;}
+    .metric-card p{color:#64748b;font-size:0.875rem;line-height:1.5;margin:0;}
+    .metric-card .metric-val{font-size:1.5rem;font-weight:900;color:#f59e0b;margin:0.5rem 0;}
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a>
+    <div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-bar"></i> Série Penny Stocks — Partie 3 sur 6</div>
+  <h1 class="hero-title">Comment Analyser une Small Cap</h1>
+  <p class="hero-subtitle">Float, VWAP, RVOL, catalyseurs — les indicateurs qui séparent les bons setups des mauvais</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-graduation-cap"></i> Débutant</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-bar"></i> Technique</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-flag"></i> Français</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<div class="series-bar">
+  <div class="series-bar-inner">
+    <a href="/series/penny-stocks-fr/part2-pieges/" class="series-arrow"><i class="fas fa-chevron-left"></i></a>
+    <span class="series-title">Penny Stocks &amp; Small Caps</span>
+    <div class="series-steps">
+      <a href="/series/penny-stocks-fr/part1-cquoi/" class="series-step"><span class="series-num">1</span><span class="series-label">C'est quoi ?</span></a>
+      <a href="/series/penny-stocks-fr/part2-pieges/" class="series-step"><span class="series-num">2</span><span class="series-label">Les Pièges</span></a>
+      <a href="/series/penny-stocks-fr/part3-analyser/" class="series-step current"><span class="series-num">3</span><span class="series-label">Analyser</span></a>
+      <a href="/series/penny-stocks-fr/part4-risk/" class="series-step"><span class="series-num">4</span><span class="series-label">Gérer le Risque</span></a>
+      <a href="/series/penny-stocks-fr/part5-screener/" class="series-step"><span class="series-num">5</span><span class="series-label">Screener</span></a>
+      <a href="/series/penny-stocks-fr/part6-plan/" class="series-step"><span class="series-num">6</span><span class="series-label">Plan Complet</span></a>
+    </div>
+    <span class="series-counter">3/6</span>
+    <a href="/series/penny-stocks-fr/part4-risk/" class="series-arrow"><i class="fas fa-chevron-right"></i></a>
+  </div>
+</div>
+
+<main class="article-container">
+
+  <div id="float" class="content-card">
+    <h2><i class="fas fa-layer-group" style="color:#f59e0b"></i> Le Float — L'indicateur N°1</h2>
+    <div class="pedagogy-box">
+      <p><strong>Le float, c'est quoi ?</strong> C'est le nombre d'actions réellement disponibles à la vente sur le marché. Ce n'est pas le total des actions émises par l'entreprise — les fondateurs, les fonds d'investissement et l'entreprise elle-même en gardent une partie "hors marché".</p>
+      <p><strong>Pourquoi c'est important ?</strong> Un float petit = peu d'actions disponibles = un petit volume peut faire bouger le prix très fort. C'est l'essence de la volatilité des penny stocks.</p>
+    </div>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <h4>Float bas</h4>
+        <div class="metric-val">&lt; 10M</div>
+        <p>Volatilité maximale. Bouger de ±50% en une journée est possible. Attention à la liquidité.</p>
+      </div>
+      <div class="metric-card">
+        <h4>Float moyen</h4>
+        <div class="metric-val">10–50M</div>
+        <p>Bon équilibre pour les débutants. Assez volatile pour faire des gains, assez liquide pour sortir.</p>
+      </div>
+      <div class="metric-card">
+        <h4>Float haut</h4>
+        <div class="metric-val">&gt; 50M</div>
+        <p>Moins volatile, mais aussi moins explosif. Idéal pour limiter les risques en début d'apprentissage.</p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <strong>⚠️ Float Bas ≠ Toujours Bon :</strong> Un float très bas (sous 5M) peut signifier que les fondateurs peuvent manipuler facilement le cours. Vérifier aussi le "short interest" (pourcentage d'actions vendues à découvert) — si > 30%, la volatilité peut être extrême dans les deux sens.
+    </div>
+  </div>
+
+  <div id="catalyseurs" class="content-card">
+    <h2><i class="fas fa-rocket" style="color:#f59e0b"></i> Les Catalyseurs</h2>
+
+    <div class="pedagogy-box">
+      <p>Un <strong>catalyseur</strong>, c'est l'événement qui explique pourquoi une action bouge. Sur les small caps, les mouvements sont <em>presque toujours</em> déclenchés par un catalyseur. Sans catalyseur, c'est souvent de la manipulation.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Type de catalyseur</th><th>Force du signal</th><th>Durée du mouvement</th><th>Exemple</th></tr></thead>
+      <tbody>
+        <tr><td>📊 Résultats trimestriels (earnings)</td><td>⭐⭐⭐⭐⭐ Très fort</td><td>2–5 jours</td><td>Biotech publie ses ventes</td></tr>
+        <tr><td>💊 Résultats d'essais cliniques (FDA)</td><td>⭐⭐⭐⭐⭐ Très fort</td><td>1–10 jours</td><td>Phase 3 réussie → +200%</td></tr>
+        <tr><td>🤝 Contrat / partenariat</td><td>⭐⭐⭐⭐ Fort</td><td>1–3 jours</td><td>Contrat gouvernemental signé</td></tr>
+        <tr><td>📰 Couverture médias / influenceurs</td><td>⭐⭐⭐ Modéré</td><td>Quelques heures</td><td>Mention dans une newsletter populaire</td></tr>
+        <tr><td>📈 Tendance sectorielle</td><td>⭐⭐ Faible seul</td><td>Jours à semaines</td><td>Tout le secteur IA monte</td></tr>
+        <tr><td>🔊 Buzz sans actu</td><td>⚠️ Danger</td><td>1–2 jours max</td><td>Reddit/Discord sans source → pump</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pedagogy-box">
+      <p><strong>Règle d'or :</strong> Avant de trader une small cap, réponds à cette question : <em>"Pourquoi cette action bouge aujourd'hui ?"</em> Si tu n'as pas de réponse claire et vérifiable (communiqué officiel, article de presse sérieux), c'est probablement un piège.</p>
+    </div>
+  </div>
+
+  <div id="rvol-vwap" class="content-card">
+    <h2><i class="fas fa-wave-square" style="color:#f59e0b"></i> RVOL et VWAP — Les Deux Indicateurs Clés</h2>
+
+    <div class="section-divider">RVOL — Volume Relatif</div>
+
+    <div class="pedagogy-box">
+      <p>Le <strong>RVOL (Relative Volume)</strong> compare le volume actuel au volume moyen habituel sur la même période. Un RVOL de 3 signifie que l'action se négocie 3 fois plus que d'habitude à cette heure.</p>
+      <p>C'est ton premier filtre : <strong>RVOL &gt; 2 = quelque chose se passe.</strong></p>
+    </div>
+
+    <div id="chart-rvol" style="width:100%; height:320px; margin:2rem 0;"></div>
+
+    <div class="section-divider">VWAP — Prix Moyen Pondéré par le Volume</div>
+
+    <div class="pedagogy-box">
+      <p>Le <strong>VWAP (Volume Weighted Average Price)</strong> est le prix moyen de la journée, pondéré par les volumes. C'est la ligne de référence intraday de tous les traders institutionnels.</p>
+      <ul>
+        <li>Prix <strong>au-dessus du VWAP</strong> → les acheteurs dominent → biais haussier</li>
+        <li>Prix <strong>en dessous du VWAP</strong> → les vendeurs dominent → biais baissier</li>
+        <li>Le VWAP sert souvent de <strong>support/résistance dynamique</strong> en cours de journée</li>
+      </ul>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Scénario</th><th>RVOL</th><th>Position vs VWAP</th><th>Signal</th></tr></thead>
+      <tbody>
+        <tr><td>Breakout haussier confirmé</td><td>&gt; 3</td><td>Au-dessus + monte</td><td style="color:#10b981">✅ Long possible</td></tr>
+        <tr><td>Consolidation</td><td>0.8 – 1.5</td><td>Autour du VWAP</td><td style="color:#94a3b8">⬌ Attendre</td></tr>
+        <tr><td>Rejet au VWAP</td><td>&gt; 2</td><td>Essaie de passer, échoue</td><td style="color:#f59e0b">⚠️ Prudence</td></tr>
+        <tr><td>Baisse forte</td><td>&gt; 2</td><td>En dessous + chute</td><td style="color:#ef4444">❌ Éviter long</td></tr>
+        <tr><td>Faible volume</td><td>&lt; 0.8</td><td>N'importe</td><td style="color:#7f1d1d">⛔ Ne pas trader</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div id="bougies" class="content-card">
+    <h2><i class="fas fa-fire-flame-curved" style="color:#f59e0b"></i> Lire les Bougies Japonaises (Bases)</h2>
+
+    <div class="pedagogy-box">
+      <p>Une <strong>bougie japonaise</strong> résume 4 informations : le prix d'ouverture, le prix de clôture, le plus haut et le plus bas de la période. Le corps de la bougie = différence ouverture/clôture. Les mèches = extrêmes.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Formation</th><th>Ce que ça dit</th><th>Action recommandée</th></tr></thead>
+      <tbody>
+        <tr><td>🕯️ Grande bougie verte (corps long)</td><td>Forte pression acheteuse, les bulls contrôlent</td><td>Chercher un retour pour rentrer</td></tr>
+        <tr><td>🕯️ Grande bougie rouge (corps long)</td><td>Forte pression vendeuse, les bears contrôlent</td><td>Éviter ou shorter (avancé)</td></tr>
+        <tr><td>📌 Doji (corps très petit)</td><td>Indécision, équilibre acheteurs/vendeurs</td><td>Attendre la bougie suivante</td></tr>
+        <tr><td>🔨 Hammer (corps bas, longue mèche basse)</td><td>Rejet d'un creux, potentiel retournement haussier</td><td>Signal d'achat si confirmé</td></tr>
+        <tr><td>⭐ Shooting Star (corps haut, longue mèche haute)</td><td>Rejet d'un sommet, potentiel retournement baissier</td><td>Prudence, possible retournement</td></tr>
+        <tr><td>📊 Engulfing haussier (2 bougies)</td><td>Grande verte "avale" la rouge précédente</td><td>Signal fort de retournement haussier</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <strong>Pour les débutants :</strong> Concentre-toi uniquement sur 2 choses — la direction générale (est-ce que les bougies font des "plus hauts" et "plus bas" croissants ?) et le volume. Une belle bougie verte sans volume = signal faux.
+    </div>
+
+    <div id="chart-analyse" style="width:100%; height:360px; margin:2rem 0;"></div>
+
+    <div class="takeaway-box">
+      <h4>🎯 La checklist d'analyse avant de trader</h4>
+      <ul>
+        <li><strong>Float</strong> : Vérifier sur Finviz. Idéal : 5–30M pour small caps actives</li>
+        <li><strong>Catalyseur</strong> : Trouver la raison du mouvement. Pas de raison = pas de trade</li>
+        <li><strong>RVOL</strong> : Doit être > 2 pour un setup digne d'intérêt</li>
+        <li><strong>VWAP</strong> : L'action doit être au-dessus pour un long, en dessous pour éviter</li>
+        <li><strong>Bougies</strong> : Y a-t-il un pattern d'entrée clair ?</li>
+        <li><strong>Dilution</strong> : Rapide check SEC.gov pour pas de S-3 récent</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="next-cta">
+    <h3>💰 Prochaine étape</h3>
+    <p>Tu sais analyser. Maintenant la partie la plus importante : <strong>gérer ton risque</strong>. Sans risk management, même le meilleur setup peut te ruiner.</p>
+    <a href="/series/penny-stocks-fr/part4-risk/">Partie 4 : Gérer Son Risque <i class="fas fa-arrow-right"></i></a>
+  </div>
+
+</main>
+
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#float" class="fnav-item" data-section="float"><i class="fas fa-layer-group"></i><span>Le Float</span></a>
+    <a href="#catalyseurs" class="fnav-item" data-section="catalyseurs"><i class="fas fa-rocket"></i><span>Catalyseurs</span></a>
+    <a href="#rvol-vwap" class="fnav-item" data-section="rvol-vwap"><i class="fas fa-wave-square"></i><span>RVOL &amp; VWAP</span></a>
+    <a href="#bougies" class="fnav-item" data-section="bougies"><i class="fas fa-fire-flame-curved"></i><span>Bougies</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Contenu éducatif uniquement. Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Chart RVOL comparatif
+  var chartRvol = echarts.init(document.getElementById('chart-rvol'));
+  chartRvol.setOption({
+    backgroundColor:'#fff',
+    title:{text:'RVOL — Exemple d\'un jour avec catalyseur vs. jour normal',left:'center',top:10,textStyle:{fontSize:13,fontFamily:'Inter',color:'#0f172a'}},
+    tooltip:{trigger:'axis'},
+    legend:{bottom:5,data:['Volume normal','Volume catalyseur'],textStyle:{fontFamily:'Inter',fontSize:11}},
+    xAxis:{type:'category',data:['9h30','10h00','10h30','11h00','11h30','12h00','13h00','14h00','15h00','15h30','16h00'],axisLabel:{fontFamily:'Inter',fontSize:11}},
+    yAxis:{type:'value',name:'Volume (k actions)',axisLabel:{formatter:'{value}k'}},
+    series:[
+      {name:'Volume normal',type:'bar',data:[120,80,60,50,45,40,50,55,60,80,100],itemStyle:{color:'#94a3b8'},barGap:'5%'},
+      {name:'Volume catalyseur',type:'bar',data:[850,620,480,380,290,210,280,350,420,680,920],itemStyle:{color:'#f59e0b'}}
+    ],
+    grid:{left:'5%',right:'5%',bottom:'15%',containLabel:true}
+  });
+
+  // Chart d'analyse combinée VWAP + price
+  var chartAnalyse = echarts.init(document.getElementById('chart-analyse'));
+  var heures = ['9h30','10h','10h30','11h','11h30','12h','13h','14h','15h','15h30','16h'];
+  var prixData = [3.20,3.45,3.30,3.55,3.80,3.70,3.85,4.10,4.20,4.05,4.35];
+  var vwapData = [3.20,3.28,3.30,3.38,3.46,3.50,3.56,3.65,3.73,3.75,3.82];
+  chartAnalyse.setOption({
+    backgroundColor:'#fff',
+    title:{text:'Prix vs VWAP — Lecture d\'un setup intraday haussier',left:'center',top:10,textStyle:{fontSize:13,fontFamily:'Inter',color:'#0f172a'}},
+    tooltip:{trigger:'axis'},
+    legend:{bottom:5,data:['Prix','VWAP'],textStyle:{fontFamily:'Inter',fontSize:11}},
+    xAxis:{type:'category',data:heures,axisLabel:{fontFamily:'Inter',fontSize:11}},
+    yAxis:{type:'value',name:'Prix ($)',min:3.0,axisLabel:{formatter:'{value}$'}},
+    series:[
+      {name:'Prix',type:'line',smooth:false,data:prixData,lineStyle:{width:2.5,color:'#0f172a'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(15,23,42,0.1)'},{offset:1,color:'rgba(15,23,42,0.01)'}]}}},
+      {name:'VWAP',type:'line',smooth:true,data:vwapData,lineStyle:{width:2,color:'#f59e0b',type:'dashed'},symbol:'none'}
+    ],
+    grid:{left:'5%',right:'5%',bottom:'15%',containLabel:true}
+  });
+
+  window.addEventListener('resize',function(){chartRvol.resize();chartAnalyse.resize();});
+});
+</script>
+</body>
+</html>

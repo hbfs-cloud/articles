@@ -4366,5 +4366,18 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "series/patrimoine-europe/part1-socle-epargne/",
     "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "C'est quoi un Penny Stock ?",
+    "desc": "Série Penny Stocks FR — Partie 1/6 : définition, fourchettes de prix, différences small/micro/nano cap, réalité des stats, pourquoi 90% des débutants perdent.",
+    "tags": "fr,small-cap,penny-stocks,formation,debutant",
+    "grade": "",
+    "href": "/series/penny-stocks-fr/part1-cquoi/",
+    "date": ""
   }
 ];
