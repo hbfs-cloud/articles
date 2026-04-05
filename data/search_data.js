@@ -3861,6 +3861,19 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "TimesFM 2.5 for Trading: The Complete Guide to AI Time Series Forecasting",
+    "desc": "Complete practical guide to TimesFM 2.5 for trading: price, volatility, volume forecasting, sector rotation, and production pipeline integration. Data-driven evaluation across 6 use cases.",
+    "tags": "ai,tech,technique,formation",
+    "grade": "",
+    "href": "/tech/timesfm-trading-guide/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",
