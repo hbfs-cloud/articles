@@ -203,9 +203,11 @@ ForecastVix(horizon=5) → MCP http://ser.tail5d09f.ts.net:8400/mcp/
 ```
 
 **⚠️ Règles MCP Forecast pour le daily :**
+- `predicted_direction` direction globale = 44% (pire que le hasard) — **jamais afficher comme signal**
+- Exception : SPY (62%), QQQ (signal marginal) — citer uniquement comme "biais léger", pas comme conviction
+- Sur tout autre indice ou action : afficher uniquement les bandes CI [q10–q90] comme zones probabilistes
 - Ne jamais écrire "le modèle prédit une hausse/baisse" → écrire "zone probabiliste 80% sur 5j : [X – Y]"
-- `predicted_direction` sur SPY/QQQ = signal marginal (62% sur SPY) → citer avec précaution
-- Sur tout autre indice ou action : afficher uniquement les bandes CI comme zones de soutien/résistance
+- `confidence` = 0.95 fixe → ne pas afficher (non informatif)
 
 ### Directives
 - Données à jour via MCP Gateway (GetMarketOverview, QueryData)

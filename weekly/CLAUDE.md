@@ -157,13 +157,16 @@ Table `.data-table` avec colonnes : Thème | #1 Ticker | Perf 1M | #2 Ticker | P
 - Badge vert/rouge pour la tendance du thème
 
 **b) Rotation Sectorielle — Podium (table ultra-compacte)**
-Table `.data-table` avec colonnes : Secteur | Leader | Perf 1W | Perf 1M | Flow (In/Out) | TFM Signal
+Table `.data-table` avec colonnes : Secteur | Leader | Perf 1W | Perf 1M | Flow (In/Out) | Forecast Signal
 - Top 3 secteurs en inflows + Bottom 3 en outflows
 - Badge 🟢 In / 🔴 Out pour les flux
 - **MCP Forecast Rotation Signal (OPTIONNEL)** : appeler `Forecast` sur les 10 ETFs sectoriels (XLK, XLF, XLE, XLV, XLI, XLY, XLP, XLC, XLRE, XLU) avec `context_length=200, horizon=10`. Afficher le **ranking relatif** (pas les valeurs absolues) dans la colonne "Forecast Signal". Top 3 = ▲, Bottom 3 = ▼, autres = ~.
+  - ⚠️ Direction par ETF = 44–56% global → **ne pas afficher comme prédiction** — uniquement comme ranking relatif
+  - `confidence` = 0.95 fixe → ne pas afficher (non informatif)
+  - ⚠️ Direction globale = 44% (non fiable) → afficher uniquement le ranking relatif, jamais comme signal directionnel
   - ⚠️ Afficher uniquement le rang (▲/▼/~), **jamais les % de retour absolus** (non calibrés)
   - Timing : 10 ETFs en ~8s (2 appels de 5 tickers)
-  - Exemple : "XLF ▲ | XLU ▲ | XLE ▼" dans la colonne TFM Signal
+  - Exemple : "XLF ▲ | XLU ▲ | XLE ▼" dans la colonne Forecast Signal
 
 **c) Saisonnalités Actives**
 Table `.data-table` avec colonnes : Ticker | Pattern | Win Rate | Avg Return | Période
