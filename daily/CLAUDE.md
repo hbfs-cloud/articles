@@ -202,11 +202,12 @@ ForecastVix(horizon=5) → MCP http://ser.tail5d09f.ts.net:8400/mcp/
 → Régime = "STABLE" + VIX < 25 : conditions normales pour les trades
 ```
 
-**⚠️ Règles MCP Forecast pour le daily :**
-- `predicted_direction` direction globale = 44% (pire que le hasard) — **jamais afficher comme signal**
-- Exception : SPY (62%), QQQ (signal marginal) — citer uniquement comme "biais léger", pas comme conviction
-- Sur tout autre indice ou action : afficher uniquement les bandes CI [q10–q90] comme zones probabilistes
-- Ne jamais écrire "le modèle prédit une hausse/baisse" → écrire "zone probabiliste 80% sur 5j : [X – Y]"
+**⚠️ Règles MCP Forecast pour le daily (5 règles empiriques) :**
+- **R1 — Direction 44%** : `predicted_direction` globale = 44% (pire que le hasard) — jamais afficher comme signal. Exception : SPY (62%) → biais léger uniquement
+- **R2 — Bandes CI** : [q10–q90] = zones probabilistes 80% → afficher comme "zone de soutien/résistance probabiliste" pour SPY/QQQ/indices. Ne jamais écrire "le modèle prédit une hausse/baisse" → écrire "zone probabiliste 80% sur 5j : [X – Y]"
+- **R3 — Volatilité ATR/RVOL** : `ForecastRaw` sur ATR(14) → DIR 67–73%. Si ATR forecast en expansion → biais défensif dans le briefing. Si contraction → conditions favorables pour les setups en cours
+- **R4 — Volume** : `ForecastRaw` sur volume → DIR 69%. Volume forecast < avg20 × 0.9 → liquidité faible attendue → signaler dans le daily
+- **R5 — Earnings ±3j** : si un ticker majeur (SPY, QQQ, AAPL, MSFT…) a des earnings dans ±3j → suspendre le forecast prix sur ce ticker (DIR chute à 40%)
 - `confidence` = 0.95 fixe → ne pas afficher (non informatif)
 
 ### Directives

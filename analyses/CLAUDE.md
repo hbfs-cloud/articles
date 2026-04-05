@@ -756,10 +756,13 @@ Appeler `Forecast` (MCP `http://ser.tail5d09f.ts.net:8400/mcp/`) **uniquement si
 ⚠️ **Ne jamais écrire "MCP Forecast", "TimesFM" ou "AI" dans le HTML de l'article.**
 Utiliser uniquement : "forecast", "price forecast", "Price Forecast (10 Days)".
 
-**Règles critiques :**
+**5 règles empiriques (toutes obligatoires) :**
+- **R1 — Direction 44%** : `predicted_direction` = 44% global → jamais afficher comme signal. Exception : AMZN/META/SPY/NVDA (62–75%) → filtre de confirmation uniquement
+- **R2 — Bandes CI** : [q10–q90] = zones TP/SL calibrées (~80% couverture réelle). TP max = CI haute, SL tight si CI < 5%, taille réduite si CI > 10%
+- **R3 — Volatilité ATR** : si besoin de sizing → `ForecastRaw(ATR14[-150:])` → ATR forecast expansion = élargir les stops / réduire la taille
+- **R4 — Volume** : `ForecastRaw(volume[-150:])` → pred_avg < avg20 × 0.9 = liquidité faible → éviter les entrées agressives
+- **R5 — Earnings ±3j** : si earnings dans ±3j → **ne pas appeler le forecast prix** (DIR chute à 40%)
 - `context_length=200`, `lookback_days=20` (fenêtre optimale empirique)
-- Si earnings dans ±3j → **ne pas appeler le forecast** (précision DIR chute à 40%)
-- CI utilisée pour : TP max = CI haute, SL tight si CI étroite (< 5%), taille réduite si CI large (> 10%)
 - `confidence` = 0.95 fixe sur tous les tickers → **ne pas afficher** (non informatif)
 
 #### 17. Note Globale
