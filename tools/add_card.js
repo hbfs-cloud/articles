@@ -326,7 +326,6 @@ if (tab === 'daily' || tab === 'weekly' || tab === 'scanner') {
 let badgeHtml = '';
 const isRetrospective = tab === 'scanner' && (
     html.includes('RÉTROSPECTIVE') ||
-    html.toLowerCase().includes('retrospective') ||
     fullPath.includes('/retrospective/')
 );
 if (isRetrospective) {
