@@ -476,7 +476,12 @@ ${posGrid.map(row => `
 
 async function generatePNG(html, outputPath) {
   const puppeteer = require('puppeteer');
+  // Use arm64-compatible chromium from playwright if available (Hetzner aarch64 CI)
+  const fs = require('fs');
+  const PLAYWRIGHT_CHROME = '/home/ci/.cache/ms-playwright/chromium-1217/chrome-linux/chrome';
+  const executablePath = fs.existsSync(PLAYWRIGHT_CHROME) ? PLAYWRIGHT_CHROME : undefined;
   const browser = await puppeteer.launch({
+    executablePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
   });
   const page = await browser.newPage();

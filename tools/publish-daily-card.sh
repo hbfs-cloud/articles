@@ -39,9 +39,9 @@ rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/stat
 echo ""
 echo "🖼️  Step 2: Generating daily card image..."
 if [ "$DRY_RUN" = true ]; then
-  node tools/generate-scanner-image.js --dry-run
+  node tools/generate-scanner-image.js --dry-run || echo "⚠️  Image generation failed (non-blocking)"
 else
-  node tools/generate-scanner-image.js
+  node tools/generate-scanner-image.js || echo "⚠️  Image generation failed (non-blocking)"
 fi
 
 # ─── Step 3: Re-run sweep (backtest all scans with current prices) ───────────
