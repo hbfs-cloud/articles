@@ -478,8 +478,18 @@ async function generatePNG(html, outputPath) {
   const puppeteer = require('puppeteer');
   // Use arm64-compatible chromium from playwright if available (Hetzner aarch64 CI)
   const fs = require('fs');
-  const PLAYWRIGHT_CHROME = '/home/ci/.cache/ms-playwright/chromium-1217/chrome-linux/chrome';
-  const executablePath = fs.existsSync(PLAYWRIGHT_CHROME) ? PLAYWRIGHT_CHROME : undefined;
+  const { execSync } = require('child_process');
+  let executablePath;
+  const playwrightBase = '/home/ci/.cache/ms-playwright';
+  if (fs.existsSync(playwrightBase)) {
+    try {
+      const dirs = fs.readdirSync(playwrightBase).filter(d => d.startsWith('chromium-')).sort().reverse();
+      for (const dir of dirs) {
+        const candidate = `${playwrightBase}/${dir}/chrome-linux/chrome`;
+        if (fs.existsSync(candidate)) { executablePath = candidate; break; }
+      }
+    } catch (e) { /* fallback to default */ }
+  }
   const browser = await puppeteer.launch({
     executablePath,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
