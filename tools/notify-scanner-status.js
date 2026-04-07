@@ -525,52 +525,51 @@ function generateModeVideo(modeKey, audioPath, scanDir) {
 
 // ─── Upload to YouTube via Mac Mini ──────────────────────────────────────────
 function uploadToYouTube(videoPath, title, description, modeKey) {
-  const SSH_HOST = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
-  const SSH_OPTS = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
-  const tmpId = `yt-${modeKey}-${Date.now()}`;
+  // Local CI upload — no Mac Mini needed
+  const YT_TOKEN = ['/home/ci/yt-venv/youtube-token.json', path.join(ROOT, 'credentials/youtube-token.json')].find(p => fs.existsSync(p));
+  const YT_CREDS = ['/home/ci/yt-venv/youtube-credentials.json', path.join(ROOT, 'credentials/youtube-credentials.json')].find(p => fs.existsSync(p));
+  const YT_PYTHON = fs.existsSync('/home/ci/yt-venv/bin/python3') ? '/home/ci/yt-venv/bin/python3' : 'python3';
 
-  // SCP video to Mac Mini
-  const scpR = require('child_process').spawnSync(
-    'sshpass', ['-p', 'Elonux!123', 'scp', ...SSH_OPTS.split(' '), videoPath, `${SSH_HOST}:/tmp/${tmpId}.mp4`],
-    { stdio: 'pipe', timeout: 120000 }
-  );
-  if (scpR.status !== 0) {
-    console.error(`  ⚠️  SCP upload failed for ${modeKey}`);
+  if (!YT_TOKEN || !YT_CREDS) {
+    console.error(`  ⚠️  YouTube credentials not found for ${modeKey}`);
     return null;
   }
 
-  // Safe strings for Python
-  const safeTitle = title.replace(/'/g, "\\'").slice(0, 95);
-  const safeDesc = description.replace(/'/g, "\\'").replace(/\n/g, '\\n').slice(0, 4900);
-  const playlist = 'Portfolio Updates';
+  const metaPath = `/tmp/mw-yt-meta-${modeKey}.json`;
+  const pyPath = `/tmp/mw-yt-upload-${modeKey}.py`;
 
-  const pyCmd = [
-    `import json,sys`,
-    `from googleapiclient.discovery import build`,
-    `from googleapiclient.http import MediaFileUpload`,
-    `from google.oauth2.credentials import Credentials`,
-    `t=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json'))`,
-    `c=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json'))['web']`,
-    `creds=Credentials(t['access_token'],refresh_token=t['refresh_token'],token_uri=c['token_uri'],client_id=c['client_id'],client_secret=c['client_secret'])`,
-    `yt=build('youtube','v3',credentials=creds)`,
-    `meta={'title':'${safeTitle}','description':'${safeDesc}','tags':['DailyTickers','portfolio','${modeKey}','trading'],'categoryId':'22'}`,
-    `media=MediaFileUpload('/tmp/${tmpId}.mp4',mimetype='video/mp4',resumable=True)`,
-    `r=yt.videos().insert(part='snippet,status',body={'snippet':meta,'status':{'privacyStatus':'public'}},media_body=media).execute()`,
-    `vid=r['id']`,
-    `print(f'YTID:{vid}')`,
-  ].join(';');
+  fs.writeFileSync(metaPath, JSON.stringify({
+    title: title.slice(0, 100),
+    description: description.slice(0, 5000),
+    videoPath,
+    tags: ['DailyTickers', 'portfolio', modeKey, 'trading'],
+    categoryId: '22',
+  }), 'utf8');
 
-  const r = require('child_process').spawnSync(
-    'sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST,
-      `/Users/marketwatchxyz/GolandProjects/video-factory/.venv/bin/python3 -c "${pyCmd}" 2>&1`],
-    { stdio: 'pipe', timeout: 180000 }
-  );
-  const out = r.stdout?.toString() || '';
+  const pyScript = [
+    'import json,os,warnings; warnings.filterwarnings("ignore")',
+    'from google.oauth2.credentials import Credentials',
+    'from googleapiclient.discovery import build',
+    'from googleapiclient.http import MediaFileUpload',
+    `t=json.load(open('${YT_TOKEN}'))`,
+    `c=json.load(open('${YT_CREDS}'))['web']`,
+    `meta=json.load(open('${metaPath}'))`,
+    'creds=Credentials(token=t["access_token"],refresh_token=t["refresh_token"],token_uri=c["token_uri"],client_id=c["client_id"],client_secret=c["client_secret"])',
+    'yt=build("youtube","v3",credentials=creds)',
+    'body={"snippet":{"title":meta["title"],"description":meta["description"],"categoryId":meta.get("categoryId","22"),"tags":meta.get("tags",[])},"status":{"privacyStatus":"public"}}',
+    'media=MediaFileUpload(meta["videoPath"],mimetype="video/mp4",resumable=True)',
+    'req=yt.videos().insert(part="snippet,status",body=body,media_body=media)',
+    'resp=None',
+    'while resp is None:',
+    '    st,resp=req.next_chunk()',
+    'vid=resp["id"]',
+    'print(f"YTID:{vid}")',
+  ].join('\n');
+
+  fs.writeFileSync(pyPath, pyScript, 'utf8');
+  const r = require('child_process').spawnSync(YT_PYTHON, [pyPath], { stdio: 'pipe', timeout: 300000 });
+  const out = (r.stdout?.toString() || '') + (r.stderr?.toString() || '');
   const ytMatch = out.match(/YTID:([a-zA-Z0-9_-]+)/);
-
-  // Cleanup remote
-  require('child_process').spawnSync('sshpass', ['-p', 'Elonux!123', 'ssh', ...SSH_OPTS.split(' '), SSH_HOST,
-    `rm -f /tmp/${tmpId}.mp4`], { stdio: 'pipe', timeout: 10000 });
 
   if (ytMatch) {
     const ytId = ytMatch[1];

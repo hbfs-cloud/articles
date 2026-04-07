@@ -69,13 +69,19 @@ const SSH_HOST  = 'marketwatchxyz@melouadis-mac-mini.tail5d09f.ts.net';
 const SSH_OPTS  = '-o StrictHostKeyChecking=no -o PubkeyAuthentication=no';
 const SSHPASS   = 'sshpass';
 const SSH_PASS  = 'Elonux!123';
-// YouTube credentials — prefer local CI copy, fallback to Mac Mini path
-const YT_TOKEN  = fs.existsSync(path.join(ROOT, 'credentials/youtube-token.json'))
-  ? path.join(ROOT, 'credentials/youtube-token.json')
-  : '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json';
-const YT_CREDS  = fs.existsSync(path.join(ROOT, 'credentials/youtube-credentials.json'))
-  ? path.join(ROOT, 'credentials/youtube-credentials.json')
-  : '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json';
+// YouTube credentials — local CI venv > project credentials/ > Mac Mini fallback
+const YT_TOKEN  = [
+  '/home/ci/yt-venv/youtube-token.json',
+  path.join(ROOT, 'credentials/youtube-token.json'),
+  '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json',
+].find(p => fs.existsSync(p)) || '/home/ci/yt-venv/youtube-token.json';
+const YT_CREDS  = [
+  '/home/ci/yt-venv/youtube-credentials.json',
+  path.join(ROOT, 'credentials/youtube-credentials.json'),
+  '/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json',
+].find(p => fs.existsSync(p)) || '/home/ci/yt-venv/youtube-credentials.json';
+// Python with google-api-python-client — prefer local CI venv
+const YT_PYTHON = fs.existsSync('/home/ci/yt-venv/bin/python3') ? '/home/ci/yt-venv/bin/python3' : 'python3';
 
 // ── Args ──────────────────────────────────────────────────────────────────────
 const args   = process.argv.slice(2);
@@ -693,70 +699,48 @@ function buildSilentVideo(pngPaths, durations, outPath) {
   try { fs.unlinkSync(concatTxt); } catch {}
 }
 
-// ── YouTube upload via Mac Mini (or locally if already on Mac Mini) ───────────
+// ── YouTube upload — local CI (no Mac Mini required) ─────────────────────────
 function uploadToYouTube(videoPath, thumbPath, title, description, playlistId) {
-  const isMacMini = process.platform === 'darwin' || (process.env.HOME || '').includes('marketwatchxyz');
-  // On CI: relay via sshpass to Mac Mini. On Mac Mini: run Python upload script directly.
-  const sshCmd = isMacMini
-    ? (cmd) => spawnSync('bash', ['-c', cmd], { stdio: 'pipe', timeout: 60000 })
-    : (cmd) => spawnSync('bash', ['-c', `${SSHPASS} -p '${SSH_PASS}' ssh ${SSH_OPTS} ${SSH_HOST} '${cmd}'`], { stdio: 'pipe', timeout: 30000 });
-  const scpCmd = isMacMini
-    ? (local, remote) => { fs.copyFileSync(local, remote); return { status: 0 }; }
-    : (local, remote) => spawnSync('bash', ['-c', `${SSHPASS} -p '${SSH_PASS}' scp ${SSH_OPTS} '${local}' ${SSH_HOST}:${remote}`], { stdio: 'pipe', timeout: 300000 });
-
   console.log('\n📤 Uploading to YouTube...');
-  sshCmd('mkdir -p /tmp/mw-upload');
-  const copyResult = scpCmd(videoPath, '/tmp/mw-upload/video.mp4');
-  if (copyResult.status !== 0) {
-    console.error('  ❌ SCP failed:', copyResult.stderr?.toString().slice(0,100));
-    return null;
-  }
-  if (thumbPath && fs.existsSync(thumbPath)) {
-    scpCmd(thumbPath, '/tmp/mw-upload/thumb.png');
-  }
 
-  const escTitle = title.replace(/'/g, "\\'").replace(/"/g, '\\"').slice(0, 100);
-  const escDesc  = description.replace(/'/g, "\\'").replace(/`/g, '').slice(0, 4000);
-
-  // Write upload script to file to avoid shell escaping issues
-  const ytDescClean = description.replace(/[`\\$]/g, '').replace(/\n/g, '\\n').slice(0, 3000);
-  const ytTitleClean = title.replace(/'/g, '').replace(/"/g, '').slice(0, 100);
+  // Write upload script locally
   const pyScript = [
     'import json,sys,os,warnings',
     'warnings.filterwarnings("ignore")',
     'from google.oauth2.credentials import Credentials',
     'from googleapiclient.discovery import build',
     'from googleapiclient.http import MediaFileUpload',
-    // Always use Mac Mini paths in the remote Python script
-    `t=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-token.json'))`,
-    `c=json.load(open('/Users/marketwatchxyz/GolandProjects/video-factory/credentials/youtube-credentials.json'))['web']`,
+    `t=json.load(open('${YT_TOKEN}'))`,
+    `c=json.load(open('${YT_CREDS}'))['web']`,
     'creds=Credentials(token=t["access_token"],refresh_token=t["refresh_token"],token_uri=c["token_uri"],client_id=c["client_id"],client_secret=c["client_secret"])',
     'yt=build("youtube","v3",credentials=creds)',
     'meta=json.load(open("/tmp/mw-yt-meta.json"))',
     'body={"snippet":{"title":meta["title"],"description":meta["description"],"categoryId":"25","defaultLanguage":"en","tags":["DailyTickers","finance","trading"]},"status":{"privacyStatus":"public"}}',
-    'media=MediaFileUpload("/tmp/mw-upload/video.mp4",mimetype="video/mp4",resumable=True)',
+    `media=MediaFileUpload(meta["videoPath"],mimetype="video/mp4",resumable=True)`,
     'req=yt.videos().insert(part="snippet,status",body=body,media_body=media)',
     'resp=None',
     'while resp is None:',
     '    st,resp=req.next_chunk()',
     'vid=resp["id"]',
     'yt.playlistItems().insert(part="snippet",body={"snippet":{"playlistId":meta["playlist"],"resourceId":{"kind":"youtube#video","videoId":vid}}}).execute()',
-    'if os.path.exists("/tmp/mw-upload/thumb.png"):',
-    '    yt.thumbnails().set(videoId=vid,media_body=MediaFileUpload("/tmp/mw-upload/thumb.png",mimetype="image/png")).execute()',
-    'os.system("rm -rf /tmp/mw-upload")',
+    'if meta.get("thumbPath") and os.path.exists(meta["thumbPath"]):',
+    '    yt.thumbnails().set(videoId=vid,media_body=MediaFileUpload(meta["thumbPath"],mimetype="image/png")).execute()',
     'print(vid)',
   ].join('\n');
 
-  // Write metadata JSON (avoids shell escaping issues)
-  const metaJson = JSON.stringify({ title: title.slice(0,100), description: description.slice(0,3000), playlist: playlistId });
+  const metaJson = JSON.stringify({
+    title: title.slice(0,100),
+    description: description.slice(0,3000),
+    playlist: playlistId,
+    videoPath,
+    thumbPath: (thumbPath && fs.existsSync(thumbPath)) ? thumbPath : '',
+  });
   const metaPath = '/tmp/mw-yt-meta.json';
   fs.writeFileSync(metaPath, metaJson, 'utf8');
-  scpCmd(metaPath, '/tmp/mw-yt-meta.json');
 
   const pyPath = '/tmp/mw-yt-upload.py';
   fs.writeFileSync(pyPath, pyScript, 'utf8');
-  scpCmd(pyPath, '/tmp/mw-yt-upload.py');
-  const result = sshCmd('python3 /tmp/mw-yt-upload.py');
+  const result = spawnSync(YT_PYTHON, [pyPath], { stdio: 'pipe', timeout: 300000 });
   const stdout = result.stdout?.toString().trim() || '';
   const videoId = stdout.split('\n').pop()?.trim();
   if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
