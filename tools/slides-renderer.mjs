@@ -8,7 +8,22 @@ import puppeteer from 'puppeteer';
 import fs from 'fs';
 import path from 'path';
 
-const CHROMIUM = '/snap/bin/chromium';
+// Detect arm64-compatible chromium (playwright) or fallback to snap/system
+function detectChromium() {
+  const playwrightBase = '/home/ci/.cache/ms-playwright';
+  try {
+    const dirs = fs.readdirSync(playwrightBase).filter(d => d.startsWith('chromium-')).sort().reverse();
+    for (const dir of dirs) {
+      const p = `${playwrightBase}/${dir}/chrome-linux/chrome`;
+      if (fs.existsSync(p)) return p;
+    }
+  } catch {}
+  for (const p of ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/chromium-browser', '/usr/bin/chromium', '/snap/bin/chromium']) {
+    if (fs.existsSync(p)) return p;
+  }
+  return '/snap/bin/chromium';
+}
+const CHROMIUM = detectChromium();
 
 // ── Light theme palette ────────────────────────────────────────────────────────
 const T = {

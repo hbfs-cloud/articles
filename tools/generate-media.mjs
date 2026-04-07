@@ -1051,13 +1051,15 @@ async function main() {
   // ── 5. Generate video via gamma-slides ──
   const videoPath = path.join(outDir, 'video.mp4');
   console.log('\n🎬 Generating video via gamma-slides...');
-  // Chromium/Chrome path: detect platform
+  // Chromium/Chrome path: detect platform (prefer playwright arm64 binary on Hetzner aarch64)
   const _chromePaths = [
-    '/snap/bin/chromium',                                    // CI Ubuntu snap (broken on ARM, kept for legacy)
+    // Playwright arm64 (auto-detected, version-agnostic)
+    ...(() => { try { const d='/home/ci/.cache/ms-playwright'; return fs.readdirSync(d).filter(x=>x.startsWith('chromium-')).sort().reverse().map(x=>`${d}/${x}/chrome-linux/chrome`); } catch { return []; } })(),
     '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', // Mac Mini
     '/usr/bin/chromium-browser',
     '/usr/bin/google-chrome',
     '/usr/bin/chromium',
+    '/snap/bin/chromium',                                    // snap (broken on ARM, last resort)
   ];
   const _chromePath = _chromePaths.find(p => { try { return fs.existsSync(p); } catch { return false; } }) || '/snap/bin/chromium';
   const gammaEnv = { ...process.env, PUPPETEER_EXECUTABLE_PATH: _chromePath, PATH: `/home/ci/edge-tts-venv/bin:/opt/homebrew/bin:${process.env.PATH}` };
