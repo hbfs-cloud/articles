@@ -865,10 +865,12 @@ function convertToGammaDeck(content, { title, dateStr, url, type: artType, meta:
 
       case 'metric-row':
         return { layout: 'metrics', title: s.title || 'Market Snapshot', columns: Math.min((s.metrics||[]).length, 4),
-          metrics: (s.metrics||[]).slice(0, 6).map(m => ({
-            label: m.label || '', value: m.value || '', delta: m.delta || '',
-            trend: m.trend || (String(m.delta||'').startsWith('-') ? 'down' : String(m.delta||'').startsWith('+') ? 'up' : 'neutral'),
-          })), narration };
+          metrics: (s.metrics||[]).slice(0, 6).map(m => {
+            const rawTrend = m.trend || (String(m.delta||'').startsWith('-') ? 'down' : String(m.delta||'').startsWith('+') ? 'up' : 'neutral');
+            // gamma-slides only allows: up, down, neutral
+            const trend = ['up','down','neutral'].includes(rawTrend) ? rawTrend : 'neutral';
+            return { label: m.label || '', value: m.value || '', delta: m.delta || '', trend };
+          }), narration };
 
       case 'event-timeline':
         return { layout: 'timeline', title: s.title || 'Timeline',
