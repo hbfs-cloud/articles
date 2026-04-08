@@ -795,6 +795,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EONR",
+    "exchange": "OTC Markets • Oil & Gas Exploration",
+    "name": "EONR — $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-su...",
+    "title": "EONR — $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-su...",
+    "desc": "EONR: $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-suspected gaps. Full intraday & fundamental analysis.",
+    "tags": "us,energy,oil,small-cap,speculative,trade-idea",
+    "grade": "C+",
+    "href": "/analyses/EONR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "SHEL",
     "exchange": "NYSE • Energy • Oil & Gas Integrated — London, UK",
     "name": "SHEL — SHEL near 52W high, strong momentum, dividend play. Entry $91-92, TP1 $95, TP2 $98. R:R...",
@@ -3131,6 +3144,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ EARLY RISK-OFF — GD, RTX, LLY, COST, ABBV, XLK, ASML, BABA, NOVO, GLD",
+    "desc": "Regime: Early Risk-Off (score 0.518) —\n    Markets reopen Wednesday after Good Friday with the Iran war entering its sixth week but no longer accelerating. VIX dropped from 26.38 to 23.87 — still elevated but the direction is improving. The S&P 500 closed at 6,528.52 (-1.22%) on April 2, testing the...",
+    "tags": "us,eu,asia,defense,healthcare,consumer,tech,semis,etf,commodity,technique,trade-idea,macro",
+    "grade": "",
+    "href": "/scanner/20260409/",
+    "date": "9 avril 2026"
   },
   {
     "type": "scanner",
