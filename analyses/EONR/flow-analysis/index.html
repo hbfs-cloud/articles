@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="us,speculative,technique,formation" data-tab="analyses">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DailyTickers | EONR — Anatomie d'une Distribution : Flux, Internalisation et Liquidité Retail</title>
+    <meta name="description" content="Analyse éducative approfondie sur EONR : comment le flux d'ordres off-exchange (80%) révèle un schéma de distribution classique. Comprendre l'internalisation, le PFOF, et pourquoi le retail devient la liquidité de sortie.">
+    <meta property="og:title" content="EONR — Anatomie d'une Distribution : Flux, Internalisation et Liquidité Retail">
+    <meta property="og:description" content="80% des transactions EONR sont off-exchange. Ce cas d'école décortique comment les market makers internalisent les ordres retail et comment un schéma de distribution se cache derrière les spikes de volume.">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://articles.dailytickers.com/analyses/EONR/flow-analysis/">
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .edu-hero {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            color: white;
+            padding: 3rem 1.5rem 2.5rem;
+            text-align: center;
+        }
+        .edu-hero .edu-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(239,68,68,0.2);
+            border: 1px solid rgba(239,68,68,0.4);
+            color: #fca5a5;
+            padding: 0.35rem 1rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1.25rem;
+        }
+        .edu-hero h1 {
+            font-size: clamp(1.6rem, 4vw, 2.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin: 0 0 0.75rem;
+            color: white;
+        }
+        .edu-hero h1 span {
+            color: #ef4444;
+        }
+        .edu-hero .subtitle {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            max-width: 680px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.6;
+        }
+        .edu-meta {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: #64748b;
+        }
+        .edu-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .edu-meta .highlight {
+            color: #ef4444;
+            font-weight: 700;
+        }
+        .flow-diagram {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin: 0.75rem 0;
+        }
+        .flow-node {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #0f172a;
+            text-align: center;
+            min-width: 120px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+        .flow-node.retail { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+        .flow-node.broker { border-color: #8b5cf6; background: #f5f3ff; color: #6d28d9; }
+        .flow-node.mm { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+        .flow-node.dark { border-color: #ef4444; background: #fef2f2; color: #dc2626; }
+        .flow-node.inst { border-color: #22c55e; background: #f0fdf4; color: #16a34a; }
+        .flow-node.lit { border-color: #06b6d4; background: #ecfeff; color: #0e7490; }
+        .flow-arrow {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            font-weight: 700;
+        }
+        .flow-label {
+            font-size: 0.68rem;
+            color: #64748b;
+            font-style: italic;
+            text-align: center;
+            margin-top: 0.25rem;
+        }
+        .flow-section {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .flow-lane {
+            flex: 1;
+            min-width: 280px;
+            border-radius: 10px;
+            padding: 1rem;
+        }
+        .flow-lane.retail-lane {
+            background: linear-gradient(135deg, #fef2f2, #fff7ed);
+            border: 1px solid #fecaca;
+        }
+        .flow-lane.inst-lane {
+            background: linear-gradient(135deg, #f0fdf4, #ecfeff);
+            border: 1px solid #bbf7d0;
+        }
+        .flow-lane h4 {
+            margin: 0 0 0.75rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .flow-lane.retail-lane h4 { color: #dc2626; }
+        .flow-lane.inst-lane h4 { color: #16a34a; }
+        .chart-container {
+            width: 100%;
+            height: 380px;
+        }
+        .chart-container-tall {
+            width: 100%;
+            height: 460px;
+        }
+        .chart-container-sm {
+            width: 100%;
+            height: 300px;
+        }
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 0.9rem 1rem;
+            text-align: center;
+        }
+        .stat-card .stat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1;
+        }
+        .stat-card .stat-val.red { color: #ef4444; }
+        .stat-card .stat-val.amber { color: #f59e0b; }
+        .stat-card .stat-val.green { color: #22c55e; }
+        .stat-card .stat-lbl {
+            font-size: 0.72rem;
+            color: #64748b;
+            margin-top: 0.3rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-weight: 600;
+        }
+        .spike-card {
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 5px solid;
+            background: #f8fafc;
+            margin-bottom: 0.75rem;
+        }
+        .spike-card.spike-green { border-color: #22c55e; background: #f0fdf4; }
+        .spike-card.spike-red { border-color: #ef4444; background: #fef2f2; }
+        .spike-card h4 { margin: 0 0 0.5rem; font-size: 0.95rem; }
+        .spike-card .spike-date { font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+        .spike-meta { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+        .spike-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .spike-badge.up { background: #dcfce7; color: #16a34a; }
+        .spike-badge.down { background: #fee2e2; color: #dc2626; }
+        .spike-badge.vol { background: #dbeafe; color: #1d4ed8; }
+        .spike-badge.dark { background: #fef3c7; color: #b45309; }
+        .key-signal {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            background: #0f172a;
+            color: white;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin: 1rem 0;
+        }
+        .key-signal i { font-size: 1.5rem; color: #f59e0b; flex-shrink: 0; margin-top: 0.1rem; }
+        .key-signal h4 { margin: 0 0 0.3rem; color: white; font-size: 0.95rem; }
+        .key-signal p { margin: 0; color: #94a3b8; font-size: 0.83rem; line-height: 1.5; }
+        .protection-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            padding: 0.9rem 1rem;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 0.6rem;
+        }
+        .protection-item i { font-size: 1.1rem; color: #22c55e; flex-shrink: 0; margin-top: 0.15rem; }
+        .protection-item .p-title { font-weight: 700; font-size: 0.88rem; color: #0f172a; margin-bottom: 0.2rem; }
+        .protection-item .p-desc { font-size: 0.8rem; color: #475569; line-height: 1.5; }
+        .verdict-banner {
+            background: linear-gradient(135deg, #dc2626, #991b1b);
+            color: white;
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            margin: 1.5rem 0;
+        }
+        .verdict-banner h3 { margin: 0 0 0.5rem; font-size: 1.4rem; }
+        .verdict-banner p { margin: 0; color: #fca5a5; font-size: 0.9rem; }
+        .sources-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .pfof-explainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .pfof-step {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 1rem;
+            position: relative;
+        }
+        .pfof-step .step-num {
+            width: 28px;
+            height: 28px;
+            background: #0f172a;
+            color: white;
+            border-radius: 50%;
+            font-size: 0.8rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+        .pfof-step h4 { margin: 0 0 0.4rem; font-size: 0.85rem; color: #0f172a; }
+        .pfof-step p { margin: 0; font-size: 0.78rem; color: #475569; line-height: 1.5; }
+        .data-row-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .data-row-table th {
+            background: #0f172a;
+            color: white;
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .data-row-table td {
+            padding: 0.55rem 0.75rem;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        .data-row-table tr:nth-child(even) td { background: #f8fafc; }
+        .data-row-table .td-up { color: #16a34a; font-weight: 700; }
+        .data-row-table .td-down { color: #dc2626; font-weight: 700; }
+        .data-row-table .td-high { color: #b45309; font-weight: 700; }
+        .risk-summary-box {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            border-radius: 14px;
+            padding: 1.5rem 2rem;
+            margin: 1rem 0;
+        }
+        .gauge-wrap {
+            flex-shrink: 0;
+        }
+        .risk-score-big {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: 5px solid #ef4444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+        .risk-score-big .score { font-size: 2rem; font-weight: 800; color: #ef4444; line-height: 1; }
+        .risk-score-big .score-lbl { font-size: 0.6rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
+        .risk-summary-box .summary-text h3 { margin: 0 0 0.3rem; color: #0f172a; }
+        .risk-summary-box .summary-text p { margin: 0; color: #475569; font-size: 0.85rem; }
+        @media (max-width: 600px) {
+            .risk-summary-box { flex-direction: column; text-align: center; }
+            .flow-section { flex-direction: column; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <!-- BRAND BAR -->
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">S&eacute;ries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- EDUCATIONAL HERO -->
+    <div class="edu-hero">
+        <div class="edu-badge">
+            <i class="fa-solid fa-graduation-cap"></i>
+            Analyse Éducative — Cas d'École
+        </div>
+        <h1>EONR — Anatomie d'une <span>Distribution</span></h1>
+        <p class="subtitle">
+            Flux d'ordres, internalisation et liquidité retail. Comment 80% des transactions off-exchange révèlent un schéma de distribution classique — et pourquoi le retail paie la sortie des insiders.
+        </p>
+        <div class="edu-meta">
+            <span><i class="fa-solid fa-calendar-day"></i> 10 avril 2026</span>
+            <span><i class="fa-solid fa-chart-line"></i> EON Resources (EONR)</span>
+            <span class="highlight"><i class="fa-solid fa-triangle-exclamation"></i> 80% Off-Exchange</span>
+            <span><i class="fa-solid fa-clock"></i> Lecture ~15 min</span>
+            <span><i class="fa-solid fa-ban"></i> Pas de recommandation de trading</span>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- ========================================================
+             SECTION 1 : RÉSUMÉ EXÉCUTIF + GAUGE
+        ========================================================= -->
+        <div id="resume" class="content-card">
+            <h2><i class="fa-solid fa-bolt"></i> Résumé Exécutif — Le Constat en 30 Secondes</h2>
+
+            <div class="risk-summary-box">
+                <div class="gauge-wrap">
+                    <div id="gaugeDistrib" style="width:110px;height:110px;"></div>
+                </div>
+                <div class="summary-text">
+                    <h3>Score de Distribution : 8/10 — Distribution Active</h3>
+                    <p>
+                        EONR affiche le profil type d'un titre en distribution avancée : 80% des ordres sont internalisés hors bourse,
+                        le prix a perdu <strong>52% en 1 mois</strong> depuis son pic, et chaque spike de volume voit le pourcentage
+                        off-exchange <em>augmenter</em> — signe que le retail achète dans la force pendant que les détenteurs institutionnels vendent
+                        discrètement via les market makers.
+                    </p>
+                </div>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-val red">$0.74</div>
+                    <div class="stat-lbl">Cours actuel (10/04)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val red">-52%</div>
+                    <div class="stat-lbl">Depuis le pic ($1.55)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val amber">80%</div>
+                    <div class="stat-lbl">Off-Exchange (10/04)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val red">4.29M</div>
+                    <div class="stat-lbl">Volume (10/04)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val amber">+51.7%</div>
+                    <div class="stat-lbl">Spike maximal (12/03)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val red">0</div>
+                    <div class="stat-lbl">Institutionnels actifs</div>
+                </div>
+            </div>
+
+            <div class="key-signal">
+                <i class="fa-solid fa-magnifying-glass-dollar"></i>
+                <div>
+                    <h4>Signal clé : le taux off-exchange a progressé de 60% à 80% alors que le prix chutait de 50%.</h4>
+                    <p>
+                        Ce n'est pas une coïncidence. Plus le prix baisse, plus le retail achète "sur la dip" —
+                        et ces ordres sont absorbés hors bourse par les market makers qui les vendent directement à leur propre inventaire.
+                        Le retail devient la liquidité de sortie d'acteurs qui ont accumulé au bas et qui distribuent maintenant.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 2 : QU'EST-CE QU'EONR ?
+        ========================================================= -->
+        <div id="contexte" class="content-card">
+            <h2><i class="fa-solid fa-building"></i> Le Contexte : Qu'est-ce qu'EONR ?</h2>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> EON Resources Inc. — Fiche Rapide</h4>
+                <p>
+                    EON Resources Inc. (ticker : <strong>EONR</strong>) est une micro-cap cotée sur l'<strong>NYSE American (AMEX)</strong>,
+                    spécialisée dans l'exploitation de ressources naturelles. Avec une capitalisation boursière inférieure à $50M
+                    et un float réduit, c'est le type de titre idéal pour un cycle pump &amp; distribute —
+                    suffisamment petit pour être manipulé, suffisamment populaire sur les forums retail pour attirer l'attention.
+                </p>
+            </div>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-val">EONR</div>
+                    <div class="stat-lbl">Ticker</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val">NYSE Arca</div>
+                    <div class="stat-lbl">Bourse</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val red">$0.74</div>
+                    <div class="stat-lbl">Cours (penny stock)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val amber">&lt;$50M</div>
+                    <div class="stat-lbl">Market Cap</div>
+                </div>
+            </div>
+
+            <div class="alert-box" style="background:#dc2626;color:white;border-radius:10px;padding:1rem 1.25rem;margin:1rem 0;">
+                <strong><i class="fa-solid fa-triangle-exclamation"></i> Cet article n'est PAS une recommandation de trading.</strong>
+                <p style="margin:0.4rem 0 0;font-size:0.85rem;color:#fecaca;">
+                    EONR est utilisé comme <em>cas d'école pédagogique</em> pour illustrer les mécanismes de distribution et d'internalisation.
+                    Les données présentées sont factuelles. Aucun conseil d'achat ou de vente n'est formulé.
+                </p>
+            </div>
+
+            <h3>La Timeline en Un Coup d'Œil</h3>
+            <div id="candlestickChart" class="chart-container-tall"></div>
+
+            <div class="didactic-box">
+                <h4><i class="fa-solid fa-chart-candlestick"></i> Comment lire ce graphique</h4>
+                <p>
+                    Chaque bougie représente une journée de trading : le corps = ouverture/fermeture, les mèches = hauts/bas.
+                    Les annotations rouges marquent les 3 grandes "impulsions" (spikes) où le prix a explosé en intraday
+                    avant de rechuter. Ce pattern — montée violente, distribution, rechute — est la signature d'une distribution active.
+                    Notez l'asymétrie : les journées de fort volume sont toutes marquées d'une longue mèche supérieure ou d'une correction
+                    immédiate le lendemain.
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 3 : LIT VS OFF-EXCHANGE (ÉDUCATIF)
+        ========================================================= -->
+        <div id="mecanismes" class="content-card">
+            <h2><i class="fa-solid fa-network-wired"></i> Comment Fonctionne le Marché : Lit vs Off-Exchange</h2>
+
+            <div class="didactic-box">
+                <h4><i class="fa-solid fa-book-open"></i> Définition : Marché "Lit" vs "Dark"</h4>
+                <p>
+                    Quand vous achetez une action via Robinhood ou Interactive Brokers, votre ordre ne va <em>pas forcément</em>
+                    sur la bourse officielle (NYSE, NASDAQ). Il peut être "internalisé" — c'est-à-dire traité directement par
+                    un market maker comme Citadel Securities ou Virtu Financial, <strong>hors de la vue du marché public</strong>.
+                </p>
+                <ul style="margin:0.5rem 0 0; padding-left:1.25rem;">
+                    <li><strong>Marché "lit"</strong> : bourse publique (NYSE, CBOE, NASDAQ). Les ordres sont visibles dans le carnet d'ordres. Transparent.</li>
+                    <li><strong>Marché "dark" / off-exchange</strong> : ordres traités hors bourse, par des market makers ou via des dark pools. Non visible en temps réel.</li>
+                </ul>
+            </div>
+
+            <!-- FLOW DIAGRAM -->
+            <h3>Le Chemin d'un Ordre Retail vs Institutionnel</h3>
+
+            <div class="flow-section">
+                <div class="flow-lane retail-lane">
+                    <h4><i class="fa-solid fa-user"></i> Circuit Retail (Off-Exchange)</h4>
+                    <div class="flow-row">
+                        <div>
+                            <div class="flow-node retail"><i class="fa-solid fa-user"></i><br>Vous (retail)</div>
+                            <div class="flow-label">Achetez EONR<br>sur Robinhood</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div>
+                            <div class="flow-node broker"><i class="fa-solid fa-building-columns"></i><br>Broker<br><small>Robinhood, IBKR</small></div>
+                            <div class="flow-label">Reçoit l'ordre<br>+ paie PFOF</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div>
+                            <div class="flow-node mm"><i class="fa-solid fa-gears"></i><br>Market Maker<br><small>Citadel, Virtu</small></div>
+                            <div class="flow-label">Internalise<br>l'ordre</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div>
+                            <div class="flow-node dark"><i class="fa-solid fa-moon"></i><br>Off-Exchange<br><small>Invisible</small></div>
+                            <div class="flow-label">Transaction<br>hors bourse</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flow-lane inst-lane">
+                    <h4><i class="fa-solid fa-landmark"></i> Circuit Institutionnel (Lit)</h4>
+                    <div class="flow-row">
+                        <div>
+                            <div class="flow-node inst"><i class="fa-solid fa-landmark"></i><br>Institutionnel<br><small>Hedge Fund</small></div>
+                            <div class="flow-label">Vend EONR<br>DMA direct</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div>
+                            <div class="flow-node lit"><i class="fa-solid fa-sun"></i><br>Lit Exchange<br><small>NYSE, CBOE</small></div>
+                            <div class="flow-label">Ordre visible<br>dans le carnet</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PFOF EXPLAINER -->
+            <h3>Le PFOF — Payment For Order Flow</h3>
+            <div class="pfof-explainer">
+                <div class="pfof-step">
+                    <div class="step-num">1</div>
+                    <h4>Vous passez un ordre</h4>
+                    <p>Vous achetez 500 EONR sur Robinhood à $0.74. Votre ordre est créé mais pas encore exécuté.</p>
+                </div>
+                <div class="pfof-step">
+                    <div class="step-num">2</div>
+                    <h4>Robinhood vend votre flux</h4>
+                    <p>Au lieu d'envoyer votre ordre sur NYSE, Robinhood le vend à Citadel Securities. Citadel paie Robinhood pour ce flux (PFOF).</p>
+                </div>
+                <div class="pfof-step">
+                    <div class="step-num">3</div>
+                    <h4>Citadel internalise</h4>
+                    <p>Citadel exécute votre ordre contre son propre inventaire ou un vendeur de gré à gré, hors bourse. Vous obtenez l'action — mais pas forcément au meilleur prix disponible.</p>
+                </div>
+                <div class="pfof-step">
+                    <div class="step-num">4</div>
+                    <h4>La transaction est invisible</h4>
+                    <p>Ce volume n'apparaît pas en temps réel sur le carnet d'ordres NYSE. Il est comptabilisé plus tard comme volume "off-exchange".</p>
+                </div>
+            </div>
+
+            <div class="key-signal">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <div>
+                    <h4>Pourquoi c'est un problème pour le retail sur EONR</h4>
+                    <p>
+                        Le PFOF n'est pas intrinsèquement mauvais sur des actions liquides (le market maker prend un spread minime).
+                        Mais sur un penny stock comme EONR, l'internalisation à 80% signifie que vos ordres d'achat ne créent
+                        <strong>aucune pression haussière visible</strong> sur le marché lit. Les vendeurs institutionnels savent
+                        qu'il y a un acheteur retail massif qui absorbe leurs positions — ce qui leur permet de vendre sans faire
+                        s'effondrer le cours immédiatement.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 4 : LES DONNÉES — 80% OFF-EXCHANGE
+        ========================================================= -->
+        <div id="donnees" class="content-card">
+            <h2><i class="fa-solid fa-chart-bar"></i> Les Données EONR : La Progression 60% → 80%</h2>
+
+            <p>
+                Les données de distribution de volume par venue sont disponibles via
+                <a href="https://chartexchange.com/symbol/nysearca-eonr/trades/distribution/" class="source-ref" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                    <span class="source-name">ChartExchange</span>
+                    <span class="source-date">· avr 2026</span>
+                </a>.
+                Voici ce que les chiffres révèlent.
+            </p>
+
+            <div id="offExchangeChart" class="chart-container-tall"></div>
+
+            <div class="didactic-box">
+                <h4><i class="fa-solid fa-chart-area"></i> Lecture du Graphique</h4>
+                <p>
+                    Les barres empilées montrent la décomposition du volume entre les différentes venues d'exécution (NYSE Arca, CBOE EDGA, MEMX, etc.).
+                    La ligne orange représente le pourcentage total off-exchange. <strong>Observez la tendance :</strong> alors que le pic
+                    de volume du 13 mars (jour du spike maximal) affichait "seulement" 60.7% off-exchange, le taux est progressivement
+                    monté à 80.9% le 31 mars et 80.2% le 10 avril — en plein effondrement du cours.
+                </p>
+            </div>
+
+            <h3>Tableau de Données Complet</h3>
+            <div style="overflow-x:auto;">
+                <table class="data-row-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Clôture</th>
+                            <th>Variation</th>
+                            <th>Volume</th>
+                            <th>Off-Exchange %</th>
+                            <th>NYSE Arca %</th>
+                            <th>Signal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>10/04</td><td>$0.74</td><td class="td-down">-7.51%</td><td>4.29M</td><td class="td-high">80.16%</td><td>8.40%</td><td class="td-down">⚠️ Distribution</td></tr>
+                        <tr><td>09/04</td><td>$0.80</td><td class="td-down">-3.25%</td><td>5.8M</td><td class="td-high">72.67%</td><td>10.47%</td><td class="td-down">Distribution</td></tr>
+                        <tr><td>08/04</td><td>$0.827</td><td class="td-down">-5.49%</td><td>10.6M</td><td class="td-high">75.71%</td><td>6.49%</td><td class="td-down">Distribution</td></tr>
+                        <tr><td>07/04</td><td>$0.875</td><td class="td-up">+0.13%</td><td>13.3M</td><td class="td-high">73.64%</td><td>9.73%</td><td class="td-down">Distribution</td></tr>
+                        <tr><td>06/04</td><td>$0.875</td><td class="td-down">-2.78%</td><td>9M</td><td class="td-high">71.36%</td><td>6.51%</td><td class="td-down">Distribution</td></tr>
+                        <tr><td>02/04</td><td>$0.899</td><td class="td-up">+11.79%</td><td>25.5M</td><td>64.74%</td><td>13.31%</td><td style="color:#f59e0b;font-weight:700;">Spike/Distrib</td></tr>
+                        <tr><td>31/03</td><td>$0.83</td><td class="td-down">-18.63%</td><td>23.7M</td><td class="td-high">80.91%</td><td>6.94%</td><td class="td-down">⚠️ Max Distrib</td></tr>
+                        <tr><td>30/03</td><td>$1.02</td><td class="td-down">-4.67%</td><td>22M</td><td class="td-high">81.79%</td><td>6.45%</td><td class="td-down">⚠️ Max Distrib</td></tr>
+                        <tr><td>27/03</td><td>$1.07</td><td class="td-up">+7.00%</td><td>21.8M</td><td>75.25%</td><td>8.88%</td><td class="td-down">Distribution</td></tr>
+                        <tr><td>16/03</td><td>$1.34</td><td class="td-down">-12.42%</td><td>61.4M</td><td>71.54%</td><td>7.95%</td><td class="td-down">Distribution élevée</td></tr>
+                        <tr><td>13/03</td><td>$1.53</td><td class="td-up">+13.33%</td><td>142.4M</td><td>60.71%</td><td>12.38%</td><td style="color:#f59e0b;font-weight:700;">Spike — Min Distrib</td></tr>
+                        <tr><td>12/03</td><td>$1.35</td><td class="td-up">+51.69%</td><td>197.4M</td><td>—</td><td>—</td><td style="color:#22c55e;font-weight:700;">SPIKE MAX</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="sources-grid">
+                <a href="https://chartexchange.com/symbol/nysearca-eonr/trades/distribution/" class="source-ref" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                    <span class="source-name">ChartExchange — Volume Distribution</span>
+                    <span class="source-date">· avr 2026</span>
+                </a>
+                <a href="https://finance.yahoo.com/quote/EONR/" class="source-ref" target="_blank" rel="noopener">
+                    <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                    <span class="source-name">Yahoo Finance — EONR</span>
+                    <span class="source-date">· live</span>
+                </a>
+            </div>
+
+            <div class="alert-box" style="background:#f59e0b;color:#0f172a;border-radius:10px;padding:1rem 1.25rem;margin:1rem 0;">
+                <strong><i class="fa-solid fa-lightbulb"></i> Règle empirique :</strong>
+                <p style="margin:0.3rem 0 0;font-size:0.85rem;">
+                    Un taux off-exchange <strong>&gt; 70%</strong> sur un penny stock est un signal d'alerte (red flag) sérieux.
+                    Cela indique que la majorité des transactions ne passent pas par les carnets d'ordres publics,
+                    ce qui rend la "vraie" pression acheteur/vendeur pratiquement opaque pour le retail.
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 5 : LE SCHÉMA DE DISTRIBUTION
+        ========================================================= -->
+        <div id="distribution" class="content-card">
+            <h2><i class="fa-solid fa-arrow-trend-down"></i> Le Schéma de Distribution</h2>
+
+            <div class="didactic-box">
+                <h4><i class="fa-solid fa-book-open"></i> Qu'est-ce qu'une "distribution" en analyse de marché ?</h4>
+                <p>
+                    Dans la théorie de Wyckoff, la <strong>distribution</strong> est la phase où les "mains fortes" (institutionnels,
+                    insiders, early holders) vendent progressivement leurs positions à des acheteurs retail, en maintenant
+                    artificiellement un niveau de prix pour ne pas provoquer une panique immédiate.
+                    La distribution se reconnaît à : (1) des spikes de prix sur fort volume sans follow-through,
+                    (2) une dégradation progressive du prix malgré des volumes élevés,
+                    (3) une accumulation du volume off-exchange (la vente se fait discrètement).
+                </p>
+            </div>
+
+            <!-- CORRELATION CHART -->
+            <h3>Corrélation Prix vs Off-Exchange % — La Relation Inverse</h3>
+            <div id="correlationChart" class="chart-container-tall"></div>
+
+            <div class="key-signal">
+                <i class="fa-solid fa-chart-mixed"></i>
+                <div>
+                    <h4>La corrélation inverse est la signature de la distribution</h4>
+                    <p>
+                        Observez le graphique : quand le prix monte (spikes de mars), le % off-exchange descend légèrement
+                        — c'est le retail qui se précipite sur les exchanges lit. Mais quand le prix redescend,
+                        le % off-exchange remonte — c'est le retail qui continue d'acheter "sur la baisse"
+                        via ses brokers PFOF, alimentant la distribution silencieuse des vendeurs.
+                    </p>
+                </div>
+            </div>
+
+            <h3>Le Cycle de Distribution EONR — Schéma Simplifié</h3>
+            <div class="flow-diagram">
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;text-align:center;">
+                    <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:12px;padding:1rem;">
+                        <div style="font-size:1.5rem;">📦</div>
+                        <div style="font-weight:800;color:#16a34a;margin:0.4rem 0;">Phase 1 : Accumulation</div>
+                        <div style="font-size:0.78rem;color:#475569;">Fév–début mars 2026. Mains fortes accumulent silencieusement sous $0.60. Volume modéré, off-exchange normal.</div>
+                    </div>
+                    <div style="background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:1rem;">
+                        <div style="font-size:1.5rem;">🚀</div>
+                        <div style="font-weight:800;color:#b45309;margin:0.4rem 0;">Phase 2 : Pump / Markup</div>
+                        <div style="font-size:0.78rem;color:#475569;">9–13 mars 2026. Spikes violents (+19%, +51%, +13%). Volume 197M–350M. Buzz retail. Off-exchange encore modéré (60–73%).</div>
+                    </div>
+                    <div style="background:#fef3c7;border:2px solid #f59e0b;border-radius:12px;padding:1rem;">
+                        <div style="font-size:1.5rem;">💰</div>
+                        <div style="font-weight:800;color:#b45309;margin:0.4rem 0;">Phase 3 : Distribution Active</div>
+                        <div style="font-size:0.78rem;color:#475569;">16 mars–fin mars. Pic à $1.55. Mains fortes vendent. Off-exchange monte à 75–82%. Volume encore élevé mais prix stagne puis recule.</div>
+                    </div>
+                    <div style="background:#fef2f2;border:2px solid #ef4444;border-radius:12px;padding:1rem;">
+                        <div style="font-size:1.5rem;">📉</div>
+                        <div style="font-weight:800;color:#dc2626;margin:0.4rem 0;">Phase 4 : Markdown</div>
+                        <div style="font-size:0.78rem;color:#475569;">Avril 2026. Prix rechute vers $0.74. Off-exchange maintenu à 72–80%. Retail "dip-buyers" = exit liquidity pour les derniers vendeurs.</div>
+                    </div>
+                </div>
+                <div class="flow-label" style="margin-top:1rem;font-size:0.8rem;">
+                    <strong>Message clé :</strong> "Quelqu'un vend dans la force, le retail absorbe."
+                    Le retail pense acheter une opportunité — en réalité, il finance la sortie des détenteurs initiaux.
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 6 : ANATOMIE DES SPIKES
+        ========================================================= -->
+        <div id="spikes" class="content-card">
+            <h2><i class="fa-solid fa-bolt-lightning"></i> Anatomie des Trois Spikes Majeurs</h2>
+
+            <p>
+                Trois journées ont concentré l'essentiel de l'action entre le 9 et le 13 mars 2026.
+                Décortiquons-les pour comprendre ce qui s'est réellement passé.
+            </p>
+
+            <div id="spikesChart" class="chart-container"></div>
+
+            <div style="margin-top:1.5rem;">
+                <div class="spike-card spike-green">
+                    <div class="spike-date">9 mars 2026</div>
+                    <h4>Spike de Déclenchement — "La Bougie d'Allumage"</h4>
+                    <div class="spike-meta">
+                        <span class="spike-badge up"><i class="fa-solid fa-arrow-up"></i> +19.44%</span>
+                        <span class="spike-badge vol"><i class="fa-solid fa-chart-bar"></i> 350.9M vol</span>
+                        <span class="spike-badge dark"><i class="fa-solid fa-moon"></i> ~73% off-ex</span>
+                    </div>
+                    <p style="margin:0.6rem 0 0;font-size:0.83rem;color:#475569;line-height:1.6;">
+                        <strong>350 millions de titres échangés</strong> — soit probablement plusieurs fois le float disponible en circulation libre.
+                        Ce volume explosif est la signature d'un <em>short squeeze déclenché artificiellement</em> ou d'une campagne de pump coordonnée.
+                        Notez que l'ouverture était à $0.9627 mais la <strong>bougie a ouvert plus bas</strong> que la clôture précédente (gap down).
+                        À ce volume, les mains fortes qui détiennent déjà des positions peuvent commencer à vendre dans la force.
+                    </p>
+                </div>
+
+                <div class="spike-card spike-green">
+                    <div class="spike-date">12 mars 2026</div>
+                    <h4>Spike Maximum — "Le Blow-off Top"</h4>
+                    <div class="spike-meta">
+                        <span class="spike-badge up"><i class="fa-solid fa-arrow-up"></i> +51.69%</span>
+                        <span class="spike-badge vol"><i class="fa-solid fa-chart-bar"></i> 197.4M vol</span>
+                        <span class="spike-badge dark"><i class="fa-solid fa-moon"></i> Données non dispo</span>
+                    </div>
+                    <p style="margin:0.6rem 0 0;font-size:0.83rem;color:#475569;line-height:1.6;">
+                        <strong>+51.69% en une seule journée</strong> — de $0.89 à $1.35. C'est le type de mouvement qui génère un buzz
+                        massif sur Reddit, StockTwits et YouTube. Le retail FOMO entre en masse.
+                        C'est exactement le moment idéal pour les détenteurs institutionnels de vendre
+                        <em>massivement dans la force</em> : le volume retail absorbe tout. Le fait que le lendemain (13 mars)
+                        le titre n'ait monté "que" de 13.3% avec 142M de volume confirme que la pression vendeuse institutionnelle
+                        était déjà bien présente.
+                    </p>
+                </div>
+
+                <div class="spike-card spike-red">
+                    <div class="spike-date">13 mars 2026 (et après)</div>
+                    <h4>La Fin du Spike — "L'Échec du Follow-Through"</h4>
+                    <div class="spike-meta">
+                        <span class="spike-badge up"><i class="fa-solid fa-arrow-up"></i> +13.33%</span>
+                        <span class="spike-badge vol"><i class="fa-solid fa-chart-bar"></i> 142.4M vol</span>
+                        <span class="spike-badge dark"><i class="fa-solid fa-moon"></i> 60.71% off-ex</span>
+                    </div>
+                    <p style="margin:0.6rem 0 0;font-size:0.83rem;color:#475569;line-height:1.6;">
+                        Le 13 mars est le <strong>plus haut historique récent</strong> à $1.53 en clôture.
+                        Mais observez : le 14 mars, le titre perd -12.42% avec encore 61.4M de volume.
+                        Les acheteurs du 12–13 mars sont immédiatement sous l'eau.
+                        Le 60.71% de taux off-exchange du 13 mars (le plus bas de la période) montre que le retail
+                        achetait aussi sur les exchanges lit ce jour-là — et s'est retrouvé face à une marée de vendeurs institutionnels
+                        qui utilisaient précisément ce volume retail visible pour placer leurs ordres de vente.
+                    </p>
+                </div>
+            </div>
+
+            <div class="didactic-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Règle : Les Spikes Sans Follow-Through = Distribution</h4>
+                <p>
+                    Un vrai spike haussier sain (breakout réel) se caractérise par : (1) un suivi le lendemain
+                    (la hausse continue ou consolide sans rechute), (2) un volume qui décroît progressivement,
+                    (3) un taux off-exchange stable ou en baisse (acheteurs institutionnels sur les exchanges lit).
+                    EONR présente l'exact opposé : chaque spike est suivi d'une rechute immédiate, le volume ne revient jamais,
+                    et le taux off-exchange remonte. <strong>C'est la signature d'un pump-and-distribute.</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 7 : POURQUOI LE RETAIL EST LA LIQUIDITÉ DE SORTIE
+        ========================================================= -->
+        <div id="liquidite" class="content-card">
+            <h2><i class="fa-solid fa-arrow-right-arrow-left"></i> Pourquoi le Retail est la Liquidité de Sortie</h2>
+
+            <div class="key-signal">
+                <i class="fa-solid fa-quote-left"></i>
+                <div>
+                    <h4>"Exit Liquidity" — Ce Concept Que Personne Ne Vous Explique</h4>
+                    <p>
+                        Dans tout marché, pour que quelqu'un vende, il faut que quelqu'un achète.
+                        Le terme "exit liquidity" désigne les acheteurs qui permettent aux détenteurs antérieurs
+                        de sortir de leur position. Sur les penny stocks en phase de distribution,
+                        <strong>le retail retail est systématiquement la liquidité de sortie</strong> —
+                        les derniers acheteurs avant l'effondrement final.
+                    </p>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;margin:1.5rem 0;">
+                <div style="border-left:5px solid #ef4444;padding:1rem 1.25rem;background:#fef2f2;border-radius:0 10px 10px 0;">
+                    <h4 style="margin:0 0 0.5rem;color:#dc2626;font-size:0.9rem;"><i class="fa-solid fa-triangle-exclamation"></i> Signal #1 : Off-Exchange ↑ + Prix ↓</h4>
+                    <p style="margin:0;font-size:0.82rem;color:#475569;line-height:1.5;">
+                        Quand le taux off-exchange <em>augmente</em> pendant que le prix <em>baisse</em>, cela signifie que
+                        les ordres d'achat retail (routés via PFOF) sont absorbés par des vendeurs institutionnels
+                        qui n'ont plus besoin d'aller sur les exchanges lit pour trouver des acheteurs.
+                        Le retail crée sa propre liquidité de sortie pour les mains fortes.
+                    </p>
+                </div>
+                <div style="border-left:5px solid #ef4444;padding:1rem 1.25rem;background:#fef2f2;border-radius:0 10px 10px 0;">
+                    <h4 style="margin:0 0 0.5rem;color:#dc2626;font-size:0.9rem;"><i class="fa-solid fa-triangle-exclamation"></i> Signal #2 : Absence d'Institutionnels</h4>
+                    <p style="margin:0;font-size:0.82rem;color:#475569;line-height:1.5;">
+                        Sur les actions institutionnelles saines, le volume lit reste dominant : les fonds
+                        utilisent des algorithmes pour exécuter sur NYSE/NASDAQ de façon transparente.
+                        Sur EONR, l'absence quasi-totale de volume lit (&lt;20% sur NYSE Arca au mieux)
+                        confirme qu'aucun acteur institutionnel sérieux ne prend de position acheteuse
+                        au cours actuel.
+                    </p>
+                </div>
+                <div style="border-left:5px solid #ef4444;padding:1rem 1.25rem;background:#fef2f2;border-radius:0 10px 10px 0;">
+                    <h4 style="margin:0 0 0.5rem;color:#dc2626;font-size:0.9rem;"><i class="fa-solid fa-triangle-exclamation"></i> Signal #3 : L'Illusion de Liquidité</h4>
+                    <p style="margin:0;font-size:0.82rem;color:#475569;line-height:1.5;">
+                        Un volume journalier de 4–10M de titres <em>semble</em> liquide. Mais si 80% est off-exchange
+                        et que vous essayez de vendre une grosse position, vous allez déplacer le spread
+                        de façon significative. La liquidité off-exchange est <strong>réelle pour l'acheteur retail</strong>
+                        (qui obtient son remplissage) mais <strong>fictive pour le vendeur en gros volume</strong>
+                        (qui ne trouvera pas preneur à ce prix).
+                    </p>
+                </div>
+            </div>
+
+            <div class="alert-box" style="background:#dc2626;color:white;border-radius:10px;padding:1.25rem 1.5rem;margin:1.5rem 0;">
+                <h4 style="margin:0 0 0.5rem;color:white;"><i class="fa-solid fa-skull-crossbones"></i> Le Piège du "Volume = Liquidité" sur les Penny Stocks</h4>
+                <p style="margin:0;font-size:0.85rem;color:#fecaca;line-height:1.6;">
+                    Sur les large-caps (Apple, Microsoft), volume élevé = liquidité réelle.
+                    Sur les penny stocks comme EONR, un volume élevé avec 80% d'internalisation n'est
+                    <strong>pas</strong> de la liquidité institutionnelle. C'est du volume retail recyclé
+                    dans des circuits fermés où les market makers jouent un rôle d'intermédiaire rémunéré
+                    — mais ne prennent aucun risque directionnel à la hausse.
+                    <strong>Ne confondez jamais activité et intérêt institutionnel sur ce type de titre.</strong>
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 8 : COMMENT SE PROTÉGER
+        ========================================================= -->
+        <div id="protection" class="content-card">
+            <h2><i class="fa-solid fa-shield-halved"></i> Comment Se Protéger — Guide Pratique</h2>
+
+            <p>
+                La bonne nouvelle : ces données sont publiques. Voici comment les utiliser avant
+                de mettre un seul euro dans un titre inconnu.
+            </p>
+
+            <div class="protection-item">
+                <i class="fa-solid fa-magnifying-glass-chart"></i>
+                <div>
+                    <div class="p-title">Vérifiez le % Off-Exchange AVANT d'acheter</div>
+                    <div class="p-desc">
+                        Rendez-vous sur <a href="https://chartexchange.com" target="_blank" rel="noopener" style="color:#3b82f6;">ChartExchange.com</a>
+                        → recherchez votre ticker → onglet "Trades" → "Distribution".
+                        Si le taux off-exchange dépasse <strong>70%</strong>, c'est un red flag majeur.
+                        Au-dessus de <strong>75%</strong>, évitez sauf position très small size avec stop serré.
+                    </div>
+                </div>
+            </div>
+
+            <div class="protection-item">
+                <i class="fa-solid fa-ban"></i>
+                <div>
+                    <div class="p-title">Off-Exchange &gt; 70% = Red Flag Systématique</div>
+                    <div class="p-desc">
+                        Cette règle simple vous aurait protégé sur EONR dès le 16 mars (71.54%) quand le titre
+                        était encore à $1.34. En appliquant cette règle, vous auriez évité toute la chute
+                        de $1.34 vers $0.74 — soit -44% en 3 semaines. Un filtre simple, un gain de temps et d'argent considérable.
+                    </div>
+                </div>
+            </div>
+
+            <div class="protection-item">
+                <i class="fa-solid fa-route"></i>
+                <div>
+                    <div class="p-title">Routez Vos Ordres vers les Exchanges Lit (IEX, DirectRoute)</div>
+                    <div class="p-desc">
+                        Sur Interactive Brokers, vous pouvez choisir "IEX" comme venue d'exécution.
+                        IEX (Investors Exchange) est conçu spécifiquement pour protéger les investisseurs
+                        des pratiques prédatrices du PFOF. Sur Schwab/TDA, activez le "Best Execution" en
+                        spécifiant NYSE ou NASDAQ comme venue préférée. Sur Robinhood, cette option n'est pas disponible
+                        — c'est une limitation structurelle du modèle économique basé sur le PFOF.
+                    </div>
+                </div>
+            </div>
+
+            <div class="protection-item">
+                <i class="fa-solid fa-chart-line"></i>
+                <div>
+                    <div class="p-title">Volume ≠ Intérêt Institutionnel sur les Penny Stocks</div>
+                    <div class="p-desc">
+                        Avant d'interpréter un "fort volume" comme un signal bullish, vérifiez la composition :
+                        volume lit (&lt;30%) + off-exchange (&gt;70%) = volume retail pur.
+                        Le vrai signal institutionnel, c'est un volume lit élevé + bid/ask serré sur les exchanges officiels.
+                        Utilisez Fintel ou WhaleWisdom pour vérifier si des fonds détiennent réellement le titre en 13F.
+                    </div>
+                </div>
+            </div>
+
+            <div class="protection-item">
+                <i class="fa-solid fa-clock"></i>
+                <div>
+                    <div class="p-title">Les Spikes Sans Follow-Through = Distribution, Pas Accumulation</div>
+                    <div class="p-desc">
+                        Un spike sain (breakout institutionnel) se consolide pendant 2–3 jours avant de continuer.
+                        Un spike de distribution rechute dans les 24–48h. La règle simple : si un titre monte +30%
+                        en une journée et perd plus de -10% le lendemain sur volume élevé,
+                        <strong>ne rachetez pas</strong>. Attendez une vraie consolidation basse volatilité avant
+                        de considérer une entrée.
+                    </div>
+                </div>
+            </div>
+
+            <div class="protection-item">
+                <i class="fa-solid fa-building-columns"></i>
+                <div>
+                    <div class="p-title">Vérifiez la Présence d'Institutionnels en 13F</div>
+                    <div class="p-desc">
+                        Sur <a href="https://fintel.io" target="_blank" rel="noopener" style="color:#3b82f6;">Fintel.io</a>
+                        ou <a href="https://whalewisdom.com" target="_blank" rel="noopener" style="color:#3b82f6;">WhaleWisdom.com</a>,
+                        vérifiez les 13F filings pour votre ticker.
+                        Si aucun fonds institutionnel sérieux ne détient le titre, le "volume élevé"
+                        n'est que du bruit retail. L'absence de 13F sur EONR confirme que les professionnels
+                        ont fui (ou n'ont jamais été présents).
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 9 : CONCLUSION & VERDICT
+        ========================================================= -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-gavel"></i> Conclusion &amp; Verdict Final</h2>
+
+            <div class="verdict-banner">
+                <h3><i class="fa-solid fa-graduation-cap"></i> EONR : Un Cas d'École de Distribution Retail</h3>
+                <p>Ce titre réunit <em>tous</em> les critères classiques d'un schéma de distribution :
+                spikes sans follow-through, taux off-exchange croissant, absence d'institutionnels,
+                dégradation progressive du cours. Il ne manque rien au tableau.</p>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;margin:1.5rem 0;">
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:1.25rem;">
+                    <h4 style="margin:0 0 0.75rem;color:#16a34a;"><i class="fa-solid fa-check-double"></i> Ce Que Vous Avez Appris</h4>
+                    <ul style="margin:0;padding-left:1.2rem;font-size:0.83rem;color:#475569;line-height:1.7;">
+                        <li>Différence marché lit vs off-exchange</li>
+                        <li>Mécanisme du PFOF (Payment For Order Flow)</li>
+                        <li>Comment un taux off-exchange élevé cache une distribution</li>
+                        <li>Anatomie d'un spike de distribution (pump &amp; dump)</li>
+                        <li>Pourquoi le retail est la liquidité de sortie</li>
+                        <li>Comment vérifier ces données avant d'investir</li>
+                    </ul>
+                </div>
+                <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:1.25rem;">
+                    <h4 style="margin:0 0 0.75rem;color:#dc2626;"><i class="fa-solid fa-xmark-circle"></i> Ce Qu'Il Faut Retenir</h4>
+                    <ul style="margin:0;padding-left:1.2rem;font-size:0.83rem;color:#475569;line-height:1.7;">
+                        <li><strong>Off-Exchange &gt; 70%</strong> = évitez ou position minimale</li>
+                        <li>Volume élevé ≠ intérêt institutionnel sur penny stocks</li>
+                        <li>Spikes sans follow-through = distribution, pas opportunité</li>
+                        <li>Robinhood + PFOF = vous ne pouvez pas router vos ordres</li>
+                        <li>Vérifiez ChartExchange + Fintel 13F avant chaque achat</li>
+                        <li>"Acheter sur la dip" sans catalyseur = exit liquidity</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- GAUGE FINAL -->
+            <div style="display:flex;justify-content:center;margin:2rem 0;">
+                <div id="gaugeDistribFinal" style="width:260px;height:200px;"></div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-scale-balanced"></i> Objectivité &amp; Limites de Cette Analyse</h4>
+                <p>
+                    Cette analyse se base exclusivement sur des données publiques (ChartExchange, OHLCV Yahoo Finance).
+                    Nous n'avons aucune information sur l'identité des vendeurs institutionnels hypothétiques,
+                    ni confirmation d'un schéma de manipulation intentionnelle. Ce qui est certain : les données
+                    de flux d'ordres sont cohérentes avec un schéma de distribution classique tel que décrit
+                    par la théorie de Wyckoff et la littérature académique sur le PFOF.
+                    <a href="https://www.sec.gov/divisions/marketreg/mrfreqreq.htm" class="source-ref" target="_blank" rel="noopener">
+                        <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                        <span class="source-name">SEC — Market Structure</span>
+                    </a>
+                </p>
+            </div>
+        </div>
+
+        <!-- ========================================================
+             SECTION 10 : SOURCES & MÉTHODOLOGIE
+        ========================================================= -->
+        <div id="sources" class="content-card">
+            <h2><i class="fa-solid fa-book-bookmark"></i> Sources &amp; Méthodologie</h2>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:1.25rem;">
+                    <h4 style="margin:0 0 0.75rem;font-size:0.88rem;"><i class="fa-solid fa-database"></i> Données Utilisées</h4>
+                    <div class="sources-grid">
+                        <a href="https://chartexchange.com/symbol/nysearca-eonr/trades/distribution/" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">ChartExchange — EONR Volume Distribution</span>
+                        </a>
+                        <a href="https://finance.yahoo.com/quote/EONR/history/" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">Yahoo Finance — EONR OHLCV</span>
+                        </a>
+                        <a href="https://fintel.io/so/us/eonr" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">Fintel — 13F Holdings EONR</span>
+                        </a>
+                        <a href="https://finviz.com/quote.ashx?t=EONR" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">Finviz — EONR Overview</span>
+                        </a>
+                    </div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:1.25rem;">
+                    <h4 style="margin:0 0 0.75rem;font-size:0.88rem;"><i class="fa-solid fa-file-contract"></i> Références Réglementaires</h4>
+                    <div class="sources-grid">
+                        <a href="https://www.sec.gov/rules/final/34-51808.pdf" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">SEC Rule 606 — Order Routing Disclosure</span>
+                        </a>
+                        <a href="https://www.sec.gov/news/studies/2000/orderflo.htm" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">SEC — Payment For Order Flow Study</span>
+                        </a>
+                        <a href="https://iextrading.com/about/" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">IEX — Investor Protection</span>
+                        </a>
+                        <a href="https://www.finra.org/rules-guidance/rulebooks/finra-rules/5310" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">FINRA Rule 5310 — Best Execution</span>
+                        </a>
+                    </div>
+                </div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:1.25rem;">
+                    <h4 style="margin:0 0 0.75rem;font-size:0.88rem;"><i class="fa-solid fa-graduation-cap"></i> Théorie &amp; Concepts</h4>
+                    <div class="sources-grid">
+                        <a href="https://school.stockcharts.com/doku.php?id=market_analysis:the_wyckoff_method" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">StockCharts — Méthode Wyckoff</span>
+                        </a>
+                        <a href="https://www.investopedia.com/terms/i/internalization.asp" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">Investopedia — Order Internalization</span>
+                        </a>
+                        <a href="https://www.investopedia.com/terms/p/paymentoforderflow.asp" class="source-ref" target="_blank" rel="noopener">
+                            <i class="fa-solid fa-arrow-up-right-from-square source-icon"></i>
+                            <span class="source-name">Investopedia — PFOF Explained</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="didactic-box" style="margin-top:1.5rem;">
+                <h4><i class="fa-solid fa-microscope"></i> Note Méthodologique</h4>
+                <p>
+                    Les données OHLCV utilisées proviennent de ChartExchange (source primaire) et Yahoo Finance (validation).
+                    Les pourcentages off-exchange sont issus du rapport de distribution de volume de ChartExchange,
+                    qui agrège les données de reporting post-trade obligatoire sous la <strong>Rule 605 SEC</strong>.
+                    Ces données représentent le volume exécuté hors exchanges réglementés — incluant les dark pools,
+                    l'internalisation des market makers (Citadel, Virtu), et les ATS (Alternative Trading Systems).
+                    Elles ne permettent pas d'identifier les contreparties individuelles — toute attribution
+                    à un acteur spécifique serait une extrapolation non vérifiable.
+                </p>
+            </div>
+        </div>
+
+    </div><!-- /.container -->
+
+    <!-- FAB NAVIGATION -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#resume" class="fnav-item" data-section="resume"><i class="fas fa-bolt"></i><span>Résumé</span></a>
+            <a href="#contexte" class="fnav-item" data-section="contexte"><i class="fas fa-building"></i><span>Contexte</span></a>
+            <a href="#mecanismes" class="fnav-item" data-section="mecanismes"><i class="fas fa-network-wired"></i><span>Mécanismes</span></a>
+            <a href="#donnees" class="fnav-item" data-section="donnees"><i class="fas fa-chart-bar"></i><span>Données</span></a>
+            <a href="#distribution" class="fnav-item" data-section="distribution"><i class="fas fa-arrow-trend-down"></i><span>Distribution</span></a>
+            <a href="#spikes" class="fnav-item" data-section="spikes"><i class="fas fa-bolt-lightning"></i><span>Spikes</span></a>
+            <a href="#liquidite" class="fnav-item" data-section="liquidite"><i class="fas fa-arrow-right-arrow-left"></i><span>Liquidité</span></a>
+            <a href="#protection" class="fnav-item" data-section="protection"><i class="fas fa-shield-halved"></i><span>Protection</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-gavel"></i><span>Verdict</span></a>
+            <a href="#sources" class="fnav-item" data-section="sources"><i class="fas fa-book-bookmark"></i><span>Sources</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Analyse éducative — pas un conseil financier.
+        Données : ChartExchange, Yahoo Finance. Méthodologie basée sur les données de flux d'ordres publics (SEC Rule 605/606).
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+    // ============================================================
+    // FAB NAVIGATION
+    // ============================================================
+    (function() {
+        var btn = document.getElementById('fnavBtn');
+        var menu = document.getElementById('fnavMenu');
+        var icon = document.getElementById('fnavIcon');
+        var label = document.getElementById('fnavLabel');
+        var isOpen = false;
+
+        btn.addEventListener('click', function() {
+            isOpen = !isOpen;
+            menu.classList.toggle('open', isOpen);
+            icon.className = isOpen ? 'fas fa-xmark' : 'fas fa-bars';
+            label.textContent = isOpen ? 'Fermer' : 'Menu';
+        });
+
+        menu.querySelectorAll('.fnav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                isOpen = false;
+                menu.classList.remove('open');
+                icon.className = 'fas fa-bars';
+                label.textContent = 'Menu';
+            });
+        });
+
+        // IntersectionObserver pour highlight actif
+        var sections = document.querySelectorAll('[id]');
+        var observer = new IntersectionObserver(function(entries) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    menu.querySelectorAll('.fnav-item').forEach(function(a) {
+                        a.classList.toggle('active', a.dataset.section === entry.target.id);
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+        sections.forEach(function(s) { observer.observe(s); });
+    })();
+
+    // ============================================================
+    // GAUGE DISTRIBUTION (Hero)
+    // ============================================================
+    (function() {
+        var chart = echarts.init(document.getElementById('gaugeDistrib'));
+        chart.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 200,
+                endAngle: -20,
+                min: 0,
+                max: 10,
+                splitNumber: 5,
+                radius: '95%',
+                axisLine: {
+                    lineStyle: {
+                        width: 14,
+                        color: [
+                            [0.3, '#22c55e'],
+                            [0.5, '#3b82f6'],
+                            [0.7, '#f59e0b'],
+                            [1, '#ef4444']
+                        ]
+                    }
+                },
+                pointer: { itemStyle: { color: '#ef4444' }, length: '65%', width: 5 },
+                axisTick: { show: false },
+                splitLine: { show: false },
+                axisLabel: { show: false },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}/10\nDistribution',
+                    color: '#ef4444',
+                    fontSize: 13,
+                    fontWeight: 800,
+                    offsetCenter: [0, '60%']
+                },
+                data: [{ value: 8 }]
+            }]
+        });
+    })();
+
+    // ============================================================
+    // CANDLESTICK CHART
+    // ============================================================
+    (function() {
+        var rawData = [
+            ['2026-03-02', 0.57, 0.5855, 0.4652, 0.498, 53],
+            ['2026-03-03', 0.6811, 0.70, 0.5036, 0.6397, 197.4],
+            ['2026-03-04', 0.5359, 0.561, 0.4839, 0.5117, 28],
+            ['2026-03-05', 0.5106, 0.7383, 0.5106, 0.61, 41.7],
+            ['2026-03-06', 0.7317, 0.8228, 0.6512, 0.67, 83.4],
+            ['2026-03-09', 0.9627, 0.9627, 0.67, 0.80, 350.9],
+            ['2026-03-10', 0.9063, 0.9276, 0.68, 0.8358, 55],
+            ['2026-03-11', 0.8317, 0.9379, 0.75, 0.89, 42.4],
+            ['2026-03-12', 1.03, 1.44, 0.99, 1.35, 197.4],
+            ['2026-03-13', 1.30, 1.46, 1.30, 1.53, 142.4],
+            ['2026-03-16', 1.3, 1.46, 1.18, 1.34, 61.4],
+            ['2026-03-17', 1.14, 1.1599, 0.9511, 1.03, 45.4],
+            ['2026-03-18', 1.12, 1.12, 1.015, 1.04, 62.4],
+            ['2026-03-19', 1.11, 1.12, 1.00, 1.06, 24.8],
+            ['2026-03-20', 1.02, 1.03, 0.9336, 1.03, 15],
+            ['2026-03-23', 0.9206, 1.03, 0.89, 0.92, 30.9],
+            ['2026-03-24', 0.9527, 1.0795, 0.9527, 1.02, 19.1],
+            ['2026-03-25', 0.9553, 0.9933, 0.9131, 0.9572, 13.6],
+            ['2026-03-26', 0.9896, 1.059, 0.9803, 1.00, 15.5],
+            ['2026-03-27', 1.00, 1.12, 0.90, 1.07, 21.8],
+            ['2026-03-30', 1.05, 1.06, 0.9305, 1.02, 22],
+            ['2026-03-31', 0.945, 0.96, 0.786, 0.83, 23.7],
+            ['2026-04-01', 0.7362, 0.8499, 0.73, 0.804, 9.5],
+            ['2026-04-02', 0.9501, 0.9928, 0.8527, 0.899, 25.5],
+            ['2026-04-06', 0.84, 0.922, 0.83, 0.875, 9],
+            ['2026-04-07', 0.8625, 0.97, 0.8625, 0.875, 13.3],
+            ['2026-04-08', 0.7341, 0.84, 0.7317, 0.827, 10.6],
+            ['2026-04-09', 0.835, 0.855, 0.78, 0.80, 5.8],
+            ['2026-04-10', 0.78, 0.78, 0.73, 0.74, 4.29]
+        ];
+
+        var dates = rawData.map(function(d) { return d[0].replace('2026-0','').replace('-','/'); });
+        var ohlc = rawData.map(function(d) { return [d[1], d[4], d[3], d[2]]; });
+        var volumes = rawData.map(function(d) { return d[5]; });
+        var colors = rawData.map(function(d) { return d[4] >= d[1] ? '#22c55e' : '#ef4444'; });
+
+        var annotations = [
+            { xAxis: '3/09', label: '+19%\n350M vol' },
+            { xAxis: '3/12', label: '+51.7%\n197M vol' },
+            { xAxis: '3/13', label: '+13.3%\n142M vol' }
+        ];
+
+        var chart = echarts.init(document.getElementById('candlestickChart'));
+        chart.setOption({
+            backgroundColor: '#fff',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                formatter: function(params) {
+                    var p = params[0];
+                    if (!p) return '';
+                    var d = p.data;
+                    var pct = ((d[1]-d[0])/d[0]*100).toFixed(2);
+                    return '<b>' + p.axisValue + '</b><br>O: $' + d[0] + ' H: $' + d[2] + '<br>L: $' + d[3] + ' C: $' + d[1] + '<br>Var: <b>' + (pct>0?'+':'') + pct + '%</b>';
+                }
+            },
+            grid: [
+                { left: '5%', right: '5%', top: '5%', height: '62%' },
+                { left: '5%', right: '5%', top: '72%', height: '20%' }
+            ],
+            xAxis: [
+                { type: 'category', data: dates, gridIndex: 0, axisLabel: { fontSize: 9, color: '#64748b' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+                { type: 'category', data: dates, gridIndex: 1, axisLabel: { show: false } }
+            ],
+            yAxis: [
+                { type: 'value', gridIndex: 0, scale: true, axisLabel: { formatter: '${value}', fontSize: 9, color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+                { type: 'value', gridIndex: 1, axisLabel: { fontSize: 9, color: '#64748b', formatter: function(v) { return v+'M'; } }, splitLine: { lineStyle: { color: '#f1f5f9' } } }
+            ],
+            series: [
+                {
+                    type: 'candlestick',
+                    data: ohlc,
+                    xAxisIndex: 0,
+                    yAxisIndex: 0,
+                    itemStyle: {
+                        color: '#22c55e',
+                        color0: '#ef4444',
+                        borderColor: '#16a34a',
+                        borderColor0: '#dc2626'
+                    },
+                    markPoint: {
+                        symbol: 'pin',
+                        symbolSize: 36,
+                        data: [
+                            { name: '🚀 +19%', xAxis: '3/09', yAxis: 0.95, label: { formatter: '+19%', fontSize: 9, color: 'white' }, itemStyle: { color: '#3b82f6' } },
+                            { name: '🚀 +51.7%', xAxis: '3/12', yAxis: 1.48, label: { formatter: '+51.7%', fontSize: 9, color: 'white' }, itemStyle: { color: '#3b82f6' } },
+                            { name: '🚀 +13.3%', xAxis: '3/13', yAxis: 1.60, label: { formatter: '+13.3%', fontSize: 9, color: 'white' }, itemStyle: { color: '#3b82f6' } }
+                        ]
+                    }
+                },
+                {
+                    type: 'bar',
+                    data: volumes,
+                    xAxisIndex: 1,
+                    yAxisIndex: 1,
+                    itemStyle: {
+                        color: function(params) { return colors[params.dataIndex]; },
+                        opacity: 0.75
+                    }
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ============================================================
+    // OFF-EXCHANGE STACKED BAR + LINE
+    // ============================================================
+    (function() {
+        var dates = [
+            '03/13','03/16','03/17','03/18','03/19','03/20',
+            '03/23','03/24','03/25','03/26','03/27',
+            '03/30','03/31','04/01','04/02',
+            '04/06','04/07','04/08','04/09','04/10'
+        ];
+        var offEx  = [60.71,71.54,72.26,71.19,71.51,76.03,73.82,71.34,75.17,78.98,75.25,81.79,80.91,72.42,64.74,71.36,73.64,75.71,72.67,80.16];
+        var nysePct= [12.38,7.95,10.74,10.51,8.43,7.29,11.05,9.42,8.79,7.14,8.88,6.45,6.94,8.29,13.31,6.51,9.73,6.49,10.47,8.40];
+        var cboe   = [0.38,0.22,0.22,0.25,1.01,2.66,1.53,0.62,2.54,0.18,1.41,1.49,1.91,2.55,2.16,3.95,2.39,2.75,2.13,2.76];
+        var memx   = [3.86,1.94,2.29,2.24,1.78,1.44,3.25,1.94,3.37,2.23,2.47,1.70,2.36,5.70,4.64,5.16,5.00,3.55,3.27,2.67];
+        var edgx   = [7.59,1.84,4.68,2.46,5.74,2.97,3.70,4.68,2.60,3.84,3.32,2.46,2.00,3.73,5.33,2.67,1.95,1.97,2.02,1.90];
+        var nyseAm = [2.18,4.77,3.73,2.73,2.18,5.33,1.77,3.08,2.81,2.22,3.47,2.52,2.16,2.24,1.42,4.08,1.69,3.66,3.05,1.29];
+        var nasdaq = [5.42,2.82,2.18,2.27,4.93,1.26,1.82,4.98,1.06,2.68,1.74,0.94,1.32,2.95,6.28,3.10,3.78,3.46,3.48,0.84];
+
+        var chart = echarts.init(document.getElementById('offExchangeChart'));
+        chart.setOption({
+            backgroundColor: '#fff',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'shadow' },
+                formatter: function(params) {
+                    var html = '<b>' + params[0].axisValue + '</b><br>';
+                    params.forEach(function(p) {
+                        if (p.seriesName === 'Off-Exchange %') {
+                            html += '<span style="color:' + p.color + '">●</span> <b>' + p.seriesName + ': ' + p.value + '%</b><br>';
+                        } else {
+                            html += '<span style="color:' + p.color + '">■</span> ' + p.seriesName + ': ' + p.value + '%<br>';
+                        }
+                    });
+                    return html;
+                }
+            },
+            legend: {
+                data: ['NYSE Arca','CBOE EDGA','MEMX','CBOE EDGX','NYSE American','Nasdaq'],
+                bottom: 0, fontSize: 9, textStyle: { fontSize: 9, color: '#64748b' }
+            },
+            grid: { left: '5%', right: '8%', top: '5%', bottom: '12%' },
+            xAxis: {
+                type: 'category', data: dates,
+                axisLabel: { fontSize: 9, color: '#64748b', rotate: 35 }
+            },
+            yAxis: [
+                { type: 'value', name: 'Volume lit (%)', min: 0, max: 50, axisLabel: { formatter: '{value}%', fontSize: 9 }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+                { type: 'value', name: 'Off-Ex %', min: 55, max: 90, axisLabel: { formatter: '{value}%', fontSize: 9 }, splitLine: { show: false } }
+            ],
+            series: [
+                { name: 'NYSE Arca', type: 'bar', stack: 'lit', data: nysePct, itemStyle: { color: '#3b82f6' } },
+                { name: 'CBOE EDGA', type: 'bar', stack: 'lit', data: cboe, itemStyle: { color: '#8b5cf6' } },
+                { name: 'MEMX', type: 'bar', stack: 'lit', data: memx, itemStyle: { color: '#06b6d4' } },
+                { name: 'CBOE EDGX', type: 'bar', stack: 'lit', data: edgx, itemStyle: { color: '#ec4899' } },
+                { name: 'NYSE American', type: 'bar', stack: 'lit', data: nyseAm, itemStyle: { color: '#10b981' } },
+                { name: 'Nasdaq', type: 'bar', stack: 'lit', data: nasdaq, itemStyle: { color: '#f59e0b' } },
+                {
+                    name: 'Off-Exchange %',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: offEx,
+                    smooth: true,
+                    lineStyle: { color: '#ef4444', width: 3 },
+                    itemStyle: { color: '#ef4444' },
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    markPoint: {
+                        data: [
+                            { type: 'max', name: 'Max', label: { formatter: '{c}%', fontSize: 9 } },
+                            { type: 'min', name: 'Min', label: { formatter: '{c}%', fontSize: 9 } }
+                        ]
+                    }
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ============================================================
+    // CORRELATION CHART (Prix vs Off-Exchange %)
+    // ============================================================
+    (function() {
+        var dates = [
+            '03/13','03/16','03/17','03/18','03/19','03/20',
+            '03/23','03/24','03/25','03/26','03/27',
+            '03/30','03/31','04/01','04/02',
+            '04/06','04/07','04/08','04/09','04/10'
+        ];
+        var prices = [1.53, 1.34, 1.03, 1.04, 1.06, 1.03, 0.92, 1.02, 0.9572, 1.00, 1.07, 1.02, 0.83, 0.804, 0.899, 0.875, 0.875, 0.827, 0.80, 0.74];
+        var offEx  = [60.71,71.54,72.26,71.19,71.51,76.03,73.82,71.34,75.17,78.98,75.25,81.79,80.91,72.42,64.74,71.36,73.64,75.71,72.67,80.16];
+
+        var chart = echarts.init(document.getElementById('correlationChart'));
+        chart.setOption({
+            backgroundColor: '#fff',
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                formatter: function(params) {
+                    return '<b>' + params[0].axisValue + '</b><br>' +
+                        '<span style="color:#3b82f6">● Prix clôture : $' + params[0].value + '</span><br>' +
+                        '<span style="color:#ef4444">● Off-Exchange : ' + params[1].value + '%</span>';
+                }
+            },
+            legend: {
+                data: ['Prix Clôture ($)', 'Off-Exchange (%)'],
+                top: 5, textStyle: { fontSize: 10, color: '#64748b' }
+            },
+            grid: { left: '7%', right: '8%', top: '15%', bottom: '10%' },
+            xAxis: {
+                type: 'category', data: dates,
+                axisLabel: { fontSize: 9, color: '#64748b', rotate: 35 }
+            },
+            yAxis: [
+                {
+                    type: 'value', name: 'Prix ($)', min: 0.6, max: 1.7,
+                    axisLabel: { formatter: '${value}', fontSize: 9, color: '#3b82f6' },
+                    nameTextStyle: { color: '#3b82f6', fontSize: 9 },
+                    splitLine: { lineStyle: { color: '#f1f5f9' } }
+                },
+                {
+                    type: 'value', name: 'Off-Ex %', min: 55, max: 90,
+                    axisLabel: { formatter: '{value}%', fontSize: 9, color: '#ef4444' },
+                    nameTextStyle: { color: '#ef4444', fontSize: 9 },
+                    splitLine: { show: false }
+                }
+            ],
+            series: [
+                {
+                    name: 'Prix Clôture ($)',
+                    type: 'line',
+                    data: prices,
+                    smooth: true,
+                    lineStyle: { color: '#3b82f6', width: 3 },
+                    areaStyle: { color: 'rgba(59,130,246,0.08)' },
+                    itemStyle: { color: '#3b82f6' },
+                    symbol: 'circle', symbolSize: 5
+                },
+                {
+                    name: 'Off-Exchange (%)',
+                    type: 'line',
+                    yAxisIndex: 1,
+                    data: offEx,
+                    smooth: true,
+                    lineStyle: { color: '#ef4444', width: 3, type: 'dashed' },
+                    areaStyle: { color: 'rgba(239,68,68,0.06)' },
+                    itemStyle: { color: '#ef4444' },
+                    symbol: 'circle', symbolSize: 5
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ============================================================
+    // SPIKES BAR CHART
+    // ============================================================
+    (function() {
+        var chart = echarts.init(document.getElementById('spikesChart'));
+        chart.setOption({
+            backgroundColor: '#fff',
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: {
+                data: ['Variation %', 'Volume (M)', 'Off-Exchange %'],
+                top: 5, textStyle: { fontSize: 10, color: '#64748b' }
+            },
+            grid: { left: '8%', right: '8%', top: '15%', bottom: '8%' },
+            xAxis: {
+                type: 'category',
+                data: ['9 mars\n(350M vol)', '12 mars\n(197M vol)', '13 mars\n(142M vol)'],
+                axisLabel: { fontSize: 10, color: '#0f172a', fontWeight: 700 }
+            },
+            yAxis: [
+                { type: 'value', name: '%', axisLabel: { formatter: '{value}%', fontSize: 9 }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+                { type: 'value', name: 'Volume M', axisLabel: { formatter: '{value}M', fontSize: 9 }, splitLine: { show: false } }
+            ],
+            series: [
+                {
+                    name: 'Variation %',
+                    type: 'bar',
+                    data: [19.44, 51.69, 13.33],
+                    itemStyle: { color: '#22c55e', borderRadius: [6,6,0,0] },
+                    label: { show: true, position: 'top', formatter: '+{c}%', fontSize: 11, fontWeight: 700, color: '#16a34a' }
+                },
+                {
+                    name: 'Volume (M)',
+                    type: 'bar',
+                    yAxisIndex: 1,
+                    data: [350.9, 197.4, 142.4],
+                    itemStyle: { color: '#3b82f6', opacity: 0.6, borderRadius: [6,6,0,0] },
+                    label: { show: true, position: 'top', formatter: '{c}M', fontSize: 9, color: '#1d4ed8' }
+                },
+                {
+                    name: 'Off-Exchange %',
+                    type: 'line',
+                    data: [73, null, 60.71],
+                    itemStyle: { color: '#f59e0b' },
+                    lineStyle: { color: '#f59e0b', width: 3 },
+                    symbol: 'circle', symbolSize: 10,
+                    label: { show: true, formatter: function(p) { return p.value ? p.value + '%' : 'N/A'; }, fontSize: 10, color: '#b45309', fontWeight: 700 }
+                }
+            ]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+
+    // ============================================================
+    // GAUGE FINAL
+    // ============================================================
+    (function() {
+        var chart = echarts.init(document.getElementById('gaugeDistribFinal'));
+        chart.setOption({
+            series: [{
+                type: 'gauge',
+                startAngle: 200,
+                endAngle: -20,
+                min: 0,
+                max: 10,
+                splitNumber: 10,
+                radius: '90%',
+                axisLine: {
+                    lineStyle: {
+                        width: 20,
+                        color: [
+                            [0.3, '#22c55e'],
+                            [0.5, '#3b82f6'],
+                            [0.7, '#f59e0b'],
+                            [1, '#ef4444']
+                        ]
+                    }
+                },
+                pointer: { itemStyle: { color: '#ef4444' }, length: '70%', width: 6 },
+                axisTick: { length: 8, lineStyle: { color: 'auto', width: 2 } },
+                splitLine: { length: 12, lineStyle: { color: 'auto', width: 3 } },
+                axisLabel: { color: '#64748b', fontSize: 10, distance: 14 },
+                title: { fontSize: 14, color: '#0f172a', fontWeight: 800, offsetCenter: [0, '-30%'] },
+                detail: {
+                    valueAnimation: true,
+                    formatter: '{value}/10',
+                    color: '#ef4444',
+                    fontSize: 28,
+                    fontWeight: 800,
+                    offsetCenter: [0, '55%']
+                },
+                data: [{ value: 8, name: 'Score Distribution' }]
+            }]
+        });
+        window.addEventListener('resize', function() { chart.resize(); });
+    })();
+    </script>
+</body>
+</html>
