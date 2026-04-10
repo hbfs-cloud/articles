@@ -821,6 +821,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "WYFI",
+    "exchange": "NASDAQ • Technology • AI Infrastructure & HPC — United States",
+    "name": "WYFI — AI infrastructure play, $556M MCap, 71.5% insider ownership, MACD cross. Cautiously bul...",
+    "title": "WYFI — AI infrastructure play, $556M MCap, 71.5% insider ownership, MACD cross. Cautiously bul...",
+    "desc": "WhiteFiber Inc. (WYFI) analysis: AI infrastructure & HPC provider, Enovum data centers, Nscale partnership. Rev est. $137M FY2026. Grade B, cautiously bullish. Entry $13.50–14.00.",
+    "tags": "us,tech,ai,trade-idea",
+    "grade": "B",
+    "href": "/analyses/WYFI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MSFT",
     "exchange": "NASDAQ • Technology",
     "name": "MSFT — Analyse institutionnelle Microsoft (MSFT) : $374.65, -32% du 52W high, MACD croisement ...",
@@ -2168,19 +2181,6 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,speculative,trade-idea",
     "grade": "B",
     "href": "analyses/UEC",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "WYFI",
-    "exchange": "NASDAQ • Technology",
-    "name": "WhiteFiber, Inc.",
-    "title": "WhiteFiber, Inc.",
-    "desc": "Analyse technique et fondamentale complète de WhiteFiber, Inc.\n    (WYFI). Prix: $19.42, Market Cap: .",
-    "tags": "us,tech,speculative,trade-idea",
-    "grade": "B",
-    "href": "analyses/WYFI",
     "date": ""
   },
   {
