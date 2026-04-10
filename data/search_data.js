@@ -821,6 +821,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "MSFT",
+    "exchange": "NASDAQ • Technology",
+    "name": "MSFT — Analyse institutionnelle Microsoft (MSFT) : $374.65, -32% du 52W high, MACD croisement ...",
+    "title": "MSFT — Analyse institutionnelle Microsoft (MSFT) : $374.65, -32% du 52W high, MACD croisement ...",
+    "desc": "Analyse institutionnelle Microsoft (MSFT) : $374.65, -32% du 52W high, MACD croisement haussier, 23x earnings. Target analyste $587. Opportunité tarif-selloff.",
+    "tags": "us,tech,ai,trade-idea",
+    "grade": "A",
+    "href": "/analyses/MSFT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EONR",
     "exchange": "OTC Markets • Oil & Gas Exploration",
     "name": "EONR — $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-su...",
@@ -1609,19 +1622,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,ai,trade-idea",
     "grade": "A-",
     "href": "analyses/META",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "MSFT",
-    "exchange": "NASDAQ • Technology",
-    "name": "Microsoft Corporation",
-    "title": "Microsoft Corporation",
-    "desc": "Analyse institutionnelle complete de Microsoft (MSFT) :\n    fondamentaux, technique, risques, insiders et trade idea. Revenue\n    $305B, marge opérationnelle 47%, target $596.",
-    "tags": "us,tech,ai,trade-idea",
-    "grade": "A-",
-    "href": "analyses/MSFT",
     "date": ""
   },
   {
