@@ -821,6 +821,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
+    "name": "IOVA — breakout explosif +17% le 9 avril, Jefferies relève à $12, données sarcoma 50% ORR, SI ...",
+    "title": "IOVA — breakout explosif +17% le 9 avril, Jefferies relève à $12, données sarcoma 50% ORR, SI ...",
+    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, breakout +17% le 9 avril, sarcoma 50% ORR, Jefferies $12 PT. Thérapie cellulaire TIL leader.",
+    "tags": "us,healthcare,biotech,trade-idea,speculative",
+    "grade": "A-",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "WYFI",
     "exchange": "NASDAQ • Technology • AI Infrastructure & HPC — United States",
     "name": "WYFI — AI infrastructure play, $556M MCap, 71.5% insider ownership, MACD cross. Cautiously bul...",
@@ -894,19 +907,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,biotech,gene-therapy,trade-idea,speculative",
     "grade": "B",
     "href": "/analyses/SRPT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
-    "name": "IOVA — AMTAGVI revenue $264M, pullback -24% post-rally, RSI 44, SI baisse  30%, entre $3.28 — ...",
-    "title": "IOVA — AMTAGVI revenue $264M, pullback -24% post-rally, RSI 44, SI baisse  30%, entre $3.28 — ...",
-    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, pullback vers $3.28, RSI 44, SI en baisse 30%, zone d'entre optimale atteinte. Thrapie cellulaire TIL leader.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative",
-    "grade": "B+",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
