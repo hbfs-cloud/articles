@@ -146,6 +146,31 @@ paths:
                     items:
                       $ref: "#/components/schemas/ExpiresAction"
 
+  /winning-streaks.json:
+    get:
+      summary: Win/loss streaks for the selected mode
+      description: >
+        Aggregate streak metrics computed from the mode's closed trades ledger.
+        Useful for social-proof, dashboards, or feeding a "hot hand" widget.
+      responses:
+        "200":
+          description: Streak snapshot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  mode: { type: string, example: "balanced" }
+                  currentStreak: { type: integer, description: "Trailing consecutive wins", example: 2 }
+                  bestStreak: { type: integer, description: "Longest win streak in history", example: 9 }
+                  bestStreakStart: { type: string, format: date, nullable: true }
+                  bestStreakEnd: { type: string, format: date, nullable: true }
+                  totalWins: { type: integer, example: 43 }
+                  totalLosses: { type: integer, example: 34 }
+                  totalTrades: { type: integer, example: 77 }
+                  winRate: { type: number, description: "Percentage, 0-100", example: 55.8 }
+
   /all.json:
     get:
       summary: Full portfolio state (all data in one call)

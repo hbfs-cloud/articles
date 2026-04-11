@@ -159,6 +159,74 @@ if (balanced) {
   count += 7;
 }
 
+// ─── Winning streaks endpoint (computed from trades.json per mode) ──────────
+// A "streak" = longest consecutive run of winning trades (TP1 or TP2), sorted chronologically.
+// Provides social-proof stats for the API consumers without needing an extra scan pass.
+function computeStreaks(trades) {
+  const sorted = [...(trades || [])]
+    .filter(t => t && (t.entryDate || t.scanDate))
+    .sort((a, b) => ((a.entryDate || a.scanDate || '').localeCompare(b.entryDate || b.scanDate || '')));
+  let curr = 0, currStart = null, best = 0, bestStart = null, bestEnd = null;
+  let totalWins = 0, totalLosses = 0;
+  for (const t of sorted) {
+    const isWin = t.status === 'tp1' || t.status === 'tp2' || (t.pnlPct || 0) > 0;
+    if (isWin) {
+      totalWins++;
+      if (curr === 0) currStart = t.entryDate || t.scanDate;
+      curr++;
+      if (curr > best) {
+        best = curr;
+        bestStart = currStart;
+        bestEnd = t.entryDate || t.scanDate;
+      }
+    } else {
+      totalLosses++;
+      curr = 0;
+    }
+  }
+  // Current streak (trailing)
+  let tail = 0;
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    const t = sorted[i];
+    const isWin = t.status === 'tp1' || t.status === 'tp2' || (t.pnlPct || 0) > 0;
+    if (!isWin) break;
+    tail++;
+  }
+  return {
+    currentStreak: tail,
+    bestStreak: best,
+    bestStreakStart: bestStart,
+    bestStreakEnd: bestEnd,
+    totalWins,
+    totalLosses,
+    totalTrades: sorted.length,
+    winRate: sorted.length ? +((totalWins / sorted.length) * 100).toFixed(1) : 0,
+  };
+}
+
+const streaksByMode = {};
+for (const id of MODE_IDS) {
+  const mode = snap.modes[id];
+  if (!mode) continue;
+  streaksByMode[id] = computeStreaks(mode.closedTrades || []);
+  // Also write a per-mode streaks endpoint
+  write(`${id}/winning-streaks.json`, {
+    updatedAt: now,
+    mode: id,
+    ...streaksByMode[id],
+  });
+  count++;
+}
+
+// Root winning-streaks.json = balanced (backward compat pattern)
+write('winning-streaks.json', {
+  updatedAt: now,
+  mode: 'balanced',
+  ...(streaksByMode.balanced || {}),
+  modes: streaksByMode,
+});
+count++;
+
 // ─── Summary endpoint: all modes overview ──────────────────────────────────
 write('modes.json', {
   updatedAt: now, date: snap.date,
