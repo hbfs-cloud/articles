@@ -3190,9 +3190,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Scanner DailyTickers — Monday, April 13, 2026 — Top 10 A+ EARLY RISK-OFF",
-    "desc": "Top 10 A+ setups for Monday April 13 2026. Early Risk-Off regime, VIX 19.23. Ceasefire relief rally meets CPI spike. LLY, GLD, INTC, SAP, AZN, DAL, XLE, NEM, EWJ, NXST.",
-    "tags": "us,eu,asia,commodity,etf,tech,semis,healthcare,energy,financials,macro,technique,trade-idea",
+    "title": "Top 10 A+ shift confirmed — AMZN, META, GS, INTC, TSM, ASML, NVS, XLK, XLB, TXN",
+    "desc": "Regime: RISK-ON (score 0.55) — VIX firmly sub-20, Dow positive YTD, SPX 6,816.89, Nasdaq +0.35%, sentiment 7:2 bull/bear. Top sectors Thursday: Energy +2%, Materials +1%, Tech +1%. Gold $4,771 topping (-0.98%), Oil $96.57 weakening (-1.33%), 10Y yield 4.317%. The ceasefire rally has matured into a g...",
+    "tags": "us,eu,asia,tech,semis,financials,materials,etf,ai,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260413/",
     "date": "13 avril 2026"
@@ -4040,6 +4040,19 @@ window.searchDataPrebuilt = [
     "tags": "ai,tech,technique,formation",
     "grade": "",
     "href": "/tech/timesfm-trading-guide/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Inside the DailyTickers Pipeline — How We Track 40 Live Trades Every Night",
+    "desc": "A transparent tour of the scanner → portfolio pipeline: how setups flow from screener DSL to 3 mode portfolios, how trades are tracked, and the public endpoints you can consume.",
+    "tags": "tech,formation,technique,macro",
+    "grade": "",
+    "href": "/tech/inside-scanner-pipeline/",
     "date": ""
   },
   {
