@@ -247,8 +247,92 @@
     <p style="padding:0 1.25rem 1rem;margin:0;font-size:.82rem;color:#64748b;line-height:1.5;">
       Full OpenAPI 3.0.3 specification with schemas, examples, and descriptions for all 7 endpoints.
       Import into Swagger UI, Postman, or any OpenAPI-compatible tool.
+      <a href="/portfolio/v1/docs/" style="margin-left:6px;font-weight:700;color:#6366f1;text-decoration:none;">Open interactive docs &rarr;</a>
     </p>
   </div>
+
+  <!-- ══ Code Examples ══ -->
+  <div class="api-section">
+    <h2 class="api-section-title"><i class="fas fa-code"></i>Code Examples</h2>
+  </div>
+  <div class="oas-card" style="padding:0;">
+    <div style="display:flex;gap:0;border-bottom:1px solid #e2e8f0;padding:.75rem 1.25rem;align-items:center;flex-wrap:wrap;gap:.4rem;">
+      <button class="code-tab active" data-tab="curl" style="font-size:.75rem;font-weight:700;padding:6px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#0f172a;color:#fff;cursor:pointer;">curl</button>
+      <button class="code-tab" data-tab="js" style="font-size:.75rem;font-weight:700;padding:6px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;cursor:pointer;">JavaScript</button>
+      <button class="code-tab" data-tab="py" style="font-size:.75rem;font-weight:700;padding:6px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;cursor:pointer;">Python</button>
+      <button class="code-tab" data-tab="go" style="font-size:.75rem;font-weight:700;padding:6px 12px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#0f172a;cursor:pointer;">Go</button>
+      <button id="copy-code" style="margin-left:auto;font-size:.7rem;font-weight:700;padding:5px 10px;border-radius:6px;border:1.5px solid #6366f1;background:#fff;color:#6366f1;cursor:pointer;"><i class="fas fa-copy" style="font-size:.65rem"></i> Copy</button>
+    </div>
+    <pre id="code-curl" class="ep-json code-panel" style="margin:0;max-height:none;"># Fetch the latest signals for the balanced mode
+curl -s https://articles.dailytickers.com/portfolio/v1/balanced/signals.json | jq .
+
+# All modes at once
+for m in balanced dynamic secured; do
+  curl -s https://articles.dailytickers.com/portfolio/v1/$m/signals.json \
+    | jq -c '{mode, date, count: (.signals|length)}'
+done
+
+# Full state in one call (positions + signals + trades + equity)
+curl -s https://articles.dailytickers.com/portfolio/v1/balanced/all.json \
+  | jq '{stats, positions: (.positions|length), signals: (.signals|length)}'
+</pre>
+    <pre id="code-js" class="ep-json code-panel" style="margin:0;max-height:none;display:none;">// Node.js / browser fetch — ES modules
+const BASE = 'https://articles.dailytickers.com/portfolio/v1';
+
+async function getMode(mode = 'balanced') {
+  const r = await fetch(`${BASE}/${mode}/all.json`);
+  if (!r.ok) throw new Error(`${mode}: HTTP ${r.status}`);
+  return r.json();
+}
+
+const { signals, positions, stats } = await getMode('balanced');
+console.log(`Return: ${stats.ret}%  DD: ${stats.dd}%  Win rate: ${stats.wr}%`);
+for (const s of signals) console.log(`${s.ticker}  ${s.score}  ${s.strategy}`);
+</pre>
+    <pre id="code-py" class="ep-json code-panel" style="margin:0;max-height:none;display:none;">import httpx
+
+BASE = "https://articles.dailytickers.com/portfolio/v1"
+
+def get_mode(mode: str = "balanced") -> dict:
+    r = httpx.get(f"{BASE}/{mode}/all.json", timeout=10)
+    r.raise_for_status()
+    return r.json()
+
+data = get_mode("balanced")
+print(f"Return: {data['stats']['ret']}%  DD: {data['stats']['dd']}%")
+for sig in data["signals"]:
+    print(f"{sig['ticker']:6s} {sig['score']:3d} {sig['strategy']}")
+</pre>
+    <pre id="code-go" class="ep-json code-panel" style="margin:0;max-height:none;display:none;">package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+)
+
+type Resp struct {
+    Stats   map[string]float64  `json:"stats"`
+    Signals []map[string]any    `json:"signals"`
+}
+
+func main() {
+    r, err := http.Get("https://articles.dailytickers.com/portfolio/v1/balanced/all.json")
+    if err != nil { panic(err) }
+    defer r.Body.Close()
+    var d Resp
+    json.NewDecoder(r.Body).Decode(&d)
+    fmt.Printf("Return: %.2f%%  DD: %.2f%%\n", d.Stats["ret"], d.Stats["dd"])
+    for _, s := range d.Signals {
+        fmt.Printf("%-6s %v %v\n", s["ticker"], s["score"], s["strategy"])
+    }
+}
+</pre>
+  </div>
+  <p style="font-size:.78rem;color:#64748b;line-height:1.5;margin:0 0 1rem;">
+    <i class="fas fa-info-circle" style="color:#6366f1;margin-right:4px;"></i>
+    Endpoints are plain public JSON, no auth, CORS open. The same path exists under each mode prefix: <code style="background:#f1f5f9;padding:2px 6px;border-radius:4px;font-size:.72rem;">/portfolio/v1/{balanced|dynamic|secured}/{resource}.json</code>.
+  </p>
 
   <!-- ══ Related ══ -->
   <div class="api-section">
@@ -363,6 +447,38 @@ setMode('balanced');
 
 // Auto-open first endpoint
 document.getElementById('ep-signals').classList.add('open');
+
+// Code examples tab switcher
+(function () {
+  var tabs = document.querySelectorAll('.code-tab');
+  var panels = document.querySelectorAll('.code-panel');
+  tabs.forEach(function (t) {
+    t.addEventListener('click', function () {
+      tabs.forEach(function (x) {
+        x.classList.remove('active');
+        x.style.background = '#fff';
+        x.style.color = '#0f172a';
+      });
+      t.classList.add('active');
+      t.style.background = '#0f172a';
+      t.style.color = '#fff';
+      panels.forEach(function (p) { p.style.display = 'none'; });
+      var id = 'code-' + t.dataset.tab;
+      var tgt = document.getElementById(id);
+      if (tgt) tgt.style.display = 'block';
+    });
+  });
+  var copyBtn = document.getElementById('copy-code');
+  if (copyBtn) copyBtn.addEventListener('click', function () {
+    var visible = Array.from(panels).find(function (p) { return p.style.display !== 'none'; });
+    if (!visible) return;
+    navigator.clipboard.writeText(visible.textContent).then(function () {
+      var old = copyBtn.innerHTML;
+      copyBtn.innerHTML = '<i class="fas fa-check" style="font-size:.65rem"></i> Copied';
+      setTimeout(function () { copyBtn.innerHTML = old; }, 1500);
+    });
+  });
+})();
 </script>
 </body>
 </html>
