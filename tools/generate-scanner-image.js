@@ -87,49 +87,42 @@ function fetchUrl(url) {
 // ─── Extract top3 from scan HTML ─────────────────────────────────────────────
 
 const EXCLUDED_STRATEGIES = ['Short Squeeze', 'Short_Squeeze'];
+const scannerParser = require('./lib/scanner-parser');
+
+function normalizeStrategy(raw) {
+  const s = (raw || '').trim();
+  if (/short.?squeeze/i.test(s)) return 'Short Squeeze';
+  if (/pre.?squeeze/i.test(s)) return 'Pre-Squeeze';
+  if (/breakout/i.test(s)) return 'Breakout';
+  if (/pullback/i.test(s)) return 'Pullback';
+  return 'Momentum';
+}
 
 function extractTop3(scanDir) {
   const htmlPath = path.join(SCANNER_DIR, scanDir, 'index.html');
   if (!fs.existsSync(htmlPath)) return [];
   const html = fs.readFileSync(htmlPath, 'utf8');
 
-  const m = html.match(/id="synthese"[\s\S]{0,10000}/);
-  if (!m) return [];
-
-  const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
+  // Use the shared parser (tools/lib/scanner-parser.js) to keep every script in sync.
+  const rawSignals = scannerParser.parseScannerHtml(html);
   const trades = [];
 
-  for (const row of rows) {
-    const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
-      .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
-    if (cells.length < 4) continue;
-
-    const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
-    if (!ticker) continue;
-
-    const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
-    const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
-    if (pf.length < 3) continue;
-
-    // Strategy detection
-    const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback/i.test(c)) || 'Momentum';
-    let strategy = 'Momentum';
-    if (/short.?squeeze/i.test(stratRaw)) strategy = 'Short Squeeze';
-    else if (/pre.?squeeze/i.test(stratRaw)) strategy = 'Pre-Squeeze';
-    else if (/breakout/i.test(stratRaw)) strategy = 'Breakout';
-    else if (/pullback/i.test(stratRaw)) strategy = 'Pullback';
-
+  for (const s of rawSignals) {
+    const strategy = normalizeStrategy(s.strategy);
     if (EXCLUDED_STRATEGIES.includes(strategy)) continue;
-
+    const entry = parseMidpoint(s.entry);
+    const stop = parseNumber(s.stop);
+    const tp1 = parseNumber(s.tp1);
+    if (entry == null || stop == null || tp1 == null) continue;
     trades.push({
-      ticker: ticker.trim(),
+      ticker: s.ticker,
       strategy,
-      score: score || 85,
-      entry: parseMidpoint(pf[0]),
-      stop: parseNumber(pf[1]),
-      tp1: parseNumber(pf[2]),
-      tp2: pf[3] ? parseNumber(pf[3]) : null,
-      rr: cells.find(c => /1:\d/.test(c)) || 'n/a',
+      score: s.score || 85,
+      entry,
+      stop,
+      tp1,
+      tp2: s.tp2 && s.tp2 !== '—' ? parseNumber(s.tp2) : null,
+      rr: s.rr || 'n/a',
     });
   }
 
@@ -562,12 +555,19 @@ async function main() {
   if (argDate) {
     scanDir = argDate;
   } else {
-    // Find latest scan
+    // Find latest scan — skip empty placeholder dirs (no index.html or < 5KB)
     const dirs = fs.readdirSync(SCANNER_DIR)
       .filter(d => /^\d{8}(-\d+)?$/.test(d))
       .sort()
       .reverse();
-    scanDir = dirs[0];
+    for (const d of dirs) {
+      const p = path.join(SCANNER_DIR, d, 'index.html');
+      try {
+        const st = fs.statSync(p);
+        if (st.size > 5000) { scanDir = d; break; }
+      } catch (_) { }
+    }
+    scanDir = scanDir || dirs[0];
   }
 
   if (!scanDir) { console.error('No scan dir found'); process.exit(1); }

@@ -270,8 +270,8 @@ check('scanner.json: tiles retro — amber + grade + date réelle + pas de doubl
     issues.push(`${noAmber.length} sans style amber: ${hrefs.join(', ')}`);
   }
 
-  // Grade présent (data-grade="B+" etc.)
-  const noGrade = retroTiles.filter(t => !t.match(/data-grade="[A-F][+-]?"/));
+  // Grade présent (data-grade="B+" etc., including provisional "C*")
+  const noGrade = retroTiles.filter(t => !t.match(/data-grade="[A-F][+\-*]?"/));
   if (noGrade.length) {
     const hrefs = noGrade.map(t => { const m = t.match(/href="([^"]+)"/); return m && m[1]; });
     issues.push(`${noGrade.length} sans grade: ${hrefs.join(', ')}`);

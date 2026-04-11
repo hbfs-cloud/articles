@@ -4,6 +4,8 @@
 const fs = require('fs');
 const https = require('https');
 const path = require('path');
+const parser = require('./lib/scanner-parser');
+const sharedCfg = require('./config');
 
 const ROOT = path.join(__dirname, '..');
 const METRICS_FILE = path.join(ROOT, 'data', 'scanner-metrics.json');
@@ -160,10 +162,11 @@ function extractTop3FromHTML(htmlPath) {
 
 // ─── Yahoo ticker mapping ─────────────────────────────────────────────────────
 
+// Yahoo override map — only list tickers that actually need remapping
+// (e.g. European listings that Yahoo serves under a suffixed symbol).
+// If a ticker is not in the map it's used as-is.
 const YAHOO_MAP = {
-  TTE: 'TTE.PA', BBVA: 'BBVA', ESLT: 'ESLT', SAP: 'SAP',
-  TTE: 'TTE', // ADR also works
-  ASML: 'ASML', ARGX: 'ARGX', EQNR: 'EQNR', TTE: 'TTE',
+  // (empty for now — all local tickers resolve directly on Yahoo)
 };
 function yahooTicker(t) {
   return YAHOO_MAP[t] || t;
@@ -248,7 +251,9 @@ async function main() {
     if (price == null) continue;
     if (!trade.entry || !trade.stop || !trade.tp1) continue;
 
-    const expired = today > trade.expire_date;
+    // Use >= so a trade expiring today is closed out on today's update,
+    // not carried to tomorrow.
+    const expired = today >= trade.expire_date;
 
     if (price <= trade.stop) {
       trade.status = 'sl';

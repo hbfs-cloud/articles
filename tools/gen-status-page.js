@@ -66,58 +66,36 @@ function main() {
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
 
-  // Latest scan signals
+  // Latest scan signals — use shared parser lib (see tools/lib/scanner-parser.js)
+  const parser = require('./lib/scanner-parser');
+  const sharedCfg = require('./config');
   let signals = [];
   let scanDir = '';
-  // Build thesis map from all recent scanner HTMLs (last 15 dirs)
   const thesisMap = {};
   try {
-    const dirs = fs.readdirSync(SCANNER_DIR).filter(d => /^\d{8}(-\d+)?$/.test(d)).sort().reverse();
-    scanDir = dirs[0] || '';
-    const recentDirs = fs.readdirSync(SCANNER_DIR).filter(d => /^\d{8}(-\d+)?$/.test(d)).sort().reverse().slice(0, 15);
+    const dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
+    // Pick the most recent scan dir that has a non-empty HTML file
+    for (const d of dirs) {
+      const p = path.join(SCANNER_DIR, d, 'index.html');
+      try {
+        const st = fs.statSync(p);
+        if (st.size > 5000) { scanDir = d; break; }
+      } catch (_) { }
+    }
+    const recentDirs = dirs.slice(0, sharedCfg.RECENT_SCANS_WINDOW);
     for (const dir of recentDirs) {
       try {
         const scanHtml = fs.readFileSync(path.join(SCANNER_DIR, dir, 'index.html'), 'utf8');
-        const setupBlocks = scanHtml.match(/id="setup-([A-Z]{1,5})"[\s\S]*?(?=id="setup-[A-Z]|id="synthese|id="summary|$)/gi) || [];
-        for (const block of setupBlocks) {
-          const tm = block.match(/id="setup-([A-Z]{1,5})"/i);
-          const thM = block.match(/Investment Thesis<\/h4>\s*<p>([\s\S]*?)<\/p>/i);
-          if (tm && thM && !thesisMap[tm[1]]) {
-            let thesis = thM[1].replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-            if (thesis.length > 140) {
-              thesis = thesis.slice(0, 137).replace(/\s+\S*$/, '') + '…';
-            }
-            thesisMap[tm[1]] = thesis;
-          }
-        }
+        const tmap = parser.parseThesisMap(scanHtml);
+        for (const [k, v] of Object.entries(tmap)) { if (!thesisMap[k]) thesisMap[k] = v; }
       } catch (_) { }
     }
-
     if (scanDir) {
       const html = fs.readFileSync(path.join(SCANNER_DIR, scanDir, 'index.html'), 'utf8');
-      const m = html.match(/id="(?:synthese|summary)"[\s\S]{0,15000}/);
-      if (m) {
-        const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
-        for (const row of rows) {
-          const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
-            .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
-          if (cells.length < 4) continue;
-          const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
-          if (!ticker) continue;
-          const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
-          const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback|trend follow|defensive yield|defensive|reversal/i.test(c)) || '';
-          const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
-          const rr = cells.find(c => /1:\d/.test(c)) || '';
-          signals.push({
-            ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
-            entry: pf[0] || '—', stop: pf[1] || '—', tp1: pf[2] || '—', tp2: pf[3] || '—', rr,
-            thesis: thesisMap[ticker.trim()] || ''
-          });
-        }
-      }
+      signals = parser.parseScannerHtml(html).map(s => ({ ...s, thesis: thesisMap[s.ticker] || '' }));
     }
   } catch (_) { }
-  signals.sort((a, b) => b.score - a.score);
+  signals.sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
   const modes = {};
@@ -179,12 +157,15 @@ function main() {
   }
   // Open positions = pending trades from the backtest (holdDays < horizon)
   // enriched with live prices from scanner-positions.json
+  // IMPORTANT: capped to cfg.portfolioSize so the snapshot cannot show more
+  // positions than the mode actually allocates. Previously Secured accumulated
+  // 17 pending trades even though portfolioSize = 10 — fixed 2026-04-11.
   function posFor(cfg, trades) {
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
 
     const pending = trades.filter(t => t._premature);
-    return pending.map(t => {
+    const mapped = pending.map(t => {
       const live = liveLookup[t.ticker];
       const currentPrice = live ? live.current_price : t.exitPrice;
       const entry = t.actualEntry || 0;
@@ -206,6 +187,15 @@ function main() {
         days_remaining: left, strategy: t.strategy, thesis: thesisMap[t.ticker] || '',
       };
     }).sort((a, b) => b.return_pct - a.return_pct);
+    // Dedupe by ticker (keep the first = highest return) then cap to portfolioSize
+    const seen = new Set();
+    const deduped = [];
+    for (const p of mapped) {
+      if (seen.has(p.ticker)) continue;
+      seen.add(p.ticker);
+      deduped.push(p);
+    }
+    return deduped.slice(0, cfg.portfolioSize);
   }
 
   // ── Panel builder ──
@@ -1300,6 +1290,10 @@ document.addEventListener('DOMContentLoaded',function(){
 
   const snapshot = { date: todayISO, updatedAt, scanDir };
   snapshot.modes = {};
+  // NOTE: each mode is an independent alternative strategy — a user replicating
+  // Dynamic is not replicating Balanced/Secured in parallel, so the same ticker
+  // legitimately showing up across modes is a signal of confirmation, not a
+  // hidden concentration risk. No cross-mode gating here by design.
   for (const [id, { cfg, trades: mTrades, m: mM }] of Object.entries(modes)) {
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, mTrades);
