@@ -35,6 +35,54 @@ if (!seriesId) {
 // ── YouTube metadata ──────────────────────────────────────────────────
 
 const YOUTUBE_META = {
+  'retraite-halal-part1': {
+    title: '100 € par mois halal → Ta retraite sans compter sur l\'État (Part 1)',
+    playlist: 'Formations Trading FR',
+    description: `🕌 Part 1 : comment construire un capital retraite de 100 à 260 000 € avec seulement 100 € par mois, en restant 100% sharia-compliant.
+
+📚 Au programme :
+• La maths brutale des intérêts composés (100 €/mois × 30 ans = 123 000 €)
+• Pilier 1 — ETF monde sharia (ISDW, HIWO, SPUS) → 60% de l'allocation
+• Pilier 2 — Or & argent physique (4GLD, SGLN, PHAU, PHAG) → 30%
+• Pilier 3 — Majors énergie sharia (Aramco, Total, Exxon, Chevron) → 10%
+• Plan d'action concret en 10 minutes chrono
+• Les 3 pièges qui ruinent ton portefeuille
+
+🧠 2 quizzes interactifs
+💡 Tickers réels, frais vérifiés, allocations précises
+⚠️ Vérification charia via Islamicly / Zoya
+
+🔜 Part 2 : comment adapter l'allocation après 50 ans (glide path charia)
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 https://articles.dailytickers.com`,
+    tags: ['retraite', 'halal', 'sharia', 'charia', 'ETF', 'or', 'argent', 'métaux précieux', 'énergie', 'Aramco', 'islamic finance', 'bourse musulman', 'dailytickers.com'],
+    lang: 'fr',
+  },
+  'retraite-halal-part2': {
+    title: 'Retraite Halal Part 2 — Le Glide Path Charia Après 50 Ans',
+    playlist: 'Formations Trading FR',
+    description: `🕌 Part 2 : comment passer de la croissance à la protection entre 50 et 65 ans, sans cross-intérêt, 100% charia.
+
+📚 Au programme :
+• Le glide path : 60/20/10/10 à 30 ans → 25/30/15/15/15 à 60 ans
+• Nouveau pilier — Les dividendes sharia (Aramco, Total, Exxon, Chevron)
+• L'or devient ton assurance-vie : 20% → 30% du portefeuille
+• Immobilier halal sans crédit (Murabaha, REITs charia, ticker HLAL)
+• La règle des 4% en version charia
+• Les 3 erreurs mortelles après 50 ans
+
+🧠 1 quiz interactif
+💡 Exemple concret : 200 000 € → 667 €/mois à la retraite
+⚠️ Ordre de retrait : dividendes d'abord, or en cas de krach
+
+👈 Regarde Part 1 si tu n'as pas encore ton capital construit.
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 https://articles.dailytickers.com`,
+    tags: ['retraite', 'halal', 'sharia', 'charia', 'glide path', 'dividendes', 'or', 'REIT', 'immobilier halal', 'Aramco', 'islamic finance', 'règle des 4%', 'dailytickers.com'],
+    lang: 'fr',
+  },
   'debuter-trading': {
     title: 'Bien Débuter en Trading — Le Guide COMPLET (2h)',
     playlist: 'Formations Trading FR',
