@@ -11,7 +11,7 @@ import { resolve, join, dirname } from 'path';
 import { existsSync, mkdirSync, readdirSync, unlinkSync, readFileSync, writeFileSync, statSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { slidesToHtml } from './slides-to-html.js';
-import { tradingTheme } from './theme.js';
+import { tradingTheme, tradingThemeLight } from './theme.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const EDGE_TTS = '/opt/homebrew/bin/edge-tts';
@@ -289,7 +289,8 @@ export async function generateVideo(opts) {
     // Generate HTML
     const htmlPath = join(tmpDir, 'slides.html');
     log('[2/5] Generating Reveal.js HTML...');
-    const html = slidesToHtml(eduData, narrationData, tradingTheme);
+    const theme = (eduData.config && eduData.config.theme === 'light') ? tradingThemeLight : tradingTheme;
+    const html = slidesToHtml(eduData, narrationData, theme);
     writeFileSync(htmlPath, html);
     log(`  HTML: ${htmlPath}\n`);
 

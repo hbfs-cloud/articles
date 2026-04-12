@@ -530,3 +530,88 @@ export const tradingTheme = {
     .highlight-text { font-size: 0.9em; color: #cbd5e1; line-height: 1.7; margin: 0; }
   `
 };
+
+// ── Light theme — bigger fonts, white background, high contrast ─────────
+// Activated via config.theme = "light" in edu-data JSON.
+export const tradingThemeLight = {
+  ...tradingTheme,
+  name: 'Trading Light',
+  background: '#f8fafc',
+  surface: '#ffffff',
+  surfaceLight: '#f1f5f9',
+  text: '#0f172a',
+  textMuted: '#475569',
+  css: tradingTheme.css
+    // ── Background ──
+    .replace(/.slide-background \{ background: #0a0e1a !important; \}/, '.slide-background { background: #f8fafc !important; }')
+    // ── Font sizes +40% across the board ──
+    .replace(/\.reveal h1 \{ font-size: 2\.6em; \}/, '.reveal h1 { font-size: 3.6em; }')
+    .replace(/\.reveal h2 \{ font-size: 1\.8em;/, '.reveal h2 { font-size: 2.5em;')
+    .replace(/\.reveal h3 \{ font-size: 1\.2em; \}/, '.reveal h3 { font-size: 1.7em; }')
+    .replace(/\.reveal p \{ font-size: 0\.85em;/, '.reveal p { font-size: 1.2em;')
+    // ── Section padding (bigger margins) ──
+    .replace(/\.reveal \.slides section \{ padding: 30px 50px 60px; \}/, '.reveal .slides section { padding: 40px 60px 70px; }')
+    // ── Text colors → dark on light ──
+    .replaceAll('color: #ffffff', 'color: #0f172a')
+    .replaceAll('color: #fff', 'color: #0f172a')
+    .replaceAll('color: #e2e8f0', 'color: #1e293b')
+    .replaceAll('color: #cbd5e1', 'color: #334155')
+    .replaceAll('color: #94a3b8', 'color: #64748b')
+    .replaceAll('color: #93c5fd', 'color: #2563eb')
+    .replaceAll('color: #d1fae5', 'color: #065f46')
+    .replaceAll('color: #fecaca', 'color: #991b1b')
+    .replaceAll('color: #fde68a', 'color: #92400e')
+    .replaceAll('color: #34d399', 'color: #059669')
+    .replaceAll('color: #f87171', 'color: #dc2626')
+    .replaceAll('color: #fbbf24', 'color: #d97706')
+    // ── Surface backgrounds ──
+    .replaceAll('background: #0a0e1a', 'background: #f8fafc')
+    .replaceAll('background: #111827', 'background: #ffffff')
+    .replaceAll('background: #0d1117', 'background: #f1f5f9')
+    .replace(/background: rgba\(10,14,26,0\.92\)/, 'background: rgba(248,250,252,0.95)')
+    .replaceAll('background: rgba(255,255,255,0.03)', 'background: rgba(15,23,42,0.03)')
+    .replaceAll('background: rgba(255,255,255,0.04)', 'background: rgba(15,23,42,0.04)')
+    .replaceAll('background: rgba(255,255,255,0.15)', 'background: rgba(15,23,42,0.08)')
+    // ── Borders ──
+    .replaceAll('border: 1px solid rgba(59,130,246,0.08)', 'border: 1px solid rgba(59,130,246,0.15)')
+    .replaceAll('border: 1px solid rgba(59,130,246,0.06)', 'border: 1px solid rgba(59,130,246,0.12)')
+    .replaceAll('border-bottom: 1px solid rgba(59,130,246,0.08)', 'border-bottom: 1px solid rgba(59,130,246,0.12)')
+    .replaceAll('border: 3px solid #0a0e1a', 'border: 3px solid #f8fafc')
+    .replaceAll('border: 2px solid #0a0e1a', 'border: 2px solid #f8fafc')
+    // ── Table & list font sizes +30% ──
+    .replace(/font-size: 0\.62em;/, 'font-size: 0.88em;')
+    .replace(/font-size: 0\.55em;[\s\S]*?color: #64748b;[\s\S]*?z-index: 100;/, 'font-size: 0.7em; color: #64748b; z-index: 100;')
+    // ── Bullet / list item sizes ──
+    .replaceAll('font-size: 0.8em; color: #e2e8f0', 'font-size: 1.05em; color: #1e293b')
+    .replaceAll('font-size: 0.78em; color: #e2e8f0', 'font-size: 1.0em; color: #1e293b')
+    .replaceAll('font-size: 0.82em; color: #cbd5e1', 'font-size: 1.1em; color: #334155')
+    .replaceAll('font-size: 0.84em; color: #d1fae5', 'font-size: 1.1em; color: #065f46')
+    .replaceAll('font-size: 0.84em; color: #fecaca', 'font-size: 1.1em; color: #991b1b')
+    .replaceAll('font-size: 0.82em;', 'font-size: 1.1em;')
+    .replaceAll('font-size: 0.85em;', 'font-size: 1.15em;')
+    .replaceAll('font-size: 0.88em;', 'font-size: 1.15em;')
+    .replaceAll('font-size: 0.75em;', 'font-size: 1.0em;')
+    .replaceAll('font-size: 0.72em;', 'font-size: 0.95em;')
+    .replaceAll('font-size: 0.7em;', 'font-size: 0.92em;')
+    .replaceAll('font-size: 0.65em;', 'font-size: 0.88em;')
+    .replaceAll('font-size: 0.6em;', 'font-size: 0.82em;')
+    // ── Metric card value bigger ──
+    .replace(/\.metric-card \.value \{[^}]*\}/, '.metric-card .value { color: #0f172a; font-size: 2.2em; font-weight: 800; line-height: 1.1; }')
+    // ── Chapter intro bigger ──
+    .replace(/\.chapter-title \{[^}]*\}/, '.chapter-title { font-size: 3.0em; font-weight: 800; color: #0f172a; letter-spacing: -0.02em; margin: 0; }')
+    .replace(/\.chapter-subtitle \{[^}]*\}/, '.chapter-subtitle { font-size: 1.3em; color: #64748b; max-width: 700px; line-height: 1.5; margin: 0; }')
+    .replace(/\.chapter-number \{[^}]*\}/, '.chapter-number { font-size: 9em; font-weight: 900; line-height: 1; background: linear-gradient(135deg, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.9; }')
+    // ── Quote bigger ──
+    .replace(/\.quote-text \{[^}]*\}/, '.quote-text { font-size: 2.0em; font-weight: 700; color: #0f172a; line-height: 1.3; max-width: 800px; font-style: italic; }')
+    // ── Quiz bigger ──
+    .replace(/\.quiz-question \{[^}]*\}/, '.quiz-question { font-size: 1.5em; font-weight: 700; color: #0f172a; margin-bottom: 24px; line-height: 1.3; }')
+    .replace(/\.quiz-option \{[^}]*\}/, '.quiz-option { display: flex; align-items: center; gap: 16px; padding: 16px 22px; border-radius: 12px; margin-bottom: 12px; border: 2px solid rgba(59,130,246,0.2); background: rgba(59,130,246,0.03); font-size: 1.05em; color: #1e293b; cursor: default; line-height: 1.4; }')
+    // ── Highlight bigger ──
+    .replace(/\.highlight-title \{ font-size: 1\.4em;/, '.highlight-title { font-size: 2.0em;')
+    .replace(/\.highlight-text \{ font-size: 0\.9em;/, '.highlight-text { font-size: 1.25em;')
+    // ── Section title ──
+    .replace(/\.section-title \{[^}]*\}/, '.section-title { font-size: 2.1em; font-weight: 800; color: #0f172a; margin-bottom: 24px; display: flex; align-items: center; gap: 14px; }')
+    // ── Footer bar light ──
+    .replace(/\.footer-brand \{ color: #3b82f6;/, '.footer-brand { color: #2563eb;')
+};
+

@@ -35,6 +35,37 @@ if (!seriesId) {
 // ── YouTube metadata ──────────────────────────────────────────────────
 
 const YOUTUBE_META = {
+  'retraite-halal': {
+    title: '100 €/mois halal → Ta retraite sans l\'État (plan complet sharia)',
+    playlist: 'Formations Trading FR',
+    description: `🕌 Plan complet pour construire ET protéger ta retraite avec 100 €/mois, 100% sharia-compliant.
+
+📚 Au programme (~10 min) :
+• Le constat : pourquoi ta retraite publique ne suffira pas
+• Pilier Croissance — ETF monde sharia (HIWO, 0.30%/an)
+• Pilier Protection — Or + argent physique (SGLN, 4GLD, PHAG)
+• Pilier Revenus — 10 dividend aristocrats européens (Total, Sanofi, Novartis, Roche, Air Liquide…)
+• Gestion 30→60 ans : glide path, rebalancing annuel, règle des 4%
+• Drawdown maîtrisé : −20% max vs S&P 500 à −55% en 2008
+
+📋 ISINs des valeurs citées :
+• HIWO : IE00B42Q0P00 (HSBC MSCI World Islamic UCITS)
+• ISDW : IE00B27YCN58 (iShares MSCI World Islamic UCITS)
+• SGLN : IE00B4ND3602 (iShares Physical Gold)
+• 4GLD : DE000A0S9GB0 (Xetra Gold, livrable)
+• PHAG : JE00B1VS3333 (WisdomTree Physical Silver)
+• HLAL : Wahed FTSE USA Shariah ETF (REITs charia)
+• TTE : FR0000120271 | SAN : FR0000120578 | AI : FR0000120073
+
+🧠 1 quiz interactif
+💡 Brokers : Trade Republic, Degiro (CTO, pas PEA)
+📱 Compliance : vérifier sur Islamicly ou Zoya avant chaque achat
+
+⚠️ Ceci n'est pas un conseil financier.
+🌐 https://articles.dailytickers.com`,
+    tags: ['retraite', 'halal', 'sharia', 'ETF', 'or', 'argent', 'dividendes', 'islamic finance', 'bourse musulman', 'MSCI World Islamic', 'TotalEnergies', 'Sanofi', 'Novartis', 'Air Liquide', 'dailytickers.com'],
+    lang: 'fr',
+  },
   'retraite-halal-part1': {
     title: '100 € par mois halal → Ta retraite sans compter sur l\'État (Part 1)',
     playlist: 'Formations Trading FR',
