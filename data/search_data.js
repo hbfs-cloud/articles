@@ -195,6 +195,19 @@ window.searchDataPrebuilt = [
     "date": "6 avril 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "IMF Forecast, Q1 Earnings Kickoff & Fed Patience: Navigating the Oil Shock",
+    "desc": "Two simultaneous macro-defining events converge this week. The IMF publishes its updated World Economic Outlook (Tuesday) — widely expected to slash global growth forecasts due to the persistent oil shock and trade fragmentation. Simultaneously, Q1 earnings season begins in earnest: Goldman Sachs (M...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260413/",
+    "date": "13 avril 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
