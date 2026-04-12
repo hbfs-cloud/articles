@@ -1,14 +1,18 @@
 #!/bin/bash
-set -u
+export HOME=/home/ci
 
-# Source user profile for Telegram topics & other env
-[ -f /home/ci/.profile ] && . /home/ci/.profile 2>/dev/null || true
+# Load Telegram topics from .profile first (base defaults)
+eval "$(grep '^export TELEGRAM_' /home/ci/.profile 2>/dev/null)" 2>/dev/null || true
 
-# Load .env if exists (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
-[ -f /home/ci/projects/articles/.env ] && eval "$(grep -v '^#' /home/ci/projects/articles/.env | sed '/^$/d' | sed 's/^/export /')" 2>/dev/null || true
+# Load .env second (overrides .profile — TELEGRAM_BOT_TOKEN, CHAT_ID, updated topics)
+if [ -f /home/ci/projects/articles/.env ]; then
+  set -a
+  . /home/ci/projects/articles/.env
+  set +a
+fi
 
 # Load secrets from Infisical
-if command -v infisical >/dev/null 2>&1 && [ -n "$INFISICAL_CLIENT_ID" ]; then
+if command -v infisical >/dev/null 2>&1 && [ -n "${INFISICAL_CLIENT_ID:-}" ]; then
   export INFISICAL_TOKEN=$(infisical login --method=universal-auth \
     --client-id="$INFISICAL_CLIENT_ID" \
     --client-secret="$INFISICAL_CLIENT_SECRET" \
@@ -21,7 +25,7 @@ if command -v infisical >/dev/null 2>&1 && [ -n "$INFISICAL_CLIENT_ID" ]; then
     --format=dotenv --silent 2>/dev/null | sed 's/^/export /')" 2>/dev/null || true
 fi
 
-# Telegram topics (from Infisical or hardcoded fallback)
+# Telegram topics (hardcoded fallback)
 export TELEGRAM_TOPIC_PORTFOLIO="${TELEGRAM_TOPIC_PORTFOLIO:-0}"
 export TELEGRAM_TOPIC_TURBO="${TELEGRAM_TOPIC_TURBO:-366}"
 export TELEGRAM_TOPIC_DYNAMIC="${TELEGRAM_TOPIC_DYNAMIC:-291}"
@@ -37,14 +41,14 @@ export DISCORD_WEBHOOK_SIGNALS_BALANCED="${DISCORD_WEBHOOK_SIGNALS_BALANCED:-htt
 export DISCORD_WEBHOOK_SIGNALS_SECURED="${DISCORD_WEBHOOK_SIGNALS_SECURED:-https://discord.com/api/webhooks/1492913794760966346/KjtqRx2OuYFdrJdxWFBQrpsmZEXJN9sZcIFJBrd8OIua30M6u0sqj0PA7s2FjKSF9-lU}"
 export DISCORD_WEBHOOK_SIGNALS_FORTRESS="${DISCORD_WEBHOOK_SIGNALS_FORTRESS:-https://discord.com/api/webhooks/1492913796367388814/KxNOXYmaVm58u8MIAoFm97BaHTCnaPEESBYzZKLDgntDGNH4QAGpQrMyCldve3fW6BFd}"
 
-export HOME=/home/ci
 cd /home/ci/projects/articles
 
 echo "=== $(date) — Signal Monitor starting ==="
 echo "Node: $(node --version)"
 echo "Tickers will be loaded from scanner/status/history/"
+echo "Telegram: BOT=${TELEGRAM_BOT_TOKEN:+SET} CHAT=${TELEGRAM_CHAT_ID:+SET}"
 echo "Telegram topics: portfolio=$TELEGRAM_TOPIC_PORTFOLIO turbo=$TELEGRAM_TOPIC_TURBO dynamic=$TELEGRAM_TOPIC_DYNAMIC balanced=$TELEGRAM_TOPIC_BALANCED secured=$TELEGRAM_TOPIC_SECURED fortress=$TELEGRAM_TOPIC_FORTRESS"
-echo "Discord webhooks: turbo=${DISCORD_WEBHOOK_SIGNALS_TURBO:+SET} dynamic=${DISCORD_WEBHOOK_SIGNALS_DYNAMIC:+SET} balanced=${DISCORD_WEBHOOK_SIGNALS_BALANCED:+SET} secured=${DISCORD_WEBHOOK_SIGNALS_SECURED:+SET} fortress=${DISCORD_WEBHOOK_SIGNALS_FORTRESS:+SET}"
+echo "Discord webhooks: global=${DISCORD_WEBHOOK_SIGNALS:+SET} turbo=${DISCORD_WEBHOOK_SIGNALS_TURBO:+SET} dynamic=${DISCORD_WEBHOOK_SIGNALS_DYNAMIC:+SET} balanced=${DISCORD_WEBHOOK_SIGNALS_BALANCED:+SET} secured=${DISCORD_WEBHOOK_SIGNALS_SECURED:+SET} fortress=${DISCORD_WEBHOOK_SIGNALS_FORTRESS:+SET}"
 
 # Run in WebSocket continuous mode
 exec node tools/signal-monitor.js --loop 2>&1
