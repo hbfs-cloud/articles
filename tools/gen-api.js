@@ -50,13 +50,22 @@ function writeMode(mode, prefix) {
   });
 
   // 2. positions.json
+  const portfolioSize = (mode.config || {}).portfolioSize || 1;
+  const allocPct = Math.round(100 / portfolioSize);
   write(`${p}positions.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
-    positions: (mode.positions || []).map(p => ({
-      ticker: p.ticker, entry: p.entry, currentPrice: p.current_price,
-      returnPct: p.return_pct, stop: p.stop, tp1: p.tp1, tp2: p.tp2,
-      scanDate: p.scan_date, daysRemaining: p.days_remaining
-    }))
+    allocPct,
+    positions: (mode.positions || []).map(p => {
+      const entry = p.entry || 0;
+      const stop = p.stop || 0;
+      const riskPct = entry > 0 && stop > 0 ? +((entry - stop) / entry * 100).toFixed(2) : 0;
+      return {
+        ticker: p.ticker, entry, currentPrice: p.current_price,
+        returnPct: p.return_pct, score: p.score || 0,
+        stop, tp1: p.tp1, tp2: p.tp2, riskPct, allocPct,
+        scanDate: p.scan_date, daysRemaining: p.days_remaining
+      };
+    })
   });
 
   // 3. trades.json
@@ -79,10 +88,12 @@ function writeMode(mode, prefix) {
   // 5. orders.json
   write(`${p}orders.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
+    allocPct,
     orders: (mode.orders || []).map(o => ({
       ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
       entry: o.entry, stop: o.stop, tp1: o.tp1, tp2: o.tp2, rr: o.rr,
-      replaces: o.replaces || null, thesis: o.thesis || ''
+      allocPct, replaces: o.replaces || null, scoreDelta: o.scoreDelta || null,
+      thesis: o.thesis || ''
     }))
   });
 
@@ -114,11 +125,17 @@ function writeMode(mode, prefix) {
       entry: o.entry, stop: o.stop, tp1: o.tp1, tp2: o.tp2, rr: o.rr,
       replaces: o.replaces || null, thesis: o.thesis || ''
     })),
-    positions: (mode.positions || []).map(p => ({
-      ticker: p.ticker, entry: p.entry, currentPrice: p.current_price,
-      returnPct: p.return_pct, stop: p.stop, tp1: p.tp1, tp2: p.tp2,
-      scanDate: p.scan_date, daysRemaining: p.days_remaining
-    })),
+    positions: (mode.positions || []).map(p => {
+      const entry = p.entry || 0;
+      const stop = p.stop || 0;
+      const riskPct = entry > 0 && stop > 0 ? +((entry - stop) / entry * 100).toFixed(2) : 0;
+      return {
+        ticker: p.ticker, entry, currentPrice: p.current_price,
+        returnPct: p.return_pct, score: p.score || 0,
+        stop, tp1: p.tp1, tp2: p.tp2, riskPct, allocPct: Math.round(100 / portfolioSize),
+        scanDate: p.scan_date, daysRemaining: p.days_remaining
+      };
+    }),
     closeNow: (mode.closeNow || []).map(p => ({
       ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
       currentPrice: p.current_price, returnPct: p.return_pct,

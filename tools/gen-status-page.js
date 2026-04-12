@@ -151,9 +151,22 @@ function main() {
   };
   function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB' }[f] || f; }
 
+  function clampStop(entry, scannerStop, maxStopPct) {
+    if (!maxStopPct || maxStopPct <= 0 || !entry || entry <= 0) return scannerStop;
+    const clampedStop = +(entry * (1 - maxStopPct / 100)).toFixed(2);
+    // Return the tighter stop (higher value = less risk)
+    const numStop = typeof scannerStop === 'string' ? parseFloat(scannerStop.replace(/[$,]/g, '')) : scannerStop;
+    if (isNaN(numStop) || numStop <= 0) return '$' + clampedStop;
+    const tighter = Math.max(numStop, clampedStop);
+    return typeof scannerStop === 'string' ? '$' + tighter.toFixed(2) : tighter;
+  }
   function signalsFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
-    return signals.filter(s => f(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN);
+    return signals.filter(s => f(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN).map(s => {
+      // Clamp stop to mode's maxStopPct
+      const entryNum = parseFloat((s.entry || '').toString().replace(/[$,]/g, ''));
+      return { ...s, stop: clampStop(entryNum, s.stop, cfg.maxStopPct) };
+    });
   }
   // Open positions = pending trades from the backtest (holdDays < horizon)
   // enriched with live prices from scanner-positions.json
@@ -175,14 +188,18 @@ function main() {
       // Compute stop: prefer live data > trade's actualStop > mode's maxStopPct fallback
       const maxStopPct = cfg.maxStopPct || 8; // default 8% if not defined
       const fallbackStop = entry > 0 ? +(entry * (1 - maxStopPct / 100)).toFixed(2) : 0;
-      const resolvedStop = (live && live.stop > 0) ? live.stop
+      const rawStop = (live && live.stop > 0) ? live.stop
         : (t.actualStop > 0) ? t.actualStop
           : fallbackStop;
+      // Clamp stop to mode's maxStopPct (tighter of scanner stop vs mode hard stop)
+      const resolvedStop = (cfg.maxStopPct > 0 && entry > 0)
+        ? Math.max(rawStop, +(entry * (1 - cfg.maxStopPct / 100)).toFixed(2))
+        : rawStop;
       const resolvedTp1 = (live && live.tp1 > 0) ? live.tp1 : (t.actualTp1 || 0);
       const resolvedTp2 = (live && live.tp2 > 0) ? live.tp2 : (t.actualTp2 || null);
       return {
         ticker: t.ticker, scan_date: t.scanDate, entry, current_price: currentPrice,
-        return_pct: ret,
+        return_pct: ret, score: t.score || 0,
         stop: resolvedStop, tp1: resolvedTp1, tp2: resolvedTp2,
         days_remaining: left, strategy: t.strategy, thesis: thesisMap[t.ticker] || '',
       };
@@ -320,14 +337,19 @@ ${(() => {
         // BUY orders: signals that fit into available slots (max = free slots)
         const buyOrders = sigFiltered.slice(0, slotsAvailable);
 
-        // ROTATION candidates (only for rotation=aggressive modes, when portfolio full):
+        // ROTATION candidates (for all rotation modes when portfolio full):
         const rotationCandidates = [];
-        if (cfg.rotation === 'aggressive' && slotsAvailable === 0 && pos.length > 0 && sigFiltered.length > 0) {
+        if (cfg.rotation !== 'none' && slotsAvailable === 0 && pos.length > 0 && sigFiltered.length > 0) {
+          const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : cfg.portfolioSize;
+          const margin = cfg.rotation === 'aggressive' ? 0 : 5; // daily_max needs +5pt advantage
           const worstPos = [...pos].sort((a, b) => a.return_pct - b.return_pct)[0];
+          const worstScore = worstPos.score || 0;
           for (const s of sigFiltered.slice(0, 5)) {
-            if (s.score >= 88 && worstPos.return_pct < 2) {
-              rotationCandidates.push({ signal: s, replaces: worstPos });
-              break;
+            if (rotationCandidates.length >= rotLimit) break;
+            const meetsMargin = margin > 0 ? (s.score - worstScore >= margin) : (s.score >= 88 && worstPos.return_pct < 2);
+            if (meetsMargin) {
+              rotationCandidates.push({ signal: s, replaces: worstPos, scoreDelta: s.score - worstScore });
+              break; // one rotation at a time
             }
           }
         }
@@ -368,9 +390,12 @@ ${(() => {
       <td class="hide-m"><span class="pill pos">BUY</span></td>
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
         }
-        for (const { signal: s, replaces } of rotationCandidates) {
+        for (const { signal: s, replaces, scoreDelta } of rotationCandidates) {
           const thesisCols = 10;
           const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+          const repBg = (replaces.score || 0) >= 90 ? '#059669' : (replaces.score || 0) >= 85 ? '#2563eb' : '#94a3b8';
+          const deltaSign = (scoreDelta || 0) >= 0 ? '+' : '';
+          const deltaColor = (scoreDelta || 0) >= 5 ? '#059669' : (scoreDelta || 0) >= 0 ? '#f59e0b' : '#dc2626';
           actionRows.push(`<tr style="background:#fefce8">
       <td><b>${s.ticker}</b></td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
@@ -380,7 +405,30 @@ ${(() => {
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
       <td class="hide-m"><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
-    </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
+    </tr>
+    <tr class="thesis-row"><td colspan="${thesisCols}">
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;padding:.5rem .75rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:.8rem">
+        <div style="text-align:center">
+          <div style="font-size:.65rem;text-transform:uppercase;color:#92400e;font-weight:600;margin-bottom:.3rem">Close</div>
+          <div style="font-weight:700;font-size:.95rem">${replaces.ticker}</div>
+          <div>Score <span class="pill-score" style="background:${repBg};font-size:.7rem;padding:.1rem .4rem">${replaces.score || '—'}</span></div>
+          <div style="color:${(replaces.return_pct || 0) >= 0 ? '#059669' : '#dc2626'}">${(replaces.return_pct || 0) > 0 ? '+' : ''}${(replaces.return_pct || 0).toFixed(2)}%</div>
+          <div style="color:#64748b;font-size:.7rem">${replaces.days_remaining || 0}d left</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:1.3rem">→</div>
+          <div style="font-weight:700;color:${deltaColor};font-size:.85rem">${deltaSign}${scoreDelta || 0} pts</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:.65rem;text-transform:uppercase;color:#059669;font-weight:600;margin-bottom:.3rem">Buy</div>
+          <div style="font-weight:700;font-size:.95rem">${s.ticker}</div>
+          <div>Score <span class="pill-score" style="background:${bg};font-size:.7rem;padding:.1rem .4rem">${s.score}</span></div>
+          <div style="color:#64748b">${s.entry} → ${s.tp1}</div>
+          <div style="color:#64748b;font-size:.7rem">R/R ${s.rr}</div>
+        </div>
+      </div>
+    </td></tr>`);
+          if (s.thesis) actionRows.push(`<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>`);
         }
 
         // ── Render: WATCH as secondary collapsible ──
@@ -1321,10 +1369,15 @@ document.addEventListener('DOMContentLoaded',function(){
     const slotsAvailable = Math.max(0, cfg.portfolioSize - activePos.length);
     const buyOrders = sigFiltered.slice(0, slotsAvailable).map(s => ({ ...s, action: 'BUY' }));
     const rotCands = [];
-    if (cfg.rotation === 'aggressive' && slotsAvailable === 0 && activePos.length > 0 && sigFiltered.length > 0) {
+    if (cfg.rotation !== 'none' && slotsAvailable === 0 && activePos.length > 0 && sigFiltered.length > 0) {
+      const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : cfg.portfolioSize;
+      const margin = cfg.rotation === 'aggressive' ? 0 : 5;
       const worst = [...activePos].sort((a, b) => a.return_pct - b.return_pct)[0];
+      const worstScore = worst.score || 0;
       for (const s of sigFiltered.slice(0, 5)) {
-        if (s.score >= 88 && worst.return_pct < 2) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker }); break; }
+        if (rotCands.length >= rotLimit) break;
+        const meetsMargin = margin > 0 ? (s.score - worstScore >= margin) : (s.score >= 88 && worst.return_pct < 2);
+        if (meetsMargin) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker, scoreDelta: s.score - worstScore }); break; }
       }
     }
 
@@ -1332,7 +1385,7 @@ document.addEventListener('DOMContentLoaded',function(){
       stats: { ret: mM.ret, dd: mM.dd, wr: mM.wr, pf: mM.pf, trades: mM.trades, avgHold: mM.avgHold },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' })),
-      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '' })),
+      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '' })),
       orders: [...buyOrders, ...rotCands],
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
