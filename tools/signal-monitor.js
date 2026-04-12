@@ -100,6 +100,87 @@ function isMarketHours() {
   return utcMinutes >= 13 * 60 + 25 && utcMinutes <= 20 * 60 + 5;
 }
 
+// ─── Heartbeat — market open/close status messages ──────────────────────────
+
+const HEARTBEAT_STATE = { lastOpenBeat: null, lastCloseBeat: null };
+
+function buildHeartbeatMessage(type) {
+  const now = new Date();
+  const ts = now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
+  const snap = loadLatestSnapshot();
+  const modes = loadModes();
+  const state = loadState();
+
+  // Count positions per mode
+  let totalPositions = 0;
+  const modeLines = [];
+  for (const [modeId, cfg] of Object.entries(modes)) {
+    const modeSnap = snap?.modes?.[modeId];
+    const positions = modeSnap?.positions || [];
+    totalPositions += positions.length;
+    const posStr = positions.map(p => p.ticker).join(', ') || '—';
+    modeLines.push(`  <b>${cfg.label || modeId}</b>: ${positions.length} pos [${posStr}]`);
+  }
+
+  // Count today's alerts from state
+  const todayKey = now.toISOString().slice(0, 10);
+  const todayAlerts = Object.keys(state).filter(k =>
+    !k.startsWith('_') && state[k]?.lastAlert?.startsWith?.(todayKey)
+  ).length;
+
+  const tickers = snap ? [...collectAllTickers(snap)] : [];
+  const wsStatus = Object.keys(liveCache).length;
+  const uptime = process.uptime();
+  const uptimeStr = uptime > 3600
+    ? `${Math.floor(uptime / 3600)}h${Math.floor((uptime % 3600) / 60)}m`
+    : `${Math.floor(uptime / 60)}m`;
+
+  const emoji = type === 'open' ? '🔔' : '🔕';
+  const label = type === 'open' ? 'MARKET OPEN' : 'MARKET CLOSE';
+
+  return `${emoji} <b>Signal Monitor — ${label}</b>\n`
+    + `${ts}\n\n`
+    + `📡 WebSocket: ${wsStatus}/${tickers.length} tickers cached\n`
+    + `⏱ Uptime: ${uptimeStr}\n`
+    + `📊 Positions: ${totalPositions} across ${Object.keys(modes).length} modes\n`
+    + `🔔 Alerts today: ${todayAlerts}\n\n`
+    + modeLines.join('\n');
+}
+
+async function checkHeartbeat() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  if (day === 0 || day === 6) return; // Skip weekends
+
+  const utcMinutes = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const today = now.toISOString().slice(0, 10);
+
+  // Market open heartbeat: 13:30-13:32 UTC (9:30 ET)
+  if (utcMinutes >= 810 && utcMinutes <= 812 && HEARTBEAT_STATE.lastOpenBeat !== today) {
+    HEARTBEAT_STATE.lastOpenBeat = today;
+    const msg = buildHeartbeatMessage('open');
+    console.log(`[${now.toISOString()}] Sending market open heartbeat`);
+    // Send to global Telegram + Discord
+    sendTelegram(msg, TOPICS.portfolio, false).catch(e => console.error('[heartbeat] tg error:', e.message));
+    if (DISCORD_WEBHOOKS.global) {
+      sendDiscord(DISCORD_WEBHOOKS.global, '🔔 Signal Monitor — MARKET OPEN', htmlToDiscord(msg), 3066993, false)
+        .catch(e => console.error('[heartbeat] discord error:', e.message));
+    }
+  }
+
+  // Market close heartbeat: 20:00-20:02 UTC (16:00 ET)
+  if (utcMinutes >= 1200 && utcMinutes <= 1202 && HEARTBEAT_STATE.lastCloseBeat !== today) {
+    HEARTBEAT_STATE.lastCloseBeat = today;
+    const msg = buildHeartbeatMessage('close');
+    console.log(`[${now.toISOString()}] Sending market close heartbeat`);
+    sendTelegram(msg, TOPICS.portfolio, false).catch(e => console.error('[heartbeat] tg error:', e.message));
+    if (DISCORD_WEBHOOKS.global) {
+      sendDiscord(DISCORD_WEBHOOKS.global, '🔕 Signal Monitor — MARKET CLOSE', htmlToDiscord(msg), 9807270, false)
+        .catch(e => console.error('[heartbeat] discord error:', e.message));
+    }
+  }
+}
+
 // ─── HTTP helpers ─────────────────────────────────────────────────────────────
 
 function httpsGet(url, timeoutMs) {
@@ -794,6 +875,7 @@ class YahooStreamer {
       try {
         console.log(`[${new Date().toISOString()}] Full sweep (safety net)...`);
         await evaluate(null);
+        await checkHeartbeat();
       } catch (e) {
         console.error('[EVAL ERROR]', e.message);
       }
