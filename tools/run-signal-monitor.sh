@@ -17,9 +17,11 @@ fi
 
 # Telegram topics (from Infisical or hardcoded fallback)
 export TELEGRAM_TOPIC_PORTFOLIO="${TELEGRAM_TOPIC_PORTFOLIO:-72}"
+export TELEGRAM_TOPIC_TURBO="${TELEGRAM_TOPIC_TURBO:-${TELEGRAM_TOPIC_GROWTH:-89}}"
 export TELEGRAM_TOPIC_DYNAMIC="${TELEGRAM_TOPIC_DYNAMIC:-${TELEGRAM_TOPIC_GROWTH:-89}}"
 export TELEGRAM_TOPIC_BALANCED="${TELEGRAM_TOPIC_BALANCED:-${TELEGRAM_TOPIC_CALMAR:-90}}"
 export TELEGRAM_TOPIC_SECURED="${TELEGRAM_TOPIC_SECURED:-${TELEGRAM_TOPIC_CONSERVATIVE:-91}}"
+export TELEGRAM_TOPIC_FORTRESS="${TELEGRAM_TOPIC_FORTRESS:-${TELEGRAM_TOPIC_CONSERVATIVE:-91}}"
 
 export HOME=/home/ci
 cd /home/ci/projects/articles
@@ -27,7 +29,7 @@ cd /home/ci/projects/articles
 echo "=== $(date) — Signal Monitor starting ==="
 echo "Node: $(node --version)"
 echo "Tickers will be loaded from scanner/status/history/"
-echo "Telegram topics: portfolio=$TELEGRAM_TOPIC_PORTFOLIO dynamic=$TELEGRAM_TOPIC_DYNAMIC balanced=$TELEGRAM_TOPIC_BALANCED secured=$TELEGRAM_TOPIC_SECURED"
+echo "Telegram topics: portfolio=$TELEGRAM_TOPIC_PORTFOLIO turbo=$TELEGRAM_TOPIC_TURBO dynamic=$TELEGRAM_TOPIC_DYNAMIC balanced=$TELEGRAM_TOPIC_BALANCED secured=$TELEGRAM_TOPIC_SECURED fortress=$TELEGRAM_TOPIC_FORTRESS"
 
 # Run in WebSocket continuous mode
 exec node tools/signal-monitor.js --loop 2>&1
