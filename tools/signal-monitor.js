@@ -61,17 +61,21 @@ const ONCE = process.argv.includes('--once');
 // Alias vars (TELEGRAM_TOPIC_DYNAMIC etc.) take precedence over legacy names.
 const TOPICS = {
   portfolio: parseInt(process.env.TELEGRAM_TOPIC_PORTFOLIO || '72', 10),
+  turbo:     parseInt(process.env.TELEGRAM_TOPIC_TURBO     || process.env.TELEGRAM_TOPIC_GROWTH       || '89', 10),
   dynamic:   parseInt(process.env.TELEGRAM_TOPIC_DYNAMIC   || process.env.TELEGRAM_TOPIC_GROWTH       || '89', 10),
   balanced:  parseInt(process.env.TELEGRAM_TOPIC_BALANCED  || process.env.TELEGRAM_TOPIC_CALMAR       || '90', 10),
   secured:   parseInt(process.env.TELEGRAM_TOPIC_SECURED   || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
+  fortress:  parseInt(process.env.TELEGRAM_TOPIC_FORTRESS  || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
 };
 
 // ─── Discord webhook URLs per mode ───────────────────────────────────────────
 const DISCORD_WEBHOOKS = {
   global:   process.env.DISCORD_WEBHOOK_SIGNALS           || '',
+  turbo:    process.env.DISCORD_WEBHOOK_SIGNALS_TURBO     || '',
   dynamic:  process.env.DISCORD_WEBHOOK_SIGNALS_DYNAMIC   || '',
   balanced: process.env.DISCORD_WEBHOOK_SIGNALS_BALANCED  || '',
   secured:  process.env.DISCORD_WEBHOOK_SIGNALS_SECURED   || '',
+  fortress: process.env.DISCORD_WEBHOOK_SIGNALS_FORTRESS  || '',
 };
 
 // Status → Discord embed color (decimal)
