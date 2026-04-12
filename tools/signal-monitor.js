@@ -57,6 +57,35 @@ const DRY_RUN = process.argv.includes('--dry-run');
 const ONCE = process.argv.includes('--once');
 // --loop is now identical to default (WS continuous); kept for backward compat
 
+// ─── Per-mode Telegram topic routing ─────────────────────────────────────────
+// Alias vars (TELEGRAM_TOPIC_DYNAMIC etc.) take precedence over legacy names.
+const TOPICS = {
+  portfolio: parseInt(process.env.TELEGRAM_TOPIC_PORTFOLIO || '72', 10),
+  dynamic:   parseInt(process.env.TELEGRAM_TOPIC_DYNAMIC   || process.env.TELEGRAM_TOPIC_GROWTH       || '89', 10),
+  balanced:  parseInt(process.env.TELEGRAM_TOPIC_BALANCED  || process.env.TELEGRAM_TOPIC_CALMAR       || '90', 10),
+  secured:   parseInt(process.env.TELEGRAM_TOPIC_SECURED   || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
+};
+
+// ─── Discord webhook URLs per mode ───────────────────────────────────────────
+const DISCORD_WEBHOOKS = {
+  global:   process.env.DISCORD_WEBHOOK_SIGNALS           || '',
+  dynamic:  process.env.DISCORD_WEBHOOK_SIGNALS_DYNAMIC   || '',
+  balanced: process.env.DISCORD_WEBHOOK_SIGNALS_BALANCED  || '',
+  secured:  process.env.DISCORD_WEBHOOK_SIGNALS_SECURED   || '',
+};
+
+// Status → Discord embed color (decimal)
+const DISCORD_COLORS = {
+  SL_HIT:      15548997, // red
+  TP1_HIT:     5763719,  // green
+  TP2_HIT:     5763719,  // green
+  TP1_PARTIAL: 5763719,  // green
+  EXPIRED:     16744448, // orange
+  NEAR_STOP:   16766720, // gold
+  NEAR_TP1:    16766720, // gold
+  ROTATION:    16744448, // orange
+};
+
 // ─── Market hours check (UTC-based, NYSE 9:30-16:00 ET = 13:30-20:00 UTC) ────
 
 function isMarketHours() {
@@ -79,6 +108,33 @@ function httpsGet(url, timeoutMs) {
     });
     req.on('error', () => resolve({ ok: false, body: '', status: 0 }));
     req.on('timeout', () => { req.destroy(); resolve({ ok: false, body: '', status: 0 }); });
+  });
+}
+
+function httpsPost(urlStr, bodyObj, timeoutMs) {
+  return new Promise((resolve) => {
+    const bodyStr = JSON.stringify(bodyObj);
+    const parsed = new URL(urlStr);
+    const opts = {
+      hostname: parsed.hostname,
+      path: parsed.pathname + parsed.search,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(bodyStr),
+        'User-Agent': 'signal-monitor/1.0',
+      },
+      timeout: timeoutMs || 10000,
+    };
+    const req = https.request(opts, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => resolve({ ok: res.statusCode >= 200 && res.statusCode < 300, status: res.statusCode, body: data }));
+    });
+    req.on('error', () => resolve({ ok: false, status: 0, body: '' }));
+    req.on('timeout', () => { req.destroy(); resolve({ ok: false, status: 0, body: '' }); });
+    req.write(bodyStr);
+    req.end();
   });
 }
 
@@ -340,6 +396,101 @@ async function sendTelegram(text, topicId, critical) {
   }
 }
 
+// ─── Discord helpers ──────────────────────────────────────────────────────────
+
+/**
+ * Convert HTML Telegram markup to Discord markdown (best-effort).
+ * <b>text</b> → **text** ; <i>text</i> → text (stripped tags, text kept)
+ */
+function htmlToDiscord(html) {
+  return html
+    .replace(/<b>([\s\S]*?)<\/b>/g, '**$1**')
+    .replace(/<\/?i>/g, '')
+    .replace(/<[^>]+>/g, ''); // strip any remaining tags
+}
+
+function sendDiscordOnce(webhookUrl, title, description, color) {
+  if (!webhookUrl) return Promise.resolve(true);
+  if (DRY_RUN) {
+    console.log(`[DRY-RUN] Discord webhook: ${title}\n${description}\n---`);
+    return Promise.resolve(true);
+  }
+  const body = {
+    embeds: [{
+      title,
+      description,
+      color,
+      footer: { text: `Signal Monitor • ${new Date().toISOString()}` },
+    }],
+  };
+  return httpsPost(webhookUrl, body, 10000).then(({ ok, status }) => {
+    if (!ok) console.error(`Discord webhook ${status}: ${webhookUrl.slice(0, 60)}...`);
+    return ok;
+  });
+}
+
+async function sendDiscord(webhookUrl, title, description, color, critical) {
+  const ok = await sendDiscordOnce(webhookUrl, title, description, color);
+  if (!ok && critical) {
+    await new Promise(r => setTimeout(r, 5000));
+    const ok2 = await sendDiscordOnce(webhookUrl, title, description, color);
+    if (!ok2) console.error('[FAIL] Discord retry also failed for:', title);
+  }
+}
+
+/**
+ * Resolve the Telegram topic ID for a given modeId.
+ * Falls back to the global portfolio topic if the mode is unknown.
+ */
+function topicForMode(modeId) {
+  return TOPICS[modeId] ?? TOPICS.portfolio;
+}
+
+/**
+ * Dispatch an alert to all 4 channels (fire-and-forget):
+ *   1. Mode-specific Telegram topic
+ *   2. Global Telegram topic (condensed 1-liner)
+ *   3. Mode-specific Discord webhook
+ *   4. Global Discord webhook (condensed 1-liner)
+ * Missing webhook URLs are skipped silently.
+ */
+async function notifyAll(modeId, alert) {
+  const modeTopicId  = topicForMode(modeId);
+  const globalTopicId = TOPICS.portfolio;
+  const isCritical   = alert.critical;
+  const color        = DISCORD_COLORS[alert.status] ?? 9807270; // grey default
+
+  // Build condensed 1-line summary for global channels
+  // Extract first line of alert text as summary
+  const summaryLine = alert.text.split('\n')[0];
+  const discordFull = htmlToDiscord(alert.text);
+  const discordSummary = htmlToDiscord(summaryLine);
+
+  // Derive a clean title from the first line (strip emoji prefix for embed title)
+  const titleClean = summaryLine.replace(/<[^>]+>/g, '').replace(/^[\s\S]{1,2}\s/, '').trim();
+
+  // 1. Mode-specific Telegram (full message)
+  sendTelegram(alert.text, modeTopicId, isCritical).catch(e => console.error('[notify] tg-mode error:', e.message));
+
+  // 2. Global Telegram (condensed — only if mode topic differs from global)
+  if (modeTopicId !== globalTopicId) {
+    sendTelegram(summaryLine, globalTopicId, false).catch(e => console.error('[notify] tg-global error:', e.message));
+  }
+
+  // 3. Mode-specific Discord webhook
+  const modeWebhook = DISCORD_WEBHOOKS[modeId] || '';
+  if (modeWebhook) {
+    sendDiscord(modeWebhook, titleClean, discordFull, color, isCritical)
+      .catch(e => console.error('[notify] discord-mode error:', e.message));
+  }
+
+  // 4. Global Discord webhook (condensed — only if differs from mode webhook)
+  if (DISCORD_WEBHOOKS.global && DISCORD_WEBHOOKS.global !== modeWebhook) {
+    sendDiscord(DISCORD_WEBHOOKS.global, titleClean, discordSummary, color, false)
+      .catch(e => console.error('[notify] discord-global error:', e.message));
+  }
+}
+
 // ─── Core: evaluate all positions ─────────────────────────────────────────────
 
 /**
@@ -457,6 +608,8 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     alerts.push({
       priority: isCritical ? 1 : 2,
       critical: isCritical,
+      modeId,
+      status,
       text: `${emoji} <b>[${modeLabel}] ${status.replace(/_/g, ' ')}</b>\n`
         + `<b>${pos.ticker}</b> @ $${price.toFixed(2)} (entry $${entry.toFixed(2)})\n`
         + `${actionMap[status] || ''}\n`
@@ -551,6 +704,8 @@ async function evaluate(tickerFilter) {
           alerts.push({
             priority: 2,
             critical: false,
+            modeId,
+            status: 'ROTATION',
             text: `🔄 <b>[${modeLabel}] ROTATION ELIGIBLE</b> (slot ${rotationsGenerated + 1}/${rotLimit})\n`
               + `New: <b>${best.ticker}</b> (score ${best.score}) vs Worst: <b>${worstPos.ticker}</b> (score ${worstScore}, ${worstPos.liveReturn >= 0 ? '+' : ''}${worstPos.liveReturn.toFixed(2)}%)\n`
               + `Delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} pts (threshold: ${margin || 'score≥88 & ret<2%'})\n`
@@ -575,7 +730,7 @@ async function evaluate(tickerFilter) {
   } else {
     console.log(`[${new Date().toISOString()}] ${alerts.length} alert(s) to send.`);
     for (const a of alerts) {
-      await sendTelegram(a.text, 72, a.critical);
+      await notifyAll(a.modeId, a);
     }
   }
 
