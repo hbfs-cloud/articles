@@ -2,22 +2,17 @@
 'use strict';
 
 /**
- * signal-monitor.js — Live price monitor + Telegram alerts
+ * signal-monitor.js — Live price monitor + Telegram alerts (WebSocket edition)
  *
- * Polls Yahoo Finance for current positions across all 3 modes.
+ * Connects to Yahoo Finance WebSocket streamer for real-time price ticks.
  * Detects: SL hits, TP1/TP2 hits, rotation eligibility, horizon expiry.
  * Sends Telegram alerts ONLY on state transitions (deduped via state file).
  *
  * Usage:
- *   node tools/signal-monitor.js              # Run once (cron mode)
- *   node tools/signal-monitor.js --loop       # Poll every 30s during hours, 5m outside
+ *   node tools/signal-monitor.js              # WebSocket continuous mode (default)
+ *   node tools/signal-monitor.js --loop       # Same as default (backward compat)
+ *   node tools/signal-monitor.js --once       # Single evaluation then exit (cron mode)
  *   node tools/signal-monitor.js --dry-run    # No Telegram, print to stdout
- *   node tools/signal-monitor.js --interval 60  # Override poll interval (seconds)
- *
- * Cron (weekdays, market hours 9:25-16:05 ET):
- *   25-59/5 13-14 * * 1-5    node /path/to/signal-monitor.js
- *   0/5     14-20 * * 1-5    node /path/to/signal-monitor.js
- *   0-5/5   20    * * 1-5    node /path/to/signal-monitor.js
  *
  * Env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID in .env
  */
@@ -25,14 +20,27 @@
 const fs = require('fs');
 const https = require('https');
 const path = require('path');
+const WebSocket = require('ws');
+const protobuf = require('protobufjs');
 
 const ROOT = path.join(__dirname, '..');
 const STATE_FILE = path.join(ROOT, 'data', 'signal-monitor-state.json');
 const MODES_CFG = path.join(ROOT, 'data', 'modes-config.json');
 const HISTORY_DIR = path.join(ROOT, 'scanner', 'status', 'history');
+const PROTO_FILE = path.join(__dirname, 'PricingData.proto');
+
+const WS_URL = 'wss://streamer.finance.yahoo.com/';
+const HEARTBEAT_INTERVAL_MS = 15 * 1000;       // Re-subscribe every 15s
+const FULL_EVAL_INTERVAL_MS = 60 * 1000;        // Full sweep every 60s safety net
+const RECONNECT_BASE_MS = 3000;                 // Initial backoff
+const RECONNECT_MAX_MS = 60 * 1000;             // Max backoff
 
 // ATR cache: { [ticker]: { atr: number, ts: number } }
 const atrCache = {};
+
+// Live price cache updated by WebSocket ticks
+// { [ticker]: { price, dayHigh, dayLow, dayVolume, changePercent, marketHours, ts } }
+const liveCache = {};
 
 // ─── Load .env (robust parser) ────────────────────────────────────────────────
 const envPath = path.join(ROOT, '.env');
@@ -46,20 +54,10 @@ if (fs.existsSync(envPath)) {
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const DRY_RUN = process.argv.includes('--dry-run');
-const LOOP = process.argv.includes('--loop');
+const ONCE = process.argv.includes('--once');
+// --loop is now identical to default (WS continuous); kept for backward compat
 
-// --interval N override (seconds)
-let INTERVAL_OVERRIDE = null;
-const idxInterval = process.argv.indexOf('--interval');
-if (idxInterval !== -1 && process.argv[idxInterval + 1]) {
-  const n = parseInt(process.argv[idxInterval + 1], 10);
-  if (n > 0) INTERVAL_OVERRIDE = n * 1000;
-}
-
-const POLL_IN_HOURS_MS = 30 * 1000;       // 30s during market hours
-const POLL_OUT_HOURS_MS = 5 * 60 * 1000;  // 5min outside market hours
-
-// ─── Market hours check ───────────────────────────────────────────────────────
+// ─── Market hours check (UTC-based, NYSE 9:30-16:00 ET = 13:30-20:00 UTC) ────
 
 function isMarketHours() {
   const now = new Date();
@@ -84,11 +82,11 @@ function httpsGet(url, timeoutMs) {
   });
 }
 
-// ─── Price fetching ───────────────────────────────────────────────────────────
+// ─── Price fetching (HTTP fallback + ATR) ─────────────────────────────────────
 
 /**
- * Fetch current price + intraday high/low for a single ticker.
- * Uses meta.regularMarketDayHigh / meta.regularMarketDayLow for correct intraday extremes.
+ * Fetch current price + intraday high/low for a single ticker via HTTP.
+ * Used as fallback when WS cache is stale, and for initial price seeding.
  */
 function fetchPrice(ticker) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=2d`;
@@ -100,7 +98,6 @@ function fetchPrice(ticker) {
       if (!result) return { price: null, dayHigh: null, dayLow: null };
       const meta = result.meta || {};
       const price = meta.regularMarketPrice ?? null;
-      // Use meta fields for correct intraday extremes
       const dayHigh = meta.regularMarketDayHigh ?? price;
       const dayLow = meta.regularMarketDayLow ?? price;
       return { price, dayHigh, dayLow };
@@ -278,6 +275,18 @@ function loadModes() {
   catch { return {}; }
 }
 
+// ─── Collect all tickers from snapshot ───────────────────────────────────────
+
+function collectAllTickers(snap) {
+  const tickers = new Set();
+  if (!snap) return tickers;
+  for (const modeSnap of Object.values(snap.modes)) {
+    for (const p of (modeSnap.positions || [])) tickers.add(p.ticker);
+    for (const s of (modeSnap.signals || [])) tickers.add(s.ticker);
+  }
+  return tickers;
+}
+
 // ─── Telegram with retry for critical alerts ──────────────────────────────────
 
 function sendTelegramOnce(text, topicId) {
@@ -333,7 +342,141 @@ async function sendTelegram(text, topicId, critical) {
 
 // ─── Core: evaluate all positions ─────────────────────────────────────────────
 
-async function evaluate() {
+/**
+ * Resolve price data for a ticker: prefer live WS cache, fall back to HTTP.
+ * maxAgeMs: how stale the WS cache can be before we fall back (default 5min).
+ */
+async function resolvePriceData(ticker, maxAgeMs = 5 * 60 * 1000) {
+  const cached = liveCache[ticker];
+  if (cached && (Date.now() - cached.ts) < maxAgeMs) {
+    return { price: cached.price, dayHigh: cached.dayHigh, dayLow: cached.dayLow };
+  }
+  // Fallback to HTTP
+  return fetchPrice(ticker);
+}
+
+async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, priceData, isFirstRun) {
+  const { price, dayLow, dayHigh } = priceData;
+  if (!price) return;
+
+  const entry = pos.entry || 0;
+  const rawStop = pos.stop || 0;
+  const tp1 = pos.tp1 || 0;
+  const tp2 = pos.tp2 || null;
+  const returnPct = entry > 0 ? ((price - entry) / entry * 100) : 0;
+  const daysHeld = bizDaysHeld(pos.scan_date);
+  const daysLeft = Math.max(0, cfg.horizon - daysHeld);
+  const stateKey = `${modeId}:${pos.ticker}:${pos.scan_date}`;
+  const prev = state[stateKey] || {};
+  const modeLabel = cfg.label || modeId;
+
+  // Fetch ATR for stop computation (cached, HTTP)
+  let atr = null;
+  if (cfg.atrStopMult > 0) {
+    atr = await getATR(pos.ticker);
+  }
+
+  // Compute initial clamped stop (first time seeing this position)
+  const initialStop = computeInitialStop(entry, rawStop, cfg, atr);
+
+  // Restore or initialize per-position live state
+  const prevStop = prev.currentStop ?? initialStop;
+  const prevHWM = prev.highWaterMark ?? entry;
+  const partialClosed = prev.partialClosed ?? false;
+
+  // Update stop based on current price
+  const { currentStop, highWaterMark } = updateStopDynamic(
+    entry, prevStop, prevHWM, price, cfg, partialClosed,
+  );
+
+  // Determine status
+  let status = 'OPEN';
+  if (dayLow <= currentStop || price <= currentStop) {
+    status = 'SL_HIT';
+  } else if (tp2 && dayHigh >= tp2) {
+    status = 'TP2_HIT';
+  } else if (tp1 > 0 && dayHigh >= tp1) {
+    if (cfg.partialTP && !partialClosed) {
+      status = 'TP1_PARTIAL';
+    } else if (!partialClosed) {
+      status = 'TP1_HIT';
+    }
+    // If already partial, check TP2 on subsequent ticks
+    if (partialClosed && tp2 && dayHigh >= tp2) {
+      status = 'TP2_HIT';
+    } else if (partialClosed) {
+      status = 'OPEN';
+    }
+  } else if (daysLeft <= 0) {
+    status = 'EXPIRED';
+  } else if (currentStop > 0 && entry > currentStop && ((price - currentStop) / (entry - currentStop)) < 0.3) {
+    status = 'NEAR_STOP';
+  } else if (tp1 > 0 && entry > 0 && tp1 > entry && ((price - entry) / (tp1 - entry)) > 0.8) {
+    status = 'NEAR_TP1';
+  }
+
+  // On first run: initialize state without sending alerts
+  if (isFirstRun) {
+    newState[stateKey] = {
+      status,
+      price: +price.toFixed(4),
+      returnPct: +returnPct.toFixed(2),
+      currentStop,
+      highWaterMark,
+      partialClosed,
+      ts: new Date().toISOString(),
+    };
+    return;
+  }
+
+  // Track partial TP state transition
+  let newPartialClosed = partialClosed;
+  if (status === 'TP1_PARTIAL' && !partialClosed) {
+    newPartialClosed = true;
+  }
+
+  // Only alert on status transitions
+  if (prev.status !== status && status !== 'OPEN') {
+    const isCritical = ['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'TP1_PARTIAL'].includes(status);
+    const emoji = {
+      SL_HIT: '🔴', TP1_HIT: '🟢', TP2_HIT: '🏆', TP1_PARTIAL: '💚',
+      EXPIRED: '⏰', NEAR_STOP: '⚠️', NEAR_TP1: '📈',
+    }[status] || '📊';
+
+    const partialPct = Math.round((cfg.partialTPPct || 0.5) * 100);
+    const actionMap = {
+      SL_HIT: `CLOSE at market — loss ${returnPct.toFixed(2)}%`,
+      TP1_HIT: `CLOSE at market — profit +${returnPct.toFixed(2)}%`,
+      TP1_PARTIAL: `Sell ${partialPct}% @ $${tp1.toFixed(2)} — move stop to entry, trail rest to TP2`,
+      TP2_HIT: `CLOSE ALL — full target hit +${returnPct.toFixed(2)}%`,
+      EXPIRED: `Horizon expired (${cfg.horizon}d) — close at open, P&L ${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%`,
+      NEAR_STOP: `Price $${price.toFixed(2)} approaching stop $${currentStop.toFixed(2)} — watch closely`,
+      NEAR_TP1: `Price $${price.toFixed(2)} approaching TP1 $${tp1.toFixed(2)} — prepare exit`,
+    };
+
+    alerts.push({
+      priority: isCritical ? 1 : 2,
+      critical: isCritical,
+      text: `${emoji} <b>[${modeLabel}] ${status.replace(/_/g, ' ')}</b>\n`
+        + `<b>${pos.ticker}</b> @ $${price.toFixed(2)} (entry $${entry.toFixed(2)})\n`
+        + `${actionMap[status] || ''}\n`
+        + `Stop: $${currentStop.toFixed(2)} | TP1: $${tp1.toFixed(2)}${tp2 ? ` | TP2: $${tp2.toFixed(2)}` : ''}\n`
+        + `Held: ${daysHeld}d / ${cfg.horizon}d | ATR stop: ${atr ? `$${(entry - cfg.atrStopMult * atr).toFixed(2)}` : 'n/a'}`,
+    });
+  }
+
+  newState[stateKey] = {
+    status,
+    price: +price.toFixed(4),
+    returnPct: +returnPct.toFixed(2),
+    currentStop,
+    highWaterMark,
+    partialClosed: newPartialClosed,
+    ts: new Date().toISOString(),
+  };
+}
+
+async function evaluate(tickerFilter) {
   const modes = loadModes();
   const snap = loadLatestSnapshot();
   if (!snap) { console.log('No snapshot found'); return; }
@@ -342,152 +485,27 @@ async function evaluate() {
   const newState = { ...state, _version: 1, _lastRun: new Date().toISOString() };
   const alerts = [];
 
-  // Collect all tickers needing prices
-  const allTickers = [];
-  for (const modeSnap of Object.values(snap.modes)) {
-    for (const p of (modeSnap.positions || [])) allTickers.push(p.ticker);
-    for (const s of (modeSnap.signals || [])) allTickers.push(s.ticker);
-  }
-
-  const uniqueTickers = [...new Set(allTickers)];
-  console.log(`[${new Date().toISOString()}] Fetching prices for ${uniqueTickers.length} tickers...`);
-  const prices = await fetchPricesParallel(uniqueTickers);
-
-  // Check if we need to initialize state (first run with existing positions)
   const isFirstRun = Object.keys(state).filter(k => !k.startsWith('_')).length === 0;
 
   for (const [modeId, cfg] of Object.entries(modes)) {
     const modeSnap = snap.modes[modeId];
     if (!modeSnap) continue;
-    const modeLabel = cfg.label || modeId;
     const positions = modeSnap.positions || [];
     const signals = modeSnap.signals || [];
 
     // ── Check each position ──
     for (const pos of positions) {
-      const priceData = prices[pos.ticker];
+      // If tickerFilter set (WS tick-driven), only evaluate that ticker
+      if (tickerFilter && pos.ticker !== tickerFilter) continue;
+
+      const priceData = await resolvePriceData(pos.ticker);
       if (!priceData || !priceData.price) continue;
 
-      const { price, dayLow, dayHigh } = priceData;
-      const entry = pos.entry || 0;
-      const rawStop = pos.stop || 0;
-      const tp1 = pos.tp1 || 0;
-      const tp2 = pos.tp2 || null;
-      const returnPct = entry > 0 ? ((price - entry) / entry * 100) : 0;
-      const daysHeld = bizDaysHeld(pos.scan_date);
-      const daysLeft = Math.max(0, cfg.horizon - daysHeld);
-      const stateKey = `${modeId}:${pos.ticker}:${pos.scan_date}`;
-      const prev = state[stateKey] || {};
-
-      // Fetch ATR for stop computation (cached)
-      let atr = null;
-      if (cfg.atrStopMult > 0) {
-        atr = await getATR(pos.ticker);
-      }
-
-      // Compute initial clamped stop (first time seeing this position)
-      const initialStop = computeInitialStop(entry, rawStop, cfg, atr);
-
-      // Restore or initialize per-position live state
-      const prevStop = prev.currentStop ?? initialStop;
-      const prevHWM = prev.highWaterMark ?? entry;
-      const partialClosed = prev.partialClosed ?? false;
-
-      // Update stop based on current price
-      const { currentStop, highWaterMark } = updateStopDynamic(
-        entry, prevStop, prevHWM, price, cfg, partialClosed,
-      );
-
-      // Determine status
-      let status = 'OPEN';
-      if (dayLow <= currentStop || price <= currentStop) {
-        status = 'SL_HIT';
-      } else if (tp2 && dayHigh >= tp2) {
-        status = 'TP2_HIT';
-      } else if (tp1 > 0 && dayHigh >= tp1) {
-        if (cfg.partialTP && !partialClosed) {
-          status = 'TP1_PARTIAL';
-        } else if (!partialClosed) {
-          status = 'TP1_HIT';
-        }
-        // If already partial, check TP2 on subsequent polls
-        if (partialClosed && tp2 && dayHigh >= tp2) {
-          status = 'TP2_HIT';
-        } else if (partialClosed) {
-          // Still open, monitoring for TP2
-          status = 'OPEN';
-        }
-      } else if (daysLeft <= 0) {
-        status = 'EXPIRED';
-      } else if (currentStop > 0 && entry > currentStop && ((price - currentStop) / (entry - currentStop)) < 0.3) {
-        status = 'NEAR_STOP';
-      } else if (tp1 > 0 && entry > 0 && tp1 > entry && ((price - entry) / (tp1 - entry)) > 0.8) {
-        status = 'NEAR_TP1';
-      }
-
-      // On first run: initialize state without sending alerts
-      if (isFirstRun) {
-        newState[stateKey] = {
-          status,
-          price: +price.toFixed(4),
-          returnPct: +returnPct.toFixed(2),
-          currentStop,
-          highWaterMark,
-          partialClosed,
-          ts: new Date().toISOString(),
-        };
-        continue;
-      }
-
-      // Track partial TP state transition
-      let newPartialClosed = partialClosed;
-      if (status === 'TP1_PARTIAL' && !partialClosed) {
-        newPartialClosed = true;
-      }
-
-      // Only alert on status transitions
-      if (prev.status !== status && status !== 'OPEN') {
-        const isCritical = ['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'TP1_PARTIAL'].includes(status);
-        const emoji = {
-          SL_HIT: '🔴', TP1_HIT: '🟢', TP2_HIT: '🏆', TP1_PARTIAL: '💚',
-          EXPIRED: '⏰', NEAR_STOP: '⚠️', NEAR_TP1: '📈',
-        }[status] || '📊';
-
-        const partialPct = Math.round((cfg.partialTPPct || 0.5) * 100);
-        const actionMap = {
-          SL_HIT: `CLOSE at market — loss ${returnPct.toFixed(2)}%`,
-          TP1_HIT: `CLOSE at market — profit +${returnPct.toFixed(2)}%`,
-          TP1_PARTIAL: `Sell ${partialPct}% @ $${tp1.toFixed(2)} — move stop to entry, trail rest to TP2`,
-          TP2_HIT: `CLOSE ALL — full target hit +${returnPct.toFixed(2)}%`,
-          EXPIRED: `Horizon expired (${cfg.horizon}d) — close at open, P&L ${returnPct >= 0 ? '+' : ''}${returnPct.toFixed(2)}%`,
-          NEAR_STOP: `Price $${price.toFixed(2)} approaching stop $${currentStop.toFixed(2)} — watch closely`,
-          NEAR_TP1: `Price $${price.toFixed(2)} approaching TP1 $${tp1.toFixed(2)} — prepare exit`,
-        };
-
-        alerts.push({
-          priority: isCritical ? 1 : 2,
-          critical: isCritical,
-          text: `${emoji} <b>[${modeLabel}] ${status.replace(/_/g, ' ')}</b>\n`
-            + `<b>${pos.ticker}</b> @ $${price.toFixed(2)} (entry $${entry.toFixed(2)})\n`
-            + `${actionMap[status] || ''}\n`
-            + `Stop: $${currentStop.toFixed(2)} | TP1: $${tp1.toFixed(2)}${tp2 ? ` | TP2: $${tp2.toFixed(2)}` : ''}\n`
-            + `Held: ${daysHeld}d / ${cfg.horizon}d | ATR stop: ${atr ? `$${(entry - cfg.atrStopMult * atr).toFixed(2)}` : 'n/a'}`,
-        });
-      }
-
-      newState[stateKey] = {
-        status,
-        price: +price.toFixed(4),
-        returnPct: +returnPct.toFixed(2),
-        currentStop,
-        highWaterMark,
-        partialClosed: newPartialClosed,
-        ts: new Date().toISOString(),
-      };
+      await evaluatePosition(pos, modeId, cfg, state, newState, alerts, priceData, isFirstRun);
     }
 
-    // ── Check rotation eligibility ──
-    if (cfg.rotation !== 'none' && positions.length >= cfg.portfolioSize) {
+    // ── Check rotation eligibility (only on full sweep, not per-tick) ──
+    if (!tickerFilter && cfg.rotation !== 'none' && positions.length >= cfg.portfolioSize) {
       const rotLimit = cfg.rotation === 'daily_max1' ? 1
         : cfg.rotation === 'daily_max2' ? 2
           : cfg.portfolioSize;
@@ -498,22 +516,21 @@ async function evaluate() {
         .sort((a, b) => b.score - a.score);
 
       // Build sorted positions by live return (ascending = worst first)
-      const posWithReturn = positions
-        .map(p => {
-          const pd = prices[p.ticker];
+      const posWithReturn = (await Promise.all(
+        positions.map(async p => {
+          const pd = await resolvePriceData(p.ticker);
           if (!pd || !pd.price) return null;
           const ret = p.entry > 0 ? ((pd.price - p.entry) / p.entry * 100) : 0;
           return { ...p, liveReturn: ret, livePrice: pd.price };
         })
-        .filter(Boolean)
-        .sort((a, b) => a.liveReturn - b.liveReturn);
+      )).filter(Boolean).sort((a, b) => a.liveReturn - b.liveReturn);
 
       let rotationsGenerated = 0;
       for (const best of eligible) {
         if (rotationsGenerated >= rotLimit) break;
         if (posWithReturn.length === 0) break;
 
-        const worstPos = posWithReturn[rotationsGenerated]; // next-worst for each slot
+        const worstPos = posWithReturn[rotationsGenerated];
         if (!worstPos) break;
 
         const worstScore = worstPos.score || 0;
@@ -530,6 +547,7 @@ async function evaluate() {
         const prevRot = state[rotKey] || {};
 
         if (meetsMargin && prevRot.candidate !== best.ticker) {
+          const modeLabel = cfg.label || modeId;
           alerts.push({
             priority: 2,
             critical: false,
@@ -551,7 +569,9 @@ async function evaluate() {
   // ── Send alerts (sorted by priority) ──
   alerts.sort((a, b) => a.priority - b.priority);
   if (alerts.length === 0) {
-    console.log(`[${new Date().toISOString()}] No transitions detected. All positions stable.`);
+    if (!tickerFilter) {
+      console.log(`[${new Date().toISOString()}] No transitions detected. All positions stable.`);
+    }
   } else {
     console.log(`[${new Date().toISOString()}] ${alerts.length} alert(s) to send.`);
     for (const a of alerts) {
@@ -560,47 +580,229 @@ async function evaluate() {
   }
 
   saveState(newState);
-  console.log(`State saved (${Object.keys(newState).filter(k => !k.startsWith('_')).length} position entries).`);
+  if (!tickerFilter) {
+    console.log(`State saved (${Object.keys(newState).filter(k => !k.startsWith('_')).length} position entries).`);
+  }
+}
+
+// ─── WebSocket manager ────────────────────────────────────────────────────────
+
+class YahooStreamer {
+  constructor(tickers) {
+    this.tickers = [...tickers];
+    this.ws = null;
+    this.PricingData = null;          // protobuf type, loaded async
+    this.heartbeatTimer = null;
+    this.fullEvalTimer = null;
+    this.reconnectDelay = RECONNECT_BASE_MS;
+    this.stopped = false;
+  }
+
+  async loadProto() {
+    const root = await protobuf.load(PROTO_FILE);
+    this.PricingData = root.lookupType('yfinancedata');
+  }
+
+  decodeMessage(rawB64) {
+    try {
+      const buf = Buffer.from(rawB64, 'base64');
+      return this.PricingData.decode(buf);
+    } catch {
+      return null;
+    }
+  }
+
+  subscribe() {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+    const msg = JSON.stringify({ subscribe: this.tickers });
+    this.ws.send(msg);
+  }
+
+  startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatTimer = setInterval(() => {
+      this.subscribe();
+    }, HEARTBEAT_INTERVAL_MS);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
+  }
+
+  startFullEvalTimer() {
+    this.stopFullEvalTimer();
+    this.fullEvalTimer = setInterval(async () => {
+      try {
+        console.log(`[${new Date().toISOString()}] Full sweep (safety net)...`);
+        await evaluate(null);
+      } catch (e) {
+        console.error('[EVAL ERROR]', e.message);
+      }
+    }, FULL_EVAL_INTERVAL_MS);
+  }
+
+  stopFullEvalTimer() {
+    if (this.fullEvalTimer) { clearInterval(this.fullEvalTimer); this.fullEvalTimer = null; }
+  }
+
+  connect() {
+    if (this.stopped) return;
+
+    console.log(`[${new Date().toISOString()}] Connecting to ${WS_URL} (${this.tickers.length} tickers)...`);
+    this.ws = new WebSocket(WS_URL, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+
+    this.ws.on('open', () => {
+      console.log(`[${new Date().toISOString()}] WebSocket connected.`);
+      this.reconnectDelay = RECONNECT_BASE_MS; // reset backoff on success
+      this.subscribe();
+      this.startHeartbeat();
+      this.startFullEvalTimer();
+    });
+
+    this.ws.on('message', async (data) => {
+      const rawB64 = data.toString();
+      const msg = this.decodeMessage(rawB64);
+      if (!msg) return;
+
+      // Skip heartbeat messages (quoteType === 7 = HEARTBEAT)
+      if (msg.quoteType === 7) return;
+
+      const ticker = msg.id;
+      if (!ticker) return;
+
+      // Only process regular market hours ticks
+      // marketHours: 0=PRE, 1=REGULAR, 2=POST, 3=EXTENDED
+      if (msg.marketHours !== 1 && !DRY_RUN) return;
+
+      const price = msg.price || 0;
+      if (price <= 0) return;
+
+      // Update live cache — merge with existing to preserve intraday high/low
+      const prev = liveCache[ticker] || {};
+      liveCache[ticker] = {
+        price,
+        dayHigh: Math.max(msg.dayHigh || price, prev.dayHigh || price),
+        dayLow: msg.dayLow > 0
+          ? (prev.dayLow > 0 ? Math.min(msg.dayLow, prev.dayLow) : msg.dayLow)
+          : (prev.dayLow || price),
+        dayVolume: msg.dayVolume || prev.dayVolume || 0,
+        changePercent: msg.changePercent || prev.changePercent || 0,
+        marketHours: msg.marketHours,
+        ts: Date.now(),
+      };
+
+      // Immediate per-tick evaluation for this ticker
+      try {
+        await evaluate(ticker);
+      } catch (e) {
+        console.error(`[TICK EVAL ERROR] ${ticker}:`, e.message);
+      }
+    });
+
+    this.ws.on('close', (code, reason) => {
+      this.stopHeartbeat();
+      this.stopFullEvalTimer();
+      if (this.stopped) return;
+      console.warn(`[${new Date().toISOString()}] WebSocket closed (${code}). Reconnecting in ${this.reconnectDelay / 1000}s...`);
+      setTimeout(() => this.connect(), this.reconnectDelay);
+      this.reconnectDelay = Math.min(this.reconnectDelay * 2, RECONNECT_MAX_MS);
+    });
+
+    this.ws.on('error', (err) => {
+      console.error(`[${new Date().toISOString()}] WebSocket error:`, err.message);
+      // close event will fire after error, triggering reconnect
+    });
+  }
+
+  stop() {
+    this.stopped = true;
+    this.stopHeartbeat();
+    this.stopFullEvalTimer();
+    if (this.ws) {
+      this.ws.terminate();
+      this.ws = null;
+    }
+  }
 }
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
 async function main() {
-  if (LOOP) {
-    const inHours = isMarketHours();
-    console.log(`Loop mode started. Market ${inHours ? 'OPEN' : 'CLOSED'}. ` +
-      `Polling every ${inHours ? POLL_IN_HOURS_MS / 1000 : POLL_OUT_HOURS_MS / 1000}s. Ctrl+C to stop.`);
-
-    const tick = async () => {
-      const open = isMarketHours();
-      if (!open && !DRY_RUN) {
-        const now = new Date();
-        console.log(`[${now.toISOString()}] Market closed — skipping evaluate(). ` +
-          `Next check in ${POLL_OUT_HOURS_MS / 1000}s.`);
-      } else {
-        await evaluate();
+  // --once mode: single evaluation then exit (replaces old default cron behavior)
+  if (ONCE) {
+    if (!DRY_RUN) {
+      const now = new Date();
+      const day = now.getUTCDay();
+      if (day === 0 || day === 6 || !isMarketHours()) {
+        const h = now.getUTCHours();
+        const m = now.getUTCMinutes();
+        console.log(`Market closed (UTC ${h}:${String(m).padStart(2, '0')}, day ${day}). Use --dry-run to force or omit --once for WS mode.`);
+        return;
       }
-      const interval = INTERVAL_OVERRIDE ?? (isMarketHours() ? POLL_IN_HOURS_MS : POLL_OUT_HOURS_MS);
-      setTimeout(tick, interval);
-    };
+    }
 
-    await tick();
+    const snap = loadLatestSnapshot();
+    if (!snap) { console.log('No snapshot found'); return; }
+    const tickers = [...collectAllTickers(snap)];
+
+    console.log(`[${new Date().toISOString()}] --once mode: fetching ${tickers.length} prices via HTTP...`);
+    const prices = await fetchPricesParallel(tickers);
+
+    // Seed live cache from HTTP fetch so evaluate() uses it
+    for (const [ticker, data] of Object.entries(prices)) {
+      if (data.price) {
+        liveCache[ticker] = {
+          price: data.price,
+          dayHigh: data.dayHigh,
+          dayLow: data.dayLow,
+          ts: Date.now(),
+        };
+      }
+    }
+
+    await evaluate(null);
     return;
   }
 
-  // Single-shot mode: skip if market closed (unless --dry-run)
-  if (!DRY_RUN) {
-    const now = new Date();
-    const day = now.getUTCDay();
-    if (day === 0 || day === 6 || !isMarketHours()) {
-      const h = now.getUTCHours();
-      const m = now.getUTCMinutes();
-      console.log(`Market closed (UTC ${h}:${String(m).padStart(2, '0')}, day ${day}). Use --dry-run to force or --loop for continuous mode.`);
-      return;
-    }
+  // WebSocket continuous mode (default, also --loop)
+  const snap = loadLatestSnapshot();
+  if (!snap) { console.log('No snapshot found — cannot start WS mode.'); return; }
+  const tickers = [...collectAllTickers(snap)];
+
+  if (tickers.length === 0) {
+    console.log('No tickers in snapshot. Nothing to monitor.');
+    return;
   }
 
-  await evaluate();
+  console.log(`[${new Date().toISOString()}] Starting WebSocket monitor for ${tickers.length} tickers.`);
+  console.log(`Tickers: ${tickers.join(', ')}`);
+
+  // Seed live cache with HTTP prices before WS connects (avoids stale-data fallback on first eval)
+  console.log('Seeding initial prices via HTTP...');
+  const initialPrices = await fetchPricesParallel(tickers);
+  let seeded = 0;
+  for (const [ticker, data] of Object.entries(initialPrices)) {
+    if (data.price) {
+      liveCache[ticker] = { price: data.price, dayHigh: data.dayHigh, dayLow: data.dayLow, ts: Date.now() };
+      seeded++;
+    }
+  }
+  console.log(`Seeded ${seeded}/${tickers.length} tickers. Connecting WebSocket...`);
+
+  const streamer = new YahooStreamer(tickers);
+  await streamer.loadProto();
+  streamer.connect();
+
+  // Graceful shutdown
+  const shutdown = () => {
+    console.log('\nShutting down...');
+    streamer.stop();
+    process.exit(0);
+  };
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
