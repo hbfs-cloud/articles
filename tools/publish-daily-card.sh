@@ -33,7 +33,7 @@ echo "📊 Step 1: Updating tracking data..."
 node tools/update-tracking.js
 
 # ─── Step 1b: Clean old static-named images (pre-timestamp migration) ────────
-rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/status/mode-zero.png scanner/status/mode-dynamic.png scanner/status/mode-balanced.png scanner/status/mode-secured.png scanner/status/daily-card.png 2>/dev/null
+rm -f scanner/status/mode-growth.png scanner/status/mode-calmar.png scanner/status/mode-zero.png scanner/status/mode-turbo.png scanner/status/mode-dynamic.png scanner/status/mode-balanced.png scanner/status/mode-secured.png scanner/status/mode-fortress.png scanner/status/daily-card.png 2>/dev/null
 
 # ─── Step 2: Generate daily card image (site only — notif texte via Step 8) ──
 echo ""

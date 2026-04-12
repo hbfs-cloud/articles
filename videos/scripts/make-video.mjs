@@ -294,7 +294,7 @@ https://articles.dailytickers.com`,
 📚 8 Chapters:
 • What Is the Scanner? — why automated screening works
 • Reading a Scan — anatomy, scoring system, safety filters
-• The 3 Portfolio Modes — Growth, Calmar, Conservative
+• The 5 Portfolio Modes — Turbo, Dynamic, Balanced, Secured, Fortress
 • Signal Lifecycle — TP1, TP2, Stop Loss, Timeout, Rotation
 • Position Sizing & Risk — what "25% allocation" really means
 • Market Regime — 5 regimes, strategy adaptation

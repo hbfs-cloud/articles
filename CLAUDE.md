@@ -23,7 +23,7 @@ articles/
 ├── data/                         # Index JSON par tab + search_data.js
 ├── tools/                        # add_card.js, migrate_astro.js, etc.
 ├── widget/                       # Widgets embarquables (iframe)
-├── portfolio/v1/                 # Public JSON API (Balanced, Dynamic, Secured)
+├── portfolio/v1/                 # Public JSON API (Turbo, Dynamic, Balanced, Secured, Fortress)
 └── mcp/                          # MCP server + watchlist.json
 ```
 
@@ -345,9 +345,10 @@ fetch(url).then(r => r.json()).then(d => {
 Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
 
 ## Portfolio API — `/portfolio/v1/`
-API publique servant les signaux et l'equity des 3 modes.
-- **Modes** : `balanced` (2 slots), `dynamic` (1 slot), `secured` (10 slots).
-- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|stats|all].json`
+API publique servant les signaux et l'equity des 5 modes.
+- **Modes** : `turbo` (1 slot, 100%, H3, extreme), `dynamic` (1 slot, 100%, H3), `balanced` (2 slots, 50%, H8), `secured` (3 slots, 33%, H10), `fortress` (3 slots, 17%, H10, half-sized).
+- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|orders|actions|trades|all].json`
+- **Paramètre clé Fortress** : `positionSizePct: 0.5` — demi-positions pour halve le drawdown.
 - **Documentation** : `https://articles.dailytickers.com/integrations/portfolio/`
 - **Génération** : `node tools/gen-api.js` (dépend de `backtest-trades.json` et `scanner-positions.json`).
 

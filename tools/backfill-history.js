@@ -20,8 +20,8 @@ const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
 const HISTORY_DIR = path.join(ROOT, 'scanner/status/history');
 
 // Mode IDs match directly between backtest-trades.json and modes-config.json
-const MODE_MAP = { dynamic: 'dynamic', balanced: 'balanced', secured: 'secured' };
-const REVERSE_MAP = { dynamic: 'dynamic', balanced: 'balanced', secured: 'secured' };
+const MODE_MAP = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress' };
+const REVERSE_MAP = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress' };
 
 function addBizDays(dateStr, n) {
   const d = new Date(dateStr + 'T12:00:00Z');

@@ -17,10 +17,11 @@ const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
 const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
 
-function computeMetrics(trades, portfolioSize) {
+function computeMetrics(trades, portfolioSize, positionSizePct) {
+  const pspct = positionSizePct || 1;
   const wins = trades.filter(t => t.pnlPct > 0);
   const losses = trades.filter(t => t.pnlPct <= 0);
-  const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize, 0);
+  const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize * pspct, 0);
   let equity = 0, peak = 0, maxDD = 0;
   const equityCurve = [{ date: null, value: 100 }];
   // Sort by approximate exit date to ensure correct path-dependent DD computation
@@ -32,7 +33,7 @@ function computeMetrics(trades, portfolioSize) {
     return (a.entryDate || '') < (b.entryDate || '') ? -1 : 1;
   });
   for (const t of sorted) {
-    equity += (t.pnlPct || 0) / portfolioSize;
+    equity += (t.pnlPct || 0) / portfolioSize * pspct;
     if (equity > peak) peak = equity;
     if (peak - equity > maxDD) maxDD = peak - equity;
     equityCurve.push({ date: t.scanDate, value: +(100 + equity).toFixed(2) });
@@ -110,7 +111,7 @@ function main() {
     });
     // Stats computed from CLOSED trades only (non-premature) — matches backfill convention
     const closedTrades = trades.filter(t => !t._premature);
-    const m = computeMetrics(closedTrades, cfg.portfolioSize);
+    const m = computeMetrics(closedTrades, cfg.portfolioSize, cfg.positionSizePct);
     // Override all stats with authoritative frozen_ values from sweep (daily MtM)
     const frozenKey = `frozen_${id}`;
     const frozen = results[frozenKey];
@@ -219,7 +220,7 @@ function main() {
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, trades);
-    const alloc = Math.round(100 / cfg.portfolioSize);
+    const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
     const totalRet = pos.length ? pos.reduce((s, p) => s + (p.return_pct || 0), 0) / pos.length : 0;
 
     // Helper: compute biz days from scan_date
@@ -254,7 +255,9 @@ function main() {
     </div>
     <div class="method-steps" style="margin-top:.85rem">
       <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
-      ${id === 'dynamic' ? `
+      ${id === 'turbo' ? `
+      <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At 9:30 AM New York (3:30 PM Paris) — market open</b>: watch the first 5-minute candle. Buy ONLY if it closes <b>above the entry range</b> with volume. This is a momentum/breakout play — speed is critical. Don't chase if it gaps up more than 3% above entry.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Set a <b>hard stop at −${cfg.maxStopPct}%</b> immediately. When price hits TP1: <b>sell 50%</b> to lock profit, move stop to breakeven, and trail the rest toward TP2. If no movement after ${cfg.staleDays} days, <b>exit at market</b> — stale momentum = dead trade.</div></div>` : id === 'dynamic' ? `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>At 9:30 AM New York (3:30 PM Paris) — market open</b>: watch the stock for the first 15 minutes. Wait for a 5-minute candle to close <b>above the entry range</b> before buying — this confirms the breakout is real. Don't buy if the stock gaps way above the entry zone.</div></div>
       <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>Once in the trade, set your <b>stop loss</b> at −${cfg.maxStopPct}% from your entry and your <b>take profit</b> at TP1. You can monitor intraday: if the stock spikes +10% in the first hour, consider taking profit early rather than waiting for the close.</div></div>` : `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>Before market open</b> (set your orders the evening before, or before 9:25 AM New York / 3:25 PM Paris), place a <b>limit buy order</b> at the entry price shown. Put <b>${alloc}% of your total money</b> into each trade. You can have up to <b>${cfg.portfolioSize} trades open at the same time</b>. No need to watch the market during the day.</div></div>
@@ -262,7 +265,7 @@ function main() {
       <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct || 0.7) * 100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1 - (cfg.partialTPPct || 0.7)) * 100)}% run toward TP2. Move your stop to your entry price (you can't lose money on this trade anymore).` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
       <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.</div></div>
       ${cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ 88) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
-      ${id === 'secured' ? `<div class="step" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#64748b"><i class="fas fa-gauge" style="font-size:.5rem"></i></span><div><b>Adapt to the market regime:</b> check the VIX level before placing orders. <b>VIX &lt; 15 (calm market)</b>: you can run with ${Math.round(cfg.portfolioSize * 0.6)}–${Math.round(cfg.portfolioSize * 0.7)} positions instead of ${cfg.portfolioSize} — concentration is fine. <b>VIX 15–20 (neutral)</b>: aim for ${Math.round(cfg.portfolioSize * 0.8)} positions. <b>VIX &gt; 20 (stressed market)</b>: go to full ${cfg.portfolioSize} positions — maximum diversification is your shield. Never hold fewer than ${Math.round(cfg.portfolioSize * 0.4)} positions in this mode.</div></div>` : ''}
+      ${id === 'fortress' ? `<div class="step" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#6d28d9"><i class="fas fa-shield-halved" style="font-size:.5rem"></i></span><div><b>Capital preservation first:</b> with 15 slots at ~7% each, a single stop-out costs only <b>−0.5% of portfolio</b>. <b>VIX &lt; 15 (calm)</b>: run ${Math.round(cfg.portfolioSize * 0.6)}–${Math.round(cfg.portfolioSize * 0.7)} positions. <b>VIX 15–25 (elevated)</b>: aim for ${Math.round(cfg.portfolioSize * 0.8)}+ positions. <b>VIX &gt; 25 (stressed)</b>: fill all ${cfg.portfolioSize} slots for maximum diversification. Never hold fewer than ${Math.round(cfg.portfolioSize * 0.4)} positions. Consider adding defensive ETFs (GLD, TLT) manually during high-VIX regimes.</div></div>` : id === 'secured' ? `<div class="step" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#64748b"><i class="fas fa-gauge" style="font-size:.5rem"></i></span><div><b>Adapt to the market regime:</b> check the VIX level before placing orders. <b>VIX &lt; 15 (calm market)</b>: you can run with ${Math.round(cfg.portfolioSize * 0.6)}–${Math.round(cfg.portfolioSize * 0.7)} positions instead of ${cfg.portfolioSize} — concentration is fine. <b>VIX 15–20 (neutral)</b>: aim for ${Math.round(cfg.portfolioSize * 0.8)} positions. <b>VIX &gt; 20 (stressed market)</b>: go to full ${cfg.portfolioSize} positions — maximum diversification is your shield. Never hold fewer than ${Math.round(cfg.portfolioSize * 0.4)} positions in this mode.</div></div>` : ''}
     </div>
     <div class="method-footer">
       <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} trades max · ${alloc}% each</span>
@@ -329,7 +332,7 @@ ${timedOut.length ? `<div class="cta-card cta-close">
 
 <!-- ══ 5. ORDERS CTA ══ -->
 ${(() => {
-        const alloc = Math.round(100 / cfg.portfolioSize);
+        const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
         const openTickers = new Set(pos.map(p => p.ticker));
         const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
         const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
@@ -1390,7 +1393,7 @@ document.addEventListener('DOMContentLoaded',function(){
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false }
+      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 }
     };
   }
 
@@ -1566,7 +1569,7 @@ function backfillHistory() {
         expiresTomorrow: activePos.filter(p => p.days_remaining === 1).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
         signals: filteredSignals,
         closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false },
+        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 },
       };
     }
 

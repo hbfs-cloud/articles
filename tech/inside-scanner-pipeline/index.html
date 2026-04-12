@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Inside the DailyTickers Pipeline — How We Track 40 Live Trades Every Night</title>
-  <meta name="description" content="A transparent tour of the scanner → portfolio pipeline: how setups flow from screener DSL to 3 mode portfolios, how trades are tracked, and the public endpoints you can consume.">
+  <meta name="description" content="A transparent tour of the scanner → portfolio pipeline: how setups flow from screener DSL to 5 mode portfolios (turbo, dynamic, balanced, secured, fortress), how trades are tracked, and the public endpoints you can consume.">
   <meta property="og:title" content="Inside the DailyTickers Pipeline — How We Track 40 Live Trades">
-  <meta property="og:description" content="Transparent tour of the scanner → portfolio pipeline (balanced, dynamic, secured modes).">
+  <meta property="og:description" content="Transparent tour of the scanner → portfolio pipeline (turbo, dynamic, balanced, secured, fortress modes).">
   <meta property="og:image" content="https://articles.dailytickers.com/scanner-daily-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
@@ -176,46 +176,55 @@
     </div>
   </section>
 
-  <!-- ── 3 Modes ── -->
+  <!-- ── 5 Modes ── -->
   <section id="modes">
-    <h2><i class="fas fa-layer-group"></i> The three modes, side by side</h2>
+    <h2><i class="fas fa-layer-group"></i> The five modes, side by side</h2>
     <p>
-      Every signal produced by the scanner is routed through three parallel mode
+      Every signal produced by the scanner is routed through five parallel mode
       configurations. Each mode has a different risk profile, slot count, and strategy
-      filter — optimized by the sweep to hit a specific objective.
+      filter — optimized by the sweep grid search (13M+ combinations) to hit a specific objective.
     </p>
 
     <table class="mode-table">
       <thead>
-        <tr><th>Mode</th><th>Slots</th><th>Horizon</th><th>Filter</th><th>minScore</th><th>Return</th><th>Max DD</th><th>Win Rate</th><th>PF</th></tr>
+        <tr><th>Mode</th><th>Slots</th><th>Alloc</th><th>Horizon</th><th>Filter</th><th>Return</th><th>Max DD</th><th>Win Rate</th><th>PF</th></tr>
       </thead>
       <tbody>
         <tr>
+          <td class="m-name"><span style="color:#f59e0b">&#9679;</span> Turbo</td>
+          <td>1</td><td>100%</td><td>3d</td><td>mom_bo</td>
+          <td class="pos">+52.47%</td><td class="neg">&minus;6.61%</td><td>50%</td><td>21.26x</td>
+        </tr>
+        <tr>
           <td class="m-name"><span style="color:#dc2626">&#9679;</span> Dynamic</td>
-          <td>1</td><td>3d</td><td>breakout_only</td><td>88</td>
-          <td class="pos">+44.57%</td><td class="neg">&minus;7.59%</td><td>58.8%</td><td>8.43x</td>
+          <td>1</td><td>100%</td><td>3d</td><td>breakout_only</td>
+          <td class="pos">+44.62%</td><td class="neg">&minus;7.59%</td><td>58.8%</td><td>8.44x</td>
         </tr>
         <tr>
           <td class="m-name"><span style="color:#059669">&#9679;</span> Balanced</td>
-          <td>2</td><td>5d</td><td>breakout_only</td><td>85</td>
-          <td class="pos">+26.81%</td><td class="neg">&minus;4.37%</td><td>60.0%</td><td>3.50x</td>
+          <td>2</td><td>50%</td><td>8d</td><td>breakout_only</td>
+          <td class="pos">+26.1%</td><td class="neg">&minus;2.61%</td><td>61.1%</td><td>3.83x</td>
         </tr>
         <tr>
           <td class="m-name"><span style="color:#2563eb">&#9679;</span> Secured</td>
-          <td>10</td><td>10d</td><td>no_sq</td><td>82</td>
-          <td class="pos">+17.22%</td><td class="neg">&minus;4.02%</td><td>55.8%</td><td>2.60x</td>
+          <td>3</td><td>33%</td><td>10d</td><td>breakout_only</td>
+          <td class="pos">+18.57%</td><td class="neg">&minus;2.2%</td><td>68.4%</td><td>4.12x</td>
+        </tr>
+        <tr>
+          <td class="m-name"><span style="color:#6d28d9">&#9679;</span> Fortress</td>
+          <td>3</td><td>17%</td><td>10d</td><td>breakout_only</td>
+          <td class="pos">+9.29%</td><td class="neg">&minus;1.11%</td><td>68.4%</td><td>4.12x</td>
         </tr>
       </tbody>
     </table>
 
     <div class="didactic-box">
-      <h4>How <code>minScore</code> differs per mode (updated 2026-04-11)</h4>
+      <h4>How the 5 modes differ (updated 2026-04-12)</h4>
       <p>
-        Previously all three modes shared <code>minScore = 85</code>. That meant Secured and
-        Dynamic were pulling from the same candidate pool, which defeated the purpose of
-        having distinct risk profiles. The fix: Dynamic now requires 88+ (only the very
-        best breakouts), Balanced keeps 85 (standard A+), Secured drops to 82 so it can
-        accumulate diversified exposure from a wider pool.
+        <b>Turbo</b> uses <code>mom_bo</code> filter (momentum + breakout), partial TP at TP1 (sell 50%, trail the rest),
+        and aggressive breakeven lock at +0.5% — producing 50% WR but a PF of 21x (avg win dwarfs avg loss).
+        <b>Fortress</b> uses the same parameters as Secured but with <code>positionSizePct = 0.5</code> — half-sized
+        positions that mechanically halve the drawdown from &minus;2.2% to &minus;1.1%.
       </p>
     </div>
 
@@ -254,7 +263,7 @@
       <ul>
         <li>Every trade in the live ledger has a traceable origin (scan date + rank).</li>
         <li>The same parser drives the backtest and the live tracker — no divergence between sim and prod.</li>
-        <li>The three modes are alternative strategies: a ticker in all three is a confirmation signal, not a hidden risk.</li>
+        <li>The five modes are alternative strategies: a ticker in all five is a confirmation signal, not a hidden risk.</li>
       </ul>
     </div>
   </section>

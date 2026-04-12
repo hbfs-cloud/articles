@@ -13,7 +13,7 @@ Pipeline complet en 6 étapes (~6 min) :
 2. `generate-scanner-image.js --telegram` — Génère image quotidienne + publie Telegram
 3. `sweep.js` — Re-run backtest optimizer (126k combos, ~5 min)
 4. `gen-3-cards.js` — Régénère les 3 PNG de mode avec timestamps (self-contained depuis backtest-trades.json)
-5. `gen-status-page.js` — Régénère scanner/status/index.html (text-only, 3 tabs avec tableaux de trades)
+5. `gen-status-page.js` — Régénère scanner/status/index.html (text-only, 5 tabs avec tableaux de trades)
 6. `git commit + push` — Tout est poussé en un seul commit
 
 Options :
@@ -736,11 +736,13 @@ Grid search exhaustif pour trouver les parametres optimaux du scanner. Teste 98 
 | Partial TP | false, true (50% a TP1, trail le reste) |
 | Trailing Stop | false, true (stop breakeven apres TP1, trail a 1.5R) |
 
-### 3 Modes Optimaux (resultats 20/03/2026)
+### 5 Modes Optimaux (resultats 12/04/2026)
 
-1. **Maximum Growth** : P4/Top4/all/aggressive/H5 -> +18.88%, DD -1.13%, Sharpe 16.71, 18 trades
-2. **Risk-Adjusted** : P5/Top5/no_sq/daily_max1/H5 -> +13.41%, DD -0.24%, Calmar 542, 19 trades
-3. **Zero Drawdown** : P3/Top2/momentum_only/aggressive/H20/PTP/Trail -> +7.42%, DD 0%, WR 77.8%, 9 trades
+1. **Turbo** : P1/Top1/mom_bo/none/H3/Trail=2%/BE=0.5%/PTP=50% -> +52.47%, DD -6.61%, WR 50%, PF 21.26x, 18 trades
+2. **Dynamic** : P1/Top1/breakout_only/daily_max1/H3/Trail=3%/BE=1% -> +44.62%, DD -7.59%, WR 58.8%, PF 8.44x, 17 trades
+3. **Balanced** : P2/Top1/breakout_only/daily_max1/H8 -> +26.1%, DD -2.61%, WR 61.1%, PF 3.83x, 18 trades
+4. **Secured** : P3/Top1/breakout_only/none/H10/MaxSt=5% -> +18.57%, DD -2.2%, WR 68.4%, PF 4.12x, 19 trades
+5. **Fortress** : P3/Top1/breakout_only/none/H10/MaxSt=5%/positionSizePct=0.5 -> +9.29%, DD -1.11%, WR 68.4%, PF 4.12x, 19 trades
 
 ### Usage
 
@@ -753,7 +755,7 @@ Grid search exhaustif pour trouver les parametres optimaux du scanner. Teste 98 
 - data/portfolio-history.json : Equity curve du combo optimal
 
 ### Page publique
-series/scanner-strategy/index.html — Guide des 3 modes avec ECharts, tabs, et instructions.
+series/scanner-strategy/index.html — Guide des 5 modes avec ECharts, tabs, et instructions.
 
 ---
 
@@ -779,14 +781,14 @@ Tout est automatise dans `publish-daily-card.sh` (voir section "Flux Post-Scan" 
 | `generate-scanner-image.js` | `scanner-metrics.json`, `scanner-positions.json` | `scanner-daily-card.html` + PNG Telegram | Step 2 |
 | `sweep.js` | tous les scans + Yahoo OHLCV | `backtest-results.json`, `backtest-trades.json`, `portfolio-history.json` | Step 3 |
 | `gen-3-cards.js` | `backtest-trades.json`, `modes-config.json` | `scanner/status/mode-{id}-{ts}.png` + `manifest.json` | Step 4 |
-| `gen-status-page.js` | `backtest-trades.json`, `modes-config.json`, `backtest-results.json` | `scanner/status/index.html` (text-only, 3 tabs) | Step 5 |
+| `gen-status-page.js` | `backtest-trades.json`, `modes-config.json`, `backtest-results.json` | `scanner/status/index.html` (text-only, 5 tabs) | Step 5 |
 
 **Single source of truth** : la page HTML et les tableaux sont generes depuis les memes fichiers JSON. Jamais de valeurs hardcodees.
 
 **scanner/status/index.html** contient :
-- Hero + 3 tabs (Growth, Calmar, Conservative) avec KPIs, config, equity chart ECharts
+- Hero + 5 tabs (Turbo, Dynamic, Balanced, Secured, Fortress) avec KPIs, config, equity chart ECharts
 - Tableau historique des trades par mode (ticker, date, strategy, entry, exit, P&L, duree, statut)
-- Tableau comparatif des 3 modes
+- Tableau comparatif des 5 modes
 - Pas d'images (tout en texte/HTML)
 
 **Images PNG** (`gen-3-cards.js`) : utilisees uniquement pour Telegram/Discord, pas affichees sur la page status.

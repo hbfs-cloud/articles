@@ -454,7 +454,8 @@ function simulatePortfolio(allTrades, scans, config) {
 
   // Equity tracking — daily mark-to-market
   let realizedPnl = 0; // cumulative realized P&L (%)
-  const weight = 1 / portfolioSize;
+  const positionSizePct = config.positionSizePct || 1;
+  const weight = (1 / portfolioSize) * positionSizePct;
   const equityCurve = [{ date: startDate, value: 100 }];
   const scanDateSet = new Set(allScanDates);
 
@@ -661,10 +662,10 @@ async function main() {
   console.log(`Walk-forward split: ${inSampleDates.size} in-sample / ${outSampleDates.size} out-of-sample scans`);
 
   // 4. Grid dimensions — ~311K combos, ~5 min nightly run
-  const PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8, 10];
+  const PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8, 10, 15];
   const TOP_NS = QUICK ? [1, 2] : [1, 2, 3, 4, 5, 8, 10];
   const MIN_SCORES = QUICK ? [85] : [85, 90];
-  const HORIZONS = QUICK ? [5, 15] : [3, 5, 8, 10, 15];
+  const HORIZONS = QUICK ? [5, 15] : [2, 3, 5, 8, 10, 15];
   const STRATEGY_FILTERS = {
     'all': new Set(),
     'no_sq': new Set(['short_squeeze']),
@@ -676,12 +677,12 @@ async function main() {
   const ROTATIONS = ['none', 'daily_max1', 'aggressive'];
   const TP_MODES = [false, true]; // partialTP
   const TP_PCTS = [0.5]; // partial TP fraction (0.5 is the balanced default)
-  const TRAIL_MODES = [false]; // trailingStop disabled (rarely wins, adds 2× combos)
-  const MAX_STOP_PCTS = [0, 3, 5, 7]; // 0 = no cap
+  const TRAIL_MODES = [false, true]; // trailingStop: turbo uses true
+  const MAX_STOP_PCTS = [0, 2, 3, 5, 7]; // 0 = no cap, 2% = turbo tight
   const ATR_STOP_MULTS = [0, 1, 2]; // 0 = disabled
-  const DAILY_TRAIL_PCTS = [0, 3]; // 0 = disabled, 3% is the proven sweet spot
-  const BREAKEVEN_PCTS = [0, 1]; // 0 = disabled, 1% is the standard
-  const STALE_DAYS = [0]; // disabled — too situational for nightly sweep
+  const DAILY_TRAIL_PCTS = [0, 2, 3]; // 0 = disabled, 2% = turbo tight, 3% = proven sweet spot
+  const BREAKEVEN_PCTS = [0, 0.5, 1]; // 0 = disabled, 0.5% = turbo fast, 1% = standard
+  const STALE_DAYS = [0, 2]; // 0 = disabled, 2 = turbo exit on stale momentum
 
   // TP_PCTS only matter when partialTP=true, so effective count = (1 + TP_PCTS.length) for TP dimension
   const tpCombos = [[false, 0.5], ...TP_PCTS.map(p => [true, p])]; // [partialTP, partialTPPct]
@@ -742,12 +743,16 @@ async function main() {
   const topByComposite = [];
   const topByLowestDD = []; // sorted ascending by |DD| (lowest first)
   // Mode-specific trackers with constraints
+  const advTurbo = [];           // strict: Return≥40%, DD≤10%, WR≥55%, trades≥8
   const advDynamic = [];         // strict: Return≥35%, DD≤6%, WR≥60%, trades≥10
   const advBalanced = [];        // strict: Return≥24%, DD≤4%, WR≥60%, trades≥10
   const advSecured = [];         // strict: Return≥12%, DD≤2%, WR≥75%, trades≥10
+  const advFortress = [];        // strict: Return≥8%, DD≤1.5%, WR≥70%, trades≥10
+  const advTurboRelaxed = [];    // relaxed: Return≥30%, DD≤15%, WR≥50%, trades≥8
   const advDynamicRelaxed = [];  // relaxed: Return≥30%, DD≤10%, WR≥55%, trades≥10
   const advBalancedRelaxed = []; // relaxed: Return≥20%, DD≤5%, WR≥55%, trades≥10
   const advSecuredRelaxed = [];  // relaxed: Return≥10%, DD≤2.5%, WR≥65%, trades≥10
+  const advFortressRelaxed = []; // relaxed: Return≥5%, DD≤2%, WR≥65%, trades≥10
 
   function insertTop(arr, item, compareFn) {
     if (arr.length < TOP_K) { arr.push(item); arr.sort(compareFn); return; }
@@ -793,6 +798,9 @@ async function main() {
                               insertTop(topByComposite, r, (a, b) => b.composite - a.composite);
                               insertTop(topByLowestDD, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                               // Mode advisors — strict targets (aspirational)
+                              if (r.returnTotal >= 40 && Math.abs(r.maxDD) <= 10 && r.winRate >= 55 && r.trades >= 8) {
+                                insertTop(advTurbo, r, (a, b) => b.returnTotal - a.returnTotal);
+                              }
                               if (r.returnTotal >= 35 && Math.abs(r.maxDD) <= 6 && r.winRate >= 60 && r.trades >= 10) {
                                 insertTop(advDynamic, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
@@ -802,7 +810,13 @@ async function main() {
                               if (r.returnTotal >= 12 && Math.abs(r.maxDD) <= 2 && r.winRate >= 75 && r.trades >= 10) {
                                 insertTop(advSecured, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
+                              if (r.returnTotal >= 8 && Math.abs(r.maxDD) <= 1.5 && r.winRate >= 70 && r.trades >= 10) {
+                                insertTop(advFortress, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
+                              }
                               // Near-miss advisors — best achievable with relaxed constraints
+                              if (r.returnTotal >= 30 && Math.abs(r.maxDD) <= 15 && r.winRate >= 50 && r.trades >= 8) {
+                                insertTop(advTurboRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
+                              }
                               if (r.returnTotal >= 30 && Math.abs(r.maxDD) <= 10 && r.winRate >= 55 && r.trades >= 10) {
                                 insertTop(advDynamicRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
@@ -811,6 +825,9 @@ async function main() {
                               }
                               if (r.returnTotal >= 10 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 65 && r.trades >= 10) {
                                 insertTop(advSecuredRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
+                              }
+                              if (r.returnTotal >= 5 && Math.abs(r.maxDD) <= 2 && r.winRate >= 65 && r.trades >= 10) {
+                                insertTop(advFortressRelaxed, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                               }
                             }
 
@@ -919,7 +936,12 @@ async function main() {
   // ─── MODE ADVISOR: find best config for each objective ───────────────────
   console.log('\n═══ MODE ADVISOR ═══\n');
 
-  console.log('DYNAMIC (Return≥35%, DD≤6%, WR≥60%, trades≥10 — sweep finds optimal P/filter/exit):');
+  console.log('TURBO (Return≥40%, DD≤10%, WR≥55%, trades≥8 — ultra-aggressive short-term):');
+  for (const r of advTurbo.slice(0, 10)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nDYNAMIC (Return≥35%, DD≤6%, WR≥60%, trades≥10 — sweep finds optimal P/filter/exit):');
   for (const r of advDynamic.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
@@ -934,9 +956,20 @@ async function main() {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
+  console.log('\nFORTRESS (Return≥8%, DD≤1.5%, WR≥70%, trades≥10 — ultra-conservative capital preservation):');
+  for (const r of advFortress.slice(0, 10)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
   console.log('\n─── NEAR-MISS (relaxed constraints — best achievable) ───\n');
 
-  console.log('DYNAMIC near-miss (Return≥30%, DD≤10%, WR≥55%, trades≥10):');
+  console.log('TURBO near-miss (Return≥30%, DD≤15%, WR≥50%, trades≥8):');
+  if (advTurboRelaxed.length === 0) console.log('  (none found)');
+  for (const r of advTurboRelaxed.slice(0, 5)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nDYNAMIC near-miss (Return≥30%, DD≤10%, WR≥55%, trades≥10):');
   if (advDynamicRelaxed.length === 0) console.log('  (none found)');
   for (const r of advDynamicRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
@@ -951,6 +984,12 @@ async function main() {
   console.log('\nSECURED near-miss (Return≥10%, DD≤2.5%, WR≥65%, trades≥10):');
   if (advSecuredRelaxed.length === 0) console.log('  (none found)');
   for (const r of advSecuredRelaxed.slice(0, 5)) {
+    console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
+  }
+
+  console.log('\nFORTRESS near-miss (Return≥5%, DD≤2%, WR≥65%, trades≥10):');
+  if (advFortressRelaxed.length === 0) console.log('  (none found)');
+  for (const r of advFortressRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
@@ -974,12 +1013,16 @@ async function main() {
     optimal_return: topByReturn[0] || null,
     optimal_calmar: topByCalmar[0] || null,
     optimal_composite: topByComposite[0] || null,
+    advisor_turbo: advTurbo[0] || null,
     advisor_dynamic: advDynamic[0] || null,
     advisor_balanced: advBalanced[0] || null,
     advisor_secured: advSecured[0] || null,
+    advisor_fortress: advFortress[0] || null,
+    advisor_turbo_relaxed: advTurboRelaxed[0] || null,
     advisor_dynamic_relaxed: advDynamicRelaxed[0] || null,
     advisor_balanced_relaxed: advBalancedRelaxed[0] || null,
     advisor_secured_relaxed: advSecuredRelaxed[0] || null,
+    advisor_fortress_relaxed: advFortressRelaxed[0] || null,
     top20_sharpe: ranked.slice(0, 20).map(r => ({
       portfolioSize: r.portfolioSize, topN: r.topN, minScore: r.minScore,
       filterName: r.filterName, rotation: r.rotation, horizon: r.horizon,
@@ -1015,7 +1058,7 @@ async function main() {
   };
 
 
-  // Save trade lists for 3 FROZEN modes (from modes-config.json)
+  // Save trade lists for all FROZEN modes (from modes-config.json)
   const MODES_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
   const frozenTrades = {};
   if (fs.existsSync(MODES_CFG_PATH)) {
@@ -1027,7 +1070,7 @@ async function main() {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
-        trailingStop: cfg.trailingStop || false,
+        trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
       };
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
       if (sim2 && sim2.closedTrades) {
@@ -1045,7 +1088,7 @@ async function main() {
     }
   } else {
     // Fallback: use optimal combos if no modes-config
-    for (const [key, combo] of [["dynamic", topByReturn[0]], ["balanced", topByCalmar[0]], ["secured", ranked[0]]]) {
+    for (const [key, combo] of [["turbo", topByReturn[0]], ["dynamic", topByReturn[0]], ["balanced", topByCalmar[0]], ["secured", ranked[0]], ["fortress", ranked[0]]]) {
       if (!combo) continue;
       const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.partialTPPct || 0.5}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}_${combo.breakevenPct || 0}_${combo.staleDays || 0}`;
       const trades2 = tradesByKey[fbKey] || [];
@@ -1094,7 +1137,7 @@ async function main() {
     console.log("All modes are FROZEN in data/modes-config.json.");
     console.log("The sweep NEVER modifies them. Comparison below:\n");
 
-    const optMap = { dynamic: topByReturn[0], balanced: topByCalmar[0], secured: ranked[0] };
+    const optMap = { turbo: topByReturn[0], dynamic: topByReturn[0], balanced: topByCalmar[0], secured: ranked[0], fortress: ranked[0] };
     for (const [id, cfg] of Object.entries(config.modes)) {
       const opt = optMap[id];
       if (!opt) continue;

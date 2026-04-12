@@ -45,6 +45,7 @@ module.exports = {
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     momentum_only: s => /momentum/i.test(s),
     breakout_only: s => /breakout/i.test(s),
+    mom_bo: s => /momentum|breakout/i.test(s),
   },
 
   // ── Operational thresholds ──────────────────────────────────────────────

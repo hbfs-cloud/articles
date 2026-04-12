@@ -2,7 +2,7 @@
 /**
  * gen-api.js — Portfolio endpoint generator (multi-mode)
  * Reads the latest scanner status snapshot and writes flat JSON to portfolio/v1/
- * Outputs per-mode endpoints in portfolio/v1/{mode}/ for all 3 modes.
+ * Outputs per-mode endpoints in portfolio/v1/{mode}/ for all 5 modes.
  * Root portfolio/v1/ endpoints point to balanced mode (backward compat).
  *
  * Usage: node tools/gen-api.js
@@ -59,7 +59,8 @@ function writeMode(mode, prefix) {
 
   // 2. positions.json
   const portfolioSize = (mode.config || {}).portfolioSize || 1;
-  const allocPct = Math.round(100 / portfolioSize);
+  const positionSizePct = (mode.config || {}).positionSizePct || 1;
+  const allocPct = Math.round(100 / portfolioSize * positionSizePct);
   write(`${p}positions.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
     allocPct,
@@ -163,8 +164,8 @@ function writeMode(mode, prefix) {
   });
 }
 
-// ─── Write all 3 modes ──────────────────────────────────────────────────────
-const MODE_IDS = ['dynamic', 'balanced', 'secured'];
+// ─── Write all modes ────────────────────────────────────────────────────────
+const MODE_IDS = ['turbo', 'dynamic', 'balanced', 'secured', 'fortress'];
 let count = 0;
 
 for (const id of MODE_IDS) {

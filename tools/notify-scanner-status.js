@@ -93,7 +93,7 @@ function readStatusMetrics(modeKey = 'balanced') {
 // ─── Reconstruct positions like gen-status-page.js ───────────────────────────
 // Positions = premature (expired but holdDays < horizon) trades, enriched with live prices
 function buildPositions(cfg, modeKey) {
-  const modeMap = { dynamic: 'dynamic', balanced: 'balanced', secured: 'secured' };
+  const modeMap = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress' };
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
   const livePositions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json'))).open_positions || [];
   const liveLookup = {};
