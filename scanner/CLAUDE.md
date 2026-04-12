@@ -736,13 +736,23 @@ Grid search exhaustif pour trouver les parametres optimaux du scanner. Teste 98 
 | Partial TP | false, true (50% a TP1, trail le reste) |
 | Trailing Stop | false, true (stop breakeven apres TP1, trail a 1.5R) |
 
-### 5 Modes Optimaux (resultats 12/04/2026)
+### 5 Modes Optimaux (resultats 12/04/2026, sweep 13M combos)
 
 1. **Turbo** : P1/Top1/mom_bo/none/H3/Trail=2%/BE=0.5%/PTP=50% -> +52.47%, DD -6.61%, WR 50%, PF 21.26x, 18 trades
 2. **Dynamic** : P1/Top1/breakout_only/daily_max1/H3/Trail=3%/BE=1% -> +44.62%, DD -7.59%, WR 58.8%, PF 8.44x, 17 trades
-3. **Balanced** : P2/Top1/breakout_only/daily_max1/H8 -> +26.1%, DD -2.61%, WR 61.1%, PF 3.83x, 18 trades
+3. **Balanced** : P1/Top1/momentum_only/aggressive/H8/ATR=1x -> +35%, DD -4%, WR 60%, PF 4.68x, R²=0.924, 10 trades
 4. **Secured** : P3/Top1/breakout_only/none/H10/MaxSt=5% -> +18.57%, DD -2.2%, WR 68.4%, PF 4.12x, 19 trades
 5. **Fortress** : P3/Top1/breakout_only/none/H10/MaxSt=5%/positionSizePct=0.5 -> +9.29%, DD -1.11%, WR 68.4%, PF 4.12x, 19 trades
+
+### Choix des filtres (validation empirique sur 6 filtres x 5 profils)
+
+| Filtre | Best use case | Raison |
+|--------|--------------|--------|
+| **mom_bo** | Turbo (H3, extreme) | Momentum+breakout = max return sur horizon court |
+| **momentum_only** | Balanced (H8, risk-adjusted) | Meilleur R²=0.924, DD -4% vs -2.61% breakout sur H8 |
+| **breakout_only** | Dynamic (H3), Secured/Fortress (H10) | Seul filtre avec DD<3% sur H10 (all/no_sq/momentum=5.85% DD) |
+
+Les filtres momentum/all/no_sq ajoutent des signaux squeeze/momentum qui gagnent sur H3-H5 mais se retournent sur H10, gonflant le DD de -2.2% a -5.85%. breakout_only est le seul viable pour capital preservation.
 
 ### Usage
 
