@@ -1,6 +1,12 @@
 #!/bin/bash
 set -u
 
+# Source user profile for Telegram topics & other env
+[ -f /home/ci/.profile ] && . /home/ci/.profile 2>/dev/null || true
+
+# Load .env if exists (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)
+[ -f /home/ci/projects/articles/.env ] && eval "$(grep -v '^#' /home/ci/projects/articles/.env | sed '/^$/d' | sed 's/^/export /')" 2>/dev/null || true
+
 # Load secrets from Infisical
 if command -v infisical >/dev/null 2>&1 && [ -n "$INFISICAL_CLIENT_ID" ]; then
   export INFISICAL_TOKEN=$(infisical login --method=universal-auth \
@@ -16,11 +22,11 @@ if command -v infisical >/dev/null 2>&1 && [ -n "$INFISICAL_CLIENT_ID" ]; then
 fi
 
 # Telegram topics (from Infisical or hardcoded fallback)
-export TELEGRAM_TOPIC_PORTFOLIO="${TELEGRAM_TOPIC_PORTFOLIO:-72}"
+export TELEGRAM_TOPIC_PORTFOLIO="${TELEGRAM_TOPIC_PORTFOLIO:-0}"
 export TELEGRAM_TOPIC_TURBO="${TELEGRAM_TOPIC_TURBO:-366}"
-export TELEGRAM_TOPIC_DYNAMIC="${TELEGRAM_TOPIC_DYNAMIC:-${TELEGRAM_TOPIC_GROWTH:-89}}"
-export TELEGRAM_TOPIC_BALANCED="${TELEGRAM_TOPIC_BALANCED:-${TELEGRAM_TOPIC_CALMAR:-90}}"
-export TELEGRAM_TOPIC_SECURED="${TELEGRAM_TOPIC_SECURED:-${TELEGRAM_TOPIC_CONSERVATIVE:-91}}"
+export TELEGRAM_TOPIC_DYNAMIC="${TELEGRAM_TOPIC_DYNAMIC:-291}"
+export TELEGRAM_TOPIC_BALANCED="${TELEGRAM_TOPIC_BALANCED:-90}"
+export TELEGRAM_TOPIC_SECURED="${TELEGRAM_TOPIC_SECURED:-293}"
 export TELEGRAM_TOPIC_FORTRESS="${TELEGRAM_TOPIC_FORTRESS:-367}"
 
 # Discord webhooks (global + per mode)
