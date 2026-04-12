@@ -616,6 +616,7 @@ function simulatePortfolio(allTrades, scans, config) {
       scanDate: t.scanDate, entryDate: t.entryDate,
       actualEntry: t.actualEntry, exitPrice: t.exitPrice,
       status: t.status, pnlPct: t.pnlPct, holdDays: t.holdDays || 0,
+      actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,
     })),
   };
 }

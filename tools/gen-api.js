@@ -15,6 +15,12 @@ const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
 const HISTORY = path.join(ROOT, 'scanner', 'status', 'history');
 
+function parsePrice(s) {
+  if (s == null || s === '—' || s === '') return null;
+  const n = parseFloat(String(s).replace(/[$,]/g, ''));
+  return isNaN(n) ? null : n;
+}
+
 fs.mkdirSync(OUT, { recursive: true });
 
 function write(filename, content) {
@@ -45,7 +51,9 @@ function writeMode(mode, prefix) {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
-      entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || ''
+      entryRaw: s.entry, entry: parsePrice(s.entry),
+      stopRaw: s.stop, stop: parsePrice(s.stop),
+      tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr, thesis: s.thesis || ''
     }))
   });
 
@@ -62,7 +70,7 @@ function writeMode(mode, prefix) {
       return {
         ticker: p.ticker, entry, currentPrice: p.current_price,
         returnPct: p.return_pct, score: p.score || 0,
-        stop, tp1: p.tp1, tp2: p.tp2, riskPct, allocPct,
+        stop, tp1: p.tp1 || null, tp2: p.tp2 || null, riskPct, allocPct,
         scanDate: p.scan_date, daysRemaining: p.days_remaining
       };
     })
@@ -118,12 +126,14 @@ function writeMode(mode, prefix) {
     equityCurve: mode.equity || {},
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
-      entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || ''
+      entryRaw: s.entry, entry: parsePrice(s.entry),
+      stopRaw: s.stop, stop: parsePrice(s.stop),
+      tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr, thesis: s.thesis || ''
     })),
     orders: (mode.orders || []).map(o => ({
       ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
       entry: o.entry, stop: o.stop, tp1: o.tp1, tp2: o.tp2, rr: o.rr,
-      replaces: o.replaces || null, thesis: o.thesis || ''
+      replaces: o.replaces || null, scoreDelta: o.scoreDelta || null, thesis: o.thesis || ''
     })),
     positions: (mode.positions || []).map(p => {
       const entry = p.entry || 0;
@@ -132,7 +142,7 @@ function writeMode(mode, prefix) {
       return {
         ticker: p.ticker, entry, currentPrice: p.current_price,
         returnPct: p.return_pct, score: p.score || 0,
-        stop, tp1: p.tp1, tp2: p.tp2, riskPct, allocPct: Math.round(100 / portfolioSize),
+        stop, tp1: p.tp1 || null, tp2: p.tp2 || null, riskPct, allocPct: Math.round(100 / portfolioSize),
         scanDate: p.scan_date, daysRemaining: p.days_remaining
       };
     }),
@@ -256,6 +266,17 @@ write('modes.json', {
       stats: m.stats || {},
       positionCount: (m.positions || []).length,
       orderCount: (m.orders || []).length,
+      portfolioSize: m.config?.portfolioSize || 1,
+      maxStopPct: m.config?.maxStopPct || 0,
+      atrStopMult: m.config?.atrStopMult || 0,
+      dailyTrailPct: m.config?.dailyTrailPct || 0,
+      breakevenPct: m.config?.breakevenPct || 0,
+      partialTP: m.config?.partialTP || false,
+      trailingStop: m.config?.trailingStop || false,
+      rotation: m.config?.rotation || 'none',
+      minScore: m.config?.minScore || 85,
+      horizon: m.config?.horizon || 10,
+      slotsAvailable: (m.config?.portfolioSize || 1) - (m.positions || []).length,
     };
   })
 });
