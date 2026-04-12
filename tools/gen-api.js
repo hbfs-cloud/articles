@@ -143,7 +143,7 @@ function writeMode(mode, prefix) {
       return {
         ticker: p.ticker, entry, currentPrice: p.current_price,
         returnPct: p.return_pct, score: p.score || 0,
-        stop, tp1: p.tp1 || null, tp2: p.tp2 || null, riskPct, allocPct: Math.round(100 / portfolioSize),
+        stop, tp1: p.tp1 || null, tp2: p.tp2 || null, riskPct, allocPct,
         scanDate: p.scan_date, daysRemaining: p.days_remaining
       };
     }),

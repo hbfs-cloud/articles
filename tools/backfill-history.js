@@ -47,15 +47,16 @@ function bizDaysBetween(d1, d2) {
   return count;
 }
 
-function computeStatsUpTo(trades, portfolioSize) {
+function computeStatsUpTo(trades, portfolioSize, positionSizePct) {
+  const pspct = positionSizePct || 1;
   const wins = trades.filter(t => t.pnlPct > 0);
   const losses = trades.filter(t => t.pnlPct <= 0);
-  const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize, 0);
+  const totalReturn = trades.reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize * pspct, 0);
 
   let equity = 0, peak = 0, maxDD = 0;
   const equityCurve = [{ date: null, value: 100 }];
   for (const t of trades) {
-    equity += (t.pnlPct || 0) / portfolioSize;
+    equity += (t.pnlPct || 0) / portfolioSize * pspct;
     if (equity > peak) peak = equity;
     if (peak - equity > maxDD) maxDD = peak - equity;
     equityCurve.push({ date: t.scanDate, value: +(100 + equity).toFixed(2) });
@@ -210,7 +211,7 @@ function main() {
       });
 
       // 2. Stats from closed trades (realized only for stats)
-      const stats = computeStatsUpTo(closedByDate, cfg.portfolioSize);
+      const stats = computeStatsUpTo(closedByDate, cfg.portfolioSize, cfg.positionSizePct);
 
       // Forward DD accumulation: DD can only get worse (more negative) over time
       if (!(modeId in worstDD)) worstDD[modeId] = 0;
