@@ -606,7 +606,12 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
-        const sorted = [...trades].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
+        // Only show pending trades that actually made it into open positions (capped to portfolioSize).
+        // Premature trades that were dropped by the cap are backtest overflow — hiding them keeps
+        // Trade History consistent with Open Positions (no orphan "Pending" rows).
+        const keptPremature = new Set(pos.map(p => p.ticker + '|' + p.scan_date));
+        const filtered = trades.filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate));
+        const sorted = [...filtered].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
         const replacedBy = {};
         for (let i = 0; i < sorted.length; i++) {
           if (sorted[i].status === 'rotated') {
