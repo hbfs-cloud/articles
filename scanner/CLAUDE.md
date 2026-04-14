@@ -1,5 +1,32 @@
 # DailyTickers - Scanner Instructions
 
+## ⭐ Nouveau Pipeline (Future Scans) — JSON → HTML
+
+### Flow
+1. Claude génère `scanner/YYYYMMDD/data.json` (structure JSON uniquement)
+2. `node tools/render-scanner.js scanner/YYYYMMDD/` génère `index.html`
+3. `node tools/add_card.js scanner/YYYYMMDD/index.html`
+4. `./tools/publish-daily-card.sh`
+
+### Avantages
+- -85% tokens LLM (JSON vs HTML brut)
+- Structure garantie (plus de dérive de template)
+- Design modifiable sans régénérer les données
+
+### Ce que Claude doit générer (data.json)
+Refer to `scanner/template/schema.json` for the full documented schema with all fields.
+
+Claude génère UNIQUEMENT le `data.json`. Pas de HTML. Le renderer s'occupe de tout le reste.
+
+Les champs obligatoires minimum :
+- `date`, `session_label`, `regime`, `regime_score`, `regime_color`, `tags`
+- `kpis` (vix, spx, avg_score, dominant_patterns)
+- `intro`, `strategy`, `regime_prose`, `regime_strategy_weights`
+- `market_snapshot`, `pedagogy`, `macro_calendar`, `sector_rotation`, `macro_thesis`
+- `setups[]` — chaque setup requiert : `ticker`, `name`, `description`, `logo_gradient`, `price`, `change_pct`, `score`, `pattern`, `region`, `region_flag`, `region_label`, `sharia`, `radar_scores`, `entry_low`, `entry_high`, `stop`, `tp1`, `tp2`, `rr`, `horizon_days`, `thesis`, `confirmations[]`, `invalidations[]`
+
+---
+
 ## 🖼️ IMAGE QUOTIDIENNE DISCORD/TELEGRAM — PROCÉDURE COMPLÈTE
 
 ### Flux Post-Scan (OBLIGATOIRE après chaque scan publié)
@@ -90,6 +117,7 @@ npm install puppeteer form-data
 
 ## 5. SCANNER QUOTIDIEN
 
+> **Pour les nouveaux scans, générer `data.json` puis lancer le renderer. Voir section ⭐ ci-dessus.**
 
 ### Objectif
 Article quotidien généré par le scanner algorithmique. Détecte automatiquement les meilleurs setups du jour en fonction du régime de marché (Risk-On, Neutral, Early Risk-Off, Risk-Off, Recovery). Supporte le multilangue et multi-niveau comme les analyses individuelles.
