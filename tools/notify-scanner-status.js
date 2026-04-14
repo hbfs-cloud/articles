@@ -240,7 +240,8 @@ function buildTelegramMessage(d) {
     `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const modeLabel = d.cfg.id === 'dynamic' ? '🔥 Dynamic' : d.cfg.id === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
+  const modeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress' };
+  const modeLabel = modeLabels[d.cfg.id] || '⚖️ Balanced';
 
   return `${modeLabel}  —  ${d.scanDate}
 <code>${sep}</code>
@@ -308,7 +309,8 @@ function buildDiscordMessage(d) {
     `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const dcLabel = d.cfg.id === 'dynamic' ? 'Dynamic' : d.cfg.id === 'secured' ? 'Secured' : 'Balanced';
+  const dcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress' };
+  const dcLabel = dcLabels[d.cfg.id] || 'Balanced';
   return `## 📊 Portfolio ${dcLabel} — ${d.scanDate}
 > 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
 ${actions}
@@ -328,7 +330,8 @@ ${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
 // ─── Build compact caption for sendAudio (max 1024 chars) ─────────────────────
 function buildAudioCaption(d, ytUrl) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabel = d.cfg.id === 'dynamic' ? '🔥 Dynamic' : d.cfg.id === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
+  const modeLabels2 = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress' };
+  const modeLabel = modeLabels2[d.cfg.id] || '⚖️ Balanced';
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
   const closeNow   = d.activePos.filter(p => p.left <= 1);
@@ -388,7 +391,8 @@ function buildAudioCaption(d, ytUrl) {
 // ─── Build audio narration script (60-80 words, analytical) ─────────────────
 function buildAudioScript(d) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabel = d.cfg.id === 'dynamic' ? 'Dynamic' : d.cfg.id === 'secured' ? 'Secured' : 'Balanced';
+  const modeLabels3 = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress' };
+  const modeLabel = modeLabels3[d.cfg.id] || 'Balanced';
 
   const closeNow = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
@@ -723,9 +727,11 @@ async function main() {
 
   // Send to all 3 mode topics
   const modeTopics = [
+    { key: 'turbo',    topicEnv: 'TELEGRAM_TOPIC_TURBO' },
     { key: 'dynamic',  topicEnv: 'TELEGRAM_TOPIC_DYNAMIC' },
     { key: 'balanced', topicEnv: 'TELEGRAM_TOPIC_BALANCED' },
     { key: 'secured',  topicEnv: 'TELEGRAM_TOPIC_SECURED' },
+    { key: 'fortress', topicEnv: 'TELEGRAM_TOPIC_FORTRESS' },
   ];
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
@@ -778,7 +784,8 @@ async function main() {
       }
       // Upload to YouTube
       if (modeVideoPath) {
-        const modeLabel = key === 'dynamic' ? '🔥 Dynamic' : key === 'secured' ? '🛡️ Secured' : '⚖️ Balanced';
+        const ytModeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress' };
+        const modeLabel = ytModeLabels[key] || '⚖️ Balanced';
         const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | DailyTickers`;
         const ytDesc = `${modeLabel} Portfolio Update\n\n` +
           `📈 Return: ${(modePayload.metrics.ret >= 0 ? '+' : '')}${modePayload.metrics.ret}%\n` +
@@ -804,7 +811,8 @@ async function main() {
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
       // Send video if no YouTube (fallback: embed directly)
       if (!modeYtUrl && modeVideoPath) {
-        const videoCaption = `📊 <b>${key === 'dynamic' ? 'Dynamic' : key === 'secured' ? 'Secured' : 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
+        const vcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress' };
+        const videoCaption = `📊 <b>${vcLabels[key] || 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
         sendTelegramVideo(modeVideoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
         console.log(`✅ Telegram video embedded [${key}] → topic ${topicId}`);
       }
