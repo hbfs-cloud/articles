@@ -252,15 +252,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     '<i class="fa-brands fa-telegram"></i> Join on Telegram' +
                 '</a>' +
             '</div>' +
-            '<div class="retention-kit-card retention-kit-email">' +
-                '<div class="rk-icon"><i class="fa-solid fa-envelope"></i></div>' +
-                '<div class="rk-heading">Email digest — coming soon</div>' +
-                '<div class="rk-sub">Weekly recap of every scanner pick, daily and analysis. We\'re building it now.</div>' +
-                '<a class="rk-btn rk-btn-email" href="https://t.me/+gl06cNSLV2RiZmE0" target="_blank" rel="noopener">' +
-                    '<i class="fa-brands fa-telegram"></i> Get it on Telegram first' +
-                '</a>' +
-                '<div class="rk-disclaimer">Free Telegram channel — same content, real-time.</div>' +
-            '</div>' +
             '<div class="retention-kit-card retention-kit-rss">' +
                 '<div class="rk-icon"><i class="fa-solid fa-rss"></i></div>' +
                 '<div class="rk-heading">Follow via RSS</div>' +
@@ -269,16 +260,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     '<i class="fa-solid fa-rss"></i> Subscribe to RSS' +
                 '</a>' +
             '</div>';
-
-        // Handle form submit — no-op until backend exists
-        var form = kit.querySelector('.rk-form');
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-            var btn = form.querySelector('button');
-            btn.textContent = 'Thanks!';
-            btn.disabled = true;
-            form.querySelector('input').disabled = true;
-        });
 
         footer.insertBefore(kit, footer.firstChild);
     }
