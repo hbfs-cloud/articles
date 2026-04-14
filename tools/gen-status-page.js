@@ -67,7 +67,7 @@ function main() {
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
 
-  // Latest scan signals — use shared parser lib (see tools/lib/scanner-parser.js)
+  // Latest scan signals — JSON-first via loadSignals, HTML fallback for legacy scans
   const parser = require('./lib/scanner-parser');
   const sharedCfg = require('./config');
   let signals = [];
@@ -75,25 +75,29 @@ function main() {
   const thesisMap = {};
   try {
     const dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
-    // Pick the most recent scan dir that has a non-empty HTML file
+    // Pick the most recent scan dir that has a valid scan
     for (const d of dirs) {
-      const p = path.join(SCANNER_DIR, d, 'index.html');
+      const jsonP = path.join(SCANNER_DIR, d, 'signals.json');
+      const htmlP = path.join(SCANNER_DIR, d, 'index.html');
       try {
-        const st = fs.statSync(p);
-        if (st.size > 5000) { scanDir = d; break; }
+        if (fs.existsSync(jsonP) || (fs.statSync(htmlP).size > 5000)) { scanDir = d; break; }
       } catch (_) { }
     }
+    // Collect thesis from recent scans (loadSignals handles JSON/HTML automatically)
     const recentDirs = dirs.slice(0, sharedCfg.RECENT_SCANS_WINDOW);
     for (const dir of recentDirs) {
       try {
-        const scanHtml = fs.readFileSync(path.join(SCANNER_DIR, dir, 'index.html'), 'utf8');
-        const tmap = parser.parseThesisMap(scanHtml);
-        for (const [k, v] of Object.entries(tmap)) { if (!thesisMap[k]) thesisMap[k] = v; }
+        const loaded = parser.loadSignals(dir);
+        if (loaded && loaded.thesis) {
+          for (const [k, v] of Object.entries(loaded.thesis)) { if (!thesisMap[k]) thesisMap[k] = v; }
+        }
       } catch (_) { }
     }
     if (scanDir) {
-      const html = fs.readFileSync(path.join(SCANNER_DIR, scanDir, 'index.html'), 'utf8');
-      signals = parser.parseScannerHtml(html).map(s => ({ ...s, thesis: thesisMap[s.ticker] || '' }));
+      const loaded = parser.loadSignals(scanDir);
+      if (loaded) {
+        signals = loaded.signals.map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || '' }));
+      }
     }
   } catch (_) { }
   signals.sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -152,21 +156,27 @@ function main() {
   };
   function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB' }[f] || f; }
 
-  function clampStop(entry, scannerStop, maxStopPct) {
-    if (!maxStopPct || maxStopPct <= 0 || !entry || entry <= 0) return scannerStop;
-    const clampedStop = +(entry * (1 - maxStopPct / 100)).toFixed(2);
-    // Return the tighter stop (higher value = less risk)
-    const numStop = typeof scannerStop === 'string' ? parseFloat(scannerStop.replace(/[$,]/g, '')) : scannerStop;
-    if (isNaN(numStop) || numStop <= 0) return '$' + clampedStop;
-    const tighter = Math.max(numStop, clampedStop);
-    return typeof scannerStop === 'string' ? '$' + tighter.toFixed(2) : tighter;
+  // Format number as "$X.XX" for display — data stays numeric until render
+  function $fmt(n) { return n != null && !isNaN(n) ? '$' + Number(n).toFixed(2) : '—'; }
+
+  function clampStop(entry, stop, maxStopPct) {
+    if (!maxStopPct || maxStopPct <= 0 || !entry || entry <= 0 || !stop) return stop;
+    const clamped = +(entry * (1 - maxStopPct / 100)).toFixed(2);
+    return Math.max(stop, clamped);
   }
   function signalsFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
     return signals.filter(s => f(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN).map(s => {
-      // Clamp stop to mode's maxStopPct
-      const entryNum = parseFloat((s.entry || '').toString().replace(/[$,]/g, ''));
-      return { ...s, stop: clampStop(entryNum, s.stop, cfg.maxStopPct) };
+      const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
+      // Return display-ready strings for HTML rendering, keep numeric _raw for computations
+      return {
+        ...s,
+        stop,
+        // Display fields (used in HTML templates)
+        entry: $fmt(s.entry), stop: $fmt(stop), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2),
+        // Keep raw numbers for downstream logic (rotation score comparison, etc.)
+        _entry: s.entry, _stop: stop, _tp1: s.tp1, _tp2: s.tp2,
+      };
     });
   }
   // Open positions = pending trades from the backtest (holdDays < horizon)
@@ -287,7 +297,9 @@ function main() {
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
       <tbody>${sig.map((s, i) => {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
-      return `<tr><td><b>${s.ticker}</b></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
+      const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
+        : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
+      return `<tr><td><b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
     }).join('')}</tbody>
     </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No signals for this mode today</p>`}
   </details>
@@ -381,9 +393,10 @@ ${(() => {
         for (let i = 0; i < buyOrders.length; i++) {
           const s = buyOrders[i];
           const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+          const sht = s.sharia === true ? ' <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? ' <span class="pill am" style="background:#94a3b8;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span>' : '';
           const thesisCols = 10; // number of columns in Orders table
           actionRows.push(`<tr>
-      <td><b>${s.ticker}</b></td>
+      <td><b>${s.ticker}</b>${sht}</td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
@@ -637,6 +650,7 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .w{max-width:1080px;margin:0 auto;padding:0 1.5rem 4rem}
 .mode-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;padding:.25rem;background:#f1f5f9;border-radius:12px}
 .mode-tab{flex:1;padding:.65rem 1rem;border:none;background:transparent;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;color:#64748b;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:all .2s}
+@media(max-width:600px){.mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.mode-tabs::-webkit-scrollbar{display:none}.mode-tab{flex:0 0 auto;padding:.55rem .75rem;font-size:.78rem;white-space:nowrap}}
 .mode-tab:hover{background:#e2e8f0;color:#334155}
 .mode-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.1)}
 .mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
@@ -1387,7 +1401,7 @@ document.addEventListener('DOMContentLoaded',function(){
     snapshot.modes[id] = {
       stats: { ret: mM.ret, dd: mM.dd, wr: mM.wr, pf: mM.pf, trades: mM.trades, avgHold: mM.avgHold },
       equity: ec,
-      signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' })),
+      signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
       positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '' })),
       orders: [...buyOrders, ...rotCands],
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
@@ -1424,48 +1438,18 @@ function backfillHistory() {
     return count;
   }
 
-  // Parse signals from scanner HTML for a given dateKey (YYYYMMDD)
+  // Parse signals for a given dateKey (YYYYMMDD) — JSON-first, HTML fallback
   const SF_BF = {
     all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
     momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
   };
   function parseScannerSignalsBF(dateKey) {
-    const htmlPath = path.join(SCANNER_DIR_BF, dateKey, 'index.html');
-    if (!fs.existsSync(htmlPath)) return [];
-    const html = fs.readFileSync(htmlPath, 'utf8');
-    const signals = [];
-    const thesisMap = {};
-    const setupBlocks = html.match(/id="setup-([A-Z]{1,5})"[\s\S]*?(?=id="setup-[A-Z]|id="synthese|id="summary|$)/gi) || [];
-    for (const block of setupBlocks) {
-      const tm = block.match(/id="setup-([A-Z]{1,5})"/i);
-      const thM = block.match(/Investment Thesis<\/h4>\s*<p>([\s\S]*?)<\/p>/i);
-      if (tm && thM) {
-        let thesis = thM[1].replace(/<[^>]+>/g, '').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
-        if (thesis.length > 140) thesis = thesis.slice(0, 137).replace(/\s+\S*$/, '') + '…';
-        thesisMap[tm[1].toUpperCase()] = thesis;
-      }
-    }
-    const m = html.match(/id="(?:synthese|summary)"[\s\S]{0,15000}/);
-    if (m) {
-      const rows = m[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
-      for (const row of rows) {
-        const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || []).map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
-        if (cells.length < 4) continue;
-        const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
-        if (!ticker) continue;
-        const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
-        const stratRaw = cells.find(c => /momentum|squeeze|breakout|pullback|trend follow|defensive/i.test(c)) || '';
-        const pf = cells.filter(c => /^\$[\d.]/.test(c.trim()));
-        const rr = cells.find(c => /1:\d/.test(c)) || '';
-        signals.push({
-          ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
-          entry: pf[0] || '—', stop: pf[1] || '—', tp1: pf[2] || '—', tp2: pf[3] || '—', rr,
-          thesis: thesisMap[ticker.trim()] || ''
-        });
-      }
-    }
-    return signals.sort((a, b) => b.score - a.score);
+    const loaded = parser.loadSignals(dateKey);
+    if (!loaded) return [];
+    return loaded.signals
+      .map(s => ({ ...s, thesis: loaded.thesis[s.ticker] || '' }))
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
   }
 
   const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();

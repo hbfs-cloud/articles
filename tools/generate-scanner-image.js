@@ -99,29 +99,23 @@ function normalizeStrategy(raw) {
 }
 
 function extractTop3(scanDir) {
-  const htmlPath = path.join(SCANNER_DIR, scanDir, 'index.html');
-  if (!fs.existsSync(htmlPath)) return [];
-  const html = fs.readFileSync(htmlPath, 'utf8');
-
-  // Use the shared parser (tools/lib/scanner-parser.js) to keep every script in sync.
-  const rawSignals = scannerParser.parseScannerHtml(html);
+  // JSON-first via loadSignals, HTML fallback for legacy scans
+  const loaded = scannerParser.loadSignals(scanDir);
+  if (!loaded) return [];
   const trades = [];
 
-  for (const s of rawSignals) {
+  for (const s of loaded.signals) {
     const strategy = normalizeStrategy(s.strategy);
     if (EXCLUDED_STRATEGIES.includes(strategy)) continue;
-    const entry = parseMidpoint(s.entry);
-    const stop = parseNumber(s.stop);
-    const tp1 = parseNumber(s.tp1);
-    if (entry == null || stop == null || tp1 == null) continue;
+    if (s.entry == null || s.stop == null || s.tp1 == null) continue;
     trades.push({
       ticker: s.ticker,
       strategy,
       score: s.score || 85,
-      entry,
-      stop,
-      tp1,
-      tp2: s.tp2 && s.tp2 !== '—' ? parseNumber(s.tp2) : null,
+      entry: s.entry,
+      stop: s.stop,
+      tp1: s.tp1,
+      tp2: s.tp2 || null,
       rr: s.rr || 'n/a',
     });
   }

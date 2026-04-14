@@ -289,10 +289,10 @@ function main() {
           ticker: t.ticker,
           score: t.score || 85,
           strategy: t.strategy,
-          entry: '$' + (t.actualEntry || 0).toFixed(2),
-          stop: '$' + (t.actualEntry * (1 - (cfg.maxStopPct || 8) / 100)).toFixed(2),
-          tp1: '$' + (t.actualEntry * 1.10).toFixed(2),
-          tp2: '$' + (t.actualEntry * 1.20).toFixed(2),
+          entry: +(t.actualEntry || 0).toFixed(2),
+          stop: +(t.actualEntry * (1 - (cfg.maxStopPct || 8) / 100)).toFixed(2),
+          tp1: +(t.actualEntry * 1.10).toFixed(2),
+          tp2: +(t.actualEntry * 1.20).toFixed(2),
           rr: '1:1.5'
         }));
 

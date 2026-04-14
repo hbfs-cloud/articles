@@ -1,21 +1,34 @@
 /**
- * tools/lib/scanner-parser.js — Shared scanner HTML parser.
+ * tools/lib/scanner-parser.js — Shared scanner signal loader.
  *
- * Before this module existed, sweep.js, update-tracking.js and gen-status-page.js
- * each had their own (slightly divergent) copy of the synthese-table parser.
- * Any schema change required three edits — easy to miss one.
+ * PRIMARY: reads `scanner/YYYYMMDD/signals.json` — zero parsing, direct JSON.
+ * FALLBACK: parses HTML for legacy scans (pre-signals.json).
  *
- * This module exposes:
- *   parseSynthese(html)     → raw signals from the <section id="synthese"> table
- *   parseSetupCards(html)   → fallback parser that reads data-* attributes
- *   parseScannerHtml(html)  → tries synthese first, falls back to setup cards
- *   parseThesisMap(html)    → { TICKER: "short thesis..." } from investment thesis <p>
+ * IMPORTANT: loadSignals always returns NUMBERS for price fields (entry, stop, tp1, tp2).
+ * Display formatting ("$120.50") is the caller's responsibility — data layer never adds "$".
  *
- * All functions are pure (no fs access). Callers pass the raw HTML string.
+ * Signal shape: { ticker, score, strategy, entry, stop, tp1, tp2, rr, sharia, thesis }
+ *   entry/stop/tp1/tp2 = number | null
+ *   sharia = true | false | null (null = untagged legacy scan)
  */
 'use strict';
 
+const fs = require('fs');
+const path = require('path');
 const cfg = require('../config');
+
+const SCANNER_DIR = path.join(__dirname, '..', '..', 'scanner');
+
+// ─── Price helpers ──────────────────────────────────────────────────────────
+
+function parsePrice(s) {
+  if (s == null) return null;
+  if (typeof s === 'number') return s > 0 ? s : null;
+  const clean = String(s).replace(/[$,\s]/g, '').replace(/[–—]/g, '-');
+  const nums = clean.split('-').map(Number).filter(n => n > 0);
+  if (!nums.length) return null;
+  return nums.length >= 2 ? (nums[0] + nums[1]) / 2 : nums[0];
+}
 
 function stripTags(s) {
   return String(s || '').replace(/<[^>]+>/g, '');
@@ -23,19 +36,63 @@ function stripTags(s) {
 
 function decodeEntities(s) {
   return String(s || '')
-    .replace(/&ndash;/g, '–')
-    .replace(/&mdash;/g, '—')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
+    .replace(/&ndash;/g, '–').replace(/&mdash;/g, '—')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n));
 }
 
+// ─── PRIMARY: load from signals.json ────────────────────────────────────────
+
 /**
- * Parse the synthese table into an array of raw signal objects.
- * Each signal: { ticker, score, strategy, entry, stop, tp1, tp2, rr }
+ * Load signals for a scan directory. Tries signals.json first, falls back to HTML.
+ * @param {string} dir — directory name like "20260414" (relative to scanner/)
+ * @returns {{ signals: Array, thesis: Object }} or null
  */
+function loadSignals(dir) {
+  const jsonPath = path.join(SCANNER_DIR, dir, 'signals.json');
+  if (fs.existsSync(jsonPath)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+      const thesis = {};
+      const signals = (data.signals || []).map(s => {
+        if (s.thesis) thesis[s.ticker] = s.thesis;
+        return {
+          ticker: s.ticker,
+          score: s.score || 0,
+          strategy: s.strategy || '',
+          entry: parsePrice(s.entry),
+          stop: parsePrice(s.stop),
+          tp1: parsePrice(s.tp1),
+          tp2: parsePrice(s.tp2),
+          rr: s.rr || '',
+          sharia: s.sharia != null ? s.sharia : null,
+          thesis: s.thesis || '',
+        };
+      });
+      return { signals, thesis };
+    } catch (_) { /* fall through to HTML */ }
+  }
+
+  // FALLBACK: parse HTML (legacy scans without signals.json)
+  const htmlPath = path.join(SCANNER_DIR, dir, 'index.html');
+  if (!fs.existsSync(htmlPath)) return null;
+  const html = fs.readFileSync(htmlPath, 'utf8');
+  const raw = parseScannerHtml(html);
+  const thesisMap = parseThesisMap(html);
+  // Normalize HTML-parsed signals to numbers
+  const signals = raw.map(s => ({
+    ...s,
+    entry: parsePrice(s.entry),
+    stop: parsePrice(s.stop),
+    tp1: parsePrice(s.tp1),
+    tp2: parsePrice(s.tp2),
+    thesis: thesisMap[s.ticker] || '',
+  }));
+  return { signals, thesis: thesisMap };
+}
+
+// ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────
+
 function parseSynthese(html) {
   if (!html) return [];
   const block = html.match(new RegExp(`id="(?:synthese|summary)"[\\s\\S]{0,${cfg.SYNTHESE_MATCH_LEN}}`));
@@ -48,30 +105,22 @@ function parseSynthese(html) {
     if (cells.length < 4) continue;
     const ticker = cells.find(c => cfg.RE_TICKER.test(c.trim()));
     if (!ticker) continue;
-    const score = cells
-      .map(c => parseFloat(c))
-      .find(n => n >= cfg.SCORE_RANGE_VALID[0] && n <= cfg.SCORE_RANGE_VALID[1]);
+    const score = cells.map(c => parseFloat(c)).find(n => n >= cfg.SCORE_RANGE_VALID[0] && n <= cfg.SCORE_RANGE_VALID[1]);
     const stratRaw = cells.find(c => cfg.RE_STRATEGY.test(c)) || '';
     const pf = cells.filter(c => cfg.RE_PRICE_CELL.test(c.trim()));
     const rr = cells.find(c => cfg.RE_RR.test(c)) || '';
+    const trAttrs = row.match(/<tr([^>]*)>/i);
+    const shariaAttr = trAttrs && trAttrs[1] ? trAttrs[1].match(/data-sharia="(true|false)"/i) : null;
+    const sharia = shariaAttr ? shariaAttr[1] === 'true' : null;
     signals.push({
-      ticker: ticker.trim(),
-      score: score || 0,
-      strategy: stratRaw.trim(),
-      entry: pf[0] || '—',
-      stop: pf[1] || '—',
-      tp1: pf[2] || '—',
-      tp2: pf[3] || '—',
-      rr,
+      ticker: ticker.trim(), score: score || 0, strategy: stratRaw.trim(),
+      entry: pf[0] || null, stop: pf[1] || null, tp1: pf[2] || null, tp2: pf[3] || null,
+      rr, sharia,
     });
   }
   return signals;
 }
 
-/**
- * Fallback parser — reads `<div class="setup-card" id="setup-TICKER" data-entry=".." ...>`
- * Useful when the synthese table shape changes but data-* attributes remain stable.
- */
 function parseSetupCards(html) {
   if (!html) return [];
   const re = /class="setup-card"\s+id="setup-([A-Z]{1,5})"([^>]*)>/gi;
@@ -80,43 +129,25 @@ function parseSetupCards(html) {
   while ((m = re.exec(html)) !== null) {
     const ticker = m[1];
     const attrs = m[2];
-    const pick = re2 => {
-      const match = attrs.match(re2);
-      return match ? parseFloat(match[1]) : null;
-    };
+    const pick = re2 => { const match = attrs.match(re2); return match ? parseFloat(match[1]) : null; };
     const entry = pick(/data-entry="([\d.]+)"/);
     const stop = pick(/data-stop="([\d.]+)"/);
     const tp1 = pick(/data-tp1="([\d.]+)"/);
     const tp2 = pick(/data-tp2="([\d.]+)"/);
     if (entry == null || stop == null || tp1 == null) continue;
-    signals.push({
-      ticker,
-      score: 85,
-      strategy: '',
-      entry: `$${entry}`,
-      stop: `$${stop}`,
-      tp1: `$${tp1}`,
-      tp2: tp2 != null ? `$${tp2}` : '—',
-      rr: '',
-    });
+    const shariaCard = attrs.match(/data-sharia="(true|false)"/i);
+    const sharia = shariaCard ? shariaCard[1] === 'true' : null;
+    signals.push({ ticker, score: 85, strategy: '', entry, stop, tp1, tp2, rr: '', sharia });
   }
   return signals;
 }
 
-/**
- * Canonical entry point — tries the synthese table first, falls back to setup cards.
- * Returns signals sorted by score descending.
- */
 function parseScannerHtml(html) {
   let signals = parseSynthese(html);
   if (!signals.length) signals = parseSetupCards(html);
   return signals.sort((a, b) => (b.score || 0) - (a.score || 0));
 }
 
-/**
- * Build a { TICKER: "thesis..." } map from the "Investment Thesis" paragraph.
- * Clipped to THESIS_MAX_LEN.
- */
 function parseThesisMap(html) {
   if (!html) return {};
   const map = {};
@@ -126,9 +157,7 @@ function parseThesisMap(html) {
     const thM = block.match(/Investment Thesis<\/h4>\s*<p>([\s\S]*?)<\/p>/i);
     if (tm && thM && !map[tm[1]]) {
       let thesis = decodeEntities(stripTags(thM[1])).replace(/\s+/g, ' ').trim();
-      if (thesis.length > cfg.THESIS_MAX_LEN) {
-        thesis = thesis.slice(0, cfg.THESIS_MAX_LEN - 3).replace(/\s+\S*$/, '') + '…';
-      }
+      if (thesis.length > cfg.THESIS_MAX_LEN) thesis = thesis.slice(0, cfg.THESIS_MAX_LEN - 3).replace(/\s+\S*$/, '') + '…';
       map[tm[1].toUpperCase()] = thesis;
     }
   }
@@ -136,6 +165,8 @@ function parseThesisMap(html) {
 }
 
 module.exports = {
+  loadSignals,
+  parsePrice,
   parseSynthese,
   parseSetupCards,
   parseScannerHtml,

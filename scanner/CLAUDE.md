@@ -113,7 +113,8 @@ Le scanner tourne le soir pour la **prochaine séance de trading**. La date du d
 ```
 scanner/
 ├── YYYYMMDD/
-│   ├── index.html                # Default = intermediate/en
+│   ├── signals.json              # ⚠️ SOURCE DE VÉRITÉ — structured data (OBLIGATOIRE)
+│   ├── index.html                # Default = intermediate/en (rendered from signals.json)
 │   ├── variants.json             # Manifest des variantes
 │   ├── expert/
 │   │   ├── en/index.html
@@ -125,6 +126,60 @@ scanner/
 ```
 
 **IMPORTANT** : Ne PAS créer de dossier `assets/` local. Utiliser exclusivement le CSS global via `/assets/report.css`.
+
+### signals.json — Source de Vérité (OBLIGATOIRE)
+
+**Chaque scan DOIT produire `scanner/YYYYMMDD/signals.json` AVANT le HTML.**
+Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, generate-scanner-image.js) lisent ce JSON en priorité. Le HTML est pour l'affichage humain uniquement.
+
+```json
+{
+  "scanDate": "2026-04-14",
+  "regime": "EARLY RISK-OFF",
+  "regimeScore": 42,
+  "signals": [
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA Corp",
+      "score": 93,
+      "strategy": "Momentum",
+      "entry": 120.50,
+      "stop": 115.00,
+      "tp1": 130.00,
+      "tp2": 140.00,
+      "rr": "1:2.2",
+      "horizon": 10,
+      "region": "US",
+      "sharia": true,
+      "thesis": "AI capex cycle acceleration with cloud revenue inflection..."
+    },
+    {
+      "ticker": "GS",
+      "name": "Goldman Sachs",
+      "score": 88,
+      "strategy": "Breakout",
+      "entry": 586.00,
+      "stop": 568.00,
+      "tp1": 608.00,
+      "tp2": 632.00,
+      "rr": "1:2.2",
+      "horizon": 10,
+      "region": "US",
+      "sharia": false,
+      "thesis": "M&A advisory revenue surge post-rate-cut expectations..."
+    }
+  ]
+}
+```
+
+**Champs obligatoires par signal** : `ticker`, `score`, `strategy`, `entry`, `stop`, `tp1`, `rr`, `sharia`
+**Champs optionnels** : `tp2`, `name`, `horizon`, `region`, `thesis`
+**Types** : `entry`/`stop`/`tp1`/`tp2` = **nombres** (pas de "$"). `sharia` = **boolean**.
+
+**Workflow** :
+1. Claude génère `signals.json` avec toutes les données structurées
+2. Claude génère `index.html` en utilisant ces mêmes données pour le rendu visuel
+3. Les outils lisent `signals.json` directement — plus de parsing HTML fragile
 
 ### Collecte des Données
 1. **`RunAutoScreener`** : Détection du régime de marché + candidats auto-adaptatifs
@@ -191,6 +246,84 @@ Pour chaque ticker candidat :
 #### Exemple (cas INDO)
 INDO avait un fund agressif (Wainwright) + warrants → dilution massive concrétisée.
 Ce risque n'apparaissait PAS sur la fiche technique classique. Seule la vérification SEC active permet de le détecter.
+
+---
+
+### Sharia Compliance Tagging (OBLIGATOIRE — sur chaque setup)
+
+**Chaque setup du scanner DOIT être taggé `data-sharia="true"` ou `data-sharia="false"`** dans le HTML. Ce flag permet aux outils downstream (sweep.js, gen-status-page.js) de filtrer et d'afficher un badge HALAL/CONV.
+
+#### Critères Sharia (AAOIFI / MSCI Islamic Index Standards)
+
+Un ticker est **NON sharia-compliant** (`data-sharia="false"`) s'il remplit **au moins un** de ces critères :
+
+**1. Activité principale haram (secteur entier exclu) :**
+- Banques & services financiers conventionnels (revenus basés sur l'intérêt/riba) — JPM, GS, BAC, BBVA, etc.
+- Assurances conventionnelles (non takaful) — UNH, CI, ALL, PGR, etc.
+- Défense & armement — LMT, RTX, NOC, GD, BA (segment défense), HII, etc.
+- Alcool — BUD, DEO, STZ, SAM, TAP, etc.
+- Tabac — PM, MO, BTI
+- Jeux d'argent & paris — DKNG, MGM, WYNN, LVS, CZR
+- Divertissement adulte / pornographie
+
+**2. Ratios financiers (seuils AAOIFI) :**
+- **Dette totale / Capitalisation boursière > 33%** → non compliant
+- **Intérêts perçus + revenus non-conformes / Revenu total > 5%** → non compliant
+- **Trésorerie + créances portant intérêt / Capitalisation boursière > 33%** → non compliant
+- Source : `QueryData` types=financials,stats ou Yahoo `quoteSummary?modules=financialData,balanceSheetHistory`
+
+**3. Instruments financiers exclus :**
+- ETFs obligataires / treasuries (TLT, TBT, SHY, IEF, AGG, BND, HYG, LQD, JNK, MUB, etc.)
+- ETFs à levier (TQQQ, SQQQ, UPRO, SPXU, SOXL, SOXS, LABU, LABD, etc.) — gharar (incertitude excessive)
+- ETFs inversés (SH, SDS, PSQ, QID, etc.)
+- Options pures, futures, CFDs (pas d'instruments dérivés dans le scanner de toute façon)
+
+**4. ETFs mixtes :**
+- ETFs sectoriels contenant majoritairement des non-compliants → vérifier la composition
+- XLF (financials) → `data-sharia="false"`
+- XLV (healthcare avec assureurs UNH, CI) → `data-sharia="false"`
+- XLE, XLK, SMH, GLD, SLV, GDX, USO → généralement compliants, vérifier au cas par cas
+
+#### Procédure de vérification par ticker
+
+```
+Pour chaque ticker candidat retenu dans le top 10 :
+1. Vérifier le secteur GICS — si finance/assurance/défense/alcool/tabac/jeux → data-sharia="false"
+2. Si le secteur est OK, vérifier les ratios :
+   - QueryData types=financials,stats pour le ticker
+   - Total Debt / Market Cap : doit être < 33%
+   - Interest Income / Total Revenue : doit être < 5%
+   - Cash + Interest-bearing receivables / Market Cap : doit être < 33%
+3. Si un ratio est indisponible (micro-cap, ETF) → WebSearch "{TICKER} sharia compliant MSCI islamic"
+4. Résultat → data-sharia="true" ou "false" sur le <tr> synthese ET le setup-card <div>
+```
+
+#### Implémentation HTML
+
+**Table synthèse** — attribut sur chaque `<tr>` :
+```html
+<tr data-sharia="true"><td>1</td><td><strong>NVDA</strong></td>...</tr>
+<tr data-sharia="false"><td>2</td><td><strong>GS</strong></td>...</tr>
+```
+
+**Setup card** — attribut sur le `<div>` :
+```html
+<div class="setup-card" id="setup-NVDA" data-ticker="NVDA" data-sharia="true" data-entry="..." ...>
+```
+
+**Badge visuel dans le setup card** (à côté des badges stratégie/région) :
+```html
+<!-- Sharia compliant -->
+<span class="badge badge-green" style="font-size:.7rem">☪ Halal</span>
+<!-- Non compliant -->
+<span class="badge" style="background:#94a3b8;color:#fff;font-size:.7rem">CONV</span>
+```
+
+#### Utilisation par les outils downstream
+
+- **sweep.js `--sharia`** : filtre les setups `data-sharia="false"` + fallback sur SHARIA_EXCLUDED pour les vieux scans non taggés
+- **gen-status-page.js** : affiche un badge HALAL (vert) ou CONV (gris) à côté de chaque ticker dans les tableaux
+- **scanner-parser.js** : parse `data-sharia` et l'inclut dans l'objet signal (`sharia: true|false|null`)
 
 ---
 

@@ -258,7 +258,8 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    - Shelf registrations / S-3 filings récents
    - Warrants, ATM offerings, fonds toxiques (H.C. Wainwright, Maxim, Roth Capital, etc.)
    - Serial diluters → **EXCLURE du scan** (leçon INDO : setup technique parfait mais dilution massive non détectée)
-5. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+5. **⚠️ Sharia Compliance Tagging (OBLIGATOIRE)** : Pour chaque ticker retenu, évaluer la conformité Sharia (secteur haram, ratios dette/market cap > 33%, intérêts > 5% du CA, ETFs levier/bonds). Ajouter `data-sharia="true"` ou `data-sharia="false"` sur chaque `<tr>` du synthèse et chaque `<div class="setup-card">`. Voir `scanner/CLAUDE.md` section "Sharia Compliance Tagging" pour les critères complets.
+6. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
 6. **Pipeline Initial (J0 - Optimisation)** :
    ```bash

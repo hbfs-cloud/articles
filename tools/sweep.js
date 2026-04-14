@@ -27,6 +27,27 @@ const SCANNER_DIR = path.join(ROOT, 'scanner');
 const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
 const FROZEN_ONLY = process.argv.includes('--frozen-only');
+const SHARIA = process.argv.includes('--sharia');
+
+// FALLBACK Sharia exclusion list — used ONLY for old scans that don't have data-sharia attributes.
+// New scans have data-sharia="true/false" on each <tr> in the synthese table (evaluated at generation
+// time using real financial ratios per scanner/CLAUDE.md "Sharia Compliance Tagging" section).
+const SHARIA_EXCLUDED = new Set([
+  // Banks & financial services (interest-based revenue / riba)
+  'JPM','BAC','GS','MS','C','WFC','USB','PNC','TFC','SCHW','BK','STT','AIG','MET','PRU',
+  'BBVA','BNP','HSBC','DB','UBS','CS','ING','SAN','BNPQY','RY','TD','BMO','XLF',
+  // Insurance (conventional, non-takaful)
+  'UNH','CI','HUM','ELV','ALL','PGR','TRV','AFL','MCK','XLV',
+  // Defense & weapons
+  'LMT','RTX','NOC','GD','BA','HII','LHX','LDOS','HEI','TXT','KTOS','ITA',
+  // Alcohol, tobacco, gambling
+  'BUD','DEO','STZ','SAM','TAP','PM','MO','BTI','DKNG','MGM','WYNN','LVS','CZR','GENI',
+  // Bond/Treasury ETFs (interest-based instruments)
+  'TLT','TBT','SHY','IEF','AGG','BND','GOVT','BNDX','HYG','LQD','JNK','MUB',
+  // Leveraged & inverse ETFs (gharar — excessive uncertainty)
+  'TQQQ','SQQQ','SPXU','UPRO','LABU','LABD','UVXY','SVXY','SOXL','SOXS','FAS','FAZ',
+  'SH','SDS','QID','PSQ',
+]);
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -73,7 +94,9 @@ function getAllBizDays(startDate, endDate) {
   return days;
 }
 
-// ─── Parse scan HTML → setups ─────────────────────────────────────────────────
+// ─── Parse scan → setups (JSON-first, HTML fallback via scanner-parser.js) ───
+
+const scannerParser = require('./lib/scanner-parser');
 
 const STRAT_PATTERNS = {
   short_squeeze: /short.?squeeze/i,
@@ -91,61 +114,26 @@ function detectStrategy(text) {
 }
 
 function parseScan(dir) {
-  const htmlPath = path.join(SCANNER_DIR, dir, 'index.html');
-  if (!fs.existsSync(htmlPath)) return null;
-  const html = fs.readFileSync(htmlPath, 'utf8');
   const dm = dir.match(/^(\d{4})(\d{2})(\d{2})/);
   if (!dm) return null;
   const scanDate = `${dm[1]}-${dm[2]}-${dm[3]}`;
 
-  const setups = [];
-  const synthMatch = html.match(/id="synthese"[\s\S]{0,12000}/);
-  if (synthMatch) {
-    const rows = synthMatch[0].match(/<tr[\s\S]*?<\/tr>/gi) || [];
-    for (const row of rows) {
-      const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
-        .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
-      if (cells.length < 4) continue;
-      const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c));
-      if (!ticker) continue;
-      const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100) || 80;
-      const pf = cells.filter(c => /^\$[\d.]/.test(c));
-      if (pf.length < 3) continue;
-      const stratText = cells.find(c => /squeeze|momentum|breakout|pullback/i.test(c)) || '';
-      const strategy = detectStrategy(stratText);
-      const entry = parsePrice(pf[0]);
-      const stop = parsePrice(pf[1]);
-      const tp1 = parsePrice(pf[2]);
-      const tp2 = pf[3] ? parsePrice(pf[3]) : null;
-      if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
-      if (stop >= entry) continue;
-      if (tp1 <= entry) continue;
-      setups.push({ ticker, strategy, score, entry, stop, tp1, tp2 });
-    }
-  }
+  const loaded = scannerParser.loadSignals(dir);
+  if (!loaded || !loaded.signals.length) return null;
 
-  // Fallback: parse setup cards
-  if (setups.length === 0) {
-    const setupRe = /id="setup-([A-Z0-9]+)"[\s\S]*?(?=id="setup-|id="synthese"|id="performance"|$)/gi;
-    let m;
-    while ((m = setupRe.exec(html)) !== null) {
-      const ticker = m[1];
-      const block = m[0].slice(0, 3000);
-      const scoreMatch = block.match(/Score[\s\S]{0,100}?(9[0-9]|8[5-9]|7[0-9])/);
-      const score = scoreMatch ? parseFloat(scoreMatch[1]) : 85;
-      const entryM = block.match(/[Ee]ntr[eé][e]?[\s\S]{0,50}\$([\d.,–\-]+)/);
-      const stopM = block.match(/[Ss]top[\s\S]{0,50}\$([\d.,]+)/);
-      const tp1M = block.match(/[Tt]arget\s*1[\s\S]{0,50}\$([\d.,]+)/);
-      const tp2M = block.match(/[Tt]arget\s*2[\s\S]{0,50}\$([\d.,]+)/);
-      const stratText = block.match(/badge[^>]*>(Momentum|Breakout|Pullback|Pre.?Squeeze|Short.?Squeeze)/i);
-      if (entryM && stopM && tp1M) {
-        const entry = parsePrice(entryM[1]), stop = parsePrice(stopM[1]),
-          tp1 = parsePrice(tp1M[1]), tp2 = tp2M ? parsePrice(tp2M[1]) : null;
-        if (entry && stop && tp1 && stop < entry && tp1 > entry) {
-          setups.push({ ticker, strategy: detectStrategy(stratText ? stratText[1] : ''), score, entry, stop, tp1, tp2 });
-        }
-      }
-    }
+  const setups = [];
+  for (const s of loaded.signals) {
+    const { entry, stop, tp1, tp2 } = s;
+    if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
+    if (stop >= entry) continue;
+    if (tp1 <= entry) continue;
+    setups.push({
+      ticker: s.ticker,
+      strategy: detectStrategy(s.strategy || ''),
+      score: s.score || 80,
+      entry, stop, tp1, tp2,
+      sharia: s.sharia,
+    });
   }
 
   const seen = new Set();
@@ -638,7 +626,17 @@ async function main() {
 
   console.log(`Parsing ${scanDirs.length} scans...`);
   const scans = scanDirs.map(parseScan).filter(Boolean);
-  const allSetups = scans.flatMap(s => s.setups.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir })));
+  let allSetups = scans.flatMap(s => s.setups.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir })));
+  if (SHARIA) {
+    const before = allSetups.length;
+    // Use parsed data-sharia flag if available, fallback to SHARIA_EXCLUDED for old untagged scans
+    allSetups = allSetups.filter(s => {
+      if (s.sharia === true) return true;   // explicitly tagged compliant
+      if (s.sharia === false) return false;  // explicitly tagged non-compliant
+      return !SHARIA_EXCLUDED.has(s.ticker); // untagged (old scan) → use fallback list
+    });
+    console.log(`🕌 Sharia filter: ${before - allSetups.length} setups excluded (${before} → ${allSetups.length})`);
+  }
   console.log(`Total setups parsed: ${allSetups.length} across ${scans.length} scans`);
 
   // 2. Fetch all ticker histories

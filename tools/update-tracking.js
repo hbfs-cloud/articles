@@ -57,106 +57,23 @@ function parseNumber(s) {
   return isNaN(n) ? null : n;
 }
 
-// ─── Extract top3 from scan HTML ─────────────────────────────────────────────
+// ─── Extract top3 from scan (JSON-first, HTML fallback) ─────────────────────
 
-function extractTop3FromHTML(htmlPath) {
-  if (!fs.existsSync(htmlPath)) return [];
-  const html = fs.readFileSync(htmlPath, 'utf8');
+function extractTop3FromDir(dir) {
+  const loaded = parser.loadSignals(dir);
+  if (!loaded || !loaded.signals.length) return [];
 
-  // Try Synthesis table first: look for rows with ticker+score+entry+stop+tp1
-  // Pattern: <td>TICKER</td> ... score ... entry ... stop ... tp1
-  const trades = [];
-
-  // Strategy 1: parse the synthesis table rows
-  // The table has pattern: rank ticker strategy region score entry stop tp1 rr
-  // Using a broad regex to find setup blocks
-  const synthMatch = html.match(/id="synthese"[\s\S]*?<\/section>/i) ||
-    html.match(/id="synthese"[\s\S]{0,20000}/i);
-
-  if (synthMatch) {
-    const synthHtml = synthMatch[0];
-    // Find table rows with ticker data
-    const rowRe = /<tr[\s\S]*?<\/tr>/gi;
-    const rows = synthHtml.match(rowRe) || [];
-    for (const row of rows) {
-      const cells = (row.match(/<td[^>]*>([\s\S]*?)<\/td>/gi) || [])
-        .map(c => c.replace(/<[^>]+>/g, '').replace(/,/g, '.').trim());
-      if (cells.length < 4) continue;
-      const ticker = cells.find(c => /^[A-Z]{1,5}$/.test(c.trim()));
-      if (!ticker) continue;
-      const score = cells.map(c => parseFloat(c)).find(n => n >= 70 && n <= 100);
-      // Price fields: cells starting with $ followed by digits
-      const priceFields = cells.filter(c => /^\$[\d.]/.test(c.trim()));
-
-      // Strategy extraction
-      const stratMap = ['Momentum', 'Breakout', 'Squeeze', 'Pullback', 'Reversal'];
-      const strategy = cells.find(c => stratMap.some(s => c.includes(s))) || 'Momentum';
-
-      if (priceFields.length >= 4) {
-        // Full format: entry | stop | tp1 | tp2
-        trades.push({
-          ticker: ticker.trim(), score: score || 85, strategy,
-          entry_str: priceFields[0], stop_str: priceFields[1],
-          tp1_str: priceFields[2], tp2_str: priceFields[3]
-        });
-      } else if (priceFields.length === 3) {
-        // entry | stop | tp1 (no tp2)
-        trades.push({
-          ticker: ticker.trim(), score: score || 85, strategy,
-          entry_str: priceFields[0], stop_str: priceFields[1],
-          tp1_str: priceFields[2], tp2_str: null
-        });
-      }
-      // Skip rows with only 2 price fields (entry+tp1, no stop) — untrackable
-    }
-  }
-
-  // Strategy 2: parse setup cards if synthesis didn't yield results
-  if (trades.length === 0) {
-    const setupRe = /id="setup-([A-Z0-9]+)"[\s\S]*?(?=id="setup-|id="synthese"|id="performance"|$)/gi;
-    let m;
-    while ((m = setupRe.exec(html)) !== null && trades.length < 10) {
-      const ticker = m[1];
-      const block = m[0];
-
-      // Extract score from gauge
-      const scoreMatch = block.match(/["']score["'][\s\S]{0,200}?([\d]{2,3})/i) ||
-        block.match(/Score[\s\S]{0,100}?(9[0-9]|8[5-9]|7[0-9])/);
-      const score = scoreMatch ? parseFloat(scoreMatch[1]) : 85;
-
-      // Extract levels
-      const entryM = block.match(/[Ee]ntr[eé][e]?[\s\S]{0,50}\$([\d.,–\-]+)/);
-      const stopM = block.match(/[Ss]top[\s\S]{0,50}\$([\d.,]+)/);
-      const tp1M = block.match(/[Tt]arget\s*1[\s\S]{0,50}\$([\d.,]+)/);
-      const tp2M = block.match(/[Tt]arget\s*2[\s\S]{0,50}\$([\d.,]+)/);
-      const horizM = block.match(/[Hh]orizon[\s\S]{0,50}(\d+)[–\-](\d+)\s*[jd]/);
-
-      if (entryM && stopM && tp1M) {
-        trades.push({
-          ticker,
-          score,
-          entry_str: entryM[1],
-          stop_str: stopM[1],
-          tp1_str: tp1M[1],
-          tp2_str: tp2M ? tp2M[1] : null,
-          horizon_max: horizM ? parseInt(horizM[2]) : 20,
-        });
-      }
-    }
-  }
-
-  // Return top 3 by score
-  return trades
-    .sort((a, b) => b.score - a.score)
+  return loaded.signals
+    .sort((a, b) => (b.score || 0) - (a.score || 0))
     .slice(0, 3)
-    .map(t => ({
-      ticker: t.ticker,
-      score: t.score,
-      entry: parseMidpoint(t.entry_str),
-      stop: parseNumber(t.stop_str),
-      tp1: parseNumber(t.tp1_str),
-      tp2: parseNumber(t.tp2_str),
-      horizon_days: t.horizon_max || 20,
+    .map(s => ({
+      ticker: s.ticker,
+      score: s.score || 85,
+      entry: s.entry,
+      stop: s.stop,
+      tp1: s.tp1,
+      tp2: s.tp2,
+      horizon_days: 20,
     }));
 }
 
@@ -194,11 +111,10 @@ async function main() {
   // Build all trades from HTMLs
   const allTrades = [];
   for (const dir of scanDirs) {
-    const htmlPath = path.join(SCANNER_DIR, dir, 'index.html');
     const dateStr = dir.slice(0, 8);
     const scanDate = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 
-    const top3 = extractTop3FromHTML(htmlPath);
+    const top3 = extractTop3FromDir(dir);
     if (top3.length === 0) {
       console.log(`  [${dir}] No trades extracted`);
       continue;

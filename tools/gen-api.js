@@ -51,9 +51,10 @@ function writeMode(mode, prefix) {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
-      entryRaw: s.entry, entry: parsePrice(s.entry),
-      stopRaw: s.stop, stop: parsePrice(s.stop),
-      tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr, thesis: s.thesis || ''
+      entry: parsePrice(s.entry), stop: parsePrice(s.stop),
+      tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr,
+      sharia: s.sharia != null ? s.sharia : null,
+      thesis: s.thesis || ''
     }))
   });
 
@@ -100,7 +101,8 @@ function writeMode(mode, prefix) {
     allocPct,
     orders: (mode.orders || []).map(o => ({
       ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
-      entry: o.entry, stop: o.stop, tp1: o.tp1, tp2: o.tp2, rr: o.rr,
+      entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
+      sharia: o.sharia != null ? o.sharia : null,
       allocPct, replaces: o.replaces || null, scoreDelta: o.scoreDelta || null,
       thesis: o.thesis || ''
     }))
@@ -127,13 +129,15 @@ function writeMode(mode, prefix) {
     equityCurve: mode.equity || {},
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
-      entryRaw: s.entry, entry: parsePrice(s.entry),
-      stopRaw: s.stop, stop: parsePrice(s.stop),
-      tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr, thesis: s.thesis || ''
+      entry: parsePrice(s.entry), stop: parsePrice(s.stop),
+      tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr,
+      sharia: s.sharia != null ? s.sharia : null,
+      thesis: s.thesis || ''
     })),
     orders: (mode.orders || []).map(o => ({
       ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
-      entry: o.entry, stop: o.stop, tp1: o.tp1, tp2: o.tp2, rr: o.rr,
+      entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
+      sharia: o.sharia != null ? o.sharia : null,
       replaces: o.replaces || null, scoreDelta: o.scoreDelta || null, thesis: o.thesis || ''
     })),
     positions: (mode.positions || []).map(p => {

@@ -801,7 +801,7 @@ async function evaluate(tickerFilter) {
             text: `🔄 <b>[${modeLabel}] ROTATION ELIGIBLE</b> (slot ${rotationsGenerated + 1}/${rotLimit})\n`
               + `New: <b>${best.ticker}</b> (score ${best.score}) vs Worst: <b>${worstPos.ticker}</b> (score ${worstScore}, ${worstPos.liveReturn >= 0 ? '+' : ''}${worstPos.liveReturn.toFixed(2)}%)\n`
               + `Delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} pts (threshold: ${margin || 'score≥88 & ret<2%'})\n`
-              + `Action: Close ${worstPos.ticker} → Buy ${best.ticker} @ ${best.entry}`,
+              + `Action: Close ${worstPos.ticker} → Buy ${best.ticker} @ $${typeof best.entry === 'number' ? best.entry.toFixed(2) : String(best.entry).replace(/^\$/, '')}`,
           });
           newState[rotKey] = { candidate: best.ticker, replaces: worstPos.ticker, ts: new Date().toISOString() };
         } else {
