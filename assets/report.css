@@ -133,9 +133,14 @@ h2 {
     color: #1e293b;
     margin-top: 3rem;
     margin-bottom: 1.5rem;
+}
+
+/* Only flex h2 with inline icon (i/svg) so icon-less headings wrap/align normally */
+h2:has(> i, > svg) {
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 h3 {
@@ -836,10 +841,14 @@ p {
     border-left: 4px solid #10b981;
 }
 
+/* Red reserved for .alert-box (actual warnings) — pedagogy/didactic boxes inherit their variant color */
+.alert-box h4 {
+    color: #dc2626;
+}
+
 .didactic-box h4,
 .pedagogy-box h4,
 .alert-box h4 {
-    color: #dc2626 !important;
     margin-top: 0;
     font-weight: 800;
     font-size: 1rem;
@@ -2301,6 +2310,33 @@ pre code {
 .brand-nav a:hover {
     background: #eff6ff;
     color: #2563eb;
+}
+
+/* A11y — keyboard focus ring for nav and FAB (only keyboard, not mouse click) */
+.brand-nav a:focus-visible,
+.fnav-btn:focus-visible,
+.fnav-item:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+    background: #eff6ff;
+}
+
+/* A11y — skip-nav link (visible only on keyboard focus) */
+.skip-nav {
+    position: absolute;
+    top: -40px;
+    left: 8px;
+    background: #2563eb;
+    color: #fff;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: 600;
+    z-index: 10000;
+    text-decoration: none;
+    transition: top 0.15s;
+}
+.skip-nav:focus {
+    top: 8px;
 }
 
 .brand-nav a.active,

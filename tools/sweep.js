@@ -304,11 +304,17 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     const bar = priceHistory[date];
     if (!bar) continue;
 
-    // Check SL first
+    // Check SL first — distinguish initial stop vs breakeven vs trailing
     if (bar.low <= currentStop) {
-      status = partialRealized > 0 ? 'tp1_partial' : 'sl';
+      // Ambiguous-bar: same bar hit SL AND TP → first-touch policy picks SL (conservative for loss, but tag it)
+      const ambiguous = (bar.high >= actualTp1) || (actualTp2 && bar.high >= actualTp2);
+      if (partialRealized > 0) status = 'tp1_partial';
+      else if (currentStop > actualEntry) status = 'trail';       // stop moved above entry → positive exit
+      else if (currentStop >= actualEntry) status = 'breakeven';  // stop moved to entry → 0 exit
+      else status = 'sl';                                         // original stop hit → loss
       exitDate = date;
       exitPrice = currentStop;
+      if (ambiguous) status = status + '_amb';                    // _amb suffix for audit
       break;
     }
 
@@ -430,13 +436,15 @@ function simulatePortfolio(allTrades, scans, config) {
     trailingStop = false,
   } = config;
 
-  // Group trades by scan date
+  // Group trades by scan date; capture per-date regime as canonical source-of-truth
   const byDate = {};
+  const regimeByDate = {};
   for (const t of allTrades) {
     if (t.score < minScore) continue;
     if (strategyFilter.has(t.strategy)) continue;
     if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
     byDate[t.scanDate].push(t);
+    if (t.regime && !regimeByDate[t.scanDate]) regimeByDate[t.scanDate] = t.regime;
   }
 
   // Build portfolio: track open positions day by day
@@ -462,7 +470,7 @@ function simulatePortfolio(allTrades, scans, config) {
     const stillOpen = [];
     for (const pos of openPositions) {
       if (pos.trade.exitDate && pos.trade.exitDate <= day) {
-        realizedPnl += pos.trade.pnlPct * (pos.weight || weight);
+        realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
         closedTrades.push(pos.trade);
       } else {
         stillOpen.push(pos);
@@ -491,7 +499,7 @@ function simulatePortfolio(allTrades, scans, config) {
             const hist = priceCache[worst.trade.ticker];
             if (hist && hist[day]) {
               const forcePnl = ((hist[day].close - worst.trade.actualEntry) / worst.trade.actualEntry) * 100;
-              realizedPnl += forcePnl * (worst.weight || weight);
+              realizedPnl += forcePnl * (worst.weight ?? weight);
               closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: day, pnlPct: +forcePnl.toFixed(2) });
             } else {
               closedTrades.push(worst.trade);
@@ -504,9 +512,9 @@ function simulatePortfolio(allTrades, scans, config) {
         }
       }
 
-      // Add new positions — apply VIX/regime sizing multiplier per scan date
+      // Add new positions — apply VIX/regime sizing multiplier per scan date (use canonical regimeByDate map)
       const openTickers = new Set(openPositions.map(p => p.trade.ticker));
-      const scanRegime = candidates[0] && candidates[0].regime;
+      const scanRegime = regimeByDate[day] || (candidates[0] && candidates[0].regime);
       const regimeMult = (config.vixKillSwitch !== false) ? regimeSizeMultiplier(scanRegime) : 1;
       const scanWeight = weight * regimeMult;
       let added = 0;
@@ -524,17 +532,29 @@ function simulatePortfolio(allTrades, scans, config) {
     for (const pos of openPositions) {
       const hist = priceCache[pos.trade.ticker];
       if (hist && hist[day]) {
-        unrealizedPnl += ((hist[day].close - pos.trade.actualEntry) / pos.trade.actualEntry) * 100 * (pos.weight || weight);
+        unrealizedPnl += ((hist[day].close - pos.trade.actualEntry) / pos.trade.actualEntry) * 100 * (pos.weight ?? weight);
       }
     }
     const dailyEquity = 100 + realizedPnl + unrealizedPnl;
     equityCurve.push({ date: day, value: +dailyEquity.toFixed(2) });
   }
 
-  // Flush remaining positions at last known price
+  // Snapshot realized (closed) vs unrealized (still open, mark-to-market) at last day
+  const returnRealized = +realizedPnl.toFixed(2);
+  let unrealizedSnapshot = 0;
+  const lastDay = allDays[allDays.length - 1];
+  for (const pos of openPositions) {
+    const hist = priceCache[pos.trade.ticker];
+    if (hist && hist[lastDay]) {
+      unrealizedSnapshot += ((hist[lastDay].close - pos.trade.actualEntry) / pos.trade.actualEntry) * 100 * (pos.weight ?? weight);
+    }
+  }
+  const returnUnrealized = +unrealizedSnapshot.toFixed(2);
+
+  // Flush remaining positions at last known price into total (preserves legacy behaviour)
   for (const pos of openPositions) {
     if (pos.trade.pnlPct != null) {
-      realizedPnl += pos.trade.pnlPct * weight;
+      realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
     }
     closedTrades.push(pos.trade);
   }
@@ -599,6 +619,8 @@ function simulatePortfolio(allTrades, scans, config) {
 
   return {
     returnTotal,
+    returnRealized,
+    returnUnrealized,
     maxDD: +(-maxDD).toFixed(2),
     r2,
     winRate,
@@ -615,7 +637,7 @@ function simulatePortfolio(allTrades, scans, config) {
     equityCurve,
     closedTrades: resolved.map(t => ({
       ticker: t.ticker, strategy: t.strategy, score: t.score,
-      scanDate: t.scanDate, entryDate: t.entryDate,
+      scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null,
       actualEntry: t.actualEntry, exitPrice: t.exitPrice,
       status: t.status, pnlPct: t.pnlPct, holdDays: t.holdDays || 0,
       actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,

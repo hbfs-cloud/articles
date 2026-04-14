@@ -29,6 +29,11 @@ function loadFilters() {
 function loadScanSignals(arg) {
   // arg can be: scanner/YYYYMMDD/, scanner/YYYYMMDD/signals.json, scanner/YYYYMMDD/index.html
   const abs = path.resolve(ROOT, arg);
+  // Path traversal guard — reject anything that escapes ROOT
+  const rootWithSep = ROOT.endsWith(path.sep) ? ROOT : ROOT + path.sep;
+  if (!abs.startsWith(rootWithSep) && abs !== ROOT) {
+    throw new Error(`Path traversal detected: ${arg} resolves outside ${ROOT}`);
+  }
   let dir = abs;
   if (fs.statSync(abs).isFile()) dir = path.dirname(abs);
 
@@ -173,11 +178,12 @@ function main() {
       sectorCount[sect] = (sectorCount[sect] || 0) + 1;
     }
     const cap = filters.diversification.max_per_sector;
+    // Cap 'Other' too — unknown tickers shouldn't be a concentration backdoor
     for (const [sect, n] of Object.entries(sectorCount)) {
-      if (sect !== 'Other' && n > cap) {
+      if (n > cap) {
         violations.push({
           rule: 'diversification.max_per_sector',
-          message: `Sector "${sect}" has ${n} setups (max ${cap}) — concentration risk.`
+          message: `Sector "${sect}" has ${n} setups (max ${cap})${sect === 'Other' ? ' — add to SECTOR_MAP if this is a real sector' : ''} — concentration risk.`
         });
       }
     }

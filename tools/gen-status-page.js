@@ -46,7 +46,12 @@ function computeMetrics(trades, portfolioSize, positionSizePct) {
   const avgHold = holdDays.length ? +(holdDays.reduce((a, b) => a + b, 0) / holdDays.length).toFixed(1) : 0;
   const ret = +totalReturn.toFixed(2);
   const dd = +maxDD.toFixed(2);
-  return { ret, dd: +(-dd).toFixed(2), wr, pf, trades: trades.length, avgHold, equityCurve, wins: wins.length, losses: losses.length };
+  // Realized = closed trades only (excludes any open/live mark-to-market)
+  const realized = +trades
+    .filter(t => ['tp1','tp2','sl','expired','rotated','tp1_partial','breakeven','trail'].includes(t.status) || t.exitDate)
+    .reduce((s, t) => s + (t.pnlPct || 0) / portfolioSize * pspct, 0).toFixed(2);
+  const unrealized = +(ret - realized).toFixed(2);
+  return { ret, realized, unrealized, dd: +(-dd).toFixed(2), wr, pf, trades: trades.length, avgHold, equityCurve, wins: wins.length, losses: losses.length };
 }
 
 function equityDV(curve) {
@@ -1399,7 +1404,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
 
     snapshot.modes[id] = {
-      stats: { ret: mM.ret, dd: mM.dd, wr: mM.wr, pf: mM.pf, trades: mM.trades, avgHold: mM.avgHold },
+      stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, trades: mM.trades, avgHold: mM.avgHold },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
       positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '' })),
@@ -1545,7 +1550,7 @@ function backfillHistory() {
       const existing_mode = (existing.modes || {})[id] || {};
       newModes[id] = {
         ...existing_mode,
-        stats: { ret: retAtDate, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold },
+        stats: { ret: retAtDate, realized: retAtDate, unrealized: 0, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold },
         equity: { d: ecDates, v: ecVals },
         positions,
         orders: [...buyOrders, ...rotCands],

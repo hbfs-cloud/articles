@@ -1724,6 +1724,14 @@
   <!-- Main content area -->
   <div class="main-content" id="mainContent">
 
+  <!-- Value proposition — shown once on first visit -->
+  <div id="valueProp" style="display:none;position:relative;background:linear-gradient(135deg,#1e3a8a,#2563eb);color:#fff;padding:1.1rem 1.5rem 1.1rem 1.5rem;text-align:center;">
+    <button type="button" aria-label="Dismiss" onclick="document.getElementById('valueProp').style.display='none';try{localStorage.setItem('valueProp-hide','1');}catch(e){}" style="position:absolute;top:8px;right:10px;background:transparent;border:none;color:#fff;font-size:1.1rem;cursor:pointer;opacity:0.7;"><i class="fa-solid fa-xmark"></i></button>
+    <div style="font-weight:800;font-size:1.1rem;margin-bottom:0.25rem;">Institutional market intelligence — daily briefings, weekly outlook &amp; live A+ scanner.</div>
+    <div style="font-size:0.8rem;opacity:0.9;">Five portfolio modes (Turbo → Fortress) · real-time tracking · Sharia-compliant filter · 100% free</div>
+  </div>
+  <script>(function(){try{if(!localStorage.getItem('valueProp-hide')){document.getElementById('valueProp').style.display='block';}}catch(e){}})();</script>
+
   <!-- A+ Picks Ticker Tape — Always at very top -->
   <iframe src="/widget/?mode=tape&theme=light" id="tickerTape" title="A+ Picks" style="width:100%;height:38px;border:none;display:block;overflow:hidden"></iframe>
 
@@ -1970,7 +1978,7 @@
 
       <!-- ===== SCANNER PERFORMANCE DASHBOARD (COLLAPSIBLE) ===== -->
       <div class="scanner-perf-card" id="scannerPerfCard">
-        <div class="scanner-perf-header" onclick="toggleScannerDashboard()">
+        <button type="button" class="scanner-perf-header" onclick="toggleScannerDashboard()" aria-expanded="false" aria-controls="scanner-perf-content" style="width:100%;background:transparent;border:none;text-align:left;cursor:pointer;padding:0;">
           <div style="
                 width: 36px;
                 height: 36px;
@@ -2001,10 +2009,10 @@
                 margin-right: 5px;
               ">
             C*</div>
-          <i class="fa-solid fa-chevron-down toggle-icon"></i>
-        </div>
+          <i class="fa-solid fa-chevron-down toggle-icon" aria-hidden="true"></i>
+        </button>
 
-        <div class="scanner-perf-content">
+        <div class="scanner-perf-content" id="scanner-perf-content">
           <!-- Narrative Framing -->
           <div style="background:rgba(37,99,235,0.08); border-left:3px solid #3b82f6; border-radius:8px; padding:0.6rem 0.9rem; margin-bottom:1rem; font-size:0.78rem; color:#cbd5e1; line-height:1.55;">
             <strong style="color:#fff;">How to read this:</strong> our A+ setups target R:R of 1:2 or better. The <strong>~38% hit rate is cumulative</strong> across all 8 retros (550 setups, weighted by resolved trades) — <em>not</em> the latest week, which can swing wildly (some retros print 0% TP1, others 60%+). It's <em>by design</em>: with 1:2 R:R we need fewer wins than losses for positive expectancy. What matters is the <strong style="color:#10b981;">size of wins vs the size of losses</strong> (Best +147%, Worst −33%) and the equity curve trend. <a href="/scanner/retrospective/" style="color:#60a5fa; text-decoration:underline;">See full methodology + every retro →</a>
@@ -3928,6 +3936,8 @@
     function toggleScannerDashboard() {
       var card = document.getElementById("scannerPerfCard");
       card.classList.toggle("expanded");
+      var btn = card.querySelector('.scanner-perf-header');
+      if (btn) btn.setAttribute('aria-expanded', card.classList.contains('expanded') ? 'true' : 'false');
 
       // If expanding, give a small delay for the animation then resize charts
       if (card.classList.contains("expanded")) {

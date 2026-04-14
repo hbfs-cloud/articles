@@ -9,11 +9,31 @@
  *                         [--dry-run] [--no-push] [--no-notify]
  */
 
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const fs   = require('fs');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
+
+// ─── Safe argv injection guard ────────────────────────────────────────────────
+// artPath is user-controlled — reject anything with shell metachars or traversal.
+function assertSafePath(p) {
+  if (!p || typeof p !== 'string') return false;
+  if (p.includes('..')) return false;
+  if (!/^[\w./-]+$/.test(p)) return false;
+  return true;
+}
+
+function runSafe(bin, args, label) {
+  const cmdStr = `${bin} ${args.join(' ')}`;
+  console.log(`  $ ${cmdStr}`);
+  if (dryRun) { console.log('  [dry-run] skipped'); return; }
+  const res = spawnSync(bin, args, { cwd: ROOT, stdio: 'inherit' });
+  if (res.status !== 0) {
+    console.error(`ERROR: ${label} failed (exit ${res.status})`);
+    process.exit(res.status || 1);
+  }
+}
 
 // ─── Parse args ───────────────────────────────────────────────────────────────
 
@@ -45,6 +65,11 @@ if (!artPath) {
   process.exit(1);
 }
 
+if (!assertSafePath(artPath)) {
+  console.error(`ERROR: --path "${artPath}" contains unsafe characters (shell metachars or path traversal).`);
+  process.exit(1);
+}
+
 console.log(`  type=${type}  path=${artPath}  dry-run=${dryRun}  no-push=${noPush}  no-notify=${noNotify}`);
 
 // ─── Step 2: File size check ──────────────────────────────────────────────────
@@ -70,9 +95,9 @@ console.log(`  OK — ${sizeKB.toFixed(1)} KB`);
 if (type === 'scanner') {
   console.log('\nStep 2b/7 — Validating scan against scanner-filters.json...');
   const scanDir = artPath.split('/').slice(0, 2).join('/');
-  try {
-    execSync(`node tools/validate-scan.js ${scanDir}`, { cwd: ROOT, stdio: 'inherit' });
-  } catch (e) {
+  const vRes = spawnSync('node', ['tools/validate-scan.js', scanDir], { cwd: ROOT, stdio: 'inherit' });
+  if (vRes.status !== 0) {
+    const e = { status: vRes.status };
     console.error('\nERROR: Scan validation failed — aborting publish.');
     console.error('Fix the signals.json / scan HTML above, or override with --skip-validate.\n');
     if (!process.argv.includes('--skip-validate')) process.exit(e.status || 1);
@@ -106,7 +131,7 @@ function extractDatePart(p) {
 // ─── Step 3: Index the article ────────────────────────────────────────────────
 
 console.log('\nStep 3/7 — Indexing article (add_card.js)...');
-run(`node tools/add_card.js ${artPath}`, 'add_card.js');
+runSafe('node', ['tools/add_card.js', artPath], 'add_card.js');
 
 // ─── Step 4: Git add ──────────────────────────────────────────────────────────
 
@@ -114,7 +139,7 @@ console.log('\nStep 4/7 — Staging files (git add)...');
 
 // Always stage the article folder and data/
 const artFolder = artPath.split('/').slice(0, 2).join('/');
-let gitAddPaths = [`"${artFolder}"`, 'data/'];
+let gitAddPaths = [artFolder, 'data/'];
 
 if (type === 'daily' || type === 'weekly') {
   gitAddPaths.push('data/radar.json');
@@ -126,20 +151,20 @@ if (type === 'scanner' || type === 'retro') {
 
 // Deduplicate
 const uniquePaths = [...new Set(gitAddPaths)];
-run(`git add ${uniquePaths.join(' ')}`, 'git add');
+runSafe('git', ['add', ...uniquePaths], 'git add');
 
 // ─── Step 5: Git commit ───────────────────────────────────────────────────────
 
 console.log('\nStep 5/7 — Committing...');
 const datePart = extractDatePart(artPath);
 const commitMsg = `feat: ${type} ${datePart} — auto-published`;
-run(`git commit -m "${commitMsg}"`, 'git commit');
+runSafe('git', ['commit', '-m', commitMsg], 'git commit');
 
 // ─── Step 6: Git push ─────────────────────────────────────────────────────────
 
 if (!noPush) {
   console.log('\nStep 6/7 — Pushing to origin main...');
-  run('git push origin main', 'git push');
+  runSafe('git', ['push', 'origin', 'main'], 'git push');
 } else {
   console.log('\nStep 6/7 — Skipped (--no-push)');
 }
@@ -148,7 +173,7 @@ if (!noPush) {
 
 if (!noNotify && !dryRun) {
   console.log('\nStep 7/7 — Sending Telegram notification...');
-  run(`node tools/telegram-publish-notify.js --type ${type} --path ${artPath}`, 'telegram-publish-notify.js');
+  runSafe('node', ['tools/telegram-publish-notify.js', '--type', type, '--path', artPath], 'telegram-publish-notify.js');
 } else {
   const reason = dryRun ? '--dry-run' : '--no-notify';
   console.log(`\nStep 7/7 — Skipped (${reason})`);

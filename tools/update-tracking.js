@@ -32,11 +32,20 @@ function fetchOHLC(ticker) {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=60d`;
     const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 };
     https.get(url, opts, (res) => {
+      if (res.statusCode === 429 || res.statusCode >= 500) {
+        console.warn(`  ⚠ ${ticker}: Yahoo HTTP ${res.statusCode} — skipped`);
+        res.resume();
+        return resolve({ history: {}, lastPrice: null, error: `http_${res.statusCode}` });
+      }
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
         try {
           const j = JSON.parse(data);
+          if (j?.chart?.error) {
+            console.warn(`  ⚠ ${ticker}: Yahoo API error ${j.chart.error.code || ''} — skipped`);
+            return resolve({ history: {}, lastPrice: null, error: 'api_error' });
+          }
           const result = j?.chart?.result?.[0];
           if (!result) return resolve({ history: {}, lastPrice: null });
           const ts = result.timestamp || [];
@@ -170,10 +179,12 @@ async function main() {
   const tickers = [...new Set(allTrades.map(t => t.ticker_yahoo))];
   console.log(`\nFetching OHLC for: ${tickers.join(', ')}`);
   const ohlcData = {};
+  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
   for (const tkr of tickers) {
     ohlcData[tkr] = await fetchOHLC(tkr);
     const bars = Object.keys(ohlcData[tkr].history).length;
     console.log(`  ${tkr}: last=${ohlcData[tkr].lastPrice}, ${bars} bars`);
+    await sleep(150); // Throttle — Yahoo rate-limits at ~15 rps
   }
 
   // Determine status for each trade — walk OHLC bars day by day.
@@ -197,6 +208,10 @@ async function main() {
     let exitFound = false;
     for (const d of dates) {
       const bar = data.history[d];
+      // Flag ambiguous bars — same bar hit SL AND a TP level (first-touch picks SL = conservative)
+      const hitSL = bar.low <= trade.stop;
+      const hitTP = (trade.tp2 && bar.high >= trade.tp2) || bar.high >= trade.tp1;
+      if (hitSL && hitTP) trade.ambiguous = true;
       // Stop touched (intraday low)
       if (bar.low <= trade.stop) {
         trade.status = 'sl';
@@ -366,7 +381,27 @@ async function main() {
   };
 
   // ── Positions ──
-  const positions = open
+  // Close legacy trades with missing levels (e.g. old forbidden-strategy entries) at current price
+  for (const t of open) {
+    if ((!t.stop || !t.tp1) && t.current_price && t.entry) {
+      t.status = 'expired';
+      t.exit_price = t.current_price;
+      t.exit_date = today;
+      t.pnl_pct = +((t.current_price - t.entry) / t.entry * 100).toFixed(2);
+    }
+  }
+  const stillOpen = allTrades.filter(t => t.status === 'open');
+
+  // Dedupe by ticker — keep the most recent scan_date per ticker (avoid duplicate exposure)
+  const seenTickers = new Set();
+  const dedupOpen = [];
+  for (const t of [...stillOpen].sort((a, b) => b.scan_date.localeCompare(a.scan_date))) {
+    if (seenTickers.has(t.ticker)) continue;
+    seenTickers.add(t.ticker);
+    dedupOpen.push(t);
+  }
+
+  const positions = dedupOpen
     .filter(t => t.current_price && t.entry)
     .map(t => {
       const ret = +((t.current_price - t.entry) / t.entry * 100).toFixed(2);

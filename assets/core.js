@@ -94,6 +94,16 @@ document.addEventListener("DOMContentLoaded", function() {
         renderClickableTags(articleTagsString, "article-clickable-tags", articleDefaultTab);
     }
 
+    // Auto-add tooltips to Sharia badges (Halal / CONV) — no need to edit every scan HTML
+    document.querySelectorAll('.badge').forEach(function(el) {
+        if (el.hasAttribute('title')) return;
+        var txt = (el.textContent || '').trim();
+        if (/Halal/i.test(txt))
+            el.setAttribute('title', 'Sharia-compliant — passes AAOIFI ratios (debt/mcap <33%, interest <5%, haram sectors excluded)');
+        else if (/CONV/i.test(txt))
+            el.setAttribute('title', 'Conventional — not Sharia-compliant (finance/alcohol/leverage or ratios out of bounds)');
+    });
+
     // === FAB (Floating Action Button) Navigation ===
     var fnavBtn = document.getElementById('fnavBtn');
     var fnavMenu = document.getElementById('fnavMenu');
@@ -201,6 +211,7 @@ function initMobileBottomNav() {
         { href: '/?tab=daily',    icon: 'fas fa-newspaper',      label: 'Daily',    tab: 'daily' },
         { href: '/?tab=scanner',  icon: 'fas fa-crosshairs',     label: 'Scanner',  tab: 'scanner' },
         { href: '/?tab=analyses', icon: 'fas fa-chart-line',     label: 'Analyses', tab: 'analyses' },
+        { href: '/?tab=radar',    icon: 'fas fa-satellite-dish', label: 'Radar',    tab: 'radar' },
         { href: '/?tab=weekly',   icon: 'fas fa-calendar-week',  label: 'Weekly',   tab: 'weekly' },
         { href: '/?tab=series',   icon: 'fas fa-graduation-cap', label: 'S\u00e9ries',  tab: 'series' }
     ];

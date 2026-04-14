@@ -163,7 +163,8 @@ function parseScannerHtml(html) {
       return {
         ...c,
         score: s.score || c.score || 85,
-        strategy: (s.strategy || c.strategy || '').replace(/\s*x\d+\s*$/i, '').trim(),
+        // Strip trailing " x2"/" X10" multiplier suffix only when it ends the string (word-boundary)
+        strategy: (s.strategy || c.strategy || '').replace(/\s+x\d+\b\s*$/i, '').trim(),
         rr: s.rr || c.rr || '',
         sharia: c.sharia != null ? c.sharia : (s.sharia != null ? s.sharia : null),
       };
