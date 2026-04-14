@@ -540,14 +540,20 @@ function topicForMode(modeId) {
  * Missing webhook URLs are skipped silently.
  */
 async function notifyAll(modeId, alert) {
+  // Guard: never send empty/blank notifications
+  if (!alert.text || alert.text.replace(/<[^>]+>/g, '').trim().length === 0) {
+    console.error(`[notify] Skipping empty alert for ${modeId}:${alert.status}`);
+    return;
+  }
+
   const modeTopicId  = topicForMode(modeId);
   const globalTopicId = TOPICS.portfolio;
   const isCritical   = alert.critical;
   const color        = DISCORD_COLORS[alert.status] ?? 9807270; // grey default
 
   // Build condensed 1-line summary for global channels
-  // Extract first line of alert text as summary
-  const summaryLine = alert.text.split('\n')[0];
+  // Extract first non-empty line of alert text as summary
+  const summaryLine = alert.text.split('\n').find(l => l.trim().length > 0) || alert.text;
   const discordFull = htmlToDiscord(alert.text);
   const discordSummary = htmlToDiscord(summaryLine);
 
@@ -593,9 +599,10 @@ async function resolvePriceData(ticker, maxAgeMs = 5 * 60 * 1000) {
 
 async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, priceData, isFirstRun) {
   const { price, dayLow, dayHigh } = priceData;
-  if (!price) return;
+  if (!price || isNaN(price) || price <= 0) return;
 
   const entry = pos.entry || 0;
+  if (!entry || isNaN(entry) || entry <= 0) return;
   const rawStop = pos.stop || 0;
   const tp1 = pos.tp1 || 0;
   const tp2 = pos.tp2 || null;
@@ -873,9 +880,11 @@ class YahooStreamer {
     this.stopFullEvalTimer();
     this.fullEvalTimer = setInterval(async () => {
       try {
+        await checkHeartbeat();
+        // Skip full evaluation outside market hours (prevents 2am ghost alerts)
+        if (!isMarketHours()) return;
         console.log(`[${new Date().toISOString()}] Full sweep (safety net)...`);
         await evaluate(null);
-        await checkHeartbeat();
       } catch (e) {
         console.error('[EVAL ERROR]', e.message);
       }
