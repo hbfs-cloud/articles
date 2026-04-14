@@ -152,26 +152,8 @@ function main() {
 
   // 6. Risk overlay — sector concentration cap (max_per_sector)
   if (filters.diversification?.max_per_sector) {
-    const SECTOR_MAP = {
-      // Financials
-      JPM:'Financials', GS:'Financials', MS:'Financials', BAC:'Financials', C:'Financials', WFC:'Financials', XLF:'Financials', V:'Financials', MA:'Financials',
-      // Tech
-      AAPL:'Tech', MSFT:'Tech', NVDA:'Tech', AMD:'Tech', INTC:'Tech', ASML:'Tech', TSM:'Tech', AVGO:'Tech', CRM:'Tech', ORCL:'Tech', SAP:'Tech', ADBE:'Tech', XLK:'Tech', SMH:'Tech',
-      // Consumer/Comm
-      AMZN:'Consumer', GOOGL:'Comm', META:'Comm', NFLX:'Comm', DIS:'Comm', TSLA:'Consumer', XLY:'Consumer', XLC:'Comm',
-      // Healthcare
-      UNH:'Healthcare', JNJ:'Healthcare', LLY:'Healthcare', MRK:'Healthcare', PFE:'Healthcare', ABBV:'Healthcare', XLV:'Healthcare',
-      // Energy
-      XOM:'Energy', CVX:'Energy', COP:'Energy', OXY:'Energy', EOG:'Energy', SLB:'Energy', XLE:'Energy', USO:'Energy',
-      // Industrials/Defense
-      BA:'Industrials', CAT:'Industrials', HON:'Industrials', GE:'Industrials', LMT:'Defense', NOC:'Defense', RTX:'Defense', GD:'Defense', XLI:'Industrials',
-      // Materials
-      FCX:'Materials', NEM:'Materials', XLB:'Materials', GLD:'Materials', SLV:'Materials', GDX:'Materials',
-      // Staples/Utilities
-      KO:'Staples', PEP:'Staples', WMT:'Staples', XLP:'Staples', XLU:'Utilities',
-      // Bonds (blocked for sharia)
-      TLT:'Bonds', HYG:'Bonds', LQD:'Bonds',
-    };
+    // SECTOR_MAP now lives in scanner-filters.json (source of truth). Fallback to empty map.
+    const SECTOR_MAP = filters.diversification.sector_map || {};
     const sectorCount = {};
     for (const s of signals) {
       const sect = SECTOR_MAP[String(s.ticker).toUpperCase()] || 'Other';

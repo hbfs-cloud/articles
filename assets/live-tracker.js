@@ -514,11 +514,11 @@
     // Color legend — makes setup-card color coding self-explanatory
     var legend =
       '<span style="display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap;margin-left:12px;font-weight:500;">' +
-        '<span title="Prix a franchi TP2 — profit maximal"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#eab308;margin-right:4px;vertical-align:middle"></span>TP2</span>' +
-        '<span title="Prix a franchi TP1 — profit partiel déclenché"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:4px;vertical-align:middle"></span>TP1/Trend</span>' +
-        '<span title="Prix dans la zone d\'entrée idéale"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:4px;vertical-align:middle"></span>Entry</span>' +
-        '<span title="Prix sous entrée mais loin du stop"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Underwater</span>' +
-        '<span title="Prix approche ou a touché le stop-loss"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle"></span>Near/Stopped</span>' +
+        '<span title="Price hit TP2 — max profit target"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#eab308;margin-right:4px;vertical-align:middle"></span>TP2</span>' +
+        '<span title="Price hit TP1 — partial profit triggered"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:4px;vertical-align:middle"></span>TP1/Trend</span>' +
+        '<span title="Price in the ideal entry zone"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:4px;vertical-align:middle"></span>Entry</span>' +
+        '<span title="Price below entry but far from stop"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;vertical-align:middle"></span>Underwater</span>' +
+        '<span title="Price near or hit the stop-loss"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:4px;vertical-align:middle"></span>Near/Stopped</span>' +
       '</span>';
 
     bar.innerHTML =
