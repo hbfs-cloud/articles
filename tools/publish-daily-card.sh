@@ -59,6 +59,7 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo ""
   echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."
   node tools/gen-status-page.js
+  node tools/gen-mode-cards.js
   node tools/gen-api.js
 else
   echo ""
