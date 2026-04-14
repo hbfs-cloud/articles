@@ -1,0 +1,146 @@
+#!/usr/bin/env node
+'use strict';
+/**
+ * publish.js — Unified publication pipeline
+ *
+ * Usage:
+ *   node tools/publish.js --type <daily|weekly|scanner|retro|analysis|series|tech>
+ *                         --path <relative/path/to/index.html>
+ *                         [--dry-run] [--no-push] [--no-notify]
+ */
+
+const { execSync } = require('child_process');
+const fs   = require('fs');
+const path = require('path');
+
+const ROOT = path.join(__dirname, '..');
+
+// ─── Parse args ───────────────────────────────────────────────────────────────
+
+function getArg(flag) {
+  const idx = process.argv.indexOf(flag);
+  return idx !== -1 ? process.argv[idx + 1] : null;
+}
+
+const type    = getArg('--type');
+const artPath = getArg('--path');
+const dryRun  = process.argv.includes('--dry-run');
+const noPush  = process.argv.includes('--no-push');
+const noNotify= process.argv.includes('--no-notify');
+
+const VALID_TYPES = ['daily', 'weekly', 'scanner', 'retro', 'analysis', 'series', 'tech'];
+
+// ─── Step 1: Validate args ────────────────────────────────────────────────────
+
+console.log('\nStep 1/7 — Validating arguments...');
+
+if (!type || !VALID_TYPES.includes(type)) {
+  console.error(`ERROR: --type must be one of: ${VALID_TYPES.join(', ')}`);
+  console.error('Usage: node tools/publish.js --type <type> --path <path> [--dry-run] [--no-push] [--no-notify]');
+  process.exit(1);
+}
+
+if (!artPath) {
+  console.error('ERROR: --path is required (e.g. --path daily/20260414/index.html)');
+  process.exit(1);
+}
+
+console.log(`  type=${type}  path=${artPath}  dry-run=${dryRun}  no-push=${noPush}  no-notify=${noNotify}`);
+
+// ─── Step 2: File size check ──────────────────────────────────────────────────
+
+console.log('\nStep 2/7 — Checking file size (> 10KB required)...');
+
+const absPath = path.join(ROOT, artPath);
+if (!fs.existsSync(absPath)) {
+  console.error(`ERROR: File not found: ${absPath}`);
+  process.exit(1);
+}
+
+const sizeKB = fs.statSync(absPath).size / 1024;
+if (sizeKB < 10) {
+  console.error(`ERROR: File is too small (${sizeKB.toFixed(1)} KB < 10 KB). Generation may be incomplete.`);
+  process.exit(1);
+}
+
+console.log(`  OK — ${sizeKB.toFixed(1)} KB`);
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function run(cmd, label) {
+  console.log(`  $ ${cmd}`);
+  if (dryRun) {
+    console.log('  [dry-run] skipped');
+    return;
+  }
+  try {
+    execSync(cmd, { cwd: ROOT, stdio: 'inherit' });
+  } catch (e) {
+    console.error(`ERROR: ${label} failed (exit ${e.status})`);
+    process.exit(e.status || 1);
+  }
+}
+
+// Extract date/identifier segment from path (e.g. daily/20260414/index.html → 20260414)
+function extractDatePart(p) {
+  const parts = p.replace(/\\/g, '/').split('/');
+  // Second segment is typically the date folder (daily/20260414/...)
+  return parts.length >= 2 ? parts[1] : parts[0];
+}
+
+// ─── Step 3: Index the article ────────────────────────────────────────────────
+
+console.log('\nStep 3/7 — Indexing article (add_card.js)...');
+run(`node tools/add_card.js ${artPath}`, 'add_card.js');
+
+// ─── Step 4: Git add ──────────────────────────────────────────────────────────
+
+console.log('\nStep 4/7 — Staging files (git add)...');
+
+// Always stage the article folder and data/
+const artFolder = artPath.split('/').slice(0, 2).join('/');
+let gitAddPaths = [`"${artFolder}"`, 'data/'];
+
+if (type === 'daily' || type === 'weekly') {
+  gitAddPaths.push('data/radar.json');
+}
+
+if (type === 'scanner' || type === 'retro') {
+  gitAddPaths.push('portfolio/', 'scanner/status/', 'history/');
+}
+
+// Deduplicate
+const uniquePaths = [...new Set(gitAddPaths)];
+run(`git add ${uniquePaths.join(' ')}`, 'git add');
+
+// ─── Step 5: Git commit ───────────────────────────────────────────────────────
+
+console.log('\nStep 5/7 — Committing...');
+const datePart = extractDatePart(artPath);
+const commitMsg = `feat: ${type} ${datePart} — auto-published`;
+run(`git commit -m "${commitMsg}"`, 'git commit');
+
+// ─── Step 6: Git push ─────────────────────────────────────────────────────────
+
+if (!noPush) {
+  console.log('\nStep 6/7 — Pushing to origin main...');
+  run('git push origin main', 'git push');
+} else {
+  console.log('\nStep 6/7 — Skipped (--no-push)');
+}
+
+// ─── Step 7: Telegram notification ───────────────────────────────────────────
+
+if (!noNotify && !dryRun) {
+  console.log('\nStep 7/7 — Sending Telegram notification...');
+  run(`node tools/telegram-publish-notify.js --type ${type} --path ${artPath}`, 'telegram-publish-notify.js');
+} else {
+  const reason = dryRun ? '--dry-run' : '--no-notify';
+  console.log(`\nStep 7/7 — Skipped (${reason})`);
+}
+
+// ─── Summary ──────────────────────────────────────────────────────────────────
+
+const url = `https://articles.dailytickers.com/${artFolder}/`;
+console.log(`\n✅ Published ${type} ${artPath} → ${url}`);
+if (dryRun) console.log('   (dry-run — no files were modified)');

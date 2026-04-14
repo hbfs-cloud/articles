@@ -145,3 +145,90 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 });
+
+// S2: Scanner Top 3 collapse
+function initScannerCollapse() {
+    if (document.documentElement.dataset.tab !== 'scanner') return;
+    var cards = Array.prototype.slice.call(document.querySelectorAll('.setup-card'));
+    if (cards.length <= 3) return;
+
+    // Hide cards after index 2
+    for (var i = 3; i < cards.length; i++) {
+        cards[i].classList.add('scanner-hidden');
+    }
+
+    // Insert expand button after 3rd card
+    var expandBtn = document.createElement('button');
+    expandBtn.className = 'scanner-expand-btn';
+    expandBtn.textContent = 'Show all ' + cards.length + ' setups \u25bc';
+    cards[2].parentNode.insertBefore(expandBtn, cards[2].nextSibling);
+
+    expandBtn.addEventListener('click', function() {
+        var hidden = document.querySelectorAll('.scanner-hidden');
+        Array.prototype.forEach.call(hidden, function(c) { c.classList.remove('scanner-hidden'); });
+        expandBtn.remove();
+
+        // Insert collapse button after last card
+        var collapseBtn = document.createElement('button');
+        collapseBtn.className = 'scanner-expand-btn';
+        collapseBtn.textContent = '\u25b2 Show less';
+        var allCards = document.querySelectorAll('.setup-card');
+        var lastCard = allCards[allCards.length - 1];
+        lastCard.parentNode.insertBefore(collapseBtn, lastCard.nextSibling);
+
+        collapseBtn.addEventListener('click', function() {
+            var allC = Array.prototype.slice.call(document.querySelectorAll('.setup-card'));
+            for (var j = 3; j < allC.length; j++) {
+                allC[j].classList.add('scanner-hidden');
+            }
+            collapseBtn.remove();
+            // Re-insert expand button
+            var newExpand = document.createElement('button');
+            newExpand.className = 'scanner-expand-btn';
+            newExpand.textContent = 'Show all ' + allC.length + ' setups \u25bc';
+            allC[2].parentNode.insertBefore(newExpand, allC[2].nextSibling);
+            newExpand.addEventListener('click', function() { expandBtn.click(); });
+        });
+    });
+}
+
+// S3: Mobile bottom nav
+function initMobileBottomNav() {
+    var nav = document.createElement('nav');
+    nav.className = 'mobile-bottom-nav';
+
+    var links = [
+        { href: '/?tab=daily',    icon: 'fas fa-newspaper',      label: 'Daily',    tab: 'daily' },
+        { href: '/?tab=scanner',  icon: 'fas fa-crosshairs',     label: 'Scanner',  tab: 'scanner' },
+        { href: '/?tab=analyses', icon: 'fas fa-chart-line',     label: 'Analyses', tab: 'analyses' },
+        { href: '/?tab=weekly',   icon: 'fas fa-calendar-week',  label: 'Weekly',   tab: 'weekly' },
+        { href: '/?tab=series',   icon: 'fas fa-graduation-cap', label: 'S\u00e9ries',  tab: 'series' }
+    ];
+
+    // Determine active tab
+    var pageTab = document.documentElement.dataset.tab || '';
+    if (!pageTab) {
+        var urlParams = new URLSearchParams(window.location.search);
+        pageTab = urlParams.get('tab') || '';
+    }
+
+    links.forEach(function(item) {
+        var a = document.createElement('a');
+        a.href = item.href;
+        if (item.tab === pageTab) a.classList.add('active');
+        var i = document.createElement('i');
+        i.className = item.icon;
+        var span = document.createElement('span');
+        span.textContent = item.label;
+        a.appendChild(i);
+        a.appendChild(span);
+        nav.appendChild(a);
+    });
+
+    document.body.appendChild(nav);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initScannerCollapse();
+    initMobileBottomNav();
+});

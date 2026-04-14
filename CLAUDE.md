@@ -9,29 +9,29 @@ Site de publication d'analyses financières institutionnelles, hébergé sur Git
 ## Structure du Projet
 ```
 articles/
-├── src/                          # Source Astro (nouveaux articles)
-│   ├── components/               # 36 composants réutilisables (*.astro)
-│   ├── layouts/                  # 8 layouts (Base, Daily, Weekly, Analyses, Analysis, Scanner, Series, Tech)
-│   ├── content/                  # Collections MDX (daily/, tech/)
-│   └── pages/                    # Routes dynamiques
 ├── assets/                       # CSS + JS global partagé
-│   ├── report.css                # Theme light (3000+ lignes)
-│   ├── core.js                   # Tag renderer + filtres
+│   ├── report.css                # Theme light — styles partagés tous articles
+│   ├── core.js                   # Tag renderer + filtres + mobile nav + scanner collapse
 │   ├── live-tracker.js           # Prix temps réel (Yahoo + Binance)
 │   └── style.css                 # Landing page CSS
-├── weekly/ daily/ analyses/ scanner/ series/ tech/  # Legacy HTML
+├── weekly/ daily/ analyses/ scanner/ series/ tech/  # Articles HTML statiques
 ├── data/                         # Index JSON par tab + search_data.js
-├── tools/                        # add_card.js, migrate_astro.js, etc.
-├── widget/                       # Widgets embarquables (iframe)
+├── tools/                        # Scripts de publication et d'analyse
+│   ├── publish.js                # ⭐ Script unifié de publication (add_card + git + telegram)
+│   ├── add_card.js               # Indexe un article dans le JSON du bon tab
+│   ├── sweep.js                  # Grid search backtest (scanner)
+│   ├── gen-status-page.js        # Dashboard portfolio 5 modes
+│   ├── gen-api.js                # Refresh public JSON API portfolio
+│   └── ...                       # Autres outils spécialisés
 ├── portfolio/v1/                 # Public JSON API (Turbo, Dynamic, Balanced, Secured, Fortress)
+├── widget/                       # Widgets embarquables (iframe)
 └── mcp/                          # MCP server + watchlist.json
 ```
 
-## Architecture Hybride (Astro + Legacy)
-- **Nouveaux articles** : MDX dans `src/content/`, rendus via layouts Astro
-- **Articles existants** (433) : HTML legacy copié dans `dist/` par `copy-legacy.mjs`
-- **Build** : `npm run build` = `astro build` + `copy-legacy.mjs`
-- **Migration tool** : `node tools/migrate_astro.js --apply` standardise tous les HTML legacy
+## Architecture
+- **Stack** : HTML statique + CSS (`report.css`) + JS vanilla (`core.js`) + JSON indexes
+- **Pas de framework de build** (Astro supprimé) — les articles sont des fichiers HTML directs
+- **Publication** : `node tools/publish.js --type <type> --path <path>` enchaîne tout automatiquement
 
 ## MCP Gateway
 Outils `mcp__claude_ai_Gateway__*` :
@@ -192,10 +192,7 @@ Chaque lundi :
 4. **Générer** : `weekly/YYYYMMDD/index.html` avec les 18 sections (> 100KB). CSS = `/assets/report.css`. FAB obligatoire, PAS de hero-brand-link.
 5. **Indexer + Push** :
    ```bash
-   node tools/add_card.js weekly/YYYYMMDD/index.html
-   git add weekly/YYYYMMDD/ data/weekly.json data/search_data.js data/radar.json
-   git commit -m "feat: weekly YYYYMMDD — {titre court}"
-   git push origin main
+   node tools/publish.js --type weekly --path weekly/YYYYMMDD/index.html
    ```
 
 ### "Analyse [TICKER]"
@@ -222,10 +219,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 5. **Indexer + Push** :
    ```bash
    node tools/update_history.js analyses/{TICKER}/index.html
-   node tools/add_card.js analyses/{TICKER}/index.html
-   git add analyses/{TICKER}/ data/analyses.json data/search_data.js
-   git commit -m "feat: analyse {TICKER} — {titre court}"
-   git push origin main
+   node tools/publish.js --type analysis --path analyses/{TICKER}/index.html
    ```
 
 ### "Analyse Daily" / "Briefing du jour"
@@ -240,10 +234,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 7. **Format date obligatoire dans `report-card-meta`** : `DD mois YYYY` en français minuscule (ex: `14 mars 2026`). JAMAIS de format anglais ("March 14"), JAMAIS de majuscule sur le mois ("Mars"), JAMAIS de suffixe ("— Vendredi", "— Tuesday Full Market"), JAMAIS d'espaces superflus.
 8. **Indexer + Push** :
    ```bash
-   node tools/add_card.js daily/YYYYMMDD/index.html
-   git add daily/YYYYMMDD/ data/daily.json data/search_data.js data/radar.json
-   git commit -m "feat: briefing quotidien DD mois YYYY — {titre court}"
-   git push origin main
+   node tools/publish.js --type daily --path daily/YYYYMMDD/index.html
    ```
 
 ### "Scanner" / "Scan du jour"
@@ -276,10 +267,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    ```
 8. **Indexer + Push** :
    ```bash
-   node tools/add_card.js scanner/YYYYMMDD/index.html
-   git add scanner/YYYYMMDD/ data/ portfolio/ scanner/status/ history/
-   git commit -m "feat: scanner YYYYMMDD — {régime}, 10 setups A+"
-   git push origin main
+   node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html
    ```
 
 ### "Rétrospective Scanner"
@@ -300,10 +288,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    - Ne pas skiper les positions ouvertes — les afficher explicitement avec leur count
 6. **Indexer + Push** :
    ```bash
-   node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html
-   git add scanner/retrospective/YYYYMMDD/ scanner/retrospective/index.html data/scanner.json data/search_data.js index.html
-   git commit -m "feat: rétrospective scanner — Note X, Y% HR"
-   git push origin main
+   node tools/publish.js --type retro --path scanner/retrospective/YYYYMMDD/index.html
    ```
 
 ## Landing Page (index.html)
