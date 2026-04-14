@@ -257,17 +257,19 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    node tools/sweep.js                     # Grid search complet (recalcul historique)
    node tools/gen-status-page.js --backfill # Reset des snapshots historiques
    ```
-7. **Pipeline Quotidien (Append-only)** :
+7. **Indexer + Push HTML d'abord** (AVANT le pipeline) :
+   ```bash
+   node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-notify
+   ```
+   ⚠️ `--no-notify` obligatoire ici — la notification Telegram est gérée par publish-daily-card.sh (step 8 média).
+
+8. **Pipeline Quotidien (Append-only)** :
    ```bash
    node tools/update-tracking.js           # Tracking exits (prix Yahoo)
    node tools/sweep.js --frozen-only       # Update closed trades (without grid search)
    node tools/gen-status-page.js           # Snapshot J + Dashboard (sans flag)
    node tools/gen-api.js                   # Refresh public JSONs (29 endpoints)
-   ./tools/publish-daily-card.sh           # Telegram Card + Deployment
-   ```
-8. **Indexer + Push** :
-   ```bash
-   node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html
+   ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
    ```
 
 ### "Rétrospective Scanner"
