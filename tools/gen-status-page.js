@@ -892,7 +892,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <!-- Mode Tabs -->
   <div class="mode-tabs">
-    ${Object.entries(modes).map(([id, m]) => `<button class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}</button>`).join('')}
+    ${Object.entries(modes).map(([id, m]) => `<button class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${id === 'balanced' ? ' <span style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
   </div>
 
   ${Object.entries(modes).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-' + id, id === 'balanced')).join('\n')}

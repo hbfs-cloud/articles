@@ -511,48 +511,7 @@ function buildPage(d) {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <style>
-    .setup-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin-bottom:2rem;max-width:1000px;margin-left:auto;margin-right:auto;box-shadow:0 4px 16px rgba(0,0,0,0.04);transition:transform 0.2s;}
-    .setup-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,0.08);}
-    .setup-header{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap;}
-    .setup-header-info{flex:1;min-width:200px;}
-    .setup-header-info h3{margin:0;font-size:1.3rem;font-weight:800;color:#0f172a;}
-    .setup-header-info .setup-name{font-size:0.85rem;color:#64748b;margin-top:0.15rem;}
-    .setup-header-price{text-align:right;}
-    .setup-header-price .price{font-size:1.5rem;font-weight:800;color:#0f172a;}
-    .setup-header-price .change{font-size:0.85rem;padding:0.2rem 0.6rem;border-radius:6px;font-weight:600;}
-    .setup-header-price .change.pos{background:#f0fdf4;color:#16a34a;}
-    .setup-header-price .change.neg{background:#fef2f2;color:#dc2626;}
-    .setup-badges{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0.75rem 0;}
-    .scanner-ticker-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.9rem;flex-shrink:0;color:white;}
-    .chart-grid-2col{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin:1.5rem 0;}
-    .nav-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:0.75rem;margin:1.5rem auto;max-width:960px;}
-    .nav-grid a{display:flex;align-items:center;gap:0.5rem;padding:0.75rem 1rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;text-decoration:none;color:#0f172a;font-weight:600;font-size:0.9rem;transition:all 0.2s;}
-    .nav-grid a:hover{background:#eff6ff;border-color:#3b82f6;}
-    .confirm-box{background:#f0fdf4;border:1px solid #86efac;padding:1rem;border-radius:12px;margin:0.75rem 0;}
-    .confirm-box h4{color:#16a34a;margin:0 0 0.5rem;}
-    .invalid-box{background:#fef2f2;border:1px solid #fecaca;padding:1rem;border-radius:12px;margin:0.75rem 0;}
-    .invalid-box h4{color:#dc2626;margin:0 0 0.5rem;}
-    .levels-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin:1rem 0;}
-    .levels-grid div{background:#f8fafc;border:1px solid #e2e8f0;padding:0.75rem;border-radius:8px;}
-    .echart-box{width:100%;height:300px;margin:1rem 0;}
-    .pedagogy-box{background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);border:1px solid #bfdbfe;border-radius:16px;padding:1.5rem;margin:1.5rem 0;}
-    .content-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;margin:1.5rem auto;max-width:1000px;}
-    .data-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin:1rem 0;}
-    .data-table th,.data-table td{padding:0.6rem;text-align:left;border-bottom:1px solid #e2e8f0;}
-    .data-table th{font-weight:700;color:#64748b;text-transform:uppercase;font-size:0.7rem;}
-    .data-table tr:hover{background:#f8fafc;}
-    .up{color:#10b981;} .down{color:#ef4444;}
-    .iran-alert{background:linear-gradient(135deg,#fff7ed,#fef3c7);border:2px solid #f59e0b;border-radius:12px;padding:1rem 1.25rem;margin:1rem 0;}
-    .iran-alert strong{color:#b45309;}
-    .risk-on-banner{background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #22c55e;border-radius:12px;padding:1rem 1.25rem;margin:1rem 0;}
-    .risk-on-banner strong{color:#15803d;}
-    .divmat-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin:1rem 0;border-radius:12px;overflow:hidden;}
-    .divmat-table th{background:#1e40af;color:white;padding:0.75rem;text-align:center;font-size:0.75rem;text-transform:uppercase;}
-    .divmat-table td{padding:0.65rem;text-align:center;border-bottom:1px solid #e2e8f0;}
-    .divmat-table tr:nth-child(even){background:#f8fafc;}
-    .finviz-chart{width:100%;border-radius:8px;border:1px solid #e2e8f0;margin:1rem 0;display:block;}
-  </style>
+  <!-- Scanner styles live in /assets/report.css (scanner-specific section) -->
 </head>
 <body>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
