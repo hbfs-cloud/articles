@@ -6,7 +6,7 @@
  *
  * Data sources:
  *   - Stocks/ETFs: Yahoo Finance via allorigins.win CORS proxy (primary)
- *     Fallback chain P0→P4: query2, corsproxy.io×2, thingproxy, fundamentals quoteSummary
+ *     Fallback chain P0→P4: allorigins×query2, allorigins×query1, thingproxy×query2, thingproxy×query1, quoteSummary
  *   - Crypto (*-USD): Binance REST API (no proxy needed)
  *
  * Cache: sessionStorage, 5-minute TTL
@@ -25,10 +25,11 @@
 
   // Fallback proxy chain — only used if primary allorigins call fails
   // P0: allorigins + query2 (alternate Yahoo host)
-  // P1: corsproxy.io + query1
-  // P2: corsproxy.io + query2
-  // P3: thingproxy (raw, no wrapper)
+  // P1: allorigins + query1 (swap primary host via same stable proxy)
+  // P2: thingproxy + query2 (different proxy, different host)
+  // P3: thingproxy + query1 (different proxy, primary host)
   // P4: Yahoo quoteSummary fundamentals via allorigins (last resort)
+  // NOTE: corsproxy.io removed — returns 403 under load, was the root cause of "Price feed unstable"
   var YAHOO_FALLBACK_PROXIES = [
     function (ticker) {
       var u = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
@@ -36,11 +37,11 @@
     },
     function (ticker) {
       var u = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
-      return { url: 'https://corsproxy.io/?' + encodeURIComponent(u), mode: 'raw-chart' };
+      return { url: YAHOO_PROXY + encodeURIComponent(u), mode: 'allorigins-chart' };
     },
     function (ticker) {
       var u = 'https://query2.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
-      return { url: 'https://corsproxy.io/?' + encodeURIComponent(u), mode: 'raw-chart' };
+      return { url: 'https://thingproxy.freeboard.io/fetch/' + u, mode: 'raw-chart' };
     },
     function (ticker) {
       var u = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(ticker) + '?range=1d&interval=1d';
