@@ -25,9 +25,11 @@ function addBusinessDays(dateStr, days) {
   return d.toISOString().slice(0, 10);
 }
 
-function fetchPrice(ticker) {
+// Fetch daily OHLC bars for a ticker — returns { history: {dateStr: {open,high,low,close}}, lastPrice }
+// Range covers up to ~60 trading days back (enough for 35d window in main).
+function fetchOHLC(ticker) {
   return new Promise((resolve) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=5d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=60d`;
     const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 };
     https.get(url, opts, (res) => {
       let data = '';
@@ -35,11 +37,22 @@ function fetchPrice(ticker) {
       res.on('end', () => {
         try {
           const j = JSON.parse(data);
-          const price = j?.chart?.result?.[0]?.meta?.regularMarketPrice ?? null;
-          resolve(price);
-        } catch { resolve(null); }
+          const result = j?.chart?.result?.[0];
+          if (!result) return resolve({ history: {}, lastPrice: null });
+          const ts = result.timestamp || [];
+          const q = result.indicators?.quote?.[0] || {};
+          const history = {};
+          for (let i = 0; i < ts.length; i++) {
+            if (q.open?.[i] != null && q.high?.[i] != null && q.low?.[i] != null && q.close?.[i] != null) {
+              const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
+              history[dateStr] = { open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i] };
+            }
+          }
+          const lastPrice = result.meta?.regularMarketPrice ?? null;
+          resolve({ history, lastPrice });
+        } catch { resolve({ history: {}, lastPrice: null }); }
       });
-    }).on('error', () => resolve(null)).on('timeout', () => resolve(null));
+    }).on('error', () => resolve({ history: {}, lastPrice: null })).on('timeout', () => resolve({ history: {}, lastPrice: null }));
   });
 }
 
@@ -57,18 +70,21 @@ function parseNumber(s) {
   return isNaN(n) ? null : n;
 }
 
-// ─── Extract top3 from scan (JSON-first, HTML fallback) ─────────────────────
+// ─── Extract ALL signals from scan (JSON-first, HTML fallback) ──────────────
+// Returns up to 10 signals, sorted by score desc. Was top-3-only — now full slate
+// so feedback loop covers the entire published universe (P1 audit fix).
 
-function extractTop3FromDir(dir) {
+function extractAllFromDir(dir) {
   const loaded = parser.loadSignals(dir);
   if (!loaded || !loaded.signals.length) return [];
 
   return loaded.signals
     .sort((a, b) => (b.score || 0) - (a.score || 0))
-    .slice(0, 3)
+    .slice(0, 10)
     .map(s => ({
       ticker: s.ticker,
       score: s.score || 85,
+      strategy: s.strategy,
       entry: s.entry,
       stop: s.stop,
       tp1: s.tp1,
@@ -114,15 +130,15 @@ async function main() {
     const dateStr = dir.slice(0, 8);
     const scanDate = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
 
-    const top3 = extractTop3FromDir(dir);
-    if (top3.length === 0) {
+    const setups = extractAllFromDir(dir);
+    if (setups.length === 0) {
       console.log(`  [${dir}] No trades extracted`);
       continue;
     }
-    console.log(`  [${dir}] Extracted:`, top3.map(t => t.ticker).join(', '));
+    console.log(`  [${dir}] Extracted ${setups.length}:`, setups.map(t => t.ticker).join(', '));
 
-    for (let i = 0; i < top3.length; i++) {
-      const t = top3[i];
+    for (let i = 0; i < setups.length; i++) {
+      const t = setups[i];
       const expireDate = addBusinessDays(scanDate, t.horizon_days || 20);
       allTrades.push({
         id: `${dir}-${t.ticker}-${i + 1}`,
@@ -150,50 +166,78 @@ async function main() {
 
   console.log(`\nTotal trades: ${allTrades.length}`);
 
-  // Fetch current prices
+  // Fetch OHLC bars for every traded ticker (batched by unique symbol)
   const tickers = [...new Set(allTrades.map(t => t.ticker_yahoo))];
-  console.log(`\nFetching prices for: ${tickers.join(', ')}`);
-  const prices = {};
+  console.log(`\nFetching OHLC for: ${tickers.join(', ')}`);
+  const ohlcData = {};
   for (const tkr of tickers) {
-    prices[tkr] = await fetchPrice(tkr);
-    console.log(`  ${tkr}: ${prices[tkr]}`);
+    ohlcData[tkr] = await fetchOHLC(tkr);
+    const bars = Object.keys(ohlcData[tkr].history).length;
+    console.log(`  ${tkr}: last=${ohlcData[tkr].lastPrice}, ${bars} bars`);
   }
 
-  // Determine status for each trade
+  // Determine status for each trade — walk OHLC bars day by day.
+  // First touch wins: low <= stop → SL, high >= tp2 → TP2, high >= tp1 → TP1.
+  // No more close-only cheat (P0 audit fix).
   for (const trade of allTrades) {
-    const price = prices[trade.ticker_yahoo];
-    trade.current_price = price;
+    const ticker = trade.ticker_yahoo;
+    const data = ohlcData[ticker];
+    const lastPrice = data?.lastPrice ?? null;
+    trade.current_price = lastPrice;
 
-    if (price == null) continue;
     if (!trade.entry || !trade.stop || !trade.tp1) continue;
+    if (!data || !Object.keys(data.history).length) continue;
 
-    // Use >= so a trade expiring today is closed out on today's update,
-    // not carried to tomorrow.
+    // Sorted list of bar dates within trade window (scan_date → min(today, expire))
+    const cutoff = today < trade.expire_date ? today : trade.expire_date;
+    const dates = Object.keys(data.history)
+      .filter(d => d >= trade.scan_date && d <= cutoff)
+      .sort();
+
+    let exitFound = false;
+    for (const d of dates) {
+      const bar = data.history[d];
+      // Stop touched (intraday low)
+      if (bar.low <= trade.stop) {
+        trade.status = 'sl';
+        trade.exit_price = trade.stop;
+        trade.exit_date = d;
+        trade.pnl_pct = +((trade.stop - trade.entry) / trade.entry * 100).toFixed(2);
+        exitFound = true;
+        break;
+      }
+      // TP2 touched (intraday high)
+      if (trade.tp2 && bar.high >= trade.tp2) {
+        trade.status = 'tp2';
+        trade.exit_price = trade.tp2;
+        trade.exit_date = d;
+        trade.pnl_pct = +((trade.tp2 - trade.entry) / trade.entry * 100).toFixed(2);
+        exitFound = true;
+        break;
+      }
+      // TP1 touched (intraday high)
+      if (bar.high >= trade.tp1) {
+        trade.status = 'tp1';
+        trade.exit_price = trade.tp1;
+        trade.exit_date = d;
+        trade.pnl_pct = +((trade.tp1 - trade.entry) / trade.entry * 100).toFixed(2);
+        exitFound = true;
+        break;
+      }
+    }
+
+    if (exitFound) continue;
+
+    // No exit hit during window — either expired or still open
     const expired = today >= trade.expire_date;
-
-    if (price <= trade.stop) {
-      trade.status = 'sl';
-      trade.exit_price = trade.stop;
-      trade.exit_date = today;
-      trade.pnl_pct = +((trade.stop - trade.entry) / trade.entry * 100).toFixed(2);
-    } else if (trade.tp2 && price >= trade.tp2) {
-      trade.status = 'tp2';
-      trade.exit_price = trade.tp2;
-      trade.exit_date = today;
-      trade.pnl_pct = +((trade.tp2 - trade.entry) / trade.entry * 100).toFixed(2);
-    } else if (price >= trade.tp1) {
-      trade.status = 'tp1';
-      trade.exit_price = trade.tp1;
-      trade.exit_date = today;
-      trade.pnl_pct = +((trade.tp1 - trade.entry) / trade.entry * 100).toFixed(2);
-    } else if (expired) {
+    if (expired && lastPrice != null) {
       trade.status = 'expired';
-      trade.exit_price = price;
+      trade.exit_price = lastPrice;
       trade.exit_date = today;
-      trade.pnl_pct = +((price - trade.entry) / trade.entry * 100).toFixed(2);
-    } else {
+      trade.pnl_pct = +((lastPrice - trade.entry) / trade.entry * 100).toFixed(2);
+    } else if (lastPrice != null) {
       trade.status = 'open';
-      trade.pnl_pct = +((price - trade.entry) / trade.entry * 100).toFixed(2);
+      trade.pnl_pct = +((lastPrice - trade.entry) / trade.entry * 100).toFixed(2);
     }
   }
 
@@ -270,12 +314,36 @@ async function main() {
     drawdownHistory.push(+(-dd).toFixed(2));
   }
 
+  // ── Per-rank metrics (top3 vs top10 honesty) ──
+  const top3Trades = allTrades.filter(t => t.rank <= 3);
+  const top3Closed = top3Trades.filter(t => ['tp1','tp2','sl','expired'].includes(t.status));
+  const top3Wins = top3Closed.filter(t => ['tp1','tp2'].includes(t.status));
+  const winRateTop3 = top3Closed.length ? +((top3Wins.length / top3Closed.length) * 100).toFixed(1) : 0;
+  const winRateTop10 = closed.length ? +((wins.length / closed.length) * 100).toFixed(1) : 0;
+
+  // ── Realized vs unrealized split (P0 audit fix) ──
+  // return_realized: closed P&L only (the figure a regulator reads)
+  // return_unrealized: MtM of currently-open positions
+  // return_total = realized + unrealized (kept for backward-compat)
+  const returnRealized = +allSorted
+    .filter(t => ['tp1','tp2','sl','expired'].includes(t.status))
+    .reduce((s, t) => s + (t.pnl_pct || 0) * FRACTION, 0).toFixed(2);
+  const returnUnrealized = +allSorted
+    .filter(t => t.status === 'open')
+    .reduce((s, t) => s + (t.pnl_pct || 0) * FRACTION, 0).toFixed(2);
+
   const metrics = {
     updated_at: new Date().toISOString(),
     trades_total: allTrades.length,
     trades_closed: closed.length,
     trades_open: open.length,
+    resolved_pct: allTrades.length ? +((closed.length / allTrades.length) * 100).toFixed(1) : 0,
     win_rate: closed.length ? +((wins.length / closed.length) * 100).toFixed(1) : 0,
+    win_rate_top3: winRateTop3,
+    win_rate_top10: winRateTop10,
+    top3_closed_count: top3Closed.length,
+    return_realized: returnRealized,
+    return_unrealized: returnUnrealized,
     tp1_count: tp1c,
     tp2_count: tp2c,
     sl_count: slc,

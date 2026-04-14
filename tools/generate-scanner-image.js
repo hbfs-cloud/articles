@@ -373,10 +373,10 @@ ${(portfolio || []).map(p => {
 <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1.8fr;gap:8px;margin-bottom:14px">
 
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
-    <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Return total D0</div>
-    <div style="font-weight:900;font-size:28px;color:#059669;line-height:1.1">${metrics.return_total > 0 ? '+' : ''}${metrics.return_total || 8.7}%</div>
-    <div style="font-size:8px;color:#94a3b8;margin-bottom:4px">Capital-weighted MtM</div>
-    ${spark(equityHist, '#22c55e', 190, 28)}
+    <div style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Realized P&L (closed)</div>
+    <div style="font-weight:900;font-size:28px;color:${(metrics.return_realized || 0) >= 0 ? '#059669' : '#dc2626'};line-height:1.1">${(metrics.return_realized || 0) > 0 ? '+' : ''}${metrics.return_realized != null ? metrics.return_realized : (metrics.return_30d_closed_only || 0)}%</div>
+    <div style="font-size:8px;color:#64748b;margin-bottom:2px">Unrealized (open MtM): <strong style="color:${(metrics.return_unrealized || 0) >= 0 ? '#059669' : '#dc2626'}">${(metrics.return_unrealized || 0) > 0 ? '+' : ''}${metrics.return_unrealized || 0}%</strong></div>
+    ${spark(equityHist, '#22c55e', 190, 22)}
     <div style="font-size:7px;color:#94a3b8;margin-top:2px">15 fév → aujourd'hui</div>
   </div>
 
@@ -410,7 +410,7 @@ ${(portfolio || []).map(p => {
   <div style="background:white;border-radius:10px;padding:11px 13px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid #e2e8f0">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
       <span style="font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Courbe equity depuis D0</span>
-      <span style="font-size:9px;font-weight:700;color:#059669">Base 100 → ${(100 + (metrics.return_total || 8.7)).toFixed(1)}</span>
+      <span style="font-size:9px;font-weight:700;color:${((metrics.return_realized || 0) + (metrics.return_unrealized || 0)) >= 0 ? '#059669' : '#dc2626'}">Base 100 → ${(100 + (metrics.return_realized || 0) + (metrics.return_unrealized || 0)).toFixed(1)} <span style="color:#94a3b8;font-weight:500">(realized ${(metrics.return_realized || 0) > 0 ? '+' : ''}${metrics.return_realized || 0}%)</span></span>
     </div>
     ${spark(equityHist.map(v => 100 + v), '#22c55e', 370, 50)}
     <div style="display:flex;justify-content:space-between;margin-top:3px;font-size:7px;color:#cbd5e1">

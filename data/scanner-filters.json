@@ -1,0 +1,111 @@
+{
+  "_comment": "Hard rules enforced pre-publish on every scan. Source of truth — NOT editorial. tools/validate-scan.js asserts these against scanner/YYYYMMDD/signals.json before publication.",
+  "_updated": "2026-04-14",
+  "_provenance": "Encoded from scanner/CLAUDE.md + retrospective learnings (Apr 6 INDO dilution, Mar 27 stop tightness, Mar 13 EU FX headwind, Feb 27 Short Squeeze 0% WR).",
+
+  "strategies": {
+    "allowed": ["Momentum", "Pre-Squeeze", "Breakout", "Pullback"],
+    "forbidden": ["Short Squeeze", "Trend Follow", "Defensive", "Defensive Momentum", "Defensive Yield", "Reversal", "Momentum Breakout"],
+    "_reason": "Short Squeeze: 0% WR over Feb-Mar (retros). Other forbidden labels = invented variants that bypass sweep optimization."
+  },
+
+  "tickers": {
+    "min_market_cap_usd": 500000000,
+    "min_avg_daily_volume_usd": 10000000,
+    "_reason": "Below $500M mcap = dilution + manipulation risk (INDO incident Apr 6). Below $10M ADV = liquidity trap, can't exit at scale."
+  },
+
+  "dilution_blocklist": {
+    "_comment": "Underwriters known for serial dilution / toxic financing. Block tickers whose recent 424B/S-3 includes any of these names.",
+    "underwriters": [
+      "H.C. Wainwright",
+      "HC Wainwright",
+      "Maxim Group",
+      "Roth Capital",
+      "Ladenburg Thalmann",
+      "Dawson James",
+      "Aegis Capital",
+      "EF Hutton",
+      "Boustead Securities"
+    ],
+    "max_recent_sec_filing_days": 90,
+    "filings_to_check": ["S-1", "S-3", "424B"],
+    "_reason": "Pattern: small-cap with toxic underwriter + recent S-3 = 80%+ probability of dilution event within next 30 days."
+  },
+
+  "sharia": {
+    "_comment": "AAOIFI / MSCI Islamic Index thresholds. Used to tag data-sharia and filter when --sharia mode is active.",
+    "haram_sectors": [
+      "Banks",
+      "Insurance",
+      "Conventional Financials",
+      "Defense",
+      "Aerospace & Defense",
+      "Alcohol",
+      "Tobacco",
+      "Gambling",
+      "Adult Entertainment"
+    ],
+    "max_debt_to_marketcap_pct": 33,
+    "max_interest_revenue_to_total_revenue_pct": 5,
+    "max_cash_plus_interest_receivables_to_marketcap_pct": 33,
+    "blocked_etf_categories": [
+      "Bond ETFs",
+      "Treasury ETFs",
+      "Leveraged ETFs",
+      "Inverse ETFs"
+    ],
+    "blocked_etf_examples": ["TLT", "TBT", "SHY", "IEF", "AGG", "BND", "HYG", "LQD", "JNK", "MUB", "TQQQ", "SQQQ", "UPRO", "SPXU", "SOXL", "SOXS", "LABU", "LABD", "SH", "SDS", "PSQ", "QID"]
+  },
+
+  "anti_duplicate": {
+    "_comment": "Never enter a second position on a ticker already open in any portfolio mode.",
+    "check_file": "data/scanner-positions.json",
+    "field": "open_positions",
+    "key": "ticker",
+    "behavior": "disqualify"
+  },
+
+  "regime_labels": {
+    "allowed": ["RISK-ON", "EARLY RISK-OFF", "RISK-OFF", "NEUTRAL", "RECOVERY"],
+    "_reason": "Stable taxonomy. No 'DEEP RISK-OFF', no 'STRONG RISK-ON', no inventions."
+  },
+
+  "earnings_window": {
+    "exclude_days_before": 3,
+    "exclude_days_after": 3,
+    "_reason": "TimesFM directional accuracy drops to 40% within ±3d of earnings vs 56% baseline. Setups are unreliable."
+  },
+
+  "stops": {
+    "min_pct_from_entry": 3,
+    "max_pct_from_entry": 8,
+    "min_atr_multiple": 1.5,
+    "_reason": "Mar 27 retro: stops < 1.5x ATR triggered intraday before recovery on 3 setups. Floor at 3% absolute."
+  },
+
+  "diversification": {
+    "min_us_count": 5,
+    "min_eu_count": 2,
+    "min_apac_count": 1,
+    "min_etf_count": 2,
+    "max_per_sector": 3,
+    "_reason": "Avoid '3 techs in same week' concentration. Sector cap from risk overlay."
+  },
+
+  "scan_size": {
+    "exact": 10
+  },
+
+  "vix_kill_switch": {
+    "_comment": "Regime-based position sizing. Applied in tools/sweep.js via regimeSizeMultiplier(). Halves drawdown during stress episodes.",
+    "multipliers": {
+      "RISK-ON": 1.0,
+      "NEUTRAL": 1.0,
+      "RECOVERY": 1.0,
+      "EARLY RISK-OFF": 0.75,
+      "RISK-OFF": 0.5
+    },
+    "_reason": "Feb-Mar retros showed -40% of drawdown came from risk-off scan dates. Halving exposure cuts tail risk without sacrificing bull-run performance."
+  }
+}

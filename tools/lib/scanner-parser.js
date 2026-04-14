@@ -48,6 +48,12 @@ function decodeEntities(s) {
  * @param {string} dir — directory name like "20260414" (relative to scanner/)
  * @returns {{ signals: Array, thesis: Object }} or null
  */
+function extractRegimeFromHtml(html) {
+  if (!html) return null;
+  const m = html.match(/\b(EARLY RISK-OFF|RISK-OFF|RISK-ON|NEUTRAL|RECOVERY)\b/);
+  return m ? m[1] : null;
+}
+
 function loadSignals(dir) {
   const jsonPath = path.join(SCANNER_DIR, dir, 'signals.json');
   if (fs.existsSync(jsonPath)) {
@@ -69,7 +75,7 @@ function loadSignals(dir) {
           thesis: s.thesis || '',
         };
       });
-      return { signals, thesis };
+      return { signals, thesis, regime: data.regime || null };
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -88,7 +94,8 @@ function loadSignals(dir) {
     tp2: parsePrice(s.tp2),
     thesis: thesisMap[s.ticker] || '',
   }));
-  return { signals, thesis: thesisMap };
+  const regime = extractRegimeFromHtml(html);
+  return { signals, thesis: thesisMap, regime };
 }
 
 // ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────
@@ -143,9 +150,27 @@ function parseSetupCards(html) {
 }
 
 function parseScannerHtml(html) {
-  let signals = parseSynthese(html);
-  if (!signals.length) signals = parseSetupCards(html);
-  return signals.sort((a, b) => (b.score || 0) - (a.score || 0));
+  // Prefer setup-cards (data-* attributes are unambiguous).
+  // Fall back to synthese table only when no cards present (very old scans).
+  // Merge: cards give clean entry/stop/tp1/tp2/sharia; synthese fills score+strategy.
+  const cards = parseSetupCards(html);
+  if (cards.length) {
+    const synth = parseSynthese(html);
+    const synthMap = {};
+    for (const s of synth) synthMap[String(s.ticker).toUpperCase()] = s;
+    const merged = cards.map(c => {
+      const s = synthMap[c.ticker.toUpperCase()] || {};
+      return {
+        ...c,
+        score: s.score || c.score || 85,
+        strategy: (s.strategy || c.strategy || '').replace(/\s*x\d+\s*$/i, '').trim(),
+        rr: s.rr || c.rr || '',
+        sharia: c.sharia != null ? c.sharia : (s.sharia != null ? s.sharia : null),
+      };
+    });
+    return merged.sort((a, b) => (b.score || 0) - (a.score || 0));
+  }
+  return parseSynthese(html).sort((a, b) => (b.score || 0) - (a.score || 0));
 }
 
 function parseThesisMap(html) {
@@ -171,6 +196,7 @@ module.exports = {
   parseSetupCards,
   parseScannerHtml,
   parseThesisMap,
+  extractRegimeFromHtml,
   stripTags,
   decodeEntities,
 };

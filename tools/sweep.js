@@ -139,12 +139,22 @@ function parseScan(dir) {
   const seen = new Set();
   return {
     dir, scanDate,
+    regime: loaded.regime || null,
     setups: setups.filter(s => {
       if (seen.has(s.ticker)) return false;
       seen.add(s.ticker);
       return true;
     }).sort((a, b) => b.score - a.score),
   };
+}
+
+// VIX/regime-based sizing multiplier (risk-off halves exposure)
+function regimeSizeMultiplier(regime) {
+  if (!regime) return 1;
+  const r = String(regime).toUpperCase();
+  if (r === 'RISK-OFF') return 0.5;          // halve exposure in risk-off
+  if (r === 'EARLY RISK-OFF') return 0.75;   // ¾ exposure in early risk-off
+  return 1;
 }
 
 // ─── Fetch Yahoo Finance OHLCV (file-cached) ─────────────────────────────────
@@ -452,7 +462,7 @@ function simulatePortfolio(allTrades, scans, config) {
     const stillOpen = [];
     for (const pos of openPositions) {
       if (pos.trade.exitDate && pos.trade.exitDate <= day) {
-        realizedPnl += pos.trade.pnlPct * weight;
+        realizedPnl += pos.trade.pnlPct * (pos.weight || weight);
         closedTrades.push(pos.trade);
       } else {
         stillOpen.push(pos);
@@ -481,7 +491,7 @@ function simulatePortfolio(allTrades, scans, config) {
             const hist = priceCache[worst.trade.ticker];
             if (hist && hist[day]) {
               const forcePnl = ((hist[day].close - worst.trade.actualEntry) / worst.trade.actualEntry) * 100;
-              realizedPnl += forcePnl * weight;
+              realizedPnl += forcePnl * (worst.weight || weight);
               closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: day, pnlPct: +forcePnl.toFixed(2) });
             } else {
               closedTrades.push(worst.trade);
@@ -494,13 +504,16 @@ function simulatePortfolio(allTrades, scans, config) {
         }
       }
 
-      // Add new positions
+      // Add new positions — apply VIX/regime sizing multiplier per scan date
       const openTickers = new Set(openPositions.map(p => p.trade.ticker));
+      const scanRegime = candidates[0] && candidates[0].regime;
+      const regimeMult = (config.vixKillSwitch !== false) ? regimeSizeMultiplier(scanRegime) : 1;
+      const scanWeight = weight * regimeMult;
       let added = 0;
       for (const cand of candidates) {
         if (added >= slotsAvailable) break;
         if (openTickers.has(cand.ticker)) continue;
-        openPositions.push({ trade: cand, weight });
+        openPositions.push({ trade: cand, weight: scanWeight });
         openTickers.add(cand.ticker);
         added++;
       }
@@ -511,7 +524,7 @@ function simulatePortfolio(allTrades, scans, config) {
     for (const pos of openPositions) {
       const hist = priceCache[pos.trade.ticker];
       if (hist && hist[day]) {
-        unrealizedPnl += ((hist[day].close - pos.trade.actualEntry) / pos.trade.actualEntry) * 100 * weight;
+        unrealizedPnl += ((hist[day].close - pos.trade.actualEntry) / pos.trade.actualEntry) * 100 * (pos.weight || weight);
       }
     }
     const dailyEquity = 100 + realizedPnl + unrealizedPnl;
@@ -626,7 +639,7 @@ async function main() {
 
   console.log(`Parsing ${scanDirs.length} scans...`);
   const scans = scanDirs.map(parseScan).filter(Boolean);
-  let allSetups = scans.flatMap(s => s.setups.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir })));
+  let allSetups = scans.flatMap(s => s.setups.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime })));
   if (SHARIA) {
     const before = allSetups.length;
     // Use parsed data-sharia flag if available, fallback to SHARIA_EXCLUDED for old untagged scans

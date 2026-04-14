@@ -65,6 +65,21 @@ if (sizeKB < 10) {
 
 console.log(`  OK — ${sizeKB.toFixed(1)} KB`);
 
+// ─── Step 2b: Pre-publish validation (scanner only) ───────────────────────────
+
+if (type === 'scanner') {
+  console.log('\nStep 2b/7 — Validating scan against scanner-filters.json...');
+  const scanDir = artPath.split('/').slice(0, 2).join('/');
+  try {
+    execSync(`node tools/validate-scan.js ${scanDir}`, { cwd: ROOT, stdio: 'inherit' });
+  } catch (e) {
+    console.error('\nERROR: Scan validation failed — aborting publish.');
+    console.error('Fix the signals.json / scan HTML above, or override with --skip-validate.\n');
+    if (!process.argv.includes('--skip-validate')) process.exit(e.status || 1);
+    console.warn('⚠️  --skip-validate set — publishing non-compliant scan (NOT RECOMMENDED).');
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function run(cmd, label) {
