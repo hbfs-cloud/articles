@@ -886,6 +886,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IONQ",
+    "exchange": "NYSE • Technology • Quantum Computing",
+    "name": "IONQ — world-record fidelity, $3.3B cash, +202% revenue. Quantum leader at -35% YTD discount. ...",
+    "title": "IONQ — world-record fidelity, $3.3B cash, +202% revenue. Quantum leader at -35% YTD discount. ...",
+    "desc": "IonQ deep-dive: 99.99% fidelity world record, $130M revenue (+202% YoY), $3.3B cash fortress. Quantum computing pure-play trading at -35% YTD. Trade Idea inside.",
+    "tags": "us,tech,ai,speculative,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/IONQ/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IOVA",
     "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
     "name": "IOVA — breakout explosif +17% le 9 avril, Jefferies relève à $12, données sarcoma 50% ORR, SI ...",
