@@ -569,9 +569,19 @@ export const tradingThemeLight = {
     .replaceAll('background: #111827', 'background: #ffffff')
     .replaceAll('background: #0d1117', 'background: #f1f5f9')
     .replace(/background: rgba\(10,14,26,0\.92\)/, 'background: rgba(248,250,252,0.95)')
-    .replaceAll('background: rgba(255,255,255,0.03)', 'background: rgba(15,23,42,0.03)')
-    .replaceAll('background: rgba(255,255,255,0.04)', 'background: rgba(15,23,42,0.04)')
+    .replaceAll('background: rgba(255,255,255,0.03)', 'background: rgba(15,23,42,0.04)')
+    .replaceAll('background: rgba(255,255,255,0.04)', 'background: rgba(15,23,42,0.05)')
     .replaceAll('background: rgba(255,255,255,0.15)', 'background: rgba(15,23,42,0.08)')
+    // ── Gradient backgrounds: ensure dark text on light gradient ──
+    .replaceAll('background: linear-gradient(145deg, #111827 0%, #1f2937 100%)', 'background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%)')
+    .replaceAll('background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(16,185,129,0.08))', 'background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.05))')
+    .replaceAll('background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.04))', 'background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(59,130,246,0.02))')
+    .replaceAll('background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.05))', 'background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(16,185,129,0.03))')
+    .replaceAll('background: linear-gradient(135deg, rgba(239,68,68,0.12), rgba(239,68,68,0.05))', 'background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02))')
+    .replaceAll('background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(16,185,129,0.05))', 'background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(16,185,129,0.03))')
+    // ── Tip/warning box text ensure dark ──
+    .replaceAll('color: #065f46', 'color: #064e3b')
+    .replaceAll('color: #991b1b', 'color: #7f1d1d')
     // ── Borders ──
     .replaceAll('border: 1px solid rgba(59,130,246,0.08)', 'border: 1px solid rgba(59,130,246,0.15)')
     .replaceAll('border: 1px solid rgba(59,130,246,0.06)', 'border: 1px solid rgba(59,130,246,0.12)')
