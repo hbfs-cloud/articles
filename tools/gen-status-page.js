@@ -828,13 +828,16 @@ details[open] summary::after{transform:rotate(90deg)}
 .disc i{font-size:.68rem;opacity:.6}
 
 /* ── Time Machine floating trigger (FAB) ── */
-.tm-btn-header{display:none;align-items:center;gap:.35rem;padding:.3rem .7rem;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;vertical-align:middle;margin-left:.5rem}
-.tm-btn-header i{font-size:.7rem}
-.tm-btn-header:hover{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
-.tm-btn-header.viewing{background:#fffbeb;color:#b45309;border-color:#f59e0b}
-.tm-btn-header.viewing i{animation:spin 2s linear infinite}
+@keyframes tm-pulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.45)}60%{box-shadow:0 0 0 7px rgba(59,130,246,0)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@media(max-width:400px){.tm-btn-header{padding:.25rem .5rem;font-size:.65rem}}
+.tm-btn-header{display:none;align-items:center;gap:.45rem;padding:.45rem 1rem;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#fff;border:none;border-radius:999px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s ease;vertical-align:middle;margin-left:.85rem;letter-spacing:.01em;box-shadow:0 2px 8px rgba(37,99,235,.45);animation:tm-pulse 2.4s ease-in-out infinite}
+.tm-btn-header i{font-size:.75rem;transition:transform .3s ease}
+.tm-btn-header:hover{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);box-shadow:0 4px 16px rgba(37,99,235,.6);transform:translateY(-1px);animation:none}
+.tm-btn-header:hover i{transform:rotate(-20deg)}
+.tm-btn-header:active{transform:translateY(0);box-shadow:0 2px 6px rgba(37,99,235,.4)}
+.tm-btn-header.viewing{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);box-shadow:0 2px 8px rgba(217,119,6,.5);animation:none;color:#fff}
+.tm-btn-header.viewing i{animation:spin 2s linear infinite}
+@media(max-width:400px){.tm-btn-header{padding:.4rem .75rem;font-size:.72rem;margin-left:.5rem}}
 
 /* ── Time Machine panel ── */
 .tm-panel{position:fixed;top:7rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
