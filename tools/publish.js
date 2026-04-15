@@ -149,8 +149,9 @@ if (type === 'scanner' || type === 'retro') {
   gitAddPaths.push('portfolio/', 'scanner/status/', 'history/');
 }
 
-// Deduplicate
-const uniquePaths = [...new Set(gitAddPaths)];
+// Deduplicate + drop non-existent paths (some like history/ only exist post-pipeline)
+const ROOT_PUB = path.resolve(__dirname, '..');
+const uniquePaths = [...new Set(gitAddPaths)].filter(p => fs.existsSync(path.join(ROOT_PUB, p)));
 runSafe('git', ['add', ...uniquePaths], 'git add');
 
 // ─── Step 5: Git commit ───────────────────────────────────────────────────────

@@ -1469,6 +1469,7 @@ document.addEventListener('DOMContentLoaded',function(){
 function backfillHistory() {
   const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
   const SCANNER_DIR_BF = path.join(ROOT, 'scanner');
+  const parser = require('./lib/scanner-parser');
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8'));
   const modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes;
   const results = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
