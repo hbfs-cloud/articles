@@ -572,7 +572,12 @@ function simulatePortfolio(allTrades, scans, config) {
     if (dd > maxDD) maxDD = dd;
   }
 
-  const resolved = closedTrades.filter(t => ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated'].includes(t.status));
+  // Include breakeven/trail exits (real fills, just locked at 0/positive) + _amb variants
+  const RESOLVED_STATUSES = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
+  const resolved = closedTrades.filter(t => {
+    const base = (t.status || '').replace(/_amb$/, '');
+    return RESOLVED_STATUSES.includes(base);
+  });
   const wins = resolved.filter(t => (t.pnlPct || 0) > 0);
   const losses = resolved.filter(t => (t.pnlPct || 0) <= 0);
   const winRate = resolved.length ? +((wins.length / resolved.length) * 100).toFixed(1) : 0;

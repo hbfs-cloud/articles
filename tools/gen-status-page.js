@@ -1067,8 +1067,10 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   };
+  var VALID_MODES=['turbo','dynamic','balanced','secured','fortress'];
   var activeMode='balanced';
-  window.switchMode=function(id){
+  window.switchMode=function(id,opts){
+    if(!VALID_MODES.includes(id))return;
     activeMode=id;
     document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.dataset.mode===id)});
     document.querySelectorAll('.mode-panel').forEach(function(p){p.style.display=p.id==='p-'+id?'':'none'});
@@ -1080,7 +1082,21 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     updateLiveActions(id);
     if(tmDates.length&&tmCurrentIdx<tmDates.length-1){tmLoadIdx(tmCurrentIdx);}
+    // Deep-link: update hash without scroll/reload (skip on initial boot)
+    if(!opts||!opts.silent){
+      try{history.replaceState(null,'','#'+id);}catch(_){ location.hash='#'+id; }
+    }
   };
+  // Boot from URL hash (#fortress) or ?m= param — allows shareable per-mode links
+  (function(){
+    var m=(location.hash||'').replace(/^#/,'').toLowerCase();
+    if(!m){var q=new URLSearchParams(location.search).get('m');if(q)m=q.toLowerCase();}
+    if(m&&VALID_MODES.includes(m)&&m!=='balanced'){window.switchMode(m,{silent:true});}
+  })();
+  window.addEventListener('hashchange',function(){
+    var m=(location.hash||'').replace(/^#/,'').toLowerCase();
+    if(VALID_MODES.includes(m)&&m!==activeMode){window.switchMode(m,{silent:true});}
+  });
   function updateLiveActions(modeId){
     fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
       document.querySelectorAll(modeId ? '#p-'+modeId : '.mode-panel').forEach(function(p){
