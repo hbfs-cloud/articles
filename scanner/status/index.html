@@ -166,13 +166,16 @@ details[open] summary::after{transform:rotate(90deg)}
 .disc i{font-size:.68rem;opacity:.6}
 
 /* ── Time Machine floating trigger (FAB) ── */
-.tm-btn-header{display:none;align-items:center;gap:.35rem;padding:.3rem .7rem;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;border-radius:8px;font-size:.7rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;vertical-align:middle;margin-left:.5rem}
-.tm-btn-header i{font-size:.7rem}
-.tm-btn-header:hover{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1}
-.tm-btn-header.viewing{background:#fffbeb;color:#b45309;border-color:#f59e0b}
-.tm-btn-header.viewing i{animation:spin 2s linear infinite}
+@keyframes tm-pulse{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.45)}60%{box-shadow:0 0 0 7px rgba(59,130,246,0)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-@media(max-width:400px){.tm-btn-header{padding:.25rem .5rem;font-size:.65rem}}
+.tm-btn-header{display:none;align-items:center;gap:.45rem;padding:.45rem 1rem;background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#fff;border:none;border-radius:999px;font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s ease;vertical-align:middle;margin-left:.85rem;letter-spacing:.01em;box-shadow:0 2px 8px rgba(37,99,235,.45);animation:tm-pulse 2.4s ease-in-out infinite}
+.tm-btn-header i{font-size:.75rem;transition:transform .3s ease}
+.tm-btn-header:hover{background:linear-gradient(135deg,#2563eb 0%,#1d4ed8 100%);box-shadow:0 4px 16px rgba(37,99,235,.6);transform:translateY(-1px);animation:none}
+.tm-btn-header:hover i{transform:rotate(-20deg)}
+.tm-btn-header:active{transform:translateY(0);box-shadow:0 2px 6px rgba(37,99,235,.4)}
+.tm-btn-header.viewing{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);box-shadow:0 2px 8px rgba(217,119,6,.5);animation:none;color:#fff}
+.tm-btn-header.viewing i{animation:spin 2s linear infinite}
+@media(max-width:400px){.tm-btn-header{padding:.4rem .75rem;font-size:.72rem;margin-left:.5rem}}
 
 /* ── Time Machine panel ── */
 .tm-panel{position:fixed;top:7rem;right:1.75rem;z-index:999;width:310px;background:#0f172a;border:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 24px 64px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.04);padding:0;display:none;flex-direction:column;overflow:hidden}
@@ -236,7 +239,7 @@ details[open] summary::after{transform:rotate(90deg)}
 <nav class="brand-bar">
   <div class="brand-bar-inner">
     <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a>
-    <div class="brand-nav"><a href="/?tab=weekly">Weekly</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Series</a></div>
+    <div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div>
     <div class="brand-actions"><a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a></div>
   </div>
 </nav>
@@ -301,7 +304,7 @@ details[open] summary::after{transform:rotate(90deg)}
     </summary>
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>CAT</b></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Momentum</td><td>$790.00</td><td class="neg">$755.00</td><td class="pos">$830.00 / $860.00</td><td class="am">1:1.5</td></tr></tbody>
+      <tbody><tr><td><b>CAT</b><span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Momentum</td><td>$790.00</td><td class="neg">$755.00</td><td class="pos">$830.00 / $860.00</td><td class="am">1:1.5</td></tr></tbody>
     </table>
   </details>
 </div>
@@ -329,7 +332,19 @@ details[open] summary::after{transform:rotate(90deg)}
 
 <!-- ══ 5. ORDERS CTA ══ -->
 
-
+<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+  <div class="cta-header">
+    <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
+    <div>
+      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">1 position</span></h3>
+      <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
+    </div>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
+    <tbody><tr><td><b>AMZN</b></td><td>$237.45</td><td class="pos"><b>+4.87%</b></td><td class="neg">$227.45</td><td class="am">2d/3d</td></tr></tbody>
+  </table>
+</div>
 
 <div class="section-card ">
   <div class="sc-head">
@@ -375,7 +390,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><b>AMZN</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AMZN&ty=c&ta=1&p=d&s=l" alt="AMZN" class="fv-thumb" onclick="fvOpen('AMZN')"></td><td class="m hide-m">04-13</td><td class="hide-m">$237.45</td><td class="hide-m">$249.02</td><td class="pos"><b>+4.87%</b></td><td class="neg hide-m">$227.45</td><td class="pos hide-m">$267.45</td><td class="am">2d</td></tr></tbody>
+    <tbody><tr><td><b>AMZN</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AMZN&ty=c&ta=1&p=d&s=l" alt="AMZN" class="fv-thumb" onclick="fvOpen('AMZN')"></td><td class="m hide-m">04-13</td><td class="hide-m">$237.45</td><td class="hide-m">$249.02</td><td class="pos"><b>+4.87%</b></td><td class="neg hide-m">$227.45</td><td class="pos hide-m">$267.45</td><td class="neg">1d</td></tr></tbody>
   </table>
 </div>
 
@@ -602,7 +617,7 @@ details[open] summary::after{transform:rotate(90deg)}
     </summary>
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>AMAT</b></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Breakout</td><td>$393.00</td><td class="neg">$381.21</td><td class="pos">$410.00 / $430.00</td><td class="am">1:1.6</td></tr></tbody>
+      <tbody><tr><td><b>AMAT</b><span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Breakout</td><td>$393.00</td><td class="neg">$381.21</td><td class="pos">$410.00 / $430.00</td><td class="am">1:1.6</td></tr></tbody>
     </table>
   </details>
 </div>
@@ -630,7 +645,19 @@ details[open] summary::after{transform:rotate(90deg)}
 
 <!-- ══ 5. ORDERS CTA ══ -->
 
-
+<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+  <div class="cta-header">
+    <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
+    <div>
+      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">1 position</span></h3>
+      <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
+    </div>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
+    <tbody><tr><td><b>GS</b></td><td>$875.55</td><td class="pos"><b>+3.89%</b></td><td class="neg">$849.28</td><td class="am">2d/3d</td></tr></tbody>
+  </table>
+</div>
 
 <div class="section-card ">
   <div class="sc-head">
@@ -676,7 +703,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><b>GS</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GS&ty=c&ta=1&p=d&s=l" alt="GS" class="fv-thumb" onclick="fvOpen('GS')"></td><td class="m hide-m">04-13</td><td class="hide-m">$875.55</td><td class="hide-m">$909.63</td><td class="pos"><b>+3.89%</b></td><td class="neg hide-m">$849.28</td><td class="pos hide-m">$970.00</td><td class="am">2d</td></tr></tbody>
+    <tbody><tr><td><b>GS</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GS&ty=c&ta=1&p=d&s=l" alt="GS" class="fv-thumb" onclick="fvOpen('GS')"></td><td class="m hide-m">04-13</td><td class="hide-m">$875.55</td><td class="hide-m">$909.63</td><td class="pos"><b>+3.89%</b></td><td class="neg hide-m">$849.28</td><td class="pos hide-m">$970.00</td><td class="neg">1d</td></tr></tbody>
   </table>
 </div>
 
@@ -903,7 +930,7 @@ details[open] summary::after{transform:rotate(90deg)}
     </summary>
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>CAT</b></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Momentum</td><td>$790.00</td><td class="neg">$755.00</td><td class="pos">$830.00 / $860.00</td><td class="am">1:1.5</td></tr></tbody>
+      <tbody><tr><td><b>CAT</b><span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:#059669">91</span></td><td class="m">Momentum</td><td>$790.00</td><td class="neg">$755.00</td><td class="pos">$830.00 / $860.00</td><td class="am">1:1.5</td></tr></tbody>
     </table>
   </details>
 </div>
@@ -1161,7 +1188,7 @@ details[open] summary::after{transform:rotate(90deg)}
     </summary>
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>AMAT</b></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Breakout</td><td>$393.00</td><td class="neg">$373.35</td><td class="pos">$410.00 / $430.00</td><td class="am">1:1.6</td></tr></tbody>
+      <tbody><tr><td><b>AMAT</b><span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Breakout</td><td>$393.00</td><td class="neg">$373.35</td><td class="pos">$410.00 / $430.00</td><td class="am">1:1.6</td></tr></tbody>
     </table>
   </details>
 </div>
@@ -1235,7 +1262,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><b>GDX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX')"></td><td class="m hide-m">04-07</td><td class="hide-m">$93.69</td><td class="hide-m">$100.75</td><td class="pos"><b>+7.54%</b></td><td class="neg hide-m">$89.01</td><td class="pos hide-m">$112.44</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GDX provides leveraged exposure (2–3x) to gold at $4,682/oz. Today's +9.07% while spot gold is flat is the textbook mining leverage…</div></td></tr><tr><td><b>RCL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=RCL&ty=c&ta=1&p=d&s=l" alt="RCL" class="fv-thumb" onclick="fvOpen('RCL')"></td><td class="m hide-m">04-09</td><td class="hide-m">$274.39</td><td class="hide-m">$281.53</td><td class="pos"><b>+2.6%</b></td><td class="neg hide-m">$261.69</td><td class="pos hide-m">$296.69</td><td class="m">6d</td></tr><tr><td><b>JPM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=JPM&ty=c&ta=1&p=d&s=l" alt="JPM" class="fv-thumb" onclick="fvOpen('JPM')"></td><td class="m hide-m">04-14</td><td class="hide-m">$309.82</td><td class="hide-m">$311.12</td><td class="pos"><b>+0.42%</b></td><td class="neg hide-m">$302.00</td><td class="pos hide-m">$337.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">JPMorgan at $294.16 (+3.66%) is testing a critical confluence zone: MA50 at $299.72 and MA200 at $301.99 are just overhead. A breakout…</div></td></tr></tbody>
+    <tbody><tr><td><b>GDX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX')"></td><td class="m hide-m">04-07</td><td class="hide-m">$93.69</td><td class="hide-m">$100.75</td><td class="pos"><b>+7.54%</b></td><td class="neg hide-m">$89.01</td><td class="pos hide-m">$112.44</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GDX provides leveraged exposure (2–3x) to gold at $4,682/oz. Today's +9.07% while spot gold is flat is the textbook mining leverage…</div></td></tr><tr><td><b>RCL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=RCL&ty=c&ta=1&p=d&s=l" alt="RCL" class="fv-thumb" onclick="fvOpen('RCL')"></td><td class="m hide-m">04-09</td><td class="hide-m">$274.39</td><td class="hide-m">$281.53</td><td class="pos"><b>+2.6%</b></td><td class="neg hide-m">$261.69</td><td class="pos hide-m">$296.69</td><td class="m">5d</td></tr><tr><td><b>JPM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=JPM&ty=c&ta=1&p=d&s=l" alt="JPM" class="fv-thumb" onclick="fvOpen('JPM')"></td><td class="m hide-m">04-14</td><td class="hide-m">$309.82</td><td class="hide-m">$311.12</td><td class="pos"><b>+0.42%</b></td><td class="neg hide-m">$302.00</td><td class="pos hide-m">$337.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">JPMorgan at $294.16 (+3.66%) is testing a critical confluence zone: MA50 at $299.72 and MA200 at $301.99 are just overhead. A breakout…</div></td></tr></tbody>
   </table>
 </div>
 
@@ -1489,7 +1516,7 @@ details[open] summary::after{transform:rotate(90deg)}
     </summary>
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
-      <tbody><tr><td><b>AMAT</b></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Breakout</td><td>$393.00</td><td class="neg">$373.35</td><td class="pos">$410.00 / $430.00</td><td class="am">1:1.6</td></tr></tbody>
+      <tbody><tr><td><b>AMAT</b><span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:#059669">90</span></td><td class="m">Breakout</td><td>$393.00</td><td class="neg">$373.35</td><td class="pos">$410.00 / $430.00</td><td class="am">1:1.6</td></tr></tbody>
     </table>
   </details>
 </div>
@@ -1563,7 +1590,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><b>GDX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX')"></td><td class="m hide-m">04-07</td><td class="hide-m">$93.69</td><td class="hide-m">$100.75</td><td class="pos"><b>+7.54%</b></td><td class="neg hide-m">$89.01</td><td class="pos hide-m">$112.44</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GDX provides leveraged exposure (2–3x) to gold at $4,682/oz. Today's +9.07% while spot gold is flat is the textbook mining leverage…</div></td></tr><tr><td><b>RCL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=RCL&ty=c&ta=1&p=d&s=l" alt="RCL" class="fv-thumb" onclick="fvOpen('RCL')"></td><td class="m hide-m">04-09</td><td class="hide-m">$274.39</td><td class="hide-m">$281.53</td><td class="pos"><b>+2.6%</b></td><td class="neg hide-m">$261.69</td><td class="pos hide-m">$296.69</td><td class="m">6d</td></tr><tr><td><b>JPM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=JPM&ty=c&ta=1&p=d&s=l" alt="JPM" class="fv-thumb" onclick="fvOpen('JPM')"></td><td class="m hide-m">04-14</td><td class="hide-m">$309.82</td><td class="hide-m">$311.12</td><td class="pos"><b>+0.42%</b></td><td class="neg hide-m">$302.00</td><td class="pos hide-m">$337.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">JPMorgan at $294.16 (+3.66%) is testing a critical confluence zone: MA50 at $299.72 and MA200 at $301.99 are just overhead. A breakout…</div></td></tr></tbody>
+    <tbody><tr><td><b>GDX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX')"></td><td class="m hide-m">04-07</td><td class="hide-m">$93.69</td><td class="hide-m">$100.75</td><td class="pos"><b>+7.54%</b></td><td class="neg hide-m">$89.01</td><td class="pos hide-m">$112.44</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GDX provides leveraged exposure (2–3x) to gold at $4,682/oz. Today's +9.07% while spot gold is flat is the textbook mining leverage…</div></td></tr><tr><td><b>RCL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=RCL&ty=c&ta=1&p=d&s=l" alt="RCL" class="fv-thumb" onclick="fvOpen('RCL')"></td><td class="m hide-m">04-09</td><td class="hide-m">$274.39</td><td class="hide-m">$281.53</td><td class="pos"><b>+2.6%</b></td><td class="neg hide-m">$261.69</td><td class="pos hide-m">$296.69</td><td class="m">5d</td></tr><tr><td><b>JPM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=JPM&ty=c&ta=1&p=d&s=l" alt="JPM" class="fv-thumb" onclick="fvOpen('JPM')"></td><td class="m hide-m">04-14</td><td class="hide-m">$309.82</td><td class="hide-m">$311.12</td><td class="pos"><b>+0.42%</b></td><td class="neg hide-m">$302.00</td><td class="pos hide-m">$337.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">JPMorgan at $294.16 (+3.66%) is testing a critical confluence zone: MA50 at $299.72 and MA200 at $301.99 are just overhead. A breakout…</div></td></tr></tbody>
   </table>
 </div>
 
@@ -2130,7 +2157,7 @@ document.addEventListener('DOMContentLoaded',function(){
         }
         if(d.orders&&d.orders.length>0){
           var od=document.createElement('div'); od.className='section-card cta-orders'; od.setAttribute('data-tm','1');
-          var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Orders to Place</h3></div>'
+          var odh='<div class="sc-head"><h3><i class="fas fa-bolt"></i> '+d.orders.length+' Order'+(d.orders.length===1?'':'s')+' to Place</h3></div>'
             +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Score</th><th>Entry</th><th>Stop/TP1</th><th class="hide-m">Action</th></tr></thead><tbody>';
           d.orders.forEach(function(o){
             var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
@@ -2167,10 +2194,11 @@ document.addEventListener('DOMContentLoaded',function(){
             +'<span class="'+(nowPct>=0?'pos':'neg')+'">Now: '+(nowPct>0?'+':'')+nowPct.toFixed(1)+'%</span>'
             +'<span class="pos">Best: +'+bestPct.toFixed(1)+'%</span>'
             +'</div><div class="scenario-bar"><div class="scenario-fill-bad" style="width:'+cp.toFixed(1)+'%"></div><div class="scenario-fill-good" style="width:'+(100-cp).toFixed(1)+'%"></div><div class="scenario-cursor" style="left:'+cp.toFixed(1)+'%"></div></div></div>'
-            +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th>P&L</th><th class="hide-m">Stop</th><th>Left</th></tr></thead><tbody>';
+            +'<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead><tbody>';
           d.positions.forEach(function(p){
             var pnl=p.pnlPct!==undefined?p.pnlPct:(p.return_pct||0);
-            psh+='<tr><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="neg hide-m">'+(p.stop && p.stop!==0?'$'+p.stop.toFixed(2):'N/A')+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+            var nowPrice=p.current_price||p.now_price||0;
+            psh+='<tr><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="hide-m">'+(nowPrice>0?'$'+nowPrice.toFixed(2):'—')+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="neg hide-m">'+(p.stop && p.stop!==0?'$'+p.stop.toFixed(2):'N/A')+'</td><td class="pos hide-m">'+(p.tp2&&p.tp2!==0?'$'+p.tp2.toFixed(2):'—')+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
           });
           psh+='</tbody></table>'; posSection.innerHTML=psh;
         }else{ posSection.innerHTML='<div class="sc-head"><h3>Open Positions</h3></div><p class="empty">No active positions</p>'; }

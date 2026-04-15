@@ -498,11 +498,14 @@
                   now.getMinutes().toString().padStart(2, '0');
 
     var isOk = loaded > 0;
-    var dotColor = isOk ? '#22c55e' : '#ef4444';
+    // Use a neutral gray (not alarming red) when the feed is temporarily down —
+    // the article still displays last-close prices from the setup cards.
+    var dotColor = isOk ? '#22c55e' : '#94a3b8';
     var msg = isOk
       ? loaded + ' live price' + (loaded > 1 ? 's' : '') + ' · ' + timeStr +
         (failed > 0 ? ' · ' + failed + ' unavailable' : '')
       : 'Price feed unavailable';
+    var unavailableTitle = 'Live prices temporarily unavailable — using last close from article. Updates automatically when feed resumes.';
 
     bar.setAttribute('style',
       'display:flex;align-items:center;justify-content:center;gap:8px;' +
@@ -510,6 +513,10 @@
       'color:#64748b;background:#f8fafc;border-bottom:1px solid #e2e8f0;' +
       'letter-spacing:.3px;'
     );
+    if (!isOk) {
+      bar.setAttribute('title', unavailableTitle);
+      bar.setAttribute('aria-label', unavailableTitle);
+    }
 
     // Color legend — makes setup-card color coding self-explanatory
     var legend =

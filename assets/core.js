@@ -86,6 +86,22 @@ function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses
     });
 }
 
+// Skip-to-content link for WCAG 2.4.1 — injected on every page that loads core.js
+document.addEventListener("DOMContentLoaded", function() {
+    if (document.querySelector('.skip-nav')) return;
+    var main = document.querySelector('main')
+            || document.querySelector('.container')
+            || document.querySelector('.ticker-header')
+            || document.querySelector('article');
+    if (!main) return;
+    if (!main.id) main.id = 'main-content';
+    var a = document.createElement('a');
+    a.className = 'skip-nav';
+    a.href = '#' + main.id;
+    a.textContent = 'Skip to content';
+    document.body.insertBefore(a, document.body.firstChild);
+});
+
 document.addEventListener("DOMContentLoaded", function() {
     const articleTagsString = document.documentElement.dataset.tags;
     const articleDefaultTab = document.documentElement.dataset.tab || "analyses";

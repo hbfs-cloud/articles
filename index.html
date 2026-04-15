@@ -1575,6 +1575,7 @@
 </head>
 
 <body>
+  <a class="skip-nav" href="#mainContent">Skip to content</a>
   <!-- Promo Banner -->
   <div id="promoBanner" class="promo-banner">
     <span>📡 New: 8-retro performance dashboard live — <a href="?tab=scanner#scanner-perf">view scanner equity</a></span>
@@ -1760,8 +1761,29 @@
   <script>
     if(localStorage.getItem('promo-prompt-hide')==='1'){var a=document.getElementById('promoBannerPrompt');if(a)a.style.display='none';}
     if(localStorage.getItem('promo-qs-hide')==='1'){var b=document.getElementById('promoBannerQS');if(b)b.style.display='none';}
-    // Hide promo container entirely if all banners dismissed
-    (function(){var c=document.getElementById('promoContainer');if(c){var banners=c.querySelectorAll('.promo-banner');var allHidden=true;banners.forEach(function(b){if(b.style.display!=='none')allHidden=false;});if(allHidden)c.style.display='none';}})();
+    // Priority-based deduplication: show at most ONE banner at a time.
+    // Priority: #promoBanner (top, highest) > #promoBannerPrompt > #promoBannerQS
+    (function(){
+      var ordered = [
+        document.getElementById('promoBanner'),
+        document.getElementById('promoBannerPrompt'),
+        document.getElementById('promoBannerQS')
+      ];
+      var shown = 0;
+      ordered.forEach(function(el){
+        if(!el) return;
+        if(el.style.display === 'none') return;
+        if(shown >= 1){ el.style.display = 'none'; return; }
+        shown++;
+      });
+      var c = document.getElementById('promoContainer');
+      if(c){
+        var banners = c.querySelectorAll('.promo-banner');
+        var allHidden = true;
+        banners.forEach(function(b){ if(b.style.display !== 'none') allHidden = false; });
+        if(allHidden) c.style.display = 'none';
+      }
+    })();
   </script>
 
   <div class="container">

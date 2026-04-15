@@ -1,4 +1,20 @@
 /* Styles extracted from dailytickers.com landing page */
+
+/* Unified design tokens — colors for positive/negative across dashboards, scanners, analyses */
+:root {
+    --color-pos: #10b981;
+    --color-neg: #ef4444;
+    --color-pos-soft: #dcfce7;
+    --color-neg-soft: #fee2e2;
+}
+
+/* FAB menu cluster separator (used on AAPL and other dense FAB menus) */
+.fnav-sep {
+    height: 1px;
+    background: #e2e8f0;
+    margin: .4rem 0;
+}
+
 html, body {
     overflow-x: hidden;
 }
@@ -2842,28 +2858,37 @@ html[data-tab="tech"] .brand-nav a[href*="series"] {
 .dash-card.card-amber::before { background: #f59e0b; }
 .dash-card.card-purple::before { background: #9333ea; }
 
-.dash-card-label {
+/* dash-card-label / dash-label — both spellings used in HTML templates */
+.dash-card-label,
+.dash-label {
     font-size: 0.7rem;
     font-weight: 700;
     color: #94a3b8;
     text-transform: uppercase;
 }
 
-.dash-card-value {
+/* dash-card-value / dash-value — both spellings used in HTML templates */
+.dash-card-value,
+.dash-value {
     font-size: 1.5rem;
     font-weight: 800;
     color: #0f172a;
     margin: 0.25rem 0;
 }
 
-.dash-card-change {
+/* dash-card-change / dash-change — both spellings used in HTML templates */
+.dash-card-change,
+.dash-change {
     font-weight: 700;
     font-size: 0.85rem;
 }
 
-.dash-card-change.up { color: #10b981; }
-.dash-card-change.down { color: #ef4444; }
-.dash-card-change.neutral { color: #64748b; }
+.dash-card-change.up,
+.dash-change.up { color: #10b981; }
+.dash-card-change.down,
+.dash-change.down { color: #ef4444; }
+.dash-card-change.neutral,
+.dash-change.neutral { color: #64748b; }
 
 /* ===== TRADE BOX ENHANCEMENTS ===== */
 .trade-title {
@@ -3700,6 +3725,8 @@ pre > code {
 
 @media (max-width: 768px) {
     body { padding-bottom: 64px; }
+    .mobile-bottom-nav { display: flex; }
+}
 
 /* ── Scanner-specific (shared by hand-written + rendered pages) ─────────────── */
 .confirm-box { background: #f0fdf4; border: 1px solid #86efac; padding: 1rem; border-radius: 12px; margin: 0.75rem 0; }
@@ -3719,10 +3746,9 @@ pre > code {
 .risk-off-banner strong { color: #b91c1c; }
 .scanner-alert { background: linear-gradient(135deg, #fff7ed, #fef3c7); border: 2px solid #f59e0b; border-radius: 12px; padding: 1rem 1.25rem; margin: 1rem 0; }
 .scanner-alert strong { color: #b45309; }
-.up { color: #10b981; }
-.down { color: #ef4444; }
-    .mobile-bottom-nav { display: flex; }
-}
+/* Scoped to financial display elements only — prevents accidental coloring on structural/semantic .up/.down */
+td.up, .metric-value.up, .metric-change.up, .chg.up, .tm-pnl.up, .dash-change.up, .dc-change.up { color: #10b981; }
+td.down, .metric-value.down, .metric-change.down, .chg.down, .tm-pnl.down, .dash-change.down, .dc-change.down { color: #ef4444; }
 
 /* ── Ticker Auto-Links ───────────────────────────────────────────────────────── */
 a.ticker-link {

@@ -101,7 +101,7 @@
 
     var navLinks = tabs.map(function (tb) {
       var active = tb.tab === currentTab ? ' active' : '';
-      var href = tb.tab === 'radar' ? '/' : '/?tab=' + tb.tab;
+      var href = '/?tab=' + tb.tab;
       var countSpan = tb.tab !== 'radar' ? '<span class="sidebar-count" id="sidebarCount-' + tb.tab + '"></span>' : '';
       return '<a href="' + href + '" class="sidebar-link' + active + '"><i class="fa-solid ' + tb.icon + '"></i><span data-i18n="tab.' + tb.tab + '">' + t('tab.' + tb.tab) + '</span>' + countSpan + '</a>';
     }).join('');
