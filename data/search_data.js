@@ -100,7 +100,7 @@ window.searchDataPrebuilt = [
     "desc": "NVIDIA earnings mercredi ($65B+). SCOTUS invalide tarifs IEEPA,\n    Trump riposte 15% global. Or $5,081 (+1.7%). Argent +6%. S&P\n    +1.1%. Consumer Confidence mardi. Rotation tangible accélère.",
     "tags": "us,eu,crypto,commodity,macro,geopolitique,technique,trade-idea,earnings",
     "grade": "",
-    "href": "weekly/20260223/",
+    "href": "/weekly/20260223/",
     "date": "23 - 27 Février 2026"
   },
   {
@@ -113,7 +113,7 @@ window.searchDataPrebuilt = [
     "desc": "ROTATION HISTORIQUE: Mag 7 en bear market. Nasdaq -$1,500 Md YTD.\n    FOMC Minutes mercredi. Walmart jeudi. Or > $5K. BTC $69,900\n    fragile. Talks Ukraine à Genève.",
     "tags": "us,eu,crypto,commodity,macro,geopolitique,technique",
     "grade": "",
-    "href": "weekly/20260216/",
+    "href": "/weekly/20260216/",
     "date": "16 - 21 Février 2026"
   },
   {
@@ -126,7 +126,7 @@ window.searchDataPrebuilt = [
     "desc": "SEMAINE PIVOT: NFP mercredi, CPI vendredi. Dow franchit 50K. CTA\n    -$33B à -$80B ventes potentielles. Nasdaq -2.8%. Rotation\n    small-cap dramatique. Or test $5K.",
     "tags": "us,macro,earnings,technique",
     "grade": "",
-    "href": "weekly/20260209/",
+    "href": "/weekly/20260209/",
     "date": "9 - 14 Février 2026"
   },
   {
@@ -139,7 +139,7 @@ window.searchDataPrebuilt = [
     "desc": "CRASH HISTORIQUE: Or $4,745 (-11.39%), Argent $78.53 (-31.37%).\n    Earnings GOOGL, AMZN, AMD. NFP vendredi. S&P +2.31%. BTC -14.50%.\n    Volatilité extrême.",
     "tags": "us,commodity,crypto,earnings,macro",
     "grade": "",
-    "href": "weekly/20260202/",
+    "href": "/weekly/20260202/",
     "date": "2 - 8 Février 2026"
   },
   {
@@ -152,7 +152,7 @@ window.searchDataPrebuilt = [
     "desc": "Décision FOMC cruciale. Tarifs Canada portés à 100%. Marchés sous\n    tension géopolitique. Métaux en consolidation.",
     "tags": "us,macro,geopolitique",
     "grade": "",
-    "href": "weekly/20260126/",
+    "href": "/weekly/20260126/",
     "date": "26 Janvier - 1er Février 2026"
   },
   {
@@ -165,7 +165,7 @@ window.searchDataPrebuilt = [
     "desc": "Menace de tarifs sur l'Europe. FOMC en ligne de mire. Rotation\n    sectorielle en cours. Or et métaux solides.",
     "tags": "us,eu,macro,geopolitique",
     "grade": "",
-    "href": "weekly/20260119/",
+    "href": "/weekly/20260119/",
     "date": "19 - 24 Janvier 2026"
   },
   {
@@ -178,7 +178,7 @@ window.searchDataPrebuilt = [
     "desc": "Saison des résultats bancaires. CPI et PPI en focus. Marchés en\n    attente de confirmation directionnelle.",
     "tags": "us,financials,earnings,macro",
     "grade": "",
-    "href": "weekly/20260112/",
+    "href": "/weekly/20260112/",
     "date": "12 - 17 Janvier 2026"
   },
   {
@@ -191,7 +191,7 @@ window.searchDataPrebuilt = [
     "desc": "Choc Venezuela : nationalisation des ressources. Marchés en\n    turbulence. Impact sur pétrole, métaux et géopolitique globale.",
     "tags": "us,energy,commodity,geopolitique",
     "grade": "",
-    "href": "weekly/20260103/",
+    "href": "/weekly/20260103/",
     "date": "3 - 10 Janvier 2026"
   },
   {
@@ -204,7 +204,7 @@ window.searchDataPrebuilt = [
     "desc": "Bilan 2025 et outlook 2026. Métaux précieux en vedette. Europe en\n    rotation favorable. Perspectives macro et sectorielles.",
     "tags": "us,eu,commodity,macro",
     "grade": "",
-    "href": "weekly/20251229/",
+    "href": "/weekly/20251229/",
     "date": "29 Décembre 2025 - 3 Janvier 2026"
   },
   {
@@ -3248,6 +3248,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-ON — NVDA, AMD, NFLX, ABT, JBLU, BE, BBVA, ING, MCHI, XLI",
+    "desc": "Regime score stands at 0.458, classified as RISK-ON. Component scores: SPX breadth 0.580 (bullish, above 50-DMA and 200-DMA), VIX 1.000 (sub-20 for 3+ sessions), Credit 0.497 (HYG 80.46 stable), DXY 0.512 (dollar weak at 98.08), Liquidity 0.553, TLT 0.609. The Iran oil shock from Monday has been ful...",
+    "tags": "us,eu,asia,tech,semis,financials,healthcare,airlines,etf,ai,earnings,macro,technique,trade-idea",
+    "grade": "",
+    "href": "/scanner/20260416/",
+    "date": "16 avril 2026"
   },
   {
     "type": "scanner",
