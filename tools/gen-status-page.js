@@ -660,6 +660,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
+  const buildVer = Date.now();
   const html = `<!DOCTYPE html>
 <html lang="en" data-tags="technique,formation,trade-idea,us,eu,asia,etf" data-tab="scanner">
 <head>
@@ -668,7 +669,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css">
+  <link rel="stylesheet" href="/assets/report.css?v=${buildVer}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -992,9 +993,10 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js"></script>
-<script src="/assets/tag-renderer.js"></script>
+<script src="/assets/core.js?v=${buildVer}"></script>
+<script src="/assets/tag-renderer.js?v=${buildVer}"></script>
 <script>
+var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
@@ -1003,9 +1005,9 @@ document.addEventListener('DOMContentLoaded',function(){
   }
   var tmDates=[], tmCurrentIdx=0, tmModesCfg={};
   function tmInit(){
-    fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
+    fetch('/data/modes-config.json?v='+_v).then(function(r){return r.json()}).then(function(cfg){
       tmModesCfg = cfg;
-      return fetch('/scanner/status/history/dates.json');
+      return fetch('/scanner/status/history/dates.json?v='+_v);
     }).then(function(r){return r.json()}).then(function(dates){
       tmDates=dates;if(dates.length<1)return;
       var fab=document.getElementById('tmFab');
@@ -1091,7 +1093,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   };
   function updateLiveActions(modeId){
-    fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
+    fetch('/data/modes-config.json?v='+_v).then(function(r){return r.json()}).then(function(cfg){
       document.querySelectorAll(modeId ? '#p-'+modeId : '.mode-panel').forEach(function(p){
         var id = p.id.replace('p-',''), mCfg = cfg.modes[id]||{};
         if(!mCfg.breakevenPct) return;
@@ -1180,7 +1182,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     tmSaveLive();
     var dateStr=tmDates[idx];
-    fetch('/scanner/status/history/'+dateStr+'.json').then(function(r){return r.json()}).then(function(snap){
+    fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
       banner.className='tm-banner show';
       var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
       banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
