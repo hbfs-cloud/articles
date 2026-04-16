@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202604161220"></script>
+  <script src="/data/search_data.js?v=202604161237"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -192,6 +192,7 @@
       justify-content: center;
       gap: 0.75rem;
       margin: 1.5rem 0 2rem;
+      flex-wrap: nowrap;
     }
     .radar-switcher-group {
       display: inline-flex;
@@ -4047,6 +4048,7 @@
     var currentMode = localStorage.getItem('mw-radar-mode') || 'board';
     var radarAngle = 0, radarAnim = null, blips = [], hoveredBlip = null;
     var canvas, ctx, cw, ch, cx, cy, radius, dpr = 1;
+    function onRadarResize() { if (currentMode==='radar') { sizeCanvas(); buildBlips(); } }
 
     var C = {
       risk:        { fill:'#ef4444', glow:'rgba(239,68,68,0.4)', bg:'#fef2f2', border:'#fecaca', text:'#991b1b', icon:'fa-triangle-exclamation', label:'Risks' },
@@ -4147,7 +4149,10 @@
           RD = data;
           buildStatus();
           var up = document.getElementById('radarUpdated');
-          if (up && data.updated) up.textContent = 'Updated: ' + data.updated;
+          if (up && data.updated) {
+            var d = new Date(data.updated);
+            up.textContent = 'Updated: ' + d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+          }
           // Set initial mode button
           document.querySelectorAll('.radar-mode').forEach(function(b) {
             b.classList.toggle('active', b.dataset.mode === currentMode);
@@ -4160,19 +4165,34 @@
     function buildStatus() {
       var el = document.getElementById('radarStatus');
       if (!el || !RD) return;
-      var reg = (RD.regime || '').toUpperCase();
+      var reg = (RD.regime || '').toUpperCase().replace(/_/g, '-');
       var regimeColor = reg.indexOf('RISK-OFF') >= 0 ? '#ef4444' : reg.indexOf('RISK-ON') >= 0 ? '#10b981' : '#f59e0b';
+      // Extract VIX from regimes if not top-level
       var vix = RD.vix || 0;
+      if (!vix && RD.items) {
+        RD.items.forEach(function(it) {
+          if (!vix && it.category === 'regime' && it.label && it.label.indexOf('VIX') >= 0) {
+            var m = it.label.match(/VIX\s*([\d.]+)/); if (m) vix = parseFloat(m[1]);
+          }
+        });
+      }
       var vixColor = vix >= 25 ? '#ef4444' : vix >= 18 ? '#f59e0b' : '#10b981';
-      var p = 'display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:0.75rem;font-weight:700;';
+      var p = 'display:inline-flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;font-size:0.75rem;font-weight:700;font-family:Inter,sans-serif;';
       var parts = [
-        '<span style="'+p+'background:'+regimeColor+'18;color:'+regimeColor+';border:1px solid '+regimeColor+'30;"><i class="fas fa-shield-halved"></i> '+(RD.regime||'—')+'</span>',
+        '<span style="'+p+'background:'+regimeColor+'18;color:'+regimeColor+';border:1px solid '+regimeColor+'30;"><i class="fas fa-shield-halved"></i> '+reg+'</span>',
         vix ? '<span style="'+p+'background:'+vixColor+'18;color:'+vixColor+';border:1px solid '+vixColor+'30;">VIX '+vix+'</span>' : '',
         RD.spx ? '<span style="'+p+'background:#3b82f618;color:#60a5fa;border:1px solid #3b82f630;">SPX '+RD.spx.toLocaleString()+'</span>' : ''
       ];
       if (RD.fear_greed != null) {
         var fgColor = RD.fear_greed <= 25 ? '#ef4444' : RD.fear_greed >= 75 ? '#10b981' : '#f59e0b';
         parts.push('<span style="'+p+'background:'+fgColor+'18;color:'+fgColor+';border:1px solid '+fgColor+'30;"><i class="fas fa-gauge"></i> F&amp;G '+RD.fear_greed+'</span>');
+      }
+      // Freshness indicator
+      if (RD.updated) {
+        var age = (Date.now() - new Date(RD.updated).getTime()) / 3600000;
+        var freshColor = age < 6 ? '#10b981' : age < 12 ? '#f59e0b' : '#ef4444';
+        var freshLabel = age < 1 ? Math.round(age*60)+'m ago' : age < 24 ? Math.round(age)+'h ago' : Math.round(age/24)+'d ago';
+        parts.push('<span style="'+p+'background:'+freshColor+'18;color:'+freshColor+';border:1px solid '+freshColor+'30;"><i class="fas fa-clock"></i> '+freshLabel+'</span>');
       }
       el.innerHTML = parts.filter(Boolean).join('');
     }
@@ -4221,7 +4241,7 @@
       h += ".rs-date { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: #94a3b8; flex-shrink: 0; white-space: nowrap; font-weight: 600; }";
       h += ".rs-arrow { font-size: 0.8rem; color: var(--accent); flex-shrink: 0; opacity: 0; transition: all 0.2s; transform: translateX(-8px); }";
       h += ".rs-row:hover .rs-arrow { opacity: 1; transform: translateX(0); }";
-      h += "@media(max-width: 768px) { .rs-detail, .rs-bar, .rs-date { display: none; } .rs-row { padding: 0.85rem 1rem; gap: 0.75rem; } .rs-label { font-size: 0.85rem; } }";
+      h += "@media(max-width: 768px) { .rs-bar, .rs-date { display: none; } .rs-detail { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:normal;font-size:0.72rem; } .rs-row { flex-wrap:wrap;padding: 0.85rem 1rem; gap: 0.5rem; } .rs-label { font-size: 0.85rem;white-space:normal; } }";
       h += "@keyframes pulse-dot { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }";
       h += "</style>";
 
@@ -4266,7 +4286,7 @@
 
       var h = '<style>';
       h += '.rb-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin:0 auto}';
-      h += '@media(max-width:700px){.rb-grid{grid-template-columns:1fr}}';
+      h += '@media(max-width:700px){.rb-grid{grid-template-columns:1fr}.rb-item{padding:0.6rem 0.25rem}}';
       h += '.rb-panel{border-radius:10px;overflow:hidden;background:#fff;border:1px solid #e2e8f0;transition:transform 0.2s,box-shadow 0.2s}';
       h += '.rb-panel:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.08)}';
       h += '.rb-head{padding:0.65rem 0.85rem;display:flex;align-items:center;gap:0.5rem}';
@@ -4290,9 +4310,16 @@
       h += '.rb-item-bar-fill{height:100%;border-radius:2px;transition:width 0.4s}';
       h += '.rb-item-link{font-size:0.6rem;opacity:0;transition:opacity 0.15s;flex-shrink:0}';
       h += 'a.rb-item:hover .rb-item-link{opacity:0.7}';
+      h += '.rb-summary{background:linear-gradient(135deg,#f8fafc,#eff6ff);border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1rem;font-size:0.82rem;line-height:1.5;color:#334155}';
+      h += '.rb-summary i{color:var(--accent);margin-right:6px}';
       h += '</style>';
 
-      h += '<div class="rb-grid">';
+      // Summary banner
+      if (RD.summary) {
+        h += '<div class="rb-summary"><i class="fas fa-chart-line"></i>' + RD.summary + '</div>';
+      }
+
+      h += '<div class="rb-grid" style="max-width:900px;">';
 
       cats.forEach(function(cat) {
         var c = C[cat];
@@ -4359,7 +4386,7 @@
 
       var h = '<style>';
       h += '.rr-wrap{display:grid;grid-template-columns:1fr 280px;gap:0;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;background:#fff}';
-      h += '@media(max-width:700px){.rr-wrap{grid-template-columns:1fr}.rr-side{border-left:none;border-top:1px solid #e2e8f0}}';
+      h += '@media(max-width:700px){.rr-wrap{grid-template-columns:1fr}.rr-side{border-left:none;border-top:1px solid #e2e8f0;max-height:240px;overflow-y:auto}}';
       h += '.rr-main{position:relative;padding:0.5rem}';
       h += '.rr-side{border-left:1px solid #e2e8f0;background:#fff;display:flex;flex-direction:column}';
       h += '.rr-side-head{padding:0.6rem 0.75rem;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:0.4rem}';
@@ -4446,7 +4473,8 @@
         canvas.addEventListener('mouseleave', function() { hoveredBlip = null; hideTooltip(); });
         canvas.addEventListener('click', onCanvasClick);
         canvas.addEventListener('touchstart', onCanvasTouch, { passive: true });
-        window.addEventListener('resize', function() { if (currentMode==='radar') { sizeCanvas(); buildBlips(); } });
+        window.removeEventListener('resize', onRadarResize);
+        window.addEventListener('resize', onRadarResize);
       }, 50);
     }
 
