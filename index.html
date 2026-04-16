@@ -3905,6 +3905,11 @@
 
       state.page++;
 
+      // Lazy-load parqet logos to avoid burst of 404s on page load
+      grid.querySelectorAll('img[src*="parqet.com"]:not([loading])').forEach(function(img) {
+        img.setAttribute('loading', 'lazy');
+      });
+
       // Translate newly rendered card buttons
       var cl = currentLangFilter === 'all' ? 'en' : currentLangFilter;
       if (typeof translateCardButtons === 'function') translateCardButtons(cl);
