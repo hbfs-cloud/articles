@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202604161003"></script>
+  <script src="/data/search_data.js?v=202604161220"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -4111,12 +4111,13 @@
       fetch('/data/radar.json?v=' + Date.now())
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          // Normalize: merge risks/opportunities/events into items[] if new format
-          if (!data.items && (data.risks || data.opportunities || data.events)) {
+          // Normalize: merge risks/opportunities/events/regimes into items[] if new format
+          if (!data.items && (data.risks || data.opportunities || data.events || data.regimes)) {
             data.items = [];
             (data.risks || []).forEach(function(it) { it.category = it.category || 'risk'; data.items.push(it); });
             (data.opportunities || []).forEach(function(it) { it.category = it.category || 'opportunity'; data.items.push(it); });
             (data.events || []).forEach(function(it) { it.category = it.category || 'event'; data.items.push(it); });
+            (data.regimes || []).forEach(function(it) { it.category = it.category || 'regime'; data.items.push(it); });
           }
           // Normalize regime: support both string and object format
           if (data.regime && typeof data.regime === 'object') {
@@ -4357,7 +4358,7 @@
       var catIcons = {risk:'fa-skull-crossbones',event:'fa-bolt',opportunity:'fa-rocket',regime:'fa-shield-halved'};
 
       var h = '<style>';
-      h += '.rr-wrap{display:grid;grid-template-columns:1fr 240px;gap:0;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;background:#fff}';
+      h += '.rr-wrap{display:grid;grid-template-columns:1fr 280px;gap:0;margin:0 auto;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;background:#fff}';
       h += '@media(max-width:700px){.rr-wrap{grid-template-columns:1fr}.rr-side{border-left:none;border-top:1px solid #e2e8f0}}';
       h += '.rr-main{position:relative;padding:0.5rem}';
       h += '.rr-side{border-left:1px solid #e2e8f0;background:#fff;display:flex;flex-direction:column}';
