@@ -995,6 +995,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 
 <script src="/assets/core.js?v=${buildVer}"></script>
 <script src="/assets/tag-renderer.js?v=${buildVer}"></script>
+<script src="/assets/live-engine.js?v=${buildVer}"></script>
+<script src="/assets/live-engine-ui.js?v=${buildVer}"></script>
 <script>
 var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
