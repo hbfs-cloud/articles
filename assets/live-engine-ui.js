@@ -37,38 +37,37 @@
     '  .mode-tab{padding:.45rem .8rem!important;font-size:.78rem!important}',
     '}',
 
-    /* ═══ DASHBOARD GRID on mode panels ═══ */
+    /* ═══ DASHBOARD GRID — wrapper inside mode panels ═══ */
     '@media(min-width:1024px){',
-    '  .mode-panel.lp-dashboard{',
-    '    display:grid!important;',
+    '  .lp-grid{',
+    '    display:grid;',
     '    grid-template-columns:1fr 1fr;',
-    '    grid-template-rows:auto auto auto auto;',
     '    gap:.6rem;',
     '    align-items:start;',
     '  }',
-    '  .mode-panel.lp-dashboard>[data-grid="live"]{grid-column:1/-1;grid-row:1}',
-    '  .mode-panel.lp-dashboard>[data-grid="equity"]{grid-column:1;grid-row:2;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard>[data-grid="signals"]{grid-column:2;grid-row:2;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard>[data-grid="orders"]{grid-column:1;grid-row:3;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard>[data-grid="positions"]{grid-column:2;grid-row:3;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard>[data-grid="history"]{grid-column:1/-1;grid-row:4;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard>[data-grid="method"]{grid-column:1/-1;grid-row:5;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard>[data-grid="footer"]{grid-column:1/-1}',
+    '  .lp-grid>[data-grid="live"]{grid-column:1/-1}',
+    '  .lp-grid>[data-grid="equity"]{grid-column:1;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="signals"]{grid-column:2;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="orders"]{grid-column:1;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="positions"]{grid-column:2;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="method"]{grid-column:1/-1;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="footer"]{grid-column:1/-1}',
     /* Compact equity in grid */
-    '  .mode-panel.lp-dashboard .perf-hero{padding:.85rem!important;gap:1rem!important;flex-direction:column!important}',
-    '  .mode-panel.lp-dashboard .perf-chart{min-height:140px!important}',
-    '  .mode-panel.lp-dashboard .perf-stats{grid-template-columns:repeat(3,1fr)!important;min-width:0!important;gap:.4rem!important}',
-    '  .mode-panel.lp-dashboard .ps{padding:.35rem .3rem!important}',
-    '  .mode-panel.lp-dashboard .ps-v{font-size:1rem!important}',
-    '  .mode-panel.lp-dashboard .ps-l{font-size:.52rem!important}',
+    '  .lp-grid .perf-hero{padding:.85rem!important;gap:1rem!important;flex-direction:column!important}',
+    '  .lp-grid .perf-chart{min-height:140px!important}',
+    '  .lp-grid .perf-stats{grid-template-columns:repeat(3,1fr)!important;min-width:0!important;gap:.4rem!important}',
+    '  .lp-grid .ps{padding:.35rem .3rem!important}',
+    '  .lp-grid .ps-v{font-size:1rem!important}',
+    '  .lp-grid .ps-l{font-size:.52rem!important}',
     /* Compact section cards in grid */
-    '  .mode-panel.lp-dashboard .section-card{padding:.75rem .9rem!important;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard .sc-head{margin-bottom:.5rem!important}',
-    '  .mode-panel.lp-dashboard .sc-head h3{font-size:.85rem!important}',
-    '  .mode-panel.lp-dashboard .t th,.mode-panel.lp-dashboard .t td{padding:.35rem .5rem!important;font-size:.72rem!important}',
-    '  .mode-panel.lp-dashboard .scenario-bar-wrap{margin-bottom:.65rem!important;padding:.6rem .8rem!important}',
-    '  .mode-panel.lp-dashboard .cta-card{padding:.75rem .9rem!important;margin-bottom:0!important}',
-    '  .mode-panel.lp-dashboard .disc{margin-top:.5rem!important;padding:.6rem!important}',
+    '  .lp-grid .section-card{padding:.75rem .9rem!important;margin-bottom:0!important}',
+    '  .lp-grid .sc-head{margin-bottom:.5rem!important}',
+    '  .lp-grid .sc-head h3{font-size:.85rem!important}',
+    '  .lp-grid .t th,.lp-grid .t td{padding:.35rem .5rem!important;font-size:.72rem!important}',
+    '  .lp-grid .scenario-bar-wrap{margin-bottom:.65rem!important;padding:.6rem .8rem!important}',
+    '  .lp-grid .cta-card{padding:.75rem .9rem!important;margin-bottom:0!important}',
+    '  .lp-grid .disc{margin-top:.5rem!important;padding:.6rem!important}',
     '}',
 
     /* ═══ LIVE PORTFOLIO CARD ═══ */
@@ -199,16 +198,17 @@
   var cards = {};
   var connState = 'idle';
 
-  /* ── Reorganize panel children into a CSS grid ── */
+  /* ── Reorganize panel children into a CSS grid wrapper ── */
   function reorganizePanel(modeId) {
     var panel = document.getElementById('p-' + modeId);
-    if (!panel) return;
+    if (!panel || panel.querySelector('.lp-grid')) return;
 
-    // Tag children for grid placement
-    var children = panel.children;
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
+    var grid = document.createElement('div');
+    grid.className = 'lp-grid';
 
+    // Collect all children, tag them, move into grid wrapper
+    var children = Array.prototype.slice.call(panel.children);
+    children.forEach(function (child) {
       if (child.classList.contains('lp-card')) {
         child.setAttribute('data-grid', 'live');
       } else if (child.classList.contains('perf-hero')) {
@@ -220,13 +220,10 @@
       } else if (child.classList.contains('related-section')) {
         child.setAttribute('data-grid', 'footer');
       } else if (child.classList.contains('cta-card')) {
-        // Orders CTA or Close CTA
         child.setAttribute('data-grid', 'orders');
       } else if (child.getAttribute('data-static') === '1') {
-        // "How to trade" — push to bottom
         child.setAttribute('data-grid', 'method');
       } else if (child.classList.contains('section-card')) {
-        // Distinguish signals vs orders vs positions vs history
         var summary = child.querySelector('.sc-sum-title, .sc-head h3');
         var text = summary ? summary.textContent.toLowerCase() : '';
 
@@ -241,11 +238,14 @@
         } else {
           child.setAttribute('data-grid', 'footer');
         }
+      } else {
+        child.setAttribute('data-grid', 'footer');
       }
-    }
 
-    // Enable grid layout
-    panel.classList.add('lp-dashboard');
+      grid.appendChild(child);
+    });
+
+    panel.appendChild(grid);
   }
 
   function createCard(modeId) {
