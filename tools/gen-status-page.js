@@ -1080,7 +1080,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
       var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
+      if(!inst){var cfg=modeCharts?modeCharts[id]:null;if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
       else{inst.resize();}
     }
     updateLiveActions(id);
@@ -1090,16 +1090,6 @@ document.addEventListener('DOMContentLoaded',function(){
       try{history.replaceState(null,'','#'+id);}catch(_){ location.hash='#'+id; }
     }
   };
-  // Boot from URL hash (#fortress) or ?m= param — allows shareable per-mode links
-  (function(){
-    var m=(location.hash||'').replace(/^#/,'').toLowerCase();
-    if(!m){var q=new URLSearchParams(location.search).get('m');if(q)m=q.toLowerCase();}
-    if(m&&VALID_MODES.includes(m)&&m!=='balanced'){window.switchMode(m,{silent:true});}
-  })();
-  window.addEventListener('hashchange',function(){
-    var m=(location.hash||'').replace(/^#/,'').toLowerCase();
-    if(VALID_MODES.includes(m)&&m!==activeMode){window.switchMode(m,{silent:true});}
-  });
   function updateLiveActions(modeId){
     fetch('/data/modes-config.json').then(function(r){return r.json()}).then(function(cfg){
       document.querySelectorAll(modeId ? '#p-'+modeId : '.mode-panel').forEach(function(p){
@@ -1145,6 +1135,16 @@ document.addEventListener('DOMContentLoaded',function(){
   }
   setTimeout(updateLiveActions, 800);
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
+  // Boot from URL hash (#fortress) or ?m= param — allows shareable per-mode links
+  (function(){
+    var m=(location.hash||'').replace(/^#/,'').toLowerCase();
+    if(!m){var q=new URLSearchParams(location.search).get('m');if(q)m=q.toLowerCase();}
+    if(m&&VALID_MODES.includes(m)&&m!=='balanced'){window.switchMode(m,{silent:true});}
+  })();
+  window.addEventListener('hashchange',function(){
+    var m=(location.hash||'').replace(/^#/,'').toLowerCase();
+    if(VALID_MODES.includes(m)&&m!==activeMode){window.switchMode(m,{silent:true});}
+  });
   var tmLiveHTML={};
   function tmSaveLive(){
     document.querySelectorAll('.mode-panel').forEach(function(p){

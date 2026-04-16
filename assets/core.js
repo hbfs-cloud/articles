@@ -488,7 +488,7 @@ function initRetentionKit() {
 
     function parseCard(html) {
         var tmp = document.createElement('div');
-        tmp.innerHTML = html;
+        tmp.innerHTML = html.replace(/ src=/gi, ' data-lazy-src=');
         var card = tmp.querySelector('.report-card');
         if (!card) return null;
         var tags = (card.dataset.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
