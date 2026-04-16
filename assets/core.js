@@ -266,7 +266,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function initRetentionKit() {
         var footer = document.querySelector('footer.article-footer');
         if (!footer) return;
-        if (footer.querySelector('.retention-kit')) return; // idempotent
+        if (document.querySelector('.retention-kit')) return; // idempotent
+        if (document.querySelector('.community-cta')) return; // skip if page already has CTA
 
         var kit = document.createElement('div');
         kit.className = 'retention-kit';
@@ -288,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 '</a>' +
             '</div>';
 
-        footer.insertBefore(kit, footer.firstChild);
+        footer.parentNode.insertBefore(kit, footer);
     }
 
     // Expose for DOMContentLoaded caller
