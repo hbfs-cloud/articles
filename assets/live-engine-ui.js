@@ -17,8 +17,6 @@
 
   var css = document.createElement('style');
   css.textContent = [
-    '@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap");',
-
     /* ═══ PAGE LAYOUT OVERRIDES — reclaim wasted space ═══ */
     '@media(min-width:1024px){',
     '  .w{max-width:1400px!important;padding-bottom:2rem!important}',
@@ -82,7 +80,7 @@
 
     /* Positions table */
     '.lp-positions{border-top:1px solid #f1f5f9}',
-    '.lp-row-head,.lp-row{display:grid;grid-template-columns:72px 88px 62px 1fr 86px;gap:0;align-items:center}',
+    '.lp-row-head,.lp-row{display:grid;grid-template-columns:82px 88px 62px 1fr 86px;gap:0;align-items:center}',
     '.lp-row-head{padding:.15rem .7rem;background:#f8fafc}',
     '.lp-row-head span{font-size:.48rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em}',
     '.lp-row-head span:last-child{text-align:right;padding-right:.1rem}',
@@ -116,7 +114,7 @@
     '.lp-gauge{position:relative;height:5px;border-radius:2.5px;background:#e2e8f0;overflow:visible}',
     '.lp-gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:2.5px;transition:width .4s ease}',
     '.lp-gauge-cursor{position:absolute;top:-3px;width:3px;height:11px;border-radius:1.5px;transform:translateX(-50%);transition:left .4s ease;box-shadow:0 1px 4px rgba(0,0,0,.15)}',
-    '.lp-gauge-labels{display:flex;justify-content:space-between;font-size:.42rem;color:#b0b8c8;font-weight:600;font-variant-numeric:tabular-nums}',
+    '.lp-gauge-labels{display:flex;justify-content:space-between;font-size:.55rem;color:#94a3b8;font-weight:600;font-variant-numeric:tabular-nums}',
 
     '.lp-badge-cell{display:flex;justify-content:flex-end}',
     '.lp-badge{display:inline-flex;align-items:center;gap:.18rem;font-size:.52rem;font-weight:700;padding:.1rem .35rem;border-radius:4px;white-space:nowrap;letter-spacing:.02em}',
@@ -152,6 +150,12 @@
     '}'
   ].join('\n');
   document.head.appendChild(css);
+
+  // Load JetBrains Mono via <link> to avoid FOUC from @import in <style>
+  var fontLink = document.createElement('link');
+  fontLink.rel = 'stylesheet';
+  fontLink.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap';
+  document.head.appendChild(fontLink);
 
   function el(tag, cls, html) {
     var e = document.createElement(tag);
@@ -413,7 +417,9 @@
     if (['SL_HIT', 'TP2_HIT', 'TP1_HIT', 'TP1_PARTIAL', 'EXPIRED'].indexOf(status) < 0) return;
 
     var key = evalResult.ticker + ':' + status;
-    if (lastToastTs[key] && Date.now() - lastToastTs[key] < 300000) return;
+    var isCritical = ['SL_HIT', 'TP2_HIT'].indexOf(status) >= 0;
+    var dedupMs = isCritical ? 60000 : 300000;
+    if (lastToastTs[key] && Date.now() - lastToastTs[key] < dedupMs) return;
     lastToastTs[key] = Date.now();
 
     var si = LE.getStatusInfo(status);
@@ -514,7 +520,6 @@
           });
 
           LE.on('connection', updateConn);
-          LE.on('tick', function () {});
           LE.on('eval', function (data) {
             updateRow(data.modeId, data.result);
             updateScenarioBar(data.modeId);
@@ -529,6 +534,15 @@
         });
     }).catch(function (e) {
       console.warn('[LiveEngineUI] Boot failed:', e);
+      ['turbo', 'dynamic', 'balanced', 'secured', 'fortress'].forEach(function (modeId) {
+        var panel = document.getElementById('p-' + modeId);
+        if (panel) {
+          var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Live data unavailable');
+          msg.style.margin = '.5rem 0';
+          var first = panel.querySelector('.section-card, .perf-hero');
+          if (first) panel.insertBefore(msg, first); else panel.appendChild(msg);
+        }
+      });
     });
   }
 
