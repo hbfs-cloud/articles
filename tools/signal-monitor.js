@@ -678,9 +678,32 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     newPartialClosed = true;
   }
 
-  // Only alert on status transitions
-  if (prev.status !== status && status !== 'OPEN') {
-    const isCritical = ['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'TP1_PARTIAL'].includes(status);
+  // Only alert on status transitions — with cooldown for non-critical alerts
+  const isCritical = ['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'TP1_PARTIAL'].includes(status);
+  const isWarning = ['NEAR_STOP', 'NEAR_TP1'].includes(status);
+
+  // Cooldown: suppress NEAR_STOP/NEAR_TP1 re-alerts within 30 minutes
+  // This covers both same-status repeats AND oscillation (OPEN→NEAR_STOP→OPEN→NEAR_STOP)
+  const WARN_COOLDOWN_MS = 30 * 60 * 1000;
+  let suppressedByCooldown = false;
+  if (isWarning) {
+    const lastAlertTs = prev._lastAlertTs ? new Date(prev._lastAlertTs).getTime() : 0;
+    const lastAlertWasSameWarning = prev._lastAlertStatus === status;
+    if (lastAlertWasSameWarning && (Date.now() - lastAlertTs < WARN_COOLDOWN_MS)) {
+      suppressedByCooldown = true;
+    }
+  }
+
+  // Cross-mode dedup: suppress Fortress alerts if Secured already covers same ticker
+  const isRedundantMode = modeId === 'fortress';
+  const securedKey = `secured:${pos.ticker}:${pos.scan_date}`;
+  const securedState = state[securedKey] || {};
+  let suppressedByDedup = false;
+  if (isRedundantMode && !isCritical && securedState.status === status) {
+    suppressedByDedup = true;
+  }
+
+  if (prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup) {
     const emoji = {
       SL_HIT: '🔴', TP1_HIT: '🟢', TP2_HIT: '🏆', TP1_PARTIAL: '💚',
       EXPIRED: '⏰', NEAR_STOP: '⚠️', NEAR_TP1: '📈',
@@ -710,6 +733,8 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     });
   }
 
+  // Preserve last alert timestamp for cooldown tracking
+  const didAlert = prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup;
   newState[stateKey] = {
     status,
     price: +price.toFixed(4),
@@ -718,6 +743,8 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     highWaterMark,
     partialClosed: newPartialClosed,
     ts: new Date().toISOString(),
+    _lastAlertTs: didAlert ? new Date().toISOString() : (prev._lastAlertTs || null),
+    _lastAlertStatus: didAlert ? status : (prev._lastAlertStatus || null),
   };
 }
 
