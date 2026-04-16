@@ -2042,16 +2042,20 @@ document.addEventListener('DOMContentLoaded',function(){
   function tmRender(snap){
     var id=activeMode;
     var d=snap.modes[id];
-    if(!d)return;
+    console.log('[TM] tmRender called, activeMode='+id+', hasData='+(!!d));
+    if(!d){console.warn('[TM] No data for mode '+id+' in snapshot. Available:', Object.keys(snap.modes||{}));return;}
+    console.log('[TM] stats:', JSON.stringify(d.stats));
+    console.log('[TM] equity pts:', d.equity?d.equity.d.length:0);
     var mCfg = tmModesCfg.modes ? tmModesCfg.modes[id] : {};
     (function(){
       var panel=document.getElementById('p-'+id);
-      if(!panel)return;
+      if(!panel){console.error('[TM] panel p-'+id+' not found');return;}
       panel.style.transition='opacity .2s ease-in-out';
       panel.style.opacity='0.4';
       setTimeout(function(){
         var cfg=d.config||{};
         var stats=panel.querySelectorAll('.ps-v');
+        console.log('[TM] .ps-v count:', stats.length);
         if(stats.length>=6){
           stats[0].textContent=(d.stats.ret>0?'+':'')+d.stats.ret.toFixed(2)+'%';
           stats[1].textContent=d.stats.dd.toFixed(2)+'%';
@@ -2062,13 +2066,16 @@ document.addEventListener('DOMContentLoaded',function(){
         }
         var chartId='chart-'+id;
         var chartEl=document.getElementById(chartId);
+        console.log('[TM] chartEl=', !!chartEl, 'id='+chartId);
         if(chartEl){
           var c=echarts.getInstanceByDom(chartEl);
+          console.log('[TM] echarts instance=', !!c, 'equity=', !!(d.equity&&d.equity.d&&d.equity.d.length>0));
           if(d.equity&&d.equity.d&&d.equity.d.length>0){
             chartEl.parentElement.style.display='';
             var minV=Math.min.apply(null,d.equity.v);
-            if(c)c.setOption({xAxis:{data:d.equity.d},yAxis:{min:Math.floor(minV)-1},series:[{data:d.equity.v}]});
-          }else{ chartEl.parentElement.style.display='none'; }
+            if(c){c.setOption({xAxis:{data:d.equity.d},yAxis:{min:Math.floor(minV)-1},series:[{data:d.equity.v}]});console.log('[TM] chart updated OK');}
+            else{console.warn('[TM] NO echarts instance, chart not updated');}
+          }else{ chartEl.parentElement.style.display='none'; console.log('[TM] no equity data, chart hidden'); }
         }
         var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
         allSections.forEach(function(s){s.style.display='none'});
@@ -2191,6 +2198,22 @@ document.addEventListener('DOMContentLoaded',function(){
   var dflt=modeCharts[activeMode];
   if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c);
   tmInit();
+  // Debug: auto-load TM snapshot by index (?tm=open&idx=N)
+  (function(){
+    var ps=new URLSearchParams(location.search);
+    if(ps.get('tm')==='open'){
+      setTimeout(function(){
+        if(window.tmToggle)window.tmToggle();
+        var idx=parseInt(ps.get('idx'));
+        if(!isNaN(idx)&&idx>=0&&idx<tmDates.length){
+          tmCurrentIdx=idx;
+          document.getElementById('timeSlider').value=idx;
+          tmUpdateLabel();
+          tmLoadIdx(idx);
+        }
+      },2000);
+    }
+  })();
 });
 </script>
 
