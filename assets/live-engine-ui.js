@@ -19,6 +19,7 @@
   // Load JetBrains Mono via <link> to avoid FOUC
   var fontLink = document.createElement('link');
   fontLink.rel = 'stylesheet';
+  fontLink.crossOrigin = 'anonymous';
   fontLink.href = 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap';
   document.head.appendChild(fontLink);
 
@@ -106,13 +107,17 @@
     '.lp-pnl.pos{color:#059669}',
     '.lp-pnl.neg{color:#dc2626}',
     '.lp-pnl.flat{color:#94a3b8}',
-    '.lp-pnl-sub{font-size:.42rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:.05rem}',
+    '.lp-pnl-sub{font-size:.55rem;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:.05rem}',
 
     '.lp-strip-chips{display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;flex-wrap:wrap}',
     '.lp-chip{display:inline-flex;align-items:center;gap:.2rem;font-size:.55rem;font-weight:700;padding:.1rem .38rem;border-radius:5px;white-space:nowrap}',
     '.lp-chip-pos{background:#f1f5f9;color:#475569}',
     '.lp-chip-alert-crit{background:#fef2f2;color:#dc2626}',
     '.lp-chip-alert-warn{background:#fffbeb;color:#d97706}',
+
+    '.lp-market-chip{font-size:.5rem;font-weight:700;padding:.08rem .3rem;border-radius:4px;margin-left:.1rem}',
+    '.lp-market-chip.open{color:#059669;background:#ecfdf5}',
+    '.lp-market-chip.closed{color:#94a3b8;background:#f8fafc}',
 
     '.lp-init-inline{display:flex;align-items:center;gap:.35rem;padding:.3rem .7rem;font-size:.58rem;color:#94a3b8;font-weight:600;flex-shrink:0;margin-left:auto}',
     '.lp-init-inline i{animation:lp-spin 1.2s linear infinite;color:var(--mode-color,#94a3b8);font-size:.58rem}',
@@ -123,7 +128,7 @@
     '.lp-positions{border-top:1px solid #f1f5f9}',
     '.lp-row-head,.lp-row{display:grid;grid-template-columns:82px 88px 62px 1fr 86px;gap:0;align-items:center}',
     '.lp-row-head{padding:.12rem .7rem;background:#f8fafc}',
-    '.lp-row-head span{font-size:.46rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em}',
+    '.lp-row-head span{font-size:.55rem;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.06em}',
     '.lp-row-head span:last-child{text-align:right;padding-right:.1rem}',
 
     '.lp-row{padding:.15rem .7rem;border-top:1px solid #f1f5f9;min-height:30px;transition:opacity .3s}',
@@ -132,7 +137,7 @@
 
     '.lp-ticker{display:flex;flex-direction:column;gap:.03rem;padding-right:.3rem}',
     '.lp-ticker-sym{font-size:.72rem;font-weight:800;color:#0f172a;letter-spacing:.02em;line-height:1}',
-    '.lp-ticker-days{font-size:.46rem;color:#94a3b8;font-weight:600}',
+    '.lp-ticker-days{font-size:.55rem;color:#94a3b8;font-weight:600}',
 
     '.lp-price-cell{display:flex;flex-direction:column;gap:.04rem}',
     '.lp-price{font-size:.7rem;font-weight:700;color:#334155;font-variant-numeric:tabular-nums;transition:color .15s;line-height:1}',
@@ -155,7 +160,7 @@
     '.lp-gauge{position:relative;height:5px;border-radius:2.5px;background:#e2e8f0;overflow:visible}',
     '.lp-gauge-fill{position:absolute;top:0;left:0;height:100%;border-radius:2.5px;transition:width .4s ease}',
     '.lp-gauge-cursor{position:absolute;top:-3px;width:3px;height:11px;border-radius:1.5px;transform:translateX(-50%);transition:left .4s ease;box-shadow:0 1px 4px rgba(0,0,0,.15)}',
-    '.lp-gauge-labels{display:flex;justify-content:space-between;font-size:.52rem;color:#94a3b8;font-weight:600;font-variant-numeric:tabular-nums}',
+    '.lp-gauge-labels{display:flex;justify-content:space-between;font-size:.58rem;color:#94a3b8;font-weight:600;font-variant-numeric:tabular-nums}',
 
     '.lp-badge-cell{display:flex;justify-content:flex-end}',
     '.lp-badge{display:inline-flex;align-items:center;gap:.18rem;font-size:.5rem;font-weight:700;padding:.1rem .32rem;border-radius:4px;white-space:nowrap;letter-spacing:.02em}',
@@ -185,12 +190,15 @@
     '  .lp-price{font-size:.6rem}',
     '  .lp-change{font-size:.45rem}',
     '  .lp-pnl-val{font-size:.55rem}',
-    '  .lp-gauge-labels{font-size:.4rem}',
+    '  .lp-gauge-labels{font-size:.5rem}',
     '  .lp-badge{font-size:.45rem;padding:.06rem .22rem}',
     '  .lp-toast-wrap{right:.75rem;left:.75rem}',
     '}'
   ].join('\n');
   document.head.appendChild(css);
+
+  // Double-boot guard
+  if (document.querySelector('.lp-toast-wrap')) return;
 
   function el(tag, cls, html) {
     var e = document.createElement(tag);
@@ -199,9 +207,11 @@
     return e;
   }
 
+  function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
   function fmt(n, d) { return n != null ? n.toFixed(d == null ? 2 : d) : '—'; }
   function sign(n) { return n > 0 ? '+' : ''; }
 
+  var MAX_TOASTS = 3;
   var cards = {};
   var connState = 'idle';
 
@@ -271,6 +281,7 @@
           '<span class="lp-label">Live Portfolio</span>' +
           '<span class="lp-conn-chip idle" id="lp-conn-' + modeId + '">Connecting...</span>' +
         '</div>' +
+        '<span class="lp-market-chip closed" id="lp-mkt-' + modeId + '"><i class="fas fa-moon"></i> Closed</span>' +
         '<div class="lp-strip-pnl">' +
           '<span class="lp-pnl flat" id="lp-pnl-' + modeId + '">—</span>' +
           '<span class="lp-pnl-sub">Unrealized P&amp;L</span>' +
@@ -316,24 +327,25 @@
       '</div>';
 
     posArr.forEach(function (pos) {
+      var t = esc(pos.ticker);
       html +=
-        '<div class="lp-row" id="lp-r-' + modeId + '-' + pos.ticker + '" data-ticker="' + pos.ticker + '">' +
+        '<div class="lp-row" id="lp-r-' + modeId + '-' + t + '" data-ticker="' + t + '">' +
           '<div class="lp-ticker">' +
-            '<span class="lp-ticker-sym">' + pos.ticker + '</span>' +
-            '<span class="lp-ticker-days" id="lp-days-' + modeId + '-' + pos.ticker + '">—</span>' +
+            '<span class="lp-ticker-sym">' + t + '</span>' +
+            '<span class="lp-ticker-days" id="lp-days-' + modeId + '-' + t + '">—</span>' +
           '</div>' +
           '<div class="lp-price-cell">' +
-            '<span class="lp-price" id="lp-px-' + modeId + '-' + pos.ticker + '">$' + fmt(pos.entry) + '</span>' +
-            '<span class="lp-change flat" id="lp-chg-' + modeId + '-' + pos.ticker + '">—</span>' +
+            '<span class="lp-price" id="lp-px-' + modeId + '-' + t + '">$' + fmt(pos.entry) + '</span>' +
+            '<span class="lp-change flat" id="lp-chg-' + modeId + '-' + t + '">—</span>' +
           '</div>' +
           '<div class="lp-pnl-cell">' +
-            '<span class="lp-pnl-val flat" id="lp-pv-' + modeId + '-' + pos.ticker + '">0.00%</span>' +
+            '<span class="lp-pnl-val flat" id="lp-pv-' + modeId + '-' + t + '">0.00%</span>' +
           '</div>' +
           '<div class="lp-gauge-cell">' +
             buildGaugeHTML(modeId, pos) +
           '</div>' +
           '<div class="lp-badge-cell">' +
-            '<span class="lp-badge" id="lp-bg-' + modeId + '-' + pos.ticker + '" style="background:#f1f5f9;color:#94a3b8"><i class="fas fa-circle"></i> Open</span>' +
+            '<span class="lp-badge" id="lp-bg-' + modeId + '-' + t + '" style="background:#f1f5f9;color:#94a3b8"><i class="fas fa-circle"></i> Open</span>' +
           '</div>' +
         '</div>';
     });
@@ -369,9 +381,15 @@
     if (pxEl) {
       pxEl.textContent = '$' + fmt(r.price);
       pxEl.classList.remove('flash-up', 'flash-down');
-      void pxEl.offsetWidth;
-      if (r.direction === 'up') pxEl.classList.add('flash-up');
-      else if (r.direction === 'down') pxEl.classList.add('flash-down');
+      var dir = r.direction;
+      if (dir === 'up' || dir === 'down') {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            if (dir === 'up') pxEl.classList.add('flash-up');
+            else pxEl.classList.add('flash-down');
+          });
+        });
+      }
     }
 
     var chgEl = document.getElementById('lp-chg-' + modeId + '-' + t);
@@ -455,6 +473,7 @@
 
   function updateConn(state) {
     connState = state;
+    var marketOpen = LE.isMarketOpen();
     Object.keys(cards).forEach(function (modeId) {
       var dot = document.getElementById('lp-dot-' + modeId);
       var chip = document.getElementById('lp-conn-' + modeId);
@@ -463,6 +482,16 @@
         var labels = { connected: 'Live', connecting: 'Connecting...', disconnected: 'Reconnecting...', idle: 'Idle' };
         chip.textContent = labels[state] || state;
         chip.className = 'lp-conn-chip ' + state;
+      }
+      var mkt = document.getElementById('lp-mkt-' + modeId);
+      if (mkt) {
+        if (marketOpen) {
+          mkt.className = 'lp-market-chip open';
+          mkt.innerHTML = '<i class="fas fa-circle"></i> Market Open';
+        } else {
+          mkt.className = 'lp-market-chip closed';
+          mkt.innerHTML = '<i class="fas fa-moon"></i> Closed';
+        }
       }
       if (state === 'connected') markReady(modeId);
     });
@@ -502,25 +531,42 @@
     if (['SL_HIT', 'TP2_HIT', 'TP1_HIT', 'TP1_PARTIAL', 'EXPIRED'].indexOf(status) < 0) return;
 
     var key = evalResult.ticker + ':' + status;
+    var now = Date.now();
     var isCritical = ['SL_HIT', 'TP2_HIT'].indexOf(status) >= 0;
     var dedupMs = isCritical ? 60000 : 300000;
-    if (lastToastTs[key] && Date.now() - lastToastTs[key] < dedupMs) return;
-    lastToastTs[key] = Date.now();
+    if (lastToastTs[key] && now - lastToastTs[key] < dedupMs) return;
+    lastToastTs[key] = now;
+
+    // Prune stale dedup entries
+    var keys = Object.keys(lastToastTs);
+    if (keys.length > 30) {
+      keys.forEach(function (k) { if (now - lastToastTs[k] > 300000) delete lastToastTs[k]; });
+    }
+
+    // Cap visible toasts
+    var existing = toastContainer.children;
+    while (existing.length >= MAX_TOASTS) {
+      toastContainer.removeChild(existing[0]);
+    }
 
     var si = LE.getStatusInfo(status);
     var toast = el('div', 'lp-toast');
+    toast.setAttribute('role', 'alert');
     toast.style.borderLeftColor = si.color;
     toast.style.borderLeftWidth = '3px';
     toast.innerHTML =
-      '<i class="fas ' + si.icon + '" style="color:' + si.color + '"></i>' +
-      '<div style="color:#0f172a"><b>' + evalResult.ticker + '</b> — ' + si.label +
-        '<div class="lp-toast-detail" style="color:#64748b">' + evalResult.statusDetail + '</div>' +
+      '<i class="fas ' + esc(si.icon) + '" style="color:' + esc(si.color) + '"></i>' +
+      '<div style="color:#0f172a"><b>' + esc(evalResult.ticker) + '</b> — ' + esc(si.label) +
+        '<div class="lp-toast-detail" style="color:#64748b">' + esc(evalResult.statusDetail) + '</div>' +
       '</div>';
     toastContainer.appendChild(toast);
 
+    toast.addEventListener('animationend', function (e) {
+      if (e.animationName === 'lp-toast-out' && toast.parentNode) toast.parentNode.removeChild(toast);
+    });
     setTimeout(function () {
       if (toast.parentNode) toast.parentNode.removeChild(toast);
-    }, 5000);
+    }, 5500);
   }
 
   function updateScenarioBar(modeId) {
@@ -571,6 +617,8 @@
 
   function boot() {
     toastContainer = el('div', 'lp-toast-wrap');
+    toastContainer.setAttribute('role', 'log');
+    toastContainer.setAttribute('aria-live', 'assertive');
     document.body.appendChild(toastContainer);
 
     Promise.all([
@@ -607,8 +655,8 @@
 
           // Resize ECharts after grid layout change
           setTimeout(function () {
-            document.querySelectorAll('.perf-chart').forEach(function (el) {
-              var chart = window.echarts && window.echarts.getInstanceByDom(el);
+            document.querySelectorAll('.perf-chart').forEach(function (chartEl) {
+              var chart = window.echarts && window.echarts.getInstanceByDom(chartEl);
               if (chart) chart.resize();
             });
           }, 100);
