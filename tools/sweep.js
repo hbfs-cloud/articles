@@ -157,6 +157,22 @@ function regimeSizeMultiplier(regime) {
   return 1;
 }
 
+// Module-scope strategy filter map (used by regime-aware filtering and grid search)
+const STRATEGY_FILTERS_MAP = {
+  'all': new Set(),
+  'no_sq': new Set(['short_squeeze']),
+  'no_sq_pb': new Set(['short_squeeze', 'pullback']),
+  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback']),
+  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback']),
+  'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback']),
+};
+
+// Normalize regime string to lookup key
+function normalizeRegime(regime) {
+  if (!regime) return '';
+  return String(regime).toLowerCase().replace(/[\s-]+/g, '_');
+}
+
 // ─── Fetch Yahoo Finance OHLCV (file-cached) ─────────────────────────────────
 
 const PRICE_CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
@@ -238,6 +254,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0,
     breakevenPct = 0, // after +X% gain, move stop to entry (0 = disabled)
     staleDays = 0,    // exit if no new high for N days (0 = disabled)
+    entryGatePct = 0, // reject if open > entry * (1 + X%) — 0 = disabled
   } = config;
   if (!priceHistory) return null;
 
@@ -251,6 +268,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   // Reject trade if entry gaps below stop level (e.g. BTU 03-31: open $34.52 < stop $35)
   if (actualEntry <= setup.stop) return null;
+
+  // Entry gate: reject if open gaps too far above target entry (cascade to next candidate)
+  if (entryGatePct > 0 && actualEntry > setup.entry * (1 + entryGatePct / 100)) return null;
 
   let riskPerUnit = setup.entry - setup.stop;
   if (riskPerUnit <= 0) return null;
@@ -437,11 +457,11 @@ function simulatePortfolio(allTrades, scans, config) {
   } = config;
 
   // Group trades by scan date; capture per-date regime as canonical source-of-truth
+  // Strategy filter is deferred to per-date level for regime-aware filter switching
   const byDate = {};
   const regimeByDate = {};
   for (const t of allTrades) {
     if (t.score < minScore) continue;
-    if (strategyFilter.has(t.strategy)) continue;
     if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
     byDate[t.scanDate].push(t);
     if (t.regime && !regimeByDate[t.scanDate]) regimeByDate[t.scanDate] = t.regime;
@@ -481,7 +501,21 @@ function simulatePortfolio(allTrades, scans, config) {
 
     // ─── On scan dates: rotation + new entries ────────────────────────
     if (scanDateSet.has(day)) {
-      const candidates = (byDate[day] || []).slice(0, topN);
+      // Regime-aware strategy filter: override filter based on scan date's regime
+      let activeFilter = strategyFilter;
+      if (config.regimeFilters) {
+        const scanRegimeRaw = regimeByDate[day];
+        if (scanRegimeRaw) {
+          const regimeKey = normalizeRegime(scanRegimeRaw);
+          const overrideName = config.regimeFilters[regimeKey];
+          if (overrideName && STRATEGY_FILTERS_MAP[overrideName]) {
+            activeFilter = STRATEGY_FILTERS_MAP[overrideName];
+          }
+        }
+      }
+      // Apply strategy filter per date (deferred from global loop for regime awareness)
+      const filtered = (byDate[day] || []).filter(t => !activeFilter.has(t.strategy));
+      const candidates = filtered.slice(0, topN);
       let slotsAvailable = portfolioSize - openPositions.length;
 
       // Rotation logic
@@ -704,14 +738,8 @@ async function main() {
   const TOP_NS = QUICK ? [1, 2] : [1, 2, 3, 4, 5, 8, 10];
   const MIN_SCORES = QUICK ? [85] : [85, 90];
   const HORIZONS = QUICK ? [5, 15] : [2, 3, 5, 8, 10, 15];
-  const STRATEGY_FILTERS = {
-    'all': new Set(),
-    'no_sq': new Set(['short_squeeze']),
-    'no_sq_pb': new Set(['short_squeeze', 'pullback']),
-    'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback']),
-    'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback']),
-    'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback']),
-  };
+  const STRATEGY_FILTERS = STRATEGY_FILTERS_MAP; // reference module-scope map
+  const ENTRY_GATE_PCTS = [0, 3]; // 0 = disabled, 3% = reject opens gapping >3% above entry
   const ROTATIONS = ['none', 'daily_max1', 'aggressive'];
   const TP_MODES = [false, true]; // partialTP
   const TP_PCTS = [0.5]; // partial TP fraction (0.5 is the balanced default)
@@ -728,14 +756,14 @@ async function main() {
   const total = PORTFOLIO_SIZES.length * TOP_NS.length * MIN_SCORES.length
     * Object.keys(STRATEGY_FILTERS).length * ROTATIONS.length * HORIZONS.length
     * tpCombos.length * TRAIL_MODES.length * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length
-    * DAILY_TRAIL_PCTS.length * BREAKEVEN_PCTS.length * STALE_DAYS.length;
+    * DAILY_TRAIL_PCTS.length * BREAKEVEN_PCTS.length * STALE_DAYS.length * ENTRY_GATE_PCTS.length;
   console.log(`\n=== GRID SEARCH (${total} combinations) ===\n`);
 
   // Pre-simulate all trades for each unique trade-level config
   const tradesByKey = {};
   const preSimTotal = HORIZONS.length * tpCombos.length * TRAIL_MODES.length
     * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length * DAILY_TRAIL_PCTS.length
-    * BREAKEVEN_PCTS.length * STALE_DAYS.length;
+    * BREAKEVEN_PCTS.length * STALE_DAYS.length * ENTRY_GATE_PCTS.length;
   console.log(`Pre-simulating ${preSimTotal} trade sets...`);
   let preSimDone = 0;
   for (const horizon of HORIZONS) {
@@ -746,14 +774,15 @@ async function main() {
             for (const dailyTrail of DAILY_TRAIL_PCTS) {
               for (const bePct of BREAKEVEN_PCTS) {
                 for (const stale of STALE_DAYS) {
-                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${stale}`;
+                  for (const entryGate of ENTRY_GATE_PCTS) {
+                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${stale}_${entryGate}`;
                   const trades = [];
                   for (const setup of allSetups) {
                     const history = priceCache[setup.ticker];
                     const result = simulateTrade(setup, setup.scanDate, history, {
                       horizonDays: horizon, partialTP: ptp, partialTPPct: ptpPct, trailingStop: trail,
                       maxStopPct: maxStop, atrStopMult: atrMult, dailyTrailPct: dailyTrail,
-                      breakevenPct: bePct, staleDays: stale,
+                      breakevenPct: bePct, staleDays: stale, entryGatePct: entryGate,
                     });
                     if (result) {
                       trades.push({ ...result, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct, _stale: stale });
@@ -762,6 +791,7 @@ async function main() {
                   tradesByKey[key] = trades;
                   preSimDone++;
                   if (preSimDone % 200 === 0) process.stdout.write(`  Pre-sim ${preSimDone}/${preSimTotal}\r`);
+                  }
                 }
               }
             }
@@ -813,7 +843,8 @@ async function main() {
                       for (const dailyTrailPct of DAILY_TRAIL_PCTS) {
                         for (const breakevenPct of BREAKEVEN_PCTS) {
                           for (const staleDays of STALE_DAYS) {
-                            const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_${staleDays}`;
+                          for (const entryGatePct of ENTRY_GATE_PCTS) {
+                            const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_${staleDays}_${entryGatePct}`;
                             const trades = tradesByKey[key] || [];
 
                             const config = {
@@ -826,7 +857,7 @@ async function main() {
                               const r = {
                                 portfolioSize, topN, minScore, filterName, rotation,
                                 horizon, partialTP, partialTPPct, trailingStop, maxStopPct, atrStopMult, dailyTrailPct,
-                                breakevenPct, staleDays,
+                                breakevenPct, staleDays, entryGatePct,
                                 ...metrics,
                               };
                               r.composite = (r.returnTotal / 30) + (1 / Math.max(0.5, Math.abs(r.maxDD))) + (r.winRate / 100) + (r.calmar / 10) + (r.profitFactor / 5);
@@ -872,6 +903,7 @@ async function main() {
                             tested++;
                             if (tested % 5000 === 0) process.stdout.write(`  ${tested}/${total}\r`);
                           }
+                          }
                         }
                       }
                     }
@@ -892,9 +924,9 @@ async function main() {
 
   if (!FROZEN_ONLY) {
     console.log(`TOP 20 COMBOS by Sharpe (min ${MIN_TRADES} trades):`);
-    console.log('PSize TopN MinSc Filter          Rotation      Horiz  PTP  Trail MaxSt  ATR Trail  Return  MaxDD    WR    PF   Sharpe Calmar Trades');
-    console.log('─'.repeat(150));
-    
+    console.log('PSize TopN MinSc Filter          Rotation      Horiz  PTP  Trail MaxSt  ATR Trail Gate  Return  MaxDD    WR    PF   Sharpe Calmar Trades');
+    console.log('─'.repeat(160));
+
     for (const r of ranked.slice(0, 20)) {
     console.log(
       String(r.portfolioSize).padStart(5),
@@ -908,6 +940,7 @@ async function main() {
       (r.maxStopPct ? r.maxStopPct + '%' : '—').padStart(5),
       (r.atrStopMult ? r.atrStopMult + 'x' : '—').padStart(4),
       (r.dailyTrailPct ? r.dailyTrailPct + '%' : '—').padStart(5),
+      (r.entryGatePct ? r.entryGatePct + '%' : '—').padStart(4),
       ((r.returnTotal > 0 ? '+' : '') + r.returnTotal.toFixed(2) + '%').padStart(8),
       (r.maxDD.toFixed(2) + '%').padStart(8),
       (r.r2.toFixed(3)).padStart(6),
@@ -1102,13 +1135,14 @@ async function main() {
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     for (const [id, cfg] of Object.entries(modesConfig.modes)) {
-      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}`;
+      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}`;
       const trades2 = tradesByKey[frozenKey] || [];
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
+        regimeFilters: cfg.regimeFilters || null,
       };
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
       if (sim2 && sim2.closedTrades) {
@@ -1128,7 +1162,7 @@ async function main() {
     // Fallback: use optimal combos if no modes-config
     for (const [key, combo] of [["turbo", topByReturn[0]], ["dynamic", topByReturn[0]], ["balanced", topByCalmar[0]], ["secured", ranked[0]], ["fortress", ranked[0]]]) {
       if (!combo) continue;
-      const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.partialTPPct || 0.5}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}_${combo.breakevenPct || 0}_${combo.staleDays || 0}`;
+      const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.partialTPPct || 0.5}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}_${combo.breakevenPct || 0}_${combo.staleDays || 0}_${combo.entryGatePct || 0}`;
       const trades2 = tradesByKey[fbKey] || [];
       const cfg2 = {
         portfolioSize: combo.portfolioSize, topN: combo.topN, minScore: combo.minScore,
@@ -1151,7 +1185,7 @@ async function main() {
       combo: {
         portfolioSize: best.portfolioSize, topN: best.topN, minScore: best.minScore,
         filterName: best.filterName, rotation: best.rotation, horizon: best.horizon,
-        partialTP: best.partialTP, partialTPPct: best.partialTPPct, trailingStop: best.trailingStop, maxStopPct: best.maxStopPct || 0, atrStopMult: best.atrStopMult || 0, dailyTrailPct: best.dailyTrailPct || 0, breakevenPct: best.breakevenPct || 0, staleDays: best.staleDays || 0,
+        partialTP: best.partialTP, partialTPPct: best.partialTPPct, trailingStop: best.trailingStop, maxStopPct: best.maxStopPct || 0, atrStopMult: best.atrStopMult || 0, dailyTrailPct: best.dailyTrailPct || 0, breakevenPct: best.breakevenPct || 0, staleDays: best.staleDays || 0, entryGatePct: best.entryGatePct || 0,
       },
       metrics: {
         returnTotal: best.returnTotal, maxDD: best.maxDD, winRate: best.winRate,
@@ -1184,8 +1218,8 @@ async function main() {
         && opt.rotation === cfg.rotation && (opt.maxStopPct || 0) === (cfg.maxStopPct || 0)
         && (opt.atrStopMult || 0) === (cfg.atrStopMult || 0) && (opt.dailyTrailPct || 0) === (cfg.dailyTrailPct || 0)
         && (opt.breakevenPct || 0) === (cfg.breakevenPct || 0) && (opt.staleDays || 0) === (cfg.staleDays || 0);
-      const frozen = `P${cfg.portfolioSize}/Top${cfg.topN}/H${cfg.horizon}/${cfg.filterName}/${cfg.rotation}/MaxSt=${cfg.maxStopPct || 0}%/ATR=${cfg.atrStopMult || 0}x/Trail=${cfg.dailyTrailPct || 0}%/BE=${cfg.breakevenPct || 0}%/Stale=${cfg.staleDays || 0}d`;
-      const sweep = `P${opt.portfolioSize}/Top${opt.topN}/H${opt.horizon}/${opt.filterName}/${opt.rotation}/MaxSt=${opt.maxStopPct || 0}%/ATR=${opt.atrStopMult || 0}x/Trail=${opt.dailyTrailPct || 0}%/BE=${opt.breakevenPct || 0}%/Stale=${opt.staleDays || 0}d`;
+      const frozen = `P${cfg.portfolioSize}/Top${cfg.topN}/H${cfg.horizon}/${cfg.filterName}/${cfg.rotation}/MaxSt=${cfg.maxStopPct || 0}%/ATR=${cfg.atrStopMult || 0}x/Trail=${cfg.dailyTrailPct || 0}%/BE=${cfg.breakevenPct || 0}%/Stale=${cfg.staleDays || 0}d/Gate=${cfg.entryGatePct || 0}%`;
+      const sweep = `P${opt.portfolioSize}/Top${opt.topN}/H${opt.horizon}/${opt.filterName}/${opt.rotation}/MaxSt=${opt.maxStopPct || 0}%/ATR=${opt.atrStopMult || 0}x/Trail=${opt.dailyTrailPct || 0}%/BE=${opt.breakevenPct || 0}%/Stale=${opt.staleDays || 0}d/Gate=${opt.entryGatePct || 0}%`;
       console.log(`${id.toUpperCase()} (${cfg.label}):`);
       console.log(`  Frozen: ${frozen}`);
       console.log(`  Sweep : ${sweep} (Return=${opt.returnTotal}% Sharpe=${opt.sharpe})`);
