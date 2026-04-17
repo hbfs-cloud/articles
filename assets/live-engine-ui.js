@@ -199,6 +199,12 @@
     '  }',
     '}',
 
+    /* Time Machine: when viewing a past snapshot, collapse the dashboard grid to a vertical stack
+       so the injected tmRender cards (no data-grid) flow in a natural reading order. */
+    '.lp-grid.tm-viewing{display:flex!important;flex-direction:column!important;gap:.75rem!important}',
+    '.lp-grid.tm-viewing>*{grid-column:unset!important;grid-row:unset!important;margin-bottom:0!important}',
+    '.lp-grid.tm-viewing>[data-grid="live"]{display:none!important}',
+
     /* ═══════════════════════════════════════════════
        LIVE PORTFOLIO CARD — The Hero
        Full-width card at top with prominent P&L

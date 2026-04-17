@@ -1186,6 +1186,9 @@ document.addEventListener('DOMContentLoaded',function(){
       return;
     }
     tmSaveLive();
+    var tmPanel=document.getElementById('p-'+activeMode);
+    var tmGrid=tmPanel&&tmPanel.querySelector('.lp-grid');
+    if(tmGrid)tmGrid.classList.add('tm-viewing');
     var dateStr=tmDates[idx];
     fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
       banner.className='tm-banner show';
