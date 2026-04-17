@@ -309,11 +309,11 @@ function main() {
   </details>
 </div>
 
-<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <div class="section-card">
-  <details>
+  <details${sig.length ? ' open' : ''}>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:#94a3b8">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
     </summary>
     ${sig.length ? `<table class="t" style="margin-top:.75rem">
@@ -743,8 +743,9 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
-  .t{table-layout:auto;word-break:break-word}
-  .t th,.t td{white-space:normal;padding:.35rem .45rem;font-size:.72rem}
+  .section-card details[open]>table.t,.section-card>table.t{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .t{table-layout:auto}
+  .t th,.t td{white-space:nowrap;padding:.3rem .45rem;font-size:.68rem}
 }
 
 /* ── Scenario bar ── */
@@ -787,7 +788,9 @@ details summary::-webkit-details-marker{display:none}
 details summary::after{content:"\\f054";font-family:"Font Awesome 6 Free";font-weight:900;font-size:.55rem;color:#94a3b8;flex-shrink:0;margin-left:.5rem;transition:transform .2s}
 details[open] summary::after{transform:rotate(90deg)}
 .sc-summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.9rem;font-weight:800;color:#0f172a;padding:.1rem 0}
-.sc-sum-title{display:flex;align-items:center;gap:.35rem}
+.sc-sum-title{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.sc-preview{font-size:.68rem;color:#475569;margin-left:.5rem;font-weight:500;font-family:"JetBrains Mono",monospace;letter-spacing:-.01em}
+.sc-preview b{color:#0f172a;font-weight:700}
 .watch-summary{color:#64748b;font-weight:600;font-size:.78rem}
 
 /* ── Responsive ── */
@@ -1076,6 +1079,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   var VALID_MODES=['turbo','dynamic','balanced','secured','fortress'];
   var activeMode='balanced';
+  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
     activeMode=id;
@@ -1148,7 +1152,6 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   setTimeout(updateLiveActions, 800);
-  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   var tmLiveHTML={};
   function tmSaveLive(){
     document.querySelectorAll('.mode-panel').forEach(function(p){
@@ -1294,7 +1297,7 @@ document.addEventListener('DOMContentLoaded',function(){
         }
         if(d.signals&&d.signals.length>0){
           var sg=document.createElement('div'); sg.className='section-card'; sg.setAttribute('data-tm','1');
-          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\\\'s Signals <span class="count">'+d.signals.length+' setups</span></span></summary>'
+          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\\\'s Signals <span class="count">'+d.signals.length+' setup'+(d.signals.length===1?'':'s')+'</span></span></summary>'
             +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
           d.signals.forEach(function(s){
             var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';

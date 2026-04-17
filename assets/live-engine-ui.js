@@ -15,6 +15,9 @@
     turbo: '#f59e0b', dynamic: '#dc2626', balanced: '#059669',
     secured: '#2563eb', fortress: '#6d28d9'
   };
+  // Nominal capital per mode — used to translate % return into a $ figure users can relate to.
+  // 10k default; fortress half-sized so effectively 5k of exposure per slot.
+  var NOMINAL_CAPITAL = { turbo: 10000, dynamic: 10000, balanced: 10000, secured: 10000, fortress: 10000 };
 
   // Load JetBrains Mono via <link> to avoid FOUC
   var fontLink = document.createElement('link');
@@ -38,7 +41,9 @@
     '  .hero-meta{margin-top:.2rem!important;font-size:.65rem!important;color:#94a3b8!important}',
     '  .breadcrumb{padding:.2rem 1.5rem!important;font-size:.6rem!important;background:#fafafa!important;border-bottom:1px solid #f1f5f9!important}',
     '  .mode-tabs{margin:.5rem 0 .6rem!important;padding:.2rem!important;gap:.2rem!important;background:#f8fafc!important;border-radius:10px!important;border:1px solid #e2e8f0!important;display:flex!important;align-items:center!important}',
-    '  .mode-tab{padding:.38rem .9rem!important;font-size:.72rem!important;border-radius:7px!important;font-weight:600!important;transition:all .15s ease!important}',
+    '  .mode-tab{padding:.38rem .9rem!important;font-size:.72rem!important;border-radius:7px!important;font-weight:600!important;transition:all .15s ease!important;position:relative!important}',
+    /* Active tab dot — a 3px mode-colored bottom bar for visual identity */
+    '  .mode-tab.active::after{content:"";position:absolute;bottom:2px;left:20%;right:20%;height:2px;border-radius:2px;background:currentColor;opacity:.35}',
     '  .brand-bar{padding:.35rem 1.5rem!important}',
     /* Hide community + related on desktop — not part of trading dashboard */
     '  .community-section,.community-cta,section.community-section{display:none!important}',
@@ -52,44 +57,54 @@
     '@media(min-width:1024px){',
     '  .lp-grid{',
     '    display:grid;',
-    '    grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);',
-    '    grid-template-rows:auto;',
+    '    grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);',
+    '    grid-auto-rows:min-content;',
     '    gap:.6rem;',
-    '    align-items:start;',
+    '    align-items:stretch;',
     '  }',
 
     /* Live card — full width hero at top */
     '  .lp-grid>[data-grid="live"]{',
     '    grid-column:1/-1;',
+    '    grid-row:1;',
     '  }',
 
-    /* Equity curve — left column, taller */
+    /* Equity curve — left column, spans 2 rows to balance with signals+orders stack on right */
     '  .lp-grid>[data-grid="equity"]{',
     '    grid-column:1;',
+    '    grid-row:2/span 2;',
     '    margin-bottom:0!important;',
+    '    display:flex!important;',
+    '    flex-direction:column!important;',
     '  }',
 
-    /* Signals — right column, top */
+    /* Signals — right column, directly under live card */
     '  .lp-grid>[data-grid="signals"]{',
     '    grid-column:2;',
+    '    grid-row:2;',
     '    margin-bottom:0!important;',
     '  }',
 
-    /* Orders — left column */
+    /* Orders — right column, under signals (CTA to action) */
     '  .lp-grid>[data-grid="orders"]{',
-    '    grid-column:1;',
-    '    margin-bottom:0!important;',
-    '  }',
-
-    /* Positions — right column */
-    '  .lp-grid>[data-grid="positions"]{',
     '    grid-column:2;',
+    '    grid-row:3;',
     '    margin-bottom:0!important;',
     '  }',
 
-    /* History + footer — full width at bottom */
-    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;margin-bottom:0!important}',
+    /* Positions — full width row 4 */
+    '  .lp-grid>[data-grid="positions"]{',
+    '    grid-column:1/-1;',
+    '    grid-row:4;',
+    '    margin-bottom:0!important;',
+    '  }',
+
+    /* History — full width row 5 */
+    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:5;margin-bottom:0!important}',
     '  .lp-grid>[data-grid="footer"]{grid-column:1/-1}',
+
+    /* Hide empty-state collapsed sections on desktop to reclaim space */
+    '  .lp-grid>[data-grid-empty="1"]{display:none!important}',
 
     /* Hide "How to trade" method card on desktop */
     '  .lp-grid>[data-grid="method"]{display:none!important}',
@@ -105,7 +120,16 @@
     '    border:1px solid #e2e8f0!important;',
     '    box-shadow:0 1px 4px rgba(15,23,42,.04)!important;',
     '  }',
-    '  .lp-grid .perf-chart{min-height:150px!important;height:150px!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart{flex:1 1 auto!important;min-height:340px!important;height:auto!important;position:relative!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart-wrap{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:360px!important}',
+    /* Empty chart — zero-trade state: show a subtle "No trades yet" watermark */
+    '  .lp-grid>[data-grid="equity"] .perf-chart:empty::after,',
+    '  .lp-grid>[data-grid="equity"] .perf-chart[data-empty]::after{',
+    '    content:"No closed trades yet";',
+    '    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);',
+    '    font-size:.65rem;font-weight:600;color:#cbd5e1;letter-spacing:.04em;text-transform:uppercase;',
+    '    pointer-events:none;white-space:nowrap;',
+    '  }',
     '  .lp-grid .perf-head{margin-bottom:.3rem!important}',
     '  .lp-grid .perf-head h2{font-size:.82rem!important;font-weight:700!important;color:#0f172a!important}',
     '  .lp-grid .perf-stats{',
@@ -117,7 +141,7 @@
     '    padding:.45rem .5rem!important;',
     '    border-radius:7px!important;',
     '    background:#f8fafc!important;',
-    '    border:1px solid #f1f5f9!important;',
+    '    border:1px solid #e2e8f0!important;',
     '  }',
     '  .lp-grid .ps-v{font-size:.95rem!important;font-weight:800!important;letter-spacing:-.02em!important}',
     '  .lp-grid .ps-l{font-size:.57rem!important;color:#94a3b8!important;font-weight:600!important}',
@@ -277,7 +301,7 @@
     '.lp-chip-alert-warn{background:#fffbeb;color:#b45309}',
 
     /* Market status chip */
-    '.lp-market-chip{font-size:.58rem;font-weight:700;padding:.1rem .4rem;border-radius:5px;margin-left:.2rem;flex-shrink:0}',
+    '.lp-market-chip{font-size:.58rem;font-weight:700;padding:.1rem .4rem;border-radius:5px;margin-left:.2rem;flex-shrink:0;align-self:center}',
     '.lp-market-chip.open{color:#059669;background:#ecfdf5}',
     '.lp-market-chip.closed{color:#64748b;background:#f1f5f9}',
 
@@ -381,14 +405,16 @@
     '.lp-empty{',
     '  display:flex;',
     '  align-items:center;',
-    '  gap:.5rem;',
-    '  padding:.7rem 1.1rem;',
+    '  gap:.55rem;',
+    '  padding:.65rem .9rem .65rem 1.1rem;',
     '  color:#94a3b8;',
-    '  font-size:.68rem;',
+    '  font-size:.65rem;',
     '  font-weight:500;',
     '  border-top:1px solid #f1f5f9;',
+    '  font-style:italic;',
+    '  letter-spacing:.01em;',
     '}',
-    '.lp-empty i{font-size:.72rem;opacity:.45;flex-shrink:0}',
+    '.lp-empty i{font-size:.78rem;opacity:.35;flex-shrink:0}',
 
     /* ═══════════════════════════════════════════════
        TOASTS
@@ -437,6 +463,24 @@
     '  .lp-badge{font-size:.55rem;padding:.1rem .28rem}',
     '  .lp-toast-wrap{right:.65rem;left:.65rem}',
     '  .lp-toast{min-width:auto}',
+    /* Stack the grid tightly — no desktop layout applies, but tighten gaps */
+    '  .lp-grid{display:flex!important;flex-direction:column!important;gap:.6rem!important}',
+    '  .lp-grid>*{margin-bottom:0!important}',
+    /* Hide empty sections + method card on mobile — reclaim vertical space */
+    '  .lp-grid>[data-grid-empty="1"]{display:none!important}',
+    '  .lp-grid>[data-grid="method"]{display:none!important}',
+    /* Compact equity chart on mobile — enough to read the curve */
+    '  .lp-grid>[data-grid="equity"] .perf-hero{padding:.7rem .8rem!important;gap:.5rem!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart{min-height:200px!important}',
+    '  .lp-grid .perf-stats{grid-template-columns:repeat(3,1fr)!important;gap:.35rem!important}',
+    '  .lp-grid .ps{padding:.35rem .4rem!important}',
+    '  .lp-grid .ps-v{font-size:.8rem!important;font-weight:800!important}',
+    '  .lp-grid .ps-l{font-size:.52rem!important}',
+    /* Tables: wrap in an overflow-x container so columns stay aligned and horizontally scroll */
+    '  .lp-grid .section-card details[open]>table.t,.lp-grid .section-card>table.t{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}',
+    '  .lp-grid .section-card table.t th,.lp-grid .section-card table.t td{font-size:.66rem!important;padding:.3rem .45rem!important;white-space:nowrap}',
+    /* Live strip: tighten the UNREALIZED P&L label */
+    '  .lp-strip-pnl .lp-pnl-label{font-size:.52rem!important;letter-spacing:.03em!important}',
     '}'
   ].join('\n');
   document.head.appendChild(css);
@@ -507,6 +551,19 @@
     });
 
     panel.appendChild(grid);
+
+    // Collapse empty Positions / History sections on desktop so the grid reclaims space
+    setTimeout(function () {
+      var empties = grid.querySelectorAll('[data-grid="positions"], [data-grid="history"]');
+      empties.forEach(function (node) {
+        var hasRows = node.querySelector('tbody tr, .setup-card, .lp-row');
+        var hasMeaningfulText = false;
+        var txt = (node.textContent || '').toLowerCase();
+        if (hasRows) hasMeaningfulText = true;
+        else if (txt.indexOf('no active') < 0 && txt.indexOf('0 closed') < 0 && txt.length > 60) hasMeaningfulText = true;
+        if (!hasMeaningfulText) node.setAttribute('data-grid-empty', '1');
+      });
+    }, 50);
   }
 
   function createCard(modeId) {
@@ -528,7 +585,7 @@
         '<span class="lp-market-chip closed" id="lp-mkt-' + modeId + '"><i class="fas fa-moon"></i> Closed</span>' +
         '<div class="lp-strip-pnl">' +
           '<span class="lp-pnl flat" id="lp-pnl-' + modeId + '">—</span>' +
-          '<span class="lp-pnl-sub">Unrealized P&amp;L</span>' +
+          '<span class="lp-pnl-sub"><span id="lp-pnl-abs-' + modeId + '">Unrealized P&amp;L</span></span>' +
         '</div>' +
         '<div class="lp-strip-chips" id="lp-chips-' + modeId + '"></div>' +
         '<div class="lp-init-inline" id="lp-init-' + modeId + '"><i class="fas fa-spinner"></i>Connecting to market data...</div>' +
@@ -721,11 +778,13 @@
     Object.keys(cards).forEach(function (modeId) {
       var dot = document.getElementById('lp-dot-' + modeId);
       var chip = document.getElementById('lp-conn-' + modeId);
-      if (dot) dot.className = 'lp-live-dot ' + state;
+      if (dot) dot.className = 'lp-live-dot ' + (marketOpen ? state : 'idle');
       if (chip) {
-        var labels = { connected: 'Live', connecting: 'Connecting...', disconnected: 'Reconnecting...', idle: 'Idle' };
+        var labels = marketOpen
+          ? { connected: 'Live', connecting: 'Connecting...', disconnected: 'Reconnecting...', idle: 'Idle' }
+          : { connected: 'Snapshot', connecting: 'Snapshot', disconnected: 'Snapshot', idle: 'Snapshot' };
         chip.textContent = labels[state] || state;
-        chip.className = 'lp-conn-chip ' + state;
+        chip.className = 'lp-conn-chip ' + (marketOpen ? state : 'idle');
       }
       var mkt = document.getElementById('lp-mkt-' + modeId);
       if (mkt) {
@@ -734,10 +793,11 @@
           mkt.innerHTML = '<i class="fas fa-circle"></i> Market Open';
         } else {
           mkt.className = 'lp-market-chip closed';
-          mkt.innerHTML = '<i class="fas fa-moon"></i> Closed';
+          mkt.innerHTML = '<i class="fas fa-moon"></i> Market Closed';
         }
       }
-      if (state === 'connected') markReady(modeId);
+      // Mark ready as soon as we have a verdict: connected OR market is closed (no live data expected).
+      if (state === 'connected' || !marketOpen) markReady(modeId);
     });
   }
 
@@ -751,6 +811,16 @@
         var pnl = a.totalPnl;
         pnlEl.className = 'lp-pnl ' + (pnl > 0.01 ? 'pos' : pnl < -0.01 ? 'neg' : 'flat');
         pnlEl.textContent = sign(pnl) + fmt(pnl) + '%';
+      }
+      var absEl = document.getElementById('lp-pnl-abs-' + modeId);
+      if (absEl) {
+        var cap = NOMINAL_CAPITAL[modeId] || 10000;
+        var dollars = cap * (a.totalPnl / 100);
+        if (a.count > 0) {
+          absEl.textContent = (dollars >= 0 ? '+$' : '-$') + fmt(Math.abs(dollars), 0) + ' on $' + fmt(cap, 0) + ' nominal';
+        } else {
+          absEl.textContent = 'Unrealized P&L';
+        }
       }
 
       var chipsEl = document.getElementById('lp-chips-' + modeId);
@@ -897,11 +967,20 @@
             reorganizePanel(modeId);
           });
 
-          // Resize ECharts after grid layout change
+          // Resize ECharts after grid layout change + flag empty charts for watermark
           setTimeout(function () {
             document.querySelectorAll('.perf-chart').forEach(function (chartEl) {
               var chart = window.echarts && window.echarts.getInstanceByDom(chartEl);
               if (chart) chart.resize();
+              // Detect zero-trade equity charts: look at the adjacent perf-stats for "0 Closed Trades"
+              var hero = chartEl.closest('.perf-hero');
+              if (hero) {
+                var statsTxt = (hero.querySelector('.perf-stats') || {}).textContent || '';
+                if (/\b0\s*closed/i.test(statsTxt)) {
+                  chartEl.setAttribute('data-empty', '1');
+                  if (chart) chart.getDom().style.opacity = '0';
+                }
+              }
             });
           }, 100);
 
@@ -917,6 +996,27 @@
             positions: allPositions,
             modesCfg: modesCfgFlat
           });
+
+          // If market is already known closed at boot, update chrome immediately —
+          // no spinning forever while waiting for a live feed that won't arrive.
+          if (!LE.isMarketOpen()) {
+            updateConn(connState || 'idle');
+          }
+
+          // Safety: if after 7s we're still not ready, stop spinning and show a soft fallback.
+          setTimeout(function () {
+            Object.keys(cards).forEach(function (modeId) {
+              var card = document.getElementById('lp-' + modeId);
+              if (card && card.classList.contains('lp-init')) {
+                markReady(modeId);
+                var chip = document.getElementById('lp-conn-' + modeId);
+                if (chip && chip.textContent === 'Connecting...') {
+                  chip.textContent = 'Offline';
+                  chip.className = 'lp-conn-chip disconnected';
+                }
+              }
+            });
+          }, 7000);
         });
     }).catch(function (e) {
       console.warn('[LiveEngineUI] Boot failed:', e);

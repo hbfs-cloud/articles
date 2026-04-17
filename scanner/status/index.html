@@ -6,7 +6,7 @@
   <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css?v=1776406353266">
+  <link rel="stylesheet" href="/assets/report.css?v=1776413380253">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -80,8 +80,9 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
-  .t{table-layout:auto;word-break:break-word}
-  .t th,.t td{white-space:normal;padding:.35rem .45rem;font-size:.72rem}
+  .section-card details[open]>table.t,.section-card>table.t{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .t{table-layout:auto}
+  .t th,.t td{white-space:nowrap;padding:.3rem .45rem;font-size:.68rem}
 }
 
 /* ── Scenario bar ── */
@@ -124,7 +125,9 @@ details summary::-webkit-details-marker{display:none}
 details summary::after{content:"\f054";font-family:"Font Awesome 6 Free";font-weight:900;font-size:.55rem;color:#94a3b8;flex-shrink:0;margin-left:.5rem;transition:transform .2s}
 details[open] summary::after{transform:rotate(90deg)}
 .sc-summary{display:flex;align-items:center;justify-content:space-between;gap:.5rem;font-size:.9rem;font-weight:800;color:#0f172a;padding:.1rem 0}
-.sc-sum-title{display:flex;align-items:center;gap:.35rem}
+.sc-sum-title{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.sc-preview{font-size:.68rem;color:#475569;margin-left:.5rem;font-weight:500;font-family:"JetBrains Mono",monospace;letter-spacing:-.01em}
+.sc-preview b{color:#0f172a;font-weight:700}
 .watch-summary{color:#64748b;font-weight:600;font-size:.78rem}
 
 /* ── Responsive ── */
@@ -295,11 +298,11 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <div class="section-card">
-  <details>
+  <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setup</span><span class="sc-preview"><b>AVGO</b> <span style="color:#94a3b8">93</span></span></span>
       <a href="/scanner/20260417/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <table class="t" style="margin-top:.75rem">
@@ -318,12 +321,12 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="perf-chart" id="chart-turbo"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:#f59e0b">0%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">0%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">0%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">0x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">0</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">0d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v" style="color:#f59e0b">+58.21%</span><span class="ps-l">Total Return</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">-3.56%</span><span class="ps-l">Max Drawdown</span></div>
+    <div class="ps"><span class="ps-v">55%</span><span class="ps-l">Win Rate</span></div>
+    <div class="ps"><span class="ps-v">23.47x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">20</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">2.6d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
@@ -334,43 +337,241 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders">
+<div class="section-card ">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">0/1 open — <b>1 slot free</b> — place at next open</span>
+    <h3><i class="fas fa-eye"></i> On Watch</h3>
+    <span class="sc-meta">1/1 open — portfolio full</span>
   </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
-    <tbody><tr>
-      <td><b>AVGO</b> <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AVGO&ty=c&ta=1&p=d&s=l" alt="AVGO" class="fv-thumb" onclick="fvOpen('AVGO')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#059669">93</span></td>
-      <td class="m hide-m">Momentum</td><td><b>$397.00</b></td>
+  
+  <details open>
+    <summary class="watch-summary">On watch — 1 signal (portfolio full, valid until Tue, Apr 21)</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <tbody><tr style="opacity:0.75">
+      <td><b>AVGO</b></td>
+      <td><span class="pill-score" style="background:#94a3b8">93</span></td>
+      <td class="m hide-m">Momentum</td><td class="m">$397.00</td>
       <td class="neg">$378.00</td>
       <td class="pos">$418.00<span class="hide-m"> / $440.00</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">100%</td>
-      <td class="hide-m"><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">AI infrastructure leader, TSMC earnings catalyst, fwd PE 22x cheap for AI growth</div></td></tr></tbody>
-  </table>
-  
+      <td class="am hide-m">1:2.0</td>
+      <td><span class="pill m">Valid until Tue, Apr 21</span></td>
+    </tr></tbody>
+    </table>
+  </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">0/1</span></h3>
-    
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">1/1</span></h3>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+0.5%</b></span>
   </div>
-  <p class="empty"><i class="fas fa-inbox"></i>No active positions</p>
+  
+  <div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.3%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +0.5%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +13.5%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:26.7%"></div>
+    <div class="scenario-fill-good" style="width:73.3%"></div>
+    <div class="scenario-cursor" style="left:26.7%"></div>
+  </div>
+</div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <tbody><tr><td><b>NVDA</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NVDA&ty=c&ta=1&p=d&s=l" alt="NVDA" class="fv-thumb" onclick="fvOpen('NVDA')"></td><td class="m hide-m">04-16</td><td class="hide-m">$197.43</td><td class="hide-m">$198.35</td><td class="pos"><b>+0.47%</b></td><td class="neg hide-m">$189.00</td><td class="pos hide-m">$224.00</td><td class="am">2d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">NVIDIA surged +5.59% to $174.40 on massive volume (225M shares), driven by Iran de-escalation lifting risk appetite and the $2B Marvell…</div></td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">0 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">19 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
-    <tbody></tbody>
+    <tbody><tr>
+          <td><b>NVDA</b></td>
+          <td class="m hide-m">04-16</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$197.43</td>
+          <td class="hide-m">$198.35</td>
+          <td class="pos"><b>+0.47%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill pending" title="Pending (1d/3d)">Pending (1d/3d)</span></td>
+        </tr><tr>
+          <td><b>AMZN</b></td>
+          <td class="m hide-m">04-13</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$237.45</td>
+          <td class="hide-m">$249.70</td>
+          <td class="pos"><b>+5.53%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>SMH</b></td>
+          <td class="m hide-m">04-10</td>
+          <td class="m hide-m">04-13</td>
+          <td class="hide-m">$434.45</td>
+          <td class="hide-m">$434.45</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>GDX</b></td>
+          <td class="m hide-m">04-07</td>
+          <td class="m hide-m">04-10</td>
+          <td class="hide-m">$93.69</td>
+          <td class="hide-m">$99.39</td>
+          <td class="pos"><b>+6.08%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>LMT</b></td>
+          <td class="m hide-m">04-02</td>
+          <td class="m hide-m">04-07</td>
+          <td class="hide-m">$616.70</td>
+          <td class="hide-m">$627.70</td>
+          <td class="pos"><b>+1.78%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>NVDA</b></td>
+          <td class="m hide-m">04-01</td>
+          <td class="m hide-m">04-02</td>
+          <td class="hide-m">$176.00</td>
+          <td class="hide-m">$176.00</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>XOM</b></td>
+          <td class="m hide-m">03-31</td>
+          <td class="m hide-m">04-01</td>
+          <td class="hide-m">$172.67</td>
+          <td class="hide-m">$172.67</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>CF</b></td>
+          <td class="m hide-m">03-26</td>
+          <td class="m hide-m">03-31</td>
+          <td class="hide-m">$130.12</td>
+          <td class="hide-m">$134.85</td>
+          <td class="pos"><b>+5.47%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="TP1 partial (50%)">TP1 ½</span></td>
+        </tr><tr>
+          <td><b>OXY</b></td>
+          <td class="m hide-m">03-23</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$58.50</td>
+          <td class="hide-m">$64.36</td>
+          <td class="pos"><b>+9.92%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>TTE</b></td>
+          <td class="m hide-m">03-20</td>
+          <td class="m hide-m">03-23</td>
+          <td class="hide-m">$89.29</td>
+          <td class="hide-m">$86.97</td>
+          <td class="neg"><b>-2.59%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>FANG</b></td>
+          <td class="m hide-m">03-17</td>
+          <td class="m hide-m">03-20</td>
+          <td class="hide-m">$183.04</td>
+          <td class="hide-m">$192.54</td>
+          <td class="pos"><b>+5.19%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>CVX</b></td>
+          <td class="m hide-m">03-13</td>
+          <td class="m hide-m">03-16</td>
+          <td class="hide-m">$196.00</td>
+          <td class="hide-m">$196.00</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>MOS</b></td>
+          <td class="m hide-m">03-12</td>
+          <td class="m hide-m">03-13</td>
+          <td class="hide-m">$31.05</td>
+          <td class="hide-m">$31.05</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>BBIO</b></td>
+          <td class="m hide-m">03-10</td>
+          <td class="m hide-m">03-11</td>
+          <td class="hide-m">$66.12</td>
+          <td class="hide-m">$72.83</td>
+          <td class="pos"><b>+10.88%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="tp1_partial_amb">tp1_partial_amb</span></td>
+        </tr><tr>
+          <td><b>EQNR</b></td>
+          <td class="m hide-m">03-06</td>
+          <td class="m hide-m">03-09</td>
+          <td class="hide-m">$32.82</td>
+          <td class="hide-m">$32.92</td>
+          <td class="pos"><b>+0.3%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="trail">trail</span></td>
+        </tr><tr>
+          <td><b>USO</b></td>
+          <td class="m hide-m">03-05</td>
+          <td class="m hide-m">03-06</td>
+          <td class="hide-m">$94.46</td>
+          <td class="hide-m">$108.71</td>
+          <td class="pos"><b>+15.09%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 2 hit">TP2 ✓</span></td>
+        </tr><tr>
+          <td><b>CF</b></td>
+          <td class="m hide-m">03-04</td>
+          <td class="m hide-m">03-05</td>
+          <td class="hide-m">$106.00</td>
+          <td class="hide-m">$106.00</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>XLE</b></td>
+          <td class="m hide-m">03-03</td>
+          <td class="m hide-m">03-04</td>
+          <td class="hide-m">$57.39</td>
+          <td class="hide-m">$57.39</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>XOM</b></td>
+          <td class="m hide-m">02-27</td>
+          <td class="m hide-m">03-03</td>
+          <td class="hide-m">$151.00</td>
+          <td class="hide-m">$151.14</td>
+          <td class="pos"><b>+0.09%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill m" title="trail">trail</span></td>
+        </tr><tr>
+          <td><b>CRM</b></td>
+          <td class="m hide-m">02-26</td>
+          <td class="m hide-m">02-27</td>
+          <td class="hide-m">$196.76</td>
+          <td class="hide-m">$196.76</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr></tbody>
   </table>
   </details>
 </div>
@@ -407,11 +608,11 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <div class="section-card">
-  <details>
+  <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setup</span><span class="sc-preview"><b>SMH</b> <span style="color:#94a3b8">91</span></span></span>
       <a href="/scanner/20260417/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <table class="t" style="margin-top:.75rem">
@@ -430,12 +631,12 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="perf-chart" id="chart-dynamic"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:#dc2626">0%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">0%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">0%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">0x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">0</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">0d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">+53.23%</span><span class="ps-l">Total Return</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">-7.59%</span><span class="ps-l">Max Drawdown</span></div>
+    <div class="ps"><span class="ps-v">57.1%</span><span class="ps-l">Win Rate</span></div>
+    <div class="ps"><span class="ps-v">18.74x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">21</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">2.7d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
@@ -446,43 +647,250 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders">
+<div class="section-card ">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">0/1 open — <b>1 slot free</b> — place at next open</span>
+    <h3><i class="fas fa-eye"></i> On Watch</h3>
+    <span class="sc-meta">1/1 open — portfolio full</span>
   </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
-    <tbody><tr>
-      <td><b>SMH</b> <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SMH&ty=c&ta=1&p=d&s=l" alt="SMH" class="fv-thumb" onclick="fvOpen('SMH')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#059669">91</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$454.50</b></td>
+  
+  <details open>
+    <summary class="watch-summary">On watch — 1 signal (portfolio full, valid until Tue, Apr 21)</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <tbody><tr style="opacity:0.75">
+      <td><b>SMH</b></td>
+      <td><span class="pill-score" style="background:#94a3b8">91</span></td>
+      <td class="m hide-m">Breakout</td><td class="m">$454.50</td>
       <td class="neg">$440.87</td>
       <td class="pos">$480.00<span class="hide-m"> / $505.00</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">100%</td>
-      <td class="hide-m"><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">At 52W high, TSMC BMO catalyst for ATH breakout, +147% 12mo trend</div></td></tr></tbody>
-  </table>
-  
+      <td class="am hide-m">1:2.0</td>
+      <td><span class="pill m">Valid until Tue, Apr 21</span></td>
+    </tr></tbody>
+    </table>
+  </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">0/1</span></h3>
-    
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">1/1</span></h3>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+0.5%</b></span>
   </div>
-  <p class="empty"><i class="fas fa-inbox"></i>No active positions</p>
+  
+  <div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -3.0%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +0.5%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +13.5%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:21.1%"></div>
+    <div class="scenario-fill-good" style="width:78.9%"></div>
+    <div class="scenario-cursor" style="left:21.1%"></div>
+  </div>
+</div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <tbody><tr><td><b>NVDA</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NVDA&ty=c&ta=1&p=d&s=l" alt="NVDA" class="fv-thumb" onclick="fvOpen('NVDA')"></td><td class="m hide-m">04-16</td><td class="hide-m">$197.43</td><td class="hide-m">$198.35</td><td class="pos"><b>+0.47%</b></td><td class="neg hide-m">$191.51</td><td class="pos hide-m">$224.00</td><td class="am">2d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">NVIDIA surged +5.59% to $174.40 on massive volume (225M shares), driven by Iran de-escalation lifting risk appetite and the $2B Marvell…</div></td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">0 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">20 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
-    <tbody></tbody>
+    <tbody><tr>
+          <td><b>NVDA</b></td>
+          <td class="m hide-m">04-16</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$197.43</td>
+          <td class="hide-m">$198.35</td>
+          <td class="pos"><b>+0.47%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill pending" title="Pending (1d/3d)">Pending (1d/3d)</span></td>
+        </tr><tr>
+          <td><b>AMAT</b></td>
+          <td class="m hide-m">04-15</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$389.21</td>
+          <td class="hide-m">$389.21</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>GS</b></td>
+          <td class="m hide-m">04-13</td>
+          <td class="m hide-m">04-15</td>
+          <td class="hide-m">$875.55</td>
+          <td class="hide-m">$922.55</td>
+          <td class="pos"><b>+5.37%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>SMH</b></td>
+          <td class="m hide-m">04-10</td>
+          <td class="m hide-m">04-13</td>
+          <td class="hide-m">$434.45</td>
+          <td class="hide-m">$434.45</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>GDX</b></td>
+          <td class="m hide-m">04-07</td>
+          <td class="m hide-m">04-10</td>
+          <td class="hide-m">$93.69</td>
+          <td class="hide-m">$99.39</td>
+          <td class="pos"><b>+6.08%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>GDX</b></td>
+          <td class="m hide-m">04-06</td>
+          <td class="m hide-m">04-07</td>
+          <td class="hide-m">$94.26</td>
+          <td class="hide-m">$94.26</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>SHEL</b></td>
+          <td class="m hide-m">04-02</td>
+          <td class="m hide-m">04-06</td>
+          <td class="hide-m">$93.71</td>
+          <td class="hide-m">$93.71</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>BA</b></td>
+          <td class="m hide-m">04-01</td>
+          <td class="m hide-m">04-02</td>
+          <td class="hide-m">$203.50</td>
+          <td class="hide-m">$203.50</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>CF</b></td>
+          <td class="m hide-m">03-31</td>
+          <td class="m hide-m">03-31</td>
+          <td class="hide-m">$135.91</td>
+          <td class="hide-m">$131.83</td>
+          <td class="neg"><b>-3%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>HAL</b></td>
+          <td class="m hide-m">03-26</td>
+          <td class="m hide-m">03-31</td>
+          <td class="hide-m">$38.87</td>
+          <td class="hide-m">$39.21</td>
+          <td class="pos"><b>+0.87%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill m" title="trail">trail</span></td>
+        </tr><tr>
+          <td><b>EOG</b></td>
+          <td class="m hide-m">03-23</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$135.85</td>
+          <td class="hide-m">$146.35</td>
+          <td class="pos"><b>+7.73%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>DAWN</b></td>
+          <td class="m hide-m">03-18</td>
+          <td class="m hide-m">03-23</td>
+          <td class="hide-m">$21.31</td>
+          <td class="hide-m">$21.36</td>
+          <td class="pos"><b>+0.26%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>CVX</b></td>
+          <td class="m hide-m">03-13</td>
+          <td class="m hide-m">03-18</td>
+          <td class="hide-m">$196.00</td>
+          <td class="hide-m">$198.61</td>
+          <td class="pos"><b>+1.33%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>DVN</b></td>
+          <td class="m hide-m">03-12</td>
+          <td class="m hide-m">03-13</td>
+          <td class="hide-m">$45.70</td>
+          <td class="hide-m">$45.70</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>ADM</b></td>
+          <td class="m hide-m">03-10</td>
+          <td class="m hide-m">03-12</td>
+          <td class="hide-m">$68.49</td>
+          <td class="hide-m">$72.60</td>
+          <td class="pos"><b>+6%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>KR</b></td>
+          <td class="m hide-m">03-06</td>
+          <td class="m hide-m">03-10</td>
+          <td class="hide-m">$71.65</td>
+          <td class="hide-m">$71.89</td>
+          <td class="pos"><b>+0.33%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill m" title="trail">trail</span></td>
+        </tr><tr>
+          <td><b>USO</b></td>
+          <td class="m hide-m">03-05</td>
+          <td class="m hide-m">03-06</td>
+          <td class="hide-m">$94.46</td>
+          <td class="hide-m">$108.71</td>
+          <td class="pos"><b>+15.09%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 2 hit">TP2 ✓</span></td>
+        </tr><tr>
+          <td><b>SAP</b></td>
+          <td class="m hide-m">03-03</td>
+          <td class="m hide-m">03-05</td>
+          <td class="hide-m">$187.94</td>
+          <td class="hide-m">$202.25</td>
+          <td class="pos"><b>+6.14%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill m" title="Rotated out">Rotated</span></td>
+        </tr><tr>
+          <td><b>ATI</b></td>
+          <td class="m hide-m">03-02</td>
+          <td class="m hide-m">03-03</td>
+          <td class="hide-m">$163.30</td>
+          <td class="hide-m">$163.30</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr><tr>
+          <td><b>LMT</b></td>
+          <td class="m hide-m">02-27</td>
+          <td class="m hide-m">03-02</td>
+          <td class="hide-m">$648.09</td>
+          <td class="hide-m">$690.59</td>
+          <td class="pos"><b>+6.56%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>SAP</b></td>
+          <td class="m hide-m">02-26</td>
+          <td class="m hide-m">02-27</td>
+          <td class="hide-m">$202.36</td>
+          <td class="hide-m">$202.36</td>
+          <td class="m"><b>0%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill m" title="breakeven">breakeven</span></td>
+        </tr></tbody>
   </table>
   </details>
 </div>
@@ -519,11 +927,11 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <div class="section-card">
-  <details>
+  <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setup</span><span class="sc-preview"><b>AVGO</b> <span style="color:#94a3b8">93</span></span></span>
       <a href="/scanner/20260417/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <table class="t" style="margin-top:.75rem">
@@ -542,12 +950,12 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="perf-chart" id="chart-balanced"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:#059669">0%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">0%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">0%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">0x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">0</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">0d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v" style="color:#059669">+32.98%</span><span class="ps-l">Total Return</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">-4.38%</span><span class="ps-l">Max Drawdown</span></div>
+    <div class="ps"><span class="ps-v">50%</span><span class="ps-l">Win Rate</span></div>
+    <div class="ps"><span class="ps-v">2.63x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">14</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">3.5d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
@@ -558,43 +966,187 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders">
+<div class="section-card ">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">0/1 open — <b>1 slot free</b> — place at next open</span>
+    <h3><i class="fas fa-eye"></i> On Watch</h3>
+    <span class="sc-meta">1/1 open — portfolio full</span>
   </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
-    <tbody><tr>
-      <td><b>AVGO</b> <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AVGO&ty=c&ta=1&p=d&s=l" alt="AVGO" class="fv-thumb" onclick="fvOpen('AVGO')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#059669">93</span></td>
-      <td class="m hide-m">Momentum</td><td><b>$397.00</b></td>
+  
+  <details open>
+    <summary class="watch-summary">On watch — 1 signal (portfolio full, valid until Tue, Apr 21)</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <tbody><tr style="opacity:0.75">
+      <td><b>AVGO</b></td>
+      <td><span class="pill-score" style="background:#94a3b8">93</span></td>
+      <td class="m hide-m">Momentum</td><td class="m">$397.00</td>
       <td class="neg">$378.00</td>
       <td class="pos">$418.00<span class="hide-m"> / $440.00</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">100%</td>
-      <td class="hide-m"><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">AI infrastructure leader, TSMC earnings catalyst, fwd PE 22x cheap for AI growth</div></td></tr></tbody>
-  </table>
-  
+      <td class="am hide-m">1:2.0</td>
+      <td><span class="pill m">Valid until Tue, Apr 21</span></td>
+    </tr></tbody>
+    </table>
+  </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">0/1</span></h3>
-    
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">1/1</span></h3>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+5.0%</b></span>
   </div>
-  <p class="empty"><i class="fas fa-inbox"></i>No active positions</p>
+  
+  <div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -3.4%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +5.0%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +12.8%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:51.8%"></div>
+    <div class="scenario-fill-good" style="width:48.2%"></div>
+    <div class="scenario-cursor" style="left:51.8%"></div>
+  </div>
+</div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <tbody><tr><td><b>AMD</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=AMD&ty=c&ta=1&p=d&s=l" alt="AMD" class="fv-thumb" onclick="fvOpen('AMD')"></td><td class="m hide-m">04-16</td><td class="hide-m">$264.99</td><td class="hide-m">$278.26</td><td class="pos"><b>+5.01%</b></td><td class="neg hide-m">$255.99</td><td class="pos hide-m">$298.99</td><td class="m">7d</td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">0 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">13 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
-    <tbody></tbody>
+    <tbody><tr>
+          <td><b>AMD</b></td>
+          <td class="m hide-m">04-16</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$264.99</td>
+          <td class="hide-m">$278.26</td>
+          <td class="pos"><b>+5.01%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill pending" title="Pending (1d/8d)">Pending (1d/8d)</span></td>
+        </tr><tr>
+          <td><b>CAT</b></td>
+          <td class="m hide-m">04-15</td>
+          <td class="m hide-m">04-15</td>
+          <td class="hide-m">$787.10</td>
+          <td class="hide-m">$762.63</td>
+          <td class="neg"><b>-3.11%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>ADI</b></td>
+          <td class="m hide-m">04-14</td>
+          <td class="m hide-m">04-15</td>
+          <td class="hide-m">$352.43</td>
+          <td class="hide-m">$342.13</td>
+          <td class="neg"><b>-2.92%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>AMZN</b></td>
+          <td class="m hide-m">04-13</td>
+          <td class="m hide-m">04-14</td>
+          <td class="hide-m">$237.45</td>
+          <td class="hide-m">$251.45</td>
+          <td class="pos"><b>+5.9%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>NVDA</b></td>
+          <td class="m hide-m">04-01</td>
+          <td class="m hide-m">04-13</td>
+          <td class="hide-m">$176.00</td>
+          <td class="hide-m">$189.31</td>
+          <td class="pos"><b>+7.56%</b></td>
+          <td class="m hide-m">8d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>XOM</b></td>
+          <td class="m hide-m">03-31</td>
+          <td class="m hide-m">03-31</td>
+          <td class="hide-m">$172.67</td>
+          <td class="hide-m">$168.35</td>
+          <td class="neg"><b>-2.5%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>LNG</b></td>
+          <td class="m hide-m">03-30</td>
+          <td class="m hide-m">03-31</td>
+          <td class="hide-m">$300.89</td>
+          <td class="hide-m">$289.56</td>
+          <td class="neg"><b>-3.77%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>CF</b></td>
+          <td class="m hide-m">03-26</td>
+          <td class="m hide-m">03-30</td>
+          <td class="hide-m">$130.12</td>
+          <td class="hide-m">$139.62</td>
+          <td class="pos"><b>+7.3%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>OXY</b></td>
+          <td class="m hide-m">03-23</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$58.50</td>
+          <td class="hide-m">$64.25</td>
+          <td class="pos"><b>+9.83%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>TTE</b></td>
+          <td class="m hide-m">03-20</td>
+          <td class="m hide-m">03-23</td>
+          <td class="hide-m">$89.29</td>
+          <td class="hide-m">$87.24</td>
+          <td class="neg"><b>-2.3%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>COP</b></td>
+          <td class="m hide-m">03-13</td>
+          <td class="m hide-m">03-20</td>
+          <td class="hide-m">$119.68</td>
+          <td class="hide-m">$128.93</td>
+          <td class="pos"><b>+6.05%</b></td>
+          <td class="m hide-m">9d</td>
+          <td><span class="pill m" title="Rotated out">Rotated</span></td>
+        </tr><tr>
+          <td><b>MOS</b></td>
+          <td class="m hide-m">03-12</td>
+          <td class="m hide-m">03-13</td>
+          <td class="hide-m">$31.05</td>
+          <td class="hide-m">$29.58</td>
+          <td class="neg"><b>-4.75%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>BBIO</b></td>
+          <td class="m hide-m">03-10</td>
+          <td class="m hide-m">03-10</td>
+          <td class="hide-m">$66.12</td>
+          <td class="hide-m">$73.80</td>
+          <td class="pos"><b>+11.62%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>CRM</b></td>
+          <td class="m hide-m">02-26</td>
+          <td class="m hide-m">03-10</td>
+          <td class="hide-m">$196.76</td>
+          <td class="hide-m">$194.91</td>
+          <td class="neg"><b>-0.94%</b></td>
+          <td class="m hide-m">9d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr></tbody>
   </table>
   </details>
 </div>
@@ -631,11 +1183,11 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <div class="section-card">
-  <details>
+  <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setup</span><span class="sc-preview"><b>SMH</b> <span style="color:#94a3b8">91</span></span></span>
       <a href="/scanner/20260417/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <table class="t" style="margin-top:.75rem">
@@ -654,12 +1206,12 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="perf-chart" id="chart-secured"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:#2563eb">0%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">0%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">0%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">0x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">0</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">0d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v" style="color:#2563eb">+22.94%</span><span class="ps-l">Total Return</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">-4.59%</span><span class="ps-l">Max Drawdown</span></div>
+    <div class="ps"><span class="ps-v">65.2%</span><span class="ps-l">Win Rate</span></div>
+    <div class="ps"><span class="ps-v">3.86x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">23</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">5.1d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
@@ -670,43 +1222,268 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders">
+<div class="section-card ">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">0/3 open — <b>3 slots free</b> — place at next open</span>
+    <h3><i class="fas fa-eye"></i> On Watch</h3>
+    <span class="sc-meta">3/3 open — portfolio full</span>
   </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
-    <tbody><tr>
-      <td><b>SMH</b> <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SMH&ty=c&ta=1&p=d&s=l" alt="SMH" class="fv-thumb" onclick="fvOpen('SMH')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#059669">91</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$454.50</b></td>
+  
+  <details open>
+    <summary class="watch-summary">On watch — 1 signal (portfolio full, valid until Tue, Apr 21)</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <tbody><tr style="opacity:0.75">
+      <td><b>SMH</b></td>
+      <td><span class="pill-score" style="background:#94a3b8">91</span></td>
+      <td class="m hide-m">Breakout</td><td class="m">$454.50</td>
       <td class="neg">$435.00</td>
       <td class="pos">$480.00<span class="hide-m"> / $505.00</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">33%</td>
-      <td class="hide-m"><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">At 52W high, TSMC BMO catalyst for ATH breakout, +147% 12mo trend</div></td></tr></tbody>
-  </table>
-  
+      <td class="am hide-m">1:2.0</td>
+      <td><span class="pill m">Valid until Tue, Apr 21</span></td>
+    </tr></tbody>
+    </table>
+  </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">0/3</span></h3>
-    
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">3/3</span></h3>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+1.6%</b></span>
   </div>
-  <p class="empty"><i class="fas fa-inbox"></i>No active positions</p>
+  
+  <div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -3.9%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +1.6%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +13.9%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:30.6%"></div>
+    <div class="scenario-fill-good" style="width:69.4%"></div>
+    <div class="scenario-cursor" style="left:30.6%"></div>
+  </div>
+</div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <tbody><tr><td><b>GDX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX')"></td><td class="m hide-m">04-07</td><td class="hide-m">$93.69</td><td class="hide-m">$97.66</td><td class="pos"><b>+4.24%</b></td><td class="neg hide-m">$89.01</td><td class="pos hide-m">$112.44</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GDX provides leveraged exposure (2–3x) to gold at $4,682/oz. Today's +9.07% while spot gold is flat is the textbook mining leverage…</div></td></tr><tr><td><b>NVDA</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NVDA&ty=c&ta=1&p=d&s=l" alt="NVDA" class="fv-thumb" onclick="fvOpen('NVDA')"></td><td class="m hide-m">04-16</td><td class="hide-m">$197.43</td><td class="hide-m">$198.35</td><td class="pos"><b>+0.47%</b></td><td class="neg hide-m">$189.00</td><td class="pos hide-m">$224.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">NVIDIA surged +5.59% to $174.40 on massive volume (225M shares), driven by Iran de-escalation lifting risk appetite and the $2B Marvell…</div></td></tr><tr><td><b>JPM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=JPM&ty=c&ta=1&p=d&s=l" alt="JPM" class="fv-thumb" onclick="fvOpen('JPM')"></td><td class="m hide-m">04-14</td><td class="hide-m">$309.82</td><td class="hide-m">$309.95</td><td class="pos"><b>+0.04%</b></td><td class="neg hide-m">$302.00</td><td class="pos hide-m">$337.00</td><td class="m">8d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">JPMorgan at $294.16 (+3.66%) is testing a critical confluence zone: MA50 at $299.72 and MA200 at $301.99 are just overhead. A breakout…</div></td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">0 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">20 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
-    <tbody></tbody>
+    <tbody><tr>
+          <td><b>NVDA</b></td>
+          <td class="m hide-m">04-16</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$197.43</td>
+          <td class="hide-m">$198.35</td>
+          <td class="pos"><b>+0.47%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
+        </tr><tr>
+          <td><b>JPM</b></td>
+          <td class="m hide-m">04-14</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$309.82</td>
+          <td class="hide-m">$309.95</td>
+          <td class="pos"><b>+0.04%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pending" title="Pending (3d/10d)">Pending (3d/10d)</span></td>
+        </tr><tr>
+          <td><b>RCL</b></td>
+          <td class="m hide-m">04-09</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$274.39</td>
+          <td class="hide-m">$286.69</td>
+          <td class="pos"><b>+4.48%</b></td>
+          <td class="m hide-m">6d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>AVGO</b></td>
+          <td class="m hide-m">04-08</td>
+          <td class="m hide-m">04-08</td>
+          <td class="hide-m">$351.75</td>
+          <td class="hide-m">$345.75</td>
+          <td class="neg"><b>-1.71%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>GDX</b></td>
+          <td class="m hide-m">04-07</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$93.69</td>
+          <td class="hide-m">$97.66</td>
+          <td class="pos"><b>+4.24%</b></td>
+          <td class="m hide-m">8d</td>
+          <td><span class="pill pending" title="Pending (8d/10d)">Pending (8d/10d)</span></td>
+        </tr><tr>
+          <td><b>SHEL</b></td>
+          <td class="m hide-m">04-02</td>
+          <td class="m hide-m">04-08</td>
+          <td class="hide-m">$93.71</td>
+          <td class="hide-m">$91.78</td>
+          <td class="neg"><b>-2.06%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>BA</b></td>
+          <td class="m hide-m">04-01</td>
+          <td class="m hide-m">04-14</td>
+          <td class="hide-m">$203.50</td>
+          <td class="hide-m">$224.50</td>
+          <td class="pos"><b>+10.32%</b></td>
+          <td class="m hide-m">9d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>MPC</b></td>
+          <td class="m hide-m">03-27</td>
+          <td class="m hide-m">04-01</td>
+          <td class="hide-m">$247.33</td>
+          <td class="hide-m">$238.85</td>
+          <td class="neg"><b>-3.43%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>HAL</b></td>
+          <td class="m hide-m">03-26</td>
+          <td class="m hide-m">04-01</td>
+          <td class="hide-m">$38.87</td>
+          <td class="hide-m">$37.66</td>
+          <td class="neg"><b>-3.11%</b></td>
+          <td class="m hide-m">5d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>TTE</b></td>
+          <td class="m hide-m">03-24</td>
+          <td class="m hide-m">04-07</td>
+          <td class="hide-m">$88.64</td>
+          <td class="hide-m">$91.37</td>
+          <td class="pos"><b>+3.08%</b></td>
+          <td class="m hide-m">10d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>EOG</b></td>
+          <td class="m hide-m">03-23</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$135.85</td>
+          <td class="hide-m">$146.35</td>
+          <td class="pos"><b>+7.73%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>RTX</b></td>
+          <td class="m hide-m">03-20</td>
+          <td class="m hide-m">03-23</td>
+          <td class="hide-m">$201.26</td>
+          <td class="hide-m">$195.05</td>
+          <td class="neg"><b>-3.09%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>FANG</b></td>
+          <td class="m hide-m">03-17</td>
+          <td class="m hide-m">03-24</td>
+          <td class="hide-m">$183.04</td>
+          <td class="hide-m">$195.54</td>
+          <td class="pos"><b>+6.83%</b></td>
+          <td class="m hide-m">6d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>DVN</b></td>
+          <td class="m hide-m">03-12</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$45.70</td>
+          <td class="hide-m">$51.20</td>
+          <td class="pos"><b>+12.04%</b></td>
+          <td class="m hide-m">11d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>ADM</b></td>
+          <td class="m hide-m">03-10</td>
+          <td class="m hide-m">03-12</td>
+          <td class="hide-m">$68.49</td>
+          <td class="hide-m">$72.60</td>
+          <td class="pos"><b>+6%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>IOT</b></td>
+          <td class="m hide-m">03-09</td>
+          <td class="m hide-m">03-10</td>
+          <td class="hide-m">$35.20</td>
+          <td class="hide-m">$33.44</td>
+          <td class="neg"><b>-5%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>KR</b></td>
+          <td class="m hide-m">03-06</td>
+          <td class="m hide-m">03-20</td>
+          <td class="hide-m">$71.65</td>
+          <td class="hide-m">$73.20</td>
+          <td class="pos"><b>+2.16%</b></td>
+          <td class="m hide-m">11d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>USO</b></td>
+          <td class="m hide-m">03-05</td>
+          <td class="m hide-m">03-06</td>
+          <td class="hide-m">$94.46</td>
+          <td class="hide-m">$108.71</td>
+          <td class="pos"><b>+15.09%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 2 hit">TP2 ✓</span></td>
+        </tr><tr>
+          <td><b>CHRD</b></td>
+          <td class="m hide-m">03-04</td>
+          <td class="m hide-m">03-09</td>
+          <td class="hide-m">$110.39</td>
+          <td class="hide-m">$124.39</td>
+          <td class="pos"><b>+12.68%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>SAP</b></td>
+          <td class="m hide-m">03-03</td>
+          <td class="m hide-m">03-17</td>
+          <td class="hide-m">$187.94</td>
+          <td class="hide-m">$190.12</td>
+          <td class="pos"><b>+1.16%</b></td>
+          <td class="m hide-m">11d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>ATI</b></td>
+          <td class="m hide-m">03-02</td>
+          <td class="m hide-m">03-03</td>
+          <td class="hide-m">$163.30</td>
+          <td class="hide-m">$158.55</td>
+          <td class="neg"><b>-2.91%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>LMT</b></td>
+          <td class="m hide-m">02-27</td>
+          <td class="m hide-m">03-02</td>
+          <td class="hide-m">$648.09</td>
+          <td class="hide-m">$690.59</td>
+          <td class="pos"><b>+6.56%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>SAP</b></td>
+          <td class="m hide-m">02-26</td>
+          <td class="m hide-m">03-02</td>
+          <td class="hide-m">$202.36</td>
+          <td class="hide-m">$196.77</td>
+          <td class="neg"><b>-2.76%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr></tbody>
   </table>
   </details>
 </div>
@@ -743,11 +1520,11 @@ details[open] summary::after{transform:rotate(90deg)}
   </details>
 </div>
 
-<!-- ══ 2. TODAY'S SIGNALS (context — collapsible) ══ -->
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <div class="section-card">
-  <details>
+  <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setups</span></span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">1 setup</span><span class="sc-preview"><b>SMH</b> <span style="color:#94a3b8">91</span></span></span>
       <a href="/scanner/20260417/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <table class="t" style="margin-top:.75rem">
@@ -766,12 +1543,12 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="perf-chart" id="chart-fortress"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:#6d28d9">0%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">0%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">0%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">0x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">0</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">0d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps"><span class="ps-v" style="color:#6d28d9">+11.47%</span><span class="ps-l">Total Return</span></div>
+    <div class="ps"><span class="ps-v" style="color:#dc2626">-2.29%</span><span class="ps-l">Max Drawdown</span></div>
+    <div class="ps"><span class="ps-v">65.2%</span><span class="ps-l">Win Rate</span></div>
+    <div class="ps"><span class="ps-v">3.86x</span><span class="ps-l">Profit Factor</span></div>
+    <div class="ps"><span class="ps-v">23</span><span class="ps-l">Closed Trades</span></div>
+    <div class="ps"><span class="ps-v">5.1d</span><span class="ps-l">Avg Hold</span></div>
   </div>
 </div>
 
@@ -782,43 +1559,268 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders">
+<div class="section-card ">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
-    <span class="sc-meta">0/3 open — <b>3 slots free</b> — place at next open</span>
+    <h3><i class="fas fa-eye"></i> On Watch</h3>
+    <span class="sc-meta">3/3 open — portfolio full</span>
   </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
-    <tbody><tr>
-      <td><b>SMH</b> <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SMH&ty=c&ta=1&p=d&s=l" alt="SMH" class="fv-thumb" onclick="fvOpen('SMH')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#059669">91</span></td>
-      <td class="m hide-m">Breakout</td><td><b>$454.50</b></td>
+  
+  <details open>
+    <summary class="watch-summary">On watch — 1 signal (portfolio full, valid until Tue, Apr 21)</summary>
+    <table class="t" style="margin-top:.5rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+      <tbody><tr style="opacity:0.75">
+      <td><b>SMH</b></td>
+      <td><span class="pill-score" style="background:#94a3b8">91</span></td>
+      <td class="m hide-m">Breakout</td><td class="m">$454.50</td>
       <td class="neg">$435.00</td>
       <td class="pos">$480.00<span class="hide-m"> / $505.00</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">17%</td>
-      <td class="hide-m"><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">At 52W high, TSMC BMO catalyst for ATH breakout, +147% 12mo trend</div></td></tr></tbody>
-  </table>
-  
+      <td class="am hide-m">1:2.0</td>
+      <td><span class="pill m">Valid until Tue, Apr 21</span></td>
+    </tr></tbody>
+    </table>
+  </details>
 </div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">0/3</span></h3>
-    
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">3/3</span></h3>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+1.6%</b></span>
   </div>
-  <p class="empty"><i class="fas fa-inbox"></i>No active positions</p>
+  
+  <div class="scenario-bar-wrap">
+  <div class="scenario-labels">
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -2.0%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +0.8%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +7.2%</span>
+  </div>
+  <div class="scenario-bar">
+    <div class="scenario-fill-bad" style="width:30.6%"></div>
+    <div class="scenario-fill-good" style="width:69.4%"></div>
+    <div class="scenario-cursor" style="left:30.6%"></div>
+  </div>
+</div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <tbody><tr><td><b>GDX</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GDX&ty=c&ta=1&p=d&s=l" alt="GDX" class="fv-thumb" onclick="fvOpen('GDX')"></td><td class="m hide-m">04-07</td><td class="hide-m">$93.69</td><td class="hide-m">$97.66</td><td class="pos"><b>+4.24%</b></td><td class="neg hide-m">$89.01</td><td class="pos hide-m">$112.44</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">GDX provides leveraged exposure (2–3x) to gold at $4,682/oz. Today's +9.07% while spot gold is flat is the textbook mining leverage…</div></td></tr><tr><td><b>NVDA</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NVDA&ty=c&ta=1&p=d&s=l" alt="NVDA" class="fv-thumb" onclick="fvOpen('NVDA')"></td><td class="m hide-m">04-16</td><td class="hide-m">$197.43</td><td class="hide-m">$198.35</td><td class="pos"><b>+0.47%</b></td><td class="neg hide-m">$189.00</td><td class="pos hide-m">$224.00</td><td class="m">9d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">NVIDIA surged +5.59% to $174.40 on massive volume (225M shares), driven by Iran de-escalation lifting risk appetite and the $2B Marvell…</div></td></tr><tr><td><b>JPM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=JPM&ty=c&ta=1&p=d&s=l" alt="JPM" class="fv-thumb" onclick="fvOpen('JPM')"></td><td class="m hide-m">04-14</td><td class="hide-m">$309.82</td><td class="hide-m">$309.95</td><td class="pos"><b>+0.04%</b></td><td class="neg hide-m">$302.00</td><td class="pos hide-m">$337.00</td><td class="m">8d</td></tr><tr class="thesis-row"><td colspan="9"><div class="thesis-text">JPMorgan at $294.16 (+3.66%) is testing a critical confluence zone: MA50 at $299.72 and MA200 at $301.99 are just overhead. A breakout…</div></td></tr></tbody>
+  </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">0 closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">20 closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
-    <tbody></tbody>
+    <tbody><tr>
+          <td><b>NVDA</b></td>
+          <td class="m hide-m">04-16</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$197.43</td>
+          <td class="hide-m">$198.35</td>
+          <td class="pos"><b>+0.47%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill pending" title="Pending (1d/10d)">Pending (1d/10d)</span></td>
+        </tr><tr>
+          <td><b>JPM</b></td>
+          <td class="m hide-m">04-14</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$309.82</td>
+          <td class="hide-m">$309.95</td>
+          <td class="pos"><b>+0.04%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pending" title="Pending (3d/10d)">Pending (3d/10d)</span></td>
+        </tr><tr>
+          <td><b>RCL</b></td>
+          <td class="m hide-m">04-09</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$274.39</td>
+          <td class="hide-m">$286.69</td>
+          <td class="pos"><b>+4.48%</b></td>
+          <td class="m hide-m">6d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>AVGO</b></td>
+          <td class="m hide-m">04-08</td>
+          <td class="m hide-m">04-08</td>
+          <td class="hide-m">$351.75</td>
+          <td class="hide-m">$345.75</td>
+          <td class="neg"><b>-1.71%</b></td>
+          <td class="m hide-m">1d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>GDX</b></td>
+          <td class="m hide-m">04-07</td>
+          <td class="m hide-m">04-16</td>
+          <td class="hide-m">$93.69</td>
+          <td class="hide-m">$97.66</td>
+          <td class="pos"><b>+4.24%</b></td>
+          <td class="m hide-m">8d</td>
+          <td><span class="pill pending" title="Pending (8d/10d)">Pending (8d/10d)</span></td>
+        </tr><tr>
+          <td><b>SHEL</b></td>
+          <td class="m hide-m">04-02</td>
+          <td class="m hide-m">04-08</td>
+          <td class="hide-m">$93.71</td>
+          <td class="hide-m">$91.78</td>
+          <td class="neg"><b>-2.06%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>BA</b></td>
+          <td class="m hide-m">04-01</td>
+          <td class="m hide-m">04-14</td>
+          <td class="hide-m">$203.50</td>
+          <td class="hide-m">$224.50</td>
+          <td class="pos"><b>+10.32%</b></td>
+          <td class="m hide-m">9d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>MPC</b></td>
+          <td class="m hide-m">03-27</td>
+          <td class="m hide-m">04-01</td>
+          <td class="hide-m">$247.33</td>
+          <td class="hide-m">$238.85</td>
+          <td class="neg"><b>-3.43%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>HAL</b></td>
+          <td class="m hide-m">03-26</td>
+          <td class="m hide-m">04-01</td>
+          <td class="hide-m">$38.87</td>
+          <td class="hide-m">$37.66</td>
+          <td class="neg"><b>-3.11%</b></td>
+          <td class="m hide-m">5d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>TTE</b></td>
+          <td class="m hide-m">03-24</td>
+          <td class="m hide-m">04-07</td>
+          <td class="hide-m">$88.64</td>
+          <td class="hide-m">$91.37</td>
+          <td class="pos"><b>+3.08%</b></td>
+          <td class="m hide-m">10d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>EOG</b></td>
+          <td class="m hide-m">03-23</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$135.85</td>
+          <td class="hide-m">$146.35</td>
+          <td class="pos"><b>+7.73%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>RTX</b></td>
+          <td class="m hide-m">03-20</td>
+          <td class="m hide-m">03-23</td>
+          <td class="hide-m">$201.26</td>
+          <td class="hide-m">$195.05</td>
+          <td class="neg"><b>-3.09%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>FANG</b></td>
+          <td class="m hide-m">03-17</td>
+          <td class="m hide-m">03-24</td>
+          <td class="hide-m">$183.04</td>
+          <td class="hide-m">$195.54</td>
+          <td class="pos"><b>+6.83%</b></td>
+          <td class="m hide-m">6d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>DVN</b></td>
+          <td class="m hide-m">03-12</td>
+          <td class="m hide-m">03-26</td>
+          <td class="hide-m">$45.70</td>
+          <td class="hide-m">$51.20</td>
+          <td class="pos"><b>+12.04%</b></td>
+          <td class="m hide-m">11d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>ADM</b></td>
+          <td class="m hide-m">03-10</td>
+          <td class="m hide-m">03-12</td>
+          <td class="hide-m">$68.49</td>
+          <td class="hide-m">$72.60</td>
+          <td class="pos"><b>+6%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>IOT</b></td>
+          <td class="m hide-m">03-09</td>
+          <td class="m hide-m">03-10</td>
+          <td class="hide-m">$35.20</td>
+          <td class="hide-m">$33.44</td>
+          <td class="neg"><b>-5%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>KR</b></td>
+          <td class="m hide-m">03-06</td>
+          <td class="m hide-m">03-20</td>
+          <td class="hide-m">$71.65</td>
+          <td class="hide-m">$73.20</td>
+          <td class="pos"><b>+2.16%</b></td>
+          <td class="m hide-m">11d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>USO</b></td>
+          <td class="m hide-m">03-05</td>
+          <td class="m hide-m">03-06</td>
+          <td class="hide-m">$94.46</td>
+          <td class="hide-m">$108.71</td>
+          <td class="pos"><b>+15.09%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 2 hit">TP2 ✓</span></td>
+        </tr><tr>
+          <td><b>CHRD</b></td>
+          <td class="m hide-m">03-04</td>
+          <td class="m hide-m">03-09</td>
+          <td class="hide-m">$110.39</td>
+          <td class="hide-m">$124.39</td>
+          <td class="pos"><b>+12.68%</b></td>
+          <td class="m hide-m">4d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>SAP</b></td>
+          <td class="m hide-m">03-03</td>
+          <td class="m hide-m">03-17</td>
+          <td class="hide-m">$187.94</td>
+          <td class="hide-m">$190.12</td>
+          <td class="pos"><b>+1.16%</b></td>
+          <td class="m hide-m">11d</td>
+          <td><span class="pill am" title="Expired">Expired</span></td>
+        </tr><tr>
+          <td><b>ATI</b></td>
+          <td class="m hide-m">03-02</td>
+          <td class="m hide-m">03-03</td>
+          <td class="hide-m">$163.30</td>
+          <td class="hide-m">$158.55</td>
+          <td class="neg"><b>-2.91%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr><tr>
+          <td><b>LMT</b></td>
+          <td class="m hide-m">02-27</td>
+          <td class="m hide-m">03-02</td>
+          <td class="hide-m">$648.09</td>
+          <td class="hide-m">$690.59</td>
+          <td class="pos"><b>+6.56%</b></td>
+          <td class="m hide-m">2d</td>
+          <td><span class="pill pos" title="Target 1 hit">TP1 ✓</span></td>
+        </tr><tr>
+          <td><b>SAP</b></td>
+          <td class="m hide-m">02-26</td>
+          <td class="m hide-m">03-02</td>
+          <td class="hide-m">$202.36</td>
+          <td class="hide-m">$196.77</td>
+          <td class="neg"><b>-2.76%</b></td>
+          <td class="m hide-m">3d</td>
+          <td><span class="pill neg" title="Stop loss hit">SL ✗</span></td>
+        </tr></tbody>
   </table>
   </details>
 </div>
@@ -889,12 +1891,12 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js?v=1776406353266"></script>
-<script src="/assets/tag-renderer.js?v=1776406353266"></script>
-<script src="/assets/live-engine.js?v=1776406353266"></script>
-<script src="/assets/live-engine-ui.js?v=1776406353266"></script>
+<script src="/assets/core.js?v=1776413380253"></script>
+<script src="/assets/tag-renderer.js?v=1776413380253"></script>
+<script src="/assets/live-engine.js?v=1776413380253"></script>
+<script src="/assets/live-engine-ui.js?v=1776413380253"></script>
 <script>
-var _v='1776406353266';
+var _v='1776413380253';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
@@ -972,6 +1974,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   var VALID_MODES=['turbo','dynamic','balanced','secured','fortress'];
   var activeMode='balanced';
+  var modeCharts={"turbo":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,144.35,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21],"c":"#f59e0b"},"dynamic":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.47,135.85,136.08,138.53,140.63,141.13,143.23,147.43,144.44,139.84,143.19,140.66,141.31,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23],"c":"#dc2626"},"balanced":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16"],"v":[101.38,99,98.06,99.64,98.13,102.35,102.72,101.03,111.46,110.68,111.68,107.78,107.3,108.6,109.25,111.23,111.37,112.77,114.38,115.41,121.38,124.37,124.4,121.3,120.4,121.33,120.54,121.47,121.73,123.99,125.03,127.72,129.13,132.91,128.93,132.98],"c":"#059669"},"secured":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16"],"v":[100.38,100.38,101.9,101.78,102.74,105.68,112.32,111.53,110,109.86,112.24,112.48,112.56,113.44,114.04,114.83,114.37,114.53,117.27,117.71,119.25,121.24,119.97,119.39,117.7,118.62,116.65,119.42,119.35,120.82,120.97,121.07,122.26,123.38,121.86,122.94],"c":"#2563eb"},"fortress":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,108.33,109.71,109.68,110.41,110.49,110.54,111.13,111.69,110.93,111.47],"c":"#6d28d9"}};
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
     activeMode=id;
@@ -1044,7 +2047,6 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   setTimeout(updateLiveActions, 800);
-  var modeCharts={"turbo":{"d":[],"v":[],"c":"#f59e0b"},"dynamic":{"d":[],"v":[],"c":"#dc2626"},"balanced":{"d":[],"v":[],"c":"#059669"},"secured":{"d":[],"v":[],"c":"#2563eb"},"fortress":{"d":[],"v":[],"c":"#6d28d9"}};
   var tmLiveHTML={};
   function tmSaveLive(){
     document.querySelectorAll('.mode-panel').forEach(function(p){
@@ -1190,7 +2192,7 @@ document.addEventListener('DOMContentLoaded',function(){
         }
         if(d.signals&&d.signals.length>0){
           var sg=document.createElement('div'); sg.className='section-card'; sg.setAttribute('data-tm','1');
-          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\'s Signals <span class="count">'+d.signals.length+' setups</span></span></summary>'
+          var sgh='<details><summary class="sc-summary"><span class="sc-sum-title">Today\'s Signals <span class="count">'+d.signals.length+' setup'+(d.signals.length===1?'':'s')+'</span></span></summary>'
             +'<table class="t" style="margin-top:.6rem"><thead><tr><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead><tbody>';
           d.signals.forEach(function(s){
             var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
