@@ -551,9 +551,10 @@ async function notifyAll(modeId, alert) {
   const isCritical   = alert.critical;
   const color        = DISCORD_COLORS[alert.status] ?? 9807270; // grey default
 
-  // Build condensed 1-line summary for global channels
-  // Extract first non-empty line of alert text as summary
-  const summaryLine = alert.text.split('\n').find(l => l.trim().length > 0) || alert.text;
+  // Build condensed 2-line summary for global channels
+  // Include header (mode + status) AND ticker line (ticker + price)
+  const lines = alert.text.split('\n').filter(l => l.trim().length > 0);
+  const summaryLine = lines.slice(0, 2).join('\n') || alert.text;
   const discordFull = htmlToDiscord(alert.text);
   const discordSummary = htmlToDiscord(summaryLine);
 
@@ -634,7 +635,10 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
 
   // Determine status
   let status = 'OPEN';
-  if (dayLow <= currentStop || price <= currentStop) {
+  // Sanity check: only trust dayLow if it's within 15% of current price
+  // (prevents false SL triggers from stale/cross-day dayLow data)
+  const dayLowValid = dayLow > 0 && dayLow > price * 0.85;
+  if (price <= currentStop || (dayLowValid && dayLow <= currentStop)) {
     status = 'SL_HIT';
   } else if (tp2 && dayHigh >= tp2) {
     status = 'TP2_HIT';
@@ -711,7 +715,7 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
 
     const partialPct = Math.round((cfg.partialTPPct || 0.5) * 100);
     const actionMap = {
-      SL_HIT: `CLOSE at market — loss ${returnPct.toFixed(2)}%`,
+      SL_HIT: `CLOSE at market — loss ${((currentStop - entry) / entry * 100).toFixed(2)}%`,
       TP1_HIT: `CLOSE at market — profit +${returnPct.toFixed(2)}%`,
       TP1_PARTIAL: `Sell ${partialPct}% @ $${tp1.toFixed(2)} — move stop to entry, trail rest to TP2`,
       TP2_HIT: `CLOSE ALL — full target hit +${returnPct.toFixed(2)}%`,
@@ -957,14 +961,21 @@ class YahooStreamer {
       if (price <= 0) return;
 
       // Update live cache — merge with existing to preserve intraday high/low
+      // Reset dayHigh/dayLow when a new trading day starts (detect via date change)
       const prev = liveCache[ticker] || {};
+      const prevDate = prev.ts ? new Date(prev.ts).toDateString() : '';
+      const nowDate = new Date().toDateString();
+      const isNewDay = prevDate && prevDate !== nowDate;
+
       liveCache[ticker] = {
         price,
-        dayHigh: Math.max(msg.dayHigh || price, prev.dayHigh || price),
-        dayLow: msg.dayLow > 0
-          ? (prev.dayLow > 0 ? Math.min(msg.dayLow, prev.dayLow) : msg.dayLow)
-          : (prev.dayLow || price),
-        dayVolume: msg.dayVolume || prev.dayVolume || 0,
+        dayHigh: isNewDay ? (msg.dayHigh || price) : Math.max(msg.dayHigh || price, prev.dayHigh || price),
+        dayLow: isNewDay
+          ? (msg.dayLow > 0 ? msg.dayLow : price)
+          : (msg.dayLow > 0
+              ? (prev.dayLow > 0 ? Math.min(msg.dayLow, prev.dayLow) : msg.dayLow)
+              : (prev.dayLow || price)),
+        dayVolume: isNewDay ? (msg.dayVolume || 0) : (msg.dayVolume || prev.dayVolume || 0),
         changePercent: msg.changePercent || prev.changePercent || 0,
         marketHours: msg.marketHours,
         ts: Date.now(),
