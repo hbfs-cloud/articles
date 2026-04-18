@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en" data-tags="us,eu,formation,technique,trade-idea" data-tab="series">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scanner Strategy Guide — 5-Mode Portfolio System | DailyTickers</title>
+  <meta name="description" content="How to use the DailyTickers 5-mode portfolio system: Turbo, Dynamic, Balanced, Secured, Fortress. Parameters, regime filters, and configuration history.">
+  <meta property="og:title" content="Scanner Strategy Guide — 5-Mode Portfolio System | DailyTickers">
+  <meta property="og:description" content="Complete guide to the DailyTickers scanner strategy: 5 modes, regime-adaptive parameters, sweep-validated configs.">
+  <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+  <meta property="og:url" content="https://articles.dailytickers.com/series/scanner-strategy/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Charts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+  <!-- Base CSS -->
+  <link rel="stylesheet" href="/assets/report.css">
+
+  <style>
+/* AMBER THEME for Scanner Strategy */
+.hero-section { padding:4rem 2rem 3rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #fef3c7 40%, #f8fafc 100%); text-align:center; position:relative; overflow:hidden; }
+.hero-section::before { content:''; position:absolute; top:-60px; right:-60px; width:200px; height:200px; background:radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%); border-radius:50%; }
+.hero-section::after { content:''; position:absolute; bottom:-40px; left:-40px; width:160px; height:160px; background:radial-gradient(circle, rgba(251,191,36,0.1) 0%, transparent 70%); border-radius:50%; }
+.hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+.hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:1.5rem; }
+.hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+.hero-badge-amber { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
+.hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+.hero-badge-green { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+.hero-badge-red { background:rgba(220,38,38,0.1); color:#dc2626; border:1px solid rgba(220,38,38,0.2); }
+.hero-badge-purple { background:rgba(109,40,217,0.1); color:#6d28d9; border:1px solid rgba(109,40,217,0.2); }
+
+/* Update Banner */
+.update-banner { border-left:4px solid #f59e0b; background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-radius:0 12px 12px 0; padding:1.5rem 2rem; margin:0 0 2rem; }
+.update-banner h3 { color:#92400e; margin:0 0 0.75rem; font-size:1.05rem; }
+.update-banner p { color:#334155; font-size:0.9rem; line-height:1.6; margin:0 0 0.5rem; }
+.update-banner p:last-child { margin-bottom:0; }
+.update-banner strong { color:#92400e; }
+
+/* Mode cards */
+.mode-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:1.25rem; margin:2rem 0; }
+.mode-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid var(--mode-color, #94a3b8); transition:transform 0.2s, box-shadow 0.2s; }
+.mode-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.1); }
+.mode-card-header { display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem; }
+.mode-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; color:white; background:var(--mode-color, #94a3b8); }
+.mode-card h3 { margin:0; font-size:1.1rem; font-weight:800; color:#0f172a; }
+.mode-card .mode-risk { font-size:0.75rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; }
+.mode-tagline { font-size:0.875rem; color:#475569; line-height:1.5; margin:0 0 1.25rem; }
+.mode-params { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+.mode-param { background:#f8fafc; border:1px solid #f1f5f9; border-radius:8px; padding:0.5rem 0.75rem; }
+.mode-param .param-label { font-size:0.7rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:0.04em; }
+.mode-param .param-value { font-size:0.95rem; font-weight:800; color:#0f172a; }
+.mode-perf { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem; padding-top:1rem; border-top:1px solid #f1f5f9; }
+.mode-perf-badge { display:inline-flex; align-items:center; gap:0.3rem; padding:0.25rem 0.6rem; border-radius:99px; font-size:0.75rem; font-weight:700; }
+.perf-green { background:#dcfce7; color:#166534; }
+.perf-red { background:#fee2e2; color:#991b1b; }
+.perf-blue { background:#dbeafe; color:#1e40af; }
+.perf-amber { background:#fef3c7; color:#92400e; }
+
+/* Compare table */
+.compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; font-size:0.85rem; }
+.compare-table th { background:#1e293b; color:white; padding:0.85rem 1rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:left; }
+.compare-table td { padding:0.75rem 1rem; border-bottom:1px solid #f1f5f9; color:#334155; vertical-align:middle; }
+.compare-table tr:nth-child(even) td { background:#f8fafc; }
+.compare-table tr:last-child td { border-bottom:none; }
+.compare-table .mode-dot { display:inline-flex; align-items:center; gap:0.4rem; font-weight:700; }
+.compare-table .mode-dot::before { content:''; display:inline-block; width:10px; height:10px; border-radius:50%; background:var(--dot-color, #94a3b8); }
+
+/* Regime table */
+.regime-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; font-size:0.82rem; }
+.regime-table th { background:#0f172a; color:white; padding:0.75rem 0.85rem; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+.regime-table td { padding:0.65rem 0.85rem; border-bottom:1px solid #f1f5f9; color:#334155; text-align:center; }
+.regime-table tr:last-child td { border-bottom:none; }
+.regime-table .mode-label { font-weight:700; text-align:left; }
+.filter-pill { display:inline-block; padding:0.2rem 0.6rem; border-radius:99px; font-size:0.72rem; font-weight:700; }
+.filter-all { background:#fef3c7; color:#92400e; }
+.filter-mom { background:#dcfce7; color:#166534; }
+.filter-mom_bo { background:#dbeafe; color:#1e40af; }
+.filter-breakout { background:#f3e8ff; color:#6b21a8; }
+
+/* Pedagogy / info boxes */
+.pedagogy-box { background:#f0fdf4; border:1px solid #86efac; border-radius:16px; padding:1.5rem 2rem; margin:1.5rem 0; }
+.pedagogy-box h4 { color:#166534; margin:0 0 0.75rem; font-size:1rem; }
+.pedagogy-box p, .pedagogy-box li { color:#334155; font-size:0.95rem; line-height:1.7; margin:0 0 0.5rem; }
+.pedagogy-box ul { margin:0.5rem 0 0 1rem; padding:0; }
+.pedagogy-box p:last-child { margin-bottom:0; }
+
+.alert-box { background:#fef2f2; border:1px solid #fca5a5; border-radius:16px; padding:1.5rem 2rem; margin:1.5rem 0; }
+.alert-box h4 { color:#dc2626; margin:0 0 0.75rem; font-size:1rem; }
+.alert-box p { color:#334155; font-size:0.95rem; line-height:1.7; margin:0 0 0.5rem; }
+.alert-box p:last-child { margin-bottom:0; }
+
+.info-box { background:#eff6ff; border:1px solid #93c5fd; border-radius:16px; padding:1.5rem 2rem; margin:1.5rem 0; }
+.info-box h4 { color:#1e40af; margin:0 0 0.75rem; font-size:1rem; }
+.info-box p, .info-box li { color:#334155; font-size:0.95rem; line-height:1.7; margin:0 0 0.5rem; }
+.info-box ul { margin:0.5rem 0 0 1rem; padding:0; }
+
+/* Config history */
+.history-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+.history-table th { background:#1e293b; color:white; padding:0.85rem 1rem; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:left; }
+.history-table td { padding:0.8rem 1rem; border-bottom:1px solid #f1f5f9; color:#334155; font-size:0.875rem; vertical-align:top; }
+.history-table tr:last-child td { border-bottom:none; }
+.version-badge { display:inline-block; padding:0.2rem 0.6rem; border-radius:99px; font-size:0.75rem; font-weight:800; font-family:monospace; }
+.v1-badge { background:#e2e8f0; color:#475569; }
+.v2-badge { background:#fef3c7; color:#92400e; border:1px solid #f59e0b; }
+.regime-risk-on { display:inline-block; background:#dcfce7; color:#166534; padding:0.2rem 0.6rem; border-radius:99px; font-size:0.75rem; font-weight:700; }
+.regime-mixed { display:inline-block; background:#e2e8f0; color:#475569; padding:0.2rem 0.6rem; border-radius:99px; font-size:0.75rem; font-weight:700; }
+.changes-list { list-style:none; padding:0; margin:0; }
+.changes-list li { padding:0.2rem 0; font-size:0.82rem; color:#334155; }
+.changes-list li::before { content:'→ '; color:#f59e0b; font-weight:700; }
+
+/* Section divider */
+.section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+.section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+/* Takeaway box */
+.takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #f59e0b; border-radius:16px; padding:2rem; margin:2rem 0; }
+.takeaway-box h3 { color:#92400e; margin-top:0; }
+.takeaway-list { list-style:none; padding:0; margin:0; }
+.takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(245,158,11,0.2); }
+.takeaway-list li:last-child { border-bottom:none; }
+.takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+/* ECharts container */
+#chartModes, #chartRadar { width:100%; height:360px; }
+</style>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<!-- Brand Bar -->
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">DailyTickers</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">Séries</a>
+    </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-sliders"></i> Scanner Strategy — How-To Guide</div>
+  <h1 class="hero-title" style="font-size:clamp(1.6rem,4vw,2.6rem); font-weight:900; color:#0f172a; margin:0.5rem 0 1rem;">The 5-Mode Portfolio System</h1>
+  <p class="hero-subtitle" style="font-size:1.05rem; color:#475569; max-width:680px; margin:0 auto 1rem; line-height:1.65;">Choose your risk profile, understand every parameter, and follow the regime-adaptive configuration. Sweep-validated on real scanner data.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-bolt"></i> v2-20260418</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-circle-check"></i> RISK-ON Config Active</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-chart-line"></i> 5 Modes</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-flask"></i> Sweep-Validated</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags"></div>
+</section>
+
+<!-- Config Update Banner -->
+<div class="container" style="max-width:1100px; margin:0 auto; padding:0 1.5rem;">
+
+  <div class="update-banner">
+    <h3>⚡ Configuration Update — RISK-ON Regime (v2, April 18 2026)</h3>
+    <p>All 5 modes have been recalibrated for the current RISK-ON market regime based on a sweep of 11 scans (Apr 6–18, 110 setups). Key changes: shorter horizons (H2), aggressive rotation, momentum-focused filters. Previous config (v1) archived for reference.</p>
+    <p><strong>Effective:</strong> April 18, 2026 &nbsp;|&nbsp; <strong>Regime:</strong> RISK-ON &nbsp;|&nbsp; <strong>Previous:</strong> v1-20260215</p>
+  </div>
+
+  <!-- FAB -->
+  <div class="fnav" id="floatingNav">
+    <div class="fnav-menu" id="fnavMenu">
+      <a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-home"></i><span>Overview</span></a>
+      <a href="#modes" class="fnav-item" data-section="modes"><i class="fas fa-layer-group"></i><span>5 Modes</span></a>
+      <a href="#params" class="fnav-item" data-section="params"><i class="fas fa-sliders"></i><span>Parameters</span></a>
+      <a href="#regime-table" class="fnav-item" data-section="regime-table"><i class="fas fa-cloud-sun"></i><span>Regime Filters</span></a>
+      <a href="#how-to-use" class="fnav-item" data-section="how-to-use"><i class="fas fa-book-open"></i><span>How To Use</span></a>
+      <a href="#history" class="fnav-item" data-section="history"><i class="fas fa-clock-rotate-left"></i><span>Config History</span></a>
+    </div>
+    <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+      <i class="fas fa-bars" id="fnavIcon"></i>
+      <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+    </button>
+  </div>
+
+  <!-- ===== OVERVIEW ===== -->
+  <div id="overview" class="content-card">
+    <h2><i class="fa-solid fa-home" style="color:#d97706"></i> Overview</h2>
+    <p>The DailyTickers scanner publishes <strong>10 A+ setups</strong> each trading day. The 5-mode portfolio system lets you allocate capital according to your risk tolerance. Each mode defines how many positions to hold simultaneously, which strategy filter to apply, the holding horizon, and how exits are managed.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fas fa-graduation-cap"></i> What is a "mode"?</h4>
+      <p>A mode is a complete set of portfolio rules applied on top of the daily scanner output. You pick <strong>one mode</strong> that matches your risk appetite and follow its rules mechanically. The scanner does the setup selection; the mode tells you exactly how to size, enter, hold, and exit.</p>
+      <p>Modes are <strong>regime-adaptive</strong>: when the market transitions from RISK-ON to RISK-OFF, the mode's filter automatically narrows to safer strategy types (e.g., breakout-only). The parameters shown here are the <strong>active RISK-ON configuration (v2-20260418)</strong>.</p>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0;">
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; border-top:4px solid #f59e0b;">
+        <div style="font-size:2rem; font-weight:900; color:#f59e0b;">Turbo</div>
+        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Extreme risk</div>
+        <div style="font-size:0.85rem; color:#334155; margin-top:0.5rem;">1 slot · H2 · All filters</div>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; border-top:4px solid #dc2626;">
+        <div style="font-size:2rem; font-weight:900; color:#dc2626;">Dynamic</div>
+        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">High risk</div>
+        <div style="font-size:0.85rem; color:#334155; margin-top:0.5rem;">1 slot · H2 · All filters</div>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; border-top:4px solid #059669;">
+        <div style="font-size:2rem; font-weight:900; color:#059669;">Balanced</div>
+        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Medium risk</div>
+        <div style="font-size:0.85rem; color:#334155; margin-top:0.5rem;">3 slots · H2 · Momentum</div>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; border-top:4px solid #2563eb;">
+        <div style="font-size:2rem; font-weight:900; color:#2563eb;">Secured</div>
+        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Low risk</div>
+        <div style="font-size:0.85rem; color:#334155; margin-top:0.5rem;">2 slots · H2 · Momentum</div>
+      </div>
+      <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; text-align:center; border-top:4px solid #6d28d9;">
+        <div style="font-size:2rem; font-weight:900; color:#6d28d9;">Fortress</div>
+        <div style="font-size:0.8rem; color:#64748b; font-weight:600;">Ultra-low risk</div>
+        <div style="font-size:0.85rem; color:#334155; margin-top:0.5rem;">4 slots · H8 · Mom+BO</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5 MODES DETAIL ===== -->
+  <div id="modes" class="content-card">
+    <h2><i class="fa-solid fa-layer-group" style="color:#d97706"></i> The 5 Modes — Current Config (v2-20260418)</h2>
+    <p>All values below are from <code>modes-config.json</code> v2-20260418, regime: <strong>RISK-ON</strong>. Performance figures are from the sweep on 11 scans (Apr 6–18, 110 setups).</p>
+
+    <div class="mode-grid">
+
+      <!-- Turbo -->
+      <div class="mode-card" style="--mode-color:#f59e0b;">
+        <div class="mode-card-header">
+          <div class="mode-icon"><i class="fas fa-bolt"></i></div>
+          <div>
+            <h3>Turbo</h3>
+            <div class="mode-risk">Extreme Risk · Score ≥ 90</div>
+          </div>
+        </div>
+        <p class="mode-tagline">Ultra-aggressive 1–2 day plays. All strategies eligible, aggressive rotation, BE lock at +0.5%. Sweep-validated RISK-ON: +18.75% return, -0.47% DD on 10-day window.</p>
+        <div class="mode-params">
+          <div class="mode-param"><div class="param-label">Slots</div><div class="param-value">1 (P1/Top1)</div></div>
+          <div class="mode-param"><div class="param-label">Horizon</div><div class="param-value">H2</div></div>
+          <div class="mode-param"><div class="param-label">Filter</div><div class="param-value">all</div></div>
+          <div class="mode-param"><div class="param-label">Rotation</div><div class="param-value">Aggressive</div></div>
+          <div class="mode-param"><div class="param-label">Partial TP</div><div class="param-value">50% at TP1</div></div>
+          <div class="mode-param"><div class="param-label">Breakeven</div><div class="param-value">+0.5%</div></div>
+          <div class="mode-param"><div class="param-label">Daily Trail</div><div class="param-value">2%</div></div>
+          <div class="mode-param"><div class="param-label">ATR Stop</div><div class="param-value">None</div></div>
+        </div>
+        <div class="mode-perf">
+          <span class="mode-perf-badge perf-green"><i class="fas fa-arrow-up"></i> +18.75% return</span>
+          <span class="mode-perf-badge perf-red"><i class="fas fa-arrow-down"></i> -0.47% DD</span>
+        </div>
+      </div>
+
+      <!-- Dynamic -->
+      <div class="mode-card" style="--mode-color:#dc2626;">
+        <div class="mode-card-header">
+          <div class="mode-icon"><i class="fas fa-fire"></i></div>
+          <div>
+            <h3>Dynamic</h3>
+            <div class="mode-risk">High Risk · Score ≥ 85</div>
+          </div>
+        </div>
+        <p class="mode-tagline">Active traders. All strategies, aggressive rotation, H2 horizon. Sweep RISK-ON: +18.75% return, Sharpe 39.89. No ATR/trailing — pure momentum capture.</p>
+        <div class="mode-params">
+          <div class="mode-param"><div class="param-label">Slots</div><div class="param-value">1 (P1/Top1)</div></div>
+          <div class="mode-param"><div class="param-label">Horizon</div><div class="param-value">H2</div></div>
+          <div class="mode-param"><div class="param-label">Filter</div><div class="param-value">all</div></div>
+          <div class="mode-param"><div class="param-label">Rotation</div><div class="param-value">Aggressive</div></div>
+          <div class="mode-param"><div class="param-label">Partial TP</div><div class="param-value">No</div></div>
+          <div class="mode-param"><div class="param-label">Breakeven</div><div class="param-value">+0.5%</div></div>
+          <div class="mode-param"><div class="param-label">Trailing</div><div class="param-value">None</div></div>
+          <div class="mode-param"><div class="param-label">ATR Stop</div><div class="param-value">None</div></div>
+        </div>
+        <div class="mode-perf">
+          <span class="mode-perf-badge perf-green"><i class="fas fa-arrow-up"></i> +18.75% return</span>
+          <span class="mode-perf-badge perf-blue"><i class="fas fa-chart-bar"></i> Sharpe 39.89</span>
+        </div>
+      </div>
+
+      <!-- Balanced -->
+      <div class="mode-card" style="--mode-color:#059669;">
+        <div class="mode-card-header">
+          <div class="mode-icon"><i class="fas fa-balance-scale"></i></div>
+          <div>
+            <h3>Balanced</h3>
+            <div class="mode-risk">Medium Risk · Score ≥ 85</div>
+          </div>
+        </div>
+        <p class="mode-tagline">Best risk/reward. Momentum-only filter, aggressive rotation, H2 horizon. Sweep RISK-ON: +10.35%, DD -0.01%, WR 71.4%. Near-zero drawdown.</p>
+        <div class="mode-params">
+          <div class="mode-param"><div class="param-label">Slots</div><div class="param-value">3 (P3/Top3)</div></div>
+          <div class="mode-param"><div class="param-label">Horizon</div><div class="param-value">H2</div></div>
+          <div class="mode-param"><div class="param-label">Filter</div><div class="param-value">momentum_only</div></div>
+          <div class="mode-param"><div class="param-label">Rotation</div><div class="param-value">Aggressive</div></div>
+          <div class="mode-param"><div class="param-label">Partial TP</div><div class="param-value">No</div></div>
+          <div class="mode-param"><div class="param-label">Breakeven</div><div class="param-value">None</div></div>
+          <div class="mode-param"><div class="param-label">Trailing</div><div class="param-value">None</div></div>
+          <div class="mode-param"><div class="param-label">ATR Stop</div><div class="param-value">None</div></div>
+        </div>
+        <div class="mode-perf">
+          <span class="mode-perf-badge perf-green"><i class="fas fa-arrow-up"></i> +10.35% return</span>
+          <span class="mode-perf-badge perf-green"><i class="fas fa-shield"></i> DD -0.01%</span>
+          <span class="mode-perf-badge perf-blue">WR 71.4%</span>
+        </div>
+      </div>
+
+      <!-- Secured -->
+      <div class="mode-card" style="--mode-color:#2563eb;">
+        <div class="mode-card-header">
+          <div class="mode-icon"><i class="fas fa-shield-halved"></i></div>
+          <div>
+            <h3>Secured</h3>
+            <div class="mode-risk">Low Risk · Score ≥ 85</div>
+          </div>
+        </div>
+        <p class="mode-tagline">Capital preservation with RISK-ON tilt. Momentum-only, 2-slot P2, H2 horizon, BE lock at +1%. Sweep: +15.31%, DD -0.94%, WR 76.9%.</p>
+        <div class="mode-params">
+          <div class="mode-param"><div class="param-label">Slots</div><div class="param-value">2 (P2/Top2)</div></div>
+          <div class="mode-param"><div class="param-label">Horizon</div><div class="param-value">H2</div></div>
+          <div class="mode-param"><div class="param-label">Filter</div><div class="param-value">momentum_only</div></div>
+          <div class="mode-param"><div class="param-label">Rotation</div><div class="param-value">None</div></div>
+          <div class="mode-param"><div class="param-label">Partial TP</div><div class="param-value">No</div></div>
+          <div class="mode-param"><div class="param-label">Breakeven</div><div class="param-value">+1%</div></div>
+          <div class="mode-param"><div class="param-label">Trailing</div><div class="param-value">None</div></div>
+          <div class="mode-param"><div class="param-label">ATR Stop</div><div class="param-value">None</div></div>
+        </div>
+        <div class="mode-perf">
+          <span class="mode-perf-badge perf-green"><i class="fas fa-arrow-up"></i> +15.31% return</span>
+          <span class="mode-perf-badge perf-red"><i class="fas fa-arrow-down"></i> DD -0.94%</span>
+          <span class="mode-perf-badge perf-blue">WR 76.9%</span>
+        </div>
+      </div>
+
+      <!-- Fortress -->
+      <div class="mode-card" style="--mode-color:#6d28d9;">
+        <div class="mode-card-header">
+          <div class="mode-icon"><i class="fas fa-fort-awesome"></i></div>
+          <div>
+            <h3>Fortress</h3>
+            <div class="mode-risk">Ultra-Low Risk · Score ≥ 85</div>
+          </div>
+        </div>
+        <p class="mode-tagline">Capital fortress. Half-sized mom_bo positions, P4 diversification, H8 horizon, BE+trail. Sweep RISK-ON: +8.07%, DD 0%, WR 76.9%.</p>
+        <div class="mode-params">
+          <div class="mode-param"><div class="param-label">Slots</div><div class="param-value">4 (P4/Top4)</div></div>
+          <div class="mode-param"><div class="param-label">Horizon</div><div class="param-value">H8</div></div>
+          <div class="mode-param"><div class="param-label">Filter</div><div class="param-value">mom_bo</div></div>
+          <div class="mode-param"><div class="param-label">Rotation</div><div class="param-value">None</div></div>
+          <div class="mode-param"><div class="param-label">Partial TP</div><div class="param-value">50% at TP1</div></div>
+          <div class="mode-param"><div class="param-label">Breakeven</div><div class="param-value">+1%</div></div>
+          <div class="mode-param"><div class="param-label">Daily Trail</div><div class="param-value">2%</div></div>
+          <div class="mode-param"><div class="param-label">Position Size</div><div class="param-value">50% (half)</div></div>
+        </div>
+        <div class="mode-perf">
+          <span class="mode-perf-badge perf-green"><i class="fas fa-arrow-up"></i> +8.07% return</span>
+          <span class="mode-perf-badge perf-green"><i class="fas fa-shield"></i> DD 0%</span>
+          <span class="mode-perf-badge perf-blue">WR 76.9%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode comparison chart -->
+    <h3 style="margin-top:2.5rem;">Return vs Drawdown — v2 RISK-ON Sweep</h3>
+    <div id="chartModes"></div>
+  </div>
+
+  <!-- ===== PARAMETERS EXPLAINED ===== -->
+  <div id="params" class="content-card">
+    <h2><i class="fa-solid fa-sliders" style="color:#d97706"></i> Parameters Explained</h2>
+    <p>Every mode exposes the same set of parameters. Here is what each one does and how it affects your trading.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Parameter</th>
+          <th>What It Does</th>
+          <th>Turbo</th>
+          <th>Dynamic</th>
+          <th>Balanced</th>
+          <th>Secured</th>
+          <th>Fortress</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>portfolioSize / topN</strong></td>
+          <td>How many simultaneous positions to hold. Top-N picks from the daily scanner, ranked by score.</td>
+          <td>1 / 1</td>
+          <td>1 / 1</td>
+          <td>3 / 3</td>
+          <td>2 / 2</td>
+          <td>4 / 4</td>
+        </tr>
+        <tr>
+          <td><strong>horizon</strong></td>
+          <td>Maximum holding period in trading days. Position is closed at EOD of day H if not exited by TP/stop first.</td>
+          <td>H2</td>
+          <td>H2</td>
+          <td>H2</td>
+          <td>H2</td>
+          <td>H8</td>
+        </tr>
+        <tr>
+          <td><strong>filterName</strong></td>
+          <td>Strategy type filter applied to the scanner output. <em>all</em> = no filter. <em>momentum_only</em> = only momentum setups. <em>mom_bo</em> = momentum + breakout. <em>breakout_only</em> = only breakout setups.</td>
+          <td>all</td>
+          <td>all</td>
+          <td>momentum_only</td>
+          <td>momentum_only</td>
+          <td>mom_bo</td>
+        </tr>
+        <tr>
+          <td><strong>rotation</strong></td>
+          <td>When to replace open positions with higher-scoring new setups. <em>aggressive</em> = replace as soon as a higher score appears. <em>none</em> = hold until TP/stop/horizon.</td>
+          <td>Aggressive</td>
+          <td>Aggressive</td>
+          <td>Aggressive</td>
+          <td>None</td>
+          <td>None</td>
+        </tr>
+        <tr>
+          <td><strong>minScore</strong></td>
+          <td>Minimum scanner score required to enter. Higher = fewer but higher-quality trades.</td>
+          <td>90</td>
+          <td>85</td>
+          <td>85</td>
+          <td>85</td>
+          <td>85</td>
+        </tr>
+        <tr>
+          <td><strong>partialTP / partialTPPct</strong></td>
+          <td>Take partial profit at TP1. Sell <em>partialTPPct</em> of the position (e.g. 50%) and let the rest run to TP2.</td>
+          <td>Yes, 50%</td>
+          <td>No</td>
+          <td>No</td>
+          <td>No</td>
+          <td>Yes, 50%</td>
+        </tr>
+        <tr>
+          <td><strong>breakevenPct</strong></td>
+          <td>Once price moves up by this %, move stop to breakeven (entry price). 0 = disabled.</td>
+          <td>0.5%</td>
+          <td>0.5%</td>
+          <td>0%</td>
+          <td>1%</td>
+          <td>1%</td>
+        </tr>
+        <tr>
+          <td><strong>dailyTrailPct</strong></td>
+          <td>End-of-day trailing stop. If EOD price falls more than X% from the daily high, close position.</td>
+          <td>2%</td>
+          <td>0%</td>
+          <td>0%</td>
+          <td>0%</td>
+          <td>2%</td>
+        </tr>
+        <tr>
+          <td><strong>atrStopMult</strong></td>
+          <td>ATR-based dynamic stop multiplier. 0 = disabled (use scanner's hard stop only). In v2, removed from all modes for RISK-ON.</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td><strong>positionSizePct</strong></td>
+          <td>Fraction of the slot allocation to deploy. 1.0 = full size. 0.5 = half size (Fortress only, to mechanically halve drawdown).</td>
+          <td>1.0</td>
+          <td>1.0</td>
+          <td>1.0</td>
+          <td>1.0</td>
+          <td>0.5</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box">
+      <h4><i class="fas fa-info-circle"></i> v2 Key Change: ATR Stops Removed</h4>
+      <p>In v1, Dynamic and Secured used ATR-based dynamic stops (atrStopMult=1). The RISK-ON sweep showed these stops were premature exits in momentum environments, reducing overall return. In v2, all modes use only the scanner's hard stop level (initial stop defined by the setup, not an ATR multiple).</p>
+    </div>
+  </div>
+
+  <!-- ===== REGIME FILTERS ===== -->
+  <div id="regime-table" class="content-card">
+    <h2><i class="fa-solid fa-cloud-sun" style="color:#d97706"></i> Regime-Adaptive Filters</h2>
+    <p>Each mode automatically adjusts its strategy filter based on the current market regime (detected from VIX, breadth, and price action). The filter shown in each mode card is the <strong>active RISK-ON filter</strong>. Here are all five regimes:</p>
+
+    <table class="regime-table">
+      <thead>
+        <tr>
+          <th style="text-align:left;">Mode</th>
+          <th>RISK-ON</th>
+          <th>NEUTRAL</th>
+          <th>EARLY RISK-OFF</th>
+          <th>RISK-OFF</th>
+          <th>RECOVERY</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="mode-label" style="color:#f59e0b; font-weight:800;">Turbo</td>
+          <td><span class="filter-pill filter-all">all</span></td>
+          <td><span class="filter-pill filter-mom_bo">mom_bo</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-mom_bo">mom_bo</span></td>
+        </tr>
+        <tr>
+          <td class="mode-label" style="color:#dc2626; font-weight:800;">Dynamic</td>
+          <td><span class="filter-pill filter-all">all</span></td>
+          <td><span class="filter-pill filter-mom_bo">mom_bo</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-mom_bo">mom_bo</span></td>
+        </tr>
+        <tr>
+          <td class="mode-label" style="color:#059669; font-weight:800;">Balanced</td>
+          <td><span class="filter-pill filter-mom">momentum_only</span></td>
+          <td><span class="filter-pill filter-mom_bo">mom_bo</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-mom">momentum_only</span></td>
+        </tr>
+        <tr>
+          <td class="mode-label" style="color:#2563eb; font-weight:800;">Secured</td>
+          <td><span class="filter-pill filter-mom">momentum_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+        </tr>
+        <tr>
+          <td class="mode-label" style="color:#6d28d9; font-weight:800;">Fortress</td>
+          <td><span class="filter-pill filter-mom_bo">mom_bo</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+          <td><span class="filter-pill filter-breakout">breakout_only</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pedagogy-box">
+      <h4><i class="fas fa-graduation-cap"></i> Reading the regime table</h4>
+      <p><strong>RISK-ON</strong> (VIX &lt; 15, positive breadth): most permissive filters — Turbo/Dynamic accept all setups including short squeezes and speculative plays.</p>
+      <p><strong>NEUTRAL</strong> (VIX 15–20): shift to momentum+breakout only. Reduce exposure to pure-momentum setups that need strong follow-through.</p>
+      <p><strong>EARLY RISK-OFF</strong> (VIX 20–28): breakout-only across all modes. Only take setups with clear technical breakout structure and volume confirmation.</p>
+      <p><strong>RISK-OFF</strong> (VIX &gt; 28): same as early risk-off. Fortress and Secured additionally restrict to breakout_only regardless of score.</p>
+      <p><strong>RECOVERY</strong>: regime transitioning back up. Turbo/Dynamic/Balanced re-enable momentum, Secured/Fortress stay cautious with breakout_only.</p>
+    </div>
+  </div>
+
+  <!-- ===== HOW TO USE ===== -->
+  <div id="how-to-use" class="content-card">
+    <h2><i class="fa-solid fa-book-open" style="color:#d97706"></i> How to Use the System</h2>
+
+    <h3>Step 1 — Choose Your Mode</h3>
+    <p>Pick the single mode that matches your risk tolerance. Do not mix modes or switch frequently. Consistency is what the sweep-validated parameters are built for.</p>
+    <table class="compare-table">
+      <thead><tr><th>If you are…</th><th>Use</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>A full-time active trader, comfortable with concentrated risk</td><td style="color:#f59e0b; font-weight:800;">Turbo</td><td>Max alpha, 1 position, score ≥ 90 filter cuts noise</td></tr>
+        <tr><td>An active trader wanting maximum return</td><td style="color:#dc2626; font-weight:800;">Dynamic</td><td>Same return as Turbo with slightly lower score bar</td></tr>
+        <tr><td>A part-time trader wanting the best risk/return ratio</td><td style="color:#059669; font-weight:800;">Balanced</td><td>3 positions, near-zero drawdown, 71% win rate</td></tr>
+        <tr><td>A conservative investor who cannot afford significant losses</td><td style="color:#2563eb; font-weight:800;">Secured</td><td>Breakeven lock, 76.9% win rate, only momentum setups</td></tr>
+        <tr><td>A capital-preservation investor who wants almost zero drawdown</td><td style="color:#6d28d9; font-weight:800;">Fortress</td><td>Half-sized positions, 0% DD in sweep, 4-slot diversification</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Step 2 — Read the Daily Scanner</h3>
+    <p>Each day the scanner publishes 10 A+ setups ranked by score. Apply your mode's filter mentally:</p>
+    <ul style="color:#334155; line-height:2; padding-left:1.5rem;">
+      <li><strong>Turbo / Dynamic (RISK-ON):</strong> take the #1 ranked setup regardless of strategy type.</li>
+      <li><strong>Balanced (RISK-ON):</strong> take the top 3 setups filtered to <em>momentum_only</em> strategy type.</li>
+      <li><strong>Secured (RISK-ON):</strong> take the top 2 setups filtered to <em>momentum_only</em>.</li>
+      <li><strong>Fortress (RISK-ON):</strong> take the top 4 setups filtered to <em>mom_bo</em> (momentum + breakout), half-sized.</li>
+    </ul>
+
+    <h3>Step 3 — Entry Rules</h3>
+    <div class="info-box">
+      <h4><i class="fas fa-sign-in-alt"></i> Entry</h4>
+      <ul>
+        <li>Enter at the scanner's published entry zone (typically near the setup trigger price).</li>
+        <li>Only enter if the setup has not already moved more than 2% above entry (stale entry risk).</li>
+        <li>For Turbo/Dynamic with aggressive rotation: if a higher-scoring setup appears the next day, you may rotate out of the current position to take the new one — even if unrealized P&L is negative (mechanical rule).</li>
+      </ul>
+    </div>
+
+    <h3>Step 4 — Exit Rules</h3>
+    <div class="pedagogy-box">
+      <h4><i class="fas fa-sign-out-alt"></i> Exit Priority (in order)</h4>
+      <ul>
+        <li><strong>1. Hard Stop:</strong> the setup's defined stop loss. Exit immediately on close below.</li>
+        <li><strong>2. Partial TP (Turbo/Fortress only):</strong> sell 50% at TP1, let remainder run.</li>
+        <li><strong>3. Breakeven Lock (Turbo/Dynamic/Secured/Fortress):</strong> once price is +0.5% or +1% above entry, move stop to entry price.</li>
+        <li><strong>4. Daily Trail (Turbo/Fortress only):</strong> if EOD price is more than 2% below the daily high, close remaining position.</li>
+        <li><strong>5. Horizon:</strong> close position at EOD of day H (H2 or H8) if none of the above triggered.</li>
+      </ul>
+    </div>
+
+    <h3>Step 5 — Rotation (Turbo/Dynamic/Balanced only)</h3>
+    <p>With <em>aggressive rotation</em> enabled, monitor the next daily scanner publication. If the new top setup has a higher score than your current open position, you may close the current position and enter the new one — regardless of current P&L. This is the mechanism that drove the Sharpe 39.89 in Dynamic's sweep result.</p>
+
+    <div class="alert-box">
+      <h4><i class="fas fa-triangle-exclamation"></i> Do Not Override the Rules</h4>
+      <p>The sweep results are valid only when rules are applied mechanically. "Feeling" that a setup will recover, holding past the horizon, or skipping a rotation are the most common failure modes in rule-based systems. If you deviate, you are no longer running the validated strategy.</p>
+    </div>
+
+    <div class="takeaway-box">
+      <h3><i class="fas fa-star"></i> Key Takeaways</h3>
+      <ul class="takeaway-list">
+        <li><i class="fas fa-check-circle"></i> Pick one mode. Stick to it for at least 20 trading sessions before evaluating.</li>
+        <li><i class="fas fa-check-circle"></i> Regime determines filter. When VIX spikes above 20, all modes narrow to breakout_only automatically.</li>
+        <li><i class="fas fa-check-circle"></i> H2 is optimal in RISK-ON. The sweep showed H2 dominates H3/H8/H10 across all modes in the current regime.</li>
+        <li><i class="fas fa-check-circle"></i> No ATR stops in v2. Use only scanner hard stops — they are set at the technical invalidation level.</li>
+        <li><i class="fas fa-check-circle"></i> Fortress uses half-sized positions (50%). Do not size up — the 0% DD result depends on this constraint.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== CONFIG HISTORY ===== -->
+  <div id="history" class="content-card">
+    <h2><i class="fa-solid fa-clock-rotate-left" style="color:#d97706"></i> Configuration History</h2>
+    <p>All past configurations are archived in <code>data/modes-config-history.json</code>. Each version is a full snapshot of all 5 modes, tagged with the market regime at the time of the sweep.</p>
+
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Version</th>
+          <th>Date</th>
+          <th>Regime</th>
+          <th>Key Changes</th>
+          <th>Sweep Basis</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="version-badge v1-badge">v1-20260215</span></td>
+          <td>Feb 15, 2026</td>
+          <td><span class="regime-mixed">MIXED</span></td>
+          <td>
+            <ul class="changes-list">
+              <li>Initial 5-mode configuration</li>
+              <li>Turbo: H3, mom_bo, no rotation</li>
+              <li>Dynamic: H3, breakout_only, daily_max1 rotation, ATR×1</li>
+              <li>Balanced: H8, P1/Top1, momentum_only, ATR×1</li>
+              <li>Secured: H10, P3/Top1, breakout_only, ATR×1, maxStop 5%</li>
+              <li>Fortress: H10, P3/Top1, breakout_only, half-size, ATR×1</li>
+            </ul>
+          </td>
+          <td>39 scans (Feb 15 – Apr 17, full dataset)</td>
+        </tr>
+        <tr>
+          <td><span class="version-badge v2-badge">v2-20260418</span></td>
+          <td>Apr 18, 2026</td>
+          <td><span class="regime-risk-on">RISK-ON</span></td>
+          <td>
+            <ul class="changes-list">
+              <li>Turbo: H3→H2, mom_bo→all, none→aggressive rotation</li>
+              <li>Dynamic: H3→H2, breakout_only→all, daily_max1→aggressive, removed ATR/trail</li>
+              <li>Balanced: H8→H2, P1/Top1→P3/Top3, removed ATR stop</li>
+              <li>Secured: H10→H2, P3/Top1→P2/Top2, breakout_only→momentum_only, added BE=1%</li>
+              <li>Fortress: H10→H8, P3/Top1→P4/Top4, breakout_only→mom_bo, added PTP+trail+BE</li>
+            </ul>
+          </td>
+          <td>11 scans (Apr 6–18, RISK-ON window, 110 setups)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box">
+      <h4><i class="fas fa-info-circle"></i> When Does Config Change?</h4>
+      <p>Configuration is updated when a new sweep produces materially better results on a recent regime window (typically 10+ scans, 100+ setups). Changes are driven by:</p>
+      <ul>
+        <li><strong>Regime shift:</strong> RISK-ON → RISK-OFF or vice versa over a sustained period.</li>
+        <li><strong>Parameter drift:</strong> sweep shows a different horizon or filter would have outperformed on recent data by a statistically meaningful margin.</li>
+        <li><strong>Structural change:</strong> new filter types added to the scanner, new strategy categories introduced.</li>
+      </ul>
+      <p>The previous config is always archived before updating. All signals and equity calculations use the config that was active at the time of the scan.</p>
+    </div>
+  </div>
+
+  <!-- ===== PORTFOLIO API LINK ===== -->
+  <div class="content-card" style="background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; border:none;">
+    <h2 style="color:white;"><i class="fa-solid fa-plug" style="color:#f59e0b"></i> Portfolio API</h2>
+    <p style="color:#94a3b8;">The 5-mode portfolio signals and equity curves are available as a public JSON API. Each mode has its own endpoints for signals, positions, equity, orders, and trades.</p>
+    <a href="/integrations/portfolio/" style="display:inline-flex; align-items:center; gap:0.5rem; background:#f59e0b; color:#0f172a; padding:0.75rem 1.5rem; border-radius:8px; font-weight:700; text-decoration:none; margin-top:0.5rem;">
+      <i class="fas fa-external-link-alt"></i> Portfolio API Documentation
+    </a>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Footer -->
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<!-- Scripts -->
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<script>
+// Return vs DD scatter chart
+(function() {
+  var chart = echarts.init(document.getElementById('chartModes'));
+  var data = [
+    { name: 'Turbo', value: [18.75, 0.47], color: '#f59e0b', symbolSize: 28 },
+    { name: 'Dynamic', value: [18.75, 0.30], color: '#dc2626', symbolSize: 28 },
+    { name: 'Balanced', value: [10.35, 0.01], color: '#059669', symbolSize: 28 },
+    { name: 'Secured', value: [15.31, 0.94], color: '#2563eb', symbolSize: 28 },
+    { name: 'Fortress', value: [8.07, 0.00], color: '#6d28d9', symbolSize: 28 }
+  ];
+  var option = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: function(p) {
+        return '<strong>' + p.data.name + '</strong><br/>Return: +' + p.data.value[0] + '%<br/>DD: -' + p.data.value[1] + '%';
+      }
+    },
+    grid: { top: 40, right: 40, bottom: 60, left: 70 },
+    xAxis: {
+      type: 'value',
+      name: 'Return (%)',
+      nameLocation: 'middle',
+      nameGap: 40,
+      axisLabel: { formatter: '+{value}%', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Max Drawdown (%)',
+      nameLocation: 'middle',
+      nameGap: 55,
+      inverse: true,
+      axisLabel: { formatter: '-{value}%', fontSize: 11 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } }
+    },
+    series: data.map(function(d) {
+      return {
+        type: 'scatter',
+        name: d.name,
+        data: [{ name: d.name, value: d.value }],
+        symbolSize: d.symbolSize,
+        itemStyle: { color: d.color, borderColor: 'white', borderWidth: 2 },
+        label: { show: true, formatter: d.name, position: 'top', fontWeight: 700, fontSize: 12, color: d.color }
+      };
+    })
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+</body>
+</html>

@@ -4730,5 +4730,18 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/series/penny-stocks-fr/part1-cquoi/",
     "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Scanner Strategy Guide — 5-Mode Portfolio System",
+    "desc": "How to use the DailyTickers 5-mode portfolio system: Turbo, Dynamic, Balanced, Secured, Fortress. Parameters, regime filters, and configuration history.",
+    "tags": "us,eu,formation,technique,trade-idea",
+    "grade": "",
+    "href": "/series/scanner-strategy/",
+    "date": ""
   }
 ];
