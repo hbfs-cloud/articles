@@ -113,15 +113,18 @@ function fmtChangePct(pct) {
 // ─── REGIME GAUGE CHART ──────────────────────────────────────────────────────
 
 function regimeGaugeConfig(score) {
+  // Convert 0-1 score to 0-100 for display; determine progress color
+  const v = typeof score === 'number' && score <= 1 ? Math.round(score * 100) : score;
+  const pColor = v <= 30 ? '#22c55e' : v <= 50 ? '#f59e0b' : v <= 70 ? '#f97316' : '#ef4444';
   return JSON.stringify({
     series: [{
-      type: 'gauge', min: 0, max: 1,
-      axisLine: { lineStyle: { width: 18, color: [[0.30,'#22c55e'],[0.50,'#eab308'],[0.70,'#f97316'],[1,'#ef4444']] } },
-      pointer: { itemStyle: { color: '#0f172a' } },
+      type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 100,
+      progress: { show: true, width: 18, itemStyle: { color: pColor } },
+      pointer: { show: true, length: '60%', width: 6 },
+      axisLine: { lineStyle: { width: 18, color: [[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#22c55e'],[1,'#3b82f6']] } },
       axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
-      detail: { formatter: '{value}', fontSize: 20, fontWeight: 700, color: '#0f172a', offsetCenter: [0,'60%'] },
-      title: { fontSize: 13, color: '#64748b', offsetCenter: [0,'80%'] },
-      data: [{ value: score, name: 'Regime Score' }]
+      detail: { valueAnimation: true, formatter: '{value}', fontSize: 28, fontWeight: 800, offsetCenter: [0,'70%'] },
+      data: [{ value: v, name: 'Regime Score' }]
     }]
   });
 }
@@ -136,11 +139,14 @@ function strategyPieConfig(weights) {
   }));
   return JSON.stringify({
     tooltip: { trigger: 'item' },
-    legend: { bottom: 0, textStyle: { fontSize: 12 } },
+    legend: { bottom: 0, textStyle: { fontSize: 11 } },
     series: [{
-      type: 'pie', radius: ['40%','68%'],
-      data,
-      label: { show: true, formatter: '{b}\n{d}%' }
+      type: 'pie', radius: ['40%','70%'],
+      avoidLabelOverlap: false,
+      itemStyle: { borderRadius: 8, borderColor: '#fff', borderWidth: 2 },
+      label: { show: false },
+      emphasis: { label: { show: true, fontSize: 14, fontWeight: 'bold' } },
+      data
     }]
   });
 }
@@ -155,7 +161,7 @@ function radarOverviewConfig(setups) {
     return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
   });
   return JSON.stringify({
-    title: { text: 'Aggregate Confluence Profile', textStyle: { fontSize: 13, fontWeight: 600 } },
+    tooltip: {},
     radar: {
       indicator: labels.map(n => ({ name: n, max: 100 })),
       radius: '65%'
@@ -164,8 +170,9 @@ function radarOverviewConfig(setups) {
       type: 'radar',
       data: [{
         value: avg, name: `${setups.length}-Setup Average`,
-        areaStyle: { color: 'rgba(59,130,246,0.2)' },
-        lineStyle: { color: '#3b82f6' }
+        areaStyle: { opacity: 0.2, color: '#3b82f6' },
+        lineStyle: { color: '#3b82f6', width: 2 },
+        itemStyle: { color: '#3b82f6' }
       }]
     }]
   });
@@ -176,73 +183,70 @@ function radarOverviewConfig(setups) {
 const SECTOR_COLORS = { us: '#0ea5e9', eu: '#7c3aed', asia: '#059669', etf: '#f59e0b' };
 
 function treemapConfig(setups) {
-  const groups = {};
-  setups.forEach(s => {
-    const region = (s.region || 'us').toLowerCase();
-    const label = s.region_label || region.toUpperCase();
-    if (!groups[region]) groups[region] = { name: label, color: SECTOR_COLORS[region] || '#94a3b8', children: [] };
-    groups[region].children.push({ name: `${s.ticker} ${s.score}`, value: s.score });
+  // Per-ticker treemap with individual colors from logo_gradient
+  const data = setups.map(s => {
+    const color = (s.logo_gradient && s.logo_gradient[0]) || SECTOR_COLORS[(s.region||'us').toLowerCase()] || '#94a3b8';
+    return { name: s.ticker, value: s.score, itemStyle: { color } };
   });
-  const data = Object.values(groups).map(g => ({
-    name: g.name, value: g.children.reduce((a, c) => a + c.value, 0),
-    itemStyle: { color: g.color }, children: g.children
-  }));
-  return JSON.stringify({
-    title: { text: 'Setup Allocation by Region', textStyle: { fontSize: 13, fontWeight: 600 } },
-    series: [{ type: 'treemap', data }]
-  });
+  // Build option as raw JS string (tooltip.formatter needs a function)
+  return `{tooltip:{formatter:function(p){return p.name+' \\u2014 Score: '+p.value}},series:[{type:'treemap',data:${JSON.stringify(data)},label:{show:true,formatter:'{b}\\n{c}',fontSize:13,fontWeight:700,color:'#fff'},breadcrumb:{show:false}}]}`;
 }
 
 // ─── SCORE BAR CHART ─────────────────────────────────────────────────────────
 
 function scoreBarConfig(setups) {
-  const sorted = [...setups].sort((a, b) => b.score - a.score);
+  // Horizontal bar (like 20260415 reference) with per-ticker colors
+  const sorted = [...setups].sort((a, b) => a.score - b.score); // ascending for horizontal
+  const data = sorted.map(s => {
+    const color = (s.logo_gradient && s.logo_gradient[0]) || (s.score >= 90 ? '#22c55e' : s.score >= 87 ? '#3b82f6' : '#f59e0b');
+    return { value: s.score, itemStyle: { color } };
+  });
   return JSON.stringify({
-    title: { text: 'Composite Score by Setup', textStyle: { fontSize: 13, fontWeight: 600 } },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: sorted.map(s => s.ticker), axisLabel: { fontSize: 11 } },
-    yAxis: { type: 'value', min: Math.max(0, Math.min(...sorted.map(s => s.score)) - 5), max: 100, axisLabel: { fontSize: 11 } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '15%', right: '5%', top: '5%', bottom: '5%' },
+    xAxis: { type: 'value', min: Math.max(0, Math.min(...sorted.map(s => s.score)) - 5), max: Math.min(100, Math.max(...sorted.map(s => s.score)) + 5) },
+    yAxis: { type: 'category', data: sorted.map(s => s.ticker) },
     series: [{
-      type: 'bar', barWidth: '55%',
-      data: sorted.map(s => s.score),
-      itemStyle: { color: function(p) { const v=p.value; return v>=90?'#22c55e':v>=87?'#3b82f6':'#f59e0b'; } },
-      label: { show: true, position: 'top', fontSize: 11, fontWeight: 700 }
+      type: 'bar', data, barWidth: '60%',
+      label: { show: true, position: 'right', fontWeight: 700 }
     }]
   });
 }
 
 // ─── PER-SETUP GAUGE & RADAR ──────────────────────────────────────────────────
 
-function setupGaugeConfig(score) {
+function setupGaugeConfig(score, tickerColor) {
+  const pColor = tickerColor || '#3b82f6';
   return JSON.stringify({
     series: [{
-      type: 'gauge', min: 0, max: 100,
-      axisLine: { lineStyle: { width: 14, color: [[0.80,'#ef4444'],[0.87,'#eab308'],[0.94,'#22c55e'],[1,'#15803d']] } },
-      pointer: { itemStyle: { color: '#0f172a' } },
+      type: 'gauge', startAngle: 200, endAngle: -20, min: 0, max: 100,
+      progress: { show: true, width: 14, itemStyle: { color: pColor } },
+      pointer: { show: true, length: '55%', width: 5 },
+      axisLine: { lineStyle: { width: 14, color: [[0.6,'#e2e8f0'],[0.85,'#fbbf24'],[1,'#22c55e']] } },
       axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
-      detail: { formatter: '{value}', fontSize: 22, fontWeight: 800, color: '#0f172a', offsetCenter: [0,'65%'] },
-      title: { fontSize: 12, color: '#64748b', offsetCenter: [0,'85%'] },
-      data: [{ value: score, name: 'Score A+' }]
+      detail: { valueAnimation: true, formatter: '{value}', fontSize: 24, fontWeight: 800, offsetCenter: [0,'70%'] },
+      data: [{ value: score, name: 'Score' }]
     }]
   });
 }
 
-function setupRadarConfig(ticker, scores) {
+function setupRadarConfig(ticker, scores, tickerColor) {
   const keys   = ['momentum','fundamentals','technical','volume','sentiment','macro'];
   const labels = ['Momentum','Fundamentals','Technical','Volume','Sentiment','Macro'];
   const values = keys.map(k => (scores && scores[k]) || 0);
+  const c = tickerColor || '#3b82f6';
   return JSON.stringify({
     radar: {
       indicator: labels.map(n => ({ name: n, max: 100 })),
-      radius: '60%'
+      radius: '65%'
     },
     series: [{
       type: 'radar',
       data: [{
         value: values, name: ticker,
-        areaStyle: { color: 'rgba(59,130,246,0.15)' },
-        lineStyle: { color: '#3b82f6', width: 2 },
-        itemStyle: { color: '#3b82f6' }
+        areaStyle: { opacity: 0.25, color: c },
+        lineStyle: { color: c, width: 2 },
+        itemStyle: { color: c }
       }]
     }]
   });
@@ -253,9 +257,10 @@ function setupRadarConfig(ticker, scores) {
 function setupCard(s, idx) {
   const gaugeId = `gaugeSetup${s.ticker}`;
   const radarId = `radarSetup${s.ticker}`;
+  const tickerColor = (s.logo_gradient && s.logo_gradient[0]) || '#3b82f6';
 
-  addChart(gaugeId, setupGaugeConfig(s.score));
-  addChart(radarId, setupRadarConfig(s.ticker, s.radar_scores));
+  addChart(gaugeId, setupGaugeConfig(s.score, tickerColor));
+  addChart(radarId, setupRadarConfig(s.ticker, s.radar_scores, tickerColor));
 
   const gradStyle = s.logo_gradient && s.logo_gradient.length >= 2
     ? `background:linear-gradient(135deg,${s.logo_gradient[0]},${s.logo_gradient[1]});`
