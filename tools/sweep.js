@@ -26,7 +26,8 @@ const ROOT = path.join(__dirname, '..');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
-const FROZEN_ONLY = process.argv.includes('--frozen-only');
+const FULL_SWEEP = process.argv.includes('--full-sweep');
+const FROZEN_ONLY = !FULL_SWEEP;
 const SHARIA = process.argv.includes('--sharia');
 const FROM_ARG = process.argv.find(a => a.startsWith('--from='));
 const FROM_DATE = FROM_ARG ? FROM_ARG.split('=')[1] : null;
@@ -441,6 +442,53 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     exitPrice,
     pnlPct: +(pnlPct * 100).toFixed(2),
     holdDays: sortedDates.indexOf(exitDate) + 1,
+  };
+}
+
+// ─── Stats from a flat closed-trade list (append-only mode) ──────────────────
+// Computes returnTotal, maxDD, winRate, profitFactor, equityCurve from a
+// pre-existing list of closed trades without re-running portfolio simulation.
+// Trades must have: pnlPct, exitDate, scanDate, status, holdDays.
+function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct) {
+  if (!closedTrades || closedTrades.length === 0) return null;
+  const weight = (1 / portfolioSize) * (positionSizePct || 1);
+
+  const RESOLVED_STATUSES = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
+  const resolved = closedTrades.filter(t => {
+    const base = (t.status || '').replace(/_amb$/, '');
+    return RESOLVED_STATUSES.includes(base);
+  });
+  if (resolved.length === 0) return null;
+
+  // Build a simple equity curve: accumulate realized P&L in exit-date order
+  const sorted = [...resolved].sort((a, b) => (a.exitDate || '').localeCompare(b.exitDate || ''));
+  let equity = 100;
+  let peak = 100;
+  let maxDD = 0;
+  const equityCurve = [{ date: sorted[0].scanDate || sorted[0].exitDate, value: 100 }];
+  for (const t of sorted) {
+    equity += (t.pnlPct || 0) * weight;
+    if (equity > peak) peak = equity;
+    const dd = peak - equity;
+    if (dd > maxDD) maxDD = dd;
+    equityCurve.push({ date: t.exitDate || t.scanDate, value: +equity.toFixed(2) });
+  }
+
+  const returnTotal = +(equity - 100).toFixed(2);
+  const wins = resolved.filter(t => (t.pnlPct || 0) > 0);
+  const losses = resolved.filter(t => (t.pnlPct || 0) <= 0);
+  const winRate = resolved.length ? +((wins.length / resolved.length) * 100).toFixed(1) : 0;
+  const grossWin = wins.reduce((s, t) => s + t.pnlPct, 0);
+  const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
+  const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
+
+  return {
+    returnTotal,
+    maxDD: +(-maxDD).toFixed(2),
+    winRate,
+    profitFactor,
+    trades: resolved.length,
+    equityCurve,
   };
 }
 
@@ -1134,6 +1182,7 @@ async function main() {
   // Save trade lists for all FROZEN modes (from modes-config.json)
   const MODES_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
   const HISTORY_PATH = path.join(ROOT, "data", "modes-config-history.json");
+  const BACKTEST_TRADES_PATH = path.join(ROOT, "data", "backtest-trades.json");
   const frozenTrades = {};
   // Load config version history for trade tagging
   let configHistory = [];
@@ -1150,11 +1199,17 @@ async function main() {
     }
     return ver;
   }
+
+  // Always load existing trades — history is never rewritten
+  let existingTrades = {};
+  if (fs.existsSync(BACKTEST_TRADES_PATH)) {
+    try { existingTrades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8')); } catch(e) {}
+  }
+
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     for (const [id, cfg] of Object.entries(modesConfig.modes)) {
       const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}`;
-      const trades2 = tradesByKey[frozenKey] || [];
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
@@ -1162,42 +1217,75 @@ async function main() {
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
       };
-      const sim2 = simulatePortfolio(trades2, scans, cfg2);
-      if (sim2 && sim2.closedTrades) {
-        frozenTrades[id] = sim2.closedTrades
-          .map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }))
-          .sort((a, b) => (a.scanDate || "").localeCompare(b.scanDate || ""));
-        // Save MtM metrics for gen-status-page.js
-        output[`frozen_${id}`] = {
-          returnTotal: sim2.returnTotal, maxDD: sim2.maxDD, winRate: sim2.winRate,
-          profitFactor: sim2.profitFactor, trades: sim2.closedTrades.length,
-          equityCurve: sim2.equityCurve,
-        };
-        console.log(`  ${id} (${cfg.label}): ${sim2.closedTrades.length} trades, return=${sim2.returnTotal}%, DD=${sim2.maxDD}%`);
+
+      if (FROZEN_ONLY) {
+        // Append-only: preserve existing trades, only simulate scans AFTER the latest existing one
+        const existing = existingTrades[id] || [];
+        const latestExistingScan = existing.reduce((max, t) => t.scanDate > max ? t.scanDate : max, '');
+
+        // Only process scans strictly after the latest existing scan date
+        const newScans = latestExistingScan
+          ? scans.filter(s => s.scanDate > latestExistingScan)
+          : scans;
+
+        let newClosedTrades = [];
+        if (newScans.length > 0) {
+          // Build a trade list for only the new scans using the frozen config key
+          const allTradesForKey = tradesByKey[frozenKey] || [];
+          const newScanDateSet = new Set(newScans.map(s => s.scanDate));
+          const newTrades = allTradesForKey.filter(t => newScanDateSet.has(t.scanDate));
+
+          if (newTrades.length > 0) {
+            const sim2 = simulatePortfolio(newTrades, newScans, cfg2);
+            if (sim2 && sim2.closedTrades) {
+              newClosedTrades = sim2.closedTrades
+                .map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }));
+            }
+          }
+        }
+
+        // Merge: existing trades + new closed trades (deduplicate by scanDate+ticker)
+        const existingKey = t => `${t.scanDate}|${t.ticker}`;
+        const existingKeys = new Set(existing.map(existingKey));
+        const toAppend = newClosedTrades.filter(t => !existingKeys.has(existingKey(t)));
+        const merged = [...existing, ...toAppend]
+          .sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
+
+        frozenTrades[id] = merged;
+
+        // Recompute stats from combined trade list
+        const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1);
+        if (stats) {
+          output[`frozen_${id}`] = {
+            returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
+            profitFactor: stats.profitFactor, trades: stats.trades,
+            equityCurve: stats.equityCurve,
+          };
+          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
+        } else {
+          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), no stats`);
+        }
       } else {
-        console.log(`  ${id} (${cfg.label}): no trades`);
+        // FULL_SWEEP: keep existing trades intact, only recompute stats for display
+        const existing = existingTrades[id] || [];
+        frozenTrades[id] = existing;
+        const stats = computeStatsFromTrades(existing, cfg.portfolioSize, cfg.positionSizePct || 1);
+        if (stats) {
+          output[`frozen_${id}`] = {
+            returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
+            profitFactor: stats.profitFactor, trades: stats.trades,
+            equityCurve: stats.equityCurve,
+          };
+          console.log(`  ${id} (${cfg.label}): ${existing.length} trades (preserved), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
+        } else {
+          console.log(`  ${id} (${cfg.label}): ${existing.length} trades (preserved), no stats`);
+        }
       }
     }
   } else {
-    // Fallback: use optimal combos if no modes-config
-    for (const [key, combo] of [["turbo", topByReturn[0]], ["dynamic", topByReturn[0]], ["balanced", topByCalmar[0]], ["secured", ranked[0]], ["fortress", ranked[0]]]) {
-      if (!combo) continue;
-      const fbKey = `${combo.horizon}_${combo.partialTP}_${combo.partialTPPct || 0.5}_${combo.trailingStop}_${combo.maxStopPct || 0}_${combo.atrStopMult || 0}_${combo.dailyTrailPct || 0}_${combo.breakevenPct || 0}_${combo.staleDays || 0}_${combo.entryGatePct || 0}`;
-      const trades2 = tradesByKey[fbKey] || [];
-      const cfg2 = {
-        portfolioSize: combo.portfolioSize, topN: combo.topN, minScore: combo.minScore,
-        rotation: combo.rotation, strategyFilter: STRATEGY_FILTERS[combo.filterName],
-        horizonDays: combo.horizon, partialTP: combo.partialTP, trailingStop: combo.trailingStop,
-      };
-      const sim2 = simulatePortfolio(trades2, scans, cfg2);
-      if (sim2 && sim2.closedTrades) {
-        frozenTrades[key] = sim2.closedTrades
-          .map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }))
-          .sort((a, b) => (a.scanDate || "").localeCompare(b.scanDate || ""));
-      }
-    }
+    console.log('⚠️  No modes-config.json found — skipping frozen trades. Run sweep --full-sweep to discover optimal strategy.');
   }
-  fs.writeFileSync(path.join(ROOT, "data", "backtest-trades.json"), JSON.stringify(frozenTrades, null, 2));
+  fs.writeFileSync(BACKTEST_TRADES_PATH, JSON.stringify(frozenTrades, null, 2));
   console.log("✅ Trade lists saved to data/backtest-trades.json (frozen modes)");
 
   // Save equity curve for optimal combo

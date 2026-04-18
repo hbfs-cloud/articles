@@ -252,12 +252,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 5. **⚠️ Sharia Compliance Tagging (OBLIGATOIRE)** : Pour chaque ticker retenu, évaluer la conformité Sharia (secteur haram, ratios dette/market cap > 33%, intérêts > 5% du CA, ETFs levier/bonds). Ajouter `data-sharia="true"` ou `data-sharia="false"` sur chaque `<tr>` du synthèse et chaque `<div class="setup-card">`. Voir `scanner/CLAUDE.md` section "Sharia Compliance Tagging" pour les critères complets.
 6. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
-6. **Pipeline Initial (J0 - Optimisation)** :
-   ```bash
-   node tools/sweep.js                     # Grid search complet (recalcul historique)
-   node tools/gen-status-page.js --backfill # Reset des snapshots historiques
-   ```
-7. **Indexer + Push HTML d'abord** (AVANT le pipeline) :
+6. **Indexer + Push HTML d'abord** (AVANT le pipeline) :
    ```bash
    node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-notify
    ```
@@ -266,11 +261,21 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 8. **Pipeline Quotidien (Append-only)** :
    ```bash
    node tools/update-tracking.js           # Tracking exits (prix Yahoo)
-   node tools/sweep.js --frozen-only       # Update closed trades (without grid search)
+   node tools/sweep.js                     # Append-only: ajoute les nouveaux trades fermés (défaut sûr)
    node tools/gen-status-page.js           # Snapshot J + Dashboard (sans flag)
    node tools/gen-api.js                   # Refresh public JSONs (29 endpoints)
    ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
    ```
+
+9. **Sweep Stratégique (ON-DEMAND uniquement)** :
+   ```bash
+   node tools/sweep.js --full-sweep        # Grid search complet — découvre la meilleure stratégie
+   ```
+   - **Ne se lance JAMAIS automatiquement** — uniquement sur demande explicite de l'utilisateur
+   - Met à jour `modes-config.json` avec les paramètres optimaux découverts
+   - **Ne touche PAS à l'historique des trades** (`backtest-trades.json` reste intact)
+   - Les nouveaux paramètres s'appliquent aux trades **futurs** uniquement
+   - Après un sweep stratégique : régénérer status page + API pour refléter la nouvelle config
 
 ### "Rétrospective Scanner"
 **Langue par défaut : anglais intermediate.** Voir `scanner/CLAUDE.md` section 5bis pour le template complet.
@@ -334,9 +339,8 @@ Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
 
 ## Portfolio API — `/portfolio/v1/`
 API publique servant les signaux et l'equity des 5 modes.
-- **Modes** : `turbo` (1 slot, 100%, H3, extreme), `dynamic` (1 slot, 100%, H3), `balanced` (2 slots, 50%, H8), `secured` (3 slots, 33%, H10), `fortress` (3 slots, 17%, H10, half-sized).
+- **Modes** : `turbo`, `dynamic`, `balanced`, `secured`, `fortress` — paramètres définis dans `data/modes-config.json` (ajustés par sweep).
 - **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|orders|actions|trades|all].json`
-- **Paramètre clé Fortress** : `positionSizePct: 0.5` — demi-positions pour halve le drawdown.
 - **Documentation** : `https://articles.dailytickers.com/integrations/portfolio/`
 - **Génération** : `node tools/gen-api.js` (dépend de `backtest-trades.json` et `scanner-positions.json`).
 

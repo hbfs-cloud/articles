@@ -1226,6 +1226,9 @@ document.addEventListener('DOMContentLoaded',function(){
       panel.innerHTML=tmLiveHTML[id];
       var oldChart=document.getElementById('chart-'+id);
       if(oldChart){var ci=echarts.getInstanceByDom(oldChart);if(ci)ci.dispose();}
+      // Re-apply lp-grid tm-viewing class after innerHTML restore
+      var restoredGrid=panel.querySelector('.lp-grid');
+      if(restoredGrid)restoredGrid.classList.add('tm-viewing');
     }
     panel.style.transition='opacity .15s';panel.style.opacity='0.3';
     setTimeout(function(){
