@@ -81,6 +81,7 @@ function equityDV(curve) {
 
 function main() {
   const config = JSON.parse(fs.readFileSync(MODES_CFG));
+  const modesConfigMeta = { configVersion: config._version || null, regime: config._regime || null };
   let allTrades = {};
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) { }
   let results = {};
@@ -742,10 +743,16 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .pill.pending{background:#eff6ff;color:#3b82f6;border:1px dashed #93c5fd}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
+/* Rotation card & thesis rows: respect parent width */
+.thesis-row td{white-space:normal!important;word-break:break-word}
+.thesis-row td>div{max-width:100%;box-sizing:border-box}
+.cta-orders table.t,.section-card table.t{table-layout:fixed;width:100%}
+.cta-orders .thesis-row td>div[style*="grid"]{max-width:100%;overflow:hidden}
 @media(max-width:600px){
   .section-card details[open]>table.t,.section-card>table.t{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .t{table-layout:auto}
   .t th,.t td{white-space:nowrap;padding:.3rem .45rem;font-size:.68rem}
+  .thesis-row td>div[style*="grid"]{grid-template-columns:1fr auto 1fr!important;gap:.4rem!important;padding:.4rem!important;font-size:.72rem!important}
 }
 
 /* ── Scenario bar ── */
@@ -1241,6 +1248,33 @@ document.addEventListener('DOMContentLoaded',function(){
         var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
         allSections.forEach(function(s){s.style.display='none'});
         panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
+        // Update how-to panel with snapshot config (time-machine aware)
+        var snapCfg=d.config||{};
+        var howTo=panel.querySelector('[data-static]');
+        if(howTo&&snapCfg.tagline){
+          var tagDiv=howTo.querySelector('div[style*="border-left"]');
+          if(tagDiv)tagDiv.textContent=snapCfg.tagline;
+          var goalSpan=howTo.querySelector('.sc-summary span[style*="color:#64748b"]');
+          if(goalSpan)goalSpan.textContent=(snapCfg.goal||'')+(snapCfg.riskProfile?' · '+snapCfg.riskProfile+' risk':'');
+          var footer=howTo.querySelector('.method-footer');
+          if(footer){
+            var alloc=Math.round(100/snapCfg.portfolioSize*(snapCfg.positionSizePct||1));
+            footer.innerHTML='<span><i class="fas fa-layer-group"></i> '+snapCfg.portfolioSize+' trades max · '+alloc+'% each</span>'
+              +'<span><i class="fas fa-calendar-days"></i> Close after '+snapCfg.horizon+' trading days</span>'
+              +(snapCfg.maxStopPct>0?'<span><i class="fas fa-shield-halved"></i> Hard stop at −'+snapCfg.maxStopPct+'%</span>':'')
+              +(snapCfg.partialTP?'<span><i class="fas fa-scissors"></i> Sell '+Math.round((snapCfg.partialTPPct||0.5)*100)+'% at TP1</span>':'');
+          }
+          var verTag=howTo.querySelector('.tm-config-ver');
+          if(!verTag&&snapCfg.configVersion){
+            var vt=document.createElement('div');
+            vt.className='tm-config-ver';
+            vt.style.cssText='margin-top:.5rem;font-size:.72rem;color:#64748b;text-align:right';
+            vt.innerHTML='<i class="fas fa-tag" style="margin-right:.25rem"></i>Config: <b>'+snapCfg.configVersion+'</b>';
+            footer.parentNode.insertBefore(vt,footer.nextSibling);
+          }else if(verTag&&snapCfg.configVersion){
+            verTag.innerHTML='<i class="fas fa-tag" style="margin-right:.25rem"></i>Config: <b>'+snapCfg.configVersion+'</b>';
+          }
+        }
         var perfHero=panel.querySelector('.perf-hero');
         var insertAfter=perfHero||panel.firstElementChild;
         function tmInsertAfter(newEl,ref){
@@ -1465,7 +1499,7 @@ document.addEventListener('DOMContentLoaded',function(){
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy, configVersion: t.configVersion || null })),
-      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 }
+      config: { label: cfg.label || id, goal: cfg.goal || '', riskProfile: cfg.riskProfile || '', tagline: cfg.tagline || '', portfolioSize: cfg.portfolioSize, topN: cfg.topN || 1, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, staleDays: cfg.staleDays || 0, configVersion: modesConfigMeta.configVersion || null }
     };
   }
 
@@ -1479,8 +1513,11 @@ document.addEventListener('DOMContentLoaded',function(){
 function backfillHistory() {
   const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
   const SCANNER_DIR_BF = path.join(ROOT, 'scanner');
+  const parser = require('./lib/scanner-parser');
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8'));
-  const modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes;
+  const mcfgFull = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8'));
+  const modesCfg = mcfgFull.modes;
+  const modesConfigMeta = { configVersion: mcfgFull._version || null, regime: mcfgFull._regime || null };
   const results = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
 
   function addBizDaysBF(dateStr, n) {
@@ -1611,7 +1648,7 @@ function backfillHistory() {
         expiresTomorrow: activePos.filter(p => p.days_remaining === 1).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysBetweenBF(p.scan_date, dateISO), horizon: cfg.horizon })),
         signals: filteredSignals,
         closedTrades: modeTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-        config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 },
+        config: { label: cfg.label || id, goal: cfg.goal || '', riskProfile: cfg.riskProfile || '', tagline: cfg.tagline || '', portfolioSize: cfg.portfolioSize, topN: cfg.topN || 1, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, staleDays: cfg.staleDays || 0, configVersion: modesConfigMeta.configVersion || null },
       };
     }
 
