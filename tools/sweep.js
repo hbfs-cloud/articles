@@ -28,6 +28,8 @@ const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
 const FROZEN_ONLY = process.argv.includes('--frozen-only');
 const SHARIA = process.argv.includes('--sharia');
+const FROM_ARG = process.argv.find(a => a.startsWith('--from='));
+const FROM_DATE = FROM_ARG ? FROM_ARG.split('=')[1] : null;
 
 // FALLBACK Sharia exclusion list — used ONLY for old scans that don't have data-sharia attributes.
 // New scans have data-sharia="true/false" on each <tr> in the synthese table (evaluated at generation
@@ -694,7 +696,7 @@ async function main() {
     .filter(d => /^\d{8}(-\d+)?$/.test(d))
     .filter(d => {
       const date = d.slice(0, 4) + '-' + d.slice(4, 6) + '-' + d.slice(6, 8);
-      return date >= '2026-02-15';
+      return date >= (FROM_DATE || '2026-02-15');
     })
     .sort();
 
@@ -1131,7 +1133,23 @@ async function main() {
 
   // Save trade lists for all FROZEN modes (from modes-config.json)
   const MODES_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
+  const HISTORY_PATH = path.join(ROOT, "data", "modes-config-history.json");
   const frozenTrades = {};
+  // Load config version history for trade tagging
+  let configHistory = [];
+  if (fs.existsSync(HISTORY_PATH)) {
+    try { configHistory = JSON.parse(fs.readFileSync(HISTORY_PATH)).versions || []; } catch(e) {}
+  }
+  function getConfigVersion(scanDate) {
+    // Find the config version active at scanDate (last version with timestamp <= scanDate)
+    let ver = configHistory.length ? configHistory[0].id : 'unknown';
+    for (const h of configHistory) {
+      const hDate = (h.timestamp || '').slice(0, 10); // "2026-04-18T..." → "2026-04-18"
+      if (hDate <= scanDate) ver = h.id;
+      else break;
+    }
+    return ver;
+  }
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     for (const [id, cfg] of Object.entries(modesConfig.modes)) {
@@ -1146,7 +1164,9 @@ async function main() {
       };
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
       if (sim2 && sim2.closedTrades) {
-        frozenTrades[id] = sim2.closedTrades.sort((a, b) => (a.scanDate || "").localeCompare(b.scanDate || ""));
+        frozenTrades[id] = sim2.closedTrades
+          .map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }))
+          .sort((a, b) => (a.scanDate || "").localeCompare(b.scanDate || ""));
         // Save MtM metrics for gen-status-page.js
         output[`frozen_${id}`] = {
           returnTotal: sim2.returnTotal, maxDD: sim2.maxDD, winRate: sim2.winRate,
@@ -1171,7 +1191,9 @@ async function main() {
       };
       const sim2 = simulatePortfolio(trades2, scans, cfg2);
       if (sim2 && sim2.closedTrades) {
-        frozenTrades[key] = sim2.closedTrades.sort((a, b) => (a.scanDate || "").localeCompare(b.scanDate || ""));
+        frozenTrades[key] = sim2.closedTrades
+          .map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }))
+          .sort((a, b) => (a.scanDate || "").localeCompare(b.scanDate || ""));
       }
     }
   }

@@ -23,6 +23,14 @@ function parsePrice(s) {
 
 fs.mkdirSync(OUT, { recursive: true });
 
+// Load modes-config for version/regime metadata
+const MODES_CFG_PATH = path.join(ROOT, 'data', 'modes-config.json');
+let modesConfigMeta = {};
+if (fs.existsSync(MODES_CFG_PATH)) {
+  const mc = JSON.parse(fs.readFileSync(MODES_CFG_PATH, 'utf8'));
+  modesConfigMeta = { configVersion: mc._version || null, regime: mc._regime || null };
+}
+
 function write(filename, content) {
   const outPath = path.join(OUT, filename);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -81,10 +89,13 @@ function writeMode(mode, prefix) {
   // 3. trades.json
   write(`${p}trades.json`, {
     updatedAt: now, mode: prefix || 'balanced',
+    configVersion: modesConfigMeta.configVersion,
+    regime: modesConfigMeta.regime,
     trades: (mode.closedTrades || []).map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
-      holdDays: t.holdDays, status: t.status, strategy: t.strategy
+      holdDays: t.holdDays, status: t.status, strategy: t.strategy,
+      configVersion: t.configVersion || null
     }))
   });
 
@@ -163,7 +174,8 @@ function writeMode(mode, prefix) {
     closedTrades: (mode.closedTrades || []).map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
-      holdDays: t.holdDays, status: t.status, strategy: t.strategy
+      holdDays: t.holdDays, status: t.status, strategy: t.strategy,
+      configVersion: t.configVersion || null
     }))
   });
 }
@@ -262,6 +274,8 @@ count++;
 // ─── Summary endpoint: all modes overview ──────────────────────────────────
 write('modes.json', {
   updatedAt: now, date: snap.date,
+  configVersion: modesConfigMeta.configVersion,
+  regime: modesConfigMeta.regime,
   modes: MODE_IDS.filter(id => snap.modes[id]).map(id => {
     const m = snap.modes[id];
     return {

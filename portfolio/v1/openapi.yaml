@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: DailyTickers Portfolio API
-  version: "1.0.0"
+  version: "1.1.0"
   description: >
     Free JSON endpoints to replicate the DailyTickers 5 specialized scanner portfolios (Turbo, Dynamic, Balanced, Secured, Fortress).
     Updated every trading session (~23:00 UTC weekdays). No authentication required.
@@ -239,8 +239,9 @@ components:
         exitPrice: { type: number, example: 75.44 }
         pnlPct: { type: number, example: 2.06 }
         holdDays: { type: integer, example: 5 }
-        status: { type: string, enum: [tp1, tp2, sl, expired, rotated] }
+        status: { type: string, enum: [tp1, tp2, sl, expired, rotated, breakeven] }
         strategy: { type: string }
+        configVersion: { type: string, nullable: true, description: "Config version active when trade was opened", example: "v2-20260418" }
 
     Order:
       type: object
@@ -290,14 +291,16 @@ components:
         topN: { type: integer, example: 1 }
         minScore: { type: integer, example: 85 }
         horizon: { type: integer, example: 5 }
-        filterName: { type: string, example: "breakout_only" }
-        rotation: { type: string, example: "daily_max1" }
+        filterName: { type: string, example: "momentum_only" }
+        rotation: { type: string, example: "aggressive" }
         partialTP: { type: boolean }
         trailingStop: { type: boolean }
         maxStopPct: { type: number }
         atrStopMult: { type: number }
         dailyTrailPct: { type: number }
         breakevenPct: { type: number }
+        configVersion: { type: string, description: "Active config version ID", example: "v2-20260418" }
+        regime: { type: string, description: "Market regime the config was optimized for", example: "RISK-ON" }
 
     Stats:
       type: object
