@@ -1222,10 +1222,15 @@ async function main() {
     return ver;
   }
 
-  // Always load existing trades — history is never rewritten
+  // Always load existing trades and results — history is never rewritten
   let existingTrades = {};
   if (fs.existsSync(BACKTEST_TRADES_PATH)) {
     try { existingTrades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8')); } catch(e) {}
+  }
+  let existingResults = {};
+  const RESULTS_PATH = path.join(ROOT, 'data', 'backtest-results.json');
+  if (fs.existsSync(RESULTS_PATH)) {
+    try { existingResults = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8')); } catch(e) {}
   }
 
   if (fs.existsSync(MODES_CFG_PATH)) {
@@ -1275,30 +1280,37 @@ async function main() {
 
         frozenTrades[id] = merged;
 
-        // Recompute stats from combined trade list
-        const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
-        if (stats) {
-          output[`frozen_${id}`] = {
-            returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
-            profitFactor: stats.profitFactor, trades: stats.trades,
-            equityCurve: stats.equityCurve,
-          };
-          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
+        if (toAppend.length === 0) {
+          // No new trades — preserve existing frozen stats exactly as-is
+          const existingStats = existingResults[`frozen_${id}`];
+          if (existingStats) {
+            output[`frozen_${id}`] = existingStats;
+            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${existingStats.returnTotal}%, DD=${existingStats.maxDD}% (preserved)`);
+          } else {
+            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), no existing stats`);
+          }
         } else {
-          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), no stats`);
+          // New trades appended — recompute stats from combined trade list
+          const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
+          if (stats) {
+            output[`frozen_${id}`] = {
+              returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
+              profitFactor: stats.profitFactor, trades: stats.trades,
+              equityCurve: stats.equityCurve,
+            };
+            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
+          } else {
+            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), no stats`);
+          }
         }
       } else {
-        // FULL_SWEEP: keep existing trades intact, only recompute stats for display
+        // FULL_SWEEP: keep existing trades and stats intact
         const existing = existingTrades[id] || [];
         frozenTrades[id] = existing;
-        const stats = computeStatsFromTrades(existing, cfg.portfolioSize, cfg.positionSizePct || 1, id);
-        if (stats) {
-          output[`frozen_${id}`] = {
-            returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
-            profitFactor: stats.profitFactor, trades: stats.trades,
-            equityCurve: stats.equityCurve,
-          };
-          console.log(`  ${id} (${cfg.label}): ${existing.length} trades (preserved), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
+        const existingStats = existingResults[`frozen_${id}`];
+        if (existingStats) {
+          output[`frozen_${id}`] = existingStats;
+          console.log(`  ${id} (${cfg.label}): ${existing.length} trades (preserved), return=${existingStats.returnTotal}%, DD=${existingStats.maxDD}%`);
         } else {
           console.log(`  ${id} (${cfg.label}): ${existing.length} trades (preserved), no stats`);
         }
