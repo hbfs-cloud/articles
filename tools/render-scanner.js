@@ -58,7 +58,7 @@ function flushChartsScript() {
   if (!_charts.length) return '';
   const inits = _charts.map(ch =>
     `(function(){\n  var el=document.getElementById(${JSON.stringify(ch.id)});\n  if(!el)return;\n  var c=echarts.init(el);\n  c.setOption(${ch.optionCode});\n})()`
-  ).join('\n\n');
+  ).join(';\n\n');
 
   const resizeIds = _charts.map(ch => JSON.stringify(ch.id)).join(',');
   return `<script>
