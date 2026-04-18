@@ -449,9 +449,31 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 // Computes returnTotal, maxDD, winRate, profitFactor, equityCurve from a
 // pre-existing list of closed trades without re-running portfolio simulation.
 // Trades must have: pnlPct, exitDate, scanDate, status, holdDays.
-function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct) {
+// Uses configVersion on each trade to look up the correct weight from config history.
+function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId) {
   if (!closedTrades || closedTrades.length === 0) return null;
-  const weight = (1 / portfolioSize) * (positionSizePct || 1);
+  const defaultWeight = (1 / portfolioSize) * (positionSizePct || 1);
+
+  // Load config history for per-trade weight lookup
+  const cfgHistPath = path.join(ROOT, 'data', 'modes-config-history.json');
+  let cfgVersions = {};
+  if (fs.existsSync(cfgHistPath)) {
+    try {
+      const hist = JSON.parse(fs.readFileSync(cfgHistPath, 'utf8'));
+      for (const v of (hist.versions || [])) {
+        cfgVersions[v.id] = v.config;
+      }
+    } catch(e) {}
+  }
+
+  function getWeight(trade, modeId) {
+    const ver = trade.configVersion;
+    if (ver && cfgVersions[ver] && cfgVersions[ver][modeId]) {
+      const c = cfgVersions[ver][modeId];
+      return (1 / (c.portfolioSize || 1)) * (c.positionSizePct || 1);
+    }
+    return defaultWeight;
+  }
 
   const RESOLVED_STATUSES = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
   const resolved = closedTrades.filter(t => {
@@ -467,7 +489,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct) {
   let maxDD = 0;
   const equityCurve = [{ date: sorted[0].scanDate || sorted[0].exitDate, value: 100 }];
   for (const t of sorted) {
-    equity += (t.pnlPct || 0) * weight;
+    equity += (t.pnlPct || 0) * getWeight(t, modeId || '');
     if (equity > peak) peak = equity;
     const dd = peak - equity;
     if (dd > maxDD) maxDD = dd;
@@ -1254,7 +1276,7 @@ async function main() {
         frozenTrades[id] = merged;
 
         // Recompute stats from combined trade list
-        const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1);
+        const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
         if (stats) {
           output[`frozen_${id}`] = {
             returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
@@ -1269,7 +1291,7 @@ async function main() {
         // FULL_SWEEP: keep existing trades intact, only recompute stats for display
         const existing = existingTrades[id] || [];
         frozenTrades[id] = existing;
-        const stats = computeStatsFromTrades(existing, cfg.portfolioSize, cfg.positionSizePct || 1);
+        const stats = computeStatsFromTrades(existing, cfg.portfolioSize, cfg.positionSizePct || 1, id);
         if (stats) {
           output[`frozen_${id}`] = {
             returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,

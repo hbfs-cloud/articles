@@ -301,4 +301,20 @@ write('modes.json', {
 });
 count++;
 
+// ─── Config history endpoint ─────────────────────────────────────────────────
+const CFG_HIST_PATH = path.join(ROOT, 'data', 'modes-config-history.json');
+if (fs.existsSync(CFG_HIST_PATH)) {
+  const hist = JSON.parse(fs.readFileSync(CFG_HIST_PATH, 'utf8'));
+  write('config-history.json', {
+    updatedAt: now,
+    versions: (hist.versions || []).map(v => ({
+      id: v.id,
+      timestamp: v.timestamp,
+      regime: v.regime || null,
+      config: v.config,
+    }))
+  });
+  count++;
+}
+
 console.log(`\nDone. ${count} endpoints written to portfolio/v1/ at ${now}`);
