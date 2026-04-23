@@ -76,6 +76,12 @@ function equityDV(curve) {
   const byDate = {};
   for (const p of curve) { if (p.date) byDate[p.date] = p.value; }
   const dates = Object.keys(byDate).sort();
+  // Extend to today so all modes show the same end date
+  const today = new Date().toISOString().slice(0, 10);
+  if (dates.length > 0 && dates[dates.length - 1] < today) {
+    byDate[today] = byDate[dates[dates.length - 1]];
+    dates.push(today);
+  }
   return { d: dates.map(d => d.slice(5).replace('-', '/')), v: dates.map(d => byDate[d]) };
 }
 
