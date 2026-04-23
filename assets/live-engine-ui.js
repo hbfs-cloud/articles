@@ -69,45 +69,48 @@
     '    grid-row:1;',
     '  }',
 
-    /* Equity curve — left column, spans 2 rows to balance with signals+orders stack on right */
+    /* Equity curve — left column, row 2. Stretches to match right-col wrapper height. */
     '  .lp-grid>[data-grid="equity"]{',
     '    grid-column:1;',
-    '    grid-row:2/span 2;',
+    '    grid-row:2;',
     '    margin-bottom:0!important;',
     '    display:flex!important;',
     '    flex-direction:column!important;',
+    '    align-self:stretch!important;',
     '  }',
 
-    /* Signals — right column, directly under live card */
-    '  .lp-grid>[data-grid="signals"]{',
+    /* Right column wrapper — holds signals + orders + CTAs stacked. Used in both live and TM modes. */
+    '  .lp-grid>[data-grid="right"]{',
     '    grid-column:2;',
     '    grid-row:2;',
-    '    margin-bottom:0!important;',
+    '    display:flex!important;',
+    '    flex-direction:column!important;',
+    '    gap:.6rem;',
+    '    align-self:stretch!important;',
+    '    min-width:0;',
     '  }',
+    '  .lp-grid>[data-grid="right"]>*{margin-bottom:0!important}',
 
-    /* Orders — right column, under signals (CTA to action) */
-    '  .lp-grid>[data-grid="orders"]{',
-    '    grid-column:2;',
+    /* Fallback for any stray direct-grid signals/orders (e.g., before wrapper is built). */
+    '  .lp-grid>[data-grid="signals"]{grid-column:2;grid-row:2;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="orders"]{grid-column:2;grid-row:3;margin-bottom:0!important}',
+
+    /* Positions — full width row 3 */
+    '  .lp-grid>[data-grid="positions"]{',
+    '    grid-column:1/-1;',
     '    grid-row:3;',
     '    margin-bottom:0!important;',
     '  }',
 
-    /* Positions — full width row 4 */
-    '  .lp-grid>[data-grid="positions"]{',
-    '    grid-column:1/-1;',
-    '    grid-row:4;',
-    '    margin-bottom:0!important;',
-    '  }',
-
-    /* History — full width row 5 */
-    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:5;margin-bottom:0!important}',
-    '  .lp-grid>[data-grid="footer"]{grid-column:1/-1}',
+    /* History — full width row 4 */
+    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:4;margin-bottom:0!important}',
+    '  .lp-grid>[data-grid="footer"]{grid-column:1/-1;grid-row:5}',
 
     /* Hide empty-state collapsed sections on desktop to reclaim space */
     '  .lp-grid>[data-grid-empty="1"]{display:none!important}',
 
-    /* "How to trade" method card — visible but collapsed (details) */
-    '  .lp-grid>[data-grid="method"]{grid-column:1/-1;grid-row:6;margin-bottom:0!important}',
+    /* Hide "How to trade" method card on desktop */
+    '  .lp-grid>[data-grid="method"]{display:none!important}',
 
     /* ── Equity curve panel ── */
     '  .lp-grid>[data-grid="equity"] .perf-hero{',
@@ -198,10 +201,6 @@
     '    color:#94a3b8!important;',
     '  }',
     '}',
-
-    /* Time Machine: when viewing a past snapshot, collapse the dashboard grid to a vertical stack
-       so the injected tmRender cards (no data-grid) flow in a natural reading order. */
-    '.lp-grid.tm-viewing>[data-grid="live"]{display:none!important}',
 
     /* ═══════════════════════════════════════════════
        LIVE PORTFOLIO CARD — The Hero
@@ -470,8 +469,9 @@
     /* Stack the grid tightly — no desktop layout applies, but tighten gaps */
     '  .lp-grid{display:flex!important;flex-direction:column!important;gap:.6rem!important}',
     '  .lp-grid>*{margin-bottom:0!important}',
-    /* Hide empty sections on mobile — reclaim vertical space */
+    /* Hide empty sections + method card on mobile — reclaim vertical space */
     '  .lp-grid>[data-grid-empty="1"]{display:none!important}',
+    '  .lp-grid>[data-grid="method"]{display:none!important}',
     /* Compact equity chart on mobile — enough to read the curve */
     '  .lp-grid>[data-grid="equity"] .perf-hero{padding:.7rem .8rem!important;gap:.5rem!important}',
     '  .lp-grid>[data-grid="equity"] .perf-chart{min-height:200px!important}',
@@ -554,6 +554,18 @@
     });
 
     panel.appendChild(grid);
+
+    // Wrap right-column items (signals + orders) in a flex container so TM mode
+    // can stack additional cards (CTAs, alerts) alongside them without breaking the grid.
+    var rightItems = grid.querySelectorAll('[data-grid="signals"], [data-grid="orders"]');
+    if (rightItems.length) {
+      var rightWrap = document.createElement('div');
+      rightWrap.setAttribute('data-grid', 'right');
+      var equity = grid.querySelector('[data-grid="equity"]');
+      if (equity && equity.nextSibling) grid.insertBefore(rightWrap, equity.nextSibling);
+      else grid.appendChild(rightWrap);
+      Array.prototype.forEach.call(rightItems, function (el) { rightWrap.appendChild(el); });
+    }
 
     // Collapse empty Positions / History sections on desktop so the grid reclaims space
     setTimeout(function () {
