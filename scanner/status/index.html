@@ -6,7 +6,7 @@
   <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css?v=1776419399531">
+  <link rel="stylesheet" href="/assets/report.css?v=1776416517342">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -1891,19 +1891,19 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js?v=1776419399531"></script>
-<script src="/assets/tag-renderer.js?v=1776419399531"></script>
-<script src="/assets/live-engine.js?v=1776419399531"></script>
-<script src="/assets/live-engine-ui.js?v=1776419399531"></script>
+<script src="/assets/core.js?v=1776416517342"></script>
+<script src="/assets/tag-renderer.js?v=1776416517342"></script>
+<script src="/assets/live-engine.js?v=1776416517342"></script>
+<script src="/assets/live-engine-ui.js?v=1776416517342"></script>
 <script>
-var _v='1776419399531';
+var _v='1776416517342';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
     var c=echarts.init(document.getElementById(el));
     c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:color+'00'}])}}]});
   }
-  var tmDates=[], tmCurrentIdx=0, tmModesCfg={}, tmLoadToken=0;
+  var tmDates=[], tmCurrentIdx=0, tmModesCfg={};
   function tmInit(){
     fetch('/data/modes-config.json?v='+_v).then(function(r){return r.json()}).then(function(cfg){
       tmModesCfg = cfg;
@@ -1924,28 +1924,8 @@ document.addEventListener('DOMContentLoaded',function(){
         tmCurrentIdx=parseInt(this.value);
         tmUpdateLabel();
         tmLoadIdx(tmCurrentIdx);
-        tmUpdateUrl();
       });
-      // Boot from URL ?t=YYYYMMDD to reproduce a specific TM state
-      var qt=new URLSearchParams(location.search).get('t');
-      if(qt){
-        var qIdx=dates.indexOf(qt);
-        if(qIdx>=0 && qIdx!==dates.length-1){
-          tmCurrentIdx=qIdx;
-          slider.value=qIdx;
-          tmUpdateLabel();
-          tmLoadIdx(qIdx);
-        }
-      }
     }).catch(function(){});
-  }
-  function tmUpdateUrl(){
-    try{
-      var u=new URL(location.href);
-      if(tmCurrentIdx===tmDates.length-1) u.searchParams.delete('t');
-      else u.searchParams.set('t', tmDates[tmCurrentIdx]);
-      history.replaceState(null,'',u.toString());
-    }catch(_){}
   }
   // Exposed globally so inline onclick handlers can reach them
   window.tmToggle=function(){
@@ -1991,7 +1971,6 @@ document.addEventListener('DOMContentLoaded',function(){
     document.getElementById('timeSlider').value=tmCurrentIdx;
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
-    tmUpdateUrl();
   };
   var VALID_MODES=['turbo','dynamic','balanced','secured','fortress'];
   var activeMode='balanced';
@@ -2076,11 +2055,8 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   function tmRestoreLive(){
-    tmLoadToken++; // invalidate any pending render
     document.querySelectorAll('.mode-panel').forEach(function(p){
       var id=p.id.replace('p-','');
-      var liveCard=p.querySelector('[data-grid="live"]');
-      if(liveCard)liveCard.style.display='';
       if(tmLiveHTML[id]){
         p.innerHTML=tmLiveHTML[id];
         p.style.minHeight='';p.style.opacity='';p.style.transition='';
@@ -2099,22 +2075,22 @@ document.addEventListener('DOMContentLoaded',function(){
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
   }
   function tmLoadIdx(idx){
-    var myToken=++tmLoadToken; // cancels any in-flight TM render
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){
       tmRestoreLive();
       return;
     }
     tmSaveLive();
+    var tmPanel=document.getElementById('p-'+activeMode);
+    var tmGrid=tmPanel&&tmPanel.querySelector('.lp-grid');
+    if(tmGrid)tmGrid.classList.add('tm-viewing');
     var dateStr=tmDates[idx];
     fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
-      if(myToken!==tmLoadToken)return; // stale — user navigated away
       banner.className='tm-banner show';
       var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
       banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
-      tmRender(snap, myToken);
+      tmRender(snap);
     }).catch(function(){
-      if(myToken!==tmLoadToken)return;
       banner.className='tm-banner show';
       banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
     });
@@ -2125,9 +2101,8 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     document.getElementById('tmPanel').classList.remove('open');
     tmRestoreLive();
-    tmUpdateUrl();
   };
-  function tmRender(snap, token){
+  function tmRender(snap){
     var id=activeMode;
     var d=snap.modes[id];
     if(!d)return;
@@ -2138,10 +2113,6 @@ document.addEventListener('DOMContentLoaded',function(){
       panel.style.transition='opacity .2s ease-in-out';
       panel.style.opacity='0.4';
       setTimeout(function(){
-        if(token!==undefined && token!==tmLoadToken){
-          panel.style.opacity='1';
-          return;
-        }
         var cfg=d.config||{};
         var stats=panel.querySelectorAll('.ps-v');
         if(stats.length>=6){
@@ -2165,26 +2136,12 @@ document.addEventListener('DOMContentLoaded',function(){
         var allSections=panel.querySelectorAll('.section-card:not([data-static]), .cta-card, .method-card');
         allSections.forEach(function(s){s.style.display='none'});
         panel.querySelectorAll('[data-tm]').forEach(function(el){el.remove()});
-        // Hide the live portfolio card in TM mode — replaced by snapshot stats shown via perf-hero
-        var liveCard=panel.querySelector('[data-grid="live"]');
-        if(liveCard)liveCard.style.display='none';
-        var grid=panel.querySelector('.lp-grid');
-        var rightWrap=grid&&grid.querySelector('[data-grid="right"]');
-        // Clear right-col wrapper of any prior live-mode signals/orders (hidden already but keep them for restore)
-        // We insert TM cards into the same wrapper so the 2-col dashboard layout persists.
-        function appendRight(el){
-          el.setAttribute('data-tm','1');
-          if(rightWrap)rightWrap.appendChild(el);
-          else if(grid)grid.appendChild(el);
-          else panel.appendChild(el);
-          return el;
-        }
-        function appendGrid(el,slot){
-          el.setAttribute('data-tm','1');
-          if(slot)el.setAttribute('data-grid',slot);
-          if(grid)grid.appendChild(el);
-          else panel.appendChild(el);
-          return el;
+        var perfHero=panel.querySelector('.perf-hero');
+        var insertAfter=perfHero||panel.firstElementChild;
+        function tmInsertAfter(newEl,ref){
+          if(ref.nextSibling)ref.parentNode.insertBefore(newEl,ref.nextSibling);
+          else ref.parentNode.appendChild(newEl);
+          return newEl;
         }
         var raiseSL = (d.positions||[]).filter(function(p){ 
           var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
@@ -2200,7 +2157,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
             cnh+='<tr><td><b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">$'+(p.entry||0).toFixed(2)+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="am">'+(p.days_held||'?')+'d</td><td><span class="pill neg">CLOSE</span></td></tr>';
           });
-          cnh+='</tbody></table>'; cn.innerHTML=cnh; appendRight(cn);
+          cnh+='</tbody></table>'; cn.innerHTML=cnh; insertAfter=tmInsertAfter(cn,insertAfter);
         }
         if(raiseSL.length > 0){
           var rs=document.createElement('div'); rs.className='cta-card'; rs.setAttribute('data-tm','1'); rs.style='background:#f0f9ff;border:1.5px solid #bae6fd;border-left:4px solid #0284c7';
@@ -2212,7 +2169,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
             rsh+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td class="pos"><b>+'+pnl.toFixed(2)+'%</b></td><td><span class="pill pos" style="background:#0284c7;color:#fff">B.EVEN</span></td><td>Trailing</td></tr>';
           });
-          rsh+='</tbody></table>'; rs.innerHTML=rsh; appendRight(rs);
+          rsh+='</tbody></table>'; rs.innerHTML=rsh; insertAfter=tmInsertAfter(rs,insertAfter);
         }
         if(d.expiresTomorrow&&d.expiresTomorrow.length>0){
           var et=document.createElement('div'); et.className='cta-card'; et.setAttribute('data-tm','1'); et.style='background:#fffbeb;border:2px solid #fcd34d;border-left:4px solid #f59e0b';
@@ -2224,7 +2181,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var pnl = p.pnlPct !== undefined ? p.pnlPct : (p.return_pct || 0);
             eth+='<tr><td><b>'+p.ticker+'</b></td><td>$'+(p.entry||0).toFixed(2)+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td class="neg">'+(p.stop && p.stop!==0?'$'+p.stop.toFixed(2):'EXIT')+'</td><td class="am">'+(p.days_held||'?')+'d</td></tr>';
           });
-          eth+='</tbody></table>'; et.innerHTML=eth; appendRight(et);
+          eth+='</tbody></table>'; et.innerHTML=eth; insertAfter=tmInsertAfter(et,insertAfter);
         }
         if(d.orders&&d.orders.length>0){
           var od=document.createElement('div'); od.className='section-card cta-orders'; od.setAttribute('data-tm','1');
@@ -2234,7 +2191,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var bg=o.score>=90?'#059669':o.score>=85?'#2563eb':'#f59e0b';
             odh+='<tr><td><b>'+o.ticker+'</b></td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+o.score+'</span></td><td><b>'+o.entry+'</b></td><td>'+o.stop+' / '+o.tp1+'</td><td class="hide-m">'+(o.action==='ROTATE'?'<span class="pill am">ROTATE</span>':'<span class="pill pos">BUY</span>')+'</td></tr>';
           });
-          odh+='</tbody></table>'; od.innerHTML=odh; appendRight(od);
+          odh+='</tbody></table>'; od.innerHTML=odh; insertAfter=tmInsertAfter(od,insertAfter);
         }
         if(d.signals&&d.signals.length>0){
           var sg=document.createElement('div'); sg.className='section-card'; sg.setAttribute('data-tm','1');
@@ -2244,7 +2201,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var bg=s.score>=90?'#059669':s.score>=85?'#2563eb':'#f59e0b';
             sgh+='<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+s.score+'</span></td><td>'+s.entry+'</td><td class="neg">'+s.stop+'</td><td class="pos">'+s.tp1+'</td></tr>';
           });
-          sgh+='</tbody></table></details>'; sg.innerHTML=sgh; appendRight(sg);
+          sgh+='</tbody></table></details>'; sg.innerHTML=sgh; insertAfter=tmInsertAfter(sg,insertAfter);
         }
         var posSection=document.createElement('div'); posSection.className='section-card'; posSection.setAttribute('data-tm','1');
         if(d.positions&&d.positions.length>0){
@@ -2273,7 +2230,7 @@ document.addEventListener('DOMContentLoaded',function(){
           });
           psh+='</tbody></table>'; posSection.innerHTML=psh;
         }else{ posSection.innerHTML='<div class="sc-head"><h3>Open Positions</h3></div><p class="empty">No active positions</p>'; }
-        appendGrid(posSection,'positions');
+        insertAfter=tmInsertAfter(posSection,insertAfter);
         if(d.closedTrades&&d.closedTrades.length>0){
           var th=document.createElement('div'); th.className='section-card'; th.setAttribute('data-tm','1');
           var thh='<details><summary class="sc-summary"><span class="sc-sum-title">Trade History <span class="count">'+d.closedTrades.length+' closed</span></span></summary>'
@@ -2282,12 +2239,12 @@ document.addEventListener('DOMContentLoaded',function(){
             var pnl=t.pnlPct||0;
             thh+='<tr><td><b>'+t.ticker+'</b></td><td class="m hide-m">'+(t.scanDate?t.scanDate.slice(5):'—')+'</td><td class="'+(pnl>=0?'pos':'neg')+'"><b>'+(pnl>0?'+':'')+pnl.toFixed(2)+'%</b></td><td><span class="pill '+(pnl>=0?'pos':'neg')+'">'+(t.status||'CLOSED').toUpperCase()+'</span></td></tr>';
           });
-          thh+='</tbody></table></details>'; th.innerHTML=thh; appendGrid(th,'history');
+          thh+='</tbody></table></details>'; th.innerHTML=thh; insertAfter=tmInsertAfter(th,insertAfter);
         }
         if((!d.signals||!d.signals.length)&&(!d.positions||!d.positions.length)&&(!d.closedTrades||!d.closedTrades.length)&&(!d.closeNow||!d.closeNow.length)&&(!d.orders||!d.orders.length)){
-          var em=document.createElement('div'); em.className='section-card';
+          var em=document.createElement('div'); em.className='section-card'; em.setAttribute('data-tm','1');
           em.innerHTML='<div class="sc-head"><h3>No Activity</h3></div><p class="empty">No data for this date.</p>';
-          appendGrid(em,'history');
+          tmInsertAfter(em,insertAfter);
         }
         panel.style.minHeight=''; panel.style.opacity='1';
       }, 150);
