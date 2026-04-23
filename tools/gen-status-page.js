@@ -244,16 +244,17 @@ async function main() {
           }
         }
 
-        // Recompute Total Return and Max DD from the extended curve
+        // Recompute Total Return from the extended curve
         const vals = ec.map(p => p.value);
         m.ret = +((vals[vals.length - 1] || 100) - 100).toFixed(2);
-        let peak = -Infinity, maxDD = 0;
+        // Recompute Max DD — can only stay same or worsen, never improve
+        let peak = -Infinity, curveDD = 0;
         for (const v of vals) {
           if (v > peak) peak = v;
           const dd = +((v - peak) / peak * 100).toFixed(2);
-          if (dd < maxDD) maxDD = dd;
+          if (dd < curveDD) curveDD = dd;
         }
-        m.dd = maxDD;
+        m.dd = Math.min(frozen.maxDD, curveDD);
 
         m.equityCurve = ec;
       }
