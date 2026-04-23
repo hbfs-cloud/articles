@@ -7,6 +7,35 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+
+function fetchOHLC(ticker) {
+  return new Promise((resolve) => {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=30d`;
+    const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 };
+    https.get(url, opts, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          const result = j?.chart?.result?.[0];
+          if (!result) return resolve({ bars: {}, lastPrice: null });
+          const ts = result.timestamp || [];
+          const q = result.indicators?.quote?.[0] || {};
+          const bars = {};
+          for (let i = 0; i < ts.length; i++) {
+            if (q.close?.[i] != null) {
+              const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
+              bars[dateStr] = q.close[i];
+            }
+          }
+          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null });
+        } catch { resolve({ bars: {}, lastPrice: null }); }
+      });
+    }).on('error', () => resolve({ bars: {}, lastPrice: null })).on('timeout', () => resolve({ bars: {}, lastPrice: null }));
+  });
+}
 
 const ROOT = path.join(__dirname, '..');
 const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
@@ -85,7 +114,7 @@ function equityDV(curve) {
   return { d: dates.map(d => d.slice(5).replace('-', '/')), v: dates.map(d => byDate[d]) };
 }
 
-function main() {
+async function main() {
   const config = JSON.parse(fs.readFileSync(MODES_CFG));
   const modesConfigMeta = { configVersion: config._version || null, regime: config._regime || null };
   let allTrades = {};
@@ -96,6 +125,30 @@ function main() {
   try { liveMetrics = JSON.parse(fs.readFileSync(METRICS_FILE)); } catch (_) { }
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
+
+  // Fetch live OHLC for premature tickers missing from scanner-positions.json
+  const liveTickers = new Set(livePositions.map(p => p.ticker));
+  const prematureTickers = new Set();
+  for (const [id, cfg] of Object.entries(config.modes)) {
+    const raw = allTrades[id] || [];
+    for (const t of raw) {
+      if (t.status === 'expired' && t.holdDays < cfg.horizon && !liveTickers.has(t.ticker)) {
+        prematureTickers.add(t.ticker);
+      }
+    }
+  }
+  const prematureBars = {};
+  if (prematureTickers.size > 0) {
+    const tickers = [...prematureTickers];
+    console.log(`📡 Fetching live OHLC for ${tickers.length} premature ticker(s): ${tickers.join(', ')}`);
+    const ohlcResults = await Promise.all(tickers.map(fetchOHLC));
+    for (let i = 0; i < tickers.length; i++) {
+      prematureBars[tickers[i]] = ohlcResults[i];
+      if (ohlcResults[i].lastPrice !== null) {
+        livePositions.push({ ticker: tickers[i], current_price: ohlcResults[i].lastPrice, stop: 0, tp1: 0, tp2: 0 });
+      }
+    }
+  }
 
   // Latest scan signals — JSON-first via loadSignals, HTML fallback for legacy scans
   const parser = require('./lib/scanner-parser');
@@ -159,6 +212,38 @@ function main() {
         // Trim flat tail (post-backtest plateau where price data ran out)
         const ec = [...frozen.equityCurve];
         while (ec.length > 1 && ec[ec.length - 1].value === ec[ec.length - 2].value) ec.pop();
+
+        // Extend equity curve with daily MtM for premature positions using live OHLC
+        const premTrades = trades.filter(t => t._premature && prematureBars[t.ticker]);
+        if (premTrades.length > 0 && ec.length > 0) {
+          const lastEcDate = ec[ec.length - 1].date;
+          const lastEcValue = ec[ec.length - 1].value;
+          const weight = (cfg.positionSizePct || 1) / cfg.portfolioSize;
+          const allDates = new Set();
+          for (const t of premTrades) {
+            for (const d of Object.keys(prematureBars[t.ticker].bars)) {
+              if (d > lastEcDate) allDates.add(d);
+            }
+          }
+          const sortedDates = [...allDates].sort();
+          for (const day of sortedDates) {
+            let delta = 0;
+            for (const t of premTrades) {
+              const ohlc = prematureBars[t.ticker];
+              const closeToday = ohlc.bars[day];
+              const entry = t.actualEntry || 0;
+              if (entry <= 0 || closeToday == null) continue;
+              // Find baseline close at or before lastEcDate
+              let baseClose = t.exitPrice;
+              for (const bd of Object.keys(ohlc.bars).sort()) {
+                if (bd <= lastEcDate) baseClose = ohlc.bars[bd];
+              }
+              delta += ((closeToday - baseClose) / entry) * weight * 100;
+            }
+            ec.push({ date: day, value: +(lastEcValue + delta).toFixed(2) });
+          }
+        }
+
         m.equityCurve = ec;
       }
     }
