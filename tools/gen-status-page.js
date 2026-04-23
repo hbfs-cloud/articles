@@ -126,25 +126,27 @@ async function main() {
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
 
-  // Fetch live OHLC for premature tickers missing from scanner-positions.json
+  // Collect ALL premature tickers (holdDays < horizon) for equity curve MtM
   const liveTickers = new Set(livePositions.map(p => p.ticker));
-  const prematureTickers = new Set();
+  const allPrematureTickers = new Set();
+  const prematureNeedLive = new Set();
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[id] || [];
     for (const t of raw) {
-      if (t.status === 'expired' && t.holdDays < cfg.horizon && !liveTickers.has(t.ticker)) {
-        prematureTickers.add(t.ticker);
+      if (t.status === 'expired' && t.holdDays < cfg.horizon) {
+        allPrematureTickers.add(t.ticker);
+        if (!liveTickers.has(t.ticker)) prematureNeedLive.add(t.ticker);
       }
     }
   }
   const prematureBars = {};
-  if (prematureTickers.size > 0) {
-    const tickers = [...prematureTickers];
+  if (allPrematureTickers.size > 0) {
+    const tickers = [...allPrematureTickers];
     console.log(`📡 Fetching live OHLC for ${tickers.length} premature ticker(s): ${tickers.join(', ')}`);
     const ohlcResults = await Promise.all(tickers.map(fetchOHLC));
     for (let i = 0; i < tickers.length; i++) {
       prematureBars[tickers[i]] = ohlcResults[i];
-      if (ohlcResults[i].lastPrice !== null) {
+      if (prematureNeedLive.has(tickers[i]) && ohlcResults[i].lastPrice !== null) {
         livePositions.push({ ticker: tickers[i], current_price: ohlcResults[i].lastPrice, stop: 0, tp1: 0, tp2: 0 });
       }
     }
