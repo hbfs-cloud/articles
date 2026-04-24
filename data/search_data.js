@@ -899,6 +899,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ITRG",
+    "exchange": "NYSE American • Basic Materials • Gold Mining",
+    "name": "ITRG — Florida Canyon gold producer + DeLamar 4.8M oz developer. Debt-free, $105.6M cash, anal...",
+    "title": "ITRG — Florida Canyon gold producer + DeLamar 4.8M oz developer. Debt-free, $105.6M cash, anal...",
+    "desc": "Integra Resources deep-dive: Florida Canyon producing 70-75K oz/year, DeLamar 4.8M oz AuEq pipeline, $105.6M cash, debt-free. Gold play at $3.01 with analyst target $6.50. Trade Idea inside.",
+    "tags": "us,materials,gold,mining,small-cap,trade-idea",
+    "grade": "B",
+    "href": "/analyses/ITRG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IONQ",
     "exchange": "NYSE • Technology • Quantum Computing",
     "name": "IONQ — world-record fidelity, $3.3B cash, +202% revenue. Quantum leader at -35% YTD discount. ...",
@@ -1882,19 +1895,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "B+",
     "href": "analyses/HOOD",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ITRG",
-    "exchange": "NYSE American • Basic Materials",
-    "name": "Integra Resources Corp.",
-    "title": "Integra Resources Corp.",
-    "desc": "Analyse complete d'Integra Resources Corp. (ITRG) : producteur\n    d'or et d'argent, projet DeLamar, fondamentaux, technique, risques\n    et trade idea.",
-    "tags": "",
-    "grade": "B+",
-    "href": "analyses/ITRG",
     "date": ""
   },
   {
