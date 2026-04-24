@@ -106,8 +106,8 @@
     /* Hide empty-state collapsed sections on desktop to reclaim space */
     '  .lp-grid>[data-grid-empty="1"]{display:none!important}',
 
-    /* Hide "How to trade" method card on desktop */
-    '  .lp-grid>[data-grid="method"]{display:none!important}',
+    /* "How to trade" — visible, collapsed <details> handles space */
+    '  .lp-grid>[data-grid="method"]{grid-column:1/-1;grid-row:auto;margin-bottom:.5rem}',
 
     /* ── Equity curve panel ── */
     '  .lp-grid>[data-grid="equity"] .perf-hero{',
@@ -472,9 +472,9 @@
     /* Stack the grid tightly — no desktop layout applies, but tighten gaps */
     '  .lp-grid{display:flex!important;flex-direction:column!important;gap:.6rem!important}',
     '  .lp-grid>*{margin-bottom:0!important}',
-    /* Hide empty sections + method card on mobile — reclaim vertical space */
+    /* Hide empty sections on mobile — reclaim vertical space */
     '  .lp-grid>[data-grid-empty="1"]{display:none!important}',
-    '  .lp-grid>[data-grid="method"]{display:none!important}',
+    '  .lp-grid>[data-grid="method"]{margin-bottom:.3rem}',
     /* Compact equity chart on mobile — enough to read the curve */
     '  .lp-grid>[data-grid="equity"] .perf-hero{padding:.7rem .8rem!important;gap:.5rem!important}',
     '  .lp-grid>[data-grid="equity"] .perf-chart{min-height:200px!important}',
