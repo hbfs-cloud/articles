@@ -14,7 +14,11 @@
   var RECONNECT_MAX = 60000;
   var PING_INTERVAL = 30000;
   var EVAL_INTERVAL = 15000; // full eval sweep
-  var CORS_PROXY = 'https://api.allorigins.win/get?url=';
+  var CORS_PROXIES = [
+    { url: 'https://api.allorigins.win/get?url=', parse: function(d) { return JSON.parse(d.contents); } },
+    { url: 'https://corsproxy.io/?url=',           parse: function(d) { return d; } },
+    { url: 'https://api.codetabs.com/v1/proxy?quest=', parse: function(d) { return d; } }
+  ];
 
   // ── State ──
   var ws = null;
@@ -405,38 +409,60 @@
   }
 
   // ── HTTP Fallback (for initial prices before WS connects) ──
-  function fetchInitialPrices(syms, cb) {
-    if (!syms.length) return cb && cb();
-    var url = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms.join(',') + '&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketVolume,regularMarketOpen,regularMarketPreviousClose';
-    var proxyUrl = CORS_PROXY + encodeURIComponent(url);
+  function processQuoteResponse(data) {
+    if (data.quoteResponse && data.quoteResponse.result) {
+      data.quoteResponse.result.forEach(function (q) {
+        prices[q.symbol] = {
+          price: q.regularMarketPrice || 0,
+          change: q.regularMarketChange || 0,
+          changePct: q.regularMarketChangePercent || 0,
+          dayHigh: q.regularMarketDayHigh || 0,
+          dayLow: q.regularMarketDayLow || 0,
+          volume: q.regularMarketVolume || 0,
+          open: q.regularMarketOpen || 0,
+          prevClose: q.regularMarketPreviousClose || 0,
+          ts: Date.now(),
+          direction: 'flat'
+        };
+      });
+      return true;
+    }
+    return false;
+  }
 
-    fetch(proxyUrl)
-      .then(function (r) { return r.json(); })
+  function fetchWithProxy(yahooUrl, proxyIdx, cb) {
+    if (proxyIdx >= CORS_PROXIES.length) {
+      console.warn('[LiveEngine] All proxies failed');
+      return cb && cb();
+    }
+    var proxy = CORS_PROXIES[proxyIdx];
+    var proxyUrl = proxy.url + encodeURIComponent(yahooUrl);
+
+    fetch(proxyUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
       .then(function (d) {
-        var data = JSON.parse(d.contents);
-        if (data.quoteResponse && data.quoteResponse.result) {
-          data.quoteResponse.result.forEach(function (q) {
-            prices[q.symbol] = {
-              price: q.regularMarketPrice || 0,
-              change: q.regularMarketChange || 0,
-              changePct: q.regularMarketChangePercent || 0,
-              dayHigh: q.regularMarketDayHigh || 0,
-              dayLow: q.regularMarketDayLow || 0,
-              volume: q.regularMarketVolume || 0,
-              open: q.regularMarketOpen || 0,
-              prevClose: q.regularMarketPreviousClose || 0,
-              ts: Date.now(),
-              direction: 'flat'
-            };
-          });
+        var data = proxy.parse(d);
+        if (processQuoteResponse(data)) {
+          console.log('[LiveEngine] Prices loaded via proxy', proxyIdx);
+          evaluateAll();
+          if (cb) cb();
+        } else {
+          throw new Error('No quote data');
         }
-        evaluateAll();
-        if (cb) cb();
       })
       .catch(function (e) {
-        console.warn('[LiveEngine] Initial fetch failed:', e);
-        if (cb) cb();
+        console.warn('[LiveEngine] Proxy', proxyIdx, 'failed:', e.message, '— trying next');
+        fetchWithProxy(yahooUrl, proxyIdx + 1, cb);
       });
+  }
+
+  function fetchInitialPrices(syms, cb) {
+    if (!syms.length) return cb && cb();
+    var yahooUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms.join(',') + '&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketVolume,regularMarketOpen,regularMarketPreviousClose';
+    fetchWithProxy(yahooUrl, 0, cb);
   }
 
   // ── Event System ──
