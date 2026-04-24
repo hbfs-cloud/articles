@@ -461,10 +461,13 @@ function sendTelegramOnce(text, topicId) {
           console.error(`Telegram ${res.statusCode}: ${d.slice(0, 200)}`);
           resolve(false);
         } else {
+          const parsed = JSON.parse(d);
+          console.log(`[TG OK] topic=${topicId} msg_id=${parsed.result?.message_id}`);
           resolve(true);
         }
       });
     });
+    req.on('timeout', () => { console.error('[TG TIMEOUT]'); req.destroy(); resolve(false); });
     req.on('error', (e) => { console.error('Telegram error:', e.message); resolve(false); });
     req.write(body);
     req.end();
