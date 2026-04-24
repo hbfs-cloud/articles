@@ -698,6 +698,11 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     }
   }
 
+  // Terminal dedup: SL/TP events fire once per position, never again
+  // Prevents duplicates from price oscillating around the level
+  const TERMINAL = new Set(['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'TP1_PARTIAL']);
+  const suppressedByTerminal = TERMINAL.has(status) && prev._lastAlertStatus === status;
+
   // Cross-mode dedup: suppress Fortress alerts if Secured already covers same ticker
   const isRedundantMode = modeId === 'fortress';
   const securedKey = `secured:${pos.ticker}:${pos.scan_date}`;
@@ -707,7 +712,7 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     suppressedByDedup = true;
   }
 
-  if (prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup) {
+  if (prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup && !suppressedByTerminal) {
     const emoji = {
       SL_HIT: '🔴', TP1_HIT: '🟢', TP2_HIT: '🏆', TP1_PARTIAL: '💚',
       EXPIRED: '⏰', NEAR_STOP: '⚠️', NEAR_TP1: '📈',
@@ -738,7 +743,7 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
   }
 
   // Preserve last alert timestamp for cooldown tracking
-  const didAlert = prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup;
+  const didAlert = prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup && !suppressedByTerminal;
   newState[stateKey] = {
     status,
     price: +price.toFixed(4),
@@ -831,7 +836,7 @@ async function evaluate(tickerFilter) {
             status: 'ROTATION',
             text: `🔄 <b>[${modeLabel}] ROTATION ELIGIBLE</b> (slot ${rotationsGenerated + 1}/${rotLimit})\n`
               + `New: <b>${best.ticker}</b> (score ${best.score}) vs Worst: <b>${worstPos.ticker}</b> (score ${worstScore}, ${worstPos.liveReturn >= 0 ? '+' : ''}${worstPos.liveReturn.toFixed(2)}%)\n`
-              + `Delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} pts (threshold: ${margin || 'score≥88 & ret<2%'})\n`
+              + `Delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} pts (threshold: ${margin || 'score≥88 &amp; ret&lt;2%'})\n`
               + `Action: Close ${worstPos.ticker} → Buy ${best.ticker} @ $${typeof best.entry === 'number' ? best.entry.toFixed(2) : String(best.entry).replace(/^\$/, '')}`,
           });
           newState[rotKey] = { candidate: best.ticker, replaces: worstPos.ticker, ts: new Date().toISOString() };
