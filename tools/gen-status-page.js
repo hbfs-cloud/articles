@@ -7,6 +7,61 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
+
+function fetchOHLC(ticker) {
+  return new Promise((resolve) => {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=30d`;
+    const opts = { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 8000 };
+    https.get(url, opts, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          const result = j?.chart?.result?.[0];
+          if (!result) return resolve({ bars: {}, lastPrice: null });
+          const ts = result.timestamp || [];
+          const q = result.indicators?.quote?.[0] || {};
+          const bars = {};
+          for (let i = 0; i < ts.length; i++) {
+            if (q.close?.[i] != null) {
+              const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
+              bars[dateStr] = q.close[i];
+            }
+          }
+          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null });
+        } catch { resolve({ bars: {}, lastPrice: null }); }
+      });
+    }).on('error', () => resolve({ bars: {}, lastPrice: null })).on('timeout', () => resolve({ bars: {}, lastPrice: null }));
+  });
+}
+
+function bizDaysSince(dateStr) {
+  if (!dateStr) return 0;
+  const start = new Date(dateStr + 'T00:00:00Z');
+  const now = new Date();
+  let count = 0;
+  const d = new Date(start);
+  d.setUTCDate(d.getUTCDate() + 1);
+  while (d <= now) {
+    const dow = d.getUTCDay();
+    if (dow !== 0 && dow !== 6) count++;
+    d.setUTCDate(d.getUTCDate() + 1);
+  }
+  return count;
+}
+
+function addBizDays(dateStr, n) {
+  const d = new Date(dateStr + 'T00:00:00Z');
+  let added = 0;
+  while (added < n) {
+    d.setUTCDate(d.getUTCDate() + 1);
+    const dow = d.getUTCDay();
+    if (dow !== 0 && dow !== 6) added++;
+  }
+  return d.toISOString().slice(0, 10);
+}
 
 const ROOT = path.join(__dirname, '..');
 const MODES_CFG = path.join(ROOT, 'data/modes-config.json');
@@ -79,7 +134,7 @@ function equityDV(curve) {
   return { d: dates.map(d => d.slice(5).replace('-', '/')), v: dates.map(d => byDate[d]) };
 }
 
-function main() {
+async function main() {
   const config = JSON.parse(fs.readFileSync(MODES_CFG));
   let allTrades = {};
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) { }
@@ -89,6 +144,32 @@ function main() {
   try { liveMetrics = JSON.parse(fs.readFileSync(METRICS_FILE)); } catch (_) { }
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
+
+  // Collect ALL premature tickers (holdDays < horizon) for equity curve MtM
+  const liveTickers = new Set(livePositions.map(p => p.ticker));
+  const allPrematureTickers = new Set();
+  const prematureNeedLive = new Set();
+  for (const [id, cfg] of Object.entries(config.modes)) {
+    const raw = allTrades[id] || [];
+    for (const t of raw) {
+      if (t.status === 'expired' && t.holdDays < cfg.horizon) {
+        allPrematureTickers.add(t.ticker);
+        if (!liveTickers.has(t.ticker)) prematureNeedLive.add(t.ticker);
+      }
+    }
+  }
+  const prematureBars = {};
+  if (allPrematureTickers.size > 0) {
+    const tickers = [...allPrematureTickers];
+    console.log(`📡 Fetching live OHLC for ${tickers.length} premature ticker(s): ${tickers.join(', ')}`);
+    const ohlcResults = await Promise.all(tickers.map(fetchOHLC));
+    for (let i = 0; i < tickers.length; i++) {
+      prematureBars[tickers[i]] = ohlcResults[i];
+      if (prematureNeedLive.has(tickers[i]) && ohlcResults[i].lastPrice !== null) {
+        livePositions.push({ ticker: tickers[i], current_price: ohlcResults[i].lastPrice, stop: 0, tp1: 0, tp2: 0 });
+      }
+    }
+  }
 
   // Latest scan signals — JSON-first via loadSignals, HTML fallback for legacy scans
   const parser = require('./lib/scanner-parser');
@@ -129,20 +210,14 @@ function main() {
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[id] || [];
-    // Tag premature expirations — trade still running if entry + horizon
-    // (in calendar days, ~7/5 ratio for biz days) hasn't elapsed yet
-    const today = new Date();
+    // Tag premature expirations — compute horizon expiry date for MtM capping
     const trades = raw.map(t => {
       if (t.status === 'expired' && t.holdDays < cfg.horizon) {
-        const entry = t.entryDate ? new Date(t.entryDate) : null;
-        if (entry) {
-          const calendarHorizon = Math.ceil(cfg.horizon * 7 / 5) + 1;
-          const expiry = new Date(entry);
-          expiry.setDate(expiry.getDate() + calendarHorizon);
-          if (expiry > today) {
-            return { ...t, _premature: true };
-          }
-        }
+        const scanDate = t.scanDate || t.entryDate;
+        const horizonExpiryDate = addBizDays(scanDate, cfg.horizon);
+        const realBizDays = bizDaysSince(scanDate);
+        const horizonExpired = realBizDays >= cfg.horizon;
+        return { ...t, _premature: true, _horizonExpiryDate: horizonExpiryDate, _horizonExpired: horizonExpired };
       }
       return t;
     });
@@ -162,6 +237,91 @@ function main() {
         // Trim flat tail (post-backtest plateau where price data ran out)
         const ec = [...frozen.equityCurve];
         while (ec.length > 1 && ec[ec.length - 1].value === ec[ec.length - 2].value) ec.pop();
+
+        // Extend equity curve with daily MtM for premature positions using live OHLC
+        // Each trade's MtM is capped at its horizon expiry date — frozen contribution persists after
+        const premTrades = trades.filter(t => t._premature && prematureBars[t.ticker]);
+        if (premTrades.length > 0 && ec.length > 0) {
+          const lastEcDate = ec[ec.length - 1].date;
+          let lastEcValue = ec[ec.length - 1].value;
+          const weight = (cfg.positionSizePct || 1) / cfg.portfolioSize;
+
+          // Step 0: correct the frozen EC endpoint for premature trades whose horizon
+          // expired ON or BEFORE lastEcDate. The sweep used a premature exitPrice (day 1),
+          // but the real exit should be at the horizon-date close (day 2+).
+          let baseCorrection = 0;
+          for (const t of premTrades) {
+            const cap = t._horizonExpiryDate || '9999-12-31';
+            if (cap > lastEcDate) continue;
+            const ohlc = prematureBars[t.ticker];
+            const barDates = Object.keys(ohlc.bars).sort();
+            let horizonClose = null;
+            for (const bd of barDates) {
+              if (bd <= cap) horizonClose = ohlc.bars[bd];
+            }
+            if (horizonClose == null) continue;
+            const entry = t.actualEntry || 0;
+            if (entry <= 0) continue;
+            const sweepPnl = (t.exitPrice - entry) / entry;
+            const realPnl = (horizonClose - entry) / entry;
+            baseCorrection += (realPnl - sweepPnl) * weight * 100;
+          }
+          if (baseCorrection !== 0) {
+            lastEcValue = +(lastEcValue + baseCorrection).toFixed(2);
+            ec[ec.length - 1] = { ...ec[ec.length - 1], value: lastEcValue };
+          }
+
+          // Pre-compute base close and sorted bars for each trade
+          const tradeCtx = premTrades.map(t => {
+            const ohlc = prematureBars[t.ticker];
+            const barDates = Object.keys(ohlc.bars).sort();
+            let baseClose = t.exitPrice;
+            for (const bd of barDates) {
+              if (bd <= lastEcDate) baseClose = ohlc.bars[bd];
+            }
+            const cap = t._horizonExpiryDate || '9999-12-31';
+            let frozenClose = null;
+            for (const bd of barDates) {
+              if (bd <= cap) frozenClose = ohlc.bars[bd];
+            }
+            return { t, ohlc, barDates, baseClose, cap, frozenClose, entry: t.actualEntry || 0 };
+          }).filter(c => c.entry > 0 && c.cap > lastEcDate);
+          // Collect all relevant dates (only trades whose horizon extends past frozen EC)
+          const allDates = new Set();
+          for (const c of tradeCtx) {
+            for (const d of c.barDates) {
+              if (d > lastEcDate) allDates.add(d);
+            }
+          }
+          const sortedDates = [...allDates].sort();
+          for (const day of sortedDates) {
+            let delta = 0;
+            for (const c of tradeCtx) {
+              let effectiveClose;
+              if (day > c.cap) {
+                effectiveClose = c.frozenClose;
+              } else {
+                effectiveClose = c.ohlc.bars[day];
+              }
+              if (effectiveClose == null) continue;
+              delta += ((effectiveClose - c.baseClose) / c.entry) * weight * 100;
+            }
+            ec.push({ date: day, value: +(lastEcValue + delta).toFixed(2) });
+          }
+        }
+
+        // Recompute Total Return from the extended curve
+        const vals = ec.map(p => p.value);
+        m.ret = +((vals[vals.length - 1] || 100) - 100).toFixed(2);
+        // Recompute Max DD — can only stay same or worsen, never improve
+        let peak = -Infinity, curveDD = 0;
+        for (const v of vals) {
+          if (v > peak) peak = v;
+          const dd = +((v - peak) / peak * 100).toFixed(2);
+          if (dd < curveDD) curveDD = dd;
+        }
+        m.dd = Math.min(frozen.maxDD, curveDD);
+
         m.equityCurve = ec;
       }
     }
@@ -221,7 +381,7 @@ function main() {
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
 
-    const pending = trades.filter(t => t._premature);
+    const pending = trades.filter(t => t._premature && !t._horizonExpired);
     const mapped = pending.map(t => {
       const live = liveLookup[t.ticker];
       const currentPrice = live ? live.current_price : t.exitPrice;
