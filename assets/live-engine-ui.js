@@ -213,11 +213,9 @@
     '  }',
     '}',
 
-    /* Time Machine: single-column grid (not flex) to minimize layout shift */
+    /* Time Machine: grid fades, .tm-render container shown instead */
     '.lp-grid{transition:opacity .15s ease-in-out}',
-    '.lp-grid.tm-viewing{grid-template-columns:1fr!important;gap:.75rem!important}',
-    '.lp-grid.tm-viewing>*{grid-column:1/-1!important;grid-row:auto!important;margin-bottom:0!important}',
-    '.lp-grid.tm-viewing>[data-grid="live"]{display:none!important}',
+    '.tm-render{transition:opacity .15s ease-in-out}',
 
     /* ═══════════════════════════════════════════════
        LIVE PORTFOLIO CARD — The Hero
@@ -534,6 +532,7 @@
     // Collect all children, tag them, move into grid wrapper
     var children = Array.prototype.slice.call(panel.children);
     children.forEach(function (child) {
+      if (child.classList.contains('tm-render')) return;
       if (child.classList.contains('lp-card')) {
         child.setAttribute('data-grid', 'live');
       } else if (child.classList.contains('perf-hero')) {
