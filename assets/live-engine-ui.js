@@ -95,6 +95,16 @@
     '    overflow:hidden;',
     '    min-width:0;',
     '  }',
+    /* Hide bulky columns (chart thumb, alloc, action label) in the right-column orders table */
+    '  .lp-grid>[data-grid="orders"] .fv-thumb{display:none!important}',
+    '  .lp-grid>[data-grid="orders"] .hide-m{display:none!important}',
+    /* Rotation card: stack vertically when in narrow grid column */
+    '  .lp-grid>[data-grid="orders"] .thesis-row>td>div{',
+    '    grid-template-columns:1fr!important;',
+    '    gap:.35rem!important;',
+    '    padding:.4rem .5rem!important;',
+    '    font-size:.75rem!important;',
+    '  }',
 
     /* Positions — full width row 4 */
     '  .lp-grid>[data-grid="positions"]{',
