@@ -1174,24 +1174,35 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   function tmRestoreLive(){
-    document.querySelectorAll('.mode-panel').forEach(function(p){
-      var id=p.id.replace('p-','');
-      if(tmLiveHTML[id]){
-        p.innerHTML=tmLiveHTML[id];
-        p.style.minHeight='';p.style.opacity='';p.style.transition='';
-        var chartEl=document.getElementById('chart-'+id);
-        if(chartEl){
-          var old=echarts.getInstanceByDom(chartEl);
-          if(old)old.dispose();
-          var cfg=modeCharts[id];
-          if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);
-        }
-      }
+    var panels=document.querySelectorAll('.mode-panel');
+    panels.forEach(function(p){
+      var g=p.querySelector('.lp-grid');
+      if(g)g.style.opacity='0';
     });
-    updateLiveActions();
-    document.getElementById('tmBanner').className='tm-banner';
-    var fab=document.getElementById('tmFab');
-    if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
+    setTimeout(function(){
+      panels.forEach(function(p){
+        var id=p.id.replace('p-','');
+        var g=p.querySelector('.lp-grid');
+        if(g)g.classList.remove('tm-viewing');
+        if(tmLiveHTML[id]){
+          p.innerHTML=tmLiveHTML[id];
+          p.style.minHeight='';p.style.opacity='';p.style.transition='';
+          var chartEl=document.getElementById('chart-'+id);
+          if(chartEl){
+            var old=echarts.getInstanceByDom(chartEl);
+            if(old)old.dispose();
+            var cfg=modeCharts[id];
+            if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);
+          }
+        }
+        g=p.querySelector('.lp-grid');
+        if(g){g.style.opacity='0';requestAnimationFrame(function(){g.style.opacity='1'});}
+      });
+      updateLiveActions();
+      document.getElementById('tmBanner').className='tm-banner';
+      var fab=document.getElementById('tmFab');
+      if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
+    },160);
   }
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
@@ -1202,17 +1213,21 @@ document.addEventListener('DOMContentLoaded',function(){
     tmSaveLive();
     var tmPanel=document.getElementById('p-'+activeMode);
     var tmGrid=tmPanel&&tmPanel.querySelector('.lp-grid');
-    if(tmGrid)tmGrid.classList.add('tm-viewing');
+    if(tmGrid)tmGrid.style.opacity='0';
     var dateStr=tmDates[idx];
-    fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
-      banner.className='tm-banner show';
-      var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
-      tmRender(snap);
-    }).catch(function(){
-      banner.className='tm-banner show';
-      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
-    });
+    setTimeout(function(){
+      if(tmGrid)tmGrid.classList.add('tm-viewing');
+      fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
+        banner.className='tm-banner show';
+        var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
+        banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
+        tmRender(snap);
+      }).catch(function(){
+        banner.className='tm-banner show';
+        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
+        if(tmGrid)requestAnimationFrame(function(){tmGrid.style.opacity='1'});
+      });
+    },160);
   }
   window.tmGoLive=function(){
     tmCurrentIdx=tmDates.length-1;
@@ -1366,6 +1381,8 @@ document.addEventListener('DOMContentLoaded',function(){
           tmInsertAfter(em,insertAfter);
         }
         panel.style.minHeight=''; panel.style.opacity='1';
+        var g=panel.querySelector('.lp-grid');
+        if(g)requestAnimationFrame(function(){g.style.opacity='1'});
       }, 150);
     })();
   }
