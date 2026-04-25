@@ -83,6 +83,8 @@
     '    grid-column:2;',
     '    grid-row:2;',
     '    margin-bottom:0!important;',
+    '    overflow:hidden;',
+    '    min-width:0;',
     '  }',
 
     /* Orders — right column, under signals (CTA to action) */
@@ -90,6 +92,8 @@
     '    grid-column:2;',
     '    grid-row:3;',
     '    margin-bottom:0!important;',
+    '    overflow:hidden;',
+    '    min-width:0;',
     '  }',
 
     /* Positions — full width row 4 */

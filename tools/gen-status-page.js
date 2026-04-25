@@ -1050,7 +1050,10 @@ document.addEventListener('DOMContentLoaded',function(){
     var fab=document.getElementById('tmFab');
     if(fab){
       if(!isOpen)fab.style.boxShadow='0 0 0 3px rgba(59,130,246,.35)';
-      else fab.style.boxShadow='';
+      else{
+        fab.style.boxShadow='';
+        if(tmDates.length&&tmCurrentIdx<tmDates.length-1){window.tmGoLive();}
+      }
     }
   };
   document.addEventListener('click',function(e){
@@ -1059,6 +1062,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(p&&p.classList.contains('open')&&!p.contains(e.target)&&fab&&!fab.contains(e.target)){
       p.classList.remove('open');
       fab.style.boxShadow='';
+      if(tmDates.length&&tmCurrentIdx<tmDates.length-1){window.tmGoLive();}
     }
   });
   function tmUpdateLabel(){
