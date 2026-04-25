@@ -129,10 +129,20 @@ function main() {
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[id] || [];
-    // Tag premature expirations but keep them in the dataset
+    // Tag premature expirations — trade still running if entry + horizon
+    // (in calendar days, ~7/5 ratio for biz days) hasn't elapsed yet
+    const today = new Date();
     const trades = raw.map(t => {
       if (t.status === 'expired' && t.holdDays < cfg.horizon) {
-        return { ...t, _premature: true };
+        const entry = t.entryDate ? new Date(t.entryDate) : null;
+        if (entry) {
+          const calendarHorizon = Math.ceil(cfg.horizon * 7 / 5) + 1;
+          const expiry = new Date(entry);
+          expiry.setDate(expiry.getDate() + calendarHorizon);
+          if (expiry > today) {
+            return { ...t, _premature: true };
+          }
+        }
       }
       return t;
     });
