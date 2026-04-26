@@ -213,7 +213,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Macro & Markets Context",
+    "title": "Mag 7 Earnings Superweek, FOMC Hold & Intel's Historic Surge",
     "desc": "Four of the five largest companies on Earth — Microsoft, Meta, Amazon, Alphabet — report earnings Wednesday April 29 after hours. Apple follows Thursday April 30. Combined market cap exceeds $15 trillion. The FOMC rate decision lands the same day. This is the most consequential 48 hours of Q1 earnin...",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
