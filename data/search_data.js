@@ -208,6 +208,19 @@ window.searchDataPrebuilt = [
     "date": "29 Décembre 2025 - 3 Janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Four of the five largest companies on Earth — Microsoft, Meta, Amazon, Alphabet — report earnings Wednesday April 29 after hours. Apple follows Thursday April 30. Combined market cap exceeds $15 trillion. The FOMC rate decision lands the same day. This is the most consequential 48 hours of Q1 earnin...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260428/",
+    "date": "28 avril 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
