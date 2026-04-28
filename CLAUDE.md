@@ -266,12 +266,13 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    ```
    ⚠️ `--no-notify` obligatoire ici — la notification Telegram est gérée par publish-daily-card.sh (step 8 média).
 
-10. **Pipeline Quotidien (Append-only) — Risk Layer v1** :
+10. **Pipeline Quotidien (Append-only) — Risk Layer v1** — ⚠️ **AUTOMATIQUE, NE JAMAIS DEMANDER** :
+    Après chaque scanner publié (step 9), lancer le pipeline complet **sans demander confirmation**. Le job "scanner du jour" inclut TOUJOURS ce pipeline. NE JAMAIS dire "veux-tu que je lance la suite" ni "reste manuel". Si une étape échoue → diagnostiquer et continuer ; si elle est bloquante → reporter à l'utilisateur après avoir tenté.
     ```bash
     node tools/update-tracking.js           # Tracking exits (prix Yahoo)
     node tools/sweep.js                     # Append-only: ajoute les nouveaux trades fermés (défaut sûr)
     MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
-      node tools/refresh-risk-metrics.js    # NEW: VaR + stress + correlation + regimeProb → data/risk-snapshots.json
+      node tools/refresh-risk-metrics.js    # VaR + stress + correlation + regimeProb → data/risk-snapshots.json
     node tools/gen-status-page.js           # Snapshot J + Dashboard (lit risk-snapshots.json)
     node tools/gen-api.js                   # Refresh public JSONs (50 endpoints, dont risk.json par mode)
     ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
