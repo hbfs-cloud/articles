@@ -291,6 +291,7 @@ function setupCard(s, idx) {
 
   return `
 <!-- SETUP ${idx + 1}: ${s.ticker} -->
+<div class="section-header"><h2>#${idx + 1} ${s.ticker} &mdash; ${s.name}</h2></div>
 <div class="setup-card" id="setup-${s.ticker}" data-ticker="${s.ticker}" data-sharia="${s.sharia ? 'true' : 'false'}" data-entry="${s.entry_low || s.entry_high || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">
   <div class="setup-header">
     <div class="scanner-ticker-logo" style="${gradStyle}">${s.ticker}</div>
