@@ -585,6 +585,57 @@
     }, 50);
   }
 
+
+  // Phase B unify: clone MODE_PANEL_TPL into mp-host and bind data via ModePanelBinder.
+  function renderMpHost(modeId, modeData, mCfg) {
+    if (!modeData) return;
+    if (!window.getModeTpl || !window.ModePanelBinder) {
+      setTimeout(function () { renderMpHost(modeId, modeData, mCfg); }, 100);
+      return;
+    }
+    var host = document.getElementById("mp-host-" + modeId);
+    if (!host) return;
+    host.innerHTML = "";
+    var clone = window.getModeTpl().content.cloneNode(true);
+    var equityTarget = clone.querySelector(".tm-equity-target");
+    if (equityTarget) equityTarget.id = "mp-eq-" + modeId;
+    var color = (mCfg && mCfg.color) || "#94a3b8";
+    clone.querySelectorAll("[data-color]").forEach(function (e) {
+      e.style.borderLeft = "3px solid " + color;
+    });
+    var enriched = window.enrichForBinding ? window.enrichForBinding(modeData, mCfg || {}) : modeData;
+    window.ModePanelBinder.bind(clone, enriched);
+    host.appendChild(clone);
+    if (modeData.equity && modeData.equity.d && modeData.equity.d.length > 0 && window.echarts) {
+      var equityEl = document.getElementById("mp-eq-" + modeId);
+      if (equityEl) {
+        var existing = window.echarts.getInstanceByDom(equityEl);
+        if (existing) existing.dispose();
+        try {
+          var c = window.echarts.init(equityEl);
+          c.setOption({
+            grid: { left: 36, right: 16, top: 12, bottom: 24 },
+            xAxis: { type: "category", data: modeData.equity.d, boundaryGap: false, axisLabel: { fontSize: 10 } },
+            yAxis: { type: "value", axisLabel: { formatter: "{value}" } },
+            tooltip: { trigger: "axis" },
+            series: [{ type: "line", smooth: true, areaStyle: { opacity: 0.18 }, lineStyle: { color: color, width: 2 }, data: modeData.equity.v }],
+          });
+        } catch (e) { /* echarts init failed */ }
+      }
+    }
+    var bar = host.querySelector(".scenario-bar");
+    if (bar && enriched && enriched._positions && enriched._positions.has) {
+      var p = enriched._positions;
+      var rng = p.best - p.worst;
+      var cp = rng > 0 ? Math.max(0, Math.min(100, (p.now - p.worst) / rng * 100)) : 50;
+      bar.innerHTML =
+        '<div class="scenario-fill-bad" style="width:' + cp.toFixed(1) + '%"></div>' +
+        '<div class="scenario-fill-good" style="width:' + (100 - cp).toFixed(1) + '%"></div>' +
+        '<div class="scenario-cursor" style="left:' + cp.toFixed(1) + '%"></div>';
+    }
+  }
+  window.renderMpHost = renderMpHost;
+
   function createCard(modeId) {
     var panel = document.getElementById('p-' + modeId);
     if (!panel) return null;
@@ -992,11 +1043,13 @@
 
           window._leModesCfg = modesCfgFlat;
           window._lePositions = allPositions;
+          window._latestSnap = snap;
 
           Object.keys(cfg.modes).forEach(function (modeId) {
             createCard(modeId);
             buildPositionRows(modeId, allPositions[modeId]);
             reorganizePanel(modeId);
+            renderMpHost(modeId, snap.modes ? snap.modes[modeId] : null, modesCfgFlat[modeId]);
           });
 
           // Resize ECharts after grid layout change + flag empty charts for watermark
@@ -1051,9 +1104,11 @@
                       fresh[modeId] = (md && md.positions && md.positions.length > 0) ? md.positions : [];
                     });
                     window._lePositions = fresh;
+                    window._latestSnap = newSnap;
                     Object.keys(fresh).forEach(function (modeId) {
                       buildPositionRows(modeId, fresh[modeId]);
                       reorganizePanel(modeId);
+                      renderMpHost(modeId, newSnap.modes ? newSnap.modes[modeId] : null, modesCfgFlat[modeId]);
                     });
                     LE.refreshPositions(fresh);
                     lastSnapDate = newest;
