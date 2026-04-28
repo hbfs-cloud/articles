@@ -240,14 +240,32 @@ async function main() {
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[id] || [];
-    // Tag premature expirations — compute horizon expiry date for MtM capping
+    // Tag premature expirations — compute horizon expiry date for MtM capping.
+    // Override sweep's stale exit values with live data so the row reflects today's
+    // reality (current price, actual hold days, today's date).
+    const livePosByTicker = {};
+    for (const lp of (livePositions || [])) {
+      livePosByTicker[lp.ticker + '|' + (lp.scan_date || '')] = lp;
+    }
+    const _todayISOEarly = new Date().toISOString().slice(0, 10);
     const trades = raw.map(t => {
       if (t.status === 'expired' && t.holdDays < cfg.horizon) {
         const scanDate = t.scanDate || t.entryDate;
         const horizonExpiryDate = addBizDays(scanDate, cfg.horizon);
         const realBizDays = bizDaysSince(scanDate);
         const horizonExpired = realBizDays >= cfg.horizon;
-        return { ...t, _premature: true, _horizonExpiryDate: horizonExpiryDate, _horizonExpired: horizonExpired };
+        // Replace sweep's stale exit fields with live values when the position
+        // is still pending. _exitPriceLive used by the trade history renderer.
+        const live = livePosByTicker[t.ticker + '|' + scanDate];
+        const overrides = live ? {
+          exitDate: _todayISOEarly,
+          exitPrice: live.current_price || t.exitPrice,
+          pnlPct: (t.actualEntry > 0 && live.current_price > 0)
+            ? +(((live.current_price - t.actualEntry) / t.actualEntry) * 100).toFixed(2)
+            : t.pnlPct,
+          holdDays: realBizDays,
+        } : {};
+        return { ...t, ...overrides, _premature: true, _horizonExpiryDate: horizonExpiryDate, _horizonExpired: horizonExpired };
       }
       return t;
     });
@@ -262,7 +280,9 @@ async function main() {
       m.dd = frozen.maxDD;
       if (frozen.winRate !== undefined) m.wr = frozen.winRate;
       if (frozen.profitFactor !== undefined) m.pf = frozen.profitFactor;
-      if (frozen.trades !== undefined) m.trades = frozen.trades;
+      // m.trades stays = closedTrades.length (computed from non-premature trades)
+      // — matches what Trade History actually displays. Don't override with frozen.trades
+      // which counts premature/open trades too and breaks the consistency.
       if (frozen.equityCurve && frozen.equityCurve.length > 0) {
         // Trim flat tail (post-backtest plateau where price data ran out)
         const ec = [...frozen.equityCurve];

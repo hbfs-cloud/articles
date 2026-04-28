@@ -1478,13 +1478,24 @@ async function main() {
         frozenTrades[id] = merged;
 
         if (toAppend.length === 0) {
-          // No new trades — preserve existing frozen stats exactly as-is
+          // No new trades — preserve existing frozen stats if present, else recompute.
           const existingStats = existingResults[`frozen_${id}`];
           if (existingStats) {
             output[`frozen_${id}`] = existingStats;
             console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${existingStats.returnTotal}%, DD=${existingStats.maxDD}% (preserved)`);
           } else {
-            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), no existing stats`);
+            // Bootstrap missing stats — compute from merged trades.
+            const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
+            if (stats) {
+              output[`frozen_${id}`] = {
+                returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
+                profitFactor: stats.profitFactor, trades: stats.trades,
+                equityCurve: stats.equityCurve,
+              };
+              console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${stats.returnTotal}%, DD=${stats.maxDD}% (rebuilt)`);
+            } else {
+              console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), no stats computable`);
+            }
           }
         } else {
           // New trades appended — recompute stats from combined trade list
