@@ -466,11 +466,8 @@ async function main() {
   </details>
 </div>
 
-<!-- mp-host: unified template render target (Live + Time Machine share this) -->
-<div class="mp-host" id="mp-host-${id}"></div>
-
-<!-- ══ 2. TODAY'S SIGNALS — server-rendered, hidden in favor of mp-host template -->
-<div class="section-card legacy-hidden">
+<!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
+<div class="section-card">
   <details${sig.length ? ' open' : ''}>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:#94a3b8">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
@@ -488,8 +485,8 @@ async function main() {
   </details>
 </div>
 
-<!-- ══ 3. PERF + STATS — server-rendered, hidden in favor of mp-host template -->
-<div class="perf-hero legacy-hidden" style="border-left:3px solid ${cfg.color}">
+<!-- ══ 3. PERF + STATS (equity curve) ══ -->
+<div class="perf-hero" style="border-left:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
       <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
@@ -506,8 +503,8 @@ async function main() {
   </div>
 </div>
 
-<!-- ══ 4. CLOSE NOW — server-rendered, hidden in favor of mp-host template -->
-${timedOut.length ? `<div class="cta-card cta-close legacy-hidden">
+<!-- ══ 4. CLOSE NOW ══ -->
+${timedOut.length ? `<div class="cta-card cta-close">
   <div class="cta-header">
     <span class="cta-icon"><i class="fas fa-ban"></i></span>
     <div>
@@ -671,14 +668,14 @@ ${(() => {
 </div>` : '';
 
         if (totalActions === 0 && watchPool.length === 0 && !recentExecutedRotation) {
-          return `<div class="section-card legacy-hidden"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
+          return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
         }
         if (totalActions === 0 && watchPool.length === 0 && recentExecutedRotation) {
-          return `<div class="section-card legacy-hidden"><div class="sc-head"><h3><i class="fas fa-arrows-rotate"></i> Recent Rotation</h3><span class="sc-meta">${occupied}/${cfg.portfolioSize} open — yesterday's rotation applied</span></div>${recentRotationHTML}</div>`;
+          return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-arrows-rotate"></i> Recent Rotation</h3><span class="sc-meta">${occupied}/${cfg.portfolioSize} open — yesterday's rotation applied</span></div>${recentRotationHTML}</div>`;
         }
 
         return `
-${expiringSoon.length ? `<div class="cta-card legacy-hidden" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
   <div class="cta-header">
     <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
     <div>
@@ -696,7 +693,7 @@ ${expiringSoon.length ? `<div class="cta-card legacy-hidden" style="background:#
   </table>
 </div>` : ''}
 
-<div class="section-card legacy-hidden ${totalActions > 0 ? 'cta-orders' : ''}">
+<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}">
   <div class="sc-head">
     <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
     <span class="sc-meta">${statusLine}</span>
@@ -716,8 +713,8 @@ ${expiringSoon.length ? `<div class="cta-card legacy-hidden" style="background:#
 </div>`;
       })()}
 
-<!-- ══ 6. OPEN POSITIONS — server-rendered, hidden in favor of mp-host template -->
-<div class="section-card legacy-hidden">
+<!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
+<div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
     ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
@@ -782,8 +779,8 @@ ${expiringSoon.length ? `<div class="cta-card legacy-hidden" style="background:#
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>
 
-<!-- ══ 7. TRADE HISTORY — server-rendered, hidden in favor of mp-host template -->
-<div class="section-card legacy-hidden">
+<!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
+<div class="section-card">
   <details>
     <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${trades.filter(t => !t._premature).length} closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
@@ -927,8 +924,6 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 
 /* ── Section cards ── */
 .section-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:1.4rem 1.6rem;margin-bottom:1.35rem}
-/* Phase B unify — server-rendered duplicates hidden; mp-host renders the canonical layout via ModePanelBinder */
-.legacy-hidden{display:none!important}
 .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
 .sc-head h3{font-size:1rem;font-weight:800;color:#0f172a;margin:0;display:flex;align-items:center;gap:.45rem}
 .sc-head h3 i{font-size:.78rem;color:#94a3b8}
@@ -1570,12 +1565,6 @@ document.addEventListener('DOMContentLoaded',function(){
     return out;
   }
 
-  // Expose template + enricher globally so live-engine-ui can clone & bind the same
-  // canonical layout for the live mp-host (Phase B unification).
-  window.MODE_PANEL_TPL_RAW = MODE_PANEL_TPL;
-  window.getModeTpl = getModeTpl;
-  window.enrichForBinding = enrichForBinding;
-
   // tmBuildHTML is now a stub — actual rendering uses the static MODE_PANEL_TPL template
   // cloned and bound by ModePanelBinder inside tmRenderInto. Kept for backward compat.
   function tmBuildHTML(d, mCfg, modeId) { return ''; }
@@ -1618,39 +1607,47 @@ document.addEventListener('DOMContentLoaded',function(){
         '<div class="scenario-cursor" style="left:' + cp.toFixed(1) + '%"></div>';
     }
   }
-  // Re-bind mp-host with today's snapshot stored on window._latestSnap.
   function tmShowLive(){
-    if (window.renderMpHost && window._latestSnap && window._leModesCfg) {
-      var d = (window._latestSnap.modes||{})[activeMode];
-      var mCfg = window._leModesCfg[activeMode] || {};
-      if (d) window.renderMpHost(activeMode, d, mCfg);
-    }
+    document.querySelectorAll('.mode-panel').forEach(function(p){
+      var g=p.querySelector('.lp-grid');
+      var tmr=p.querySelector('.tm-render');
+      if(tmr){tmr.style.opacity='0';setTimeout(function(){tmr.style.display='none'},160);}
+      if(g){g.style.display='';g.style.opacity='0';requestAnimationFrame(function(){g.style.opacity='1'});}
+    });
+    var chartEl=document.getElementById('chart-'+activeMode);
+    if(chartEl){var c=echarts.getInstanceByDom(chartEl);if(c)setTimeout(function(){c.resize()},200);}
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
   }
-  // Phase B unify: Time Machine re-binds the same mp-host with historical data.
-  // Layout stays identical to Live — only the data swaps.
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){tmShowLive();return;}
+    var panel=document.getElementById('p-'+activeMode);
+    if(!panel)return;
+    var grid=panel.querySelector('.lp-grid');
+    var tmr=panel.querySelector('.tm-render');
+    var cur=grid&&grid.style.display!=='none'?grid:tmr;
+    if(cur){cur.style.opacity='0';}
     var dateStr=tmDates[idx];
-    fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
-      var d=snap.modes[activeMode];
-      if(!d){
+    setTimeout(function(){
+      if(grid)grid.style.display='none';
+      fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
+        var d=snap.modes[activeMode];
+        if(!d){if(grid){grid.style.display='';grid.style.opacity='1';}return;}
+        var mCfg=tmModesCfg.modes?tmModesCfg.modes[activeMode]:{};
+        tmRenderInto(tmr,d,mCfg,activeMode);
+        tmr.style.display='';tmr.style.opacity='0';
+        requestAnimationFrame(function(){tmr.style.opacity='1';});
         banner.className='tm-banner show';
-        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> No data for '+activeMode+' on '+dateStr;
-        return;
-      }
-      var mCfg=tmModesCfg.modes?tmModesCfg.modes[activeMode]:{};
-      if(window.renderMpHost) window.renderMpHost(activeMode, d, mCfg);
-      banner.className='tm-banner show';
-      var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
-      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
-    }).catch(function(){
-      banner.className='tm-banner show';
-      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
-    });
+        var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
+        banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
+      }).catch(function(){
+        banner.className='tm-banner show';
+        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
+        if(grid){grid.style.display='';grid.style.opacity='1';}
+      });
+    },160);
   }
   window.tmGoLive=function(){
     tmCurrentIdx=tmDates.length-1;
@@ -1792,7 +1789,7 @@ document.addEventListener('DOMContentLoaded',function(){
       recentRotation,
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
-      closedTrades: mTrades.filter(t => !t._premature).map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
+      closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
       config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
       risk: getRiskFor(id),
     };
