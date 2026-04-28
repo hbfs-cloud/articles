@@ -481,7 +481,25 @@ async function main() {
         : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
       return `<tr><td><b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
     }).join('')}</tbody>
-    </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No signals for this mode today</p>`}
+    </table>` : (() => {
+      // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
+      const total = (signals || []).length;
+      if (total === 0) {
+        return `<p class="empty"><i class="fas fa-inbox"></i>No signals published today.</p>`;
+      }
+      const f = SF[cfg.filterName] || (() => true);
+      const afterFilter = signals.filter(s => f(s.strategy || ''));
+      const afterScore = afterFilter.filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore);
+      let reason;
+      if (afterFilter.length === 0) {
+        reason = `Filter <b>${filterLabel(cfg.filterName)}</b> excluded all ${total} signal${total > 1 ? 's' : ''} today (no matching strategy).`;
+      } else if (afterScore.length === 0) {
+        reason = `${afterFilter.length} signal${afterFilter.length > 1 ? 's' : ''} matched filter <b>${filterLabel(cfg.filterName)}</b> but none reached minScore <b>${cfg.minScore}</b>.`;
+      } else {
+        reason = `No new signals for this mode today.`;
+      }
+      return `<p class="empty"><i class="fas fa-inbox"></i>${reason} Existing positions remain active.</p>`;
+    })()}
   </details>
 </div>
 
