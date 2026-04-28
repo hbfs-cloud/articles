@@ -872,7 +872,22 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
             case 'tp2': statusLabel = 'Target 2 hit'; statusShort = 'TP2 ✓'; statusCls = 'pos'; break;
             case 'tp1_partial': statusLabel = 'TP1 partial (50%)'; statusShort = 'TP1 ½'; statusCls = 'pos'; break;
             case 'sl': statusLabel = 'Stop loss hit'; statusShort = 'SL ✗'; statusCls = 'neg'; break;
-            case 'expired': statusLabel = t._premature ? 'Pending (' + (t.holdDays || 0) + 'd/' + cfg.horizon + 'd)' : 'Expired'; statusShort = statusLabel; statusCls = t._premature ? 'pending' : 'am'; break;
+            case 'expired': {
+              // A trade is "Pending" only if its horizon hasn't actually expired in real time.
+              // _premature alone is set whenever holdDays < cfg.horizon — but the trade can already
+              // be terminal (rotated/early-exit/horizon-expired). Use _horizonExpired to gate.
+              const stillPending = t._premature && !t._horizonExpired;
+              if (stillPending) {
+                statusLabel = 'Pending (' + (t.holdDays || 0) + 'd/' + cfg.horizon + 'd)';
+                statusShort = statusLabel;
+                statusCls = 'pending';
+              } else {
+                statusLabel = 'Expired';
+                statusShort = 'Expired';
+                statusCls = 'am';
+              }
+              break;
+            }
             case 'rotated': { const rep = replacedBy[t.ticker + t.scanDate]; statusLabel = rep ? 'Replaced by ' + rep : 'Rotated out'; statusShort = rep ? '↔ ' + rep : 'Rotated'; statusCls = 'm'; break; }
             default: statusLabel = t.status || '—'; statusShort = statusLabel; statusCls = 'm';
           }
