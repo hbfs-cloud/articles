@@ -70,7 +70,26 @@ const RESULTS = path.join(ROOT, 'data/backtest-results.json');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
 const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
+const RISK_SNAP_FILE = path.join(ROOT, 'data/risk-snapshots.json');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
+
+// Lazy risk-snapshot loader — graceful no-op when file is missing.
+let _riskSnap = null;
+function loadRiskSnapshot() {
+  if (_riskSnap !== null) return _riskSnap;
+  if (!fs.existsSync(RISK_SNAP_FILE)) return (_riskSnap = {});
+  try { _riskSnap = JSON.parse(fs.readFileSync(RISK_SNAP_FILE, 'utf8')) || {}; }
+  catch (e) { _riskSnap = {}; }
+  return _riskSnap;
+}
+function getRiskFor(modeId) {
+  const snap = loadRiskSnapshot();
+  return (snap.modes || {})[modeId] || null;
+}
+function getGlobalRegimeProb() {
+  const snap = loadRiskSnapshot();
+  return snap.regimeProbability || null;
+}
 
 function computeMetrics(trades, portfolioSize, positionSizePct) {
   const pspct = positionSizePct || 1;
@@ -1505,9 +1524,12 @@ document.addEventListener('DOMContentLoaded',function(){
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
-      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1 }
+      config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
+      risk: getRiskFor(id),
     };
   }
+  // Attach the global (market-wide) regime probability once per snapshot.
+  snapshot.regimeProbability = getGlobalRegimeProb();
 
   fs.writeFileSync(path.join(historyDir, todayKey + '.json'), JSON.stringify(snapshot));
   const existingDates = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f)).map(f => f.replace('.json', '')).sort();

@@ -691,14 +691,21 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
 
   // Cooldown: suppress NEAR_STOP/NEAR_TP1 re-alerts within 30 minutes
   // This covers both same-status repeats AND oscillation (OPEN→NEAR_STOP→OPEN→NEAR_STOP)
+  // Cooldown v2: universal warning cooldown + daily hard cap.
+  // Universal: any prior alert within 30 min suppresses NEAR_STOP / NEAR_TP1.
+  // Hard cap: max 5 alerts per position key per 24 h (kills oscillation spam).
   const WARN_COOLDOWN_MS = 30 * 60 * 1000;
+  const HARD_CAP_WINDOW_MS = 24 * 60 * 60 * 1000;
+  const HARD_CAP_MAX_ALERTS = 5;
   let suppressedByCooldown = false;
-  if (isWarning) {
-    const lastAlertTs = prev._lastAlertTs ? new Date(prev._lastAlertTs).getTime() : 0;
-    const lastAlertWasSameWarning = prev._lastAlertStatus === status;
-    if (lastAlertWasSameWarning && (Date.now() - lastAlertTs < WARN_COOLDOWN_MS)) {
-      suppressedByCooldown = true;
-    }
+  const lastAlertTs = prev._lastAlertTs ? new Date(prev._lastAlertTs).getTime() : 0;
+  if (isWarning && (Date.now() - lastAlertTs < WARN_COOLDOWN_MS)) {
+    suppressedByCooldown = true;
+  }
+  const recentAlertTimes = (prev._alertHistory || [])
+    .filter(ts => (Date.now() - new Date(ts).getTime()) < HARD_CAP_WINDOW_MS);
+  if (!suppressedByCooldown && recentAlertTimes.length >= HARD_CAP_MAX_ALERTS) {
+    suppressedByCooldown = true;
   }
 
   // Terminal dedup: SL/TP events fire once per position, never again
@@ -745,8 +752,12 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     });
   }
 
-  // Preserve last alert timestamp for cooldown tracking
+  // Preserve last alert timestamp for cooldown tracking + sliding 24h window for hard cap.
   const didAlert = prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup && !suppressedByTerminal;
+  const nowTs = new Date().toISOString();
+  const updatedHistory = didAlert
+    ? [...recentAlertTimes, nowTs].slice(-HARD_CAP_MAX_ALERTS - 5)  // keep a few extra for forensics
+    : recentAlertTimes;
   newState[stateKey] = {
     status,
     price: +price.toFixed(4),
@@ -754,9 +765,10 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     currentStop,
     highWaterMark,
     partialClosed: newPartialClosed,
-    ts: new Date().toISOString(),
-    _lastAlertTs: didAlert ? new Date().toISOString() : (prev._lastAlertTs || null),
+    ts: nowTs,
+    _lastAlertTs: didAlert ? nowTs : (prev._lastAlertTs || null),
     _lastAlertStatus: didAlert ? status : (prev._lastAlertStatus || null),
+    _alertHistory: updatedHistory,
   };
 }
 

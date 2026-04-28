@@ -160,6 +160,122 @@ function regimeSizeMultiplier(regime) {
   return 1;
 }
 
+// Sector lookup — embedded GICS-ish map for the scanner universe.
+// Unknown tickers fall back to 'Other' (cap still enforced for the bucket).
+const SECTOR_MAP = {
+  // Tech
+  'AAPL':'Tech','MSFT':'Tech','GOOGL':'Tech','GOOG':'Tech','META':'Tech','NFLX':'Tech',
+  'CRM':'Tech','ORCL':'Tech','ADBE':'Tech','NOW':'Tech','INTU':'Tech','PANW':'Tech',
+  'FTNT':'Tech','CRWD':'Tech','ZS':'Tech','SNOW':'Tech','PLTR':'Tech','DDOG':'Tech',
+  'NET':'Tech','OKTA':'Tech','TEAM':'Tech','SHOP':'Tech','SQ':'Tech','PYPL':'Tech',
+  // Semis
+  'NVDA':'Semis','AMD':'Semis','AVGO':'Semis','TSM':'Semis','INTC':'Semis','MU':'Semis',
+  'QCOM':'Semis','MRVL':'Semis','LRCX':'Semis','AMAT':'Semis','KLAC':'Semis','ASML':'Semis',
+  'ARM':'Semis','SMCI':'Semis','ON':'Semis','ADI':'Semis','TXN':'Semis',
+  // Consumer
+  'AMZN':'Consumer','TSLA':'Consumer','HD':'Consumer','MCD':'Consumer','NKE':'Consumer',
+  'SBUX':'Consumer','TGT':'Consumer','WMT':'Consumer','COST':'Consumer','LULU':'Consumer',
+  'ABNB':'Consumer','UBER':'Consumer','LYFT':'Consumer','DASH':'Consumer','BKNG':'Consumer',
+  // Health
+  'UNH':'Health','LLY':'Health','PFE':'Health','MRK':'Health','ABBV':'Health','JNJ':'Health',
+  'TMO':'Health','DHR':'Health','BMY':'Health','GILD':'Health','REGN':'Health','VRTX':'Health',
+  'MRNA':'Health','BIIB':'Health','SRPT':'Health','AMGN':'Health',
+  // Finance
+  'JPM':'Finance','BAC':'Finance','WFC':'Finance','GS':'Finance','MS':'Finance','C':'Finance',
+  'V':'Finance','MA':'Finance','BLK':'Finance','SCHW':'Finance','AXP':'Finance','COF':'Finance',
+  'BRK-B':'Finance','BRK.B':'Finance',
+  // Energy
+  'XOM':'Energy','CVX':'Energy','COP':'Energy','OXY':'Energy','EOG':'Energy','SLB':'Energy',
+  'PSX':'Energy','MPC':'Energy','VLO':'Energy','HAL':'Energy','BKR':'Energy','BTU':'Energy',
+  // Industrials
+  'CAT':'Industrials','BA':'Industrials','HON':'Industrials','UPS':'Industrials','UNP':'Industrials',
+  'GE':'Industrials','DE':'Industrials','MMM':'Industrials','LMT':'Industrials','RTX':'Industrials',
+  'NOC':'Industrials','GD':'Industrials','IOT':'Industrials',
+  // Materials
+  'FCX':'Materials','NEM':'Materials','GOLD':'Materials','MOS':'Materials','CF':'Materials',
+  'NUE':'Materials','LIN':'Materials','APD':'Materials','SHW':'Materials',
+  // Comms
+  'DIS':'Comms','CMCSA':'Comms','T':'Comms','VZ':'Comms','TMUS':'Comms','CHTR':'Comms',
+  // Crypto
+  'BTC-USD':'Crypto','ETH-USD':'Crypto','SOL-USD':'Crypto','XRP-USD':'Crypto','COIN':'Crypto',
+  'MSTR':'Crypto','MARA':'Crypto','RIOT':'Crypto','HUT':'Crypto','CLSK':'Crypto',
+  // Broad ETFs
+  'SPY':'ETF-Broad','QQQ':'ETF-Broad','DIA':'ETF-Broad','IWM':'ETF-Broad','EFA':'ETF-Broad',
+  'EEM':'ETF-Broad','FXI':'ETF-Broad','VTI':'ETF-Broad','VOO':'ETF-Broad',
+  'XLF':'ETF-Sector','XLK':'ETF-Sector','XLV':'ETF-Sector','XLE':'ETF-Sector','XLI':'ETF-Sector',
+  'XLY':'ETF-Sector','XLP':'ETF-Sector','XLU':'ETF-Sector','XLB':'ETF-Sector','XLRE':'ETF-Sector',
+  'XLC':'ETF-Sector','SMH':'ETF-Sector','SOXX':'ETF-Sector','XBI':'ETF-Sector',
+  'GLD':'ETF-Commodity','SLV':'ETF-Commodity','USO':'ETF-Commodity','TLT':'ETF-Bond',
+};
+
+function getSector(ticker) {
+  if (!ticker) return 'Other';
+  return SECTOR_MAP[ticker] || SECTOR_MAP[String(ticker).toUpperCase()] || 'Other';
+}
+
+// VIX kill switch — backtest doesn't carry VIX numerics, so map regime label
+// to approximate VIX band per CLAUDE.md convention.
+function vixKillTriggered(regime, threshold) {
+  if (!threshold) return false;
+  if (!regime) return false;
+  const r = String(regime).toUpperCase().trim();
+  const regimeVix = (
+    r === 'RISK-OFF' ? 32 :
+    (r === 'EARLY RISK-OFF' || r === 'EARLY-RISK-OFF') ? 24 :
+    r === 'NEUTRAL' ? 18 :
+    r === 'RISK-ON' ? 13 :
+    18
+  );
+  return regimeVix >= threshold;
+}
+
+// Pairwise correlation helpers — used by correlationCap gate.
+function _logReturns(history, datesSorted) {
+  const r = [];
+  let prev = null;
+  for (const d of datesSorted) {
+    const bar = history[d];
+    if (!bar || !(bar.close > 0)) continue;
+    if (prev != null && prev > 0) r.push(Math.log(bar.close / prev));
+    prev = bar.close;
+  }
+  return r;
+}
+function _pearson(a, b) {
+  const n = Math.min(a.length, b.length);
+  if (n < 10) return null;
+  const ax = a.slice(-n), bx = b.slice(-n);
+  let mA = 0, mB = 0;
+  for (let i = 0; i < n; i++) { mA += ax[i]; mB += bx[i]; }
+  mA /= n; mB /= n;
+  let num = 0, dA = 0, dB = 0;
+  for (let i = 0; i < n; i++) {
+    const da = ax[i] - mA, db = bx[i] - mB;
+    num += da * db; dA += da * da; dB += db * db;
+  }
+  if (dA <= 0 || dB <= 0) return null;
+  return num / Math.sqrt(dA * dB);
+}
+// Compute max |correlation| of candidate vs each open position (60-day log returns).
+// Returns null when not computable. Uses module-scope priceCache.
+function maxCorrToOpen(cand, openPositions, lookbackDays) {
+  const candHist = priceCache[cand.ticker];
+  if (!candHist || openPositions.length === 0) return null;
+  const allDates = Object.keys(candHist).sort();
+  const window = allDates.slice(-Math.max(lookbackDays + 1, 20));
+  const candRet = _logReturns(candHist, window);
+  if (candRet.length < 10) return null;
+  let maxAbs = 0, signed = 0;
+  for (const pos of openPositions) {
+    const posHist = priceCache[pos.trade.ticker];
+    if (!posHist) continue;
+    const posRet = _logReturns(posHist, window);
+    const rho = _pearson(candRet, posRet);
+    if (rho != null && Math.abs(rho) > Math.abs(maxAbs)) { maxAbs = rho; signed = rho; }
+  }
+  return signed;
+}
+
 // Module-scope strategy filter map (used by regime-aware filtering and grid search)
 const STRATEGY_FILTERS_MAP = {
   'all': new Set(),
@@ -618,17 +734,76 @@ function simulatePortfolio(allTrades, scans, config) {
         }
       }
 
-      // Add new positions — apply VIX/regime sizing multiplier per scan date (use canonical regimeByDate map)
+      // Add new positions — risk layer v1: VIX kill, DD breaker, sector cap, correlation cap,
+      // inverse-ATR sizing, cross-mode dedup
       const openTickers = new Set(openPositions.map(p => p.trade.ticker));
       const scanRegime = regimeByDate[day] || (candidates[0] && candidates[0].regime);
+
+      // VIX kill switch — skip all new entries this scan if regime tier exceeds threshold
+      const vixKill = vixKillTriggered(scanRegime, config.vixKillThreshold);
+
+      // DD circuit breaker — uses *prior-day close* equity to avoid same-day mark bias
+      let ddBreakerActive = false;
+      if (config.ddBreakerPct && equityCurve.length >= 2) {
+        let peakSoFar = 100;
+        for (let i = 0; i < equityCurve.length - 1; i++) {
+          if (equityCurve[i].value > peakSoFar) peakSoFar = equityCurve[i].value;
+        }
+        const priorClose = equityCurve[equityCurve.length - 2].value;
+        const currentDD = peakSoFar - priorClose;
+        ddBreakerActive = currentDD > config.ddBreakerPct;
+      }
+
       const regimeMult = (config.vixKillSwitch !== false) ? regimeSizeMultiplier(scanRegime) : 1;
       const scanWeight = weight * regimeMult;
+      const SIZING_REF_STOP_PCT = 0.03;   // 3% reference stop width for relative sizing
+      const SIZING_MIN_FACTOR = 0.5;
+      const SIZING_MAX_FACTOR = 1.5;
+
+      // Track sector exposure already in portfolio (count by sector)
+      const sectorCounts = {};
+      for (const pos of openPositions) {
+        const sec = getSector(pos.trade.ticker);
+        sectorCounts[sec] = (sectorCounts[sec] || 0) + 1;
+      }
+
       let added = 0;
       for (const cand of candidates) {
         if (added >= slotsAvailable) break;
+        if (vixKill || ddBreakerActive) break;          // halt new entries
         if (openTickers.has(cand.ticker)) continue;
-        openPositions.push({ trade: cand, weight: scanWeight });
+        // Cross-mode dedup — skip ticker already picked by another mode this scan day
+        if (config.crossModeDedup && config.crossModePicked) {
+          const dedupKey = `${day}|${cand.ticker}`;
+          if (config.crossModePicked.has(dedupKey)) continue;
+        }
+        // Sector concentration cap
+        if (config.sectorCapMax) {
+          const sec = getSector(cand.ticker);
+          if ((sectorCounts[sec] || 0) >= config.sectorCapMax) continue;
+        }
+        // Pairwise correlation cap (vs already-open positions in this mode)
+        if (config.correlationCap > 0 && openPositions.length > 0) {
+          const rho = maxCorrToOpen(cand, openPositions, 60);
+          if (rho != null && Math.abs(rho) > config.correlationCap) continue;
+        }
+        // Inverse-ATR sizing — RELATIVE adjustment to scanWeight (0.5x..1.5x clamp).
+        // High stop (vol) → smaller weight; tight stop → larger weight; mean ≈ scanWeight.
+        let candWeight = scanWeight;
+        if (config.sizingMethod === 'inverse_atr' && cand.actualEntry > 0 && cand.actualStop > 0) {
+          const stopPct = (cand.actualEntry - cand.actualStop) / cand.actualEntry;
+          if (stopPct > 0) {
+            const adj = Math.max(SIZING_MIN_FACTOR, Math.min(SIZING_MAX_FACTOR, SIZING_REF_STOP_PCT / Math.max(stopPct, 0.005)));
+            candWeight = scanWeight * adj;
+          }
+        }
+        openPositions.push({ trade: cand, weight: candWeight });
         openTickers.add(cand.ticker);
+        const candSec = getSector(cand.ticker);
+        sectorCounts[candSec] = (sectorCounts[candSec] || 0) + 1;
+        if (config.crossModeDedup && config.crossModePicked) {
+          config.crossModePicked.add(`${day}|${cand.ticker}`);
+        }
         added++;
       }
     }
@@ -752,6 +927,7 @@ function simulatePortfolio(allTrades, scans, config) {
       actualEntry: t.actualEntry, exitPrice: t.exitPrice,
       status: t.status, pnlPct: t.pnlPct, holdDays: t.holdDays || 0,
       actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,
+      regime: t.regime || null,
     })),
   };
 }
@@ -857,7 +1033,9 @@ async function main() {
                       breakevenPct: bePct, staleDays: stale, entryGatePct: entryGate,
                     });
                     if (result) {
-                      trades.push({ ...result, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct, _stale: stale });
+                      // Preserve regime from setup so simulatePortfolio's regimeByDate map
+                      // populates correctly. Without this, VIX kill is dead code on backtest.
+                      trades.push({ ...result, regime: setup.regime || null, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct, _stale: stale });
                     }
                   }
                   tradesByKey[key] = trades;
@@ -1235,7 +1413,17 @@ async function main() {
 
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
-    for (const [id, cfg] of Object.entries(modesConfig.modes)) {
+    // Shared scoreboard — modes with crossModeDedup=true skip tickers already picked.
+    // Priority order (most conservative first): fortress → secured → balanced → dynamic → turbo.
+    // Conservative modes need diversification most, so they consume the candidate pool first.
+    const crossModePicked = new Set();
+    const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo'];
+    const orderedModeIds = [
+      ...DEDUP_PRIORITY.filter(id => modesConfig.modes[id]),
+      ...Object.keys(modesConfig.modes).filter(id => !DEDUP_PRIORITY.includes(id)),
+    ];
+    for (const id of orderedModeIds) {
+      const cfg = modesConfig.modes[id];
       const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}`;
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
@@ -1243,6 +1431,15 @@ async function main() {
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
+        // Risk layer v1 — forwarded as-is so simulatePortfolio applies them at entry time
+        ddBreakerPct: cfg.ddBreakerPct ?? 0,
+        sectorCapMax: cfg.sectorCapMax ?? 0,
+        sizingMethod: cfg.sizingMethod || null,
+        targetRiskPct: cfg.targetRiskPct ?? 0,
+        vixKillThreshold: cfg.vixKillThreshold ?? 0,
+        correlationCap: cfg.correlationCap ?? 0,
+        crossModeDedup: cfg.crossModeDedup === true,
+        crossModePicked,        // shared Set across all modes
       };
 
       if (FROZEN_ONLY) {

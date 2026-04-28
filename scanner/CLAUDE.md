@@ -215,8 +215,30 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
    - Oversold bounce : `rsi14<35 && vol>sma(vol,20)*1.5`
    - Momentum expansion : `close>sma(close,20) && vol>sma(vol,20)*2 && rsi14>50 && rsi14<75`
    - Breakout squeeze : `close>sma(close,50) && atr(14)>atr(28)*1.2`
-3. **`QueryData`** types: quote,insider_transactions pour les 10 tickers retenus (validation prix spot + détection achats insiders)
-4. **WebSearch** pour les catalyseurs récents de chaque ticker
+3. **`QueryData`** types **OBLIGATOIRES** pour les 10 tickers retenus :
+   - `quote,insider_transactions,social_sentiment,capital_flow` — base validation
+   - `dark_pool` — détection accumulation institutionnelle (alpha signal majeur)
+   - `unusual_options` — flux smart money / informed flow
+   - `ftd_threshold` — Failure-to-Deliver list (squeeze precursor)
+   - `sec_filings,flags` — remplace les 2 WebSearch dilution (voir section Anti-Dilution v2)
+4. **`GetRegimeProbability`** (model=ensemble, horizon=5) : régime probabiliste 4-state pour gating des entrées
+5. **`GetMarketOverview`** : trending topics, sector variations, calendrier macro
+6. **WebSearch** : catalyseurs récents (réservé aux infos non couvertes par MCP)
+
+### Risk Gating Post-Screener (OBLIGATOIRE — Risk Layer v1)
+Avant de figer le top 10, appliquer ces 4 vérifs MCP-driven :
+
+1. **`GetRegimeProbability`** :
+   - Si `crisis > 0.30` ou `early_risk_off > 0.50` → réduire le top à 5, mode = breakout_only uniquement, taille position × 0.5
+   - Si `current_state_confidence < 0.30` → flag "régime incertain" dans la section Invalidations
+2. **`GetCorrelationMatrix`** sur les top 10 (window 60j, pearson) :
+   - Si `max_pair.rho > 0.85` entre 2 candidats → garder le score le plus haut, drop l'autre
+   - Si `avg_off_diagonal > 0.65` → portefeuille trop concentré → diversifier (forcer min 2 secteurs)
+3. **`GetEarningsCalendarFiltered`** (days_ahead=7, min_expected_move_pct=4) :
+   - Si un candidat a `report_date` dans la fenêtre `exclusion_window` (±3j earnings) → DISQUALIFIER ou tag "earnings risk" obligatoire
+4. **`OptimizeSizing`** post-screening (mode=balanced, method=vol_target, max_position_risk_pct=1.0, max_pairwise_correlation=0.7) :
+   - Utiliser le `risk_pct` retourné par OptimizeSizing pour caler les Stop/TP au lieu de l'allocation simple
+   - Si OptimizeSizing rejette un candidat (`dropped_for_correlation`) → drop du top 10
 
 ### Filtre Anti-Doublon Position Ouverte (OBLIGATOIRE — BLOQUANT)
 
@@ -246,30 +268,51 @@ Si le régime impose Short Squeeze → remplacer par Pre-Squeeze ou Momentum.
 - `Momentum Breakout` → utiliser **Breakout**
 - Tout autre cas → forcer **Momentum** ou **Pullback** selon le profil technique
 
-### Filtres Anti-Dilution & Fonds Agressifs (OBLIGATOIRE — BLOQUANT)
+### Filtres Anti-Dilution & Fonds Agressifs (OBLIGATOIRE — BLOQUANT) — v2 MCP-driven
 
 **Avant de retenir un ticker dans le top 10, vérifier OBLIGATOIREMENT les risques de dilution massive. Un ticker qui échoue à ces filtres est DISQUALIFIÉ même avec un score élevé.**
 
-#### Checks SEC (via WebSearch "site:sec.gov {TICKER} S-1 S-3 424B")
-- **Prospectus de dilution** : dépôt S-1, S-3, 424B récent (< 90 jours) → **DISQUALIFIER**
-- **ATM program (At-The-Market)** : accord permettant l'émission continue d'actions → **DISQUALIFIER si actif**
-- **Warrants** : vérifier s'il existe des warrants exerçables à court terme (PIPE, SPAC legacy) → **-15 pts score ou DISQUALIFIER**
-- **Shelf registration** : dépôt S-3ASR ou shelf registration déclenché → **avertissement obligatoire**
+#### Source primaire : `QueryData types=sec_filings,flags`
+Remplace les 2 WebSearch précédents (plus rapide, structuré, sans hallucination).
 
-#### Fonds Agressifs & Short Interest Toxique
-- **Vérifier le short interest** : si > 30% du float → flag "High Short Interest" obligatoire dans les invalidations
-- **Fonds agressifs (Wainwright, Maxim, Dawson James, etc.)** : si le ticker a eu une offre récente via ces banques → **DISQUALIFIER** (ces fonds revendent immédiatement, écrasant le cours)
-- **PIPE récent** : Private Investment in Public Equity dans les 6 mois → **DISQUALIFIER** (actions déjà en circulation à discount)
-- **Reverse split récent** (< 6 mois) → **DISQUALIFIER** (signe de détresse financière)
+```
+QueryData symbols={TICKER} types=sec_filings,flags days=180
+```
 
-#### Procédure de vérification
+Retourne un payload structuré avec `recent_filings[]` (form, filed_at, headline, dilution_flag, shelf_amount_usd) + `dilution_risk_score`.
+
+**Règles de disqualification automatiques (du payload `flags`) :**
+- `flags.shelf_active=true` ET `recent_filings` contient S-3 < 90j → **DISQUALIFIER**
+- `flags.atm_program_active=true` → **DISQUALIFIER**
+- `flags.warrants_outstanding=true` ET `flags.warrants_strike_proximity < 0.20` → **DISQUALIFIER** (warrants ITM imminents)
+- `flags.recent_pipe=true` (< 180j) → **DISQUALIFIER**
+- `flags.reverse_split_recent=true` (< 180j) → **DISQUALIFIER**
+- `flags.aggressive_underwriter=true` (Wainwright, Maxim, Dawson James, Roth Capital, Ladenburg Thalmann détectés) → **DISQUALIFIER**
+- `dilution_risk_score >= 70` → **DISQUALIFIER** (composite multi-signaux)
+- `dilution_risk_score 40-69` → **-15 pts score + flag obligatoire dans Invalidations**
+
+#### Source secondaire : `QueryData types=ftd_threshold` (squeeze precursor)
+- `flags.on_threshold_list=true` AND `ftds_5d > avg_volume_20d × 0.5` → flag "FTD pressure" + considérer pre-squeeze label
+- Sur micro/small-caps, FTD spike = squeeze risk (peut être positif intraday mais évite holds H8+)
+
+#### Source tertiaire : `QueryData types=dark_pool,unusual_options`
+- `dark_pool.accumulation_score > 70` → flag "institutional accumulation" en Confirmations (positif)
+- `unusual_options.smart_money_score > 70` ET `call_put_ratio > 2.0` → flag "smart money long" (positif)
+- Inversement : `unusual_options.call_put_ratio < 0.4` ET volume > 2× normal → "smart money short" → DISQUALIFIER
+
+#### Procédure simplifiée (v2)
 ```
-Pour chaque ticker candidat :
-1. WebSearch "{TICKER} SEC filing dilution warrant 2025 2026"
-2. WebSearch "{TICKER} prospectus offering site:sec.gov"
-3. Si micro-cap (< $500M market cap) : vérification OBLIGATOIRE du float et short interest
-4. Résultat : mentionner dans la section Invalidations si risque identifié
+Pour chaque ticker candidat (1 seul appel MCP par ticker) :
+QueryData symbols={TICKER} types=sec_filings,flags,ftd_threshold,dark_pool,unusual_options days=180
+
+Décision automatique selon le payload :
+  - flags.dilution_risk_score >= 70 OR aggressive_underwriter → DROP
+  - flags.dilution_risk_score 40-69 → SCORE -15
+  - dark_pool.accumulation_score > 70 OR unusual_options.smart_money_score > 70 → CONFIRM
+  - flags.on_threshold_list=true → tag "FTD pressure" (neutre selon contexte)
 ```
+
+**Fallback WebSearch** : uniquement si `sec_filings` retourne vide pour un micro-cap (< $500M market cap), garder l'ancienne procédure WebSearch comme filet de sécurité.
 
 #### Exemple (cas INDO)
 INDO avait un fund agressif (Wainwright) + warrants → dilution massive concrétisée.

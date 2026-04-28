@@ -26,9 +26,44 @@ fs.mkdirSync(OUT, { recursive: true });
 // Load modes-config for version/regime metadata
 const MODES_CFG_PATH = path.join(ROOT, 'data', 'modes-config.json');
 let modesConfigMeta = {};
+let modesConfigFull = null;
 if (fs.existsSync(MODES_CFG_PATH)) {
   const mc = JSON.parse(fs.readFileSync(MODES_CFG_PATH, 'utf8'));
   modesConfigMeta = { configVersion: mc._version || null, regime: mc._regime || null };
+  modesConfigFull = mc;
+}
+
+// Load risk snapshot (VaR / stress / regime-prob / correlations).
+// Populated by tools/refresh-risk-metrics.js. Missing file = no-op.
+const RISK_SNAP_PATH = path.join(ROOT, 'data', 'risk-snapshots.json');
+let riskSnap = {};
+if (fs.existsSync(RISK_SNAP_PATH)) {
+  try { riskSnap = JSON.parse(fs.readFileSync(RISK_SNAP_PATH, 'utf8')) || {}; }
+  catch (e) { console.log('  [warn] risk-snapshots.json unreadable, skipping risk fields'); riskSnap = {}; }
+}
+function getRiskFor(modeId) {
+  const haveSnap = riskSnap && Object.keys(riskSnap).length > 0;
+  if (!haveSnap) return { status: 'pending', reason: 'risk-snapshots.json absent — run tools/refresh-risk-metrics.js' };
+  const r = (riskSnap.modes || {})[modeId];
+  if (!r) return { status: 'unavailable', reason: `mode "${modeId}" missing from snapshot` };
+  if (r.reason === 'no_positions') return { status: 'no_positions', asOf: r.asOf || null };
+  return {
+    status: 'ok',
+    asOf: r.asOf || riskSnap.asOf || null,
+    var95_5d: r.var95_5d != null ? r.var95_5d : null,
+    var99_5d: r.var99_5d != null ? r.var99_5d : null,
+    expectedShortfall95_5d: r.expectedShortfall95_5d != null ? r.expectedShortfall95_5d : null,
+    portfolioValueUsd: r.portfolioValueUsd != null ? r.portfolioValueUsd : null,
+    stressScenarios: r.stressScenarios || [],
+    regimeProbability: riskSnap.regimeProbability || null,  // shared market-level signal
+    maxPairwiseCorrelation: r.maxPairwiseCorrelation != null ? r.maxPairwiseCorrelation : null,
+    avgCorrelation: r.avgCorrelation != null ? r.avgCorrelation : null,
+    method: r.method || 'historical',
+  };
+}
+function getGlobalRegime() {
+  if (!riskSnap.regimeProbability) return { status: 'pending', reason: 'no regime probability in snapshot' };
+  return { status: 'ok', ...riskSnap.regimeProbability };
 }
 
 function write(filename, content) {
@@ -176,7 +211,18 @@ function writeMode(mode, prefix) {
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
       holdDays: t.holdDays, status: t.status, strategy: t.strategy,
       configVersion: t.configVersion || null
-    }))
+    })),
+    risk: getRiskFor(prefix || 'balanced'),
+  });
+
+  // 8. risk.json — VaR, stress scenarios, regime probability, correlations.
+  // Standalone endpoint so consumers can poll risk independently.
+  write(`${p}risk.json`, {
+    updatedAt: now,
+    mode: prefix || 'balanced',
+    configVersion: modesConfigMeta.configVersion,
+    regime: modesConfigMeta.regime,
+    risk: getRiskFor(prefix || 'balanced'),
   });
 }
 
@@ -278,6 +324,7 @@ write('modes.json', {
   regime: modesConfigMeta.regime,
   modes: MODE_IDS.filter(id => snap.modes[id]).map(id => {
     const m = snap.modes[id];
+    const r = getRiskFor(id);
     return {
       id,
       label: m.config?.label || id,
@@ -296,8 +343,30 @@ write('modes.json', {
       minScore: m.config?.minScore || 85,
       horizon: m.config?.horizon || 10,
       slotsAvailable: (m.config?.portfolioSize || 1) - (m.positions || []).length,
+      // Risk-layer-v1 fields propagated from modes-config
+      ddBreakerPct: m.config?.ddBreakerPct || 0,
+      sectorCapMax: m.config?.sectorCapMax || 0,
+      sizingMethod: m.config?.sizingMethod || null,
+      vixKillThreshold: m.config?.vixKillThreshold || 0,
+      // Risk snapshot summary (null when refresh-risk-metrics.js hasn't run yet)
+      risk: r ? {
+        var95_5d: r.var95_5d, var99_5d: r.var99_5d,
+        expectedShortfall95_5d: r.expectedShortfall95_5d,
+        maxPairwiseCorrelation: r.maxPairwiseCorrelation,
+        regimeState: r.regimeProbability?.currentState || null,
+        asOf: r.asOf,
+      } : null,
     };
   })
+});
+count++;
+
+// ─── Global regime endpoint (market-wide regime probability) ────────────────
+write('regime.json', {
+  updatedAt: now,
+  configVersion: modesConfigMeta.configVersion,
+  regimeLabel: modesConfigMeta.regime,
+  regimeProbability: getGlobalRegime(),
 });
 count++;
 

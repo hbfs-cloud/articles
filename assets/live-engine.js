@@ -339,6 +339,29 @@
     };
   }
 
+  // Statuses that mark a position as final — no more evaluation, no more price updates.
+  var TERMINAL_STATUSES = { SL_HIT: 1, TP1_HIT: 1, TP2_HIT: 1, EXPIRED: 1 };
+
+  function markTerminalIfNeeded(pos, result) {
+    if (!result || pos._terminal) return;
+    if (TERMINAL_STATUSES[result.status]) {
+      pos._terminal = true;
+      pos._exitPrice = result.price;
+      pos._exitStatus = result.status;
+      pos._exitTs = new Date().toISOString();
+    }
+  }
+
+  function liveTickersStillNeeded() {
+    var s = {};
+    Object.keys(positions).forEach(function (modeId) {
+      positions[modeId].forEach(function (p) {
+        if (!p._terminal && p.ticker) s[p.ticker] = true;
+      });
+    });
+    return s;
+  }
+
   function evaluateForTicker(ticker) {
     if (!modesCfg) return;
     Object.keys(positions).forEach(function (modeId) {
@@ -346,12 +369,14 @@
       if (!cfg) return;
       positions[modeId].forEach(function (pos) {
         if (pos.ticker !== ticker) return;
+        if (pos._terminal) return;            // closed — skip
         var lp = prices[ticker];
         if (!lp) return;
         var result = evaluatePosition(pos, lp, cfg);
         if (result) {
           pos._eval = result;
-          emit('eval', { modeId: modeId, result: result });
+          markTerminalIfNeeded(pos, result);
+          emit('eval', { modeId: modeId, result: result, terminal: !!pos._terminal });
         }
       });
     });
@@ -365,16 +390,25 @@
       var cfg = modesCfg[modeId];
       if (!cfg) return;
       positions[modeId].forEach(function (pos) {
+        if (pos._terminal) return;            // closed — skip
         var lp = prices[pos.ticker];
         if (!lp) return;
         var result = evaluatePosition(pos, lp, cfg);
         if (result) {
           pos._eval = result;
-          emit('eval', { modeId: modeId, result: result });
+          markTerminalIfNeeded(pos, result);
+          emit('eval', { modeId: modeId, result: result, terminal: !!pos._terminal });
         }
       });
     });
     updateAggregates();
+    // Prune subscribed tickers — drop those whose positions all reached terminal.
+    var keep = liveTickersStillNeeded();
+    var newTickers = tickers.filter(function (t) { return keep[t]; });
+    if (newTickers.length !== tickers.length) {
+      tickers = newTickers;
+      try { if (typeof subscribe === 'function') subscribe(); } catch (e) { /* noop */ }
+    }
   }
 
   // ── Aggregates ──
@@ -513,6 +547,9 @@
       if (!opts) opts = {};
       modesCfg = opts.modesCfg || null;
 
+      // Avoid timer leak when init() is called twice.
+      if (evalTimer) { clearInterval(evalTimer); evalTimer = null; }
+
       // Extract tickers from positions
       if (opts.positions) {
         positions = opts.positions;
@@ -543,6 +580,27 @@
 
       // Periodic full eval
       evalTimer = setInterval(evaluateAll, EVAL_INTERVAL);
+    },
+
+    // Hot-swap positions when a new snapshot lands (rotation/new scan).
+    // Invalidates stale per-position eval so rotated-out tickers stop firing alerts.
+    refreshPositions: function (newPositions) {
+      if (!newPositions) return;
+      positions = newPositions;
+      var tickerSet = {};
+      Object.keys(positions).forEach(function (modeId) {
+        positions[modeId].forEach(function (pos) {
+          if (pos.ticker) {
+            pos._modeId = modeId;
+            pos._eval = null;
+            tickerSet[pos.ticker] = true;
+          }
+        });
+      });
+      tickers = Object.keys(tickerSet);
+      console.log('[LiveEngine] refreshPositions —', tickers.length, 'tickers:', tickers.join(', '));
+      try { if (typeof subscribe === 'function') subscribe(); } catch (e) { /* noop */ }
+      try { if (typeof evaluateAll === 'function') evaluateAll(); } catch (e) { /* noop */ }
     },
 
     on: on,

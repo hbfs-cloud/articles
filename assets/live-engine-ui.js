@@ -692,23 +692,34 @@
     );
   }
 
+  // Terminal statuses freeze the row (no more price ticks rendered for closed positions).
+  var UI_TERMINAL = { SL_HIT: 1, TP1_HIT: 1, TP2_HIT: 1, EXPIRED: 1 };
+
   function updateRow(modeId, r) {
     if (!r) return;
     var t = r.ticker;
     var si = LE.getStatusInfo(r.status);
+    var rowEl = document.getElementById('lp-r-' + modeId + '-' + t);
+
+    // Once a row has been frozen, drop further updates (LiveEngine also stops eval'ing it).
+    if (rowEl && rowEl.dataset.terminal === '1') return;
+
+    var becomingTerminal = r.terminal === true || UI_TERMINAL[r.status];
 
     var pxEl = document.getElementById('lp-px-' + modeId + '-' + t);
     if (pxEl) {
       pxEl.textContent = '$' + fmt(r.price);
       pxEl.classList.remove('flash-up', 'flash-down');
-      var dir = r.direction;
-      if (dir === 'up' || dir === 'down') {
-        requestAnimationFrame(function () {
+      if (!becomingTerminal) {
+        var dir = r.direction;
+        if (dir === 'up' || dir === 'down') {
           requestAnimationFrame(function () {
-            if (dir === 'up') pxEl.classList.add('flash-up');
-            else pxEl.classList.add('flash-down');
+            requestAnimationFrame(function () {
+              if (dir === 'up') pxEl.classList.add('flash-up');
+              else pxEl.classList.add('flash-down');
+            });
           });
-        });
+        }
       }
     }
 
@@ -740,12 +751,14 @@
       bgEl.innerHTML = '<i class="fas ' + si.icon + '"></i> ' + si.label;
     }
 
-    var rowEl = document.getElementById('lp-r-' + modeId + '-' + t);
     if (rowEl) {
-      if (r.status === 'SL_HIT' || r.status === 'EXPIRED') {
+      if (becomingTerminal) {
         rowEl.classList.add('terminal');
+        rowEl.dataset.terminal = '1';      // sticky — no further ticks render
+        rowEl.title = 'Closed @ $' + fmt(r.price) + ' (' + r.status + ')';
       } else {
         rowEl.classList.remove('terminal');
+        rowEl.removeAttribute('title');
       }
       if (r.status === 'TP2_HIT') {
         rowEl.style.borderLeft = '2px solid #7c3aed';
@@ -1015,6 +1028,39 @@
             positions: allPositions,
             modesCfg: modesCfgFlat
           });
+
+          // ── Snapshot reloader: poll dates.json every 5 min. When a newer snapshot
+          // lands (rotation / new scan), hot-swap positions so rotated-out tickers
+          // stop firing alerts in long-lived browser tabs.
+          var lastSnapDate = latest;
+          var SNAP_POLL_MS = 5 * 60 * 1000;
+          setInterval(function () {
+            fetch('/scanner/status/history/dates.json?v=' + Date.now())
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (!d || !d.length) return;
+                var newest = d[d.length - 1];
+                if (newest === lastSnapDate) return;
+                console.log('[LiveEngineUI] new snapshot', lastSnapDate, '→', newest);
+                return fetch('/scanner/status/history/' + newest + '.json?v=' + Date.now())
+                  .then(function (r) { return r.json(); })
+                  .then(function (newSnap) {
+                    var fresh = {};
+                    Object.keys(modesCfgFlat).forEach(function (modeId) {
+                      var md = newSnap.modes ? newSnap.modes[modeId] : null;
+                      fresh[modeId] = (md && md.positions && md.positions.length > 0) ? md.positions : [];
+                    });
+                    window._lePositions = fresh;
+                    Object.keys(fresh).forEach(function (modeId) {
+                      buildPositionRows(modeId, fresh[modeId]);
+                      reorganizePanel(modeId);
+                    });
+                    LE.refreshPositions(fresh);
+                    lastSnapDate = newest;
+                  });
+              })
+              .catch(function (e) { console.warn('[LiveEngineUI] snapshot poll failed:', e); });
+          }, SNAP_POLL_MS);
 
           // If market is already known closed at boot, update chrome immediately —
           // no spinning forever while waiting for a live feed that won't arrive.

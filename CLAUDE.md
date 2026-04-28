@@ -244,28 +244,39 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
 
 1. **Lire TOUTES les rétrospectives** (`scanner/retrospective/YYYYMMDD/`) pour cumuler les enseignements
 2. **Lire le scan précédent** pour filtre anti-doublon (min 70% nouveaux tickers)
-3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `GetMarketOverview` (trending, sectors, calendar) + `QueryData` (quote, **social_sentiment, capital_flow**, insider_transactions) pour les 10 tickers retenus
-4. **⚠️ Dilution Filter (OBLIGATOIRE)** : Pour chaque ticker candidat (surtout small/mid-caps), `WebSearch "{TICKER} dilution warrants SEC S-3"` pour détecter :
-   - Shelf registrations / S-3 filings récents
-   - Warrants, ATM offerings, fonds toxiques (H.C. Wainwright, Maxim, Roth Capital, etc.)
-   - Serial diluters → **EXCLURE du scan** (leçon INDO : setup technique parfait mais dilution massive non détectée)
-5. **⚠️ Sharia Compliance Tagging (OBLIGATOIRE)** : Pour chaque ticker retenu, évaluer la conformité Sharia (secteur haram, ratios dette/market cap > 33%, intérêts > 5% du CA, ETFs levier/bonds). Ajouter `data-sharia="true"` ou `data-sharia="false"` sur chaque `<tr>` du synthèse et chaque `<div class="setup-card">`. Voir `scanner/CLAUDE.md` section "Sharia Compliance Tagging" pour les critères complets.
-6. **Sélection : 10 setups A+** (score ≥ 85, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
-5. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
-6. **Indexer + Push HTML d'abord** (AVANT le pipeline) :
+3. **Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `GetMarketOverview` (trending, sectors, calendar) + `GetRegimeProbability` (model=ensemble, horizon=5) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour les 10 tickers retenus
+4. **⚠️ Dilution Filter v2 MCP-driven (OBLIGATOIRE)** : `QueryData types=sec_filings,flags days=180` par ticker candidat. Disqualification automatique sur :
+   - `flags.dilution_risk_score >= 70` ou `flags.shelf_active=true` + S-3 récent
+   - `flags.atm_program_active=true` ou `flags.aggressive_underwriter=true` (Wainwright, Maxim, Dawson James, Roth, Ladenburg)
+   - `flags.warrants_outstanding` ITM imminents (proximity < 0.20)
+   - `flags.recent_pipe` (< 180j) ou `flags.reverse_split_recent` (< 180j)
+   - Score 40-69 → **-15 pts + flag obligatoire dans Invalidations**
+   - Fallback WebSearch uniquement si `sec_filings` retourne vide pour un micro-cap. Voir `scanner/CLAUDE.md` "Anti-Dilution v2".
+5. **⚠️ Risk Gating Post-Screener (OBLIGATOIRE — Risk Layer v1)** : avant de figer le top 10, appliquer 4 vérifs MCP :
+   - `GetRegimeProbability` : si `crisis > 0.30` ou `early_risk_off > 0.50` → top réduit à 5, breakout_only, taille × 0.5
+   - `GetCorrelationMatrix` (window=60, pearson) : `max_pair.rho > 0.85` → drop le score le plus bas ; `avg_off_diagonal > 0.65` → forcer min 2 secteurs
+   - `GetEarningsCalendarFiltered` (days_ahead=7, min_expected_move=4) : si ticker dans `exclusion_window` → DISQUALIFIER ou tag "earnings risk"
+   - `OptimizeSizing` (mode=balanced, method=vol_target, max_position_risk_pct=1.0, max_pairwise_correlation=0.7) : utiliser `risk_pct` retourné pour caler les sizes
+6. **⚠️ Sharia Compliance Tagging (OBLIGATOIRE)** : Pour chaque ticker retenu, évaluer la conformité Sharia (secteur haram, ratios dette/market cap > 33%, intérêts > 5% du CA, ETFs levier/bonds). Ajouter `data-sharia="true"` ou `data-sharia="false"` sur chaque `<tr>` du synthèse et chaque `<div class="setup-card">`. Voir `scanner/CLAUDE.md` section "Sharia Compliance Tagging" pour les critères complets.
+7. **Sélection : 10 setups A+** (score ≥ **90** — relevé de 85 en v4 risk layer, confluence ≥ 3 signaux, diversification géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+8. **Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
+9. **Indexer + Push HTML d'abord** (AVANT le pipeline) :
    ```bash
    node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-notify
    ```
    ⚠️ `--no-notify` obligatoire ici — la notification Telegram est gérée par publish-daily-card.sh (step 8 média).
 
-8. **Pipeline Quotidien (Append-only)** :
-   ```bash
-   node tools/update-tracking.js           # Tracking exits (prix Yahoo)
-   node tools/sweep.js                     # Append-only: ajoute les nouveaux trades fermés (défaut sûr)
-   node tools/gen-status-page.js           # Snapshot J + Dashboard (sans flag)
-   node tools/gen-api.js                   # Refresh public JSONs (29 endpoints)
-   ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
-   ```
+10. **Pipeline Quotidien (Append-only) — Risk Layer v1** :
+    ```bash
+    node tools/update-tracking.js           # Tracking exits (prix Yahoo)
+    node tools/sweep.js                     # Append-only: ajoute les nouveaux trades fermés (défaut sûr)
+    MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
+      node tools/refresh-risk-metrics.js    # NEW: VaR + stress + correlation + regimeProb → data/risk-snapshots.json
+    node tools/gen-status-page.js           # Snapshot J + Dashboard (lit risk-snapshots.json)
+    node tools/gen-api.js                   # Refresh public JSONs (50 endpoints, dont risk.json par mode)
+    ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
+    ```
+    Sans `MCP_GATEWAY_URL` → `refresh-risk-metrics.js --stub` écrit un schéma vide, le pipeline continue (graceful degradation).
 
 9. **Sweep Stratégique (ON-DEMAND uniquement)** :
    ```bash
