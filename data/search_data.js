@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Mag 7 Earnings Superweek, FOMC Hold & Intel's Historic Surge",
+    "desc": "Four of the five largest companies on Earth — Microsoft, Meta, Amazon, Alphabet — report earnings Wednesday April 29 after hours. Apple follows Thursday April 30. Combined market cap exceeds $15 trillion. The FOMC rate decision lands the same day. This is the most consequential 48 hours of Q1 earnin...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260428/",
+    "date": "28 avril 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "IMF Forecast, Q1 Earnings Kickoff & Fed Patience: Navigating the Oil Shock",
     "desc": "Two simultaneous macro-defining events converge this week. The IMF publishes its updated World Economic Outlook (Tuesday) — widely expected to slash global growth forecasts due to the persistent oil shock and trade fragmentation. Simultaneously, Q1 earnings season begins in earnest: Goldman Sachs (M...",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
@@ -206,19 +219,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 Décembre 2025 - 3 Janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Mag 7 Earnings Superweek, FOMC Hold & Intel's Historic Surge",
-    "desc": "Four of the five largest companies on Earth — Microsoft, Meta, Amazon, Alphabet — report earnings Wednesday April 29 after hours. Apple follows Thursday April 30. Combined market cap exceeds $15 trillion. The FOMC rate decision lands the same day. This is the most consequential 48 hours of Q1 earnin...",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
-    "grade": "",
-    "href": "/weekly/20260428/",
-    "date": "28 avril 2026"
   },
   {
     "type": "daily",
