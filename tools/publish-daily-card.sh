@@ -71,15 +71,21 @@ echo ""
 echo "📤 Step 6: Committing..."
 # Convention: scanner du soir = séance J+1 (prochain jour de trading ouvrable)
 # Lundi→Mardi, Mardi→Mercredi, ..., Vendredi→Lundi (skip weekend)
+# Cross-platform date arithmetic (BSD on macOS / GNU on Linux)
+if date -v +1d '+%Y' >/dev/null 2>&1; then
+  _date_add_days() { date -v "+${1}d" '+%Y%m%d'; }   # BSD
+else
+  _date_add_days() { date -d "+${1} days" '+%Y%m%d'; } # GNU
+fi
 _DOW=$(date '+%u')  # 1=Mon, 5=Fri, 6=Sat, 7=Sun
 if [ "$_DOW" -eq 5 ]; then
-  SCAN_DATE=$(date -d '+3 days' '+%Y%m%d')  # Vendredi soir → lundi
+  SCAN_DATE=$(_date_add_days 3)  # Vendredi soir → lundi
 elif [ "$_DOW" -eq 6 ]; then
-  SCAN_DATE=$(date -d '+2 days' '+%Y%m%d')  # Samedi → lundi
+  SCAN_DATE=$(_date_add_days 2)  # Samedi → lundi
 elif [ "$_DOW" -eq 7 ]; then
-  SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')   # Dimanche → lundi
+  SCAN_DATE=$(_date_add_days 1)  # Dimanche → lundi
 else
-  SCAN_DATE=$(date -d '+1 day' '+%Y%m%d')   # Lun-Jeu → J+1
+  SCAN_DATE=$(_date_add_days 1)  # Lun-Jeu → J+1
 fi
 TODAY=$(date '+%Y%m%d')  # Date réelle (pour commits/logs)
 echo "   Scan date (séance): $SCAN_DATE | Today: $TODAY"
