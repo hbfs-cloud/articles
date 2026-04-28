@@ -782,8 +782,23 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
         if (recentExecutedRotation && recentExecutedRotation.replaces && recentExecutedRotation.fromDate) {
           rotatedKeys.add(recentExecutedRotation.replaces + '|' + recentExecutedRotation.fromDate);
         }
+        const _todayISOLocal = new Date().toISOString().slice(0, 10);
+        // Try to use the live current price for the rotated ticker as a better
+        // exit-price approximation (sweep.js's synthesized exit is at scan-day
+        // which is wrong for rotation-closed trades).
+        const rotatedTickerLive = (recentExecutedRotation && recentExecutedRotation.replaces)
+          ? (livePositions || []).find(p => p.ticker === recentExecutedRotation.replaces)
+          : null;
         const filtered = trades.filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate)).map(t => {
-          if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) return { ...t, status: 'rotated', _rotatedTo: recentExecutedRotation && recentExecutedRotation.ticker };
+          if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) {
+            const exitPrice = rotatedTickerLive && rotatedTickerLive.current_price
+              ? rotatedTickerLive.current_price
+              : t.exitPrice;
+            const pnlPct = (t.actualEntry > 0 && exitPrice > 0)
+              ? +(((exitPrice - t.actualEntry) / t.actualEntry) * 100).toFixed(2)
+              : t.pnlPct;
+            return { ...t, status: 'rotated', exitDate: _todayISOLocal, exitPrice, pnlPct, _rotatedTo: recentExecutedRotation && recentExecutedRotation.ticker };
+          }
           return t;
         });
         const sorted = [...filtered].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
