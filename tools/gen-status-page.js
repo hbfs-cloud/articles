@@ -164,6 +164,17 @@ async function main() {
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
 
+  // Load previous snapshot once — used by panel() to surface "rotation just executed"
+  // (yesterday had a ROTATE order whose ticker is now today's position).
+  let prevSnap = null;
+  try {
+    const _historyDir = path.join(ROOT, 'scanner/status/history');
+    const _todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const _files = fs.readdirSync(_historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
+    const _prev = _files.filter(f => f.replace('.json', '') < _todayKey).slice(-1)[0];
+    if (_prev) prevSnap = JSON.parse(fs.readFileSync(path.join(_historyDir, _prev), 'utf8'));
+  } catch (e) { /* first run — no previous snapshot */ }
+
   // Collect ALL premature tickers (holdDays < horizon) for equity curve MtM
   const liveTickers = new Set(livePositions.map(p => p.ticker));
   const allPrematureTickers = new Set();
@@ -361,6 +372,25 @@ async function main() {
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, trades);
     const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
+
+    // Recently executed rotation: yesterday's ROTATE order whose ticker is now in pos.
+    // Hoisted at panel() level so both the Orders section and the Trade History
+    // section can use it (relabel "Expired" → "Rotated", keep the row visible).
+    let recentExecutedRotation = null;
+    if (prevSnap && prevSnap.modes && prevSnap.modes[id]) {
+      const prevOrders = (prevSnap.modes[id].orders || []).filter(o => (o.action || '').toUpperCase() === 'ROTATE');
+      const currentTickers = new Set(pos.map(p => p.ticker));
+      const justExecuted = prevOrders.find(o => currentTickers.has(o.ticker));
+      if (justExecuted) {
+        recentExecutedRotation = {
+          ticker: justExecuted.ticker,
+          replaces: justExecuted.replaces || null,
+          score: justExecuted.score || null,
+          scoreDelta: justExecuted.scoreDelta || null,
+          fromDate: prevSnap.date || null,
+        };
+      }
+    }
     const totalRet = pos.length ? pos.reduce((s, p) => s + (p.return_pct || 0), 0) / pos.length : 0;
 
     // Helper: compute biz days from scan_date
@@ -499,6 +529,9 @@ ${(() => {
           }
         }
 
+        // recentExecutedRotation is hoisted at panel() top level so both Orders
+        // and Trade History sections can use it.
+
         // WATCH: signals that could not be placed and don't qualify for rotation.
         // Only shown if portfolio is full and there are remaining signals worth monitoring.
         const scanDateStr = scanDir ? `${scanDir.slice(0, 4)}-${scanDir.slice(4, 6)}-${scanDir.slice(6, 8)}` : null;
@@ -598,8 +631,27 @@ ${(() => {
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
           : `${occupied}/${cfg.portfolioSize} open — portfolio full${rotationCandidates.length ? ' — rotation opportunity' : ''}`;
 
-        if (totalActions === 0 && watchPool.length === 0) {
+        // Just-executed rotation card (always shown when recentExecutedRotation exists)
+        const recentRotationHTML = recentExecutedRotation ? `
+<div class="cta-card" style="background:#ecfdf5;border:1px solid #a7f3d0;border-left:4px solid #059669;margin-bottom:.75rem;padding:.7rem 1rem;border-radius:8px">
+  <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-size:.82rem">
+    <span style="background:#059669;color:#fff;padding:.15rem .45rem;border-radius:4px;font-weight:700;font-size:.6rem;letter-spacing:.06em"><i class="fas fa-check-circle"></i> JUST EXECUTED</span>
+    <span style="color:#92400e;font-weight:700">CLOSE</span>
+    <b style="color:#dc2626">${recentExecutedRotation.replaces || '?'}</b>
+    <span style="color:#059669;font-size:1.1rem">⟶</span>
+    <span style="color:#065f46;font-weight:700">BUY</span>
+    <b style="color:#059669">${recentExecutedRotation.ticker}</b>
+    ${recentExecutedRotation.score ? `<span class="pill-score" style="background:#059669;font-size:.65rem;padding:.1rem .4rem">${recentExecutedRotation.score}</span>` : ''}
+    <span style="margin-left:auto;color:#059669;font-size:.7rem"><i class="fas fa-clock"></i> ${recentExecutedRotation.fromDate || 'previous'}</span>
+  </div>
+  <div style="margin-top:.4rem;font-size:.7rem;color:#065f46">Yesterday's rotation order applied — <b>${recentExecutedRotation.replaces || '?'}</b> closed, <b>${recentExecutedRotation.ticker}</b> now in portfolio.</div>
+</div>` : '';
+
+        if (totalActions === 0 && watchPool.length === 0 && !recentExecutedRotation) {
           return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
+        }
+        if (totalActions === 0 && watchPool.length === 0 && recentExecutedRotation) {
+          return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-arrows-rotate"></i> Recent Rotation</h3><span class="sc-meta">${occupied}/${cfg.portfolioSize} open — yesterday's rotation applied</span></div>${recentRotationHTML}</div>`;
         }
 
         return `
@@ -626,6 +678,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
     <span class="sc-meta">${statusLine}</span>
   </div>
+  ${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
@@ -716,8 +769,23 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
         // Only show pending trades that actually made it into open positions (capped to portfolioSize).
         // Premature trades that were dropped by the cap are backtest overflow — hiding them keeps
         // Trade History consistent with Open Positions (no orphan "Pending" rows).
+        // ALSO keep yesterday's positions that were just rotated out — otherwise the rotation
+        // closes the trade with status='expired' + _premature=true and it disappears from history.
         const keptPremature = new Set(pos.map(p => p.ticker + '|' + p.scan_date));
-        const filtered = trades.filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate));
+        if (prevSnap && prevSnap.modes && prevSnap.modes[id]) {
+          for (const p of (prevSnap.modes[id].positions || [])) {
+            keptPremature.add(p.ticker + '|' + p.scan_date);
+          }
+        }
+        // Mark trades that were rotated-out so their status renders as "Rotated" (not Pending/Expired)
+        const rotatedKeys = new Set();
+        if (recentExecutedRotation && recentExecutedRotation.replaces && recentExecutedRotation.fromDate) {
+          rotatedKeys.add(recentExecutedRotation.replaces + '|' + recentExecutedRotation.fromDate);
+        }
+        const filtered = trades.filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate)).map(t => {
+          if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) return { ...t, status: 'rotated', _rotatedTo: recentExecutedRotation && recentExecutedRotation.ticker };
+          return t;
+        });
         const sorted = [...filtered].sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
         const replacedBy = {};
         for (let i = 0; i < sorted.length; i++) {
@@ -1287,12 +1355,12 @@ document.addEventListener('DOMContentLoaded',function(){
     +   '<div class="perf-hero-left"><span class="perf-hero-label"><i class="fas fa-chart-line"></i> Equity Curve</span></div>'
     +   '<div class="tm-equity-target" style="width:100%;height:260px"></div>'
     + '</div>'
-    // Rotation Signal — explicit CLOSE X → BUY Y
+    // Rotation Signal — pending + just-executed visible side by side
     + '<div class="section-card tm-section tm-rotation" style="border-left:4px solid #f59e0b;background:#fffbeb">'
     +   '<div class="sc-head"><h3 style="color:#92400e"><i class="fas fa-arrows-rotate"></i> Rotation Signal '
     +     '<span class="count" data-bind="orders|filter:rotate|count" data-format="int"></span></h3>'
     +     '<span class="sc-meta">close-and-buy swap</span></div>'
-    +   '<table class="t" data-list="orders|filter:rotate" data-empty="No rotation signal — portfolio stable.">'
+    +   '<table class="t" data-list="orders|filter:rotate" data-empty="No pending rotation — portfolio stable.">'
     +     '<thead><tr><th>Close</th><th></th><th>Buy</th><th class="hide-m">Score Δ</th><th class="hide-m">Entry / Stop / TP1</th></tr></thead>'
     +     '<tbody></tbody>'
     +     '<template>'
@@ -1305,6 +1373,20 @@ document.addEventListener('DOMContentLoaded',function(){
     +         '<span data-bind="tp1" data-format="usd"></span></td></tr>'
     +     '</template>'
     +   '</table>'
+    +   // Just-executed rotation block — shown when recentRotation is populated
+    +   '<div data-show-if="recentRotation" style="margin-top:.7rem;padding:.55rem .8rem;background:#ecfdf5;border:1px solid #6ee7b7;border-left:3px solid #059669;border-radius:6px;font-size:.78rem">'
+    +     '<div style="font-weight:700;color:#065f46;margin-bottom:.2rem"><i class="fas fa-check-circle"></i> Just Executed</div>'
+    +     '<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+    +       '<span style="color:#92400e">CLOSE</span>'
+    +       '<b class="neg" data-bind="recentRotation.replaces"></b>'
+    +       '<span style="color:#059669">⟶</span>'
+    +       '<span style="color:#065f46">BUY</span>'
+    +       '<b class="pos" data-bind="recentRotation.ticker"></b>'
+    +       '<span class="pill-score" data-bind="recentRotation.score" style="background:#059669"></span>'
+    +       '<span style="margin-left:auto;color:#059669;font-size:.7rem"><i class="fas fa-clock"></i> '
+    +         '<span data-bind="recentRotation.executedDate" data-format="date-md"></span></span>'
+    +     '</div>'
+    +   '</div>'
     + '</div>'
     // Close Now
     + '<div class="section-card tm-section tm-close-now cta-close">'
@@ -1595,6 +1677,9 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   } catch (e) { }
 
+  // prevSnap is loaded earlier in main() (so panel() can use it during HTML render).
+  // Reuse the same closure-bound prevSnap here for snapshot annotation.
+
   const snapshot = { date: todayISO, updatedAt, scanDir };
   snapshot.modes = {};
   // NOTE: each mode is an independent alternative strategy — a user replicating
@@ -1640,12 +1725,33 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     }
 
+    // Recent rotation: if yesterday's snapshot had a ROTATE order whose ticker
+    // is now a current position, surface "CLOSE X → BUY Y" info even after exec.
+    let recentRotation = null;
+    if (prevSnap && prevSnap.modes && prevSnap.modes[id]) {
+      const prevMode = prevSnap.modes[id];
+      const prevOrders = (prevMode.orders || []).filter(o => (o.action || '').toUpperCase() === 'ROTATE');
+      const currentTickers = new Set(pos.map(p => p.ticker));
+      const justExecuted = prevOrders.find(o => currentTickers.has(o.ticker));
+      if (justExecuted) {
+        recentRotation = {
+          ticker: justExecuted.ticker,
+          replaces: justExecuted.replaces || null,
+          score: justExecuted.score || null,
+          scoreDelta: justExecuted.scoreDelta || null,
+          executedDate: todayISO,
+          fromDate: prevSnap.date || null,
+        };
+      }
+    }
+
     snapshot.modes[id] = {
       stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
-      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '' })),
+      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '', replacedFrom: (recentRotation && recentRotation.ticker === p.ticker) ? recentRotation.replaces : null })),
       orders: [...buyOrders, ...rotCands],
+      recentRotation,
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
