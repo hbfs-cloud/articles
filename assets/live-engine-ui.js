@@ -585,82 +585,6 @@
     }, 50);
   }
 
-  // Phase B unification: inject the same MODE_PANEL_TPL clone used by Time Machine
-  // into the live panel. Hide server-rendered duplicate sections so layout matches
-  // TM (Stats, Equity, Rotation, Close Now, Expires, Buy Orders, Signals, Positions,
-  // Trade History) — single source of truth.
-  var TPL_OVERLAP_HEADINGS = [
-    'today’s signals', "today's signals",
-    'orders', 'open positions', 'trade history',
-    'rotation signal', 'close now', 'raise stop loss', 'expires tomorrow',
-    'new buy orders'
-  ];
-  function _hideServerDuplicates(panel) {
-    panel.querySelectorAll(':scope > .section-card, :scope > .perf-hero').forEach(function (sc) {
-      // Don't hide the lp-card (live grid) or the template host
-      if (sc.classList.contains('lp-card') || sc.classList.contains('mp-host')) return;
-      var h = sc.querySelector('h3, .sc-sum-title');
-      if (!h) return;
-      var label = (h.textContent || '').toLowerCase().replace(/[–—]/g, '-').trim().split(/\s{2,}/)[0];
-      // Strip trailing count words like "1 setup" → keep heading
-      var heading = label.split(/\s\d+\s/)[0].trim();
-      if (TPL_OVERLAP_HEADINGS.indexOf(heading) >= 0 || heading.indexOf("today") === 0 ||
-          heading.indexOf('orders to place') >= 0 || heading.indexOf('open position') >= 0 ||
-          heading.indexOf('trade history') >= 0 || heading.indexOf('history') >= 0) {
-        sc.classList.add('mp-server-hidden');
-        sc.style.display = 'none';
-      }
-    });
-  }
-  function renderUnifiedTemplate(modeId, modeData, mCfg) {
-    if (!modeData || !window.getModeTpl || !window.ModePanelBinder) return;
-    var panel = document.getElementById('p-' + modeId);
-    if (!panel) return;
-    var host = panel.querySelector('.mp-host');
-    if (!host) {
-      host = el('div', 'mp-host');
-      // Insert AFTER the live-engine card (so the live grid is on top).
-      var liveCard = panel.querySelector('#lp-' + modeId);
-      if (liveCard && liveCard.parentNode === panel) {
-        liveCard.insertAdjacentElement('afterend', host);
-      } else {
-        panel.appendChild(host);
-      }
-      _hideServerDuplicates(panel);
-    }
-    host.innerHTML = '';
-    var clone = window.getModeTpl().content.cloneNode(true);
-    var equityTarget = clone.querySelector('.tm-equity-target');
-    if (equityTarget) equityTarget.id = 'mp-eq-' + modeId;
-    var color = (mCfg && mCfg.color) || '#94a3b8';
-    clone.querySelectorAll('[data-color]').forEach(function (e) {
-      e.style.borderLeft = '3px solid ' + color;
-    });
-    // Hide the template's own Open Positions section — the live lp-card already
-    // shows positions interactively (sparklines, gauges, scenario bar).
-    var tmPos = clone.querySelector('.tm-positions');
-    if (tmPos) tmPos.style.display = 'none';
-    var enriched = window.enrichForBinding ? window.enrichForBinding(modeData, mCfg || {}) : modeData;
-    window.ModePanelBinder.bind(clone, enriched);
-    host.appendChild(clone);
-    // Equity chart for this template host (independent from chart-{modeId})
-    if (modeData.equity && modeData.equity.d && modeData.equity.d.length > 0 && window.echarts) {
-      var equityEl = document.getElementById('mp-eq-' + modeId);
-      if (equityEl && !window.echarts.getInstanceByDom(equityEl)) {
-        try {
-          var c = window.echarts.init(equityEl);
-          c.setOption({
-            grid: { left: 36, right: 16, top: 12, bottom: 24 },
-            xAxis: { type: 'category', data: modeData.equity.d, boundaryGap: false, axisLabel: { fontSize: 10 } },
-            yAxis: { type: 'value', axisLabel: { formatter: '{value}' } },
-            tooltip: { trigger: 'axis' },
-            series: [{ type: 'line', smooth: true, areaStyle: { opacity: 0.18 }, lineStyle: { color: color, width: 2 }, data: modeData.equity.v }],
-          });
-        } catch (e) { /* echarts init failed, leave empty */ }
-      }
-    }
-  }
-
   function createCard(modeId) {
     var panel = document.getElementById('p-' + modeId);
     if (!panel) return null;
@@ -1073,10 +997,6 @@
             createCard(modeId);
             buildPositionRows(modeId, allPositions[modeId]);
             reorganizePanel(modeId);
-            // Phase B: inject MODE_PANEL_TPL clone bound to snapshot data.
-            // Same fixed-section layout as Time Machine (rotation signal, close-now,
-            // expires, buy orders, signals, history) — empty-state when no data.
-            renderUnifiedTemplate(modeId, snap.modes ? snap.modes[modeId] : null, modesCfgFlat[modeId]);
           });
 
           // Resize ECharts after grid layout change + flag empty charts for watermark
@@ -1134,8 +1054,6 @@
                     Object.keys(fresh).forEach(function (modeId) {
                       buildPositionRows(modeId, fresh[modeId]);
                       reorganizePanel(modeId);
-                      // Phase B: re-bind the unified template with the new snapshot.
-                      renderUnifiedTemplate(modeId, newSnap.modes ? newSnap.modes[modeId] : null, modesCfgFlat[modeId]);
                     });
                     LE.refreshPositions(fresh);
                     lastSnapDate = newest;
