@@ -671,7 +671,15 @@ ${(() => {
           return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
         }
         if (totalActions === 0 && watchPool.length === 0 && recentExecutedRotation) {
-          return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-arrows-rotate"></i> Recent Rotation</h3><span class="sc-meta">${occupied}/${cfg.portfolioSize} open — yesterday's rotation applied</span></div>${recentRotationHTML}</div>`;
+          // Render "Orders to Place" header WITH the Recent Rotation card inside.
+          return `<div class="section-card cta-orders">
+  <div class="sc-head">
+    <h3><i class="fas fa-bolt"></i> Orders to Place</h3>
+    <span class="sc-meta">${statusLine} — yesterday's rotation applied</span>
+  </div>
+  ${recentRotationHTML}
+  <p class="empty" style="margin:.5rem 0 0"><i class="fas fa-check-circle"></i> All slots filled — no new orders to place at next open.</p>
+</div>`;
         }
 
         return `
