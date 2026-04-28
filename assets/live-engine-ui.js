@@ -621,15 +621,18 @@
     var host = panel.querySelector('.mp-host');
     if (!host) {
       host = el('div', 'mp-host');
-      // Insert AFTER the live-engine card (so the live grid is on top).
       var liveCard = panel.querySelector('#lp-' + modeId);
       if (liveCard && liveCard.parentNode === panel) {
         liveCard.insertAdjacentElement('afterend', host);
       } else {
         panel.appendChild(host);
       }
-      _hideServerDuplicates(panel);
     }
+    // Always re-run hide pass — reorganizePanel runs in a setTimeout(50ms),
+    // so on first boot the sections move into .lp-grid AFTER this function ran.
+    // Run twice: now (sections still direct children) + after 100ms (post-reorganize).
+    _hideServerDuplicates(panel);
+    setTimeout(function () { _hideServerDuplicates(panel); }, 120);
     host.innerHTML = '';
     var clone = window.getModeTpl().content.cloneNode(true);
     var equityTarget = clone.querySelector('.tm-equity-target');
