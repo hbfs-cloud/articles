@@ -277,7 +277,14 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
     node tools/gen-api.js                   # Refresh public JSONs (50 endpoints, dont risk.json par mode)
     ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
     ```
-    Sans `MCP_GATEWAY_URL` → `refresh-risk-metrics.js --stub` écrit un schéma vide, le pipeline continue (graceful degradation).
+    Sans `MCP_GATEWAY_URL` → `refresh-risk-metrics.js --stub` écrit un schéma vide, le pipeline continue (graceful degradation). **⚠️ MCP_GATEWAY_URL=`https://gateway.dailytickers.com/mcp` est dispo en prod** — TOUJOURS l'exporter, ne jamais accepter le stub silencieusement.
+
+    **Post-pipeline checklist OBLIGATOIRE** (regressions historiques — voir mémoire `feedback_pipeline_gotchas.md`) :
+    - QA check (`tools/qa-check.js` — step 7 du publish-daily-card.sh) doit afficher 0 ❌ ; investiguer chaque échec (pas seulement les ⚠️)
+    - Vérifier `scanner/status/index.html` pour chaque mode : pas de "Pending (Nd/Md)" sur trades dont l'`exitDate` est passé, comptage "Orders to Place" cohérent avec rangées affichées
+    - `data/risk-snapshots.json` ne doit pas être un stub vide si MCP_GATEWAY_URL était set
+    - QA strategy-label check lit `signals.json` (pas le HTML) — si modifié, ne pas re-grepper le HTML
+    - Date arithmétique shell : tout `date -d` doit avoir un fallback BSD `date -v` (voir helper dans publish-daily-card.sh)
 
 9. **Sweep Stratégique (ON-DEMAND uniquement)** :
    ```bash
