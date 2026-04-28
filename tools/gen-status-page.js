@@ -663,7 +663,9 @@ ${(() => {
     </tr>`;
         });
 
-        const totalActions = actionRows.length;
+        // Count logical orders (1 per buy, 1 per rotation), NOT TR rows
+        // (each order can push 1-3 <tr> for main+comparison+thesis).
+        const totalActions = buyOrders.length + rotationCandidates.length;
         const occupied = pos.length;
         const statusLine = slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
