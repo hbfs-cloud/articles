@@ -101,9 +101,14 @@ if [ "$SKIP_SWEEP" = false ]; then
     data/backtest-results.json \
     data/backtest-trades.json \
     data/portfolio-history.json \
+    data/modes-config.json \
+    data/modes-config-history.json \
+    data/risk-snapshots.json \
     scanner/status/mode-*-*.png \
     scanner/status/index.html \
     scanner/status/manifest.json \
+    scanner/status/history/dates.json \
+    scanner/status/history/*.json \
     portfolio/v1/ \
     2>/dev/null || true
 fi
