@@ -1359,7 +1359,7 @@ document.addEventListener('DOMContentLoaded',function(){
     + '</div>'
     // Today's Signals (collapsible)
     + '<div class="section-card tm-section tm-signals">'
-    +   '<details><summary class="sc-summary"><span class="sc-sum-title">Today\'s Signals '
+    +   '<details><summary class="sc-summary"><span class="sc-sum-title">Today&#39;s Signals '
     +     '<span class="count" data-bind="signals|count" data-format="int"></span></span></summary>'
     +   '<table class="t" style="margin-top:.6rem" data-list="signals" data-empty="No signals — scanner published no setups.">'
     +     '<thead><tr><th>Ticker</th><th>Score</th><th>Entry</th><th>Stop</th><th>TP1</th></tr></thead>'
