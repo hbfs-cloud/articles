@@ -534,24 +534,26 @@ function buildPage(d) {
 
 <!-- HERO -->
 <div class="ticker-header">
-  <div class="ticker-meta">
-    ${heroBadges}
+  <div class="ticker-header-inner">
+    <div class="ticker-meta">
+      ${heroBadges}
+    </div>
+    <h1 class="ticker-name">Scanner DailyTickers &mdash; ${d.session_label || d.date}</h1>
+    <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} &mdash; ${tickers}</p>
+    <div class="ticker-kpis">
+      <div class="kpi-box"><span class="kpi-label">Regime</span><span class="kpi-value" style="color:${regColor};">${regime}</span></div>
+      <div class="kpi-box"><span class="kpi-label">Avg Score</span><span class="kpi-value">${avgScore}</span></div>
+      <div class="kpi-box"><span class="kpi-label">Setups</span><span class="kpi-value">${setups.length}</span></div>
+      <div class="kpi-box"><span class="kpi-label">Dominant</span><span class="kpi-value">${dominantStr || 'Momentum'}</span></div>
+      ${vixVal ? `<div class="kpi-box"><span class="kpi-label">VIX</span><span class="kpi-value" style="color:${vixColor};">${vixVal}</span></div>` : ''}
+      ${spxVal ? `<div class="kpi-box"><span class="kpi-label">SPX</span><span class="kpi-value" style="color:${spxColor};">${spxVal}</span></div>` : ''}
+    </div>
+    <div id="article-clickable-tags" class="card-tags"></div>
   </div>
-  <h1 class="ticker-name">Scanner DailyTickers &mdash; ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} &mdash; ${tickers}</p>
-  <div class="ticker-kpis">
-    <div class="kpi-box"><span class="kpi-label">Regime</span><span class="kpi-value" style="color:${regColor};">${regime}</span></div>
-    <div class="kpi-box"><span class="kpi-label">Avg Score</span><span class="kpi-value">${avgScore}</span></div>
-    <div class="kpi-box"><span class="kpi-label">Setups</span><span class="kpi-value">${setups.length}</span></div>
-    <div class="kpi-box"><span class="kpi-label">Dominant</span><span class="kpi-value">${dominantStr || 'Momentum'}</span></div>
-    ${vixVal ? `<div class="kpi-box"><span class="kpi-label">VIX</span><span class="kpi-value" style="color:${vixColor};">${vixVal}</span></div>` : ''}
-    ${spxVal ? `<div class="kpi-box"><span class="kpi-label">SPX</span><span class="kpi-value" style="color:${spxColor};">${spxVal}</span></div>` : ''}
-  </div>
-  <div id="article-clickable-tags" class="card-tags"></div>
 </div>
 
 <!-- INTRO -->
-<div class="content-card">
+<div class="content-card" style="margin:1.5rem auto;max-width:960px;">
   ${d.intro || ''}
 ${alertsHtml(d.alerts)}
   <p>${d.regime_prose || ''}</p>

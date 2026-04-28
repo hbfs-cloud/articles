@@ -172,8 +172,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// S2: Scanner Top 3 collapse
+// S2: Scanner Top 3 collapse — DISABLED 2026-04-29.
+// User feedback: hiding setups #4-10 behind "Show all" button breaks the
+// reference layout (matches scanner/20260407/) where all 10 cards are
+// visible by default. Function kept as no-op for backward compatibility
+// in case the call site is referenced elsewhere.
 function initScannerCollapse() {
+    return; // disabled — show all setups
     if (document.documentElement.dataset.tab !== 'scanner') return;
     var cards = Array.prototype.slice.call(document.querySelectorAll('.setup-card'));
     if (cards.length <= 3) return;
