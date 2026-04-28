@@ -598,12 +598,9 @@
     'new buy orders', 'equity curve',
   ];
   function _hideServerDuplicates(panel) {
-    // Sections may live directly under panel OR inside the .lp-grid wrapper that
-    // reorganizePanel installs. Scan everything except the unified template host
-    // and the live-engine card (the live ticker widget) themselves.
-    panel.querySelectorAll('.section-card, .perf-hero').forEach(function (sc) {
+    panel.querySelectorAll(':scope > .section-card, :scope > .perf-hero').forEach(function (sc) {
       if (sc.classList.contains('lp-card') || sc.classList.contains('mp-host')) return;
-      if (sc.closest('.mp-host') || sc.closest('.lp-card')) return;
+      if (sc.closest('.mp-host')) return;          // never hide template-cloned content
       var h = sc.querySelector('h3, .sc-sum-title, .perf-hero-label');
       if (!h) return;
       var label = (h.textContent || '').toLowerCase().replace(/\s+/g, ' ').trim();
