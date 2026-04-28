@@ -6,7 +6,7 @@
   <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css?v=1777401148696">
+  <link rel="stylesheet" href="/assets/report.css?v=1777401395465">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -2092,13 +2092,13 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js?v=1777401148696"></script>
-<script src="/assets/tag-renderer.js?v=1777401148696"></script>
-<script src="/assets/mode-panel-binder.js?v=1777401148696"></script>
-<script src="/assets/live-engine.js?v=1777401148696"></script>
-<script src="/assets/live-engine-ui.js?v=1777401148696"></script>
+<script src="/assets/core.js?v=1777401395465"></script>
+<script src="/assets/tag-renderer.js?v=1777401395465"></script>
+<script src="/assets/mode-panel-binder.js?v=1777401395465"></script>
+<script src="/assets/live-engine.js?v=1777401395465"></script>
+<script src="/assets/live-engine-ui.js?v=1777401395465"></script>
 <script>
-var _v='1777401148696';
+var _v='1777401395465';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
@@ -2493,15 +2493,93 @@ document.addEventListener('DOMContentLoaded',function(){
         '<div class="scenario-cursor" style="left:' + cp.toFixed(1) + '%"></div>';
     }
   }
+  // Time Machine = update Live sections in-place. Snapshot the full lp-grid
+  // HTML on first activation so we can restore it exactly on "Back to live".
+  var _tmLiveCache = {};
+  function _tmCaptureLive(modeId){
+    if(_tmLiveCache[modeId]) return;
+    var panel=document.getElementById('p-'+modeId);
+    var grid=panel?panel.querySelector('.lp-grid'):null;
+    if(grid) _tmLiveCache[modeId] = grid.innerHTML;
+  }
+  function _fmtPct2(v){var n=Number(v||0);return (n>0?'+':'')+n.toFixed(2)+'%';}
+  function _fmtUsd2(v){var n=Number(v||0);if(!isFinite(n)||n===0)return '—';return '$'+n.toFixed(2);}
+  function _scoreBg(s){return s>=90?'#059669':s>=85?'#2563eb':'#f59e0b';}
+  function tmUpdateLive(modeId, d, mCfg){
+    var panel=document.getElementById('p-'+modeId);
+    if(!panel||!d) return;
+    var stats=d.stats||{};
+    var psList=panel.querySelectorAll('.perf-hero .perf-stats .ps .ps-v');
+    if(psList.length>=6){
+      psList[0].textContent=_fmtPct2(stats.ret);
+      psList[1].textContent=_fmtPct2(stats.dd);
+      psList[2].textContent=Number(stats.wr||0).toFixed(1)+'%';
+      psList[3].textContent=Number(stats.pf||0).toFixed(2)+'x';
+      psList[4].textContent=String(stats.trades||0);
+      psList[5].textContent=Number(stats.avgHold||0).toFixed(1)+'d';
+    }
+    var chartEl=document.getElementById('chart-'+modeId);
+    if(chartEl && d.equity && d.equity.d && window.echarts){
+      var existing=window.echarts.getInstanceByDom(chartEl);
+      if(existing) existing.dispose();
+      mk('chart-'+modeId, d.equity.d, d.equity.v, mCfg.color||'#94a3b8');
+    }
+    var sigSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3, .sc-sum-title');return h && /today.s signals/i.test(h.textContent);});
+    if(sigSec){
+      var sigBody=sigSec.querySelector('tbody');
+      var sig=(d.signals||[]);
+      if(sigBody){
+        sigBody.innerHTML = sig.length ? sig.map(function(s){
+          var bg=_scoreBg(s.score||0);
+          return '<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
+        }).join('') : '<tr><td colspan="7" class="empty">No signals</td></tr>';
+      }
+    }
+    var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h && /open positions/i.test(h.textContent);});
+    if(posSec){
+      var posBody=posSec.querySelector('tbody');
+      var pos=(d.positions||[]);
+      if(posBody){
+        posBody.innerHTML = pos.length ? pos.map(function(p){
+          var pnl=p.return_pct!=null?p.return_pct:(p.pnlPct||0);
+          var rc=pnl>=0?'pos':'neg';
+          return '<tr><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(p.entry)+'</td><td class="hide-m">'+_fmtUsd2(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_fmtUsd2(p.stop)+'</td><td class="pos hide-m">'+_fmtUsd2(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+        }).join('') : '<tr><td colspan="8" class="empty">No active positions</td></tr>';
+      }
+      var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=pos.length+'/'+(mCfg.portfolioSize||'?');
+    }
+    var hSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3, .sc-sum-title');return h && /trade history/i.test(h.textContent);});
+    if(hSec){
+      var hBody=hSec.querySelector('tbody');
+      var ct=(d.closedTrades||[]).slice().sort(function(a,b){return (b.scanDate||'').localeCompare(a.scanDate||'');});
+      if(hBody){
+        hBody.innerHTML = ct.length ? ct.map(function(t){
+          var pnl=t.pnlPct||0;
+          var rc=pnl>0?'pos':pnl<0?'neg':'m';
+          var st=(t.status||'').toUpperCase();
+          var stCls=/TP/.test(st)?'pos':/SL/.test(st)?'neg':'m';
+          return '<tr><td><b>'+t.ticker+'</b></td><td class="m hide-m">'+(t.entryDate?t.entryDate.slice(5):'—')+'</td><td class="m hide-m">'+(t.exitDate?t.exitDate.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(t.actualEntry)+'</td><td class="hide-m">'+_fmtUsd2(t.exitPrice)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="m hide-m">'+(t.holdDays||0)+'d</td><td><span class="pill '+stCls+'">'+st+'</span></td></tr>';
+        }).join('') : '<tr><td colspan="8" class="empty">No closed trades</td></tr>';
+      }
+      var hCount=hSec.querySelector('.count'); if(hCount) hCount.textContent=ct.length+' closed';
+    }
+  }
+  window.tmUpdateLive = tmUpdateLive;
+
   function tmShowLive(){
-    document.querySelectorAll('.mode-panel').forEach(function(p){
-      var g=p.querySelector('.lp-grid');
-      var tmr=p.querySelector('.tm-render');
-      if(tmr){tmr.style.opacity='0';setTimeout(function(){tmr.style.display='none'},160);}
-      if(g){g.style.display='';g.style.opacity='0';requestAnimationFrame(function(){g.style.opacity='1'});}
-    });
-    var chartEl=document.getElementById('chart-'+activeMode);
-    if(chartEl){var c=echarts.getInstanceByDom(chartEl);if(c)setTimeout(function(){c.resize()},200);}
+    var panel=document.getElementById('p-'+activeMode);
+    var grid=panel?panel.querySelector('.lp-grid'):null;
+    if(grid && _tmLiveCache[activeMode]){
+      grid.innerHTML=_tmLiveCache[activeMode];
+      var chartEl=document.getElementById('chart-'+activeMode);
+      if(chartEl){
+        var existing=window.echarts && window.echarts.getInstanceByDom(chartEl);
+        if(existing) existing.dispose();
+        var dflt=modeCharts[activeMode];
+        if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c);
+      }
+      delete _tmLiveCache[activeMode];
+    }
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
@@ -2509,31 +2587,24 @@ document.addEventListener('DOMContentLoaded',function(){
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){tmShowLive();return;}
-    var panel=document.getElementById('p-'+activeMode);
-    if(!panel)return;
-    var grid=panel.querySelector('.lp-grid');
-    var tmr=panel.querySelector('.tm-render');
-    var cur=grid&&grid.style.display!=='none'?grid:tmr;
-    if(cur){cur.style.opacity='0';}
+    _tmCaptureLive(activeMode);
     var dateStr=tmDates[idx];
-    setTimeout(function(){
-      if(grid)grid.style.display='none';
-      fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
-        var d=snap.modes[activeMode];
-        if(!d){if(grid){grid.style.display='';grid.style.opacity='1';}return;}
-        var mCfg=tmModesCfg.modes?tmModesCfg.modes[activeMode]:{};
-        tmRenderInto(tmr,d,mCfg,activeMode);
-        tmr.style.display='';tmr.style.opacity='0';
-        requestAnimationFrame(function(){tmr.style.opacity='1';});
+    fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
+      var d=snap.modes[activeMode];
+      if(!d){
         banner.className='tm-banner show';
-        var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
-        banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
-      }).catch(function(){
-        banner.className='tm-banner show';
-        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
-        if(grid){grid.style.display='';grid.style.opacity='1';}
-      });
-    },160);
+        banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> No data for '+activeMode+' on '+dateStr;
+        return;
+      }
+      var mCfg=tmModesCfg.modes?tmModesCfg.modes[activeMode]:{};
+      tmUpdateLive(activeMode, d, mCfg);
+      banner.className='tm-banner show';
+      var formatted=dateStr.slice(0,4)+'-'+dateStr.slice(4,6)+'-'+dateStr.slice(6,8);
+      banner.innerHTML='<i class="fas fa-clock-rotate-left"></i> Viewing snapshot from <b>'+formatted+'</b> &mdash; <a onclick="window.tmGoLive()">Back to live</a>';
+    }).catch(function(){
+      banner.className='tm-banner show';
+      banner.innerHTML='<i class="fas fa-triangle-exclamation"></i> Snapshot not available for '+dateStr;
+    });
   }
   window.tmGoLive=function(){
     tmCurrentIdx=tmDates.length-1;
