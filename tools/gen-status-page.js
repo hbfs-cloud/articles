@@ -1452,6 +1452,12 @@ document.addEventListener('DOMContentLoaded',function(){
   // cloned and bound by ModePanelBinder inside tmRenderInto. Kept for backward compat.
   function tmBuildHTML(d, mCfg, modeId) { return ''; }
 
+  // Expose the template + enricher globally so live-engine-ui can reuse the same
+  // layout for the Live grid (Phase B unification: one template, two render paths).
+  window.MODE_PANEL_TPL_RAW = MODE_PANEL_TPL;
+  window.getModeTpl = getModeTpl;
+  window.enrichForBinding = enrichForBinding;
+
 
   // Render mode panel for Time Machine: clone the static template, set the equity
   // chart container's id, then bind enriched data via ModePanelBinder. No string concat.
