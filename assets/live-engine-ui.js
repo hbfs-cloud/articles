@@ -589,24 +589,23 @@
   // into the live panel. Hide server-rendered duplicate sections so layout matches
   // TM (Stats, Equity, Rotation, Close Now, Expires, Buy Orders, Signals, Positions,
   // Trade History) — single source of truth.
-  var TPL_OVERLAP_HEADINGS = [
-    'today’s signals', "today's signals",
+  // Server-side heading prefixes that are now covered by the unified template.
+  // Match by prefix on lowercased text so "Today's Signals 1 setupGOOGL 92" still hits.
+  var TPL_OVERLAP_PREFIXES = [
+    "today's signals", 'today’s signals',
     'orders', 'open positions', 'trade history',
     'rotation signal', 'close now', 'raise stop loss', 'expires tomorrow',
-    'new buy orders'
+    'new buy orders', 'equity curve',
   ];
   function _hideServerDuplicates(panel) {
     panel.querySelectorAll(':scope > .section-card, :scope > .perf-hero').forEach(function (sc) {
-      // Don't hide the lp-card (live grid) or the template host
       if (sc.classList.contains('lp-card') || sc.classList.contains('mp-host')) return;
-      var h = sc.querySelector('h3, .sc-sum-title');
+      if (sc.closest('.mp-host')) return;          // never hide template-cloned content
+      var h = sc.querySelector('h3, .sc-sum-title, .perf-hero-label');
       if (!h) return;
-      var label = (h.textContent || '').toLowerCase().replace(/[–—]/g, '-').trim().split(/\s{2,}/)[0];
-      // Strip trailing count words like "1 setup" → keep heading
-      var heading = label.split(/\s\d+\s/)[0].trim();
-      if (TPL_OVERLAP_HEADINGS.indexOf(heading) >= 0 || heading.indexOf("today") === 0 ||
-          heading.indexOf('orders to place') >= 0 || heading.indexOf('open position') >= 0 ||
-          heading.indexOf('trade history') >= 0 || heading.indexOf('history') >= 0) {
+      var label = (h.textContent || '').toLowerCase().replace(/\s+/g, ' ').trim();
+      var hit = TPL_OVERLAP_PREFIXES.some(function (p) { return label.indexOf(p) === 0; });
+      if (hit) {
         sc.classList.add('mp-server-hidden');
         sc.style.display = 'none';
       }
