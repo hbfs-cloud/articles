@@ -178,17 +178,31 @@ check(`scan dernier jour ouvré: id="synthese" présent`, () => {
 
 // 4b. Scan du dernier jour ouvré — labels de stratégie conformes à la taxonomie
 check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follow/Defensive/etc.)', () => {
-  const FORBIDDEN = ['Trend Follow', 'Defensive Momentum', 'Defensive Yield', 'Defensive', 'Reversal', 'Momentum Breakout'];
-  // Chercher dans les 2 derniers scans
+  // Lire signals.json (source de vérité structurée) plutôt que grep le HTML
+  // (le HTML contient légitimement le mot "defensive" en prose descriptive).
+  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze']);
   const scannerDir = path.join(ROOT, 'scanner');
   const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse().slice(0, 2);
   const found = [];
   for (const d of dirs) {
-    const p = path.join(scannerDir, d, 'index.html');
-    if (!fs.existsSync(p)) continue;
-    const html = fs.readFileSync(p, 'utf8');
-    for (const label of FORBIDDEN) {
-      if (html.includes(label)) found.push(`${d}: "${label}"`);
+    // Préférer signals.json ; fallback sur data.json (champ setups[].pattern)
+    const sigPath = path.join(scannerDir, d, 'signals.json');
+    const dataPath = path.join(scannerDir, d, 'data.json');
+    let strategies = [];
+    if (fs.existsSync(sigPath)) {
+      try {
+        const sig = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+        strategies = (sig.signals || []).map(s => s.strategy).filter(Boolean);
+      } catch { /* ignore */ }
+    }
+    if (!strategies.length && fs.existsSync(dataPath)) {
+      try {
+        const data = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+        strategies = (data.setups || []).map(s => s.pattern).filter(Boolean);
+      } catch { /* ignore */ }
+    }
+    for (const label of strategies) {
+      if (!ALLOWED.has(label)) found.push(`${d}: "${label}"`);
     }
   }
   if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;
