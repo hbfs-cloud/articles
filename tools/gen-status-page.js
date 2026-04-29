@@ -24,13 +24,16 @@ function fetchOHLC(ticker) {
           const ts = result.timestamp || [];
           const q = result.indicators?.quote?.[0] || {};
           const bars = {};
+          let lastOHLC = null;
           for (let i = 0; i < ts.length; i++) {
             if (q.close?.[i] != null) {
               const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
               bars[dateStr] = q.close[i];
+              lastOHLC = { high: q.high?.[i] || 0, low: q.low?.[i] || 0, close: q.close[i] };
             }
           }
-          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null });
+          const vwap = lastOHLC ? +((lastOHLC.high + lastOHLC.low + lastOHLC.close) / 3).toFixed(2) : null;
+          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null, vwap });
         } catch { resolve({ bars: {}, lastPrice: null }); }
       });
     }).on('error', () => resolve({ bars: {}, lastPrice: null })).on('timeout', () => resolve({ bars: {}, lastPrice: null }));
@@ -236,6 +239,16 @@ async function main() {
   } catch (_) { }
   signals.sort((a, b) => (b.score || 0) - (a.score || 0));
 
+  // Fetch previous-day VWAP for signal tickers (trader reference for VWAP gate)
+  const signalVwap = {};
+  if (signals.length) {
+    const sigTickers = [...new Set(signals.map(s => s.ticker))];
+    const sigOhlc = await Promise.all(sigTickers.map(fetchOHLC));
+    for (let i = 0; i < sigTickers.length; i++) {
+      if (sigOhlc[i].vwap) signalVwap[sigTickers[i]] = sigOhlc[i].vwap;
+    }
+  }
+
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
@@ -330,9 +343,11 @@ async function main() {
     return signals.filter(s => f(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
+      const vwapRef = signalVwap[s.ticker] || null;
       return {
         ...s,
         stop,
+        vwapRef,
         // Display fields (used in HTML templates)
         entry: $fmt(s.entry), stop: $fmt(stop), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2),
         // Keep raw numbers for downstream logic (rotation score comparison, etc.)
@@ -373,6 +388,7 @@ async function main() {
         ticker: t.ticker, scan_date: t.scanDate, entry, current_price: currentPrice,
         return_pct: ret, score: t.score || 0,
         stop: resolvedStop, tp1: resolvedTp1, tp2: resolvedTp2,
+        vwap: t.vwap || null,
         days_remaining: left, strategy: t.strategy, thesis: thesisMap[t.ticker] || '',
       };
     }).sort((a, b) => b.return_pct - a.return_pct);
@@ -596,12 +612,14 @@ ${(() => {
           const s = buyOrders[i];
           const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
           const sht = s.sharia === true ? ' <span class="pill am" style="background:#059669;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? ' <span class="pill am" style="background:#94a3b8;color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span>' : '';
-          const thesisCols = 10; // number of columns in Orders table
+          const thesisCols = 11; // number of columns in Orders table
+          const vwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr>
       <td><b>${s.ticker}</b>${sht}</td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
+      <td class="am hide-m" title="Previous day typical price — skip if open > VWAP×1.01">${vwapCell}</td>
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
@@ -609,16 +627,18 @@ ${(() => {
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
         }
         for (const { signal: s, replaces, scoreDelta } of rotationCandidates) {
-          const thesisCols = 10;
+          const thesisCols = 11;
           const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
           const repBg = (replaces.score || 0) >= 90 ? '#059669' : (replaces.score || 0) >= 85 ? '#2563eb' : '#94a3b8';
           const deltaSign = (scoreDelta || 0) >= 0 ? '+' : '';
           const deltaColor = (scoreDelta || 0) >= 5 ? '#059669' : (scoreDelta || 0) >= 0 ? '#f59e0b' : '#dc2626';
+          const rotVwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr style="background:#fefce8">
       <td><b>${s.ticker}</b></td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
+      <td class="am hide-m" title="Previous day typical price">${rotVwapCell}</td>
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
@@ -729,7 +749,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </div>
   ${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">VWAP</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
   </table>` : ''}
   ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
@@ -794,7 +814,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 </div>`;
         })()}
   <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">VWAP</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
           const rc = p.return_pct >= 0 ? 'pos' : 'neg';
           const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
@@ -802,8 +822,9 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
           const leftCls = isExpired ? 'neg' : left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
           const leftLabel = isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
           const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
-          const posCols = 9; // columns in Open Positions table
-          return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          const posCols = 10; // columns in Open Positions table
+          const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
+          return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Entry day typical price (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>

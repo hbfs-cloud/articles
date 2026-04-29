@@ -394,10 +394,13 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   // VWAP entry gate: skip if open gaps above VWAP (gap-up trap filter)
   let entryPrice = actualEntry; // default: market open
-  if (vwapGate && entryBar.high && entryBar.low && entryBar.close) {
-    const vwap = (entryBar.high + entryBar.low + entryBar.close) / 3;
-    if (actualEntry > vwap * 1.01) return null; // gap-up trap — skip
-    entryPrice = Math.min(actualEntry, vwap);
+  let vwapValue = null;
+  if (entryBar.high && entryBar.low && entryBar.close) {
+    vwapValue = (entryBar.high + entryBar.low + entryBar.close) / 3;
+  }
+  if (vwapGate && vwapValue !== null) {
+    if (actualEntry > vwapValue * 1.01) return null; // gap-up trap — skip
+    entryPrice = Math.min(actualEntry, vwapValue);
   }
 
   let riskPerUnit = setup.entry - setup.stop;
@@ -566,6 +569,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     actualStop,
     actualTp1,
     actualTp2,
+    vwap: vwapValue ? +vwapValue.toFixed(4) : null,
     status,
     exitDate,
     exitPrice,
@@ -1556,6 +1560,19 @@ async function main() {
     }
   } else {
     console.log('⚠️  No modes-config.json found — skipping frozen trades. Run sweep --full-sweep to discover optimal strategy.');
+  }
+  // Backfill vwap for trades that predate the vwap field
+  for (const id of Object.keys(frozenTrades)) {
+    for (const t of frozenTrades[id]) {
+      if (t.vwap != null) continue;
+      const bars = priceCache[t.ticker];
+      if (!bars) continue;
+      const d = t.entryDate || t.scanDate;
+      const bar = bars[d];
+      if (bar && bar.high && bar.low && bar.close) {
+        t.vwap = +((bar.high + bar.low + bar.close) / 3).toFixed(4);
+      }
+    }
   }
   fs.writeFileSync(BACKTEST_TRADES_PATH, JSON.stringify(frozenTrades, null, 2));
   console.log("✅ Trade lists saved to data/backtest-trades.json (frozen modes)");
