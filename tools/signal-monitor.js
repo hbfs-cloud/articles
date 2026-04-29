@@ -817,6 +817,7 @@ async function evaluate(tickerFilter) {
             const rr = (s.tp1 - s.entry) / risk;
             if (rr < 1.5) return false;
           }
+          // VWAP gate enforced at execution time (systematic-tss), not at signal level
           return true;
         })
         .sort((a, b) => b.score - a.score);

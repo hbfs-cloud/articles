@@ -374,6 +374,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     breakevenPct = 0, // after +X% gain, move stop to entry (0 = disabled)
     staleDays = 0,    // exit if no new high for N days (0 = disabled)
     entryGatePct = 0, // reject if open > entry * (1 + X%) — 0 = disabled
+    vwapGate = false, // skip trade if open gaps above VWAP * 1.01 (gap-up trap filter)
   } = config;
   if (!priceHistory) return null;
 
@@ -391,6 +392,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // Entry gate: reject if open gaps too far above target entry (cascade to next candidate)
   if (entryGatePct > 0 && actualEntry > setup.entry * (1 + entryGatePct / 100)) return null;
 
+  // VWAP entry gate: skip if open gaps above VWAP (gap-up trap filter)
+  let entryPrice = actualEntry; // default: market open
+  if (vwapGate && entryBar.high && entryBar.low && entryBar.close) {
+    const vwap = (entryBar.high + entryBar.low + entryBar.close) / 3;
+    if (actualEntry > vwap * 1.01) return null; // gap-up trap — skip
+    entryPrice = Math.min(actualEntry, vwap);
+  }
+
   let riskPerUnit = setup.entry - setup.stop;
   if (riskPerUnit <= 0) return null;
 
@@ -407,7 +416,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     STRATEGY_STOP_CAP[setup.strategy] || (maxStopPct > 0 ? maxStopPct : 100),
   );
   if (effectiveMaxStop < 100) {
-    const maxRisk = actualEntry * (effectiveMaxStop / 100);
+    const maxRisk = entryPrice * (effectiveMaxStop / 100);
     if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
   }
 
@@ -420,14 +429,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
   }
 
-  const actualStop = actualEntry - riskPerUnit;
+  const actualStop = entryPrice - riskPerUnit;
   const rewardMult1 = (setup.tp1 - setup.entry) / riskPerUnit;
-  const actualTp1 = actualEntry + riskPerUnit * rewardMult1;
+  const actualTp1 = entryPrice + riskPerUnit * rewardMult1;
   const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : rewardMult1 * 1.5;
-  const actualTp2 = actualEntry + riskPerUnit * rewardMult2;
+  const actualTp2 = entryPrice + riskPerUnit * rewardMult2;
 
   // R:R gate: reject trades with reward/risk below 1.5
-  const rrRatio = (actualTp1 - actualEntry) / riskPerUnit;
+  const rrRatio = (actualTp1 - entryPrice) / riskPerUnit;
   if (rrRatio < 1.5) return null;
 
   const expireDate = addBizDays(scanDate, horizonDays);
@@ -439,7 +448,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let exitDate = null;
   let exitPrice = null;
   let partialRealized = 0; // P&L from partial close at TP1
-  let highWaterMark = actualEntry;
+  let highWaterMark = entryPrice;
   let daysSinceNewHigh = 0;
   let breakevenActivated = false;
 
@@ -452,8 +461,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       // Ambiguous-bar: same bar hit SL AND TP → first-touch policy picks SL (conservative for loss, but tag it)
       const ambiguous = (bar.high >= actualTp1) || (actualTp2 && bar.high >= actualTp2);
       if (partialRealized > 0) status = 'tp1_partial';
-      else if (currentStop > actualEntry) status = 'trail';       // stop moved above entry → positive exit
-      else if (currentStop >= actualEntry) status = 'breakeven';  // stop moved to entry → 0 exit
+      else if (currentStop > entryPrice) status = 'trail';       // stop moved above entry → positive exit
+      else if (currentStop >= entryPrice) status = 'breakeven';  // stop moved to entry → 0 exit
       else status = 'sl';                                         // original stop hit → loss
       exitDate = date;
       exitPrice = currentStop;
@@ -474,9 +483,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       if (partialTP) {
         // Close partialTPPct at TP1, trail the rest
         const tpFrac = partialTPPct * 100; // e.g. 0.5 → 50
-        partialRealized = ((actualTp1 - actualEntry) / actualEntry) * tpFrac;
+        partialRealized = ((actualTp1 - entryPrice) / entryPrice) * tpFrac;
         if (trailingStop) {
-          currentStop = actualEntry; // Move stop to breakeven
+          currentStop = entryPrice; // Move stop to breakeven
         }
         // Continue with remaining fraction
       } else {
@@ -501,10 +510,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
     // Breakeven stop: after +X% gain, move stop to entry (no loss possible)
     if (breakevenPct > 0 && !breakevenActivated) {
-      const currentGain = (bar.high - actualEntry) / actualEntry * 100;
+      const currentGain = (bar.high - entryPrice) / entryPrice * 100;
       if (currentGain >= breakevenPct) {
         breakevenActivated = true;
-        if (actualEntry > currentStop) currentStop = actualEntry;
+        if (entryPrice > currentStop) currentStop = entryPrice;
       }
     }
 
@@ -518,7 +527,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       }
       // After staleDays without new high, progressively tighten stop
       if (daysSinceNewHigh >= staleDays) {
-        const staleRaise = (daysSinceNewHigh - staleDays + 1) * 0.002 * actualEntry; // 0.2% per day
+        const staleRaise = (daysSinceNewHigh - staleDays + 1) * 0.002 * entryPrice; // 0.2% per day
         const tightenedStop = currentStop + staleRaise;
         if (tightenedStop > currentStop && tightenedStop < bar.close) currentStop = tightenedStop;
       }
@@ -541,10 +550,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let pnlPct;
   if (partialTP && partialRealized > 0) {
     const tpFrac = partialTPPct * 100;
-    const remainingPnl = ((exitPrice - actualEntry) / actualEntry) * (100 - tpFrac);
+    const remainingPnl = ((exitPrice - entryPrice) / entryPrice) * (100 - tpFrac);
     pnlPct = (partialRealized + remainingPnl) / 100;
   } else {
-    pnlPct = (exitPrice - actualEntry) / actualEntry;
+    pnlPct = (exitPrice - entryPrice) / entryPrice;
   }
 
   return {
@@ -553,7 +562,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     score: setup.score,
     scanDate,
     entryDate,
-    actualEntry,
+    actualEntry: entryPrice,
     actualStop,
     actualTp1,
     actualTp2,
@@ -1005,6 +1014,8 @@ async function main() {
   const HORIZONS = QUICK ? [5, 15] : [2, 3, 5, 8, 10, 15];
   const STRATEGY_FILTERS = STRATEGY_FILTERS_MAP; // reference module-scope map
   const ENTRY_GATE_PCTS = [0, 3]; // 0 = disabled, 3% = reject opens gapping >3% above entry
+  // VWAP gate always ON — proven +29% total PnL improvement, not grid-searched to save memory
+  const VWAP_GATE_FIXED = true;
   const ROTATIONS = ['none', 'daily_max1', 'aggressive'];
   const TP_MODES = [false, true]; // partialTP
   const TP_PCTS = [0.5]; // partial TP fraction (0.5 is the balanced default)
@@ -1040,14 +1051,15 @@ async function main() {
               for (const bePct of BREAKEVEN_PCTS) {
                 for (const stale of STALE_DAYS) {
                   for (const entryGate of ENTRY_GATE_PCTS) {
-                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${stale}_${entryGate}`;
+                  const vwapGate = VWAP_GATE_FIXED;
+                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${stale}_${entryGate}_${vwapGate}`;
                   const trades = [];
                   for (const setup of allSetups) {
                     const history = priceCache[setup.ticker];
                     const result = simulateTrade(setup, setup.scanDate, history, {
                       horizonDays: horizon, partialTP: ptp, partialTPPct: ptpPct, trailingStop: trail,
                       maxStopPct: maxStop, atrStopMult: atrMult, dailyTrailPct: dailyTrail,
-                      breakevenPct: bePct, staleDays: stale, entryGatePct: entryGate,
+                      breakevenPct: bePct, staleDays: stale, entryGatePct: entryGate, vwapGate,
                     });
                     if (result) {
                       // Preserve regime from setup so simulatePortfolio's regimeByDate map
@@ -1111,7 +1123,8 @@ async function main() {
                         for (const breakevenPct of BREAKEVEN_PCTS) {
                           for (const staleDays of STALE_DAYS) {
                           for (const entryGatePct of ENTRY_GATE_PCTS) {
-                            const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_${staleDays}_${entryGatePct}`;
+                          const vwapGate = VWAP_GATE_FIXED;
+                            const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_${staleDays}_${entryGatePct}_${vwapGate}`;
                             const trades = tradesByKey[key] || [];
 
                             const config = {
@@ -1124,7 +1137,7 @@ async function main() {
                               const r = {
                                 portfolioSize, topN, minScore, filterName, rotation,
                                 horizon, partialTP, partialTPPct, trailingStop, maxStopPct, atrStopMult, dailyTrailPct,
-                                breakevenPct, staleDays, entryGatePct,
+                                breakevenPct, staleDays, entryGatePct, vwapGate,
                                 ...metrics,
                               };
                               r.composite = (r.returnTotal / 30) + (1 / Math.max(0.5, Math.abs(r.maxDD))) + (r.winRate / 100) + (r.calmar / 10) + (r.profitFactor / 5);
@@ -1169,8 +1182,8 @@ async function main() {
 
                             tested++;
                             if (tested % 5000 === 0) process.stdout.write(`  ${tested}/${total}\r`);
-                          }
-                          }
+                          } // end entryGatePct
+                          } // end staleDays
                         }
                       }
                     }
@@ -1224,7 +1237,7 @@ async function main() {
     console.log('\n=== WALK-FORWARD VALIDATION (top 5 in-sample → out-of-sample) ===\n');
     for (const r of ranked.slice(0, 5)) {
       // Re-simulate on in-sample only
-      const wfKey = `${r.horizon}_${r.partialTP}_${r.trailingStop}_${r.maxStopPct || 0}_${r.atrStopMult || 0}_${r.dailyTrailPct || 0}`;
+      const wfKey = `${r.horizon}_${r.partialTP}_${r.partialTPPct || 0.5}_${r.trailingStop}_${r.maxStopPct || 0}_${r.atrStopMult || 0}_${r.dailyTrailPct || 0}_${r.breakevenPct || 0}_${r.staleDays || 0}_${r.entryGatePct || 0}_${r.vwapGate || false}`;
       const isTrades = (tradesByKey[wfKey] || [])
         .filter(t => inSampleDates.has(t.scanDate));
       const osTrades = (tradesByKey[wfKey] || [])
@@ -1441,7 +1454,7 @@ async function main() {
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
-      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}`;
+      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],

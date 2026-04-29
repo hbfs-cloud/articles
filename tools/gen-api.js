@@ -338,6 +338,7 @@ write('modes.json', {
       partialTP: m.config?.partialTP || false,
       trailingStop: m.config?.trailingStop || false,
       rotation: m.config?.rotation || 'none',
+      vwapGate: m.config?.vwapGate || false,
       minScore: m.config?.minScore || 85,
       horizon: m.config?.horizon || 10,
       slotsAvailable: (m.config?.portfolioSize || 1) - (m.positions || []).length,
