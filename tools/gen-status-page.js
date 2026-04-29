@@ -721,7 +721,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </table>
 </div>` : ''}
 
-<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}">
+<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}" data-scan-date="${scanDir}">
   <div class="sc-head">
     <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
     <span class="sc-meta">${statusLine}</span>
@@ -1410,6 +1410,15 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   setTimeout(updateLiveActions, 800);
+  // Hide stale orders: orders only show on their scan date
+  (function(){
+    var t=new Date(),y=t.getFullYear(),m=String(t.getMonth()+1).padStart(2,'0'),d=String(t.getDate()).padStart(2,'0');
+    var today=y+''+m+''+d;
+    document.querySelectorAll('.cta-orders[data-scan-date]').forEach(function(el){
+      var sd=el.getAttribute('data-scan-date');
+      if(sd&&sd!==today) el.style.display='none';
+    });
+  })();
   // ═══ TIME MACHINE — template approach: hide grid, render into .tm-render ═══
   document.querySelectorAll('.mode-panel').forEach(function(p){
     var tmr=document.createElement('div');tmr.className='tm-render';tmr.style.display='none';

@@ -82,8 +82,11 @@ if (!snapshots.length) {
 const latestFile = path.join(HISTORY, snapshots[snapshots.length - 1]);
 const snap = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
 const now = new Date().toISOString();
+const todayKey = now.slice(0, 10).replace(/-/g, '');
+const scanDir = snap.scanDir || '';
+const ordersStale = scanDir !== todayKey;
 
-console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})`);
+console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${ordersStale ? ` [orders stale: scanDir=${scanDir} != today=${todayKey}]` : ''}`);
 
 // ─── Helper: write all 7 endpoints for a mode ─────────────────────────────────
 function writeMode(mode, prefix) {
@@ -141,17 +144,17 @@ function writeMode(mode, prefix) {
     equityCurve: mode.equity || {}
   });
 
-  // 5. orders.json
+  // 5. orders.json — orders only valid on scan date
+  const modeOrders = ordersStale ? [] : (mode.orders || []).map(o => ({
+    ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
+    entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
+    sharia: o.sharia != null ? o.sharia : null,
+    allocPct, replaces: o.replaces || null, scoreDelta: o.scoreDelta || null,
+    thesis: o.thesis || ''
+  }));
   write(`${p}orders.json`, {
-    updatedAt: now, date: snap.date, mode: prefix || 'balanced',
-    allocPct,
-    orders: (mode.orders || []).map(o => ({
-      ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
-      entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
-      sharia: o.sharia != null ? o.sharia : null,
-      allocPct, replaces: o.replaces || null, scoreDelta: o.scoreDelta || null,
-      thesis: o.thesis || ''
-    }))
+    updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
+    allocPct, orders: modeOrders
   });
 
   // 6. actions.json
@@ -170,7 +173,7 @@ function writeMode(mode, prefix) {
 
   // 7. all.json
   write(`${p}all.json`, {
-    updatedAt: now, date: snap.date, mode: prefix || 'balanced',
+    updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     config: mode.config || {}, stats: mode.stats || {},
     equityCurve: mode.equity || {},
     signals: (mode.signals || []).map(s => ({
@@ -180,12 +183,7 @@ function writeMode(mode, prefix) {
       sharia: s.sharia != null ? s.sharia : null,
       thesis: s.thesis || ''
     })),
-    orders: (mode.orders || []).map(o => ({
-      ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
-      entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
-      sharia: o.sharia != null ? o.sharia : null,
-      replaces: o.replaces || null, scoreDelta: o.scoreDelta || null, thesis: o.thesis || ''
-    })),
+    orders: modeOrders,
     positions: (mode.positions || []).map(p => {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
