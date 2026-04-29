@@ -204,7 +204,7 @@ const SECTOR_MAP = {
   'EEM':'ETF-Broad','FXI':'ETF-Broad','VTI':'ETF-Broad','VOO':'ETF-Broad',
   'XLF':'ETF-Sector','XLK':'ETF-Sector','XLV':'ETF-Sector','XLE':'ETF-Sector','XLI':'ETF-Sector',
   'XLY':'ETF-Sector','XLP':'ETF-Sector','XLU':'ETF-Sector','XLB':'ETF-Sector','XLRE':'ETF-Sector',
-  'XLC':'ETF-Sector','SMH':'ETF-Sector','SOXX':'ETF-Sector','XBI':'ETF-Sector',
+  'XLC':'ETF-Sector','SMH':'ETF-Sector','SOXX':'ETF-Sector','XBI':'ETF-Sector','ITA':'ETF-Sector','ANET':'Tech',
   'GLD':'ETF-Commodity','SLV':'ETF-Commodity','USO':'ETF-Commodity','TLT':'ETF-Bond',
 };
 
@@ -425,6 +425,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const actualTp1 = actualEntry + riskPerUnit * rewardMult1;
   const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : rewardMult1 * 1.5;
   const actualTp2 = actualEntry + riskPerUnit * rewardMult2;
+
+  // R:R gate: reject trades with reward/risk below 1.5
+  const rrRatio = (actualTp1 - actualEntry) / riskPerUnit;
+  if (rrRatio < 1.5) return null;
 
   const expireDate = addBizDays(scanDate, horizonDays);
   const sortedDates = Object.keys(priceHistory)
@@ -786,6 +790,19 @@ function simulatePortfolio(allTrades, scans, config) {
         if (config.correlationCap > 0 && openPositions.length > 0) {
           const rho = maxCorrToOpen(cand, openPositions, 60);
           if (rho != null && Math.abs(rho) > config.correlationCap) continue;
+        }
+        // ETF at 52w high penalty: reduce effective score by 5 for ETFs near yearly highs
+        const candSector = getSector(cand.ticker);
+        if (candSector.startsWith('ETF-')) {
+          const hist = priceCache[cand.ticker];
+          if (hist) {
+            const lookbackDays = Object.keys(hist).filter(d => d <= day).sort().slice(-252);
+            const yearHigh = Math.max(...lookbackDays.map(d => hist[d]?.high || 0));
+            if (yearHigh > 0 && cand.actualEntry >= yearHigh * 0.98) {
+              cand.score = (cand.score || 0) - 5;
+              if (cand.score < (config.minScore || 85)) continue;
+            }
+          }
         }
         // Inverse-ATR sizing — RELATIVE adjustment to scanWeight (0.5x..1.5x clamp).
         // High stop (vol) → smaller weight; tight stop → larger weight; mean ≈ scanWeight.
