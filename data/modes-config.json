@@ -1,9 +1,9 @@
 {
-  "_comment": "5 modes — RISK-ON v4.2 (2026-04-28). Per-mode minScore + dedup priority (fortress→secured→balanced→dynamic→turbo). Concentrated modes (turbo/dynamic) keep 90 threshold; multi-slot modes lower to ensure fillage despite filter+dedup pressure: balanced 88, secured 85 (breakout-only filter already restrictive), fortress 85 (P4 needs candidate volume). Counter-factual on 20260428 scan: fortress GOOGL/MSFT/TSM/GS, secured NVO/XLI, balanced GOOGL/AMZN/MSFT — all modes filled.",
-  "_updated": "2026-04-28",
-  "_version": "v4.2-20260428",
+  "_comment": "6 modes — RISK-ON v5.0 (2026-04-30). Added TKL mode (Thami Kabbaj-Like: 30-position momentum portfolio, H10, wide net). Fixed balanced H2→H5 and secured breakout_only→mom_bo + H2→H5 to stop phantom positions (trades were happening but expiring before snapshot). Dedup priority: fortress→secured→balanced→dynamic→turbo (TKL independent, no dedup).",
+  "_updated": "2026-04-30",
+  "_version": "v5.0-20260430",
   "_regime": "RISK-ON",
-  "_prevVersion": "v4.1-20260428",
+  "_prevVersion": "v4.2-20260428",
   "_riskLayer": "v1.2-20260428",
   "modes": {
     "turbo": {
@@ -85,13 +85,13 @@
       "color": "#059669",
       "goal": "Risk-Adjusted Growth",
       "riskProfile": "Medium",
-      "tagline": "Best risk/reward. Momentum+Breakout filter, H2 horizon. Risk layer v1.1: minScore 88, maxStop 2.5%, DD breaker 5%, sector cap 2/sector, VIX kill 25, cross-mode dedup (priority 3), inverse-ATR sizing.",
+      "tagline": "Best risk/reward. Momentum+Breakout filter, H5 horizon. Risk layer v1.1: minScore 88, maxStop 2.5%, DD breaker 5%, sector cap 2/sector, VIX kill 25, cross-mode dedup (priority 3), inverse-ATR sizing.",
       "portfolioSize": 3,
       "topN": 3,
       "minScore": 88,
       "filterName": "mom_bo",
       "rotation": "aggressive",
-      "horizon": 2,
+      "horizon": 5,
       "partialTP": false,
       "partialTPPct": 0.5,
       "trailingStop": false,
@@ -122,13 +122,13 @@
       "color": "#2563eb",
       "goal": "Capital Preservation",
       "riskProfile": "Low",
-      "tagline": "Capital preservation with RISK-ON tilt. Breakout-only, P2, H2, BE lock at +1%. Risk layer v1.2: minScore 85 (filter already restrictive), DD breaker 3%, sector cap 1/sector, VIX kill 22, cross-mode dedup (priority 2), correlation 0.65, inverse-ATR sizing.",
+      "tagline": "Capital preservation with RISK-ON tilt. Mom+Breakout, P2, H5, BE lock at +1%. Risk layer v1.2: minScore 85, DD breaker 3%, sector cap 1/sector, VIX kill 22, cross-mode dedup (priority 2), correlation 0.65, inverse-ATR sizing. v5.0: breakout_only→mom_bo (was starved in momentum markets), H2→H5.",
       "portfolioSize": 2,
       "topN": 2,
       "minScore": 85,
-      "filterName": "breakout_only",
+      "filterName": "mom_bo",
       "rotation": "none",
-      "horizon": 2,
+      "horizon": 5,
       "partialTP": false,
       "partialTPPct": 0.5,
       "trailingStop": false,
@@ -147,11 +147,11 @@
       "correlationCap": 0.65,
       "crossModeDedup": true,
       "regimeFilters": {
-        "risk_on": "breakout_only",
+        "risk_on": "mom_bo",
         "early_risk_off": "breakout_only",
         "risk_off": "breakout_only",
-        "neutral": "breakout_only",
-        "recovery": "breakout_only"
+        "neutral": "mom_bo",
+        "recovery": "mom_bo"
       }
     },
     "fortress": {
@@ -190,6 +190,43 @@
         "risk_off": "breakout_only",
         "neutral": "breakout_only",
         "recovery": "breakout_only"
+      }
+    },
+    "tkl": {
+      "label": "TKL",
+      "color": "#e11d48",
+      "goal": "Multi-Position Momentum",
+      "riskProfile": "High",
+      "tagline": "Thami Kabbaj-Like momentum portfolio. 30 positions, all strategies, no time limit — ride momentum with trailing stop (3% from high) + stale exit (5 days flat = no momentum = out). Inspired by TK's 30-stock approach: high diversification, aggressive rotation. No cross-mode dedup.",
+      "portfolioSize": 10,
+      "topN": 10,
+      "minScore": 80,
+      "filterName": "all",
+      "rotation": "aggressive",
+      "horizon": 252,
+      "partialTP": true,
+      "partialTPPct": 0.5,
+      "trailingStop": true,
+      "maxStopPct": 0,
+      "atrStopMult": 0,
+      "dailyTrailPct": 3,
+      "breakevenPct": 2,
+      "staleDays": 5,
+      "entryGatePct": 0,
+      "vwapGate": false,
+      "ddBreakerPct": 6,
+      "sectorCapMax": 0,
+      "sizingMethod": "inverse_atr",
+      "targetRiskPct": 0.5,
+      "vixKillThreshold": 32,
+      "correlationCap": 0,
+      "crossModeDedup": false,
+      "regimeFilters": {
+        "risk_on": "all",
+        "early_risk_off": "mom_bo",
+        "risk_off": "breakout_only",
+        "neutral": "all",
+        "recovery": "all"
       }
     }
   }

@@ -1148,6 +1148,33 @@ async function main() {
   }
   console.log(`Pre-simulated ${preSimDone} trade sets`);
 
+  // Pre-simulate frozen mode configs that fall outside the grid dimensions
+  const FROZEN_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
+  if (fs.existsSync(FROZEN_CFG_PATH)) {
+    const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
+    let frozenExtra = 0;
+    for (const [modeId, cfg] of Object.entries(frozenModes)) {
+      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      if (!tradesByKey[fKey]) {
+        const trades = [];
+        for (const setup of allSetups) {
+          const history = priceCache[setup.ticker];
+          const result = simulateTrade(setup, setup.scanDate, history, {
+            horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
+            trailingStop: cfg.trailingStop || false, maxStopPct: cfg.maxStopPct || 0, atrStopMult: cfg.atrStopMult || 0,
+            dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, staleDays: cfg.staleDays || 0,
+            entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
+          });
+          if (result) trades.push({ ...result, regime: setup.regime || null });
+        }
+        tradesByKey[fKey] = trades;
+        frozenExtra++;
+        console.log(`  Pre-sim extra for ${modeId}: key=${fKey} (${trades.length} trades)`);
+      }
+    }
+    if (frozenExtra) console.log(`Pre-simulated ${frozenExtra} extra frozen-mode trade sets`);
+  }
+
   // Bounded top-N tracker to avoid OOM on large grids
   const TOP_K = 50;
   const MIN_TRADES = 8;

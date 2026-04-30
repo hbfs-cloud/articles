@@ -1368,7 +1368,7 @@ document.addEventListener('DOMContentLoaded',function(){
     tmUpdateLabel();
     tmLoadIdx(tmCurrentIdx);
   };
-  var VALID_MODES=['turbo','dynamic','balanced','secured','fortress'];
+  var VALID_MODES=${JSON.stringify(Object.keys(modes))};
   var activeMode='balanced';
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   window.switchMode=function(id,opts){

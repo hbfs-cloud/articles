@@ -253,7 +253,7 @@ function writeMode(mode, prefix) {
 }
 
 // ─── Write all modes ────────────────────────────────────────────────────────
-const MODE_IDS = ['turbo', 'dynamic', 'balanced', 'secured', 'fortress'];
+const MODE_IDS = Object.keys(require('../data/modes-config.json').modes);
 let count = 0;
 
 for (const id of MODE_IDS) {

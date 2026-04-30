@@ -60,7 +60,7 @@ function loadSignals(dir) {
     try {
       const data = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
       const thesis = {};
-      const signals = (data.signals || []).map(s => {
+      const mapSignal = s => {
         if (s.thesis) thesis[s.ticker] = s.thesis;
         return {
           ticker: s.ticker,
@@ -74,7 +74,15 @@ function loadSignals(dir) {
           sharia: s.sharia != null ? s.sharia : null,
           thesis: s.thesis || '',
         };
-      });
+      };
+      const signals = (data.signals || []).map(mapSignal);
+      const tklPool = (data.tkl_pool || []).map(mapSignal);
+      if (tklPool.length) {
+        const existing = new Set(signals.map(s => s.ticker));
+        for (const s of tklPool) {
+          if (!existing.has(s.ticker)) { signals.push(s); existing.add(s.ticker); }
+        }
+      }
       return { signals, thesis, regime: data.regime || null };
     } catch (_) { /* fall through to HTML */ }
   }

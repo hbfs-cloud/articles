@@ -204,10 +204,33 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
 **Champs optionnels** : `tp2`, `name`, `horizon`, `region`, `thesis`
 **Types** : `entry`/`stop`/`tp1`/`tp2` = **nombres** (pas de "$"). `sharia` = **boolean**.
 
+**Section `tkl_pool`** (optionnelle, alimentée par les screeners TKL) :
+```json
+{
+  "scanDate": "2026-04-30",
+  "regime": "RISK-ON",
+  "signals": [ ... les 10 A+ habituels ... ],
+  "tkl_pool": [
+    {
+      "ticker": "BTE", "name": "Baytex Energy", "score": 82,
+      "strategy": "Momentum", "entry": 5.11, "stop": 4.85,
+      "tp1": 5.64, "rr": "1:2.0", "sharia": true,
+      "source": "tkl_momentum"
+    }
+  ]
+}
+```
+- `tkl_pool` contient jusqu'à 20 signaux supplémentaires (small/mid-cap momentum)
+- sweep.js et gen-status-page.js lisent `signals` + `tkl_pool` pour le mode TKL
+- Le HTML du scanner n'affiche que les 10 `signals` (top A+)
+- Les scores dans `tkl_pool` sont recalculés par Claude sur une échelle 0-100 compatible
+- Champ `source` : `tkl_momentum`, `tkl_breakout`, ou `tkl_volume_surge`
+
 **Workflow** :
-1. Claude génère `signals.json` avec toutes les données structurées
-2. Claude génère `index.html` en utilisant ces mêmes données pour le rendu visuel
+1. Claude génère `signals.json` avec les 10 A+ + le `tkl_pool` (20 extra)
+2. Claude génère `index.html` en utilisant uniquement les 10 `signals` pour le rendu visuel
 3. Les outils lisent `signals.json` directement — plus de parsing HTML fragile
+4. sweep.js consomme `signals` + `tkl_pool` pour alimenter le mode TKL
 
 ### Collecte des Données
 1. **`RunAutoScreener`** : Détection du régime de marché + candidats auto-adaptatifs
@@ -215,6 +238,30 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
    - Oversold bounce : `rsi14<35 && vol>sma(vol,20)*1.5`
    - Momentum expansion : `close>sma(close,20) && vol>sma(vol,20)*2 && rsi14>50 && rsi14<75`
    - Breakout squeeze : `close>sma(close,50) && atr(14)>atr(28)*1.2`
+2b. **`RunScreener` — TKL Pool** (screeners momentum small/mid-cap, alimentent le mode TKL)
+   Ces screeners élargissent l'univers au-delà des large-caps. Les résultats sont ajoutés dans `signals.json` (section `tkl_pool`) mais ne comptent PAS dans les 10 setups A+ du scanner HTML.
+
+   - **TKL-Momentum** (small/mid-caps en tendance avec volume) :
+     ```
+     pass_expr: market_cap >= 500000000 && market_cap < 50000000000 && close > ema20 && ema20 > ema50 && avg_volume > 300000 && rising('ema20', 10) && trend_strength(20) > 0.2 && change_pct(20) > 0.03
+     score_expr: change_pct(10) * 100 + trend_strength(30) * 40 + near_sr_score() * 20
+     top_k: 20
+     ```
+   - **TKL-Breakout** (near 52w high, volume spike, pure breakout) :
+     ```
+     pass_expr: market_cap >= 500000000 && close >= hhv('close', 50) * 0.97 && avg_volume > 200000 && vol > avg_vol(20) * 1.3 && rsi14 > 50 && rsi14 < 85 && close > ema50
+     score_expr: (close / hhv('close', 50)) * 50 + trend_strength(20) * 30 + (vol / avg_vol(20)) * 20
+     top_k: 20
+     ```
+   - **TKL-Volume-Surge** (accumulation + surge volume, tous market caps) :
+     ```
+     pass_expr: avg_volume > 200000 && vol > avg_vol(20) * 2 && close > ema20 && rsi14 > 45 && rsi14 < 80 && change_pct(5) > 0.02
+     score_expr: (vol / avg_vol(20)) * 40 + trend_strength(20) * 30 + change_pct(10) * 100
+     top_k: 20
+     ```
+
+   **Déduplication** : fusionner les 3 résultats, supprimer les doublons (garder le meilleur score), exclure les tickers déjà dans le top 10 A+. Prendre les 20 meilleurs comme `tkl_pool`.
+
 3. **`QueryData`** types **OBLIGATOIRES** pour les 10 tickers retenus :
    - `quote,insider_transactions,social_sentiment,capital_flow` — base validation
    - `dark_pool` — détection accumulation institutionnelle (alpha signal majeur)
@@ -1000,10 +1047,11 @@ Tout est automatise dans `publish-daily-card.sh` (voir section "Flux Post-Scan" 
 **Single source of truth** : la page HTML et les tableaux sont generes depuis les memes fichiers JSON. Jamais de valeurs hardcodees.
 
 **scanner/status/index.html** contient :
-- Hero + 5 tabs (Turbo, Dynamic, Balanced, Secured, Fortress) avec KPIs, config, equity chart ECharts
+- Hero + 6 tabs (Turbo, Dynamic, Balanced, Secured, Fortress, TKL) avec KPIs, config, equity chart ECharts
 - Tableau historique des trades par mode (ticker, date, strategy, entry, exit, P&L, duree, statut)
-- Tableau comparatif des 5 modes
+- Tableau comparatif des 6 modes
 - Pas d'images (tout en texte/HTML)
+- TKL (Thami Kabbaj-Like) : 30 positions, momentum small/mid-cap, no horizon limit, trailing stop
 
 **Images PNG** (`gen-3-cards.js`) : utilisees uniquement pour Telegram/Discord, pas affichees sur la page status.
 Noms timestampes (`mode-growth-{ts}.png`) avec `manifest.json` pour le cache busting.
