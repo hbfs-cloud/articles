@@ -20,6 +20,7 @@
 const fs = require('fs');
 const https = require('https');
 const path = require('path');
+const crypto = require('crypto');
 const WebSocket = require('ws');
 const protobuf = require('protobufjs');
 
@@ -55,7 +56,35 @@ const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const DRY_RUN = process.argv.includes('--dry-run');
 const ONCE = process.argv.includes('--once');
+
+// ─── Token redaction helper (prevents BOT_TOKEN leak via stack traces) ───────
+function redactToken(s) {
+  if (!BOT_TOKEN || !s) return s;
+  return String(s).split(BOT_TOKEN).join(BOT_TOKEN.slice(0, 6) + '…REDACTED');
+}
+
+// ─── Magic numbers / configurables ───────────────────────────────────────────
+const ROTATION_MIN_SCORE = parseInt(process.env.ROTATION_MIN_SCORE) || 88;
 // --loop is now identical to default (WS continuous); kept for backward compat
+
+// ─── HTML escape helper (prevents injection from pos.* dynamic values) ────────
+function escapeHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
+// ─── Regime cache (refreshed every 60 min from risk-snapshots.json) ──────────
+let _regimeCache = { regime: null, ts: 0 };
+function getCurrentRegime() {
+  if (Date.now() - _regimeCache.ts < 3600000 && _regimeCache.regime) return _regimeCache.regime;
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'risk-snapshots.json'), 'utf8'));
+    _regimeCache = { regime: raw?.latest?.regime || raw?.regime || 'UNKNOWN', ts: Date.now() };
+  } catch (_) { /* graceful degradation */ }
+  return _regimeCache.regime || 'UNKNOWN';
+}
 
 // ─── Per-mode Telegram topic routing ─────────────────────────────────────────
 // Alias vars (TELEGRAM_TOPIC_DYNAMIC etc.) take precedence over legacy names.
@@ -105,46 +134,20 @@ function isMarketHours() {
 const HEARTBEAT_STATE = { lastOpenBeat: null, lastCloseBeat: null };
 
 function buildHeartbeatMessage(type) {
-  const now = new Date();
-  const ts = now.toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
   const snap = loadLatestSnapshot();
   const modes = loadModes();
-  const state = loadState();
-
-  // Count positions per mode
-  let totalPositions = 0;
-  const modeLines = [];
-  for (const [modeId, cfg] of Object.entries(modes)) {
-    const modeSnap = snap?.modes?.[modeId];
-    const positions = modeSnap?.positions || [];
-    totalPositions += positions.length;
-    const posStr = positions.map(p => p.ticker).join(', ') || '—';
-    modeLines.push(`  <b>${cfg.label || modeId}</b>: ${positions.length} pos [${posStr}]`);
-  }
-
-  // Count today's alerts from state
-  const todayKey = now.toISOString().slice(0, 10);
-  const todayAlerts = Object.keys(state).filter(k =>
-    !k.startsWith('_') && state[k]?.lastAlert?.startsWith?.(todayKey)
-  ).length;
-
   const tickers = snap ? [...collectAllTickers(snap)] : [];
   const wsStatus = Object.keys(liveCache).length;
-  const uptime = process.uptime();
-  const uptimeStr = uptime > 3600
-    ? `${Math.floor(uptime / 3600)}h${Math.floor((uptime % 3600) / 60)}m`
-    : `${Math.floor(uptime / 60)}m`;
-
+  let totalPositions = 0;
+  for (const [modeId] of Object.entries(modes)) {
+    totalPositions += (snap?.modes?.[modeId]?.positions || []).length;
+  }
   const emoji = type === 'open' ? '🔔' : '🔕';
   const label = type === 'open' ? 'MARKET OPEN' : 'MARKET CLOSE';
-
-  return `${emoji} <b>Signal Monitor — ${label}</b>\n`
-    + `${ts}\n\n`
-    + `📡 WebSocket: ${wsStatus}/${tickers.length} tickers cached\n`
-    + `⏱ Uptime: ${uptimeStr}\n`
-    + `📊 Positions: ${totalPositions} across ${Object.keys(modes).length} modes\n`
-    + `🔔 Alerts today: ${todayAlerts}\n\n`
-    + modeLines.join('\n');
+  const env = DRY_RUN ? '(dry-run)' : '';
+  return `📡 Live Monitor — ${label} ${env}`.trim() + '\n'
+    + `${totalPositions} positions tracked · ${tickers.length} tickers · WS ${wsStatus}/${tickers.length}\n`
+    + `🔗 articles.dailytickers.com/scanner/status/`;
 }
 
 async function checkHeartbeat() {
@@ -161,10 +164,10 @@ async function checkHeartbeat() {
     const msg = buildHeartbeatMessage('open');
     console.log(`[${now.toISOString()}] Sending market open heartbeat`);
     // Send to global Telegram + Discord
-    sendTelegram(msg, TOPICS.portfolio, false).catch(e => console.error('[heartbeat] tg error:', e.message));
+    sendTelegram(msg, TOPICS.portfolio, false).catch(e => console.error('[heartbeat] tg error:', redactToken(e?.message || e)));
     if (DISCORD_WEBHOOKS.global) {
       sendDiscord(DISCORD_WEBHOOKS.global, '🔔 Signal Monitor — MARKET OPEN', htmlToDiscord(msg), 3066993, false)
-        .catch(e => console.error('[heartbeat] discord error:', e.message));
+        .catch(e => console.error('[heartbeat] discord error:', redactToken(e?.message || e)));
     }
   }
 
@@ -173,10 +176,10 @@ async function checkHeartbeat() {
     HEARTBEAT_STATE.lastCloseBeat = today;
     const msg = buildHeartbeatMessage('close');
     console.log(`[${now.toISOString()}] Sending market close heartbeat`);
-    sendTelegram(msg, TOPICS.portfolio, false).catch(e => console.error('[heartbeat] tg error:', e.message));
+    sendTelegram(msg, TOPICS.portfolio, false).catch(e => console.error('[heartbeat] tg error:', redactToken(e?.message || e)));
     if (DISCORD_WEBHOOKS.global) {
       sendDiscord(DISCORD_WEBHOOKS.global, '🔕 Signal Monitor — MARKET CLOSE', htmlToDiscord(msg), 9807270, false)
-        .catch(e => console.error('[heartbeat] discord error:', e.message));
+        .catch(e => console.error('[heartbeat] discord error:', redactToken(e?.message || e)));
     }
   }
 }
@@ -242,7 +245,8 @@ function fetchPrice(ticker) {
       const dayHigh = meta.regularMarketDayHigh ?? price;
       const dayLow = meta.regularMarketDayLow ?? price;
       return { price, dayHigh, dayLow };
-    } catch {
+    } catch (e) {
+      console.error('[fetchPrice]', ticker, redactToken(e?.message || e));
       return { price: null, dayHigh: null, dayLow: null };
     }
   });
@@ -298,7 +302,8 @@ async function getATR(ticker) {
     const atr = computeATRFromHistory(history);
     atrCache[ticker] = { atr, ts: Date.now() };
     return atr;
-  } catch {
+  } catch (e) {
+    console.error('[getATR]', ticker, redactToken(e?.message || e));
     return null;
   }
 }
@@ -332,8 +337,13 @@ function computeInitialStop(entry, rawStop, cfg, atr) {
 /**
  * Update stop and highWaterMark based on live price.
  * Returns { currentStop, highWaterMark }.
+ *
+ * `riskUnitOriginal` MUST be the initial (entry - actualStopOriginal) computed at
+ * position open time. Passing the *current* mutable stop here makes riskUnit
+ * collapse to ~0 after breakeven, causing the trail stop to glue to the high.
+ * Cohérent avec sweep.js (commit 3019a545 / line 514).
  */
-function updateStopDynamic(entry, currentStop, highWaterMark, price, cfg, partialClosed) {
+function updateStopDynamic(entry, currentStop, highWaterMark, price, cfg, partialClosed, riskUnitOriginal) {
   let stop = currentStop;
   let hwm = highWaterMark;
 
@@ -358,8 +368,8 @@ function updateStopDynamic(entry, currentStop, highWaterMark, price, cfg, partia
   // Trailing stop after TP1 partial: move to entry + trail at 1.5R
   if (cfg.trailingStop && partialClosed) {
     if (entry > stop) stop = entry; // move to breakeven
-    // trail at 1.5R from hwm
-    const riskUnit = entry - currentStop;
+    // trail at 1.5R from hwm — use ORIGINAL risk unit (not the post-mutation gap)
+    const riskUnit = riskUnitOriginal > 0 ? riskUnitOriginal : (entry - currentStop);
     if (riskUnit > 0) {
       const trailLevel = hwm - riskUnit * 1.5;
       if (trailLevel > stop) stop = trailLevel;
@@ -379,17 +389,33 @@ function bizDaysHeld(scanDate) {
 
 // ─── State persistence (atomic write) ────────────────────────────────────────
 
+function _checksum(obj) {
+  return crypto.createHash('sha1').update(JSON.stringify(obj)).digest('hex').slice(0, 8);
+}
+
 function loadState() {
   try {
     const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    if (raw && typeof raw === 'object') return raw;
-  } catch { /* ignore */ }
+    if (!raw || typeof raw !== 'object') return {};
+    // New format: { checksum, state }
+    if (raw.checksum && raw.state && typeof raw.state === 'object') {
+      const expected = _checksum(raw.state);
+      if (expected !== raw.checksum) {
+        console.error(`[state-checksum] mismatch (expected=${expected} got=${raw.checksum}) — treating as fresh state`);
+        return {};
+      }
+      return raw.state;
+    }
+    // Legacy format: bare state object (no checksum wrapper)
+    return raw;
+  } catch (e) { console.error('[loadState]', redactToken(e?.message || e)); }
   return {};
 }
 
 function saveState(state) {
   const tmp = STATE_FILE + '.tmp';
-  fs.writeFileSync(tmp, JSON.stringify(state, null, 2));
+  const payload = { checksum: _checksum(state), state };
+  fs.writeFileSync(tmp, JSON.stringify(payload, null, 2));
   fs.renameSync(tmp, STATE_FILE);
 }
 
@@ -406,14 +432,14 @@ function loadLatestSnapshot() {
     try {
       const data = JSON.parse(fs.readFileSync(path.join(HISTORY_DIR, f), 'utf8'));
       if (data && data.modes) return data;
-    } catch { /* corrupt, try next */ }
+    } catch (e) { console.error('[loadLatestSnapshot]', f, redactToken(e?.message || e)); }
   }
   return null;
 }
 
 function loadModes() {
-  try { return JSON.parse(fs.readFileSync(MODES_CFG, 'utf8')).modes; }
-  catch { return {}; }
+  try { return JSON.parse(fs.readFileSync(MODES_CFG, 'utf8')).modes || {}; }
+  catch (e) { console.error('[loadModes] failed, using empty:', redactToken(e?.message || e)); return {}; }
 }
 
 // ─── Collect all tickers from snapshot ───────────────────────────────────────
@@ -430,15 +456,7 @@ function collectAllTickers(snap) {
 
 // ─── Telegram with retry for critical alerts ──────────────────────────────────
 
-function sendTelegramOnce(text, topicId) {
-  if (DRY_RUN) {
-    console.log('[DRY-RUN] Would send:\n' + text + '\n---');
-    return Promise.resolve(true);
-  }
-  if (!BOT_TOKEN || !CHAT_ID) {
-    console.log('[SKIP] No Telegram config:\n' + text);
-    return Promise.resolve(true);
-  }
+function _sendTelegramRaw(text, topicId) {
   return new Promise((resolve) => {
     const body = JSON.stringify({
       chat_id: CHAT_ID,
@@ -457,24 +475,66 @@ function sendTelegramOnce(text, topicId) {
       let d = '';
       res.on('data', c => d += c);
       res.on('end', () => {
-        if (res.statusCode !== 200) {
-          console.error(`Telegram ${res.statusCode}: ${d.slice(0, 200)}`);
-          resolve(false);
-        } else {
-          const parsed = JSON.parse(d);
-          console.log(`[TG OK] topic=${topicId} msg_id=${parsed.result?.message_id}`);
-          resolve(true);
-        }
+        resolve({ status: res.statusCode, body: d });
       });
     });
-    req.on('timeout', () => { console.error('[TG TIMEOUT]'); req.destroy(); resolve(false); });
-    req.on('error', (e) => { console.error('Telegram error:', e.message); resolve(false); });
+    req.on('timeout', () => { console.error('[TG TIMEOUT]'); req.destroy(); resolve({ status: 0, body: '' }); });
+    req.on('error', (e) => { console.error(redactToken('Telegram error: ' + (e?.message || e))); resolve({ status: 0, body: '' }); });
     req.write(body);
     req.end();
   });
 }
 
-async function sendTelegram(text, topicId, critical) {
+async function sendTelegramOnce(text, topicId) {
+  if (DRY_RUN) {
+    console.log('[DRY-RUN] Would send:\n' + text + '\n---');
+    return true;
+  }
+  if (!BOT_TOKEN || !CHAT_ID) {
+    console.log('[SKIP] No Telegram config:\n' + text);
+    return true;
+  }
+  let res = await _sendTelegramRaw(text, topicId);
+
+  // Handle 429 rate limit with retry_after
+  if (res.status === 429) {
+    let wait = 10 * 1000;
+    try {
+      const j = JSON.parse(res.body || '{}');
+      wait = ((j.parameters && j.parameters.retry_after) || 10) * 1000;
+    } catch (e) { /* keep default */ }
+    console.error(redactToken(`[TG 429] backing off ${wait}ms`));
+    await new Promise(r => setTimeout(r, wait));
+    res = await _sendTelegramRaw(text, topicId);
+  }
+
+  if (res.status !== 200) {
+    console.error(redactToken(`Telegram ${res.status}: ${(res.body || '').slice(0, 200)}`));
+    return false;
+  }
+  try {
+    const parsed = JSON.parse(res.body);
+    console.log(`[TG OK] topic=${topicId} msg_id=${parsed.result?.message_id}`);
+  } catch (e) { /* ignore parse */ }
+  return true;
+}
+
+// ─── Telegram queue (1 msg/s, used for critical alerts only) ────────────────
+const _telegramQueue = [];
+let _telegramBusy = false;
+async function _drainTelegramQueue() {
+  if (_telegramBusy) return;
+  _telegramBusy = true;
+  while (_telegramQueue.length) {
+    const fn = _telegramQueue.shift();
+    try { await fn(); } catch (e) { console.error('[telegram-queue] task error:', redactToken(e?.message || e)); }
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  _telegramBusy = false;
+}
+function enqueueTelegram(fn) { _telegramQueue.push(fn); _drainTelegramQueue(); }
+
+async function _sendTelegramWithRetry(text, topicId, critical) {
   const ok = await sendTelegramOnce(text, topicId);
   if (!ok && critical) {
     // Single retry after 5s for SL_HIT / TP_HIT
@@ -482,6 +542,20 @@ async function sendTelegram(text, topicId, critical) {
     const ok2 = await sendTelegramOnce(text, topicId);
     if (!ok2) console.error('[FAIL] Telegram retry also failed for:', text.slice(0, 80));
   }
+}
+
+function sendTelegram(text, topicId, critical) {
+  // Critical alerts go through the 1 msg/s queue to avoid burst-cap hits.
+  // Non-critical/warnings stay direct so cooldown logic still applies in real-time.
+  if (critical) {
+    return new Promise((resolve) => {
+      enqueueTelegram(async () => {
+        await _sendTelegramWithRetry(text, topicId, true);
+        resolve();
+      });
+    });
+  }
+  return _sendTelegramWithRetry(text, topicId, false);
 }
 
 // ─── Discord helpers ──────────────────────────────────────────────────────────
@@ -565,25 +639,37 @@ async function notifyAll(modeId, alert) {
   const titleClean = summaryLine.replace(/<[^>]+>/g, '').replace(/^[\s\S]{1,2}\s/, '').trim();
 
   // 1. Mode-specific Telegram (full message)
-  sendTelegram(alert.text, modeTopicId, isCritical).catch(e => console.error('[notify] tg-mode error:', e.message));
+  sendTelegram(alert.text, modeTopicId, isCritical).catch(e => console.error('[notify] tg-mode error:', redactToken(e?.message || e)));
 
   // 2. Global Telegram (condensed — only if mode topic differs from global)
   if (modeTopicId !== globalTopicId) {
-    sendTelegram(summaryLine, globalTopicId, false).catch(e => console.error('[notify] tg-global error:', e.message));
+    sendTelegram(summaryLine, globalTopicId, false).catch(e => console.error('[notify] tg-global error:', redactToken(e?.message || e)));
   }
 
   // 3. Mode-specific Discord webhook
   const modeWebhook = DISCORD_WEBHOOKS[modeId] || '';
   if (modeWebhook) {
     sendDiscord(modeWebhook, titleClean, discordFull, color, isCritical)
-      .catch(e => console.error('[notify] discord-mode error:', e.message));
+      .catch(e => console.error('[notify] discord-mode error:', redactToken(e?.message || e)));
   }
 
   // 4. Global Discord webhook (condensed — only if differs from mode webhook)
   if (DISCORD_WEBHOOKS.global && DISCORD_WEBHOOKS.global !== modeWebhook) {
     sendDiscord(DISCORD_WEBHOOKS.global, titleClean, discordSummary, color, false)
-      .catch(e => console.error('[notify] discord-global error:', e.message));
+      .catch(e => console.error('[notify] discord-global error:', redactToken(e?.message || e)));
   }
+}
+
+// ─── Async mutex per ticker (prevents race on state read-modify-write) ───────
+const _evalLocks = new Map(); // key → Promise
+function _withLock(key, fn) {
+  const prev = _evalLocks.get(key) || Promise.resolve();
+  let next;
+  next = prev.then(() => fn()).finally(() => {
+    if (_evalLocks.get(key) === next) _evalLocks.delete(key);
+  });
+  _evalLocks.set(key, next);
+  return next;
 }
 
 // ─── Core: evaluate all positions ─────────────────────────────────────────────
@@ -630,17 +716,23 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
   const prevStop = prev.currentStop ?? initialStop;
   const prevHWM = prev.highWaterMark ?? entry;
   const partialClosed = prev.partialClosed ?? false;
+  // Persist the ORIGINAL risk unit (entry - initialStop) on first sighting.
+  // Without this, the trail stop collapses to the high-water-mark after breakeven.
+  const riskUnitOriginal = prev.riskUnitOriginal ?? Math.max(0, +(entry - initialStop).toFixed(4));
 
   // Update stop based on current price
   const { currentStop, highWaterMark } = updateStopDynamic(
-    entry, prevStop, prevHWM, price, cfg, partialClosed,
+    entry, prevStop, prevHWM, price, cfg, partialClosed, riskUnitOriginal,
   );
 
   // Determine status
   let status = 'OPEN';
-  // Sanity check: only trust dayLow if it's within 15% of current price
-  // (prevents false SL triggers from stale/cross-day dayLow data)
-  const dayLowValid = dayLow > 0 && dayLow > price * 0.85;
+  // Sanity check: only trust dayLow if it's within 25% of current price
+  // (prevents false SL triggers from stale/cross-day dayLow data; gap-down up to -25% accepted)
+  const dayLowValid = dayLow > 0 && dayLow > price * 0.75;
+  if (dayLow > 0 && !dayLowValid) {
+    console.warn(`[dayLow-suspect] ${pos.ticker}: dayLow=${dayLow} vs price=${price} → ignored`);
+  }
   if (price <= currentStop || (dayLowValid && dayLow <= currentStop)) {
     status = 'SL_HIT';
   } else if (tp2 && dayHigh >= tp2) {
@@ -674,6 +766,7 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
       currentStop,
       highWaterMark,
       partialClosed,
+      riskUnitOriginal,
       ts: new Date().toISOString(),
     };
     return;
@@ -739,16 +832,42 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
       NEAR_TP1: `Price $${price.toFixed(2)} approaching TP1 $${tp1.toFixed(2)} — prepare exit`,
     };
 
+    // #1 scan_date for same-ticker multi-mode disambiguation
+    const scanDateLabel = pos.scan_date ? ` | scan ${pos.scan_date}` : '';
+    // #2 P&L per share
+    const pnlPerShare = (price - entry).toFixed(2);
+    const pnlSign = price >= entry ? '+' : '';
+    const pnlShLabel = ` (${pnlSign}$${pnlPerShare}/sh)`;
+    // #3 Residual R:R (for NEAR_TP1 / OPEN with trail)
+    let rrLine = '';
+    if ((status === 'NEAR_TP1' || status === 'OPEN') && tp1 > price && price > currentStop) {
+      const rrResidual = ((tp1 - price) / (price - currentStop)).toFixed(2);
+      rrLine = `\nR:R restant: ${rrResidual}`;
+    }
+    // #4 Score + setup type
+    const scoreLabel = pos.score ? `\nScore ${escapeHtml(pos.score)} · ${escapeHtml(pos.strategy || '—')}` : '';
+    // #5 Scanner source URL
+    const scanUrl = pos.scan_date
+      ? `https://articles.dailytickers.com/scanner/${pos.scan_date.replace(/-/g, '')}/`
+      : null;
+    const scanLink = scanUrl ? `\n📎 ${scanUrl}` : '';
+    // #6 Regime — only on terminal events
+    const TERMINAL_STATUSES = new Set(['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'EXPIRED']);
+    const regimeLine = TERMINAL_STATUSES.has(status) ? `\nRégime: ${escapeHtml(getCurrentRegime())}` : '';
+
     alerts.push({
       priority: isCritical ? 1 : 2,
       critical: isCritical,
       modeId,
       status,
-      text: `${emoji} <b>[${modeLabel}] ${status.replace(/_/g, ' ')}</b>\n`
-        + `<b>${pos.ticker}</b> @ $${price.toFixed(2)} (entry $${entry.toFixed(2)})\n`
-        + `${actionMap[status] || ''}\n`
+      text: `${emoji} <b>[${escapeHtml(modeLabel)}${scanDateLabel}] ${status.replace(/_/g, ' ')}</b>\n`
+        + `<b>${escapeHtml(pos.ticker)}</b> @ $${price.toFixed(2)}${pnlShLabel} (entry $${entry.toFixed(2)})\n`
+        + `${actionMap[status] || ''}${rrLine}\n`
         + `Stop: $${currentStop.toFixed(2)} | TP1: $${tp1.toFixed(2)}${tp2 ? ` | TP2: $${tp2.toFixed(2)}` : ''}\n`
-        + `Held: ${daysHeld}d / ${cfg.horizon}d | ATR stop: ${atr ? `$${(entry - cfg.atrStopMult * atr).toFixed(2)}` : 'n/a'}`,
+        + `Held: ${daysHeld}d / ${cfg.horizon}d | ATR stop: ${atr ? `$${(entry - cfg.atrStopMult * atr).toFixed(2)}` : 'n/a'}`
+        + scoreLabel
+        + regimeLine
+        + scanLink,
     });
   }
 
@@ -765,6 +884,7 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     currentStop,
     highWaterMark,
     partialClosed: newPartialClosed,
+    riskUnitOriginal,
     ts: nowTs,
     _lastAlertTs: didAlert ? nowTs : (prev._lastAlertTs || null),
     _lastAlertStatus: didAlert ? status : (prev._lastAlertStatus || null),
@@ -817,7 +937,13 @@ async function evaluate(tickerFilter) {
             const rr = (s.tp1 - s.entry) / risk;
             if (rr < 1.5) return false;
           }
-          // VWAP gate enforced at execution time (systematic-tss), not at signal level
+          // TODO: VWAP gate non appliqué côté live — divergence connue avec backtest sweep.js.
+          // Voir commit 3019a545: sweep.js applique vwapRef = (prevDay.high+low+close)/3 et
+          // skip si currentPrice > vwapRef * 1.01 (gap-up trap). Côté live, on n'a pas le
+          // bar D-1 facilement (signal-monitor.js ne charge que la chart 2d via fetchPrice).
+          // Implémentation propre: ajouter fetchPrevDayHLC() helper avec fail-soft (skip
+          // gate si fetch fail). Risque actuel: rotation peut entrer sur un gap-up que le
+          // backtest aurait filtré → over-trading marginal sur jours de gap.
           return true;
         })
         .sort((a, b) => b.score - a.score);
@@ -845,7 +971,7 @@ async function evaluate(tickerFilter) {
 
         let meetsMargin;
         if (cfg.rotation === 'aggressive') {
-          meetsMargin = best.score >= 88 && worstPos.liveReturn < 2;
+          meetsMargin = best.score >= ROTATION_MIN_SCORE && worstPos.liveReturn < 2;
         } else {
           meetsMargin = scoreDelta >= margin;
         }
@@ -862,7 +988,7 @@ async function evaluate(tickerFilter) {
             status: 'ROTATION',
             text: `🔄 <b>[${modeLabel}] ROTATION ELIGIBLE</b> (slot ${rotationsGenerated + 1}/${rotLimit})\n`
               + `New: <b>${best.ticker}</b> (score ${best.score}) vs Worst: <b>${worstPos.ticker}</b> (score ${worstScore}, ${worstPos.liveReturn >= 0 ? '+' : ''}${worstPos.liveReturn.toFixed(2)}%)\n`
-              + `Delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} pts (threshold: ${margin || 'score≥88 &amp; ret&lt;2%'})\n`
+              + `Delta: ${scoreDelta >= 0 ? '+' : ''}${scoreDelta} pts (threshold: ${margin || `score≥${ROTATION_MIN_SCORE} &amp; ret&lt;2%`})\n`
               + `Action: Close ${worstPos.ticker} → Buy ${best.ticker} @ $${typeof best.entry === 'number' ? best.entry.toFixed(2) : String(best.entry).replace(/^\$/, '')}`,
           });
           newState[rotKey] = { candidate: best.ticker, replaces: worstPos.ticker, ts: new Date().toISOString() };
@@ -903,6 +1029,7 @@ class YahooStreamer {
     this.PricingData = null;          // protobuf type, loaded async
     this.heartbeatTimer = null;
     this.fullEvalTimer = null;
+    this.reconnectTimer = null;
     this.reconnectDelay = RECONNECT_BASE_MS;
     this.stopped = false;
   }
@@ -916,7 +1043,8 @@ class YahooStreamer {
     try {
       const buf = Buffer.from(rawB64, 'base64');
       return this.PricingData.decode(buf);
-    } catch {
+    } catch (e) {
+      console.error('[decodeMessage]', redactToken(e?.message || e));
       return null;
     }
   }
@@ -948,7 +1076,7 @@ class YahooStreamer {
         console.log(`[${new Date().toISOString()}] Full sweep (safety net)...`);
         await evaluate(null);
       } catch (e) {
-        console.error('[EVAL ERROR]', e.message);
+        console.error('[EVAL ERROR]', redactToken(e?.message || e));
       }
     }, FULL_EVAL_INTERVAL_MS);
   }
@@ -1012,11 +1140,11 @@ class YahooStreamer {
         ts: Date.now(),
       };
 
-      // Immediate per-tick evaluation for this ticker
+      // Immediate per-tick evaluation for this ticker (mutex'd to avoid state race)
       try {
-        await evaluate(ticker);
+        await _withLock(ticker, () => evaluate(ticker));
       } catch (e) {
-        console.error(`[TICK EVAL ERROR] ${ticker}:`, e.message);
+        console.error(`[TICK EVAL ERROR] ${ticker}:`, redactToken(e?.message || e));
       }
     });
 
@@ -1025,12 +1153,15 @@ class YahooStreamer {
       this.stopFullEvalTimer();
       if (this.stopped) return;
       console.warn(`[${new Date().toISOString()}] WebSocket closed (${code}). Reconnecting in ${this.reconnectDelay / 1000}s...`);
-      setTimeout(() => this.connect(), this.reconnectDelay);
+      this.reconnectTimer = setTimeout(() => {
+        this.reconnectTimer = null;
+        this.connect();
+      }, this.reconnectDelay);
       this.reconnectDelay = Math.min(this.reconnectDelay * 2, RECONNECT_MAX_MS);
     });
 
     this.ws.on('error', (err) => {
-      console.error(`[${new Date().toISOString()}] WebSocket error:`, err.message);
+      console.error(`[${new Date().toISOString()}] WebSocket error:`, redactToken(err?.message || err));
       // close event will fire after error, triggering reconnect
     });
   }
@@ -1039,6 +1170,10 @@ class YahooStreamer {
     this.stopped = true;
     this.stopHeartbeat();
     this.stopFullEvalTimer();
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
     if (this.ws) {
       this.ws.terminate();
       this.ws = null;
@@ -1124,4 +1259,4 @@ async function main() {
   process.on('SIGTERM', shutdown);
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch(e => { console.error(redactToken(e?.stack || e?.message || e)); process.exit(1); });

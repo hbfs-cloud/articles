@@ -224,8 +224,19 @@
 
     if (!entry || !price) return null;
 
+    // Guard: missing/zero stop = treat as inactive, do NOT default-long (would
+    // never trigger SL_HIT and lock state forever). Returning null lets caller
+    // skip the position quietly.
+    if (!stop || stop <= 0) {
+      if (!pos._warnedNoStop) {
+        console.warn('[live-engine] missing stop for', pos.ticker, '— skipping eval');
+        pos._warnedNoStop = true;
+      }
+      return null;
+    }
+
     var pnlPct = ((price - entry) / entry) * 100;
-    var isLong = !stop || stop < entry;
+    var isLong = stop < entry;
 
     // State from localStorage
     var stateKey = 'le_' + (pos._modeId || '') + '_' + pos.ticker + '_' + (pos.scan_date || '');

@@ -51,6 +51,12 @@ loadProfile();
 const BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID      = process.env.TELEGRAM_CHAT_ID;
 const ANTHROPIC_KEY= process.env.ANTHROPIC_API_KEY;
+
+// ─── Token redaction helper (prevents BOT_TOKEN leak via stack traces) ─────
+function redactToken(s) {
+  if (!BOT_TOKEN || !s) return s;
+  return String(s).split(BOT_TOKEN).join(BOT_TOKEN.slice(0, 6) + '…REDACTED');
+}
 const BASE_URL     = 'https://articles.dailytickers.com';
 const DRY_RUN      = process.argv.includes('--dry-run');
 
@@ -321,11 +327,11 @@ function send(text, topicId) {
         try {
           const j = JSON.parse(data);
           if (j.ok) resolve(j.result);
-          else reject(new Error(j.description || JSON.stringify(j)));
-        } catch (e) { reject(e); }
+          else reject(new Error(redactToken(j.description || JSON.stringify(j))));
+        } catch (e) { reject(new Error(redactToken(e?.message || e))); }
       });
     });
-    req.on('error', reject);
+    req.on('error', (e) => reject(new Error(redactToken(e?.message || e))));
     req.write(payload);
     req.end();
   });
@@ -364,7 +370,7 @@ function send(text, topicId) {
     const r = await send(msg, meta.topicId);
     console.log(`✅ Telegram → ${meta.section} (msg_id: ${r.message_id}, thread: ${meta.topicId})`);
   } catch (e) {
-    console.error('❌ Telegram failed:', e.message);
+    console.error('❌ Telegram failed:', redactToken(e?.message || e));
     process.exit(1);
   }
 })();

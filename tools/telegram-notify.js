@@ -38,6 +38,12 @@ if (!BOT_TOKEN || !CHAT_ID) {
   process.exit(1);
 }
 
+// ─── Token redaction helper (prevents BOT_TOKEN leak via stack traces) ──────
+function redactToken(s) {
+  if (!BOT_TOKEN || !s) return s;
+  return String(s).split(BOT_TOKEN).join(BOT_TOKEN.slice(0, 6) + '…REDACTED');
+}
+
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 const BASE_URL = 'https://articles.dailytickers.com/scanner';
 
@@ -122,15 +128,15 @@ function sendTelegramMessage(text, topicId) {
           if (j.ok) {
             resolve(j.result);
           } else {
-            reject(new Error(`Telegram API error: ${j.description}`));
+            reject(new Error(redactToken(`Telegram API error: ${j.description}`)));
           }
         } catch (e) {
-          reject(e);
+          reject(new Error(redactToken(e?.message || e)));
         }
       });
     });
-    
-    req.on('error', reject);
+
+    req.on('error', (e) => reject(new Error(redactToken(e?.message || e))));
     req.write(payload);
     req.end();
   });
@@ -186,7 +192,7 @@ async function main() {
     const result = await sendTelegramMessage(message, scanTopicId);
     console.log(`✅ Message sent (id: ${result.message_id})`);
   } catch (e) {
-    console.error(`❌ Failed: ${e.message}`);
+    console.error(`❌ Failed: ${redactToken(e?.message || e)}`);
     process.exit(1);
   }
 }
