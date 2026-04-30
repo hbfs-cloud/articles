@@ -238,6 +238,14 @@ warn('scanner-positions.json: fraîcheur < 48h', () => {
   if (!isFresh(d.updated_at, 48)) return `updated_at: ${d.updated_at}`;
 });
 
+// 5b. data/risk-snapshots.json — détecte stub silencieux (MCP_GATEWAY_URL absent)
+warn('risk-snapshots.json: var95 non-null (MCP gateway live)', () => {
+  const d = readJSON('data/risk-snapshots.json');
+  if (!d.modes) return 'champ modes absent';
+  const allStub = Object.values(d.modes).every(m => m === null || (m && m.var95_5d == null));
+  if (allStub) return 'tous modes var95_5d=null — refresh-risk-metrics a écrit un stub (MCP_GATEWAY_URL non exporté?)';
+});
+
 // 6. index.html — structure basique
 check('index.html: tab-scanner existe', () => {
   const html = readFile('index.html');

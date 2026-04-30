@@ -12,6 +12,7 @@
 #   30 23 * * 1-5 cd /home/ci/projects/articles && ./tools/publish-daily-card.sh >> /tmp/scanner-publish.log 2>&1
 
 set -e
+set -o pipefail   # fail pipelines on first non-zero (sweep | tail used to swallow crashes)
 cd "$(dirname "$0")/.."
 
 SKIP_SWEEP=false
@@ -53,7 +54,17 @@ if [ "$SKIP_SWEEP" = false ]; then
   SWEEP_END=$(date +%s)
   echo "   Sweep done in $((SWEEP_END - SWEEP_START))s"
 
-  # ─── Step 4: (removed — gen-3-cards.js legacy) ───────────────────────────
+  # ─── Step 4: Refresh risk metrics (VaR + stress + correlation + regime) ────
+  echo ""
+  echo "🛡️  Step 4: Refreshing risk metrics from MCP gateway..."
+  if [ -z "${MCP_GATEWAY_URL:-}" ]; then
+    echo "⚠️  MCP_GATEWAY_URL not set — risk-snapshots.json will be a stub."
+    echo "   Export MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp before running."
+    echo "   Continuing with explicit --stub (acknowledged)..."
+    node tools/refresh-risk-metrics.js --stub
+  else
+    node tools/refresh-risk-metrics.js
+  fi
 
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""

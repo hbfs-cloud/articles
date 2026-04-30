@@ -865,14 +865,28 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
   }
 
   if (prev.status !== status && status !== 'OPEN' && !suppressedByCooldown && !suppressedByDedup && !suppressedByTerminal) {
-    const emoji = {
-      SL_HIT: '🔴', TP1_HIT: '🟢', TP2_HIT: '🏆', TP1_PARTIAL: '💚',
-      EXPIRED: '⏰', NEAR_STOP: '⚠️', NEAR_TP1: '📈',
-    }[status] || '📊';
+    // Cosmetic split for SL_HIT: trail/breakeven stop above entry = profitable exit, show as TRAIL HIT 🟢.
+    // State machine value stays 'SL_HIT' — only the displayed label/emoji change.
+    const slAboveEntry = status === 'SL_HIT' && currentStop >= entry;
+    const emoji = slAboveEntry
+      ? '🟢'
+      : ({
+          SL_HIT: '🔴', TP1_HIT: '🟢', TP2_HIT: '🏆', TP1_PARTIAL: '💚',
+          EXPIRED: '⏰', NEAR_STOP: '⚠️', NEAR_TP1: '📈',
+        }[status] || '📊');
+    const displayStatus = slAboveEntry ? 'TRAIL HIT' : status.replace(/_/g, ' ');
 
     const partialPct = Math.round((cfg.partialTPPct || 0.5) * 100);
+    // SL_HIT P&L: stop may sit ABOVE entry (trail after TP1 partial or breakeven move).
+    // Use sign-aware label — never display a profitable trail-stop close as "loss".
+    const slPnlPct = ((currentStop - entry) / entry * 100);
+    const slLabel = slPnlPct >= 0
+      ? (prev.partialClosed
+          ? `CLOSE remaining ${100 - partialPct}% — trail stop hit, locked +${slPnlPct.toFixed(2)}% (above entry)`
+          : `CLOSE at market — breakeven stop hit, locked +${slPnlPct.toFixed(2)}% (above entry)`)
+      : `CLOSE at market — loss ${slPnlPct.toFixed(2)}%`;
     const actionMap = {
-      SL_HIT: `CLOSE at market — loss ${((currentStop - entry) / entry * 100).toFixed(2)}%`,
+      SL_HIT: slLabel,
       TP1_HIT: `CLOSE at market — profit +${returnPct.toFixed(2)}%`,
       TP1_PARTIAL: `Sell ${partialPct}% @ $${tp1.toFixed(2)} — move stop to entry, trail rest to TP2`,
       TP2_HIT: `CLOSE ALL — full target hit +${returnPct.toFixed(2)}%`,
@@ -911,7 +925,7 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
       critical: isCritical,
       modeId,
       status,
-      text: `${emoji} <b>${escapeHtml(pos.ticker)}</b> — ${status.replace(/_/g, ' ')} <i>[${escapeHtml(modeLabel)}${scanDateLabel}]</i>\n`
+      text: `${emoji} <b>${escapeHtml(pos.ticker)}</b> — ${displayStatus} <i>[${escapeHtml(modeLabel)}${scanDateLabel}]</i>\n`
         + `@ $${price.toFixed(2)}${pnlShLabel} (entry $${entry.toFixed(2)})\n`
         + `${actionMap[status] || ''}${rrLine}\n`
         + `Stop: $${currentStop.toFixed(2)} | TP1: $${tp1.toFixed(2)}${tp2 ? ` | TP2: $${tp2.toFixed(2)}` : ''}\n`
