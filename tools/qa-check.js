@@ -208,6 +208,25 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
   if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;
 });
 
+// 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
+check('bench-spy.json: fichier existe', () => {
+  if (!fs.existsSync(path.join(ROOT, 'data', 'bench-spy.json'))) return 'data/bench-spy.json absent — relancer node tools/fetch-bench-spy.js';
+});
+
+warn('bench-spy.json: fraîcheur < 48h', () => {
+  const d = readJSON('data/bench-spy.json');
+  if (!isFresh(d.updated_at, 48)) return `updated_at: ${d.updated_at}`;
+});
+
+check('bench-spy.json: stats numériques valides', () => {
+  const d = readJSON('data/bench-spy.json');
+  if (!d.stats) return 'champ stats absent';
+  const fields = ['returnTotal', 'maxDD', 'sharpe', 'calmar'];
+  const bad = fields.filter(f => typeof d.stats[f] !== 'number' || isNaN(d.stats[f]));
+  if (bad.length) return `champs non numériques: ${bad.join(', ')}`;
+  if (!d.closes || Object.keys(d.closes).length < 5) return `closes insuffisants: ${Object.keys(d.closes || {}).length}`;
+});
+
 // 5. data/scanner-metrics.json + positions.json — fraîcheur
 warn('scanner-metrics.json: fraîcheur < 48h', () => {
   const d = readJSON('data/scanner-metrics.json');

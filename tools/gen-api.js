@@ -41,6 +41,14 @@ if (fs.existsSync(RISK_SNAP_PATH)) {
   try { riskSnap = JSON.parse(fs.readFileSync(RISK_SNAP_PATH, 'utf8')) || {}; }
   catch (e) { console.log('  [warn] risk-snapshots.json unreadable, skipping risk fields'); riskSnap = {}; }
 }
+
+// Load SPY benchmark (fetch-bench-spy.js). Missing file = no-op.
+const BENCH_SPY_PATH = path.join(ROOT, 'data', 'bench-spy.json');
+let benchSpy = null;
+if (fs.existsSync(BENCH_SPY_PATH)) {
+  try { benchSpy = JSON.parse(fs.readFileSync(BENCH_SPY_PATH, 'utf8')) || null; }
+  catch (e) { console.log('  [warn] bench-spy.json unreadable, skipping bench fields'); benchSpy = null; }
+}
 function getRiskFor(modeId) {
   const haveSnap = riskSnap && Object.keys(riskSnap).length > 0;
   if (!haveSnap) return { status: 'pending', reason: 'risk-snapshots.json absent — run tools/refresh-risk-metrics.js' };
@@ -216,12 +224,31 @@ function writeMode(mode, prefix) {
 
   // 8. risk.json — VaR, stress scenarios, regime probability, correlations.
   // Standalone endpoint so consumers can poll risk independently.
+  // mode.stats.ret = percentage points (e.g. 32.86 = +32.86%)
+  const modeReturnTotal = (mode.stats || {}).ret;
+  let benchField = null;
+  if (benchSpy && benchSpy.stats) {
+    // benchSpy.stats.returnTotal is decimal fraction (e.g. 0.045 = 4.5%)
+    // modeReturnTotal is percentage points (e.g. 12.5 = +12.5%) → convert to pct points
+    const spyReturnPct = benchSpy.stats.returnTotal * 100;
+    const alpha = modeReturnTotal != null ? +(modeReturnTotal - spyReturnPct).toFixed(4) : null;
+    benchField = {
+      spy: {
+        returnTotal: benchSpy.stats.returnTotal,
+        sharpe: benchSpy.stats.sharpe,
+        period: benchSpy.period || null,
+        updated_at: benchSpy.updated_at || null,
+      },
+      alpha,
+    };
+  }
   write(`${p}risk.json`, {
     updatedAt: now,
     mode: prefix || 'balanced',
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
     risk: getRiskFor(prefix || 'balanced'),
+    bench: benchField,
   });
 }
 

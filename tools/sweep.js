@@ -647,8 +647,28 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
   const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
 
-  // Risk-adjusted return metrics (parallel definition to simulatePortfolio's)
-  const sharpe = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
+  // Risk-adjusted return metrics
+  // returnDDRatio = legacy field (was misnamed "sharpe"); kept for backward compat.
+  const returnDDRatio = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
+
+  // True Sharpe ratio: sqrt(252) * mean(daily_returns) / std(daily_returns)
+  // Uses log returns on the equity curve for robustness.
+  let sharpe = 0;
+  if (equityCurve.length > 2) {
+    const dailyReturns = [];
+    for (let i = 1; i < equityCurve.length; i++) {
+      const prev = equityCurve[i - 1].value;
+      const curr = equityCurve[i].value;
+      if (prev > 0) dailyReturns.push((curr - prev) / prev);
+    }
+    if (dailyReturns.length > 1) {
+      const mean = dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length;
+      const variance = dailyReturns.reduce((s, r) => s + (r - mean) ** 2, 0) / (dailyReturns.length - 1);
+      const stdev = Math.sqrt(variance);
+      if (stdev > 0) sharpe = +(Math.sqrt(252) * mean / stdev).toFixed(2);
+    }
+  }
+
   const firstDate = sorted[0]?.exitDate || sorted[0]?.scanDate;
   const lastDate = sorted[sorted.length - 1]?.exitDate || firstDate;
   let dayCount = 1;
@@ -666,7 +686,8 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     profitFactor,
     trades: resolved.length,
     calmar,
-    sharpe,
+    sharpe,             // TRUE Sharpe: sqrt(252) * mean(daily_returns) / std(daily_returns)
+    returnDDRatio,      // legacy "sharpe" alias: returnTotal / |maxDD|
     equityCurve,
   };
 }
@@ -921,7 +942,24 @@ function simulatePortfolio(allTrades, scans, config) {
   const grossWin = wins.reduce((s, t) => s + t.pnlPct, 0);
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
   const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
-  const sharpe = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
+
+  // returnDDRatio = legacy field (was misnamed "sharpe"); kept for backward compat.
+  const returnDDRatio = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
+
+  // True Sharpe ratio: sqrt(252) * mean(daily_returns) / std(daily_returns)
+  let sharpe = 0;
+  if (values.length > 2) {
+    const dailyRet = [];
+    for (let i = 1; i < values.length; i++) {
+      if (values[i - 1] > 0) dailyRet.push((values[i] - values[i - 1]) / values[i - 1]);
+    }
+    if (dailyRet.length > 1) {
+      const mean = dailyRet.reduce((s, r) => s + r, 0) / dailyRet.length;
+      const variance = dailyRet.reduce((s, r) => s + (r - mean) ** 2, 0) / (dailyRet.length - 1);
+      const stdev = Math.sqrt(variance);
+      if (stdev > 0) sharpe = +(Math.sqrt(252) * mean / stdev).toFixed(2);
+    }
+  }
 
   // Calmar: annualized return / maxDD
   const dayCount = allDays.length || 1;
@@ -968,6 +1006,7 @@ function simulatePortfolio(allTrades, scans, config) {
     avgLoss,
     profitFactor,
     sharpe,
+    returnDDRatio,
     calmar,
     sortino,
     avgHold,
@@ -1545,49 +1584,35 @@ async function main() {
 
         frozenTrades[id] = merged;
 
-        if (toAppend.length === 0) {
-          // No new trades — preserve existing frozen stats if present, else recompute.
-          // Also enrich existing stats if calmar/sharpe are missing (legacy regression).
-          const existingStats = existingResults[`frozen_${id}`];
-          if (existingStats) {
-            if (existingStats.calmar == null || existingStats.sharpe == null) {
-              const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
-              if (stats) {
-                existingStats.calmar = stats.calmar;
-                existingStats.sharpe = stats.sharpe;
-              }
-            }
-            output[`frozen_${id}`] = existingStats;
-            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${existingStats.returnTotal}%, DD=${existingStats.maxDD}% (preserved)`);
-          } else {
-            // Bootstrap missing stats — compute from merged trades.
-            const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
-            if (stats) {
-              output[`frozen_${id}`] = {
-                returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
-                profitFactor: stats.profitFactor, trades: stats.trades,
-                calmar: stats.calmar, sharpe: stats.sharpe,
-                equityCurve: stats.equityCurve,
-              };
-              console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${stats.returnTotal}%, DD=${stats.maxDD}% (rebuilt)`);
-            } else {
-              console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), no stats computable`);
-            }
-          }
+        // Always recompute frozen stats from merged trades — old caches may carry
+        // legacy "sharpe" formula (Return/MaxDD) that is now exposed as returnDDRatio.
+        // Recomputing guarantees true sharpe + IS/OOS partitioning fields are fresh.
+        const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
+        const isOosSets = (typeof inSampleDates !== 'undefined') ? { inSample: inSampleDates, outSample: outSampleDates } : null;
+        const isStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.inSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
+        const oosStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.outSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
+        if (stats) {
+          output[`frozen_${id}`] = {
+            returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
+            profitFactor: stats.profitFactor, trades: stats.trades,
+            calmar: stats.calmar, sharpe: stats.sharpe, returnDDRatio: stats.returnDDRatio,
+            equityCurve: stats.equityCurve,
+            in_sample: isStats ? {
+              returnTotal: isStats.returnTotal, maxDD: isStats.maxDD, winRate: isStats.winRate,
+              profitFactor: isStats.profitFactor, trades: isStats.trades,
+              calmar: isStats.calmar, sharpe: isStats.sharpe, returnDDRatio: isStats.returnDDRatio,
+            } : null,
+            out_sample: oosStats ? {
+              returnTotal: oosStats.returnTotal, maxDD: oosStats.maxDD, winRate: oosStats.winRate,
+              profitFactor: oosStats.profitFactor, trades: oosStats.trades,
+              calmar: oosStats.calmar, sharpe: oosStats.sharpe, returnDDRatio: oosStats.returnDDRatio,
+            } : null,
+          };
+          const tag = toAppend.length === 0 ? '0 new' : `${toAppend.length} new`;
+          const oosTag = oosStats ? ` | OOS Ret=${oosStats.returnTotal}% WR=${oosStats.winRate}% n=${oosStats.trades}` : '';
+          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}%${oosTag}`);
         } else {
-          // New trades appended — recompute stats from combined trade list
-          const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
-          if (stats) {
-            output[`frozen_${id}`] = {
-              returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
-              profitFactor: stats.profitFactor, trades: stats.trades,
-              calmar: stats.calmar, sharpe: stats.sharpe,
-              equityCurve: stats.equityCurve,
-            };
-            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
-          } else {
-            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), no stats`);
-          }
+          console.log(`  ${id} (${cfg.label}): ${merged.length} trades, no stats computable`);
         }
       } else {
         // FULL_SWEEP: keep existing trades and stats intact
