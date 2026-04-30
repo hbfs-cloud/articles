@@ -75,6 +75,50 @@ function escapeHtml(s) {
     .replace(/>/g, '&gt;');
 }
 
+// ─── Earnings cache (refreshed every 60 min from risk-snapshots.json) ────────
+let _earningsCache = { map: null, ts: 0 };
+function getEarningsMap() {
+  if (Date.now() - _earningsCache.ts < 3600000 && _earningsCache.map) return _earningsCache.map;
+  const map = {};
+  try {
+    const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'risk-snapshots.json'), 'utf8'));
+    const list = raw?.latest?.earnings_calendar || raw?.earnings_calendar || raw?.latest?.earnings || raw?.earnings || [];
+    if (Array.isArray(list)) {
+      for (const item of list) {
+        if (item && item.ticker && item.date) map[item.ticker] = item.date;
+      }
+    } else if (list && typeof list === 'object') {
+      for (const [k, v] of Object.entries(list)) {
+        if (typeof v === 'string') map[k] = v;
+        else if (v && v.date) map[k] = v.date;
+      }
+    }
+  } catch (e) {
+    console.error('[getEarningsMap] graceful degradation:', redactToken(e?.message || e));
+  }
+  _earningsCache = { map, ts: Date.now() };
+  return map;
+}
+
+/**
+ * Returns " ⚠️ earnings in Nd" suffix when ticker has earnings within 5 trading days.
+ * Looks up pos.earnings_date first, then falls back to risk-snapshots.json mapping.
+ * Silent (returns '') when no data is available.
+ */
+function earningsFlagLine(pos) {
+  let dateStr = pos && pos.earnings_date ? pos.earnings_date : null;
+  if (!dateStr) {
+    const map = getEarningsMap();
+    dateStr = map[pos?.ticker] || null;
+  }
+  if (!dateStr) return '';
+  const target = new Date(dateStr + (dateStr.length === 10 ? 'T12:00:00Z' : ''));
+  if (isNaN(target.getTime())) return '';
+  const diffDays = Math.round((target - Date.now()) / 86400000);
+  if (diffDays < 0 || diffDays > 7) return '';
+  return `\n⚠️ Earnings in ${diffDays}d (${dateStr.slice(0, 10)})`;
+}
+
 // ─── Regime cache (refreshed every 60 min from risk-snapshots.json) ──────────
 let _regimeCache = { regime: null, ts: 0 };
 function getCurrentRegime() {
@@ -82,7 +126,9 @@ function getCurrentRegime() {
   try {
     const raw = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'risk-snapshots.json'), 'utf8'));
     _regimeCache = { regime: raw?.latest?.regime || raw?.regime || 'UNKNOWN', ts: Date.now() };
-  } catch (_) { /* graceful degradation */ }
+  } catch (e) {
+    console.error('[getCurrentRegime] graceful degradation:', redactToken(e?.message || e));
+  }
   return _regimeCache.regime || 'UNKNOWN';
 }
 
@@ -502,7 +548,7 @@ async function sendTelegramOnce(text, topicId) {
     try {
       const j = JSON.parse(res.body || '{}');
       wait = ((j.parameters && j.parameters.retry_after) || 10) * 1000;
-    } catch (e) { /* keep default */ }
+    } catch (e) { console.error('[TG 429 parse] keeping default 10s:', redactToken(e?.message || e)); }
     console.error(redactToken(`[TG 429] backing off ${wait}ms`));
     await new Promise(r => setTimeout(r, wait));
     res = await _sendTelegramRaw(text, topicId);
@@ -515,7 +561,7 @@ async function sendTelegramOnce(text, topicId) {
   try {
     const parsed = JSON.parse(res.body);
     console.log(`[TG OK] topic=${topicId} msg_id=${parsed.result?.message_id}`);
-  } catch (e) { /* ignore parse */ }
+  } catch (e) { console.error('[TG response parse]', redactToken(e?.message || e)); }
   return true;
 }
 
@@ -532,7 +578,10 @@ async function _drainTelegramQueue() {
   }
   _telegramBusy = false;
 }
-function enqueueTelegram(fn) { _telegramQueue.push(fn); _drainTelegramQueue(); }
+function enqueueTelegram(fn) {
+  _telegramQueue.push(fn);
+  _drainTelegramQueue().catch(e => console.error('[telegram-queue] drain error:', redactToken(e?.message || e)));
+}
 
 async function _sendTelegramWithRetry(text, topicId, critical) {
   const ok = await sendTelegramOnce(text, topicId);
@@ -851,22 +900,25 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
       ? `https://articles.dailytickers.com/scanner/${pos.scan_date.replace(/-/g, '')}/`
       : null;
     const scanLink = scanUrl ? `\n📎 ${scanUrl}` : '';
-    // #6 Regime — only on terminal events
-    const TERMINAL_STATUSES = new Set(['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'EXPIRED']);
-    const regimeLine = TERMINAL_STATUSES.has(status) ? `\nRégime: ${escapeHtml(getCurrentRegime())}` : '';
+    // #6 Regime — on terminal events AND warning states (NEAR_STOP/NEAR_TP1)
+    const REGIME_STATUSES = new Set(['SL_HIT', 'TP1_HIT', 'TP2_HIT', 'TP1_PARTIAL', 'EXPIRED', 'NEAR_STOP', 'NEAR_TP1']);
+    const regimeLine = REGIME_STATUSES.has(status) ? `\nRégime: ${escapeHtml(getCurrentRegime())}` : '';
+    // #7 Earnings flag — silent when no data, otherwise warn if ≤7d
+    const earningsLine = earningsFlagLine(pos);
 
     alerts.push({
       priority: isCritical ? 1 : 2,
       critical: isCritical,
       modeId,
       status,
-      text: `${emoji} <b>[${escapeHtml(modeLabel)}${scanDateLabel}] ${status.replace(/_/g, ' ')}</b>\n`
-        + `<b>${escapeHtml(pos.ticker)}</b> @ $${price.toFixed(2)}${pnlShLabel} (entry $${entry.toFixed(2)})\n`
+      text: `${emoji} <b>${escapeHtml(pos.ticker)}</b> — ${status.replace(/_/g, ' ')} <i>[${escapeHtml(modeLabel)}${scanDateLabel}]</i>\n`
+        + `@ $${price.toFixed(2)}${pnlShLabel} (entry $${entry.toFixed(2)})\n`
         + `${actionMap[status] || ''}${rrLine}\n`
         + `Stop: $${currentStop.toFixed(2)} | TP1: $${tp1.toFixed(2)}${tp2 ? ` | TP2: $${tp2.toFixed(2)}` : ''}\n`
         + `Held: ${daysHeld}d / ${cfg.horizon}d | ATR stop: ${atr ? `$${(entry - cfg.atrStopMult * atr).toFixed(2)}` : 'n/a'}`
         + scoreLabel
         + regimeLine
+        + earningsLine
         + scanLink,
     });
   }

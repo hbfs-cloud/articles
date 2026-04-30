@@ -32,6 +32,13 @@ if (fs.existsSync(envPath)) {
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// Prevents BOT_TOKEN from leaking in stack traces / error output
+function redactToken(s) {
+  if (!BOT_TOKEN || !s) return s;
+  return String(s).split(BOT_TOKEN).join(BOT_TOKEN.slice(0, 6) + '…REDACTED');
+}
+
 const DISCORD_CHANNEL = '1483382014588747778';
 const STATUS_URL = 'https://articles.dailytickers.com/scanner/status/';
 
@@ -611,7 +618,7 @@ function sendTelegramAudio(audioPath, caption, topicId, title) {
       console.log(`  ✅ Telegram audio sent (msg_id: ${j.result.message_id})`);
       return j.result.message_id;
     } else {
-      console.error('  ❌ Telegram sendAudio:', j.description);
+      console.error('  ❌ Telegram sendAudio:', redactToken(j.description));
     }
   } catch {}
   return null;
@@ -642,7 +649,7 @@ function sendTelegramVideo(videoPath, caption, topicId, title) {
       console.log(`  ✅ Telegram video sent (msg_id: ${j.result.message_id})`);
       return j.result.message_id;
     } else {
-      console.error('  ❌ Telegram sendVideo:', j.description);
+      console.error('  ❌ Telegram sendVideo:', redactToken(j.description));
     }
   } catch {}
   return null;
@@ -765,6 +772,7 @@ async function main() {
   for (const { key, topicEnv } of modeTopics) {
     const modePayload = buildStatusPayload(scanDir, key);
     const topicId     = process.env[topicEnv];
+    if (!topicId) console.warn(`[topics] ${topicEnv} unset — messages for mode ${key} will go to default thread`);
 
     // Generate audio
     const audioPath = `/tmp/scanner-${key}-${scanDir}.mp3`;

@@ -157,7 +157,8 @@ function equityDV(curve) {
 }
 
 async function main() {
-  const config = JSON.parse(fs.readFileSync(MODES_CFG));
+  let config;
+  try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
   let allTrades = {};
   try { allTrades = JSON.parse(fs.readFileSync(TRADES)); } catch (_) { }
   let results = {};
@@ -1961,9 +1962,10 @@ document.addEventListener('DOMContentLoaded',function(){
 function backfillHistory() {
   const historyDir = path.join(ROOT, 'scanner', 'status', 'history');
   const SCANNER_DIR_BF = path.join(ROOT, 'scanner');
-  const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8'));
-  const modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes;
-  const results = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
+  let allTrades = {}, modesCfg = {}, results = {};
+  try { allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-trades.json'), 'utf8')); } catch (e) { console.error(`[backfillHistory] Cannot read backtest-trades: ${e.message}`); return; }
+  try { modesCfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')).modes; } catch (e) { console.error(`[backfillHistory] Cannot read modes-config: ${e.message}`); return; }
+  try { results = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8')); } catch (e) { console.error(`[backfillHistory] Cannot read backtest-results: ${e.message}`); return; }
 
   function addBizDaysBF(dateStr, n) {
     let d = new Date(dateStr + 'T12:00:00Z');
@@ -2010,7 +2012,8 @@ function backfillHistory() {
   for (const f of histFiles) {
     const dateKey = f.replace('.json', '');
     const dateISO = `${dateKey.slice(0, 4)}-${dateKey.slice(4, 6)}-${dateKey.slice(6, 8)}`;
-    const existing = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
+    let existing;
+    try { existing = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8')); } catch (e) { console.warn(`[backfillHistory] Skipping ${f}: ${e.message}`); continue; }
 
     // Parse scanner signals for this date
     const rawSignals = parseScannerSignalsBF(dateKey);

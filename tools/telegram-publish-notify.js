@@ -60,6 +60,11 @@ function redactToken(s) {
 const BASE_URL     = 'https://articles.dailytickers.com';
 const DRY_RUN      = process.argv.includes('--dry-run');
 
+if (!process.env.TELEGRAM_TOPIC_PORTFOLIO) console.warn('[topics] TELEGRAM_TOPIC_PORTFOLIO unset, fallback to default 72');
+if (!process.env.TELEGRAM_TOPIC_DAILY)     console.warn('[topics] TELEGRAM_TOPIC_DAILY unset, fallback to default 73');
+if (!process.env.TELEGRAM_TOPIC_WEEKLY)    console.warn('[topics] TELEGRAM_TOPIC_WEEKLY unset, fallback to default 74');
+if (!process.env.TELEGRAM_TOPIC_ANALYSIS)  console.warn('[topics] TELEGRAM_TOPIC_ANALYSIS unset, fallback to default 75');
+if (!process.env.TELEGRAM_TOPIC_LEARNING)  console.warn('[topics] TELEGRAM_TOPIC_LEARNING unset, fallback to default 76');
 const TOPICS = {
   portfolio : parseInt(process.env.TELEGRAM_TOPIC_PORTFOLIO || '72'),
   daily     : parseInt(process.env.TELEGRAM_TOPIC_DAILY     || '73'),
