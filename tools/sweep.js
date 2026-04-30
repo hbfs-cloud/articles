@@ -410,7 +410,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   }
   if (vwapGate && vwapRef !== null) {
     if (actualEntry > vwapRef * 1.01) return null; // gap-up trap — skip
-    entryPrice = Math.min(actualEntry, vwapRef);
+    entryPrice = Math.max(Math.min(actualEntry, vwapRef), entryBar.low);
   }
 
   let riskPerUnit = setup.entry - setup.stop;
@@ -547,17 +547,20 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
   }
 
-  // Expired — only if we have enough bars to cover the horizon
+  // Expired or pending (not enough forward data yet)
   if (status === 'open') {
     const lastDate = sortedDates[sortedDates.length - 1];
-    if (lastDate < expireDate) return null; // not enough forward data yet
     const expireBar = priceHistory[lastDate];
-    if (expireBar) {
-      status = 'expired';
+    if (!expireBar) return null;
+    if (lastDate < expireDate) {
+      // Mark-to-market at last available bar — gen-status-page shows as open position
+      status = 'pending';
       exitDate = lastDate;
       exitPrice = expireBar.close;
     } else {
-      return null;
+      status = 'expired';
+      exitDate = lastDate;
+      exitPrice = expireBar.close;
     }
   }
 
@@ -595,7 +598,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 // Trades must have: pnlPct, exitDate, scanDate, status, holdDays.
 // Uses configVersion on each trade to look up the correct weight from config history.
 function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId) {
-  if (!closedTrades || closedTrades.length === 0) return null;
+  closedTrades = (closedTrades || []).filter(t => t.status !== 'pending');
+  if (closedTrades.length === 0) return null;
   const defaultWeight = (1 / portfolioSize) * (positionSizePct || 1);
 
   // Load config history for per-trade weight lookup
@@ -741,7 +745,7 @@ function simulatePortfolio(allTrades, scans, config) {
     const stillOpen = [];
     for (const pos of openPositions) {
       if (pos.trade.exitDate && pos.trade.exitDate <= day) {
-        realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
+        if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
         closedTrades.push(pos.trade);
       } else {
         stillOpen.push(pos);
@@ -910,7 +914,7 @@ function simulatePortfolio(allTrades, scans, config) {
 
   // Flush remaining positions at last known price into total (preserves legacy behaviour)
   for (const pos of openPositions) {
-    if (pos.trade.pnlPct != null) {
+    if (pos.trade.pnlPct != null && pos.trade.status !== 'pending') {
       realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
     }
     closedTrades.push(pos.trade);
@@ -1580,16 +1584,16 @@ async function main() {
       if (FROZEN_ONLY) {
         // Append-only: preserve existing trades, only simulate scans AFTER the latest existing one
         const allExisting = existingTrades[id] || [];
-        // Purge trades expired prematurely (holdDays < horizon, simulated with insufficient forward data)
+        // Purge: pending trades (always re-simulate with latest data) + early-expired (corrupted)
         const modeHorizon = cfg.horizon || 10;
-        const corrupted = t => t.status === 'expired' && t.holdDays < modeHorizon;
-        const existing = allExisting.filter(t => !corrupted(t));
+        const shouldPurge = t => t.status === 'pending' || (t.status === 'expired' && t.holdDays < modeHorizon);
+        const existing = allExisting.filter(t => !shouldPurge(t));
         const purged = allExisting.length - existing.length;
-        if (purged > 0) console.log(`  ⚠️ ${id}: purged ${purged} same-day expired trades for re-simulation`);
+        if (purged > 0) console.log(`  ⚠️ ${id}: purged ${purged} pending/early-expired trades for re-simulation`);
         const latestExistingScan = existing.reduce((max, t) => t.scanDate > max ? t.scanDate : max, '');
 
         // Include scans after latest valid trade AND scans whose trades were purged
-        const purgedDates = new Set(allExisting.filter(corrupted).map(t => t.scanDate));
+        const purgedDates = new Set(allExisting.filter(shouldPurge).map(t => t.scanDate));
         const newScans = latestExistingScan
           ? scans.filter(s => s.scanDate > latestExistingScan || purgedDates.has(s.scanDate))
           : scans;
@@ -1614,8 +1618,17 @@ async function main() {
         const existingKey = t => `${t.scanDate}|${t.ticker}`;
         const existingKeys = new Set(existing.map(existingKey));
         const toAppend = newClosedTrades.filter(t => !existingKeys.has(existingKey(t)));
-        const merged = [...existing, ...toAppend]
-          .sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
+        const merged = [...existing, ...toAppend];
+
+        // Inject pending trades from pre-simulation (open positions with mark-to-market)
+        const allPreSimTrades = tradesByKey[frozenKey] || [];
+        const mergedKeys = new Set(merged.map(existingKey));
+        const pendingToAdd = allPreSimTrades.filter(t =>
+          t.status === 'pending' && !mergedKeys.has(existingKey(t))
+        ).map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }));
+        if (pendingToAdd.length > 0) merged.push(...pendingToAdd);
+
+        merged.sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
 
         frozenTrades[id] = merged;
 

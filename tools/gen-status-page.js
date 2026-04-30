@@ -187,7 +187,7 @@ async function main() {
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[id] || [];
     for (const t of raw) {
-      if (t.status === 'expired' && t.holdDays < cfg.horizon) {
+      if (t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
         allPrematureTickers.add(t.ticker);
         if (!liveTickers.has(t.ticker)) prematureNeedLive.add(t.ticker);
       }
@@ -272,7 +272,7 @@ async function main() {
     }
     const _todayISOEarly = new Date().toISOString().slice(0, 10);
     const trades = raw.map(t => {
-      if (t.status === 'expired' && t.holdDays < cfg.horizon) {
+      if (t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
         const scanDate = t.scanDate || t.entryDate;
         const horizonExpiryDate = addBizDays(scanDate, cfg.horizon);
         const realBizDays = bizDaysSince(scanDate);
