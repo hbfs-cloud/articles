@@ -303,9 +303,7 @@ async function main() {
       m.dd = frozen.maxDD;
       if (frozen.winRate !== undefined) m.wr = frozen.winRate;
       if (frozen.profitFactor !== undefined) m.pf = frozen.profitFactor;
-      // m.trades stays = closedTrades.length (computed from non-premature trades)
-      // — matches what Trade History actually displays. Don't override with frozen.trades
-      // which counts premature/open trades too and breaks the consistency.
+      if (frozen.trades !== undefined) m.trades = frozen.trades;
       if (frozen.equityCurve && frozen.equityCurve.length > 0) {
         // Trim flat tail (post-backtest plateau where price data ran out)
         const ec = [...frozen.equityCurve];
@@ -842,7 +840,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${trades.filter(t => !t._premature).length} closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
