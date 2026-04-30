@@ -547,9 +547,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
   }
 
-  // Expired
+  // Expired — only if we have enough bars to cover the horizon
   if (status === 'open') {
     const lastDate = sortedDates[sortedDates.length - 1];
+    if (lastDate < expireDate) return null; // not enough forward data yet
     const expireBar = priceHistory[lastDate];
     if (expireBar) {
       status = 'expired';
@@ -1578,12 +1579,19 @@ async function main() {
 
       if (FROZEN_ONLY) {
         // Append-only: preserve existing trades, only simulate scans AFTER the latest existing one
-        const existing = existingTrades[id] || [];
+        const allExisting = existingTrades[id] || [];
+        // Purge trades expired prematurely (holdDays < horizon, simulated with insufficient forward data)
+        const modeHorizon = cfg.horizon || 10;
+        const corrupted = t => t.status === 'expired' && t.holdDays < modeHorizon;
+        const existing = allExisting.filter(t => !corrupted(t));
+        const purged = allExisting.length - existing.length;
+        if (purged > 0) console.log(`  ⚠️ ${id}: purged ${purged} same-day expired trades for re-simulation`);
         const latestExistingScan = existing.reduce((max, t) => t.scanDate > max ? t.scanDate : max, '');
 
-        // Only process scans strictly after the latest existing scan date
+        // Include scans after latest valid trade AND scans whose trades were purged
+        const purgedDates = new Set(allExisting.filter(corrupted).map(t => t.scanDate));
         const newScans = latestExistingScan
-          ? scans.filter(s => s.scanDate > latestExistingScan)
+          ? scans.filter(s => s.scanDate > latestExistingScan || purgedDates.has(s.scanDate))
           : scans;
 
         let newClosedTrades = [];
