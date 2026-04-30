@@ -383,6 +383,96 @@ warn('media pipeline: result.json généré dans les 24h', () => {
   if (!r.audioPath || !fs.existsSync(r.audioPath)) return `audioPath absent ou fichier manquant`;
 });
 
+// ─── Check 24: VWAP no-lookahead spot-check ──────────────────────────────────
+warn('backtest-trades: VWAP in plausible range vs actualEntry (0.5–2×)', () => {
+  const bt = readJSON('data/backtest-trades.json');
+  const modes = Object.keys(bt);
+  const issues = [];
+  for (const mode of modes) {
+    const trades = (bt[mode] || []).filter(t => t.vwap != null && t.actualEntry != null);
+    if (!trades.length) continue;
+    // pick up to 5 random-ish trades (deterministic: every Nth)
+    const step = Math.max(1, Math.floor(trades.length / 5));
+    const sample = trades.filter((_, i) => i % step === 0).slice(0, 5);
+    for (const t of sample) {
+      const ratio = t.vwap / t.actualEntry;
+      if (ratio < 0.5 || ratio > 2.0) {
+        issues.push(`${mode}/${t.ticker}@${t.entryDate}: vwap=${t.vwap} vs entry=${t.actualEntry} (ratio=${ratio.toFixed(3)})`);
+      }
+    }
+  }
+  if (issues.length) return `VWAP hors-range (0.5–2×): ${issues.join('; ')}`;
+});
+
+// ─── Check 25: R:R minimum gate on latest scan signals ───────────────────────
+check('signals.json (dernier scan): R:R ≥ 1.5 pour tous les signaux', () => {
+  const scannerDir = path.join(ROOT, 'scanner');
+  const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse();
+  if (!dirs.length) return 'aucun dossier scanner trouvé';
+  let sigPath = null;
+  let scanDir = null;
+  for (const d of dirs) {
+    const p = path.join(scannerDir, d, 'signals.json');
+    if (fs.existsSync(p)) { sigPath = p; scanDir = d; break; }
+  }
+  if (!sigPath) return 'signals.json introuvable dans les derniers scans';
+  const sig = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  const signals = sig.signals || [];
+  const bad = [];
+  for (const s of signals) {
+    const { ticker, entry, stop, tp1 } = s;
+    if (entry == null || stop == null || tp1 == null) continue;
+    const reward = tp1 - entry;
+    const risk = entry - stop;
+    if (risk <= 0) { bad.push(`${ticker}: risk≤0 (entry=${entry} stop=${stop})`); continue; }
+    const rr = reward / risk;
+    if (rr < 1.5) bad.push(`${ticker}: R:R=${rr.toFixed(2)} < 1.5`);
+  }
+  if (bad.length) return `${scanDir} — ${bad.join(', ')}`;
+});
+
+// ─── Check 26: advisor_* non-null in backtest-results.json ───────────────────
+warn('backtest-results.json: advisor_* non-null (sweep complet requis)', () => {
+  const br = readJSON('data/backtest-results.json');
+  const nullAdvisors = Object.keys(br).filter(k => k.startsWith('advisor_') && br[k] === null);
+  if (nullAdvisors.length) return `${nullAdvisors.length} advisor(s) null: ${nullAdvisors.join(', ')} — relancer sweep.js`;
+});
+
+// ─── Check 27: frozen_* completeness (calmar + sharpe requis) ────────────────
+check('backtest-results.json: frozen_* ont tous les champs obligatoires', () => {
+  const REQUIRED = ['returnTotal', 'winRate', 'profitFactor', 'trades', 'maxDD', 'calmar', 'sharpe'];
+  const br = readJSON('data/backtest-results.json');
+  const issues = [];
+  for (const key of Object.keys(br).filter(k => k.startsWith('frozen_'))) {
+    const v = br[key];
+    if (!v) { issues.push(`${key}=null`); continue; }
+    const missing = REQUIRED.filter(f => v[f] === undefined || v[f] === null);
+    if (missing.length) issues.push(`${key} manque: ${missing.join(', ')}`);
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
+// ─── Check 28: TZ ET coherence — dernier snapshot history < 24h ──────────────
+warn('scanner/status/history: snapshot le plus récent < 24h (ET)', () => {
+  const histDir = path.join(ROOT, 'scanner', 'status', 'history');
+  if (!fs.existsSync(histDir)) return 'scanner/status/history/ absent';
+  const files = fs.readdirSync(histDir).filter(f => f.endsWith('.json') && f !== 'dates.json').sort().reverse();
+  if (!files.length) return 'aucun snapshot historique trouvé';
+  const latest = files[0].replace('.json', ''); // ex: "20260430"
+  // Parse YYYYMMDD into a date (treat as America/New_York midnight)
+  const y = parseInt(latest.slice(0, 4));
+  const m = parseInt(latest.slice(4, 6)) - 1;
+  const d = parseInt(latest.slice(6, 8));
+  // Get current time in ET offset (UTC-4 EDT / UTC-5 EST)
+  const nowUTC = Date.now();
+  const etOffset = -4 * 3600000; // assume EDT (Apr–Oct)
+  const nowET = new Date(nowUTC + etOffset);
+  // Snapshot date at midnight ET
+  const snapET = new Date(Date.UTC(y, m, d) - etOffset);
+  const gapH = (nowUTC - snapET.getTime()) / 3600000;
+  if (gapH > 24) return `dernier snapshot: ${latest} — gap ${Math.round(gapH)}h > 24h (heure ET)`;
+});
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
 
 const total = ok.length + warnings.length + errors.length;

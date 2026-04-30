@@ -82,7 +82,8 @@ if (!snapshots.length) {
 const latestFile = path.join(HISTORY, snapshots[snapshots.length - 1]);
 const snap = JSON.parse(fs.readFileSync(latestFile, 'utf8'));
 const now = new Date().toISOString();
-const todayKey = now.slice(0, 10).replace(/-/g, '');
+const todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
+  .format(new Date()).replace(/-/g, '');
 const scanDir = snap.scanDir || '';
 const ordersStale = scanDir !== todayKey;
 

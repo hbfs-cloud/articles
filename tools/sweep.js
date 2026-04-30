@@ -392,15 +392,25 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // Entry gate: reject if open gaps too far above target entry (cascade to next candidate)
   if (entryGatePct > 0 && actualEntry > setup.entry * (1 + entryGatePct / 100)) return null;
 
-  // VWAP entry gate: skip if open gaps above VWAP (gap-up trap filter)
+  // VWAP entry gate: skip if open gaps above reference price (gap-up trap filter).
+  //
+  // ⚠️ NO LOOKAHEAD: we use the previous day's typical price ((H+L+C)/3) as the
+  // pre-market reference. The original implementation used the entry bar's own
+  // close — which is unknown at the open and constituted lookahead bias.
+  // Same convention as gen-status-page.js ("previous day typical price").
+  // If no prevBar exists (first scan day, gap in cache) → skip the gate entirely
+  // and return a normal trade (do not reject).
   let entryPrice = actualEntry; // default: market open
-  let vwapValue = null;
-  if (entryBar.high && entryBar.low && entryBar.close) {
-    vwapValue = (entryBar.high + entryBar.low + entryBar.close) / 3;
+  let vwapRef = null;
+  const allDates = Object.keys(priceHistory).sort();
+  const entryIdx = allDates.indexOf(entryDate);
+  const prevBar = entryIdx > 0 ? priceHistory[allDates[entryIdx - 1]] : null;
+  if (prevBar && prevBar.high && prevBar.low && prevBar.close) {
+    vwapRef = (prevBar.high + prevBar.low + prevBar.close) / 3;
   }
-  if (vwapGate && vwapValue !== null) {
-    if (actualEntry > vwapValue * 1.01) return null; // gap-up trap — skip
-    entryPrice = Math.min(actualEntry, vwapValue);
+  if (vwapGate && vwapRef !== null) {
+    if (actualEntry > vwapRef * 1.01) return null; // gap-up trap — skip
+    entryPrice = Math.min(actualEntry, vwapRef);
   }
 
   let riskPerUnit = setup.entry - setup.stop;
@@ -569,7 +579,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     actualStop,
     actualTp1,
     actualTp2,
-    vwap: vwapValue ? +vwapValue.toFixed(4) : null,
+    vwap: vwapRef ? +vwapRef.toFixed(4) : null, // previous day typical price (no-lookahead reference)
     status,
     exitDate,
     exitPrice,
@@ -637,12 +647,26 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
   const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
 
+  // Risk-adjusted return metrics (parallel definition to simulatePortfolio's)
+  const sharpe = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
+  const firstDate = sorted[0]?.exitDate || sorted[0]?.scanDate;
+  const lastDate = sorted[sorted.length - 1]?.exitDate || firstDate;
+  let dayCount = 1;
+  if (firstDate && lastDate) {
+    const ms = new Date(lastDate).getTime() - new Date(firstDate).getTime();
+    dayCount = Math.max(1, Math.round(ms / 86400000));
+  }
+  const annReturn = returnTotal * (252 / dayCount);
+  const calmar = maxDD > 0 ? +(annReturn / maxDD).toFixed(2) : 0;
+
   return {
     returnTotal,
     maxDD: +(-maxDD).toFixed(2),
     winRate,
     profitFactor,
     trades: resolved.length,
+    calmar,
+    sharpe,
     equityCurve,
   };
 }
@@ -1445,6 +1469,16 @@ async function main() {
     try { existingResults = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8')); } catch(e) {}
   }
 
+  // Preserve advisor_* values when daily run (FROZEN_ONLY) does not regenerate them.
+  // The advisor arrays only populate during a full grid search; without this fallback
+  // the output gets stale nulls overwriting the last good advisor recommendation.
+  for (const k of Object.keys(existingResults)) {
+    if (!k.startsWith('advisor_')) continue;
+    if (output[k] == null && existingResults[k] != null) {
+      output[k] = existingResults[k];
+    }
+  }
+
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     // Shared scoreboard — modes with crossModeDedup=true skip tickers already picked.
@@ -1513,8 +1547,16 @@ async function main() {
 
         if (toAppend.length === 0) {
           // No new trades — preserve existing frozen stats if present, else recompute.
+          // Also enrich existing stats if calmar/sharpe are missing (legacy regression).
           const existingStats = existingResults[`frozen_${id}`];
           if (existingStats) {
+            if (existingStats.calmar == null || existingStats.sharpe == null) {
+              const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
+              if (stats) {
+                existingStats.calmar = stats.calmar;
+                existingStats.sharpe = stats.sharpe;
+              }
+            }
             output[`frozen_${id}`] = existingStats;
             console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${existingStats.returnTotal}%, DD=${existingStats.maxDD}% (preserved)`);
           } else {
@@ -1524,6 +1566,7 @@ async function main() {
               output[`frozen_${id}`] = {
                 returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
                 profitFactor: stats.profitFactor, trades: stats.trades,
+                calmar: stats.calmar, sharpe: stats.sharpe,
                 equityCurve: stats.equityCurve,
               };
               console.log(`  ${id} (${cfg.label}): ${merged.length} trades (0 new), return=${stats.returnTotal}%, DD=${stats.maxDD}% (rebuilt)`);
@@ -1538,6 +1581,7 @@ async function main() {
             output[`frozen_${id}`] = {
               returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
               profitFactor: stats.profitFactor, trades: stats.trades,
+              calmar: stats.calmar, sharpe: stats.sharpe,
               equityCurve: stats.equityCurve,
             };
             console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${toAppend.length} new), return=${stats.returnTotal}%, DD=${stats.maxDD}%`);
@@ -1561,16 +1605,21 @@ async function main() {
   } else {
     console.log('⚠️  No modes-config.json found — skipping frozen trades. Run sweep --full-sweep to discover optimal strategy.');
   }
-  // Backfill vwap for trades that predate the vwap field
+  // Backfill vwap for trades that predate the vwap field.
+  // ⚠️ NO LOOKAHEAD: use the *previous* day's typical price (pre-market reference),
+  // never the entry day's bar (its close is unknown at the open).
   for (const id of Object.keys(frozenTrades)) {
     for (const t of frozenTrades[id]) {
       if (t.vwap != null) continue;
       const bars = priceCache[t.ticker];
       if (!bars) continue;
       const d = t.entryDate || t.scanDate;
-      const bar = bars[d];
-      if (bar && bar.high && bar.low && bar.close) {
-        t.vwap = +((bar.high + bar.low + bar.close) / 3).toFixed(4);
+      const sortedDs = Object.keys(bars).sort();
+      const idx = sortedDs.indexOf(d);
+      if (idx <= 0) continue; // no prev bar available
+      const prev = bars[sortedDs[idx - 1]];
+      if (prev && prev.high && prev.low && prev.close) {
+        t.vwap = +((prev.high + prev.low + prev.close) / 3).toFixed(4);
       }
     }
   }

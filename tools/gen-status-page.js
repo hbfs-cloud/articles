@@ -172,7 +172,8 @@ async function main() {
   let prevSnap = null;
   try {
     const _historyDir = path.join(ROOT, 'scanner/status/history');
-    const _todayKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const _todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
+      .format(new Date()).replace(/-/g, '');
     const _files = fs.readdirSync(_historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
     const _prev = _files.filter(f => f.replace('.json', '') < _todayKey).slice(-1)[0];
     if (_prev) prevSnap = JSON.parse(fs.readFileSync(path.join(_historyDir, _prev), 'utf8'));
@@ -243,7 +244,15 @@ async function main() {
   const signalVwap = {};
   if (signals.length) {
     const sigTickers = [...new Set(signals.map(s => s.ticker))];
-    const sigOhlc = await Promise.all(sigTickers.map(fetchOHLC));
+    // Limit concurrency to 6 (matches live-tracker.js convention) to avoid Yahoo rate limits
+    async function pMapLimit(items, limit, fn) {
+      const results = []; let i = 0;
+      await Promise.all(Array.from({length: Math.min(limit, items.length)}, async () => {
+        while (i < items.length) { const idx = i++; results[idx] = await fn(items[idx]); }
+      }));
+      return results;
+    }
+    const sigOhlc = await pMapLimit(sigTickers, 6, fetchOHLC);
     for (let i = 0; i < sigTickers.length; i++) {
       if (sigOhlc[i].vwap) signalVwap[sigTickers[i]] = sigOhlc[i].vwap;
     }
@@ -619,7 +628,7 @@ ${(() => {
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
-      <td class="am hide-m" title="Previous day typical price — skip if open > VWAP×1.01">${vwapCell}</td>
+      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${vwapCell}</td>
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
@@ -638,7 +647,7 @@ ${(() => {
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
-      <td class="am hide-m" title="Previous day typical price">${rotVwapCell}</td>
+      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${rotVwapCell}</td>
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
@@ -749,7 +758,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </div>
   ${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">VWAP</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
   </table>` : ''}
   ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
@@ -814,7 +823,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
 </div>`;
         })()}
   <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">VWAP</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
     <tbody>${pos.map(p => {
           const rc = p.return_pct >= 0 ? 'pos' : 'neg';
           const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
@@ -824,7 +833,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
           const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
-          return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Entry day typical price (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>
@@ -1077,6 +1086,7 @@ details[open] summary::after{transform:rotate(90deg)}
   .t th,.t td{padding:.35rem .4rem}
   .hero-inner{flex-direction:column;align-items:flex-start}
 }
+@media(max-width:640px){.hide-m{display:none!important}}
 @media(max-width:600px){
   .t .hide-m{display:none}
   .perf-stats{grid-template-columns:repeat(3,1fr)}
@@ -1434,8 +1444,7 @@ document.addEventListener('DOMContentLoaded',function(){
   setTimeout(updateLiveActions, 800);
   // Hide stale orders: orders only show on their scan date
   (function(){
-    var t=new Date(),y=t.getFullYear(),m=String(t.getMonth()+1).padStart(2,'0'),d=String(t.getDate()).padStart(2,'0');
-    var today=y+''+m+''+d;
+    var today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()).replace(/-/g,'');
     document.querySelectorAll('.cta-orders[data-scan-date]').forEach(function(el){
       var sd=el.getAttribute('data-scan-date');
       if(sd&&sd!==today) el.style.display='none';
