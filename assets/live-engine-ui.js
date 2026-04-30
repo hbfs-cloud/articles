@@ -651,6 +651,7 @@
       html +=
         '<div class="lp-row" id="lp-r-' + modeId + '-' + t + '" data-ticker="' + t + '">' +
           '<div class="lp-ticker">' +
+            '<img src="https://assets.parqet.com/logos/symbol/' + t + '?format=jpg" alt="" class="tk-logo" onerror="this.style.display=\'none\'">' +
             '<span class="lp-ticker-sym">' + t + '</span>' +
             '<span class="lp-ticker-days" id="lp-days-' + modeId + '-' + t + '">—</span>' +
           '</div>' +

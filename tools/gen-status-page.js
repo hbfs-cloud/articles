@@ -9,6 +9,8 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+const tkLogo = t => `<img src="https://assets.parqet.com/logos/symbol/${t}?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'">`;
+
 function fetchOHLC(ticker) {
   return new Promise((resolve) => {
     const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=30d`;
@@ -504,7 +506,7 @@ async function main() {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
         : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
-      return `<tr><td><b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
+      return `<tr><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
     }).join('')}</tbody>
     </table>` : (() => {
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
@@ -560,7 +562,7 @@ ${timedOut.length ? `<div class="cta-card cta-close">
     <tbody>${timedOut.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const held = bizDaysHeld(p.scan_date);
-      return `<tr><td><b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
+      return `<tr><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
     }).join('')}</tbody>
   </table>
 </div>` : ''}
@@ -623,7 +625,7 @@ ${(() => {
           const thesisCols = 11; // number of columns in Orders table
           const vwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr>
-      <td><b>${s.ticker}</b>${sht}</td>
+      <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
@@ -642,7 +644,7 @@ ${(() => {
           const deltaColor = (scoreDelta || 0) >= 5 ? '#059669' : (scoreDelta || 0) >= 0 ? '#f59e0b' : '#dc2626';
           const rotVwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr style="background:#fefce8">
-      <td><b>${s.ticker}</b></td>
+      <td>${tkLogo(s.ticker)}<b>${s.ticker}</b></td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
@@ -745,7 +747,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     <tbody>${expiringSoon.map(p => {
           const rc = p.return_pct >= 0 ? 'pos' : 'neg';
           const held = bizDaysHeld(p.scan_date);
-          return `<tr><td><b>${p.ticker}</b></td><td>$${(p.entry || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">$${(p.stop || 0).toFixed(2)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
+          return `<tr><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td>$${(p.entry || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">$${(p.stop || 0).toFixed(2)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
         }).join('')}</tbody>
   </table>
 </div>` : ''}
@@ -832,7 +834,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
           const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
-          return `<tr${rowStyle}><td><b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
 </div>
@@ -924,7 +926,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
             default: statusLabel = t.status || '—'; statusShort = statusLabel; statusCls = 'm';
           }
           return `<tr>
-          <td><b>${t.ticker || '—'}</b></td>
+          <td>${t.ticker ? tkLogo(t.ticker) : ''}<b>${t.ticker || '—'}</b></td>
           <td class="m hide-m">${t.entryDate ? t.entryDate.slice(5) : '—'}</td>
           <td class="m hide-m">${exitDate}</td>
           <td class="hide-m">$${(t.actualEntry || 0).toFixed(2)}</td>
@@ -1098,6 +1100,7 @@ details[open] summary::after{transform:rotate(90deg)}
 .thesis-text{font-size:.72rem;color:#64748b;line-height:1.45;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 
 /* ── Finviz thumbnails ── */
+.tk-logo{width:18px;height:18px;border-radius:50%;vertical-align:middle;margin-right:4px;object-fit:cover;background:#f1f5f9}
 .fv-thumb{width:110px;height:62px;border-radius:6px;border:1px solid #e2e8f0;cursor:pointer;object-fit:cover;transition:transform .15s,box-shadow .15s;background:#f8fafc}
 .fv-thumb:hover{transform:scale(1.08);box-shadow:0 2px 8px rgba(0,0,0,.12);border-color:#94a3b8}
 /* ── Finviz fullscreen dialog ── */
@@ -1701,6 +1704,7 @@ document.addEventListener('DOMContentLoaded',function(){
   function _fmtPct2(v){var n=Number(v||0);return (n>0?'+':'')+n.toFixed(2)+'%';}
   function _fmtUsd2(v){var n=Number(v||0);if(!isFinite(n)||n===0)return '—';return '$'+n.toFixed(2);}
   function _scoreBg(s){return s>=90?'#059669':s>=85?'#2563eb':'#f59e0b';}
+  function _tkLogo(t){return t?'<img src="https://assets.parqet.com/logos/symbol/'+t+'?format=jpg" alt="" class="tk-logo" onerror="this.style.display=\\'none\\'">':'';}
   function tmUpdateLive(modeId, d, mCfg){
     var panel=document.getElementById('p-'+modeId);
     if(!panel||!d) return;
@@ -1727,7 +1731,7 @@ document.addEventListener('DOMContentLoaded',function(){
       if(sigBody){
         sigBody.innerHTML = sig.length ? sig.map(function(s){
           var bg=_scoreBg(s.score||0);
-          return '<tr><td><b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
+          return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
         }).join('') : '<tr><td colspan="7" class="empty">No signals</td></tr>';
       }
     }
@@ -1739,7 +1743,7 @@ document.addEventListener('DOMContentLoaded',function(){
         posBody.innerHTML = pos.length ? pos.map(function(p){
           var pnl=p.return_pct!=null?p.return_pct:(p.pnlPct||0);
           var rc=pnl>=0?'pos':'neg';
-          return '<tr><td><b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(p.entry)+'</td><td class="hide-m">'+_fmtUsd2(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_fmtUsd2(p.stop)+'</td><td class="pos hide-m">'+_fmtUsd2(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+          return '<tr><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(p.entry)+'</td><td class="hide-m">'+_fmtUsd2(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_fmtUsd2(p.stop)+'</td><td class="pos hide-m">'+_fmtUsd2(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
         }).join('') : '<tr><td colspan="8" class="empty">No active positions</td></tr>';
       }
       var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=pos.length+'/'+(mCfg.portfolioSize||'?');
@@ -1754,7 +1758,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var rc=pnl>0?'pos':pnl<0?'neg':'m';
           var st=(t.status||'').toUpperCase();
           var stCls=/TP/.test(st)?'pos':/SL/.test(st)?'neg':'m';
-          return '<tr><td><b>'+t.ticker+'</b></td><td class="m hide-m">'+(t.entryDate?t.entryDate.slice(5):'—')+'</td><td class="m hide-m">'+(t.exitDate?t.exitDate.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(t.actualEntry)+'</td><td class="hide-m">'+_fmtUsd2(t.exitPrice)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="m hide-m">'+(t.holdDays||0)+'d</td><td><span class="pill '+stCls+'">'+st+'</span></td></tr>';
+          return '<tr><td>'+_tkLogo(t.ticker)+'<b>'+t.ticker+'</b></td><td class="m hide-m">'+(t.entryDate?t.entryDate.slice(5):'—')+'</td><td class="m hide-m">'+(t.exitDate?t.exitDate.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(t.actualEntry)+'</td><td class="hide-m">'+_fmtUsd2(t.exitPrice)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="m hide-m">'+(t.holdDays||0)+'d</td><td><span class="pill '+stCls+'">'+st+'</span></td></tr>';
         }).join('') : '<tr><td colspan="8" class="empty">No closed trades</td></tr>';
       }
       var hCount=hSec.querySelector('.count'); if(hCount) hCount.textContent=ct.length+' closed';
