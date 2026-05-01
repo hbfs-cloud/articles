@@ -76,14 +76,12 @@ function loadSignals(dir) {
         };
       };
       const signals = (data.signals || []).map(mapSignal);
-      const tklPool = (data.tkl_pool || []).map(mapSignal);
-      if (tklPool.length) {
-        const existing = new Set(signals.map(s => s.ticker));
-        for (const s of tklPool) {
-          if (!existing.has(s.ticker)) { signals.push(s); existing.add(s.ticker); }
-        }
-      }
-      return { signals, thesis, regime: data.regime || null };
+      const tklPool = (data.tkl_pool || []).map(s => {
+        const m = mapSignal(s);
+        m.source = 'tkl_pool';
+        return m;
+      });
+      return { signals, tklPool, thesis, regime: data.regime || null };
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -103,7 +101,7 @@ function loadSignals(dir) {
     thesis: thesisMap[s.ticker] || '',
   }));
   const regime = extractRegimeFromHtml(html);
-  return { signals, thesis: thesisMap, regime };
+  return { signals, tklPool: [], thesis: thesisMap, regime };
 }
 
 // ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────

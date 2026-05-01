@@ -31,6 +31,18 @@ const FROZEN_ONLY = !FULL_SWEEP;
 const SHARIA = process.argv.includes('--sharia');
 const FROM_ARG = process.argv.find(a => a.startsWith('--from='));
 const FROM_DATE = FROM_ARG ? FROM_ARG.split('=')[1] : null;
+// TKL pool ingestion policy:
+//   off      → published Top 10 only (revert to pre-tkl-pool behavior)
+//   hybrid   → Top 10 + tkl_pool merged into shared candidate pool (gated by per-mode minScore/regime/etc.)
+//   isolated → Top 10 only for non-tkl modes; tkl mode also gets tkl_pool. Requires per-mode candidate filtering.
+const TKL_POLICY_ARG = process.argv.find(a => a.startsWith('--tkl-policy='));
+const TKL_POLICY = TKL_POLICY_ARG
+  ? TKL_POLICY_ARG.split('=')[1]
+  : (process.env.TKL_POLICY || 'hybrid');
+if (!['off', 'hybrid', 'isolated'].includes(TKL_POLICY)) {
+  console.error(`Invalid --tkl-policy=${TKL_POLICY}. Use off|hybrid|isolated.`);
+  process.exit(1);
+}
 
 // FALLBACK Sharia exclusion list — used ONLY for old scans that don't have data-sharia attributes.
 // New scans have data-sharia="true/false" on each <tr> in the synthese table (evaluated at generation
@@ -124,30 +136,45 @@ function parseScan(dir) {
   const loaded = scannerParser.loadSignals(dir);
   if (!loaded || !loaded.signals.length) return null;
 
-  const setups = [];
-  for (const s of loaded.signals) {
-    const { entry, stop, tp1, tp2 } = s;
-    if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
-    if (stop >= entry) continue;
-    if (tp1 <= entry) continue;
-    setups.push({
-      ticker: s.ticker,
-      strategy: detectStrategy(s.strategy || ''),
-      score: s.score || 80,
-      entry, stop, tp1, tp2,
-      sharia: s.sharia,
-    });
-  }
+  const buildSetups = (arr, source) => {
+    const out = [];
+    for (const s of arr || []) {
+      const { entry, stop, tp1, tp2 } = s;
+      if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
+      if (stop >= entry) continue;
+      if (tp1 <= entry) continue;
+      out.push({
+        ticker: s.ticker,
+        strategy: detectStrategy(s.strategy || ''),
+        score: s.score || 80,
+        entry, stop, tp1, tp2,
+        sharia: s.sharia,
+        source: source || s.source || 'signals',
+      });
+    }
+    return out;
+  };
 
-  const seen = new Set();
-  return {
-    dir, scanDate,
-    regime: loaded.regime || null,
-    setups: setups.filter(s => {
+  const dedup = arr => {
+    const seen = new Set();
+    return arr.filter(s => {
       if (seen.has(s.ticker)) return false;
       seen.add(s.ticker);
       return true;
-    }).sort((a, b) => b.score - a.score),
+    }).sort((a, b) => b.score - a.score);
+  };
+
+  const setups = dedup(buildSetups(loaded.signals, 'signals'));
+  // tklPool kept separate so call sites can opt-in per-mode (see TKL_POLICY in main()).
+  const signalTickers = new Set(setups.map(s => s.ticker));
+  const tklPool = dedup(buildSetups(loaded.tklPool, 'tkl_pool'))
+    .filter(s => !signalTickers.has(s.ticker));
+
+  return {
+    dir, scanDate,
+    regime: loaded.regime || null,
+    setups,
+    tklPool,
   };
 }
 
@@ -589,6 +616,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     exitPrice,
     pnlPct: +(pnlPct * 100).toFixed(2),
     holdDays: sortedDates.indexOf(exitDate) + 1,
+    source: setup.source || 'signals',
   };
 }
 
@@ -709,7 +737,9 @@ function simulatePortfolio(allTrades, scans, config) {
     horizonDays = 20,
     partialTP = false,
     trailingStop = false,
+    excludeSources = null, // e.g. ['tkl_pool'] — skip candidates whose source matches
   } = config;
+  const excludeSet = excludeSources && excludeSources.length ? new Set(excludeSources) : null;
 
   // Group trades by scan date; capture per-date regime as canonical source-of-truth
   // Strategy filter is deferred to per-date level for regime-aware filter switching
@@ -717,6 +747,7 @@ function simulatePortfolio(allTrades, scans, config) {
   const regimeByDate = {};
   for (const t of allTrades) {
     if (t.score < minScore) continue;
+    if (excludeSet && excludeSet.has(t.source)) continue;
     if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
     byDate[t.scanDate].push(t);
     if (t.regime && !regimeByDate[t.scanDate]) regimeByDate[t.scanDate] = t.regime;
@@ -1026,6 +1057,7 @@ function simulatePortfolio(allTrades, scans, config) {
       status: t.status, pnlPct: t.pnlPct, holdDays: t.holdDays || 0,
       actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,
       regime: t.regime || null,
+      source: t.source || 'signals',
     })),
   };
 }
@@ -1044,9 +1076,20 @@ async function main() {
     })
     .sort();
 
-  console.log(`Parsing ${scanDirs.length} scans...`);
+  console.log(`Parsing ${scanDirs.length} scans... (TKL_POLICY=${TKL_POLICY})`);
   const scans = scanDirs.map(parseScan).filter(Boolean);
-  let allSetups = scans.flatMap(s => s.setups.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime })));
+  // TKL_POLICY governs whether scanner/.../signals.json#tkl_pool candidates feed the candidate pool.
+  // off: published Top 10 only.
+  // hybrid: Top 10 + tkl_pool merged (per-mode minScore/regime/sector caps still apply).
+  // isolated: identical to hybrid here; non-tkl modes filter source==='tkl_pool' downstream via simulatePortfolio.
+  const includeTklPool = TKL_POLICY !== 'off';
+  let allSetups = scans.flatMap(s => {
+    const list = s.setups.slice();
+    if (includeTklPool) list.push(...(s.tklPool || []));
+    return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime }));
+  });
+  const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
+  console.log(`Setup pool composition: ${allSetups.length - tklPoolCount} top-10 + ${tklPoolCount} tkl_pool`);
   if (SHARIA) {
     const before = allSetups.length;
     // Use parsed data-sharia flag if available, fallback to SHARIA_EXCLUDED for old untagged scans
@@ -1579,6 +1622,9 @@ async function main() {
         correlationCap: cfg.correlationCap ?? 0,
         crossModeDedup: cfg.crossModeDedup === true,
         crossModePicked,        // shared Set across all modes
+        // Per-mode tkl_pool ingestion gate. Default = true (backward-compatible);
+        // set tklPoolEnabled:false to keep this mode on the published Top 10 only.
+        excludeSources: cfg.tklPoolEnabled === false ? ['tkl_pool'] : null,
       };
 
       if (FROZEN_ONLY) {
@@ -1623,8 +1669,10 @@ async function main() {
         // Inject pending trades from pre-simulation (open positions with mark-to-market)
         const allPreSimTrades = tradesByKey[frozenKey] || [];
         const mergedKeys = new Set(merged.map(existingKey));
+        const tklEnabled = cfg.tklPoolEnabled !== false;
         const pendingToAdd = allPreSimTrades.filter(t =>
           t.status === 'pending' && !mergedKeys.has(existingKey(t))
+          && (tklEnabled || t.source !== 'tkl_pool')
         ).map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }));
         if (pendingToAdd.length > 0) merged.push(...pendingToAdd);
 
@@ -1750,4 +1798,12 @@ async function main() {
   }
 }
 
-main().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+module.exports = {
+  parseScan, simulateTrade, simulatePortfolio, computeStatsFromTrades,
+  fetchOHLCV, priceCache, getSector, normalizeRegime,
+  STRATEGY_FILTERS_MAP,
+};
+
+if (require.main === module) {
+  main().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+}

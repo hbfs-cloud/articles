@@ -19,9 +19,11 @@ const MODES_FILE = path.join(ROOT, 'data/modes-config.json');
 const POSITIONS_FILE = path.join(ROOT, 'data/scanner-positions.json');
 const HISTORY_DIR = path.join(ROOT, 'scanner/status/history');
 
-// Mode IDs match directly between backtest-trades.json and modes-config.json
-const MODE_MAP = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress' };
-const REVERSE_MAP = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress' };
+// Mode IDs match directly between backtest-trades.json and modes-config.json.
+// tkl was added 2026-04-30 — backfill renders genesis-aware (only writes tkl section
+// from its first scan date with trades onward).
+const MODE_MAP = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress', tkl: 'tkl' };
+const REVERSE_MAP = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress', tkl: 'tkl' };
 
 function addBizDays(dateStr, n) {
   const d = new Date(dateStr + 'T12:00:00Z');
