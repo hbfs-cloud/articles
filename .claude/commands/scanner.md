@@ -20,9 +20,11 @@ End-to-end scanner pipeline for the next trading session.
    - Saturday → Monday
    - Sunday → Monday
 2. Check `data/scanner.json` for existing entry at target date → abort if duplicate
-3. Read previous scan (`ls scanner/ | sort | tail -1`) for anti-doublon filter (max 3 repeat tickers)
+3. Read previous scan (`ls scanner/ | sort | tail -1`) for anti-doublon filter (min 70% new = max 3 repeats out of 10)
 4. Read `data/scanner-positions.json` for blocked tickers (open positions)
 5. Read `data/scanner-filters.json` for sector_map + diversification rules
+6. Modes downstream = 6: `turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl`. TKL pool gated per-mode via `modes-config.json#tklPoolEnabled`.
+7. Pre-flight: read `~/.claude/projects/-Users-marketwatchxyz-GolandProjects-articles/memory/feedback_pipeline_gotchas.md` for known regression traps (BSD date fallback, qa-check reads `signals.json` not HTML, Pending status, order count).
 
 ## Phase 1 — MCP Data Collection
 
@@ -59,13 +61,21 @@ mcp__dailytickers__QueryData(symbols="TICKER", types="sec_filings,flags", days=1
 Disqualify on: dilution_risk_score >= 70, shelf_active, atm_program_active, aggressive_underwriter, ITM warrants, recent PIPE/reverse split.
 
 ### Risk Gating (OBLIGATOIRE)
-Before finalizing top 10:
-- Regime check: crisis > 0.30 or early_risk_off > 0.50 → reduce to 5, breakout_only
-- Correlation: max_pair rho > 0.85 → drop lowest score
-- Earnings calendar: ±7 days, expected_move > 4% → disqualify or tag
+Before finalizing top 10, run 4 MCP checks:
+```
+mcp__dailytickers__GetRegimeProbability(model="ensemble", horizon=5)
+mcp__dailytickers__GetCorrelationMatrix(symbols=[top10], window=60, method="pearson")
+mcp__dailytickers__GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)
+mcp__dailytickers__OptimizeSizing(mode="balanced", method="vol_target", max_position_risk_pct=1.0, max_pairwise_correlation=0.7)
+```
+- Regime: `crisis > 0.30` or `early_risk_off > 0.50` → reduce to 5, breakout_only, size × 0.5
+- Correlation: `max_pair.rho > 0.85` → drop lowest score; `avg_off_diagonal > 0.65` → force min 2 sectors
+- Earnings: ticker in `exclusion_window` → DISQUALIFY or tag "earnings risk"
+- Sizing: use `risk_pct` returned to set position size
 
 ### Sharia Compliance
-Tag each setup: `sharia: true/false` based on sector (haram), debt/market_cap > 33%, interest > 5% revenue, leveraged ETFs.
+Tag each setup: haram sector, debt/mcap > 33%, interest > 5% revenue, leveraged/bond ETFs.
+DOM contract: `data-sharia="true|false"` on BOTH `<tr>` synthesis row AND `<div class="setup-card">`.
 
 ### Per-Ticker MCP Enrichment
 For each of the 10 selected tickers:
@@ -82,6 +92,11 @@ mcp__dailytickers__QueryData(
 2. Generate `scanner/YYYYMMDD/signals.json` (simplified format for downstream tools)
 3. Strategy labels ONLY: Momentum, Breakout, Pullback, Pre-Squeeze
 4. R/R calculated from entry MIDPOINT (not entry_low) — must be >= 1.5 for all setups
+5. **VWAP entry gate (always-on, not grid-searched)** — validated +29% PnL, +16pp WR, 2.5× PF (commit 91596bd9):
+   - Effective entry = `min(open_next_session, VWAP_next_session)` clamped to `day_low` (no-lookahead)
+   - Skip gap-up traps: if `open > entry_high × 1.02`, only fill at VWAP pullback
+   - Display VWAP value in setup card AND status table (commit 58bac3bb)
+   - Applied uniformly across `sweep.js`, `signal-monitor.js`, status page how-to-trade, portfolio API
 
 ## Phase 4 — Render & Publish
 
@@ -94,25 +109,35 @@ If publish validation fails (filter violations), return to Phase 2 with the spec
 
 ## Phase 5 — Downstream Pipeline (skip with --skip-downstream)
 
-Run sequentially:
+Strict order — `update-tracking` MUST run BEFORE `sweep` (sweep reads tracked exits):
 ```bash
-node tools/update-tracking.js
-node tools/sweep.js
-MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp node tools/refresh-risk-metrics.js
-node tools/gen-status-page.js
-node tools/gen-api.js
-bash tools/publish-daily-card.sh
+node tools/update-tracking.js                                                # Yahoo prices → exit triggers
+node tools/sweep.js                                                          # Append-only: new closed trades
+MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
+  node tools/refresh-risk-metrics.js                                         # VaR + stress + correlation + regimeProb
+node tools/gen-status-page.js                                                # Snapshot J + dashboard
+node tools/gen-api.js                                                        # Refresh 50 public JSON endpoints
+bash tools/publish-daily-card.sh                                             # Image + media + Telegram + final git push
 ```
 
+⚠️ **MCP_GATEWAY_URL is mandatory** (prod URL `https://gateway.dailytickers.com/mcp` always available). Never silently accept `--stub` — it writes an empty schema. If gateway down, log warning and re-run when restored. Ref: memory `reference_mcp_gateway.md`.
+
 ### Post-Pipeline Checklist
-- QA check (`tools/qa-check.js`) must show 0 failures
-- `scanner/status/index.html` — no stale "Pending" on expired trades
-- `data/risk-snapshots.json` — not a stub if MCP_GATEWAY_URL was set
-- signals.json strategy labels match HTML
-- **Stats consistency**: verify hero stats (Closed Trades, WR, PF, Return, DD) in `scanner/status/index.html` match `frozen_` values in `data/backtest-results.json` for ALL 6 modes. Trade History count must also match. Mismatch → re-run `node tools/gen-status-page.js`
-- **API consistency**: verify `portfolio/v1/{mode}/equity.json` contains non-null stats for all modes after `gen-api.js`
-- **Trade integrity**: verify zero same-day expired trades (`holdDays===1 && status==='expired' && entryDate===exitDate`) in `data/backtest-trades.json`. Also verify zero early-expired trades (`holdDays < mode.horizon && status==='expired'`).
-- **Sweep timing**: sweep.js returns null for trades without enough forward data (`lastDate < expireDate`). Safe — trade will be simulated on the next run when more OHLC bars are available.
+- QA check (`tools/qa-check.js`, step 7 of publish-daily-card.sh) must show 0 ❌. Investigate every failure (not only ⚠️). qa-check reads `signals.json` (NOT the HTML).
+- `scanner/status/index.html` per mode: no stale "Pending (Nd/Md)" on trades whose `exitDate` is past. "Orders to Place" count cohérent avec rangées affichées (filter applies execution-day-only — commit 0fd444af).
+- `data/risk-snapshots.json` — must NOT be a stub if MCP_GATEWAY_URL was set
+- signals.json strategy labels match `data.json` setup labels
+- **Stats consistency** for ALL 6 modes (`turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl`):
+  - Hero stats (Closed Trades, WR, PF, Return, DD) in `scanner/status/index.html` match `frozen_*` values in `data/backtest-results.json`
+  - Trade History count = hero "Closed Trades" (same `closedTrades.filter(!_premature).length` filter)
+  - Mismatch → re-run `node tools/gen-status-page.js`
+- **API consistency**: `portfolio/v1/{mode}/equity.json` contains non-null stats for all 6 modes after `gen-api.js`
+- **Trade integrity** in `data/backtest-trades.json`:
+  - Zero same-day expired trades (`holdDays===1 && status==='expired' && entryDate===exitDate`)
+  - Zero early-expired trades (`holdDays < mode.horizon && status==='expired'`)
+- **Sweep timing**: sweep.js returns null for trades without enough forward data (`lastDate < expireDate`). Safe — simulated on next run when more OHLC bars arrive.
+- **TKL pool**: `modes-config.json#tklPoolEnabled` per-mode gate respected. Time Machine backfill present in `scanner/status/history/*.json` (commit 4a39aea3).
+- **BSD date fallback**: any `date -d` in shell scripts must have BSD `date -v` fallback (publish-daily-card.sh helper).
 
 ## Phase 6 — Multi-Agent Validation (skip with --skip-validation)
 
@@ -141,11 +166,22 @@ Each agent returns PASS/WARN/FAIL per check area with required fixes.
 
 ## Phase 8 — Final Commit & Notify
 
-```bash
-git add scanner/YYYYMMDD/ data/ portfolio/ scanner/status/
-git commit -m "feat: scanner YYYYMMDD — auto-published"
-git push origin main
-```
+⚠️ `publish-daily-card.sh` (Phase 5) already does the final `git push` and Telegram notification. Phase 8 only runs in two cases:
+
+1. **`--skip-downstream` was used** — manual commit + push:
+   ```bash
+   git add scanner/YYYYMMDD/ data/scanner.json data/scanner-history.json
+   git commit -m "feat: scanner YYYYMMDD — auto-published"
+   git push origin main
+   ```
+2. **Phase 7 made post-publish fixes** — additional commit:
+   ```bash
+   git add -p   # review only intended files (no .env, no large binaries)
+   git commit -m "fix: scanner YYYYMMDD — post-validation fixes"
+   git push origin main
+   ```
+
+If Phase 5 ran successfully, do NOT push twice — already pushed by `publish-daily-card.sh`.
 
 ## Error Handling
 - MCP screener returns empty → use GetMarketOverview top movers + manual candidate selection
@@ -153,5 +189,6 @@ git push origin main
 - EU screener empty → fill EU slots from GetMarketOverview EU movers or known EU large-caps
 - Sweep timeout → continue pipeline, sweep is not blocking
 - Telegram notification fails → log warning, do not block
-- refresh-risk-metrics.js without MCP_GATEWAY_URL → use --stub, flag in post-pipeline check
+- refresh-risk-metrics.js: **MCP_GATEWAY_URL is mandatory in prod**. Stub fallback only acceptable if gateway is verifiably down — flag loudly in post-pipeline check, never accept silently
 - Phase 6 validation loops > 3 → stop, report remaining issues to user
+- TKL pool empty (Time Machine backfill missing) → re-run scanner with `--date YYYYMMDD` to populate `scanner/status/history/YYYYMMDD.json`
