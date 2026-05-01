@@ -1207,6 +1207,11 @@ class YahooStreamer {
       };
 
       // Immediate per-tick evaluation for this ticker (mutex'd to avoid state race)
+      // Wall-clock gate: skip eval outside US session even if Yahoo flags tick REGULAR
+      // (Yahoo sometimes replays end-of-day ticks marked marketHours=1 after 20:00 UTC,
+      // which used to fire phantom NEAR_TP1/NEAR_STOP alerts at 02h Paris).
+      // Cache update above is preserved so next legitimate tick has correct dayHigh/Low.
+      if (!isMarketHours() && !DRY_RUN) return;
       try {
         await _withLock(ticker, () => evaluate(ticker));
       } catch (e) {
