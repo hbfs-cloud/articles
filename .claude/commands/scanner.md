@@ -112,13 +112,37 @@ If publish validation fails (filter violations), return to Phase 2 with the spec
 Strict order — `update-tracking` MUST run BEFORE `sweep` (sweep reads tracked exits):
 ```bash
 node tools/update-tracking.js                                                # Yahoo prices → exit triggers
-node tools/sweep.js                                                          # Append-only: new closed trades
+node tools/sweep.js                                                          # Append-only: new closed trades + advisor_*
 MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
-  node tools/refresh-risk-metrics.js                                         # VaR + stress + correlation + regimeProb
-node tools/gen-status-page.js                                                # Snapshot J + dashboard
-node tools/gen-api.js                                                        # Refresh 50 public JSON endpoints
+  node tools/refresh-risk-metrics.js                                         # VaR + stress + correlation + regimeProb (6 modes from config)
+node tools/gen-status-page.js                                                # Snapshot J + dashboard (6 modes)
+node tools/gen-mode-cards.js                                                 # Per-mode PNG cards for Telegram/Discord (6 modes)
+node tools/gen-api.js                                                        # Refresh 50+ public JSON endpoints
 bash tools/publish-daily-card.sh                                             # Image + media + Telegram + final git push
 ```
+
+### Phase 5b — Regime Recalibration (optional, run weekly OR on regime shift)
+
+Append-only mode-parameter recalibration. Detects significant regime change vs `data/modes-config.json#_regime` and proposes new params from `advisor_*` fields:
+
+```bash
+node tools/regime-recalibrate.js                      # dry-run report
+node tools/regime-recalibrate.js --apply              # apply (append to config-history.json)
+node tools/regime-recalibrate.js --force --apply      # bypass stability gate
+```
+
+**Behavior**: detects dominant regime in last 7 scanner runs, requires 3 consecutive stable days at new regime before triggering. NEVER overwrites history — appends new version to `portfolio/v1/config-history.json` with bumped `_version` and tags `triggered_by`. `modes-config.json` gets the new params with `_prevVersion` chain.
+
+⚠️ Prerequisites: `data/backtest-results.json` must contain non-null `advisor_<mode>` fields. If sweep strict thresholds aren't met, advisor falls back to `advisor_<mode>_relaxed`. TKL needs `advisor_tkl` populated (sweep.js advTkl array — see audit `.omc/audit-20260502/dev.md` for status).
+
+### Phase 5c — Rolling Walk-Forward Sanity Check (optional, ad-hoc)
+
+```bash
+node tools/rolling-walk-forward.js                    # rolling 10-day window
+node tools/rolling-walk-forward.js --days=20          # rolling 20-day window
+```
+
+Outputs `data/rolling-walk-forward.json` + markdown summary. Per-mode rolling-N-day WR/PF/Ret time series. Caveat: small sample sizes (~9 weeks of data) limit statistical power — use for direction-of-travel signal only.
 
 ⚠️ **MCP_GATEWAY_URL is mandatory** (prod URL `https://gateway.dailytickers.com/mcp` always available). Never silently accept `--stub` — it writes an empty schema. If gateway down, log warning and re-run when restored. Ref: memory `reference_mcp_gateway.md`.
 

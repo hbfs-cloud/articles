@@ -20,10 +20,13 @@ articles/
 │   ├── publish.js                # ⭐ Script unifié de publication (add_card + git + telegram)
 │   ├── add_card.js               # Indexe un article dans le JSON du bon tab
 │   ├── sweep.js                  # Grid search backtest (scanner)
-│   ├── gen-status-page.js        # Dashboard portfolio 5 modes
-│   ├── gen-api.js                # Refresh public JSON API portfolio
+│   ├── gen-status-page.js        # Dashboard portfolio 6 modes (turbo/dynamic/balanced/secured/fortress/tkl)
+│   ├── gen-mode-cards.js         # Per-mode PNG cards for Telegram/Discord/OG
+│   ├── gen-api.js                # Refresh 50+ public JSON endpoints (6 modes)
+│   ├── regime-recalibrate.js     # Detect regime change + append-only param recalibration
+│   ├── rolling-walk-forward.js   # Rolling N-day walk-forward analysis (sanity check)
 │   └── ...                       # Autres outils spécialisés
-├── portfolio/v1/                 # Public JSON API (Turbo, Dynamic, Balanced, Secured, Fortress)
+├── portfolio/v1/                 # Public JSON API (turbo, dynamic, balanced, secured, fortress, tkl)
 ├── widget/                       # Widgets embarquables (iframe)
 └── mcp/                          # MCP server + watchlist.json
 ```
@@ -357,11 +360,13 @@ fetch(url).then(r => r.json()).then(d => {
 Fallback : `corsproxy.io` (peut retourner 403). **JAMAIS** `allorigins.win/raw`.
 
 ## Portfolio API — `/portfolio/v1/`
-API publique servant les signaux et l'equity des 5 modes.
-- **Modes** : `turbo`, `dynamic`, `balanced`, `secured`, `fortress` — paramètres définis dans `data/modes-config.json` (ajustés par sweep).
-- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|orders|actions|trades|all].json`
+API publique servant les signaux et l'equity des 6 modes.
+- **Modes (6)** : `turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl` — paramètres définis dans `data/modes-config.json` (ajustés par sweep + recalibrage de régime).
+- **Endpoints par mode** : `/portfolio/v1/{mode}/[signals|positions|equity|orders|actions|trades|risk|winning-streaks|all].json`
 - **Documentation** : `https://articles.dailytickers.com/integrations/portfolio/`
 - **Génération** : `node tools/gen-api.js` (dépend de `backtest-trades.json` et `scanner-positions.json`).
+- **Telegram topics** : turbo/dynamic→89, balanced→90, secured/fortress→91, **tkl→1064** (env: `TELEGRAM_TOPIC_<MODE>`).
+- **Recalibration de régime** : `node tools/regime-recalibrate.js` détecte les changements de régime (RECOVERY ↔ RISK-ON ↔ RISK-OFF) et propose un nouveau set de params depuis `data/backtest-results.json#advisor_*`. Append-only dans `portfolio/v1/config-history.json` — l'historique n'est jamais écrasé.
 
 ## Scanner Status Page — Architecture & Time Machine (`scanner/status/`)
 
