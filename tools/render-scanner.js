@@ -416,7 +416,7 @@ function alertsHtml(alerts) {
 // ─── MACRO CALENDAR TABLE ────────────────────────────────────────────────────
 
 function macroCalendarTable(rows) {
-  if (!rows || !rows.length) return '';
+  if (!Array.isArray(rows) || !rows.length) return '';
   const trs = rows.map(r => {
     const dirClass = r.dir === 'up' ? 'up' : r.dir === 'down' ? 'down' : '';
     const impactClass = (r.impact || '').toUpperCase().includes('HIGH') ? 'up' : '';
@@ -431,7 +431,7 @@ function macroCalendarTable(rows) {
 // ─── SECTOR ROTATION TABLE ───────────────────────────────────────────────────
 
 function sectorRotationTable(rows) {
-  if (!rows || !rows.length) return '';
+  if (!Array.isArray(rows) || !rows.length) return '';
   const trs = rows.map(r => {
     const dirClass = r.dir === 'up' ? 'up' : r.dir === 'down' ? 'down' : '';
     return `            <tr><td>${r.sector}</td><td class="${dirClass}">${r.perf}</td><td>${r.signal}</td><td><strong>${r.exposure}</strong></td></tr>`;

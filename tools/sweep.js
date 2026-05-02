@@ -1599,7 +1599,7 @@ async function main() {
     // Priority order (most conservative first): fortress → secured → balanced → dynamic → turbo.
     // Conservative modes need diversification most, so they consume the candidate pool first.
     const crossModePicked = new Set();
-    const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo'];
+    const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo', 'tkl'];
     const orderedModeIds = [
       ...DEDUP_PRIORITY.filter(id => modesConfig.modes[id]),
       ...Object.keys(modesConfig.modes).filter(id => !DEDUP_PRIORITY.includes(id)),

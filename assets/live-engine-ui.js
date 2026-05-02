@@ -13,11 +13,11 @@
   var toastContainer = null;
   var MODE_COLORS = {
     turbo: '#f59e0b', dynamic: '#dc2626', balanced: '#059669',
-    secured: '#2563eb', fortress: '#6d28d9'
+    secured: '#2563eb', fortress: '#6d28d9', tkl: '#e11d48'
   };
   // Nominal capital per mode — used to translate % return into a $ figure users can relate to.
   // 10k default; fortress half-sized so effectively 5k of exposure per slot.
-  var NOMINAL_CAPITAL = { turbo: 10000, dynamic: 10000, balanced: 10000, secured: 10000, fortress: 10000 };
+  var NOMINAL_CAPITAL = { turbo: 10000, dynamic: 10000, balanced: 10000, secured: 10000, fortress: 10000, tkl: 10000 };
 
   // Load JetBrains Mono via <link> to avoid FOUC
   var fontLink = document.createElement('link');
@@ -1086,7 +1086,7 @@
         });
     }).catch(function (e) {
       console.warn('[LiveEngineUI] Boot failed:', e);
-      ['turbo', 'dynamic', 'balanced', 'secured', 'fortress'].forEach(function (modeId) {
+      ['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'tkl'].forEach(function (modeId) {
         var panel = document.getElementById('p-' + modeId);
         if (panel) {
           var msg = el('div', 'lp-empty', '<i class="fas fa-exclamation-triangle"></i>Live data unavailable');

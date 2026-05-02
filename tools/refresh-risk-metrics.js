@@ -35,7 +35,14 @@ const GATEWAY = process.env.MCP_GATEWAY_URL || '';
 const STUB = process.argv.includes('--stub');
 const DRY = process.argv.includes('--dry-run');
 const PORTFOLIO_VALUE_USD = +(process.env.PORTFOLIO_VALUE_USD || 100000);
-const MODE_IDS = ['turbo', 'dynamic', 'balanced', 'secured', 'fortress'];
+const MODE_IDS = (() => {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8'));
+    return Object.keys(cfg.modes || {});
+  } catch {
+    return ['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'tkl'];
+  }
+})();
 
 // Bounds-check helpers — reject obviously bad responses from the gateway.
 function _isFiniteNumber(x) { return typeof x === 'number' && Number.isFinite(x); }

@@ -100,7 +100,7 @@ function readStatusMetrics(modeKey = 'balanced') {
 // ─── Reconstruct positions like gen-status-page.js ───────────────────────────
 // Positions = premature (expired but holdDays < horizon) trades, enriched with live prices
 function buildPositions(cfg, modeKey) {
-  const modeMap = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress' };
+  const modeMap = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress', tkl: 'tkl' };
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
   const livePositions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json'))).open_positions || [];
   const liveLookup = {};
@@ -247,7 +247,7 @@ function buildTelegramMessage(d) {
     `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const modeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress' };
+  const modeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress', tkl: '🎯 TKL' };
   const modeLabel = modeLabels[d.cfg.id] || '⚖️ Balanced';
 
   return `${modeLabel}  —  ${d.scanDate}
@@ -316,7 +316,7 @@ function buildDiscordMessage(d) {
     `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const dcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress' };
+  const dcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress', tkl: 'TKL' };
   const dcLabel = dcLabels[d.cfg.id] || 'Balanced';
   return `## 📊 Portfolio ${dcLabel} — ${d.scanDate}
 > 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
@@ -337,7 +337,7 @@ ${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
 // ─── Build compact caption for sendAudio (max 1024 chars) ─────────────────────
 function buildAudioCaption(d, ytUrl) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabels2 = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress' };
+  const modeLabels2 = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress', tkl: '🎯 TKL' };
   const modeLabel = modeLabels2[d.cfg.id] || '⚖️ Balanced';
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
@@ -398,7 +398,7 @@ function buildAudioCaption(d, ytUrl) {
 // ─── Build audio narration script (60-80 words, analytical) ─────────────────
 function buildAudioScript(d) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabels3 = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress' };
+  const modeLabels3 = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress', tkl: 'TKL' };
   const modeLabel = modeLabels3[d.cfg.id] || 'Balanced';
 
   const closeNow = d.activePos.filter(p => p.left <= 1);
@@ -739,6 +739,7 @@ async function main() {
     { key: 'balanced', topicEnv: 'TELEGRAM_TOPIC_BALANCED' },
     { key: 'secured',  topicEnv: 'TELEGRAM_TOPIC_SECURED' },
     { key: 'fortress', topicEnv: 'TELEGRAM_TOPIC_FORTRESS' },
+    { key: 'tkl',      topicEnv: 'TELEGRAM_TOPIC_TKL' },
   ];
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
@@ -792,7 +793,7 @@ async function main() {
       }
       // Upload to YouTube
       if (modeVideoPath) {
-        const ytModeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress' };
+        const ytModeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🛡️ Secured', fortress: '🏰 Fortress', tkl: '🎯 TKL' };
         const modeLabel = ytModeLabels[key] || '⚖️ Balanced';
         const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | DailyTickers`;
         const ytDesc = `${modeLabel} Portfolio Update\n\n` +
@@ -819,7 +820,7 @@ async function main() {
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
       // Send video if no YouTube (fallback: embed directly)
       if (!modeYtUrl && modeVideoPath) {
-        const vcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress' };
+        const vcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Secured', fortress: 'Fortress', tkl: 'TKL' };
         const videoCaption = `📊 <b>${vcLabels[key] || 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
         sendTelegramVideo(modeVideoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
         console.log(`✅ Telegram video embedded [${key}] → topic ${topicId}`);

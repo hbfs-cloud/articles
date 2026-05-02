@@ -368,7 +368,7 @@ check('index.html: Performance du Scanner — Updated date en phase avec derniè
 });
 
 // 14. scanner/status — section Pending Orders présente pour chaque mode (après mise à jour scanner)
-check('scanner/status: section Pending Orders présente pour les 5 modes', () => {
+check('scanner/status: section Pending Orders présente pour les 6 modes (incl. tkl)', () => {
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
   // Section orders: "Orders to Place" ou "Order to Place" ou "On Watch" ou "no action needed"

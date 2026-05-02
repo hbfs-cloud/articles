@@ -28,6 +28,7 @@ const MODE_META = {
   balanced: { emoji: '⚖️',  label: 'Balanced' },
   secured:  { emoji: '🛡️',  label: 'Secured' },
   fortress: { emoji: '🏰', label: 'Fortress' },
+  tkl:      { emoji: '🎯', label: 'TKL' },
 };
 const MODES = Object.keys(MODE_META);
 

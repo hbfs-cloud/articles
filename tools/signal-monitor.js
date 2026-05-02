@@ -141,6 +141,7 @@ const TOPICS = {
   balanced:  parseInt(process.env.TELEGRAM_TOPIC_BALANCED  || process.env.TELEGRAM_TOPIC_CALMAR       || '90', 10),
   secured:   parseInt(process.env.TELEGRAM_TOPIC_SECURED   || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
   fortress:  parseInt(process.env.TELEGRAM_TOPIC_FORTRESS  || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
+  tkl:       parseInt(process.env.TELEGRAM_TOPIC_TKL       || process.env.TELEGRAM_TOPIC_PORTFOLIO    || '72', 10),
 };
 
 // ─── Discord webhook URLs per mode ───────────────────────────────────────────
@@ -151,6 +152,7 @@ const DISCORD_WEBHOOKS = {
   balanced: process.env.DISCORD_WEBHOOK_SIGNALS_BALANCED  || '',
   secured:  process.env.DISCORD_WEBHOOK_SIGNALS_SECURED   || '',
   fortress: process.env.DISCORD_WEBHOOK_SIGNALS_FORTRESS  || '',
+  tkl:      process.env.DISCORD_WEBHOOK_SIGNALS_TKL       || '',
 };
 
 // Status → Discord embed color (decimal)
