@@ -869,7 +869,12 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
         const rotatedTickerLive = (recentExecutedRotation && recentExecutedRotation.replaces)
           ? (livePositions || []).find(p => p.ticker === recentExecutedRotation.replaces)
           : null;
-        const filtered = trades.filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate)).map(t => {
+        // Trade History = closed trades only (status !== 'pending'). Open positions live in their own section.
+        // Premature trades from rotation (status='expired' + _premature) ARE kept if they match keptPremature.
+        const filtered = trades
+          .filter(t => t.status !== 'pending')
+          .filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate))
+          .map(t => {
           if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) {
             const exitPrice = rotatedTickerLive && rotatedTickerLive.current_price
               ? rotatedTickerLive.current_price

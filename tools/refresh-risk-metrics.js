@@ -114,7 +114,15 @@ function jsonrpcCall(toolName, params) {
         try {
           const j = JSON.parse(data);
           if (j.error) return reject(new Error(j.error.message || 'rpc error'));
-          resolve(j.result);
+          // MCP tools/call wraps the actual payload in result.content[0].text (JSON string).
+          // Unwrap so callers get the raw object directly.
+          const r = j.result;
+          if (r && r.content && Array.isArray(r.content) && r.content[0]?.type === 'text') {
+            try { resolve(JSON.parse(r.content[0].text)); }
+            catch { resolve(r.content[0].text); }
+            return;
+          }
+          resolve(r);
         } catch (e) { reject(e); }
       });
     });
@@ -145,8 +153,8 @@ async function fetchModeRisk(modeId, modeSnapshot) {
       method: 'historical',
       lookback_days: 252,
     });
-    out.var95_5d = _validateVar(var95?.value_at_risk ?? var95?.var_usd ?? null);
-    out.expectedShortfall95_5d = _validateVar(var95?.expected_shortfall ?? var95?.cvar_usd ?? null);
+    out.var95_5d = _validateVar(var95?.totalVaR ?? var95?.value_at_risk ?? var95?.var_usd ?? null);
+    out.expectedShortfall95_5d = _validateVar(var95?.expectedShortfall ?? var95?.expected_shortfall ?? var95?.cvar_usd ?? null);
     out.method = 'historical';
   } catch (e) { console.log(`  [warn] VaR95 ${modeId}: ${e.message}`); }
 
@@ -160,7 +168,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
       method: 'historical',
       lookback_days: 252,
     });
-    out.var99_5d = _validateVar(var99?.value_at_risk ?? var99?.var_usd ?? null);
+    out.var99_5d = _validateVar(var99?.totalVaR ?? var99?.value_at_risk ?? var99?.var_usd ?? null);
   } catch (e) { console.log(`  [warn] VaR99 ${modeId}: ${e.message}`); }
 
   // Stress test
@@ -181,7 +189,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
         window_days: 60,
         method: 'pearson',
       });
-      out.maxPairwiseCorrelation = _validateCorr(corr?.max_pair?.rho ?? null);
+      out.maxPairwiseCorrelation = _validateCorr(corr?.max_pair?.correlation ?? corr?.max_pair?.rho ?? null);
       out.avgCorrelation = _validateCorr(corr?.avg_off_diagonal ?? null);
     }
   } catch (e) { console.log(`  [warn] correlation ${modeId}: ${e.message}`); }
