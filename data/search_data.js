@@ -3281,7 +3281,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-ON — PWR, WCC, MYRG, TSM, ASML, XLK, NVO, LMT, SFM, KRE",
+    "title": "Top 10 A+ RECOVERY — PWR, WCC, MYRG, TSM, ASML, XLK, NVO, LMT, SFM, KRE",
     "desc": "The regime score reads 0.41, classified as RISK-ON by the MarketOverview composite. Component scores: SPX 0.53 (price > 50-DMA > 200-DMA, fresh highs), VIX 1.00 (16.99 close, deeply below the 20 risk threshold), Credit 0.49 (HYG 80.06 stable), DXY 0.46 (dollar weak at 98.21, multinational tailwind),...",
     "tags": "us,eu,asia,tech,semis,industrials,healthcare,defense,consumer,financials,etf,ai,macro,technique,trade-idea",
     "grade": "",
