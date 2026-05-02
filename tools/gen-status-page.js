@@ -1375,7 +1375,12 @@ document.addEventListener('DOMContentLoaded',function(){
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
     activeMode=id;
-    document.querySelectorAll('.mode-tab').forEach(function(t){t.classList.toggle('active',t.dataset.mode===id)});
+    document.querySelectorAll('.mode-tab').forEach(function(t){
+      var on=t.dataset.mode===id;
+      t.classList.toggle('active',on);
+      // Scroll active tab into view on mobile (TKL is the 6th tab — off-screen by default at 375px)
+      if(on){try{t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}catch(_){ }}
+    });
     document.querySelectorAll('.mode-panel').forEach(function(p){p.style.display=p.id==='p-'+id?'':'none'});
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
