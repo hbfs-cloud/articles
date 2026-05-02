@@ -229,9 +229,17 @@ if (!APPLY) {
   process.exit(0);
 }
 
+// Backup before apply (defense in depth — regime-recalibrate is APPEND-ONLY by design but extra safety)
+const backupDir = path.join(ROOT, `.backup-history-${Date.now()}`);
+fs.mkdirSync(backupDir, { recursive: true });
+fs.copyFileSync(path.join(ROOT, 'data', 'modes-config.json'), path.join(backupDir, 'modes-config.json'));
+fs.copyFileSync(path.join(ROOT, 'portfolio', 'v1', 'config-history.json'), path.join(backupDir, 'config-history.json'));
+log(`Pre-apply backup written to ${backupDir} (modes-config.json + config-history.json snapshot).`);
+
 // Apply
 const history = readConfigHistory();
 const { newCfg, newHistEntry } = applyProposal(proposal, activeCfg, history);
 log(`Applied. New active version: ${newCfg._version} (${newCfg._regime}).`);
 log(`Appended history entry: ${newHistEntry.id}`);
 log(`config-history.json now has ${history.versions.length} versions (no history overwritten).`);
+log(`To rollback: cp ${backupDir}/modes-config.json data/ && cp ${backupDir}/config-history.json portfolio/v1/`);

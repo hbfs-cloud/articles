@@ -1232,16 +1232,18 @@ async function main() {
   const topByComposite = [];
   const topByLowestDD = []; // sorted ascending by |DD| (lowest first)
   // Mode-specific trackers with constraints
-  const advTurbo = [];           // strict: Return≥40%, DD≤10%, WR≥55%, trades≥8
-  const advDynamic = [];         // strict: Return≥35%, DD≤6%, WR≥60%, trades≥10
-  const advBalanced = [];        // strict: Return≥24%, DD≤4%, WR≥60%, trades≥10
-  const advSecured = [];         // strict: Return≥12%, DD≤2%, WR≥75%, trades≥10
-  const advFortress = [];        // strict: Return≥8%, DD≤1.5%, WR≥70%, trades≥10
-  const advTurboRelaxed = [];    // relaxed: Return≥30%, DD≤15%, WR≥50%, trades≥8
-  const advDynamicRelaxed = [];  // relaxed: Return≥30%, DD≤10%, WR≥55%, trades≥10
-  const advBalancedRelaxed = []; // relaxed: Return≥20%, DD≤5%, WR≥55%, trades≥10
-  const advSecuredRelaxed = [];  // relaxed: Return≥10%, DD≤2.5%, WR≥65%, trades≥10
-  const advFortressRelaxed = []; // relaxed: Return≥5%, DD≤2%, WR≥65%, trades≥10
+  const advTurbo = [];           // strict: Return≥40%, DD≤10%, WR≥50%, trades≥8
+  const advDynamic = [];         // strict: Return≥35%, DD≤6%, WR≥55%, trades≥10
+  const advBalanced = [];        // strict: Return≥24%, DD≤4%, WR≥55%, trades≥10
+  const advSecured = [];         // strict: Return≥12%, DD≤2.5%, WR≥65%, trades≥10
+  const advFortress = [];        // strict: Return≥8%, DD≤1.5%, WR≥65%, trades≥10
+  const advTkl = [];             // strict: Return≥15%, DD≤5%, WR≥50%, trades≥30 (high-volume momentum)
+  const advTurboRelaxed = [];    // relaxed: Return≥25%, DD≤15%, WR≥45%, trades≥8
+  const advDynamicRelaxed = [];  // relaxed: Return≥25%, DD≤10%, WR≥50%, trades≥10
+  const advBalancedRelaxed = []; // relaxed: Return≥18%, DD≤6%, WR≥50%, trades≥10
+  const advSecuredRelaxed = [];  // relaxed: Return≥8%, DD≤3%, WR≥55%, trades≥10
+  const advFortressRelaxed = []; // relaxed: Return≥5%, DD≤2.5%, WR≥55%, trades≥10
+  const advTklRelaxed = [];      // relaxed: Return≥10%, DD≤8%, WR≥40%, trades≥20
 
   function insertTop(arr, item, compareFn) {
     if (arr.length < TOP_K) { arr.push(item); arr.sort(compareFn); return; }
@@ -1289,36 +1291,42 @@ async function main() {
                               insertTop(topByComposite, r, (a, b) => b.composite - a.composite);
                               insertTop(topByLowestDD, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                               // Mode advisors — strict targets (aspirational)
-                              if (r.returnTotal >= 40 && Math.abs(r.maxDD) <= 10 && r.winRate >= 55 && r.trades >= 8) {
+                              if (r.returnTotal >= 40 && Math.abs(r.maxDD) <= 10 && r.winRate >= 50 && r.trades >= 8) {
                                 insertTop(advTurbo, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 35 && Math.abs(r.maxDD) <= 6 && r.winRate >= 60 && r.trades >= 10) {
+                              if (r.returnTotal >= 35 && Math.abs(r.maxDD) <= 6 && r.winRate >= 55 && r.trades >= 10) {
                                 insertTop(advDynamic, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 24 && Math.abs(r.maxDD) <= 4 && r.winRate >= 60 && r.trades >= 10) {
+                              if (r.returnTotal >= 24 && Math.abs(r.maxDD) <= 4 && r.winRate >= 55 && r.trades >= 10) {
                                 insertTop(advBalanced, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 12 && Math.abs(r.maxDD) <= 2 && r.winRate >= 75 && r.trades >= 10) {
+                              if (r.returnTotal >= 12 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 65 && r.trades >= 10) {
                                 insertTop(advSecured, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 8 && Math.abs(r.maxDD) <= 1.5 && r.winRate >= 70 && r.trades >= 10) {
+                              if (r.returnTotal >= 8 && Math.abs(r.maxDD) <= 1.5 && r.winRate >= 65 && r.trades >= 10) {
                                 insertTop(advFortress, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                               }
+                              if (r.returnTotal >= 15 && Math.abs(r.maxDD) <= 5 && r.winRate >= 50 && r.trades >= 30) {
+                                insertTop(advTkl, r, (a, b) => b.returnTotal - a.returnTotal);
+                              }
                               // Near-miss advisors — best achievable with relaxed constraints
-                              if (r.returnTotal >= 30 && Math.abs(r.maxDD) <= 15 && r.winRate >= 50 && r.trades >= 8) {
+                              if (r.returnTotal >= 25 && Math.abs(r.maxDD) <= 15 && r.winRate >= 45 && r.trades >= 8) {
                                 insertTop(advTurboRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 30 && Math.abs(r.maxDD) <= 10 && r.winRate >= 55 && r.trades >= 10) {
+                              if (r.returnTotal >= 25 && Math.abs(r.maxDD) <= 10 && r.winRate >= 50 && r.trades >= 10) {
                                 insertTop(advDynamicRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 20 && Math.abs(r.maxDD) <= 5 && r.winRate >= 55 && r.trades >= 10) {
+                              if (r.returnTotal >= 18 && Math.abs(r.maxDD) <= 6 && r.winRate >= 50 && r.trades >= 10) {
                                 insertTop(advBalancedRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 10 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 65 && r.trades >= 10) {
+                              if (r.returnTotal >= 8 && Math.abs(r.maxDD) <= 3 && r.winRate >= 55 && r.trades >= 10) {
                                 insertTop(advSecuredRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 5 && Math.abs(r.maxDD) <= 2 && r.winRate >= 65 && r.trades >= 10) {
+                              if (r.returnTotal >= 5 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 55 && r.trades >= 10) {
                                 insertTop(advFortressRelaxed, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
+                              }
+                              if (r.returnTotal >= 10 && Math.abs(r.maxDD) <= 8 && r.winRate >= 40 && r.trades >= 20) {
+                                insertTop(advTklRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
                             }
 
@@ -1511,11 +1519,13 @@ async function main() {
     advisor_balanced: advBalanced[0] || null,
     advisor_secured: advSecured[0] || null,
     advisor_fortress: advFortress[0] || null,
+    advisor_tkl: advTkl[0] || null,
     advisor_turbo_relaxed: advTurboRelaxed[0] || null,
     advisor_dynamic_relaxed: advDynamicRelaxed[0] || null,
     advisor_balanced_relaxed: advBalancedRelaxed[0] || null,
     advisor_secured_relaxed: advSecuredRelaxed[0] || null,
     advisor_fortress_relaxed: advFortressRelaxed[0] || null,
+    advisor_tkl_relaxed: advTklRelaxed[0] || null,
     top20_sharpe: ranked.slice(0, 20).map(r => ({
       portfolioSize: r.portfolioSize, topN: r.topN, minScore: r.minScore,
       filterName: r.filterName, rotation: r.rotation, horizon: r.horizon,

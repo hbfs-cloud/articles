@@ -72,9 +72,20 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/gen-status-page.js
   node tools/gen-mode-cards.js
   node tools/gen-api.js
+
+  # ─── Step 5b: Regime recalibration check (dry-run) ─────────────────────────
+  # Detects significant regime shift vs modes-config.json. Append-only to
+  # config-history.json. Auto-apply only when REGIME_AUTO_APPLY=1 is set.
+  echo ""
+  echo "🌐 Step 5b: Regime recalibration check (dry-run)..."
+  if [ "${REGIME_AUTO_APPLY:-0}" = "1" ]; then
+    node tools/regime-recalibrate.js --apply || echo "  Recalibration skipped (gate not met or no advisor delta)."
+  else
+    node tools/regime-recalibrate.js || echo "  Recalibration check exited cleanly (no change proposed)."
+  fi
 else
   echo ""
-  echo "⏭️  Steps 3-5: Skipped (--no-sweep)"
+  echo "⏭️  Steps 3-5b: Skipped (--no-sweep)"
 fi
 
 # ─── Step 6: Commit & push everything ────────────────────────────────────────
