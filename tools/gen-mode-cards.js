@@ -3,7 +3,7 @@
 
 /**
  * gen-mode-cards.js
- * Generates PNG card images for all 5 portfolio modes.
+ * Generates PNG card images for all portfolio modes (turbo, dynamic, balanced, secured, fortress, tkl — read dynamically from MODE_META).
  * Reads metrics from scanner/status/index.html (same source of truth as notify-scanner-status.js)
  * Saves to scanner/status/mode-{mode}-{timestamp}.png
  * Updates scanner/status/manifest.json

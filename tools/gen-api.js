@@ -2,7 +2,7 @@
 /**
  * gen-api.js — Portfolio endpoint generator (multi-mode)
  * Reads the latest scanner status snapshot and writes flat JSON to portfolio/v1/
- * Outputs per-mode endpoints in portfolio/v1/{mode}/ for all 5 modes.
+ * Outputs per-mode endpoints in portfolio/v1/{mode}/ for all modes (read dynamically from data/modes-config.json).
  * Root portfolio/v1/ endpoints point to balanced mode (backward compat).
  *
  * Usage: node tools/gen-api.js
