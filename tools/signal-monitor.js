@@ -141,7 +141,7 @@ const TOPICS = {
   balanced:  parseInt(process.env.TELEGRAM_TOPIC_BALANCED  || process.env.TELEGRAM_TOPIC_CALMAR       || '90', 10),
   secured:   parseInt(process.env.TELEGRAM_TOPIC_SECURED   || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
   fortress:  parseInt(process.env.TELEGRAM_TOPIC_FORTRESS  || process.env.TELEGRAM_TOPIC_CONSERVATIVE || '91', 10),
-  tkl:       parseInt(process.env.TELEGRAM_TOPIC_TKL       || process.env.TELEGRAM_TOPIC_PORTFOLIO    || '72', 10),
+  tkl:       parseInt(process.env.TELEGRAM_TOPIC_TKL       || '1064', 10),
 };
 
 // ─── Discord webhook URLs per mode ───────────────────────────────────────────

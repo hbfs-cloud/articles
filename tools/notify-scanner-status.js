@@ -770,10 +770,12 @@ async function main() {
   else if (media.videoPath) console.log(`📺 Video found (no YouTube): ${media.videoPath}`);
   else console.log('📺 No scanner media found');
 
+  // Fallback topic IDs (last-resort defaults if env vars unset)
+  const TOPIC_FALLBACKS = { turbo: '89', dynamic: '89', balanced: '90', secured: '91', fortress: '91', tkl: '1064' };
   for (const { key, topicEnv } of modeTopics) {
     const modePayload = buildStatusPayload(scanDir, key);
-    const topicId     = process.env[topicEnv];
-    if (!topicId) console.warn(`[topics] ${topicEnv} unset — messages for mode ${key} will go to default thread`);
+    const topicId     = process.env[topicEnv] || TOPIC_FALLBACKS[key];
+    if (!process.env[topicEnv]) console.warn(`[topics] ${topicEnv} unset — using fallback ${topicId} for mode ${key}`);
 
     // Generate audio
     const audioPath = `/tmp/scanner-${key}-${scanDir}.mp3`;
