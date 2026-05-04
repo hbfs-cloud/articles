@@ -6,7 +6,7 @@
   <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css?v=1777746665246">
+  <link rel="stylesheet" href="/assets/report.css?v=1777877153742">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -80,7 +80,12 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
-  .section-card details[open]>table.t,.section-card>table.t{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .section-card details[open]>table.t,.section-card>table.t{
+    display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    /* Scroll shadow: shows a gradient on left/right edges when content overflows (Lea Verou trick) */
+    background-image:linear-gradient(to right,#fff 30%,rgba(255,255,255,0)),linear-gradient(to right,rgba(255,255,255,0),#fff 70%) 100% 0,radial-gradient(farthest-side at 0 50%,rgba(15,23,42,.18),rgba(0,0,0,0)),radial-gradient(farthest-side at 100% 50%,rgba(15,23,42,.18),rgba(0,0,0,0)) 100% 0;
+    background-repeat:no-repeat;background-color:#fff;background-size:40px 100%,40px 100%,14px 100%,14px 100%;background-attachment:local,local,scroll,scroll;
+  }
   .t{table-layout:auto}
   .t th,.t td{white-space:nowrap;padding:.3rem .45rem;font-size:.68rem}
 }
@@ -266,7 +271,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <!-- Mode Tabs -->
   <div class="mode-tabs">
-    <button class="mode-tab" data-mode="turbo" onclick="switchMode('turbo')" style="--mc:#f59e0b"><span class="mode-dot" style="background:#f59e0b"></span>Turbo</button><button class="mode-tab" data-mode="dynamic" onclick="switchMode('dynamic')" style="--mc:#dc2626"><span class="mode-dot" style="background:#dc2626"></span>Dynamic</button><button class="mode-tab active" data-mode="balanced" onclick="switchMode('balanced')" style="--mc:#059669"><span class="mode-dot" style="background:#059669"></span>Balanced <span style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span></button><button class="mode-tab" data-mode="secured" onclick="switchMode('secured')" style="--mc:#2563eb"><span class="mode-dot" style="background:#2563eb"></span>Secured</button><button class="mode-tab" data-mode="fortress" onclick="switchMode('fortress')" style="--mc:#6d28d9"><span class="mode-dot" style="background:#6d28d9"></span>Fortress</button><button class="mode-tab" data-mode="tkl" onclick="switchMode('tkl')" style="--mc:#e11d48"><span class="mode-dot" style="background:#e11d48"></span>TKL</button>
+    <button class="mode-tab" data-mode="turbo" onclick="switchMode('turbo')" style="--mc:#f59e0b"><span class="mode-dot" style="background:#f59e0b"></span>Turbo</button><button class="mode-tab" data-mode="dynamic" onclick="switchMode('dynamic')" style="--mc:#dc2626"><span class="mode-dot" style="background:#dc2626"></span>Dynamic</button><button class="mode-tab active" data-mode="balanced" onclick="switchMode('balanced')" style="--mc:#059669"><span class="mode-dot" style="background:#059669"></span>Balanced <span class="hide-m" style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span></button><button class="mode-tab" data-mode="secured" onclick="switchMode('secured')" style="--mc:#2563eb"><span class="mode-dot" style="background:#2563eb"></span>Secured</button><button class="mode-tab" data-mode="fortress" onclick="switchMode('fortress')" style="--mc:#6d28d9"><span class="mode-dot" style="background:#6d28d9"></span>Fortress</button><button class="mode-tab" data-mode="tkl" onclick="switchMode('tkl')" style="--mc:#e11d48"><span class="mode-dot" style="background:#e11d48"></span>TKL</button>
   </div>
 
   <div id="p-turbo" class="mode-panel" style="display:none">
@@ -344,7 +349,7 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/IHRT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IHRT</b></td><td class="m">04-30</td><td class="hide-m">$5.10</td><td class="hide-m">$6.33</td><td class="pos"><b>+24.12%</b></td><td class="am">2d / 2d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="m">05-01</td><td class="hide-m">$93.20</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="am">2d / 2d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr></tbody>
   </table>
 </div>
 
@@ -380,24 +385,24 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">1/1</span></h3>
-    <span class="sc-meta">avg P&amp;L: <b class="pos">+24.1%</b></span>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+6.9%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
-    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -10.0%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +24.1%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +41.3%</span>
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.5%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +6.9%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +17.0%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:66.5%"></div>
-    <div class="scenario-fill-good" style="width:33.5%"></div>
-    <div class="scenario-cursor" style="left:66.5%"></div>
+    <div class="scenario-fill-bad" style="width:53.1%"></div>
+    <div class="scenario-fill-good" style="width:46.9%"></div>
+    <div class="scenario-cursor" style="left:53.1%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr style="opacity:.6;background:#fef2f2"><td><img src="https://assets.parqet.com/logos/symbol/IHRT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IHRT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=IHRT&ty=c&ta=1&p=d&s=l" alt="IHRT" class="fv-thumb" onclick="fvOpen('IHRT')"></td><td class="m hide-m">04-30</td><td class="hide-m">$5.10</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$5.18</td><td class="hide-m">$6.33</td><td class="pos"><b>+24.12%</b></td><td class="neg hide-m">$4.59</td><td class="pos hide-m">$7.21</td><td class="neg"><span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span></td></tr><tr class="thesis-row" style="opacity:.6;background:#fef2f2"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr></tbody>
+    <tbody><tr style="opacity:.6;background:#fef2f2"><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="neg"><span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span></td></tr><tr class="thesis-row" style="opacity:.6;background:#fef2f2"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -730,23 +735,23 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 
 <!-- ══ 4. CLOSE NOW ══ -->
-
-
-<!-- ══ 5. ORDERS CTA ══ -->
-
-<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+<div class="cta-card cta-close">
   <div class="cta-header">
-    <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
+    <span class="cta-icon"><i class="fas fa-ban"></i></span>
     <div>
-      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">1 position</span></h3>
-      <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
+      <h3>Close Now <span class="cta-badge">1 position</span></h3>
+      <p class="cta-sub">Horizon expired — exit at market open, regardless of P&amp;L</p>
     </div>
   </div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td>$93.20</td><td class="pos"><b>+6.89%</b></td><td class="neg">$89.00</td><td class="am">1d/2d</td></tr></tbody>
+    <thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="m">05-01</td><td class="hide-m">$93.20</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="am">2d / 2d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr></tbody>
   </table>
 </div>
+
+<!-- ══ 5. ORDERS CTA ══ -->
+
+
 
 <div class="section-card " data-scan-date="20260504">
   <div class="sc-head">
@@ -793,7 +798,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr></tbody>
+    <tbody><tr style="opacity:.6;background:#fef2f2"><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="neg"><span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span></td></tr><tr class="thesis-row" style="opacity:.6;background:#fef2f2"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -1107,13 +1112,13 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="cta-header">
     <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
     <div>
-      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">2 positions</span></h3>
+      <h3 style="color:#92400e">Expires Tomorrow <span class="cta-badge" style="background:#d97706">1 position</span></h3>
       <p class="cta-sub" style="color:#b45309">Horizon reached at next close — decide: keep or exit at open</p>
     </div>
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/QNTM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QNTM</b></td><td>$4.36</td><td class="pos"><b>+27.29%</b></td><td class="neg">$4.25</td><td class="am">4d/5d</td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CLOV?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CLOV</b></td><td>$2.40</td><td class="pos"><b>+12.92%</b></td><td class="neg">$2.34</td><td class="am">4d/5d</td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/QNTM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QNTM</b></td><td>$4.36</td><td class="pos"><b>+27.29%</b></td><td class="neg">$4.25</td><td class="am">4d/5d</td></tr></tbody>
   </table>
 </div>
 
@@ -1161,24 +1166,24 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">3/3</span></h3>
-    <span class="sc-meta">avg P&amp;L: <b class="pos">+15.7%</b></span>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+13.4%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
     <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -2.5%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +15.5%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +38.2%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +13.2%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +37.2%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:44.3%"></div>
-    <div class="scenario-fill-good" style="width:55.7%"></div>
-    <div class="scenario-cursor" style="left:44.3%"></div>
+    <div class="scenario-fill-bad" style="width:39.6%"></div>
+    <div class="scenario-fill-good" style="width:60.4%"></div>
+    <div class="scenario-cursor" style="left:39.6%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/QNTM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QNTM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=QNTM&ty=c&ta=1&p=d&s=l" alt="QNTM" class="fv-thumb" onclick="fvOpen('QNTM')"></td><td class="m hide-m">04-28</td><td class="hide-m">$4.36</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$4.35</td><td class="hide-m">$5.55</td><td class="pos"><b>+27.29%</b></td><td class="neg hide-m">$4.25</td><td class="pos hide-m">$7.58</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-VolSurge</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CLOV?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CLOV</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=CLOV&ty=c&ta=1&p=d&s=l" alt="CLOV" class="fv-thumb" onclick="fvOpen('CLOV')"></td><td class="m hide-m">04-27</td><td class="hide-m">$2.40</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$2.41</td><td class="hide-m">$2.71</td><td class="pos"><b>+12.92%</b></td><td class="neg hide-m">$2.34</td><td class="pos hide-m">$3.00</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$90.87</td><td class="pos hide-m">$109.00</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/QNTM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QNTM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=QNTM&ty=c&ta=1&p=d&s=l" alt="QNTM" class="fv-thumb" onclick="fvOpen('QNTM')"></td><td class="m hide-m">04-28</td><td class="hide-m">$4.36</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$4.35</td><td class="hide-m">$5.55</td><td class="pos"><b>+27.29%</b></td><td class="neg hide-m">$4.25</td><td class="pos hide-m">$7.58</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-VolSurge</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$90.87</td><td class="pos hide-m">$109.00</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CLOV?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CLOV</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=CLOV&ty=c&ta=1&p=d&s=l" alt="CLOV" class="fv-thumb" onclick="fvOpen('CLOV')"></td><td class="m hide-m">04-30</td><td class="hide-m">$2.56</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$2.56</td><td class="hide-m">$2.71</td><td class="pos"><b>+5.93%</b></td><td class="neg hide-m">$2.49</td><td class="pos hide-m">$3.11</td><td class="am">2d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr></tbody>
   </table>
 </div>
 
@@ -1570,7 +1575,7 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/NUE?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NUE</b></td><td>$213.31</td><td class="pos"><b>+5.97%</b></td><td class="neg">$202.00</td><td class="am">4d/5d</td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/ANET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ANET</b></td><td>$165.12</td><td class="pos"><b>+4.59%</b></td><td class="neg">$158.00</td><td class="am">4d/5d</td></tr></tbody>
   </table>
 </div>
 
@@ -1610,24 +1615,24 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">2/2</span></h3>
-    <span class="sc-meta">avg P&amp;L: <b class="pos">+6.4%</b></span>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+5.7%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
-    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.9%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +6.4%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +14.7%</span>
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.4%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +5.7%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +16.6%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:57.7%"></div>
-    <div class="scenario-fill-good" style="width:42.3%"></div>
-    <div class="scenario-cursor" style="left:57.7%"></div>
+    <div class="scenario-fill-bad" style="width:48.3%"></div>
+    <div class="scenario-fill-good" style="width:51.7%"></div>
+    <div class="scenario-cursor" style="left:48.3%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/NUE?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NUE</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=NUE&ty=c&ta=1&p=d&s=l" alt="NUE" class="fv-thumb" onclick="fvOpen('NUE')"></td><td class="m hide-m">04-27</td><td class="hide-m">$213.31</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$213.31</td><td class="hide-m">$226.04</td><td class="pos"><b>+5.97%</b></td><td class="neg hide-m">$202.00</td><td class="pos hide-m">$240.00</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Steel leader near 52w high ($216). Earnings Monday pre-market = direct catalyst. Infrastructure spending tailwind. Fwd PE 15.2x = value.</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ANET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ANET</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ANET&ty=c&ta=1&p=d&s=l" alt="ANET" class="fv-thumb" onclick="fvOpen('ANET')"></td><td class="m hide-m">04-29</td><td class="hide-m">$165.12</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$165.12</td><td class="hide-m">$172.70</td><td class="pos"><b>+4.59%</b></td><td class="neg hide-m">$158.00</td><td class="pos hide-m">$192.00</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Hyperscaler networking equipment (Meta, Microsoft, Amazon = top 3 customers). Pure beta to Mag 7 AI capex guidance. Above 50DMA $140 + 200DMA $136. RSI in momentum zone.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -1956,7 +1961,7 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">4/4</span></h3>
-    <span class="sc-meta">avg P&amp;L: <b class="pos">+9.9%</b></span>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+9.8%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
@@ -1966,14 +1971,14 @@ details[open] summary::after{transform:rotate(90deg)}
     <span class="pos"><i class="fas fa-bullseye"></i> Best: +13.1%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:52.2%"></div>
-    <div class="scenario-fill-good" style="width:47.8%"></div>
-    <div class="scenario-cursor" style="left:52.2%"></div>
+    <div class="scenario-fill-bad" style="width:52.0%"></div>
+    <div class="scenario-fill-good" style="width:48.0%"></div>
+    <div class="scenario-cursor" style="left:52.0%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/IHRT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IHRT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=IHRT&ty=c&ta=1&p=d&s=l" alt="IHRT" class="fv-thumb" onclick="fvOpen('IHRT')"></td><td class="m hide-m">04-30</td><td class="hide-m">$5.10</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$5.18</td><td class="hide-m">$6.33</td><td class="pos"><b>+24.12%</b></td><td class="neg hide-m">$4.59</td><td class="pos hide-m">$7.21</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="m">7d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ANET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ANET</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ANET&ty=c&ta=1&p=d&s=l" alt="ANET" class="fv-thumb" onclick="fvOpen('ANET')"></td><td class="m hide-m">04-29</td><td class="hide-m">$165.12</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$165.12</td><td class="hide-m">$172.70</td><td class="pos"><b>+4.59%</b></td><td class="neg hide-m">$158.00</td><td class="pos hide-m">$192.00</td><td class="m">5d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Hyperscaler networking equipment (Meta, Microsoft, Amazon = top 3 customers). Pure beta to Mag 7 AI capex guidance. Above 50DMA $140 + 200DMA $136. RSI in momentum zone.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/SABR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SABR</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SABR&ty=c&ta=1&p=d&s=l" alt="SABR" class="fv-thumb" onclick="fvOpen('SABR')"></td><td class="m hide-m">04-30</td><td class="hide-m">$1.78</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$1.80</td><td class="hide-m">$1.85</td><td class="pos"><b>+3.93%</b></td><td class="neg hide-m">$1.62</td><td class="pos hide-m">$2.25</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/IHRT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IHRT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=IHRT&ty=c&ta=1&p=d&s=l" alt="IHRT" class="fv-thumb" onclick="fvOpen('IHRT')"></td><td class="m hide-m">04-30</td><td class="hide-m">$5.10</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$5.18</td><td class="hide-m">$6.32</td><td class="pos"><b>+23.92%</b></td><td class="neg hide-m">$4.59</td><td class="pos hide-m">$7.21</td><td class="m">5d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ANET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ANET</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ANET&ty=c&ta=1&p=d&s=l" alt="ANET" class="fv-thumb" onclick="fvOpen('ANET')"></td><td class="m hide-m">04-29</td><td class="hide-m">$165.12</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$165.12</td><td class="hide-m">$172.70</td><td class="pos"><b>+4.59%</b></td><td class="neg hide-m">$158.00</td><td class="pos hide-m">$192.00</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Hyperscaler networking equipment (Meta, Microsoft, Amazon = top 3 customers). Pure beta to Mag 7 AI capex guidance. Above 50DMA $140 + 200DMA $136. RSI in momentum zone.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/SABR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SABR</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SABR&ty=c&ta=1&p=d&s=l" alt="SABR" class="fv-thumb" onclick="fvOpen('SABR')"></td><td class="m hide-m">04-30</td><td class="hide-m">$1.78</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$1.80</td><td class="hide-m">$1.85</td><td class="pos"><b>+3.93%</b></td><td class="neg hide-m">$1.62</td><td class="pos hide-m">$2.25</td><td class="m">5d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr></tbody>
   </table>
 </div>
 
@@ -2341,7 +2346,7 @@ details[open] summary::after{transform:rotate(90deg)}
       <div class="step"><span class="step-n" style="background:#e11d48">3</span><div>At the same time, set your <b>stop loss</b> and <b>take profit</b> as bracket orders (OCO). The levels are shown on the signal card. Hard stop at −<b>7%</b> from entry — this is your maximum loss per trade, no exceptions.</div></div>
       <div class="step"><span class="step-n" style="background:#e11d48">4</span><div>When the price hits <b>TP1</b>: sell <b>50%</b> of your shares to lock in profit, and let the remaining 50% run toward TP2. Move your stop to your entry price (you can't lose money on this trade anymore).</div></div>
       <div class="step"><span class="step-n" style="background:#e11d48">&#x25b6;</span><div><b>VWAP Entry Gate:</b> Do <b>NOT</b> buy at market open. Wait 30 minutes, then calculate the day's VWAP. If the stock opened above VWAP &times; 1.01, <b>SKIP the trade</b> (gap-up trap — bad risk/reward). Otherwise, enter at the <b>lower of current price and VWAP</b> for a better fill.</div></div>
-      <div class="step"><span class="step-n" style="background:#e11d48">5</span><div>Close everything after <b>252 trading days</b> (about 353 calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.</div></div>
+      <div class="step"><span class="step-n" style="background:#e11d48">5</span><div><b>Trailing exit (no fixed time limit):</b> ride the position with the <b>2% daily trailing stop</b>. If the position goes <b>5 sessions without making a new high</b> (stale), exit at market — momentum is dead. Hard cap at 252 trading days as a safety net.</div></div>
       <div class="step"><span class="step-n" style="background:#e11d48">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ 88) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>
       
     </div>
@@ -2437,24 +2442,24 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">10/10</span></h3>
-    <span class="sc-meta">avg P&amp;L: <b class="pos">+7.6%</b></span>
+    <span class="sc-meta">avg P&amp;L: <b class="pos">+7.5%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
     <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.8%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +7.6%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now: +7.5%</span>
     <span class="pos"><i class="fas fa-bullseye"></i> Best: +20.7%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:48.4%"></div>
-    <div class="scenario-fill-good" style="width:51.6%"></div>
-    <div class="scenario-cursor" style="left:48.4%"></div>
+    <div class="scenario-fill-bad" style="width:48.3%"></div>
+    <div class="scenario-fill-good" style="width:51.7%"></div>
+    <div class="scenario-cursor" style="left:48.3%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/IHRT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IHRT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=IHRT&ty=c&ta=1&p=d&s=l" alt="IHRT" class="fv-thumb" onclick="fvOpen('IHRT')"></td><td class="m hide-m">04-30</td><td class="hide-m">$5.10</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$5.18</td><td class="hide-m">$6.33</td><td class="pos"><b>+24.12%</b></td><td class="neg hide-m">$4.74</td><td class="pos hide-m">$7.21</td><td class="m">250d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/GOOGL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>GOOGL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GOOGL&ty=c&ta=1&p=d&s=l" alt="GOOGL" class="fv-thumb" onclick="fvOpen('GOOGL')"></td><td class="m hide-m">04-28</td><td class="hide-m">$348.55</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$348.75</td><td class="hide-m">$385.69</td><td class="pos"><b>+10.66%</b></td><td class="neg hide-m">$333.55</td><td class="pos hide-m">$393.55</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">GOOGL surged post-earnings with Cloud revenue acceleration +28% YoY and AI monetization via Gemini. RSI 71.7 confirms strong momentum. Earnings Wed (MSFT/META) provide sector validation catalyst.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CAT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CAT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=CAT&ty=c&ta=1&p=d&s=l" alt="CAT" class="fv-thumb" onclick="fvOpen('CAT')"></td><td class="m hide-m">04-28</td><td class="hide-m">$814.35</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$827.18</td><td class="hide-m">$889.67</td><td class="pos"><b>+9.25%</b></td><td class="neg hide-m">$785.35</td><td class="pos hide-m">$905.35</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">CAT benefits from infrastructure spending cycle (IIJA, CHIPS Act) and global construction demand. Strong MACD +28.71 confirms momentum. Industrials sector rotation ongoing. Materials strength (steel +4%, uranium +5%) validates the macro theme.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/KEEL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>KEEL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=KEEL&ty=c&ta=1&p=d&s=l" alt="KEEL" class="fv-thumb" onclick="fvOpen('KEEL')"></td><td class="m hide-m">04-29</td><td class="hide-m">$2.86</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$2.92</td><td class="hide-m">$3.09</td><td class="pos"><b>+8.04%</b></td><td class="neg hide-m">$2.66</td><td class="pos hide-m">$4.00</td><td class="m">249d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="m">251d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ANET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ANET</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ANET&ty=c&ta=1&p=d&s=l" alt="ANET" class="fv-thumb" onclick="fvOpen('ANET')"></td><td class="m hide-m">04-29</td><td class="hide-m">$165.12</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$165.12</td><td class="hide-m">$172.70</td><td class="pos"><b>+4.59%</b></td><td class="neg hide-m">$158.00</td><td class="pos hide-m">$192.00</td><td class="m">249d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Hyperscaler networking equipment (Meta, Microsoft, Amazon = top 3 customers). Pure beta to Mag 7 AI capex guidance. Above 50DMA $140 + 200DMA $136. RSI in momentum zone.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/SABR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SABR</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SABR&ty=c&ta=1&p=d&s=l" alt="SABR" class="fv-thumb" onclick="fvOpen('SABR')"></td><td class="m hide-m">04-30</td><td class="hide-m">$1.78</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$1.80</td><td class="hide-m">$1.85</td><td class="pos"><b>+3.93%</b></td><td class="neg hide-m">$1.66</td><td class="pos hide-m">$2.25</td><td class="m">250d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CRM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CRM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=CRM&ty=c&ta=1&p=d&s=l" alt="CRM" class="fv-thumb" onclick="fvOpen('CRM')"></td><td class="m hide-m">04-30</td><td class="hide-m">$178.30</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$180.12</td><td class="hide-m">$183.82</td><td class="pos"><b>+3.1%</b></td><td class="neg hide-m">$172.00</td><td class="pos hide-m">$210.00</td><td class="m">250d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Pullback to SMA20 $180 = textbook entry. MSFT AI validation lifts entire SaaS/AI ecosystem. Agentforce AI product gaining enterprise traction. Room to recover — well below 52w high $296.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/QQQ?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QQQ</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=QQQ&ty=c&ta=1&p=d&s=l" alt="QQQ" class="fv-thumb" onclick="fvOpen('QQQ')"></td><td class="m hide-m">04-28</td><td class="hide-m">$657.41</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$663.12</td><td class="hide-m">$674.15</td><td class="pos"><b>+2.55%</b></td><td class="neg hide-m">$645.00</td><td class="pos hide-m">$720.00</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">QQQ captures broad Nasdaq-100 momentum with mega-cap earnings week as catalyst. RSI 73 in sweet spot. FOMC hold expected — dovish tone would accelerate tech rotation. ETF structure diversifies single-stock binary risk.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ING?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ING</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ING&ty=c&ta=1&p=d&s=l" alt="ING" class="fv-thumb" onclick="fvOpen('ING')"></td><td class="m hide-m">04-23</td><td class="hide-m">$27.88</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$28.20</td><td class="hide-m">$28.55</td><td class="pos"><b>+2.4%</b></td><td class="neg hide-m">$26.50</td><td class="pos hide-m">$32.00</td><td class="m">245d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">EU bank leader with 4.5% dividend yield. Fwd PE 9.1x — cheapest large EU bank. RSI 56.7, above EMA200 (25.9). Minor pullback (-1.4% Tue) in strong uptrend. ECB rate environment supportive.</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/IHRT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IHRT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=IHRT&ty=c&ta=1&p=d&s=l" alt="IHRT" class="fv-thumb" onclick="fvOpen('IHRT')"></td><td class="m hide-m">04-30</td><td class="hide-m">$5.10</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$5.18</td><td class="hide-m">$6.32</td><td class="pos"><b>+23.92%</b></td><td class="neg hide-m">$4.74</td><td class="pos hide-m">$7.21</td><td class="m">249d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/GOOGL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>GOOGL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=GOOGL&ty=c&ta=1&p=d&s=l" alt="GOOGL" class="fv-thumb" onclick="fvOpen('GOOGL')"></td><td class="m hide-m">04-28</td><td class="hide-m">$348.55</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$348.75</td><td class="hide-m">$385.69</td><td class="pos"><b>+10.66%</b></td><td class="neg hide-m">$333.55</td><td class="pos hide-m">$393.55</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">GOOGL surged post-earnings with Cloud revenue acceleration +28% YoY and AI monetization via Gemini. RSI 71.7 confirms strong momentum. Earnings Wed (MSFT/META) provide sector validation catalyst.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CAT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CAT</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=CAT&ty=c&ta=1&p=d&s=l" alt="CAT" class="fv-thumb" onclick="fvOpen('CAT')"></td><td class="m hide-m">04-28</td><td class="hide-m">$814.35</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$827.18</td><td class="hide-m">$889.67</td><td class="pos"><b>+9.25%</b></td><td class="neg hide-m">$785.35</td><td class="pos hide-m">$905.35</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">CAT benefits from infrastructure spending cycle (IIJA, CHIPS Act) and global construction demand. Strong MACD +28.71 confirms momentum. Industrials sector rotation ongoing. Materials strength (steel +4%, uranium +5%) validates the macro theme.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/KEEL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>KEEL</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=KEEL&ty=c&ta=1&p=d&s=l" alt="KEEL" class="fv-thumb" onclick="fvOpen('KEEL')"></td><td class="m hide-m">04-29</td><td class="hide-m">$2.86</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$2.92</td><td class="hide-m">$3.09</td><td class="pos"><b>+8.04%</b></td><td class="neg hide-m">$2.66</td><td class="pos hide-m">$4.00</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/INTC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INTC</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=INTC&ty=c&ta=1&p=d&s=l" alt="INTC" class="fv-thumb" onclick="fvOpen('INTC')"></td><td class="m hide-m">05-01</td><td class="hide-m">$93.20</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$93.89</td><td class="hide-m">$99.62</td><td class="pos"><b>+6.89%</b></td><td class="neg hide-m">$89.00</td><td class="pos hide-m">$109.00</td><td class="m">250d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Best month in Intel history (+110% April). Foundry recovery with 18A process gaining MSFT/Broadcom commitments. CHIPS Act subsidies de-risk capex. Entire semi sector in historic rally. Volume 157M shares confirms massive institutional accumulation.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ANET?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ANET</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ANET&ty=c&ta=1&p=d&s=l" alt="ANET" class="fv-thumb" onclick="fvOpen('ANET')"></td><td class="m hide-m">04-29</td><td class="hide-m">$165.12</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$165.12</td><td class="hide-m">$172.70</td><td class="pos"><b>+4.59%</b></td><td class="neg hide-m">$158.00</td><td class="pos hide-m">$192.00</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Hyperscaler networking equipment (Meta, Microsoft, Amazon = top 3 customers). Pure beta to Mag 7 AI capex guidance. Above 50DMA $140 + 200DMA $136. RSI in momentum zone.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/SABR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SABR</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=SABR&ty=c&ta=1&p=d&s=l" alt="SABR" class="fv-thumb" onclick="fvOpen('SABR')"></td><td class="m hide-m">04-30</td><td class="hide-m">$1.78</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$1.80</td><td class="hide-m">$1.85</td><td class="pos"><b>+3.93%</b></td><td class="neg hide-m">$1.66</td><td class="pos hide-m">$2.25</td><td class="m">249d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">TKL-DSL TKL-Momentum</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/CRM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CRM</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=CRM&ty=c&ta=1&p=d&s=l" alt="CRM" class="fv-thumb" onclick="fvOpen('CRM')"></td><td class="m hide-m">04-30</td><td class="hide-m">$178.30</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$180.12</td><td class="hide-m">$183.82</td><td class="pos"><b>+3.1%</b></td><td class="neg hide-m">$172.00</td><td class="pos hide-m">$210.00</td><td class="m">249d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Pullback to SMA20 $180 = textbook entry. MSFT AI validation lifts entire SaaS/AI ecosystem. Agentforce AI product gaining enterprise traction. Room to recover — well below 52w high $296.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/QQQ?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QQQ</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=QQQ&ty=c&ta=1&p=d&s=l" alt="QQQ" class="fv-thumb" onclick="fvOpen('QQQ')"></td><td class="m hide-m">04-28</td><td class="hide-m">$657.41</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$663.12</td><td class="hide-m">$674.15</td><td class="pos"><b>+2.55%</b></td><td class="neg hide-m">$645.00</td><td class="pos hide-m">$720.00</td><td class="m">248d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">QQQ captures broad Nasdaq-100 momentum with mega-cap earnings week as catalyst. RSI 73 in sweet spot. FOMC hold expected — dovish tone would accelerate tech rotation. ETF structure diversifies single-stock binary risk.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ING?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ING</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=ING&ty=c&ta=1&p=d&s=l" alt="ING" class="fv-thumb" onclick="fvOpen('ING')"></td><td class="m hide-m">04-23</td><td class="hide-m">$27.88</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$28.20</td><td class="hide-m">$28.55</td><td class="pos"><b>+2.4%</b></td><td class="neg hide-m">$26.50</td><td class="pos hide-m">$32.00</td><td class="m">244d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">EU bank leader with 4.5% dividend yield. Fwd PE 9.1x — cheapest large EU bank. RSI 56.7, above EMA200 (25.9). Minor pullback (-1.4% Tue) in strong uptrend. ECB rate environment supportive.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -3525,13 +3530,13 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js?v=1777746665246"></script>
-<script src="/assets/tag-renderer.js?v=1777746665246"></script>
-<script src="/assets/mode-panel-binder.js?v=1777746665246"></script>
-<script src="/assets/live-engine.js?v=1777746665246"></script>
-<script src="/assets/live-engine-ui.js?v=1777746665246"></script>
+<script src="/assets/core.js?v=1777877153742"></script>
+<script src="/assets/tag-renderer.js?v=1777877153742"></script>
+<script src="/assets/mode-panel-binder.js?v=1777877153742"></script>
+<script src="/assets/live-engine.js?v=1777877153742"></script>
+<script src="/assets/live-engine-ui.js?v=1777877153742"></script>
 <script>
-var _v='1777746665246';
+var _v='1777877153742';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;

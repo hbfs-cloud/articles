@@ -480,7 +480,7 @@ async function main() {
       <div class="step"><span class="step-n" style="background:${cfg.color}">3</span><div>At the same time, set your <b>stop loss</b> and <b>take profit</b> as bracket orders (OCO). The levels are shown on the signal card.${cfg.maxStopPct > 0 ? ` Hard stop at −<b>${cfg.maxStopPct}%</b> from entry — this is your maximum loss per trade, no exceptions.` : cfg.atrStopMult > 0 ? ' Your stop adapts to each stock\'s volatility — wider for volatile stocks, tighter for stable ones.' : ''}</div></div>`}
       <div class="step"><span class="step-n" style="background:${cfg.color}">4</span><div>${cfg.partialTP ? `When the price hits <b>TP1</b>: sell <b>${Math.round((cfg.partialTPPct || 0.7) * 100)}%</b> of your shares to lock in profit, and let the remaining ${Math.round((1 - (cfg.partialTPPct || 0.7)) * 100)}% run toward TP2. Move your stop to your entry price (you can't lose money on this trade anymore).` : 'Hold your full position and let it run. Exit when TP1 is hit, your stop triggers, or after the max hold time below.'}</div></div>
       ${cfg.vwapGate ? `<div class="step"><span class="step-n" style="background:${cfg.color}">&#x25b6;</span><div><b>VWAP Entry Gate:</b> Do <b>NOT</b> buy at market open. Wait 30 minutes, then calculate the day's VWAP. If the stock opened above VWAP &times; 1.01, <b>SKIP the trade</b> (gap-up trap — bad risk/reward). Otherwise, enter at the <b>lower of current price and VWAP</b> for a better fill.</div></div>` : ''}
-      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">5</span><div>${cfg.trailingStop && cfg.horizon >= 30 ? `<b>Trailing exit (no fixed time limit):</b> ride the position with the <b>${cfg.dailyTrailPct || 2}% daily trailing stop</b>. If the position goes <b>${cfg.staleDays || 5} sessions without making a new high</b> (stale), exit at market — momentum is dead. Hard cap at ${cfg.horizon} trading days as a safety net.` : `Close everything after <b>${cfg.horizon} trading days</b> (about ${Math.ceil(cfg.horizon * 7 / 5)} calendar days) — even if the trade hasn't hit TP or stop. This keeps your capital moving.`}</div></div>
       ${cfg.rotation === 'aggressive' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Rotation:</b> each evening, check if a new signal (score ≥ 88) appeared. If your worst open trade is still losing and the new setup is stronger, close the loser and buy the new one instead. Fresh opportunity beats a stale position.</div></div>` : cfg.rotation === 'daily_max1' ? `<div class="step"><span class="step-n" style="background:${cfg.color}">6</span><div><b>Upgrade rule (max once per day):</b> if the scanner finds a new setup that scores at least 5 points higher than your weakest current trade, close the weak one and buy the new one. This keeps your portfolio fresh without turning everything over at once.</div></div>` : ''}
       ${id === 'fortress' ? `<div class="step" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#6d28d9"><i class="fas fa-shield-halved" style="font-size:.5rem"></i></span><div><b>Capital preservation first:</b> with 15 slots at ~7% each, a single stop-out costs only <b>−0.5% of portfolio</b>. <b>VIX &lt; 15 (calm)</b>: run ${Math.round(cfg.portfolioSize * 0.6)}–${Math.round(cfg.portfolioSize * 0.7)} positions. <b>VIX 15–25 (elevated)</b>: aim for ${Math.round(cfg.portfolioSize * 0.8)}+ positions. <b>VIX &gt; 25 (stressed)</b>: fill all ${cfg.portfolioSize} slots for maximum diversification. Never hold fewer than ${Math.round(cfg.portfolioSize * 0.4)} positions. Consider adding defensive ETFs (GLD, TLT) manually during high-VIX regimes.</div></div>` : id === 'secured' ? `<div class="step" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#64748b"><i class="fas fa-gauge" style="font-size:.5rem"></i></span><div><b>Adapt to the market regime:</b> check the VIX level before placing orders. <b>VIX &lt; 15 (calm market)</b>: you can run with ${Math.max(1, Math.round(cfg.portfolioSize * 0.5))} position${Math.max(1, Math.round(cfg.portfolioSize * 0.5)) > 1 ? 's' : ''} — concentration is fine. <b>VIX 15–20 (neutral)</b>: aim for ${Math.min(cfg.portfolioSize, Math.round(cfg.portfolioSize * 0.75))} positions. <b>VIX &gt; 20 (stressed market)</b>: go to full ${cfg.portfolioSize} positions — maximum diversification is your shield.</div></div>` : ''}
     </div>
@@ -768,7 +768,7 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
       <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
       <tbody>${watchRows.join('')}</tbody>
     </table>
-  </details>` : ''}
+  </details>` : (totalActions === 0 ? `<div style="padding:.85rem 1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;font-size:.82rem;color:#475569;text-align:center;margin-top:.5rem">No actions today — portfolio is at capacity (${pos.length}/${cfg.portfolioSize}) and tonight's scan produced no eligible signals above score threshold for this mode. Stand by; new candidates may appear at the next scan or when current positions rotate.</div>` : '')}
 </div>`;
       })()}
 
@@ -1033,7 +1033,12 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
-  .section-card details[open]>table.t,.section-card>table.t{display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .section-card details[open]>table.t,.section-card>table.t{
+    display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;
+    /* Scroll shadow: shows a gradient on left/right edges when content overflows (Lea Verou trick) */
+    background-image:linear-gradient(to right,#fff 30%,rgba(255,255,255,0)),linear-gradient(to right,rgba(255,255,255,0),#fff 70%) 100% 0,radial-gradient(farthest-side at 0 50%,rgba(15,23,42,.18),rgba(0,0,0,0)),radial-gradient(farthest-side at 100% 50%,rgba(15,23,42,.18),rgba(0,0,0,0)) 100% 0;
+    background-repeat:no-repeat;background-color:#fff;background-size:40px 100%,40px 100%,14px 100%,14px 100%;background-attachment:local,local,scroll,scroll;
+  }
   .t{table-layout:auto}
   .t th,.t td{white-space:nowrap;padding:.3rem .45rem;font-size:.68rem}
 }
@@ -1219,7 +1224,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <!-- Mode Tabs -->
   <div class="mode-tabs">
-    ${Object.entries(modes).map(([id, m]) => `<button class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${id === 'balanced' ? ' <span style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
+    ${Object.entries(modes).map(([id, m]) => `<button class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${id === 'balanced' ? ' <span class="hide-m" style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
   </div>
 
   ${Object.entries(modes).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-' + id, id === 'balanced')).join('\n')}
