@@ -3281,9 +3281,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ NEUTRAL — MSFT, NVDA, META, AAPL, V, COIN, RACE, TTE, EWJ, GLD",
-    "desc": "The regime score stands at 0.55, classified as NEUTRAL — the amber zone between constructive and cautious. Component scores: SPX breadth 0.50 (near highs but Friday dip, Dow lagging), VIX 0.60 (18.3 — not alarming but no longer deeply sub-16 RISK-ON territory), Credit 0.55 (HYG stable, no stress sig...",
-    "tags": "us,eu,asia,etf,tech,semis,energy,consumer,crypto,financials,technique,trade-idea,macro",
+    "title": "Top 10 A+ RECOVERY — GOOGL, AMD, ABNB, QCOM, MA, AMAT, SHEL, XLE, EWT, VGK",
+    "desc": "The regime score stands at 0.66, classified as RECOVERY — holding from the post-correction rebound phase. Component signals: SPX breadth bullish (7,200.75, above 50-DMA and 200-DMA), VIX 18.29 (sub-20, risk appetite intact), DXY 98.49 (+0.34%, mild firming but not a headwind), 10Y Treasury 4.446% (+...",
+    "tags": "us,eu,asia,tech,semis,energy,etf,ai,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260505/",
     "date": "5 mai 2026"
