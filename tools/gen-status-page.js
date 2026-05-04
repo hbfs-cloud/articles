@@ -622,8 +622,24 @@ ${(() => {
           ? sigFiltered.filter(s => !rotationCandidates.some(r => r.signal.ticker === s.ticker)).slice(0, 3)
           : [];
 
-        // ── Render: BUY + ROTATE as primary CTA ──
+        // ── Render: SELL/CLOSE (urgent — horizon expired) → BUY → ROTATE ──
         const actionRows = [];
+        // SELL rows first (urgent action — close horizon-expired positions at open)
+        for (const p of timedOut) {
+          const rc = p.return_pct >= 0 ? 'pos' : 'neg';
+          const held = bizDaysHeld(p.scan_date);
+          actionRows.push(`<tr style="background:#fef2f2">
+      <td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td>
+      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td>
+      <td class="hide-m"><span class="pill-score" style="background:#dc2626">expired</span></td>
+      <td class="m hide-m">close</td><td><b>$${(p.current_price || 0).toFixed(2)}</b></td>
+      <td class="am hide-m">—</td>
+      <td class="neg">—</td>
+      <td class="pos">—</td>
+      <td class="am hide-m">${held}d / ${cfg.horizon}d</td><td class="m hide-m">—</td>
+      <td class="hide-m"><span class="pill neg">SELL</span></td>
+    </tr>`);
+        }
         for (let i = 0; i < buyOrders.length; i++) {
           const s = buyOrders[i];
           const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
@@ -702,7 +718,7 @@ ${(() => {
 
         // Count logical orders (1 per buy, 1 per rotation), NOT TR rows
         // (each order can push 1-3 <tr> for main+comparison+thesis).
-        const totalActions = buyOrders.length + rotationCandidates.length;
+        const totalActions = buyOrders.length + rotationCandidates.length + timedOut.length;
         const occupied = pos.length;
         const statusLine = slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
