@@ -555,7 +555,7 @@ async function main() {
 </div>
 
 <!-- ══ 4. CLOSE NOW ══ -->
-${timedOut.length ? `<div class="cta-card cta-close">
+${timedOut.length ? `<div class="cta-card cta-close" data-section="closenow">
   <div class="cta-header">
     <span class="cta-icon"><i class="fas fa-ban"></i></span>
     <div>
@@ -622,27 +622,8 @@ ${(() => {
           ? sigFiltered.filter(s => !rotationCandidates.some(r => r.signal.ticker === s.ticker)).slice(0, 3)
           : [];
 
-        // ── Render: SELL/CLOSE (urgent — horizon expired) → BUY → ROTATE ──
+        // ── Render: BUY → ROTATE (Close Now lives in its own card, no duplicate SELL row) ──
         const actionRows = [];
-        // SELL rows first (urgent action — close horizon-expired positions at open)
-        for (const p of timedOut) {
-          const rc = p.return_pct >= 0 ? 'pos' : 'neg';
-          const held = bizDaysHeld(p.scan_date);
-          // Trader-friendly: explicit market sell, current price reference, P&L, held/horizon
-          actionRows.push(`<tr style="background:#fef2f2">
-      <td>${tkLogo(p.ticker)}<b>${p.ticker}</b> <span class="pill" style="background:#dc2626;color:#fff;font-size:.55rem;padding:.1rem .3rem;margin-left:.2rem">SELL</span></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#dc2626">EXPIRED</span></td>
-      <td class="m hide-m">Market @ open</td>
-      <td><b>≈ $${(p.current_price || 0).toFixed(2)}</b><br><span style="font-size:.65rem;color:#475569">market sell</span></td>
-      <td class="am hide-m">—</td>
-      <td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b><br><span style="font-size:.65rem;color:#64748b">P&amp;L now</span></td>
-      <td class="am">${held}d / ${cfg.horizon}d<br><span style="font-size:.65rem;color:#64748b">held / horizon</span></td>
-      <td class="am hide-m">—</td>
-      <td class="m hide-m">${alloc}%</td>
-      <td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">SELL</span></td>
-    </tr>`);
-        }
         for (let i = 0; i < buyOrders.length; i++) {
           const s = buyOrders[i];
           const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
@@ -721,7 +702,7 @@ ${(() => {
 
         // Count logical orders (1 per buy, 1 per rotation), NOT TR rows
         // (each order can push 1-3 <tr> for main+comparison+thesis).
-        const totalActions = buyOrders.length + rotationCandidates.length + timedOut.length;
+        const totalActions = buyOrders.length + rotationCandidates.length;
         const occupied = pos.length;
         const statusLine = slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
@@ -777,19 +758,18 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </table>
 </div>` : ''}
 
-<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}" data-scan-date="${scanDir}">
+<div class="section-card ${totalActions > 0 ? 'cta-orders' : ''}" data-section="orders" data-scan-date="${scanDir}">
   <div class="sc-head">
-    <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-eye"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'On Watch'}</h3>
+    <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-coffee" style="color:#94a3b8"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'No new orders'}</h3>
     <span class="sc-meta">${statusLine}</span>
   </div>
   ${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
-  </table>` : ''}
-  ${(totalActions === 0 && watchRows.length === 0) ? `<div style="padding:.85rem 1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;font-size:.82rem;color:#475569;text-align:center;margin-top:.5rem">No actions today — portfolio is at capacity (${pos.length}/${cfg.portfolioSize}) and tonight's scan produced no eligible signals above score threshold for this mode. Stand by; new candidates may appear at the next scan or when current positions rotate.</div>` : ''}
+  </table>` : `<div style="padding:.6rem .85rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:6px;font-size:.78rem;color:#475569;text-align:center">${timedOut.length ? `Today's only action: see <b>Close Now</b> above.` : (watchRows.length ? `Portfolio full — see <b>On Watch</b> below.` : `No actions today.`)}</div>`}
 </div>
-${watchRows.length ? `<div class="section-card">
+${watchRows.length ? `<div class="section-card" data-section="watch">
   <div class="sc-head">
     <h3><i class="fas fa-eye"></i> On Watch <span class="count">${watchRows.length}</span></h3>
     <span class="sc-meta">portfolio full — signals expire ${expiryLabel}</span>

@@ -87,27 +87,14 @@
     '    min-width:0;',
     '  }',
 
-    /* Close Now — full width (action-urgent, needs to be visible) */
-    '  .lp-grid>[data-grid="closenow"]{',
-    '    grid-column:1/-1;',
-    '    grid-row:4;',
-    '    margin-bottom:0!important;',
-    '  }',
-    /* Orders — full width */
-    '  .lp-grid>[data-grid="orders"]{',
-    '    grid-column:1/-1;',
-    '    grid-row:5;',
-    '    margin-bottom:0!important;',
-    '  }',
-    /* On Watch — full width */
-    '  .lp-grid>[data-grid="watch"]{',
-    '    grid-column:1/-1;',
-    '    grid-row:6;',
-    '    margin-bottom:0!important;',
-    '  }',
-    /* Hide bulky columns (chart thumb, alloc, action label) in the right-column orders table */
-    '  .lp-grid>[data-grid="orders"] .fv-thumb{display:none!important}',
-    '  .lp-grid>[data-grid="orders"] .hide-m{display:none!important}',
+    /* Right-column stack: signals(2) → closenow(3) → orders(4) → watch(5). Equity spans rows 2-5 left. */
+    '  .lp-grid>[data-grid="closenow"]{grid-column:2;grid-row:3;margin-bottom:0!important;overflow:hidden;min-width:0}',
+    '  .lp-grid>[data-grid="orders"]{grid-column:2;grid-row:4;margin-bottom:0!important;overflow:hidden;min-width:0}',
+    '  .lp-grid>[data-grid="watch"]{grid-column:2;grid-row:5;margin-bottom:0!important;overflow:hidden;min-width:0}',
+    '  .lp-grid>[data-grid="equity"]{grid-row:2/span 4!important}',
+    /* Apply hide-m + thumb hide to all right-column action cards (compact view) */
+    '  .lp-grid>[data-grid="closenow"] .fv-thumb,.lp-grid>[data-grid="watch"] .fv-thumb,.lp-grid>[data-grid="orders"] .fv-thumb{display:none!important}',
+    '  .lp-grid>[data-grid="closenow"] .hide-m,.lp-grid>[data-grid="watch"] .hide-m,.lp-grid>[data-grid="orders"] .hide-m{display:none!important}',
     /* Rotation card: stack vertically when in narrow grid column */
     '  .lp-grid>[data-grid="orders"] .thesis-row>td>div{',
     '    grid-template-columns:1fr!important;',
@@ -116,15 +103,15 @@
     '    font-size:.75rem!important;',
     '  }',
 
-    /* Positions — full width row 7 */
+    /* Positions — full width row 6 */
     '  .lp-grid>[data-grid="positions"]{',
     '    grid-column:1/-1;',
-    '    grid-row:7;',
+    '    grid-row:6;',
     '    margin-bottom:0!important;',
     '  }',
 
-    /* History — full width row 8 */
-    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:8;margin-bottom:0!important}',
+    /* History — full width row 7 */
+    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:7;margin-bottom:0!important}',
     '  .lp-grid>[data-grid="footer"]{grid-column:1/-1}',
 
     /* Hide empty-state collapsed sections on desktop to reclaim space */
@@ -558,6 +545,14 @@
       } else if (child.getAttribute('data-static') === '1') {
         child.setAttribute('data-grid', 'method');
       } else if (child.classList.contains('section-card')) {
+        // Prefer explicit data-section attribute over heading text match (avoids collisions
+        // when a section header dynamically reads e.g. "On Watch" but isn't the watch card)
+        var explicit = child.getAttribute('data-section');
+        if (explicit && ['signals','orders','watch','closenow','positions','history'].indexOf(explicit) >= 0) {
+          child.setAttribute('data-grid', explicit);
+          grid.appendChild(child);
+          return;
+        }
         var summary = child.querySelector('.sc-sum-title, .sc-head h3');
         var text = summary ? summary.textContent.toLowerCase() : '';
 
