@@ -787,14 +787,18 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
   </table>` : ''}
-  ${watchRows.length ? `<details open style="margin-top:.75rem;border-top:1px solid #e2e8f0;padding-top:.65rem">
-    <summary class="watch-summary"><i class="fas fa-eye" style="color:#64748b"></i> On Watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
-    <table class="t" style="margin-top:.5rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
-      <tbody>${watchRows.join('')}</tbody>
-    </table>
-  </details>` : (totalActions === 0 ? `<div style="padding:.85rem 1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;font-size:.82rem;color:#475569;text-align:center;margin-top:.5rem">No actions today — portfolio is at capacity (${pos.length}/${cfg.portfolioSize}) and tonight's scan produced no eligible signals above score threshold for this mode. Stand by; new candidates may appear at the next scan or when current positions rotate.</div>` : '')}
-</div>`;
+  ${(totalActions === 0 && watchRows.length === 0) ? `<div style="padding:.85rem 1rem;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:8px;font-size:.82rem;color:#475569;text-align:center;margin-top:.5rem">No actions today — portfolio is at capacity (${pos.length}/${cfg.portfolioSize}) and tonight's scan produced no eligible signals above score threshold for this mode. Stand by; new candidates may appear at the next scan or when current positions rotate.</div>` : ''}
+</div>
+${watchRows.length ? `<div class="section-card">
+  <div class="sc-head">
+    <h3><i class="fas fa-eye"></i> On Watch <span class="count">${watchRows.length}</span></h3>
+    <span class="sc-meta">portfolio full — signals expire ${expiryLabel}</span>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+    <tbody>${watchRows.join('')}</tbody>
+  </table>
+</div>` : ''}`;
       })()}
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
