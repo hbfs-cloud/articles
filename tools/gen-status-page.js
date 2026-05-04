@@ -628,16 +628,19 @@ ${(() => {
         for (const p of timedOut) {
           const rc = p.return_pct >= 0 ? 'pos' : 'neg';
           const held = bizDaysHeld(p.scan_date);
+          // Trader-friendly: explicit market sell, current price reference, P&L, held/horizon
           actionRows.push(`<tr style="background:#fef2f2">
-      <td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td>
+      <td>${tkLogo(p.ticker)}<b>${p.ticker}</b> <span class="pill" style="background:#dc2626;color:#fff;font-size:.55rem;padding:.1rem .3rem;margin-left:.2rem">SELL</span></td>
       <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:#dc2626">expired</span></td>
-      <td class="m hide-m">close</td><td><b>$${(p.current_price || 0).toFixed(2)}</b></td>
+      <td class="hide-m"><span class="pill-score" style="background:#dc2626">EXPIRED</span></td>
+      <td class="m hide-m">Market @ open</td>
+      <td><b>≈ $${(p.current_price || 0).toFixed(2)}</b><br><span style="font-size:.65rem;color:#475569">market sell</span></td>
       <td class="am hide-m">—</td>
-      <td class="neg">—</td>
-      <td class="pos">—</td>
-      <td class="am hide-m">${held}d / ${cfg.horizon}d</td><td class="m hide-m">—</td>
-      <td class="hide-m"><span class="pill neg">SELL</span></td>
+      <td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b><br><span style="font-size:.65rem;color:#64748b">P&amp;L now</span></td>
+      <td class="am">${held}d / ${cfg.horizon}d<br><span style="font-size:.65rem;color:#64748b">held / horizon</span></td>
+      <td class="am hide-m">—</td>
+      <td class="m hide-m">${alloc}%</td>
+      <td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">SELL</span></td>
     </tr>`);
         }
         for (let i = 0; i < buyOrders.length; i++) {
@@ -655,7 +658,7 @@ ${(() => {
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
-      <td class="hide-m"><span class="pill pos">BUY</span></td>
+      <td><span class="pill pos">BUY</span></td>
     </tr>${s.thesis ? `<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>` : ''}`);
         }
         for (const { signal: s, replaces, scoreDelta } of rotationCandidates) {
@@ -674,7 +677,7 @@ ${(() => {
       <td class="neg">${s.stop}</td>
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
-      <td class="hide-m"><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
+      <td><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
     </tr>
     <tr class="thesis-row"><td colspan="${thesisCols}">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;padding:.5rem .75rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:.8rem">
@@ -781,11 +784,11 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   </div>
   ${recentRotationHTML}
   ${totalActions > 0 ? `<table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th class="hide-m">Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
   </table>` : ''}
-  ${watchRows.length ? `<details${totalActions > 0 ? '' : ' open'}>
-    <summary class="watch-summary">On watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
+  ${watchRows.length ? `<details open style="margin-top:.75rem;border-top:1px solid #e2e8f0;padding-top:.65rem">
+    <summary class="watch-summary"><i class="fas fa-eye" style="color:#64748b"></i> On Watch — ${watchRows.length} signal${watchRows.length > 1 ? 's' : ''} (portfolio full, valid until ${expiryLabel})</summary>
     <table class="t" style="margin-top:.5rem">
       <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
       <tbody>${watchRows.join('')}</tbody>
