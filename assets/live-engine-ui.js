@@ -87,13 +87,23 @@
     '    min-width:0;',
     '  }',
 
-    /* Orders — right column, under signals (CTA to action) */
-    '  .lp-grid>[data-grid="orders"]{',
-    '    grid-column:2;',
-    '    grid-row:3;',
+    /* Close Now — full width (action-urgent, needs to be visible) */
+    '  .lp-grid>[data-grid="closenow"]{',
+    '    grid-column:1/-1;',
+    '    grid-row:4;',
     '    margin-bottom:0!important;',
-    '    overflow:hidden;',
-    '    min-width:0;',
+    '  }',
+    /* Orders — full width */
+    '  .lp-grid>[data-grid="orders"]{',
+    '    grid-column:1/-1;',
+    '    grid-row:5;',
+    '    margin-bottom:0!important;',
+    '  }',
+    /* On Watch — full width */
+    '  .lp-grid>[data-grid="watch"]{',
+    '    grid-column:1/-1;',
+    '    grid-row:6;',
+    '    margin-bottom:0!important;',
     '  }',
     /* Hide bulky columns (chart thumb, alloc, action label) in the right-column orders table */
     '  .lp-grid>[data-grid="orders"] .fv-thumb{display:none!important}',
@@ -106,15 +116,15 @@
     '    font-size:.75rem!important;',
     '  }',
 
-    /* Positions — full width row 4 */
+    /* Positions — full width row 7 */
     '  .lp-grid>[data-grid="positions"]{',
     '    grid-column:1/-1;',
-    '    grid-row:4;',
+    '    grid-row:7;',
     '    margin-bottom:0!important;',
     '  }',
 
-    /* History — full width row 5 */
-    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:5;margin-bottom:0!important}',
+    /* History — full width row 8 */
+    '  .lp-grid>[data-grid="history"]{grid-column:1/-1;grid-row:8;margin-bottom:0!important}',
     '  .lp-grid>[data-grid="footer"]{grid-column:1/-1}',
 
     /* Hide empty-state collapsed sections on desktop to reclaim space */
@@ -544,7 +554,7 @@
       } else if (child.classList.contains('related-section')) {
         child.setAttribute('data-grid', 'footer');
       } else if (child.classList.contains('cta-card')) {
-        child.setAttribute('data-grid', 'orders');
+        child.setAttribute('data-grid', 'closenow');
       } else if (child.getAttribute('data-static') === '1') {
         child.setAttribute('data-grid', 'method');
       } else if (child.classList.contains('section-card')) {
@@ -553,8 +563,10 @@
 
         if (text.indexOf('signal') >= 0) {
           child.setAttribute('data-grid', 'signals');
-        } else if (text.indexOf('order') >= 0 || text.indexOf('watch') >= 0) {
+        } else if (text.indexOf('order') >= 0) {
           child.setAttribute('data-grid', 'orders');
+        } else if (text.indexOf('watch') >= 0) {
+          child.setAttribute('data-grid', 'watch');
         } else if (text.indexOf('open') >= 0 || text.indexOf('position') >= 0) {
           child.setAttribute('data-grid', 'positions');
         } else if (text.indexOf('history') >= 0 || text.indexOf('trade') >= 0) {
