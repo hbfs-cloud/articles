@@ -123,11 +123,16 @@ function writeMode(mode, prefix) {
     positions: (mode.positions || []).map(p => {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
+      // riskPct = % loss IF stop hits (per-trade). Use riskPctOfPortfolio for portfolio-level exposure.
       const riskPct = entry > 0 && stop > 0 ? +((entry - stop) / entry * 100).toFixed(2) : 0;
+      const riskPctOfPortfolio = +((riskPct * allocPct) / 100).toFixed(3);
       return {
         ticker: p.ticker, entry, currentPrice: p.current_price,
         returnPct: p.return_pct, score: p.score || 0,
-        stop, tp1: p.tp1 || null, tp2: p.tp2 || null, riskPct, allocPct,
+        stop, tp1: p.tp1 || null, tp2: p.tp2 || null,
+        riskPct,                  // % loss per-trade if stop hits
+        riskPctOfPortfolio,       // % of total portfolio at risk on this position
+        allocPct,
         scanDate: p.scan_date, daysRemaining: p.days_remaining
       };
     })
@@ -146,10 +151,40 @@ function writeMode(mode, prefix) {
     }))
   });
 
-  // 4. equity.json
+  // 4. equity.json (with reliability disclosures)
+  // Compute sample period from equity curve (first → last data point)
+  const ec = mode.equity && Array.isArray(mode.equity.d) ? mode.equity : null;
+  let samplePeriodDays = null, samplePeriodStart = null, samplePeriodEnd = null;
+  if (ec && ec.d.length >= 2) {
+    samplePeriodStart = ec.d[0];
+    samplePeriodEnd = ec.d[ec.d.length - 1];
+    try {
+      // Dates are like "MM/DD" — parse with current year
+      const yr = new Date().getFullYear();
+      const ds = new Date(`${yr}-${samplePeriodStart}T00:00:00Z`);
+      const de = new Date(`${yr}-${samplePeriodEnd}T00:00:00Z`);
+      samplePeriodDays = Math.round((de - ds) / 86400000);
+    } catch {}
+  }
+  const tradesN = ((mode.stats || {}).trades) || 0;
+  const reliability = {
+    sample_period_days: samplePeriodDays,
+    sample_period_start: samplePeriodStart,
+    sample_period_end: samplePeriodEnd,
+    closed_trades: tradesN,
+    statistically_reliable: tradesN >= 30,
+    pf_reliable: ((mode.stats || {}).pfReliable) === true,
+    warnings: [
+      ...(samplePeriodDays !== null && samplePeriodDays < 90 ? [`Sample period only ${samplePeriodDays} days (${(samplePeriodDays/7).toFixed(1)} weeks). Statistical significance limited.`] : []),
+      ...(tradesN < 30 ? [`Only ${tradesN} closed trades (need n≥30 for reliable WR/PF inference).`] : []),
+      ...(((mode.stats || {}).pfReliable) === false ? ['Profit Factor below n=50 reliability threshold — bootstrapped 90% CI in pfLow/pfHigh fields.'] : []),
+      'No bear-market test (2022 / 2020 type) included — system inception was 2026-02-26.',
+    ],
+  };
   write(`${p}equity.json`, {
     updatedAt: now, mode: prefix || 'balanced',
     config: mode.config || {}, stats: mode.stats || {},
+    reliability,
     equityCurve: mode.equity || {}
   });
 
@@ -197,10 +232,14 @@ function writeMode(mode, prefix) {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
       const riskPct = entry > 0 && stop > 0 ? +((entry - stop) / entry * 100).toFixed(2) : 0;
+      const riskPctOfPortfolio = +((riskPct * allocPct) / 100).toFixed(3);
       return {
         ticker: p.ticker, entry, currentPrice: p.current_price,
         returnPct: p.return_pct, score: p.score || 0,
-        stop, tp1: p.tp1 || null, tp2: p.tp2 || null, riskPct, allocPct,
+        stop, tp1: p.tp1 || null, tp2: p.tp2 || null,
+        riskPct,                  // % loss per-trade if stop hits
+        riskPctOfPortfolio,       // % of total portfolio at risk on this position
+        allocPct,
         scanDate: p.scan_date, daysRemaining: p.days_remaining
       };
     }),
@@ -242,12 +281,23 @@ function writeMode(mode, prefix) {
       alpha,
     };
   }
+  // Note for mono-position modes: pairwise correlation requires ≥ 2 symbols.
+  const _ps = ((mode.config || {}).portfolioSize) || 1;
+  const riskPayload = getRiskFor(prefix || 'balanced');
+  const riskNotes = [];
+  if (_ps === 1) {
+    riskNotes.push('Single-position mode — pairwise correlation N/A (requires ≥ 2 symbols). VaR is per-position only.');
+  }
+  if (riskPayload && riskPayload.maxPairwiseCorrelation === null && _ps > 1) {
+    riskNotes.push('Correlation matrix temporarily unavailable from gateway. VaR/ES values remain valid.');
+  }
   write(`${p}risk.json`, {
     updatedAt: now,
     mode: prefix || 'balanced',
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
-    risk: getRiskFor(prefix || 'balanced'),
+    risk: riskPayload,
+    notes: riskNotes,
     bench: benchField,
   });
 }

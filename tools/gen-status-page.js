@@ -297,12 +297,18 @@ async function main() {
     // Stats computed from CLOSED trades only (non-premature) — matches backfill convention
     const closedTrades = trades.filter(t => !t._premature);
     const m = computeMetrics(closedTrades, cfg.portfolioSize, cfg.positionSizePct);
-    // Override all stats with authoritative frozen_ values from sweep (daily MtM)
+    // Override all stats with authoritative frozen_ values from sweep (daily MtM).
+    // Frozen ret is the final portfolio-simulation result (handles concurrency, sizing,
+    // rotation correctly). It supersedes the per-trade sum from computeMetrics.
+    // Keep the realized/unrealized split coherent: when frozen ret is applied, realized
+    // is by definition ret (sweep covers closed period only), unrealized = 0.
     const frozenKey = `frozen_${id}`;
     const frozen = results[frozenKey];
     if (frozen) {
       m.ret = frozen.returnTotal;
       m.dd = frozen.maxDD;
+      m.realized = frozen.returnTotal;  // sweep ret is realized — no open positions in frozen sim
+      m.unrealized = 0;
       if (frozen.winRate !== undefined) m.wr = frozen.winRate;
       if (frozen.profitFactor !== undefined) m.pf = frozen.profitFactor;
       if (frozen.trades !== undefined) m.trades = frozen.trades;
