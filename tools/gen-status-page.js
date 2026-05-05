@@ -429,38 +429,46 @@ async function main() {
 
     let pending = trades.filter(t => t._premature && !t._horizonExpired);
     // Fallback: aggressive-rotation modes (turbo/dynamic/tkl) frequently end the
-    // backtest with all sim positions resolved. Real-world portfolio is held
-    // continuously — show recent live positions as "currently held" so the UI
-    // doesn't say "0 open / N orders to place" right after a normal trading day.
+    // backtest with all sim positions resolved. Show this mode's MOST RECENT
+    // sim entries (within the horizon window) cross-referenced with the live
+    // tracker so QCOM/etc. don't bleed across modes that never entered them.
     if (pending.length === 0 && livePositions.length > 0) {
+      const liveTickers = new Set(livePositions.map(p => p.ticker));
       const horizonDays = cfg.horizon || 10;
-      const minScore = cfg.minScore || 80;
       const cutoffMs = Date.now() - horizonDays * 86400000;
-      // Use most recent live positions (within horizon window) as fallback.
-      // Sort newest-first, take up to portfolioSize.
-      const fallback = livePositions
-        .filter(p => p.scan_date && new Date(p.scan_date).getTime() >= cutoffMs)
-        .filter(p => (p.score || 99) >= minScore - 5)  // small tolerance
-        .sort((a, b) => (b.scan_date || '').localeCompare(a.scan_date || ''))
-        .slice(0, cfg.portfolioSize)
-        .map(p => ({
-          ticker: p.ticker,
-          scanDate: p.scan_date,
-          entryDate: p.scan_date,
-          actualEntry: p.entry,
-          actualStop: p.stop,
-          actualTp1: p.tp1,
-          actualTp2: p.tp2,
-          score: p.score || 0,
-          strategy: p.strategy,
+      // Take this mode's recent trades (sim entered them) that the live tracker
+      // still considers "open" (ticker present in scanner-positions). Newest first.
+      const recent = trades
+        .filter(t => t.ticker && t.entryDate && new Date(t.entryDate).getTime() >= cutoffMs)
+        .filter(t => liveTickers.has(t.ticker))
+        .sort((a, b) => (b.entryDate || '').localeCompare(a.entryDate || ''));
+      const seenTk = new Set();
+      const fallback = [];
+      for (const t of recent) {
+        if (seenTk.has(t.ticker)) continue;
+        seenTk.add(t.ticker);
+        const live = livePositions.find(p => p.ticker === t.ticker) || {};
+        fallback.push({
+          ticker: t.ticker,
+          scanDate: t.scanDate,
+          entryDate: t.entryDate,
+          actualEntry: t.actualEntry || live.entry,
+          actualStop: t.actualStop || live.stop,
+          actualTp1: t.actualTp1 || live.tp1,
+          actualTp2: t.actualTp2 || live.tp2 || null,
+          score: t.score || live.score || 0,
+          strategy: t.strategy || live.strategy,
+          vwap: t.vwap || null,
           exitDate: null,
-          exitPrice: p.current_price,
+          exitPrice: live.current_price || null,
           status: 'pending',
           holdDays: 0,
           _premature: true,
           _horizonExpired: false,
           _liveFallback: true,
-        }));
+        });
+        if (fallback.length >= cfg.portfolioSize) break;
+      }
       pending = fallback;
     }
     const mapped = pending.map(t => {
