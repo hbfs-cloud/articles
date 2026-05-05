@@ -62,10 +62,16 @@ function generatePlan(mode, broker) {
   const { execSync } = require('child_process');
   const planDir = path.join(ROOT, 'data/trading-plans');
   fs.mkdirSync(planDir, { recursive: true });
-  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  // Derive date from orders.json scanDate (target session), fallback to today
+  let date;
+  try {
+    const od = JSON.parse(fs.readFileSync(path.join(ROOT, 'portfolio/v1', mode, 'orders.json'), 'utf8'));
+    date = od.scanDate || '';
+  } catch (_) {}
+  if (!date) date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const outPath = path.join(planDir, `${mode}-${broker}-${date}.json`);
 
-  const cmd = `node ${path.join(ROOT, 'tools/gen-trading-plan.js')} --mode ${mode} --broker ${broker} --output ${outPath}`;
+  const cmd = `node ${path.join(ROOT, 'tools/gen-trading-plan.js')} --mode ${mode} --broker ${broker} --date ${date} --output ${outPath}`;
   try {
     execSync(cmd, { stdio: VERBOSE ? 'inherit' : 'pipe' });
     return outPath;
