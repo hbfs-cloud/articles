@@ -223,7 +223,9 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
 - `tkl_pool` contient jusqu'à 20 signaux supplémentaires (small/mid-cap momentum)
 - sweep.js et gen-status-page.js lisent `signals` + `tkl_pool` pour le mode TKL
 - Le HTML du scanner n'affiche que les 10 `signals` (top A+)
-- Les scores dans `tkl_pool` sont recalculés par Claude sur une échelle 0-100 compatible
+- **Scores tkl_pool**: Claude écrit le score brut renvoyé par le screener (souvent 99 = "passed"). `sweep.js buildSetups` les normalise automatiquement à parse-time en composite [85,95] = `85 + stratBonus*0.4 + rrBonus` (rrBonus = clamp((rr-1.5)*4, 0, 6)). Pas besoin de recalibrer manuellement côté Claude.
+- **regime cohérence (CRITIQUE)** : `signals.json#regime` DOIT être identique à `data.json#regime` (ex: tous les deux `RECOVERY` ou tous les deux `RISK-ON`). Mismatch ⇒ pipeline downstream lit signals.json et ignore le label canonique de data.json.
+- **Backfill historique tkl_pool** : si un scan ancien a `tkl_pool: []`, utiliser `mcp__dailytickers__RunScreener` avec `as_of=YYYY-MM-DDT22:00:00Z` et le DSL TKL-Momentum, dédup vs main top10, sharia filter.
 - Champ `source` : `tkl_momentum`, `tkl_breakout`, ou `tkl_volume_surge`
 
 **Workflow** :

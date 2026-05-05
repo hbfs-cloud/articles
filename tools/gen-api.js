@@ -167,6 +167,7 @@ function writeMode(mode, prefix) {
     } catch {}
   }
   const tradesN = ((mode.stats || {}).trades) || 0;
+  const oosWarn = (mode.stats || {}).oosWarn || null;
   const reliability = {
     sample_period_days: samplePeriodDays,
     sample_period_start: samplePeriodStart,
@@ -174,10 +175,14 @@ function writeMode(mode, prefix) {
     closed_trades: tradesN,
     statistically_reliable: tradesN >= 30,
     pf_reliable: ((mode.stats || {}).pfReliable) === true,
+    pf_low: (mode.stats || {}).pfLow ?? null,
+    pf_high: (mode.stats || {}).pfHigh ?? null,
+    out_of_sample_warning: oosWarn,
     warnings: [
       ...(samplePeriodDays !== null && samplePeriodDays < 90 ? [`Sample period only ${samplePeriodDays} days (${(samplePeriodDays/7).toFixed(1)} weeks). Statistical significance limited.`] : []),
       ...(tradesN < 30 ? [`Only ${tradesN} closed trades (need n≥30 for reliable WR/PF inference).`] : []),
-      ...(((mode.stats || {}).pfReliable) === false ? ['Profit Factor below n=50 reliability threshold — bootstrapped 90% CI in pfLow/pfHigh fields.'] : []),
+      ...(((mode.stats || {}).pfReliable) === false ? ['Profit Factor below n=50 reliability threshold — bootstrapped 90% CI in pf_low / pf_high.'] : []),
+      ...(oosWarn ? [`Out-of-sample degradation: IS WR ${oosWarn.isWR}% / PF ${oosWarn.isPF}x → OOS WR ${oosWarn.oosWR}% / PF ${oosWarn.oosPF}x (n=${oosWarn.oosTrades}). Treat in-sample stats as overfit-prone.`] : []),
       'No bear-market test (2022 / 2020 type) included — system inception was 2026-02-26.',
     ],
   };

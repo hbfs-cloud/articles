@@ -321,6 +321,18 @@ async function main() {
 
         m.equityCurve = ec;
       }
+      // Out-of-sample degradation flag — surface overfitting risk to the UI.
+      // Triggers if OOS PF < 1.5 OR (IS_WR - OOS_WR) > 20pp on a non-trivial OOS sample.
+      const isS = frozen.in_sample, oosS = frozen.out_sample;
+      if (isS && oosS && oosS.trades >= 5) {
+        const wrDelta = (isS.winRate || 0) - (oosS.winRate || 0);
+        const pfWeak = (oosS.profitFactor || 0) < 1.5;
+        m.oosWarn = (pfWeak || wrDelta > 20)
+          ? { isWR: isS.winRate, oosWR: oosS.winRate, isPF: isS.profitFactor, oosPF: oosS.profitFactor, oosTrades: oosS.trades, wrDelta: +wrDelta.toFixed(1) }
+          : null;
+      } else {
+        m.oosWarn = null;
+      }
     }
     modes[id] = { cfg, trades, m, ec: equityDV(m.equityCurve) };
   }
@@ -537,6 +549,10 @@ async function main() {
 </div>
 
 <!-- ══ 3. PERF + STATS (equity curve) ══ -->
+${m.oosWarn ? `<div class="oos-warn" style="margin:.5rem 0 .75rem;padding:.55rem .85rem;background:#fef3c7;border:1px solid #fcd34d;border-left:4px solid #d97706;border-radius:8px;font-size:.74rem;color:#78350f;display:flex;gap:.5rem;align-items:flex-start" role="status">
+  <i class="fas fa-triangle-exclamation" style="color:#d97706;margin-top:.15rem"></i>
+  <span><b>Out-of-sample degradation detected.</b> In-sample WR ${m.oosWarn.isWR}% / PF ${m.oosWarn.isPF}x → out-of-sample (${m.oosWarn.oosTrades} trades) WR ${m.oosWarn.oosWR}% / PF ${m.oosWarn.oosPF}x. Δ WR = ${m.oosWarn.wrDelta}pp. Treat in-sample stats as overfitting-prone; favour OOS metrics for forward expectations.</span>
+</div>` : ''}
 <div class="perf-hero" style="border-left:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
@@ -545,12 +561,24 @@ async function main() {
     <div class="perf-chart" id="${chartId}"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps"><span class="ps-v" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Total Return</span></div>
-    <div class="ps"><span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max Drawdown</span></div>
-    <div class="ps"><span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span></div>
-    <div class="ps"><span class="ps-v">${m.pf}x</span><span class="ps-l">Profit Factor</span></div>
-    <div class="ps"><span class="ps-v">${m.trades}</span><span class="ps-l">Closed Trades</span></div>
-    <div class="ps"><span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span></div>
+    <div class="ps" title="Cumulative percent gain since strategy inception (2026-02-26). Compounded across all closed trades.">
+      <span class="ps-v" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Total Return</span>
+    </div>
+    <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
+      <span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max Drawdown</span>
+    </div>
+    <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
+      <span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span>
+    </div>
+    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated.${m.pfLow != null && m.pfHigh != null ? ` 90% bootstrap CI: [${m.pfLow}x — ${m.pfHigh}x] over ${m.trades} trades.` : (m.pfReliable === false ? ` Sample ${m.trades}<50 trades — point estimate only, treat as fragile.` : '')}">
+      <span class="ps-v">${m.pf}x${m.pfLow != null && m.pfHigh != null ? `<span style="font-size:.55rem;color:#94a3b8;margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${m.pfReliable === false ? ' <span style="color:#d97706;font-size:.55rem;background:#fef3c7;padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
+    </div>
+    <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
+      <span class="ps-v">${m.trades}</span><span class="ps-l">Closed Trades</span>
+    </div>
+    <div class="ps" title="Average number of trading days each closed trade was held.">
+      <span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span>
+    </div>
   </div>
 </div>
 
@@ -845,7 +873,9 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
           return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
-  </table>` : `<p class="empty"><i class="fas fa-inbox"></i>No active positions</p>`}
+  </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
+    <span><b>No active positions</b><br><span style="font-size:.72rem;color:#94a3b8">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore || 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore || 85) + ') today or stale exits closed prior holds.'}</span></span>
+  </p>`}
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
@@ -974,13 +1004,32 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <style>
 *{box-sizing:border-box}
+html,body{overflow-x:hidden;max-width:100vw}
 body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
-.w{max-width:1080px;margin:0 auto;padding:0 1.5rem 4rem}
+.w{max-width:1080px;margin:0 auto;padding:0 1.5rem 4rem;width:100%}
+.mode-panel{min-width:0;max-width:100%;overflow-x:hidden}
+.mode-panel>*{min-width:0;max-width:100%}
 .mode-tabs{display:flex;gap:.5rem;margin-bottom:1.5rem;padding:.25rem;background:#f1f5f9;border-radius:12px}
 .mode-tab{flex:1;padding:.65rem 1rem;border:none;background:transparent;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;color:#64748b;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:all .2s}
-@media(max-width:600px){.mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}.mode-tabs::-webkit-scrollbar{display:none}.mode-tab{flex:0 0 auto;padding:.55rem .75rem;font-size:.78rem;white-space:nowrap}}
+.mode-tab:focus-visible{outline:2px solid var(--mc,#0f172a);outline-offset:2px}
+@media(max-width:600px){
+  .mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    /* Edge fade hint: shows a gradient on the right when more tabs are off-screen (Lea Verou trick) */
+    background-image:
+      linear-gradient(to right,#f1f5f9 30%,rgba(241,245,249,0)),
+      linear-gradient(to right,rgba(241,245,249,0),#f1f5f9 70%) 100% 0,
+      radial-gradient(farthest-side at 0 50%,rgba(15,23,42,.18),rgba(0,0,0,0)),
+      radial-gradient(farthest-side at 100% 50%,rgba(15,23,42,.18),rgba(0,0,0,0)) 100% 0;
+    background-repeat:no-repeat;background-color:#f1f5f9;background-size:36px 100%,36px 100%,12px 100%,12px 100%;background-attachment:local,local,scroll,scroll;
+  }
+  .mode-tabs::-webkit-scrollbar{display:none}
+  .mode-tab{flex:0 0 auto;padding:.55rem .75rem;font-size:.78rem;white-space:nowrap}
+}
+/* Time Machine FAB pulse for first-time discoverability */
+@keyframes tmFabPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 6px rgba(245,158,11,0)}}
+.tm-hero-btn:not(.viewing):not(.dismissed){animation:tmFabPulse 2.4s ease-in-out infinite}
 .mode-tab:hover{background:#e2e8f0;color:#334155}
-.mode-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.mode-tab.active{background:#fff;color:var(--mc,#0f172a);box-shadow:0 1px 3px rgba(0,0,0,.1);border-bottom:2px solid var(--mc,#0f172a);font-weight:700}
 .mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* ── Hero ── */
@@ -1232,8 +1281,8 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="tm-banner" id="tmBanner"></div>
 
   <!-- Mode Tabs -->
-  <div class="mode-tabs">
-    ${Object.entries(modes).map(([id, m]) => `<button class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${id === 'balanced' ? ' <span class="hide-m" style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
+  <div class="mode-tabs" role="tablist" aria-label="Portfolio modes">
+    ${Object.entries(modes).map(([id, m]) => `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Switch to ${m.cfg.label} mode" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${id === 'balanced' ? ' <span class="hide-m" style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
   </div>
 
   ${Object.entries(modes).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-' + id, id === 'balanced')).join('\n')}
@@ -1346,6 +1395,9 @@ document.addEventListener('DOMContentLoaded',function(){
     p.classList.toggle('open');
     var fab=document.getElementById('tmFab');
     if(fab){
+      // First open: kill the discoverability pulse permanently for this session
+      fab.classList.add('dismissed');
+      try{sessionStorage.setItem('tmFabDismissed','1');}catch(_){ }
       if(!isOpen)fab.style.boxShadow='0 0 0 3px rgba(59,130,246,.35)';
       else{
         fab.style.boxShadow='';
@@ -1353,6 +1405,12 @@ document.addEventListener('DOMContentLoaded',function(){
       }
     }
   };
+  // Restore dismissed state across page reloads within session
+  (function(){try{
+    if(sessionStorage.getItem('tmFabDismissed')==='1'){
+      var f=document.getElementById('tmFab');if(f)f.classList.add('dismissed');
+    }
+  }catch(_){ }})();
   document.addEventListener('click',function(e){
     var p=document.getElementById('tmPanel');
     var fab=document.getElementById('tmFab');
@@ -1397,8 +1455,16 @@ document.addEventListener('DOMContentLoaded',function(){
     document.querySelectorAll('.mode-tab').forEach(function(t){
       var on=t.dataset.mode===id;
       t.classList.toggle('active',on);
-      // Scroll active tab into view on mobile (TKL is the 6th tab — off-screen by default at 375px)
-      if(on){try{t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});}catch(_){ }}
+      t.setAttribute('aria-pressed', on ? 'true' : 'false');
+      // Scroll active tab horizontally inside .mode-tabs only (avoid window-level scroll
+      // that would shift the whole panel on mobile when picking fortress/tkl).
+      if(on){try{
+        var tabs=t.parentElement;
+        if(tabs && tabs.scrollWidth > tabs.clientWidth){
+          var target=t.offsetLeft - (tabs.clientWidth - t.offsetWidth)/2;
+          tabs.scrollTo ? tabs.scrollTo({left:Math.max(0,target),behavior:'smooth'}) : (tabs.scrollLeft=Math.max(0,target));
+        }
+      }catch(_){ }}
     });
     document.querySelectorAll('.mode-panel').forEach(function(p){p.style.display=p.id==='p-'+id?'':'none'});
     var chartEl=document.getElementById('chart-'+id);
@@ -1733,6 +1799,30 @@ document.addEventListener('DOMContentLoaded',function(){
     var panel=document.getElementById('p-'+modeId);
     if(!panel||!d) return;
     var stats=d.stats||{};
+    // Hide today's "JUST EXECUTED" rotation card on historical view —
+    // it represents a live action and would mislead users on past dates.
+    panel.querySelectorAll('[data-section="orders"] .cta-card').forEach(function(c){
+      if(/JUST EXECUTED/i.test(c.textContent||'')) c.style.display='none';
+    });
+    // Replace orders/watch tables with snapshot data (or empty placeholder)
+    var ordersSec=panel.querySelector('[data-section="orders"]');
+    if(ordersSec){
+      var oTable=ordersSec.querySelector('table');
+      var oBody=oTable?oTable.querySelector('tbody'):null;
+      var orders=(d.orders||[]);
+      if(oBody){
+        oBody.innerHTML = orders.length ? orders.map(function(o){
+          var bg=_scoreBg(o.score||0);
+          return '<tr><td>'+_tkLogo(o.ticker)+'<b>'+o.ticker+'</b></td><td class="hide-m">—</td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+(o.score||0)+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td>'+(o.entry||'')+'</td><td class="hide-m">—</td><td class="neg">'+(o.stop||'')+'</td><td class="pos">'+(o.tp1||'')+' / '+(o.tp2||'')+'</td><td class="am hide-m">'+(o.rr||'')+'</td><td class="hide-m">—</td><td><span class="pill pos">BUY</span></td></tr>';
+        }).join('') : '<tr><td colspan="11" class="empty">No orders for this snapshot</td></tr>';
+      }
+      var oMeta=ordersSec.querySelector('.sc-meta');
+      if(oMeta) oMeta.textContent = orders.length+' order'+(orders.length!==1?'s':'')+' on this date';
+    }
+    var watchSec=panel.querySelector('[data-section="watch"]');
+    if(watchSec){watchSec.style.display='none';}  // hide watch on historical (rare data)
+    var closeSec=panel.querySelector('[data-section="closenow"]');
+    if(closeSec){closeSec.style.display='none';}  // hide closenow on historical
     var psList=panel.querySelectorAll('.perf-hero .perf-stats .ps .ps-v');
     if(psList.length>=6){
       psList[0].textContent=_fmtPct2(stats.ret);
@@ -1743,10 +1833,21 @@ document.addEventListener('DOMContentLoaded',function(){
       psList[5].textContent=Number(stats.avgHold||0).toFixed(1)+'d';
     }
     var chartEl=document.getElementById('chart-'+modeId);
-    if(chartEl && d.equity && d.equity.d && window.echarts){
+    if(chartEl && window.echarts){
       var existing=window.echarts.getInstanceByDom(chartEl);
       if(existing) existing.dispose();
-      mk('chart-'+modeId, d.equity.d, d.equity.v, mCfg.color||'#94a3b8');
+      // Prefer the stats.ret-based cumulative curve (modeCharts) sliced to the
+      // snapshot date — keeps Time Machine continuous with the live chart.
+      // Fall back to the snapshot's own equity (legacy MtM) if slicing fails.
+      var src=modeCharts[modeId];
+      var sliced=null;
+      if(src && tmActiveDateLabel){
+        var idx=src.d.indexOf(tmActiveDateLabel);
+        if(idx>=0) sliced={d:src.d.slice(0,idx+1), v:src.v.slice(0,idx+1)};
+      }
+      var dArr = sliced ? sliced.d : (d.equity && d.equity.d ? d.equity.d : []);
+      var vArr = sliced ? sliced.v : (d.equity && d.equity.v ? d.equity.v : []);
+      if(dArr.length) mk('chart-'+modeId, dArr, vArr, mCfg.color||'#94a3b8');
     }
     var sigSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3, .sc-sum-title');return h && /today.s signals/i.test(h.textContent);});
     if(sigSec){
@@ -1791,6 +1892,7 @@ document.addEventListener('DOMContentLoaded',function(){
   window.tmUpdateLive = tmUpdateLive;
 
   function tmShowLive(){
+    tmActiveDateLabel=null;
     var panel=document.getElementById('p-'+activeMode);
     var grid=panel?panel.querySelector('.lp-grid'):null;
     if(grid && _tmLiveCache[activeMode]){
@@ -1808,11 +1910,13 @@ document.addEventListener('DOMContentLoaded',function(){
     var fab=document.getElementById('tmFab');
     if(fab){fab.classList.remove('viewing');fab.style.boxShadow='';}
   }
+  var tmActiveDateLabel=null;
   function tmLoadIdx(idx){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){tmShowLive();return;}
     _tmCaptureLive(activeMode);
     var dateStr=tmDates[idx];
+    tmActiveDateLabel=dateStr.slice(4,6)+'/'+dateStr.slice(6,8);
     fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
       var d=snap.modes[activeMode];
       if(!d){
@@ -1873,21 +1977,28 @@ document.addEventListener('DOMContentLoaded',function(){
   const historyDir = path.join(ROOT, 'scanner/status/history');
   fs.mkdirSync(historyDir, { recursive: true });
 
-  // Build MtM equity curves from historical backfill snapshots + today's live data
-  // This ensures the live snapshot's equity curve is consistent with backfill snapshots
+  // Build equity history aligned to today's anchoring (frozen returnTotal).
+  // Historical snapshots stored equity.v[-1] from simulatePortfolio (which includes
+  // unrealized MtM at snapshot time). Today uses stats.ret = computeStatsFromTrades
+  // returnTotal (realized closed trades only). Mixing the two created the chart
+  // discontinuity. Now we ALWAYS read snap.modes[id].stats.ret to keep the curve
+  // consistent across history + today.
   const modeEquityHistory = {};
   try {
     const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f) && f.replace('.json', '') < todayKey).sort();
     for (const f of histFiles) {
       const snap = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
+      const dateKey = f.replace('.json', '');
+      const dateLabel = dateKey.slice(4, 6) + '/' + dateKey.slice(6, 8);
       for (const [mId, mData] of Object.entries(snap.modes || {})) {
         if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
-        if (mData.equity && mData.equity.d && mData.equity.v) {
-          // Take the LAST point from each snapshot (the point for that date)
+        const ret = mData.stats && mData.stats.ret != null ? mData.stats.ret : null;
+        if (ret != null) {
+          modeEquityHistory[mId].push({ d: dateLabel, v: +(100 + ret).toFixed(2) });
+        } else if (mData.equity && mData.equity.d && mData.equity.v && mData.equity.v.length) {
+          // Fallback for legacy snapshots without stats.ret
           const lastIdx = mData.equity.d.length - 1;
-          if (lastIdx >= 0) {
-            modeEquityHistory[mId].push({ d: mData.equity.d[lastIdx], v: mData.equity.v[lastIdx] });
-          }
+          modeEquityHistory[mId].push({ d: mData.equity.d[lastIdx], v: mData.equity.v[lastIdx] });
         }
       }
     }
@@ -1906,10 +2017,11 @@ document.addEventListener('DOMContentLoaded',function(){
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, mTrades);
 
-    // MtM equity for today: realized + unrealized (matching backfill logic)
+    // MtM equity for today: anchor to frozen returnTotal (sweep-authoritative).
+    // Adding live unrealized created day-to-day discontinuities (chart jumps when open
+    // positions PnL fluctuates). Frozen value is the consistent backtest equity.
     const realized = mM.ret;
-    const unrealized = pos.reduce((s, p) => s + (p.return_pct || 0), 0) / cfg.portfolioSize;
-    const todayMtm = +(100 + realized + unrealized).toFixed(2);
+    const todayMtm = +(100 + realized).toFixed(2);
     const todayLabel = todayISO.slice(5).replace('-', '/');
 
     // Build continuous MtM curve: historical points + today
@@ -1962,7 +2074,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
 
     snapshot.modes[id] = {
-      stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold },
+      stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold, oosWarn: mM.oosWarn || null },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
       positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '', replacedFrom: (recentRotation && recentRotation.ticker === p.ticker) ? recentRotation.replaces : null })),

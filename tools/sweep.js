@@ -143,10 +143,31 @@ function parseScan(dir) {
       if (!entry || !stop || !tp1 || entry <= 0 || stop <= 0) continue;
       if (stop >= entry) continue;
       if (tp1 <= entry) continue;
+      // Score derivation: tkl_pool entries from screeners commonly arrive at a fixed
+      // ceiling (e.g. 99) — useless for sorting. Replace with a composite derived
+      // from setup geometry (R/R) + strategy bias so tkl candidates rank within
+      // [85, 95] and remain ELIGIBLE for high-minScore modes (turbo/dynamic = 90).
+      // Main "signals" keep their published Claude-curated score as-is.
+      let score = s.score || 80;
+      if (source === 'tkl_pool') {
+        const rr = (tp1 - entry) / Math.max(1e-6, entry - stop);
+        const strat = detectStrategy(s.strategy || '');
+        // Strategy bias from retro hit-rate: breakout/momentum strongest on small-caps,
+        // pre_squeeze actionable when volume contracts, pullback decent, short_squeeze last.
+        const stratBonus =
+          strat === 'breakout' ? 4 :
+          strat === 'momentum' ? 4 :
+          strat === 'pre_squeeze' ? 3 :
+          strat === 'pullback' ? 3 :
+          2; // short_squeeze / unknown
+        // R/R bonus: 1.5 → +0, 2 → +2, 2.5 → +4, 3+ → +6
+        const rrBonus = Math.min(6, Math.max(0, (rr - 1.5) * 4));
+        score = Math.min(95, Math.round(85 + stratBonus * 0.4 + rrBonus));
+      }
       out.push({
         ticker: s.ticker,
         strategy: detectStrategy(s.strategy || ''),
-        score: s.score || 80,
+        score,
         entry, stop, tp1, tp2,
         sharia: s.sharia,
         source: source || s.source || 'signals',
@@ -1676,15 +1697,10 @@ async function main() {
         const toAppend = newClosedTrades.filter(t => !existingKeys.has(existingKey(t)));
         const merged = [...existing, ...toAppend];
 
-        // Inject pending trades from pre-simulation (open positions with mark-to-market)
-        const allPreSimTrades = tradesByKey[frozenKey] || [];
-        const mergedKeys = new Set(merged.map(existingKey));
-        const tklEnabled = cfg.tklPoolEnabled !== false;
-        const pendingToAdd = allPreSimTrades.filter(t =>
-          t.status === 'pending' && !mergedKeys.has(existingKey(t))
-          && (tklEnabled || t.source !== 'tkl_pool')
-        ).map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }));
-        if (pendingToAdd.length > 0) merged.push(...pendingToAdd);
+        // Pending trades are now produced by sim2.closedTrades (which already respects
+        // portfolioSize, rotation, sector caps). The previous injection from the per-ticker
+        // pre-sim list bypassed portfolio constraints — turbo (portfolioSize=1) ended up
+        // with 5+ "pending" tickers on the same scan day. Removed.
 
         merged.sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
 
