@@ -109,6 +109,18 @@ function getAllBizDays(startDate, endDate) {
   return days;
 }
 
+function bizDaysBetween(dateA, dateB) {
+  let d = new Date(dateA + 'T12:00:00Z');
+  const end = new Date(dateB + 'T12:00:00Z');
+  if (d >= end) return 0;
+  let count = 0;
+  while (d < end) {
+    d.setDate(d.getDate() + 1);
+    if (d.getDay() !== 0 && d.getDay() !== 6) count++;
+  }
+  return count;
+}
+
 // ─── Parse scan → setups (JSON-first, HTML fallback via scanner-parser.js) ───
 
 const scannerParser = require('./lib/scanner-parser');
@@ -777,6 +789,7 @@ function simulatePortfolio(allTrades, scans, config) {
   // Build portfolio: track open positions day by day
   const openPositions = []; // { trade, weight }
   const closedTrades = [];
+  const slCooldown = new Map(); // ticker → exitDate (10 biz day re-entry ban after SL)
   const allScanDates = Object.keys(byDate).sort();
   if (allScanDates.length === 0) return null;
 
@@ -799,6 +812,7 @@ function simulatePortfolio(allTrades, scans, config) {
       if (pos.trade.exitDate && pos.trade.exitDate <= day) {
         if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
         closedTrades.push(pos.trade);
+        if (pos.trade.status === 'sl') slCooldown.set(pos.trade.ticker, pos.trade.exitDate);
       } else {
         stillOpen.push(pos);
       }
@@ -891,6 +905,9 @@ function simulatePortfolio(allTrades, scans, config) {
         if (added >= slotsAvailable) break;
         if (vixKill || ddBreakerActive) break;          // halt new entries
         if (openTickers.has(cand.ticker)) continue;
+        // SL cooldown — 10 biz day re-entry ban after stop-loss
+        const lastSL = slCooldown.get(cand.ticker);
+        if (lastSL && bizDaysBetween(lastSL, day) < 10) continue;
         // Cross-mode dedup — skip ticker already picked by another mode this scan day
         if (config.crossModeDedup && config.crossModePicked) {
           const dedupKey = `${day}|${cand.ticker}`;

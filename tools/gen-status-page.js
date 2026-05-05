@@ -440,11 +440,14 @@ async function main() {
     // sim entries (within the horizon window) cross-referenced with the live
     // tracker so QCOM/etc. don't bleed across modes that never entered them.
     if (pending.length === 0 && livePositions.length > 0) {
+      // Build lookup: ticker → live position (keyed by scan_date for precision)
+      const liveLookupByTicker = {};
+      for (const p of livePositions) { liveLookupByTicker[p.ticker] = p; }
       const liveTickers = new Set(livePositions.map(p => p.ticker));
-      // Take this mode's recent trades (sim entered them) that the live tracker
-      // still considers "open" (ticker present in scanner-positions). Newest first.
-      // No horizon cutoff — short-horizon modes (turbo h=2) would otherwise reject
-      // every entry older than 2 days, leaving Open Positions permanently empty.
+
+      // Take this mode's recent trades that the live tracker still considers
+      // "open" (ticker present in scanner-positions). Match by scan_date to
+      // avoid Frankenstein positions (old trade data + new live price).
       const recent = trades
         .filter(t => t.ticker && t.entryDate)
         .filter(t => liveTickers.has(t.ticker))
@@ -454,20 +457,48 @@ async function main() {
       for (const t of recent) {
         if (seenTk.has(t.ticker)) continue;
         seenTk.add(t.ticker);
-        const live = livePositions.find(p => p.ticker === t.ticker) || {};
+        const live = liveLookupByTicker[t.ticker] || {};
+        // If the live position's scan_date differs from this trade, the trade
+        // was closed and a NEW signal re-entered the ticker — use live data.
+        const scanMismatch = live.scan_date && t.scanDate && live.scan_date !== t.scanDate;
         fallback.push({
           ticker: t.ticker,
-          scanDate: t.scanDate,
-          entryDate: t.entryDate,
-          actualEntry: t.actualEntry || live.entry,
-          actualStop: t.actualStop || live.stop,
-          actualTp1: t.actualTp1 || live.tp1,
-          actualTp2: t.actualTp2 || live.tp2 || null,
-          score: t.score || live.score || 0,
-          strategy: t.strategy || live.strategy,
-          vwap: t.vwap || null,
+          scanDate: scanMismatch ? live.scan_date : t.scanDate,
+          entryDate: scanMismatch ? live.scan_date : t.entryDate,
+          actualEntry: scanMismatch ? live.entry : (t.actualEntry || live.entry),
+          actualStop: scanMismatch ? live.stop : (t.actualStop || live.stop),
+          actualTp1: scanMismatch ? live.tp1 : (t.actualTp1 || live.tp1),
+          actualTp2: scanMismatch ? live.tp2 : (t.actualTp2 || live.tp2 || null),
+          score: scanMismatch ? (live.score || 0) : (t.score || live.score || 0),
+          strategy: scanMismatch ? (live.strategy || t.strategy) : (t.strategy || live.strategy),
+          vwap: scanMismatch ? null : (t.vwap || null),
           exitDate: null,
           exitPrice: live.current_price || null,
+          status: 'pending',
+          holdDays: 0,
+          _premature: true,
+          _horizonExpired: false,
+          _liveFallback: true,
+        });
+        if (fallback.length >= cfg.portfolioSize) break;
+      }
+      // Also add live positions that have NO matching trade at all (brand new signals)
+      for (const p of livePositions) {
+        if (seenTk.has(p.ticker)) continue;
+        seenTk.add(p.ticker);
+        fallback.push({
+          ticker: p.ticker,
+          scanDate: p.scan_date,
+          entryDate: p.scan_date,
+          actualEntry: p.entry,
+          actualStop: p.stop,
+          actualTp1: p.tp1,
+          actualTp2: p.tp2 || null,
+          score: p.score || 0,
+          strategy: p.strategy || '',
+          vwap: null,
+          exitDate: null,
+          exitPrice: p.current_price || null,
           status: 'pending',
           holdDays: 0,
           _premature: true,
@@ -1894,30 +1925,43 @@ document.addEventListener('DOMContentLoaded',function(){
     var panel=document.getElementById('p-'+modeId);
     if(!panel||!d) return;
     var stats=d.stats||{};
-    // Hide today's "JUST EXECUTED" rotation card on historical view —
-    // it represents a live action and would mislead users on past dates.
-    panel.querySelectorAll('[data-section="orders"] .cta-card').forEach(function(c){
-      if(/JUST EXECUTED/i.test(c.textContent||'')) c.style.display='none';
-    });
-    // Replace orders/watch tables with snapshot data (or empty placeholder)
+    // ── Close Now: render from snapshot (create container if missing) ──
+    var closeNow=(d.closeNow||[]);
+    var closeSec=panel.querySelector('[data-section="closenow"]');
+    if(closeNow.length){
+      var closeHTML='<div class="cta-card cta-close" data-section="closenow"><div class="cta-header"><span class="cta-icon"><i class="fas fa-ban"></i></span><div><h3>Close Now <span class="cta-badge">'+closeNow.length+' position'+(closeNow.length>1?'s':'')+'</span></h3><p class="cta-sub">Horizon expired — exit at market open</p></div></div><table class="t"><thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&L</th><th>Held</th><th>Action</th></tr></thead><tbody>'+closeNow.map(function(p){var rc=(p.return_pct||0)>=0?'pos':'neg';return '<tr><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b></td><td class="m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(p.entry)+'</td><td class="hide-m">'+_fmtUsd2(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(p.return_pct)+'</b></td><td class="am">'+(p.days_held||'—')+'d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>';}).join('')+'</tbody></table></div>';
+      if(closeSec){closeSec.outerHTML=closeHTML;}
+      else{var ordersSec=panel.querySelector('[data-section="orders"]');if(ordersSec)ordersSec.insertAdjacentHTML('beforebegin',closeHTML);}
+    } else if(closeSec){closeSec.style.display='none';}
+
+    // ── Orders: render from snapshot (inject table if missing) ──
     var ordersSec=panel.querySelector('[data-section="orders"]');
     if(ordersSec){
-      var oTable=ordersSec.querySelector('table');
-      var oBody=oTable?oTable.querySelector('tbody'):null;
+      // Hide any live "JUST EXECUTED" rotation card
+      ordersSec.querySelectorAll('.cta-card').forEach(function(c){
+        if(/JUST EXECUTED/i.test(c.textContent||'')) c.style.display='none';
+      });
       var orders=(d.orders||[]);
-      if(oBody){
-        oBody.innerHTML = orders.length ? orders.map(function(o){
-          var bg=_scoreBg(o.score||0);
-          return '<tr><td>'+_tkLogo(o.ticker)+'<b>'+o.ticker+'</b></td><td class="hide-m">—</td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+(o.score||0)+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td>'+(o.entry||'')+'</td><td class="hide-m">—</td><td class="neg">'+(o.stop||'')+'</td><td class="pos">'+(o.tp1||'')+' / '+(o.tp2||'')+'</td><td class="am hide-m">'+(o.rr||'')+'</td><td class="hide-m">—</td><td><span class="pill pos">BUY</span></td></tr>';
-        }).join('') : '<tr><td colspan="11" class="empty">No orders for this snapshot</td></tr>';
+      var oTable=ordersSec.querySelector('table');
+      if(orders.length){
+        var tableHTML='<table class="t"><thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead><tbody>'+orders.map(function(o){var bg=_scoreBg(o.score||0);return '<tr><td>'+_tkLogo(o.ticker)+'<b>'+o.ticker+'</b></td><td class="hide-m">—</td><td class="hide-m"><span class="pill-score" style="background:'+bg+'">'+(o.score||0)+'</span></td><td class="m hide-m">'+(o.strategy||'')+'</td><td>'+(o.entry||'')+'</td><td class="hide-m">—</td><td class="neg">'+(o.stop||'')+'</td><td class="pos">'+(o.tp1||'')+' / '+(o.tp2||'')+'</td><td class="am hide-m">'+(o.rr||'')+'</td><td class="hide-m">—</td><td><span class="pill pos">BUY</span></td></tr>';}).join('')+'</tbody></table>';
+        if(oTable){oTable.outerHTML=tableHTML;}
+        else{var emptyBox=ordersSec.querySelector('[style*="dashed"]');if(emptyBox)emptyBox.outerHTML=tableHTML;else ordersSec.insertAdjacentHTML('beforeend',tableHTML);}
+      } else if(oTable){
+        oTable.querySelector('tbody').innerHTML='<tr><td colspan="11" class="empty">No orders for this snapshot</td></tr>';
       }
       var oMeta=ordersSec.querySelector('.sc-meta');
-      if(oMeta) oMeta.textContent = orders.length+' order'+(orders.length!==1?'s':'')+' on this date';
+      if(oMeta) oMeta.textContent=orders.length+' order'+(orders.length!==1?'s':'')+' on this date';
     }
+
+    // ── On Watch: render from snapshot signals not in positions ──
     var watchSec=panel.querySelector('[data-section="watch"]');
-    if(watchSec){watchSec.style.display='none';}  // hide watch on historical (rare data)
-    var closeSec=panel.querySelector('[data-section="closenow"]');
-    if(closeSec){closeSec.style.display='none';}  // hide closenow on historical
+    var expTmrw=(d.expiresTomorrow||[]);
+    if(expTmrw.length){
+      var watchHTML='<div class="section-card" data-section="watch"><div class="sc-head"><h3><i class="fas fa-eye"></i> On Watch <span class="count">'+expTmrw.length+'</span></h3><span class="sc-meta">portfolio full — signals on standby</span></div><table class="t"><thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead><tbody>'+expTmrw.map(function(s){var bg=_scoreBg(s.score||0);return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m hide-m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am hide-m">'+(s.rr||'')+'</td><td><span class="pill">WATCH</span></td></tr>';}).join('')+'</tbody></table></div>';
+      if(watchSec){watchSec.outerHTML=watchHTML;}
+      else{var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h&&/open positions/i.test(h.textContent);});if(posSec)posSec.insertAdjacentHTML('beforebegin',watchHTML);}
+    } else if(watchSec){watchSec.style.display='none';}
     var psList=panel.querySelectorAll('.perf-hero .perf-stats .ps .ps-v');
     if(psList.length>=6){
       psList[0].textContent=_fmtPct2(stats.ret);

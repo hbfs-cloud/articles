@@ -42,6 +42,20 @@ if (fs.existsSync(RISK_SNAP_PATH)) {
   catch (e) { console.log('  [warn] risk-snapshots.json unreadable, skipping risk fields'); riskSnap = {}; }
 }
 
+// Load broker-instruments map (build-broker-map.js). Missing file = no-op.
+const BROKER_MAP_PATH = path.join(ROOT, 'data', 'broker-instruments.json');
+let brokerMap = null;
+if (fs.existsSync(BROKER_MAP_PATH)) {
+  try { brokerMap = JSON.parse(fs.readFileSync(BROKER_MAP_PATH, 'utf8')) || null; }
+  catch (e) { console.log('  [warn] broker-instruments.json unreadable, skipping broker fields'); brokerMap = null; }
+}
+function getBrokersFor(ticker) {
+  if (!brokerMap || !brokerMap.symbols) return null;
+  const entry = brokerMap.symbols[ticker];
+  if (!entry) return null;
+  return Object.keys(entry.brokers);
+}
+
 // Load SPY benchmark (fetch-bench-spy.js). Missing file = no-op.
 const BENCH_SPY_PATH = path.join(ROOT, 'data', 'bench-spy.json');
 let benchSpy = null;
@@ -109,7 +123,8 @@ function writeMode(mode, prefix) {
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
       tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr,
       sharia: s.sharia != null ? s.sharia : null,
-      thesis: s.thesis || ''
+      thesis: s.thesis || '',
+      brokers: getBrokersFor(s.ticker),
     }))
   });
 
@@ -230,7 +245,8 @@ function writeMode(mode, prefix) {
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
       tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr,
       sharia: s.sharia != null ? s.sharia : null,
-      thesis: s.thesis || ''
+      thesis: s.thesis || '',
+      brokers: getBrokersFor(s.ticker),
     })),
     orders: modeOrders,
     positions: (mode.positions || []).map(p => {
@@ -465,6 +481,12 @@ if (fs.existsSync(CFG_HIST_PATH)) {
       config: v.config,
     }))
   });
+  count++;
+}
+
+// ─── Broker instruments endpoint ────────────────────────────────────────────
+if (brokerMap) {
+  write('instruments.json', brokerMap);
   count++;
 }
 
