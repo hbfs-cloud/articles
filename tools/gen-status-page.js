@@ -627,11 +627,11 @@ async function main() {
 </div>
 
 <!-- ══ 3. PERF + STATS (equity curve) ══ -->
-${m.oosWarn ? `<div class="oos-warn" style="margin:.5rem 0 .75rem;padding:.55rem .85rem;background:#fef3c7;border:1px solid #fcd34d;border-left:4px solid #d97706;border-radius:8px;font-size:.74rem;color:#78350f;display:flex;gap:.5rem;align-items:flex-start" role="status">
-  <i class="fas fa-triangle-exclamation" style="color:#d97706;margin-top:.15rem"></i>
-  <span><b>Out-of-sample degradation detected.</b> In-sample WR ${m.oosWarn.isWR}% / PF ${m.oosWarn.isPF}x → out-of-sample (${m.oosWarn.oosTrades} trades) WR ${m.oosWarn.oosWR}% / PF ${m.oosWarn.oosPF}x. Δ WR = ${m.oosWarn.wrDelta}pp. Treat in-sample stats as overfitting-prone; favour OOS metrics for forward expectations.</span>
-</div>` : ''}
-<div class="perf-hero" style="border-left:3px solid ${cfg.color}">
+<div class="perf-hero${m.oosWarn ? ' has-oos-warn' : ''}" style="border-left:3px solid ${cfg.color}${m.oosWarn ? ';flex-wrap:wrap' : ''}">${m.oosWarn ? `
+  <div style="flex:0 0 100%;width:100%;margin-bottom:.65rem;padding:.5rem .75rem;background:#fef3c7;border:1px solid #fcd34d;border-left:4px solid #d97706;border-radius:8px;font-size:.72rem;color:#78350f;display:flex;gap:.45rem;align-items:flex-start" role="status">
+    <i class="fas fa-triangle-exclamation" style="color:#d97706;margin-top:.1rem;flex-shrink:0"></i>
+    <span><b>OOS degradation.</b> IS WR ${m.oosWarn.isWR}% / PF ${m.oosWarn.isPF}x → OOS (${m.oosWarn.oosTrades} trades) WR ${m.oosWarn.oosWR}% / PF ${m.oosWarn.oosPF}x. Δ WR = ${m.oosWarn.wrDelta}pp. Favour OOS metrics.</span>
+  </div>` : ''}
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
       <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
@@ -851,7 +851,7 @@ ${(() => {
         }
 
         return `
-${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
+${expiringSoon.length ? `<div class="cta-card" data-section="expiring" style="background:#fffbeb;border:1.5px solid #fde68a;border-left:4px solid #f59e0b">
   <div class="cta-header">
     <span class="cta-icon" style="background:rgba(245,158,11,.12)"><i class="fas fa-hourglass-half" style="color:#d97706"></i></span>
     <div>
@@ -873,12 +873,12 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
   <div class="sc-head">
     <h3>${totalActions > 0 ? '<i class="fas fa-bolt"></i>' : '<i class="fas fa-coffee" style="color:#94a3b8"></i>'} ${totalActions > 0 ? `${totalActions} Order${totalActions > 1 ? 's' : ''} to Place` : 'No new orders'}</h3>
     <span class="sc-meta">${statusLine}</span>
+    ${totalActions > 0 && cfg.vwapGate ? `<div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:#fffbeb;border:1px solid #fde68a;border-left:3px solid #f59e0b;border-radius:6px;font-size:.7rem;color:#78350f;display:flex;gap:.4rem;align-items:flex-start" role="note">
+      <i class="fas fa-circle-info" style="color:#d97706;margin-top:.12rem;flex-shrink:0"></i>
+      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
+    </div>` : ''}
   </div>
   ${recentRotationHTML}
-  ${totalActions > 0 && cfg.vwapGate ? `<div style="margin:.4rem 0 .55rem;padding:.45rem .7rem;background:#fffbeb;border:1px solid #fde68a;border-left:3px solid #f59e0b;border-radius:6px;font-size:.7rem;color:#78350f;display:flex;gap:.4rem;align-items:flex-start" role="note">
-    <i class="fas fa-circle-info" style="color:#d97706;margin-top:.15rem"></i>
-    <span><b>Conditional fill.</b> VWAP entry-gate active for this mode: orders execute only if next session's open ≤ pivot × 1.01. Gap-up above pivot ⇒ <b>order skipped</b> (not a missed P&amp;L — strategy by design avoids chasing).</span>
-  </div>` : ''}
   ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
