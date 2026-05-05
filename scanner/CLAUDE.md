@@ -262,6 +262,37 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
 
    **Déduplication** : fusionner les 3 résultats, supprimer les doublons (garder le meilleur score), exclure les tickers déjà dans le top 10 A+. Prendre les 20 meilleurs comme `tkl_pool`.
 
+2c. **TKL Pool Validation (OBLIGATOIRE — MÊME PIPELINE QUE LE TOP 10)**
+   Les TKL passent le **même** process de validation que les 10 A+. Seuls les seuils mcap/ADV sont relâchés (voir `scanner-filters.json#tkl_pool`).
+
+   **Seuils TKL :**
+   - Market cap ≥ **$10M** (vs $500M pour le top 10)
+   - ADV ≥ **$2M** (vs $10M pour le top 10)
+
+   **Pour TOUS les TKL candidats (batched par 4-6) :**
+   ```
+   QueryData symbols={TKL_BATCH} types=sec_filings,flags,quote,insider_transactions,unusual_options,dark_pool,financials days=180
+   QueryData types=earnings_calendar days=14
+   ```
+
+   **Règles de disqualification (identiques au top 10) :**
+   - Market cap < $10M → DROP
+   - ADV < $2M → DROP
+   - Anti-dilution : S-3/424B5 < 90j, shelf_active, atm_program_active, aggressive_underwriter → DROP
+   - Serial diluter (multiple S-3/424B5 en 12 mois) → DROP
+   - Earnings ±3 jours → DROP ou tag "earnings risk"
+   - Smart money short (call_put_ratio < 0.4 + vol > 2× normal) → DROP
+
+   **Sharia tagging (identique au top 10) :**
+   - Secteur haram → `sharia: false`
+   - Debt/mcap > 33% → `sharia: false`
+   - Sinon → `sharia: true`
+   - **Toujours tagger** (jamais `sharia: null` dans le JSON final)
+
+   **Insiders :** achat significatif → +5 pts, vente massive → -5 pts
+
+   ⚠️ Cette validation est NON optionnelle. Aucun ticker TKL n'entre dans `signals.json` sans avoir passé tous ces checks. Le pipeline downstream (sweep, gen-status-page, gen-api) lit le `tkl_pool` validé.
+
 3. **`QueryData`** types **OBLIGATOIRES** pour les 10 tickers retenus :
    - `quote,insider_transactions,social_sentiment,capital_flow` — base validation
    - `dark_pool` — détection accumulation institutionnelle (alpha signal majeur)

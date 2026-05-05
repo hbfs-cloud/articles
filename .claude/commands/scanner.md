@@ -86,6 +86,33 @@ mcp__dailytickers__QueryData(
 )
 ```
 
+### TKL Pool — SAME Validation Pipeline (OBLIGATOIRE)
+
+TKL pool tickers MUST pass the **identical** validation as the top 10. The only relaxed threshold is market cap ($10M vs $500M) and ADV ($2M vs $10M). See `scanner-filters.json#tkl_pool`.
+
+For ALL TKL candidates (batched in groups of 4-6):
+```
+mcp__dailytickers__QueryData(symbols="TKL_TICKERS", types="sec_filings,flags,quote,insider_transactions,unusual_options,dark_pool,financials", days=180)
+mcp__dailytickers__QueryData(types="earnings_calendar", days=14)
+```
+
+**Disqualification rules (same as top 10):**
+- Market cap < $10M → DROP
+- ADV < $2M → DROP
+- Anti-dilution: S-3/424B5 within 90 days, shelf_active, atm_program_active, aggressive_underwriter → DROP
+- Serial diluter (multiple S-3/424B5 filings in 12 months) → DROP
+- Earnings within ±3 trading days → DROP or tag "earnings risk"
+- Unusual options: call_put_ratio < 0.4 + volume > 2× normal (smart money short) → DROP
+
+**Sharia tagging (same as top 10):**
+- Check sector (financials/defense/alcohol/tobacco/gambling → false)
+- Check debt/mcap ratio > 33% → false
+- Tag `sharia: true|false` in signals.json tkl_pool entries
+
+**Insider transactions:** Flag significant buys (+5 pts) or sells (-5 pts to score).
+
+This validation is NOT optional — it runs as part of Phase 2, immediately after TKL screener results are collected. No TKL ticker enters signals.json without passing all checks.
+
 ## Phase 3 — Data Generation
 
 1. Generate `scanner/YYYYMMDD/data.json` following `scanner/template/schema.json` exactly
