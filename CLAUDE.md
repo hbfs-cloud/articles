@@ -279,6 +279,7 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
     node tools/gen-status-page.js           # Snapshot J + Dashboard (lit risk-snapshots.json)
     node tools/gen-api.js                   # Refresh public JSONs (50 endpoints, dont risk.json par mode)
     ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push final
+    node tools/trading-executor/run-session.js  # Generate plans + execute all configured mode/broker pairs
     ```
     Sans `MCP_GATEWAY_URL` → `refresh-risk-metrics.js --stub` écrit un schéma vide, le pipeline continue (graceful degradation). **⚠️ MCP_GATEWAY_URL=`https://gateway.dailytickers.com/mcp` est dispo en prod** — TOUJOURS l'exporter, ne jamais accepter le stub silencieusement.
 
@@ -298,6 +299,57 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
    - **Ne touche PAS à l'historique des trades** (`backtest-trades.json` reste intact)
    - Les nouveaux paramètres s'appliquent aux trades **futurs** uniquement
    - Après un sweep stratégique : régénérer status page + API pour refléter la nouvelle config
+
+### Trading Executor (auto-execution post-pipeline)
+
+Automated order execution DSL. Generates a plan from scanner signals, executes against a broker.
+
+**Setup:**
+```bash
+cp tools/trading-executor/config.example.json tools/trading-executor/config.json
+# Edit config.json: set modes per broker, capital. Credentials via env vars only.
+```
+
+**Env vars** (set in shell, `.env`, or secrets manager — never in config.json):
+- Alpaca: `ALPACA_API_KEY`, `ALPACA_API_SECRET`
+- IBKR: `IBKR_GATEWAY_HOST`, `IBKR_GATEWAY_PORT`, `IBKR_ACCOUNT_ID`
+- Saxo: `SAXO_ACCESS_TOKEN`, `SAXO_ACCOUNT_KEY`
+- Trading212: `T212_API_KEY`
+- Binance: `BINANCE_API_KEY`, `BINANCE_API_SECRET`
+- Notifications: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_TOPIC_*`, `DISCORD_WEBHOOK_URL`
+
+**Usage:**
+```bash
+# Batch: all configured mode/broker pairs
+node tools/trading-executor/run-session.js
+
+# Single mode/broker
+node tools/trading-executor/run-session.js --mode balanced --broker alpaca
+
+# Paper simulation (same notifs as live)
+node tools/trading-executor/run-session.js --broker paper
+
+# Dry-run (plan only, no execution)
+node tools/trading-executor/run-session.js --dry-run
+
+# Manual: generate plan then execute separately
+node tools/gen-trading-plan.js --mode balanced --broker alpaca
+node tools/trading-executor/index.js --plan data/trading-plans/balanced-alpaca-20260505.json --verbose
+```
+
+**How modes are determined:** `config.json` maps each broker account to its modes array. `run-session.js` iterates all pairs. Filter with `--mode` / `--broker` flags.
+
+**Engine lifecycle:** connect → reconcile positions → VIX kill check → close expired → rotate → place entries (VWAP gate, gap-up, spread checks) → monitor fills → bracket exits (SL + TP1 50% + TP2) → breakeven trigger → circuit breaker → session end → log export.
+
+**Notifications:** Every fill/close/error pushes to Telegram (per-mode topic) + Discord. Paper mode prefixes `[PAPER]`. No Telegram token = silent (no crash).
+
+**Adapters:** `paper` (simulation), `alpaca`, `ibkr`, `saxo`, `trading212`, `binance`. All implement same interface. Paper useful for backtesting notification flow.
+
+**Pipeline integration:** Runs as final step of downstream pipeline (after `publish-daily-card.sh`):
+```bash
+node tools/trading-executor/run-session.js
+```
+Generates plans for all configured mode/broker pairs in `config.json`, executes them, sends Telegram/Discord notifications per fill/close. Paper mode = full simulation with same notification flow.
 
 ### "Rétrospective Scanner"
 **Langue par défaut : anglais intermediate.** Voir `scanner/CLAUDE.md` section 5bis pour le template complet.
