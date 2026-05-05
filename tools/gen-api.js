@@ -107,7 +107,12 @@ const now = new Date().toISOString();
 const todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
   .format(new Date()).replace(/-/g, '');
 const scanDir = snap.scanDir || '';
-const ordersStale = scanDir !== todayKey;
+const nextBizDay = (() => {
+  const d = new Date(todayKey.slice(0,4) + '-' + todayKey.slice(4,6) + '-' + todayKey.slice(6) + 'T12:00:00Z');
+  do { d.setDate(d.getDate() + 1); } while (d.getDay() === 0 || d.getDay() === 6);
+  return d.toISOString().slice(0,10).replace(/-/g, '');
+})();
+const ordersStale = scanDir !== todayKey && scanDir !== nextBizDay;
 
 console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${ordersStale ? ` [orders stale: scanDir=${scanDir} != today=${todayKey}]` : ''}`);
 
