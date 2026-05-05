@@ -193,11 +193,12 @@ class PaperAdapter {
         const msg = this._PricingData.decode(buf);
         if (msg.quoteType === 7 || !msg.id || !msg.price || msg.price <= 0) return;
         const prev = this._wsCache.get(msg.id) || {};
+        const toNum = v => (v && typeof v === 'object' && 'toNumber' in v) ? v.toNumber() : (+v || 0);
         this._wsCache.set(msg.id, {
           price: msg.price,
           dayHigh: Math.max(msg.dayHigh || msg.price, prev.dayHigh || msg.price),
           dayLow: msg.dayLow > 0 ? Math.min(msg.dayLow, prev.dayLow || Infinity) : (prev.dayLow || msg.price),
-          dayVolume: msg.dayVolume || prev.dayVolume || 0,
+          dayVolume: toNum(msg.dayVolume) || toNum(prev.dayVolume) || 0,
           ts: Date.now(),
         });
       } catch (_) {}
