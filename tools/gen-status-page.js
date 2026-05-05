@@ -353,22 +353,29 @@ async function main() {
         m.oosWarn = null;
       }
     }
-    // Build the canonical equity curve from snapshot history (frozen per-day stats.ret)
-    // + today's anchor point. Same definition is used by:
-    //   - the live chart (modes[id].ec → modeCharts client-side)
-    //   - the Time Machine slice (sliced view for any historical date)
-    //   - the snapshot persisted at end of run (snapshot.modes[id].equity)
-    // No more divergence between live / TM / snapshot equity values.
-    const _todayLabel = (function(){
-      const d = new Date();
-      return ('0' + (d.getMonth()+1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
-    })();
-    const _hist = modeEquityHistory[id] || [];
-    const _todayMtm = +(100 + (m.ret || 0)).toFixed(2);
-    const ec = {
-      d: [..._hist.map(p => p.d), _todayLabel],
-      v: [..._hist.map(p => p.v), _todayMtm],
-    };
+    // Use FROZEN equity curve (authoritative daily MtM from sweep).
+    // Frozen EC never changes retroactively — unlike snapshot stats.ret which gets
+    // recalculated when sweep reruns with updated parameters.
+    let ec;
+    if (m.equityCurve && m.equityCurve.length > 0) {
+      // Deduplicate: multiple trades on same date → keep last value (end-of-day state)
+      const _dedup = new Map();
+      for (const p of m.equityCurve) {
+        _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+      }
+      ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
+    } else {
+      const _todayLabel = (function(){
+        const d = new Date();
+        return ('0' + (d.getMonth()+1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
+      })();
+      const _hist = modeEquityHistory[id] || [];
+      const _todayMtm = +(100 + (m.ret || 0)).toFixed(2);
+      ec = {
+        d: [..._hist.map(p => p.d), _todayLabel],
+        v: [..._hist.map(p => p.v), _todayMtm],
+      };
+    }
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
@@ -627,11 +634,7 @@ async function main() {
 </div>
 
 <!-- ══ 3. PERF + STATS (equity curve) ══ -->
-<div class="perf-hero${m.oosWarn ? ' has-oos-warn' : ''}" style="border-left:3px solid ${cfg.color}${m.oosWarn ? ';flex-wrap:wrap' : ''}">${m.oosWarn ? `
-  <div style="flex:0 0 100%;width:100%;margin-bottom:.65rem;padding:.5rem .75rem;background:#fef3c7;border:1px solid #fcd34d;border-left:4px solid #d97706;border-radius:8px;font-size:.72rem;color:#78350f;display:flex;gap:.45rem;align-items:flex-start" role="status">
-    <i class="fas fa-triangle-exclamation" style="color:#d97706;margin-top:.1rem;flex-shrink:0"></i>
-    <span><b>OOS degradation.</b> IS WR ${m.oosWarn.isWR}% / PF ${m.oosWarn.isPF}x → OOS (${m.oosWarn.oosTrades} trades) WR ${m.oosWarn.oosWR}% / PF ${m.oosWarn.oosPF}x. Δ WR = ${m.oosWarn.wrDelta}pp. Favour OOS metrics.</span>
-  </div>` : ''}
+<div class="perf-hero" style="border-left:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
       <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
@@ -2093,12 +2096,22 @@ document.addEventListener('DOMContentLoaded',function(){
     const todayMtm = +(100 + realized).toFixed(2);
     const todayLabel = todayISO.slice(5).replace('-', '/');
 
-    // Build continuous MtM curve: historical points + today
-    const hist = modeEquityHistory[id] || [];
-    const ec = {
-      d: [...hist.map(p => p.d), todayLabel],
-      v: [...hist.map(p => p.v), todayMtm]
-    };
+    // Build continuous MtM curve from frozen EC (authoritative) or snapshot fallback
+    const frozenEC = modes[id].m.equityCurve;
+    let ec;
+    if (frozenEC && frozenEC.length > 0) {
+      const _dedup = new Map();
+      for (const p of frozenEC) {
+        _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+      }
+      ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
+    } else {
+      const hist = modeEquityHistory[id] || [];
+      ec = {
+        d: [...hist.map(p => p.d), todayLabel],
+        v: [...hist.map(p => p.v), todayMtm]
+      };
+    }
     // Compute closeNow (timed out positions) first — they free slots for orders
     function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
     const timedOutSnap = pos.filter(p => Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);

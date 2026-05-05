@@ -1,7 +1,15 @@
 'use strict';
 
-// Paper trading adapter — simulates a broker with randomized fills.
-// Useful for testing execution plans without real money.
+// Paper trading adapter — simulates a broker with real-time Yahoo WebSocket prices.
+// Uses wss://streamer.finance.yahoo.com/ for RT ticks (same as signal-monitor.js).
+// Fills are simulated locally; no orders go to any exchange.
+
+const path = require('path');
+const WebSocket = require('ws');
+const protobuf = require('protobufjs');
+
+const PROTO_FILE = path.join(__dirname, '../../PricingData.proto');
+const WS_URL = 'wss://streamer.finance.yahoo.com/';
 
 class PaperAdapter {
   constructor(credentials = {}, opts = {}) {
@@ -17,14 +25,26 @@ class PaperAdapter {
     this._fillDelay = opts.fill_delay_ms || 500;
     this._fillRate = opts.fill_rate || 0.95; // 95% of orders fill
     this._slippageBps = opts.slippage_bps || 5; // 5bps slippage
+    this._liveQuotes = credentials.live_quotes !== false; // default: use real Yahoo RT WebSocket
+    this._wsCache = new Map(); // symbol → { price, dayHigh, dayLow, dayVolume, ts }
+    this._ws = null;
+    this._wsHeartbeat = null;
+    this._wsStopped = false;
+    this._wsRetries = 0;
+    this._PricingData = null;
+    this._wsSymbols = [];
   }
 
-  async connect() {
+  async connect(symbols) {
     this.connected = true;
-    if (this.verbose) console.log('[paper] Connected (simulated)');
+    if (symbols && symbols.length > 0 && this._liveQuotes) {
+      await this._initWebSocket(symbols);
+    }
+    if (this.verbose) console.log(`[paper] Connected (RT WebSocket: ${this._liveQuotes ? 'yes' : 'no'})`);
   }
 
   async disconnect() {
+    this._wsDisconnect();
     this.connected = false;
   }
 
@@ -61,6 +81,31 @@ class PaperAdapter {
   }
 
   async getQuote(symbol) {
+    // 1. Primary: Yahoo WebSocket RT cache (tick-by-tick, zero latency)
+    if (this._liveQuotes && this._wsCache.has(symbol)) {
+      const tick = this._wsCache.get(symbol);
+      const pos = this._positions.get(symbol);
+      if (pos) pos.currentPrice = tick.price;
+      return {
+        last: tick.price,
+        bid: tick.price * 0.9999,
+        ask: tick.price * 1.0001,
+        halted: false,
+        volume: tick.dayVolume || 0,
+        dayHigh: tick.dayHigh,
+        dayLow: tick.dayLow,
+      };
+    }
+    // 2. Fallback: Webull REST (real-time, no auth, no 15min delay)
+    if (this._liveQuotes) {
+      try {
+        const data = await this._fetchWebullQuote(symbol);
+        const pos = this._positions.get(symbol);
+        if (pos) pos.currentPrice = data.last;
+        return data;
+      } catch (_) {}
+    }
+    // 3. Last resort: synthetic price (offline mode)
     const pos = this._positions.get(symbol);
     const basePrice = pos ? pos.currentPrice : this._syntheticPrice(symbol);
     const spread = basePrice * 0.001;
@@ -71,6 +116,114 @@ class PaperAdapter {
       halted: false,
       volume: Math.floor(Math.random() * 5000000) + 100000,
     };
+  }
+
+  _fetchWebullQuote(symbol) {
+    const https = require('https');
+    return new Promise((resolve, reject) => {
+      const searchUrl = `https://quotes-gw.webullfintech.com/api/search/pc/tickers?keyword=${encodeURIComponent(symbol)}&pageIndex=1&pageSize=1&regionId=6`;
+      const opts = { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json', 'appid': 'webull-webapp' } };
+
+      // Step 1: resolve tickerId
+      https.get(searchUrl, opts, (res) => {
+        let data = '';
+        res.on('data', c => { data += c; });
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data);
+            const items = parsed.data || parsed;
+            const item = Array.isArray(items) ? items[0] : null;
+            if (!item || !item.tickerId) return reject(new Error('no ticker'));
+
+            // Step 2: get RT quote
+            const quoteUrl = `https://quotes-gw.webullfintech.com/api/stock/tickerRealTime/getQuote?tickerId=${item.tickerId}&includeSecu=1&includeQuote=1&more=1`;
+            https.get(quoteUrl, opts, (res2) => {
+              let qd = '';
+              res2.on('data', c => { qd += c; });
+              res2.on('end', () => {
+                try {
+                  const q = JSON.parse(qd);
+                  resolve({
+                    last: +(q.close || q.price || q.tradePrice || 0),
+                    bid: +(q.bidPrice || q.close || 0),
+                    ask: +(q.askPrice || q.close || 0),
+                    halted: q.status === 'H',
+                    volume: +(q.volume || 0),
+                    dayHigh: +(q.high || 0),
+                    dayLow: +(q.low || 0),
+                  });
+                } catch (e) { reject(e); }
+              });
+            }).on('error', reject);
+          } catch (e) { reject(e); }
+        });
+      }).on('error', reject);
+    });
+  }
+
+  // ── Yahoo WebSocket (real-time) ──
+  async _initWebSocket(symbols) {
+    if (!this._liveQuotes || this._ws) return;
+    try {
+      const root = await protobuf.load(PROTO_FILE);
+      this._PricingData = root.lookupType('yfinancedata');
+    } catch (e) {
+      if (this.verbose) console.log('[paper] protobuf load failed, falling back to synthetic:', e.message);
+      this._liveQuotes = false;
+      return;
+    }
+
+    this._wsSymbols = symbols;
+    this._wsConnect();
+  }
+
+  _wsConnect() {
+    if (this._wsStopped) return;
+    this._ws = new WebSocket(WS_URL, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+
+    this._ws.on('open', () => {
+      if (this.verbose) console.log(`[paper] WebSocket connected (${this._wsSymbols.length} tickers)`);
+      this._wsSubscribe();
+      this._wsHeartbeat = setInterval(() => this._wsSubscribe(), 15000);
+    });
+
+    this._ws.on('message', (data) => {
+      try {
+        const buf = Buffer.from(data.toString(), 'base64');
+        const msg = this._PricingData.decode(buf);
+        if (msg.quoteType === 7 || !msg.id || !msg.price || msg.price <= 0) return;
+        const prev = this._wsCache.get(msg.id) || {};
+        this._wsCache.set(msg.id, {
+          price: msg.price,
+          dayHigh: Math.max(msg.dayHigh || msg.price, prev.dayHigh || msg.price),
+          dayLow: msg.dayLow > 0 ? Math.min(msg.dayLow, prev.dayLow || Infinity) : (prev.dayLow || msg.price),
+          dayVolume: msg.dayVolume || prev.dayVolume || 0,
+          ts: Date.now(),
+        });
+      } catch (_) {}
+    });
+
+    this._ws.on('close', () => {
+      if (this._wsHeartbeat) { clearInterval(this._wsHeartbeat); this._wsHeartbeat = null; }
+      if (this._wsStopped) return;
+      const delay = Math.min(3000 * Math.pow(2, this._wsRetries || 0), 60000);
+      this._wsRetries = (this._wsRetries || 0) + 1;
+      setTimeout(() => this._wsConnect(), delay);
+    });
+
+    this._ws.on('error', () => {}); // close fires after error
+  }
+
+  _wsSubscribe() {
+    if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+      this._ws.send(JSON.stringify({ subscribe: this._wsSymbols }));
+    }
+  }
+
+  _wsDisconnect() {
+    this._wsStopped = true;
+    if (this._wsHeartbeat) { clearInterval(this._wsHeartbeat); this._wsHeartbeat = null; }
+    if (this._ws) { try { this._ws.close(); } catch (_) {} this._ws = null; }
   }
 
   async placeOrder(params) {
