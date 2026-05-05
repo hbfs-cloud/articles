@@ -47,6 +47,15 @@ try {
 
 if (!DATE) DATE = ordersScanDate || new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
+// Load raw scanner signals as fallback pool (mode signals.json is topN-filtered)
+let rawSignals = [];
+const scanDir = ordersScanDate || DATE;
+const rawPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+try {
+  const raw = JSON.parse(fs.readFileSync(rawPath, 'utf8'));
+  rawSignals = raw.signals || [];
+} catch (_) {}
+
 // ── Helpers ──
 function brokerSymbol(ticker) {
   if (BROKER === 'paper') return ticker;
@@ -261,8 +270,8 @@ for (const o of rotateOrders) {
   usedTickers.add(o.ticker);
 }
 
-// Fallback: remaining signals sorted by score, fill up to MAX_ORDERS
-const fallbackSignals = signals.signals
+// Fallback: raw scanner signals (not topN-filtered), sorted by score
+const fallbackSignals = (rawSignals.length > 0 ? rawSignals : signals.signals)
   .filter(s => !usedTickers.has(s.ticker) && s.entry && s.stop && s.tp1)
   .sort((a, b) => (b.score || 0) - (a.score || 0));
 
