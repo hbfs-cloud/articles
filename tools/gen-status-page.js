@@ -875,6 +875,10 @@ ${expiringSoon.length ? `<div class="cta-card" style="background:#fffbeb;border:
     <span class="sc-meta">${statusLine}</span>
   </div>
   ${recentRotationHTML}
+  ${totalActions > 0 && cfg.vwapGate ? `<div style="margin:.4rem 0 .55rem;padding:.45rem .7rem;background:#fffbeb;border:1px solid #fde68a;border-left:3px solid #f59e0b;border-radius:6px;font-size:.7rem;color:#78350f;display:flex;gap:.4rem;align-items:flex-start" role="note">
+    <i class="fas fa-circle-info" style="color:#d97706;margin-top:.15rem"></i>
+    <span><b>Conditional fill.</b> VWAP entry-gate active for this mode: orders execute only if next session's open ≤ pivot × 1.01. Gap-up above pivot ⇒ <b>order skipped</b> (not a missed P&amp;L — strategy by design avoids chasing).</span>
+  </div>` : ''}
   ${totalActions > 0 ? `<table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody>${actionRows.join('')}</tbody>
