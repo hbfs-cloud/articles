@@ -173,13 +173,32 @@ async function main() {
   // Load previous snapshot once — used by panel() to surface "rotation just executed"
   // (yesterday had a ROTATE order whose ticker is now today's position).
   let prevSnap = null;
+  // Per-mode FROZEN historical equity (one point per snapshot date, anchored to
+  // each snapshot's own stats.ret). This is the canonical source of truth for the
+  // equity curve — historical points NEVER change retroactively because each
+  // snapshot's stats.ret is captured at close on that date.
+  const modeEquityHistory = {};
+  const _todayKeyNY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
+    .format(new Date()).replace(/-/g, '');
   try {
     const _historyDir = path.join(ROOT, 'scanner/status/history');
-    const _todayKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
-      .format(new Date()).replace(/-/g, '');
     const _files = fs.readdirSync(_historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
-    const _prev = _files.filter(f => f.replace('.json', '') < _todayKey).slice(-1)[0];
+    const _prev = _files.filter(f => f.replace('.json', '') < _todayKeyNY).slice(-1)[0];
     if (_prev) prevSnap = JSON.parse(fs.readFileSync(path.join(_historyDir, _prev), 'utf8'));
+    // Build per-mode history from EVERY snapshot < today (excludes today, which
+    // gets appended at panel-build time using fresh stats.ret).
+    for (const f of _files.filter(ff => ff.replace('.json', '') < _todayKeyNY)) {
+      const snap = JSON.parse(fs.readFileSync(path.join(_historyDir, f), 'utf8'));
+      const dateKey = f.replace('.json', '');
+      const dateLabel = dateKey.slice(4, 6) + '/' + dateKey.slice(6, 8);
+      for (const [mId, mData] of Object.entries(snap.modes || {})) {
+        if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
+        const ret = mData.stats && mData.stats.ret != null ? mData.stats.ret : null;
+        if (ret != null) {
+          modeEquityHistory[mId].push({ d: dateLabel, v: +(100 + ret).toFixed(2) });
+        }
+      }
+    }
   } catch (e) { /* first run — no previous snapshot */ }
 
   // Collect ALL premature tickers (holdDays < horizon) for equity curve MtM
@@ -334,7 +353,23 @@ async function main() {
         m.oosWarn = null;
       }
     }
-    modes[id] = { cfg, trades, m, ec: equityDV(m.equityCurve) };
+    // Build the canonical equity curve from snapshot history (frozen per-day stats.ret)
+    // + today's anchor point. Same definition is used by:
+    //   - the live chart (modes[id].ec → modeCharts client-side)
+    //   - the Time Machine slice (sliced view for any historical date)
+    //   - the snapshot persisted at end of run (snapshot.modes[id].equity)
+    // No more divergence between live / TM / snapshot equity values.
+    const _todayLabel = (function(){
+      const d = new Date();
+      return ('0' + (d.getMonth()+1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
+    })();
+    const _hist = modeEquityHistory[id] || [];
+    const _todayMtm = +(100 + (m.ret || 0)).toFixed(2);
+    const ec = {
+      d: [..._hist.map(p => p.d), _todayLabel],
+      v: [..._hist.map(p => p.v), _todayMtm],
+    };
+    modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
   const defaultMode = modes.balanced || modes[Object.keys(modes)[0]];
@@ -392,7 +427,42 @@ async function main() {
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
 
-    const pending = trades.filter(t => t._premature && !t._horizonExpired);
+    let pending = trades.filter(t => t._premature && !t._horizonExpired);
+    // Fallback: aggressive-rotation modes (turbo/dynamic/tkl) frequently end the
+    // backtest with all sim positions resolved. Real-world portfolio is held
+    // continuously — show recent live positions as "currently held" so the UI
+    // doesn't say "0 open / N orders to place" right after a normal trading day.
+    if (pending.length === 0 && livePositions.length > 0) {
+      const horizonDays = cfg.horizon || 10;
+      const minScore = cfg.minScore || 80;
+      const cutoffMs = Date.now() - horizonDays * 86400000;
+      // Use most recent live positions (within horizon window) as fallback.
+      // Sort newest-first, take up to portfolioSize.
+      const fallback = livePositions
+        .filter(p => p.scan_date && new Date(p.scan_date).getTime() >= cutoffMs)
+        .filter(p => (p.score || 99) >= minScore - 5)  // small tolerance
+        .sort((a, b) => (b.scan_date || '').localeCompare(a.scan_date || ''))
+        .slice(0, cfg.portfolioSize)
+        .map(p => ({
+          ticker: p.ticker,
+          scanDate: p.scan_date,
+          entryDate: p.scan_date,
+          actualEntry: p.entry,
+          actualStop: p.stop,
+          actualTp1: p.tp1,
+          actualTp2: p.tp2,
+          score: p.score || 0,
+          strategy: p.strategy,
+          exitDate: null,
+          exitPrice: p.current_price,
+          status: 'pending',
+          holdDays: 0,
+          _premature: true,
+          _horizonExpired: false,
+          _liveFallback: true,
+        }));
+      pending = fallback;
+    }
     const mapped = pending.map(t => {
       const live = liveLookup[t.ticker];
       const currentPrice = live ? live.current_price : t.exitPrice;
@@ -651,6 +721,11 @@ ${(() => {
           : [];
 
         // ── Render: BUY → ROTATE (Close Now lives in its own card, no duplicate SELL row) ──
+        // Compact mode: when many orders queue up, suppress per-row thesis prose +
+        // rotation comparison card to keep the table from steamrolling the equity
+        // curve and pushing other sections off-screen.
+        const _ttlActions = buyOrders.length + rotationCandidates.length;
+        const compactRows = _ttlActions > 3;
         const actionRows = [];
         for (let i = 0; i < buyOrders.length; i++) {
           const s = buyOrders[i];
@@ -687,7 +762,7 @@ ${(() => {
       <td class="pos">${s.tp1}<span class="hide-m"> / ${s.tp2}</span></td>
       <td class="am hide-m">${s.rr}</td><td class="m hide-m">${alloc}%</td>
       <td><span class="pill am">ROTATE ↔ ${replaces.ticker}</span></td>
-    </tr>
+    </tr>${compactRows ? '' : `
     <tr class="thesis-row"><td colspan="${thesisCols}">
       <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:.75rem;align-items:center;padding:.5rem .75rem;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:.8rem">
         <div style="text-align:center">
@@ -709,8 +784,8 @@ ${(() => {
           <div style="color:#64748b;font-size:.7rem">R/R ${s.rr}</div>
         </div>
       </div>
-    </td></tr>`);
-          if (s.thesis) actionRows.push(`<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>`);
+    </td></tr>`}`);
+          if (s.thesis && !compactRows) actionRows.push(`<tr class="thesis-row"><td colspan="${thesisCols}"><div class="thesis-text">${s.thesis}</div></td></tr>`);
         }
 
         // ── Render: WATCH as secondary collapsible ──
@@ -1088,6 +1163,11 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .pill.am{background:#fffbeb;color:#d97706}
 .pill.m{background:#f1f5f9;color:#475569}
 .pill.pending{background:#eff6ff;color:#3b82f6;border:1px dashed #93c5fd}
+/* Long Orders to Place tables — bound card height + sticky head, vertical scroll */
+.section-card.cta-orders{max-height:560px;overflow-y:auto;overflow-x:hidden}
+.section-card.cta-orders .sc-head{position:sticky;top:0;background:#fff;z-index:2;padding-top:.6rem}
+.section-card.cta-orders table.t thead th{position:sticky;top:2.6rem;background:#f8fafc;z-index:1}
+@media(max-width:600px){.section-card.cta-orders{max-height:420px}}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
@@ -1977,32 +2057,9 @@ document.addEventListener('DOMContentLoaded',function(){
   const historyDir = path.join(ROOT, 'scanner/status/history');
   fs.mkdirSync(historyDir, { recursive: true });
 
-  // Build equity history aligned to today's anchoring (frozen returnTotal).
-  // Historical snapshots stored equity.v[-1] from simulatePortfolio (which includes
-  // unrealized MtM at snapshot time). Today uses stats.ret = computeStatsFromTrades
-  // returnTotal (realized closed trades only). Mixing the two created the chart
-  // discontinuity. Now we ALWAYS read snap.modes[id].stats.ret to keep the curve
-  // consistent across history + today.
-  const modeEquityHistory = {};
-  try {
-    const histFiles = fs.readdirSync(historyDir).filter(f => /^\d{8}\.json$/.test(f) && f.replace('.json', '') < todayKey).sort();
-    for (const f of histFiles) {
-      const snap = JSON.parse(fs.readFileSync(path.join(historyDir, f), 'utf8'));
-      const dateKey = f.replace('.json', '');
-      const dateLabel = dateKey.slice(4, 6) + '/' + dateKey.slice(6, 8);
-      for (const [mId, mData] of Object.entries(snap.modes || {})) {
-        if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
-        const ret = mData.stats && mData.stats.ret != null ? mData.stats.ret : null;
-        if (ret != null) {
-          modeEquityHistory[mId].push({ d: dateLabel, v: +(100 + ret).toFixed(2) });
-        } else if (mData.equity && mData.equity.d && mData.equity.v && mData.equity.v.length) {
-          // Fallback for legacy snapshots without stats.ret
-          const lastIdx = mData.equity.d.length - 1;
-          modeEquityHistory[mId].push({ d: mData.equity.d[lastIdx], v: mData.equity.v[lastIdx] });
-        }
-      }
-    }
-  } catch (e) { }
+  // modeEquityHistory was built earlier in main() (right after prevSnap load).
+  // It's the canonical per-day equity already used by modes[id].ec / modeCharts /
+  // panel(). Reused below to seed the persisted snapshot's equity payload.
 
   // prevSnap is loaded earlier in main() (so panel() can use it during HTML render).
   // Reuse the same closure-bound prevSnap here for snapshot annotation.
