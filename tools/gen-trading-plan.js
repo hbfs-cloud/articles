@@ -81,7 +81,8 @@ function roundToIncrement(price, increment) {
 // ── Build plan ──
 const now = new Date();
 const todayISO = now.toISOString().slice(0, 10);
-const expiryDate = addBizDays(todayISO, modeCfg.horizon);
+const targetISO = DATE.length === 8 ? `${DATE.slice(0,4)}-${DATE.slice(4,6)}-${DATE.slice(6,8)}` : todayISO;
+const expiryDate = addBizDays(targetISO, modeCfg.horizon);
 const nominalUsd = modeCfg.portfolioSize > 0 ? 10000 : 10000; // default capital
 const positionPct = modeCfg.positionSizePct || +(100 / modeCfg.portfolioSize).toFixed(2);
 const positionNominal = +(nominalUsd * positionPct / 100).toFixed(2);
@@ -162,8 +163,8 @@ function makeOrder(signal, action, rotation) {
         shares: shares,
         pct_of_portfolio: positionPct,
       },
-      valid_from: `${todayISO}T09:30:00-04:00`,
-      valid_until: `${todayISO}T16:00:00-04:00`,
+      valid_from: `${targetISO}T09:30:00-04:00`,
+      valid_until: `${targetISO}T16:00:00-04:00`,
       time_in_force: 'DAY',
     },
     exit: {
@@ -279,7 +280,7 @@ const plan = {
   version: '1.0',
   dsl: 'dailytickers-trading-plan',
   generated_at: now.toISOString(),
-  valid_for: todayISO,
+  valid_for: targetISO,
 
   broker: {
     name: BROKER,
