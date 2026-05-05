@@ -241,15 +241,38 @@ function makeOrder(signal, action, rotation) {
   };
 }
 
-// Build orders
+// Build orders — scanner picks first (priority 1), then remaining signals as fallbacks
+const MAX_ORDERS = 5;
 const orders = [];
+const usedTickers = new Set();
+
 for (const o of buyOrders) {
   const sig = signals.signals.find(s => s.ticker === o.ticker) || o;
-  orders.push(makeOrder(sig, 'BUY', null));
+  const order = makeOrder(sig, 'BUY', null);
+  order.priority = orders.filter(x => x.action !== 'SKIP').length + 1;
+  orders.push(order);
+  usedTickers.add(o.ticker);
 }
 for (const o of rotateOrders) {
   const sig = signals.signals.find(s => s.ticker === o.ticker) || o;
-  orders.push(makeOrder(sig, 'ROTATE', { close: o.rotate_out || o.close, reason: o.reason }));
+  const order = makeOrder(sig, 'ROTATE', { close: o.rotate_out || o.close, reason: o.reason });
+  order.priority = orders.filter(x => x.action !== 'SKIP').length + 1;
+  orders.push(order);
+  usedTickers.add(o.ticker);
+}
+
+// Fallback: remaining signals sorted by score, fill up to MAX_ORDERS
+const fallbackSignals = signals.signals
+  .filter(s => !usedTickers.has(s.ticker) && s.entry && s.stop && s.tp1)
+  .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+for (const sig of fallbackSignals) {
+  if (orders.filter(o => o.action !== 'SKIP').length >= MAX_ORDERS) break;
+  const order = makeOrder(sig, 'BUY', null);
+  if (order.action !== 'SKIP') {
+    order.priority = orders.filter(x => x.action !== 'SKIP').length + 1;
+    orders.push(order);
+  }
 }
 
 // ── Close-now positions ──
@@ -471,5 +494,5 @@ if (DRY_RUN) {
   fs.writeFileSync(outPath, json);
   console.log(`✅ Trading plan written: ${outPath}`);
   console.log(`   Mode: ${MODE} | Broker: ${BROKER} | Orders: ${orders.length} | Close: ${closeNow.length}`);
-  console.log(`   Valid for: ${todayISO} | Horizon: ${modeCfg.horizon}d | Expiry: ${expiryDate}`);
+  console.log(`   Valid for: ${targetISO} | Horizon: ${modeCfg.horizon}d | Expiry: ${expiryDate}`);
 }
