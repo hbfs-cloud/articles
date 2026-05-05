@@ -15,7 +15,7 @@ const args = process.argv.slice(2);
 function flag(name) { const i = args.indexOf('--' + name); return i >= 0 ? (args[i + 1] || true) : null; }
 const MODE = flag('mode') || 'balanced';
 const BROKER = flag('broker') || 'paper';
-const DATE = flag('date') || new Date().toISOString().slice(0, 10).replace(/-/g, '');
+let DATE = flag('date');
 const DRY_RUN = args.includes('--dry-run');
 const OUTPUT = flag('output');
 
@@ -38,7 +38,14 @@ try { positions = JSON.parse(fs.readFileSync(path.join(DATA, 'scanner-positions.
 
 const ordersPath = path.join(ROOT, 'portfolio/v1', MODE, 'orders.json');
 let currentOrders = [];
-try { currentOrders = JSON.parse(fs.readFileSync(ordersPath, 'utf8')).orders || []; } catch (_) {}
+let ordersScanDate = '';
+try {
+  const ordersData = JSON.parse(fs.readFileSync(ordersPath, 'utf8'));
+  currentOrders = ordersData.orders || [];
+  ordersScanDate = ordersData.scanDate || '';
+} catch (_) {}
+
+if (!DATE) DATE = ordersScanDate || new Date().toISOString().slice(0, 10).replace(/-/g, '');
 
 // ── Helpers ──
 function brokerSymbol(ticker) {
