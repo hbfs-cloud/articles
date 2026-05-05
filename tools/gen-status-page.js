@@ -434,12 +434,12 @@ async function main() {
     // tracker so QCOM/etc. don't bleed across modes that never entered them.
     if (pending.length === 0 && livePositions.length > 0) {
       const liveTickers = new Set(livePositions.map(p => p.ticker));
-      const horizonDays = cfg.horizon || 10;
-      const cutoffMs = Date.now() - horizonDays * 86400000;
       // Take this mode's recent trades (sim entered them) that the live tracker
       // still considers "open" (ticker present in scanner-positions). Newest first.
+      // No horizon cutoff — short-horizon modes (turbo h=2) would otherwise reject
+      // every entry older than 2 days, leaving Open Positions permanently empty.
       const recent = trades
-        .filter(t => t.ticker && t.entryDate && new Date(t.entryDate).getTime() >= cutoffMs)
+        .filter(t => t.ticker && t.entryDate)
         .filter(t => liveTickers.has(t.ticker))
         .sort((a, b) => (b.entryDate || '').localeCompare(a.entryDate || ''));
       const seenTk = new Set();
