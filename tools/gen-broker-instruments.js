@@ -25,8 +25,15 @@ for (const [broker, file] of Object.entries(BROKER_FILES)) {
   let mapped = 0;
 
   for (const inst of instruments) {
-    const key = inst.internal_symbol;
+    let key = inst.internal_symbol;
     if (!key) continue;
+
+    // Trading212: internal_symbol has lowercase suffix for London-listed ETFs (e.g. KWEBl → KWEB).
+    // Map to canonical US ticker if the base symbol already exists from another broker.
+    if (broker === 'trading212' && /^[A-Z]+[a-z]$/.test(key)) {
+      const base = key.replace(/[a-z]$/, '');
+      if (symbols[base]) key = base;
+    }
 
     if (!symbols[key]) symbols[key] = { name: inst.name || '', brokers: {} };
 
