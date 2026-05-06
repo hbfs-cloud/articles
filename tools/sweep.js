@@ -28,6 +28,9 @@ const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
 const FULL_SWEEP = process.argv.includes('--full-sweep');
 const FROZEN_ONLY = !FULL_SWEEP;
+const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
+const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
+const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
 const SHARIA = process.argv.includes('--sharia');
 const FROM_ARG = process.argv.find(a => a.startsWith('--from='));
 const FROM_DATE = FROM_ARG ? FROM_ARG.split('=')[1] : null;
@@ -1161,7 +1164,10 @@ async function main() {
   console.log(`Walk-forward split: ${inSampleDates.size} in-sample / ${outSampleDates.size} out-of-sample scans`);
 
   // 4. Grid dimensions — ~311K combos, ~5 min nightly run
-  const PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8, 10, 15];
+  const ALL_PORTFOLIO_SIZES = QUICK ? [1, 3, 5] : [1, 2, 3, 4, 5, 8, 10, 15];
+  const PORTFOLIO_SIZES = SWEEP_SHARD >= 0
+    ? ALL_PORTFOLIO_SIZES.filter((_, i) => i % SWEEP_SHARDS === SWEEP_SHARD)
+    : ALL_PORTFOLIO_SIZES;
   const TOP_NS = QUICK ? [1, 2] : [1, 2, 3, 4, 5, 8, 10];
   const MIN_SCORES = QUICK ? [85] : [85, 90];
   const HORIZONS = QUICK ? [5, 15] : [2, 3, 5, 8, 10, 15];
@@ -1533,6 +1539,24 @@ async function main() {
   }
 
   console.log();
+  }
+
+  // 6a. Shard mode — write only advisor top-K arrays and exit
+  if (SHARD_OUT) {
+    const shardData = {
+      shard: SWEEP_SHARD, portfolioSizes: PORTFOLIO_SIZES, tested,
+      topBySharpe: topBySharpe.slice(0, 50), topByReturn: topByReturn.slice(0, 50),
+      topByCalmar: topByCalmar.slice(0, 50), topByComposite: topByComposite.slice(0, 50),
+      advTurbo: advTurbo.slice(0, 50), advDynamic: advDynamic.slice(0, 50),
+      advBalanced: advBalanced.slice(0, 50), advSecured: advSecured.slice(0, 50),
+      advFortress: advFortress.slice(0, 50), advTkl: advTkl.slice(0, 50),
+      advTurboRelaxed: advTurboRelaxed.slice(0, 50), advDynamicRelaxed: advDynamicRelaxed.slice(0, 50),
+      advBalancedRelaxed: advBalancedRelaxed.slice(0, 50), advSecuredRelaxed: advSecuredRelaxed.slice(0, 50),
+      advFortressRelaxed: advFortressRelaxed.slice(0, 50), advTklRelaxed: advTklRelaxed.slice(0, 50),
+    };
+    fs.writeFileSync(SHARD_OUT, JSON.stringify(shardData));
+    console.log(`  [shard ${SWEEP_SHARD}] wrote ${tested} combos to ${SHARD_OUT}`);
+    return;
   }
 
   // 6. Save results
