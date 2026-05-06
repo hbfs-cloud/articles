@@ -99,45 +99,6 @@ function buildPositions(cfg, modeKey) {
   );
   let pending = trades.filter(t => t._premature);
 
-  // Fallback: when sweep has 0 pending trades, build positions from recent
-  // scan signals that sweep hasn't processed yet.
-  if (pending.length === 0 && livePositions.length > 0) {
-    const parser = require('./lib/scanner-parser');
-    const sharedCfg = require('./config');
-    const lastSweepDate = raw.length > 0
-      ? raw.reduce((max, t) => (t.scanDate || '') > max ? t.scanDate : max, '')
-      : '';
-    const lastSweepKey = lastSweepDate.replace(/-/g, '');
-    const f = SF_CARDS[cfg.filterName] || (() => true);
-    const horizonCalDays = Math.ceil(cfg.horizon * 7 / 5) + 2;
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - horizonCalDays);
-    const cutoffKey = cutoff.toISOString().slice(0, 10).replace(/-/g, '');
-    const SCANNER_DIR = path.join(ROOT, 'scanner');
-    const dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
-    for (const d of dirs) {
-      if (d <= lastSweepKey) continue;
-      if (d < cutoffKey) continue;
-      try {
-        const loaded = parser.loadSignals(d);
-        if (!loaded || !loaded.signals) continue;
-        const filtered = loaded.signals
-          .filter(s => f(s.strategy || ''))
-          .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
-          .slice(0, cfg.topN);
-        const scanISO = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-        for (const s of filtered) {
-          if (!liveLookup[s.ticker]) continue;
-          pending.push({
-            ticker: s.ticker, entryDate: scanISO,
-            actualEntry: s.entry, exitPrice: liveLookup[s.ticker].current_price,
-            _premature: true,
-          });
-        }
-      } catch (_) { }
-    }
-  }
-
   const seen = new Set();
   return pending.map(t => {
     const live         = liveLookup[t.ticker];

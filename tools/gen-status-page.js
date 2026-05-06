@@ -438,48 +438,6 @@ async function main() {
 
     let pending = trades.filter(t => t._premature && !t._horizonExpired);
 
-    // Fallback: when sweep has 0 pending trades, build positions from recent
-    // scan signals that sweep hasn't processed yet (no OHLCV data available).
-    // Load signals from unprocessed scan dirs, apply mode filter, match with
-    // scanner-positions.json for live prices.
-    if (pending.length === 0 && livePositions.length > 0) {
-      const lastSweepDate = trades.length > 0
-        ? trades.reduce((max, t) => (t.scanDate || '') > max ? t.scanDate : max, '')
-        : '';
-      const lastSweepKey = lastSweepDate.replace(/-/g, '');
-      const f = SF[cfg.filterName] || (() => true);
-      const horizonCalDays = Math.ceil(cfg.horizon * 7 / 5) + 2;
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - horizonCalDays);
-      const cutoffKey = cutoff.toISOString().slice(0, 10).replace(/-/g, '');
-
-      for (const d of dirs) {
-        if (d <= lastSweepKey) continue;
-        if (d < cutoffKey) continue;
-        try {
-          const loaded = parser.loadSignals(d);
-          if (!loaded || !loaded.signals) continue;
-          const filtered = loaded.signals
-            .filter(s => f(s.strategy || ''))
-            .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
-            .slice(0, cfg.topN);
-          const scanISO = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-          for (const s of filtered) {
-            const live = liveLookup[s.ticker];
-            if (!live) continue;
-            pending.push({
-              ticker: s.ticker, scanDate: scanISO, actualEntry: s.entry,
-              exitPrice: live.current_price, score: s.score || 0,
-              strategy: s.strategy, actualStop: s.stop,
-              actualTp1: s.tp1, actualTp2: s.tp2 || null,
-              vwap: null, entryDate: scanISO,
-              _premature: true, _horizonExpired: false,
-            });
-          }
-        } catch (_) { }
-      }
-    }
-
     const mapped = pending.map(t => {
       const live = liveLookup[t.ticker];
       const currentPrice = live ? live.current_price : t.exitPrice;
