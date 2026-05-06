@@ -137,6 +137,45 @@ function jsonrpcCall(toolName, params) {
   });
 }
 
+// Fetch bars from QueryData and compute weighted portfolio returns for VaR Mode 1.
+// Mode 2 (symbols+weights) fails with "no historical data" — the gateway's VaR module
+// doesn't have its own bar store. Mode 1 (pre-computed returns array) works.
+async function fetchPortfolioReturns(symbols, weights, lookbackDays) {
+  const barsResult = await jsonrpcCall('QueryData', {
+    symbols: symbols.join(','),
+    types: 'bars_daily',
+    days: lookbackDays + 10,
+  });
+  const barsBySymbol = {};
+  for (const r of (barsResult.results || [])) {
+    if (r.data_type !== 'bars_daily' || !r.data) continue;
+    for (let i = 0; i < (r.symbols || []).length; i++) {
+      const sym = r.symbols[i];
+      const bars = r.data[i] || [];
+      const closes = bars.map(b => b[4]).filter(c => c > 0);
+      if (closes.length < 20) continue;
+      const rets = [];
+      for (let j = 1; j < closes.length; j++) {
+        rets.push(+((closes[j] - closes[j - 1]) / closes[j - 1]).toFixed(6));
+      }
+      barsBySymbol[sym] = rets;
+    }
+  }
+  const validSymbols = symbols.filter(s => barsBySymbol[s]);
+  if (validSymbols.length === 0) return null;
+  const minLen = Math.min(...validSymbols.map(s => barsBySymbol[s].length));
+  const portfolioReturns = [];
+  for (let d = 0; d < minLen; d++) {
+    let dayRet = 0;
+    for (let i = 0; i < validSymbols.length; i++) {
+      const idx = symbols.indexOf(validSymbols[i]);
+      dayRet += barsBySymbol[validSymbols[i]][d] * weights[idx];
+    }
+    portfolioReturns.push(+dayRet.toFixed(6));
+  }
+  return portfolioReturns;
+}
+
 async function fetchModeRisk(modeId, modeSnapshot) {
   const sw = buildSymbolsWeights(modeSnapshot);
   const positions = buildPositions(modeSnapshot);
@@ -146,34 +185,39 @@ async function fetchModeRisk(modeId, modeSnapshot) {
 
   const out = { asOf: new Date().toISOString(), portfolioValueUsd: PORTFOLIO_VALUE_USD };
 
-  // VaR 95 + 99 (5-day horizon)
-  try {
-    const var95 = await jsonrpcCall('CalculatePortfolioVaR', {
-      symbols: JSON.stringify(sw.symbols),
-      weights: JSON.stringify(sw.weights),
-      portfolio_value: PORTFOLIO_VALUE_USD,
-      confidence_level: 0.95,
-      horizon: 5,
-      method: 'historical',
-      lookback_days: 252,
-    });
-    out.var95_5d = _validateVar(var95?.totalVaR ?? var95?.value_at_risk ?? var95?.var_usd ?? null);
-    out.expectedShortfall95_5d = _validateVar(var95?.expectedShortfall ?? var95?.expected_shortfall ?? var95?.cvar_usd ?? null);
-    out.method = 'historical';
-  } catch (e) { console.log(`  [warn] VaR95 ${modeId}: ${e.message}`); }
+  // VaR 95 + 99 (5-day horizon) — Mode 1: compute returns from bars, pass directly
+  const portfolioReturns = await fetchPortfolioReturns(sw.symbols, sw.weights, 252).catch(e => {
+    console.log(`  [warn] fetchReturns ${modeId}: ${e.message}`);
+    return null;
+  });
 
-  try {
-    const var99 = await jsonrpcCall('CalculatePortfolioVaR', {
-      symbols: JSON.stringify(sw.symbols),
-      weights: JSON.stringify(sw.weights),
-      portfolio_value: PORTFOLIO_VALUE_USD,
-      confidence_level: 0.99,
-      horizon: 5,
-      method: 'historical',
-      lookback_days: 252,
-    });
-    out.var99_5d = _validateVar(var99?.totalVaR ?? var99?.value_at_risk ?? var99?.var_usd ?? null);
-  } catch (e) { console.log(`  [warn] VaR99 ${modeId}: ${e.message}`); }
+  if (portfolioReturns && portfolioReturns.length >= 20) {
+    try {
+      const var95 = await jsonrpcCall('CalculatePortfolioVaR', {
+        portfolio_value: PORTFOLIO_VALUE_USD,
+        returns: JSON.stringify(portfolioReturns),
+        confidence_level: 0.95,
+        horizon: 5,
+        method: 'historical',
+      });
+      out.var95_5d = _validateVar(var95?.totalVaR ?? var95?.value_at_risk ?? null);
+      out.expectedShortfall95_5d = _validateVar(var95?.expectedShortfall ?? var95?.expected_shortfall ?? null);
+      out.method = 'historical';
+    } catch (e) { console.log(`  [warn] VaR95 ${modeId}: ${e.message}`); }
+
+    try {
+      const var99 = await jsonrpcCall('CalculatePortfolioVaR', {
+        portfolio_value: PORTFOLIO_VALUE_USD,
+        returns: JSON.stringify(portfolioReturns),
+        confidence_level: 0.99,
+        horizon: 5,
+        method: 'historical',
+      });
+      out.var99_5d = _validateVar(var99?.totalVaR ?? var99?.value_at_risk ?? null);
+    } catch (e) { console.log(`  [warn] VaR99 ${modeId}: ${e.message}`); }
+  } else {
+    console.log(`  [warn] VaR ${modeId}: insufficient returns data (${portfolioReturns?.length || 0} days)`);
+  }
 
   // Stress test
   try {
