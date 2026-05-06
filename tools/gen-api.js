@@ -55,6 +55,19 @@ function getBrokersFor(ticker) {
   if (!entry) return null;
   return Object.keys(entry.brokers);
 }
+function getBrokerSymbols(ticker) {
+  if (!brokerMap || !brokerMap.symbols) return null;
+  const entry = brokerMap.symbols[ticker];
+  if (!entry) return null;
+  const out = {};
+  for (const [broker, info] of Object.entries(entry.brokers)) {
+    out[broker] = { symbol: info.symbol, tradable: info.tradable };
+    if (info.uic) out[broker].uic = info.uic;
+    if (info.isin) out[broker].isin = info.isin;
+    if (info.currency) out[broker].currency = info.currency;
+  }
+  return out;
+}
 
 // Load SPY benchmark (fetch-bench-spy.js). Missing file = no-op.
 const BENCH_SPY_PATH = path.join(ROOT, 'data', 'bench-spy.json');
@@ -130,6 +143,7 @@ function writeMode(mode, prefix) {
       sharia: s.sharia != null ? s.sharia : null,
       thesis: s.thesis || '',
       brokers: getBrokersFor(s.ticker),
+      broker_symbols: getBrokerSymbols(s.ticker),
     }))
   });
 
@@ -153,7 +167,8 @@ function writeMode(mode, prefix) {
         riskPct,                  // % loss per-trade if stop hits
         riskPctOfPortfolio,       // % of total portfolio at risk on this position
         allocPct,
-        scanDate: p.scan_date, daysRemaining: p.days_remaining
+        scanDate: p.scan_date, daysRemaining: p.days_remaining,
+        broker_symbols: getBrokerSymbols(p.ticker),
       };
     })
   });
@@ -219,7 +234,8 @@ function writeMode(mode, prefix) {
     entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
     sharia: o.sharia != null ? o.sharia : null,
     allocPct, replaces: o.replaces || null, scoreDelta: o.scoreDelta || null,
-    thesis: o.thesis || ''
+    thesis: o.thesis || '',
+    broker_symbols: getBrokerSymbols(o.ticker),
   }));
   write(`${p}orders.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
@@ -232,11 +248,13 @@ function writeMode(mode, prefix) {
     closeNow: (mode.closeNow || []).map(p => ({
       ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
       currentPrice: p.current_price, returnPct: p.return_pct,
-      daysHeld: p.days_held, horizon: p.horizon
+      daysHeld: p.days_held, horizon: p.horizon,
+      broker_symbols: getBrokerSymbols(p.ticker),
     })),
     expiresTomorrow: (mode.expiresTomorrow || []).map(p => ({
       ticker: p.ticker, entry: p.entry, returnPct: p.return_pct,
-      stop: p.stop, daysHeld: p.days_held, horizon: p.horizon
+      stop: p.stop, daysHeld: p.days_held, horizon: p.horizon,
+      broker_symbols: getBrokerSymbols(p.ticker),
     }))
   });
 
@@ -252,6 +270,7 @@ function writeMode(mode, prefix) {
       sharia: s.sharia != null ? s.sharia : null,
       thesis: s.thesis || '',
       brokers: getBrokersFor(s.ticker),
+      broker_symbols: getBrokerSymbols(s.ticker),
     })),
     orders: modeOrders,
     positions: (mode.positions || []).map(p => {
@@ -266,17 +285,20 @@ function writeMode(mode, prefix) {
         riskPct,                  // % loss per-trade if stop hits
         riskPctOfPortfolio,       // % of total portfolio at risk on this position
         allocPct,
-        scanDate: p.scan_date, daysRemaining: p.days_remaining
+        scanDate: p.scan_date, daysRemaining: p.days_remaining,
+        broker_symbols: getBrokerSymbols(p.ticker),
       };
     }),
     closeNow: (mode.closeNow || []).map(p => ({
       ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
       currentPrice: p.current_price, returnPct: p.return_pct,
-      daysHeld: p.days_held, horizon: p.horizon
+      daysHeld: p.days_held, horizon: p.horizon,
+      broker_symbols: getBrokerSymbols(p.ticker),
     })),
     expiresTomorrow: (mode.expiresTomorrow || []).map(p => ({
       ticker: p.ticker, entry: p.entry, returnPct: p.return_pct,
-      stop: p.stop, daysHeld: p.days_held, horizon: p.horizon
+      stop: p.stop, daysHeld: p.days_held, horizon: p.horizon,
+      broker_symbols: getBrokerSymbols(p.ticker),
     })),
     closedTrades: (mode.closedTrades || []).map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,

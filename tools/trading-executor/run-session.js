@@ -96,33 +96,38 @@ function generatePlan(mode, broker) {
     // Apply filters
     if (FILTER_BROKER && account.broker !== FILTER_BROKER) continue;
 
-    const creds = resolveCredentials(account);
-    if (!creds) { results.push({ broker: account.broker, status: 'SKIPPED', reason: 'missing credentials' }); continue; }
-
-    const AdapterClass = loadAdapter(account.broker);
-    if (!AdapterClass) { results.push({ broker: account.broker, status: 'SKIPPED', reason: 'no adapter' }); continue; }
-
     for (const mode of account.modes) {
       if (FILTER_MODE && mode !== FILTER_MODE) continue;
 
       console.log(`\n── ${mode} / ${account.broker} ──`);
 
-      // Generate plan
+      // Always generate plan (plan = data, independent of credentials)
       const planPath = generatePlan(mode, account.broker);
       if (!planPath) { results.push({ broker: account.broker, mode, status: 'FAILED', reason: 'plan generation' }); continue; }
 
       const plan = JSON.parse(fs.readFileSync(planPath, 'utf8'));
+      const orderCount = plan.orders?.length || 0;
+      const closeCount = plan.close_now?.length || 0;
 
       // Override capital from config
       if (account.capital_usd) plan.account.nominal_usd = account.capital_usd;
 
       if (DRY_RUN) {
-        const orderCount = plan.orders?.length || 0;
-        const closeCount = plan.close_now?.length || 0;
         console.log(`   📋 Plan: ${orderCount} orders, ${closeCount} close-now (dry-run — not executing)`);
         results.push({ broker: account.broker, mode, status: 'DRY_RUN', orders: orderCount, closes: closeCount });
         continue;
       }
+
+      // Credentials required only for execution
+      const creds = resolveCredentials(account);
+      if (!creds) {
+        console.log(`   📋 Plan: ${orderCount} orders, ${closeCount} close-now (no credentials — plan saved, not executing)`);
+        results.push({ broker: account.broker, mode, status: 'PLAN_ONLY', reason: 'missing credentials', orders: orderCount, closes: closeCount });
+        continue;
+      }
+
+      const AdapterClass = loadAdapter(account.broker);
+      if (!AdapterClass) { results.push({ broker: account.broker, mode, status: 'SKIPPED', reason: 'no adapter' }); continue; }
 
       // Execute
       try {
@@ -130,7 +135,6 @@ function generatePlan(mode, broker) {
         const engine = new Engine(plan, adapter, { verbose, logDir });
         new Notifier(engine, { quiet: DRY_RUN });
 
-        // Timeout: 2 hours max per mode
         const timeout = setTimeout(() => { engine.shutdown(); }, 7200000);
         await engine.run();
         clearTimeout(timeout);

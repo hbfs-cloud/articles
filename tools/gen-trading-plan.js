@@ -67,6 +67,19 @@ function brokerSymbol(ticker) {
   return entry.brokers[BROKER_LOOKUP].symbol;
 }
 
+function brokerInfo(ticker) {
+  if (BROKER === 'paper') return { symbol: ticker };
+  const entry = brokerMap.symbols[ticker];
+  if (!entry || !entry.brokers[BROKER_LOOKUP]) return null;
+  const b = entry.brokers[BROKER_LOOKUP];
+  const info = { symbol: b.symbol, exchange: b.exchange || '' };
+  if (b.uic) info.uic = b.uic;
+  if (b.isin) info.isin = b.isin;
+  if (b.currency) info.currency = b.currency;
+  if (b.asset_type) info.asset_type = b.asset_type;
+  return info;
+}
+
 function brokerRestrictions(ticker) {
   if (BROKER === 'paper') return { tradable: true, marginable: true, shortable: true, min_order_size: 1, price_increment: 0.01 };
   const entry = brokerMap.symbols[ticker];
@@ -161,6 +174,7 @@ function makeOrder(signal, action, rotation) {
     action: action,
     ticker: signal.ticker,
     broker_symbol: sym,
+    broker: brokerInfo(signal.ticker),
     entry: {
       type: 'LIMIT',
       price: entryPrice,
@@ -297,6 +311,7 @@ for (const p of modePositions) {
       action: 'CLOSE',
       ticker: p.ticker,
       broker_symbol: sym || p.ticker,
+      broker: brokerInfo(p.ticker),
       reason: 'HORIZON_EXPIRED',
       held_days: held,
       horizon: modeCfg.horizon,

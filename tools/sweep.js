@@ -991,7 +991,8 @@ function simulatePortfolio(allTrades, scans, config) {
     }
     closedTrades.push(pos.trade);
   }
-  const equity = 100 + realizedPnl;
+  // MtM-inclusive: returnTotal reflects realized + unrealized (matches equity curve)
+  const equity = 100 + returnRealized + returnUnrealized;
 
   // Compute metrics
   const values = equityCurve.map(d => d.value);
