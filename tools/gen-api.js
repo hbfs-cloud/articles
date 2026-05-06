@@ -135,7 +135,7 @@ function writeMode(mode, prefix) {
 
   // 1. signals.json
   write(`${p}signals.json`, {
-    updatedAt: now, date: snap.date, mode: prefix || 'balanced',
+    updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
