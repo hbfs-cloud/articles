@@ -233,8 +233,9 @@ async function main() {
   let signals = [];
   let scanDir = '';
   const thesisMap = {};
+  let dirs = [];
   try {
-    const dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
+    dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
     // Pick the most recent scan dir that has a valid scan
     for (const d of dirs) {
       const jsonP = path.join(SCANNER_DIR, d, 'signals.json');
@@ -397,8 +398,9 @@ async function main() {
     all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
     momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
+    mom_bo: s => /momentum|breakout/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout' }[f] || f; }
 
   // Format number as "$X.XX" for display — data stays numeric until render
   function $fmt(n) { return n != null && !isNaN(n) ? '$' + Number(n).toFixed(2) : '—'; }
@@ -435,6 +437,49 @@ async function main() {
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
 
     let pending = trades.filter(t => t._premature && !t._horizonExpired);
+
+    // Fallback: when sweep has 0 pending trades, build positions from recent
+    // scan signals that sweep hasn't processed yet (no OHLCV data available).
+    // Load signals from unprocessed scan dirs, apply mode filter, match with
+    // scanner-positions.json for live prices.
+    if (pending.length === 0 && livePositions.length > 0) {
+      const lastSweepDate = trades.length > 0
+        ? trades.reduce((max, t) => (t.scanDate || '') > max ? t.scanDate : max, '')
+        : '';
+      const lastSweepKey = lastSweepDate.replace(/-/g, '');
+      const f = SF[cfg.filterName] || (() => true);
+      const horizonCalDays = Math.ceil(cfg.horizon * 7 / 5) + 2;
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - horizonCalDays);
+      const cutoffKey = cutoff.toISOString().slice(0, 10).replace(/-/g, '');
+
+      for (const d of dirs) {
+        if (d <= lastSweepKey) continue;
+        if (d < cutoffKey) continue;
+        try {
+          const loaded = parser.loadSignals(d);
+          if (!loaded || !loaded.signals) continue;
+          const filtered = loaded.signals
+            .filter(s => f(s.strategy || ''))
+            .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
+            .slice(0, cfg.topN);
+          const scanISO = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+          for (const s of filtered) {
+            const live = liveLookup[s.ticker];
+            if (!live) continue;
+            pending.push({
+              ticker: s.ticker, scanDate: scanISO, actualEntry: s.entry,
+              exitPrice: live.current_price, score: s.score || 0,
+              strategy: s.strategy, actualStop: s.stop,
+              actualTp1: s.tp1, actualTp2: s.tp2 || null,
+              vwap: null, entryDate: scanISO,
+              _premature: true, _horizonExpired: false,
+            });
+          }
+        } catch (_) { }
+      }
+    }
+
     const mapped = pending.map(t => {
       const live = liveLookup[t.ticker];
       const currentPrice = live ? live.current_price : t.exitPrice;
@@ -442,13 +487,11 @@ async function main() {
       const ret = entry > 0 ? +((currentPrice - entry) / entry * 100).toFixed(2) : 0;
       const ageD = t.entryDate ? Math.round((new Date() - new Date(t.entryDate)) / 86400000) : 0;
       const left = Math.max(0, cfg.horizon - Math.round(ageD * 5 / 7));
-      // Compute stop: prefer live data > trade's actualStop > mode's maxStopPct fallback
-      const maxStopPct = cfg.maxStopPct || 8; // default 8% if not defined
+      const maxStopPct = cfg.maxStopPct || 8;
       const fallbackStop = entry > 0 ? +(entry * (1 - maxStopPct / 100)).toFixed(2) : 0;
       const rawStop = (live && live.stop > 0) ? live.stop
         : (t.actualStop > 0) ? t.actualStop
           : fallbackStop;
-      // Clamp stop to mode's maxStopPct (tighter of scanner stop vs mode hard stop)
       const resolvedStop = (cfg.maxStopPct > 0 && entry > 0)
         ? Math.max(rawStop, +(entry * (1 - cfg.maxStopPct / 100)).toFixed(2))
         : rawStop;
@@ -2175,6 +2218,7 @@ function backfillHistory() {
     all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
     momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
+    mom_bo: s => /momentum|breakout/i.test(s),
   };
   function parseScannerSignalsBF(dateKey) {
     const loaded = parser.loadSignals(dateKey);

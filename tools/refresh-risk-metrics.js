@@ -117,6 +117,10 @@ function jsonrpcCall(toolName, params) {
           // MCP tools/call wraps the actual payload in result.content[0].text (JSON string).
           // Unwrap so callers get the raw object directly.
           const r = j.result;
+          if (r && r.isError) {
+            const msg = r.content?.[0]?.text || 'MCP tool returned isError';
+            return reject(new Error(msg));
+          }
           if (r && r.content && Array.isArray(r.content) && r.content[0]?.type === 'text') {
             try { resolve(JSON.parse(r.content[0].text)); }
             catch { resolve(r.content[0].text); }

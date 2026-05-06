@@ -98,7 +98,14 @@ function readStatusMetrics(modeKey = 'balanced') {
 }
 
 // ─── Reconstruct positions like gen-status-page.js ───────────────────────────
-// Positions = premature (expired but holdDays < horizon) trades, enriched with live prices
+// Positions = premature (expired but holdDays < horizon) trades, enriched with live prices.
+// Fallback: when sweep has 0 pending trades, build from recent unprocessed scan signals.
+const SF_NOTIFY = {
+  all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
+  momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
+  no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
+  mom_bo: s => /momentum|breakout/i.test(s),
+};
 function buildPositions(cfg, modeKey) {
   const modeMap = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress', tkl: 'tkl' };
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
@@ -110,8 +117,46 @@ function buildPositions(cfg, modeKey) {
   const trades = raw.map(t =>
     (t.status === 'expired' && t.holdDays < cfg.horizon) ? { ...t, _premature: true } : t
   );
-  const pending = trades.filter(t => t._premature);
+  let pending = trades.filter(t => t._premature);
 
+  if (pending.length === 0 && livePositions.length > 0) {
+    const parser = require('./lib/scanner-parser');
+    const sharedCfg = require('./config');
+    const lastSweepDate = raw.length > 0
+      ? raw.reduce((max, t) => (t.scanDate || '') > max ? t.scanDate : max, '')
+      : '';
+    const lastSweepKey = lastSweepDate.replace(/-/g, '');
+    const f = SF_NOTIFY[cfg.filterName] || (() => true);
+    const horizonCalDays = Math.ceil(cfg.horizon * 7 / 5) + 2;
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - horizonCalDays);
+    const cutoffKey = cutoff.toISOString().slice(0, 10).replace(/-/g, '');
+    const SCANNER_DIR = path.join(ROOT, 'scanner');
+    const dirs = fs.readdirSync(SCANNER_DIR).filter(d => sharedCfg.RE_SCAN_DIR.test(d)).sort().reverse();
+    for (const d of dirs) {
+      if (d <= lastSweepKey) continue;
+      if (d < cutoffKey) continue;
+      try {
+        const loaded = parser.loadSignals(d);
+        if (!loaded || !loaded.signals) continue;
+        const filtered = loaded.signals
+          .filter(s => f(s.strategy || ''))
+          .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
+          .slice(0, cfg.topN);
+        const scanISO = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
+        for (const s of filtered) {
+          if (!liveLookup[s.ticker]) continue;
+          pending.push({
+            ticker: s.ticker, scanDate: scanISO, entryDate: scanISO,
+            actualEntry: s.entry, exitPrice: liveLookup[s.ticker].current_price,
+            _premature: true,
+          });
+        }
+      } catch (_) { }
+    }
+  }
+
+  const seen = new Set();
   return pending.map(t => {
     const live = liveLookup[t.ticker];
     const currentPrice = live ? live.current_price : (t.exitPrice || 0);
@@ -130,7 +175,9 @@ function buildPositions(cfg, modeKey) {
       tp2: live ? (live.tp2 || null) : null,
       left,
     };
-  }).sort((a, b) => b.return_pct - a.return_pct);
+  }).filter(p => { if (seen.has(p.ticker)) return false; seen.add(p.ticker); return true; })
+    .sort((a, b) => b.return_pct - a.return_pct)
+    .slice(0, cfg.portfolioSize);
 }
 
 // ─── Build payload ────────────────────────────────────────────────────────────
