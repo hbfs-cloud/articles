@@ -47,22 +47,21 @@ function readStatusMetrics(modeKey) {
   if (!fs.existsSync(htmlPath)) return null;
   const statusHtml = fs.readFileSync(htmlPath, 'utf8');
   const panelId = `p-${modeKey}`;
-  const section = statusHtml.match(new RegExp(`id="${panelId}"[\\s\\S]{0,8000}`));
+  const section = statusHtml.match(new RegExp(`id="${panelId}"[\\s\\S]{0,15000}`));
   if (!section) return null;
   const html = section[0];
 
-  const perfBlock = html.match(/class="perf-stats"[\s\S]{0,1500}?<\/div>\s*<\/div>/);
+  const perfBlock = html.match(/class="perf-stats"[\s\S]{0,4000}?<\/div>\s*<\/div>/);
   const perfHtml  = perfBlock ? perfBlock[0] : '';
 
-  const nums = perfHtml.match(/class="ps-v"[^>]*>([+\-]?[\d.]+[%x]?)<\/span/g) || [];
+  const allPsV = perfHtml.match(/class="ps-v"[^>]*>([+\-]?[\d.]+[%x]?)/g) || [];
   const extract = s => { const m = s.match(/>([+\-]?[\d.]+)/); return m ? parseFloat(m[1]) : NaN; };
-  const vals = nums.map(extract).filter(n => !isNaN(n));
+  const vals = allPsV.map(extract).filter(n => !isNaN(n));
 
   const worstM = html.match(/Worst:\s*([+\-]?[\d.]+)%/);
   const nowM   = html.match(/Now:\s*([+\-]?[\d.]+)%/);
   const bestM  = html.match(/Best:\s*([+\-]?[\d.]+)%/);
 
-  // Also try to extract trades count from the status html
   const tradesM = html.match(/(\d+)\s*(?:trades?|Trades?)/);
 
   return {

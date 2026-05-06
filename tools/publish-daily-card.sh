@@ -57,14 +57,8 @@ if [ "$SKIP_SWEEP" = false ]; then
   # ─── Step 4: Refresh risk metrics (VaR + stress + correlation + regime) ────
   echo ""
   echo "🛡️  Step 4: Refreshing risk metrics from MCP gateway..."
-  if [ -z "${MCP_GATEWAY_URL:-}" ]; then
-    echo "⚠️  MCP_GATEWAY_URL not set — risk-snapshots.json will be a stub."
-    echo "   Export MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp before running."
-    echo "   Continuing with explicit --stub (acknowledged)..."
-    node tools/refresh-risk-metrics.js --stub
-  else
-    node tools/refresh-risk-metrics.js
-  fi
+  export MCP_GATEWAY_URL="${MCP_GATEWAY_URL:-https://gateway.dailytickers.com/mcp}"
+  node tools/refresh-risk-metrics.js
 
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
