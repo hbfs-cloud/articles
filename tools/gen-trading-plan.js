@@ -333,16 +333,16 @@ const plan = {
   valid_for: targetISO,
 
   broker: {
-    name: BROKER,
-    type: BROKER === 'paper' ? 'simulation' : brokerMap.symbols[Object.keys(brokerMap.symbols)[0]]?.brokers[BROKER] ? 'live' : 'live',
+    name: BROKER_LOOKUP,
+    type: BROKER === 'paper' ? 'simulation' : brokerMap.symbols[Object.keys(brokerMap.symbols)[0]]?.brokers[BROKER_LOOKUP] ? 'live' : 'live',
     credentials: {
       api_key: '${BROKER_API_KEY}',
       api_secret: '${BROKER_API_SECRET}',
-      base_url: BROKER === 'alpaca' ? 'https://paper-api.alpaca.markets'
-        : BROKER === 'ibkr' ? 'https://localhost:5000/v1/api'
-        : BROKER === 'trading212' ? 'https://live.trading212.com/api/v0'
-        : BROKER === 'saxo' ? 'https://gateway.saxobank.com/openapi'
-        : BROKER === 'binance' ? 'https://api.binance.com'
+      base_url: BROKER_LOOKUP === 'alpaca' ? 'https://paper-api.alpaca.markets'
+        : BROKER_LOOKUP === 'ibkr' ? 'https://localhost:5000/v1/api'
+        : BROKER_LOOKUP === 'trading212' ? 'https://live.trading212.com/api/v0'
+        : BROKER_LOOKUP === 'saxo' ? 'https://gateway.saxobank.com/openapi'
+        : BROKER_LOOKUP === 'binance' ? 'https://api.binance.com'
         : 'http://localhost:9999',
       note: 'Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs.',
     },
@@ -506,12 +506,12 @@ const plan = {
       crypto_only: 'Binance only supports crypto pairs — not applicable for stock signals',
       symbol_format: 'Trading pairs like BTCUSDT, ETHUSDT',
     },
-  }[BROKER] || {},
+  }[BROKER_LOOKUP] || {},
 };
 
 // ── Output ──
 const json = JSON.stringify(plan, null, 2);
-const outPath = OUTPUT || path.join(ROOT, `data/trading-plans/${MODE}-${BROKER}-${DATE}.json`);
+const outPath = OUTPUT || path.join(ROOT, `data/trading-plans/${MODE}-${BROKER_LOOKUP}-${DATE}.json`);
 
 if (DRY_RUN) {
   console.log(json);
