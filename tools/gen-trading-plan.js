@@ -14,7 +14,10 @@ const DATA = path.join(ROOT, 'data');
 const args = process.argv.slice(2);
 function flag(name) { const i = args.indexOf('--' + name); return i >= 0 ? (args[i + 1] || true) : null; }
 const MODE = flag('mode') || 'balanced';
-const BROKER = flag('broker') || 'paper';
+const BROKER_RAW = flag('broker') || 'paper';
+const BROKER_ALIAS = { t212: 'trading212' };
+const BROKER_LOOKUP = BROKER_ALIAS[BROKER_RAW] || BROKER_RAW;
+const BROKER = BROKER_RAW;
 let DATE = flag('date');
 const DRY_RUN = args.includes('--dry-run');
 const OUTPUT = flag('output');
@@ -25,8 +28,8 @@ const modeCfg = modesConfig.modes[MODE];
 if (!modeCfg) { console.error(`Unknown mode: ${MODE}. Available: ${Object.keys(modesConfig.modes).join(', ')}`); process.exit(1); }
 
 const brokerMap = JSON.parse(fs.readFileSync(path.join(DATA, 'broker-instruments.json'), 'utf8'));
-if (!brokerMap.brokers.includes(BROKER) && BROKER !== 'paper') {
-  console.error(`Unknown broker: ${BROKER}. Available: ${brokerMap.brokers.join(', ')}, paper`);
+if (!brokerMap.brokers.includes(BROKER_LOOKUP) && BROKER !== 'paper') {
+  console.error(`Unknown broker: ${BROKER}. Available: ${brokerMap.brokers.join(', ')}, paper, t212`);
   process.exit(1);
 }
 
@@ -60,15 +63,15 @@ try {
 function brokerSymbol(ticker) {
   if (BROKER === 'paper') return ticker;
   const entry = brokerMap.symbols[ticker];
-  if (!entry || !entry.brokers[BROKER]) return null;
-  return entry.brokers[BROKER].symbol;
+  if (!entry || !entry.brokers[BROKER_LOOKUP]) return null;
+  return entry.brokers[BROKER_LOOKUP].symbol;
 }
 
 function brokerRestrictions(ticker) {
   if (BROKER === 'paper') return { tradable: true, marginable: true, shortable: true, min_order_size: 1, price_increment: 0.01 };
   const entry = brokerMap.symbols[ticker];
-  if (!entry || !entry.brokers[BROKER]) return null;
-  const b = entry.brokers[BROKER];
+  if (!entry || !entry.brokers[BROKER_LOOKUP]) return null;
+  const b = entry.brokers[BROKER_LOOKUP];
   return { tradable: b.tradable, marginable: b.marginable, shortable: b.shortable, min_order_size: b.min_order_size || 1, price_increment: b.price_increment || 0.01 };
 }
 

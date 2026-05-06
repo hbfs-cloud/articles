@@ -56,10 +56,12 @@ jobs:
           echo "date=$SCAN_DATE" >> $GITHUB_OUTPUT
           echo "Plan date: $SCAN_DATE"
 
-      - name: Generate plans for all modes
+      - name: Generate plans for all modes × brokers
         run: |
           for mode in turbo dynamic balanced secured fortress tkl; do
-            node tools/gen-trading-plan.js --mode "$mode" --broker paper --date "${{ steps.date.outputs.date }}" || true
+            for broker in paper alpaca t212; do
+              node tools/gen-trading-plan.js --mode "$mode" --broker "$broker" --date "${{ steps.date.outputs.date }}" || true
+            done
           done
           echo "Generated plans:"
           ls -la data/trading-plans/*${{ steps.date.outputs.date }}* 2>/dev/null || echo "No new plans"
