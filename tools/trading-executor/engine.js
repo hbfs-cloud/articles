@@ -31,6 +31,7 @@ class Engine extends EventEmitter {
     this.trades = [];
     this.orderState = new Map(); // orderId → { state, brokerOrderId, fills, ... }
     this.positionState = new Map(); // ticker → { qty, avgPrice, unrealizedPnl, exitOrders }
+    this.sectorCount = new Map(); // sector → count of open/submitted positions
     this.errors = [];
     this.log = [];
     this._monitorInterval = null;
@@ -137,11 +138,79 @@ class Engine extends EventEmitter {
           }
           break;
         }
+        case 'CHECK_REGIME': {
+          const regimeFilters = this.plan.mode.regime_filters;
+          if (!regimeFilters || Object.keys(regimeFilters).length === 0) break;
+          try {
+            const vix = await this.adapter.getQuote('VIX');
+            let regime = 'neutral';
+            if (vix?.last < 15) regime = 'risk_on';
+            else if (vix?.last < 20) regime = 'neutral';
+            else if (vix?.last < 25) regime = 'early_risk_off';
+            else regime = 'risk_off';
+
+            const allowedFilter = regimeFilters[regime];
+            if (allowedFilter && allowedFilter !== 'all') {
+              this._log('INFO', `Regime: ${regime} → filter=${allowedFilter}`);
+              for (const [id, os] of this.orderState) {
+                if (os.state !== ORDER_STATES.PENDING) continue;
+                const order = this.plan.orders.find(o => o.id === id);
+                if (!order?.metadata?.strategy) continue;
+                const strategy = order.metadata.strategy.toLowerCase();
+                const pass = allowedFilter === 'mom_bo' ? (strategy.includes('momentum') || strategy.includes('breakout'))
+                  : allowedFilter === 'momentum_only' ? strategy.includes('momentum')
+                  : allowedFilter === 'breakout_only' ? strategy.includes('breakout')
+                  : true;
+                if (!pass) {
+                  os.state = ORDER_STATES.SKIPPED;
+                  this._log('INFO', `${os.ticker}: skipped by regime filter (${regime}→${allowedFilter}, strategy=${strategy})`);
+                }
+              }
+            }
+          } catch (_) {
+            this._log('WARN', 'Regime check failed — proceeding without filter');
+          }
+          break;
+        }
         case 'SYNC_ACCOUNT':
         case 'RECONCILE_POSITIONS':
         case 'LOG_STATE':
           this._log('INFO', `Pre-market: ${step.step}`);
           break;
+      }
+    }
+
+    // Auto regime check if regime_filters defined but CHECK_REGIME not in lifecycle steps
+    const hasRegimeStep = (this.plan.lifecycle.on_start || []).some(s => s.step === 'CHECK_REGIME');
+    if (!hasRegimeStep && this.plan.mode.regime_filters && Object.keys(this.plan.mode.regime_filters).length > 0) {
+      try {
+        const vix = await this.adapter.getQuote('VIX');
+        let regime = 'neutral';
+        if (vix?.last < 15) regime = 'risk_on';
+        else if (vix?.last < 20) regime = 'neutral';
+        else if (vix?.last < 25) regime = 'early_risk_off';
+        else regime = 'risk_off';
+
+        const allowedFilter = this.plan.mode.regime_filters[regime];
+        if (allowedFilter && allowedFilter !== 'all') {
+          this._log('INFO', `Auto regime check: ${regime} → filter=${allowedFilter}`);
+          for (const [id, os] of this.orderState) {
+            if (os.state !== ORDER_STATES.PENDING) continue;
+            const order = this.plan.orders.find(o => o.id === id);
+            if (!order?.metadata?.strategy) continue;
+            const strategy = order.metadata.strategy.toLowerCase();
+            const pass = allowedFilter === 'mom_bo' ? (strategy.includes('momentum') || strategy.includes('breakout'))
+              : allowedFilter === 'momentum_only' ? strategy.includes('momentum')
+              : allowedFilter === 'breakout_only' ? strategy.includes('breakout')
+              : true;
+            if (!pass) {
+              os.state = ORDER_STATES.SKIPPED;
+              this._log('INFO', `${os.ticker}: skipped by auto regime filter (${regime}→${allowedFilter}, strategy=${strategy})`);
+            }
+          }
+        }
+      } catch (_) {
+        this._log('WARN', 'Auto regime check failed — proceeding without filter');
       }
     }
   }
@@ -187,13 +256,36 @@ class Engine extends EventEmitter {
     }
 
     // 3. Place buy orders
+    // Seed sector counts from already-open positions
+    for (const [ticker] of this.positionState) {
+      const order = this.plan.orders.find(o => o.broker_symbol === ticker || o.ticker === ticker);
+      if (order?.metadata?.sector) {
+        this.sectorCount.set(order.metadata.sector, (this.sectorCount.get(order.metadata.sector) || 0) + 1);
+      }
+    }
+
     const buys = this.plan.orders.filter(o => o.action === 'BUY');
     for (const order of buys) {
       const os = this.orderState.get(order.id);
       if (os.state !== ORDER_STATES.PENDING) continue;
 
+      // Sector cap check
+      const sectorCap = this.plan.mode.sector_cap_max;
+      if (sectorCap > 0 && order.metadata?.sector) {
+        const current = this.sectorCount.get(order.metadata.sector) || 0;
+        if (current >= sectorCap) {
+          this._log('WARN', `${order.ticker}: sector cap reached (${order.metadata.sector}: ${current}/${sectorCap}) — skipping`);
+          os.state = ORDER_STATES.SKIPPED;
+          continue;
+        }
+      }
+
       try {
         await this._placeEntry(order);
+        // Increment sector count on successful submission
+        if (order.metadata?.sector) {
+          this.sectorCount.set(order.metadata.sector, (this.sectorCount.get(order.metadata.sector) || 0) + 1);
+        }
       } catch (err) {
         await this._handleError(err.code || 'ORDER_FAILED', err, { order: order.id });
       }
@@ -212,7 +304,16 @@ class Engine extends EventEmitter {
             if (quote && quote.last > order.entry.price * (cond.threshold_ratio || 1.02)) {
               this._log('WARN', `${order.ticker}: gap-up detected (${quote.last} > ${order.entry.price * cond.threshold_ratio}). ${cond.if_true}`);
               if (cond.if_true === 'SKIP_ORDER') { os.state = ORDER_STATES.SKIPPED; return; }
-              // WAIT_VWAP_PULLBACK: place limit at entry instead of market
+              if (cond.if_true === 'WAIT_VWAP_PULLBACK') {
+                // Check VWAP gate: if enabled and price > entry × max_open_ratio, place limit at entry
+                if (order.entry.vwap_gate?.enabled) {
+                  const maxOpenRatio = order.entry.vwap_gate.max_open_ratio || 1.01;
+                  if (quote.last > order.entry.price * maxOpenRatio) {
+                    this._log('INFO', `VWAP gate: placing limit at ${order.entry.price} instead of market (gap-up detected)`);
+                    order.entry.type = 'LIMIT';
+                  }
+                }
+              }
             }
           } catch (_) {}
           break;
@@ -242,6 +343,39 @@ class Engine extends EventEmitter {
           break;
         }
       }
+    }
+
+    // Entry gate — skip if current price has moved too far above entry
+    const entryGatePct = this.plan.mode.entry_gate_pct;
+    if (entryGatePct > 0) {
+      try {
+        const quote = await this.adapter.getQuote(order.broker_symbol);
+        if (quote?.last) {
+          const gatePrice = order.entry.price * (1 + entryGatePct / 100);
+          if (quote.last > gatePrice) {
+            this._log('WARN', `${order.ticker}: entry gate failed (${quote.last} > gate ${gatePrice.toFixed(2)}) — skipping`);
+            os.state = ORDER_STATES.SKIPPED;
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // Inverse ATR sizing
+    if (this.plan.mode.sizing_method === 'inverse_atr' && order.entry.size.shares) {
+      try {
+        const quote = await this.adapter.getQuote(order.broker_symbol);
+        if (quote && quote.atr14) {
+          const riskPerShare = quote.atr14 * (this.plan.mode.atr_stop_mult || 2);
+          const capitalPerPos = this.plan.account.nominal_usd / (this.plan.account.max_positions || 1);
+          const riskBudget = capitalPerPos * (this.plan.mode.target_risk_pct || 1) / 100;
+          const atrShares = Math.floor(riskBudget / riskPerShare);
+          if (atrShares > 0 && atrShares !== order.entry.size.shares) {
+            this._log('INFO', `${order.ticker}: ATR sizing ${order.entry.size.shares} → ${atrShares} shares (ATR14=${quote.atr14.toFixed(2)}, risk=${riskBudget.toFixed(0)})`);
+            order.entry.size.shares = atrShares;
+          }
+        }
+      } catch (_) { /* fallback to fixed size */ }
     }
 
     // Submit order
@@ -323,6 +457,42 @@ class Engine extends EventEmitter {
             }
           } catch (_) {}
         }
+
+        // Trailing stop
+        if (pos.entryPrice && this.plan.mode.daily_trail_pct > 0) {
+          try {
+            const quote = await this.adapter.getQuote(ticker);
+            if (quote?.last) await this._checkTrailingStop(ticker, pos, quote);
+          } catch (_) {}
+        }
+
+        // Stale days detection
+        const staleDays = this.plan.mode.stale_days;
+        if (staleDays > 0 && pos.entryPrice) {
+          try {
+            const quote = await this.adapter.getQuote(ticker);
+            if (quote?.last && pos.highWaterMark) {
+              const pnlFromHigh = ((quote.last - pos.highWaterMark) / pos.highWaterMark) * 100;
+              if (Math.abs(pnlFromHigh) < 1 && quote.last < pos.highWaterMark) {
+                if (!pos.staleSince) pos.staleSince = new Date();
+                const staleForDays = (new Date() - pos.staleSince) / (1000 * 60 * 60 * 24);
+                if (staleForDays >= staleDays) {
+                  this._log('TRADE', `${ticker}: stale for ${staleForDays.toFixed(1)} days — closing`);
+                  const order = this.plan.orders.find(o => o.broker_symbol === ticker || o.ticker === ticker);
+                  const symbol = order?.broker_symbol || ticker;
+                  try {
+                    await this.adapter.closePosition(symbol);
+                    this.trades.push({ type: 'CLOSE', ticker, reason: 'STALE_EXIT', result: {}, ts: new Date().toISOString() });
+                  } catch (err) {
+                    this._log('ERROR', `Failed to close stale position ${ticker}: ${err.message}`);
+                  }
+                }
+              } else {
+                pos.staleSince = null;
+              }
+            }
+          } catch (_) {}
+        }
       }
 
       // Check circuit breaker
@@ -361,21 +531,31 @@ class Engine extends EventEmitter {
     try {
       // Stop loss
       if (order.exit.stop_loss) {
+        let stopPrice = order.exit.stop_loss.price;
+        const maxStopPct = this.plan.mode.max_stop_pct;
+        if (maxStopPct > 0) {
+          const maxStopPrice = filledPrice * (1 - maxStopPct / 100);
+          if (stopPrice < maxStopPrice) {
+            this._log('INFO', `${os.ticker}: clamping stop from ${stopPrice} to ${maxStopPrice.toFixed(2)} (maxStop ${maxStopPct}%)`);
+            stopPrice = maxStopPrice;
+          }
+        }
         const slOrder = await this.adapter.placeOrder({
           symbol: os.brokerSymbol,
           side: 'sell',
           type: 'stop',
           qty: filledQty,
-          stop_price: order.exit.stop_loss.price,
+          stop_price: stopPrice,
           time_in_force: 'gtc',
         });
         os.exitOrders.push({ type: 'SL', brokerOrderId: slOrder.id });
-        this._log('INFO', `SL placed for ${os.ticker} @ ${order.exit.stop_loss.price} → ${slOrder.id}`);
+        this._log('INFO', `SL placed for ${os.ticker} @ ${stopPrice} → ${slOrder.id}`);
       }
 
       // Take profit 1 (partial)
+      const partialPct = this.plan.mode.partial_tp ? (this.plan.mode.partial_tp_pct != null ? this.plan.mode.partial_tp_pct * 100 : 50) : 50;
       if (order.exit.take_profit_1) {
-        const tp1Qty = Math.floor(filledQty * (order.exit.take_profit_1.partial_exit_pct || 50) / 100);
+        const tp1Qty = Math.floor(filledQty * partialPct / 100);
         if (tp1Qty > 0) {
           const tp1Order = await this.adapter.placeOrder({
             symbol: os.brokerSymbol,
@@ -392,7 +572,7 @@ class Engine extends EventEmitter {
 
       // Take profit 2 (remaining)
       if (order.exit.take_profit_2) {
-        const tp1Qty = Math.floor(filledQty * (order.exit.take_profit_1?.partial_exit_pct || 50) / 100);
+        const tp1Qty = Math.floor(filledQty * partialPct / 100);
         const tp2Qty = filledQty - tp1Qty;
         if (tp2Qty > 0) {
           const tp2Order = await this.adapter.placeOrder({
@@ -432,6 +612,36 @@ class Engine extends EventEmitter {
           this._log('TRADE', `Breakeven: moved SL to ${pos.entryPrice} for ${symbol}`);
         } catch (err) {
           this._log('ERROR', `Failed to modify SL for breakeven: ${err.message}`);
+        }
+      }
+    }
+  }
+
+  async _checkTrailingStop(symbol, pos, quote) {
+    if (!quote?.last || !pos.entryPrice) return;
+    const trailPct = this.plan.mode.daily_trail_pct;
+
+    // Track high water mark
+    if (!pos.highWaterMark || quote.last > pos.highWaterMark) {
+      pos.highWaterMark = quote.last;
+    }
+
+    // Trailing stop = highWaterMark × (1 - trailPct/100)
+    const trailStop = pos.highWaterMark * (1 - trailPct / 100);
+
+    // Only trail UP — never move stop down
+    if (!pos.currentStop || trailStop > pos.currentStop) {
+      for (const [, os] of this.orderState) {
+        if (os.brokerSymbol !== symbol) continue;
+        const slExit = os.exitOrders.find(e => e.type === 'SL');
+        if (slExit) {
+          try {
+            await this.adapter.modifyOrder(slExit.brokerOrderId, { stop_price: trailStop });
+            pos.currentStop = trailStop;
+            this._log('TRADE', `Trailing stop: ${symbol} moved to ${trailStop.toFixed(2)} (HWM: ${pos.highWaterMark.toFixed(2)}, trail: ${trailPct}%)`);
+          } catch (err) {
+            this._log('WARN', `Failed to trail stop for ${symbol}: ${err.message}`);
+          }
         }
       }
     }

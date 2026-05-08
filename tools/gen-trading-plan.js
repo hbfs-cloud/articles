@@ -27,7 +27,23 @@ const modesConfig = JSON.parse(fs.readFileSync(path.join(DATA, 'modes-config.jso
 const modeCfg = modesConfig.modes[MODE];
 if (!modeCfg) { console.error(`Unknown mode: ${MODE}. Available: ${Object.keys(modesConfig.modes).join(', ')}`); process.exit(1); }
 
-const brokerMap = JSON.parse(fs.readFileSync(path.join(DATA, 'broker-instruments.json'), 'utf8'));
+let brokerMap = { brokers: [], symbols: {} };
+const brokerMapPath = path.join(DATA, 'broker-instruments.json');
+if (fs.existsSync(brokerMapPath)) {
+  brokerMap = JSON.parse(fs.readFileSync(brokerMapPath, 'utf8'));
+} else {
+  // Try loading per-broker instrument file
+  const perBrokerPath = path.join(ROOT, 'tools/trading-executor/instruments', BROKER_LOOKUP + '.json');
+  if (fs.existsSync(perBrokerPath)) {
+    const raw = JSON.parse(fs.readFileSync(perBrokerPath, 'utf8'));
+    brokerMap.brokers = [BROKER_LOOKUP];
+    for (const inst of (raw.instruments || [])) {
+      brokerMap.symbols[inst.internal_symbol || inst.broker_symbol] = {
+        brokers: { [BROKER_LOOKUP]: { symbol: inst.broker_symbol, exchange: inst.exchange, tradable: inst.tradable, marginable: inst.marginable, shortable: inst.shortable, min_order_size: inst.min_order_size, price_increment: inst.price_increment, uic: inst.uic, isin: inst.isin, currency: inst.currency, asset_type: inst.asset_type } }
+      };
+    }
+  }
+}
 if (!brokerMap.brokers.includes(BROKER_LOOKUP) && BROKER !== 'paper') {
   console.error(`Unknown broker: ${BROKER}. Available: ${brokerMap.brokers.join(', ')}, paper, t212`);
   process.exit(1);
@@ -197,13 +213,16 @@ function makeOrder(signal, action, rotation) {
       stop_loss: {
         type: 'STOP',
         price: stopPrice,
-        trailing: false,
+        trailing: modeCfg.trailingStop || false,
+        daily_trail_pct: modeCfg.dailyTrailPct || 0,
+        max_stop_pct: modeCfg.maxStopPct || 0,
+        atr_stop_mult: modeCfg.atrStopMult || 0,
       },
       take_profit_1: {
         type: 'LIMIT',
         price: tp1Price,
-        partial_exit_pct: 50,
-        description: 'Sell 50% at TP1, move stop to breakeven on remainder',
+        partial_exit_pct: (modeCfg.partialTPPct || 0.5) * 100,
+        description: `Sell ${(modeCfg.partialTPPct || 0.5) * 100}% at TP1, move stop to breakeven on remainder`,
       },
       take_profit_2: tp2Price ? {
         type: 'LIMIT',
@@ -211,11 +230,13 @@ function makeOrder(signal, action, rotation) {
         partial_exit_pct: 100,
         description: 'Sell remaining position at TP2',
       } : null,
-      breakeven: {
-        trigger_pct: modeCfg.breakevenPct || 2,
-        action: 'MOVE_STOP_TO_ENTRY',
-        description: `When unrealized P&L ≥ ${modeCfg.breakevenPct || 2}%, move stop to entry price`,
-      },
+      ...(modeCfg.breakevenPct > 0 ? {
+        breakeven: {
+          trigger_pct: modeCfg.breakevenPct || 0,
+          action: 'MOVE_STOP_TO_ENTRY',
+          description: `When unrealized P&L ≥ ${modeCfg.breakevenPct || 0}%, move stop to entry price`,
+        },
+      } : {}),
       time_exit: {
         horizon_days: modeCfg.horizon,
         expiry_date: expiryDate,
@@ -362,7 +383,22 @@ const plan = {
     min_score: modeCfg.minScore,
     rotation: modeCfg.rotation,
     breakeven_pct: modeCfg.breakevenPct,
-    vix_kill: modeCfg.vixKill,
+    vix_kill: modeCfg.vixKillThreshold,
+    trailing_stop: modeCfg.trailingStop || false,
+    daily_trail_pct: modeCfg.dailyTrailPct || 0,
+    max_stop_pct: modeCfg.maxStopPct || 0,
+    atr_stop_mult: modeCfg.atrStopMult || 0,
+    stale_days: modeCfg.staleDays || 0,
+    entry_gate_pct: modeCfg.entryGatePct || 0,
+    partial_tp: modeCfg.partialTP || false,
+    partial_tp_pct: modeCfg.partialTPPct || 0.5,
+    sector_cap_max: modeCfg.sectorCapMax || 0,
+    sizing_method: modeCfg.sizingMethod || 'fixed',
+    target_risk_pct: modeCfg.targetRiskPct || 1,
+    correlation_cap: modeCfg.correlationCap || 0,
+    cross_mode_dedup: modeCfg.crossModeDedup || false,
+    regime_filters: modeCfg.regimeFilters || {},
+    dd_breaker_pct: modeCfg.ddBreakerPct || 5,
   },
 
   session: {
@@ -381,12 +417,12 @@ const plan = {
     max_slippage_pct: 1.0,
     max_spread_pct: 0.5,
     circuit_breaker: {
-      daily_loss_pct: 5,
+      daily_loss_pct: modeCfg.ddBreakerPct || 5,
       action: 'HALT_ALL_ORDERS',
-      description: 'If portfolio drops 5% intraday, cancel all pending orders and alert.',
+      description: `If portfolio drops ${modeCfg.ddBreakerPct || 5}% intraday, cancel all pending orders and alert.`,
     },
-    correlation_limit: 0.85,
-    max_sector_concentration: 3,
+    correlation_limit: modeCfg.correlationCap || 0.85,
+    max_sector_concentration: modeCfg.sectorCapMax || 3,
   },
 
   close_now: closeNow,
@@ -439,7 +475,7 @@ const plan = {
       { step: 'CHECK_MARKET_STATUS', description: 'Verify market is open or will open today' },
       { step: 'SYNC_ACCOUNT', description: 'Fetch current account balance, buying power, positions' },
       { step: 'RECONCILE_POSITIONS', description: 'Compare broker positions with expected positions. Alert on discrepancy.' },
-      { step: 'CHECK_VIX', threshold: modeCfg.vixKill, action: 'HALT_IF_ABOVE', description: `If VIX > ${modeCfg.vixKill}, halt all new orders` },
+      { step: 'CHECK_VIX', threshold: modeCfg.vixKillThreshold, action: 'HALT_IF_ABOVE', description: `If VIX > ${modeCfg.vixKillThreshold}, halt all new orders` },
       { step: 'LOG_STATE', description: 'Log initial account state for audit trail' },
     ],
     on_fill: [
