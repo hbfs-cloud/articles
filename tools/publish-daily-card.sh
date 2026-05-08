@@ -60,6 +60,12 @@ if [ "$SKIP_SWEEP" = false ]; then
   export MCP_GATEWAY_URL="${MCP_GATEWAY_URL:-https://gateway.dailytickers.com/mcp}"
   node tools/refresh-risk-metrics.js
 
+  # ─── Step 4b: Replay trades with 1-min OHLCV (realistic entry/exit times) ──
+  echo ""
+  echo "🔁 Step 4b: Replaying trades with 1-min data..."
+  node tools/replay-trades.js 2>&1 | tail -15
+  echo "   Replay done."
+
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
   echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."

@@ -1104,6 +1104,35 @@ function simulatePortfolio(allTrades, scans, config) {
   };
 }
 
+// ─── Rolling window stats for advisor constraints ────────────────────────────
+const ROLLING_WINDOW_DAYS = 20;
+
+function computeRollingStats(metrics, windowDays) {
+  const ec = metrics.equityCurve;
+  if (!ec || ec.length < windowDays + 1) return null;
+  const startIdx = ec.length - windowDays;
+  const startVal = ec[startIdx].value;
+  const endVal = ec[ec.length - 1].value;
+  const rollReturn = startVal > 0 ? ((endVal / startVal) - 1) * 100 : 0;
+  let peak = startVal, maxDD = 0;
+  for (let i = startIdx; i < ec.length; i++) {
+    if (ec[i].value > peak) peak = ec[i].value;
+    if (peak > 0) {
+      const dd = ((peak - ec[i].value) / peak) * 100;
+      if (dd > maxDD) maxDD = dd;
+    }
+  }
+  const cutoffDate = ec[startIdx].date;
+  const ct = (metrics.closedTrades || []).filter(t => t.exitDate && t.exitDate >= cutoffDate);
+  const w = ct.filter(t => (t.pnlPct || 0) > 0);
+  const l = ct.filter(t => (t.pnlPct || 0) <= 0);
+  const wr = ct.length >= 2 ? (w.length / ct.length) * 100 : -1;
+  const gw = w.reduce((s, t) => s + (t.pnlPct || 0), 0);
+  const gl = Math.abs(l.reduce((s, t) => s + (t.pnlPct || 0), 0));
+  const pf = gl > 0 ? gw / gl : gw > 0 ? 99 : 0;
+  return { returnTotal: +rollReturn.toFixed(2), maxDD: +maxDD.toFixed(2), winRate: +wr.toFixed(1), profitFactor: +pf.toFixed(2), trades: ct.length };
+}
+
 // ─── Main sweep ───────────────────────────────────────────────────────────────
 
 async function main() {
@@ -1277,18 +1306,19 @@ async function main() {
   const topByComposite = [];
   const topByLowestDD = []; // sorted ascending by |DD| (lowest first)
   // Mode-specific trackers with constraints
-  const advTurbo = [];           // strict: Return≥40%, DD≤10%, WR≥50%, trades≥8
-  const advDynamic = [];         // strict: Return≥35%, DD≤6%, WR≥55%, trades≥10
-  const advBalanced = [];        // strict: Return≥24%, DD≤4%, WR≥55%, trades≥10
-  const advSecured = [];         // strict: Return≥12%, DD≤2.5%, WR≥65%, trades≥10
-  const advFortress = [];        // strict: Return≥8%, DD≤1.5%, WR≥65%, trades≥10
-  const advTkl = [];             // strict: Return≥15%, DD≤5%, WR≥50%, trades≥30 (high-volume momentum)
-  const advTurboRelaxed = [];    // relaxed: Return≥25%, DD≤15%, WR≥45%, trades≥8
-  const advDynamicRelaxed = [];  // relaxed: Return≥25%, DD≤10%, WR≥50%, trades≥10
-  const advBalancedRelaxed = []; // relaxed: Return≥18%, DD≤6%, WR≥50%, trades≥10
-  const advSecuredRelaxed = [];  // relaxed: Return≥8%, DD≤3%, WR≥55%, trades≥10
-  const advFortressRelaxed = []; // relaxed: Return≥5%, DD≤2.5%, WR≥55%, trades≥10
-  const advTklRelaxed = [];      // relaxed: Return≥10%, DD≤8%, WR≥40%, trades≥20
+  // Mode advisors — evaluated on ROLLING 20-day window (not full period)
+  const advTurbo = [];           // rolling: Ret≥10%, DD≤10%, WR≥45%, rollTrades≥2, fullTrades≥8
+  const advDynamic = [];         // rolling: Ret≥8%, DD≤6%, WR≥50%, rollTrades≥2, fullTrades≥10
+  const advBalanced = [];        // rolling: Ret≥5%, DD≤4%, WR≥50%, rollTrades≥2, fullTrades≥10
+  const advSecured = [];         // rolling: Ret≥3%, DD≤2.5%, WR≥55%, rollTrades≥2, fullTrades≥10
+  const advFortress = [];        // rolling: Ret≥2%, DD≤1.5%, WR≥55%, rollTrades≥2, fullTrades≥10
+  const advTkl = [];             // rolling: Ret≥4%, DD≤5%, WR≥40%, rollTrades≥5, fullTrades≥30
+  const advTurboRelaxed = [];    // relaxed rolling: Ret≥5%, DD≤15%, WR≥40%, rollTrades≥2, fullTrades≥8
+  const advDynamicRelaxed = [];  // relaxed rolling: Ret≥5%, DD≤10%, WR≥45%, rollTrades≥2, fullTrades≥10
+  const advBalancedRelaxed = []; // relaxed rolling: Ret≥3%, DD≤6%, WR≥45%, rollTrades≥2, fullTrades≥10
+  const advSecuredRelaxed = [];  // relaxed rolling: Ret≥1.5%, DD≤3%, WR≥50%, rollTrades≥2, fullTrades≥10
+  const advFortressRelaxed = []; // relaxed rolling: Ret≥1%, DD≤2.5%, WR≥50%, rollTrades≥2, fullTrades≥10
+  const advTklRelaxed = [];      // relaxed rolling: Ret≥2%, DD≤8%, WR≥35%, rollTrades≥3, fullTrades≥20
 
   function insertTop(arr, item, compareFn) {
     if (arr.length < TOP_K) { arr.push(item); arr.sort(compareFn); return; }
@@ -1335,42 +1365,49 @@ async function main() {
                               insertTop(topByCalmar, r, (a, b) => b.calmar - a.calmar);
                               insertTop(topByComposite, r, (a, b) => b.composite - a.composite);
                               insertTop(topByLowestDD, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
-                              // Mode advisors — strict targets (aspirational)
-                              if (r.returnTotal >= 40 && Math.abs(r.maxDD) <= 10 && r.winRate >= 50 && r.trades >= 8) {
+                              // Mode advisors — rolling 20-day window constraints (recent performance gate)
+                              const roll = computeRollingStats(metrics, ROLLING_WINDOW_DAYS);
+                              const useRoll = roll && roll.trades >= 2;
+                              const rr = useRoll ? roll.returnTotal : r.returnTotal;
+                              const rd = useRoll ? roll.maxDD : Math.abs(r.maxDD);
+                              const rw = useRoll ? (roll.winRate >= 0 ? roll.winRate : r.winRate) : r.winRate;
+                              const rt = useRoll ? roll.trades : r.trades;
+                              // Strict targets (scaled for 20-day rolling window)
+                              if (rr >= 10 && rd <= 10 && rw >= 45 && rt >= 2 && r.trades >= 8) {
                                 insertTop(advTurbo, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 35 && Math.abs(r.maxDD) <= 6 && r.winRate >= 55 && r.trades >= 10) {
+                              if (rr >= 8 && rd <= 6 && rw >= 50 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advDynamic, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 24 && Math.abs(r.maxDD) <= 4 && r.winRate >= 55 && r.trades >= 10) {
+                              if (rr >= 5 && rd <= 4 && rw >= 50 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advBalanced, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 12 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 65 && r.trades >= 10) {
+                              if (rr >= 3 && rd <= 2.5 && rw >= 55 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advSecured, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 8 && Math.abs(r.maxDD) <= 1.5 && r.winRate >= 65 && r.trades >= 10) {
+                              if (rr >= 2 && rd <= 1.5 && rw >= 55 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advFortress, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                               }
-                              if (r.returnTotal >= 15 && Math.abs(r.maxDD) <= 5 && r.winRate >= 50 && r.trades >= 30) {
+                              if (rr >= 4 && rd <= 5 && rw >= 40 && rt >= 5 && r.trades >= 30) {
                                 insertTop(advTkl, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              // Near-miss advisors — best achievable with relaxed constraints
-                              if (r.returnTotal >= 25 && Math.abs(r.maxDD) <= 15 && r.winRate >= 45 && r.trades >= 8) {
+                              // Near-miss advisors — relaxed rolling constraints
+                              if (rr >= 5 && rd <= 15 && rw >= 40 && rt >= 2 && r.trades >= 8) {
                                 insertTop(advTurboRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 25 && Math.abs(r.maxDD) <= 10 && r.winRate >= 50 && r.trades >= 10) {
+                              if (rr >= 5 && rd <= 10 && rw >= 45 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advDynamicRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 18 && Math.abs(r.maxDD) <= 6 && r.winRate >= 50 && r.trades >= 10) {
+                              if (rr >= 3 && rd <= 6 && rw >= 45 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advBalancedRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 8 && Math.abs(r.maxDD) <= 3 && r.winRate >= 55 && r.trades >= 10) {
+                              if (rr >= 1.5 && rd <= 3 && rw >= 50 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advSecuredRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
-                              if (r.returnTotal >= 5 && Math.abs(r.maxDD) <= 2.5 && r.winRate >= 55 && r.trades >= 10) {
+                              if (rr >= 1 && rd <= 2.5 && rw >= 50 && rt >= 2 && r.trades >= 10) {
                                 insertTop(advFortressRelaxed, r, (a, b) => Math.abs(a.maxDD) - Math.abs(b.maxDD));
                               }
-                              if (r.returnTotal >= 10 && Math.abs(r.maxDD) <= 8 && r.winRate >= 40 && r.trades >= 20) {
+                              if (rr >= 2 && rd <= 8 && rw >= 35 && rt >= 3 && r.trades >= 20) {
                                 insertTop(advTklRelaxed, r, (a, b) => b.returnTotal - a.returnTotal);
                               }
                             }
@@ -1482,58 +1519,59 @@ async function main() {
   // ─── MODE ADVISOR: find best config for each objective ───────────────────
   console.log('\n═══ MODE ADVISOR ═══\n');
 
-  console.log('TURBO (Return≥40%, DD≤10%, WR≥55%, trades≥8 — ultra-aggressive short-term):');
+  console.log(`(Rolling ${ROLLING_WINDOW_DAYS}-day window — recent performance gate, ranked by full-period return)\n`);
+  console.log('TURBO (roll: Ret≥10%, DD≤10%, WR≥45%, rollTrades≥2, fullTrades≥8):');
   for (const r of advTurbo.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nDYNAMIC (Return≥35%, DD≤6%, WR≥60%, trades≥10 — sweep finds optimal P/filter/exit):');
+  console.log('\nDYNAMIC (roll: Ret≥8%, DD≤6%, WR≥50%, rollTrades≥2, fullTrades≥10):');
   for (const r of advDynamic.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nBALANCED (Return≥24%, DD≤4%, WR≥60%, trades≥10 — sweep finds optimal P/filter/exit):');
+  console.log('\nBALANCED (roll: Ret≥5%, DD≤4%, WR≥50%, rollTrades≥2, fullTrades≥10):');
   for (const r of advBalanced.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nSECURED (Return≥12%, DD≤2%, WR≥75%, trades≥10 — sweep finds optimal P/filter/exit):');
+  console.log('\nSECURED (roll: Ret≥3%, DD≤2.5%, WR≥55%, rollTrades≥2, fullTrades≥10):');
   for (const r of advSecured.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nFORTRESS (Return≥8%, DD≤1.5%, WR≥70%, trades≥10 — ultra-conservative capital preservation):');
+  console.log('\nFORTRESS (roll: Ret≥2%, DD≤1.5%, WR≥55%, rollTrades≥2, fullTrades≥10):');
   for (const r of advFortress.slice(0, 10)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% R2=${r.r2.toFixed(3)} WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
   console.log('\n─── NEAR-MISS (relaxed constraints — best achievable) ───\n');
 
-  console.log('TURBO near-miss (Return≥30%, DD≤15%, WR≥50%, trades≥8):');
+  console.log('TURBO near-miss (roll: Ret≥5%, DD≤15%, WR≥40%, rollTrades≥2, fullTrades≥8):');
   if (advTurboRelaxed.length === 0) console.log('  (none found)');
   for (const r of advTurboRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nDYNAMIC near-miss (Return≥30%, DD≤10%, WR≥55%, trades≥10):');
+  console.log('\nDYNAMIC near-miss (roll: Ret≥5%, DD≤10%, WR≥45%, rollTrades≥2, fullTrades≥10):');
   if (advDynamicRelaxed.length === 0) console.log('  (none found)');
   for (const r of advDynamicRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nBALANCED near-miss (Return≥20%, DD≤5%, WR≥55%, trades≥10):');
+  console.log('\nBALANCED near-miss (roll: Ret≥3%, DD≤6%, WR≥45%, rollTrades≥2, fullTrades≥10):');
   if (advBalancedRelaxed.length === 0) console.log('  (none found)');
   for (const r of advBalancedRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nSECURED near-miss (Return≥10%, DD≤2.5%, WR≥65%, trades≥10):');
+  console.log('\nSECURED near-miss (roll: Ret≥1.5%, DD≤3%, WR≥50%, rollTrades≥2, fullTrades≥10):');
   if (advSecuredRelaxed.length === 0) console.log('  (none found)');
   for (const r of advSecuredRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
   }
 
-  console.log('\nFORTRESS near-miss (Return≥5%, DD≤2%, WR≥65%, trades≥10):');
+  console.log('\nFORTRESS near-miss (roll: Ret≥1%, DD≤2.5%, WR≥50%, rollTrades≥2, fullTrades≥10):');
   if (advFortressRelaxed.length === 0) console.log('  (none found)');
   for (const r of advFortressRelaxed.slice(0, 5)) {
     console.log(`  ${fmtR(r)}: Ret=${r.returnTotal > 0 ? '+' : ''}${r.returnTotal}% DD=${r.maxDD}% WR=${r.winRate}% PF=${r.profitFactor} trades=${r.trades}`);
@@ -1567,6 +1605,7 @@ async function main() {
     period: { start: '2026-02-15', end: new Date().toISOString().slice(0, 10), scans: scans.length },
     universe: { tickers: tickers.length, total_setups: allSetups.length, fetched: fetchedOK },
     walk_forward: { in_sample_scans: inSampleDates.size, out_sample_scans: outSampleDates.size },
+    advisor_rolling_window_days: ROLLING_WINDOW_DAYS,
     grid: {
       portfolio_sizes: PORTFOLIO_SIZES, top_ns: TOP_NS, min_scores: MIN_SCORES,
       horizons: HORIZONS, strategies: Object.keys(STRATEGY_FILTERS),

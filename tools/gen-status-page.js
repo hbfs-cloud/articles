@@ -1006,12 +1006,15 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
             }
           }
         }
+        const _etTime = iso => { if (!iso) return ''; try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' }); } catch { return iso.slice(11, 16); } };
         return sorted.map(t => {
           const pnl = t.pnlPct || 0;
           const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';
           let exitDate = '—';
           if (t.exitDate) { exitDate = t.exitDate.slice(5, 10); }
           else if (t.entryDate && t.holdDays) { const d = new Date(t.entryDate); d.setDate(d.getDate() + t.holdDays); exitDate = d.toISOString().slice(5, 10); }
+          const entryTimeFmt = t.entryTime ? `<br><span style="font-size:.6rem;color:#94a3b8">${_etTime(t.entryTime)} ET</span>` : '';
+          const exitTimeFmt = t.exitTime ? `<br><span style="font-size:.6rem;color:#94a3b8">${_etTime(t.exitTime)} ET</span>` : '';
           let statusLabel, statusShort, statusCls;
           switch (t.status) {
             case 'tp1': statusLabel = 'Target 1 hit'; statusShort = 'TP1 ✓'; statusCls = 'pos'; break;
@@ -1039,8 +1042,8 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           }
           return `<tr>
           <td>${t.ticker ? tkLogo(t.ticker) : ''}<b>${t.ticker || '—'}</b></td>
-          <td class="m hide-m">${t.entryDate ? t.entryDate.slice(5) : '—'}</td>
-          <td class="m hide-m">${exitDate}</td>
+          <td class="m hide-m">${t.entryDate ? t.entryDate.slice(5) : '—'}${entryTimeFmt}</td>
+          <td class="m hide-m">${exitDate}${exitTimeFmt}</td>
           <td class="hide-m">$${(t.actualEntry || 0).toFixed(2)}</td>
           <td class="hide-m">${t.exitPrice ? '$' + t.exitPrice.toFixed(2) : '—'}</td>
           <td class="${cls}"><b>${pnl > 0 ? '+' : ''}${pnl}%</b></td>

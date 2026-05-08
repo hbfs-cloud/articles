@@ -182,6 +182,10 @@ function writeMode(mode, prefix) {
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
       holdDays: t.holdDays, status: t.status, strategy: t.strategy,
+      entryTime: t.entryTime || null, exitTime: t.exitTime || null,
+      replayEntry: t.replayEntry || null, replayExit: t.replayExit || null,
+      replayPnlPct: t.replayPnlPct != null ? t.replayPnlPct : null,
+      replayStatus: t.replayStatus || null,
       configVersion: t.configVersion || null
     }))
   });
@@ -304,6 +308,10 @@ function writeMode(mode, prefix) {
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
       holdDays: t.holdDays, status: t.status, strategy: t.strategy,
+      entryTime: t.entryTime || null, exitTime: t.exitTime || null,
+      replayEntry: t.replayEntry || null, replayExit: t.replayExit || null,
+      replayPnlPct: t.replayPnlPct != null ? t.replayPnlPct : null,
+      replayStatus: t.replayStatus || null,
       configVersion: t.configVersion || null
     })),
     risk: getRiskFor(prefix || 'balanced'),
