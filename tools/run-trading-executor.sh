@@ -1,8 +1,9 @@
 #!/bin/bash
 # run-trading-executor.sh — Nomad raw_exec launcher for trading executor daemon.
-# Runs daemon.js for a single MODE (set via env). Loads credentials from .env/Infisical.
+# Spawns daemon.js for all 6 modes as background processes, waits on all.
 #
-# Usage (standalone): MODE=balanced BROKER=paper ./tools/run-trading-executor.sh
+# Usage (standalone): BROKER=paper ./tools/run-trading-executor.sh
+# Usage (single):     MODE=balanced BROKER=paper ./tools/run-trading-executor.sh
 # Usage (Nomad):      raw_exec { command = "/home/ci/projects/articles/tools/run-trading-executor.sh" }
 
 export HOME=/home/ci
@@ -40,7 +41,6 @@ export TELEGRAM_TOPIC_FORTRESS="${TELEGRAM_TOPIC_FORTRESS:-367}"
 export TELEGRAM_TOPIC_TKL="${TELEGRAM_TOPIC_TKL:-1064}"
 
 # Defaults
-export MODE="${MODE:-balanced}"
 export BROKER="${BROKER:-paper}"
 export CAPITAL_USD="${CAPITAL_USD:-10000}"
 export VERBOSE="${VERBOSE:-false}"
@@ -48,9 +48,20 @@ export LOG_DIR="${LOG_DIR:-/home/ci/projects/articles/data/execution-logs}"
 
 cd /home/ci/projects/articles
 
+MODES="${MODE:-turbo dynamic balanced secured fortress tkl}"
+
 echo "=== $(date) — Trading Executor starting ==="
 echo "Node: $(node --version)"
-echo "Mode: $MODE | Broker: $BROKER | Capital: \$$CAPITAL_USD"
-echo "Telegram: BOT=${TELEGRAM_BOT_TOKEN:+SET} CHAT=${TELEGRAM_CHAT_ID:+SET} Topic=${MODE^^}=$(eval echo \$TELEGRAM_TOPIC_${MODE^^})"
+echo "Broker: $BROKER | Capital: \$$CAPITAL_USD | Modes: $MODES"
+echo "Telegram: BOT=${TELEGRAM_BOT_TOKEN:+SET} CHAT=${TELEGRAM_CHAT_ID:+SET}"
 
-exec node tools/trading-executor/daemon.js 2>&1
+PIDS=""
+for m in $MODES; do
+  MODE=$m node tools/trading-executor/daemon.js 2>&1 &
+  PIDS="$PIDS $!"
+  echo "  → $m (PID $!)"
+done
+
+trap 'kill $PIDS 2>/dev/null; wait' SIGTERM SIGINT
+
+wait $PIDS
