@@ -11,8 +11,12 @@ COPY tools/gen-trading-plan.js ./tools/gen-trading-plan.js
 COPY tools/build-broker-map.js ./tools/build-broker-map.js
 COPY data/modes-config.json ./data/modes-config.json
 COPY data/scanner-positions.json ./data/scanner-positions.json
-COPY data/broker-instruments.json ./data/broker-instruments.json
 COPY portfolio/v1/ ./portfolio/v1/
+COPY scanner/ ./scanner/
+
+# broker-instruments.json is optional — gen-trading-plan.js falls back
+# to per-broker files in tools/trading-executor/instruments/
+RUN test -f data/broker-instruments.json || echo '{"brokers":[],"symbols":{}}' > data/broker-instruments.json
 
 # Runtime env (override at deploy)
 ENV MODE=balanced
