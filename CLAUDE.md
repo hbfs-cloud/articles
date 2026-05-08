@@ -290,15 +290,37 @@ Par défaut, génère **une seule variante** : `intermediate/en`.
     - QA strategy-label check lit `signals.json` (pas le HTML) — si modifié, ne pas re-grepper le HTML
     - Date arithmétique shell : tout `date -d` doit avoir un fallback BSD `date -v` (voir helper dans publish-daily-card.sh)
 
-9. **Sweep Stratégique (ON-DEMAND uniquement)** :
+9. **Optimisation Paramétrique — Méthode Plateau (ON-DEMAND uniquement)** :
    ```bash
-   node tools/sweep.js --full-sweep        # Grid search complet — découvre la meilleure stratégie
+   node tools/optimize-param.js --mode balanced --all        # Sweep tous les params, 1 à la fois
+   node tools/optimize-param.js --mode balanced --param maxStopPct  # Un seul param
+   node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10  # Range custom
    ```
-   - **Ne se lance JAMAIS automatiquement** — uniquement sur demande explicite de l'utilisateur
-   - Met à jour `modes-config.json` avec les paramètres optimaux découverts
-   - **Ne touche PAS à l'historique des trades** (`backtest-trades.json` reste intact)
-   - Les nouveaux paramètres s'appliquent aux trades **futurs** uniquement
-   - Après un sweep stratégique : régénérer status page + API pour refléter la nouvelle config
+   **Méthodologie "Mountain Plateau" (OBLIGATOIRE) :**
+   - **1 paramètre à la fois** — tous les autres restent à leur baseline
+   - **Plateau > pic** — chercher la zone stable (retour ≥ 85% du max), PAS le maximum absolu
+   - **Centre du plateau** — la valeur recommandée est au centre de la zone stable
+   - **Stabilité ≥ 50%** — ignorer les plateaux étroits (< 25% = overfitting probable)
+   - **Consistance cross-période** — vérifier que l'optimal est similaire sur sous-périodes
+   - **Assemblage** — combiner les optima individuels, tester, résultat ≥ 85% du meilleur individuel
+   - **Fine-tuning** — micro-sweep ±1-2 steps autour de chaque optimal assemblé
+   - **Validation** — full period + stress + recent + param ±10% robustesse
+
+   **⚠️ ANTI-PATTERNS (INTERDITS) :**
+   - ❌ `sweep.js --full-sweep` pour décisions de config prod (26M combos = data snooping)
+   - ❌ Modifier plusieurs params simultanément (cascade optimization)
+   - ❌ Prendre le CAGR max absolu (pic étroit = overfitting)
+   - ❌ Ignorer les contradictions avec les données réelles (ex: breakout 0/8 WR)
+
+   **Ordre d'optimisation (impact décroissant) :**
+   1. portfolioSize / topN (concentration vs diversification)
+   2. maxStopPct / atrStopMult (stop management → impact MaxDD)
+   3. horizon (holding period → rotation du capital)
+   4. dailyTrailPct / breakevenPct (profit locking)
+   5. filterName / minScore (qualité des entrées)
+   6. rotation / partialTP / staleDays / entryGatePct (fine-tuning)
+
+   `sweep.js --full-sweep` reste disponible pour exploration/recherche mais **JAMAIS pour config prod**.
 
 ### Trading Executor (auto-execution post-pipeline)
 
