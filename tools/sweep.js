@@ -83,9 +83,10 @@ function nextBizDay(dateStr) {
 
 function addBizDays(dateStr, n) {
   let d = new Date(dateStr + 'T12:00:00Z');
+  const step = n >= 0 ? 1 : -1;
   let added = 0;
-  while (added < n) {
-    d.setDate(d.getDate() + 1);
+  while (added < Math.abs(n)) {
+    d.setDate(d.getDate() + step);
     if (d.getDay() !== 0 && d.getDay() !== 6) added++;
   }
   return d.toISOString().slice(0, 10);
@@ -658,12 +659,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
 // ─── Stats from a flat closed-trade list (append-only mode) ──────────────────
 // Computes returnTotal, maxDD, winRate, profitFactor, equityCurve from a
-// pre-existing list of closed trades without re-running portfolio simulation.
-// Trades must have: pnlPct, exitDate, scanDate, status, holdDays.
+// pre-existing list of trades (resolved + pending/open).
+// Daily MtM equity curve: realized P&L from closed trades + unrealized from
+// open positions at each business day's close (via priceCache).
+// Trades must have: pnlPct, exitDate, scanDate, status, holdDays, actualEntry.
 // Uses configVersion on each trade to look up the correct weight from config history.
 function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId) {
-  closedTrades = (closedTrades || []).filter(t => t.status !== 'pending');
-  if (closedTrades.length === 0) return null;
+  const allTrades = (closedTrades || []).filter(t => t.actualEntry > 0);
+  if (allTrades.length === 0) return null;
   const defaultWeight = (1 / portfolioSize) * (positionSizePct || 1);
 
   // Load config history for per-trade weight lookup
@@ -688,27 +691,106 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   }
 
   const RESOLVED_STATUSES = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
-  const resolved = closedTrades.filter(t => {
+  const resolved = allTrades.filter(t => {
     const base = (t.status || '').replace(/_amb$/, '');
     return RESOLVED_STATUSES.includes(base);
   });
-  if (resolved.length === 0) return null;
+  const pendingTrades = allTrades.filter(t => t.status === 'pending')
+    .sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
 
-  // Build a simple equity curve: accumulate realized P&L in exit-date order
-  const sorted = [...resolved].sort((a, b) => (a.exitDate || '').localeCompare(b.exitDate || ''));
-  let equity = 100;
-  let peak = 100;
-  let maxDD = 0;
-  const equityCurve = [{ date: sorted[0].scanDate || sorted[0].exitDate, value: 100 }];
-  for (const t of sorted) {
-    equity += (t.pnlPct || 0) * getWeight(t, modeId || '');
-    if (equity > peak) peak = equity;
-    const dd = peak - equity;
-    if (dd > maxDD) maxDD = dd;
-    equityCurve.push({ date: t.exitDate || t.scanDate, value: +equity.toFixed(2) });
+  if (resolved.length === 0 && pendingTrades.length === 0) return null;
+
+  // ─── Daily MtM equity curve: realized + unrealized at each biz day close ───
+  const allDates = [
+    ...resolved.flatMap(t => [t.scanDate, t.entryDate, t.exitDate]),
+    ...pendingTrades.flatMap(t => [t.scanDate, t.entryDate, t.exitDate]),
+  ].filter(Boolean).sort();
+  const firstDate = allDates[0];
+  // Use last available price date (not today) to avoid zero-unrealized tail
+  // when Yahoo data hasn't arrived yet for the current day.
+  const lastTradeDate = allDates[allDates.length - 1];
+  let lastPriceDate = '';
+  const allMtmTickers = [...new Set([...pendingTrades.map(t => t.ticker), ...resolved.map(t => t.ticker)])];
+  for (const ticker of allMtmTickers) {
+    const hist = priceCache[ticker];
+    if (hist) {
+      const dates = Object.keys(hist).sort();
+      if (dates.length > 0 && dates[dates.length - 1] > lastPriceDate) {
+        lastPriceDate = dates[dates.length - 1];
+      }
+    }
+  }
+  const endDate = lastPriceDate || lastTradeDate;
+
+  const allDays = getAllBizDays(firstDate, endDate);
+  const sortedResolved = [...resolved].sort((a, b) => (a.exitDate || '').localeCompare(b.exitDate || ''));
+
+  let realizedPnl = 0;
+  let resolvedIdx = 0;
+  let peak = 100, maxDD = 0;
+  const equityCurve = [];
+  const lastKnownClose = {};
+
+  function getClose(ticker, day) {
+    const hist = priceCache[ticker];
+    if (hist && hist[day]) {
+      lastKnownClose[ticker] = hist[day].close;
+      return hist[day].close;
+    }
+    return lastKnownClose[ticker] || null;
   }
 
-  const returnTotal = +(equity - 100).toFixed(2);
+  for (const day of allDays) {
+    // Accumulate realized from trades closing on or before this day
+    while (resolvedIdx < sortedResolved.length && sortedResolved[resolvedIdx].exitDate <= day) {
+      realizedPnl += (sortedResolved[resolvedIdx].pnlPct || 0) * getWeight(sortedResolved[resolvedIdx], modeId || '');
+      resolvedIdx++;
+    }
+
+    // Unrealized: resolved trades not yet closed + pending trades
+    let unrealizedPnl = 0;
+
+    // Resolved trades entered but not yet exited as of this day
+    for (let i = resolvedIdx; i < sortedResolved.length; i++) {
+      const t = sortedResolved[i];
+      const entryDay = t.entryDate || t.scanDate;
+      if (entryDay && entryDay <= day && t.actualEntry > 0) {
+        const close = getClose(t.ticker, day);
+        if (close) {
+          unrealizedPnl += ((close - t.actualEntry) / t.actualEntry) * 100 * getWeight(t, modeId || '');
+        }
+      }
+    }
+
+    // Pending trades (still open) — cap total unrealized exposure at 1.0 (100% capital)
+    let pendingExposure = 0;
+    for (const t of pendingTrades) {
+      const w = getWeight(t, modeId || '');
+      if (pendingExposure + w > 1.0 + 1e-9) continue;
+      const entryDay = t.entryDate || t.scanDate;
+      if (entryDay && entryDay <= day && t.actualEntry > 0) {
+        const close = getClose(t.ticker, day);
+        if (close) {
+          pendingExposure += w;
+          unrealizedPnl += ((close - t.actualEntry) / t.actualEntry) * 100 * w;
+        }
+      }
+    }
+
+    const dailyEquity = 100 + realizedPnl + unrealizedPnl;
+    equityCurve.push({ date: day, value: +dailyEquity.toFixed(2) });
+
+    if (dailyEquity > peak) peak = dailyEquity;
+    const dd = ((peak - dailyEquity) / peak) * 100;
+    if (dd > maxDD) maxDD = dd;
+  }
+
+  const returnTotal = equityCurve.length > 0
+    ? +(equityCurve[equityCurve.length - 1].value - 100).toFixed(2) : 0;
+  const returnRealized = +realizedPnl.toFixed(2);
+  const returnUnrealized = +(returnTotal - returnRealized).toFixed(2);
+
+  // WR, PF — from resolved trades only (unrealized don't count)
   const wins = resolved.filter(t => (t.pnlPct || 0) > 0);
   const losses = resolved.filter(t => (t.pnlPct || 0) <= 0);
   const winRate = resolved.length ? +((wins.length / resolved.length) * 100).toFixed(1) : 0;
@@ -717,11 +799,9 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
 
   // Risk-adjusted return metrics
-  // returnDDRatio = legacy field (was misnamed "sharpe"); kept for backward compat.
   const returnDDRatio = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
 
-  // True Sharpe ratio: sqrt(252) * mean(daily_returns) / std(daily_returns)
-  // Uses log returns on the equity curve for robustness.
+  // True Sharpe ratio from daily MtM returns
   let sharpe = 0;
   if (equityCurve.length > 2) {
     const dailyReturns = [];
@@ -738,25 +818,21 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     }
   }
 
-  const firstDate = sorted[0]?.exitDate || sorted[0]?.scanDate;
-  const lastDate = sorted[sorted.length - 1]?.exitDate || firstDate;
-  let dayCount = 1;
-  if (firstDate && lastDate) {
-    const ms = new Date(lastDate).getTime() - new Date(firstDate).getTime();
-    dayCount = Math.max(1, Math.round(ms / 86400000));
-  }
+  const dayCount = allDays.length || 1;
   const annReturn = returnTotal * (252 / dayCount);
   const calmar = maxDD > 0 ? +(annReturn / maxDD).toFixed(2) : 0;
 
   return {
     returnTotal,
+    returnRealized,
+    returnUnrealized,
     maxDD: +(-maxDD).toFixed(2),
     winRate,
     profitFactor,
     trades: resolved.length,
     calmar,
-    sharpe,             // TRUE Sharpe: sqrt(252) * mean(daily_returns) / std(daily_returns)
-    returnDDRatio,      // legacy "sharpe" alias: returnTotal / |maxDD|
+    sharpe,
+    returnDDRatio,
     equityCurve,
   };
 }
@@ -1705,6 +1781,44 @@ async function main() {
     }
   }
 
+  // Load live positions from scanner-positions.json for MtM injection.
+  // These are REAL open positions tracked by update-tracking.js — they must
+  // contribute to returnUnrealized so stats match the status page.
+  const SCANNER_POS_PATH = path.join(ROOT, 'data', 'scanner-positions.json');
+  let livePositions = [];
+  if (FROZEN_ONLY && fs.existsSync(SCANNER_POS_PATH)) {
+    try {
+      const spData = JSON.parse(fs.readFileSync(SCANNER_POS_PATH, 'utf8'));
+      livePositions = spData.open_positions || [];
+      if (livePositions.length > 0) {
+        console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
+        const liveTickers = [...new Set(livePositions.map(p => p.ticker))];
+        const missing = liveTickers.filter(t => !priceCache[t]);
+        if (missing.length > 0) {
+          console.log(`  Fetching prices for ${missing.length} live-only tickers...`);
+          for (const t of missing) { await fetchOHLCV(t); await sleep(120); }
+        }
+        // Seed priceCache from scanner-positions.json current_price for dates
+        // where Yahoo hasn't delivered a bar yet (entry day = nextBizDay of scan,
+        // which may be today or tomorrow depending on timing).
+        let seeded = 0;
+        for (const p of livePositions) {
+          if (!p.current_price || p.current_price <= 0) continue;
+          if (!priceCache[p.ticker]) priceCache[p.ticker] = {};
+          const entryDay = nextBizDay(p.scan_date);
+          if (!priceCache[p.ticker][entryDay]) {
+            priceCache[p.ticker][entryDay] = {
+              open: p.current_price, high: p.current_price,
+              low: p.current_price, close: p.current_price,
+            };
+            seeded++;
+          }
+        }
+        if (seeded > 0) console.log(`  Seeded ${seeded} tickers with live price for entry day`);
+      }
+    } catch(e) { console.log('⚠️ Could not load scanner-positions.json:', e.message); }
+  }
+
   if (fs.existsSync(MODES_CFG_PATH)) {
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     // Shared scoreboard — modes with crossModeDedup=true skip tickers already picked.
@@ -1785,6 +1899,68 @@ async function main() {
 
         merged.sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
 
+        // ── Inject real open positions from scanner-positions.json ──
+        // Positions visible on the status page (posFor) must contribute to
+        // returnUnrealized so MtM stats match what the user sees.
+        if (livePositions.length > 0) {
+          const RES_SET = new Set(['tp1','tp1_partial','tp2','sl','expired','rotated','breakeven','trail']);
+          const resolvedKeys = new Set(
+            merged.filter(t => RES_SET.has((t.status||'').replace(/_amb$/,'')))
+              .map(t => `${t.ticker}_${t.scanDate}`)
+          );
+          const mergedKeys = new Set(merged.map(t => `${t.ticker}_${t.scanDate}`));
+
+          const activeFilter = STRATEGY_FILTERS[cfg.filterName] || new Set();
+          const horizonCalDays = Math.ceil(cfg.horizon * 7 / 5) + 2;
+          const cutoff = new Date();
+          cutoff.setDate(cutoff.getDate() - horizonCalDays);
+          const cutoffISO = cutoff.toISOString().slice(0,10);
+
+          const eligible = new Map();
+          for (const scan of scans) {
+            if (scan.scanDate < cutoffISO) continue;
+            const pool = [...scan.setups];
+            if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
+            const filtered = pool
+              .filter(s => !activeFilter.has(s.strategy))
+              .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
+              .slice(0, cfg.topN);
+            for (const s of filtered) {
+              const key = `${s.ticker}_${scan.scanDate}`;
+              if (!resolvedKeys.has(key)) eligible.set(key, { ...s, scanDate: scan.scanDate });
+            }
+          }
+
+          const injected = [];
+          const seenTickers = new Set();
+          for (const p of livePositions) {
+            if (seenTickers.has(p.ticker)) continue;
+            const key = `${p.ticker}_${p.scan_date}`;
+            const sig = eligible.get(key);
+            if (!sig) continue;
+            if (mergedKeys.has(key)) continue;
+            if (!priceCache[p.ticker]) continue;
+            seenTickers.add(p.ticker);
+            injected.push({
+              ticker: p.ticker, scanDate: p.scan_date,
+              entryDate: nextBizDay(p.scan_date),
+              actualEntry: p.entry, actualStop: p.stop || sig.stop,
+              entry: sig.entry, stop: p.stop || sig.stop,
+              tp1: p.tp1 || sig.tp1, tp2: p.tp2 || sig.tp2,
+              score: sig.score, strategy: sig.strategy,
+              status: 'pending', pnlPct: 0,
+              source: sig.source || 'signals',
+            });
+          }
+
+          injected.sort((a,b) => b.score - a.score);
+          const capped = injected.slice(0, cfg.portfolioSize);
+          if (capped.length > 0) {
+            merged.push(...capped);
+            console.log(`  ${id}: injected ${capped.length} live positions as pending for MtM`);
+          }
+        }
+
         frozenTrades[id] = merged;
 
         // Always recompute frozen stats from merged trades — old caches may carry
@@ -1796,7 +1972,9 @@ async function main() {
         const oosStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.outSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
         if (stats) {
           output[`frozen_${id}`] = {
-            returnTotal: stats.returnTotal, maxDD: stats.maxDD, winRate: stats.winRate,
+            returnTotal: stats.returnTotal, returnRealized: stats.returnRealized,
+            returnUnrealized: stats.returnUnrealized,
+            maxDD: stats.maxDD, winRate: stats.winRate,
             profitFactor: stats.profitFactor, trades: stats.trades,
             calmar: stats.calmar, sharpe: stats.sharpe, returnDDRatio: stats.returnDDRatio,
             equityCurve: stats.equityCurve,

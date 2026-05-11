@@ -327,8 +327,8 @@ async function main() {
     if (frozen) {
       m.ret = frozen.returnTotal;
       m.dd = frozen.maxDD;
-      m.realized = frozen.returnTotal;  // sweep ret is realized — no open positions in frozen sim
-      m.unrealized = 0;
+      m.realized = frozen.returnRealized ?? frozen.returnTotal;
+      m.unrealized = frozen.returnUnrealized ?? 0;
       if (frozen.winRate !== undefined) m.wr = frozen.winRate;
       if (frozen.profitFactor !== undefined) m.pf = frozen.profitFactor;
       if (frozen.trades !== undefined) m.trades = frozen.trades;
@@ -491,7 +491,15 @@ async function main() {
       });
     }
 
-    return positions.sort((a, b) => b.return_pct - a.return_pct).slice(0, cfg.portfolioSize);
+    // Tag mode-expired positions so they don't occupy portfolio slots
+    for (const p of positions) {
+      const age = Math.round((Date.now() - new Date(p.scan_date)) / 86400000);
+      const held = Math.round(age * 5 / 7);
+      p._expired = held >= cfg.horizon;
+    }
+    const live = positions.filter(p => !p._expired).sort((a, b) => b.return_pct - a.return_pct);
+    const expired = positions.filter(p => p._expired).sort((a, b) => b.return_pct - a.return_pct);
+    return [...live.slice(0, cfg.portfolioSize), ...expired];
   }
 
   // ── Panel builder ──
@@ -499,6 +507,7 @@ async function main() {
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, trades);
     const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
+    const liveCount = pos.filter(p => !p._expired).length;
 
     // Recently executed rotation: yesterday's ROTATE order whose ticker is now in pos.
     // Hoisted at panel() level so both the Orders section and the Trade History
@@ -620,8 +629,8 @@ async function main() {
     <div class="perf-chart" id="${chartId}"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps" title="Cumulative percent gain since strategy inception (2026-02-26). Compounded across all closed trades.">
-      <span class="ps-v" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Total Return</span>
+    <div class="ps" title="Cumulative percent gain since strategy inception (2026-02-26). Includes mark-to-market on open positions.">
+      <span class="ps-v" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Total Return${m.unrealized ? ' <small style="opacity:.6">(incl. ' + (m.unrealized > 0 ? '+' : '') + m.unrealized + '% MtM)</small>' : ''}</span>
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
       <span class="ps-v" style="color:#dc2626">${m.dd}%</span><span class="ps-l">Max Drawdown</span>
@@ -665,7 +674,7 @@ ${(() => {
         const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
         const openTickers = new Set(pos.map(p => p.ticker));
         const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
-        const slotsAvailable = Math.max(0, cfg.portfolioSize - pos.length);
+        const slotsAvailable = Math.max(0, cfg.portfolioSize - liveCount);
 
         // BUY orders: signals that fit into available slots (max = free slots)
         const buyOrders = sigFiltered.slice(0, slotsAvailable);
@@ -795,7 +804,7 @@ ${(() => {
         // Count logical orders (1 per buy, 1 per rotation), NOT TR rows
         // (each order can push 1-3 <tr> for main+comparison+thesis).
         const totalActions = buyOrders.length + rotationCandidates.length;
-        const occupied = pos.length;
+        const occupied = liveCount;
         const statusLine = slotsAvailable > 0
           ? `${occupied}/${cfg.portfolioSize} open — <b>${slotsAvailable} slot${slotsAvailable > 1 ? 's' : ''} free</b> — place at next open`
           : `${occupied}/${cfg.portfolioSize} open — portfolio full${rotationCandidates.length ? ' — rotation opportunity' : ''}`;
@@ -880,7 +889,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${pos.length}/${cfg.portfolioSize}</span></h3>
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${pos.length > liveCount ? ' + ' + (pos.length - liveCount) + ' expired' : ''}</span></h3>
     ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${pos.length ? `
