@@ -3281,9 +3281,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-ON — AMD, AVGO, QCOM, PANW, CRWD, TSLA, ING, UNH, EWI, FXI",
-    "desc": "The regime score stands at 0.72, classified as RISK-ON. Component analysis: SPX near ATH at 7,399 (+0.84%), NASDAQ leading at +1.71% (tech dominance), VIX sub-18 (risk appetite intact), Gold selling off -1.42% (haven rotation out = bullish), DXY weak at 98.11 (multinational tailwind), Oil $99.82 but...",
-    "tags": "us,eu,asia,tech,semis,healthcare,financials,etf,ai,macro,technique,trade-idea",
+    "title": "Top 10 A+ RISK-ON — MU, GLW, INTC, FTNT, LLY, NUE, NVO, TTE, EWY, SOXX",
+    "desc": "Regime score 0.74, classified RISK-ON — upgraded from 0.72 on May 11 as semiconductor breadth expands. Component scores: SPX breadth 0.20 (bullish, above all major DMAs), VIX 0.05 (sub-18, sustained low vol), Credit 0.80 (spreads tight), DXY 0.95 (dollar weak ~$98, multinational tailwind), Liquidity...",
+    "tags": "us,eu,asia,tech,semis,healthcare,energy,materials,etf,ai,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260512/",
     "date": "12 mai 2026"
