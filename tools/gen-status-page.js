@@ -435,59 +435,23 @@ async function main() {
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
 
-    const f = SF[cfg.filterName] || (() => true);
-    const horizonCalDays = Math.ceil(cfg.horizon * 7 / 5) + 2;
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - horizonCalDays);
-    const cutoffISO = cutoff.toISOString().slice(0, 10);
-
-    // Sweep-resolved trades: ticker+scanDate combos that hit SL/TP/expired
-    const RESOLVED = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
-    const resolvedKeys = new Set(
-      trades.filter(t => RESOLVED.includes((t.status || '').replace(/_amb$/, '')))
-        .map(t => `${t.ticker}_${t.scanDate}`)
-    );
-
-    // Build mode-eligible set: for each recent scan, apply mode filter
-    const eligible = new Map(); // ticker_scanDate → signal
-    for (const d of dirs) {
-      const dISO = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}`;
-      if (dISO < cutoffISO) break;
-      try {
-        const loaded = parser.loadSignals(d);
-        if (!loaded || !loaded.signals) continue;
-        const filtered = loaded.signals
-          .filter(s => f(s.strategy || ''))
-          .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
-          .slice(0, cfg.topN);
-        for (const s of filtered) {
-          const key = `${s.ticker}_${dISO}`;
-          if (!resolvedKeys.has(key)) eligible.set(key, { ...s, scanISO: dISO });
-        }
-      } catch (_) { }
-    }
-
-    // Match live positions with eligible signals
+    // Source of truth: open trades from backtest-trades.json (mode-specific)
+    // _premature = pending/not-yet-resolved by sweep (exitDate is overridden to today for MtM)
+    const openTrades = trades.filter(t => t._premature);
     const positions = [];
-    const seenTickers = new Set();
-    for (const p of livePositions) {
-      if (seenTickers.has(p.ticker)) continue;
-      const key = `${p.ticker}_${p.scan_date}`;
-      const sig = eligible.get(key);
-      if (!sig) continue;
-      seenTickers.add(p.ticker);
-
-      const entry = p.entry || sig.entry || 0;
-      const currentPrice = p.current_price || entry;
+    for (const t of openTrades) {
+      const lp = liveLookup[t.ticker];
+      const entry = t.actualEntry || t.entry || 0;
+      const currentPrice = (lp && lp.current_price) || entry;
       const ret = entry > 0 ? +((currentPrice - entry) / entry * 100).toFixed(2) : 0;
-      const stop = clampStop(entry, p.stop || sig.stop || 0, cfg.maxStopPct);
+      const stop = clampStop(entry, t.actualStop || t.stop || 0, cfg.maxStopPct);
       positions.push({
-        ticker: p.ticker, scan_date: p.scan_date, entry, current_price: currentPrice,
-        return_pct: ret, score: sig.score || p.score || 0,
-        stop, tp1: p.tp1 || sig.tp1 || 0, tp2: p.tp2 || sig.tp2 || null,
-        vwap: p.vwap || null,
-        days_remaining: p.days_remaining || 0, strategy: sig.strategy || p.strategy || '',
-        thesis: thesisMap[p.ticker] || '',
+        ticker: t.ticker, scan_date: t.scanDate, entry, current_price: currentPrice,
+        return_pct: ret, score: t.score || 0,
+        stop, tp1: t.tp1 || 0, tp2: t.tp2 || null,
+        vwap: t.vwap || (lp && lp.vwap) || null,
+        days_remaining: (lp && lp.days_remaining) || 0,
+        strategy: t.strategy || '', thesis: thesisMap[t.ticker] || '',
       });
     }
 
