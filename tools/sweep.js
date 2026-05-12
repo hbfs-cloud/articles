@@ -456,6 +456,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // Entry gate: reject if open gaps too far above target entry (cascade to next candidate)
   if (entryGatePct > 0 && actualEntry > setup.entry * (1 + entryGatePct / 100)) return null;
 
+
   // VWAP entry gate: skip if open gaps above reference price (gap-up trap filter).
   //
   // ⚠️ NO LOOKAHEAD: we use the previous day's typical price ((H+L+C)/3) as the
@@ -475,6 +476,19 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   if (vwapGate && vwapRef !== null) {
     if (actualEntry > vwapRef * 1.01) return null; // gap-up trap — skip
     entryPrice = Math.max(Math.min(actualEntry, vwapRef), entryBar.low);
+  }
+
+  // Gap-down reject: TKL-only. Large-cap gap-downs mean-revert (SM +14.76%, EOG +7.73%),
+  // but small-cap gap-downs are distribution (MNTS -7%, POET -7%, AXTI -7%). Net +18.9% on TKL.
+  // Thresholds: breakout 5%, momentum 6%, pre_squeeze 7%, pullback disabled.
+  if (setup.source && setup.source.startsWith('tkl')) {
+    const GAP_DOWN_PCT = { breakout: 5, momentum: 6, pre_squeeze: 7, pullback: 0 };
+    const stratKey = (setup.strategy || '').toLowerCase().replace(/[^a-z_]/g, '');
+    const gapDownThresh = GAP_DOWN_PCT[stratKey] ?? 5;
+    if (gapDownThresh > 0 && prevBar && prevBar.close) {
+      const gapPct = (prevBar.close - actualEntry) / prevBar.close * 100;
+      if (gapPct > gapDownThresh) return null;
+    }
   }
 
   let riskPerUnit = setup.entry - setup.stop;
