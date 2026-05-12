@@ -111,7 +111,7 @@ for (const file of snapFiles) {
     const live = positions.filter(p => !p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
     const terminal = positions.filter(p => p._terminal);
     const expired = positions.filter(p => p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
-    const finalPositions = [...live.slice(0, portfolioSize), ...terminal, ...expired];
+    const finalPositions = [...live, ...terminal, ...expired];
 
     // Also fix closedTrades: only include trades that were actually closed on or before this date
     const closedTradesAsOf = allTrades.filter(t => {
