@@ -519,7 +519,7 @@ async function main() {
       return Math.round(age * 5 / 7);
     }
 
-    const livePos = pos.filter(p => !p._expired);
+    const livePos = pos.filter(p => !p._expired && !p._terminal);
     // Timed-out positions: left <= 0 (horizon expired) — only from live, not already-expired
     const timedOut = livePos.filter(p => {
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
@@ -656,7 +656,7 @@ ${timedOut.length ? `<div class="cta-card cta-close" data-section="closenow">
 <!-- ══ 5. ORDERS CTA ══ -->
 ${(() => {
         const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
-        const openTickers = new Set(pos.map(p => p.ticker));
+        const openTickers = new Set(pos.filter(p => !p._terminal).map(p => p.ticker));
         const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
         const slotsAvailable = Math.max(0, cfg.portfolioSize - liveCount);
 
