@@ -1952,7 +1952,10 @@ document.addEventListener('DOMContentLoaded',function(){
         posBody.innerHTML = pos.length ? pos.map(function(p){
           var pnl=p.return_pct!=null?p.return_pct:(p.pnlPct||0);
           var rc=pnl>=0?'pos':'neg';
-          return '<tr><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b></td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(p.entry)+'</td><td class="hide-m">'+_fmtUsd2(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_fmtUsd2(p.stop)+'</td><td class="pos hide-m">'+_fmtUsd2(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+          var termStyle=p._terminal?'style="opacity:.45;filter:grayscale(1);background:#f1f5f9"':'';
+          var stBadge='';
+          if(p._terminal){var st=(p._terminalStatus||'closed').toUpperCase();var sc=/TP/.test(st)?'pos':/SL/.test(st)?'neg':'m';stBadge=' <span class="pill '+sc+'" style="font-size:.55rem;padding:.1rem .3rem">'+st+'</span>';}
+          return '<tr '+termStyle+'><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b>'+stBadge+'</td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_fmtUsd2(p.entry)+'</td><td class="hide-m">'+_fmtUsd2(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_fmtUsd2(p.stop)+'</td><td class="pos hide-m">'+_fmtUsd2(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
         }).join('') : '<tr><td colspan="8" class="empty">No active positions</td></tr>';
       }
       var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=pos.length+'/'+(mCfg.portfolioSize||'?');
