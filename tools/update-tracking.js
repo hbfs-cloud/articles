@@ -10,6 +10,7 @@ const sharedCfg = require('./config');
 const ROOT = path.join(__dirname, '..');
 const METRICS_FILE = path.join(ROOT, 'data', 'scanner-metrics.json');
 const POSITIONS_FILE = path.join(ROOT, 'data', 'scanner-positions.json');
+const BACKTEST_TRADES = path.join(ROOT, 'data', 'backtest-trades.json');
 const SCANNER_DIR = path.join(ROOT, 'scanner');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -428,11 +429,30 @@ async function main() {
     })
     .sort((a, b) => b.return_pct - a.return_pct);
 
+  // ── Cross-reference with backtest-trades.json: keep only positions open in ≥1 mode ──
+  let activePositions = positions;
+  if (fs.existsSync(BACKTEST_TRADES)) {
+    try {
+      const bt = JSON.parse(fs.readFileSync(BACKTEST_TRADES, 'utf8'));
+      const modes = Object.keys(bt).filter(k => Array.isArray(bt[k]));
+      const openInModes = new Set();
+      for (const m of modes) {
+        for (const t of bt[m]) {
+          if (!t.exitDate) openInModes.add(t.ticker);
+        }
+      }
+      const before = activePositions.length;
+      activePositions = activePositions.filter(p => openInModes.has(p.ticker));
+      const pruned = before - activePositions.length;
+      if (pruned > 0) console.log(`\n🧹 Pruned ${pruned} orphan positions (not open in any mode)`);
+    } catch (e) { console.warn('⚠️ Could not cross-reference backtest-trades:', e.message); }
+  }
+
   fs.writeFileSync(METRICS_FILE, JSON.stringify(metrics, null, 2));
-  fs.writeFileSync(POSITIONS_FILE, JSON.stringify({ updated_at: metrics.updated_at, open_positions: positions }, null, 2));
+  fs.writeFileSync(POSITIONS_FILE, JSON.stringify({ updated_at: metrics.updated_at, open_positions: activePositions }, null, 2));
 
   console.log('\n✅ scanner-metrics.json:', metrics);
-  console.log(`✅ scanner-positions.json: ${positions.length} open positions`);
+  console.log(`✅ scanner-positions.json: ${activePositions.length} open positions`);
 }
 
 main().catch(console.error);

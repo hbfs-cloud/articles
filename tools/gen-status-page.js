@@ -434,10 +434,14 @@ async function main() {
   function posFor(cfg, trades) {
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
+    const todayISO = new Date().toISOString().slice(0, 10);
 
-    // Source of truth: open trades from backtest-trades.json (mode-specific)
-    // _premature = pending/not-yet-resolved by sweep (exitDate is overridden to today for MtM)
+    // Source of truth: backtest-trades.json per mode
+    // 1) Active positions: _premature (sweep hasn't resolved — still holding)
     const openTrades = trades.filter(t => t._premature);
+    // 2) Same-day closed: resolved today, show grayed with terminal status
+    const closedToday = trades.filter(t => !t._premature && t.exitDate === todayISO);
+
     const positions = [];
     for (const t of openTrades) {
       const lp = liveLookup[t.ticker];
@@ -454,16 +458,30 @@ async function main() {
         strategy: t.strategy || '', thesis: thesisMap[t.ticker] || '',
       });
     }
+    for (const t of closedToday) {
+      positions.push({
+        ticker: t.ticker, scan_date: t.scanDate,
+        entry: t.actualEntry || t.entry || 0,
+        current_price: t.exitPrice || t.actualEntry || 0,
+        return_pct: t.pnlPct || 0, score: t.score || 0,
+        stop: t.actualStop || t.stop || 0, tp1: t.tp1 || 0, tp2: t.tp2 || null,
+        vwap: t.vwap || null, days_remaining: 0,
+        strategy: t.strategy || '', thesis: thesisMap[t.ticker] || '',
+        _terminal: true, _terminalStatus: t.status,
+      });
+    }
 
     // Tag mode-expired positions so they don't occupy portfolio slots
     for (const p of positions) {
+      if (p._terminal) continue;
       const age = Math.round((Date.now() - new Date(p.scan_date)) / 86400000);
       const held = Math.round(age * 5 / 7);
       p._expired = held >= cfg.horizon;
     }
-    const live = positions.filter(p => !p._expired).sort((a, b) => b.return_pct - a.return_pct);
-    const expired = positions.filter(p => p._expired).sort((a, b) => b.return_pct - a.return_pct);
-    return [...live.slice(0, cfg.portfolioSize), ...expired];
+    const live = positions.filter(p => !p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
+    const terminal = positions.filter(p => p._terminal);
+    const expired = positions.filter(p => p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
+    return [...live.slice(0, cfg.portfolioSize), ...terminal, ...expired];
   }
 
   // ── Panel builder ──
@@ -471,7 +489,8 @@ async function main() {
     const sig = signalsFor(cfg);
     const pos = posFor(cfg, trades);
     const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
-    const liveCount = pos.filter(p => !p._expired).length;
+    const liveCount = pos.filter(p => !p._expired && !p._terminal).length;
+    const terminalCount = pos.filter(p => p._terminal).length;
 
     // Recently executed rotation: yesterday's ROTATE order whose ticker is now in pos.
     // Hoisted at panel() level so both the Orders section and the Trade History
@@ -854,7 +873,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${pos.length > liveCount ? ' + ' + (pos.length - liveCount) + ' expired' : ''}</span></h3>
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${terminalCount ? ' + ' + terminalCount + ' closed today' : ''}${pos.length > liveCount + terminalCount ? ' + ' + (pos.length - liveCount - terminalCount) + ' expired' : ''}</span></h3>
     ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${pos.length ? `
@@ -907,10 +926,12 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
     <tbody>${pos.map(p => {
           const rc = p.return_pct >= 0 ? 'pos' : 'neg';
           const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
-          const isExpired = left <= 0;
-          const leftCls = isExpired ? 'neg' : left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
-          const leftLabel = isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
-          const rowStyle = isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
+          const isExpired = !p._terminal && left <= 0;
+          const isTerminal = p._terminal;
+          const termBadge = isTerminal ? { sl: 'SL', tp1: 'TP1', tp1_partial: 'TP1', tp2: 'TP2', expired: 'EXP', rotated: 'ROT', breakeven: 'B.EVEN', trail: 'TRAIL' }[p._terminalStatus] || p._terminalStatus || 'CLOSED' : '';
+          const leftCls = isTerminal ? 'neg' : isExpired ? 'neg' : left <= 1 ? 'neg' : left <= 2 ? 'am' : 'm';
+          const leftLabel = isTerminal ? `<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">${termBadge}</span>` : isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
+          const rowStyle = isTerminal ? ' style="opacity:.45;background:#f1f5f9;filter:grayscale(1)"' : isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
           return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
@@ -2082,10 +2103,10 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     // Compute closeNow (timed out positions) first — they free slots for orders
     function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
-    const timedOutSnap = pos.filter(p => Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);
-    // Compute orders for snapshot — closeNow positions free their slots
+    const timedOutSnap = pos.filter(p => !p._terminal && Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);
+    // Compute orders for snapshot — closeNow and terminal positions free their slots
     const closeNowTickers = new Set(timedOutSnap.map(p => p.ticker));
-    const activePos = pos.filter(p => !closeNowTickers.has(p.ticker));
+    const activePos = pos.filter(p => !p._terminal && !closeNowTickers.has(p.ticker));
     const openTickers = new Set(activePos.map(p => p.ticker));
     const sigFiltered = sig.filter(s => !openTickers.has(s.ticker));
     const slotsAvailable = Math.max(0, cfg.portfolioSize - activePos.length);
@@ -2127,7 +2148,7 @@ document.addEventListener('DOMContentLoaded',function(){
       stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold, oosWarn: mM.oosWarn || null },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
-      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '', replacedFrom: (recentRotation && recentRotation.ticker === p.ticker) ? recentRotation.replaces : null })),
+      positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '', replacedFrom: (recentRotation && recentRotation.ticker === p.ticker) ? recentRotation.replaces : null, _terminal: p._terminal || false, _terminalStatus: p._terminalStatus || null })),
       orders: [...buyOrders, ...rotCands],
       recentRotation,
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),

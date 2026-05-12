@@ -657,25 +657,42 @@
 
     posArr.forEach(function (pos) {
       var t = esc(pos.ticker);
+      var isTerminal = pos._terminal === true;
+      var termStyle = isTerminal ? ' style="opacity:.45;filter:grayscale(1);background:#f1f5f9"' : '';
+      var termAttr = isTerminal ? ' data-terminal="1"' : '';
+      var badgeLabel = 'Open';
+      var badgeStyle = 'background:#f1f5f9;color:#94a3b8';
+      if (isTerminal) {
+        var st = (pos._terminalStatus || '').toLowerCase();
+        if (st === 'sl') { badgeLabel = 'SL Hit'; badgeStyle = 'background:#fee2e2;color:#dc2626'; }
+        else if (st === 'tp1') { badgeLabel = 'TP1 Hit'; badgeStyle = 'background:#d1fae5;color:#059669'; }
+        else if (st === 'tp2') { badgeLabel = 'TP2 Hit'; badgeStyle = 'background:#a7f3d0;color:#047857'; }
+        else if (st === 'breakeven') { badgeLabel = 'B.Even'; badgeStyle = 'background:#e0e7ff;color:#4f46e5'; }
+        else if (st === 'expired') { badgeLabel = 'Expired'; badgeStyle = 'background:#fef3c7;color:#d97706'; }
+        else if (st === 'rotated') { badgeLabel = 'Rotated'; badgeStyle = 'background:#ede9fe;color:#7c3aed'; }
+        else { badgeLabel = st || 'Closed'; badgeStyle = 'background:#f1f5f9;color:#64748b'; }
+      }
+      var pnlDisplay = isTerminal && pos.return_pct != null ? (pos.return_pct >= 0 ? '+' : '') + pos.return_pct.toFixed(2) + '%' : '0.00%';
+      var pnlClass = isTerminal ? (pos.return_pct >= 0 ? 'up' : 'down') : 'flat';
       html +=
-        '<div class="lp-row" id="lp-r-' + modeId + '-' + t + '" data-ticker="' + t + '">' +
+        '<div class="lp-row" id="lp-r-' + modeId + '-' + t + '" data-ticker="' + t + '"' + termAttr + termStyle + '>' +
           '<div class="lp-ticker">' +
             '<img src="https://assets.parqet.com/logos/symbol/' + t + '?format=jpg" alt="" class="tk-logo" onerror="this.style.display=\'none\'">' +
             '<span class="lp-ticker-sym">' + t + '</span>' +
             '<span class="lp-ticker-days" id="lp-days-' + modeId + '-' + t + '">—</span>' +
           '</div>' +
           '<div class="lp-price-cell">' +
-            '<span class="lp-price" id="lp-px-' + modeId + '-' + t + '">$' + fmt(pos.entry) + '</span>' +
+            '<span class="lp-price" id="lp-px-' + modeId + '-' + t + '">$' + fmt(pos.current_price || pos.entry) + '</span>' +
             '<span class="lp-change flat" id="lp-chg-' + modeId + '-' + t + '">—</span>' +
           '</div>' +
           '<div class="lp-pnl-cell">' +
-            '<span class="lp-pnl-val flat" id="lp-pv-' + modeId + '-' + t + '">0.00%</span>' +
+            '<span class="lp-pnl-val ' + pnlClass + '" id="lp-pv-' + modeId + '-' + t + '">' + pnlDisplay + '</span>' +
           '</div>' +
           '<div class="lp-gauge-cell">' +
             buildGaugeHTML(modeId, pos) +
           '</div>' +
           '<div class="lp-badge-cell">' +
-            '<span class="lp-badge" id="lp-bg-' + modeId + '-' + t + '" style="background:#f1f5f9;color:#94a3b8"><i class="fas fa-circle"></i> Open</span>' +
+            '<span class="lp-badge" id="lp-bg-' + modeId + '-' + t + '" style="' + badgeStyle + '"><i class="fas fa-circle"></i> ' + badgeLabel + '</span>' +
           '</div>' +
         '</div>';
     });

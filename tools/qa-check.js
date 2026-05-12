@@ -500,6 +500,66 @@ warn('scanner/status/history: snapshot le plus récent < 24h (ET)', () => {
   if (gapH > 24) return `dernier snapshot: ${latest} — gap ${Math.round(gapH)}h > 24h (heure ET)`;
 });
 
+// ─── Check 29: Position integrity — per-mode positions from backtest-trades ──
+check('scanner/status: per-mode positions match backtest-trades.json (no phantom positions)', () => {
+  const statusPath = path.join(ROOT, 'scanner', 'status', 'index.html');
+  if (!fs.existsSync(statusPath)) return 'scanner/status/index.html absent';
+  const bt = readJSON('data/backtest-trades.json');
+  const mc = readJSON('data/modes-config.json');
+  const modes = mc.modes ? mc.modes : mc;
+  const issues = [];
+  const todayISO = new Date().toISOString().slice(0, 10);
+
+  for (const [modeId, cfg] of Object.entries(modes)) {
+    const trades = bt[modeId] || [];
+    const portfolioSize = cfg.portfolioSize || 3;
+    const openTrades = trades.filter(t => {
+      if (t.status === 'skipped') return false;
+      if (!t.entryDate || t.entryDate > todayISO) return false;
+      if (!t.exitDate) return true;
+      return t.exitDate > todayISO;
+    });
+    if (openTrades.length > portfolioSize) {
+      issues.push(`${modeId}: ${openTrades.length} open > P${portfolioSize} (tickers: ${openTrades.map(t=>t.ticker).join(',')})`);
+    }
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
+check('scanner/status: latest snapshot positions consistent with backtest-trades', () => {
+  const histDir = path.join(ROOT, 'scanner', 'status', 'history');
+  if (!fs.existsSync(histDir)) return 'scanner/status/history/ absent';
+  const files = fs.readdirSync(histDir).filter(f => /^\d{8}\.json$/.test(f)).sort().reverse();
+  if (!files.length) return 'aucun snapshot';
+  const latest = files[0];
+  const dateKey = latest.replace('.json', '');
+  const dateISO = `${dateKey.slice(0,4)}-${dateKey.slice(4,6)}-${dateKey.slice(6,8)}`;
+  const snap = JSON.parse(fs.readFileSync(path.join(histDir, latest), 'utf8'));
+  const bt = readJSON('data/backtest-trades.json');
+  const mc = readJSON('data/modes-config.json');
+  const modes = mc.modes ? mc.modes : mc;
+  const issues = [];
+
+  if (!snap.modes) return 'snapshot sans champ modes';
+  for (const [modeId, modeSnap] of Object.entries(snap.modes)) {
+    const cfg = modes[modeId];
+    if (!cfg) continue;
+    const trades = bt[modeId] || [];
+    const expectedOpen = trades.filter(t => {
+      if (!t.entryDate || t.status === 'skipped') return false;
+      if (t.entryDate > dateISO) return false;
+      if (!t.exitDate) return true;
+      return t.exitDate > dateISO;
+    }).map(t => t.ticker).sort();
+    const snapActive = (modeSnap.positions || []).filter(p => !p._terminal).map(p => p.ticker).sort();
+    const extra = snapActive.filter(t => !expectedOpen.includes(t));
+    const missing = expectedOpen.filter(t => !snapActive.includes(t));
+    if (extra.length) issues.push(`${modeId}: phantom positions in snapshot: ${extra.join(',')}`);
+    if (missing.length > 0 && snapActive.length > 0) issues.push(`${modeId}: missing from snapshot: ${missing.join(',')}`);
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
 
 const total = ok.length + warnings.length + errors.length;
