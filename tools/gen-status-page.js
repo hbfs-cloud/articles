@@ -536,13 +536,14 @@ async function main() {
       return Math.round(age * 5 / 7);
     }
 
-    // Timed-out positions: left <= 0 (horizon expired)
-    const timedOut = pos.filter(p => {
+    const livePos = pos.filter(p => !p._expired);
+    // Timed-out positions: left <= 0 (horizon expired) — only from live, not already-expired
+    const timedOut = livePos.filter(p => {
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       return left <= 0;
     });
     // Expiring soon: left == 1 (expire next trading day)
-    const expiringSoon = pos.filter(p => {
+    const expiringSoon = livePos.filter(p => {
       const left = Math.max(0, cfg.horizon - bizDaysHeld(p.scan_date));
       return left === 1;
     });
@@ -681,10 +682,10 @@ ${(() => {
 
         // ROTATION candidates (for all rotation modes when portfolio full):
         const rotationCandidates = [];
-        if (cfg.rotation !== 'none' && slotsAvailable === 0 && pos.length > 0 && sigFiltered.length > 0) {
+        if (cfg.rotation !== 'none' && slotsAvailable === 0 && livePos.length > 0 && sigFiltered.length > 0) {
           const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : cfg.portfolioSize;
           const margin = cfg.rotation === 'aggressive' ? 0 : 5; // daily_max needs +5pt advantage
-          const worstPos = [...pos].sort((a, b) => a.return_pct - b.return_pct)[0];
+          const worstPos = [...livePos].sort((a, b) => a.return_pct - b.return_pct)[0];
           const worstScore = worstPos.score || 0;
           for (const s of sigFiltered.slice(0, 5)) {
             if (rotationCandidates.length >= rotLimit) break;
