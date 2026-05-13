@@ -1,53 +1,53 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-05-13T21:15:54.232Z",
+  "generated_at": "2026-05-13T21:18:18.810Z",
   "valid_for": "2026-05-14",
   "broker": {
-    "name": "paper",
-    "type": "simulation",
+    "name": "saxo",
+    "type": "live",
     "credentials": {
       "api_key": "${BROKER_API_KEY}",
       "api_secret": "${BROKER_API_SECRET}",
-      "base_url": "http://localhost:9999",
+      "base_url": "https://gateway.saxobank.com/openapi",
       "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
     }
   },
   "account": {
     "nominal_usd": 10000,
     "currency": "USD",
-    "position_size_pct": 33.33,
-    "max_positions": 3
+    "position_size_pct": 50,
+    "max_positions": 2
   },
   "mode": {
-    "name": "balanced",
+    "name": "secured",
     "horizon_days": 5,
-    "filter": "momentum_only",
+    "filter": "mom_bo",
     "min_score": 85,
     "rotation": "none",
-    "breakeven_pct": 0,
-    "vix_kill": 25,
+    "breakeven_pct": 1,
+    "vix_kill": 22,
     "trailing_stop": false,
-    "daily_trail_pct": 2,
-    "max_stop_pct": 7,
-    "atr_stop_mult": 2,
+    "daily_trail_pct": 0,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 0,
     "stale_days": 0,
     "entry_gate_pct": 0,
     "partial_tp": false,
     "partial_tp_pct": 0.5,
-    "sector_cap_max": 2,
+    "sector_cap_max": 1,
     "sizing_method": "inverse_atr",
-    "target_risk_pct": 1,
-    "correlation_cap": 0.7,
+    "target_risk_pct": 0.75,
+    "correlation_cap": 0.65,
     "cross_mode_dedup": true,
     "regime_filters": {
-      "risk_on": "momentum_only",
-      "early_risk_off": "momentum_only",
+      "risk_on": "mom_bo",
+      "early_risk_off": "breakout_only",
       "risk_off": "breakout_only",
-      "neutral": "momentum_only",
-      "recovery": "momentum_only"
+      "neutral": "mom_bo",
+      "recovery": "mom_bo"
     },
-    "dd_breaker_pct": 5
+    "dd_breaker_pct": 3
   },
   "session": {
     "market": "US_EQUITY",
@@ -59,25 +59,29 @@
     "extended_hours": false
   },
   "risk": {
-    "max_portfolio_heat_pct": "3.0",
+    "max_portfolio_heat_pct": "2.0",
     "max_single_loss_pct": 3,
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
     "circuit_breaker": {
-      "daily_loss_pct": 5,
+      "daily_loss_pct": 3,
       "action": "HALT_ALL_ORDERS",
-      "description": "If portfolio drops 5% intraday, cancel all pending orders and alert."
+      "description": "If portfolio drops 3% intraday, cancel all pending orders and alert."
     },
-    "correlation_limit": 0.7,
-    "max_sector_concentration": 2
+    "correlation_limit": 0.65,
+    "max_sector_concentration": 1
   },
   "close_now": [
     {
       "action": "CLOSE",
       "ticker": "DVA",
-      "broker_symbol": "DVA",
+      "broker_symbol": "DVA:xnys",
       "broker": {
-        "symbol": "DVA"
+        "symbol": "DVA:xnys",
+        "exchange": "NYSE",
+        "uic": 15144,
+        "currency": "USD",
+        "asset_type": "Stock"
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 5,
@@ -92,9 +96,13 @@
     {
       "action": "CLOSE",
       "ticker": "PWR",
-      "broker_symbol": "PWR",
+      "broker_symbol": "PWR:xnys",
       "broker": {
-        "symbol": "PWR"
+        "symbol": "PWR:xnys",
+        "exchange": "NYSE",
+        "uic": 25373,
+        "currency": "USD",
+        "asset_type": "Stock"
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 8,
@@ -111,102 +119,14 @@
     {
       "id": "ORD-001",
       "action": "BUY",
-      "ticker": "GOOGL",
-      "broker_symbol": "GOOGL",
-      "broker": {
-        "symbol": "GOOGL"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 401,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 8,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-05-14T09:30:00-04:00",
-        "valid_until": "2026-05-14T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 380,
-          "trailing": false,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 440,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 470,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-05-21",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 93,
-        "strategy": "Momentum",
-        "rr": "1:1.9",
-        "sharia": true,
-        "thesis": "Alphabet momentum play on AI Search + Cloud growth re-acceleration. Price recovered from $318 support to $402 (+26% in 3 weeks). BUY signal from Apr 24 at $340.71 still active with +18.1% follow-through. Gemini AI integration across Search, Cloud, and Workspace driving revenue upside."
-      },
-      "priority": 1
-    },
-    {
-      "id": "ORD-002",
-      "action": "BUY",
       "ticker": "LLY",
-      "broker_symbol": "LLY",
+      "broker_symbol": "LLY:xnys",
       "broker": {
-        "symbol": "LLY"
+        "symbol": "LLY:xnys",
+        "exchange": "NYSE",
+        "uic": 466,
+        "currency": "USD",
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -218,9 +138,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 3,
-          "pct_of_portfolio": 33.33
+          "nominal_usd": 5000,
+          "shares": 4,
+          "pct_of_portfolio": 50
         },
         "valid_from": "2026-05-14T09:30:00-04:00",
         "valid_until": "2026-05-14T16:00:00-04:00",
@@ -231,9 +151,9 @@
           "type": "STOP",
           "price": 975,
           "trailing": false,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 2
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -246,6 +166,11 @@
           "price": 1150,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
         },
         "time_exit": {
           "horizon_days": 5,
@@ -290,15 +215,19 @@
         "sharia": true,
         "thesis": "Eli Lilly breaking above $1000 psychological resistance on GLP-1 pipeline momentum. Mounjaro/Zepbound revenue acceleration + orforglipron oral GLP-1 data readout. BUY signal active since Apr 30 at $902 — now +12.7%. Strongest momentum in the scan with breakout confirmation above prior resistance."
       },
-      "priority": 2
+      "priority": 1
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-002",
       "action": "BUY",
       "ticker": "FXI",
-      "broker_symbol": "FXI",
+      "broker_symbol": "FXI:arcx",
       "broker": {
-        "symbol": "FXI"
+        "symbol": "FXI:arcx",
+        "exchange": "NYSEARCA",
+        "uic": 31903,
+        "currency": "USD",
+        "asset_type": "Etf"
       },
       "entry": {
         "type": "LIMIT",
@@ -310,9 +239,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 87,
-          "pct_of_portfolio": 33.33
+          "nominal_usd": 5000,
+          "shares": 130,
+          "pct_of_portfolio": 50
         },
         "valid_from": "2026-05-14T09:30:00-04:00",
         "valid_until": "2026-05-14T16:00:00-04:00",
@@ -323,9 +252,9 @@
           "type": "STOP",
           "price": 36.800000000000004,
           "trailing": false,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 2
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -338,6 +267,11 @@
           "price": 43,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
         },
         "time_exit": {
           "horizon_days": 5,
@@ -382,15 +316,120 @@
         "sharia": false,
         "thesis": "Trump-Xi Beijing summit is the strongest near-term catalyst for Chinese equities. FXI breaking above EMA200 ($37.43) on massive volume (212M shares). RSI 65.5 with bullish MACD crossover. Price above all moving averages for first time in 3 months. CEOs traveling with Trump signals potential trade deal concessions."
       },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "GOOGL",
+      "broker_symbol": "GOOGL:xnas",
+      "broker": {
+        "symbol": "GOOGL:xnas",
+        "exchange": "NASDAQ",
+        "uic": 773599,
+        "currency": "USD",
+        "asset_type": "Stock"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 401,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 12,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-05-14T09:30:00-04:00",
+        "valid_until": "2026-05-14T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 380,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 440,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 470,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-05-21",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:1.9",
+        "sharia": true,
+        "thesis": "Alphabet momentum play on AI Search + Cloud growth re-acceleration. Price recovered from $318 support to $402 (+26% in 3 weeks). BUY signal from Apr 24 at $340.71 still active with +18.1% follow-through. Gemini AI integration across Search, Cloud, and Workspace driving revenue upside."
+      },
       "priority": 3
     },
     {
       "id": "ORD-004",
       "action": "BUY",
       "ticker": "EWJ",
-      "broker_symbol": "EWJ",
+      "broker_symbol": "EWJ:arcx",
       "broker": {
-        "symbol": "EWJ"
+        "symbol": "EWJ:arcx",
+        "exchange": "NYSEARCA",
+        "uic": 31880,
+        "currency": "USD",
+        "asset_type": "Etf"
       },
       "entry": {
         "type": "LIMIT",
@@ -402,9 +441,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 36,
-          "pct_of_portfolio": 33.33
+          "nominal_usd": 5000,
+          "shares": 54,
+          "pct_of_portfolio": 50
         },
         "valid_from": "2026-05-14T09:30:00-04:00",
         "valid_until": "2026-05-14T16:00:00-04:00",
@@ -415,9 +454,9 @@
           "type": "STOP",
           "price": 89.5,
           "trailing": false,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 2
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -430,6 +469,11 @@
           "price": 102,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
         },
         "time_exit": {
           "horizon_days": 5,
@@ -480,9 +524,13 @@
       "id": "ORD-005",
       "action": "BUY",
       "ticker": "META",
-      "broker_symbol": "META",
+      "broker_symbol": "META:xnas",
       "broker": {
-        "symbol": "META"
+        "symbol": "META:xnas",
+        "exchange": "NASDAQ",
+        "uic": 29529022,
+        "currency": "USD",
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -494,9 +542,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 5,
-          "pct_of_portfolio": 33.33
+          "nominal_usd": 5000,
+          "shares": 8,
+          "pct_of_portfolio": 50
         },
         "valid_from": "2026-05-14T09:30:00-04:00",
         "valid_until": "2026-05-14T16:00:00-04:00",
@@ -507,9 +555,9 @@
           "type": "STOP",
           "price": 588,
           "trailing": false,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 2
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -522,6 +570,11 @@
           "price": 700,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
         },
         "time_exit": {
           "horizon_days": 5,
@@ -632,9 +685,9 @@
       },
       {
         "step": "CHECK_VIX",
-        "threshold": 25,
+        "threshold": 22,
         "action": "HALT_IF_ABOVE",
-        "description": "If VIX > 25, halt all new orders"
+        "description": "If VIX > 22, halt all new orders"
       },
       {
         "step": "LOG_STATE",
@@ -727,5 +780,10 @@
       }
     ]
   },
-  "broker_notes": {}
+  "broker_notes": {
+    "auth": "OAuth2 — requires authorization code flow",
+    "symbol_format": "Use Uic (unique instrument code) or SYMBOL:EXCHANGE format",
+    "order_types": "Supports limit, stop, trailing stop, OCO",
+    "related_orders": "Supports related orders (bracket) natively"
+  }
 }
