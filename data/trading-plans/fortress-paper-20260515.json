@@ -1,0 +1,739 @@
+{
+  "version": "1.0",
+  "dsl": "dailytickers-trading-plan",
+  "generated_at": "2026-05-14T22:24:41.569Z",
+  "valid_for": "2026-05-15",
+  "broker": {
+    "name": "paper",
+    "type": "simulation",
+    "credentials": {
+      "api_key": "${BROKER_API_KEY}",
+      "api_secret": "${BROKER_API_SECRET}",
+      "base_url": "http://localhost:9999",
+      "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
+    }
+  },
+  "account": {
+    "nominal_usd": 10000,
+    "currency": "USD",
+    "position_size_pct": 0.5,
+    "max_positions": 4
+  },
+  "mode": {
+    "name": "fortress",
+    "horizon_days": 8,
+    "filter": "mom_bo",
+    "min_score": 85,
+    "rotation": "none",
+    "breakeven_pct": 1,
+    "vix_kill": 20,
+    "trailing_stop": false,
+    "daily_trail_pct": 2,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 0,
+    "stale_days": 0,
+    "entry_gate_pct": 0,
+    "partial_tp": true,
+    "partial_tp_pct": 0.5,
+    "sector_cap_max": 2,
+    "sizing_method": "inverse_atr",
+    "target_risk_pct": 0.5,
+    "correlation_cap": 0.7,
+    "cross_mode_dedup": true,
+    "regime_filters": {
+      "risk_on": "mom_bo",
+      "early_risk_off": "breakout_only",
+      "risk_off": "breakout_only",
+      "neutral": "breakout_only",
+      "recovery": "breakout_only"
+    },
+    "dd_breaker_pct": 2
+  },
+  "session": {
+    "market": "US_EQUITY",
+    "timezone": "America/New_York",
+    "pre_market": "04:00",
+    "market_open": "09:30",
+    "market_close": "16:00",
+    "post_market": "20:00",
+    "extended_hours": false
+  },
+  "risk": {
+    "max_portfolio_heat_pct": "0.1",
+    "max_single_loss_pct": 3,
+    "max_slippage_pct": 1,
+    "max_spread_pct": 0.5,
+    "circuit_breaker": {
+      "daily_loss_pct": 2,
+      "action": "HALT_ALL_ORDERS",
+      "description": "If portfolio drops 2% intraday, cancel all pending orders and alert."
+    },
+    "correlation_limit": 0.7,
+    "max_sector_concentration": 2
+  },
+  "close_now": [
+    {
+      "action": "CLOSE",
+      "ticker": "PWR",
+      "broker_symbol": "PWR",
+      "broker": {
+        "symbol": "PWR"
+      },
+      "reason": "HORIZON_EXPIRED",
+      "held_days": 9,
+      "horizon": 8,
+      "current_pnl_pct": 5.1,
+      "execution": {
+        "type": "MARKET",
+        "timing": "AT_OPEN",
+        "description": "Close at market open — horizon expired, exit regardless of P&L"
+      }
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "PANW",
+      "broker_symbol": "PANW",
+      "broker": {
+        "symbol": "PANW"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 237,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 50,
+          "shares": 1,
+          "pct_of_portfolio": 0.5
+        },
+        "valid_from": "2026-05-15T09:30:00-04:00",
+        "valid_until": "2026-05-15T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 219,
+          "trailing": false,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 267,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 285,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-05-27",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 94,
+        "strategy": "Breakout",
+        "rr": "1:1.7",
+        "sharia": true,
+        "thesis": "Palo Alto Networks breaking into 52-week high territory at $239 with institutional consensus. Jefferies initiated Buy $265, Baird raised to Outperform $220. Platformization strategy driving 30%+ ARR growth in XSIAM/Cortex. BUY signal active since Apr 20 at $167.78 — +36% follow-through. Clean breakout above $230 prior resistance with volume confirmation."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "CSCO",
+      "broker_symbol": "CSCO",
+      "broker": {
+        "symbol": "CSCO"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 115,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 50,
+          "shares": 1,
+          "pct_of_portfolio": 0.5
+        },
+        "valid_from": "2026-05-15T09:30:00-04:00",
+        "valid_until": "2026-05-15T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 107,
+          "trailing": false,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 127,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 137,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-05-27",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "Cisco delivered the most bullish post-earnings analyst response of 2026 — 12+ firms raised targets in a single day. Gap-opened from $93 to $123 on 194M volume (8x normal). AI infrastructure pivot working: enterprise networking demand inflecting on data center buildout. BUY signal active since Apr 29 at $89.34 — +29% momentum."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "BABA",
+      "broker_symbol": "BABA",
+      "broker": {
+        "symbol": "BABA"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 142,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 50,
+          "shares": 1,
+          "pct_of_portfolio": 0.5
+        },
+        "valid_from": "2026-05-15T09:30:00-04:00",
+        "valid_until": "2026-05-15T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 131,
+          "trailing": false,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 162,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 175,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-05-27",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Breakout",
+        "rr": "1:1.8",
+        "sharia": true,
+        "thesis": "Alibaba direct beneficiary of Trump-Xi Beijing summit. Four analyst target raises today: Barclays $186, Mizuho $190, HSBC $172, JPMorgan $200. Trading at 12x forward PE vs US tech at 25x — massive valuation discount. BUY signal active since May 6 at $137.92 with breakout above $140 resistance on 179M volume."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "MRVL",
+      "broker_symbol": "MRVL",
+      "broker": {
+        "symbol": "MRVL"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 183,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 50,
+          "shares": 1,
+          "pct_of_portfolio": 0.5
+        },
+        "valid_from": "2026-05-15T09:30:00-04:00",
+        "valid_until": "2026-05-15T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 169,
+          "trailing": false,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 206,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 220,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-05-27",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 92,
+        "strategy": "Momentum",
+        "rr": "1:1.6",
+        "sharia": true,
+        "thesis": "Marvell is the premier AI custom silicon (ASIC) play as cloud hyperscalers diversify beyond NVIDIA GPUs. RBC raised target to $170 (already exceeded at $183). Cerebras IPO +68% confirms insatiable AI compute silicon demand. MRVL custom ASIC partnerships with Amazon, Google, Microsoft give unique hyperscaler exposure. BUY signal since May 11 at $167.48."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "CVS",
+      "broker_symbol": "CVS",
+      "broker": {
+        "symbol": "CVS"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 95,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 50,
+          "shares": 1,
+          "pct_of_portfolio": 0.5
+        },
+        "valid_from": "2026-05-15T09:30:00-04:00",
+        "valid_until": "2026-05-15T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 88,
+          "trailing": false,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 109,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 118,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-05-27",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 91,
+        "strategy": "Pullback",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "CVS Health completing a structural turnaround with Morgan Stanley upgrading to Overweight at $93 target. Aetna insurance + CVS pharmacy + MinuteClinic vertical integration delivering margin expansion. BUY signal active since May 7 at $87.36 — +10.7% follow-through. Trading near 52-week high ($98.56) with breakout imminent."
+      },
+      "priority": 5
+    }
+  ],
+  "error_handlers": {
+    "INSUFFICIENT_MARGIN": {
+      "action": "REDUCE_SIZE",
+      "reduce_pct": 50,
+      "retry": true,
+      "max_retries": 1
+    },
+    "SYMBOL_NOT_FOUND": {
+      "action": "SKIP",
+      "log_level": "ERROR"
+    },
+    "CONNECTION_LOST": {
+      "action": "RECONNECT",
+      "max_retries": 10,
+      "backoff_ms": [
+        1000,
+        2000,
+        5000,
+        10000,
+        30000
+      ],
+      "on_failure": "CANCEL_PENDING_AND_ALERT"
+    },
+    "PARTIAL_FILL": {
+      "action": "KEEP_PARTIAL",
+      "adjust_exits": true,
+      "description": "Keep partial fill. Adjust TP/SL quantities proportionally."
+    },
+    "ORDER_REJECTED": {
+      "action": "LOG_AND_SKIP",
+      "log_level": "WARN"
+    },
+    "MARKET_HALTED": {
+      "action": "WAIT_RESUME",
+      "timeout_min": 60,
+      "on_timeout": "CANCEL_ORDER"
+    },
+    "RATE_LIMITED": {
+      "action": "BACKOFF",
+      "delay_ms": 5000,
+      "max_retries": 3
+    },
+    "DUPLICATE_ORDER": {
+      "action": "SKIP",
+      "description": "Order for this symbol already exists. Idempotent — skip."
+    }
+  },
+  "lifecycle": {
+    "on_start": [
+      {
+        "step": "CHECK_MARKET_STATUS",
+        "description": "Verify market is open or will open today"
+      },
+      {
+        "step": "SYNC_ACCOUNT",
+        "description": "Fetch current account balance, buying power, positions"
+      },
+      {
+        "step": "RECONCILE_POSITIONS",
+        "description": "Compare broker positions with expected positions. Alert on discrepancy."
+      },
+      {
+        "step": "CHECK_VIX",
+        "threshold": 20,
+        "action": "HALT_IF_ABOVE",
+        "description": "If VIX > 20, halt all new orders"
+      },
+      {
+        "step": "LOG_STATE",
+        "description": "Log initial account state for audit trail"
+      }
+    ],
+    "on_fill": [
+      {
+        "step": "PLACE_EXITS",
+        "description": "Immediately place SL and TP1/TP2 bracket orders"
+      },
+      {
+        "step": "LOG_FILL",
+        "description": "Record fill price, time, slippage, fees"
+      },
+      {
+        "step": "CHECK_BREAKEVEN",
+        "description": "Start monitoring for breakeven trigger"
+      },
+      {
+        "step": "NOTIFY",
+        "channel": "telegram",
+        "description": "Send fill notification to Telegram"
+      }
+    ],
+    "on_exit": [
+      {
+        "step": "CANCEL_REMAINING_EXITS",
+        "description": "Cancel the other side (SL if TP hit, TP if SL hit)"
+      },
+      {
+        "step": "LOG_EXIT",
+        "description": "Record exit price, P&L, hold time"
+      },
+      {
+        "step": "CHECK_ROTATION",
+        "description": "If slot freed, check for pending rotation candidates"
+      },
+      {
+        "step": "UPDATE_PORTFOLIO",
+        "description": "Update local portfolio state file"
+      }
+    ],
+    "on_breakeven": [
+      {
+        "step": "MODIFY_STOP",
+        "description": "Move stop loss to entry price (+ spread buffer)"
+      },
+      {
+        "step": "LOG_BREAKEVEN",
+        "description": "Record breakeven activation"
+      }
+    ],
+    "on_horizon_expiry": [
+      {
+        "step": "CLOSE_AT_MARKET",
+        "description": "Submit market close order at next open"
+      },
+      {
+        "step": "CANCEL_EXITS",
+        "description": "Cancel any pending TP/SL orders for this position"
+      }
+    ],
+    "on_error": [
+      {
+        "step": "LOG_ERROR",
+        "description": "Record error with full context"
+      },
+      {
+        "step": "LOOKUP_HANDLER",
+        "description": "Find matching error_handler and execute action"
+      },
+      {
+        "step": "NOTIFY_IF_CRITICAL",
+        "description": "Alert on CONNECTION_LOST, CIRCUIT_BREAKER, or unknown errors"
+      }
+    ],
+    "on_end": [
+      {
+        "step": "CANCEL_UNFILLED",
+        "description": "Cancel any GTC orders that were not filled today"
+      },
+      {
+        "step": "EXPORT_TRADES",
+        "description": "Write execution log to trades-YYYYMMDD.json"
+      },
+      {
+        "step": "SUMMARY",
+        "description": "Print session summary: fills, skips, errors, P&L"
+      }
+    ]
+  },
+  "broker_notes": {}
+}
