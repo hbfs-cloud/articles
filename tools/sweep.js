@@ -436,6 +436,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     horizonDays = 20, partialTP = false, partialTPPct = 0.5, trailingStop = false,
     maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0,
     breakevenPct = 0, // after +X% gain, move stop to entry (0 = disabled)
+    beGraceDays = 0,  // min days held before breakeven/trail can activate (0 = immediate)
     staleDays = 0,    // exit if no new high for N days (0 = disabled)
     entryGatePct = 0, // reject if open > entry * (1 + X%) — 0 = disabled
     vwapGate = false, // skip trade if open gaps above VWAP * 1.01 (gap-up trap filter)
@@ -542,8 +543,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let highWaterMark = entryPrice;
   let daysSinceNewHigh = 0;
   let breakevenActivated = false;
+  let daysHeld = 0;
 
   for (const date of sortedDates) {
+    daysHeld++;
     const bar = priceHistory[date];
     if (!bar) continue;
 
@@ -594,13 +597,15 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
 
     // Daily trailing stop: move stop up based on highest close seen
-    if (dailyTrailPct > 0) {
+    // Grace period: don't trail until position held beGraceDays
+    if (dailyTrailPct > 0 && daysHeld > beGraceDays) {
       const trailLevel = bar.close * (1 - dailyTrailPct / 100);
       if (trailLevel > currentStop) currentStop = trailLevel;
     }
 
     // Breakeven stop: after +X% gain, move stop to entry (no loss possible)
-    if (breakevenPct > 0 && !breakevenActivated) {
+    // Grace period: don't activate until position held beGraceDays
+    if (breakevenPct > 0 && !breakevenActivated && daysHeld > beGraceDays) {
       const currentGain = (bar.high - entryPrice) / entryPrice * 100;
       if (currentGain >= breakevenPct) {
         breakevenActivated = true;
@@ -905,7 +910,8 @@ function simulatePortfolio(allTrades, scans, config) {
       if (pos.trade.exitDate && pos.trade.exitDate <= day) {
         if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
         closedTrades.push(pos.trade);
-        if (pos.trade.status === 'sl') slCooldown.set(pos.trade.ticker, pos.trade.exitDate);
+        // Cooldown: SL=10d re-entry ban (unchanged). BE/expired/rotated = no cooldown (grace period handles churn)
+        if (pos.trade.status === 'sl') slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 10 });
       } else {
         stillOpen.push(pos);
       }
@@ -998,9 +1004,12 @@ function simulatePortfolio(allTrades, scans, config) {
         if (added >= slotsAvailable) break;
         if (vixKill || ddBreakerActive) break;          // halt new entries
         if (openTickers.has(cand.ticker)) continue;
-        // SL cooldown — 10 biz day re-entry ban after stop-loss
-        const lastSL = slCooldown.get(cand.ticker);
-        if (lastSL && bizDaysBetween(lastSL, day) < 10) continue;
+        // Exit cooldown — re-entry ban after SL (10d), breakeven (5d), expired/rotated (3d)
+        const cooldown = slCooldown.get(cand.ticker);
+        if (cooldown) {
+          const cd = typeof cooldown === 'string' ? { date: cooldown, days: 10 } : cooldown;
+          if (bizDaysBetween(cd.date, day) < cd.days) continue;
+        }
         // Cross-mode dedup — skip ticker already picked by another mode this scan day
         if (config.crossModeDedup && config.crossModePicked) {
           const dedupKey = `${day}|${cand.ticker}`;
@@ -1182,7 +1191,7 @@ function simulatePortfolio(allTrades, scans, config) {
     wins: wins.length,
     losses: losses.length,
     equityCurve,
-    closedTrades: resolved.map(t => ({
+    closedTrades: closedTrades.map(t => ({
       ticker: t.ticker, strategy: t.strategy, score: t.score,
       scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null,
       actualEntry: t.actualEntry, exitPrice: t.exitPrice,
@@ -1331,14 +1340,15 @@ async function main() {
                 for (const stale of STALE_DAYS) {
                   for (const entryGate of ENTRY_GATE_PCTS) {
                   const vwapGate = VWAP_GATE_FIXED;
-                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${stale}_${entryGate}_${vwapGate}`;
+                  const beGrace = 0; // grid search doesn't sweep beGraceDays — it's a mode-level param
+                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${beGrace}_${stale}_${entryGate}_${vwapGate}`;
                   const trades = [];
                   for (const setup of allSetups) {
                     const history = priceCache[setup.ticker];
                     const result = simulateTrade(setup, setup.scanDate, history, {
                       horizonDays: horizon, partialTP: ptp, partialTPPct: ptpPct, trailingStop: trail,
                       maxStopPct: maxStop, atrStopMult: atrMult, dailyTrailPct: dailyTrail,
-                      breakevenPct: bePct, staleDays: stale, entryGatePct: entryGate, vwapGate,
+                      breakevenPct: bePct, beGraceDays: beGrace, staleDays: stale, entryGatePct: entryGate, vwapGate,
                     });
                     if (result) {
                       // Preserve regime from setup so simulatePortfolio's regimeByDate map
@@ -1366,7 +1376,8 @@ async function main() {
     const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
     let frozenExtra = 0;
     for (const [modeId, cfg] of Object.entries(frozenModes)) {
-      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      console.log(`  DEBUG ${modeId}: fKey=${fKey} inGrid=${!!tradesByKey[fKey]}`);
       if (!tradesByKey[fKey]) {
         const trades = [];
         for (const setup of allSetups) {
@@ -1374,8 +1385,8 @@ async function main() {
           const result = simulateTrade(setup, setup.scanDate, history, {
             horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
             trailingStop: cfg.trailingStop || false, maxStopPct: cfg.maxStopPct || 0, atrStopMult: cfg.atrStopMult || 0,
-            dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, staleDays: cfg.staleDays || 0,
-            entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
+            dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, beGraceDays: cfg.beGraceDays || 0,
+            staleDays: cfg.staleDays || 0, entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
           });
           if (result) trades.push({ ...result, regime: setup.regime || null });
         }
@@ -1846,7 +1857,7 @@ async function main() {
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
-      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
@@ -1947,6 +1958,7 @@ async function main() {
 
           const injected = [];
           const seenTickers = new Set();
+          const todayISO = new Date().toISOString().slice(0, 10);
           for (const p of livePositions) {
             if (seenTickers.has(p.ticker)) continue;
             const key = `${p.ticker}_${p.scan_date}`;
@@ -1954,7 +1966,15 @@ async function main() {
             if (!sig) continue;
             if (mergedKeys.has(key)) continue;
             if (!priceCache[p.ticker]) continue;
+            // Skip if mode horizon already expired for this trade
+            const modeExpire = addBizDays(p.scan_date, cfg.horizon);
+            if (modeExpire <= todayISO) continue;
             seenTickers.add(p.ticker);
+            // MtM from last cached bar vs actual entry (real position, not simulated)
+            const bars = priceCache[p.ticker];
+            const lastBarDate = Object.keys(bars).sort().pop();
+            const lastClose = bars[lastBarDate]?.close || p.entry;
+            const mtmPnl = +((lastClose - p.entry) / p.entry * 100).toFixed(2);
             injected.push({
               ticker: p.ticker, scanDate: p.scan_date,
               entryDate: nextBizDay(p.scan_date),
@@ -1962,7 +1982,9 @@ async function main() {
               entry: sig.entry, stop: p.stop || sig.stop,
               tp1: p.tp1 || sig.tp1, tp2: p.tp2 || sig.tp2,
               score: sig.score, strategy: sig.strategy,
-              status: 'pending', pnlPct: 0,
+              status: 'pending', pnlPct: mtmPnl,
+              exitDate: lastBarDate, exitPrice: lastClose,
+              holdDays: Object.keys(bars).filter(d => d >= nextBizDay(p.scan_date) && d <= lastBarDate).length,
               source: sig.source || 'signals',
             });
           }
