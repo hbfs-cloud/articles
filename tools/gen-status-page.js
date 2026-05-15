@@ -201,6 +201,48 @@ async function main() {
     }
   } catch (e) { /* first run — no previous snapshot */ }
 
+  // ── Regime map: scan date → regime label ──
+  const regimeMap = {};
+  try {
+    const scanDirs = fs.readdirSync(path.join(ROOT, 'scanner')).filter(d => /^\d{8}$/.test(d)).sort();
+    for (const d of scanDirs) {
+      try {
+        const sig = JSON.parse(fs.readFileSync(path.join(ROOT, 'scanner', d, 'signals.json')));
+        regimeMap[d.slice(4, 6) + '/' + d.slice(6, 8)] = sig.regime || 'NEUTRAL';
+      } catch (_) {}
+    }
+  } catch (_) {}
+
+  // ── SPY benchmark (indexed to 100 at inception) ──
+  const spyRaw = await new Promise(resolve => {
+    const url = 'https://query1.finance.yahoo.com/v8/finance/chart/SPY?interval=1d&range=6mo';
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 10000 }, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          const r = j?.chart?.result?.[0];
+          const ts = r?.timestamp || [], cl = r?.indicators?.quote?.[0]?.close || [];
+          const bars = {};
+          for (let i = 0; i < ts.length; i++) {
+            if (cl[i] != null) {
+              const ds = new Date(ts[i] * 1000).toISOString().slice(0, 10);
+              bars[ds.slice(5).replace('-', '/')] = cl[i];
+            }
+          }
+          resolve(bars);
+        } catch { resolve({}); }
+      });
+    }).on('error', () => resolve({})).on('timeout', function() { this.destroy(); resolve({}); });
+  });
+  const spyKeys = Object.keys(spyRaw).sort();
+  const spyBaseKey = spyKeys.find(k => k >= '02/26') || spyKeys[0];
+  const spyBase = spyBaseKey ? spyRaw[spyBaseKey] : null;
+  const spyIndexed = {};
+  if (spyBase) { for (const [d, v] of Object.entries(spyRaw)) spyIndexed[d] = +(v / spyBase * 100).toFixed(2); }
+  console.log(`📊 SPY benchmark: ${spyKeys.length} bars, base=${spyBase ? '$' + spyBase.toFixed(2) : 'N/A'}`);
+
   // Collect ALL premature tickers (holdDays < horizon) for equity curve MtM
   const liveTickers = new Set(livePositions.map(p => p.ticker));
   const allPrematureTickers = new Set();
@@ -1522,26 +1564,57 @@ document.addEventListener('DOMContentLoaded',function(){
       if(vals[i]>pk)pk=vals[i];
       ddS.push(pk>0?+((vals[i]-pk)/pk*100).toFixed(2):0);
     }
+    // Regime background bands
+    var regimeAreas=[];
+    if(typeof _regimeMap!=='undefined'){
+      var prevR=null,startI=0;
+      for(var i=0;i<dates.length;i++){
+        var r=_regimeMap[dates[i]]||null;
+        if(r)prevR=r;
+        var cur=prevR||'NEUTRAL';
+        if(i===0){prevR=cur;startI=0;continue;}
+        var prev=_regimeMap[dates[startI]]||prevR||'NEUTRAL';
+        // detect regime change
+        if(cur!==prev||i===0){
+          if(i>0)regimeAreas.push([{xAxis:dates[startI],itemStyle:{color:_RCOL[prev]||'rgba(148,163,184,.08)'}},{xAxis:dates[i-1]}]);
+          startI=i;
+        }
+      }
+      if(dates.length>0){var lastR=prevR||'NEUTRAL';regimeAreas.push([{xAxis:dates[startI],itemStyle:{color:_RCOL[lastR]||'rgba(148,163,184,.08)'}},{xAxis:dates[dates.length-1]}]);}
+    }
+    // SPY benchmark (indexed to 100)
+    var spyVals=null;
+    if(typeof _spyData!=='undefined'&&Object.keys(_spyData).length>0){
+      spyVals=dates.map(function(d){return _spyData[d]||null;});
+    }
+    var series=[
+      {name:'Equity',data:vals,type:'line',smooth:true,symbol:'none',yAxisIndex:0,z:5,lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'22'},{offset:1,color:color+'00'}])},markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined},
+      {name:'1D',data:ret1d,type:'bar',yAxisIndex:1,barWidth:2,z:1,itemStyle:{color:function(p){return p.value>=0?'#10b981':'#ef4444'},opacity:.45}},
+      {name:'7D',data:ret7d,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:3,lineStyle:{color:'#8b5cf6',width:1.5,type:'dashed'},connectNulls:true},
+      {name:'30D',data:ret30d,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:3,lineStyle:{color:'#f59e0b',width:1.5,type:'dashed'},connectNulls:true},
+      {name:'DD',data:ddS,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:2,lineStyle:{color:'#dc2626',width:1,opacity:.6},areaStyle:{color:'rgba(220,38,38,.1)'}}
+    ];
+    var legendItems=['Equity','1D','7D','30D','DD'];
+    if(spyVals){
+      series.push({name:'SPY',data:spyVals,type:'line',smooth:true,symbol:'none',yAxisIndex:0,z:4,lineStyle:{color:'#94a3b8',width:1.8,type:'dotted'},connectNulls:true});
+      legendItems.push('SPY');
+    }
     c.setOption({
       tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(p){
         var s=p[0].name;
-        for(var j=0;j<p.length;j++){if(p[j].value!=null)s+='<br/>'+p[j].marker+p[j].seriesName+': <b>'+p[j].value+(p[j].seriesIndex===0?'':'%')+'</b>';}
+        // Show regime label in tooltip
+        if(typeof _regimeMap!=='undefined'){var rr=null,pr=null;for(var k=0;k<dates.length;k++){if(_regimeMap[dates[k]])pr=_regimeMap[dates[k]];if(dates[k]===p[0].name){rr=pr;break;}}if(rr)s+=' <span style="font-size:10px;padding:1px 4px;border-radius:3px;background:'+(_RCOL[rr]||'#eee').replace(/[\d.]+\)/,'0.3)')+';color:#334155">'+rr+'</span>';}
+        for(var j=0;j<p.length;j++){if(p[j].value!=null)s+='<br/>'+p[j].marker+p[j].seriesName+': <b>'+p[j].value+(p[j].seriesName==='Equity'||p[j].seriesName==='SPY'?'':'%')+'</b>';}
         return s;
       }},
-      legend:{data:['Equity','1D','7D','30D','DD'],top:0,right:0,textStyle:{fontSize:10,color:'#94a3b8'},itemWidth:12,itemHeight:8,selected:{'Equity':true,'1D':true,'7D':true,'30D':true,'DD':true}},
+      legend:{data:legendItems,top:0,right:0,textStyle:{fontSize:10,color:'#94a3b8'},itemWidth:12,itemHeight:8,selected:{'Equity':true,'1D':true,'7D':true,'30D':true,'DD':true,'SPY':true}},
       grid:{top:30,bottom:25,left:45,right:45},
       xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:9,interval:'auto'}},
       yAxis:[
         {type:'value',name:'',position:'left',min:function(v){return Math.floor(v.min)-1},axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:9}},
         {type:'value',name:'',position:'right',axisLine:{show:false},splitLine:{show:false},axisLabel:{color:'#94a3b8',fontSize:9,formatter:'{value}%'}}
       ],
-      series:[
-        {name:'Equity',data:vals,type:'line',smooth:true,symbol:'none',yAxisIndex:0,z:5,lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'22'},{offset:1,color:color+'00'}])}},
-        {name:'1D',data:ret1d,type:'bar',yAxisIndex:1,barWidth:2,z:1,itemStyle:{color:function(p){return p.value>=0?'#10b981':'#ef4444'},opacity:.45}},
-        {name:'7D',data:ret7d,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:3,lineStyle:{color:'#8b5cf6',width:1.5,type:'dashed'},connectNulls:true},
-        {name:'30D',data:ret30d,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:3,lineStyle:{color:'#f59e0b',width:1.5,type:'dashed'},connectNulls:true},
-        {name:'DD',data:ddS,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:2,lineStyle:{color:'#dc2626',width:1,opacity:.6},areaStyle:{color:'rgba(220,38,38,.1)'}}
-      ]
+      series:series
     });
     return c;
   }
@@ -1630,6 +1703,9 @@ document.addEventListener('DOMContentLoaded',function(){
   var VALID_MODES=${JSON.stringify(Object.keys(modes))};
   var activeMode='balanced';
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
+  var _regimeMap=${JSON.stringify(regimeMap)};
+  var _spyData=${JSON.stringify(spyIndexed)};
+  var _RCOL={'RISK-ON':'rgba(16,185,129,.12)','RECOVERY':'rgba(59,130,246,.12)','NEUTRAL':'rgba(148,163,184,.08)','EARLY RISK-OFF':'rgba(245,158,11,.12)','RISK-OFF':'rgba(239,68,68,.12)'};
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
     activeMode=id;

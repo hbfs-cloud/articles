@@ -1200,7 +1200,7 @@ function simulatePortfolio(allTrades, scans, config) {
       regime: t.regime || null,
       source: t.source || 'signals',
       entryTime: t.entryDate ? '09:30' : null,
-      exitTime: t.exitDate ? (t.status === 'expired' || t.status === 'pending' ? '16:00' : t.status === 'rotated' ? '09:30' : null) : null,
+      exitTime: t.exitDate ? (['expired','pending'].includes(t.status) ? '16:00' : t.status === 'rotated' ? '09:30' : ['sl'].includes(t.status) ? '10:00' : ['tp1','tp1_partial'].includes(t.status) ? '11:00' : ['tp2'].includes(t.status) ? '13:00' : ['breakeven','trail'].includes(t.status) ? '14:00' : '16:00') : null,
     })),
   };
 }
@@ -2066,6 +2066,21 @@ async function main() {
       const prev = bars[sortedDs[idx - 1]];
       if (prev && prev.high && prev.low && prev.close) {
         t.vwap = +((prev.high + prev.low + prev.close) / 3).toFixed(4);
+      }
+    }
+  }
+  // Backfill entryTime/exitTime on all trades (including legacy ones lacking them)
+  for (const id of Object.keys(frozenTrades)) {
+    for (const t of frozenTrades[id]) {
+      if (!t.entryTime && t.entryDate) t.entryTime = '09:30';
+      if (!t.exitTime && t.exitDate) {
+        t.exitTime = ['expired','pending'].includes(t.status) ? '16:00'
+          : t.status === 'rotated' ? '09:30'
+          : t.status === 'sl' ? '10:00'
+          : ['tp1','tp1_partial'].includes(t.status) ? '11:00'
+          : t.status === 'tp2' ? '13:00'
+          : ['breakeven','trail'].includes(t.status) ? '14:00'
+          : '16:00';
       }
     }
   }
