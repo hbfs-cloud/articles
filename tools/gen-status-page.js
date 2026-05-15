@@ -1603,7 +1603,7 @@ document.addEventListener('DOMContentLoaded',function(){
       tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(p){
         var s=p[0].name;
         // Show regime label in tooltip
-        if(typeof _regimeMap!=='undefined'){var rr=null,pr=null;for(var k=0;k<dates.length;k++){if(_regimeMap[dates[k]])pr=_regimeMap[dates[k]];if(dates[k]===p[0].name){rr=pr;break;}}if(rr)s+=' <span style="font-size:10px;padding:1px 4px;border-radius:3px;background:'+(_RCOL[rr]||'#eee').replace(/[\d.]+\)/,'0.3)')+';color:#334155">'+rr+'</span>';}
+        if(typeof _regimeMap!=='undefined'){var rr=null,pr=null;for(var k=0;k<dates.length;k++){if(_regimeMap[dates[k]])pr=_regimeMap[dates[k]];if(dates[k]===p[0].name){rr=pr;break;}}if(rr){var rbg=(_RCOL[rr]||'rgba(148,163,184,.08)').replace('.12)','.3)').replace('.08)','.3)');s+=' <span style="font-size:10px;padding:1px 4px;border-radius:3px;background:'+rbg+';color:#334155">'+rr+'</span>';}}
         for(var j=0;j<p.length;j++){if(p[j].value!=null)s+='<br/>'+p[j].marker+p[j].seriesName+': <b>'+p[j].value+(p[j].seriesName==='Equity'||p[j].seriesName==='SPY'?'':'%')+'</b>';}
         return s;
       }},
