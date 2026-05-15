@@ -377,6 +377,46 @@ async function main() {
         v: [..._hist.map(p => p.v), _todayMtm],
       };
     }
+    // ── Compute R², CAGR, Sharpe from equity curve ──
+    if (ec.v && ec.v.length >= 3) {
+      // R² — linear regression on equity values
+      const n = ec.v.length;
+      const xMean = (n - 1) / 2;
+      const yMean = ec.v.reduce((a, b) => a + b, 0) / n;
+      let ssXY = 0, ssXX = 0, ssTot = 0, ssRes = 0;
+      for (let i = 0; i < n; i++) {
+        ssXY += (i - xMean) * (ec.v[i] - yMean);
+        ssXX += (i - xMean) ** 2;
+        ssTot += (ec.v[i] - yMean) ** 2;
+      }
+      const slope = ssXX ? ssXY / ssXX : 0;
+      const intercept = yMean - slope * xMean;
+      for (let i = 0; i < n; i++) { ssRes += (ec.v[i] - (intercept + slope * i)) ** 2; }
+      m.r2 = ssTot > 0 ? +(1 - ssRes / ssTot).toFixed(3) : 0;
+
+      // CAGR — annualized from equity curve date range
+      const ecDates = m.equityCurve ? m.equityCurve.filter(p => p.date) : [];
+      if (ecDates.length >= 2) {
+        const d0 = new Date(ecDates[0].date), d1 = new Date(ecDates[ecDates.length - 1].date);
+        const years = (d1 - d0) / (365.25 * 86400000);
+        const finalV = ec.v[ec.v.length - 1], startV = ec.v[0];
+        m.cagr = years > 0.01 && startV > 0 ? +((Math.pow(finalV / startV, 1 / years) - 1) * 100).toFixed(1) : null;
+      } else { m.cagr = null; }
+
+      // Sharpe — annualized (daily returns, risk-free = 0)
+      const dailyRet = [];
+      for (let i = 1; i < ec.v.length; i++) {
+        if (ec.v[i - 1] > 0) dailyRet.push((ec.v[i] - ec.v[i - 1]) / ec.v[i - 1]);
+      }
+      if (dailyRet.length >= 5) {
+        const mu = dailyRet.reduce((a, b) => a + b, 0) / dailyRet.length;
+        const sigma = Math.sqrt(dailyRet.reduce((s, r) => s + (r - mu) ** 2, 0) / dailyRet.length);
+        m.sharpe = sigma > 0 ? +(mu / sigma * Math.sqrt(252)).toFixed(2) : null;
+      } else { m.sharpe = null; }
+    } else { m.r2 = 0; m.cagr = null; m.sharpe = null; }
+    // Override sharpe with frozen if available (sweep's is authoritative)
+    if (frozen && frozen.sharpe != null) m.sharpe = frozen.sharpe;
+
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
@@ -654,6 +694,15 @@ async function main() {
     </div>
     <div class="ps" title="Average number of trading days each closed trade was held.">
       <span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span>
+    </div>
+    <div class="ps" title="R-squared: how closely the equity curve follows a straight line. 1.0 = perfect linear growth, 0 = random.">
+      <span class="ps-v">${m.r2 != null ? m.r2.toFixed(3) : '—'}</span><span class="ps-l">R²</span>
+    </div>
+    <div class="ps" title="Compound Annual Growth Rate: annualized return extrapolated from the equity curve.">
+      <span class="ps-v">${m.cagr != null ? (m.cagr > 0 ? '+' : '') + m.cagr + '%' : '—'}</span><span class="ps-l">CAGR</span>
+    </div>
+    <div class="ps" title="Annualized Sharpe Ratio: risk-adjusted return (daily returns × √252). >1 = good, >2 = excellent, >3 = elite.">
+      <span class="ps-v">${m.sharpe != null ? m.sharpe : '—'}</span><span class="ps-l">Sharpe</span>
     </div>
   </div>
 </div>
@@ -1144,8 +1193,9 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .perf-hero-left{display:flex;align-items:center;gap:.5rem;margin-bottom:.6rem}
 .perf-hero-label{font-size:.72rem;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.06em}
 .perf-chart-wrap{flex:1;min-width:0;display:flex;flex-direction:column}
-.perf-chart{flex:1;min-height:230px}
-.perf-stats{display:grid;grid-template-columns:1fr 1fr;gap:.7rem .85rem;align-content:center;min-width:195px}
+.perf-chart{flex:1;min-height:310px}
+.perf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem .85rem;align-content:center;min-width:260px}
+@media(max-width:600px){.perf-stats{grid-template-columns:1fr 1fr}}
 .ps{text-align:center;padding:.65rem .5rem;border-radius:10px;background:#f8fafc}
 .ps-v{display:block;font-size:1.35rem;font-weight:800;color:#0f172a;line-height:1.2}
 .ps-l{display:block;font-size:.62rem;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-top:.25rem;font-weight:600}
@@ -1164,6 +1214,8 @@ body{background:#f8fafc;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .t{width:100%;border-collapse:collapse;font-size:.84rem}
 .t th{background:#f8fafc;color:#64748b;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:.65rem .85rem;text-align:left;border-bottom:2px solid #e2e8f0;white-space:nowrap}
 .t td{padding:.6rem .85rem;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.t td b,.t td strong{cursor:pointer;border-bottom:1px dashed #cbd5e1;transition:color .15s}
+.t td b:hover,.t td strong:hover{color:#3b82f6}
 .t tr:last-child td{border-bottom:none}
 .t tr:hover td{background:#fafbfc}
 .t .pos{color:#059669;font-weight:600}
@@ -1456,8 +1508,42 @@ var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
   function mk(el,dates,vals,color){
     if(!document.getElementById(el))return null;
-    var c=echarts.init(document.getElementById(el));
-    c.setOption({tooltip:{trigger:'axis',formatter:function(p){return p[0].name+'<br/><b>'+p[0].value.toFixed(2)+'</b>'}},xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:10}},yAxis:{type:'value',min:Math.floor(Math.min.apply(null,vals))-1,axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:10}},series:[{data:vals,type:'line',smooth:true,symbol:'none',lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'33'},{offset:1,color:color+'00'}])}}]});
+    var dom=document.getElementById(el);
+    var existing=echarts.getInstanceByDom(dom);
+    if(existing) existing.dispose();
+    var c=echarts.init(dom);
+    // Compute rolling returns + drawdown
+    var ret1d=[],ret7d=[],ret30d=[],ddS=[];
+    var pk=vals[0]||100;
+    for(var i=0;i<vals.length;i++){
+      ret1d.push(i>0&&vals[i-1]>0?+((vals[i]-vals[i-1])/vals[i-1]*100).toFixed(2):0);
+      ret7d.push(i>=7&&vals[i-7]>0?+((vals[i]-vals[i-7])/vals[i-7]*100).toFixed(2):null);
+      ret30d.push(i>=30&&vals[i-30]>0?+((vals[i]-vals[i-30])/vals[i-30]*100).toFixed(2):null);
+      if(vals[i]>pk)pk=vals[i];
+      ddS.push(pk>0?+((vals[i]-pk)/pk*100).toFixed(2):0);
+    }
+    c.setOption({
+      tooltip:{trigger:'axis',axisPointer:{type:'cross'},formatter:function(p){
+        var s=p[0].name;
+        for(var j=0;j<p.length;j++){if(p[j].value!=null)s+='<br/>'+p[j].marker+p[j].seriesName+': <b>'+p[j].value+(p[j].seriesIndex===0?'':'%')+'</b>';}
+        return s;
+      }},
+      legend:{data:['Equity','1D','7D','30D','DD'],top:0,right:0,textStyle:{fontSize:10,color:'#94a3b8'},itemWidth:12,itemHeight:8,selected:{'Equity':true,'1D':true,'7D':true,'30D':true,'DD':true}},
+      grid:{top:30,bottom:25,left:45,right:45},
+      xAxis:{type:'category',data:dates,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{color:'#94a3b8',fontSize:9,interval:'auto'}},
+      yAxis:[
+        {type:'value',name:'',position:'left',min:function(v){return Math.floor(v.min)-1},axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:9}},
+        {type:'value',name:'',position:'right',axisLine:{show:false},splitLine:{show:false},axisLabel:{color:'#94a3b8',fontSize:9,formatter:'{value}%'}}
+      ],
+      series:[
+        {name:'Equity',data:vals,type:'line',smooth:true,symbol:'none',yAxisIndex:0,z:5,lineStyle:{color:color,width:2.5},areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'22'},{offset:1,color:color+'00'}])}},
+        {name:'1D',data:ret1d,type:'bar',yAxisIndex:1,barWidth:2,z:1,itemStyle:{color:function(p){return p.value>=0?'#10b981':'#ef4444'},opacity:.45}},
+        {name:'7D',data:ret7d,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:3,lineStyle:{color:'#8b5cf6',width:1.5,type:'dashed'},connectNulls:true},
+        {name:'30D',data:ret30d,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:3,lineStyle:{color:'#f59e0b',width:1.5,type:'dashed'},connectNulls:true},
+        {name:'DD',data:ddS,type:'line',smooth:true,symbol:'none',yAxisIndex:1,z:2,lineStyle:{color:'#dc2626',width:1,opacity:.6},areaStyle:{color:'rgba(220,38,38,.1)'}}
+      ]
+    });
+    return c;
   }
   var tmDates=[], tmCurrentIdx=0, tmModesCfg={};
   function tmInit(){
@@ -1939,6 +2025,11 @@ document.addEventListener('DOMContentLoaded',function(){
       psList[3].textContent=Number(stats.pf||0).toFixed(2)+'x';
       psList[4].textContent=String(stats.trades||0);
       psList[5].textContent=Number(stats.avgHold||0).toFixed(1)+'d';
+      if(psList.length>=9){
+        psList[6].textContent=stats.r2!=null?Number(stats.r2).toFixed(3):'—';
+        psList[7].textContent=stats.cagr!=null?(stats.cagr>0?'+':'')+Number(stats.cagr).toFixed(1)+'%':'—';
+        psList[8].textContent=stats.sharpe!=null?Number(stats.sharpe).toFixed(2):'—';
+      }
     }
     var chartEl=document.getElementById('chart-'+modeId);
     if(chartEl && window.echarts){
@@ -2151,6 +2242,49 @@ document.addEventListener('DOMContentLoaded',function(){
   else{update();setInterval(update,INTERVAL)}
 })();
 </script>
+<style>
+.fv-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.fv-overlay.open{opacity:1;pointer-events:auto}
+.fv-modal{background:#fff;border-radius:14px;padding:1rem;max-width:620px;width:95%;box-shadow:0 20px 60px rgba(0,0,0,.3);position:relative}
+.fv-modal img{width:100%;border-radius:8px;display:block}
+.fv-close{position:absolute;top:.5rem;right:.75rem;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#64748b;line-height:1}
+.fv-title{font-size:.85rem;font-weight:700;margin-bottom:.5rem;color:#0f172a}
+.fv-links{display:flex;gap:.5rem;margin-top:.6rem;flex-wrap:wrap}
+.fv-links a{font-size:.7rem;padding:.25rem .6rem;border-radius:6px;background:#f1f5f9;color:#3b82f6;text-decoration:none;font-weight:600}
+.fv-links a:hover{background:#e0e7ff}
+</style>
+<div class="fv-overlay" id="fvOverlay" onclick="if(event.target===this)closeFV()">
+  <div class="fv-modal">
+    <button class="fv-close" onclick="closeFV()">&times;</button>
+    <div class="fv-title" id="fvTitle"></div>
+    <img id="fvImg" src="" alt="chart">
+    <div class="fv-links" id="fvLinks"></div>
+  </div>
+</div>
+<script>
+(function(){
+  function openFV(ticker){
+    if(!ticker)return;
+    var t=ticker.toUpperCase();
+    document.getElementById('fvTitle').textContent=t+' — Daily Chart';
+    document.getElementById('fvImg').src='https://charts2.finviz.com/chart.ashx?t='+t+'&ty=c&ta=1&p=d&s=l';
+    document.getElementById('fvLinks').innerHTML=
+      '<a href="https://finviz.com/quote.ashx?t='+t+'" target="_blank" rel="noopener">FinViz</a>'+
+      '<a href="https://finance.yahoo.com/quote/'+t+'/" target="_blank" rel="noopener">Yahoo Finance</a>'+
+      '<a href="https://www.tradingview.com/symbols/'+t+'/" target="_blank" rel="noopener">TradingView</a>'+
+      '<a href="https://stockanalysis.com/stocks/'+t.toLowerCase()+'/" target="_blank" rel="noopener">StockAnalysis</a>';
+    document.getElementById('fvOverlay').classList.add('open');
+  }
+  window.closeFV=function(){document.getElementById('fvOverlay').classList.remove('open')};
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeFV()});
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('td b, td strong');
+    if(!b)return;
+    var txt=(b.textContent||'').trim();
+    if(/^[A-Z]{1,5}(-[A-Z]{1,4})?$/.test(txt)){e.preventDefault();openFV(txt);}
+  });
+})();
+</script>
 </body>
 </html>`;
 
@@ -2250,7 +2384,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
 
     snapshot.modes[id] = {
-      stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold, oosWarn: mM.oosWarn || null },
+      stats: { ret: mM.ret, realized: mM.realized, unrealized: mM.unrealized, dd: mM.dd, wr: mM.wr, pf: mM.pf, pfLow: mM.pfLow, pfHigh: mM.pfHigh, pfReliable: mM.pfReliable, trades: mM.trades, avgHold: mM.avgHold, oosWarn: mM.oosWarn || null, r2: mM.r2 ?? null, cagr: mM.cagr ?? null, sharpe: mM.sharpe ?? null },
       equity: ec,
       signals: sig.map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s._entry, stop: s._stop, tp1: s._tp1, tp2: s._tp2, rr: s.rr, thesis: s.thesis || '', sharia: s.sharia })),
       positions: pos.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, score: p.score || 0, stop: p.stop, tp1: p.tp1, tp2: p.tp2, days_remaining: p.days_remaining, strategy: p.strategy, thesis: p.thesis || '', replacedFrom: (recentRotation && recentRotation.ticker === p.ticker) ? recentRotation.replaces : null, _terminal: p._terminal || false, _terminalStatus: p._terminalStatus || null })),
@@ -2403,7 +2537,7 @@ function backfillHistory() {
       const existing_mode = (existing.modes || {})[id] || {};
       newModes[id] = {
         ...existing_mode,
-        stats: { ret: retAtDate, realized: retAtDate, unrealized: 0, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold },
+        stats: { ret: retAtDate, realized: retAtDate, unrealized: 0, dd: maxDDEC, wr, pf, trades: modeTrades.length, avgHold, r2: null, cagr: null, sharpe: null },
         equity: { d: ecDates, v: ecVals },
         positions,
         orders: [...buyOrders, ...rotCands],
