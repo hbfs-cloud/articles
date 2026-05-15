@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { Engine } = require('./engine');
 const { Notifier } = require('./notifier');
+const { MarketDataEngine } = require('./market-data/engine');
 
 const ROOT = path.resolve(__dirname, '../..');
 const args = process.argv.slice(2);
@@ -132,7 +133,8 @@ function generatePlan(mode, broker) {
       // Execute
       try {
         const adapter = new AdapterClass(creds, { verbose });
-        const engine = new Engine(plan, adapter, { verbose, logDir });
+        const marketData = new MarketDataEngine({ verbose });
+        const engine = new Engine(plan, adapter, { verbose, logDir, marketData });
         new Notifier(engine, { quiet: DRY_RUN });
 
         const timeout = setTimeout(() => { engine.shutdown(); }, 7200000);

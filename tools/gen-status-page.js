@@ -486,6 +486,19 @@ async function main() {
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const sig = signalsFor(cfg);
+    // Fallback candidates: signals beyond topN that still pass filter + minScore
+    const _sf = SF[cfg.filterName] || (() => true);
+    const fallback = signals.filter(s => _sf(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+      .slice(cfg.topN, cfg.topN + 4).map(s => {
+        const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
+        return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: $fmt(s.entry), stop: $fmt(st), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
+      });
+    // Signal validity (scan-level): 2 biz-day timeout
+    const _sigScanDate = scanDir ? `${scanDir.slice(0, 4)}-${scanDir.slice(4, 6)}-${scanDir.slice(6, 8)}` : null;
+    const _sigAge = _sigScanDate ? Math.round((Date.now() - new Date(_sigScanDate)) / 86400000) : 0;
+    const _sigExpired = _sigAge > 2;
+    const _sigStatusLabel = _sigAge <= 1 ? 'LIVE' : _sigAge <= 2 ? 'VALID' : 'EXPIRED';
+    const _sigStatusCls = _sigAge <= 1 ? 'pos' : _sigAge <= 2 ? 'am' : 'neg';
     const pos = posFor(cfg, trades);
     const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
     const liveCount = pos.filter(p => !p._expired && !p._terminal).length;
@@ -578,17 +591,21 @@ async function main() {
 <div class="section-card">
   <details${sig.length ? ' open' : ''}>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:#94a3b8">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:#94a3b8;font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}${fallback.length ? ' + ' + fallback.length + ' fallback' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:#94a3b8">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
     </summary>
     ${sig.length ? `<table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th></tr></thead>
+      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
       <tbody>${sig.map((s, i) => {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
         : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
-      return `<tr><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td></tr>`;
-    }).join('')}</tbody>
+      return `<tr><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0"' : ''}>${_sigStatusLabel}</span></td></tr>`;
+    }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:#f8fafc;font-size:.68rem;color:#94a3b8;font-weight:600;border-top:2px dashed #e2e8f0"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr>${fallback.map((s, i) => {
+      const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
+      const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span>' : '';
+      return `<tr style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
+    }).join('')}` : ''}</tbody>
     </table>` : (() => {
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
       const total = (signals || []).length;
@@ -1008,7 +1025,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
             }
           }
         }
-        const _etTime = iso => { if (!iso) return ''; try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' }); } catch { return iso.slice(11, 16); } };
+        const _etTime = iso => { if (!iso) return ''; if (/^\d{2}:\d{2}$/.test(iso)) return iso; if (iso.length <= 16 && iso.includes('T')) return iso.slice(11, 16); try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' }); } catch { return iso.slice(11, 16); } };
         return sorted.map(t => {
           const pnl = t.pnlPct || 0;
           const cls = pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : 'm';

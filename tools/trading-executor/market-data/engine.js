@@ -50,6 +50,8 @@ class MarketDataEngine extends EventEmitter {
     this._lastTick = new Map();    // symbol → Tick (latest validated)
     this._prevTick = new Map();    // symbol → Tick (previous, for jump detection)
     this._barBuilders = new Map(); // `${symbol}:${tf}` → BarBuilder
+    this._vwapState = new Map(); // symbol → { cumPV, cumVol, vwap, sessionDate }
+    this._vwapDriftCheck = null;
 
     // Subscriptions: timeframe → Set<callback>
     this._subs = new Map();
@@ -85,6 +87,7 @@ class MarketDataEngine extends EventEmitter {
 
     // Start bar aggregation loop
     this._aggTimer = setInterval(() => this._flushBars(), AGGREGATION_INTERVAL);
+    this._vwapDriftCheck = setInterval(() => this._checkVWAPDrift(), 60_000);
 
     const srcs = ['yahoo-ws', 'webull', this._t212 ? 't212' : null, 'yahoo-rest'].filter(Boolean);
     this._log(`started (${symbols.length} symbols, sources: ${srcs.join(', ')})`);
@@ -93,6 +96,7 @@ class MarketDataEngine extends EventEmitter {
   async stop() {
     this._running = false;
     if (this._aggTimer) { clearInterval(this._aggTimer); this._aggTimer = null; }
+    if (this._vwapDriftCheck) { clearInterval(this._vwapDriftCheck); this._vwapDriftCheck = null; }
     this._yahooWS.destroy();
     this._webull.destroy();
     if (this._t212) this._t212.destroy();
@@ -199,7 +203,53 @@ class MarketDataEngine extends EventEmitter {
     return this._lastTick.get(symbol) || null;
   }
 
-  get stats() { return { ...this._stats, symbols: this._symbols.length, sources: this._sourceStatus() }; }
+  get stats() {
+    const vwapCoverage = [...this._vwapState.values()].filter(s => s.cumVol > 0).length;
+    return { ...this._stats, symbols: this._symbols.length, vwapCoverage, sources: this._sourceStatus() };
+  }
+
+  // ── Internal: VWAP ──
+
+  _updateVWAP(tick) {
+    const sessionDate = this._getSessionDate(tick.ts);
+    let state = this._vwapState.get(tick.symbol);
+    if (!state || state.sessionDate !== sessionDate) {
+      state = { cumPV: 0, cumVol: 0, vwap: 0, sessionDate };
+      this._vwapState.set(tick.symbol, state);
+    }
+    const vol = tick.volume || 0;
+    if (vol > 0) {
+      state.cumPV += tick.price * vol;
+      state.cumVol += vol;
+      state.vwap = state.cumPV / state.cumVol;
+    }
+  }
+
+  _getSessionDate(ts) {
+    const d = new Date(ts);
+    const etStr = d.toLocaleString('en-US', { timeZone: 'America/New_York' });
+    const et = new Date(etStr);
+    if (et.getHours() < 4) et.setDate(et.getDate() - 1);
+    return et.toISOString().slice(0, 10);
+  }
+
+  async _checkVWAPDrift() {
+    if (!this._running) return;
+    for (const symbol of this._symbols) {
+      const vwapState = this._vwapState.get(symbol);
+      if (!vwapState || vwapState.cumVol === 0) continue;
+      try {
+        const wbTick = await this._webull.getQuote(symbol).catch(() => null);
+        if (!wbTick || !wbTick.dayVolume || wbTick.dayVolume === 0) continue;
+        const drift = Math.abs(vwapState.cumVol - wbTick.dayVolume) / wbTick.dayVolume;
+        if (drift > 0.3) {
+          this._log(`VWAP drift ${symbol}: cumVol=${vwapState.cumVol} vs dayVol=${wbTick.dayVolume} (${(drift*100).toFixed(1)}%)`);
+          vwapState.cumVol = wbTick.dayVolume;
+          vwapState._driftDetected = true;
+        }
+      } catch (_) {}
+    }
+  }
 
   // ── Internal: Tick Processing ──
 
@@ -222,6 +272,7 @@ class MarketDataEngine extends EventEmitter {
     // Update state
     if (prev) this._prevTick.set(tick.symbol, prev);
     this._lastTick.set(tick.symbol, tick);
+    this._updateVWAP(tick);
 
     // Emit to tick subscribers
     const tickSubs = this._subs.get('tick');
@@ -235,6 +286,17 @@ class MarketDataEngine extends EventEmitter {
     }
 
     this.emit('tick', tick);
+  }
+
+  getVWAP(symbol) {
+    const state = this._vwapState.get(symbol);
+    if (!state || state.cumVol === 0) return null;
+    return {
+      vwap: state.vwap,
+      cumVol: state.cumVol,
+      sessionDate: state.sessionDate,
+      confidence: state.cumVol > 10000 ? 'high' : 'low',
+    };
   }
 
   // ── Internal: Bar Aggregation ──

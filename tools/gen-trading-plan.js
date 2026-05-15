@@ -383,6 +383,7 @@ const plan = {
     min_score: modeCfg.minScore,
     rotation: modeCfg.rotation,
     breakeven_pct: modeCfg.breakevenPct,
+    be_grace_days: modeCfg.beGraceDays || 0,
     vix_kill: modeCfg.vixKillThreshold,
     trailing_stop: modeCfg.trailingStop || false,
     daily_trail_pct: modeCfg.dailyTrailPct || 0,

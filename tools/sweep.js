@@ -1199,6 +1199,8 @@ function simulatePortfolio(allTrades, scans, config) {
       actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,
       regime: t.regime || null,
       source: t.source || 'signals',
+      entryTime: t.entryDate ? '09:30' : null,
+      exitTime: t.exitDate ? (t.status === 'expired' || t.status === 'pending' ? '16:00' : t.status === 'rotated' ? '09:30' : null) : null,
     })),
   };
 }
@@ -1986,6 +1988,8 @@ async function main() {
               exitDate: lastBarDate, exitPrice: lastClose,
               holdDays: Object.keys(bars).filter(d => d >= nextBizDay(p.scan_date) && d <= lastBarDate).length,
               source: sig.source || 'signals',
+              entryTime: '09:30',
+              exitTime: null,
             });
           }
 

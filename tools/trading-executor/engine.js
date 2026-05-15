@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const EventEmitter = require('events');
+const { MarketDataEngine } = require('./market-data/engine');
 
 const PHASES = ['INIT', 'PRE_MARKET', 'OPEN_SESSION', 'MONITOR', 'CLOSE_SESSION', 'DONE'];
 
@@ -35,6 +36,9 @@ class Engine extends EventEmitter {
     this.errors = [];
     this.log = [];
     this._monitorInterval = null;
+    this.marketData = opts.marketData || null;
+    this._entryPhaseLog = new Map();
+    this._lastBars = new Map();
   }
 
   _log(level, msg, data) {
@@ -102,6 +106,19 @@ class Engine extends EventEmitter {
         ticker: order.ticker,
         brokerSymbol: order.broker_symbol,
       });
+    }
+
+    if (this.marketData) {
+      const entrySymbols = this.plan.orders
+        .filter(o => o.action === 'BUY' || o.action === 'ROTATE')
+        .map(o => o.broker_symbol);
+      if (entrySymbols.length > 0) {
+        await this.marketData.start(entrySymbols);
+        this.marketData.subscribe('5m', (bar) => {
+          this._lastBars.set(bar.symbol, bar);
+        });
+        this._log('INFO', `MarketData started for ${entrySymbols.length} symbols (VWAP + 5m bars)`);
+      }
     }
   }
 
@@ -249,7 +266,7 @@ class Engine extends EventEmitter {
         await this.adapter.closePosition(rot.rotation.close_broker_symbol);
 
         // Place the buy
-        await this._placeEntry(rot);
+        await this._placeEntryVWAP(rot);
       } catch (err) {
         await this._handleError('ROTATION_FAILED', err, { order: rot.id });
       }
@@ -281,7 +298,7 @@ class Engine extends EventEmitter {
       }
 
       try {
-        await this._placeEntry(order);
+        await this._placeEntryVWAP(order);
         // Increment sector count on successful submission
         if (order.metadata?.sector) {
           this.sectorCount.set(order.metadata.sector, (this.sectorCount.get(order.metadata.sector) || 0) + 1);
@@ -394,6 +411,236 @@ class Engine extends EventEmitter {
     this._log('INFO', `Order ${order.id} submitted → broker ID: ${brokerOrder.id}`);
   }
 
+  // ── VWAP-based 3-phase entry ──
+  async _placeEntryVWAP(order) {
+    // Fallback: no marketData or unrecognized strategy → use simple entry
+    const strategy = (order.metadata?.strategy || '').toUpperCase();
+    if (!this.marketData || !['MOMENTUM', 'BREAKOUT', 'PULLBACK'].includes(strategy)) {
+      return this._placeEntry(order);
+    }
+
+    const os = this.orderState.get(order.id);
+    const symbol = order.broker_symbol;
+
+    // Pre-entry condition checks (HALTED, SPREAD) — mirror _placeEntry
+    for (const cond of (order.conditions || []).filter(c => c.phase === 'PRE_ENTRY')) {
+      switch (cond.check) {
+        case 'HALTED': {
+          try {
+            const q = await this.adapter.getQuote(symbol);
+            if (q && q.halted) {
+              this._log('WARN', `${order.ticker}: trading halted — skipping`);
+              os.state = ORDER_STATES.SKIPPED;
+              return;
+            }
+          } catch (_) {}
+          break;
+        }
+        case 'SPREAD': {
+          try {
+            const q = await this.adapter.getQuote(symbol);
+            if (q && q.bid && q.ask) {
+              const spreadPct = ((q.ask - q.bid) / q.bid) * 100;
+              if (spreadPct > (cond.max_spread_pct || 0.5)) {
+                this._log('WARN', `${order.ticker}: spread ${spreadPct.toFixed(2)}% > ${cond.max_spread_pct}% — delaying`);
+                await this._sleep(30000);
+              }
+            }
+          } catch (_) {}
+          break;
+        }
+      }
+    }
+
+    // Entry gate check
+    const entryGatePct = this.plan.mode.entry_gate_pct;
+    if (entryGatePct > 0) {
+      try {
+        const q = await this.adapter.getQuote(symbol);
+        if (q?.last) {
+          const gatePrice = order.entry.price * (1 + entryGatePct / 100);
+          if (q.last > gatePrice) {
+            this._log('WARN', `${order.ticker}: entry gate failed (${q.last} > gate ${gatePrice.toFixed(2)}) — skipping`);
+            os.state = ORDER_STATES.SKIPPED;
+            return;
+          }
+        }
+      } catch (_) {}
+    }
+
+    const entry = order.entry.price;
+    const stop = order.exit?.stop_loss?.price || entry * 0.95;
+    const avgVol = order.metadata?.avg_volume || 0;
+    const MAX_POLLS = 600; // 2.5h at 15s interval
+    const POLL_INTERVAL = 15000;
+
+    this._log('INFO', `${order.ticker}: VWAP entry loop start (strategy=${strategy}, entry=${entry})`);
+
+    let lastPhase = -99;
+
+    for (let poll = 0; poll < MAX_POLLS; poll++) {
+      const phase = this._getEntryPhase();
+
+      if (phase === 0) {
+        this._log('WARN', `${order.ticker}: past deadline (phase=0) — skipping`);
+        os.state = ORDER_STATES.SKIPPED;
+        return;
+      }
+
+      if (phase !== lastPhase && phase > 0) {
+        this._log('INFO', `${order.ticker}: entering phase ${phase} (${this._minutesSinceOpen()}min since open, strategy=${strategy})`);
+        lastPhase = phase;
+      }
+
+      let tick, vwapData, bar5m;
+      try {
+        tick = this.marketData.getQuote(symbol);
+        vwapData = this.marketData.getVWAP(symbol);
+        bar5m = this._lastBars.get(symbol);
+      } catch (_) {}
+
+      const price = tick?.price || 0;
+      const vwap = vwapData?.vwap || 0;
+      const cumVol = vwapData?.cumVol || 0;
+
+      let triggered = false;
+      let triggerReason = '';
+      let orderType = 'LIMIT';
+      let limitPrice = price;
+
+      if (strategy === 'MOMENTUM') {
+        if (phase === 1) {
+          // 5min green candle + price ≤ entry × 1.02
+          const greenCandle = bar5m && bar5m.close > bar5m.open;
+          if (greenCandle && price > 0 && price <= entry * 1.02) {
+            triggered = true;
+            triggerReason = `Phase1 MOMENTUM: green candle + price ${price} ≤ entry×1.02 ${(entry * 1.02).toFixed(2)}`;
+            orderType = 'LIMIT';
+            limitPrice = price;
+          }
+        } else if (phase === 2) {
+          // price ≤ entry
+          if (price > 0 && price <= entry) {
+            triggered = true;
+            triggerReason = `Phase2 MOMENTUM: price ${price} ≤ entry ${entry}`;
+            orderType = 'LIMIT';
+            limitPrice = price;
+          }
+        } else if (phase === 3) {
+          // price < entry × 1.02 → market, else skip
+          if (price > 0 && price < entry * 1.02) {
+            triggered = true;
+            triggerReason = `Phase3 MOMENTUM: deadline market (price=${price})`;
+            orderType = 'MARKET';
+          } else {
+            this._log('WARN', `${order.ticker}: Phase3 MOMENTUM gap-up trap (price=${price} ≥ entry×1.02) — skipping`);
+            os.state = ORDER_STATES.SKIPPED;
+            return;
+          }
+        }
+      } else if (strategy === 'BREAKOUT') {
+        if (phase === 1) {
+          // price > entry AND volume confirm AND no false breakout
+          const volConfirm = avgVol > 0 ? cumVol > avgVol * 1.5 : true;
+          const falseBreakout = bar5m && bar5m.high > entry && bar5m.close < stop;
+          if (price > entry && volConfirm && !falseBreakout) {
+            triggered = true;
+            triggerReason = `Phase1 BREAKOUT: price ${price} > entry ${entry}, vol confirm (cumVol=${cumVol}, avgVol=${avgVol})`;
+            orderType = 'LIMIT';
+            limitPrice = price;
+          }
+        } else if (phase === 2) {
+          // price in [stop, entry]
+          if (price > 0 && price >= stop && price <= entry) {
+            triggered = true;
+            triggerReason = `Phase2 BREAKOUT: price ${price} in [stop ${stop}, entry ${entry}]`;
+            orderType = 'LIMIT';
+            limitPrice = stop;
+          }
+        } else if (phase === 3) {
+          if (price > 0 && price < entry * 1.02) {
+            triggered = true;
+            triggerReason = `Phase3 BREAKOUT: deadline market (price=${price})`;
+            orderType = 'MARKET';
+          } else {
+            this._log('WARN', `${order.ticker}: Phase3 BREAKOUT skip (price=${price} ≥ entry×1.02)`);
+            os.state = ORDER_STATES.SKIPPED;
+            return;
+          }
+        }
+      } else if (strategy === 'PULLBACK') {
+        if (phase === 1) {
+          // price < VWAP AND 5min green candle (VWAP reclaim)
+          const greenCandle = bar5m && bar5m.close > bar5m.open;
+          if (vwap > 0 && price < vwap && greenCandle) {
+            triggered = true;
+            triggerReason = `Phase1 PULLBACK: price ${price} < VWAP ${vwap} + green candle (VWAP reclaim)`;
+            orderType = 'LIMIT';
+            limitPrice = price;
+          }
+        } else if (phase === 2) {
+          // price ≤ entry AND price < VWAP
+          if (price > 0 && price <= entry && vwap > 0 && price < vwap) {
+            triggered = true;
+            triggerReason = `Phase2 PULLBACK: price ${price} ≤ entry ${entry} and < VWAP ${vwap}`;
+            orderType = 'LIMIT';
+            limitPrice = price;
+          }
+        } else if (phase === 3) {
+          if (price > 0 && price < entry * 1.01) {
+            triggered = true;
+            triggerReason = `Phase3 PULLBACK: deadline market (price=${price})`;
+            orderType = 'MARKET';
+          } else {
+            this._log('WARN', `${order.ticker}: Phase3 PULLBACK skip (price=${price} ≥ entry×1.01)`);
+            os.state = ORDER_STATES.SKIPPED;
+            return;
+          }
+        }
+      }
+
+      if (triggered) {
+        this._log('INFO', `${order.ticker}: VWAP trigger — ${triggerReason}`);
+
+        // Inverse ATR sizing
+        if (this.plan.mode.sizing_method === 'inverse_atr' && order.entry.size.shares) {
+          try {
+            const q = await this.adapter.getQuote(symbol);
+            if (q && q.atr14) {
+              const riskPerShare = q.atr14 * (this.plan.mode.atr_stop_mult || 2);
+              const capitalPerPos = this.plan.account.nominal_usd / (this.plan.account.max_positions || 1);
+              const riskBudget = capitalPerPos * (this.plan.mode.target_risk_pct || 1) / 100;
+              const atrShares = Math.floor(riskBudget / riskPerShare);
+              if (atrShares > 0 && atrShares !== order.entry.size.shares) {
+                this._log('INFO', `${order.ticker}: ATR sizing ${order.entry.size.shares} → ${atrShares} shares`);
+                order.entry.size.shares = atrShares;
+              }
+            }
+          } catch (_) {}
+        }
+
+        this._log('INFO', `Placing ${order.action} ${order.ticker} @ ${orderType === 'MARKET' ? 'MARKET' : limitPrice} x${order.entry.size.shares}`);
+        const brokerOrder = await this.adapter.placeOrder({
+          symbol,
+          side: 'buy',
+          type: orderType.toLowerCase(),
+          qty: order.entry.size.shares,
+          limit_price: orderType === 'LIMIT' ? limitPrice : undefined,
+          time_in_force: (order.entry.time_in_force || 'DAY').toLowerCase(),
+        });
+        os.brokerOrderId = brokerOrder.id;
+        os.state = ORDER_STATES.SUBMITTED;
+        this._log('INFO', `Order ${order.id} submitted → broker ID: ${brokerOrder.id}`);
+        return;
+      }
+
+      await this._sleep(POLL_INTERVAL);
+    }
+
+    this._log('WARN', `${order.ticker}: VWAP entry loop exhausted (${MAX_POLLS} polls) — skipping`);
+    os.state = ORDER_STATES.SKIPPED;
+  }
+
   // ── Phase: MONITOR ──
   async _phaseMonitor() {
     this.phase = 'MONITOR';
@@ -444,13 +691,16 @@ class Engine extends EventEmitter {
 
       // Check breakeven on filled positions
       for (const [ticker, pos] of this.positionState) {
-        if (!pos.breakeven_active && pos.entryPrice && pos.breakeven_pct) {
+        const daysHeld = pos.fillTs ? (Date.now() - pos.fillTs) / (1000 * 60 * 60 * 24) : 999;
+        const graceMet = daysHeld > (pos.beGraceDays || 0);
+
+        if (!pos.breakeven_active && pos.entryPrice && pos.breakeven_pct && graceMet) {
           try {
             const quote = await this.adapter.getQuote(ticker);
             if (quote && quote.last) {
               const pnlPct = ((quote.last - pos.entryPrice) / pos.entryPrice) * 100;
               if (pnlPct >= pos.breakeven_pct) {
-                this._log('TRADE', `${ticker}: breakeven triggered (${pnlPct.toFixed(1)}% ≥ ${pos.breakeven_pct}%)`);
+                this._log('TRADE', `${ticker}: breakeven triggered (${pnlPct.toFixed(1)}% ≥ ${pos.breakeven_pct}%, held ${daysHeld.toFixed(1)}d)`);
                 await this._onBreakeven(ticker, pos);
                 pos.breakeven_active = true;
               }
@@ -458,8 +708,8 @@ class Engine extends EventEmitter {
           } catch (_) {}
         }
 
-        // Trailing stop
-        if (pos.entryPrice && this.plan.mode.daily_trail_pct > 0) {
+        // Trailing stop — also gated by grace period
+        if (pos.entryPrice && this.plan.mode.daily_trail_pct > 0 && graceMet) {
           try {
             const quote = await this.adapter.getQuote(ticker);
             if (quote?.last) await this._checkTrailingStop(ticker, pos, quote);
@@ -522,7 +772,9 @@ class Engine extends EventEmitter {
     this.positionState.set(os.brokerSymbol, {
       qty: filledQty,
       entryPrice: filledPrice,
+      fillTs: Date.now(),
       breakeven_pct: order.exit.breakeven?.trigger_pct,
+      beGraceDays: this.plan.mode.be_grace_days || 0,
       breakeven_active: false,
       exitOrders: [],
     });
@@ -709,6 +961,9 @@ class Engine extends EventEmitter {
     await this._cancelAllPending();
     await this._exportLog();
     try { await this.adapter.disconnect(); } catch (_) {}
+    if (this.marketData) {
+      try { await this.marketData.stop(); } catch (_) {}
+    }
     this._log('PHASE', 'Engine shut down');
   }
 
@@ -734,6 +989,24 @@ class Engine extends EventEmitter {
     console.log(`\n📊 Session Summary — ${this.plan.mode.name} / ${this.plan.broker.name}`);
     console.log(`   Filled: ${filled} | Skipped: ${skipped} | Rejected: ${rejected} | Errors: ${this.errors.length}`);
     console.log(`   Trades: ${this.trades.length} | Log: ${logPath}`);
+  }
+
+  _minutesSinceOpen() {
+    const now = new Date();
+    const etStr = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+    const et = new Date(etStr);
+    const openMinutes = 9 * 60 + 30;
+    const nowMinutes = et.getHours() * 60 + et.getMinutes();
+    return nowMinutes - openMinutes;
+  }
+
+  _getEntryPhase() {
+    const mins = this._minutesSinceOpen();
+    if (mins < 0) return -1;   // pre-market
+    if (mins < 45) return 1;   // Phase 1: sniper (9:30-10:15 ET)
+    if (mins < 120) return 2;  // Phase 2: pragmatic (10:15-11:30 ET)
+    if (mins < 150) return 3;  // Phase 3: deadline (11:30-12:00 ET)
+    return 0;                   // past deadline
   }
 
   _isWeekday() {
