@@ -600,11 +600,11 @@ async function main() {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
         : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
-      return `<tr><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0"' : ''}>${_sigStatusLabel}</span></td></tr>`;
+      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0"' : ''}>${_sigStatusLabel}</span></td></tr>`;
     }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:#f8fafc;font-size:.68rem;color:#94a3b8;font-weight:600;border-top:2px dashed #e2e8f0"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr>${fallback.map((s, i) => {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span>' : '';
-      return `<tr style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
+      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
     }).join('')}` : ''}</tbody>
     </table>` : (() => {
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
@@ -2073,6 +2073,84 @@ document.addEventListener('DOMContentLoaded',function(){
   <div class="tm-range-labels"><span id="tmFirstDate"></span><span id="tmLastDate"></span></div>
   <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-satellite-dish"></i> Back to Live</button>
 </div>
+<script>
+// ── Signal Live Tracker — updates Today's Signals with live prices + VWAP gate detection ──
+(function(){
+  var PROXY='https://api.allorigins.win/get?url=';
+  var INTERVAL=30000;
+  var _cache={};var _cacheTs=0;var CACHE_TTL=300000;
+
+  function fetchQuotes(tickers,cb){
+    if(Date.now()-_cacheTs<CACHE_TTL&&Object.keys(_cache).length){return cb(_cache)}
+    var url='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+tickers.join(',')+'&fields=regularMarketPrice,regularMarketOpen,regularMarketDayHigh,regularMarketDayLow,regularMarketChangePercent';
+    fetch(PROXY+encodeURIComponent(url)).then(function(r){return r.json()}).then(function(d){
+      try{var p=JSON.parse(d.contents);var m={};(p.quoteResponse&&p.quoteResponse.result||[]).forEach(function(q){m[q.symbol]={price:q.regularMarketPrice,open:q.regularMarketOpen,high:q.regularMarketDayHigh,low:q.regularMarketDayLow,chg:q.regularMarketChangePercent}});_cache=m;_cacheTs=Date.now();cb(m)}catch(e){cb({})}
+    }).catch(function(){cb({})});
+  }
+
+  function evalSig(q,entry,stop,tp1,tp2,vwap){
+    if(!q||!q.price)return{l:'—',c:'m',d:'',skip:false};
+    var p=q.price,o=q.open,gate=vwap?vwap*1.01:entry*1.02;
+    if(o&&o>gate&&o>entry*1.03)return{l:'SKIPPED ⊘',c:'neg',d:'Open $'+o.toFixed(2)+' > gate $'+gate.toFixed(2),skip:true};
+    if(p<=stop)return{l:'STOPPED ✗',c:'neg',d:'$'+p.toFixed(2),skip:false};
+    if(tp2&&p>=tp2)return{l:'TP2 ✓✓',c:'pos',d:'$'+p.toFixed(2),skip:false};
+    if(p>=tp1)return{l:'TP1 ✓',c:'pos',d:'$'+p.toFixed(2),skip:false};
+    if(p>entry*1.005)return{l:'ACTIVE ↑'+((p/entry-1)*100).toFixed(1)+'%',c:'pos',d:'$'+p.toFixed(2),skip:false};
+    if(p>=entry*0.99)return{l:'ENTRY ZONE',c:'am',d:'$'+p.toFixed(2),skip:false};
+    if(p<entry&&p>stop)return{l:'BELOW '+((p/entry-1)*100).toFixed(1)+'%',c:'am',d:'$'+p.toFixed(2),skip:false};
+    return{l:'PENDING',c:'m',d:'$'+p.toFixed(2),skip:false};
+  }
+
+  function update(){
+    var rows=document.querySelectorAll('tr[data-sig-ticker]');
+    if(!rows.length)return;
+    var tickers=[],seen={};
+    rows.forEach(function(r){var t=r.dataset.sigTicker;if(!seen[t]){seen[t]=1;tickers.push(t)}});
+    fetchQuotes(tickers,function(quotes){
+      var panels={};
+      rows.forEach(function(row){
+        var tk=row.dataset.sigTicker,entry=+row.dataset.sigEntry,stop=+row.dataset.sigStop,tp1=+row.dataset.sigTp1,tp2=+row.dataset.sigTp2||0,vwap=+row.dataset.sigVwap||0,rank=row.dataset.sigRank;
+        var q=quotes[tk];var st=evalSig(q,entry,stop,tp1,tp2,vwap||0);
+        // Update status cell
+        var statusCell=row.querySelector('td:last-child');
+        if(statusCell){var pill=statusCell.querySelector('.pill');if(pill){pill.className='pill '+st.c;pill.textContent=st.l;pill.title=st.d}}
+        // Live price badge under ticker
+        var tc=row.querySelector('td:first-child');
+        if(tc&&q&&q.price){
+          var b=tc.querySelector('.slp');
+          if(!b){b=document.createElement('span');b.className='slp';b.style.cssText='display:block;font-size:.6rem;color:#64748b;margin-top:.1rem';tc.appendChild(b)}
+          var cc=q.chg>=0?'#059669':'#dc2626';var cs=q.chg!=null?(q.chg>=0?'+':'')+q.chg.toFixed(2)+'%':'';
+          b.innerHTML='$'+q.price.toFixed(2)+' <span style="color:'+cc+';font-weight:600">'+cs+'</span>';
+        }
+        // Track panels for fallback promotion
+        var panel=row.closest('.mode-panel');
+        if(panel){var pid=panel.id;if(!panels[pid])panels[pid]={p:[],f:[]};if(rank==='primary')panels[pid].p.push({row:row,st:st});else panels[pid].f.push({row:row,st:st})}
+      });
+      // Fallback promotion: if ALL primaries SKIPPED → promote first fallback
+      Object.keys(panels).forEach(function(pid){
+        var pr=panels[pid].p,fb=panels[pid].f;
+        var allSkip=pr.length>0&&pr.every(function(x){return x.st.skip});
+        pr.forEach(function(x){
+          if(x.st.skip){x.row.style.opacity='.4';x.row.style.textDecoration='line-through'}
+          else{x.row.style.opacity='';x.row.style.textDecoration=''}
+        });
+        fb.forEach(function(x,i){
+          if(allSkip&&i===0){
+            x.row.style.opacity='1';x.row.style.background='#f0fdf4';
+            var tc=x.row.querySelector('td:first-child');
+            if(tc&&!tc.querySelector('.fb-up')){var bd=document.createElement('span');bd.className='fb-up pill pos';bd.style.cssText='font-size:.55rem;margin-left:.3rem';bd.textContent='▲ PROMOTED';tc.appendChild(bd)}
+          }else{
+            x.row.style.opacity='.55';x.row.style.background='';
+            var rm=x.row.querySelector('.fb-up');if(rm)rm.remove();
+          }
+        });
+      });
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){update();setInterval(update,INTERVAL)});
+  else{update();setInterval(update,INTERVAL)}
+})();
+</script>
 </body>
 </html>`;
 
