@@ -458,6 +458,41 @@ check('signals.json (dernier scan): R:R ≥ 1.5 pour tous les signaux', () => {
   if (bad.length) return `${scanDir} — ${bad.join(', ')}`;
 });
 
+// ─── Check 25b: Overextension gate — distance from 50-DMA per strategy ──────
+// Encoded from VRT failure 2026-05-18 (entry $367 → SL $336 same-day -7.9%).
+// VRT was +38% above 50-DMA, RSI > 75, no consolidation = parabolic exhaustion.
+check('signals.json (dernier scan): distance_50dma_pct ≤ cap par stratégie', () => {
+  const scannerDir = path.join(ROOT, 'scanner');
+  const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse();
+  if (!dirs.length) return 'aucun dossier scanner trouvé';
+  let sigPath = null;
+  let scanDir = null;
+  for (const d of dirs) {
+    const p = path.join(scannerDir, d, 'signals.json');
+    if (fs.existsSync(p)) { sigPath = p; scanDir = d; break; }
+  }
+  if (!sigPath) return 'signals.json introuvable';
+  const sig = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  const filters = readJSON('data/scanner-filters.json');
+  const caps = filters?.overextension?.max_distance_50dma_pct_by_strategy;
+  if (!caps) return 'scanner-filters.json#overextension manquant';
+  const missing = [];
+  const violations = [];
+  for (const s of (sig.signals || [])) {
+    if (!s.extension || s.extension.distance_50dma_pct === undefined) {
+      missing.push(s.ticker);
+      continue;
+    }
+    const cap = caps[s.strategy];
+    if (cap === undefined) continue;
+    if (s.extension.distance_50dma_pct > cap) {
+      violations.push(`${s.ticker} (${s.strategy}): +${s.extension.distance_50dma_pct.toFixed(1)}% > cap ${cap}%`);
+    }
+  }
+  if (violations.length) return `${scanDir} — ${violations.join('; ')}`;
+  if (missing.length === (sig.signals || []).length) return `${scanDir} — extension field absent sur tous les signaux (skip — pre-extension-filter scan)`;
+});
+
 // ─── Check 26: advisor_* non-null in backtest-results.json ───────────────────
 warn('backtest-results.json: advisor_* non-null (sweep complet requis)', () => {
   const br = readJSON('data/backtest-results.json');
