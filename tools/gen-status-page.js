@@ -989,7 +989,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
       })()}
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
-<div class="section-card">
+<div class="section-card" id="sec-pos-${id}">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${terminalCount ? ' + ' + terminalCount + ' closed today' : ''}${pos.length > liveCount + terminalCount ? ' + ' + (pos.length - liveCount - terminalCount) + ' expired' : ''}</span></h3>
     ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
@@ -1060,7 +1060,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
-<div class="section-card">
+<div class="section-card" id="sec-hist-${id}">
   <details>
     <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:#94a3b8;font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed</span></span></summary>
   <table class="t" style="margin-top:.6rem">
@@ -2356,7 +2356,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var pid=panel.id;
           if(!panels[pid])panels[pid]={p:[],f:[],filled:0,wins:0,losses:0,pnlSum:0,stopped:0,tp1:0,tp2:0,n:0};
           if(rank==='primary'){
-            panels[pid].p.push({row:row,st:st});panels[pid].n++;
+            panels[pid].p.push({row:row,st:st,tk:tk,entry:entry,stop:stop,tp1:tp1,tp2:tp2,q:q});panels[pid].n++;
             if(st.filled){panels[pid].filled++;if(st.pnl!=null){panels[pid].pnlSum+=st.pnl;if(st.pnl>=0)panels[pid].wins++;else panels[pid].losses++}if(st.terminal&&st.label.indexOf('STOPPED')>=0)panels[pid].stopped++;if(st.tp1Hit)panels[pid].tp1++;if(st.terminal&&st.label.indexOf('TP2')>=0)panels[pid].tp2++}
           }else{panels[pid].f.push({row:row,st:st})}
         }
@@ -2392,6 +2392,89 @@ document.addEventListener('DOMContentLoaded',function(){
           if(d.stopped>0)h+=' <span style="color:#dc2626;font-weight:600">✗ '+d.stopped+' SL</span>';
           if(d.n>d.filled)h+=' <span style="color:#94a3b8;font-style:italic">'+(d.n-d.filled)+' waiting</span>';
           sumEl.innerHTML=h;
+        }
+        // ── Sync filled signals → Open Positions + lp-card + Trade History ──
+        var modeId=pid.replace('p-','');
+        var livePos=[],termTrades=[];
+        d.p.forEach(function(x){
+          if(!x.st.filled)return;
+          if(x.st.terminal)termTrades.push(x);else livePos.push(x);
+        });
+        var totalCount=livePos.length+termTrades.length;
+        if(totalCount===0)return;
+        // 1) Open Positions section
+        var posEl=document.getElementById('sec-pos-'+modeId);
+        if(posEl){
+          var empty=posEl.querySelector('.empty');if(empty)empty.style.display='none';
+          posEl.querySelectorAll('tr[data-sig-live]').forEach(function(r){r.remove()});
+          var tbody=posEl.querySelector('tbody');
+          if(!tbody){
+            var tbl=document.createElement('table');tbl.className='t';
+            tbl.innerHTML='<thead><tr><th>Ticker</th><th class="hide-m">Fill</th><th class="hide-m">Now</th><th>P&L</th><th class="hide-m">Stop</th><th class="hide-m">TP</th><th>Status</th></tr></thead><tbody></tbody>';
+            var sh=posEl.querySelector('.sc-head');if(sh)sh.after(tbl);else posEl.appendChild(tbl);
+            tbody=tbl.querySelector('tbody');
+          }
+          livePos.forEach(function(x){
+            var fp=x.st.fp||x.entry,pr=x.q?x.q.price:0,pc=x.st.pnl>=0?'pos':'neg';
+            var sLbl=x.st.tp1Hit?'TP1 ✓':'LIVE',sCls=x.st.tp1Hit?'pos':pc;
+            var tr=document.createElement('tr');tr.setAttribute('data-sig-live','1');
+            tr.style.cssText='background:'+(x.st.pnl>=0?'#f0fdf4':'#fff7ed')+';border-left:3px solid '+(x.st.pnl>=0?'#059669':'#f59e0b');
+            tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:#3b82f6">⚡ Signal fill</div></td><td class="hide-m">$'+fp.toFixed(2)+'</td><td class="hide-m">$'+pr.toFixed(2)+'</td><td class="'+pc+'"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="neg hide-m">$'+x.stop.toFixed(2)+'</td><td class="pos hide-m">$'+x.tp1.toFixed(2)+(x.tp2?' / $'+x.tp2.toFixed(2):'')+'</td><td><span class="pill '+sCls+'">'+sLbl+'</span></td>';
+            tbody.insertBefore(tr,tbody.firstChild);
+          });
+          termTrades.forEach(function(x){
+            var fp=x.st.fp||x.entry,pc=x.st.pnl>=0?'pos':'neg';
+            var rLbl=x.st.label.indexOf('STOPPED')>=0?'SL':x.st.label.indexOf('TP2')>=0?'TP2':'TP1';
+            var tr=document.createElement('tr');tr.setAttribute('data-sig-live','1');
+            tr.style.cssText='opacity:.5;background:#f1f5f9;filter:grayscale(.8)';
+            tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:#94a3b8">Closed today</div></td><td class="hide-m">$'+fp.toFixed(2)+'</td><td class="hide-m">—</td><td class="'+pc+'"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="neg hide-m">$'+x.stop.toFixed(2)+'</td><td class="pos hide-m">$'+x.tp1.toFixed(2)+'</td><td><span class="pill '+pc+'">'+rLbl+'</span></td>';
+            tbody.appendChild(tr);
+          });
+        }
+        // 2) Live Portfolio card
+        var pnlEl=document.getElementById('lp-pnl-'+modeId);
+        var chipsEl=document.getElementById('lp-chips-'+modeId);
+        var posC=document.getElementById('lp-pos-'+modeId);
+        var initEl=document.getElementById('lp-init-'+modeId);
+        if(initEl)initEl.style.display='none';
+        if(pnlEl){
+          var tPnl=0;livePos.forEach(function(x){tPnl+=(x.st.pnl||0)});
+          pnlEl.textContent=(tPnl>=0?'+':'')+tPnl.toFixed(2)+'%';
+          pnlEl.className='lp-pnl '+(tPnl>=0?'pos':'neg');
+          var absEl=document.getElementById('lp-pnl-abs-'+modeId);
+          if(absEl)absEl.textContent='Unrealized P&L ('+livePos.length+' pos)';
+        }
+        if(chipsEl){
+          var ch='<span class="lp-chip lp-chip-pos"><i class="fas fa-layer-group"></i> '+livePos.length+' pos</span>';
+          if(termTrades.length)ch+='<span class="lp-chip" style="color:#94a3b8;font-size:.65rem"><i class="fas fa-check"></i> '+termTrades.length+' closed</span>';
+          chipsEl.innerHTML=ch;
+        }
+        if(posC&&livePos.length){
+          var strip='';livePos.forEach(function(x){
+            var c=x.st.pnl>=0?'#059669':'#dc2626';
+            strip+='<div style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .5rem;background:'+(x.st.pnl>=0?'#ecfdf5':'#fef2f2')+';border-radius:6px;font-size:.72rem;margin:.1rem .15rem"><b>'+x.tk+'</b><span style="color:'+c+';font-weight:700">'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(1)+'%</span></div>';
+          });
+          posC.innerHTML=strip;
+        }
+        // 3) Trade History — inject terminal trades at top
+        var histEl=document.getElementById('sec-hist-'+modeId);
+        if(histEl&&termTrades.length){
+          var htb=histEl.querySelector('tbody');
+          if(htb){
+            htb.querySelectorAll('tr[data-sig-live]').forEach(function(r){r.remove()});
+            var today=new Date().toISOString().slice(0,10).slice(5);
+            termTrades.forEach(function(x){
+              var fp=x.st.fp||x.entry,pc=x.st.pnl>=0?'pos':'neg';
+              var exitP=x.st.label.indexOf('STOPPED')>=0?x.stop:x.st.label.indexOf('TP2')>=0?x.tp2:x.tp1;
+              var rLbl=x.st.label.indexOf('STOPPED')>=0?'SL':x.st.label.indexOf('TP2')>=0?'TP2':'TP1';
+              var tr=document.createElement('tr');tr.setAttribute('data-sig-live','1');
+              tr.style.cssText='background:#fffbeb;border-left:3px solid #f59e0b';
+              tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:#d97706">Today (sim)</div></td><td class="hide-m">'+today+'</td><td class="hide-m">'+today+'</td><td class="hide-m">$'+fp.toFixed(2)+'</td><td class="hide-m">$'+exitP.toFixed(2)+'</td><td class="'+pc+'"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="hide-m">0d</td><td><span class="pill '+pc+'">'+rLbl+'</span></td>';
+              htb.insertBefore(tr,htb.firstChild);
+            });
+            var hCount=histEl.querySelector('.count');
+            if(hCount)hCount.textContent=(htb.querySelectorAll('tr').length)+' closed';
+          }
         }
       });
     });
