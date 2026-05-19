@@ -133,6 +133,7 @@
     '    border-radius:10px!important;',
     '    background:#fff!important;',
     '    border:1px solid #e2e8f0!important;',
+    '    border-left:3px solid var(--mc,#e2e8f0)!important;',
     '    box-shadow:0 1px 4px rgba(15,23,42,.04)!important;',
     '  }',
     '  .lp-grid>[data-grid="equity"] .perf-chart{flex:1 1 auto!important;min-height:380px!important;max-height:640px!important;height:auto!important;position:relative!important}',
@@ -162,6 +163,12 @@
     '  .lp-grid .ps:hover{box-shadow:0 2px 8px rgba(15,23,42,.06)!important}',
     '  .lp-grid .ps-v{font-size:1.25rem!important;font-weight:800!important;letter-spacing:-.02em!important;font-variant-numeric:tabular-nums!important}',
     '  .lp-grid .ps-l{font-size:.63rem!important;color:#94a3b8!important;font-weight:600!important}',
+    /* Stats hierarchy — top row bigger, Total Return mode-colored */
+    '  .lp-grid .perf-stats .ps:nth-child(-n+3) .ps-v{font-size:1.4rem!important}',
+    '  .lp-grid .perf-stats .ps:nth-child(n+4) .ps-v{font-size:1.05rem!important;font-weight:700!important}',
+    '  .lp-grid .perf-stats .ps:nth-child(n+4){background:#fbfcfd!important;border-color:#f1f5f9!important}',
+    '  .lp-grid .perf-stats .ps:first-child{border-left:3px solid var(--mc,#059669)!important}',
+    '  .lp-grid .perf-stats .ps:first-child .ps-v{color:var(--mc,#059669)!important}',
 
     /* ── Section cards (signals, orders, positions, history) ── */
     '  .lp-grid .section-card{',
@@ -173,6 +180,7 @@
     '    box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.02)!important;',
     '    min-height:80px!important;',
     '  }',
+    '  .lp-grid>[data-grid="signals"]{border-left:3px solid var(--mc,#e2e8f0)!important}',
     '  .lp-grid .cta-card{',
     '    padding:1rem 1.2rem!important;',
     '    margin-bottom:0!important;',
@@ -275,7 +283,7 @@
     '  border-right:1px solid #f1f5f9;',
     '  white-space:nowrap;',
     '  flex-shrink:0;',
-    '  background:#fafbfc;',
+    '  background:linear-gradient(135deg,color-mix(in srgb,var(--mode-color,#94a3b8) 4%,#fafbfc),#fafbfc);',
     '}',
     '.lp-live-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}',
     '.lp-live-dot.connected{background:#10b981;box-shadow:0 0 0 3px rgba(16,185,129,.2);animation:lp-pulse 2s infinite}',
@@ -302,7 +310,7 @@
     '  min-width:120px;',
     '}',
     '.lp-pnl{',
-    '  font-size:2.2rem;',
+    '  font-size:2.6rem;',
     '  font-weight:800;',
     '  line-height:1;',
     '  letter-spacing:-.04em;',
@@ -532,6 +540,8 @@
 
     var grid = document.createElement('div');
     grid.className = 'lp-grid';
+    var mc = MODE_COLORS[modeId] || '#94a3b8';
+    grid.style.setProperty('--mc', mc);
 
     // Collect all children, tag them, move into grid wrapper
     var children = Array.prototype.slice.call(panel.children);
