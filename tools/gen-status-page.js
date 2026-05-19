@@ -2268,8 +2268,11 @@ document.addEventListener('DOMContentLoaded',function(){
       tickers.forEach(function(t){if(lp[t]&&lp[t].price){m[t]={price:lp[t].price,open:lp[t].open,high:lp[t].dayHigh,low:lp[t].dayLow,chg:lp[t].changePct};got++}});
       if(got>=tickers.length*0.5){_cache=m;_cacheTs=Date.now();return cb(m)}
     }
+    // Proxy fetch with 5s timeout — baked OHLC fills gaps via caller
+    var done=false;
+    var timer=setTimeout(function(){if(!done){done=true;cb({})}},5000);
     var url='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+tickers.join(',')+'&fields=regularMarketPrice,regularMarketOpen,regularMarketDayHigh,regularMarketDayLow,regularMarketChangePercent';
-    tryProxy(0,url,cb);
+    tryProxy(0,url,function(r){if(!done){done=true;clearTimeout(timer);cb(r)}});
   }
 
   function evalSignal(q,entry,stop,tp1,tp2,vwap){
@@ -2437,8 +2440,10 @@ document.addEventListener('DOMContentLoaded',function(){
         var posC=document.getElementById('lp-pos-'+modeId);
         var initEl=document.getElementById('lp-init-'+modeId);
         if(initEl)initEl.style.display='none';
+        window._sigLiveAgg=window._sigLiveAgg||{};
+        var tPnl=0;livePos.forEach(function(x){tPnl+=(x.st.pnl||0)});
+        window._sigLiveAgg[modeId]={count:livePos.length,totalPnl:tPnl,alerts:[]};
         if(pnlEl){
-          var tPnl=0;livePos.forEach(function(x){tPnl+=(x.st.pnl||0)});
           pnlEl.textContent=(tPnl>=0?'+':'')+tPnl.toFixed(2)+'%';
           pnlEl.className='lp-pnl '+(tPnl>=0?'pos':'neg');
           var absEl=document.getElementById('lp-pnl-abs-'+modeId);

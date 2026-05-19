@@ -864,6 +864,7 @@
     Object.keys(cards).forEach(function (modeId) {
       var a = aggs[modeId];
       if (!a) return;
+      if (a.count === 0 && window._sigLiveAgg && window._sigLiveAgg[modeId]) a = window._sigLiveAgg[modeId];
 
       var pnlEl = document.getElementById('lp-pnl-' + modeId);
       if (pnlEl) {
