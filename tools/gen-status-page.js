@@ -2241,7 +2241,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <button class="tm-live-btn" id="tmLiveBtn" onclick="tmGoLive()"><i class="fas fa-satellite-dish"></i> Back to Live</button>
 </div>
 <script>
-// ── Signal Live Tracker — updates Today's Signals with live prices + VWAP gate detection ──
+// ── Signal Live Tracker v2 — fill detection + virtual P&L + execution summary ──
 (function(){
   var PROXY='https://api.allorigins.win/get?url=';
   var INTERVAL=30000;
@@ -2255,17 +2255,29 @@ document.addEventListener('DOMContentLoaded',function(){
     }).catch(function(){cb({})});
   }
 
-  function evalSig(q,entry,stop,tp1,tp2,vwap){
-    if(!q||!q.price)return{l:'—',c:'m',d:'',skip:false};
-    var p=q.price,o=q.open,gate=vwap?vwap*1.01:entry*1.02;
-    if(o&&o>gate&&o>entry*1.03)return{l:'SKIPPED ⊘',c:'neg',d:'Open $'+o.toFixed(2)+' > gate $'+gate.toFixed(2),skip:true};
-    if(p<=stop)return{l:'STOPPED ✗',c:'neg',d:'$'+p.toFixed(2),skip:false};
-    if(tp2&&p>=tp2)return{l:'TP2 ✓✓',c:'pos',d:'$'+p.toFixed(2),skip:false};
-    if(p>=tp1)return{l:'TP1 ✓',c:'pos',d:'$'+p.toFixed(2),skip:false};
-    if(p>entry*1.005)return{l:'ACTIVE ↑'+((p/entry-1)*100).toFixed(1)+'%',c:'pos',d:'$'+p.toFixed(2),skip:false};
-    if(p>=entry*0.99)return{l:'ENTRY ZONE',c:'am',d:'$'+p.toFixed(2),skip:false};
-    if(p<entry&&p>stop)return{l:'BELOW '+((p/entry-1)*100).toFixed(1)+'%',c:'am',d:'$'+p.toFixed(2),skip:false};
-    return{l:'PENDING',c:'m',d:'$'+p.toFixed(2),skip:false};
+  function evalSignal(q,entry,stop,tp1,tp2,vwap){
+    if(!q||!q.price)return{label:'—',cls:'m',detail:'',skip:false,filled:false,pnl:null};
+    var p=q.price,o=q.open,lo=q.low,hi=q.high;
+    // VWAP gate: if open gapped too far above entry, skip
+    var gate=vwap?vwap*1.01:entry*1.02;
+    if(o&&o>gate&&o>entry*1.03)return{label:'SKIPPED ⊘',cls:'neg',detail:'Gap +'+((o/entry-1)*100).toFixed(1)+'% above gate',skip:true,filled:false,pnl:null};
+    // Fill detection: limit buy at entry triggers if dayLow <= entry or open <= entry
+    var filled=(o!=null&&o<=entry)||(lo!=null&&lo<=entry);
+    if(!filled){
+      if(p>=entry)return{label:'UNFILLED',cls:'m',detail:'Limit $'+entry.toFixed(2)+' not reached (low $'+(lo||0).toFixed(2)+')',skip:false,filled:false,pnl:null};
+      return{label:'PENDING',cls:'m',detail:'$'+((entry-p)).toFixed(2)+' to entry',skip:false,filled:false,pnl:null};
+    }
+    // Fill price: open below entry = better fill at open; otherwise fill at limit
+    var fp=o!=null&&o<=entry?o:entry;
+    // Stop hit check (dayLow breached stop after fill)
+    if(lo!=null&&lo<=stop){var slPnl=((stop-fp)/fp*100);return{label:'STOPPED ✗ '+slPnl.toFixed(1)+'%',cls:'neg',detail:'Fill $'+fp.toFixed(2)+' → SL $'+stop.toFixed(2),skip:false,filled:true,fp:fp,pnl:slPnl,terminal:true}}
+    // TP2 hit
+    if(tp2&&hi!=null&&hi>=tp2){var t2=((tp2-fp)/fp*100);return{label:'TP2 ✓✓ +'+t2.toFixed(1)+'%',cls:'pos',detail:'Fill $'+fp.toFixed(2)+' → TP2 $'+tp2.toFixed(2),skip:false,filled:true,fp:fp,pnl:t2,terminal:true,tp1Hit:true}}
+    // TP1 hit (still holding remainder)
+    if(hi!=null&&hi>=tp1){var pnl1=((p-fp)/fp*100);return{label:'TP1 ✓ '+(pnl1>=0?'+':'')+pnl1.toFixed(1)+'%',cls:'pos',detail:'Fill $'+fp.toFixed(2)+' — TP1 touched at $'+tp1.toFixed(2),skip:false,filled:true,fp:fp,pnl:pnl1,tp1Hit:true}}
+    // Active filled position
+    var pnl=((p-fp)/fp*100);
+    return{label:(pnl>=0?'↑+':'↓')+pnl.toFixed(1)+'%',cls:pnl>=0?'pos':'neg',detail:'Fill $'+fp.toFixed(2)+' → Now $'+p.toFixed(2),skip:false,filled:true,fp:fp,pnl:pnl};
   }
 
   function update(){
@@ -2277,40 +2289,84 @@ document.addEventListener('DOMContentLoaded',function(){
       var panels={};
       rows.forEach(function(row){
         var tk=row.dataset.sigTicker,entry=+row.dataset.sigEntry,stop=+row.dataset.sigStop,tp1=+row.dataset.sigTp1,tp2=+row.dataset.sigTp2||0,vwap=+row.dataset.sigVwap||0,rank=row.dataset.sigRank;
-        var q=quotes[tk];var st=evalSig(q,entry,stop,tp1,tp2,vwap||0);
-        // Update status cell
+        var q=quotes[tk];var st=evalSignal(q,entry,stop,tp1,tp2,vwap);
+        // Status pill
         var statusCell=row.querySelector('td:last-child');
-        if(statusCell){var pill=statusCell.querySelector('.pill');if(pill){pill.className='pill '+st.c;pill.textContent=st.l;pill.title=st.d}}
-        // Live price badge under ticker
+        if(statusCell){var pill=statusCell.querySelector('.pill');if(pill){pill.className='pill '+st.cls;pill.textContent=st.label;pill.title=st.detail}}
+        // Price + P&L badge under ticker name
         var tc=row.querySelector('td:first-child');
         if(tc&&q&&q.price){
           var b=tc.querySelector('.slp');
-          if(!b){b=document.createElement('span');b.className='slp';b.style.cssText='display:block;font-size:.6rem;color:#64748b;margin-top:.1rem';tc.appendChild(b)}
-          var cc=q.chg>=0?'#059669':'#dc2626';var cs=q.chg!=null?(q.chg>=0?'+':'')+q.chg.toFixed(2)+'%':'';
-          b.innerHTML='$'+q.price.toFixed(2)+' <span style="color:'+cc+';font-weight:600">'+cs+'</span>';
+          if(!b){b=document.createElement('span');b.className='slp';b.style.cssText='display:block;font-size:.6rem;margin-top:.1rem';tc.appendChild(b)}
+          if(st.filled&&st.pnl!=null){
+            var pc=st.pnl>=0?'#059669':'#dc2626';
+            b.innerHTML='<span style="color:#64748b">$'+q.price.toFixed(2)+'</span> <b style="color:'+pc+'">'+(st.pnl>=0?'+':'')+st.pnl.toFixed(2)+'%</b> <span style="font-size:.5rem;color:#94a3b8">from $'+(st.fp||entry).toFixed(2)+'</span>';
+          }else{
+            var cc=q.chg>=0?'#059669':'#dc2626';var cs=q.chg!=null?(q.chg>=0?'+':'')+q.chg.toFixed(2)+'%':'';
+            b.innerHTML='<span style="color:#64748b">$'+q.price.toFixed(2)+'</span> <span style="color:'+cc+';font-weight:600">'+cs+'</span>';
+          }
         }
-        // Track panels for fallback promotion
+        // Row background: green=filled+winning, red=stopped, orange=filled+losing, grey=unfilled
+        if(st.skip){row.style.cssText='opacity:.4;text-decoration:line-through'}
+        else if(st.filled&&st.terminal&&st.label.indexOf('STOPPED')>=0){row.style.cssText='background:#fef2f2'}
+        else if(st.filled&&st.tp1Hit){row.style.cssText='background:#ecfdf5'}
+        else if(st.filled&&st.pnl!=null&&st.pnl>=0){row.style.cssText='background:#f0fdf4'}
+        else if(st.filled&&st.pnl!=null){row.style.cssText='background:#fff7ed'}
+        else if(!st.filled){row.style.cssText='opacity:.65;background:#f8fafc'}
+        else{row.style.cssText=''}
+        // Fill badge in entry column (index 3: Ticker, Score, Setup, Entry)
+        var entryTd=row.querySelectorAll('td')[3];
+        if(entryTd){
+          var fb=entryTd.querySelector('.fill-tag');
+          if(st.filled){
+            if(!fb){fb=document.createElement('div');fb.className='fill-tag';fb.style.cssText='font-size:.55rem;font-weight:600;margin-top:.15rem';entryTd.appendChild(fb)}
+            fb.style.color=st.pnl>=0?'#059669':'#dc2626';
+            fb.textContent='✓ filled'+(st.fp&&st.fp<entry?' @ $'+st.fp.toFixed(2):'');
+          }else if(fb){fb.remove()}
+        }
+        // Panel tracking for summary + fallback
         var panel=row.closest('.mode-panel');
-        if(panel){var pid=panel.id;if(!panels[pid])panels[pid]={p:[],f:[]};if(rank==='primary')panels[pid].p.push({row:row,st:st});else panels[pid].f.push({row:row,st:st})}
+        if(panel){
+          var pid=panel.id;
+          if(!panels[pid])panels[pid]={p:[],f:[],filled:0,wins:0,losses:0,pnlSum:0,stopped:0,tp1:0,tp2:0,n:0};
+          if(rank==='primary'){
+            panels[pid].p.push({row:row,st:st});panels[pid].n++;
+            if(st.filled){panels[pid].filled++;if(st.pnl!=null){panels[pid].pnlSum+=st.pnl;if(st.pnl>=0)panels[pid].wins++;else panels[pid].losses++}if(st.terminal&&st.label.indexOf('STOPPED')>=0)panels[pid].stopped++;if(st.tp1Hit)panels[pid].tp1++;if(st.terminal&&st.label.indexOf('TP2')>=0)panels[pid].tp2++}
+          }else{panels[pid].f.push({row:row,st:st})}
+        }
       });
-      // Fallback promotion: if ALL primaries SKIPPED → promote first fallback
+      // Fallback promotion + per-mode execution summary
       Object.keys(panels).forEach(function(pid){
-        var pr=panels[pid].p,fb=panels[pid].f;
+        var d=panels[pid],pr=d.p,fb=d.f;
         var allSkip=pr.length>0&&pr.every(function(x){return x.st.skip});
-        pr.forEach(function(x){
-          if(x.st.skip){x.row.style.opacity='.4';x.row.style.textDecoration='line-through'}
-          else{x.row.style.opacity='';x.row.style.textDecoration=''}
-        });
         fb.forEach(function(x,i){
           if(allSkip&&i===0){
-            x.row.style.opacity='1';x.row.style.background='#f0fdf4';
+            x.row.style.cssText='opacity:1;background:#f0fdf4';
             var tc=x.row.querySelector('td:first-child');
             if(tc&&!tc.querySelector('.fb-up')){var bd=document.createElement('span');bd.className='fb-up pill pos';bd.style.cssText='font-size:.55rem;margin-left:.3rem';bd.textContent='▲ PROMOTED';tc.appendChild(bd)}
-          }else{
-            x.row.style.opacity='.55';x.row.style.background='';
+          }else if(!allSkip){
+            x.row.style.cssText='opacity:.55';
             var rm=x.row.querySelector('.fb-up');if(rm)rm.remove();
           }
         });
+        // Execution summary bar above signals table
+        if(d.n>0){
+          var panel=document.getElementById(pid);if(!panel)return;
+          var sumEl=panel.querySelector('.sig-exec-sum');
+          if(!sumEl){var sig=panel.querySelector('tr[data-sig-ticker]');if(!sig)return;var tbl=sig.closest('table');if(!tbl)return;sumEl=document.createElement('div');sumEl.className='sig-exec-sum';sumEl.style.cssText='display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;padding:.5rem .75rem;margin-bottom:.5rem;background:linear-gradient(135deg,#f8fafc,#f0f4ff);border-radius:8px;border:1px solid #e2e8f0;font-size:.72rem';tbl.parentNode.insertBefore(sumEl,tbl)}
+          var nc=d.pnlSum>=0?'#059669':'#dc2626';
+          var h='<span style="font-weight:700;color:#334155">⚡ Live Execution Sim</span>';
+          h+=' <span style="background:#e0e7ff;padding:.15rem .4rem;border-radius:4px;font-weight:600;color:#3730a3">'+d.filled+'/'+d.n+' filled</span>';
+          if(d.filled>0){
+            h+=' <span style="color:'+nc+';font-weight:700;font-size:.78rem">'+(d.pnlSum>=0?'+':'')+d.pnlSum.toFixed(2)+'% net</span>';
+            h+=' <span style="color:#94a3b8">'+d.wins+'W '+d.losses+'L</span>';
+          }
+          if(d.tp1>0)h+=' <span style="color:#059669;font-weight:600">✓ '+d.tp1+' TP1</span>';
+          if(d.tp2>0)h+=' <span style="color:#d97706;font-weight:600">✓✓ '+d.tp2+' TP2</span>';
+          if(d.stopped>0)h+=' <span style="color:#dc2626;font-weight:600">✗ '+d.stopped+' SL</span>';
+          if(d.n>d.filled)h+=' <span style="color:#94a3b8;font-style:italic">'+(d.n-d.filled)+' waiting</span>';
+          sumEl.innerHTML=h;
+        }
       });
     });
   }
