@@ -42,8 +42,7 @@
     '  .breadcrumb{padding:.2rem 1.5rem!important;font-size:.6rem!important;background:#fafafa!important;border-bottom:1px solid #f1f5f9!important}',
     '  .mode-tabs{margin:.5rem 0 .6rem!important;padding:.2rem!important;gap:.2rem!important;background:#f8fafc!important;border-radius:10px!important;border:1px solid #e2e8f0!important;display:flex!important;align-items:center!important}',
     '  .mode-tab{padding:.38rem .9rem!important;font-size:.72rem!important;border-radius:7px!important;font-weight:600!important;transition:all .15s ease!important;position:relative!important}',
-    /* Active tab dot — a 3px mode-colored bottom bar for visual identity */
-    '  .mode-tab.active::after{content:"";position:absolute;bottom:2px;left:20%;right:20%;height:2px;border-radius:2px;background:currentColor;opacity:.35}',
+    /* Active tab — base border-bottom is sufficient, no ::after needed */
     '  .brand-bar{padding:.35rem 1.5rem!important}',
     /* Hide community + related on desktop — not part of trading dashboard */
     '  .community-section,.community-cta,section.community-section{display:none!important}',
@@ -83,9 +82,13 @@
     '    grid-column:2;',
     '    grid-row:2;',
     '    margin-bottom:0!important;',
-    '    overflow:hidden;',
+    '    overflow-x:hidden;',
+    '    overflow-y:auto;',
+    '    max-height:520px;',
     '    min-width:0;',
     '  }',
+    '  .lp-grid>[data-grid="signals"] .sc-head{position:sticky;top:0;background:#fff;z-index:2;padding-top:.4rem}',
+    '  .lp-grid>[data-grid="signals"] table.t thead th{position:sticky;top:2.8rem;background:#f8fafc;z-index:1}',
 
     /* Right-column stack: signals(2) → expiring(3) → closenow(4) → orders(5) → watch(6). Equity spans rows 2-6 left. */
     '  .lp-grid>[data-grid="expiring"]{grid-column:2;grid-row:3;margin-bottom:0!important;overflow:hidden;min-width:0}',
@@ -123,7 +126,7 @@
 
     /* ── Equity curve panel ── */
     '  .lp-grid>[data-grid="equity"] .perf-hero{',
-    '    padding:.9rem 1rem!important;',
+    '    padding:.9rem 1.2rem!important;',
     '    gap:.6rem!important;',
     '    flex-direction:column!important;',
     '    margin-bottom:0!important;',
@@ -132,8 +135,8 @@
     '    border:1px solid #e2e8f0!important;',
     '    box-shadow:0 1px 4px rgba(15,23,42,.04)!important;',
     '  }',
-    '  .lp-grid>[data-grid="equity"] .perf-chart{flex:1 1 auto!important;min-height:380px!important;height:auto!important;position:relative!important}',
-    '  .lp-grid>[data-grid="equity"] .perf-chart-wrap{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:400px!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart{flex:1 1 auto!important;min-height:380px!important;max-height:640px!important;height:auto!important;position:relative!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart-wrap{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:400px!important;max-height:680px!important}',
     /* Empty chart — zero-trade state: show a subtle "No trades yet" watermark */
     '  .lp-grid>[data-grid="equity"] .perf-chart:empty::after,',
     '  .lp-grid>[data-grid="equity"] .perf-chart[data-empty]::after{',
@@ -157,8 +160,8 @@
     '    transition:box-shadow .15s!important;',
     '  }',
     '  .lp-grid .ps:hover{box-shadow:0 2px 8px rgba(15,23,42,.06)!important}',
-    '  .lp-grid .ps-v{font-size:1.15rem!important;font-weight:800!important;letter-spacing:-.02em!important;font-variant-numeric:tabular-nums!important}',
-    '  .lp-grid .ps-l{font-size:.58rem!important;color:#94a3b8!important;font-weight:600!important}',
+    '  .lp-grid .ps-v{font-size:1.25rem!important;font-weight:800!important;letter-spacing:-.02em!important;font-variant-numeric:tabular-nums!important}',
+    '  .lp-grid .ps-l{font-size:.63rem!important;color:#94a3b8!important;font-weight:600!important}',
 
     /* ── Section cards (signals, orders, positions, history) ── */
     '  .lp-grid .section-card{',
@@ -168,6 +171,7 @@
     '    background:#fff!important;',
     '    border:1px solid #e2e8f0!important;',
     '    box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.02)!important;',
+    '    min-height:80px!important;',
     '  }',
     '  .lp-grid .cta-card{',
     '    padding:1rem 1.2rem!important;',
@@ -177,7 +181,7 @@
     '    border:1px solid #e2e8f0!important;',
     '    box-shadow:0 1px 3px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.02)!important;',
     '  }',
-    '  .lp-grid .sc-head{margin-bottom:.5rem!important}',
+    '  .lp-grid .sc-head{margin-bottom:.65rem!important}',
     '  .lp-grid .sc-head h3{font-size:.82rem!important;font-weight:700!important;color:#0f172a!important}',
 
     /* Table in orders/signals */

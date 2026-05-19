@@ -1197,8 +1197,7 @@ body{background:#f1f5f9;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .mode-tab{flex:1;padding:.65rem 1rem;border:none;background:transparent;border-radius:10px;cursor:pointer;font-size:.85rem;font-weight:600;color:#64748b;display:flex;align-items:center;justify-content:center;gap:.4rem;transition:all .2s}
 .mode-tab:focus-visible{outline:2px solid var(--mc,#0f172a);outline-offset:2px}
 @media(max-width:600px){
-  .mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;
-    /* Edge fade hint: shows a gradient on the right when more tabs are off-screen (Lea Verou trick) */
+  .mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding-left:.5rem;
     background-image:
       linear-gradient(to right,#f1f5f9 30%,rgba(241,245,249,0)),
       linear-gradient(to right,rgba(241,245,249,0),#f1f5f9 70%) 100% 0,
@@ -1207,7 +1206,7 @@ body{background:#f1f5f9;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
     background-repeat:no-repeat;background-color:#f1f5f9;background-size:36px 100%,36px 100%,12px 100%,12px 100%;background-attachment:local,local,scroll,scroll;
   }
   .mode-tabs::-webkit-scrollbar{display:none}
-  .mode-tab{flex:0 0 auto;padding:.55rem .75rem;font-size:.78rem;white-space:nowrap}
+  .mode-tab{flex:0 0 auto;padding:.55rem .75rem;font-size:.78rem;white-space:nowrap;scroll-snap-align:start}
 }
 /* Time Machine FAB pulse for first-time discoverability */
 @keyframes tmFabPulse{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5)}50%{box-shadow:0 0 0 6px rgba(245,158,11,0)}}
@@ -1279,16 +1278,13 @@ body{background:#f1f5f9;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 /* Long Orders to Place tables — bound card height + sticky head, vertical scroll */
 .section-card.cta-orders{max-height:560px;overflow-y:auto;overflow-x:hidden}
 .section-card.cta-orders .sc-head{position:sticky;top:0;background:#fff;z-index:2;padding-top:.6rem}
-.section-card.cta-orders table.t thead th{position:sticky;top:2.6rem;background:#f8fafc;z-index:1}
+.section-card.cta-orders table.t thead th{position:sticky;top:3.2rem;background:#f8fafc;z-index:1}
 @media(max-width:600px){.section-card.cta-orders{max-height:420px}}
 .empty{text-align:center;padding:2rem 1rem;color:#94a3b8;font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
   .section-card details[open]>table.t,.section-card>table.t{
     display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;
-    /* Scroll shadow: shows a gradient on left/right edges when content overflows (Lea Verou trick) */
-    background-image:linear-gradient(to right,#fff 30%,rgba(255,255,255,0)),linear-gradient(to right,rgba(255,255,255,0),#fff 70%) 100% 0,radial-gradient(farthest-side at 0 50%,rgba(15,23,42,.18),rgba(0,0,0,0)),radial-gradient(farthest-side at 100% 50%,rgba(15,23,42,.18),rgba(0,0,0,0)) 100% 0;
-    background-repeat:no-repeat;background-color:#fff;background-size:40px 100%,40px 100%,14px 100%,14px 100%;background-attachment:local,local,scroll,scroll;
   }
   .t{table-layout:auto}
   .t th,.t td{white-space:nowrap;padding:.3rem .45rem;font-size:.68rem}
@@ -1343,7 +1339,7 @@ details[open] summary::after{transform:rotate(90deg)}
 @media(max-width:700px){
   .perf-hero{flex-direction:column;gap:1rem}
   .perf-stats{grid-template-columns:repeat(3,1fr)}
-  .perf-chart{min-height:180px}
+  .perf-chart{min-height:240px}
   .t{font-size:.72rem}
   .t th,.t td{padding:.35rem .4rem}
   .hero-inner{flex-direction:column;align-items:flex-start}
@@ -1962,7 +1958,7 @@ document.addEventListener('DOMContentLoaded',function(){
     // Trade History (collapsible)
     + '<div class="section-card tm-section tm-history">'
     +   '<details><summary class="sc-summary"><span class="sc-sum-title">Trade History '
-    +     '<span class="count" data-bind="closedTrades|count" data-format="int"></span></span></summary>'
+    +     '<span class="count"><span data-bind="closedTrades|count" data-format="int"></span> closed</span></span></summary>'
     +   '<table class="t" style="margin-top:.6rem" data-list="closedTrades|sort:scanDate" data-empty="No closed trades on this date.">'
     +     '<thead><tr><th>Ticker</th><th class="hide-m">End</th><th>P&L</th><th>Result</th></tr></thead>'
     +     '<tbody></tbody>'
