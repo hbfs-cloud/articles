@@ -132,8 +132,8 @@
     '    border:1px solid #e2e8f0!important;',
     '    box-shadow:0 1px 4px rgba(15,23,42,.04)!important;',
     '  }',
-    '  .lp-grid>[data-grid="equity"] .perf-chart{flex:1 1 auto!important;min-height:340px!important;height:auto!important;position:relative!important}',
-    '  .lp-grid>[data-grid="equity"] .perf-chart-wrap{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:360px!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart{flex:1 1 auto!important;min-height:380px!important;height:auto!important;position:relative!important}',
+    '  .lp-grid>[data-grid="equity"] .perf-chart-wrap{flex:1 1 auto!important;display:flex!important;flex-direction:column!important;min-height:400px!important}',
     /* Empty chart — zero-trade state: show a subtle "No trades yet" watermark */
     '  .lp-grid>[data-grid="equity"] .perf-chart:empty::after,',
     '  .lp-grid>[data-grid="equity"] .perf-chart[data-empty]::after{',
