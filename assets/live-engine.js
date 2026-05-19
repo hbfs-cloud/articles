@@ -614,6 +614,12 @@
       try { if (typeof evaluateAll === 'function') evaluateAll(); } catch (e) { /* noop */ }
     },
 
+    addTickers: function (extra) {
+      var added = [];
+      extra.forEach(function (t) { if (tickers.indexOf(t) < 0) { tickers.push(t); added.push(t); } });
+      if (added.length && ws && ws.readyState === 1) subscribe(added);
+      return added;
+    },
     on: on,
     getPrice: function (t) { return prices[t] || null; },
     getPrices: function () { return prices; },

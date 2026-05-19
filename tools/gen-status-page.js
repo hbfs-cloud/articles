@@ -2243,16 +2243,30 @@ document.addEventListener('DOMContentLoaded',function(){
 <script>
 // ── Signal Live Tracker v2 — fill detection + virtual P&L + execution summary ──
 (function(){
-  var PROXY='https://api.allorigins.win/get?url=';
+  var PROXIES=['https://api.allorigins.win/get?url=','https://api.codetabs.com/v1/proxy?quest='];
   var INTERVAL=30000;
   var _cache={};var _cacheTs=0;var CACHE_TTL=300000;
 
+  function tryProxy(idx,yahooUrl,cb){
+    if(idx>=PROXIES.length)return cb({});
+    var purl=PROXIES[idx]+encodeURIComponent(yahooUrl);
+    fetch(purl).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text()}).then(function(raw){
+      try{var body=raw;try{var wrap=JSON.parse(raw);if(wrap.contents)body=wrap.contents}catch(e){}
+      var p=JSON.parse(body);var m={};(p.quoteResponse&&p.quoteResponse.result||[]).forEach(function(q){m[q.symbol]={price:q.regularMarketPrice,open:q.regularMarketOpen,high:q.regularMarketDayHigh,low:q.regularMarketDayLow,chg:q.regularMarketChangePercent}});
+      if(Object.keys(m).length>0){_cache=m;_cacheTs=Date.now();cb(m)}else{tryProxy(idx+1,yahooUrl,cb)}}catch(e){tryProxy(idx+1,yahooUrl,cb)}
+    }).catch(function(){tryProxy(idx+1,yahooUrl,cb)});
+  }
+
   function fetchQuotes(tickers,cb){
     if(Date.now()-_cacheTs<CACHE_TTL&&Object.keys(_cache).length){return cb(_cache)}
+    // Try LiveEngine prices first (WebSocket-fed, always fresh when connected)
+    if(window.LE&&typeof LE.getPrices==='function'){
+      var lp=LE.getPrices(),m={},got=0;
+      tickers.forEach(function(t){if(lp[t]&&lp[t].price){m[t]={price:lp[t].price,open:lp[t].open,high:lp[t].dayHigh,low:lp[t].dayLow,chg:lp[t].changePct};got++}});
+      if(got>=tickers.length*0.5){_cache=m;_cacheTs=Date.now();return cb(m)}
+    }
     var url='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+tickers.join(',')+'&fields=regularMarketPrice,regularMarketOpen,regularMarketDayHigh,regularMarketDayLow,regularMarketChangePercent';
-    fetch(PROXY+encodeURIComponent(url)).then(function(r){return r.json()}).then(function(d){
-      try{var p=JSON.parse(d.contents);var m={};(p.quoteResponse&&p.quoteResponse.result||[]).forEach(function(q){m[q.symbol]={price:q.regularMarketPrice,open:q.regularMarketOpen,high:q.regularMarketDayHigh,low:q.regularMarketDayLow,chg:q.regularMarketChangePercent}});_cache=m;_cacheTs=Date.now();cb(m)}catch(e){cb({})}
-    }).catch(function(){cb({})});
+    tryProxy(0,url,cb);
   }
 
   function evalSignal(q,entry,stop,tp1,tp2,vwap){
@@ -2285,6 +2299,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!rows.length)return;
     var tickers=[],seen={};
     rows.forEach(function(r){var t=r.dataset.sigTicker;if(!seen[t]){seen[t]=1;tickers.push(t)}});
+    if(window.LE&&typeof LE.addTickers==='function')LE.addTickers(tickers);
     fetchQuotes(tickers,function(quotes){
       var panels={};
       rows.forEach(function(row){
