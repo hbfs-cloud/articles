@@ -31,11 +31,11 @@ function fetchOHLC(ticker) {
             if (q.close?.[i] != null) {
               const dateStr = new Date(ts[i] * 1000).toISOString().slice(0, 10);
               bars[dateStr] = q.close[i];
-              lastOHLC = { high: q.high?.[i] || 0, low: q.low?.[i] || 0, close: q.close[i] };
+              lastOHLC = { open: q.open?.[i] || 0, high: q.high?.[i] || 0, low: q.low?.[i] || 0, close: q.close[i] };
             }
           }
           const vwap = lastOHLC ? +((lastOHLC.high + lastOHLC.low + lastOHLC.close) / 3).toFixed(2) : null;
-          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null, vwap });
+          resolve({ bars, lastPrice: result.meta?.regularMarketPrice ?? null, vwap, ohlc: lastOHLC });
         } catch { resolve({ bars: {}, lastPrice: null }); }
       });
     }).on('error', () => resolve({ bars: {}, lastPrice: null })).on('timeout', () => resolve({ bars: {}, lastPrice: null }));
@@ -306,7 +306,7 @@ async function main() {
   signals.sort((a, b) => (b.score || 0) - (a.score || 0));
 
   // Fetch previous-day VWAP for signal tickers (trader reference for VWAP gate)
-  const signalVwap = {};
+  const signalVwap = {}, signalOhlc = {};
   if (signals.length) {
     const sigTickers = [...new Set(signals.map(s => s.ticker))];
     // Limit concurrency to 6 (matches live-tracker.js convention) to avoid Yahoo rate limits
@@ -320,6 +320,7 @@ async function main() {
     const sigOhlc = await pMapLimit(sigTickers, 6, fetchOHLC);
     for (let i = 0; i < sigTickers.length; i++) {
       if (sigOhlc[i].vwap) signalVwap[sigTickers[i]] = sigOhlc[i].vwap;
+      if (sigOhlc[i].ohlc) signalOhlc[sigTickers[i]] = { ...sigOhlc[i].ohlc, price: sigOhlc[i].lastPrice || sigOhlc[i].ohlc.close };
     }
   }
 
@@ -682,11 +683,13 @@ async function main() {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
         : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
-      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0"' : ''}>${_sigStatusLabel}</span></td></tr>`;
+      const _ohlc = signalOhlc[s.ticker] || {};
+      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:#ecfdf5;color:#059669;border:1px solid #a7f3d0"' : ''}>${_sigStatusLabel}</span></td></tr>`;
     }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:#f8fafc;font-size:.68rem;color:#94a3b8;font-weight:600;border-top:2px dashed #e2e8f0"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr>${fallback.map((s, i) => {
       const bg = s.score >= 90 ? '#059669' : s.score >= 85 ? '#2563eb' : '#f59e0b';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:#059669;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? '<span class="pill am" style="background:#94a3b8;color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span>' : '';
-      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
+      const _ohlc = signalOhlc[s.ticker] || {};
+      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
     }).join('')}` : ''}</tbody>
     </table>` : (() => {
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
@@ -1049,7 +1052,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           const rowStyle = isTerminal ? ' style="opacity:.45;background:#f1f5f9;filter:grayscale(1)"' : isExpired ? ' style="opacity:.6;background:#fef2f2"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
-          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2-node.finviz.com/chart?t=${p.ticker}&tf=d&s=linear&ct=candle_stick" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
     <span><b>No active positions</b><br><span style="font-size:.72rem;color:#94a3b8">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore || 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore || 85) + ') today or stale exits closed prior holds.'}</span></span>
@@ -1528,7 +1531,7 @@ details[open] summary::after{transform:rotate(90deg)}
 function fvOpen(ticker){
   var d=document.getElementById('fvDialog');
   document.getElementById('fvTicker').textContent=ticker;
-  document.getElementById('fvImg').src='https://charts2.finviz.com/chart.ashx?t='+ticker+'&ty=c&ta=1&p=d&s=l';
+  document.getElementById('fvImg').src='https://charts2-node.finviz.com/chart?t='+ticker+'&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D';
   document.getElementById('fvLink').href='https://finviz.com/quote.ashx?t='+ticker;
   d.classList.add('open');
   document.body.style.overflow='hidden';
@@ -2297,10 +2300,18 @@ document.addEventListener('DOMContentLoaded',function(){
   function update(){
     var rows=document.querySelectorAll('tr[data-sig-ticker]');
     if(!rows.length)return;
-    var tickers=[],seen={};
-    rows.forEach(function(r){var t=r.dataset.sigTicker;if(!seen[t]){seen[t]=1;tickers.push(t)}});
+    var tickers=[],seen={},baked={};
+    rows.forEach(function(r){
+      var t=r.dataset.sigTicker;
+      if(!seen[t]){
+        seen[t]=1;tickers.push(t);
+        var bp=+r.dataset.sigPrice,bo=+r.dataset.sigOpen,bh=+r.dataset.sigHigh,bl=+r.dataset.sigLow;
+        if(bp)baked[t]={price:bp,open:bo||null,high:bh||null,low:bl||null,chg:null};
+      }
+    });
     if(window.LE&&typeof LE.addTickers==='function')LE.addTickers(tickers);
-    fetchQuotes(tickers,function(quotes){
+    fetchQuotes(tickers,function(live){
+      var quotes={};tickers.forEach(function(t){quotes[t]=live[t]||baked[t]||null});
       var panels={};
       rows.forEach(function(row){
         var tk=row.dataset.sigTicker,entry=+row.dataset.sigEntry,stop=+row.dataset.sigStop,tp1=+row.dataset.sigTp1,tp2=+row.dataset.sigTp2||0,vwap=+row.dataset.sigVwap||0,rank=row.dataset.sigRank;
