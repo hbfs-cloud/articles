@@ -2266,19 +2266,30 @@ document.addEventListener('DOMContentLoaded',function(){
     }).catch(function(){tryProxy(idx+1,yahooUrl,cb)});
   }
 
+  function isNYSEOpen(){
+    var now=new Date();var d=now.getUTCDay();if(d===0||d===6)return false;
+    var mins=now.getUTCHours()*60+now.getUTCMinutes();return mins>=810&&mins<=1200;
+  }
+
   function fetchQuotes(tickers,cb){
     if(Date.now()-_cacheTs<CACHE_TTL&&Object.keys(_cache).length){return cb(_cache)}
-    // Try LiveEngine prices first (WebSocket-fed, always fresh when connected)
+    var mktOpen=isNYSEOpen();
+    // Try LiveEngine prices first (Webull-fed or WebSocket)
     if(window.LE&&typeof LE.getPrices==='function'){
       var lp=LE.getPrices(),m={},got=0;
-      tickers.forEach(function(t){if(lp[t]&&lp[t].price){m[t]={price:lp[t].price,open:lp[t].open,high:lp[t].dayHigh,low:lp[t].dayLow,chg:lp[t].changePct};got++}});
+      tickers.forEach(function(t){if(lp[t]&&lp[t].price){
+        m[t]={price:lp[t].price,open:mktOpen?lp[t].open:null,high:mktOpen?lp[t].dayHigh:null,low:mktOpen?lp[t].dayLow:null,chg:lp[t].changePct};got++}});
       if(got>=tickers.length*0.5){_cache=m;_cacheTs=Date.now();return cb(m)}
     }
-    // Proxy fetch with 5s timeout — baked OHLC fills gaps via caller
-    var done=false;
-    var timer=setTimeout(function(){if(!done){done=true;cb({})}},5000);
-    var url='https://query1.finance.yahoo.com/v7/finance/quote?symbols='+tickers.join(',')+'&fields=regularMarketPrice,regularMarketOpen,regularMarketDayHigh,regularMarketDayLow,regularMarketChangePercent';
-    tryProxy(0,url,function(r){if(!done){done=true;clearTimeout(timer);cb(r)}});
+    // Fallback: Webull quote per ticker (no CORS proxy needed)
+    var done=false;var pending=tickers.length;var result={};
+    var timer=setTimeout(function(){if(!done){done=true;cb(result)}},8000);
+    tickers.forEach(function(t){
+      if(window.LE&&typeof LE.getPrice==='function'){var p=LE.getPrice(t);if(p&&p.price){
+        result[t]={price:p.price,open:mktOpen?p.open:null,high:mktOpen?p.dayHigh:null,low:mktOpen?p.dayLow:null,chg:p.changePct};
+        pending--;if(pending<=0&&!done){done=true;clearTimeout(timer);cb(result)}return}}
+      pending--;if(pending<=0&&!done){done=true;clearTimeout(timer);cb(result)}
+    });
   }
 
   function evalSignal(q,entry,stop,tp1,tp2,vwap){
