@@ -324,6 +324,21 @@ async function main() {
     }
   }
 
+  // Baked prices for client-side live-engine (eliminates CORS dependency)
+  const bakedPrices = {};
+  for (const [ticker, data] of Object.entries(prematureBars)) {
+    if (data.lastPrice != null) {
+      const o = data.ohlc || {};
+      const bd = Object.keys(data.bars).sort();
+      const pc = bd.length >= 2 ? data.bars[bd[bd.length - 2]] : o.close;
+      bakedPrices[ticker] = { p: data.lastPrice, o: o.open||0, h: o.high||0, l: o.low||0, pc: pc||0 };
+    }
+  }
+  for (const [ticker, o] of Object.entries(signalOhlc)) {
+    if (!bakedPrices[ticker] && o.price)
+      bakedPrices[ticker] = { p: o.price, o: o.open||0, h: o.high||0, l: o.low||0, pc: o.close||0 };
+  }
+
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {
@@ -835,7 +850,7 @@ ${(() => {
           const vwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr>
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
+      <td class="hide-m"><img src="https://charts2-node.finviz.com/chart?t=${s.ticker}&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${vwapCell}</td>
@@ -854,7 +869,7 @@ ${(() => {
           const rotVwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr style="background:#fefce8">
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b></td>
-      <td class="hide-m"><img src="https://charts2.finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
+      <td class="hide-m"><img src="https://charts2-node.finviz.com/chart?t=${s.ticker}&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${rotVwapCell}</td>
@@ -1543,6 +1558,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 <script src="/assets/core.js?v=${buildVer}"></script>
 <script src="/assets/tag-renderer.js?v=${buildVer}"></script>
 <script src="/assets/mode-panel-binder.js?v=${buildVer}"></script>
+<script>window.__BP=${JSON.stringify(bakedPrices)}</script>
 <script src="/assets/live-engine.js?v=${buildVer}"></script>
 <script src="/assets/live-engine-ui.js?v=${buildVer}"></script>
 <script>
