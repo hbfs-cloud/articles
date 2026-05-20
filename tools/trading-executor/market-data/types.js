@@ -38,7 +38,7 @@ const SANITY = Object.freeze({
 });
 
 class Tick {
-  constructor({ symbol, price, bid, ask, volume, dayHigh, dayLow, dayVolume, ts, source }) {
+  constructor({ symbol, price, bid, ask, volume, dayHigh, dayLow, dayVolume, ts, source, session }) {
     this.symbol = symbol;
     this.price = price;
     this.bid = bid || null;
@@ -49,6 +49,7 @@ class Tick {
     this.dayVolume = dayVolume || 0;
     this.ts = ts || Date.now();
     this.source = source || 'unknown';
+    this.session = session || null; // 'regular' | 'pre' | 'after' | etc.
   }
 
   get age() { return Date.now() - this.ts; }
@@ -84,7 +85,7 @@ class Tick {
 }
 
 class Bar {
-  constructor({ symbol, timeframe, open, high, low, close, volume, ts, tsEnd, source }) {
+  constructor({ symbol, timeframe, open, high, low, close, volume, ts, tsEnd, source, session }) {
     this.symbol = symbol;
     this.timeframe = timeframe;
     this.open = open;
@@ -95,6 +96,7 @@ class Bar {
     this.ts = ts;          // bar open timestamp (ms)
     this.tsEnd = tsEnd || null; // bar close timestamp (ms)
     this.source = source || 'unknown';
+    this.session = session || null; // 'regular' | 'pre' | 'after' (T212 tag)
   }
 
   get age() { return Date.now() - (this.tsEnd || this.ts); }
