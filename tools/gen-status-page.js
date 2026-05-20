@@ -2537,7 +2537,7 @@ document.addEventListener('DOMContentLoaded',function(){
   <div class="fv-modal">
     <button class="fv-close" onclick="closeFV()">&times;</button>
     <div class="fv-title" id="fvTitle"></div>
-    <img id="fvImg" src="" alt="chart">
+    <img id="fvImg2" src="" alt="chart">
     <div class="fv-links" id="fvLinks"></div>
   </div>
 </div>
@@ -2547,7 +2547,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!ticker)return;
     var t=ticker.toUpperCase();
     document.getElementById('fvTitle').textContent=t+' — Daily Chart';
-    document.getElementById('fvImg').src='https://charts2-node.finviz.com/chart?t='+t+'&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D';
+    document.getElementById('fvImg2').src='https://charts2-node.finviz.com/chart?t='+t+'&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D';
     document.getElementById('fvLinks').innerHTML=
       '<a href="https://finviz.com/quote.ashx?t='+t+'" target="_blank" rel="noopener">FinViz</a>'+
       '<a href="https://finance.yahoo.com/quote/'+t+'/" target="_blank" rel="noopener">Yahoo Finance</a>'+
