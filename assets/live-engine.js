@@ -14,10 +14,11 @@
   var RECONNECT_MAX = 60000;
   var PING_INTERVAL = 30000;
   var EVAL_INTERVAL = 15000; // full eval sweep
-  var CORS_PROXIES = [
-    { url: 'https://api.allorigins.win/get?url=', parse: function(d) { return JSON.parse(d.contents); } },
-    { url: 'https://corsproxy.io/?url=',           parse: function(d) { return d; } },
-    { url: 'https://api.codetabs.com/v1/proxy?quest=', parse: function(d) { return d; } }
+  var ALLORIGINS = 'https://api.allorigins.win/get?url=';
+  var CHART_PROXIES = [
+    function (t) { return { url: ALLORIGINS + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + t + '?range=1d&interval=1d'), mode: 'allorigins' }; },
+    function (t) { return { url: ALLORIGINS + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?range=1d&interval=1d'), mode: 'allorigins' }; },
+    function (t) { return { url: 'https://thingproxy.freeboard.io/fetch/https://query2.finance.yahoo.com/v8/finance/chart/' + t + '?range=1d&interval=1d', mode: 'raw' }; }
   ];
 
   // ── State ──
@@ -454,60 +455,80 @@
   }
 
   // ── HTTP Fallback (for initial prices before WS connects) ──
-  function processQuoteResponse(data) {
-    if (data.quoteResponse && data.quoteResponse.result) {
-      data.quoteResponse.result.forEach(function (q) {
-        prices[q.symbol] = {
-          price: q.regularMarketPrice || 0,
-          change: q.regularMarketChange || 0,
-          changePct: q.regularMarketChangePercent || 0,
-          dayHigh: q.regularMarketDayHigh || 0,
-          dayLow: q.regularMarketDayLow || 0,
-          volume: q.regularMarketVolume || 0,
-          open: q.regularMarketOpen || 0,
-          prevClose: q.regularMarketPreviousClose || 0,
-          ts: Date.now(),
-          direction: 'flat'
-        };
-      });
-      return true;
-    }
-    return false;
+  // Uses v8/finance/chart per-ticker (no crumb needed) via allorigins/thingproxy
+  function parseChartResponse(ticker, raw) {
+    var chart = raw.chart || raw;
+    if (!chart || !chart.result || !chart.result[0]) return false;
+    var r = chart.result[0];
+    var meta = r.meta || {};
+    var price = meta.regularMarketPrice || 0;
+    var prevClose = meta.chartPreviousClose || meta.previousClose || 0;
+    var change = prevClose ? price - prevClose : 0;
+    var changePct = prevClose ? (change / prevClose) * 100 : 0;
+    var q = r.indicators && r.indicators.quote && r.indicators.quote[0];
+    prices[ticker] = {
+      price: price,
+      change: change,
+      changePct: changePct,
+      dayHigh: (q && q.high) ? Math.max.apply(null, q.high.filter(Boolean)) : meta.regularMarketDayHigh || 0,
+      dayLow: (q && q.low) ? Math.min.apply(null, q.low.filter(Boolean)) : meta.regularMarketDayLow || 0,
+      volume: meta.regularMarketVolume || 0,
+      open: (q && q.open) ? q.open.filter(Boolean)[0] || 0 : 0,
+      prevClose: prevClose,
+      ts: Date.now(),
+      direction: 'flat'
+    };
+    return true;
   }
 
-  function fetchWithProxy(yahooUrl, proxyIdx, cb) {
-    if (proxyIdx >= CORS_PROXIES.length) {
-      console.warn('[LiveEngine] All proxies failed');
-      return cb && cb();
-    }
-    var proxy = CORS_PROXIES[proxyIdx];
-    var proxyUrl = proxy.url + encodeURIComponent(yahooUrl);
-
-    fetch(proxyUrl, { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined })
+  function fetchTickerChart(ticker, proxyIdx, cb) {
+    if (proxyIdx >= CHART_PROXIES.length) return cb(false);
+    var cfg = CHART_PROXIES[proxyIdx](ticker);
+    fetch(cfg.url, { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined })
       .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.json();
       })
       .then(function (d) {
-        var data = proxy.parse(d);
-        if (processQuoteResponse(data)) {
-          console.log('[LiveEngine] Prices loaded via proxy', proxyIdx);
-          evaluateAll();
-          if (cb) cb();
+        var raw = cfg.mode === 'allorigins' ? JSON.parse(d.contents) : d;
+        if (parseChartResponse(ticker, raw)) {
+          cb(true);
         } else {
-          throw new Error('No quote data');
+          throw new Error('No chart data');
         }
       })
-      .catch(function (e) {
-        console.warn('[LiveEngine] Proxy', proxyIdx, 'failed:', e.message, '— trying next');
-        fetchWithProxy(yahooUrl, proxyIdx + 1, cb);
+      .catch(function () {
+        fetchTickerChart(ticker, proxyIdx + 1, cb);
       });
   }
 
   function fetchInitialPrices(syms, cb) {
     if (!syms.length) return cb && cb();
-    var yahooUrl = 'https://query1.finance.yahoo.com/v7/finance/quote?symbols=' + syms.join(',') + '&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent,regularMarketDayHigh,regularMarketDayLow,regularMarketVolume,regularMarketOpen,regularMarketPreviousClose';
-    fetchWithProxy(yahooUrl, 0, cb);
+    var pending = syms.length;
+    var loaded = 0;
+    var concurrent = 0;
+    var queue = syms.slice();
+
+    function next() {
+      while (queue.length && concurrent < 6) {
+        concurrent++;
+        (function (t) {
+          fetchTickerChart(t, 0, function (ok) {
+            concurrent--;
+            if (ok) loaded++;
+            pending--;
+            if (pending === 0) {
+              console.log('[LiveEngine] Chart prices loaded:', loaded + '/' + syms.length);
+              evaluateAll();
+              if (cb) cb();
+            } else {
+              next();
+            }
+          });
+        })(queue.shift());
+      }
+    }
+    next();
   }
 
   // ── Event System ──
