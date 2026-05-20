@@ -1,9 +1,8 @@
 /**
- * live-engine.js — Real-time portfolio valuation via Yahoo Finance WebSocket
- * Connects to wss://streamer.finance.yahoo.com/, decodes protobuf PricingData,
- * evaluates TP/SL/trailing stops, and updates the scanner status page DOM.
- *
- * Dependencies: None (vanilla JS, browser-native WebSocket + protobuf decoder)
+ * live-engine.js — Real-time portfolio valuation
+ * Initial prices via Webull public API (quotes-gw.webullfintech.com).
+ * Live streaming via Yahoo Finance WebSocket (wss://streamer.finance.yahoo.com/).
+ * Evaluates TP/SL/trailing stops and updates the scanner status page DOM.
  */
 (function () {
   'use strict';
@@ -14,12 +13,8 @@
   var RECONNECT_MAX = 60000;
   var PING_INTERVAL = 30000;
   var EVAL_INTERVAL = 15000; // full eval sweep
-  var ALLORIGINS = 'https://api.allorigins.win/get?url=';
-  var CHART_PROXIES = [
-    function (t) { return { url: ALLORIGINS + encodeURIComponent('https://query2.finance.yahoo.com/v8/finance/chart/' + t + '?range=1d&interval=1d'), mode: 'allorigins' }; },
-    function (t) { return { url: ALLORIGINS + encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/' + t + '?range=1d&interval=1d'), mode: 'allorigins' }; },
-    function (t) { return { url: 'https://thingproxy.freeboard.io/fetch/https://query2.finance.yahoo.com/v8/finance/chart/' + t + '?range=1d&interval=1d', mode: 'raw' }; }
-  ];
+  var WEBULL_BASE = 'https://quotes-gw.webullfintech.com';
+  var _tickerIdCache = {};
 
   // ── State ──
   var ws = null;
@@ -454,26 +449,48 @@
     emit('aggregates', aggregates);
   }
 
-  // ── HTTP Fallback (for initial prices before WS connects) ──
-  // Uses v8/finance/chart per-ticker (no crumb needed) via allorigins/thingproxy
-  function parseChartResponse(ticker, raw) {
-    var chart = raw.chart || raw;
-    if (!chart || !chart.result || !chart.result[0]) return false;
-    var r = chart.result[0];
-    var meta = r.meta || {};
-    var price = meta.regularMarketPrice || 0;
-    var prevClose = meta.chartPreviousClose || meta.previousClose || 0;
-    var change = prevClose ? price - prevClose : 0;
-    var changePct = prevClose ? (change / prevClose) * 100 : 0;
-    var q = r.indicators && r.indicators.quote && r.indicators.quote[0];
+  // ── Webull API (public, CORS-enabled, no auth required) ──
+  // Direct browser calls to quotes-gw.webullfintech.com — no proxy needed.
+
+  function resolveTickerId(symbol, cb) {
+    var upper = symbol.toUpperCase();
+    if (_tickerIdCache[upper]) return cb(_tickerIdCache[upper]);
+    try {
+      var cached = sessionStorage.getItem('wb_' + upper);
+      if (cached) { _tickerIdCache[upper] = parseInt(cached); return cb(_tickerIdCache[upper]); }
+    } catch (e) {}
+    fetch(WEBULL_BASE + '/api/search/pc/tickers?keyword=' + encodeURIComponent(upper) + '&pageIndex=1&pageSize=5&regionId=6')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var items = d.data || [];
+        var tid = 0;
+        for (var i = 0; i < items.length; i++) {
+          if ((items[i].disSymbol || items[i].symbol || '').toUpperCase() === upper) { tid = items[i].tickerId; break; }
+        }
+        if (!tid && items.length) tid = items[0].tickerId;
+        if (tid) {
+          _tickerIdCache[upper] = tid;
+          try { sessionStorage.setItem('wb_' + upper, String(tid)); } catch (e) {}
+        }
+        cb(tid || null);
+      })
+      .catch(function () { cb(null); });
+  }
+
+  function parseWebullQuote(ticker, d) {
+    var price = parseFloat(d.close) || 0;
+    if (!price) return false;
+    var prevClose = parseFloat(d.preClose) || 0;
+    var change = parseFloat(d.change) || (prevClose ? price - prevClose : 0);
+    var changePct = d.changeRatio ? parseFloat(d.changeRatio) * 100 : (prevClose ? (change / prevClose) * 100 : 0);
     prices[ticker] = {
       price: price,
       change: change,
       changePct: changePct,
-      dayHigh: (q && q.high) ? Math.max.apply(null, q.high.filter(Boolean)) : meta.regularMarketDayHigh || 0,
-      dayLow: (q && q.low) ? Math.min.apply(null, q.low.filter(Boolean)) : meta.regularMarketDayLow || 0,
-      volume: meta.regularMarketVolume || 0,
-      open: (q && q.open) ? q.open.filter(Boolean)[0] || 0 : 0,
+      dayHigh: parseFloat(d.high) || price,
+      dayLow: parseFloat(d.low) || price,
+      volume: parseInt(d.volume) || 0,
+      open: parseFloat(d.open) || 0,
       prevClose: prevClose,
       ts: Date.now(),
       direction: 'flat'
@@ -481,25 +498,18 @@
     return true;
   }
 
-  function fetchTickerChart(ticker, proxyIdx, cb) {
-    if (proxyIdx >= CHART_PROXIES.length) return cb(false);
-    var cfg = CHART_PROXIES[proxyIdx](ticker);
-    fetch(cfg.url, { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function (d) {
-        var raw = cfg.mode === 'allorigins' ? JSON.parse(d.contents) : d;
-        if (parseChartResponse(ticker, raw)) {
-          cb(true);
-        } else {
-          throw new Error('No chart data');
-        }
-      })
-      .catch(function () {
-        fetchTickerChart(ticker, proxyIdx + 1, cb);
-      });
+  function fetchTickerQuote(ticker, cb) {
+    resolveTickerId(ticker, function (tid) {
+      if (!tid) return cb(false);
+      fetch(WEBULL_BASE + '/api/stock/tickerRealTime/getQuote?tickerId=' + tid + '&includeSecu=1&includeQuote=1&more=1',
+        { signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined })
+        .then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function (d) { cb(parseWebullQuote(ticker, d)); })
+        .catch(function () { cb(false); });
+    });
   }
 
   function fetchInitialPrices(syms, cb) {
@@ -513,12 +523,12 @@
       while (queue.length && concurrent < 6) {
         concurrent++;
         (function (t) {
-          fetchTickerChart(t, 0, function (ok) {
+          fetchTickerQuote(t, function (ok) {
             concurrent--;
             if (ok) loaded++;
             pending--;
             if (pending === 0) {
-              console.log('[LiveEngine] Chart prices loaded:', loaded + '/' + syms.length);
+              console.log('[LiveEngine] Webull prices loaded:', loaded + '/' + syms.length);
               evaluateAll();
               if (cb) cb();
             } else {
