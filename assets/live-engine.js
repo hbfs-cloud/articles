@@ -460,7 +460,7 @@
         var changePct = pc ? (change / pc) * 100 : 0;
         prices[t] = {
           price: price, change: change, changePct: changePct,
-          dayHigh: b.h || price, dayLow: b.l || price,
+          dayHigh: price, dayLow: price,
           volume: 0, open: b.o || 0, prevClose: pc,
           ts: Date.now(), direction: 'flat'
         };

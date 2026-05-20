@@ -2311,6 +2311,7 @@ document.addEventListener('DOMContentLoaded',function(){
   function evalSignal(q,entry,stop,tp1,tp2,vwap){
     if(!q||!q.price)return{label:'—',cls:'m',detail:'',skip:false,filled:false,pnl:null};
     var p=q.price,o=q.open,lo=q.low,hi=q.high;
+    if(!isNYSEOpen()){o=null;lo=null;hi=null;}
     // VWAP gate: if open gapped too far above entry, skip
     var gate=vwap?vwap*1.01:entry*1.02;
     if(o&&o>gate&&o>entry*1.03)return{label:'SKIPPED ⊘',cls:'neg',detail:'Gap +'+((o/entry-1)*100).toFixed(1)+'% above gate',skip:true,filled:false,pnl:null};
