@@ -37,6 +37,7 @@ function parseArgs(argv) {
     const m = a.match(/^--([^=]+)(?:=(.*))?$/);
     if (!m) continue;
     if (m[1] === 'verbose') out.verbose = true;
+    else if (m[1] === 'use-history') out['use-history'] = true;
     else if (m[1] === 'modes' && m[2]) out.modes = m[2].split(',').map(s => s.trim());
     else out[m[1]] = m[2];
   }
@@ -47,6 +48,8 @@ const STATE_IN = ARGS['state-in'];
 const STATE_OUT = ARGS['state-out'] || path.join(ROOT, 'data', 'pit-state.json');
 const OUT = ARGS.out || path.join(ROOT, 'data', 'pit-results.json');
 const CONFIG_PATH = ARGS.config || path.join(ROOT, 'data', 'modes-config.json');
+const HISTORY_PATH = ARGS['config-history'] || path.join(ROOT, 'data', 'modes-config-history.json');
+const USE_HISTORY = ARGS['use-history'] !== undefined;
 
 const log = (...args) => ARGS.verbose && console.log(...args);
 
@@ -305,6 +308,35 @@ function openPosition(setup, scanDate, entryDate, cfg) {
   };
 }
 
+// ─── History-aware config resolver ───────────────────────────────────────────
+// Returns active config (per mode) for a given date, merged with current defaults
+// to fill any fields the history version omitted (e.g. vwapGate added later).
+function buildHistoryResolver(historyPath, currentModes) {
+  if (!fs.existsSync(historyPath)) {
+    return () => currentModes;
+  }
+  const hist = JSON.parse(fs.readFileSync(historyPath, 'utf8'));
+  const versions = (hist.versions || [])
+    .map(v => ({ id: v.id, day: v.timestamp.slice(0, 10), config: v.config }))
+    .sort((a, b) => a.day.localeCompare(b.day));
+  if (versions.length === 0) return () => currentModes;
+  return (day) => {
+    // Find latest version whose day <= day
+    let active = null;
+    for (const v of versions) {
+      if (v.day <= day) active = v;
+      else break;
+    }
+    if (!active) return currentModes;
+    const merged = {};
+    for (const id of Object.keys(currentModes)) {
+      merged[id] = { ...currentModes[id], ...(active.config[id] || {}) };
+      merged[id].__configVersion = active.id;
+    }
+    return merged;
+  };
+}
+
 // ─── State init / resume ─────────────────────────────────────────────────────
 function initState(modesConfig, modeFilter) {
   const state = { asOf: null, modes: {} };
@@ -332,8 +364,8 @@ function saveState(state, file) {
 }
 
 // ─── Get effective candidates for a scan, applying all filters ──────────────
-function buildCandidates(scan, mode, day) {
-  const cfg = mode.cfg;
+function buildCandidates(scan, mode, day, cfgOverride = null) {
+  const cfg = cfgOverride || mode.cfg;
   // Source pool selection — matches sweep excludeSources logic:
   //   - TKL mode: tkl_pool only (signals excluded)
   //   - Other modes: signals always; tkl_pool included unless tklPoolEnabled===false
@@ -397,6 +429,13 @@ async function run() {
     state = initState(modesConfig, ARGS.modes);
   }
 
+  // History resolver — when --use-history is set, lookup active config per day
+  // from modes-config-history.json. Otherwise always return current cfg.
+  const resolveCfg = USE_HISTORY
+    ? buildHistoryResolver(HISTORY_PATH, modesConfig)
+    : (() => modesConfig);
+  if (USE_HISTORY) console.log(`Using PIT config history from ${HISTORY_PATH}`);
+
   const FROM = ARGS.from || state.asOf || null;
   const TO = ARGS.to || new Date().toISOString().slice(0, 10);
   console.log(`PIT engine: from=${FROM || 'first scan'} to=${TO}`);
@@ -432,13 +471,13 @@ async function run() {
     dayCount++;
     if (dayCount % 20 === 0) process.stdout.write(`  day ${dayCount}/${allDays.length}\r`);
 
-    // 1. Per-mode: update open positions
+    // 1. Per-mode: update open positions using their stamped cfg (PIT-correct)
     for (const mode of Object.values(state.modes)) {
-      const cfg = mode.cfg;
       const stillOpen = [];
       for (const pos of mode.positions) {
         if (pos.entryDate >= day) { stillOpen.push(pos); continue; }
         const bar = priceCache[pos.ticker]?.[day];
+        const cfg = pos.cfg || mode.cfg;
         const res = stepPosition(pos, day, bar, cfg);
         if (res === 'closed') {
           pos.pnlPct = computePnl(pos, cfg);
@@ -498,6 +537,8 @@ async function run() {
     // 3. Scan event today → queue new entries per mode
     const scan = scanByDate.get(day);
     if (scan) {
+      // Resolve active cfg for this day (PIT history-aware if --use-history)
+      const activeCfgByMode = resolveCfg(day);
       // Cross-mode dedup: shared picked set per scan day
       const crossModePicked = new Set();
       // Iterate modes in priority order (matches sweep DEDUP_PRIORITY).
@@ -510,8 +551,8 @@ async function run() {
       ];
       for (const id of modeOrder) {
         const mode = state.modes[id];
-        const cfg = mode.cfg;
-        const candidates = buildCandidates(scan, mode, day);
+        const cfg = activeCfgByMode[id] || mode.cfg;
+        const candidates = buildCandidates(scan, mode, day, cfg);
         let slots = (cfg.portfolioSize || 1) - mode.positions.length - mode.pendingEntries.length;
 
         // Rotation
@@ -608,6 +649,8 @@ async function run() {
           const pos = openPosition(cand, day, day, cfg);
           if (!pos) { log(`  ${day} ${mode.id} reject ${cand.ticker} (gate)`); continue; }
           pos.weight = weight;
+          pos.cfg = cfg;                            // PIT: stamp cfg for trade lifetime
+          pos.configVersion = cfg.__configVersion || null;
           mode.positions.push(pos);
           openTickers.add(cand.ticker);
           const candSec = getSector(cand.ticker);
