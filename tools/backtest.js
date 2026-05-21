@@ -243,16 +243,16 @@ function simulateTradeRun(setup, entryDate, actualEntryPrice, priceData) {
   if (isLong) {
     actualStop = actualEntryPrice * (1 - setupRiskPct);
     const tp1Mult = (setup.tp1 - setup.entry) / setup.entry;
-    const tp2Mult = setup.tp2 ? (setup.tp2 - setup.entry) / setup.entry : tp1Mult * 2;
+    const tp2Mult = setup.tp2 ? (setup.tp2 - setup.entry) / setup.entry : null;
     actualTp1 = actualEntryPrice * (1 + tp1Mult);
-    actualTp2 = actualEntryPrice * (1 + tp2Mult);
+    actualTp2 = tp2Mult !== null ? actualEntryPrice * (1 + tp2Mult) : null;
   } else {
     // Short setup? (Rare but possible)
     actualStop = actualEntryPrice * (1 + setupRiskPct);
     const tp1Mult = (setup.entry - setup.tp1) / setup.entry;
-    const tp2Mult = setup.tp2 ? (setup.entry - setup.tp2) / setup.entry : tp1Mult * 2;
+    const tp2Mult = setup.tp2 ? (setup.entry - setup.tp2) / setup.entry : null;
     actualTp1 = actualEntryPrice * (1 - tp1Mult);
-    actualTp2 = actualEntryPrice * (1 - tp2Mult);
+    actualTp2 = tp2Mult !== null ? actualEntryPrice * (1 - tp2Mult) : null;
   }
 
   // Run simulation day by day
@@ -262,18 +262,19 @@ function simulateTradeRun(setup, entryDate, actualEntryPrice, priceData) {
 
   for (const date of dates) {
     const candle = priceData[date];
+    if (!candle) continue;
     daysHeld++;
-    
+
     // Check stop (Low <= Stop)
     if (isLong && candle.low <= actualStop) {
       const pnl = (actualStop - actualEntryPrice) / actualEntryPrice * 100;
       return { status: 'loss', pnl, exitDate: date, daysHeld };
     }
-    
+
     // Check TP1
     if (isLong && candle.high >= actualTp1) {
-      // Check TP2 same day?
-      if (candle.high >= actualTp2) {
+      // Check TP2 same day? (only if real tp2 set — no synthetic fallback)
+      if (actualTp2 !== null && candle.high >= actualTp2) {
         const pnl = (actualTp2 - actualEntryPrice) / actualEntryPrice * 100;
         return { status: 'win_tp2', pnl, exitDate: date, daysHeld };
       }
