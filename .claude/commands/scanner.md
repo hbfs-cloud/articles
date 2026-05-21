@@ -145,6 +145,7 @@ MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
 node tools/gen-status-page.js                                                # Snapshot J + dashboard (6 modes)
 node tools/gen-mode-cards.js                                                 # Per-mode PNG cards for Telegram/Discord (6 modes)
 node tools/gen-api.js                                                        # Refresh 50+ public JSON endpoints
+node tools/daily-synthesis.js                                                # Per-mode synthesis: entries / exits / equity move
 bash tools/publish-daily-card.sh                                             # Image + media + Telegram + final git push
 node tools/trading-executor/run-session.js                                   # Generate plans + execute for all configured mode/broker pairs
 ```
