@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-05-21T08:15:28.146Z",
+  "generated_at": "2026-05-21T19:05:16.598Z",
   "valid_for": "2026-05-21",
   "broker": {
     "name": "alpaca",
@@ -22,7 +22,7 @@
   "mode": {
     "name": "secured",
     "horizon_days": 5,
-    "filter": "mom_bo",
+    "filter": "breakout_only",
     "min_score": 85,
     "rotation": "none",
     "breakeven_pct": 1,
@@ -30,8 +30,8 @@
     "vix_kill": 22,
     "trailing_stop": false,
     "daily_trail_pct": 0,
-    "max_stop_pct": 0,
-    "atr_stop_mult": 0,
+    "max_stop_pct": 4,
+    "atr_stop_mult": 1.5,
     "stale_days": 0,
     "entry_gate_pct": 0,
     "partial_tp": false,
@@ -77,206 +77,6 @@
     {
       "id": "ORD-001",
       "action": "BUY",
-      "ticker": "TSM",
-      "broker_symbol": "TSM",
-      "broker": {
-        "symbol": "TSM",
-        "exchange": "NYSE",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 401,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 5000,
-          "shares": 12,
-          "pct_of_portfolio": 50
-        },
-        "valid_from": "2026-05-21T09:30:00-04:00",
-        "valid_until": "2026-05-21T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 378,
-          "trailing": false,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 0
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 440,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 470,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "breakeven": {
-          "trigger_pct": 1,
-          "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
-        },
-        "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-05-28",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 91,
-        "strategy": "Momentum",
-        "rr": "1:1.70",
-        "sharia": true,
-        "thesis": "TSM at $401.62 +2.29% Monday on broad weakness, relative strength leader. AI accelerator capacity sole-source for NVDA, AVGO, AMD chips. 50-DMA $369.61 well below = clean uptrend. +8.66% above 50-DMA, +27.4% above 200-DMA — extended but momentum cap 20% respected. NVDA reports tonight AMC (TSM is read-through). Entry $395-$406, stop $378 below 50-DMA, TP1 $440 above 52w high."
-      },
-      "priority": 1
-    },
-    {
-      "id": "ORD-002",
-      "action": "BUY",
-      "ticker": "NSRGY",
-      "broker_symbol": "NSRGY",
-      "broker": {
-        "symbol": "NSRGY",
-        "exchange": "OTC",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 99.5,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 5000,
-          "shares": 50,
-          "pct_of_portfolio": 50
-        },
-        "valid_from": "2026-05-21T09:30:00-04:00",
-        "valid_until": "2026-05-21T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 94,
-          "trailing": false,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 0
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 108,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 115,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "breakeven": {
-          "trigger_pct": 1,
-          "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
-        },
-        "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-05-28",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 89,
-        "strategy": "Momentum",
-        "rr": "1:1.55",
-        "sharia": true,
-        "thesis": "Nestlé ADR at $99.71, hugging 50-DMA $99.43 with tight consolidation past 30d. Swiss consumer staples mega-cap, defensive bid in risk-off. 3.97% yield, forward P/E 16.4. Weak USD tailwind for CHF-denominated revenue. Entry $98-$101, stop $94 below base, TP1 $108 52w high zone, TP2 $115 fresh ATH territory."
-      },
-      "priority": 2
-    },
-    {
-      "id": "ORD-003",
-      "action": "BUY",
       "ticker": "JNJ",
       "broker_symbol": "JNJ",
       "broker": {
@@ -309,8 +109,8 @@
           "price": 220,
           "trailing": false,
           "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -372,10 +172,110 @@
         "sharia": true,
         "thesis": "JNJ pulling back to $229.32, ~2% below 50-DMA $234, with 200-DMA $209.83 well below as secular support. Defensive healthcare leader in early risk-off regime (regime probability 0.50). Forward P/E 18.0 reasonable, 2.33% yield, balance sheet AAA. Entry $227-$232, stop $220 (~4% risk), TP1 $245 back to upper consolidation, TP2 $252 52w high."
       },
-      "priority": 3
+      "priority": 1
     },
     {
-      "id": "ORD-004",
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "TSM",
+      "broker_symbol": "TSM",
+      "broker": {
+        "symbol": "TSM",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 401,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 12,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 378,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 440,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 470,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-05-28",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 91,
+        "strategy": "Momentum",
+        "rr": "1:1.70",
+        "sharia": true,
+        "thesis": "TSM at $401.62 +2.29% Monday on broad weakness, relative strength leader. AI accelerator capacity sole-source for NVDA, AVGO, AMD chips. 50-DMA $369.61 well below = clean uptrend. +8.66% above 50-DMA, +27.4% above 200-DMA — extended but momentum cap 20% respected. NVDA reports tonight AMC (TSM is read-through). Entry $395-$406, stop $378 below 50-DMA, TP1 $440 above 52w high."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
       "action": "BUY",
       "ticker": "PG",
       "broker_symbol": "PG",
@@ -409,8 +309,8 @@
           "price": 135,
           "trailing": false,
           "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -472,10 +372,10 @@
         "sharia": true,
         "thesis": "PG at $142.44 testing 52w low zone ($137.62), -2.08% below 50-DMA. +0.81% Monday relative strength on weak tape. Consumer staples defensive leader, organic growth 4-5%, 3.0% yield, free cash flow generation among the best in mega-cap. Pullback entry $141-$144, stop $135 floor, TP1 $154 break above 50-DMA, TP2 $165 prior consolidation."
       },
-      "priority": 4
+      "priority": 3
     },
     {
-      "id": "ORD-005",
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "NEM",
       "broker_symbol": "NEM",
@@ -509,8 +409,8 @@
           "price": 103,
           "trailing": false,
           "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -571,6 +471,106 @@
         "rr": "1:3.0",
         "sharia": true,
         "thesis": "Largest US gold miner at $107.39, +2.19% Monday. Gold spot $4,567 sustaining record highs on EARLY RISK-OFF + dollar weakness. NEM ATR-expansion play with 200-DMA $98.80 well below. Pullback to $105-$109 from $134 cycle high — classic mean-revert in a multi-quarter uptrend. Forward P/E 9.5 — cheap on $90 oz operating costs. Stop $99 protects against 200-DMA break."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "AZN",
+      "broker_symbol": "AZN",
+      "broker": {
+        "symbol": "AZN",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 187,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 26,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 180,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 202,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 213,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-05-28",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 90,
+        "strategy": "Pullback",
+        "rr": "1:2.14",
+        "sharia": true,
+        "thesis": "AstraZeneca at $187.46, -2.14% below 50-DMA, +1.53% Monday. EU pharma defensive: oncology pipeline (Tagrisso, Imfinzi) + diabetes/cardiovascular Farxiga. 200-DMA $179.64 secular support. Tight stop $180 protects against 200-DMA break, R:R 2.14 to TP1 $202 (50-DMA reclaim). EU diversification + healthcare defensive double-tilt."
       },
       "priority": 5
     }

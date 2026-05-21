@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-05-21T08:15:28.452Z",
+  "generated_at": "2026-05-21T19:05:16.919Z",
   "valid_for": "2026-05-21",
   "broker": {
     "name": "paper",
@@ -76,7 +76,7 @@
   "orders": [
     {
       "id": "ORD-001",
-      "action": "ROTATE",
+      "action": "BUY",
       "ticker": "JNJ",
       "broker_symbol": "JNJ",
       "broker": {
@@ -162,9 +162,6 @@
           "description": "Log warning if fill price > 1% worse than limit."
         }
       ],
-      "rotation": {
-        "reason": "Score upgrade — rotate worst position for better signal"
-      },
       "metadata": {
         "score": 91,
         "strategy": "Pullback",
@@ -561,6 +558,491 @@
         "thesis": "AstraZeneca at $187.46, -2.14% below 50-DMA, +1.53% Monday. EU pharma defensive: oncology pipeline (Tagrisso, Imfinzi) + diabetes/cardiovascular Farxiga. 200-DMA $179.64 secular support. Tight stop $180 protects against 200-DMA break, R:R 2.14 to TP1 $202 (50-DMA reclaim). EU diversification + healthcare defensive double-tilt."
       },
       "priority": 5
+    },
+    {
+      "id": "ORD-006",
+      "action": "BUY",
+      "ticker": "GLD",
+      "broker_symbol": "GLD",
+      "broker": {
+        "symbol": "GLD"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 417,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 2,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 404,
+          "trailing": true,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 445,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 475,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1.5,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-10",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 90,
+        "strategy": "Pullback",
+        "rr": "1:2.15",
+        "sharia": true,
+        "thesis": "GLD at $417.40 pulled back -3.39% from 50-DMA $432.06 but 200-DMA $398.54 still below = uptrend intact. +1.43% Monday on weak tape. Gold = pure risk-off ballast in EARLY RISK-OFF regime (P(crisis) 0.15, P(early_risk_off) 0.50). Real rates compressing as 10Y stabilizes. Entry $415-$420, stop $405 above 200-DMA, TP1 $445 reclaim 50-DMA, TP2 $475 fresh highs."
+      },
+      "priority": 6
+    },
+    {
+      "id": "ORD-007",
+      "action": "BUY",
+      "ticker": "DUK",
+      "broker_symbol": "DUK",
+      "broker": {
+        "symbol": "DUK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 124,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 8,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 119,
+          "trailing": true,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 134,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 142,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1.5,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-10",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 89,
+        "strategy": "Pullback",
+        "rr": "1:2.0",
+        "sharia": false,
+        "thesis": "Duke Energy at $123.81 retracing to 200-DMA support ($124.08). Regulated utility — defensive bid in EARLY RISK-OFF regime (probability 0.50, expected SPY -0.05%). 3.42% yield, P/E 19.0, regulated returns. AI data center power demand secular tailwind on grid utilities. Entry $122-$125, stop $117 below recent base, TP1 $134 52w high, TP2 $140."
+      },
+      "priority": 7
+    },
+    {
+      "id": "ORD-008",
+      "action": "BUY",
+      "ticker": "NSRGY",
+      "broker_symbol": "NSRGY",
+      "broker": {
+        "symbol": "NSRGY"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 99.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 10,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 94,
+          "trailing": true,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 108,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 115,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1.5,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-10",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 89,
+        "strategy": "Momentum",
+        "rr": "1:1.55",
+        "sharia": true,
+        "thesis": "Nestlé ADR at $99.71, hugging 50-DMA $99.43 with tight consolidation past 30d. Swiss consumer staples mega-cap, defensive bid in risk-off. 3.97% yield, forward P/E 16.4. Weak USD tailwind for CHF-denominated revenue. Entry $98-$101, stop $94 below base, TP1 $108 52w high zone, TP2 $115 fresh ATH territory."
+      },
+      "priority": 8
+    },
+    {
+      "id": "ORD-009",
+      "action": "BUY",
+      "ticker": "TLT",
+      "broker_symbol": "TLT",
+      "broker": {
+        "symbol": "TLT"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 83.91,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 11,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 81,
+          "trailing": true,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 89,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 92,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1.5,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-10",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 89,
+        "strategy": "Pullback",
+        "rr": "1:1.75",
+        "sharia": false,
+        "thesis": "TLT at $83.91, +1.07% Monday — long-duration Treasury bid in EARLY RISK-OFF regime. 50-DMA $86.22 and 200-DMA $88.10 both above = mean-revert bounce setup at multi-month base. 30Y yield around 5.15% near cycle high → duration trade tactical buy. **Uncorrelated with equity longs** — pure portfolio hedge replacing XLP (XLP overlapped PG at ~85% rho). FOMC Minutes May 20 binary upside catalyst. Sharia false (interest-bearing bonds)."
+      },
+      "priority": 9
+    },
+    {
+      "id": "ORD-010",
+      "action": "BUY",
+      "ticker": "VZ",
+      "broker_symbol": "VZ",
+      "broker": {
+        "symbol": "VZ"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 47.75,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 20,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-05-21T09:30:00-04:00",
+        "valid_until": "2026-05-21T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 45.5,
+          "trailing": true,
+          "daily_trail_pct": 2,
+          "max_stop_pct": 7,
+          "atr_stop_mult": 0
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 52,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 55.5,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "breakeven": {
+          "trigger_pct": 1.5,
+          "action": "MOVE_STOP_TO_ENTRY",
+          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-10",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 88,
+        "strategy": "Pullback",
+        "rr": "1:1.89",
+        "sharia": false,
+        "thesis": "VZ at $47.82, just below 50-DMA $48.23, +0.17% Monday. Telecom defensive: 5.93% dividend yield, FCF coverage solid. Forward P/E 9.1 deep value. 52w high $51.68 within 8%. Entry $47-$48.5, stop $44.5 (~6.8% risk), TP1 $52 break to 52w high, TP2 $55 prior consolidation. Risk: sharia non-compliant (interest expense + debt > 33% mcap)."
+      },
+      "priority": 10
     }
   ],
   "error_handlers": {
