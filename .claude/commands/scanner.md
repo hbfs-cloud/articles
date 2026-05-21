@@ -2,6 +2,32 @@
 
 End-to-end scanner pipeline for the next trading session.
 
+## ⛔ NO-SKIP POLICY (CRITICAL)
+
+NEVER skip any phase, step, or per-ticker check without explicit user consent. Token budget / time pressure are NOT valid reasons. If a step seems too costly, ASK the user first and wait for the answer. Default = complete every step exactly as specified.
+
+Mandatory per-ticker checks (run for EVERY candidate top-10 + every tkl_pool entry):
+- Anti-dilution: `QueryData(symbols=T, types='sec_filings,flags', days=180)` — disqualify dilution_risk_score≥70, S-3 active, ATM, aggressive underwriter, ITM warrants, recent PIPE
+- Per-ticker enrichment: `QueryData(symbols=T, types='quote,social_sentiment,capital_flow,insider_transactions,dark_pool,unusual_options,trading_signals')`
+- Earnings proximity: `GetEarningsCalendarFiltered(days_ahead=7)` AND DSL `days_until_earnings('T') <= 3` check — DISQUALIFY if within ±3 trading days (or tag "earnings risk")
+- Economic event proximity (per ticker currency): `is_near_economic_event(currency, min_priority=2, within_days=3)` — drop or tag
+
+## ✅ MCP DSL Syntax Reference (verified working)
+
+- Indicator variables: `rsi14`, `ema20`, `ema50`, `ema200`, `vwap`, `bbw`, `hhv20`, `hhv50`, `llv20`, `llv50`, `atrpct`, `obvz`, `sma50`, `sma200`, `vol`
+- Indicator functions (series argument MUST be quoted): `sma('close', 50)`, `ema('close', 20)`, `rsi('close', 14)`, `atr(14)`, `hhv('close', 50)`, `pct_change('vwap', 3)`
+- Pattern: `is_cup_handle()`, `near_breakout(0.02)`, `cross_up('ema20', 'ema50')`, `vol_spike45(1.5)`
+- Signal: `rising('ema50', 10)`, `falling('vwap', 5)`, `inrange('rsi14', 45, 70, 10)`, `trend_strength(20)`
+- Context: `market_cap`, `avg_volume`, `asset_type` (== 'stock' or 'etf'), `sector`, `industry`, `country`, `in_index`, `themes`
+- Calendar: `days_until_earnings('AAPL') <= 3`, `is_near_economic_event('USD', 3, 2)`
+- Relative strength: `perf_rank('sector', '', 20) <= 5` (max 3 args excluding kind), `perf_rel('sector', '', 20)` (no bench unless kind='etf')
+- Macro: `vix() > 20`, `regime_score() >= 0.75`
+- Multi-asset: `security('SPY', '1d', 'close', 1)`, `benchmark('SPY')`
+
+⚠️ INVALID (do NOT use): `sma(close, 50)` (no quotes), `ma(close, 50)` (function doesn't exist), `asset_type=='etf'` inside pass_expr — use the separate `asset='etf'` param of RunScreener.
+
+RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ranker), `region` ('us'/'eu'), `asset` ('stock' default, 'etf' for ETF universe), `top_k`, `force_async=true` recommended.
+
 ## Input
 
 `$ARGUMENTS` — Options:

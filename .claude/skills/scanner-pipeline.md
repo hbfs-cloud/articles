@@ -6,6 +6,25 @@ user_invocable: false
 
 # Scanner / Scan du jour
 
+## ⛔ NO-SKIP POLICY (CRITICAL)
+
+JAMAIS skipper une étape du pipeline (anti-dilution, MCP enrichment per ticker, risk gating, earnings/economic event proximity, validation) sans accord explicite du user. Token/temps ≠ raison valable. Si une étape semble trop coûteuse, demander explicitement avant. Default = exécution complète.
+
+## ✅ MCP DSL Syntax — Bons appels (verified)
+
+- Variables : `rsi14`, `ema20/50/200`, `sma50`, `sma200`, `vwap`, `bbw`, `hhv20/50`, `llv20/50`, `atrpct`, `obvz`, `vol`
+- Fonctions (série quotée) : `sma('close',50)`, `ema('close',20)`, `rsi('close',14)`, `atr(14)`, `hhv('close',50)`, `pct_change('vwap',3)`
+- Patterns : `cross_up('ema20','ema50')`, `rising('ema50',10)`, `vol_spike45(1.5)`, `near_breakout(0.02)`, `is_cup_handle()`
+- Context : `market_cap`, `avg_volume`, `asset_type`, `sector`, `industry`, `country`, `in_index`, `themes`
+- Calendar : `days_until_earnings('AAPL') <= 3`, `is_near_economic_event('USD', 3, 2)`
+- Relative strength : `perf_rank('sector', '', 20) <= 5` (max 3 args après kind), `perf_rel('sector', '', 20)` (no bench sauf kind='etf')
+- Macro : `vix()`, `regime_score()`
+- Multi-asset : `security('SPY','1d','close',1)`, `benchmark('SPY')`
+
+⚠️ INVALID : `sma(close,50)` (manque quotes), `ma(close,50)` (fonction inexistante), `asset_type=='etf'` dans pass_expr — utiliser param `asset='etf'` séparé.
+
+RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('stock' default ou 'etf'), `top_k`, `force_async=true` recommandé.
+
 **Langue par défaut : anglais intermediate.** Voir `scanner/CLAUDE.md` pour le template complet, sections, méthodologie.
 
 **⚠️ Convention de date :** Scanner couvre la **prochaine séance de trading**. Généré après 22h30 : dossier = D+1. **Vendredi soir → lundi (D+3).**
