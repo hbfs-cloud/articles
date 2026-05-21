@@ -524,8 +524,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const actualStop = entryPrice - riskPerUnit;
   const rewardMult1 = (setup.tp1 - setup.entry) / riskPerUnit;
   const actualTp1 = entryPrice + riskPerUnit * rewardMult1;
-  const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : rewardMult1 * 1.5;
-  const actualTp2 = entryPrice + riskPerUnit * rewardMult2;
+  const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : null;
+  const actualTp2 = rewardMult2 !== null ? entryPrice + riskPerUnit * rewardMult2 : null;
 
   // R:R gate: reject trades with reward/risk below 1.5
   const rrRatio = (actualTp1 - entryPrice) / riskPerUnit;
@@ -546,9 +546,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let daysHeld = 0;
 
   for (const date of sortedDates) {
-    daysHeld++;
     const bar = priceHistory[date];
     if (!bar) continue;
+    daysHeld++;
 
     // Check SL first — distinguish initial stop vs breakeven vs trailing
     if (bar.low <= currentStop) {
@@ -564,8 +564,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       break;
     }
 
-    // Check TP2 (only if partial TP mode and TP1 already hit, or normal mode)
-    if (bar.high >= actualTp2) {
+    // Check TP2 (only when real tp2 set — no synthetic fallback)
+    if (actualTp2 !== null && bar.high >= actualTp2) {
       status = 'tp2';
       exitDate = date;
       exitPrice = actualTp2;
@@ -575,12 +575,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     // Check TP1
     if (bar.high >= actualTp1 && partialRealized === 0) {
       if (partialTP) {
-        // Close partialTPPct at TP1, trail the rest
+        // Close partialTPPct at TP1, lock remainder breakeven (no post-TP1 loss possible).
         const tpFrac = partialTPPct * 100; // e.g. 0.5 → 50
         partialRealized = ((actualTp1 - entryPrice) / entryPrice) * tpFrac;
-        if (trailingStop) {
-          currentStop = entryPrice; // Move stop to breakeven
-        }
+        if (entryPrice > currentStop) currentStop = entryPrice;
         // Continue with remaining fraction
       } else {
         status = 'tp1';
@@ -671,7 +669,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     exitDate,
     exitPrice,
     pnlPct: +(pnlPct * 100).toFixed(2),
-    holdDays: sortedDates.indexOf(exitDate) + 1,
+    holdDays: daysHeld,
     source: setup.source || 'signals',
   };
 }
