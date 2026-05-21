@@ -2147,6 +2147,7 @@ module.exports = {
   parseScan, simulateTrade, simulatePortfolio, computeStatsFromTrades,
   fetchOHLCV, priceCache, getSector, normalizeRegime,
   STRATEGY_FILTERS_MAP,
+  vixKillTriggered, regimeSizeMultiplier, maxCorrToOpen,
 };
 
 if (require.main === module) {
