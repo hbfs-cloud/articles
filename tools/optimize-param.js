@@ -326,8 +326,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const actualStop = entryPrice - riskPerUnit;
   const rewardMult1 = (setup.tp1 - setup.entry) / riskPerUnit;
   const actualTp1 = entryPrice + riskPerUnit * rewardMult1;
-  const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : rewardMult1 * 1.5;
-  const actualTp2 = entryPrice + riskPerUnit * rewardMult2;
+  const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : null;
+  const actualTp2 = rewardMult2 !== null ? entryPrice + riskPerUnit * rewardMult2 : null;
 
   const rrRatio = (actualTp1 - entryPrice) / riskPerUnit;
   if (rrRatio < 1.5) return null;
@@ -344,10 +344,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let highWaterMark = entryPrice;
   let daysSinceNewHigh = 0;
   let breakevenActivated = false;
+  let daysHeld = 0;
 
   for (const date of sortedDates) {
     const bar = priceHistory[date];
     if (!bar) continue;
+    daysHeld++;
 
     if (bar.low <= currentStop) {
       if (partialRealized > 0) status = 'tp1_partial';
@@ -359,7 +361,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       break;
     }
 
-    if (bar.high >= actualTp2) {
+    if (actualTp2 !== null && bar.high >= actualTp2) {
       status = 'tp2';
       exitDate = date;
       exitPrice = actualTp2;
@@ -370,7 +372,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       if (partialTP) {
         const tpFrac = partialTPPct * 100;
         partialRealized = ((actualTp1 - entryPrice) / entryPrice) * tpFrac;
-        if (trailingStop) currentStop = entryPrice;
+        if (entryPrice > currentStop) currentStop = entryPrice;
       } else {
         status = 'tp1';
         exitDate = date;
@@ -450,7 +452,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     exitDate,
     exitPrice,
     pnlPct: +(pnlPct * 100).toFixed(2),
-    holdDays: sortedDates.indexOf(exitDate) + 1,
+    holdDays: daysHeld,
     source: setup.source || 'signals',
   };
 }
