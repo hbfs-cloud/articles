@@ -595,6 +595,36 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
   if (issues.length) return issues.join(' | ');
 });
 
+check('backtest-trades: no breakeven artifacts (pnlPct=0 with exitPrice!=actualEntry)', () => {
+  const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
+  let artifacts = 0;
+  for (const mode of Object.keys(bt)) {
+    artifacts += bt[mode].filter(t =>
+      t.status === 'breakeven' &&
+      t.pnlPct === 0 &&
+      t.exitPrice != null &&
+      t.actualEntry != null &&
+      Math.abs(t.exitPrice - t.actualEntry) > 0.01
+    ).length;
+  }
+  return artifacts === 0 || `BE-artifact regression: ${artifacts} trades`;
+});
+
+check('signals.json (last 5 scans): regime field present in ≥50%', () => {
+  const scannerDir = path.join(ROOT, 'scanner');
+  const dates = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().slice(-5);
+  let total = 0, missing = 0;
+  for (const d of dates) {
+    try {
+      const s = JSON.parse(fs.readFileSync(path.join(scannerDir, d, 'signals.json'), 'utf8'));
+      const sigs = Array.isArray(s) ? s : (s.signals || []);
+      total += sigs.length;
+      missing += sigs.filter(x => !x.regime && !x.region).length;
+    } catch(e) {}
+  }
+  return total === 0 || missing / total <= 0.5 || `Null-regime: ${missing}/${total} signals lack regime`;
+});
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
 
 const total = ok.length + warnings.length + errors.length;

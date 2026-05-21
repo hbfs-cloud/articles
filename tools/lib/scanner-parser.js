@@ -81,7 +81,7 @@ function loadSignals(dir) {
         m.source = 'tkl_pool';
         return m;
       });
-      return { signals, tklPool, thesis, regime: data.regime || null };
+      return { signals, tklPool, thesis, regime: data.regime || 'EARLY RISK-OFF' };  // retail fail-closed: null regime = max caution
     } catch (_) { /* fall through to HTML */ }
   }
 

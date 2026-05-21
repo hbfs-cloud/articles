@@ -878,7 +878,7 @@ function simulatePortfolio(allTrades, scans, config) {
   const regimeByDate = {};
   for (const t of allTrades) {
     if (t.score < minScore) continue;
-    if (excludeSet && excludeSet.has(t.source)) continue;
+    if (excludeSet && excludeSet.has(t.source || 'signals')) continue;
     if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
     byDate[t.scanDate].push(t);
     if (t.regime && !regimeByDate[t.scanDate]) regimeByDate[t.scanDate] = t.regime;
@@ -1767,7 +1767,7 @@ async function main() {
 
 
   // Save trade lists for all FROZEN modes (from modes-config.json)
-  const MODES_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
+  const MODES_CFG_PATH = process.env.MODES_CFG_OVERRIDE || path.join(ROOT, "data", "modes-config.json");
   const HISTORY_PATH = path.join(ROOT, "data", "modes-config-history.json");
   const BACKTEST_TRADES_PATH = path.join(ROOT, "data", "backtest-trades.json");
   const frozenTrades = {};
@@ -1875,9 +1875,16 @@ async function main() {
         correlationCap: cfg.correlationCap ?? 0,
         crossModeDedup: cfg.crossModeDedup === true,
         crossModePicked,        // shared Set across all modes
-        // Per-mode tkl_pool ingestion gate. Default = true (backward-compatible);
-        // set tklPoolEnabled:false to keep this mode on the published Top 10 only.
-        excludeSources: cfg.tklPoolEnabled === false ? ['tkl_pool'] : null,
+        // Per-mode source filter:
+        // - tkl_pool gated by tklPoolEnabled (default true).
+        // - TKL mode excludes 'signals' (Top10 list) — drag eliminator: signals source
+        //   WR 30% (n=76) vs pool WR 50% (n=16). OPTIM B1.
+        excludeSources: (() => {
+          const excl = [];
+          if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
+          if (id === 'tkl') excl.push('signals');
+          return excl.length ? excl : null;
+        })(),
       };
 
       if (FROZEN_ONLY) {
