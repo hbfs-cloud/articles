@@ -561,21 +561,37 @@ async function run() {
         const baseWeight = (1 / (cfg.portfolioSize || 1)) * (cfg.positionSizePct || 1) * regimeMult;
         const SIZING_REF = 0.03;
 
-        const nextDay = addBizDays(day, 1);
-        const openTickers = new Set([
-          ...mode.positions.map(p => p.ticker),
-          ...mode.pendingEntries.map(p => p.ticker),
-        ]);
+        // Scan date IS entry day (folder generated D-1 at 23h, folder=D+1 entry).
+        // Open positions same day at scan date open price.
+        const openTickers = new Set(mode.positions.map(p => p.ticker));
+        const sectorCounts = {};
+        for (const p of mode.positions) {
+          const sec = getSector(p.ticker);
+          sectorCounts[sec] = (sectorCounts[sec] || 0) + 1;
+        }
 
-        let queued = 0;
+        let added = 0;
         for (const cand of candidates) {
-          if (queued >= slots) break;
+          if (added >= slots) break;
           if (openTickers.has(cand.ticker)) continue;
+          // Cooldown
+          const cd = mode.cooldown[cand.ticker];
+          if (cd && bizDaysBetween(cd.exitDate, day) < cd.days) continue;
           // Cross-mode dedup
           if (cfg.crossModeDedup) {
             const key = `${day}|${cand.ticker}`;
             if (crossModePicked.has(key)) continue;
-            crossModePicked.add(key);
+          }
+          // Sector cap (checked at queue time, against in-portfolio + freshly added)
+          if (cfg.sectorCapMax) {
+            const sec = getSector(cand.ticker);
+            if ((sectorCounts[sec] || 0) >= cfg.sectorCapMax) continue;
+          }
+          // Correlation cap
+          if (cfg.correlationCap > 0 && mode.positions.length > 0) {
+            const openPseudo = mode.positions.map(p => ({ trade: { ticker: p.ticker } }));
+            const rho = maxCorrToOpen({ ticker: cand.ticker }, openPseudo, 60);
+            if (rho != null && Math.abs(rho) > cfg.correlationCap) continue;
           }
 
           // Compute candidate weight (inverse-ATR)
@@ -587,12 +603,18 @@ async function run() {
               weight = baseWeight * adj;
             }
           }
-          mode.pendingEntries.push({
-            ticker: cand.ticker, scanDate: day, entryDate: nextDay,
-            setup: cand, weight,
-          });
+
+          // Open immediately (same day entry)
+          const pos = openPosition(cand, day, day, cfg);
+          if (!pos) { log(`  ${day} ${mode.id} reject ${cand.ticker} (gate)`); continue; }
+          pos.weight = weight;
+          mode.positions.push(pos);
           openTickers.add(cand.ticker);
-          queued++;
+          const candSec = getSector(cand.ticker);
+          sectorCounts[candSec] = (sectorCounts[candSec] || 0) + 1;
+          if (cfg.crossModeDedup) crossModePicked.add(`${day}|${cand.ticker}`);
+          log(`  ${day} ${mode.id} ENTER ${cand.ticker} @ ${pos.entryPrice.toFixed(2)}`);
+          added++;
         }
       }
     }
