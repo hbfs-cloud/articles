@@ -166,7 +166,7 @@ Strict order — `update-tracking` MUST run BEFORE `sweep` (sweep reads tracked 
 ```bash
 node tools/update-tracking.js                                                # Yahoo prices → exit triggers
 node tools/sweep.js                                                          # Append-only: new closed trades + advisor_*
-MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
+MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
   node tools/refresh-risk-metrics.js                                         # VaR + stress + correlation + regimeProb (6 modes from config)
 node tools/gen-status-page.js                                                # Snapshot J + dashboard (6 modes)
 node tools/gen-mode-cards.js                                                 # Per-mode PNG cards for Telegram/Discord (6 modes)
@@ -199,7 +199,7 @@ node tools/rolling-walk-forward.js --days=20          # rolling 20-day window
 
 Outputs `data/rolling-walk-forward.json` + markdown summary. Per-mode rolling-N-day WR/PF/Ret time series. Caveat: small sample sizes (~9 weeks of data) limit statistical power — use for direction-of-travel signal only.
 
-⚠️ **MCP_GATEWAY_URL is mandatory** (prod URL `https://gateway.dailytickers.com/mcp` always available). Never silently accept `--stub` — it writes an empty schema. If gateway down, log warning and re-run when restored. Ref: memory `reference_mcp_gateway.md`.
+⚠️ **MCP_GATEWAY_URL is mandatory** (prod URL `https://mcp.dailytickers.com/mcp` always available). Never silently accept `--stub` — it writes an empty schema. If gateway down, log warning and re-run when restored. Ref: memory `reference_mcp_gateway.md`.
 
 ### Post-Pipeline Checklist
 - QA check (`tools/qa-check.js`, step 7 of publish-daily-card.sh) must show 0 ❌. Investigate every failure (not only ⚠️). qa-check reads `signals.json` (NOT the HTML).

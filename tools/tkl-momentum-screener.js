@@ -348,7 +348,7 @@ async function fetchOHLCV(ticker) {
 
 // ── MCP Gateway OHLCV (primary — no rate limits) ────────────────────────────
 
-const MCP_GATEWAY_URL = process.env.MCP_GATEWAY_URL || 'https://gateway.dailytickers.com/mcp';
+const MCP_GATEWAY_URL = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
 const MCP_BATCH_SIZE  = 10;
 const MCP_DELAY_MS    = 500;
 

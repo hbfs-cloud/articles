@@ -25,7 +25,7 @@ articles/
 
 ## MCP_GATEWAY_URL (CRITIQUE)
 ```bash
-MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp
+MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp
 ```
 **TOUJOURS exporter, JAMAIS accepter le stub silencieusement.** Sans cette URL, `refresh-risk-metrics.js --stub` écrit un schéma vide.
 

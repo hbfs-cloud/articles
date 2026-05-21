@@ -57,7 +57,7 @@ Après chaque scanner publié, lancer pipeline complet **sans demander confirmat
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
-MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp \
+MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
   node tools/refresh-risk-metrics.js    # VaR + stress + correlation + regimeProb
 node tools/gen-status-page.js           # Snapshot J + Dashboard
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)

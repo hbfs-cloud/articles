@@ -57,7 +57,7 @@ if [ "$SKIP_SWEEP" = false ]; then
   # ─── Step 4: Refresh risk metrics (VaR + stress + correlation + regime) ────
   echo ""
   echo "🛡️  Step 4: Refreshing risk metrics from MCP gateway..."
-  export MCP_GATEWAY_URL="${MCP_GATEWAY_URL:-https://gateway.dailytickers.com/mcp}"
+  export MCP_GATEWAY_URL="${MCP_GATEWAY_URL:-https://mcp.dailytickers.com/mcp}"
   node tools/refresh-risk-metrics.js
 
   # ─── Step 4b: Replay trades with 1-min OHLCV (realistic entry/exit times) ──

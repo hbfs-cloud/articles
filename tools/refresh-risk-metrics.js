@@ -11,13 +11,13 @@
  * Source: scanner/status/history/<latest>.json (current open positions per mode)
  *
  * Transport: HTTP POST to MCP gateway via JSON-RPC 2.0.
- * Configure with env var MCP_GATEWAY_URL (e.g. https://gateway.dailytickers.com/mcp).
+ * Configure with env var MCP_GATEWAY_URL (e.g. https://mcp.dailytickers.com/mcp).
  * Without the env var the script writes a stub file documenting the schema.
  *
  * Output: data/risk-snapshots.json
  *
  * Usage:
- *   MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp node tools/refresh-risk-metrics.js
+ *   MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp node tools/refresh-risk-metrics.js
  *   node tools/refresh-risk-metrics.js --stub          # write empty schema-only stub
  *   node tools/refresh-risk-metrics.js --dry-run       # print payloads, do not write
  */
@@ -288,7 +288,7 @@ async function main() {
   if (!GATEWAY && !DRY) {
     console.error('  [error] MCP_GATEWAY_URL not set and --stub not provided.');
     console.error('  Refusing to silently stub data/risk-snapshots.json (would publish hollow VaR/stress/regime to prod).');
-    console.error('  Fix: export MCP_GATEWAY_URL=https://gateway.dailytickers.com/mcp');
+    console.error('  Fix: export MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp');
     console.error('  Or:  pass --stub explicitly to acknowledge writing an empty schema.');
     process.exit(2);
   }
