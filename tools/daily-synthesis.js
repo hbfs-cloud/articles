@@ -63,10 +63,12 @@ function modeFilePath(mode, name) {
 function equityValueOn(equityCurve, date) {
   if (!equityCurve) return null;
   // Two known shapes: { d: [...], v: [...] } or [{date, value}]
+  // Date in d[] is MM/DD format (no year), so convert TARGET to MM/DD for comparison.
   if (Array.isArray(equityCurve.d) && Array.isArray(equityCurve.v)) {
+    const mmdd = date.slice(5).replace('-', '/');  // YYYY-MM-DD → MM/DD
     let idx = -1;
     for (let i = 0; i < equityCurve.d.length; i++) {
-      if (equityCurve.d[i] <= date) idx = i; else break;
+      if (equityCurve.d[i] <= mmdd) idx = i; else break;
     }
     return idx >= 0 ? equityCurve.v[idx] : null;
   }
