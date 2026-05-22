@@ -22,6 +22,7 @@
 const fs = require('fs');
 const path = require('path');
 const sweep = require('./sweep.js');
+const ms = require('./lib/mode-status');
 const {
   fetchOHLCV, priceCache, parseScan, getSector, normalizeRegime,
   STRATEGY_FILTERS_MAP, vixKillTriggered, regimeSizeMultiplier, maxCorrToOpen,
@@ -592,8 +593,15 @@ async function run() {
           const priorClose = mode.equityCurve[mode.equityCurve.length - 1].value;
           ddBreaker = (peak - priorClose) > cfg.ddBreakerPct;
         }
-        if (vixKill || ddBreaker) {
-          log(`  ${day} ${mode.id} HALT new entries (vixKill=${vixKill}, ddBreaker=${ddBreaker})`);
+        // Status gate: paused / stopped / live-to-pause / draft block new entries
+        // from the date the mode entered that state. Earlier days keep normal behavior
+        // so historical backtest results stay reproducible.
+        const cfgStatus = ms.isValidState(cfg.status) ? cfg.status : ms.DEFAULT_STATE;
+        const statusSinceDay = (cfg.statusSince || '').slice(0, 10);
+        const statusActiveOnDay = !statusSinceDay || day >= statusSinceDay;
+        const statusHalt = statusActiveOnDay && !ms.acceptsNewEntries(cfgStatus);
+        if (vixKill || ddBreaker || statusHalt) {
+          log(`  ${day} ${mode.id} HALT new entries (vixKill=${vixKill}, ddBreaker=${ddBreaker}, status=${statusHalt ? cfgStatus : 'ok'})`);
           continue;
         }
 

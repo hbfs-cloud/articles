@@ -27,6 +27,21 @@ const modesConfig = JSON.parse(fs.readFileSync(path.join(DATA, 'modes-config.jso
 const modeCfg = modesConfig.modes[MODE];
 if (!modeCfg) { console.error(`Unknown mode: ${MODE}. Available: ${Object.keys(modesConfig.modes).join(', ')}`); process.exit(1); }
 
+// ── Status gate ──
+// Modes in draft / paused / stopped emit no plan at all.
+// live-to-pause emits exit-only plan (no new entries).
+const ms = require('./lib/mode-status');
+const MODE_STATUS = ms.isValidState(modeCfg.status) ? modeCfg.status : ms.DEFAULT_STATE;
+const STATUS_ACCEPTS_ENTRIES = ms.acceptsNewEntries(MODE_STATUS);
+const STATUS_EXITS_ONLY = ms.exitsOnly(MODE_STATUS);
+if (MODE_STATUS === 'draft' || MODE_STATUS === 'paused' || MODE_STATUS === 'stopped') {
+  console.error(`[gen-trading-plan] mode '${MODE}' is in status '${MODE_STATUS}' — no plan generated.`);
+  if (!DRY_RUN) process.exit(0);
+}
+if (STATUS_EXITS_ONLY) {
+  console.log(`[gen-trading-plan] mode '${MODE}' in status '${MODE_STATUS}' — exits-only plan (new entries suppressed).`);
+}
+
 let brokerMap = { brokers: [], symbols: {} };
 const brokerMapPath = path.join(DATA, 'broker-instruments.json');
 if (fs.existsSync(brokerMapPath)) {
@@ -150,8 +165,10 @@ function bizDaysSince(dateStr) {
 }
 
 // ── Orders from API ──
-const buyOrders = currentOrders.filter(o => o.action === 'BUY');
-const rotateOrders = currentOrders.filter(o => o.action === 'ROTATE');
+// Status gate: in exits-only state we suppress every BUY/ROTATE entry.
+// Close-now exits below still run so open positions can be wound down.
+const buyOrders = STATUS_EXITS_ONLY ? [] : currentOrders.filter(o => o.action === 'BUY');
+const rotateOrders = STATUS_EXITS_ONLY ? [] : currentOrders.filter(o => o.action === 'ROTATE');
 
 // ── Generate order entries ──
 let orderSeq = 0;
@@ -308,10 +325,13 @@ for (const o of rotateOrders) {
   usedTickers.add(o.ticker);
 }
 
-// Fallback: raw scanner signals (not topN-filtered), sorted by score
-const fallbackSignals = (rawSignals.length > 0 ? rawSignals : signals.signals)
-  .filter(s => !usedTickers.has(s.ticker) && s.entry && s.stop && s.tp1)
-  .sort((a, b) => (b.score || 0) - (a.score || 0));
+// Fallback: raw scanner signals (not topN-filtered), sorted by score.
+// Suppressed entirely when status is exits-only.
+const fallbackSignals = STATUS_EXITS_ONLY
+  ? []
+  : (rawSignals.length > 0 ? rawSignals : signals.signals)
+      .filter(s => !usedTickers.has(s.ticker) && s.entry && s.stop && s.tp1)
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
 
 for (const sig of fallbackSignals) {
   if (orders.filter(o => o.action !== 'SKIP').length >= MAX_ORDERS) break;
@@ -352,6 +372,12 @@ const plan = {
   dsl: 'dailytickers-trading-plan',
   generated_at: now.toISOString(),
   valid_for: targetISO,
+  mode_status: ms.statusBlock(
+    MODE_STATUS,
+    modeCfg.statusSince || null,
+    modeCfg.statusReason || null,
+    modeCfg.statusNextReviewAt || null
+  ),
 
   broker: {
     name: BROKER_LOOKUP,

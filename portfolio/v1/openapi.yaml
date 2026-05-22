@@ -1,7 +1,7 @@
 openapi: "3.0.3"
 info:
   title: DailyTickers Portfolio API
-  version: "1.2.0"
+  version: "1.3.0"
   description: >
     Free JSON endpoints to replicate the DailyTickers 6 specialized scanner portfolios (Turbo, Dynamic, Balanced, Secured, Fortress, TKL).
     Updated every trading session (~23:00 UTC weekdays). No authentication required.
@@ -21,6 +21,8 @@ servers:
           - "fortress"
           - "tkl"
         description: Portfolio mode (turbo, dynamic, balanced, secured, fortress, or tkl)
+  - url: https://articles.dailytickers.com/portfolio/v1
+    description: Root endpoints (no mode prefix) — modes overview, regime, status, config-history, instruments
 
 paths:
   /signals.json:
@@ -201,6 +203,36 @@ paths:
                   expiresTomorrow: { type: array, items: { $ref: "#/components/schemas/ExpiresAction" } }
                   closedTrades: { type: array, items: { $ref: "#/components/schemas/Trade" } }
 
+  /status.json:
+    servers:
+      - url: https://articles.dailytickers.com/portfolio/v1
+        description: Root endpoint (no mode prefix)
+    get:
+      summary: Mode status (state machine snapshot)
+      description: >
+        Aggregate snapshot of every mode's lifecycle state (draft, test, test-to-live,
+        live, live-to-pause, paused, stopped) plus the last 20 status transitions.
+        Lightweight endpoint for integrations that only need to know whether a mode
+        accepts new entries.
+      responses:
+        "200":
+          description: Status snapshot for all modes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updatedAt: { type: string, format: date-time }
+                  configVersion: { type: string, nullable: true, example: "v5.3-20260508" }
+                  modes:
+                    type: object
+                    additionalProperties:
+                      $ref: "#/components/schemas/ModeStatus"
+                  recentTransitions:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ModeStatusTransition"
+
 components:
   schemas:
     Signal:
@@ -323,3 +355,57 @@ components:
       properties:
         d: { type: array, items: { type: string }, description: "Dates (MM/DD format)" }
         v: { type: array, items: { type: number }, description: "Equity values (base 100)" }
+
+    ModeStatus:
+      type: object
+      description: >
+        Lifecycle state for a mode. Embedded as `status` in every mode-scoped endpoint
+        (signals/positions/trades/equity/orders/actions/all/risk) and in the modes.json /
+        status.json aggregates.
+      properties:
+        state:
+          type: string
+          enum: [draft, test, test-to-live, live, live-to-pause, paused, stopped]
+          description: Current state in the lifecycle state machine.
+        since:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp the mode entered this state.
+        reason:
+          type: string
+          nullable: true
+          description: Free-form reason recorded with the latest transition.
+        acceptsNewEntries:
+          type: boolean
+          description: True for `live` and `test`. Consumers should not place new buy orders if false.
+        exitsOnly:
+          type: boolean
+          description: True for `live-to-pause` — open positions must be wound down, no new entries.
+        publiclyVisible:
+          type: boolean
+          description: False for `draft` and `stopped` — hide from default UI listings.
+        tradingMode:
+          type: string
+          enum: [real, paper, exit-only, none]
+          description: Execution policy implied by the state.
+        nextReviewAt:
+          type: string
+          format: date
+          nullable: true
+          description: Optional review date (manual checkpoint).
+
+    ModeStatusTransition:
+      type: object
+      properties:
+        mode: { type: string, example: "secured" }
+        from:
+          type: string
+          enum: [draft, test, test-to-live, live, live-to-pause, paused, stopped]
+        to:
+          type: string
+          enum: [draft, test, test-to-live, live, live-to-pause, paused, stopped]
+        at: { type: string, format: date-time }
+        reason: { type: string, nullable: true }
+        by: { type: string, example: "manual" }
+        nextReviewAt: { type: string, format: date, nullable: true }

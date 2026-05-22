@@ -10,10 +10,12 @@
 
 const fs = require('fs');
 const path = require('path');
+const ms = require('./lib/mode-status');
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
 const HISTORY = path.join(ROOT, 'scanner', 'status', 'history');
+const STATUS_HISTORY_PATH = path.join(ROOT, 'data', 'modes-status-history.json');
 
 function parsePrice(s) {
   if (s == null || s === '—' || s === '') return null;
@@ -101,6 +103,12 @@ function getGlobalRegime() {
   return { status: 'ok', ...riskSnap.regimeProbability };
 }
 
+function getStatusFor(modeId) {
+  const m = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {};
+  const state = ms.isValidState(m.status) ? m.status : ms.DEFAULT_STATE;
+  return ms.statusBlock(state, m.statusSince || null, m.statusReason || null, m.statusNextReviewAt || null);
+}
+
 function write(filename, content) {
   const outPath = path.join(OUT, filename);
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
@@ -132,10 +140,12 @@ console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${orders
 // ─── Helper: write all 7 endpoints for a mode ─────────────────────────────────
 function writeMode(mode, prefix) {
   const p = prefix ? `${prefix}/` : '';
+  const status = getStatusFor(prefix || 'balanced');
 
   // 1. signals.json
   write(`${p}signals.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
+    status,
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
@@ -153,6 +163,7 @@ function writeMode(mode, prefix) {
   const allocPct = Math.round(100 / portfolioSize * positionSizePct);
   write(`${p}positions.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
+    status,
     allocPct,
     positions: (mode.positions || []).map(p => {
       const entry = p.entry || 0;
@@ -176,6 +187,7 @@ function writeMode(mode, prefix) {
   // 3. trades.json
   write(`${p}trades.json`, {
     updatedAt: now, mode: prefix || 'balanced',
+    status,
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
     trades: (mode.closedTrades || []).map(t => ({
@@ -227,13 +239,16 @@ function writeMode(mode, prefix) {
   };
   write(`${p}equity.json`, {
     updatedAt: now, mode: prefix || 'balanced',
+    status,
     config: mode.config || {}, stats: mode.stats || {},
     reliability,
     equityCurve: mode.equity || {}
   });
 
   // 5. orders.json — orders only valid on scan date
-  const modeOrders = ordersStale ? [] : (mode.orders || []).map(o => ({
+  // Modes that do not accept new entries (paused, stopped, live-to-pause, draft) emit empty orders.
+  const ordersAllowed = status.acceptsNewEntries;
+  const modeOrders = (!ordersAllowed || ordersStale) ? [] : (mode.orders || []).map(o => ({
     ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,
     entry: parsePrice(o.entry), stop: parsePrice(o.stop), tp1: parsePrice(o.tp1), tp2: parsePrice(o.tp2), rr: o.rr,
     sharia: o.sharia != null ? o.sharia : null,
@@ -243,12 +258,14 @@ function writeMode(mode, prefix) {
   }));
   write(`${p}orders.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
+    status,
     allocPct, orders: modeOrders
   });
 
   // 6. actions.json
   write(`${p}actions.json`, {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
+    status,
     closeNow: (mode.closeNow || []).map(p => ({
       ticker: p.ticker, scanDate: p.scan_date, entry: p.entry,
       currentPrice: p.current_price, returnPct: p.return_pct,
@@ -265,6 +282,7 @@ function writeMode(mode, prefix) {
   // 7. all.json
   write(`${p}all.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
+    status,
     config: mode.config || {}, stats: mode.stats || {},
     equityCurve: mode.equity || {},
     signals: (mode.signals || []).map(s => ({
@@ -350,6 +368,7 @@ function writeMode(mode, prefix) {
   write(`${p}risk.json`, {
     updatedAt: now,
     mode: prefix || 'balanced',
+    status,
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
     risk: riskPayload,
@@ -461,6 +480,7 @@ write('modes.json', {
       id,
       label: m.config?.label || id,
       color: m.config?.color || '#888',
+      status: getStatusFor(id),
       stats: m.stats || {},
       positionCount: (m.positions || []).length,
       orderCount: (m.orders || []).length,
@@ -500,6 +520,27 @@ write('regime.json', {
   configVersion: modesConfigMeta.configVersion,
   regimeLabel: modesConfigMeta.regime,
   regimeProbability: getGlobalRegime(),
+});
+count++;
+
+// ─── Mode status aggregate (lightweight integrations) ──────────────────────
+const allModeIds = modesConfigFull && modesConfigFull.modes ? Object.keys(modesConfigFull.modes) : MODE_IDS;
+const statusByMode = {};
+for (const id of allModeIds) statusByMode[id] = getStatusFor(id);
+let recentTransitions = [];
+if (fs.existsSync(STATUS_HISTORY_PATH)) {
+  try {
+    const sh = JSON.parse(fs.readFileSync(STATUS_HISTORY_PATH, 'utf8'));
+    recentTransitions = (sh.transitions || []).slice(-20).reverse();
+  } catch (e) {
+    console.log('  [warn] modes-status-history.json unreadable, skipping recentTransitions');
+  }
+}
+write('status.json', {
+  updatedAt: now,
+  configVersion: modesConfigMeta.configVersion,
+  modes: statusByMode,
+  recentTransitions,
 });
 count++;
 

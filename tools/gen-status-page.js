@@ -8,6 +8,49 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const ms = require('./lib/mode-status');
+
+function fmtDateFR(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+function renderStatusBadge(state) {
+  if (!state || state === 'live') return '';
+  const d = ms.describe(state) || { label: state, color: '#94a3b8' };
+  return `<span class="mode-status-badge ms-${state}" style="--ms-bg:${d.color}">${d.label.toUpperCase()}</span>`;
+}
+
+function renderStatusBanner(cfg) {
+  const state = ms.isValidState(cfg.status) ? cfg.status : ms.DEFAULT_STATE;
+  if (state === 'live') return '';
+  const d = ms.describe(state);
+  const messages = {
+    'draft':          { title: 'Mode en draft', body: 'Configuration créée, aucune exécution.' },
+    'test':           { title: 'Mode en test', body: 'Paper trading uniquement, aucune position réelle.' },
+    'test-to-live':   { title: 'Activation en cours', body: 'Transition vers live, validation en attente.' },
+    'live-to-pause':  { title: 'Sortie progressive', body: 'Aucune nouvelle entrée. Gestion exits sur positions ouvertes.' },
+    'paused':         { title: 'Mode en pause', body: 'Aucune activité, equity frozen — réactivable.' },
+    'stopped':        { title: 'Mode archivé', body: 'Mode définitivement stoppé.' },
+  };
+  const m = messages[state] || { title: d.label, body: '' };
+  const reason = cfg.statusReason ? `<p class="msb-reason">Raison : ${cfg.statusReason}</p>` : '';
+  const since = cfg.statusSince ? `Depuis ${fmtDateFR(cfg.statusSince)}` : '';
+  const review = cfg.statusNextReviewAt ? ` · Review ${fmtDateFR(cfg.statusNextReviewAt)}` : '';
+  const meta = (since || review) ? `<small>${since}${review}</small>` : '';
+  return `<div class="mode-status-banner ms-banner-${state}" style="--ms-bg:${d.color}">
+    <i class="fas fa-circle-info"></i>
+    <div class="msb-text">
+      <strong>${m.title}</strong>
+      <p>${m.body}</p>
+      ${reason}
+      ${meta}
+    </div>
+  </div>`;
+}
 
 const tkLogo = t => `<img src="https://assets.parqet.com/logos/symbol/${t}?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'">`;
 
@@ -641,8 +684,8 @@ async function main() {
       return left === 1;
     });
 
-    return `<div id="p-${id}" class="mode-panel" style="${active ? '' : 'display:none'}">
-
+    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" style="${active ? '' : 'display:none'}">
+${renderStatusBanner(cfg)}
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -1229,6 +1272,19 @@ body{background:#f1f5f9;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .mode-tab:hover{background:#e2e8f0;color:#334155}
 .mode-tab.active{background:#fff;color:var(--mc,#0f172a);box-shadow:0 2px 8px rgba(0,0,0,.08);border-bottom:2px solid var(--mc,#0f172a);font-weight:700}
 .mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* ── Mode status badge / banner ── */
+.mode-status-badge{display:inline-flex;align-items:center;font-size:.58rem;font-weight:800;letter-spacing:.04em;background:var(--ms-bg,#94a3b8);color:#fff;padding:.12rem .38rem;border-radius:4px;margin-left:.3rem;text-transform:uppercase;line-height:1.1}
+.mode-status-badge.ms-live-to-pause,.mode-status-badge.ms-test-to-live{animation:msPulse 2s ease-in-out infinite}
+@keyframes msPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.mode-status-banner{display:flex;align-items:flex-start;gap:.7rem;padding:.85rem 1rem;margin:0 0 1.25rem;border-radius:10px;background:#fff8eb;border-left:4px solid var(--ms-bg,#f59e0b);color:#334155}
+.mode-status-banner.ms-banner-paused,.mode-status-banner.ms-banner-stopped,.mode-status-banner.ms-banner-draft{background:#f1f5f9;color:#475569}
+.mode-status-banner.ms-banner-test,.mode-status-banner.ms-banner-test-to-live{background:#eff6ff;color:#1e3a8a}
+.mode-status-banner>i{font-size:1.05rem;color:var(--ms-bg,#f59e0b);margin-top:.15rem;flex-shrink:0}
+.mode-status-banner .msb-text{flex:1;min-width:0;font-size:.82rem;line-height:1.45}
+.mode-status-banner .msb-text strong{display:block;font-size:.92rem;color:#0f172a;margin-bottom:.2rem}
+.mode-status-banner .msb-text p{margin:.1rem 0}
+.mode-status-banner .msb-text .msb-reason{font-style:italic;color:#64748b;font-size:.78rem;margin-top:.25rem}
+.mode-status-banner .msb-text small{display:block;margin-top:.35rem;font-size:.7rem;color:#94a3b8}
 
 /* ── Hero ── */
 .hero{padding:2.5rem 1.5rem 2rem;border-bottom:1px solid #e2e8f0;position:relative}
@@ -1486,7 +1542,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <!-- Mode Tabs -->
   <div class="mode-tabs" role="tablist" aria-label="Portfolio modes">
-    ${Object.entries(modes).map(([id, m]) => `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Switch to ${m.cfg.label} mode" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${id === 'balanced' ? ' <span class="hide-m" style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
+    ${Object.entries(modes).map(([id, m]) => `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Switch to ${m.cfg.label} mode" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${m.cfg.color}"><span class="mode-dot" style="background:${m.cfg.color}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="hide-m" style="font-size:.6rem;background:#dcfce7;color:#15803d;padding:.1rem .35rem;border-radius:4px;font-weight:700;margin-left:.2rem;">★ Rec.</span>' : ''}</button>`).join('')}
   </div>
 
   ${Object.entries(modes).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-' + id, id === 'balanced')).join('\n')}
