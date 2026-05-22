@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-05-22T21:07:42.069Z",
+  "generated_at": "2026-05-22T21:07:37.690Z",
   "valid_for": "2026-05-26",
   "mode_status": {
     "state": "live",
@@ -15,12 +15,12 @@
     "nextReviewAt": null
   },
   "broker": {
-    "name": "trading212",
+    "name": "ibkr",
     "type": "live",
     "credentials": {
       "api_key": "${BROKER_API_KEY}",
       "api_secret": "${BROKER_API_SECRET}",
-      "base_url": "https://live.trading212.com/api/v0",
+      "base_url": "https://localhost:5000/v1/api",
       "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
     }
   },
@@ -89,13 +89,13 @@
       "id": "ORD-001",
       "action": "BUY",
       "ticker": "SPOT",
-      "broker_symbol": "SPOT_US_EQ",
+      "broker_symbol": "SPOT",
       "broker": {
-        "symbol": "SPOT_US_EQ",
-        "exchange": "NYSE",
+        "symbol": "SPOT",
+        "exchange": "SMART",
         "isin": "LU1778762911",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -190,13 +190,13 @@
       "id": "ORD-002",
       "action": "BUY",
       "ticker": "ROST",
-      "broker_symbol": "ROST_US_EQ",
+      "broker_symbol": "ROST",
       "broker": {
-        "symbol": "ROST_US_EQ",
-        "exchange": "NASDAQ",
+        "symbol": "ROST",
+        "exchange": "SMART",
         "isin": "US7782961038",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -291,13 +291,13 @@
       "id": "ORD-003",
       "action": "BUY",
       "ticker": "NVDA",
-      "broker_symbol": "NVDA_US_EQ",
+      "broker_symbol": "NVDA",
       "broker": {
-        "symbol": "NVDA_US_EQ",
-        "exchange": "NASDAQ",
+        "symbol": "NVDA",
+        "exchange": "SMART",
         "isin": "US67066G1040",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -392,13 +392,13 @@
       "id": "ORD-004",
       "action": "BUY",
       "ticker": "EL",
-      "broker_symbol": "EL_US_EQ",
+      "broker_symbol": "EL",
       "broker": {
-        "symbol": "EL_US_EQ",
-        "exchange": "NYSE",
+        "symbol": "EL",
+        "exchange": "SMART",
         "isin": "US5184391044",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -493,11 +493,10 @@
       "id": "ORD-005",
       "action": "BUY",
       "ticker": "SMH",
-      "broker_symbol": "SMHl_EQ",
+      "broker_symbol": "SMH",
       "broker": {
-        "symbol": "SMHl_EQ",
-        "exchange": "Trading212",
-        "isin": "IE00BMC38736",
+        "symbol": "SMH",
+        "exchange": "SMART",
         "currency": "USD",
         "asset_type": "ETF"
       },
@@ -750,9 +749,10 @@
     ]
   },
   "broker_notes": {
-    "api_limits": "Very limited API — equity orders only, no bracket orders",
-    "fractional": "Supports fractional shares down to 0.001",
-    "symbol_format": "Append _US_EQ for US equities (e.g., GOOGL_US_EQ)",
-    "workaround": "No native bracket orders — must monitor and place SL/TP separately"
+    "gateway": "Requires IB Gateway or TWS running locally on port 5000",
+    "auth": "Session-based — authenticate via Client Portal then use session token",
+    "order_types": "Supports all order types including adaptive, pegged, TWAP",
+    "fractional": "No fractional shares on IBKR",
+    "min_commission": "$1.00 per trade"
   }
 }
