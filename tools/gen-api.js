@@ -246,7 +246,7 @@ function writeMode(mode, prefix) {
   });
 
   // 5. orders.json — orders only valid on scan date
-  // Modes that do not accept new entries (paused, stopped, live-to-pause, draft) emit empty orders.
+  // Modes that do not accept new entries (paused, stopped, pausing, liquidated, draft) emit empty orders.
   const ordersAllowed = status.acceptsNewEntries;
   const modeOrders = (!ordersAllowed || ordersStale) ? [] : (mode.orders || []).map(o => ({
     ticker: o.ticker, action: o.action || 'BUY', score: o.score, strategy: o.strategy,

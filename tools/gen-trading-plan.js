@@ -28,18 +28,23 @@ const modeCfg = modesConfig.modes[MODE];
 if (!modeCfg) { console.error(`Unknown mode: ${MODE}. Available: ${Object.keys(modesConfig.modes).join(', ')}`); process.exit(1); }
 
 // ── Status gate ──
-// Modes in draft / paused / stopped emit no plan at all.
-// live-to-pause emits exit-only plan (no new entries).
+// draft / paused / stopped: no plan at all.
+// pausing: exit-only plan (no new entries; SL/TP/horizon run normally).
+// liquidated: force-close plan (no new entries; ALL open positions closed at market).
 const ms = require('./lib/mode-status');
 const MODE_STATUS = ms.isValidState(modeCfg.status) ? modeCfg.status : ms.DEFAULT_STATE;
 const STATUS_ACCEPTS_ENTRIES = ms.acceptsNewEntries(MODE_STATUS);
 const STATUS_EXITS_ONLY = ms.exitsOnly(MODE_STATUS);
+const STATUS_LIQUIDATED = ms.forceLiquidate(MODE_STATUS);
 if (MODE_STATUS === 'draft' || MODE_STATUS === 'paused' || MODE_STATUS === 'stopped') {
   console.error(`[gen-trading-plan] mode '${MODE}' is in status '${MODE_STATUS}' — no plan generated.`);
   if (!DRY_RUN) process.exit(0);
 }
 if (STATUS_EXITS_ONLY) {
   console.log(`[gen-trading-plan] mode '${MODE}' in status '${MODE_STATUS}' — exits-only plan (new entries suppressed).`);
+}
+if (STATUS_LIQUIDATED) {
+  console.log(`[gen-trading-plan] mode '${MODE}' in status '${MODE_STATUS}' — FORCE LIQUIDATION (close all positions at market).`);
 }
 
 let brokerMap = { brokers: [], symbols: {} };
@@ -165,10 +170,11 @@ function bizDaysSince(dateStr) {
 }
 
 // ── Orders from API ──
-// Status gate: in exits-only state we suppress every BUY/ROTATE entry.
-// Close-now exits below still run so open positions can be wound down.
-const buyOrders = STATUS_EXITS_ONLY ? [] : currentOrders.filter(o => o.action === 'BUY');
-const rotateOrders = STATUS_EXITS_ONLY ? [] : currentOrders.filter(o => o.action === 'ROTATE');
+// Status gate: any state that doesn't accept new entries (pausing,
+// liquidated, paused, stopped, draft) suppresses every BUY/ROTATE. Close-now
+// exits below still run so open positions can be wound down.
+const buyOrders = STATUS_ACCEPTS_ENTRIES ? currentOrders.filter(o => o.action === 'BUY') : [];
+const rotateOrders = STATUS_ACCEPTS_ENTRIES ? currentOrders.filter(o => o.action === 'ROTATE') : [];
 
 // ── Generate order entries ──
 let orderSeq = 0;
@@ -326,8 +332,8 @@ for (const o of rotateOrders) {
 }
 
 // Fallback: raw scanner signals (not topN-filtered), sorted by score.
-// Suppressed entirely when status is exits-only.
-const fallbackSignals = STATUS_EXITS_ONLY
+// Suppressed whenever the mode is not accepting new entries.
+const fallbackSignals = !STATUS_ACCEPTS_ENTRIES
   ? []
   : (rawSignals.length > 0 ? rawSignals : signals.signals)
       .filter(s => !usedTickers.has(s.ticker) && s.entry && s.stop && s.tp1)
@@ -343,9 +349,30 @@ for (const sig of fallbackSignals) {
 }
 
 // ── Close-now positions ──
+// In liquidated state, every open position is force-closed at market regardless
+// of horizon / SL / TP. Otherwise the normal horizon-expired rule applies.
 const closeNow = [];
 for (const p of modePositions) {
   const held = bizDaysSince(p.scan_date || p.entry_date);
+  if (STATUS_LIQUIDATED) {
+    const sym = brokerSymbol(p.ticker);
+    closeNow.push({
+      action: 'CLOSE',
+      ticker: p.ticker,
+      broker_symbol: sym || p.ticker,
+      broker: brokerInfo(p.ticker),
+      reason: 'LIQUIDATION',
+      held_days: held,
+      horizon: modeCfg.horizon,
+      current_pnl_pct: p.return_pct,
+      execution: {
+        type: 'MARKET',
+        timing: 'AT_OPEN',
+        description: 'Force-close at market open — mode liquidated, exit immediately regardless of P&L, SL, TP, or horizon',
+      },
+    });
+    continue;
+  }
   if (held >= modeCfg.horizon) {
     const sym = brokerSymbol(p.ticker);
     closeNow.push({

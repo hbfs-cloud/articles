@@ -210,8 +210,8 @@ paths:
     get:
       summary: Mode status (state machine snapshot)
       description: >
-        Aggregate snapshot of every mode's lifecycle state (draft, test, test-to-live,
-        live, live-to-pause, paused, stopped) plus the last 20 status transitions.
+        Aggregate snapshot of every mode's lifecycle state (draft, test, deploying,
+        live, pausing, liquidated, paused, stopped) plus the last 20 status transitions.
         Lightweight endpoint for integrations that only need to know whether a mode
         accepts new entries.
       responses:
@@ -365,7 +365,7 @@ components:
       properties:
         state:
           type: string
-          enum: [draft, test, test-to-live, live, live-to-pause, paused, stopped]
+          enum: [draft, test, deploying, live, pausing, liquidated, paused, stopped]
           description: Current state in the lifecycle state machine.
         since:
           type: string
@@ -381,7 +381,7 @@ components:
           description: True for `live` and `test`. Consumers should not place new buy orders if false.
         exitsOnly:
           type: boolean
-          description: True for `live-to-pause` — open positions must be wound down, no new entries.
+          description: True for `pausing` — open positions must be wound down, no new entries.
         publiclyVisible:
           type: boolean
           description: False for `draft` and `stopped` — hide from default UI listings.
@@ -392,7 +392,7 @@ components:
             Execution policy implied by the state.
             `real` = live orders.
             `paper` = simulated only.
-            `paper-ramp` = test-to-live ramp-up, paper executions pending live promotion.
+            `paper-ramp` = `deploying` ramp-up, paper executions pending live promotion.
             `exit-only` = no new entries; existing positions wind down via normal SL/TP/horizon/trailing.
             `none` = no trading activity.
         nextReviewAt:
@@ -407,10 +407,10 @@ components:
         mode: { type: string, example: "secured" }
         from:
           type: string
-          enum: [draft, test, test-to-live, live, live-to-pause, paused, stopped]
+          enum: [draft, test, deploying, live, pausing, liquidated, paused, stopped]
         to:
           type: string
-          enum: [draft, test, test-to-live, live, live-to-pause, paused, stopped]
+          enum: [draft, test, deploying, live, pausing, liquidated, paused, stopped]
         at: { type: string, format: date-time }
         reason: { type: string, nullable: true }
         by: { type: string, example: "manual" }

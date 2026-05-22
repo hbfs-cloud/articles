@@ -6,7 +6,7 @@
  *   node tools/set-mode-status.js --mode <modeId> --to <state> --reason "..." [--by manual] [--review YYYY-MM-DD]
  *
  * Example:
- *   node tools/set-mode-status.js --mode secured --to live-to-pause \
+ *   node tools/set-mode-status.js --mode secured --to pausing \
  *     --reason "OOS PF=0.53 sur n=11 — monitor 30j" --review 2026-06-22
  */
 

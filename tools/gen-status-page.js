@@ -29,12 +29,13 @@ function renderStatusBanner(cfg) {
   if (state === 'live') return '';
   const d = ms.describe(state);
   const messages = {
-    'draft':          { title: 'Mode en draft', body: 'Configuration créée, aucune exécution.' },
-    'test':           { title: 'Mode en test', body: 'Paper trading uniquement, aucune position réelle.' },
-    'test-to-live':   { title: 'Activation en cours', body: 'Transition vers live, validation en attente.' },
-    'live-to-pause':  { title: 'Sortie progressive', body: 'Aucune nouvelle entrée. Gestion exits sur positions ouvertes.' },
-    'paused':         { title: 'Mode en pause', body: 'Aucune activité, equity frozen — réactivable.' },
-    'stopped':        { title: 'Mode archivé', body: 'Mode définitivement stoppé.' },
+    'draft':      { title: 'Mode en draft', body: 'Configuration créée, aucune exécution.' },
+    'test':       { title: 'Mode en test', body: 'Paper trading uniquement, aucune position réelle.' },
+    'deploying':  { title: 'Déploiement en cours', body: 'Ramp-up au fil de l’eau : ordres en paper-validation avant flip live.' },
+    'pausing':    { title: 'Sortie progressive', body: 'Aucune nouvelle entrée. Gestion exits sur positions ouvertes jusqu’à fermeture naturelle.' },
+    'liquidated': { title: 'Liquidation forcée', body: 'Toutes les positions sont fermées au marché à la prochaine séance.' },
+    'paused':     { title: 'Mode en pause', body: 'Aucune activité, equity frozen — réactivable.' },
+    'stopped':    { title: 'Mode archivé', body: 'Mode définitivement stoppé.' },
   };
   const m = messages[state] || { title: d.label, body: '' };
   const reason = cfg.statusReason ? `<p class="msb-reason">Raison : ${cfg.statusReason}</p>` : '';
@@ -1274,11 +1275,12 @@ body{background:#f1f5f9;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 .mode-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 /* ── Mode status badge / banner ── */
 .mode-status-badge{display:inline-flex;align-items:center;font-size:.58rem;font-weight:800;letter-spacing:.04em;background:var(--ms-bg,#94a3b8);color:#fff;padding:.12rem .38rem;border-radius:4px;margin-left:.3rem;text-transform:uppercase;line-height:1.1}
-.mode-status-badge.ms-live-to-pause,.mode-status-badge.ms-test-to-live{animation:msPulse 2s ease-in-out infinite}
+.mode-status-badge.ms-pausing,.mode-status-badge.ms-deploying,.mode-status-badge.ms-liquidated{animation:msPulse 2s ease-in-out infinite}
 @keyframes msPulse{0%,100%{opacity:1}50%{opacity:.55}}
 .mode-status-banner{display:flex;align-items:flex-start;gap:.7rem;padding:.85rem 1rem;margin:0 0 1.25rem;border-radius:10px;background:#fff8eb;border-left:4px solid var(--ms-bg,#f59e0b);color:#334155}
 .mode-status-banner.ms-banner-paused,.mode-status-banner.ms-banner-stopped,.mode-status-banner.ms-banner-draft{background:#f1f5f9;color:#475569}
-.mode-status-banner.ms-banner-test,.mode-status-banner.ms-banner-test-to-live{background:#eff6ff;color:#1e3a8a}
+.mode-status-banner.ms-banner-test,.mode-status-banner.ms-banner-deploying{background:#eff6ff;color:#1e3a8a}
+.mode-status-banner.ms-banner-liquidated{background:#fef2f2;color:#7f1d1d;border-left-color:#dc2626}
 .mode-status-banner>i{font-size:1.05rem;color:var(--ms-bg,#f59e0b);margin-top:.15rem;flex-shrink:0}
 .mode-status-banner .msb-text{flex:1;min-width:0;font-size:.82rem;line-height:1.45}
 .mode-status-banner .msb-text strong{display:block;font-size:.92rem;color:#0f172a;margin-bottom:.2rem}

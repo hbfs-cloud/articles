@@ -492,6 +492,31 @@ async function run() {
       mode.positions = stillOpen;
     }
 
+    // 1b. Liquidation pass — modes flagged 'liquidated' force-close every
+    // remaining position at the day's close price (skip if no bar yet).
+    // Runs after the normal exit pass so SL/TP firing today are still
+    // honored at their actual triggers.
+    for (const mode of Object.values(state.modes)) {
+      const cfg = mode.cfg;
+      const cfgStatus = ms.isValidState(cfg.status) ? cfg.status : ms.DEFAULT_STATE;
+      if (!ms.forceLiquidate(cfgStatus)) continue;
+      const statusSinceDay = (cfg.statusSince || '').slice(0, 10);
+      if (statusSinceDay && day < statusSinceDay) continue;
+      if (mode.positions.length === 0) continue;
+      const stillOpen = [];
+      for (const pos of mode.positions) {
+        const bar = priceCache[pos.ticker]?.[day];
+        if (!bar) { stillOpen.push(pos); continue; }
+        pos.status = 'liquidated';
+        pos.exitDate = day;
+        pos.exitPrice = bar.close;
+        pos.pnlPct = +(((bar.close - pos.entryPrice) / pos.entryPrice) * 100).toFixed(2);
+        mode.closedTrades.push(pos);
+        log(`  ${day} ${mode.id} LIQUIDATE ${pos.ticker} @ ${bar.close.toFixed(2)} pnl=${pos.pnlPct.toFixed(2)}%`);
+      }
+      mode.positions = stillOpen;
+    }
+
     // 2. Per-mode: process pending entries scheduled for today
     for (const mode of Object.values(state.modes)) {
       const cfg = mode.cfg;
@@ -602,10 +627,11 @@ async function run() {
           ddBreaker = (peak - priorClose) > cfg.ddBreakerPct;
         }
         // Status gate already computed above (statusHalt). For paused / stopped /
-        // live-to-pause / draft, statusActiveOnDay gates from the transition date
-        // so historical backtest results stay reproducible. Existing positions
+        // pausing / liquidated / draft, statusActiveOnDay gates from the transition
+        // date so historical backtest results stay reproducible. Existing positions
         // still run their full exit logic (SL/TP/horizon/trailing) — only the
-        // new-entry path is suppressed.
+        // new-entry path is suppressed. Liquidated additionally force-closes
+        // every remaining position via the 1b pass above.
         if (vixKill || ddBreaker || statusHalt) {
           log(`  ${day} ${mode.id} HALT new entries (vixKill=${vixKill}, ddBreaker=${ddBreaker}, status=${statusHalt ? cfgStatus : 'ok'})`);
           continue;
