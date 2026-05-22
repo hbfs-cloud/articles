@@ -534,22 +534,20 @@ function buildPage(d) {
 
 <!-- HERO -->
 <div class="ticker-header">
-  <div class="ticker-header-inner">
-    <div class="ticker-meta">
-      ${heroBadges}
-    </div>
-    <h1 class="ticker-name">Scanner DailyTickers &mdash; ${d.session_label || d.date}</h1>
-    <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} &mdash; ${tickers}</p>
-    <div class="ticker-kpis">
-      <div class="kpi-box"><span class="kpi-label">Regime</span><span class="kpi-value" style="color:${regColor};">${regime}</span></div>
-      <div class="kpi-box"><span class="kpi-label">Avg Score</span><span class="kpi-value">${avgScore}</span></div>
-      <div class="kpi-box"><span class="kpi-label">Setups</span><span class="kpi-value">${setups.length}</span></div>
-      <div class="kpi-box"><span class="kpi-label">Dominant</span><span class="kpi-value">${dominantStr || 'Momentum'}</span></div>
-      ${vixVal ? `<div class="kpi-box"><span class="kpi-label">VIX</span><span class="kpi-value" style="color:${vixColor};">${vixVal}</span></div>` : ''}
-      ${spxVal ? `<div class="kpi-box"><span class="kpi-label">SPX</span><span class="kpi-value" style="color:${spxColor};">${spxVal}</span></div>` : ''}
-    </div>
-    <div id="article-clickable-tags" class="card-tags"></div>
+  <div class="ticker-meta">
+    ${heroBadges}
   </div>
+  <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
+  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} — ${tickers}</p>
+  <div class="ticker-metrics">
+    <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Regime</div></div>
+    <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Avg Score</div></div>
+    <div class="ticker-metric"><div class="tm-value">${setups.length}</div><div class="tm-label">Setups</div></div>
+    <div class="ticker-metric"><div class="tm-value">${dominantStr || 'Momentum'}</div><div class="tm-label">Dominant</div></div>
+    ${vixVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${vixColor};">${vixVal}</div><div class="tm-label">VIX</div></div>` : ''}
+    ${spxVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${spxColor};">${spxVal}</div><div class="tm-label">SPX</div></div>` : ''}
+  </div>
+  <div id="article-clickable-tags" class="card-tags"></div>
 </div>
 
 <!-- INTRO -->
@@ -704,11 +702,11 @@ ${syntheseTable(setups)}
 <!-- FAB -->
 <div class="fnav" id="floatingNav">
   <div class="fnav-menu" id="fnavMenu">
-    <a href="#regime" class="fnav-item" data-section="regime"><i class="fas fa-gauge"></i><span>R&eacute;gime</span></a>
-    <a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-list"></i><span>Vue d&rsquo;Ensemble</span></a>
-    <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-chart-pie"></i><span>Synth&egrave;se</span></a>
+    <a href="#regime" class="fnav-item" data-section="regime"><i class="fas fa-gauge"></i><span>Régime</span></a>
+    <a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-list"></i><span>Vue d'Ensemble</span></a>
+    <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-chart-pie"></i><span>Synthèse</span></a>
     <a href="#performance" class="fnav-item" data-section="performance"><i class="fas fa-chart-bar"></i><span>Performance</span></a>
-    <a href="#methodo" class="fnav-item" data-section="methodo"><i class="fas fa-flask"></i><span>M&eacute;thodologie</span></a>
+    <a href="#methodo" class="fnav-item" data-section="methodo"><i class="fas fa-flask"></i><span>Méthodologie</span></a>
     <a href="#disclaimer" class="fnav-item" data-section="disclaimer"><i class="fas fa-triangle-exclamation"></i><span>Disclaimer</span></a>
   </div>
   <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
@@ -718,8 +716,8 @@ ${syntheseTable(setups)}
 </div>
 
 <footer class="article-footer">
-  &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
-  Ceci n&rsquo;est pas un conseil financier.
+  © 2026 DailyTickers. Données via DailyTickers Gateway.
+  Ceci n'est pas un conseil financier.
   <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
 </footer>
 
