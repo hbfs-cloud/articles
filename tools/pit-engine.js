@@ -556,8 +556,16 @@ async function run() {
         const candidates = buildCandidates(scan, mode, day, cfg);
         let slots = (cfg.portfolioSize || 1) - mode.positions.length - mode.pendingEntries.length;
 
-        // Rotation
-        if (cfg.rotation && cfg.rotation !== 'none' && slots <= 0 && candidates.length > 0) {
+        // Status gate (computed early so rotation respects it too — rotating in a
+        // new candidate is effectively a new entry and must be blocked when the
+        // mode is winding down or paused).
+        const cfgStatus = ms.isValidState(cfg.status) ? cfg.status : ms.DEFAULT_STATE;
+        const statusSinceDay = (cfg.statusSince || '').slice(0, 10);
+        const statusActiveOnDay = !statusSinceDay || day >= statusSinceDay;
+        const statusHalt = statusActiveOnDay && !ms.acceptsNewEntries(cfgStatus);
+
+        // Rotation — skipped when status forbids new entries.
+        if (!statusHalt && cfg.rotation && cfg.rotation !== 'none' && slots <= 0 && candidates.length > 0) {
           const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : (cfg.portfolioSize || 1);
           const margin = cfg.rotation === 'aggressive' ? 0 : 5;
           const sorted = [...mode.positions].sort((a, b) => (a.score || 0) - (b.score || 0));
@@ -593,13 +601,11 @@ async function run() {
           const priorClose = mode.equityCurve[mode.equityCurve.length - 1].value;
           ddBreaker = (peak - priorClose) > cfg.ddBreakerPct;
         }
-        // Status gate: paused / stopped / live-to-pause / draft block new entries
-        // from the date the mode entered that state. Earlier days keep normal behavior
-        // so historical backtest results stay reproducible.
-        const cfgStatus = ms.isValidState(cfg.status) ? cfg.status : ms.DEFAULT_STATE;
-        const statusSinceDay = (cfg.statusSince || '').slice(0, 10);
-        const statusActiveOnDay = !statusSinceDay || day >= statusSinceDay;
-        const statusHalt = statusActiveOnDay && !ms.acceptsNewEntries(cfgStatus);
+        // Status gate already computed above (statusHalt). For paused / stopped /
+        // live-to-pause / draft, statusActiveOnDay gates from the transition date
+        // so historical backtest results stay reproducible. Existing positions
+        // still run their full exit logic (SL/TP/horizon/trailing) — only the
+        // new-entry path is suppressed.
         if (vixKill || ddBreaker || statusHalt) {
           log(`  ${day} ${mode.id} HALT new entries (vixKill=${vixKill}, ddBreaker=${ddBreaker}, status=${statusHalt ? cfgStatus : 'ok'})`);
           continue;

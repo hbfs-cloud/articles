@@ -43,7 +43,9 @@ function canTransition(from, to) {
 }
 
 function acceptsNewEntries(state) {
-  return state === 'live' || state === 'test';
+  // live + test = full new entries. test-to-live = gradual ramp-up: entries
+  // flow at-the-water (paper executions validated before flipping to live).
+  return state === 'live' || state === 'test' || state === 'test-to-live';
 }
 
 function exitsOnly(state) {
@@ -56,9 +58,18 @@ function publiclyVisible(state) {
 
 function tradingMode(state) {
   if (state === 'live') return 'real';
-  if (state === 'test' || state === 'test-to-live') return 'paper';
+  if (state === 'test') return 'paper';
+  if (state === 'test-to-live') return 'paper-ramp';  // paper orders pending live promotion
   if (state === 'live-to-pause') return 'exit-only';
   return 'none';
+}
+
+// True when the mode should continue managing existing positions toward exit
+// (SL / TP / horizon / trailing) but not open new ones. Useful for the
+// intelligent wind-down phase: live-to-pause runs normal exit logic while
+// suppressing new entries and rotations.
+function windsDownPositions(state) {
+  return state === 'live-to-pause';
 }
 
 function describe(state) {
@@ -97,6 +108,7 @@ module.exports = {
   exitsOnly,
   publiclyVisible,
   tradingMode,
+  windsDownPositions,
   describe,
   statusBlock,
 };

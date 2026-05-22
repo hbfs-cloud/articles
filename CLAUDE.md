@@ -111,6 +111,17 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | `telegram-notifications-qa` | telegram-publish-notify, topic Telegram, notif article |
 | `scheduled-tasks-veille` | veille tech, tâche planifiée, Discord bot, claude-discord-bot |
 
+## Mode Status State Machine
+Doc complète : [`tools/lib/MODE_STATUS.md`](tools/lib/MODE_STATUS.md). Résumé :
+
+- 7 états : `draft → test → test-to-live → live → live-to-pause → paused → stopped` (+ `paused → live` resume)
+- **`live-to-pause`** = sortie progressive intelligente. Pas de nouvelles entrées NI de rotation, mais SL/TP/horizon/trailing continuent sur les positions ouvertes jusqu'à fermeture naturelle. Puis transition vers `paused`.
+- **`test-to-live`** = ramp-up au fil de l'eau. Entries acceptées en `paper-ramp` pour validation conditions réelles avant flip vers `live`.
+- Stockage : `data/modes-config.json` (état courant via `status` + `statusSince` + `statusReason` + `statusNextReviewAt`) ; `data/modes-status-history.json` (log append-only).
+- API : `portfolio/v1/status.json` agrégé + bloc `status` dans tous endpoints per-mode. OpenAPI v1.3.0+.
+- CLI : `node tools/set-mode-status.js --mode X --to STATE --reason "..." --review YYYY-MM-DD`. Rejette transitions illégales (override : `--force`).
+- Pipeline : `gen-api`, `gen-status-page`, `gen-trading-plan`, `pit-engine` respectent le status. `pit-engine` gate via `statusSince` pour backtest reproductible.
+
 ## Post-tâche : Commit & Push (OBLIGATOIRE)
 Après chaque tâche réussie : `add_card.js` → vérifier `git status` → `git add` (fichiers spécifiques) → `git commit` → `git push origin main`.
 **Ne PAS push si** : HTML < 10KB, `add_card.js` échoué, génération incomplète.
