@@ -151,9 +151,14 @@ This validation is NOT optional — it runs as part of Phase 2, immediately afte
 
 1. Generate `scanner/YYYYMMDD/data.json` following `scanner/template/schema.json` exactly
 2. Generate `scanner/YYYYMMDD/signals.json` (simplified format for downstream tools)
-3. Strategy labels ONLY: Momentum, Breakout, Pullback, Pre-Squeeze
-4. R/R calculated from entry MIDPOINT (not entry_low) — must be >= 1.5 for all setups
-5. **VWAP entry gate (always-on, not grid-searched)** — validated +29% PnL, +16pp WR, 2.5× PF (commit 91596bd9):
+3. **MANDATORY signals.json fields per signal (top_10 + tkl_pool)** — required for validate-scan.js advisory checks and Phase 0.8 lessons-engine consumption:
+   - `extension: { rsi, atr, distance_50dma_pct }` — populate from MCP technicals (GetInstruments instrument_technicals + instrument_support_resistance). RSI 0–100, ATR in price units, distance_50dma_pct = (price-ema50)/ema50*100.
+   - `earnings_clear: true` — set false ONLY if you decide to tag-and-keep (rare); default true means scan was filtered against `±3d` earnings window.
+   - `dilution_clear: true` — set false ONLY if you accept a flagged ticker with explicit rationale (extremely rare); default true means anti-dilution v2 passed.
+   - `region: "US"|"EU"|"UK"|"ASIA"|"CHINA"|"JAPAN"|"ETF"` — used for diversification floor advisory (5 US + 2 EU + 1 APAC + 2 ETFs).
+4. Strategy labels ONLY: Momentum, Breakout, Pullback, Pre-Squeeze
+5. R/R calculated from entry MIDPOINT (not entry_low) — must respect regime-based minimum per `scanner-lessons.json#rr-min-by-regime`: RISK-ON 1.5, RECOVERY/NEUTRAL 1.7, EARLY RISK-OFF/RISK-OFF 2.0.
+6. **VWAP entry gate (always-on, not grid-searched)** — validated +29% PnL, +16pp WR, 2.5× PF (commit 91596bd9):
    - Effective entry = `min(open_next_session, VWAP_next_session)` clamped to `day_low` (no-lookahead)
    - Skip gap-up traps: if `open > entry_high × 1.02`, only fill at VWAP pullback
    - Display VWAP value in setup card AND status table (commit 58bac3bb)
