@@ -51,6 +51,10 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 5. Read `data/scanner-filters.json` for sector_map + diversification rules
 6. Modes downstream = 6: `turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl`. TKL pool gated per-mode via `modes-config.json#tklPoolEnabled`.
 7. Pre-flight: read `~/.claude/projects/-Users-marketwatchxyz-GolandProjects-articles/memory/feedback_pipeline_gotchas.md` for known regression traps (BSD date fallback, qa-check reads `signals.json` not HTML, Pending status, order count).
+8. **Read `data/scanner-lessons.json`** — accumulated rules synthesized from prior weekly retrospectives. Apply during Phase 2:
+   - `severity: blocking` rules → MUST enforce (Claude pre-filters candidates accordingly; validate-scan.js double-checks at publish)
+   - `severity: advisory` rules → bias selection (e.g., favor Momentum in RISK-ON per `momentum-favored-risk-on`; lift Pre-Squeeze weight in EARLY RISK-OFF per `pre-squeeze-early-risk-off`)
+   - Cross-reference `_open_questions` — if a question targets the current scan (`next_retro_check ≤ today`), test the hypothesis and report in Phase 6 QA.
 
 ## Phase 1 — MCP Data Collection
 

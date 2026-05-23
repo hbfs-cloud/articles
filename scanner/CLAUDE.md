@@ -972,12 +972,37 @@ Chaque pilier donne un score numérique (1-7), la moyenne arrondie = note finale
   4. La carte dans `scanner.json` DOIT avoir le style rétrospective : bordure colorée selon la note, badges RÉTROSPECTIVE + NOTE, bouton gradient
 - **NE PAS** supprimer les anciennes rétrospectives — elles restent dans l'index `scanner.json` triées par date avec les scans
 
-### Feedback Loop
-Les leçons de chaque rétrospective sont utilisées pour affiner les scans suivants :
-- Si une stratégie sous-performe → réduire son poids dans `RunAutoScreener`
-- Si un secteur génère trop de faux signaux → ajuster les filtres
-- Si les stops sont trop serrés → élargir les seuils ATR
-- Mentionner explicitement dans le prochain scan : "Suite à la rétrospective du DD/MM, nous avons ajusté..."
+### Feedback Loop — Synthèse Automatisée des Règles (OBLIGATOIRE)
+
+Chaque rétrospective DOIT mettre à jour `data/scanner-lessons.json` — fichier machine-readable lu par `/scanner` Phase 0 step 8 et appliqué pendant la sélection.
+
+**Au moment de générer la rétro :**
+
+1. **Lire `data/scanner-lessons.json` existant** : 12 règles actuelles avec champs `id`, `from_retros`, `rule`, `rationale`, `applies_to`, `enforced_by`, `validation`, `status`, `severity`.
+
+2. **Pour chaque nouveau pattern observé dans la semaine** :
+   - Si pattern récurrent (≥ 2 rétros) → créer/promote la règle en `severity: blocking` et ajouter `from_retros: [...]`
+   - Si pattern isolé (1 seule rétro) → créer en `severity: advisory`, à confirmer à la prochaine rétro
+   - Si pattern contredit une règle existante → marquer l'ancienne `status: deprecated` avec `superseded_by` pointant la nouvelle
+
+3. **Pour chaque règle existante** : vérifier si toujours pertinente. Une règle qui n'a pas été déclenchée sur 4 rétros consécutives peut passer en `status: dormant`.
+
+4. **Cibler les `enforced_by`** :
+   - `blocking` rules → encodées dans `scanner-filters.json` + `validate-scan.js` (Claude ne peut pas les contourner)
+   - `advisory` rules → appliquées par Claude pendant Phase 2 sélection
+   - Si une `blocking` rule ne peut pas encore être encodée dans validate-scan.js, marquer `validation: "pending-implementation"` + ouvrir une issue
+
+5. **Open questions** : ajouter dans `_open_questions[]` les hypothèses à tester au prochain scan (champs `id`, `question`, `next_retro_check`).
+
+6. **Bump `_version`** : `v{major}.{minor}-{YYYYMMDD}`. Major bump si breaking change (règle supprimée ou superseded). Minor sinon.
+
+7. **`_source_retros`** : append la nouvelle rétro à la liste chronologique.
+
+8. **Commit avec la rétro** : `scanner-lessons.json` change AVEC le HTML, dans le même commit.
+
+**Pendant /scanner (Phase 0.8 + Phase 2)** : Claude lit `scanner-lessons.json` au démarrage, applique blocking rules en filtre dur, biaise sélection selon advisory rules, et reporte en Phase 6 QA si une open_question target la scan en cours.
+
+Cette synthèse est **non-optionnelle** — elle évite la dérive du process et capitalise les apprentissages historiques sans relire toutes les rétros à chaque /scanner.
 
 ### Post-Publication (OBLIGATOIRE — NE JAMAIS SAUTER)
 

@@ -1,0 +1,158 @@
+{
+  "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
+  "_version": "v1.0-20260522",
+  "_updated": "2026-05-22",
+  "_source_retros": [
+    "20260327",
+    "20260403",
+    "20260410",
+    "20260417",
+    "20260425",
+    "20260502",
+    "20260515",
+    "20260522"
+  ],
+  "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins. Rules with 'enforced_by' point to the source-of-truth file (scanner-filters.json, validate-scan.js, or this skill's Phase 2 logic). Rules with no enforced_by are advisory — applied by Claude during candidate selection.",
+
+  "rules": [
+    {
+      "id": "stops-min-atr-multiple",
+      "from_retros": ["20260327", "20260515", "20260522"],
+      "rule": "Stop minimum 1.5× ATR(14) du ticker. JAMAIS de stop < 3% absolu, JAMAIS > 8%.",
+      "rationale": "Pattern récurrent sur 3 rétros : stops < 1.5× ATR ont déclenché intraday avant rebond (VRT -7.9% 20260518, COP -3.5% 20260520, COST -3.0% 20260520, IBM 20260327, etc.). Régimes volatiles amplifient le problème.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#stops.min_atr_multiple=1.5, min_pct_from_entry=3, max_pct_from_entry=8",
+      "validation": "validate-scan.js doit rejeter tout setup avec stop_pct < 3% ou stop_pct < 1.5*atr_pct",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "rr-min-by-regime",
+      "from_retros": ["20260522"],
+      "rule": "R/R minimum (depuis entry midpoint) : RISK-ON 1:1.5, RECOVERY/NEUTRAL 1:1.7, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. Régime déterminé via RunAutoScreener#regime_score.",
+      "rationale": "R/R 1:1.5 jugé insuffisant en EARLY RISK-OFF — COP/COST/TTE setups 20260520 ont tous failed avec R/R trop courts. Régime défensif réduit la tolérance à des trades à faible asymétrie.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js R/R check by regime label",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "regime-rotation-penalty",
+      "from_retros": ["20260515", "20260522"],
+      "rule": "Si le régime change ≥ 2× dans les 5 derniers jours scanner : réduire taille position 30% + élargir stops ×1.5 ATR sur tous les nouveaux setups. Détecté via comparaison data/scanner.json[-5].regime.",
+      "rationale": "Semaine 20260518-22 a connu 4 rotations RECOVERY→RISK-ON→EARLY R-OFF→RISK-ON en 5j — les Breakouts/Momentum entrés en conditions rapidement invalidées ont saigné. Volatilité de régime = facteur limitant principal depuis 3 rétros.",
+      "applies_to": ["top_10", "all modes"],
+      "enforced_by": "advisory — applied by Claude during Phase 2 sizing + OptimizeSizing constraint",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "limit-high-beta-ai-infra",
+      "from_retros": ["20260522"],
+      "rule": "Maximum 1 setup high-beta AI infra (Vertiv/Eaton/Modine/VRT-type) par scan en régime RECOVERY ou EARLY RISK-OFF. RISK-ON : pas de limite.",
+      "rationale": "VRT 20260518 (RECOVERY, +38% au-dessus 50-DMA, RSI 75) a crashé -7.9% same-day. Setups d'AI capex avec extension extrême sont des traps en régime instable.",
+      "applies_to": ["top_10"],
+      "enforced_by": "scanner-filters.json#overextension (max_distance_50dma_pct_by_strategy, max_rsi14_daily=72, min_consolidation_bars=5)",
+      "validation": "validate-scan.js doit rejeter Momentum > 20% au-dessus 50-DMA OU RSI > 72 daily",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "trailing-stop-delay",
+      "from_retros": ["20260515"],
+      "rule": "Trailing stop ne s'active pas avant 50% du parcours vers TP1 quand R/R initial ≥ 1:2.4. Sur PANW 20260518 (R/R 1:2.4, entry $236 → +2.5% le 19/05), un trailing prématuré aurait sorti à BE sans capturer la suite.",
+      "rationale": "Trailing trop précoce sur breakouts à fort R/R coupe la queue de distribution. Règle déjà encodée dans mode-config v5.2+ pour balanced/secured.",
+      "applies_to": ["all modes"],
+      "enforced_by": "modes-config.json (sweep-optimized trail params per mode)",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "momentum-favored-risk-on",
+      "from_retros": ["20260425", "20260522"],
+      "rule": "En régime RISK-ON continu (≥ 2 jours), favoriser Momentum (45% target weight) > Breakout (30%). En EARLY RISK-OFF, inverser : Breakout 40%, Pullback 30%, Momentum 20%.",
+      "rationale": "Retro 20260425 a montré Momentum > Breakout sous RISK-ON continu (HR Momentum 65%, Breakout 45%). Retro 20260522 confirme : 4 Momentum sur top 10 ont surperformé les 2 Breakouts en RISK-ON terminal vendredi.",
+      "applies_to": ["top_10 strategy mix"],
+      "enforced_by": "advisory — Claude aligns regime_strategy_weights with regime detected",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "pre-squeeze-early-risk-off",
+      "from_retros": ["20260502"],
+      "rule": "Pre-Squeeze est SOUS-EXPLOITÉ en EARLY RISK-OFF. Si régime = EARLY RISK-OFF et compression volatilité détectée (bbw < hhv20(bbw)*0.6), allouer 25% du top 10 à Pre-Squeeze.",
+      "rationale": "Rétro 20260502 a montré Pre-Squeeze HR 70% en EARLY RISK-OFF — meilleure stratégie du régime, mais sous-représentée dans les scans (3 occurrences sur 50 setups la semaine 20260427-01).",
+      "applies_to": ["top_10 strategy mix"],
+      "enforced_by": "advisory — Claude prioritizes Pre-Squeeze candidates from RunAutoScreener when regime = EARLY RISK-OFF",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "earnings-window-strict",
+      "from_retros": ["20260403"],
+      "rule": "Aucun ticker avec earnings dans ±3 jours de bourse. Pas de tag 'earnings risk', DISQUALIFICATION dure.",
+      "rationale": "TimesFM accuracy chute à 40% (vs 56% baseline) près des earnings. Multiple retros ont confirmé hit rate désastreux sur setups près du print.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#earnings_window + GetEarningsCalendarFiltered cross-check",
+      "validation": "validate-scan.js doit rejeter tout setup avec report_date dans exclusion_window",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "dilution-block-toxic-underwriters",
+      "from_retros": ["20260406"],
+      "rule": "DISQUALIFICATION immédiate si recent SEC filing (S-1, S-3, 424B) < 90 jours mentionne aggressive underwriter (H.C. Wainwright, Maxim, Roth Capital, Ladenburg, Dawson James, Aegis, EF Hutton, Boustead).",
+      "rationale": "INDO 20260406 a dilué 80% du float dans les 30j suivants — fund toxique + warrants ITM. Pattern récurrent sur micro/small-caps.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#dilution_blocklist + QueryData types=sec_filings,flags",
+      "validation": "validate-scan.js doit rejeter si flags.aggressive_underwriter=true OR dilution_risk_score >= 70",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "no-short-squeeze-strategy",
+      "from_retros": ["20260327"],
+      "rule": "Short Squeeze EXCLU de toutes les stratégies (0% win rate Feb-Mar 2026 sur retros). Stratégies autorisées UNIQUEMENT : Momentum, Pre-Squeeze, Breakout, Pullback.",
+      "rationale": "0% WR documenté sur 2 mois consécutifs. Stratégie morte.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#strategies.forbidden",
+      "validation": "validate-scan.js doit rejeter Short Squeeze label",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "vwap-entry-gate",
+      "from_retros": ["validated-by-sweep-2026-04"],
+      "rule": "Entry effective = min(open_next_session, VWAP_next_session) clamped à day_low (no-lookahead). Si open > entry_high * 1.02, fill uniquement à VWAP pullback.",
+      "rationale": "Sweep optimization validée +29% PnL, +16pp WR, 2.5× PF (commit 91596bd9). Évite gap-up traps systématiquement.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "sweep.js + signal-monitor.js + portfolio API (always-on, not grid-searched)",
+      "status": "active",
+      "severity": "blocking"
+    },
+    {
+      "id": "diversification-floor",
+      "from_retros": ["accumulated"],
+      "rule": "Diversification minimum sur top 10 : 5 US + 2 EU + 1 APAC + 2 ETFs. Max 3 setups par secteur (sector_map). Max 3 repeats vs scan précédent.",
+      "rationale": "Concentration sectorielle = principal vecteur de drawdown corrélé. Encodé pour limiter le tail risk.",
+      "applies_to": ["top_10"],
+      "enforced_by": "scanner-filters.json#diversification",
+      "validation": "validate-scan.js doit valider les counts US/EU/APAC/ETF et sector caps",
+      "status": "active",
+      "severity": "blocking"
+    }
+  ],
+
+  "_open_questions": [
+    {
+      "id": "tkl-pool-rsi-ceiling",
+      "question": "Faut-il abaisser le plafond RSI TKL pool de 75 à 70 ? Les 5 candidats 20260526 (OLPX 69, TE 68, BTBT 58, APPS 68, SLS 65) sont tous dans cette zone — moins de marge avant overheat.",
+      "next_retro_check": "20260605"
+    },
+    {
+      "id": "mcp-gateway-quality-tag",
+      "question": "Ajouter un flag `_mcp_quality` dans signals.json indiquant si le scan a été généré pendant un incident MCP (worker timeout > 10m, force-async failures > 30%) — la rétro pourra alors pondérer l'évaluation.",
+      "next_retro_check": "20260605"
+    }
+  ]
+}

@@ -461,6 +461,22 @@
     <p><strong>1. Règle volatilité de régime :</strong> Si le régime change 2× en 3 jours → réduire taille position de 30% et élargir stops ×1.5 ATR. <strong>2. R/R minimum en EARLY RISK-OFF :</strong> Exiger R/R ≥ 1:2.0 (pas 1:1.5). Éliminer les setups 1:1.5 en régime défensif. <strong>3. VRT-type exposure :</strong> Limiter à 1 seul setup high-beta AI infra par scan en régime RECOVERY/EARLY RISK-OFF. <strong>4. Trailing stop PANW :</strong> Sur 52W high breakout avec R/R ≥ 1:2.4, ne pas activer trailing avant 50% du parcours TP1. <strong>5. Post-rétro 20260515 (note C+) :</strong> Les stops trop serrés étaient déjà identifiés — le problème persiste sur VRT/COP. Priorité #1 pour le prochain cycle.</p>
   </div>
 
+  <div style="background:#eff6ff;border:1px solid #3b82f6;border-radius:10px;padding:1rem;margin-top:1rem">
+    <h4 style="color:#1e40af;margin:0 0 .4rem;font-size:.95rem">🔧 Automatisation — <code style="background:#dbeafe;padding:.1rem .3rem;border-radius:3px">data/scanner-lessons.json</code></h4>
+    <p style="font-size:.875rem;margin:0 0 .5rem">Les 5 ajustements ci-dessus + les 7 règles synthétisées des rétros antérieures (depuis mars 2026) sont désormais encodés dans <code>data/scanner-lessons.json</code> — fichier machine-readable lu automatiquement par <code>/scanner</code> Phase 0.8 au démarrage de chaque scan. Plus besoin de relire toutes les rétros manuellement : 12 règles actives appliquées en filtre dur (severity=blocking) ou en biais de sélection (advisory).</p>
+    <ul style="font-size:.85rem;margin:.4rem 0 0;padding-left:1.2rem;line-height:1.7">
+      <li><strong>Blocking</strong> (validate-scan.js refuse la publication) : stops &lt;1.5×ATR, R/R minimum par régime, RSI &gt;72, earnings ±3j, dilution toxique, Short Squeeze, VWAP gate, diversification.</li>
+      <li><strong>Advisory</strong> (Claude biaise la sélection) : trailing delay, rotation régime → size ×0.7, Momentum favorisé en RISK-ON, Pre-Squeeze en EARLY RISK-OFF.</li>
+      <li><strong>Open questions</strong> : 2 hypothèses à tester à la rétro 20260605 (plafond RSI TKL pool, flag MCP quality).</li>
+    </ul>
+    <p style="font-size:.8rem;color:#475569;margin:.5rem 0 0;font-style:italic">Synthèse mise à jour à chaque rétro. Source de vérité unique. Voir <code>scanner/CLAUDE.md §5bis "Feedback Loop"</code> pour le process de mise à jour.</p>
+  </div>
+
+  <div style="background:#fefce8;border:1px solid #eab308;border-radius:10px;padding:1rem;margin-top:1rem">
+    <h4 style="color:#854d0e;margin:0 0 .4rem;font-size:.95rem">⚠️ Contexte qualité data — MCP Gateway instabilité (mai 2026)</h4>
+    <p style="font-size:.875rem;color:#713f12;margin:0">Le gateway MCP (RunAutoScreener + GetMarketOverview) a connu des incidents intermittents depuis fin avril : workers stuck &gt;10min, goroutines explosion (34k+), proxy errors Cloudflare 502. Conséquence pour les scans 20260518-22 : plusieurs cycles ont dû basculer en sélection manuelle/diversification fallback (cf. spec §"Error Handling"). Le gateway a été stabilisé le 2026-05-22 (restart clean → 35 goroutines, healthy). Une partie de la sous-performance de la semaine (notamment EL/DECK/SPOT picks tardifs vendredi) reflète cette dégradation de qualité du screening automatique. La rétro 20260529 sera la première à bénéficier d'une semaine entière sous gateway sain — meilleur baseline pour comparer.</p>
+  </div>
+
   <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:1rem;margin-top:1rem">
     <h4 style="color:#92400e;margin:0 0 .4rem;font-size:.9rem">Pédagogie — Méthodologie rolling</h4>
     <p style="font-size:.85rem;color:#78350f;margin:0">La note C reflète les 6 trades résolus de la semaine. Les 44 setups inflight (ARM +6.35%, MS +4.95%, TSM +1.25%, etc.) seront comptabilisés dans la rétro suivante au fil de leur résolution — par construction, le système rolling 10j contient toujours des positions ouvertes en queue, donc une rétro "définitive sans inflight" n'existe pas. Le portfolio frozen_fortress (+1.32% semaine, MaxDD -0.29%) capture la performance réelle agnostique du timing de résolution.</p>
