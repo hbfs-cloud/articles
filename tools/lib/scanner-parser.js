@@ -73,6 +73,13 @@ function loadSignals(dir) {
           rr: s.rr || '',
           sharia: s.sharia != null ? s.sharia : null,
           thesis: s.thesis || '',
+          // Preserve fields used by validate-scan.js blocking rules
+          region: s.region || null,
+          extension: s.extension || null,
+          earnings_clear: s.earnings_clear,
+          dilution_clear: s.dilution_clear,
+          horizon: s.horizon,
+          name: s.name,
         };
       };
       const signals = (data.signals || []).map(mapSignal);

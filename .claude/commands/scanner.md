@@ -51,10 +51,14 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 5. Read `data/scanner-filters.json` for sector_map + diversification rules
 6. Modes downstream = 6: `turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl`. TKL pool gated per-mode via `modes-config.json#tklPoolEnabled`.
 7. Pre-flight: read `~/.claude/projects/-Users-marketwatchxyz-GolandProjects-articles/memory/feedback_pipeline_gotchas.md` for known regression traps (BSD date fallback, qa-check reads `signals.json` not HTML, Pending status, order count).
-8. **Read `data/scanner-lessons.json`** — accumulated rules synthesized from prior weekly retrospectives. Apply during Phase 2:
-   - `severity: blocking` rules → MUST enforce (Claude pre-filters candidates accordingly; validate-scan.js double-checks at publish)
-   - `severity: advisory` rules → bias selection (e.g., favor Momentum in RISK-ON per `momentum-favored-risk-on`; lift Pre-Squeeze weight in EARLY RISK-OFF per `pre-squeeze-early-risk-off`)
+8. **Read `data/scanner-lessons.json`** — accumulated rules synthesized from prior weekly retrospectives. **The retros fuel the candidate-selection debate at Phase 2** — they do NOT block trades at publish-time. Apply during Phase 2 selection:
+   - `severity: selection_filter` rules → use these to PICK better candidates upstream (e.g., favor names with stop ≥ 1.5× ATR, R/R ≥ regime threshold, RSI < 72, no earnings ±3d, no toxic underwriters). Each filter rule cites its rationale and source retros — incorporate the reasoning during selection.
+   - `severity: advisory` rules → bias selection (e.g., favor Momentum in RISK-ON per `momentum-favored-risk-on`; lift Pre-Squeeze weight in EARLY RISK-OFF per `pre-squeeze-early-risk-off`). Deviations OK with rationale.
+   - `severity: hard_block` rules → encoded in `scanner-filters.json` + enforced by `validate-scan.js` at publish (strategy whitelist, sector cap, scan size, absolute stop %, sharia ETF blocklist).
+   - `severity: infrastructure` rules → enforced downstream (sweep.js, signal-monitor.js, portfolio API).
    - Cross-reference `_open_questions` — if a question targets the current scan (`next_retro_check ≤ today`), test the hypothesis and report in Phase 6 QA.
+
+   **Output of validate-scan.js may emit non-blocking advisories** (lesson-rule deviations such as stop < 1.5× ATR, RSI > 72, R/R below regime threshold). These are educational signals for the NEXT scan iteration — not gates on the current one.
 
 ## Phase 1 — MCP Data Collection
 

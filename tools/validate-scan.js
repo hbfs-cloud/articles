@@ -182,6 +182,90 @@ function main() {
     }
   }
 
+  // ── ADVISORY CHECKS (warnings only, do NOT block publish) ─────────────────
+  // Lessons from scanner-lessons.json are SELECTION-TIME inputs at /scanner Phase 2.
+  // validate-scan.js only blocks gross errors (strategy whitelist, sector cap, stops abs %).
+  // The advisory section below surfaces lesson-rule deviations so Claude can iterate at
+  // selection time — but a passing scan with warnings still publishes.
+  const advisories = [];
+
+  // R/R minimum by regime (advisory)
+  const RR_MIN_BY_REGIME = {
+    'RISK-ON': 1.5, 'RECOVERY': 1.7, 'NEUTRAL': 1.7,
+    'EARLY RISK-OFF': 2.0, 'RISK-OFF': 2.0
+  };
+  if (regime) {
+    const rrMin = RR_MIN_BY_REGIME[String(regime).toUpperCase().trim()] || 1.5;
+    for (const s of signals) {
+      if (!s.rr) continue;
+      const m = String(s.rr).match(/1:(\d+\.?\d*)/);
+      if (!m) continue;
+      const ratio = parseFloat(m[1]);
+      if (ratio < rrMin) advisories.push(`${s.ticker}: R/R 1:${ratio} < regime min 1:${rrMin} (${regime}) [rr_min_by_regime]`);
+    }
+  }
+
+  // Stop ATR multiple (advisory)
+  if (filters.stops?.min_atr_multiple) {
+    const minMult = filters.stops.min_atr_multiple;
+    for (const s of signals) {
+      if (typeof s.extension?.atr !== 'number' || !s.entry || !s.stop || s.extension.atr <= 0) continue;
+      const r = Math.abs(s.entry - s.stop) / s.extension.atr;
+      if (r < minMult) advisories.push(`${s.ticker}: stop ${r.toFixed(2)}× ATR (recommend ≥${minMult}×) [stops_atr_multiple]`);
+    }
+  }
+
+  // RSI overextension (advisory)
+  const maxRsi = filters.overextension?.max_rsi14_daily;
+  if (maxRsi) for (const s of signals) {
+    if (typeof s.extension?.rsi === 'number' && s.extension.rsi > maxRsi)
+      advisories.push(`${s.ticker}: RSI ${s.extension.rsi.toFixed(1)} > ${maxRsi} (parabolic risk) [overextension_rsi]`);
+  }
+
+  // Distance 50-DMA by strategy (advisory)
+  const maxByStrat = filters.overextension?.max_distance_50dma_pct_by_strategy;
+  if (maxByStrat) for (const s of signals) {
+    if (typeof s.extension?.distance_50dma_pct !== 'number') continue;
+    const cap = maxByStrat[s.strategy]; if (cap == null) continue;
+    if (s.extension.distance_50dma_pct > cap)
+      advisories.push(`${s.ticker}: ${s.extension.distance_50dma_pct.toFixed(1)}% above 50-DMA > ${s.strategy} cap ${cap}% [overextension_50dma]`);
+  }
+
+  // Earnings + dilution flags (advisory — Claude's selection should set true; only flag if false)
+  for (const s of signals) {
+    if (s.earnings_clear === false) advisories.push(`${s.ticker}: earnings_clear=false (±3d window) [earnings_window]`);
+    if (s.dilution_clear === false) advisories.push(`${s.ticker}: dilution_clear=false [dilution_clear]`);
+  }
+
+  // Diversification floors (advisory — Claude's selection should hit these)
+  if (filters.diversification) {
+    const counts = { US: 0, EU: 0, APAC: 0, ETF: 0, Other: 0 };
+    for (const s of signals) {
+      const r = String(s.region || '').toUpperCase().trim();
+      if (r === 'US') counts.US++;
+      else if (['EU', 'UK', 'FR', 'DE', 'IT', 'ES', 'NL', 'CH'].includes(r)) counts.EU++;
+      else if (['ASIA', 'APAC', 'CHINA', 'JAPAN', 'KOREA', 'HK', 'TW'].includes(r)) counts.APAC++;
+      else if (r === 'ETF') counts.ETF++;
+      else counts.Other++;
+    }
+    const floors = {
+      US: filters.diversification.min_us_count,
+      EU: filters.diversification.min_eu_count,
+      APAC: filters.diversification.min_apac_count,
+      ETF: filters.diversification.min_etf_count
+    };
+    for (const [region, floor] of Object.entries(floors)) {
+      if (floor == null) continue;
+      if (counts[region] < floor) advisories.push(`Region "${region}" has ${counts[region]} setups (recommend ≥${floor}) [diversification_floor]`);
+    }
+  }
+
+  if (advisories.length) {
+    console.warn(`\n⚠️  ${advisories.length} advisory note(s) from scanner-lessons.json (non-blocking — selection-time hints):`);
+    advisories.forEach((a, i) => console.warn(`  ${i + 1}. ${a}`));
+    console.warn('  → Claude should incorporate these at /scanner Phase 2 for the NEXT scan, not block this one.\n');
+  }
+
   if (violations.length) fail(violations);
   ok(dirName, signals.length);
 }

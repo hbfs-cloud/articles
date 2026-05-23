@@ -12,7 +12,7 @@
     "20260515",
     "20260522"
   ],
-  "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins. Rules with 'enforced_by' point to the source-of-truth file (scanner-filters.json, validate-scan.js, or this skill's Phase 2 logic). Rules with no enforced_by are advisory — applied by Claude during candidate selection.",
+  "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2 (preferred path: surface better picks upstream).\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright (strategy whitelist, sector cap, scan size, sharia ETF blocklist, absolute stop %).\n\n  Philosophy: retros must FUEL the candidate selection debate at Phase 2, NOT block legitimate trades at publish time. validate-scan.js surfaces lesson-rule deviations as advisories (non-blocking warnings) so Claude can iterate at the NEXT scan — never to fail-close a scan that's already in flight.",
 
   "rules": [
     {
@@ -24,7 +24,7 @@
       "enforced_by": "scanner-filters.json#stops.min_atr_multiple=1.5, min_pct_from_entry=3, max_pct_from_entry=8",
       "validation": "validate-scan.js doit rejeter tout setup avec stop_pct < 3% ou stop_pct < 1.5*atr_pct",
       "status": "active",
-      "severity": "blocking"
+      "severity": "selection_filter"
     },
     {
       "id": "rr-min-by-regime",
@@ -34,7 +34,7 @@
       "applies_to": ["top_10"],
       "enforced_by": "validate-scan.js R/R check by regime label",
       "status": "active",
-      "severity": "blocking"
+      "severity": "selection_filter"
     },
     {
       "id": "regime-rotation-penalty",
@@ -55,7 +55,7 @@
       "enforced_by": "scanner-filters.json#overextension (max_distance_50dma_pct_by_strategy, max_rsi14_daily=72, min_consolidation_bars=5)",
       "validation": "validate-scan.js doit rejeter Momentum > 20% au-dessus 50-DMA OU RSI > 72 daily",
       "status": "active",
-      "severity": "blocking"
+      "severity": "selection_filter"
     },
     {
       "id": "trailing-stop-delay",
@@ -96,7 +96,7 @@
       "enforced_by": "scanner-filters.json#earnings_window + GetEarningsCalendarFiltered cross-check",
       "validation": "validate-scan.js doit rejeter tout setup avec report_date dans exclusion_window",
       "status": "active",
-      "severity": "blocking"
+      "severity": "selection_filter"
     },
     {
       "id": "dilution-block-toxic-underwriters",
@@ -107,7 +107,7 @@
       "enforced_by": "scanner-filters.json#dilution_blocklist + QueryData types=sec_filings,flags",
       "validation": "validate-scan.js doit rejeter si flags.aggressive_underwriter=true OR dilution_risk_score >= 70",
       "status": "active",
-      "severity": "blocking"
+      "severity": "selection_filter"
     },
     {
       "id": "no-short-squeeze-strategy",
@@ -116,9 +116,9 @@
       "rationale": "0% WR documenté sur 2 mois consécutifs. Stratégie morte.",
       "applies_to": ["top_10", "tkl_pool"],
       "enforced_by": "scanner-filters.json#strategies.forbidden",
-      "validation": "validate-scan.js doit rejeter Short Squeeze label",
+      "validation": "validate-scan.js rejects Short Squeeze label (rule 3)",
       "status": "active",
-      "severity": "blocking"
+      "severity": "hard_block"
     },
     {
       "id": "vwap-entry-gate",
@@ -128,7 +128,7 @@
       "applies_to": ["top_10", "tkl_pool"],
       "enforced_by": "sweep.js + signal-monitor.js + portfolio API (always-on, not grid-searched)",
       "status": "active",
-      "severity": "blocking"
+      "severity": "infrastructure"
     },
     {
       "id": "diversification-floor",
@@ -136,10 +136,10 @@
       "rule": "Diversification minimum sur top 10 : 5 US + 2 EU + 1 APAC + 2 ETFs. Max 3 setups par secteur (sector_map). Max 3 repeats vs scan précédent.",
       "rationale": "Concentration sectorielle = principal vecteur de drawdown corrélé. Encodé pour limiter le tail risk.",
       "applies_to": ["top_10"],
-      "enforced_by": "scanner-filters.json#diversification",
-      "validation": "validate-scan.js doit valider les counts US/EU/APAC/ETF et sector caps",
+      "enforced_by": "scanner-filters.json#diversification + validate-scan.js max_per_sector (hard block); min country counts surfaced as advisory",
+      "validation": "validate-scan.js rule 6 hard-blocks max_per_sector violations; min US/EU/APAC/ETF counts emitted as warnings",
       "status": "active",
-      "severity": "blocking"
+      "severity": "mixed (max_per_sector=hard_block, country_floors=selection_filter)"
     }
   ],
 
