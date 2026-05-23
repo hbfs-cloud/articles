@@ -3308,7 +3308,7 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Scanner Retrospective",
-    "desc": "Revue complète de 50 setups sur 5 scans (18–22 mai 2026) — Note C* (provisoire) — 16.7% TP1 HR sur 6 résolus — Portfolio +1.32% (frozen_fortress). Best: ARM +6.35%, worst: VRT -7.90%.",
+    "desc": "Revue complète de 50 setups sur 5 scans (18–22 mai 2026) — Note C — 16.7% TP1 HR sur 6 résolus — Portfolio +1.32% (frozen_fortress). Best: ARM +6.35%, worst: VRT -7.90%.",
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,tech,semis,industrials,consumer,financials,energy,healthcare,commodity",
     "grade": "C",
     "href": "/scanner/retrospective/20260522/",
