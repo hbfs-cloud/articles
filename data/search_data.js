@@ -221,6 +221,19 @@ window.searchDataPrebuilt = [
     "date": "29 Décembre 2025 - 3 Janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "University of Michigan consumer sentiment hit 44.8 in May — a new all-time low dating back to the 1970s. Current conditions (45.8) and expectations (44.1) both set record lows. One-year inflation expectations surged to 4.8%, the highest since the early 1980s. Meanwhile, the S&P 500 sits 0.3% below i...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260526/",
+    "date": "26 mai 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
