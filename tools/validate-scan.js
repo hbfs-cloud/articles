@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const parser = require('./lib/scanner-parser');
+const { recentDilutionFilings } = require('./pre-scan-filter');
 
 const ROOT = path.join(__dirname, '..');
 const FILTERS_FILE = path.join(ROOT, 'data', 'scanner-filters.json');
@@ -42,7 +43,7 @@ function loadScanSignals(arg) {
   if (!loaded || !loaded.signals.length) {
     throw new Error(`No signals found in ${dir}`);
   }
-  return { dir, dirName, signals: loaded.signals, regime: loaded.regime || null };
+  return { dir, dirName, signals: loaded.signals, tklPool: loaded.tklPool || [], regime: loaded.regime || null };
 }
 
 function loadOpenPositions() {
@@ -64,18 +65,20 @@ function ok(scanRef, signalCount) {
   console.log(`\n✅ Scan validation PASSED — ${signalCount} signals in ${scanRef}\n`);
 }
 
-function main() {
+async function main() {
   const arg = process.argv[2];
   if (!arg) {
     console.error('Usage: node tools/validate-scan.js <scanner/YYYYMMDD/ or signals.json or index.html>');
     process.exit(2);
   }
+  const skipEdgar = process.argv.includes('--skip-edgar');
 
   const filters = loadFilters();
-  const { dir, dirName, signals, regime } = loadScanSignals(arg);
+  const { dir, dirName, signals, tklPool, regime } = loadScanSignals(arg);
   const openPositions = loadOpenPositions();
 
   const violations = [];
+  const advisoriesFromEdgar = [];
 
   // 1. Scan size
   if (filters.scan_size && filters.scan_size.exact && signals.length !== filters.scan_size.exact) {
@@ -182,6 +185,64 @@ function main() {
     }
   }
 
+  // ── TKL POOL HARD CHECKS ──────────────────────────────────────────────────
+  // TKL pool gets the same strategy + stops checks as top 10.
+  for (const s of tklPool) {
+    const strat = (s.strategy || '').trim();
+    if (strat && forbiddenStrats.has(strat)) {
+      violations.push({
+        rule: 'tkl.strategies.forbidden',
+        message: `TKL ${s.ticker}: strategy "${strat}" is forbidden.`
+      });
+    }
+    if (typeof s.entry === 'number' && typeof s.stop === 'number' && filters.stops) {
+      const pct = Math.abs((s.entry - s.stop) / s.entry) * 100;
+      if (filters.stops.min_pct_from_entry != null && pct < filters.stops.min_pct_from_entry) {
+        violations.push({
+          rule: 'tkl.stops.min_pct',
+          message: `TKL ${s.ticker}: stop ${pct.toFixed(2)}% from entry (min ${filters.stops.min_pct_from_entry}%).`
+        });
+      }
+    }
+    if (openPositions.has(String(s.ticker).toUpperCase())) {
+      violations.push({
+        rule: 'tkl.anti_duplicate',
+        message: `TKL ${s.ticker}: already in open_positions.`
+      });
+    }
+  }
+
+  // ── SEC EDGAR DILUTION CHECK (TKL pool — hard block) ─────────────────────
+  // MCP flags don't surface 424B5/S-3 as dilution signals. Cross-reference
+  // SEC EDGAR directly for recent prospectus supplements on all TKL tickers.
+  // Top 10 checked as advisory (Claude already ran MCP anti-dilution v2).
+  if (!skipEdgar && (tklPool.length > 0 || signals.length > 0)) {
+    console.log('  Checking SEC EDGAR for recent dilution filings...');
+    const allTickers = [
+      ...tklPool.map(s => ({ ticker: s.ticker, pool: 'tkl' })),
+      ...signals.map(s => ({ ticker: s.ticker, pool: 'top10' })),
+    ];
+    for (const { ticker, pool } of allTickers) {
+      try {
+        const edgar = await recentDilutionFilings(ticker, filters);
+        if (edgar.hits.length > 0) {
+          const detail = edgar.hits.map(h => `${h.form} (${h.ageDays}d ago)`).join(', ');
+          if (pool === 'tkl') {
+            violations.push({
+              rule: 'tkl.edgar_dilution',
+              message: `TKL ${ticker}: recent SEC dilution filings — ${detail}. Remove from tkl_pool.`
+            });
+          } else {
+            // Top 10 = advisory (Claude did MCP check; EDGAR is a safety net)
+            advisoriesFromEdgar.push(`${ticker}: SEC EDGAR found ${detail} — verify dilution_clear [edgar_dilution]`);
+          }
+        }
+      } catch { /* SEC EDGAR down — non-fatal, skip */ }
+    }
+  } else if (skipEdgar) {
+    console.log('  Skipping SEC EDGAR dilution check (--skip-edgar).');
+  }
+
   // ── ADVISORY CHECKS (warnings only, do NOT block publish) ─────────────────
   // Lessons from scanner-lessons.json are SELECTION-TIME inputs at /scanner Phase 2.
   // validate-scan.js only blocks gross errors (strategy whitelist, sector cap, stops abs %).
@@ -232,10 +293,15 @@ function main() {
   }
 
   // Earnings + dilution flags (advisory — Claude's selection should set true; only flag if false)
-  for (const s of signals) {
-    if (s.earnings_clear === false) advisories.push(`${s.ticker}: earnings_clear=false (±3d window) [earnings_window]`);
-    if (s.dilution_clear === false) advisories.push(`${s.ticker}: dilution_clear=false [dilution_clear]`);
+  const allSignals = [...signals, ...tklPool];
+  for (const s of allSignals) {
+    const prefix = tklPool.includes(s) ? `TKL ${s.ticker}` : s.ticker;
+    if (s.earnings_clear === false) advisories.push(`${prefix}: earnings_clear=false (±3d window) [earnings_window]`);
+    if (s.dilution_clear === false) advisories.push(`${prefix}: dilution_clear=false [dilution_clear]`);
   }
+
+  // Merge EDGAR-discovered advisories (top 10 only — TKL EDGAR hits are hard blocks above)
+  advisories.push(...advisoriesFromEdgar);
 
   // Diversification floors (advisory — Claude's selection should hit these)
   if (filters.diversification) {
@@ -270,6 +336,6 @@ function main() {
   ok(dirName, signals.length);
 }
 
-if (require.main === module) main();
+if (require.main === module) main().catch(e => { console.error(e); process.exit(2); });
 
 module.exports = { loadFilters, loadScanSignals };
