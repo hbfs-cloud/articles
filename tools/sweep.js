@@ -768,13 +768,20 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     let unrealizedPnl = 0;
 
     // Resolved trades entered but not yet exited as of this day
+    // Cap at portfolioSize to prevent inflated equity when FROZEN_ONLY merges
+    // overlapping old + new trades (e.g. 23 positions at 10% each = 230% exposure)
+    let resolvedExposure = 0;
+    const maxExposure = (1 / portfolioSize) * (positionSizePct || 1) * portfolioSize; // = positionSizePct (1.0)
     for (let i = resolvedIdx; i < sortedResolved.length; i++) {
       const t = sortedResolved[i];
       const entryDay = t.entryDate || t.scanDate;
       if (entryDay && entryDay <= day && t.actualEntry > 0) {
+        const w = getWeight(t, modeId || '');
+        if (resolvedExposure + w > maxExposure + 1e-9) continue;
         const close = getClose(t.ticker, day);
         if (close) {
-          unrealizedPnl += ((close - t.actualEntry) / t.actualEntry) * 100 * getWeight(t, modeId || '');
+          resolvedExposure += w;
+          unrealizedPnl += ((close - t.actualEntry) / t.actualEntry) * 100 * w;
         }
       }
     }
@@ -884,6 +891,10 @@ function simulatePortfolio(allTrades, scans, config) {
 
   // Build portfolio: track open positions day by day
   const openPositions = []; // { trade, weight }
+  // Seed with existing open positions from prior FROZEN_ONLY runs to prevent over-allocation
+  if (config.initialPositions && config.initialPositions.length > 0) {
+    openPositions.push(...config.initialPositions);
+  }
   const closedTrades = [];
   const slCooldown = new Map(); // ticker → exitDate (10 biz day re-entry ban after SL)
   const allScanDates = Object.keys(byDate).sort();
@@ -906,8 +917,10 @@ function simulatePortfolio(allTrades, scans, config) {
     const stillOpen = [];
     for (const pos of openPositions) {
       if (pos.trade.exitDate && pos.trade.exitDate <= day) {
-        if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
-        closedTrades.push(pos.trade);
+        if (!pos.trade._phantom) {
+          if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
+          closedTrades.push(pos.trade);
+        }
         // Cooldown: SL=10d re-entry ban (unchanged). BE/expired/rotated = no cooldown (grace period handles churn)
         if (pos.trade.status === 'sl') slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 10 });
       } else {
@@ -951,8 +964,10 @@ function simulatePortfolio(allTrades, scans, config) {
             const hist = priceCache[worst.trade.ticker];
             if (hist && hist[day]) {
               const forcePnl = ((hist[day].close - worst.trade.actualEntry) / worst.trade.actualEntry) * 100;
-              realizedPnl += forcePnl * (worst.weight ?? weight);
-              closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: day, pnlPct: +forcePnl.toFixed(2) });
+              if (!worst.trade._phantom) {
+                realizedPnl += forcePnl * (worst.weight ?? weight);
+                closedTrades.push({ ...worst.trade, status: 'rotated', exitDate: day, pnlPct: +forcePnl.toFixed(2) });
+              }
             } else {
               closedTrades.push(worst.trade);
             }
@@ -1083,6 +1098,7 @@ function simulatePortfolio(allTrades, scans, config) {
 
   // Flush remaining positions at last known price into total (preserves legacy behaviour)
   for (const pos of openPositions) {
+    if (pos.trade._phantom) continue;
     if (pos.trade.pnlPct != null && pos.trade.status !== 'pending') {
       realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
     }
@@ -1909,10 +1925,26 @@ async function main() {
           const newScanDateSet = new Set(newScans.map(s => s.scanDate));
           const newTrades = allTradesForKey.filter(t => newScanDateSet.has(t.scanDate));
 
+          // Seed sim2 with existing positions still open at start of new simulation period.
+          // Without this, sim2 starts with empty openPositions and over-allocates slots.
+          const firstNewScan = newScans.map(s => s.scanDate).sort()[0];
+          const existingOpen = firstNewScan ? existing.filter(t =>
+            t.entryDate && t.entryDate < firstNewScan &&
+            t.exitDate && t.exitDate >= firstNewScan &&
+            t.actualEntry > 0
+          ) : [];
+          if (existingOpen.length > 0) {
+            cfg2.initialPositions = existingOpen.map(t => ({
+              trade: { ...t, _phantom: true },
+              weight: (1 / (cfg.portfolioSize || 10)) * (cfg.positionSizePct || 1),
+            }));
+          }
+
           if (newTrades.length > 0) {
             const sim2 = simulatePortfolio(newTrades, newScans, cfg2);
             if (sim2 && sim2.closedTrades) {
               newClosedTrades = sim2.closedTrades
+                .filter(t => !t._phantom)
                 .map(t => ({ ...t, configVersion: getConfigVersion(t.scanDate || t.entryDate) }));
             }
           }
