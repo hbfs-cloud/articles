@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-05-29T15:31:09.962Z",
+  "generated_at": "2026-05-29T15:31:10.710Z",
   "valid_for": "2026-05-29",
   "mode_status": {
     "state": "live",
@@ -15,51 +15,51 @@
     "nextReviewAt": null
   },
   "broker": {
-    "name": "alpaca",
+    "name": "ibkr",
     "type": "live",
     "credentials": {
       "api_key": "${BROKER_API_KEY}",
       "api_secret": "${BROKER_API_SECRET}",
-      "base_url": "https://paper-api.alpaca.markets",
+      "base_url": "https://localhost:5000/v1/api",
       "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
     }
   },
   "account": {
     "nominal_usd": 10000,
     "currency": "USD",
-    "position_size_pct": 10,
-    "max_positions": 10
+    "position_size_pct": 100,
+    "max_positions": 1
   },
   "mode": {
-    "name": "tkl",
-    "horizon_days": 252,
+    "name": "turbo",
+    "horizon_days": 2,
     "filter": "all",
-    "min_score": 80,
+    "min_score": 90,
     "rotation": "aggressive",
-    "breakeven_pct": 1.5,
+    "breakeven_pct": 0.5,
     "be_grace_days": 0,
-    "vix_kill": 32,
-    "trailing_stop": true,
+    "vix_kill": 28,
+    "trailing_stop": false,
     "daily_trail_pct": 2,
-    "max_stop_pct": 7,
-    "atr_stop_mult": 0,
-    "stale_days": 5,
+    "max_stop_pct": 4,
+    "atr_stop_mult": 1.5,
+    "stale_days": 0,
     "entry_gate_pct": 0,
     "partial_tp": true,
     "partial_tp_pct": 0.5,
-    "sector_cap_max": 0,
+    "sector_cap_max": 1,
     "sizing_method": "inverse_atr",
-    "target_risk_pct": 0.5,
+    "target_risk_pct": 1,
     "correlation_cap": 0,
     "cross_mode_dedup": false,
     "regime_filters": {
       "risk_on": "all",
-      "early_risk_off": "mom_bo",
+      "early_risk_off": "breakout_only",
       "risk_off": "breakout_only",
-      "neutral": "all",
-      "recovery": "all"
+      "neutral": "mom_bo",
+      "recovery": "mom_bo"
     },
-    "dd_breaker_pct": 6
+    "dd_breaker_pct": 4
   },
   "session": {
     "market": "US_EQUITY",
@@ -71,30 +71,31 @@
     "extended_hours": false
   },
   "risk": {
-    "max_portfolio_heat_pct": "10.0",
+    "max_portfolio_heat_pct": "1.0",
     "max_single_loss_pct": 3,
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
     "circuit_breaker": {
-      "daily_loss_pct": 6,
+      "daily_loss_pct": 4,
       "action": "HALT_ALL_ORDERS",
-      "description": "If portfolio drops 6% intraday, cancel all pending orders and alert."
+      "description": "If portfolio drops 4% intraday, cancel all pending orders and alert."
     },
     "correlation_limit": 0.85,
-    "max_sector_concentration": 3
+    "max_sector_concentration": 1
   },
   "close_now": [],
   "orders": [
     {
       "id": "ORD-001",
-      "action": "BUY",
+      "action": "ROTATE",
       "ticker": "AMZN",
       "broker_symbol": "AMZN",
       "broker": {
         "symbol": "AMZN",
-        "exchange": "NASDAQ",
+        "exchange": "SMART",
+        "isin": "US0231351067",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -106,9 +107,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 3,
-          "pct_of_portfolio": 10
+          "nominal_usd": 10000,
+          "shares": 36,
+          "pct_of_portfolio": 100
         },
         "valid_from": "2026-05-29T09:30:00-04:00",
         "valid_until": "2026-05-29T16:00:00-04:00",
@@ -117,11 +118,11 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 262,
-          "trailing": true,
+          "price": 263.04,
+          "trailing": false,
           "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -136,15 +137,15 @@
           "description": "Sell remaining position at TP2"
         },
         "breakeven": {
-          "trigger_pct": 1.5,
+          "trigger_pct": 0.5,
           "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+          "description": "When unrealized P&L ≥ 0.5%, move stop to entry price"
         },
         "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-18",
+          "horizon_days": 2,
+          "expiry_date": "2026-06-02",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
+          "description": "If still open after 2 business days, close at next market open"
         }
       },
       "conditions": [
@@ -176,6 +177,10 @@
           "description": "Log warning if fill price > 1% worse than limit."
         }
       ],
+      "rotation": {
+        "close_broker_symbol": null,
+        "reason": "Score upgrade — rotate worst position for better signal"
+      },
       "metadata": {
         "score": 91,
         "strategy": "Momentum",
@@ -192,9 +197,10 @@
       "broker_symbol": "LLY",
       "broker": {
         "symbol": "LLY",
-        "exchange": "NYSE",
+        "exchange": "SMART",
+        "isin": "US5324571083",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -206,9 +212,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 1,
-          "pct_of_portfolio": 10
+          "nominal_usd": 10000,
+          "shares": 8,
+          "pct_of_portfolio": 100
         },
         "valid_from": "2026-05-29T09:30:00-04:00",
         "valid_until": "2026-05-29T16:00:00-04:00",
@@ -218,10 +224,10 @@
         "stop_loss": {
           "type": "STOP",
           "price": 1075,
-          "trailing": true,
+          "trailing": false,
           "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -236,15 +242,15 @@
           "description": "Sell remaining position at TP2"
         },
         "breakeven": {
-          "trigger_pct": 1.5,
+          "trigger_pct": 0.5,
           "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+          "description": "When unrealized P&L ≥ 0.5%, move stop to entry price"
         },
         "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-18",
+          "horizon_days": 2,
+          "expiry_date": "2026-06-02",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
+          "description": "If still open after 2 business days, close at next market open"
         }
       },
       "conditions": [
@@ -292,9 +298,10 @@
       "broker_symbol": "ASML",
       "broker": {
         "symbol": "ASML",
-        "exchange": "NASDAQ",
+        "exchange": "SMART",
+        "isin": "USN070592100",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -306,9 +313,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 1,
-          "pct_of_portfolio": 10
+          "nominal_usd": 10000,
+          "shares": 6,
+          "pct_of_portfolio": 100
         },
         "valid_from": "2026-05-29T09:30:00-04:00",
         "valid_until": "2026-05-29T16:00:00-04:00",
@@ -318,10 +325,10 @@
         "stop_loss": {
           "type": "STOP",
           "price": 1510,
-          "trailing": true,
+          "trailing": false,
           "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -336,15 +343,15 @@
           "description": "Sell remaining position at TP2"
         },
         "breakeven": {
-          "trigger_pct": 1.5,
+          "trigger_pct": 0.5,
           "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+          "description": "When unrealized P&L ≥ 0.5%, move stop to entry price"
         },
         "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-18",
+          "horizon_days": 2,
+          "expiry_date": "2026-06-02",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
+          "description": "If still open after 2 business days, close at next market open"
         }
       },
       "conditions": [
@@ -392,9 +399,10 @@
       "broker_symbol": "DRS",
       "broker": {
         "symbol": "DRS",
-        "exchange": "NASDAQ",
+        "exchange": "SMART",
+        "isin": "US52661A1088",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -406,9 +414,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 20,
-          "pct_of_portfolio": 10
+          "nominal_usd": 10000,
+          "shares": 206,
+          "pct_of_portfolio": 100
         },
         "valid_from": "2026-05-29T09:30:00-04:00",
         "valid_until": "2026-05-29T16:00:00-04:00",
@@ -418,10 +426,10 @@
         "stop_loss": {
           "type": "STOP",
           "price": 45.5,
-          "trailing": true,
+          "trailing": false,
           "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -436,15 +444,15 @@
           "description": "Sell remaining position at TP2"
         },
         "breakeven": {
-          "trigger_pct": 1.5,
+          "trigger_pct": 0.5,
           "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+          "description": "When unrealized P&L ≥ 0.5%, move stop to entry price"
         },
         "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-18",
+          "horizon_days": 2,
+          "expiry_date": "2026-06-02",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
+          "description": "If still open after 2 business days, close at next market open"
         }
       },
       "conditions": [
@@ -492,9 +500,10 @@
       "broker_symbol": "MT",
       "broker": {
         "symbol": "MT",
-        "exchange": "NYSE",
+        "exchange": "SMART",
+        "isin": "US03938L2034",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -506,9 +515,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 14,
-          "pct_of_portfolio": 10
+          "nominal_usd": 10000,
+          "shares": 143,
+          "pct_of_portfolio": 100
         },
         "valid_from": "2026-05-29T09:30:00-04:00",
         "valid_until": "2026-05-29T16:00:00-04:00",
@@ -518,10 +527,10 @@
         "stop_loss": {
           "type": "STOP",
           "price": 65.5,
-          "trailing": true,
+          "trailing": false,
           "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 0
+          "max_stop_pct": 4,
+          "atr_stop_mult": 1.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -536,15 +545,15 @@
           "description": "Sell remaining position at TP2"
         },
         "breakeven": {
-          "trigger_pct": 1.5,
+          "trigger_pct": 0.5,
           "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
+          "description": "When unrealized P&L ≥ 0.5%, move stop to entry price"
         },
         "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-18",
+          "horizon_days": 2,
+          "expiry_date": "2026-06-02",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
+          "description": "If still open after 2 business days, close at next market open"
         }
       },
       "conditions": [
@@ -584,106 +593,6 @@
         "thesis": "Global steel leader, infrastructure supercycle beneficiary. BUY signal May 21 at $63.45 now +9.6%. Near 52W high $70 (99%). RSI 66.5 healthy with room. Above all EMAs (+44% above 200DMA). Deep value play fwd PE 9.9, div 0.9%. MCap $52.9B."
       },
       "priority": 5
-    },
-    {
-      "id": "ORD-006",
-      "action": "BUY",
-      "ticker": "CZR",
-      "broker_symbol": "CZR",
-      "broker": {
-        "symbol": "CZR",
-        "exchange": "NASDAQ",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 29.1,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 34,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-05-29T09:30:00-04:00",
-        "valid_until": "2026-05-29T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 27.5,
-          "trailing": true,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 0
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 31.5,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 33.5,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "breakeven": {
-          "trigger_pct": 1.5,
-          "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1.5%, move stop to entry price"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-18",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 88,
-        "strategy": "Breakout",
-        "rr": "1:1.50",
-        "sharia": false,
-        "thesis": "Casino/gaming recovery play, triple screener confluence (Momentum+Breakout+EU). BUY signal May 14 at $27.05 now +7.5%. Near 52W high $31.58 (92%). RSI 62.1 healthy. Above all EMAs. IV spike on calls. MCap $5.9B, fwd PE 34.5."
-      },
-      "priority": 6
     }
   ],
   "error_handlers": {
@@ -749,9 +658,9 @@
       },
       {
         "step": "CHECK_VIX",
-        "threshold": 32,
+        "threshold": 28,
         "action": "HALT_IF_ABOVE",
-        "description": "If VIX > 32, halt all new orders"
+        "description": "If VIX > 28, halt all new orders"
       },
       {
         "step": "LOG_STATE",
@@ -845,11 +754,10 @@
     ]
   },
   "broker_notes": {
-    "pdt_rule": "Pattern Day Trader: max 3 day trades in 5 business days if account < $25K",
-    "fractional": "Alpaca supports fractional shares — use exact nominal instead of rounding to whole shares",
-    "paper_url": "https://paper-api.alpaca.markets",
-    "live_url": "https://api.alpaca.markets",
-    "websocket": "wss://stream.data.alpaca.markets/v2/iex",
-    "auth": "Headers: APCA-API-KEY-ID + APCA-API-SECRET-KEY"
+    "gateway": "Requires IB Gateway or TWS running locally on port 5000",
+    "auth": "Session-based — authenticate via Client Portal then use session token",
+    "order_types": "Supports all order types including adaptive, pegged, TWAP",
+    "fractional": "No fractional shares on IBKR",
+    "min_commission": "$1.00 per trade"
   }
 }

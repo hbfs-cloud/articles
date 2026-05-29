@@ -1,65 +1,65 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-05-29T15:30:27.924Z",
+  "generated_at": "2026-05-29T15:31:14.837Z",
   "valid_for": "2026-05-29",
   "mode_status": {
-    "state": "pausing",
-    "since": "2026-05-22T08:00:22.072Z",
-    "reason": "OOS PF=0.53 sur n=11 — monitor 30j avant resume/stop",
-    "acceptsNewEntries": false,
-    "exitsOnly": true,
+    "state": "live",
+    "since": "2026-02-26T00:00:00Z",
+    "reason": null,
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
     "forceLiquidate": false,
     "publiclyVisible": true,
-    "tradingMode": "exit-only",
-    "nextReviewAt": "2026-06-22"
+    "tradingMode": "real",
+    "nextReviewAt": null
   },
   "broker": {
-    "name": "paper",
-    "type": "simulation",
+    "name": "binance",
+    "type": "live",
     "credentials": {
       "api_key": "${BROKER_API_KEY}",
       "api_secret": "${BROKER_API_SECRET}",
-      "base_url": "http://localhost:9999",
+      "base_url": "https://api.binance.com",
       "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
     }
   },
   "account": {
     "nominal_usd": 10000,
     "currency": "USD",
-    "position_size_pct": 50,
-    "max_positions": 2
+    "position_size_pct": 10,
+    "max_positions": 10
   },
   "mode": {
-    "name": "secured",
-    "horizon_days": 5,
-    "filter": "breakout_only",
-    "min_score": 85,
-    "rotation": "none",
-    "breakeven_pct": 1,
+    "name": "tkl",
+    "horizon_days": 252,
+    "filter": "all",
+    "min_score": 80,
+    "rotation": "aggressive",
+    "breakeven_pct": 1.5,
     "be_grace_days": 0,
-    "vix_kill": 22,
-    "trailing_stop": false,
-    "daily_trail_pct": 0,
-    "max_stop_pct": 4,
-    "atr_stop_mult": 1.5,
-    "stale_days": 0,
+    "vix_kill": 32,
+    "trailing_stop": true,
+    "daily_trail_pct": 2,
+    "max_stop_pct": 7,
+    "atr_stop_mult": 0,
+    "stale_days": 5,
     "entry_gate_pct": 0,
-    "partial_tp": false,
+    "partial_tp": true,
     "partial_tp_pct": 0.5,
-    "sector_cap_max": 1,
+    "sector_cap_max": 0,
     "sizing_method": "inverse_atr",
-    "target_risk_pct": 0.75,
-    "correlation_cap": 0.65,
-    "cross_mode_dedup": true,
+    "target_risk_pct": 0.5,
+    "correlation_cap": 0,
+    "cross_mode_dedup": false,
     "regime_filters": {
-      "risk_on": "mom_bo",
-      "early_risk_off": "breakout_only",
+      "risk_on": "all",
+      "early_risk_off": "mom_bo",
       "risk_off": "breakout_only",
-      "neutral": "mom_bo",
-      "recovery": "mom_bo"
+      "neutral": "all",
+      "recovery": "all"
     },
-    "dd_breaker_pct": 3
+    "dd_breaker_pct": 6
   },
   "session": {
     "market": "US_EQUITY",
@@ -71,20 +71,63 @@
     "extended_hours": false
   },
   "risk": {
-    "max_portfolio_heat_pct": "2.0",
+    "max_portfolio_heat_pct": "10.0",
     "max_single_loss_pct": 3,
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
     "circuit_breaker": {
-      "daily_loss_pct": 3,
+      "daily_loss_pct": 6,
       "action": "HALT_ALL_ORDERS",
-      "description": "If portfolio drops 3% intraday, cancel all pending orders and alert."
+      "description": "If portfolio drops 6% intraday, cancel all pending orders and alert."
     },
-    "correlation_limit": 0.65,
-    "max_sector_concentration": 1
+    "correlation_limit": 0.85,
+    "max_sector_concentration": 3
   },
   "close_now": [],
-  "orders": [],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "SKIP",
+      "ticker": "AMZN",
+      "reason": "Not available on binance",
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "SKIP",
+      "ticker": "LLY",
+      "reason": "Not available on binance",
+      "priority": 1
+    },
+    {
+      "id": "ORD-003",
+      "action": "SKIP",
+      "ticker": "ASML",
+      "reason": "Not available on binance",
+      "priority": 1
+    },
+    {
+      "id": "ORD-004",
+      "action": "SKIP",
+      "ticker": "DRS",
+      "reason": "Not available on binance",
+      "priority": 1
+    },
+    {
+      "id": "ORD-005",
+      "action": "SKIP",
+      "ticker": "MT",
+      "reason": "Not available on binance",
+      "priority": 1
+    },
+    {
+      "id": "ORD-006",
+      "action": "SKIP",
+      "ticker": "CZR",
+      "reason": "Not available on binance",
+      "priority": 1
+    }
+  ],
   "error_handlers": {
     "INSUFFICIENT_MARGIN": {
       "action": "REDUCE_SIZE",
@@ -148,9 +191,9 @@
       },
       {
         "step": "CHECK_VIX",
-        "threshold": 22,
+        "threshold": 32,
         "action": "HALT_IF_ABOVE",
-        "description": "If VIX > 22, halt all new orders"
+        "description": "If VIX > 32, halt all new orders"
       },
       {
         "step": "LOG_STATE",
@@ -243,5 +286,8 @@
       }
     ]
   },
-  "broker_notes": {}
+  "broker_notes": {
+    "crypto_only": "Binance only supports crypto pairs — not applicable for stock signals",
+    "symbol_format": "Trading pairs like BTCUSDT, ETHUSDT"
+  }
 }

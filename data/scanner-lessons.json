@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v1.0-20260522",
-  "_updated": "2026-05-22",
+  "_version": "v1.1-20260529",
+  "_updated": "2026-05-29",
   "_source_retros": [
     "20260327",
     "20260403",
@@ -10,7 +10,8 @@
     "20260425",
     "20260502",
     "20260515",
-    "20260522"
+    "20260522",
+    "20260529"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2 (preferred path: surface better picks upstream).\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright (strategy whitelist, sector cap, scan size, sharia ETF blocklist, absolute stop %).\n\n  Philosophy: retros must FUEL the candidate selection debate at Phase 2, NOT block legitimate trades at publish time. validate-scan.js surfaces lesson-rule deviations as advisories (non-blocking warnings) so Claude can iterate at the NEXT scan — never to fail-close a scan that's already in flight.",
 
@@ -140,6 +141,57 @@
       "validation": "validate-scan.js rule 6 hard-blocks max_per_sector violations; min US/EU/APAC/ETF counts emitted as warnings",
       "status": "active",
       "severity": "mixed (max_per_sector=hard_block, country_floors=selection_filter)"
+    },
+    {
+      "id": "energy-early-risk-off-block",
+      "from_retros": ["20260515", "20260522", "20260529"],
+      "rule": "DISQUALIFIER tout setup Energy (sector_map = Energy) quand GetRegimeProbability montre early_risk_off > 0.30. Applicable à Momentum ET Breakout sur tickers Energy.",
+      "rationale": "3ème rétro consécutive : COP -3.51% (20260520), TTE -2.47% (20260520), plus patterns similaires 20260515 et 20260522. Pétrole crashe systématiquement dans les fenêtres EARLY RISK-OFF. Secteur Energy = -5.98% de pertes évitables sur cette seule période.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "Claude Phase 2 — check GetRegimeProbability early_risk_off probability, cross-ref sector_map. Pending encode in validate-scan.js.",
+      "validation": "pending-implementation — needs regime-aware sector block in validate-scan.js",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "gap-up-pullback-entry",
+      "from_retros": ["20260529"],
+      "rule": "En RISK-ON > 70 confidence, si open > entry_high * 1.01, attendre un pullback intraday de -0.3% depuis l'open avant d'entrer. Évite les gap-up traps qui produisent des breakevens.",
+      "rationale": "RISK-ON 85 (May 26-28) a produit majoritairement des breakevens — entries trop tardives après gap-ups. 40% BE rate sur la période est anormalement élevé. Le VWAP gate protège déjà mais insuffisamment quand le gap est modéré (+1-2%).",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude mentions in setup thesis when gap-up risk is elevated. Infrastructure pending for sweep.js gap-up filter.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "mega-cap-regime-oscillation",
+      "from_retros": ["20260529"],
+      "rule": "Quand le régime a changé ≥ 2× dans les 5 derniers jours scanner, augmenter le seuil mcap minimum à $50B et réduire l'allocation commodity/small-cap à max 1 par scan.",
+      "rationale": "TSM (+6.35%), MS (+5.33%), ARM (+4.22%) = top 3 de la période, tous mega-caps. COP, TTE (commodities), BTBT (small-cap) = les 3 pires. Les mega-caps avec drivers séculaires (AI semis, M&A banking) survivent aux oscillations de régime, les cycliques non.",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude checks regime change count via data/scanner.json[-5] and adjusts mcap floor + commodity allocation during Phase 2.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "pullback-regime-confidence-gate",
+      "from_retros": ["20260529"],
+      "rule": "Stratégie Pullback UNIQUEMENT si regime confidence > 60% (GetRegimeProbability current_state_confidence). En régime oscillant (confidence < 60%), Pullback → remplacer par Momentum ou Breakout.",
+      "rationale": "Pullback 0% WR sur la période 20260519-29. Seuls des breakevens defensifs (JPM). En régime oscillant, les pullbacks font face au mean-reversion risk — les entrées en repli ne rebondissent pas car le régime peut se dégrader davantage.",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude gates Pullback strategy at Phase 2 behind regime confidence check.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "energy-early-risk-off-sizing",
+      "from_retros": ["20260529"],
+      "rule": "Si EARLY RISK-OFF détecté ET tickers Energy/cycliques encore présents (par exception manuelle), réduire sizing de x0.7 à x0.5 pour ces tickers spécifiquement.",
+      "rationale": "Le regime-rotation-penalty existant (x0.7 global) était insuffisant pour energy spécifiquement. COP et TTE ont été stoppés malgré le penalty — sizing x0.5 aurait réduit la perte de -5.98% à -2.99%.",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude applies via OptimizeSizing constraint override for energy sector in EARLY RISK-OFF.",
+      "status": "active",
+      "severity": "advisory"
     }
   ],
 
@@ -152,6 +204,16 @@
     {
       "id": "mcp-gateway-quality-tag",
       "question": "Ajouter un flag `_mcp_quality` dans signals.json indiquant si le scan a été généré pendant un incident MCP (worker timeout > 10m, force-async failures > 30%) — la rétro pourra alors pondérer l'évaluation.",
+      "next_retro_check": "20260605"
+    },
+    {
+      "id": "vwap-gate-gap-up-calibration",
+      "question": "Le VWAP gate produit 40% de breakevens en RISK-ON > 70. Faut-il un variant 'gap-up pullback' qui attend -0.3% intraday avant entry quand l'open gap > 1%? Tester sur le prochain RISK-ON > 70 cluster.",
+      "next_retro_check": "20260605"
+    },
+    {
+      "id": "breakeven-rate-persistence",
+      "question": "Le 40% BE rate est-il persistant ou spécifique à cette semaine de forte oscillation? Vérifier sur la prochaine rétro — si BE > 30% à nouveau, encoder gap-up pullback entry comme infrastructure rule.",
       "next_retro_check": "20260605"
     }
   ]
