@@ -234,6 +234,19 @@ window.searchDataPrebuilt = [
     "date": "26 mai 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Weekly Market Report — AVGO joins $2T club, NFP Friday (95K forecast), ISM Prices at 85, CRWD/PANW cybersecurity earnings, Fed speakers before blackout. Risk-On at 58.5% but inflation won't quit.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260601/",
+    "date": "1 juin 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
