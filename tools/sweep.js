@@ -1946,9 +1946,10 @@ async function main() {
       if (FROZEN_ONLY) {
         // Append-only: preserve existing trades, only simulate scans AFTER the latest existing one
         const allExisting = existingTrades[id] || [];
-        // Purge: pending trades (always re-simulate with latest data) + early-expired (corrupted)
-        const modeHorizon = cfg.horizon || 10;
-        const shouldPurge = t => t.status === 'pending' || (t.status === 'expired' && t.holdDays < modeHorizon);
+        // Purge: pending trades only (always re-simulate with latest data).
+        // Never purge closed/expired trades — they were simulated with their original config
+        // and changing the current horizon must not retroactively invalidate them.
+        const shouldPurge = t => t.status === 'pending';
         const existing = allExisting.filter(t => !shouldPurge(t));
         const purged = allExisting.length - existing.length;
         if (purged > 0) console.log(`  ⚠️ ${id}: purged ${purged} pending/early-expired trades for re-simulation`);
