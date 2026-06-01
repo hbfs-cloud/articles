@@ -437,10 +437,20 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     maxStopPct = 0, atrStopMult = 0, dailyTrailPct = 0,
     breakevenPct = 0, // after +X% gain, move stop to entry (0 = disabled)
     beGraceDays = 0,  // min days held before breakeven/trail can activate (0 = immediate)
-    staleDays = 0,    // exit if no new high for N days (0 = disabled)
+    staleDays = 0,    // LEGACY compat — use staleGraceDays instead
+    // v3 stale tightening (systematic-tss inspired): progressive stop raise after grace period
+    staleGraceDays = 0,     // days without new high before tightening starts (0 = disabled)
+    staleRaiseRate = 0.001, // fraction of entry price raised per excess day
+    staleAccel = 'log',     // acceleration: 'linear', 'log', 'quadratic', 'sqrt'
+    // v3 partial TP at gain threshold (systematic-tss: 30% sold at +10% gain)
+    partialTPGain = 0,   // trigger partial TP at this % gain (0 = use TP1 level)
+    disableTP2 = false,  // skip TP2 hard exit — let trailing/stale handle runner exits
     entryGatePct = 0, // reject if open > entry * (1 + X%) — 0 = disabled
     vwapGate = false, // skip trade if open gaps above VWAP * 1.01 (gap-up trap filter)
   } = config;
+  const _staleGrace = staleGraceDays > 0 ? staleGraceDays : staleDays;
+  const _staleRate = staleGraceDays > 0 ? staleRaiseRate : 0.002;
+  const _staleAccel = staleGraceDays > 0 ? staleAccel : 'linear';
   if (!priceHistory) return null;
 
   // Scanner folder IS the entry day (generated D-1 at 23h, folder = D+1 = entry day)
@@ -564,22 +574,30 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       break;
     }
 
-    // Check TP2 (only when real tp2 set — no synthetic fallback)
-    if (actualTp2 !== null && bar.high >= actualTp2) {
+    // Check TP2 (only when real tp2 set and not disabled — no synthetic fallback)
+    if (!disableTP2 && actualTp2 !== null && bar.high >= actualTp2) {
       status = 'tp2';
       exitDate = date;
       exitPrice = actualTp2;
       break;
     }
 
-    // Check TP1
-    if (bar.high >= actualTp1 && partialRealized === 0) {
+    // v3 gain-based partial TP (systematic-tss: sell 30% at +10%, let rest ride)
+    if (partialTPGain > 0 && partialRealized === 0) {
+      const currentGain = (bar.high - entryPrice) / entryPrice * 100;
+      if (currentGain >= partialTPGain) {
+        const tpFrac = partialTPPct * 100;
+        partialRealized = (partialTPGain / 100) * tpFrac;
+        if (entryPrice > currentStop) currentStop = entryPrice;
+      }
+    }
+
+    // Check TP1 (original logic — only fires when no gain-based partial TP is configured)
+    if (partialTPGain <= 0 && bar.high >= actualTp1 && partialRealized === 0) {
       if (partialTP) {
-        // Close partialTPPct at TP1, lock remainder breakeven (no post-TP1 loss possible).
-        const tpFrac = partialTPPct * 100; // e.g. 0.5 → 50
+        const tpFrac = partialTPPct * 100;
         partialRealized = ((actualTp1 - entryPrice) / entryPrice) * tpFrac;
         if (entryPrice > currentStop) currentStop = entryPrice;
-        // Continue with remaining fraction
       } else {
         status = 'tp1';
         exitDate = date;
@@ -611,17 +629,22 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       }
     }
 
-    // Stale exit: track high water mark, tighten stop if stale
-    if (staleDays > 0) {
+    // Stale tightening: after grace days without new high, progressively raise stop
+    // v3: log/sqrt/quadratic acceleration (systematic-tss inspired)
+    if (_staleGrace > 0) {
       if (bar.high > highWaterMark) {
         highWaterMark = bar.high;
         daysSinceNewHigh = 0;
       } else {
         daysSinceNewHigh++;
       }
-      // After staleDays without new high, progressively tighten stop
-      if (daysSinceNewHigh >= staleDays) {
-        const staleRaise = (daysSinceNewHigh - staleDays + 1) * 0.002 * entryPrice; // 0.2% per day
+      if (daysSinceNewHigh >= _staleGrace) {
+        const excess = daysSinceNewHigh - _staleGrace + 1;
+        const accelMult = _staleAccel === 'log' ? Math.log(excess + 1)
+          : _staleAccel === 'quadratic' ? excess * excess * 0.1
+          : _staleAccel === 'sqrt' ? Math.sqrt(excess)
+          : excess;
+        const staleRaise = accelMult * _staleRate * entryPrice;
         const tightenedStop = currentStop + staleRaise;
         if (tightenedStop > currentStop && tightenedStop < bar.close) currentStop = tightenedStop;
       }
@@ -897,6 +920,12 @@ function simulatePortfolio(allTrades, scans, config) {
   }
   const closedTrades = [];
   const slCooldown = new Map(); // ticker → exitDate (10 biz day re-entry ban after SL)
+  // v3 circuit breaker (systematic-tss inspired): pause entries after stop streak
+  const cbStopDates = []; // dates of SL events for circuit breaker window
+  let cbPauseUntil = null;
+  const cbMaxStops = config.circuitBreakerStops || 0; // 0 = disabled
+  const cbWindowDays = config.circuitBreakerWindow || 5;
+  const cbPauseDays = config.circuitBreakerPause || 3;
   const allScanDates = Object.keys(byDate).sort();
   if (allScanDates.length === 0) return null;
 
@@ -922,7 +951,18 @@ function simulatePortfolio(allTrades, scans, config) {
           closedTrades.push(pos.trade);
         }
         // Cooldown: SL=10d re-entry ban (unchanged). BE/expired/rotated = no cooldown (grace period handles churn)
-        if (pos.trade.status === 'sl') slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 10 });
+        if (pos.trade.status === 'sl') {
+          slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 10 });
+          // v3 circuit breaker: track SL events
+          if (cbMaxStops > 0) {
+            cbStopDates.push(day);
+            const windowStart = addBizDays(day, -cbWindowDays);
+            const recentStops = cbStopDates.filter(d => d >= windowStart).length;
+            if (recentStops >= cbMaxStops) {
+              cbPauseUntil = addBizDays(day, cbPauseDays);
+            }
+          }
+        }
       } else {
         stillOpen.push(pos);
       }
@@ -986,6 +1026,8 @@ function simulatePortfolio(allTrades, scans, config) {
 
       // VIX kill switch — skip all new entries this scan if regime tier exceeds threshold
       const vixKill = vixKillTriggered(scanRegime, config.vixKillThreshold);
+      // v3 circuit breaker — pause new entries after stop streak
+      const cbActive = cbPauseUntil && day < cbPauseUntil;
 
       // DD circuit breaker — uses *prior-day close* equity to avoid same-day mark bias
       let ddBreakerActive = false;
@@ -1015,7 +1057,7 @@ function simulatePortfolio(allTrades, scans, config) {
       let added = 0;
       for (const cand of candidates) {
         if (added >= slotsAvailable) break;
-        if (vixKill || ddBreakerActive) break;          // halt new entries
+        if (vixKill || ddBreakerActive || cbActive) break; // halt new entries
         if (openTickers.has(cand.ticker)) continue;
         // Exit cooldown — re-entry ban after SL (10d), breakeven (5d), expired/rotated (3d)
         const cooldown = slCooldown.get(cand.ticker);
@@ -1327,8 +1369,10 @@ async function main() {
   const MAX_STOP_PCTS = [0, 2, 3, 5, 7]; // 0 = no cap, 2% = turbo tight
   const ATR_STOP_MULTS = [0, 1, 2]; // 0 = disabled
   const DAILY_TRAIL_PCTS = [0, 2, 3]; // 0 = disabled, 2% = turbo tight, 3% = proven sweet spot
-  const BREAKEVEN_PCTS = [0, 0.5, 1]; // 0 = disabled, 0.5% = turbo fast, 1% = standard
-  const STALE_DAYS = [0, 2]; // 0 = disabled, 2 = turbo exit on stale momentum
+  const BREAKEVEN_PCTS = [0, 0.5]; // 0 = disabled (v3 uses stale tightening), 0.5% = legacy compat
+  // v3 stale params (staleGraceDays, staleRaiseRate, staleAccel) are NOT grid-searched —
+  // they're set per-mode in modes-config.json and pre-simulated via the frozen config path.
+  // Same for partialTPGain and disableTP2. Grid uses defaults (all disabled).
 
   // TP_PCTS only matter when partialTP=true, so effective count = (1 + TP_PCTS.length) for TP dimension
   const tpCombos = [[false, 0.5], ...TP_PCTS.map(p => [true, p])]; // [partialTP, partialTPPct]
@@ -1336,14 +1380,14 @@ async function main() {
   const total = PORTFOLIO_SIZES.length * TOP_NS.length * MIN_SCORES.length
     * Object.keys(STRATEGY_FILTERS).length * ROTATIONS.length * HORIZONS.length
     * tpCombos.length * TRAIL_MODES.length * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length
-    * DAILY_TRAIL_PCTS.length * BREAKEVEN_PCTS.length * STALE_DAYS.length * ENTRY_GATE_PCTS.length;
+    * DAILY_TRAIL_PCTS.length * BREAKEVEN_PCTS.length * ENTRY_GATE_PCTS.length;
   console.log(`\n=== GRID SEARCH (${total} combinations) ===\n`);
 
   // Pre-simulate all trades for each unique trade-level config
   const tradesByKey = {};
   const preSimTotal = HORIZONS.length * tpCombos.length * TRAIL_MODES.length
     * MAX_STOP_PCTS.length * ATR_STOP_MULTS.length * DAILY_TRAIL_PCTS.length
-    * BREAKEVEN_PCTS.length * STALE_DAYS.length * ENTRY_GATE_PCTS.length;
+    * BREAKEVEN_PCTS.length * ENTRY_GATE_PCTS.length;
   console.log(`Pre-simulating ${preSimTotal} trade sets...`);
   let preSimDone = 0;
   for (const horizon of HORIZONS) {
@@ -1353,29 +1397,28 @@ async function main() {
           for (const atrMult of ATR_STOP_MULTS) {
             for (const dailyTrail of DAILY_TRAIL_PCTS) {
               for (const bePct of BREAKEVEN_PCTS) {
-                for (const stale of STALE_DAYS) {
-                  for (const entryGate of ENTRY_GATE_PCTS) {
+                for (const entryGate of ENTRY_GATE_PCTS) {
                   const vwapGate = VWAP_GATE_FIXED;
-                  const beGrace = 0; // grid search doesn't sweep beGraceDays — it's a mode-level param
-                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${beGrace}_${stale}_${entryGate}_${vwapGate}`;
+                  const beGrace = 0, staleGrace = 0, staleRate = 0.001, staleAccelV = 'log', ptpGain = 0, noTP2 = false;
+                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${beGrace}_${staleGrace}_${staleRate}_${staleAccelV}_${ptpGain}_${noTP2}_${entryGate}_${vwapGate}`;
                   const trades = [];
                   for (const setup of allSetups) {
                     const history = priceCache[setup.ticker];
                     const result = simulateTrade(setup, setup.scanDate, history, {
                       horizonDays: horizon, partialTP: ptp, partialTPPct: ptpPct, trailingStop: trail,
                       maxStopPct: maxStop, atrStopMult: atrMult, dailyTrailPct: dailyTrail,
-                      breakevenPct: bePct, beGraceDays: beGrace, staleDays: stale, entryGatePct: entryGate, vwapGate,
+                      breakevenPct: bePct, beGraceDays: beGrace,
+                      staleGraceDays: staleGrace, staleRaiseRate: staleRate, staleAccel: staleAccelV,
+                      partialTPGain: ptpGain, disableTP2: noTP2,
+                      entryGatePct: entryGate, vwapGate,
                     });
                     if (result) {
-                      // Preserve regime from setup so simulatePortfolio's regimeByDate map
-                      // populates correctly. Without this, VIX kill is dead code on backtest.
-                      trades.push({ ...result, regime: setup.regime || null, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct, _stale: stale });
+                      trades.push({ ...result, regime: setup.regime || null, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct });
                     }
                   }
                   tradesByKey[key] = trades;
                   preSimDone++;
                   if (preSimDone % 200 === 0) process.stdout.write(`  Pre-sim ${preSimDone}/${preSimTotal}\r`);
-                  }
                 }
               }
             }
@@ -1392,7 +1435,7 @@ async function main() {
     const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
     let frozenExtra = 0;
     for (const [modeId, cfg] of Object.entries(frozenModes)) {
-      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
       console.log(`  DEBUG ${modeId}: fKey=${fKey} inGrid=${!!tradesByKey[fKey]}`);
       if (!tradesByKey[fKey]) {
         const trades = [];
@@ -1402,7 +1445,10 @@ async function main() {
             horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
             trailingStop: cfg.trailingStop || false, maxStopPct: cfg.maxStopPct || 0, atrStopMult: cfg.atrStopMult || 0,
             dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, beGraceDays: cfg.beGraceDays || 0,
-            staleDays: cfg.staleDays || 0, entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
+            staleGraceDays: cfg.staleGraceDays || 0, staleRaiseRate: cfg.staleRaiseRate ?? 0.001,
+            staleAccel: cfg.staleAccel || 'log', partialTPGain: cfg.partialTPGain || 0,
+            disableTP2: cfg.disableTP2 || false,
+            entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
           });
           if (result) trades.push({ ...result, regime: setup.regime || null });
         }
@@ -1457,10 +1503,9 @@ async function main() {
                     for (const atrStopMult of ATR_STOP_MULTS) {
                       for (const dailyTrailPct of DAILY_TRAIL_PCTS) {
                         for (const breakevenPct of BREAKEVEN_PCTS) {
-                          for (const staleDays of STALE_DAYS) {
                           for (const entryGatePct of ENTRY_GATE_PCTS) {
                           const vwapGate = VWAP_GATE_FIXED;
-                            const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_${staleDays}_${entryGatePct}_${vwapGate}`;
+                            const key = `${horizon}_${partialTP}_${partialTPPct}_${trailingStop}_${maxStopPct}_${atrStopMult}_${dailyTrailPct}_${breakevenPct}_0_0_0.001_log_0_false_${entryGatePct}_${vwapGate}`;
                             const trades = tradesByKey[key] || [];
 
                             const config = {
@@ -1473,7 +1518,7 @@ async function main() {
                               const r = {
                                 portfolioSize, topN, minScore, filterName, rotation,
                                 horizon, partialTP, partialTPPct, trailingStop, maxStopPct, atrStopMult, dailyTrailPct,
-                                breakevenPct, staleDays, entryGatePct, vwapGate,
+                                breakevenPct, entryGatePct, vwapGate,
                                 ...metrics,
                               };
                               r.composite = (r.returnTotal / 30) + (1 / Math.max(0.5, Math.abs(r.maxDD))) + (r.winRate / 100) + (r.calmar / 10) + (r.profitFactor / 5);
@@ -1532,7 +1577,6 @@ async function main() {
                             tested++;
                             if (tested % 5000 === 0) process.stdout.write(`  ${tested}/${total}\r`);
                           } // end entryGatePct
-                          } // end staleDays
                         }
                       }
                     }
@@ -1586,7 +1630,7 @@ async function main() {
     console.log('\n=== WALK-FORWARD VALIDATION (top 5 in-sample → out-of-sample) ===\n');
     for (const r of ranked.slice(0, 5)) {
       // Re-simulate on in-sample only
-      const wfKey = `${r.horizon}_${r.partialTP}_${r.partialTPPct || 0.5}_${r.trailingStop}_${r.maxStopPct || 0}_${r.atrStopMult || 0}_${r.dailyTrailPct || 0}_${r.breakevenPct || 0}_${r.staleDays || 0}_${r.entryGatePct || 0}_${r.vwapGate || false}`;
+      const wfKey = `${r.horizon}_${r.partialTP}_${r.partialTPPct || 0.5}_${r.trailingStop}_${r.maxStopPct || 0}_${r.atrStopMult || 0}_${r.dailyTrailPct || 0}_${r.breakevenPct || 0}_0_0_0.001_log_0_false_${r.entryGatePct || 0}_${r.vwapGate || false}`;
       const isTrades = (tradesByKey[wfKey] || [])
         .filter(t => inSampleDates.has(t.scanDate));
       const osTrades = (tradesByKey[wfKey] || [])
@@ -1616,7 +1660,7 @@ async function main() {
   }
 
   // Top by different metrics
-  const fmtR = r => `P${r.portfolioSize} Top${r.topN} Score≥${r.minScore} ${r.filterName} ${r.rotation} H${r.horizon} MaxSt=${r.maxStopPct || 0}% ATR=${r.atrStopMult || 0}x Trail=${r.dailyTrailPct || 0}% TR=${r.trailingStop ? 'Y' : 'N'} BE=${r.breakevenPct || 0}% Stale=${r.staleDays || 0}d${r.partialTP ? ' PTP=' + ((r.partialTPPct || 0.5) * 100) + '%' : ''}`;
+  const fmtR = r => `P${r.portfolioSize} Top${r.topN} Score≥${r.minScore} ${r.filterName} ${r.rotation} H${r.horizon} MaxSt=${r.maxStopPct || 0}% ATR=${r.atrStopMult || 0}x Trail=${r.dailyTrailPct || 0}% TR=${r.trailingStop ? 'Y' : 'N'} BE=${r.breakevenPct || 0}%${r.partialTP ? ' PTP=' + ((r.partialTPPct || 0.5) * 100) + '%' : ''}`;
 
   console.log('TOP 5 by Composite (return + low DD + high WR + calmar + PF):');
   for (const r of topByComposite.slice(0, 5)) {
@@ -1726,7 +1770,7 @@ async function main() {
     grid: {
       portfolio_sizes: PORTFOLIO_SIZES, top_ns: TOP_NS, min_scores: MIN_SCORES,
       horizons: HORIZONS, strategies: Object.keys(STRATEGY_FILTERS),
-      rotations: ROTATIONS, tp_modes: TP_MODES, trail_modes: TRAIL_MODES, max_stop_pcts: MAX_STOP_PCTS, atr_stop_mults: ATR_STOP_MULTS, daily_trail_pcts: DAILY_TRAIL_PCTS, breakeven_pcts: BREAKEVEN_PCTS, stale_days: STALE_DAYS, tp_pcts: TP_PCTS,
+      rotations: ROTATIONS, tp_modes: TP_MODES, trail_modes: TRAIL_MODES, max_stop_pcts: MAX_STOP_PCTS, atr_stop_mults: ATR_STOP_MULTS, daily_trail_pcts: DAILY_TRAIL_PCTS, breakeven_pcts: BREAKEVEN_PCTS, tp_pcts: TP_PCTS,
       total_combos: tested,
     },
     optimal_sharpe: ranked[0] || null,
@@ -1873,14 +1917,13 @@ async function main() {
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
-      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleDays || 0}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
-        // Risk layer v1 — forwarded as-is so simulatePortfolio applies them at entry time
         ddBreakerPct: cfg.ddBreakerPct ?? 0,
         sectorCapMax: cfg.sectorCapMax ?? 0,
         sizingMethod: cfg.sizingMethod || null,
@@ -1888,11 +1931,10 @@ async function main() {
         vixKillThreshold: cfg.vixKillThreshold ?? 0,
         correlationCap: cfg.correlationCap ?? 0,
         crossModeDedup: cfg.crossModeDedup === true,
-        crossModePicked,        // shared Set across all modes
-        // Per-mode source filter:
-        // - tkl_pool gated by tklPoolEnabled (default true).
-        // - TKL mode excludes 'signals' (Top10 list) — drag eliminator: signals source
-        //   WR 30% (n=76) vs pool WR 50% (n=16). OPTIM B1.
+        crossModePicked,
+        circuitBreakerStops: cfg.circuitBreakerStops ?? 0,
+        circuitBreakerWindow: cfg.circuitBreakerWindow ?? 5,
+        circuitBreakerPause: cfg.circuitBreakerPause ?? 3,
         excludeSources: (() => {
           const excl = [];
           if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
