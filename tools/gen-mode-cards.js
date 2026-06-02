@@ -26,7 +26,7 @@ const MODE_META = {
   turbo:    { emoji: '🚀', label: 'Turbo' },
   dynamic:  { emoji: '🔥', label: 'Dynamic' },
   balanced: { emoji: '⚖️',  label: 'Balanced' },
-  secured:  { emoji: '🛡️',  label: 'Secured' },
+  secured:  { emoji: '🪐',  label: 'Orbit' },
   fortress: { emoji: '🏰', label: 'Fortress' },
   tkl:      { emoji: '🎯', label: 'TKL' },
 };
