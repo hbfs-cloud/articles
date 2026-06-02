@@ -17,6 +17,13 @@ function fmtDateFR(iso) {
   const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
   return `${d.getUTCDate()} ${months[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
+function fmtDateEN(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d)) return iso;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+}
 
 function renderStatusBadge(state) {
   if (!state || state === 'live') return '';
@@ -29,18 +36,18 @@ function renderStatusBanner(cfg) {
   if (state === 'live') return '';
   const d = ms.describe(state);
   const messages = {
-    'draft':      { title: 'Mode en draft', body: 'Configuration créée, aucune exécution.' },
-    'test':       { title: 'Mode en test', body: 'Paper trading uniquement, aucune position réelle.' },
-    'deploying':  { title: 'Déploiement en cours', body: 'Ramp-up au fil de l’eau : ordres en paper-validation avant flip live.' },
-    'pausing':    { title: 'Sortie progressive', body: 'Aucune nouvelle entrée. Gestion exits sur positions ouvertes jusqu’à fermeture naturelle.' },
-    'liquidated': { title: 'Liquidation forcée', body: 'Toutes les positions sont fermées au marché à la prochaine séance.' },
-    'paused':     { title: 'Mode en pause', body: 'Aucune activité, equity frozen — réactivable.' },
-    'stopped':    { title: 'Mode archivé', body: 'Mode définitivement stoppé.' },
+    'draft':      { title: 'Draft Mode', body: 'Configuration created, no execution.' },
+    'test':       { title: 'Paper Testing', body: 'Paper trading only, no real positions.' },
+    'deploying':  { title: 'Deploying', body: 'Gradual ramp-up: orders in paper-validation before going live.' },
+    'pausing':    { title: 'Winding Down', body: 'No new entries. Managing exits on open positions until natural close.' },
+    'liquidated': { title: 'Force Liquidated', body: 'All positions closed at market at the next session.' },
+    'paused':     { title: 'Paused', body: 'No activity, equity frozen — can be reactivated.' },
+    'stopped':    { title: 'Archived', body: 'Mode permanently stopped.' },
   };
   const m = messages[state] || { title: d.label, body: '' };
-  const reason = cfg.statusReason ? `<p class="msb-reason">Raison : ${cfg.statusReason}</p>` : '';
-  const since = cfg.statusSince ? `Depuis ${fmtDateFR(cfg.statusSince)}` : '';
-  const review = cfg.statusNextReviewAt ? ` · Review ${fmtDateFR(cfg.statusNextReviewAt)}` : '';
+  const reason = cfg.statusReason ? `<p class="msb-reason">Reason: ${cfg.statusReason}</p>` : '';
+  const since = cfg.statusSince ? `Since ${fmtDateEN(cfg.statusSince)}` : '';
+  const review = cfg.statusNextReviewAt ? ` · Review ${fmtDateEN(cfg.statusNextReviewAt)}` : '';
   const meta = (since || review) ? `<small>${since}${review}</small>` : '';
   return `<div class="mode-status-banner ms-banner-${state}" style="--ms-bg:${d.color}">
     <i class="fas fa-circle-info"></i>
