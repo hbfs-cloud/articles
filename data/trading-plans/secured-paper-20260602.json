@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-02T15:15:52.398Z",
+  "generated_at": "2026-06-02T18:43:32.106Z",
   "valid_for": "2026-06-02",
   "mode_status": {
-    "state": "pausing",
-    "since": "2026-05-22T08:00:22.072Z",
-    "reason": "OOS PF=0.53 sur n=11 — monitor 30j avant resume/stop",
-    "acceptsNewEntries": false,
-    "exitsOnly": true,
+    "state": "deploying",
+    "since": "2026-06-02T15:00:00.000Z",
+    "reason": "New Orbit mode replacing Secured. H20/3.5×ATR. Deploying paper-ramp from 2026-06-03.",
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
     "forceLiquidate": false,
     "publiclyVisible": true,
-    "tradingMode": "exit-only",
-    "nextReviewAt": "2026-06-22"
+    "tradingMode": "paper-ramp",
+    "nextReviewAt": "2026-07-03"
   },
   "broker": {
     "name": "paper",
@@ -32,34 +32,34 @@
   },
   "mode": {
     "name": "secured",
-    "horizon_days": 5,
-    "filter": "breakout_only",
-    "min_score": 85,
+    "horizon_days": 20,
+    "filter": "mom_bo",
+    "min_score": 88,
     "rotation": "none",
-    "breakeven_pct": 1,
+    "breakeven_pct": 0,
     "be_grace_days": 0,
-    "vix_kill": 22,
+    "vix_kill": 28,
     "trailing_stop": false,
     "daily_trail_pct": 0,
-    "max_stop_pct": 4,
-    "atr_stop_mult": 1.5,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 3.5,
     "stale_days": 0,
     "entry_gate_pct": 0,
-    "partial_tp": false,
-    "partial_tp_pct": 0.5,
-    "sector_cap_max": 1,
+    "partial_tp": true,
+    "partial_tp_pct": 0.3,
+    "sector_cap_max": 2,
     "sizing_method": "inverse_atr",
-    "target_risk_pct": 0.75,
-    "correlation_cap": 0.65,
+    "target_risk_pct": 1,
+    "correlation_cap": 0.7,
     "cross_mode_dedup": true,
     "regime_filters": {
       "risk_on": "mom_bo",
-      "early_risk_off": "breakout_only",
+      "early_risk_off": "mom_bo",
       "risk_off": "breakout_only",
       "neutral": "mom_bo",
       "recovery": "mom_bo"
     },
-    "dd_breaker_pct": 3
+    "dd_breaker_pct": 5
   },
   "session": {
     "market": "US_EQUITY",
@@ -76,15 +76,476 @@
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
     "circuit_breaker": {
-      "daily_loss_pct": 3,
+      "daily_loss_pct": 5,
       "action": "HALT_ALL_ORDERS",
-      "description": "If portfolio drops 3% intraday, cancel all pending orders and alert."
+      "description": "If portfolio drops 5% intraday, cancel all pending orders and alert."
     },
-    "correlation_limit": 0.65,
-    "max_sector_concentration": 1
+    "correlation_limit": 0.7,
+    "max_sector_concentration": 2
   },
   "close_now": [],
-  "orders": [],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "NVDA",
+      "broker_symbol": "NVDA",
+      "broker": {
+        "symbol": "NVDA"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 223.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 22,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-02T09:30:00-04:00",
+        "valid_until": "2026-06-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 211.56,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 247.38,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 259.32,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 94,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "AI infrastructure leader powering the Vera Rubin GPU cycle. Above all major MAs with strong MACD, 8th consecutive SPX up session confirms risk-on momentum. Semiconductor sector leading at +5%."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "TSM",
+      "broker_symbol": "TSM",
+      "broker": {
+        "symbol": "TSM"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 434,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 11,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-02T09:30:00-04:00",
+        "valid_until": "2026-06-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 409.69,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 482.62,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 506.93,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "World's dominant advanced foundry. CoWoS packaging demand from NVIDIA/Apple/AMD driving record revenue. AI infrastructure capex cycle is secular, not cyclical."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "LLY",
+      "broker_symbol": "LLY",
+      "broker": {
+        "symbol": "LLY"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1080,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 4,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-02T09:30:00-04:00",
+        "valid_until": "2026-06-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1027.35,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1185.3,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1237.95,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "GLP-1/obesity megatrend leader with Mounjaro/Zepbound franchise. Above all MAs with very strong MACD. Healthcare adds critical sector diversification in a tech-heavy market."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "PLTR",
+      "broker_symbol": "PLTR",
+      "broker": {
+        "symbol": "PLTR"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 160,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 31,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-02T09:30:00-04:00",
+        "valid_until": "2026-06-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 149.19,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 181.62,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 192.43,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 92,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "AI/defense data analytics leader near all-time highs. Government + commercial AI adoption accelerating. Strong momentum with RSI 70 not yet overbought."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "CRM",
+      "broker_symbol": "CRM",
+      "broker": {
+        "symbol": "CRM"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 209.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 23,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-02T09:30:00-04:00",
+        "valid_until": "2026-06-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 193.78,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 240.94,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 256.66,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 91,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Enterprise AI integration catalyst via Agentforce platform. Cloud CRM dominant with margin expansion story. Above all MAs in strong uptrend."
+      },
+      "priority": 5
+    }
+  ],
   "error_handlers": {
     "INSUFFICIENT_MARGIN": {
       "action": "REDUCE_SIZE",
@@ -148,9 +609,9 @@
       },
       {
         "step": "CHECK_VIX",
-        "threshold": 22,
+        "threshold": 28,
         "action": "HALT_IF_ABOVE",
-        "description": "If VIX > 22, halt all new orders"
+        "description": "If VIX > 28, halt all new orders"
       },
       {
         "step": "LOG_STATE",
