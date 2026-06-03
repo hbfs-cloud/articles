@@ -4551,6 +4551,8 @@ document.addEventListener('DOMContentLoaded',function(){
       var quotes={};tickers.forEach(function(t){quotes[t]=live[t]||baked[t]||null});
       var panels={};
       rows.forEach(function(row){
+        var mPanel=row.closest('.mode-panel');
+        if(mPanel&&mPanel.dataset.modeStatus==='deploying')return;
         var tk=row.dataset.sigTicker,entry=+row.dataset.sigEntry,stop=+row.dataset.sigStop,tp1=+row.dataset.sigTp1,tp2=+row.dataset.sigTp2||0,vwap=+row.dataset.sigVwap||0,rank=row.dataset.sigRank;
         var q=quotes[tk];var st=evalSignal(q,entry,stop,tp1,tp2,vwap);
         // Status pill
