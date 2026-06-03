@@ -238,11 +238,16 @@ async function main() {
     if (_prev) prevSnap = JSON.parse(fs.readFileSync(path.join(_historyDir, _prev), 'utf8'));
     // Build per-mode history from EVERY snapshot < today (excludes today, which
     // gets appended at panel-build time using fresh stats.ret).
+    const _statusSinceCutoff = {};
+    for (const [mId, mCfg] of Object.entries(config.modes || {})) {
+      if (mCfg.statusSince) _statusSinceCutoff[mId] = mCfg.statusSince.slice(0, 10).replace(/-/g, '');
+    }
     for (const f of _files.filter(ff => ff.replace('.json', '') < _todayKeyNY)) {
       const snap = JSON.parse(fs.readFileSync(path.join(_historyDir, f), 'utf8'));
       const dateKey = f.replace('.json', '');
       const dateLabel = dateKey.slice(4, 6) + '/' + dateKey.slice(6, 8);
       for (const [mId, mData] of Object.entries(snap.modes || {})) {
+        if (_statusSinceCutoff[mId] && dateKey < _statusSinceCutoff[mId]) continue;
         if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
         const ret = mData.stats && mData.stats.ret != null ? mData.stats.ret : null;
         if (ret != null) {
@@ -467,10 +472,11 @@ async function main() {
     // Frozen EC never changes retroactively — unlike snapshot stats.ret which gets
     // recalculated when sweep reruns with updated parameters.
     let ec;
-    if (m.equityCurve && m.equityCurve.length > 0) {
+    if (m.equityCurve && m.equityCurve.filter(p => p.date).length > 0) {
       // Deduplicate: multiple trades on same date → keep last value (end-of-day state)
       const _dedup = new Map();
       for (const p of m.equityCurve) {
+        if (!p.date) continue;
         _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
       }
       ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
@@ -2679,9 +2685,10 @@ document.addEventListener('DOMContentLoaded',function(){
     // Build continuous MtM curve from frozen EC (authoritative) or snapshot fallback
     const frozenEC = modes[id].m.equityCurve;
     let ec;
-    if (frozenEC && frozenEC.length > 0) {
+    if (frozenEC && frozenEC.filter(p => p.date).length > 0) {
       const _dedup = new Map();
       for (const p of frozenEC) {
+        if (!p.date) continue;
         _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
       }
       ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
