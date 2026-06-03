@@ -522,12 +522,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
   }
 
-  // ATR-based stop: use tightest of setup stop and N*ATR
+  // ATR-based stop: use widest of setup stop and N*ATR (ATR overrides signal stop)
   if (atrStopMult > 0) {
     const atr = computeATR(priceHistory, entryDate);
     if (atr) {
       const atrRisk = atr * atrStopMult;
-      if (atrRisk < riskPerUnit) riskPerUnit = atrRisk;
+      if (atrRisk > riskPerUnit) riskPerUnit = atrRisk;
     }
   }
 
