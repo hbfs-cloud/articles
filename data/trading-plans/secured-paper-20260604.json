@@ -1,0 +1,708 @@
+{
+  "version": "1.0",
+  "dsl": "dailytickers-trading-plan",
+  "generated_at": "2026-06-03T21:20:01.750Z",
+  "valid_for": "2026-06-04",
+  "mode_status": {
+    "state": "deploying",
+    "since": "2026-06-02T15:00:00.000Z",
+    "reason": "New Orbit mode replacing Secured. H20/3.5×ATR. Deploying paper-ramp from 2026-06-03.",
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
+    "forceLiquidate": false,
+    "publiclyVisible": true,
+    "tradingMode": "paper-ramp",
+    "nextReviewAt": "2026-07-03"
+  },
+  "broker": {
+    "name": "paper",
+    "type": "simulation",
+    "credentials": {
+      "api_key": "${BROKER_API_KEY}",
+      "api_secret": "${BROKER_API_SECRET}",
+      "base_url": "http://localhost:9999",
+      "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
+    }
+  },
+  "account": {
+    "nominal_usd": 10000,
+    "currency": "USD",
+    "position_size_pct": 50,
+    "max_positions": 2
+  },
+  "mode": {
+    "name": "secured",
+    "horizon_days": 20,
+    "filter": "mom_bo",
+    "min_score": 88,
+    "rotation": "none",
+    "breakeven_pct": 0,
+    "be_grace_days": 0,
+    "vix_kill": 28,
+    "trailing_stop": false,
+    "daily_trail_pct": 0,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 3.5,
+    "stale_days": 0,
+    "entry_gate_pct": 0,
+    "partial_tp": true,
+    "partial_tp_pct": 0.3,
+    "sector_cap_max": 2,
+    "sizing_method": "inverse_atr",
+    "target_risk_pct": 1,
+    "correlation_cap": 0.7,
+    "cross_mode_dedup": true,
+    "regime_filters": {
+      "risk_on": "mom_bo",
+      "early_risk_off": "mom_bo",
+      "risk_off": "breakout_only",
+      "neutral": "mom_bo",
+      "recovery": "mom_bo"
+    },
+    "dd_breaker_pct": 5
+  },
+  "session": {
+    "market": "US_EQUITY",
+    "timezone": "America/New_York",
+    "pre_market": "04:00",
+    "market_open": "09:30",
+    "market_close": "16:00",
+    "post_market": "20:00",
+    "extended_hours": false
+  },
+  "risk": {
+    "max_portfolio_heat_pct": "2.0",
+    "max_single_loss_pct": 3,
+    "max_slippage_pct": 1,
+    "max_spread_pct": 0.5,
+    "circuit_breaker": {
+      "daily_loss_pct": 5,
+      "action": "HALT_ALL_ORDERS",
+      "description": "If portfolio drops 5% intraday, cancel all pending orders and alert."
+    },
+    "correlation_limit": 0.7,
+    "max_sector_concentration": 2
+  },
+  "close_now": [],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "LLY",
+      "broker_symbol": "LLY",
+      "broker": {
+        "symbol": "LLY"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1081,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 4,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1028,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1162,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1210,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-07-02",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "GLP-1 leader with tirzepatide dominating the obesity/diabetes drug market. Price surged +1.4% today to $1,078 while SPX fell -0.74% — demonstrating defensive momentum and sector rotation into healthcare. RSI 62.1, 12.3% above 50DMA. Bullish call sweep at $1,130 strike (Jun 5 expiry, 2.1x avg volume). VWAP entry gate active."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "MSFT",
+      "broker_symbol": "MSFT",
+      "broker": {
+        "symbol": "MSFT"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 428,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 11,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 406,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 461,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 483,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-07-02",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 92,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "Mega-cap tech recovering after -3.2% sympathy sell-off (AVGO/CRWD pre-earnings). RSI 52.6, 5.4% above 50DMA. Massive bullish call flow: 60K+ contracts at $427.5-$440 strikes (Jun 3 expiry, 40x avg). If AVGO beats tonight, MSFT gaps up as AI infrastructure demand confirmation. EMA50 > EMA200 momentum structure intact."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "TGTX",
+      "broker_symbol": "TGTX",
+      "broker": {
+        "symbol": "TGTX"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 40,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 125,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 37.300000000000004,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 44.1,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 46.5,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-07-02",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 91,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "Small-cap biotech with commercial-stage multiple sclerosis franchise (ublituximab/Briumvi). +9.5% today to $40.11 on strong volume (3.6M vs 1.9M avg). RSI 57.4, EMA20 > EMA50, MACD strongly positive. 10.1% above 50DMA — early-stage momentum, not overextended. $6.1B mcap with growing net revenues."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "FCX",
+      "broker_symbol": "FCX",
+      "broker": {
+        "symbol": "FCX"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 70.75,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 70,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 66.3,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 77.5,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 81,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-07-02",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 90,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "Copper leader at 52-week high territory. RISK-ON regime = commodity expansion. RSI 64.3, 12.9% above 50DMA. EMA20 > EMA50, MACD bullish. Copper demand driven by EV buildout, AI data center power density, grid infrastructure. UOA: call sweep at $63 ITM (bullish) and vol spikes confirming institutional positioning."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "TPL",
+      "broker_symbol": "TPL",
+      "broker": {
+        "symbol": "TPL"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 407.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 12,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 377,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 452,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 490,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-07-02",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 89,
+        "strategy": "Pullback",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "Permian Basin royalty and land management company. Pullback from $547 52-week high to $407 (near 200DMA $393). RSI 50.5 = neutral, not oversold. Price recovered +9.7% today on strong volume. EMA200 acting as support. TPL earns oil/gas royalties with no exploration risk — pure RISK-ON commodity beneficiary with low capex model."
+      },
+      "priority": 5
+    }
+  ],
+  "error_handlers": {
+    "INSUFFICIENT_MARGIN": {
+      "action": "REDUCE_SIZE",
+      "reduce_pct": 50,
+      "retry": true,
+      "max_retries": 1
+    },
+    "SYMBOL_NOT_FOUND": {
+      "action": "SKIP",
+      "log_level": "ERROR"
+    },
+    "CONNECTION_LOST": {
+      "action": "RECONNECT",
+      "max_retries": 10,
+      "backoff_ms": [
+        1000,
+        2000,
+        5000,
+        10000,
+        30000
+      ],
+      "on_failure": "CANCEL_PENDING_AND_ALERT"
+    },
+    "PARTIAL_FILL": {
+      "action": "KEEP_PARTIAL",
+      "adjust_exits": true,
+      "description": "Keep partial fill. Adjust TP/SL quantities proportionally."
+    },
+    "ORDER_REJECTED": {
+      "action": "LOG_AND_SKIP",
+      "log_level": "WARN"
+    },
+    "MARKET_HALTED": {
+      "action": "WAIT_RESUME",
+      "timeout_min": 60,
+      "on_timeout": "CANCEL_ORDER"
+    },
+    "RATE_LIMITED": {
+      "action": "BACKOFF",
+      "delay_ms": 5000,
+      "max_retries": 3
+    },
+    "DUPLICATE_ORDER": {
+      "action": "SKIP",
+      "description": "Order for this symbol already exists. Idempotent — skip."
+    }
+  },
+  "lifecycle": {
+    "on_start": [
+      {
+        "step": "CHECK_MARKET_STATUS",
+        "description": "Verify market is open or will open today"
+      },
+      {
+        "step": "SYNC_ACCOUNT",
+        "description": "Fetch current account balance, buying power, positions"
+      },
+      {
+        "step": "RECONCILE_POSITIONS",
+        "description": "Compare broker positions with expected positions. Alert on discrepancy."
+      },
+      {
+        "step": "CHECK_VIX",
+        "threshold": 28,
+        "action": "HALT_IF_ABOVE",
+        "description": "If VIX > 28, halt all new orders"
+      },
+      {
+        "step": "LOG_STATE",
+        "description": "Log initial account state for audit trail"
+      }
+    ],
+    "on_fill": [
+      {
+        "step": "PLACE_EXITS",
+        "description": "Immediately place SL and TP1/TP2 bracket orders"
+      },
+      {
+        "step": "LOG_FILL",
+        "description": "Record fill price, time, slippage, fees"
+      },
+      {
+        "step": "CHECK_BREAKEVEN",
+        "description": "Start monitoring for breakeven trigger"
+      },
+      {
+        "step": "NOTIFY",
+        "channel": "telegram",
+        "description": "Send fill notification to Telegram"
+      }
+    ],
+    "on_exit": [
+      {
+        "step": "CANCEL_REMAINING_EXITS",
+        "description": "Cancel the other side (SL if TP hit, TP if SL hit)"
+      },
+      {
+        "step": "LOG_EXIT",
+        "description": "Record exit price, P&L, hold time"
+      },
+      {
+        "step": "CHECK_ROTATION",
+        "description": "If slot freed, check for pending rotation candidates"
+      },
+      {
+        "step": "UPDATE_PORTFOLIO",
+        "description": "Update local portfolio state file"
+      }
+    ],
+    "on_breakeven": [
+      {
+        "step": "MODIFY_STOP",
+        "description": "Move stop loss to entry price (+ spread buffer)"
+      },
+      {
+        "step": "LOG_BREAKEVEN",
+        "description": "Record breakeven activation"
+      }
+    ],
+    "on_horizon_expiry": [
+      {
+        "step": "CLOSE_AT_MARKET",
+        "description": "Submit market close order at next open"
+      },
+      {
+        "step": "CANCEL_EXITS",
+        "description": "Cancel any pending TP/SL orders for this position"
+      }
+    ],
+    "on_error": [
+      {
+        "step": "LOG_ERROR",
+        "description": "Record error with full context"
+      },
+      {
+        "step": "LOOKUP_HANDLER",
+        "description": "Find matching error_handler and execute action"
+      },
+      {
+        "step": "NOTIFY_IF_CRITICAL",
+        "description": "Alert on CONNECTION_LOST, CIRCUIT_BREAKER, or unknown errors"
+      }
+    ],
+    "on_end": [
+      {
+        "step": "CANCEL_UNFILLED",
+        "description": "Cancel any GTC orders that were not filled today"
+      },
+      {
+        "step": "EXPORT_TRADES",
+        "description": "Write execution log to trades-YYYYMMDD.json"
+      },
+      {
+        "step": "SUMMARY",
+        "description": "Print session summary: fills, skips, errors, P&L"
+      }
+    ]
+  },
+  "broker_notes": {}
+}
