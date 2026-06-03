@@ -438,7 +438,7 @@ async function main() {
       const openInModes = new Set();
       for (const m of modes) {
         for (const t of bt[m]) {
-          if (!t.exitDate) openInModes.add(t.ticker);
+          if (!t.exitDate || t.status === 'pending') openInModes.add(t.ticker);
         }
       }
       const before = activePositions.length;

@@ -985,9 +985,15 @@ function simulatePortfolio(allTrades, scans, config) {
         }
       }
       // Apply strategy filter per date (deferred from global loop for regime awareness)
-      const filtered = (byDate[day] || []).filter(t => !activeFilter.has(t.strategy));
-      const candidates = filtered.slice(0, topN);
+      const filtered = (byDate[day] || [])
+        .filter(t => !activeFilter.has(t.strategy))
+        .sort((a, b) => b.score - a.score);
+      // Defer topN slicing until after cooldown/dedup checks — ensures the best
+      // ELIGIBLE candidates are picked, not just the top N before filtering.
       let slotsAvailable = portfolioSize - openPositions.length;
+
+      // Build eligible candidates: apply cooldown, dedup, and topN AFTER filtering
+      const candidates = filtered.slice(0, topN * 3); // generous pool for cooldown filtering
 
       // Rotation logic
       if (rotation !== 'none' && slotsAvailable <= 0 && candidates.length > 0) {
@@ -1946,20 +1952,30 @@ async function main() {
       if (FROZEN_ONLY) {
         // Append-only: preserve existing trades, only simulate scans AFTER the latest existing one
         const allExisting = existingTrades[id] || [];
+        // statusSince gate: drop trades before mode inception date (e.g. Orbit replacing Secured)
+        const sinceISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : null;
+        const sinceCutoff = sinceISO ? sinceISO.replace(/-/g, '') : null;
+        const afterSince = sinceISO
+          ? allExisting.filter(t => (t.scanDate || '') >= sinceISO)
+          : allExisting;
+        if (sinceISO && afterSince.length < allExisting.length) {
+          console.log(`  ${id}: filtered ${allExisting.length - afterSince.length} trades before statusSince ${sinceISO}`);
+        }
         // Purge: pending trades only (always re-simulate with latest data).
         // Never purge closed/expired trades — they were simulated with their original config
         // and changing the current horizon must not retroactively invalidate them.
         const shouldPurge = t => t.status === 'pending';
-        const existing = allExisting.filter(t => !shouldPurge(t));
-        const purged = allExisting.length - existing.length;
+        const existing = afterSince.filter(t => !shouldPurge(t));
+        const purged = afterSince.length - existing.length;
         if (purged > 0) console.log(`  ⚠️ ${id}: purged ${purged} pending/early-expired trades for re-simulation`);
         const latestExistingScan = existing.reduce((max, t) => t.scanDate > max ? t.scanDate : max, '');
 
         // Include scans after latest valid trade AND scans whose trades were purged
-        const purgedDates = new Set(allExisting.filter(shouldPurge).map(t => t.scanDate));
+        const purgedDates = new Set(afterSince.filter(shouldPurge).map(t => t.scanDate));
+        const modeScans = sinceISO ? scans.filter(s => s.scanDate >= sinceISO) : scans;
         const newScans = latestExistingScan
-          ? scans.filter(s => s.scanDate > latestExistingScan || purgedDates.has(s.scanDate))
-          : scans;
+          ? modeScans.filter(s => s.scanDate > latestExistingScan || purgedDates.has(s.scanDate))
+          : modeScans;
 
         let newClosedTrades = [];
         if (newScans.length > 0) {
