@@ -2086,6 +2086,18 @@ async function main() {
 
         merged.sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
 
+        // Dedup pending trades by ticker: keep only the most recent scanDate per ticker
+        const pendingByTicker = new Map();
+        for (let i = merged.length - 1; i >= 0; i--) {
+          if (merged[i].status === 'pending') {
+            if (pendingByTicker.has(merged[i].ticker)) {
+              merged.splice(i, 1);
+            } else {
+              pendingByTicker.set(merged[i].ticker, true);
+            }
+          }
+        }
+
         // ── Inject real open positions from scanner-positions.json ──
         // Positions visible on the status page (posFor) must contribute to
         // returnUnrealized so MtM stats match what the user sees.
@@ -2123,6 +2135,10 @@ async function main() {
 
           const injected = [];
           const seenTickers = new Set();
+          // Pre-seed with tickers already pending in merged (prevent duplicate positions)
+          for (const t of merged) {
+            if (t.status === 'pending') seenTickers.add(t.ticker);
+          }
           const todayISO = new Date().toISOString().slice(0, 10);
           for (const p of livePositions) {
             if (seenTickers.has(p.ticker)) continue;
