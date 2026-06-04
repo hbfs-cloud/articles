@@ -451,6 +451,10 @@ async function main() {
         const ec = [...frozen.equityCurve];
         while (ec.length > 1 && ec[ec.length - 1].value === ec[ec.length - 2].value) ec.pop();
 
+        // Clamp: drop any points dated after today (future dates from stale price cache)
+        const todayISO = new Date().toISOString().slice(0, 10);
+        while (ec.length > 1 && ec[ec.length - 1].date > todayISO) ec.pop();
+
         // Frozen EC is authoritative — no MtM extension (append-only: sweep stats are final)
 
         m.equityCurve = ec;

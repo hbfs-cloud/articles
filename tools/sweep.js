@@ -588,7 +588,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       if (currentGain >= partialTPGain) {
         const tpFrac = partialTPPct * 100;
         partialRealized = (partialTPGain / 100) * tpFrac;
-        if (entryPrice > currentStop) currentStop = entryPrice;
+        // Snap stop to entry (implicit BE lock) — but NOT when trailingStop is active,
+        // because the 1.5R trail should manage the stop for momentum runway (TKL fix)
+        if (!trailingStop && entryPrice > currentStop) currentStop = entryPrice;
       }
     }
 
@@ -657,10 +659,25 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     const expireBar = priceHistory[lastDate];
     if (!expireBar) return null;
     if (lastDate < expireDate) {
-      // Mark-to-market at last available bar — gen-status-page shows as open position
-      status = 'pending';
-      exitDate = lastDate;
-      exitPrice = expireBar.close;
+      // Check if price data has clearly ended (delisted/no data for >10 biz days)
+      // If so, resolve to terminal status instead of leaving as phantom "pending"
+      const today = new Date().toISOString().slice(0, 10);
+      const gapDays = bizDaysBetween(lastDate, today);
+      if (gapDays > 10) {
+        // Price data ended — resolve based on P&L
+        exitDate = lastDate;
+        exitPrice = expireBar.close;
+        const rawPnl = (exitPrice - entryPrice) / entryPrice;
+        if (partialRealized > 0) status = 'tp1_partial';
+        else if (Math.abs(rawPnl) < 0.005) status = 'breakeven';  // <0.5% = breakeven
+        else if (rawPnl > 0) status = 'expired';
+        else status = 'sl';
+      } else {
+        // Mark-to-market at last available bar — gen-status-page shows as open position
+        status = 'pending';
+        exitDate = lastDate;
+        exitPrice = expireBar.close;
+      }
     } else {
       status = 'expired';
       exitDate = lastDate;
@@ -760,6 +777,9 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
       }
     }
   }
+  // Clamp to today — never extend the equity curve into future dates
+  const todayClamp = new Date().toISOString().slice(0, 10);
+  if (lastPriceDate > todayClamp) lastPriceDate = todayClamp;
   const endDate = lastPriceDate || lastTradeDate;
 
   const allDays = getAllBizDays(firstDate, endDate);
@@ -830,6 +850,29 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     if (dailyEquity > peak) peak = dailyEquity;
     const dd = ((peak - dailyEquity) / peak) * 100;
     if (dd > maxDD) maxDD = dd;
+  }
+
+  // Compress interior flat runs: collapse 5+ consecutive same-value points to
+  // first + last of the run. Preserves start/end dates for chart rendering
+  // while eliminating misleading "flat padding" stretches in the middle.
+  if (equityCurve.length > 4) {
+    const compressed = [equityCurve[0]];
+    let i = 1;
+    while (i < equityCurve.length) {
+      let runEnd = i;
+      while (runEnd + 1 < equityCurve.length && equityCurve[runEnd + 1].value === equityCurve[i].value) runEnd++;
+      const runLen = runEnd - i + 1;
+      if (runLen >= 5 && i > 0 && runEnd < equityCurve.length - 1) {
+        // Interior flat run: keep only first and last point
+        compressed.push(equityCurve[i]);
+        if (runEnd !== i) compressed.push(equityCurve[runEnd]);
+      } else {
+        for (let j = i; j <= runEnd; j++) compressed.push(equityCurve[j]);
+      }
+      i = runEnd + 1;
+    }
+    equityCurve.length = 0;
+    equityCurve.push(...compressed);
   }
 
   const returnTotal = equityCurve.length > 0
