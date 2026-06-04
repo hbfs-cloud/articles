@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-04T10:22:58.179Z",
+  "generated_at": "2026-06-04T10:53:36.667Z",
   "valid_for": "2026-06-04",
   "mode_status": {
     "state": "live",
@@ -87,7 +87,7 @@
   "orders": [
     {
       "id": "ORD-001",
-      "action": "BUY",
+      "action": "ROTATE",
       "ticker": "MSFT",
       "broker_symbol": "MSFT_US_EQ",
       "broker": {
@@ -172,6 +172,10 @@
           "description": "Log warning if fill price > 1% worse than limit."
         }
       ],
+      "rotation": {
+        "close_broker_symbol": null,
+        "reason": "Score upgrade — rotate worst position for better signal"
+      },
       "metadata": {
         "score": 92,
         "strategy": "Momentum",
@@ -183,6 +187,102 @@
     },
     {
       "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "LLY",
+      "broker_symbol": "LLY_US_EQ",
+      "broker": {
+        "symbol": "LLY_US_EQ",
+        "exchange": "NYSE",
+        "isin": "US5324571083",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1081,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 1,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1028,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1162,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1210,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "GLP-1 leader with tirzepatide dominating the obesity/diabetes drug market. Price surged +1.4% today to $1,078 while SPX fell -0.74% — demonstrating defensive momentum and sector rotation into healthcare. RSI 62.1, 12.3% above 50DMA. Bullish call sweep at $1,130 strike (Jun 5 expiry, 2.1x avg volume). VWAP entry gate active."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
       "action": "BUY",
       "ticker": "TGTX",
       "broker_symbol": "TGTX_US_EQ",
@@ -275,10 +375,10 @@
         "sharia": true,
         "thesis": "Small-cap biotech with commercial-stage multiple sclerosis franchise (ublituximab/Briumvi). +9.5% today to $40.11 on strong volume (3.6M vs 1.9M avg). RSI 57.4, EMA20 > EMA50, MACD strongly positive. 10.1% above 50DMA — early-stage momentum, not overextended. $6.1B mcap with growing net revenues."
       },
-      "priority": 2
+      "priority": 3
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "FCX",
       "broker_symbol": "FCX_US_EQ",
@@ -370,102 +470,6 @@
         "rr": "1:1.5",
         "sharia": true,
         "thesis": "Copper leader at 52-week high territory. RISK-ON regime = commodity expansion. RSI 64.3, 12.9% above 50DMA. EMA20 > EMA50, MACD bullish. Copper demand driven by EV buildout, AI data center power density, grid infrastructure. UOA: call sweep at $63 ITM (bullish) and vol spikes confirming institutional positioning."
-      },
-      "priority": 3
-    },
-    {
-      "id": "ORD-004",
-      "action": "BUY",
-      "ticker": "LLY",
-      "broker_symbol": "LLY_US_EQ",
-      "broker": {
-        "symbol": "LLY_US_EQ",
-        "exchange": "NYSE",
-        "isin": "US5324571083",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 1081,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 1,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 1028,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 3.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 1162,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 1210,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 93,
-        "strategy": "Momentum",
-        "rr": "1:1.5",
-        "sharia": true,
-        "thesis": "GLP-1 leader with tirzepatide dominating the obesity/diabetes drug market. Price surged +1.4% today to $1,078 while SPX fell -0.74% — demonstrating defensive momentum and sector rotation into healthcare. RSI 62.1, 12.3% above 50DMA. Bullish call sweep at $1,130 strike (Jun 5 expiry, 2.1x avg volume). VWAP entry gate active."
       },
       "priority": 4
     },
