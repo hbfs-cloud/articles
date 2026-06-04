@@ -447,6 +447,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     disableTP2 = false,  // skip TP2 hard exit — let trailing/stale handle runner exits
     entryGatePct = 0, // reject if open > entry * (1 + X%) — 0 = disabled
     vwapGate = false, // skip trade if open gaps above VWAP * 1.01 (gap-up trap filter)
+    trailMultR = 1.5,    // trail distance as multiple of riskPerUnit (1.5R default)
+    trailGraceDays = 0,  // min days held before trailing stop activates (0 = immediate)
   } = config;
   const _staleGrace = staleGraceDays > 0 ? staleGraceDays : staleDays;
   const _staleRate = staleGraceDays > 0 ? staleRaiseRate : 0.002;
@@ -608,9 +610,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       }
     }
 
-    // Trailing stop: if price made new high, trail stop
-    if (trailingStop && partialRealized > 0) {
-      const trailLevel = bar.high - riskPerUnit * 1.5; // Trail at 1.5R from high
+    // Trailing stop: trail from high at trailMultR × riskPerUnit
+    // When partialTP is disabled (partialTPGain=0 && !partialTP), trail activates unconditionally
+    // after grace period. When partialTP is enabled, trail gates on partialRealized > 0.
+    const trailGated = (partialTPGain > 0 || partialTP) ? partialRealized > 0 : true;
+    if (trailingStop && trailGated && daysHeld > trailGraceDays) {
+      const trailLevel = bar.high - riskPerUnit * trailMultR;
       if (trailLevel > currentStop) currentStop = trailLevel;
     }
 
@@ -1434,7 +1439,8 @@ async function main() {
                 for (const entryGate of ENTRY_GATE_PCTS) {
                   const vwapGate = VWAP_GATE_FIXED;
                   const beGrace = 0, staleGrace = 0, staleRate = 0.001, staleAccelV = 'log', ptpGain = 0, noTP2 = false;
-                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${beGrace}_${staleGrace}_${staleRate}_${staleAccelV}_${ptpGain}_${noTP2}_${entryGate}_${vwapGate}`;
+                  const trMultR = 1.5, trGrace = 0;
+                  const key = `${horizon}_${ptp}_${ptpPct}_${trail}_${maxStop}_${atrMult}_${dailyTrail}_${bePct}_${beGrace}_${staleGrace}_${staleRate}_${staleAccelV}_${ptpGain}_${noTP2}_${entryGate}_${vwapGate}_${trMultR}_${trGrace}`;
                   const trades = [];
                   for (const setup of allSetups) {
                     const history = priceCache[setup.ticker];
@@ -1469,7 +1475,7 @@ async function main() {
     const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
     let frozenExtra = 0;
     for (const [modeId, cfg] of Object.entries(frozenModes)) {
-      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
       console.log(`  DEBUG ${modeId}: fKey=${fKey} inGrid=${!!tradesByKey[fKey]}`);
       if (!tradesByKey[fKey]) {
         const trades = [];
@@ -1483,6 +1489,7 @@ async function main() {
             staleAccel: cfg.staleAccel || 'log', partialTPGain: cfg.partialTPGain || 0,
             disableTP2: cfg.disableTP2 || false,
             entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
+            trailMultR: cfg.trailMultR ?? 1.5, trailGraceDays: cfg.trailGraceDays ?? 0,
           });
           if (result) trades.push({ ...result, regime: setup.regime || null });
         }
@@ -1951,7 +1958,7 @@ async function main() {
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
-      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}`;
+      const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
       const cfg2 = {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
@@ -1972,7 +1979,7 @@ async function main() {
         excludeSources: (() => {
           const excl = [];
           if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
-          if (id === 'tkl') excl.push('signals');
+          if (cfg.tklExcludeSignals === true) excl.push('signals');
           return excl.length ? excl : null;
         })(),
       };
