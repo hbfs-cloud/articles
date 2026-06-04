@@ -506,25 +506,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 
   let riskPerUnit = setup.entry - setup.stop;
   if (riskPerUnit <= 0) return null;
+  const originalRisk = riskPerUnit;
 
-  // Per-strategy stop cap: tighter for volatile strategies
-  const STRATEGY_STOP_CAP = {
-    'pre_squeeze': 10,
-    'short_squeeze': 10,
-    'breakout': 10,
-    'momentum': 10,
-    'pullback': 10,
-  };
-  const effectiveMaxStop = Math.min(
-    maxStopPct > 0 ? maxStopPct : 100,
-    STRATEGY_STOP_CAP[setup.strategy] || (maxStopPct > 0 ? maxStopPct : 100),
-  );
-  if (effectiveMaxStop < 100) {
-    const maxRisk = entryPrice * (effectiveMaxStop / 100);
-    if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
-  }
-
-  // ATR-based stop: use widest of setup stop and N*ATR (ATR overrides signal stop)
+  // ATR-based stop: use widest of setup stop and N*ATR
   if (atrStopMult > 0) {
     const atr = computeATR(priceHistory, entryDate);
     if (atr) {
@@ -533,14 +517,20 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
   }
 
-  const actualStop = entryPrice - riskPerUnit;
-  const rewardMult1 = (setup.tp1 - setup.entry) / riskPerUnit;
-  const actualTp1 = entryPrice + riskPerUnit * rewardMult1;
-  const rewardMult2 = setup.tp2 ? (setup.tp2 - setup.entry) / riskPerUnit : null;
-  const actualTp2 = rewardMult2 !== null ? entryPrice + riskPerUnit * rewardMult2 : null;
+  // maxStopPct ceiling AFTER ATR widening (was before → ATR override bypassed cap)
+  const effectiveMaxStop = maxStopPct > 0 ? maxStopPct : 100;
+  if (effectiveMaxStop < 100) {
+    const maxRisk = entryPrice * (effectiveMaxStop / 100);
+    if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
+  }
 
-  // R:R gate: reject trades with reward/risk below 1.5
-  const rrRatio = (actualTp1 - entryPrice) / riskPerUnit;
+  const actualStop = entryPrice - riskPerUnit;
+  // TP levels preserve original signal dollar distance (not affected by ATR widening)
+  const actualTp1 = entryPrice + (setup.tp1 - setup.entry);
+  const actualTp2 = setup.tp2 ? entryPrice + (setup.tp2 - setup.entry) : null;
+
+  // R:R gate uses ORIGINAL signal risk (not ATR-widened) to avoid silent rejection
+  const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
   if (rrRatio < 1.5) return null;
 
   const expireDate = addBizDays(scanDate, horizonDays);
@@ -552,6 +542,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let exitDate = null;
   let exitPrice = null;
   let partialRealized = 0; // P&L from partial close at TP1
+  let partialTriggerDay = null;
   let highWaterMark = entryPrice;
   let daysSinceNewHigh = 0;
   let breakevenActivated = false;
@@ -590,9 +581,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       if (currentGain >= partialTPGain) {
         const tpFrac = partialTPPct * 100;
         partialRealized = (partialTPGain / 100) * tpFrac;
-        // Snap stop to entry (implicit BE lock) — but NOT when trailingStop is active,
-        // because the 1.5R trail should manage the stop for momentum runway (TKL fix)
-        if (!trailingStop && entryPrice > currentStop) currentStop = entryPrice;
+        partialTriggerDay = daysHeld;
+        // DO NOT snap stop to entry immediately — 3-day grace before BE lock
+      }
+    }
+    // BE lock after partial TP: wait 3 days to avoid instant breakeven trap
+    if (partialRealized > 0 && !trailingStop && typeof partialTriggerDay === 'number') {
+      if (daysHeld - partialTriggerDay >= 3 && entryPrice > currentStop) {
+        currentStop = entryPrice;
       }
     }
 
@@ -601,7 +597,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       if (partialTP) {
         const tpFrac = partialTPPct * 100;
         partialRealized = ((actualTp1 - entryPrice) / entryPrice) * tpFrac;
-        if (entryPrice > currentStop) currentStop = entryPrice;
+        partialTriggerDay = daysHeld;
       } else {
         status = 'tp1';
         exitDate = date;
@@ -1196,7 +1192,7 @@ function simulatePortfolio(allTrades, scans, config) {
   let peak = 100, maxDD = 0;
   for (const v of values) {
     if (v > peak) peak = v;
-    const dd = peak - v;
+    const dd = peak > 0 ? ((peak - v) / peak) * 100 : 0;
     if (dd > maxDD) maxDD = dd;
   }
 
