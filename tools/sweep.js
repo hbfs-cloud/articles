@@ -950,9 +950,15 @@ function simulatePortfolio(allTrades, scans, config) {
           if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
           closedTrades.push(pos.trade);
         }
-        // Cooldown: SL=10d re-entry ban (unchanged). BE/expired/rotated = no cooldown (grace period handles churn)
+        // Cooldown: SL=10d, breakeven=5d, expired/rotated=3d re-entry ban
         if (pos.trade.status === 'sl') {
           slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 10 });
+        } else if (pos.trade.status === 'breakeven') {
+          slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 5 });
+        } else if (['expired', 'rotated'].includes(pos.trade.status)) {
+          slCooldown.set(pos.trade.ticker, { date: pos.trade.exitDate, days: 3 });
+        }
+        if (pos.trade.status === 'sl') {
           // v3 circuit breaker: track SL events
           if (cbMaxStops > 0) {
             cbStopDates.push(day);
@@ -1043,7 +1049,7 @@ function simulatePortfolio(allTrades, scans, config) {
           if (equityCurve[i].value > peakSoFar) peakSoFar = equityCurve[i].value;
         }
         const priorClose = equityCurve[equityCurve.length - 2].value;
-        const currentDD = peakSoFar - priorClose;
+        const currentDD = ((peakSoFar - priorClose) / peakSoFar) * 100;
         ddBreakerActive = currentDD > config.ddBreakerPct;
       }
 
@@ -1084,7 +1090,7 @@ function simulatePortfolio(allTrades, scans, config) {
         // Pairwise correlation cap (vs already-open positions in this mode)
         if (config.correlationCap > 0 && openPositions.length > 0) {
           const rho = maxCorrToOpen(cand, openPositions, 60);
-          if (rho != null && Math.abs(rho) > config.correlationCap) continue;
+          if (rho != null && rho > config.correlationCap) continue;
         }
         // ETF at 52w high penalty: reduce effective score by 5 for ETFs near yearly highs
         const candSector = getSector(cand.ticker);
