@@ -2628,6 +2628,98 @@ document.addEventListener('DOMContentLoaded',function(){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){update();setInterval(update,INTERVAL)});
   else{update();setInterval(update,INTERVAL)}
 })();
+
+// ── Position Live MtM + Equity Point Update ──
+(function(){
+  var MTM_INTERVAL=60000; // 60s
+  var PROXIES=['https://api.allorigins.win/get?url='];
+  function isNYSEOpen(){var now=new Date();var d=now.getUTCDay();if(d===0||d===6)return false;var m=now.getUTCHours()*60+now.getUTCMinutes();return m>=810&&m<=1200;}
+  function fetchQuote(ticker){
+    var u='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(ticker)+'?range=1d&interval=1d';
+    return fetch(PROXIES[0]+encodeURIComponent(u)).then(function(r){return r.json()}).then(function(w){
+      var inner=JSON.parse(w.contents);return inner.chart.result[0].meta.regularMarketPrice;
+    }).catch(function(){return null});
+  }
+  function updatePositions(){
+    if(!isNYSEOpen())return;
+    var activeTab=document.querySelector('.mode-tab.active');
+    if(!activeTab)return;
+    var modeId=activeTab.dataset.mode;
+    var panel=document.getElementById('p-'+modeId);
+    if(!panel)return;
+    // Find position rows
+    var posRows=panel.querySelectorAll('[data-section="positions"] tr[data-pos-ticker], [data-section="positions"] tbody tr');
+    if(!posRows||!posRows.length)return;
+    // Collect tickers from position rows
+    var positions=[];
+    posRows.forEach(function(row){
+      var cells=row.querySelectorAll('td');
+      if(cells.length<5)return;
+      var tickerEl=cells[0].querySelector('b');
+      if(!tickerEl)return;
+      var ticker=tickerEl.textContent.trim();
+      var entryCell=cells[2]||cells[1];
+      var entry=parseFloat((entryCell.textContent||'').replace(/[^0-9.]/g,''));
+      if(!ticker||!entry)return;
+      positions.push({ticker:ticker,entry:entry,row:row,cells:cells});
+    });
+    if(!positions.length)return;
+    // Fetch prices for all position tickers
+    var tickers=[...new Set(positions.map(function(p){return p.ticker}))];
+    Promise.all(tickers.map(fetchQuote)).then(function(prices){
+      var priceMap={};tickers.forEach(function(t,i){if(prices[i])priceMap[t]=prices[i]});
+      var totalMtm=0;var count=0;
+      positions.forEach(function(p){
+        var lp=priceMap[p.ticker];
+        if(!lp)return;
+        var pnl=((lp-p.entry)/p.entry*100);
+        totalMtm+=pnl;count++;
+        // Update current price cell (usually cell 3)
+        var curCell=p.cells[3];
+        if(curCell&&curCell.classList.contains('hide-m')){curCell.textContent='$'+lp.toFixed(2)}
+        // Update P&L cell (usually cell 4)
+        var pnlCell=p.cells[4];
+        if(pnlCell){
+          var b=pnlCell.querySelector('b');
+          if(b){b.textContent=(pnl>=0?'+':'')+pnl.toFixed(2)+'%';pnlCell.className=pnl>=0?'pos':'neg'}
+        }
+      });
+      // Update hero unrealized stat if available
+      var heroUnreal=panel.querySelector('[data-bind="unrealized"]');
+      if(heroUnreal&&count>0){
+        var avgMtm=totalMtm/count;
+        heroUnreal.textContent=(avgMtm>=0?'+':'')+avgMtm.toFixed(2)+'%';
+        heroUnreal.style.color=avgMtm>=0?'#059669':'#dc2626';
+      }
+      // Append live equity point to chart
+      if(typeof modeCharts!=='undefined'&&modeCharts[modeId]&&count>0){
+        var now=new Date();var label=(now.getMonth()+1).toString().padStart(2,'0')+'/'+now.getDate().toString().padStart(2,'0');
+        var eq=modeCharts[modeId];
+        var lastEq=eq.v[eq.v.length-1]||100;
+        // Simple: adjust last equity point by avg position MtM delta
+        var _pSizeMap=${JSON.stringify(Object.fromEntries(Object.entries(config.modes).map(([id,c])=>[id,c.portfolioSize])))};
+        var weight=1/(_pSizeMap[modeId]||1);
+        var liveEq=lastEq+(totalMtm*weight);
+        // Update or append today's point
+        if(eq.d[eq.d.length-1]===label){eq.v[eq.v.length-1]=+liveEq.toFixed(2)}
+        else{eq.d.push(label);eq.v.push(+liveEq.toFixed(2))}
+        // Re-render chart
+        var chartEl=panel.querySelector('.eq-chart');
+        if(chartEl){
+          var inst=window.echarts&&window.echarts.getInstanceByDom(chartEl);
+          if(inst){inst.setOption({xAxis:{data:eq.d},series:[{data:eq.v}]})}
+        }
+      }
+      // Update last-refresh timestamp
+      var ts=panel.querySelector('.mtm-timestamp');
+      if(!ts){ts=document.createElement('span');ts.className='mtm-timestamp';ts.style.cssText='font-size:.65rem;color:#94a3b8;margin-left:.5rem';
+        var heroEl=panel.querySelector('.hero-stats');if(heroEl)heroEl.appendChild(ts)}
+      var t=new Date();ts.textContent='Live '+t.getHours().toString().padStart(2,'0')+':'+t.getMinutes().toString().padStart(2,'0');
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){updatePositions();setInterval(updatePositions,MTM_INTERVAL)});
+  else{updatePositions();setInterval(updatePositions,MTM_INTERVAL)}
+})();
 </script>
 <style>
 .fv-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}

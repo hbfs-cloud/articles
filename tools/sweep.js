@@ -852,28 +852,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     if (dd > maxDD) maxDD = dd;
   }
 
-  // Compress interior flat runs: collapse 5+ consecutive same-value points to
-  // first + last of the run. Preserves start/end dates for chart rendering
-  // while eliminating misleading "flat padding" stretches in the middle.
-  if (equityCurve.length > 4) {
-    const compressed = [equityCurve[0]];
-    let i = 1;
-    while (i < equityCurve.length) {
-      let runEnd = i;
-      while (runEnd + 1 < equityCurve.length && equityCurve[runEnd + 1].value === equityCurve[i].value) runEnd++;
-      const runLen = runEnd - i + 1;
-      if (runLen >= 5 && i > 0 && runEnd < equityCurve.length - 1) {
-        // Interior flat run: keep only first and last point
-        compressed.push(equityCurve[i]);
-        if (runEnd !== i) compressed.push(equityCurve[runEnd]);
-      } else {
-        for (let j = i; j <= runEnd; j++) compressed.push(equityCurve[j]);
-      }
-      i = runEnd + 1;
-    }
-    equityCurve.length = 0;
-    equityCurve.push(...compressed);
-  }
+  // Keep ALL business days in equity curve — flat days are real (capital idle, no trade)
 
   const returnTotal = equityCurve.length > 0
     ? +(equityCurve[equityCurve.length - 1].value - 100).toFixed(2) : 0;
