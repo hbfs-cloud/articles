@@ -29,6 +29,7 @@ const MODE_META = {
   secured:  { emoji: '🪐',  label: 'Orbit' },
   fortress: { emoji: '🏰', label: 'Fortress' },
   tkl:      { emoji: '🎯', label: 'TKL' },
+  alpha:    { emoji: '🎯', label: 'Alpha' },
 };
 const MODES = Object.keys(MODE_META);
 
