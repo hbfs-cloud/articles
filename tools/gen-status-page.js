@@ -564,7 +564,7 @@ async function main() {
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
     const parts = [];
-    parts.push(`${cfg.label || id}.`);
+    parts.push(`${cfg.label || id}`);
     parts.push(`H${cfg.horizon}`);
     parts.push(`${filterLabel(cfg.filterName)}`);
     if (cfg.atrStopMult > 0) parts.push(`${cfg.atrStopMult}× ATR stop`);
@@ -762,7 +762,7 @@ ${renderStatusBanner(cfg)}
       ${id === 'fortress' ? `<div class="step" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#6d28d9"><i class="fas fa-shield-halved" style="font-size:.5rem"></i></span><div><b>Capital preservation first:</b> with ${cfg.portfolioSize} slots at ~${Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1))}% each, a single stop-out costs only <b>−${((cfg.maxStopPct || cfg.atrStopMult * 2) * (cfg.positionSizePct || 1) / cfg.portfolioSize).toFixed(1)}% of portfolio</b>. <b>VIX &lt; 15 (calm)</b>: run ${Math.max(1, Math.round(cfg.portfolioSize * 0.6))}–${Math.round(cfg.portfolioSize * 0.7)} positions. <b>VIX 15–${cfg.vixKillThreshold} (elevated)</b>: aim for ${Math.max(1, Math.round(cfg.portfolioSize * 0.8))}+ positions. <b>VIX &gt; ${cfg.vixKillThreshold}</b>: mode pauses — no new entries until VIX drops. Never hold fewer than ${Math.max(1, Math.round(cfg.portfolioSize * 0.4))} position${Math.round(cfg.portfolioSize * 0.4) > 1 ? 's' : ''}. Consider adding defensive ETFs (GLD, TLT) manually during high-VIX regimes.</div></div>` : id === 'secured' ? `<div class="step" style="background:#ecfeff;border:1px solid #a5f3fc;border-radius:8px;padding:.65rem .9rem"><span class="step-n" style="background:#0891b2"><i class="fas fa-satellite" style="font-size:.5rem"></i></span><div><b>Orbit = patience.</b> This mode holds ${cfg.horizon} trading days (~${Math.round(cfg.horizon / 5)} weeks) with ${cfg.atrStopMult}× ATR stops — much wider than other modes. The key insight: the scanner already picks winners, but short horizons (5–8d) exit before the move fully develops. Orbit lets the trade breathe through intraday noise and captures the full trend arc. <b>Do NOT</b> panic-sell on red days — the wide stop is your safety net. If it doesn't hit, the trade is still working.</div></div>` : ''}
     </div>
     <div class="method-footer">
-      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} trades max · ${alloc}% each</span>
+      <span><i class="fas fa-layer-group"></i> ${cfg.portfolioSize} ${cfg.portfolioSize === 1 ? 'trade' : 'trades'} max · ${alloc}% each</span>
       <span><i class="fas fa-calendar-days"></i> Close after ${cfg.horizon} trading days</span>
       ${cfg.maxStopPct > 0 ? `<span><i class="fas fa-shield-halved"></i> Hard stop at −${cfg.maxStopPct}%</span>` : ''}
       ${cfg.partialTP ? `<span><i class="fas fa-scissors"></i> Sell ${Math.round((cfg.partialTPPct || 0.3) * 100)}% at TP1</span>` : ''}
@@ -1317,6 +1317,7 @@ body{background:#f1f5f9;font-family:'Inter',sans-serif;color:#0f172a;margin:0}
 /* ── Mode status badge / banner ── */
 .mode-status-badge{display:inline-flex;align-items:center;font-size:.58rem;font-weight:800;letter-spacing:.04em;background:var(--ms-bg,#94a3b8);color:#fff;padding:.12rem .38rem;border-radius:4px;margin-left:.3rem;text-transform:uppercase;line-height:1.1}
 .mode-status-badge.ms-pausing,.mode-status-badge.ms-deploying,.mode-status-badge.ms-liquidated{animation:msPulse 2s ease-in-out infinite}
+@media(max-width:600px){.mode-status-badge{font-size:.5rem;padding:.1rem .28rem;margin-left:.2rem}}
 @keyframes msPulse{0%,100%{opacity:1}50%{opacity:.55}}
 .mode-status-banner{display:flex;align-items:flex-start;gap:.7rem;padding:.85rem 1rem;margin:0 0 1.25rem;border-radius:10px;background:#fff8eb;border-left:4px solid var(--ms-bg,#f59e0b);color:#334155}
 .mode-status-banner.ms-banner-paused,.mode-status-banner.ms-banner-stopped,.mode-status-banner.ms-banner-draft{background:#f1f5f9;color:#475569}
@@ -1700,7 +1701,7 @@ document.addEventListener('DOMContentLoaded',function(){
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])},
         markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined},
       {name:'Drawdown',data:ddS,type:'line',smooth:.3,symbol:'none',xAxisIndex:1,yAxisIndex:2,z:2,
-        lineStyle:{color:'#ef4444',width:1.2,opacity:.8},
+        lineStyle:{color:'#ef4444',width:2,opacity:1},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,.18)'},{offset:1,color:'rgba(239,68,68,.02)'}])}}
     ];
     var legendItems=['Strategy','Drawdown'];
