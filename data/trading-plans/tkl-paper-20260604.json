@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-04T08:45:06.351Z",
+  "generated_at": "2026-06-04T10:22:58.029Z",
   "valid_for": "2026-06-04",
   "mode_status": {
     "state": "live",
@@ -34,22 +34,22 @@
     "name": "tkl",
     "horizon_days": 252,
     "filter": "all",
-    "min_score": 85,
-    "rotation": "none",
+    "min_score": 88,
+    "rotation": "aggressive",
     "breakeven_pct": 0,
     "be_grace_days": 0,
-    "vix_kill": 32,
+    "vix_kill": 35,
     "trailing_stop": true,
     "daily_trail_pct": 0,
     "max_stop_pct": 0,
-    "atr_stop_mult": 2.5,
+    "atr_stop_mult": 3.5,
     "stale_days": 0,
     "entry_gate_pct": 0,
-    "partial_tp": true,
+    "partial_tp": false,
     "partial_tp_pct": 0.3,
-    "sector_cap_max": 0,
+    "sector_cap_max": 3,
     "sizing_method": "inverse_atr",
-    "target_risk_pct": 0.5,
+    "target_risk_pct": 0.6,
     "correlation_cap": 0,
     "cross_mode_dedup": false,
     "regime_filters": {
@@ -59,7 +59,7 @@
       "neutral": "all",
       "recovery": "all"
     },
-    "dd_breaker_pct": 6
+    "dd_breaker_pct": 8
   },
   "session": {
     "market": "US_EQUITY",
@@ -76,9 +76,9 @@
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
     "circuit_breaker": {
-      "daily_loss_pct": 6,
+      "daily_loss_pct": 8,
       "action": "HALT_ALL_ORDERS",
-      "description": "If portfolio drops 6% intraday, cancel all pending orders and alert."
+      "description": "If portfolio drops 8% intraday, cancel all pending orders and alert."
     },
     "correlation_limit": 0.85,
     "max_sector_concentration": 3
@@ -87,98 +87,6 @@
   "orders": [
     {
       "id": "ORD-001",
-      "action": "BUY",
-      "ticker": "LLY",
-      "broker_symbol": "LLY",
-      "broker": {
-        "symbol": "LLY"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 1081,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 1,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 1028,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 1162,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 1210,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 93,
-        "strategy": "Momentum",
-        "rr": "1:1.5",
-        "sharia": true,
-        "thesis": "GLP-1 leader with tirzepatide dominating the obesity/diabetes drug market. Price surged +1.4% today to $1,078 while SPX fell -0.74% — demonstrating defensive momentum and sector rotation into healthcare. RSI 62.1, 12.3% above 50DMA. Bullish call sweep at $1,130 strike (Jun 5 expiry, 2.1x avg volume). VWAP entry gate active."
-      },
-      "priority": 1
-    },
-    {
-      "id": "ORD-002",
       "action": "BUY",
       "ticker": "MSFT",
       "broker_symbol": "MSFT",
@@ -210,7 +118,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 3.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -267,10 +175,10 @@
         "sharia": true,
         "thesis": "Mega-cap tech recovering after -3.2% sympathy sell-off (AVGO/CRWD pre-earnings). RSI 52.6, 5.4% above 50DMA. Massive bullish call flow: 60K+ contracts at $427.5-$440 strikes (Jun 3 expiry, 40x avg). If AVGO beats tonight, MSFT gaps up as AI infrastructure demand confirmation. EMA50 > EMA200 momentum structure intact."
       },
-      "priority": 2
+      "priority": 1
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-002",
       "action": "BUY",
       "ticker": "TGTX",
       "broker_symbol": "TGTX",
@@ -302,7 +210,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 3.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -359,10 +267,10 @@
         "sharia": true,
         "thesis": "Small-cap biotech with commercial-stage multiple sclerosis franchise (ublituximab/Briumvi). +9.5% today to $40.11 on strong volume (3.6M vs 1.9M avg). RSI 57.4, EMA20 > EMA50, MACD strongly positive. 10.1% above 50DMA — early-stage momentum, not overextended. $6.1B mcap with growing net revenues."
       },
-      "priority": 3
+      "priority": 2
     },
     {
-      "id": "ORD-004",
+      "id": "ORD-003",
       "action": "BUY",
       "ticker": "FCX",
       "broker_symbol": "FCX",
@@ -394,7 +302,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 3.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -451,6 +359,98 @@
         "sharia": true,
         "thesis": "Copper leader at 52-week high territory. RISK-ON regime = commodity expansion. RSI 64.3, 12.9% above 50DMA. EMA20 > EMA50, MACD bullish. Copper demand driven by EV buildout, AI data center power density, grid infrastructure. UOA: call sweep at $63 ITM (bullish) and vol spikes confirming institutional positioning."
       },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "LLY",
+      "broker_symbol": "LLY",
+      "broker": {
+        "symbol": "LLY"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1081,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 1,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1028,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1162,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1210,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "GLP-1 leader with tirzepatide dominating the obesity/diabetes drug market. Price surged +1.4% today to $1,078 while SPX fell -0.74% — demonstrating defensive momentum and sector rotation into healthcare. RSI 62.1, 12.3% above 50DMA. Bullish call sweep at $1,130 strike (Jun 5 expiry, 2.1x avg volume). VWAP entry gate active."
+      },
       "priority": 4
     },
     {
@@ -486,7 +486,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 3.5
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -544,466 +544,6 @@
         "thesis": "Permian Basin royalty and land management company. Pullback from $547 52-week high to $407 (near 200DMA $393). RSI 50.5 = neutral, not oversold. Price recovered +9.7% today on strong volume. EMA200 acting as support. TPL earns oil/gas royalties with no exploration risk — pure RISK-ON commodity beneficiary with low capex model."
       },
       "priority": 5
-    },
-    {
-      "id": "ORD-006",
-      "action": "BUY",
-      "ticker": "COST",
-      "broker_symbol": "COST",
-      "broker": {
-        "symbol": "COST"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 963,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 1,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 927,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 1017,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 1050,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 88,
-        "strategy": "Pullback",
-        "rr": "1:1.5",
-        "sharia": true,
-        "thesis": "Consumer staples giant pulling back to 200DMA ($957). RSI 37.8 — oversold relative to historical norms. Price +0.8% today against the tape. Bullish call sweeps: $960-$995 strikes (Jun 5), 2-14x avg volume. 10-Q filed today confirms healthy membership metrics. Defensive quality name that bounces reliably from 200DMA support."
-      },
-      "priority": 6
-    },
-    {
-      "id": "ORD-007",
-      "action": "BUY",
-      "ticker": "SAP",
-      "broker_symbol": "SAP",
-      "broker": {
-        "symbol": "SAP"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 181,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 5,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 169,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 199,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 212,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 88,
-        "strategy": "Momentum",
-        "rr": "1:1.5",
-        "sharia": true,
-        "thesis": "Europe's largest software company recovering from Jan-Mar correction. RSI 53.2, +4.6% above 50DMA, MACD turning positive. SAP buy signals since May 5 (+8.1% since). RISE with SAP cloud migration accelerating. Bullish call sweep at $187.5 strike (Jun 5). Below 200DMA (-19.5%) = recovery momentum, not overextension. EU tech anchor."
-      },
-      "priority": 7
-    },
-    {
-      "id": "ORD-008",
-      "action": "BUY",
-      "ticker": "AZN",
-      "broker_symbol": "AZN",
-      "broker": {
-        "symbol": "AZN"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 176.5,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 5,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 171,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 184.75,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 191,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 87,
-        "strategy": "Pullback",
-        "rr": "1:1.5",
-        "sharia": true,
-        "thesis": "EU healthcare leader (oncology: osimertinib, datopotamab; cardiovascular: cotadutide) pulling back to 52-week low territory. RSI 33.2 — deeply oversold. Price near $176 (52-week low $137, high $212). Unusual put IV spike at $90 (far OTM Jun 18) suggests capitulation selling. Bounce candidate with strong pipeline catalysts and 1.78% dividend yield."
-      },
-      "priority": 8
-    },
-    {
-      "id": "ORD-009",
-      "action": "BUY",
-      "ticker": "EWJ",
-      "broker_symbol": "EWJ",
-      "broker": {
-        "symbol": "EWJ"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 94,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 10,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 91.15,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 98.35000000000001,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 100.8,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 86,
-        "strategy": "Momentum",
-        "rr": "1:1.5",
-        "sharia": false,
-        "thesis": "Japan equity ETF near 52-week high ($94.28). Nikkei corporate governance reforms driving ROE expansion. BoJ policy normalization narrative supporting yen strengthening. RSI 65.7, 5.8% above 50DMA. APAC RISK-ON diversification mandate. Toyota, Sony, Keyence — global quality franchises. Mild tech sympathy risk from AVGO catalyst."
-      },
-      "priority": 9
-    },
-    {
-      "id": "ORD-010",
-      "action": "BUY",
-      "ticker": "GLD",
-      "broker_symbol": "GLD",
-      "broker": {
-        "symbol": "GLD"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 408.5,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 1000,
-          "shares": 2,
-          "pct_of_portfolio": 10
-        },
-        "valid_from": "2026-06-04T09:30:00-04:00",
-        "valid_until": "2026-06-04T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 396.2,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 427,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 440,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 252,
-          "expiry_date": "2027-05-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 252 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 85,
-        "strategy": "Pullback",
-        "rr": "1:1.5",
-        "sharia": true,
-        "thesis": "Gold pulling back from ATH territory. RSI 38.8 — oversold. EMA50 at $425.40 as overhead target. Central bank demand, USD weakness, and geopolitical risk premium support gold's structural bid. 5-year seasonality: June historically sees gold rebound after spring consolidation. Portfolio hedge against tech concentration risk."
-      },
-      "priority": 10
     }
   ],
   "error_handlers": {
@@ -1069,9 +609,9 @@
       },
       {
         "step": "CHECK_VIX",
-        "threshold": 32,
+        "threshold": 35,
         "action": "HALT_IF_ABOVE",
-        "description": "If VIX > 32, halt all new orders"
+        "description": "If VIX > 35, halt all new orders"
       },
       {
         "step": "LOG_STATE",
