@@ -932,7 +932,7 @@ function simulatePortfolio(allTrades, scans, config) {
   // Get date range for daily equity curve
   const startDate = allScanDates[0];
   const endDate = allScanDates[allScanDates.length - 1];
-  const allDays = getAllBizDays(startDate, addBizDays(endDate, horizonDays + 5));
+  const allDays = getAllBizDays(startDate, addBizDays(endDate, horizonDays));
 
   // Equity tracking — daily mark-to-market
   let realizedPnl = 0; // cumulative realized P&L (%)
@@ -2040,13 +2040,16 @@ async function main() {
           const cutoffISO = cutoff.toISOString().slice(0,10);
 
           const eligible = new Map();
+          const exclSources = new Set(cfg2.excludeSources || []);
           for (const scan of scans) {
             if (scan.scanDate < cutoffISO) continue;
             const pool = [...scan.setups];
             if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
             const filtered = pool
+              .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))
               .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
+              .sort((a, b) => (b.score || 0) - (a.score || 0))
               .slice(0, cfg.topN);
             for (const s of filtered) {
               const key = `${s.ticker}_${scan.scanDate}`;
@@ -2075,7 +2078,7 @@ async function main() {
             const mtmPnl = +((lastClose - p.entry) / p.entry * 100).toFixed(2);
             injected.push({
               ticker: p.ticker, scanDate: p.scan_date,
-              entryDate: nextBizDay(p.scan_date),
+              entryDate: p.scan_date,
               actualEntry: p.entry, actualStop: p.stop || sig.stop,
               entry: sig.entry, stop: p.stop || sig.stop,
               tp1: p.tp1 || sig.tp1, tp2: p.tp2 || sig.tp2,
