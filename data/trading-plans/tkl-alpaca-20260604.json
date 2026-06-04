@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-04T07:26:19.490Z",
+  "generated_at": "2026-06-04T07:49:36.548Z",
   "valid_for": "2026-06-04",
   "mode_status": {
     "state": "live",
@@ -939,6 +939,101 @@
         "thesis": "Japan equity ETF near 52-week high ($94.28). Nikkei corporate governance reforms driving ROE expansion. BoJ policy normalization narrative supporting yen strengthening. RSI 65.7, 5.8% above 50DMA. APAC RISK-ON diversification mandate. Toyota, Sony, Keyence — global quality franchises. Mild tech sympathy risk from AVGO catalyst."
       },
       "priority": 9
+    },
+    {
+      "id": "ORD-010",
+      "action": "BUY",
+      "ticker": "GLD",
+      "broker_symbol": "GLD",
+      "broker": {
+        "symbol": "GLD",
+        "exchange": "NYSEARCA",
+        "currency": "USD",
+        "asset_type": "ETF"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 408.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1000,
+          "shares": 2,
+          "pct_of_portfolio": 10
+        },
+        "valid_from": "2026-06-04T09:30:00-04:00",
+        "valid_until": "2026-06-04T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 396.2,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 427,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 440,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 252,
+          "expiry_date": "2027-05-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 252 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 85,
+        "strategy": "Pullback",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "Gold pulling back from ATH territory. RSI 38.8 — oversold. EMA50 at $425.40 as overhead target. Central bank demand, USD weakness, and geopolitical risk premium support gold's structural bid. 5-year seasonality: June historically sees gold rebound after spring consolidation. Portfolio hedge against tech concentration risk."
+      },
+      "priority": 10
     }
   ],
   "error_handlers": {
