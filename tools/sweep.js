@@ -449,11 +449,19 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     vwapGate = false, // skip trade if open gaps above VWAP * 1.01 (gap-up trap filter)
     trailMultR = 1.5,    // trail distance as multiple of riskPerUnit (1.5R default)
     trailGraceDays = 0,  // min days held before trailing stop activates (0 = immediate)
+    // v8.3 post-widening R:R gate — reject trades where ATR-widened risk destroys reward
+    postWideningRRMin = 0, // 0 = disabled; e.g. 1.5 = require actual R:R >= 1.5 after widening
+    // v8.3 blacklist — serial losers excluded from candidate pool
+    blacklist = null,      // array of ticker strings to skip
   } = config;
   const _staleGrace = staleGraceDays > 0 ? staleGraceDays : staleDays;
   const _staleRate = staleGraceDays > 0 ? staleRaiseRate : 0.002;
   const _staleAccel = staleGraceDays > 0 ? staleAccel : 'linear';
+  const _blacklist = blacklist && blacklist.length ? new Set(blacklist.map(t => t.toUpperCase())) : null;
   if (!priceHistory) return null;
+
+  // v8.3 blacklist — skip serial losers
+  if (_blacklist && _blacklist.has((setup.ticker || '').toUpperCase())) return null;
 
   // Scanner folder IS the entry day (generated D-1 at 23h, folder = D+1 = entry day)
   const entryDate = scanDate;
@@ -532,6 +540,13 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   // R:R gate uses ORIGINAL signal risk (not ATR-widened) to avoid silent rejection
   const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
   if (rrRatio < 1.5) return null;
+
+  // v8.3 post-widening R:R gate — reject trades where ATR widening collapses actual R:R
+  // This prevents the Orbit R:R inversion problem (signal R:R=2.0 but actual R:R=0.8)
+  if (postWideningRRMin > 0 && riskPerUnit > 0) {
+    const actualRR = (actualTp1 - entryPrice) / riskPerUnit;
+    if (actualRR < postWideningRRMin) return null;
+  }
 
   const expireDate = addBizDays(scanDate, horizonDays);
   const sortedDates = Object.keys(priceHistory)
@@ -922,6 +937,9 @@ function simulatePortfolio(allTrades, scans, config) {
     excludeSources = null, // e.g. ['tkl_pool'] — skip candidates whose source matches
   } = config;
   const excludeSet = excludeSources && excludeSources.length ? new Set(excludeSources) : null;
+  // v8.3 blacklist — serial losers excluded at portfolio level
+  const _blSet = config.blacklist && config.blacklist.length
+    ? new Set(config.blacklist.map(t => t.toUpperCase())) : null;
 
   // Group trades by scan date; capture per-date regime as canonical source-of-truth
   // Strategy filter is deferred to per-date level for regime-aware filter switching
@@ -1065,6 +1083,7 @@ function simulatePortfolio(allTrades, scans, config) {
       const cbActive = cbPauseUntil && day < cbPauseUntil;
 
       // DD circuit breaker — uses *prior-day close* equity to avoid same-day mark bias
+      // v8.3 adaptiveDrawdown: profit-aware threshold that widens as equity grows
       let ddBreakerActive = false;
       if (config.ddBreakerPct && equityCurve.length >= 2) {
         let peakSoFar = 100;
@@ -1073,7 +1092,14 @@ function simulatePortfolio(allTrades, scans, config) {
         }
         const priorClose = equityCurve[equityCurve.length - 2].value;
         const currentDD = ((peakSoFar - priorClose) / peakSoFar) * 100;
-        ddBreakerActive = currentDD > config.ddBreakerPct;
+        let effectiveDDPct = config.ddBreakerPct;
+        if (config.adaptiveDrawdown) {
+          const ad = config.adaptiveDrawdown;
+          const profitPct = Math.max(0, priorClose - 100); // cumulative profit from baseline
+          const cushion = profitPct * (ad.cushion || 0.05);
+          effectiveDDPct = Math.min(ad.max || 15, Math.max(ad.min || config.ddBreakerPct, (ad.base || config.ddBreakerPct) + cushion));
+        }
+        ddBreakerActive = currentDD > effectiveDDPct;
       }
 
       const regimeMult = (config.vixKillSwitch !== false) ? regimeSizeMultiplier(scanRegime) : 1;
@@ -1094,6 +1120,8 @@ function simulatePortfolio(allTrades, scans, config) {
         if (added >= slotsAvailable) break;
         if (vixKill || ddBreakerActive || cbActive) break; // halt new entries
         if (openTickers.has(cand.ticker)) continue;
+        // v8.3 blacklist — serial losers excluded from candidate pool
+        if (_blSet && _blSet.has((cand.ticker || '').toUpperCase())) continue;
         // Exit cooldown — re-entry ban after SL (10d), breakeven (5d), expired/rotated (3d)
         const cooldown = slCooldown.get(cand.ticker);
         if (cooldown) {
@@ -1486,6 +1514,8 @@ async function main() {
             disableTP2: cfg.disableTP2 || false,
             entryGatePct: cfg.entryGatePct || 0, vwapGate: cfg.vwapGate || false,
             trailMultR: cfg.trailMultR ?? 1.5, trailGraceDays: cfg.trailGraceDays ?? 0,
+            postWideningRRMin: cfg.postWideningRRMin || 0,
+            blacklist: cfg.blacklist || null,
           });
           if (result) trades.push({ ...result, regime: setup.regime || null });
         }
@@ -1972,6 +2002,9 @@ async function main() {
         circuitBreakerStops: cfg.circuitBreakerStops ?? 0,
         circuitBreakerWindow: cfg.circuitBreakerWindow ?? 5,
         circuitBreakerPause: cfg.circuitBreakerPause ?? 3,
+        // v8.3 features
+        blacklist: cfg.blacklist || null,
+        adaptiveDrawdown: cfg.adaptiveDrawdown || null,
         excludeSources: (() => {
           const excl = [];
           if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
