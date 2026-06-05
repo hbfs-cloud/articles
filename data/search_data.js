@@ -3307,9 +3307,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ NEUTRAL — MRVL, FANG, EQIX, NBIX, DELL, URI, ERIC, IHG, EWJ, SMH",
-    "desc": "Regime score 0.356 — classified as NEUTRAL. The ensemble model (5-day horizon) returns a genuine three-way split: Neutral 35.6%, Risk-On 31.5%, Early Risk-Off 27.1%, Crisis 5.8%. This is the tightest three-way race since April 2026. Component breakdown: VIX 0.60 (17.2, neutral corridor 15-20), SPX b...",
-    "tags": "us,eu,asia,tech,semis,energy,healthcare,industrials,consumer,etf,ai,macro,technique,trade-idea",
+    "title": "Top 10 A+ NEUTRAL — UNH, GS, CAT, NBIX, RTX, NVO, ERIC, EWJ, IWM, XLI",
+    "desc": "The regime score stands at 0.358, classified as NEUTRAL by the ensemble model. This is the tightest three-way probability split since April 2026: Neutral 35.8%, Risk-On 32.1%, Early Risk-Off 26.3%, with a residual 5.9% Crisis tail. Component scores: VIX 1.00 (15.74, sub-16 = maximum bullish signal),...",
+    "tags": "us,eu,asia,tech,healthcare,financials,industrials,consumer,defense,etf,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260605/",
     "date": "5 juin 2026"
