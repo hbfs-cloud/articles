@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-08T08:37:02.287Z",
+  "generated_at": "2026-06-08T21:07:15.731Z",
   "valid_for": "2026-06-09",
   "mode_status": {
     "state": "live",
@@ -92,9 +92,9 @@
         "symbol": "BBVA"
       },
       "reason": "HORIZON_EXPIRED",
-      "held_days": 15,
+      "held_days": 16,
       "horizon": 8,
-      "current_pnl_pct": 2.4,
+      "current_pnl_pct": 3.09,
       "execution": {
         "type": "MARKET",
         "timing": "AT_OPEN",
@@ -109,9 +109,26 @@
         "symbol": "NVDA"
       },
       "reason": "HORIZON_EXPIRED",
-      "held_days": 9,
+      "held_days": 10,
       "horizon": 8,
-      "current_pnl_pct": -4.16,
+      "current_pnl_pct": -2.5,
+      "execution": {
+        "type": "MARKET",
+        "timing": "AT_OPEN",
+        "description": "Close at market open — horizon expired, exit regardless of P&L"
+      }
+    },
+    {
+      "action": "CLOSE",
+      "ticker": "AAPL",
+      "broker_symbol": "AAPL",
+      "broker": {
+        "symbol": "AAPL"
+      },
+      "reason": "HORIZON_EXPIRED",
+      "held_days": 8,
+      "horizon": 8,
+      "current_pnl_pct": -3.04,
       "execution": {
         "type": "MARKET",
         "timing": "AT_OPEN",
@@ -123,14 +140,14 @@
     {
       "id": "ORD-001",
       "action": "BUY",
-      "ticker": "UNH",
-      "broker_symbol": "UNH",
+      "ticker": "ARGX",
+      "broker_symbol": "ARGX",
       "broker": {
-        "symbol": "UNH"
+        "symbol": "ARGX"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 397.5,
+        "price": 880,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -139,7 +156,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 10000,
-          "shares": 25,
+          "shares": 11,
           "pct_of_portfolio": 100
         },
         "valid_from": "2026-06-09T09:30:00-04:00",
@@ -149,7 +166,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 380,
+          "price": 838,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -157,13 +174,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 435,
+          "price": 964,
           "partial_exit_pct": 50,
           "description": "Sell 50% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 460,
+          "price": 1006,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -205,24 +222,116 @@
       ],
       "metadata": {
         "score": 93,
-        "strategy": "Breakout",
-        "rr": "1:2.1",
-        "sharia": false,
-        "thesis": "Mega-cap healthcare near all-time high ($404.15) showing extreme relative strength (+0.76%) during NASDAQ -4.18% selloff. Institutional safe haven rotation into managed care. Breakout above $404 targets $435 (new highs). Best-in-class managed care with secular aging tailwind. Above all major moving averages."
+        "strategy": "Pullback",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Global FcRn antibody leader with Vyvgart generating $2.5B+ annualized revenue. Pulled back -8% from ATH into 50-DMA support. Healthcare defensive growth in EARLY RISK-OFF. EU geographic diversification. Pipeline optionality (CIDP, ITP, pemphigus expansion)."
       },
       "priority": 1
     },
     {
       "id": "ORD-002",
       "action": "BUY",
-      "ticker": "MRK",
-      "broker_symbol": "MRK",
+      "ticker": "GLD",
+      "broker_symbol": "GLD",
       "broker": {
-        "symbol": "MRK"
+        "symbol": "GLD"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 120.5,
+        "price": 397.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 25,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-09T09:30:00-04:00",
+        "valid_until": "2026-06-09T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 384,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 424,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 438,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-06-19",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 92,
+        "strategy": "Pullback",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Strongest asset class of 2026 pulling back below 50-DMA ($424.89). Rare mean-reversion entry in premier safe haven. Central bank buying record 1,037 tonnes in 2025. Iran-Israel geopolitical risk premium. CPI two-way bullish (hot = inflation hedge, cold = rate cut). TP1 targets 50-DMA mean-reversion."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "CNI",
+      "broker_symbol": "CNI",
+      "broker": {
+        "symbol": "CNI"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 120.65,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -241,7 +350,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 114,
+          "price": 115.2,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -249,13 +358,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 134,
+          "price": 131.55,
           "partial_exit_pct": 50,
           "description": "Sell 50% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 140,
+          "price": 137,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -298,23 +407,23 @@
       "metadata": {
         "score": 91,
         "strategy": "Breakout",
-        "rr": "1:2.1",
+        "rr": "1:2.0",
         "sharia": true,
-        "thesis": "Big pharma breakout candidate near 52-week highs ($125.14) with Keytruda franchise driving earnings growth. Classic defensive rotation beneficiary. Dividend yield 2.83% provides downside cushion. MACD above signal with bullish crossover. Above all major moving averages with positive relative strength (+0.44%) on selloff day."
+        "thesis": "North America's largest transcontinental railroad breaking out above 6-week consolidation. Nearshoring-driven freight demand accelerating along USMCA corridor. Defensive growth with contracted revenue visibility and pricing power. CHIPS Act + IRA reshoring driving incremental cross-border freight volumes."
       },
-      "priority": 2
+      "priority": 3
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-004",
       "action": "BUY",
-      "ticker": "XLV",
-      "broker_symbol": "XLV",
+      "ticker": "FCNCA",
+      "broker_symbol": "FCNCA",
       "broker": {
-        "symbol": "XLV"
+        "symbol": "FCNCA"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 152.5,
+        "price": 2070,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -323,7 +432,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 10000,
-          "shares": 65,
+          "shares": 4,
           "pct_of_portfolio": 100
         },
         "valid_from": "2026-06-09T09:30:00-04:00",
@@ -333,7 +442,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 147,
+          "price": 1987,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -341,13 +450,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 164,
+          "price": 2236,
           "partial_exit_pct": 50,
           "description": "Sell 50% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 170,
+          "price": 2319,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -389,116 +498,24 @@
       ],
       "metadata": {
         "score": 90,
-        "strategy": "Breakout",
-        "rr": "1:2.1",
-        "sharia": false,
-        "thesis": "Healthcare sector ETF near 52-week highs ($160.59) with strong defensive rotation bid. Above all major moving averages with clean uptrend. Broad healthcare exposure reduces single-stock risk. +0.61% on SPX -2.64% selloff day confirms sector rotation into defensives. Aging demographics secular tailwind."
-      },
-      "priority": 3
-    },
-    {
-      "id": "ORD-004",
-      "action": "BUY",
-      "ticker": "PG",
-      "broker_symbol": "PG",
-      "broker": {
-        "symbol": "PG"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 146,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 68,
-          "pct_of_portfolio": 100
-        },
-        "valid_from": "2026-06-09T09:30:00-04:00",
-        "valid_until": "2026-06-09T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 138,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 162,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 170,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-06-19",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 89,
-        "strategy": "Breakout",
+        "strategy": "Pre-Squeeze",
         "rr": "1:2.0",
-        "sharia": true,
-        "thesis": "Consumer staples breakout above EMA50 consolidation zone with extreme relative strength (+4.09% vs SPX -2.64%). Flight-to-quality rotation into defensive mega-caps. MACD crossing above signal (bearish-to-bullish reversal). Dividend aristocrat with 3.03% yield. Recession-proof business model."
+        "sharia": false,
+        "thesis": "SVB franchise acquired at discount to book. Pre-squeeze compression: short interest ~4.2%, declining borrow availability, volatility narrowing near 52-week highs. Higher rates = NIM expansion. Regional banking strength +2.3%. Unique tech/VC lending franchise avoids generic CRE concerns."
       },
       "priority": 4
     },
     {
       "id": "ORD-005",
       "action": "BUY",
-      "ticker": "SAP",
-      "broker_symbol": "SAP",
+      "ticker": "OSCR",
+      "broker_symbol": "OSCR",
       "broker": {
-        "symbol": "SAP"
+        "symbol": "OSCR"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 185,
+        "price": 27.150000000000002,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -507,7 +524,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 10000,
-          "shares": 54,
+          "shares": 368,
           "pct_of_portfolio": 100
         },
         "valid_from": "2026-06-09T09:30:00-04:00",
@@ -517,7 +534,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 171,
+          "price": 25,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -525,13 +542,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 213,
+          "price": 31.45,
           "partial_exit_pct": 50,
           "description": "Sell 50% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 230,
+          "price": 33.6,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -572,11 +589,11 @@
         }
       ],
       "metadata": {
-        "score": 87,
-        "strategy": "Breakout",
+        "score": 90,
+        "strategy": "Momentum",
         "rr": "1:2.0",
-        "sharia": true,
-        "thesis": "European enterprise tech giant breaking out from multi-month base above EMA20/EMA50. MACD confirmed bullish (3.50 > signal 2.25). EU markets held up much better than US (DAX -0.75% vs NASDAQ -4.18%). Enterprise software has recurring revenue = defensive tech. Target is EMA200 at $212.65."
+        "sharia": false,
+        "thesis": "Highest momentum in scan (+3.4% Friday). InsurTech turnaround: MLR improvement 82% to 78%, first annual operating profit in 2025. ACA enrollment growth secular tailwind. Healthcare insurance is counter-cyclical. Advisory: stop at 8% cap (1.17x ATR vs 1.5x minimum) per filter max."
       },
       "priority": 5
     }
