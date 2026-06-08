@@ -3320,9 +3320,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 5 A+ EARLY RISK-OFF — UNH, MRK, XLV, PG, SAP",
-    "desc": "The regime score stands at 0.38, classified as EARLY RISK-OFF with crisis overlay. The ensemble model probabilities are stark: Crisis 43%, Early Risk-Off 32%, Neutral 19%, Risk-On 6%. This is the first time crisis probability has exceeded 30% since February 2026. Component scores: VIX 1.00 (21.51, a...",
-    "tags": "us,eu,etf,technique,trade-idea,macro,healthcare,consumer,tech",
+    "title": "Top 10 A+ EARLY RISK-OFF — CNI, ARGX, FMX, FCNCA, CACC, OSCR, SRAD, MLCO, XLU, GLD",
+    "desc": "The regime score stands at 0.47, classified as EARLY RISK-OFF by the ensemble model. This is a sharp deterioration from Thursday’s NEUTRAL (0.358). Ensemble probabilities: Early Risk-Off 44.6% (dominant), Risk-On ~25%, Crisis 17.8% (elevated), Neutral ~13%. The AutoScreener paradoxically reports RIS...",
+    "tags": "us,eu,asia,etf,healthcare,financials,industrials,consumer,technique,trade-idea,macro,geopolitique",
     "grade": "",
     "href": "/scanner/20260609/",
     "date": "9 juin 2026"
