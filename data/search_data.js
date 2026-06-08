@@ -247,6 +247,19 @@ window.searchDataPrebuilt = [
     "date": "1 juin 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Iran fires missiles at Israel for the first time since April. SpaceX's $1.77 trillion IPO prices Thursday. CPI Wednesday with inflation running hot. Nasdaq crashed -4.18% Friday. Regime at Crisis 43%. The week that could break markets.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260608/",
+    "date": "8 juin 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
