@@ -24,10 +24,47 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Upload Pages artifact (static repo)
+      - name: Build public site
+        run: |
+          mkdir -p _site
+
+          # Root public files
+          cp -f index.html 404.html CNAME robots.txt sitemap.xml feed.xml sw.js manifest.json logo.svg _site/ 2>/dev/null || true
+          cp -f favicon.ico favicon-*.png apple-touch-icon.png _site/ 2>/dev/null || true
+          cp -f icon-*.png scanner-daily-card.html scanner-daily-*.png _site/ 2>/dev/null || true
+
+          # Static assets (CSS + JS)
+          cp -r assets/ _site/assets/
+
+          # Article directories + public apps
+          for dir in daily weekly scanner analyses series tech prompt-ia; do
+            [ -d "$dir" ] && cp -r "$dir" "_site/$dir"
+          done
+
+          # Data (JSON indexes + search + trading plans)
+          mkdir -p _site/data
+          cp -f data/*.json data/*.js _site/data/ 2>/dev/null || true
+          [ -d data/trading-plans ] && cp -r data/trading-plans _site/data/trading-plans
+
+          # Portfolio API (all modes + root endpoints)
+          cp -r portfolio/ _site/portfolio/
+
+          # Widget system
+          cp -r widget/ _site/widget/
+
+          # MCP public files only (NOT server/, extension/, validation/, data/)
+          mkdir -p _site/mcp
+          cp -f mcp/index.html mcp/watchlist.json mcp/earnings-calendar.json mcp/scanner-performance.json _site/mcp/ 2>/dev/null || true
+
+          # Integrations docs
+          [ -d integrations ] && cp -r integrations/ _site/integrations/
+
+          echo "Site built: $(find _site -type f | wc -l) files"
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment
