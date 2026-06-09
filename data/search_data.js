@@ -951,6 +951,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ABAT",
+    "exchange": "NASDAQ • Materials • Critical Minerals — Recyclage Batteries & Lithium",
+    "name": "ABAT — critical minerals play légitime, revenue +697% YoY, DOE $320M+, mais dilution sérielle ...",
+    "title": "ABAT — critical minerals play légitime, revenue +697% YoY, DOE $320M+, mais dilution sérielle ...",
+    "desc": "Analyse experte ABAT : recyclage de batteries, lithium Tonopah Flats ($2.57B NPV), DOE $320M+, dilution 40% en 10 mois. War room multi-agents.",
+    "tags": "us,materials,speculative,trade-idea",
+    "grade": "C+",
+    "href": "/analyses/ABAT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EONR",
     "exchange": "NYSE American (Compliance Failure) • Oil & Gas E&P",
     "name": "EONR — EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active diluti...",
@@ -2467,19 +2480,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,speculative,trade-idea",
     "grade": "B-",
     "href": "analyses/USAR",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ABAT",
-    "exchange": "NASDAQ • Industrials",
-    "name": "American Battery Technology",
-    "title": "American Battery Technology",
-    "desc": "Analyse complète ABAT : recyclage de batteries lithium-ion,\n    extraction minière, revenus record +1300% YoY. Target $6.00.\n    Données temps réel.",
-    "tags": "us,industrials,materials,speculative,trade-idea",
-    "grade": "C+",
-    "href": "analyses/ABAT",
     "date": ""
   },
   {
