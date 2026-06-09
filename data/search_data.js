@@ -951,6 +951,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EONR",
+    "exchange": "NYSE American (Compliance Failure) • Oil & Gas E&P",
+    "name": "EONR — EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active diluti...",
+    "title": "EONR — EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active diluti...",
+    "desc": "EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active dilution (+11% shares), White Lion death-spiral ELOC, multi-year restatement. Expert panel says: avoid.",
+    "tags": "us,energy,small-cap,speculative",
+    "grade": "D",
+    "href": "/analyses/EONR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ITRG",
     "exchange": "NYSE American • Basic Materials • Gold Mining",
     "name": "ITRG — Florida Canyon gold producer + DeLamar 4.8M oz developer. Debt-free, $105.6M cash, anal...",
@@ -1011,19 +1024,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,ai,trade-idea",
     "grade": "A",
     "href": "/analyses/MSFT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EONR",
-    "exchange": "OTC Markets • Oil & Gas Exploration",
-    "name": "EONR — $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-su...",
-    "title": "EONR — $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-su...",
-    "desc": "EONR: $0.83, oil hedged 75% through 2027, Iran conflict accelerates drilling plans. 2 halt-suspected gaps. Full intraday & fundamental analysis.",
-    "tags": "us,energy,oil,small-cap,speculative,trade-idea",
-    "grade": "C+",
-    "href": "/analyses/EONR/",
     "date": ""
   },
   {
