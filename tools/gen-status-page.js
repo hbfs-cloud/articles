@@ -395,6 +395,11 @@ async function main() {
       bakedPrices[ticker] = { p: o.price, o: o.open||0, h: o.high||0, l: o.low||0, pc: o.close||0 };
   }
 
+  // Filter out stopped modes — they should not appear on the status page
+  for (const [id, cfg] of Object.entries(config.modes)) {
+    if (cfg.status === 'stopped') delete config.modes[id];
+  }
+
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
   const modes = {};
   for (const [id, cfg] of Object.entries(config.modes)) {

@@ -1504,6 +1504,10 @@ async function main() {
   const FROZEN_CFG_PATH = path.join(ROOT, "data", "modes-config.json");
   if (fs.existsSync(FROZEN_CFG_PATH)) {
     const frozenModes = JSON.parse(fs.readFileSync(FROZEN_CFG_PATH)).modes || {};
+    // Skip stopped modes
+    for (const id of Object.keys(frozenModes)) {
+      if (frozenModes[id].status === 'stopped') delete frozenModes[id];
+    }
     let frozenExtra = 0;
     for (const [modeId, cfg] of Object.entries(frozenModes)) {
       const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
@@ -1984,10 +1988,10 @@ async function main() {
     // Priority order (most conservative first): fortress → secured → balanced → dynamic → turbo.
     // Conservative modes need diversification most, so they consume the candidate pool first.
     const crossModePicked = new Set();
-    const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo', 'tkl'];
+    const DEDUP_PRIORITY = ['fortress', 'secured', 'balanced', 'dynamic', 'turbo'];
     const orderedModeIds = [
-      ...DEDUP_PRIORITY.filter(id => modesConfig.modes[id]),
-      ...Object.keys(modesConfig.modes).filter(id => !DEDUP_PRIORITY.includes(id)),
+      ...DEDUP_PRIORITY.filter(id => modesConfig.modes[id] && modesConfig.modes[id].status !== 'stopped'),
+      ...Object.keys(modesConfig.modes).filter(id => !DEDUP_PRIORITY.includes(id) && modesConfig.modes[id].status !== 'stopped'),
     ];
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
