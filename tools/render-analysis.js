@@ -159,6 +159,9 @@ function render(d) {
     </nav>
 
     <header class="ticker-header">
+      <div class="ticker-symbol" style="display:none">${esc(d.ticker)}</div>
+      <div class="ticker-name" style="display:none">${esc(d.name)} — ${esc(d.exchange || 'NASDAQ')} · ${isEtf ? 'ETF' : esc(d.sector || '')}</div>
+      <div class="ticker-exchange" style="display:none">${esc(d.exchange || 'NASDAQ')} · ${isEtf ? 'ETF' : esc(d.sector || '')}</div>
       <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
         <img src="/logo.svg" alt="" width="44" height="44" style="border-radius:10px;">
         <div>

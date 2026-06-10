@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202606100736"></script>
+  <script src="/data/search_data.js?v=202606100742"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -1961,7 +1961,8 @@
                 class="range-value">All</span></span>
             <div class="range-control">
               <span style="font-size: 0.7rem; color: #94a3b8;" data-i18n="filter.1d">1d</span>
-              <input type="range" id="daysSlider" min="1" max="3650" value="3650">
+              <input type="range" id="daysSlider" min="0" max="10" value="10" list="daysStops">
+              <datalist id="daysStops"><option value="0"><option value="1"><option value="2"><option value="3"><option value="4"><option value="5"><option value="6"><option value="7"><option value="8"><option value="9"><option value="10"></datalist>
               <span style="font-size: 0.7rem; color: #94a3b8;" data-i18n="filter.all">All</span>
             </div>
           </div>
@@ -2895,7 +2896,7 @@
 
       // Time range filter
       var daysSlider = document.getElementById("daysSlider");
-      var maxDays = daysSlider ? parseInt(daysSlider.value) : 30;
+      var maxDays = daysSlider ? daysFromSlider(parseInt(daysSlider.value)) : 99999;
       var now = new Date();
 
       var count = 0;
@@ -2929,7 +2930,7 @@
           if (cardDate) {
             var diffTime = Math.abs(now - cardDate);
             var diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-            timeMatch = diffDays < maxDays;
+            timeMatch = maxDays >= 99999 || diffDays < maxDays;
           }
         }
 
@@ -3043,13 +3044,18 @@
     // Event Listener for Days Slider
     var daysSlider = document.getElementById("daysSlider");
     if (daysSlider) {
-      daysSlider.addEventListener("input", function () {
-        var val = parseInt(this.value);
-        var lang = document.documentElement.lang || 'en';
+      var daysStops = [1, 3, 7, 14, 30, 60, 90, 180, 365, 730, 99999];
+      function daysFromSlider(pos) { return daysStops[Math.min(pos, daysStops.length - 1)]; }
+      function daysLabel(days, lang) {
         var allWords = { fr: 'Tout', en: 'All', ar: 'الكل', es: 'Todo', zh: '全部' };
+        if (days >= 99999) return allWords[lang] || 'All';
         var dayWords = { fr: [' jour', ' jours'], en: [' day', ' days'], ar: [' يوم', ' أيام'], es: [' día', ' días'], zh: [' 天', ' 天'] };
         var w = dayWords[lang] || dayWords.en;
-        document.getElementById("daysValue").textContent = val >= 3650 ? (allWords[lang] || 'All') : val + (val > 1 ? w[1] : w[0]);
+        return days + (days > 1 ? w[1] : w[0]);
+      }
+      daysSlider.addEventListener("input", function () {
+        var lang = document.documentElement.lang || 'en';
+        document.getElementById("daysValue").textContent = daysLabel(daysFromSlider(parseInt(this.value)), lang);
         applyAllFilters();
       });
     }
@@ -5098,11 +5104,7 @@
       var daysSlider = document.getElementById('daysSlider');
       var daysValue = document.getElementById('daysValue');
       if (daysSlider && daysValue) {
-        var val = parseInt(daysSlider.value);
-        var allWords = { fr: 'Tout', en: 'All', ar: 'الكل', es: 'Todo', zh: '全部' };
-        var dayWords = { fr: [' jour', ' jours'], en: [' day', ' days'], ar: [' يوم', ' أيام'], es: [' día', ' días'], zh: [' 天', ' 天'] };
-        var w = dayWords[uiLang] || dayWords.en;
-        daysValue.textContent = val >= 3650 ? (allWords[uiLang] || 'All') : val + (val > 1 ? w[1] : w[0]);
+        daysValue.textContent = daysLabel(daysFromSlider(parseInt(daysSlider.value)), uiLang);
       }
 
       // Update search results empty state
