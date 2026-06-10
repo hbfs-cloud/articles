@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202606100711"></script>
+  <script src="/data/search_data.js?v=202606100713"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -1958,11 +1958,11 @@
 
           <div class="filter-item">
             <span class="filter-label"><i class="fa-solid fa-clock-rotate-left"></i> <span data-i18n="filter.freshness">Freshness</span> : <span id="daysValue"
-                class="range-value">30 days</span></span>
+                class="range-value">All</span></span>
             <div class="range-control">
               <span style="font-size: 0.7rem; color: #94a3b8;" data-i18n="filter.1d">1d</span>
-              <input type="range" id="daysSlider" min="1" max="90" value="30">
-              <span style="font-size: 0.7rem; color: #94a3b8;" data-i18n="filter.90d">90d</span>
+              <input type="range" id="daysSlider" min="1" max="3650" value="3650">
+              <span style="font-size: 0.7rem; color: #94a3b8;" data-i18n="filter.all">All</span>
             </div>
           </div>
         </div>
@@ -3044,11 +3044,12 @@
     var daysSlider = document.getElementById("daysSlider");
     if (daysSlider) {
       daysSlider.addEventListener("input", function () {
-        var val = this.value;
+        var val = parseInt(this.value);
         var lang = document.documentElement.lang || 'en';
+        var allWords = { fr: 'Tout', en: 'All', ar: 'الكل', es: 'Todo', zh: '全部' };
         var dayWords = { fr: [' jour', ' jours'], en: [' day', ' days'], ar: [' يوم', ' أيام'], es: [' día', ' días'], zh: [' 天', ' 天'] };
         var w = dayWords[lang] || dayWords.en;
-        document.getElementById("daysValue").textContent = val + (val > 1 ? w[1] : w[0]);
+        document.getElementById("daysValue").textContent = val >= 3650 ? (allWords[lang] || 'All') : val + (val > 1 ? w[1] : w[0]);
         applyAllFilters();
       });
     }
@@ -4803,7 +4804,7 @@
         'filter.medium': 'Moyenne',
         'filter.low': 'Faible',
         'filter.1d': '1j',
-        'filter.90d': '90j',
+        'filter.all': 'Tout',
         'tag.us': 'US',
         'tag.eu': 'Europe',
         'tag.crypto': 'Crypto',
@@ -4864,7 +4865,7 @@
         'filter.medium': 'Medium',
         'filter.low': 'Low',
         'filter.1d': '1d',
-        'filter.90d': '90d',
+        'filter.all': 'All',
         'tag.us': 'US',
         'tag.eu': 'EU',
         'tag.crypto': 'Crypto',
@@ -4921,7 +4922,7 @@
         'filter.medium': 'متوسطة',
         'filter.low': 'منخفضة',
         'filter.1d': '١ي',
-        'filter.90d': '٩٠ي',
+        'filter.all': 'الكل',
         'tag.us': 'أمريكا',
         'tag.eu': 'أوروبا',
         'tag.crypto': 'كريبتو',
@@ -4978,7 +4979,7 @@
         'filter.medium': 'Media',
         'filter.low': 'Baja',
         'filter.1d': '1d',
-        'filter.90d': '90d',
+        'filter.all': 'All',
         'tag.us': 'EEUU',
         'tag.eu': 'Europa',
         'tag.crypto': 'Cripto',
@@ -5034,7 +5035,7 @@
         'filter.medium': '中',
         'filter.low': '低',
         'filter.1d': '1天',
-        'filter.90d': '90天',
+        'filter.all': '全部',
         'tag.us': '美国',
         'tag.eu': '欧洲',
         'tag.crypto': '加密货币',
@@ -5097,10 +5098,11 @@
       var daysSlider = document.getElementById('daysSlider');
       var daysValue = document.getElementById('daysValue');
       if (daysSlider && daysValue) {
-        var val = daysSlider.value;
+        var val = parseInt(daysSlider.value);
+        var allWords = { fr: 'Tout', en: 'All', ar: 'الكل', es: 'Todo', zh: '全部' };
         var dayWords = { fr: [' jour', ' jours'], en: [' day', ' days'], ar: [' يوم', ' أيام'], es: [' día', ' días'], zh: [' 天', ' 天'] };
         var w = dayWords[uiLang] || dayWords.en;
-        daysValue.textContent = val + (val > 1 ? w[1] : w[0]);
+        daysValue.textContent = val >= 3650 ? (allWords[uiLang] || 'All') : val + (val > 1 ? w[1] : w[0]);
       }
 
       // Update search results empty state
