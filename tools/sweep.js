@@ -396,11 +396,18 @@ async function fetchOHLCV(ticker) {
           if (!result) return resolve(null);
           const timestamps = result.timestamp || [];
           const q = result.indicators?.quote?.[0] || {};
+          const rmp = result.meta?.regularMarketPrice;
           const history = {};
           for (let i = 0; i < timestamps.length; i++) {
             const dateStr = toDateStr(timestamps[i]);
             if (q.open?.[i] != null && q.high?.[i] != null && q.low?.[i] != null && q.close?.[i] != null) {
               history[dateStr] = { open: q.open[i], high: q.high[i], low: q.low[i], close: q.close[i] };
+            } else if (i === timestamps.length - 1 && rmp != null) {
+              // Last bar may have null OHLC before Yahoo finalizes — use regularMarketPrice
+              const o = q.open?.[i] ?? rmp;
+              const h = q.high?.[i] ?? rmp;
+              const l = q.low?.[i] ?? rmp;
+              history[dateStr] = { open: o, high: h, low: l, close: rmp };
             }
           }
           priceCache[ticker] = history;

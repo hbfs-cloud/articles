@@ -957,7 +957,7 @@ window.searchDataPrebuilt = [
     "title": "EWJ — Breakout setup, score 83/100. Entry $90.25, target $95.75.",
     "desc": "EWJ analysis: EWJ provides diversified exposure to Japan's equity market renaissance. The Nikkei has been one of the best-performing major indices, driven by BOJ policy norma",
     "tags": "etf,asia,trade-idea",
-    "grade": "B+",
+    "grade": "A+",
     "href": "/analyses/EWJ/",
     "date": ""
   },
@@ -970,7 +970,7 @@ window.searchDataPrebuilt = [
     "title": "POOL — Pre-Squeeze setup, score 84/100. Entry $191.50, target $212.50.",
     "desc": "POOL analysis: Pool Corporation is the dominant distributor of pool supplies, equipment, and related outdoor living products in North America. The stock is down 44% from its $",
     "tags": "us,industrials,consumer,trade-idea",
-    "grade": "B+",
+    "grade": "A+",
     "href": "/analyses/POOL/",
     "date": ""
   },
@@ -983,7 +983,7 @@ window.searchDataPrebuilt = [
     "title": "U — Breakout setup, score 85/100. Entry $28.00, target $31.80.",
     "desc": "U analysis: Unity is a recovery play on the dominant gaming engine platform. After the runtime fee controversy decimated the stock (from $52 to $17), the company has restru",
     "tags": "us,tech,ai,trade-idea",
-    "grade": "B+",
+    "grade": "A+",
     "href": "/analyses/U/",
     "date": ""
   },
@@ -996,7 +996,7 @@ window.searchDataPrebuilt = [
     "title": "IWM — Breakout setup, score 86/100. Entry $285.00, target $305.00.",
     "desc": "IWM analysis: IWM is near its 52-week high as market breadth expands beyond mega-cap tech leadership. Small-caps benefit disproportionately from rate cut expectations due to",
     "tags": "etf,us,trade-idea",
-    "grade": "A",
+    "grade": "A+",
     "href": "/analyses/IWM/",
     "date": ""
   },
@@ -1009,7 +1009,7 @@ window.searchDataPrebuilt = [
     "title": "RYAN — Pre-Squeeze setup, score 86/100. Entry $33.00, target $38.00.",
     "desc": "RYAN analysis: Ryan Specialty is a high-quality specialty insurance broker trading at a significant discount to its 52-week high ($69.49). The company is consolidating between",
     "tags": "us,financials,trade-idea",
-    "grade": "A",
+    "grade": "A+",
     "href": "/analyses/RYAN/",
     "date": ""
   },
@@ -1022,7 +1022,7 @@ window.searchDataPrebuilt = [
     "title": "AAL — Breakout setup, score 87/100. Entry $14.00, target $15.70.",
     "desc": "AAL analysis: American Airlines is a high-conviction deep-value play at 6.3x forward P/E, breaking above all major moving averages on massive volume. Summer travel demand is",
     "tags": "us,industrials,trade-idea",
-    "grade": "A",
+    "grade": "A+",
     "href": "/analyses/AAL/",
     "date": ""
   },
@@ -1035,7 +1035,7 @@ window.searchDataPrebuilt = [
     "title": "STM — Breakout setup, score 88/100. Entry $72.50, target $83.50.",
     "desc": "STM analysis: STMicroelectronics is the European semiconductor champion benefiting from the EU CHIPS Act and automotive recovery. Revenue is surging +23% YoY as the cyclical",
     "tags": "eu,semis,ai,trade-idea",
-    "grade": "A",
+    "grade": "A+",
     "href": "/analyses/STM/",
     "date": ""
   },
@@ -1061,7 +1061,7 @@ window.searchDataPrebuilt = [
     "title": "VECO — Breakout setup, score 89/100. Entry $66.00, target $77.00.",
     "desc": "VECO analysis: Veeco is a critical-path equipment supplier for advanced semiconductor manufacturing. As AI chip demand drives HBM and advanced packaging investment, VECO's las",
     "tags": "us,semis,ai,trade-idea",
-    "grade": "A",
+    "grade": "A+",
     "href": "/analyses/VECO/",
     "date": ""
   },
