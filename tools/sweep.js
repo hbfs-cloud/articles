@@ -128,7 +128,8 @@ function bizDaysBetween(dateA, dateB) {
 // ─── Parse scan → setups (JSON-first, HTML fallback via scanner-parser.js) ───
 
 const scannerParser = require('./lib/scanner-parser');
-const { isPatternInvalidated } = require('./lib/americanbull-pm');
+const { isPatternInvalidated, checkBearishExit } = require('./lib/americanbull-pm');
+const { detectBearishExit } = require('./lib/candlestick-patterns');
 
 const STRAT_PATTERNS = {
   short_squeeze: /short.?squeeze/i,
@@ -594,14 +595,32 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       break;
     }
 
-    // Americanbull PM: pattern invalidation early exit (candlestick strategy only)
-    if (setup.strategy === 'candlestick' && setup.pattern && daysHeld >= 2) {
-      const inv = isPatternInvalidated(setup, bar, entryPrice);
-      if (inv.invalidated) {
-        status = bar.close >= entryPrice ? 'trail' : 'sl';
-        exitDate = date;
-        exitPrice = bar.close;
-        break;
+    // Americanbull PM: pattern invalidation + bearish exit signals (candlestick only)
+    if (setup.strategy === 'candlestick' && daysHeld >= 2) {
+      // Pattern geometry invalidation
+      if (setup.pattern) {
+        const inv = isPatternInvalidated(setup, bar, entryPrice);
+        if (inv.invalidated) {
+          status = bar.close >= entryPrice ? 'trail' : 'sl';
+          exitDate = date; exitPrice = bar.close; break;
+        }
+      }
+      // Bearish candlestick exit signals (Bearish Engulfing, Three Black Crows, etc.)
+      const allKeys = Object.keys(priceHistory).sort();
+      const dateIdx = allKeys.indexOf(date);
+      if (dateIdx >= 59) {
+        const recentBars = [];
+        for (let bi = dateIdx - 59; bi <= dateIdx; bi++) {
+          const bd = allKeys[bi], bb = priceHistory[bd];
+          if (bb) recentBars.push({ date: bd, open: bb.open, high: bb.high, low: bb.low, close: bb.close, volume: 0 });
+        }
+        if (recentBars.length >= 60) {
+          const bearish = detectBearishExit(recentBars);
+          if (bearish) {
+            status = bar.close >= entryPrice ? 'trail' : 'sl';
+            exitDate = date; exitPrice = bar.close; break;
+          }
+        }
       }
     }
 
