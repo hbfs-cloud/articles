@@ -776,7 +776,12 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     return RESOLVED_STATUSES.includes(base);
   });
   const pendingTrades = allTrades.filter(t => t.status === 'pending')
-    .sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
+    .sort((a, b) => {
+      // Injected (real broker positions) always take priority over sim2 artifacts
+      if (a._injected && !b._injected) return -1;
+      if (!a._injected && b._injected) return 1;
+      return (a.scanDate || '').localeCompare(b.scanDate || '');
+    });
 
   if (resolved.length === 0 && pendingTrades.length === 0) return null;
 
@@ -2180,6 +2185,7 @@ async function main() {
               source: sig.source || 'signals',
               entryTime: '09:30',
               exitTime: null,
+              _injected: true,
             });
           }
 
