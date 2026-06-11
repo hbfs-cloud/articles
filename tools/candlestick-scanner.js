@@ -22,10 +22,12 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
 const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/candlestick-patterns');
 
 const ROOT = path.join(__dirname, '..');
 const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+const MCP_GATEWAY = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -49,77 +51,137 @@ const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 
 // systematic-tss config: min mcap $300M, min volume 5M, blacklist DAWN/GLDD
 const MIN_MARKET_CAP = 300_000_000;
+const MIN_VOLUME = 5_000_000;
 const BLACKLIST = new Set(['DAWN', 'GLDD']);
 
-// ─── Universe: fetch all US stocks from Yahoo screener ──────────────────────
+// ─── MCP JSON-RPC 2.0 transport (same as refresh-risk-metrics.js) ──────────
+
+function mcpCall(toolName, params, timeout = 60000) {
+  const url = new URL(MCP_GATEWAY);
+  const body = JSON.stringify({
+    jsonrpc: '2.0',
+    id: crypto.randomUUID(),
+    method: 'tools/call',
+    params: { name: toolName, arguments: params },
+  });
+  const mod = url.protocol === 'https:' ? https : require('http');
+  const opts = {
+    hostname: url.hostname,
+    port: url.port || (url.protocol === 'https:' ? 443 : 80),
+    path: url.pathname + (url.search || ''),
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream', 'Content-Length': Buffer.byteLength(body) },
+    timeout,
+  };
+  return new Promise((resolve, reject) => {
+    const req = mod.request(opts, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (j.error) return reject(new Error(j.error.message || 'rpc error'));
+          const r = j.result;
+          if (r && r.isError) return reject(new Error(r.content?.[0]?.text || 'MCP tool error'));
+          if (r && r.content && Array.isArray(r.content) && r.content[0]?.type === 'text') {
+            try { resolve(JSON.parse(r.content[0].text)); } catch { resolve(r.content[0].text); }
+            return;
+          }
+          resolve(r);
+        } catch (e) { reject(e); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('MCP timeout')); });
+    req.write(body);
+    req.end();
+  });
+}
+
+// ─── Universe: dynamic via MCP RunScreener (mirrors Go's stockanalysis.com) ─
 
 async function fetchScreenerUniverse() {
-  // Try loading cached universe (refresh daily)
   const cacheFile = path.join(CACHE_DIR, '_universe.json');
+  fs.mkdirSync(CACHE_DIR, { recursive: true });
+
+  // Use daily cache (universe doesn't change intraday)
   if (fs.existsSync(cacheFile)) {
     const stat = fs.statSync(cacheFile);
     if ((Date.now() - stat.mtimeMs) / 3600000 < 18) {
-      try { return JSON.parse(fs.readFileSync(cacheFile, 'utf8')); } catch {}
+      try {
+        const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+        if (cached.tickers && cached.tickers.length > 500) {
+          console.log(`  ♻️  Universe from cache: ${cached.tickers.length} tickers (${cached.source || 'unknown'})`);
+          return cached.tickers;
+        }
+      } catch {}
     }
   }
 
-  // Fallback: use a comprehensive list of US equities
-  // In production, systematic-tss loads from Yahoo's screener API
-  // Here we use the SP500 + extended universe
-  const spFile = path.join(ROOT, 'data', 'sp500-tickers.json');
-  let tickers = [];
-  if (fs.existsSync(spFile)) {
-    tickers = JSON.parse(fs.readFileSync(spFile, 'utf8'));
+  // Fetch via MCP RunScreener: mcap >= $300M, avg_volume >= 5M (exact Go filters)
+  console.log('  📡 Fetching universe via MCP RunScreener (market_cap >= $300M, avg_volume >= 5M)...');
+  const allTickers = [];
+  let page = 1;
+  let paginationToken = null;
+
+  while (true) {
+    try {
+      const params = {
+        pass_expr: `market_cap > ${MIN_MARKET_CAP} && avg_volume > ${MIN_VOLUME}`,
+        score_expr: 'market_cap',
+        region: 'us',
+        asset: 'stock',
+        top_k: 500,
+        timeout: 60,
+        page,
+      };
+      if (paginationToken) params.pagination_token = paginationToken;
+
+      const result = await mcpCall('RunScreener', params, 90000);
+      const candidates = result?.screener_results || result?.results || [];
+      if (!candidates.length) break;
+
+      for (const c of candidates) {
+        const sym = c.symbol || c.ticker;
+        if (sym && !BLACKLIST.has(sym)) allTickers.push(sym);
+      }
+
+      // Check pagination
+      if (result?.has_next && result?.pagination_token) {
+        paginationToken = result.pagination_token;
+        page++;
+        console.log(`  📡 Page ${page}: ${allTickers.length} tickers so far...`);
+      } else {
+        break;
+      }
+    } catch (err) {
+      console.error(`  ⚠️  MCP RunScreener error: ${err.message}`);
+      break;
+    }
   }
 
-  // Extend with known mid/large-cap universe
-  const EXTENDED = [
-    'ABNB','ADBE','ADP','ADSK','AEE','AES','AFL','AIG','AIZ','AJG','AKAM','ALB','ALGN','ALK',
-    'ALL','ALLE','AMAT','AMCR','AMGN','AMP','AMT','AMZN','ANET','ANSS','AON','AOS','APA',
-    'APD','APH','APTV','ARE','ATO','ATVI','AVB','AVGO','AVY','AWK','AXP','AZO','BA','BAC',
-    'BAX','BBWI','BBY','BDX','BEN','BF-B','BIIB','BIO','BK','BKNG','BKR','BLK','BMY','BR',
-    'BRK-B','BRO','BSX','BWA','BXP','C','CAG','CAH','CARR','CAT','CB','CBOE','CBRE','CCI',
-    'CCL','CDAY','CDNS','CDW','CE','CEG','CF','CFG','CHD','CHRW','CHTR','CI','CINF','CL',
-    'CLX','CMA','CMCSA','CME','CMG','CMI','CMS','CNC','CNP','COF','COO','COP','COST','CPB',
-    'CPRT','CPT','CRL','CRM','CSCO','CSGP','CSX','CTAS','CTLT','CTRA','CTSH','CTVA','CVS',
-    'CVX','CZR','D','DAL','DD','DE','DFS','DG','DGX','DHI','DHR','DIS','DISH','DLTR','DOV',
-    'DOW','DPZ','DRI','DTE','DUK','DVA','DVN','DXC','DXCM','EA','EBAY','ECL','ED','EFX',
-    'EIX','EL','EMN','EMR','ENPH','EOG','EPAM','EQIX','EQR','EQT','ES','ESS','ETN','ETR',
-    'ETSY','EVRG','EW','EXC','EXPD','EXPE','EXR','F','FANG','FAST','FBHS','FCX','FDS','FDX',
-    'FE','FFIV','FIS','FISV','FITB','FLT','FMC','FOX','FOXA','FRC','FRT','FTNT','FTV','GD',
-    'GE','GILD','GIS','GL','GLW','GM','GNRC','GOOG','GOOGL','GPC','GPN','GRMN','GS','GWW',
-    'HAL','HAS','HBAN','HCA','HD','HOLX','HON','HPE','HPQ','HRL','HSIC','HST','HSY','HUM',
-    'HWM','IBM','ICE','IDXX','IEX','IFF','ILMN','INCY','INTC','INTU','INVH','IP','IPG',
-    'IQV','IR','IRM','ISRG','IT','ITW','IVZ','J','JBHT','JCI','JKHY','JNJ','JNPR','JPM',
-    'K','KDP','KEY','KEYS','KHC','KIM','KLAC','KMB','KMI','KMX','KO','KR','L','LDOS','LEN',
-    'LH','LHX','LIN','LKQ','LLY','LMT','LNC','LNT','LOW','LRCX','LUMN','LUV','LVS','LW',
-    'LYB','LYV','MA','MAA','MAR','MAS','MCD','MCHP','MCK','MCO','MDLZ','MDT','MET','META',
-    'MGM','MHK','MKC','MKTX','MLM','MMC','MMM','MNST','MO','MOH','MOS','MPC','MPWR','MRK',
-    'MRNA','MRO','MS','MSCI','MSFT','MSI','MTB','MTCH','MTD','MU','NCLH','NDAQ','NDSN','NEE',
-    'NEM','NFLX','NI','NKE','NOC','NOW','NRG','NSC','NTAP','NTRS','NUE','NVDA','NVR','NWL',
-    'NWS','NWSA','NXPI','O','ODFL','OGN','OKE','OMC','ON','ORCL','ORLY','OTIS','OXY','PARA',
-    'PAYC','PAYX','PCAR','PCG','PEAK','PEG','PEP','PFE','PFG','PG','PGR','PH','PHM','PKG',
-    'PKI','PLD','PM','PNC','PNR','PNW','POOL','PPG','PPL','PRU','PSA','PSX','PTC','PVH',
-    'PWR','PXD','PYPL','QCOM','QRVO','RCL','RE','REG','REGN','RF','RHI','RJF','RL','RMD',
-    'ROK','ROL','ROP','ROST','RSG','RTX','RVTY','SBAC','SBNY','SBUX','SCHW','SEE','SHW',
-    'SIVB','SJM','SLB','SNA','SNPS','SO','SPG','SPGI','SRE','STE','STT','STX','STZ','SWK',
-    'SWKS','SYF','SYK','SYY','T','TAP','TDG','TDY','TECH','TEL','TER','TFC','TFX','TGT',
-    'TMO','TMUS','TPR','TRGP','TRMB','TROW','TRV','TSCO','TSLA','TSN','TT','TTWO','TXN',
-    'TXT','TYL','UAL','UDR','UHS','ULTA','UNH','UNP','UPS','URI','USB','V','VFC','VICI',
-    'VLO','VMC','VNO','VRSK','VRSN','VRTX','VTR','VTRS','VZ','WAB','WAT','WBA','WBD','WDC',
-    'WEC','WELL','WFC','WHR','WM','WMB','WMT','WRB','WRK','WST','WTW','WY','WYNN','XEL',
-    'XOM','XRAY','XYL','YUM','ZBH','ZBRA','ZION','ZTS',
-    // Additional large-cap not in SP500
-    'AAPL','AMD','SPOT','MUSA','CASY','FANG','ANET','OLPX','OGN','VECO','ASML','TTE','NSRGY',
-  ];
+  if (allTickers.length > 100) {
+    const unique = [...new Set(allTickers)].sort();
+    console.log(`  ✅ Universe built: ${unique.length} US stocks (mcap >= $300M, vol >= 5M)`);
+    fs.writeFileSync(cacheFile, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), source: 'MCP RunScreener', minMarketCap: MIN_MARKET_CAP, minVolume: MIN_VOLUME, tickers: unique }));
+    return unique;
+  }
 
-  const combined = new Set([...tickers, ...EXTENDED]);
-  BLACKLIST.forEach(t => combined.delete(t));
-  const result = [...combined].sort();
+  // Fallback: pre-built universe file
+  const universeFile = path.join(ROOT, 'data', 'americanbull-universe.json');
+  if (fs.existsSync(universeFile)) {
+    try {
+      const data = JSON.parse(fs.readFileSync(universeFile, 'utf8'));
+      const tickers = (data.tickers || []).filter(t => !BLACKLIST.has(t));
+      if (tickers.length > 100) {
+        console.log(`  ⚠️  MCP returned ${allTickers.length} tickers, falling back to pre-built universe: ${tickers.length} tickers`);
+        return tickers;
+      }
+    } catch {}
+  }
 
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(cacheFile, JSON.stringify(result));
-  return result;
+  console.error('ERROR: Could not build universe. Set MCP_GATEWAY_URL or provide data/americanbull-universe.json');
+  process.exit(1);
 }
 
 // ─── Yahoo Finance OHLCV fetch (120d, with volume) ──────────────────────────
