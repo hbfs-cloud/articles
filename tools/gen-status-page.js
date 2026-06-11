@@ -1197,7 +1197,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
         // Trade History = closed trades only (status !== 'pending'). Open positions live in their own section.
         // Premature trades from rotation (status='expired' + _premature) ARE kept if they match keptPremature.
         const filtered = trades
-          .filter(t => t.status !== 'pending')
+          .filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact')
           .filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate))
           .map(t => {
           if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) {
