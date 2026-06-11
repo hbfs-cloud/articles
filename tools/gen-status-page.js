@@ -802,12 +802,14 @@ ${renderStatusBanner(cfg)}
       if (total === 0) {
         return `<p class="empty"><i class="fas fa-inbox"></i>No signals published today.</p>`;
       }
+      // Summarise which strategies the scanner actually produced today
+      const todayStrategies = [...new Set(signals.map(s => s.strategy || 'unknown'))];
       const f = SF[cfg.filterName] || (() => true);
       const afterFilter = signals.filter(s => f(s.strategy || ''));
       const afterScore = afterFilter.filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore);
       let reason;
       if (afterFilter.length === 0) {
-        reason = `Filter <b>${filterLabel(cfg.filterName)}</b> excluded all ${total} signal${total > 1 ? 's' : ''} today (no matching strategy).`;
+        reason = `Filter <b>${filterLabel(cfg.filterName)}</b> excluded all ${total} signal${total > 1 ? 's' : ''} today — available strateg${todayStrategies.length > 1 ? 'ies' : 'y'}: ${todayStrategies.map(s => '<b>' + s + '</b>').join(', ')}.`;
       } else if (afterScore.length === 0) {
         reason = `${afterFilter.length} signal${afterFilter.length > 1 ? 's' : ''} matched filter <b>${filterLabel(cfg.filterName)}</b> but none reached minScore <b>${cfg.minScore}</b>.`;
       } else {
@@ -2269,7 +2271,7 @@ document.addEventListener('DOMContentLoaded',function(){
         sigBody.innerHTML = sig.length ? sig.map(function(s){
           var bg=_scoreBg(s.score||0);
           return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
-        }).join('') : '<tr><td colspan="7" class="empty">No signals</td></tr>';
+        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
       }
     }
     var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h && /open positions/i.test(h.textContent);});
