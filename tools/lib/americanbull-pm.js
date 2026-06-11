@@ -102,15 +102,11 @@ function resolveConfig(config, mode, regime, vixRising) {
   const hc = config.hybridModes || DEFAULT_CONFIG.hybridModes;
   const modeOverrides = mode === 'AGGRESSIVE' ? hc.aggressive : mode === 'DEFENSIVE' ? hc.defensive : hc.normal;
 
+  // Go flow: ResolvedConfig(regime) → applyModeOverrides(cfg, mode)
+  // Step 1: Start from base config
   const resolved = { ...DEFAULT_CONFIG, ...config };
-  if (modeOverrides) {
-    if (modeOverrides.maxOpenPositions != null) resolved.maxOpenPositions = modeOverrides.maxOpenPositions;
-    if (modeOverrides.positionSizePct != null) resolved.positionSizePct = modeOverrides.positionSizePct;
-    if (modeOverrides.safetyStopMult != null) resolved.safetyStopMult = modeOverrides.safetyStopMult;
-    if (modeOverrides.timeoutDays != null) resolved.timeoutDays = modeOverrides.timeoutDays;
-  }
 
-  // Dynamic regime overrides
+  // Step 2: Apply dynamic regime overrides (to base config)
   const regimeKey = (regime || 'neutral').toLowerCase().replace(/[\s-]+/g, '_');
   const vixKey = vixRising ? regimeKey + '_vix_rising' : null;
 
@@ -122,8 +118,16 @@ function resolveConfig(config, mode, regime, vixRising) {
   if (vixKey && dml[vixKey] != null) resolved.maxLossPct = dml[vixKey];
   else if (dml[regimeKey] != null) resolved.maxLossPct = dml[regimeKey];
   if (dtp[regimeKey] != null) resolved.takeProfitPct = dtp[regimeKey];
-  if (dmp[regimeKey] != null) resolved.maxOpenPositions = Math.min(resolved.maxOpenPositions, dmp[regimeKey]);
+  if (dmp[regimeKey] != null) resolved.maxOpenPositions = dmp[regimeKey];
   if (dps[regimeKey] != null) resolved.positionSizePct = dps[regimeKey];
+
+  // Step 3: Apply mode overrides ON TOP (mode has final say — exact Go behavior)
+  if (modeOverrides) {
+    if (modeOverrides.maxOpenPositions != null) resolved.maxOpenPositions = modeOverrides.maxOpenPositions;
+    if (modeOverrides.positionSizePct != null) resolved.positionSizePct = modeOverrides.positionSizePct;
+    if (modeOverrides.safetyStopMult != null) resolved.safetyStopMult = modeOverrides.safetyStopMult;
+    if (modeOverrides.timeoutDays != null) resolved.timeoutDays = modeOverrides.timeoutDays;
+  }
 
   return resolved;
 }
