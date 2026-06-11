@@ -698,7 +698,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       } else {
         // Mark-to-market at last available bar — gen-status-page shows as open position
         status = 'pending';
-        exitDate = lastDate;
+        exitDate = null;
         exitPrice = expireBar.close;
       }
     } else {
@@ -776,7 +776,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     return RESOLVED_STATUSES.includes(base);
   });
   const pendingTrades = allTrades.filter(t => t.status === 'pending')
-    .sort((a, b) => (b.scanDate || '').localeCompare(a.scanDate || ''));
+    .sort((a, b) => (a.scanDate || '').localeCompare(b.scanDate || ''));
 
   if (resolved.length === 0 && pendingTrades.length === 0) return null;
 
@@ -993,7 +993,7 @@ function simulatePortfolio(allTrades, scans, config) {
     // ─── Close expired/exited positions ───────────────────────────────
     const stillOpen = [];
     for (const pos of openPositions) {
-      if (pos.trade.exitDate && pos.trade.exitDate <= day) {
+      if (pos.trade.exitDate && pos.trade.exitDate <= day && pos.trade.status !== 'pending') {
         if (!pos.trade._phantom) {
           if (pos.trade.status !== 'pending') realizedPnl += pos.trade.pnlPct * (pos.weight ?? weight);
           closedTrades.push(pos.trade);
@@ -2175,7 +2175,7 @@ async function main() {
               tp1: p.tp1 || sig.tp1, tp2: p.tp2 || sig.tp2,
               score: sig.score, strategy: sig.strategy,
               status: 'pending', pnlPct: mtmPnl,
-              exitDate: lastBarDate, exitPrice: lastClose,
+              exitDate: null, exitPrice: lastClose,
               holdDays: Object.keys(bars).filter(d => d >= nextBizDay(p.scan_date) && d <= lastBarDate).length,
               source: sig.source || 'signals',
               entryTime: '09:30',
