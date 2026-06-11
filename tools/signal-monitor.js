@@ -808,6 +808,19 @@ async function evaluatePosition(pos, modeId, cfg, state, newState, alerts, price
     status = 'NEAR_TP1';
   }
 
+  // Americanbull PM: pattern invalidation check for candlestick trades
+  if (pos.pattern && status === 'OPEN' && daysHeld >= 2) {
+    try {
+      const { checkPatternHealth } = require('./lib/americanbull-pm');
+      const health = checkPatternHealth(pos, { price, dayHigh, dayLow, dayVolume: 0 });
+      if (health.alert === 'exit') {
+        status = price >= entry ? 'TRAIL_EXIT' : 'PATTERN_INVALID';
+      } else if (health.alert === 'warning' && !prev._patternWarned) {
+        alerts.push({ stateKey, mode: modeLabel, ticker: pos.ticker, msg: health.message });
+      }
+    } catch {}
+  }
+
   // On first run: initialize state without sending alerts
   if (isFirstRun) {
     newState[stateKey] = {

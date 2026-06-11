@@ -563,8 +563,9 @@ async function main() {
     momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /momentum|breakout/i.test(s),
+    candlestick_only: s => /candlestick/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only' }[f] || f; }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
@@ -744,7 +745,7 @@ ${renderStatusBanner(cfg)}
       ${buildTagline(id, cfg)}
     </div>
     <div class="method-steps" style="margin-top:.85rem">
-      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'mom_bo' ? ' (momentum + breakout setups only)' : cfg.filterName === 'momentum_only' ? ' (momentum setups only)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
+      <div class="step"><span class="step-n" style="background:${cfg.color}">1</span><div>Each evening, look at the <b>signals section</b> below. It shows the best ${cfg.topN} setup${cfg.topN > 1 ? 's' : ''} from tonight's scan${cfg.filterName === 'breakout_only' ? ' (breakout setups only)' : cfg.filterName === 'mom_bo' ? ' (momentum + breakout setups only)' : cfg.filterName === 'momentum_only' ? ' (momentum setups only)' : cfg.filterName === 'candlestick_only' ? ' (candlestick reversal patterns only — Hammer, Engulfing, Pin Bar with volume spike)' : cfg.filterName === 'no_sq' ? ' (no Short Squeeze plays)' : ''}. These are the ones you can act on tomorrow.</div></div>
       ${id === 'turbo' ? `
       <div class="step"><span class="step-n" style="background:${cfg.color}">2</span><div><b>3-Phase Smart Entry (momentum/breakout plays — you must watch at open):</b><br>
         <b>Phase 1 — 9:30–10:15 ET / 15:30–16:15 Paris:</b> strict confirmation. <i>Momentum:</i> wait for a 5-min green candle above the entry. <i>Breakout:</i> price above entry + volume spike. <i>Pullback:</i> price dips below VWAP then reclaims it with a green candle. VWAP = the fair price of the day based on where most volume traded — buying at or below it gives you a better fill.<br>
@@ -2271,7 +2272,7 @@ document.addEventListener('DOMContentLoaded',function(){
         sigBody.innerHTML = sig.length ? sig.map(function(s){
           var bg=_scoreBg(s.score||0);
           return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
-        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
+        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout',candlestick_only:'Candlestick only'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
       }
     }
     var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h && /open positions/i.test(h.textContent);});
@@ -2921,6 +2922,7 @@ function backfillHistory() {
     momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /momentum|breakout/i.test(s),
+    candlestick_only: s => /candlestick/i.test(s),
   };
   function parseScannerSignalsBF(dateKey) {
     const loaded = parser.loadSignals(dateKey);

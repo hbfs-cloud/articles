@@ -128,6 +128,7 @@ function bizDaysBetween(dateA, dateB) {
 // ─── Parse scan → setups (JSON-first, HTML fallback via scanner-parser.js) ───
 
 const scannerParser = require('./lib/scanner-parser');
+const { isPatternInvalidated } = require('./lib/americanbull-pm');
 
 const STRAT_PATTERNS = {
   short_squeeze: /short.?squeeze/i,
@@ -135,6 +136,7 @@ const STRAT_PATTERNS = {
   breakout: /breakout/i,
   momentum: /momentum/i,
   pullback: /pullback/i,
+  candlestick: /candlestick/i,
 };
 
 function detectStrategy(text) {
@@ -173,6 +175,7 @@ function parseScan(dir) {
         const stratBonus =
           strat === 'breakout' ? 4 :
           strat === 'momentum' ? 4 :
+          strat === 'candlestick' ? 3.5 :
           strat === 'pre_squeeze' ? 3 :
           strat === 'pullback' ? 3 :
           2; // short_squeeze / unknown
@@ -187,6 +190,7 @@ function parseScan(dir) {
         entry, stop, tp1, tp2,
         sharia: s.sharia,
         source: source || s.source || 'signals',
+        pattern: s.pattern || null,
       });
     }
     return out;
@@ -345,9 +349,10 @@ const STRATEGY_FILTERS_MAP = {
   'all': new Set(),
   'no_sq': new Set(['short_squeeze']),
   'no_sq_pb': new Set(['short_squeeze', 'pullback']),
-  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback']),
-  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback']),
-  'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback']),
+  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback', 'candlestick']),
+  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback', 'candlestick']),
+  'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
+  'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback']),
 };
 
 // Normalize regime string to lookup key
@@ -587,6 +592,17 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       exitPrice = currentStop;
       if (ambiguous) status = status + '_amb';                    // _amb suffix for audit
       break;
+    }
+
+    // Americanbull PM: pattern invalidation early exit (candlestick strategy only)
+    if (setup.strategy === 'candlestick' && setup.pattern && daysHeld >= 2) {
+      const inv = isPatternInvalidated(setup, bar, entryPrice);
+      if (inv.invalidated) {
+        status = bar.close >= entryPrice ? 'trail' : 'sl';
+        exitDate = date;
+        exitPrice = bar.close;
+        break;
+      }
     }
 
     // Check TP2 (only when real tp2 set and not disabled — no synthetic fallback)

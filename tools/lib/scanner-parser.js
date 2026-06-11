@@ -80,6 +80,7 @@ function loadSignals(dir) {
           dilution_clear: s.dilution_clear,
           horizon: s.horizon,
           name: s.name,
+          pattern: s.pattern || null,
         };
       };
       const signals = (data.signals || []).map(mapSignal);
