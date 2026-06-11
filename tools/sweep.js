@@ -2044,7 +2044,7 @@ async function main() {
         // Purge: pending trades only (always re-simulate with latest data).
         // Never purge closed/expired trades — they were simulated with their original config
         // and changing the current horizon must not retroactively invalidate them.
-        const shouldPurge = t => t.status === 'pending';
+        const shouldPurge = t => t.status === 'pending' || t.status === 'sim2_artifact';
         const existing = afterSince.filter(t => !shouldPurge(t));
         const purged = afterSince.length - existing.length;
         if (purged > 0) console.log(`  ⚠️ ${id}: purged ${purged} pending/early-expired trades for re-simulation`);
@@ -2195,6 +2195,17 @@ async function main() {
             merged.push(...capped);
             console.log(`  ${id}: injected ${capped.length} live positions as pending for MtM`);
           }
+
+          // Mark sim2 overflow: positions never actually held by the broker
+          const injectedTickers = new Set(capped.map(t => t.ticker));
+          let markedCount = 0;
+          for (const t of merged) {
+            if (t.status === 'pending' && !t._injected && !injectedTickers.has(t.ticker)) {
+              t.status = 'sim2_artifact';
+              markedCount++;
+            }
+          }
+          if (markedCount > 0) console.log(`  ${id}: marked ${markedCount} sim2 artifacts (never-held positions)`);
         }
 
         frozenTrades[id] = merged;

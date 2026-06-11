@@ -549,13 +549,13 @@ warn('scanner/status: per-mode positions match backtest-trades.json (no phantom 
     const trades = bt[modeId] || [];
     const portfolioSize = cfg.portfolioSize || 3;
     const openTrades = trades.filter(t => {
-      if (t.status === 'skipped') return false;
+      if (t.status === 'skipped' || t.status === 'sim2_artifact') return false;
       if (!t.entryDate || t.entryDate > todayISO) return false;
       if (!t.exitDate) return true;
       return t.exitDate > todayISO;
     });
     if (openTrades.length > portfolioSize) {
-      issues.push(`${modeId}: ${openTrades.length} open > P${portfolioSize} (injection overflow, capped by exposure limit)`);
+      issues.push(`${modeId}: ${openTrades.length} open > P${portfolioSize}`);
     }
   }
   if (issues.length) return issues.join(' | ');
@@ -581,7 +581,7 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
     if (!cfg) continue;
     const trades = bt[modeId] || [];
     const expectedOpen = trades.filter(t => {
-      if (!t.entryDate || t.status === 'skipped') return false;
+      if (!t.entryDate || t.status === 'skipped' || t.status === 'sim2_artifact') return false;
       if (t.entryDate > dateISO) return false;
       if (!t.exitDate) return true;
       return t.exitDate > dateISO;
