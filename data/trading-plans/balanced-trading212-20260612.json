@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-11T22:16:40.432Z",
+  "generated_at": "2026-06-12T06:28:38.245Z",
   "valid_for": "2026-06-12",
   "mode_status": {
     "state": "live",
@@ -33,16 +33,16 @@
   "mode": {
     "name": "balanced",
     "horizon_days": 8,
-    "filter": "momentum_only",
+    "filter": "mom_bo",
     "min_score": 85,
     "rotation": "none",
     "breakeven_pct": 0,
     "be_grace_days": 0,
     "vix_kill": 25,
-    "trailing_stop": false,
+    "trailing_stop": true,
     "daily_trail_pct": 0,
     "max_stop_pct": 0,
-    "atr_stop_mult": 2.5,
+    "atr_stop_mult": 2,
     "stale_days": 0,
     "entry_gate_pct": 0,
     "partial_tp": true,
@@ -53,11 +53,11 @@
     "correlation_cap": 0.7,
     "cross_mode_dedup": false,
     "regime_filters": {
-      "risk_on": "momentum_only",
-      "early_risk_off": "momentum_only",
+      "risk_on": "mom_bo",
+      "early_risk_off": "mom_bo",
       "risk_off": "breakout_only",
-      "neutral": "momentum_only",
-      "recovery": "momentum_only"
+      "neutral": "mom_bo",
+      "recovery": "mom_bo"
     },
     "dd_breaker_pct": 5
   },
@@ -110,198 +110,6 @@
     {
       "id": "ORD-001",
       "action": "BUY",
-      "ticker": "CAT",
-      "broker_symbol": "CAT_US_EQ",
-      "broker": {
-        "symbol": "CAT_US_EQ",
-        "exchange": "NYSE",
-        "isin": "US1491231015",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 890,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 3,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-12T09:30:00-04:00",
-        "valid_until": "2026-06-12T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 845,
-          "trailing": false,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 940,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 960,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-06-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 90,
-        "strategy": "Momentum",
-        "rr": "1:2.2",
-        "sharia": true,
-        "thesis": "Caterpillar closed at $897.63 (+4.8%) near its 52-week high ($946.83). The construction and mining equipment giant benefits from the US infrastructure spending cycle and global re-industrialization theme. RSI 52.4 is ideal — strong momentum without overextension. ATR 39.2 implies natural price swings, so the $45 stop width (5%) is appropriate at 1.15x ATR. The industrial sector led broader market gains (+5% XLI) as the risk appetite snapback from yesterday's RISK-OFF selloff drove rotation into cyclicals."
-      },
-      "priority": 1
-    },
-    {
-      "id": "ORD-002",
-      "action": "BUY",
-      "ticker": "JNJ",
-      "broker_symbol": "JNJ_US_EQ",
-      "broker": {
-        "symbol": "JNJ_US_EQ",
-        "exchange": "NYSE",
-        "isin": "US4781601046",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 236,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 14,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-12T09:30:00-04:00",
-        "valid_until": "2026-06-12T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 227,
-          "trailing": false,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 248,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 254,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-06-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 89,
-        "strategy": "Momentum",
-        "rr": "1:2.0",
-        "sharia": true,
-        "thesis": "Johnson & Johnson at $238.33 continues its secular uptrend, trading above both EMA20 ($231) and EMA50 ($230.91). RSI 63.2 confirms momentum without overextension. JNJ is a classic defensive play in EARLY RISK-OFF — healthcare staple with 3.2% dividend yield and uncorrelated returns vs cyclicals (correlation -0.04 with LRCX). The $9 stop (3.8%) is 1.9x ATR ($4.63), giving adequate room while respecting the 8% maximum. 52-week high at $251.71 provides the upside target."
-      },
-      "priority": 2
-    },
-    {
-      "id": "ORD-003",
-      "action": "BUY",
       "ticker": "LRCX",
       "broker_symbol": "LRCX_US_EQ",
       "broker": {
@@ -313,7 +121,7 @@
       },
       "entry": {
         "type": "LIMIT",
-        "price": 355,
+        "price": 350,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -333,20 +141,20 @@
         "stop_loss": {
           "type": "STOP",
           "price": 330,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 405,
+          "price": 390,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 430,
+          "price": 410,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -391,12 +199,12 @@
         "strategy": "Breakout",
         "rr": "1:2.0",
         "sharia": true,
-        "thesis": "Lam Research surged +12.7% to a new 52-week high ($364.80) on massive volume (14.5M vs 3.0M avg) as the entire semiconductor equipment complex ripped higher. KLAC led with +12.9%. AMAT +11.2%. The sector is pricing in sustained AI capex demand and a potential CHIPS Act spending acceleration. LRCX's etch and deposition tools are critical for advanced node manufacturing. RSI 67.7 provides room to run before overextension. EMA20 ($316) well below price = momentum confirmed. Entry on pullback from today's surge to $355 zone gives a clean 2:1 R/R with stop below the breakout level."
+        "thesis": "Lam Research surged +12.7% to a new 52-week high ($364.80) on massive volume (14.5M vs 3.0M avg) as the entire semiconductor equipment complex ripped higher. KLAC led with +12.9%. AMAT +11.2%. The sector is pricing in sustained AI capex demand and a potential CHIPS Act spending acceleration. LRCX's etch and deposition tools are critical for advanced node manufacturing. RSI 67.7 provides room to run before overextension. EMA20 ($316) well below price = momentum confirmed. Entry on pullback to $350 zone gives a clean 2:1 R/R with stop below the breakout level."
       },
-      "priority": 3
+      "priority": 1
     },
     {
-      "id": "ORD-004",
+      "id": "ORD-002",
       "action": "BUY",
       "ticker": "GE",
       "broker_symbol": "GE_US_EQ",
@@ -428,21 +236,21 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 310,
-          "trailing": false,
+          "price": 316,
+          "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 346,
+          "price": 352,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 355,
+          "price": 365,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -489,10 +297,106 @@
         "sharia": true,
         "thesis": "GE Aerospace surged +4.4% to $332.76 within striking distance of its 52-week high ($348.48). The aerospace and defense sector benefits from both commercial aviation recovery and defense spending tailwinds. Volume was 3.2M, in line with its average — this is steady institutional buying, not a spike-and-fade. RSI 61.9 is healthy. EMA20 ($315.77) serves as the first pullback target. The entry at $328 on a pullback from today's high gives a clean breakout setup with the stop below the EMA20."
       },
-      "priority": 4
+      "priority": 2
     },
     {
-      "id": "ORD-005",
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "CAT",
+      "broker_symbol": "CAT_US_EQ",
+      "broker": {
+        "symbol": "CAT_US_EQ",
+        "exchange": "NYSE",
+        "isin": "US1491231015",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 890,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 3,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-12T09:30:00-04:00",
+        "valid_until": "2026-06-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 860,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 950,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 975,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-06-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 90,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Caterpillar closed at $897.63 (+4.8%) near its 52-week high ($946.83). The construction and mining equipment giant benefits from the US infrastructure spending cycle and global re-industrialization theme. RSI 52.4 is ideal — strong momentum without overextension. ATR 39.2 implies natural price swings, so the $30 stop width (3.4%) is appropriate at 0.77x ATR. The industrial sector led broader market gains (+5% XLI) as the risk appetite snapback from yesterday's RISK-OFF selloff drove rotation into cyclicals."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "MRK",
       "broker_symbol": "MRK_US_EQ",
@@ -505,7 +409,7 @@
       },
       "entry": {
         "type": "LIMIT",
-        "price": 120,
+        "price": 119,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -514,7 +418,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 27,
+          "shares": 28,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-12T09:30:00-04:00",
@@ -525,20 +429,20 @@
         "stop_loss": {
           "type": "STOP",
           "price": 114,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 125,
+          "price": 129,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 128,
+          "price": 134,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -584,6 +488,102 @@
         "rr": "1:2.0",
         "sharia": true,
         "thesis": "Merck at $120.76 is approaching its 52-week high ($125.14) after a +1.4% session. RSI 58.8 provides ample headroom. The pharma giant's Keytruda franchise and diversified pipeline make it a defensive growth play — ideal for EARLY RISK-OFF environments. EMA20 ($117.70) provides the pullback floor. Volume at 13.1M was above average, suggesting institutional accumulation. Low correlation with cyclicals (0.13 with LRCX, 0.23 with CAT) adds diversification value to the portfolio."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "BBVA",
+      "broker_symbol": "BBVA_US_EQ",
+      "broker": {
+        "symbol": "BBVA_US_EQ",
+        "exchange": "NYSE",
+        "isin": "US05946K1016",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 22.8,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 146,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-12T09:30:00-04:00",
+        "valid_until": "2026-06-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 21.5,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 25.400000000000002,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 27,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-06-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 90,
+        "strategy": "Breakout",
+        "rr": "1:2.0",
+        "sharia": false,
+        "thesis": "BBVA surged +5.1% to $23.15 on strong volume (3.3M vs 1.7M avg). The Spanish bank benefits from rising European interest rates and strong domestic loan demand. RSI 55.8 leaves significant room to run. EMA20 ($22.59) is well below price = fresh breakout. BBVA has moderate correlation with European markets (0.75 with EWJ) but low correlation with US defensives (0.07 with JNJ, 0.25 with PG). European financials are benefiting from the ECB's rate stance and improving credit conditions."
       },
       "priority": 5
     }
