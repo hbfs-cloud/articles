@@ -28,6 +28,7 @@ const https = require('https');
 const fs = require('fs');
 const { detectPattern, detectBearishExit } = require('./lib/candlestick-patterns');
 const { DEFAULT_CONFIG, selectMode, resolveConfig, bleedingFraction } = require('./lib/americanbull-pm');
+const { loadUniverse: loadSAUniverse } = require('./lib/stockanalysis');
 
 const GO_BIN = path.join('/Users/marketwatchxyz/GolandProjects/systematic-tss/bin/ab-scan-history');
 
@@ -35,17 +36,21 @@ const args = process.argv.slice(2);
 function getArg(name, def) { const i = args.indexOf(`--${name}`); return i >= 0 && args[i + 1] ? args[i + 1] : def; }
 function hasFlag(name) { return args.includes(`--${name}`); }
 
-const INITIAL_CAPITAL = parseFloat(getArg('capital', '96785'));
+const INITIAL_CAPITAL = parseFloat(getArg('capital', '100000'));
 const START = getArg('start', '2021-01-01');
-const END = getArg('end', '2026-04-12');
+const END = getArg('end', '2026-06-11');
 const QUICK = getArg('quick', '');
 const MIN_SCORE = parseFloat(getArg('min-score', '70'));
 const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '8.0'));
 const USE_GO_SIGNALS = hasFlag('go-signals');
+const USE_GO_CACHE = hasFlag('go-cache');
+const SIGNALS_FROM = getArg('signals-from', '');
 const VERBOSE = hasFlag('verbose');
 const NO_CACHE = hasFlag('no-cache');
+const REFRESH_UNIVERSE = hasFlag('refresh');
 
-const CACHE_DIR = path.join(__dirname, '..', 'cache', 'ab-ohlcv');
+const GO_CACHE_DIR = path.join(__dirname, '..', 'cache', 'ab-ohlcv-go');
+const CACHE_DIR = USE_GO_CACHE ? GO_CACHE_DIR : path.join(__dirname, '..', 'cache', 'ab-ohlcv');
 const UNIVERSE_FILE = path.join(__dirname, '..', 'data', 'americanbull-universe.json');
 
 // Top US stocks by market cap + liquidity (captures >80% of AB signals)
@@ -89,14 +94,22 @@ function getCachePath(ticker) {
 }
 
 function loadCached(ticker) {
-  if (NO_CACHE) return null;
+  if (NO_CACHE && !USE_GO_CACHE) return null;
   try {
     const p = getCachePath(ticker);
     if (!fs.existsSync(p)) return null;
-    const stat = fs.statSync(p);
-    const ageHours = (Date.now() - stat.mtimeMs) / 3600000;
-    if (ageHours > 48) return null; // stale after 48h
+    if (!USE_GO_CACHE) {
+      const stat = fs.statSync(p);
+      const ageHours = (Date.now() - stat.mtimeMs) / 3600000;
+      if (ageHours > 48) return null;
+    }
     const data = JSON.parse(fs.readFileSync(p, 'utf8'));
+    if (USE_GO_CACHE && Array.isArray(data)) {
+      // Go cache: [{d,o,h,l,c,ac,v}, ...]
+      return data.filter(b => b.o > 0 && b.h > 0).map(b => ({
+        date: b.d, open: b.o, high: b.h, low: b.l, close: b.c, volume: b.v || 0,
+      }));
+    }
     return data.bars && data.bars.length > 0 ? data.bars : null;
   } catch { return null; }
 }
@@ -150,12 +163,29 @@ async function fetchOHLCV(ticker, range = '10y') {
 
 // ─── Signal pre-computation ────────────────────────────────────────────────
 
-function computeJSSignals(ticker, bars, startDate, minScore, minVolRatio, vixByDate) {
+// P80 dollar volume filter (exact port of Go calcDollarVolumePercentile)
+const MIN_DOLLAR_VOL_P80 = parseFloat(getArg('min-dolvol', '0'));
+function dollarVolP80(bars, idx, period = 20) {
+  if (idx < period) return 0;
+  const dvs = [];
+  for (let k = idx - period + 1; k <= idx; k++) dvs.push(bars[k].close * (bars[k].volume || 0));
+  dvs.sort((a, b) => a - b);
+  const pIdx = Math.min(Math.floor(period * 0.80), period - 1);
+  return dvs[pIdx];
+}
+
+function computeJSSignals(ticker, bars, startDate, minScore, minVolRatio, vixByDate, scanStartDate) {
   const signals = [];
-  const startIdx = bars.findIndex(b => b.date >= startDate);
+  // Go's AsOf(startDate) returns bars up to the previous trading day.
+  // scanStartDate lets us capture those pre-start signals.
+  const effectiveStart = scanStartDate || startDate;
+  const startIdx = bars.findIndex(b => b.date >= effectiveStart);
   if (startIdx < 0) return signals;
 
   for (let i = Math.max(startIdx, 60); i < bars.length; i++) {
+    // P80 dollar volume filter (Go: min_avg_dollar_volume)
+    if (MIN_DOLLAR_VOL_P80 > 0 && dollarVolP80(bars, i) < MIN_DOLLAR_VOL_P80) continue;
+
     // Compute regime from VIX for this date (exact Go behavior)
     const date = bars[i].date;
     const vix = vixByDate ? vixByDate.get(date) : null;
@@ -520,15 +550,42 @@ async function main() {
     // Quick mode: use TOP_UNIVERSE subset
     const quickN = parseInt(QUICK) || 300;
     tickers = TOP_UNIVERSE.slice(0, quickN);
+  } else if (USE_GO_CACHE) {
+    // Go cache mode: use Go's universe from Go OHLCV cache dir
+    const uniPath = path.join(GO_CACHE_DIR, 'universe.json');
+    if (fs.existsSync(uniPath)) {
+      tickers = JSON.parse(fs.readFileSync(uniPath, 'utf8'));
+    } else {
+      tickers = fs.readdirSync(GO_CACHE_DIR)
+        .filter(f => f.endsWith('.json') && f !== 'universe.json')
+        .map(f => f.replace('.json', ''))
+        .filter(t => !t.startsWith('_'));
+    }
   } else {
-    // Default: FULL universe from americanbull-universe.json (same as Go)
+    // Default: Go frozen universe for exact backtest parity (same tickers as Go backtest)
+    const goFrozen = path.join(__dirname, '../data/tickers-frozen.json');
     try {
-      const uniData = JSON.parse(fs.readFileSync(UNIVERSE_FILE, 'utf8'));
-      tickers = uniData.tickers || [];
+      let sa;
+      if (fs.existsSync(goFrozen)) {
+        const raw = JSON.parse(fs.readFileSync(goFrozen, 'utf8'));
+        const stocks = raw.data?.data || raw.data || raw;
+        const minMcap = 300_000_000;
+        tickers = Object.keys(stocks).filter(t => (stocks[t].marketCap || 0) >= minMcap).sort();
+        console.log(`[stockanalysis] ${tickers.length} tickers (mcap >= ${(minMcap / 1e6).toFixed(0)}M) from go:tickers-frozen.json`);
+      } else {
+        sa = await loadSAUniverse({ minMarketCap: 300_000_000, forceRefresh: REFRESH_UNIVERSE });
+        tickers = sa.tickers;
+      }
     } catch (e) {
-      console.error(`  Cannot load ${UNIVERSE_FILE}: ${e.message}`);
-      console.error('  Falling back to TOP_UNIVERSE (300 tickers)');
-      tickers = TOP_UNIVERSE.slice();
+      console.warn(`  StockAnalysis load failed: ${e.message}`);
+      // Fallback: americanbull-universe.json
+      try {
+        const uniData = JSON.parse(fs.readFileSync(UNIVERSE_FILE, 'utf8'));
+        tickers = uniData.tickers || [];
+      } catch (e2) {
+        console.error(`  Cannot load ${UNIVERSE_FILE}: ${e2.message}`);
+        tickers = TOP_UNIVERSE.slice();
+      }
     }
   }
 
@@ -549,8 +606,8 @@ async function main() {
   console.log(`  Capital: $${INITIAL_CAPITAL.toLocaleString()} | Start: ${START}`);
   console.log(`  Universe: ${tickers.length} tickers | Min score: ${MIN_SCORE} | Min vol ratio: ${MIN_VOL_RATIO}`);
   console.log(`  Cache: ${cachedCount}/${tickers.length} cached (${NO_CACHE ? 'disabled' : 'cache/ab-ohlcv/'})`);
-  console.log(`  Signal source: ${USE_GO_SIGNALS ? 'Go ab-scan-history' : 'JS scanner'}`);
-  console.log(`  Go ref: 1042 trades, WR 48.85%, CAGR 411.86%, DD 27.45%`);
+  console.log(`  Signal source: ${SIGNALS_FROM ? 'Go CSV: ' + SIGNALS_FROM : USE_GO_SIGNALS ? 'Go ab-scan-history' : 'JS scanner'}`);
+  console.log(`  Go ref: 1022 trades, WR 48.83%, CAGR 341.58%, DD 27.20%`);
   console.log('───────────────────────────────────────────────────────────\n');
 
   console.log(`[1/4] Fetching OHLCV for ${tickers.length} tickers + VIX + regime tickers...`);
@@ -584,6 +641,13 @@ async function main() {
       regimeCounts[rd.regime] = (regimeCounts[rd.regime] || 0) + 1;
     }
     console.log(`  Regime map: ${regimeDataMap.size} days — ${JSON.stringify(regimeCounts)}`);
+    if (hasFlag('dump-regime')) {
+      const regimeDump = [];
+      for (const [d, rd] of regimeDataMap) regimeDump.push({ date: d, ...rd });
+      regimeDump.sort((a, b) => a.date.localeCompare(b.date));
+      fs.writeFileSync('/tmp/js_regime_dump.json', JSON.stringify(regimeDump, null, 0));
+      console.log(`  Regime data dumped to /tmp/js_regime_dump.json`);
+    }
   }
 
   // Fetch OHLCV in parallel batches (with disk cache)
@@ -643,7 +707,31 @@ async function main() {
   const signalsByDate = new Map(); // date → [{ticker, score, entry, stop, atr, pattern}]
   let totalSignals = 0;
 
-  if (USE_GO_SIGNALS) {
+  if (SIGNALS_FROM) {
+    // Load pre-computed signals from Go scanner-debug CSV
+    const csvLines = fs.readFileSync(SIGNALS_FROM, 'utf8').trim().split('\n');
+    const hdr = csvLines[0].split(',');
+    const colIdx = {};
+    hdr.forEach((h, i) => colIdx[h] = i);
+    for (let i = 1; i < csvLines.length; i++) {
+      const p = csvLines[i].split(',');
+      const date = p[colIdx.Date];
+      const ticker = p[colIdx.Symbol];
+      const score = parseFloat(p[colIdx.Score]);
+      const entry = parseFloat(p[colIdx.EntryPrice]);
+      const stop = parseFloat(p[colIdx.StopLoss]);
+      if (!priceData.has(ticker)) continue;
+      const atrPct = parseFloat(p[colIdx.ATRPct] || '0.03');
+      const price = parseFloat(p[colIdx.Price] || entry);
+      const atr = atrPct * price;
+      const pattern = p[colIdx.Strategy] || 'americanbulls';
+      const sig = { ticker, date, score, entry, stop, atr, pattern, volRatio: parseFloat(p[colIdx.VolRatio] || '10'), rsi: parseFloat(p[colIdx.RSI] || '50') };
+      if (!signalsByDate.has(date)) signalsByDate.set(date, []);
+      signalsByDate.get(date).push(sig);
+      totalSignals++;
+    }
+    console.log(`  Loaded ${totalSignals} signals from ${SIGNALS_FROM}`);
+  } else if (USE_GO_SIGNALS) {
     const tickerList = [...priceData.keys()];
     const goBatchSize = 50;
     for (let i = 0; i < tickerList.length; i += goBatchSize) {
@@ -657,9 +745,15 @@ async function main() {
       process.stderr.write(`  Go scanner: ${i + batch.length}/${tickerList.length} tickers, ${totalSignals} signals\r`);
     }
   } else {
+    // Go's main loop starts at startDate (e.g. 2021-01-01) but AsOf returns bars
+    // up to the previous trading day (2020-12-31). Scan from 10 calendar days
+    // before START to capture those pre-start signals.
+    const preStartD = new Date(START);
+    preStartD.setDate(preStartD.getDate() - 10);
+    const SCAN_START = preStartD.toISOString().slice(0, 10);
     let processed = 0;
     for (const [ticker, bars] of priceData) {
-      const signals = computeJSSignals(ticker, bars, START, MIN_SCORE, MIN_VOL_RATIO, vixByDate);
+      const signals = computeJSSignals(ticker, bars, START, MIN_SCORE, MIN_VOL_RATIO, vixByDate, SCAN_START);
       for (const s of signals) {
         if (!signalsByDate.has(s.date)) signalsByDate.set(s.date, []);
         signalsByDate.get(s.date).push(s);
@@ -670,9 +764,11 @@ async function main() {
     }
   }
 
-  // Sort each day's signals by score descending
+  // Sort each day's signals by score DESC, symbol ASC (exact Go tiebreaker)
+  // then limit to top 20 per day (Go MaxCandidates=20)
   for (const [, sigs] of signalsByDate) {
-    sigs.sort((a, b) => b.score - a.score);
+    sigs.sort((a, b) => b.score - a.score || a.ticker.localeCompare(b.ticker));
+    if (sigs.length > 20) sigs.length = 20;
   }
 
   console.log(`  Total signals: ${totalSignals} across ${signalsByDate.size} trading days\n`);
@@ -698,6 +794,61 @@ async function main() {
   let prevVix = 20;
   let modeHistory = { AGGRESSIVE: 0, NORMAL: 0, DEFENSIVE: 0 };
 
+  // Go's loop starts at startDate and AsOf(startDate) returns bars through the
+  // LAST trading day before startDate. Only that ONE day generates pre-start signals.
+  // (Go skips subsequent loop dates where currentDataDate hasn't advanced.)
+  const firstTradingDate = tradingDates[0];
+  const preStartSignalDates = [...signalsByDate.keys()]
+    .filter(d => d < firstTradingDate)
+    .sort();
+  if (preStartSignalDates.length > 0) {
+    // Only use the LAST pre-start date (matching Go's AsOf behavior)
+    const lastPreStartDate = preStartSignalDates[preStartSignalDates.length - 1];
+    const preVix = vixByDate.get(lastPreStartDate) || 20;
+    const preRegime = getRegime(preVix, lastPreStartDate);
+    const preMode = selectMode(preVix, false, INITIAL_CAPITAL, INITIAL_CAPITAL, [], DEFAULT_CONFIG);
+    const preConfig = resolveConfig(DEFAULT_CONFIG, preMode, preRegime, false);
+    const heldOrPending = new Set();
+    let slotsAvail = preConfig.maxOpenPositions;
+    const minCashReserve = preConfig.minCashReserve || 2.0;
+
+    const candidates = signalsByDate.get(lastPreStartDate) || [];
+    for (const candidate of candidates) {
+      if (slotsAvail <= 0) break;
+      if (heldOrPending.has(candidate.ticker)) continue;
+      const availableCash = cash - (INITIAL_CAPITAL * minCashReserve / 100);
+      if (availableCash < 100) break;
+      const posSize = Math.min(availableCash / slotsAvail, availableCash * 0.98);
+      if (posSize < 100) break;
+      const limitPrice = candidate.entry * 1.001;
+      const qty = Math.floor(posSize / limitPrice);
+      if (qty <= 0) continue;
+      const reservedCash = qty * limitPrice;
+      if (reservedCash > cash) continue;
+
+      const atr = candidate.atr || (candidate.entry * 0.03);
+      const baseStopATR = preConfig.baseStopATR || 1.5;
+      // Go: uses patternStop directly, no Math.min with ATR-stop, no maxLoss floor
+      let softStop = candidate.stop > 0 ? candidate.stop : candidate.entry - atr * baseStopATR;
+      const dist = candidate.entry - softStop;
+      const safetyMult = preConfig.safetyStopMult || 3.0;
+      const hardStop = candidate.entry - dist * safetyMult;
+
+      cash -= reservedCash;
+      pendingBuys.push({
+        symbol: candidate.ticker, qty, limitPrice, softStop,
+        hardStop: Math.max(hardStop, 0), atr, safetyMult,
+        placedDate: lastPreStartDate, score: candidate.score, pattern: candidate.pattern,
+        reservedCash,
+      });
+      heldOrPending.add(candidate.ticker);
+      slotsAvail--;
+    }
+    if (pendingBuys.length > 0) {
+      console.log(`  Pre-start: ${lastPreStartDate} signals, mode=${preMode}, ${pendingBuys.length} pending buys (${pendingBuys.map(b => b.symbol).join(', ')})`);
+    }
+  }
+
   for (let dayIdx = 0; dayIdx < tradingDates.length; dayIdx++) {
     const date = tradingDates[dayIdx];
 
@@ -716,6 +867,7 @@ async function main() {
       const pnlPct = (fillPrice - pos.entry) / pos.entry;
       closedTrades.push({
         symbol: pos.symbol, entry: pos.entry, exitPrice: fillPrice, exitDate: date,
+        openDate: pos.openDate, fillDate: pos.fillDate,
         pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry),
         status: sell.reason, holdDays: calendarDays(pos.openDate, date),
         pattern: pos.pattern || '', score: pos.score || 0,
@@ -735,6 +887,7 @@ async function main() {
         const pnlPct = (fillPrice - pos.entry) / pos.entry;
         closedTrades.push({
           symbol: pos.symbol, entry: pos.entry, exitPrice: fillPrice, exitDate: date,
+          openDate: pos.openDate, fillDate: pos.fillDate,
           pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry),
           status: 'hard_stop', holdDays: calendarDays(pos.openDate, date),
           pattern: pos.pattern || '', score: pos.score || 0,
@@ -758,6 +911,7 @@ async function main() {
         const pnlPct = (fillPrice - pos.entry) / pos.entry;
         closedTrades.push({
           symbol: pos.symbol, entry: pos.entry, exitPrice: fillPrice, exitDate: date,
+          openDate: pos.openDate, fillDate: pos.fillDate,
           pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry),
           status: 'safety_stop', holdDays: calendarDays(pos.openDate, date),
           pattern: pos.pattern || '', score: pos.score || 0,
@@ -771,49 +925,45 @@ async function main() {
     pendingSells = remainingSells;
 
     // 1d. Process pending BUY limit orders
+    // Go fills orders FIRST (ProcessDayEndWithOHLC), then cancels stale
+    // (CancelStalePending in strategy.Apply). Match that order.
     const newPendingBuys = [];
     for (const buy of pendingBuys) {
       const bar = getBar(buy.symbol, date);
-      const age = calendarDays(buy.placedDate, date);
 
-      // Cancel stale pending (Go: pendingBuyCancelDays, default 1-3)
-      if (age >= (DEFAULT_CONFIG.pendingBuyCancelDays || 3)) {
-        cash += buy.reservedCash;
-        continue;
+      // Try to fill first (Go: broker fills before PM cancels stale)
+      if (bar) {
+        let fillPrice = null;
+        if (bar.open <= buy.limitPrice) fillPrice = bar.open;
+        else if (bar.low <= buy.limitPrice) fillPrice = buy.limitPrice;
+
+        if (fillPrice && fillPrice > 0) {
+          const actualQty = Math.floor(buy.reservedCash / fillPrice);
+          if (actualQty <= 0) { cash += buy.reservedCash; continue; }
+          const cost = actualQty * fillPrice;
+          cash += buy.reservedCash - cost;
+
+          // Go: at fill time, stop = patternStop (stored in buy.softStop from entry)
+          // No Math.min with ATR, no maxLoss floor — J+1 fix handles tightening
+          const softStop = buy.softStop;
+          const dist = fillPrice - softStop;
+          const hardStop = fillPrice - dist * (buy.safetyMult || DEFAULT_CONFIG.safetyStopMult || 3.0);
+
+          positions.push({
+            symbol: buy.symbol, qty: actualQty, entry: fillPrice,
+            openDate: buy.placedDate, fillDate: date,
+            softStop, origSoftStop: softStop, hardStop: Math.max(hardStop, 0),
+            pattern: buy.pattern, score: buy.score,
+          });
+          if (VERBOSE && dayIdx < 60) console.error(`    FILL BUY ${buy.symbol} ${actualQty}sh @${fillPrice.toFixed(2)} cost=$${Math.round(cost)} soft=${softStop.toFixed(2)} hard=${Math.max(hardStop,0).toFixed(2)}`);
+          continue;
+        }
       }
 
-      if (!bar) { newPendingBuys.push(buy); continue; }
-
-      // Check fill conditions (exact port of Go BUY LIMIT logic)
-      let fillPrice = null;
-      if (bar.open <= buy.limitPrice) fillPrice = bar.open;
-      else if (bar.low <= buy.limitPrice) fillPrice = buy.limitPrice;
-
-      if (fillPrice && fillPrice > 0) {
-        // Fill: create position
-        const actualQty = Math.floor(buy.reservedCash / fillPrice);
-        if (actualQty <= 0) { cash += buy.reservedCash; continue; }
-        const cost = actualQty * fillPrice;
-        cash += buy.reservedCash - cost;
-
-        // Recalculate stops based on actual fill price
-        const atr = buy.atr || (fillPrice * 0.03);
-        const baseStopATR = DEFAULT_CONFIG.baseStopATR || 1.5;
-        let softStop = Math.min(buy.softStop, fillPrice - atr * baseStopATR);
-        const maxLossStop = fillPrice * (1 - (DEFAULT_CONFIG.maxLossPct || 0.07));
-        if (softStop < maxLossStop) softStop = maxLossStop;
-        const dist = fillPrice - softStop;
-        const hardStop = fillPrice - dist * (buy.safetyMult || DEFAULT_CONFIG.safetyStopMult || 3.0);
-
-        positions.push({
-          symbol: buy.symbol, qty: actualQty, entry: fillPrice,
-          openDate: buy.placedDate, softStop, hardStop: Math.max(hardStop, 0),
-          pattern: buy.pattern, score: buy.score,
-        });
-        if (VERBOSE && dayIdx < 60) console.error(`    FILL BUY ${buy.symbol} ${actualQty}sh @${fillPrice.toFixed(2)} cost=$${Math.round(cost)} soft=${softStop.toFixed(2)} hard=${Math.max(hardStop,0).toFixed(2)}`);
-      } else {
-        newPendingBuys.push(buy);
-      }
+      // Keep unfilled pending (including stale) — Go defers stale cancellation
+      // to AFTER createConfirmationEntries, so stale orders still count as slots.
+      // We cancel them in Step 2e below.
+      newPendingBuys.push(buy);
     }
     pendingBuys = newPendingBuys;
 
@@ -873,6 +1023,26 @@ async function main() {
           }
         }
         config.maxLossPct = maxLossInterp;
+
+        // Go uses interpolateInt for maxOpenPositions (piecewise linear + round, NOT step)
+        const dmp = DEFAULT_CONFIG.dynamicMaxPositions;
+        if (dmp) {
+          const mpVals = [dmp.risk_off || 0, dmp.early_risk_off || 0, dmp.neutral || 4,
+                          dmp.recovery || 5, dmp.risk_on || 5];
+          let maxPosInterp = mpVals[mpVals.length - 1];
+          if (s <= anchors[0]) maxPosInterp = mpVals[0];
+          else if (s >= anchors[anchors.length - 1]) maxPosInterp = mpVals[mpVals.length - 1];
+          else {
+            for (let i = 1; i < anchors.length; i++) {
+              if (s <= anchors[i]) {
+                const t = (s - anchors[i - 1]) / (anchors[i] - anchors[i - 1]);
+                maxPosInterp = mpVals[i - 1] + t * (mpVals[i] - mpVals[i - 1]);
+                break;
+              }
+            }
+          }
+          config.maxOpenPositions = Math.round(maxPosInterp);
+        }
       }
     }
 
@@ -939,22 +1109,26 @@ async function main() {
       }
     }
 
-    // 2b. Bearish pattern exits
-    for (const pos of positions) {
-      if (exitingSymbols.has(pos.symbol)) continue;
-      const daysHeld = calendarDays(pos.openDate, date);
-      if (daysHeld < 2) continue;
+    // 2b. Bearish pattern exits — DISABLED (Go has enable_short: false, so no
+    // bearish sell signals are generated. handleABSellSignals never fires.)
+    // To enable: set --bearish-exits flag
+    if (hasFlag('bearish-exits')) {
+      for (const pos of positions) {
+        if (exitingSymbols.has(pos.symbol)) continue;
+        const daysHeld = calendarDays(pos.openDate, date);
+        if (daysHeld < 2) continue;
 
-      const bars = priceData.get(pos.symbol);
-      const bidx = getBarIdx(pos.symbol, date);
-      if (bidx == null || bidx < 3) continue;
+        const bars = priceData.get(pos.symbol);
+        const bidx = getBarIdx(pos.symbol, date);
+        if (bidx == null || bidx < 3) continue;
 
-      const slice = bars.slice(Math.max(0, bidx - 59), bidx + 1);
-      if (slice.length >= 3) {
-        const bearish = detectBearishExit(slice);
-        if (bearish) {
-          exitingSymbols.add(pos.symbol);
-          pendingSells.push({ symbol: pos.symbol, qty: pos.qty, type: 'market', reason: 'bearish' });
+        const slice = bars.slice(Math.max(0, bidx - 59), bidx + 1);
+        if (slice.length >= 3) {
+          const bearish = detectBearishExit(slice, regime);
+          if (bearish) {
+            exitingSymbols.add(pos.symbol);
+            pendingSells.push({ symbol: pos.symbol, qty: pos.qty, type: 'market', reason: 'bearish' });
+          }
         }
       }
     }
@@ -1009,10 +1183,13 @@ async function main() {
       let entered = 0;
 
       // Go: availableCash = cash - (totalEquity * minCashReserve/100) - pendingBuyCashLocked
-      // Note: In JS, cash is already reduced by pending buys. Go's broker also deducts cash
-      // for pending buys, so pendingBuyCashLocked may double-count. Match Go exactly.
+      // Go's broker deducts cash at PlaceOrder AND AvailableCash subtracts pendingBuyCashLocked again.
+      // Go's TotalEquity = baseCash + posVal (no pendVal) because baseCash is already reduced.
+      // Match Go exactly: use deflated equity + double-subtract pending cash.
       const minCashReserve = config.minCashReserve || 2.0;
-      const availableCash = cash - (equity * minCashReserve / 100);
+      const goEquity = cash + posVal; // Go's deflated TotalEquity (no pendVal)
+      const pendingBuyCashLocked = pendingBuys.reduce((s, b) => s + b.reservedCash, 0);
+      const availableCash = cash - (goEquity * minCashReserve / 100) - pendingBuyCashLocked;
       let posSize = availableCash > 0 ? availableCash / slotsAvailable : 0;
       // Go AmericanBulls PM: positionSize = availableCash/slotsAvailable (no PositionSizePct cap)
       // Only MaxPositionValue cap applies (not configured in AB YAML)
@@ -1030,12 +1207,10 @@ async function main() {
         const reservedCash = qty * limitPrice;
         if (reservedCash > cash) continue;
 
-        // Compute stops
         const atr = candidate.atr || (candidate.entry * 0.03);
         const baseStopATR = config.baseStopATR || 1.5;
-        let softStop = Math.min(candidate.stop, candidate.entry - atr * baseStopATR);
-        const maxLossStop = candidate.entry * (1 - config.maxLossPct);
-        if (softStop < maxLossStop) softStop = maxLossStop;
+        // Go: uses patternStop directly, no Math.min with ATR-stop, no maxLoss floor
+        let softStop = candidate.stop > 0 ? candidate.stop : candidate.entry - atr * baseStopATR;
         const dist = candidate.entry - softStop;
         const safetyMult = config.safetyStopMult || 3.0;
         const hardStop = candidate.entry - dist * safetyMult;
@@ -1051,6 +1226,19 @@ async function main() {
         entered++;
       }
     }
+
+    // 2e. Cancel stale pending buys (Go: deferred after createConfirmationEntries)
+    const cancelDays = DEFAULT_CONFIG.pendingBuyCancelDays || 3;
+    const freshPending = [];
+    for (const buy of pendingBuys) {
+      const age = calendarDays(buy.placedDate, date);
+      if (age >= cancelDays) {
+        cash += buy.reservedCash;
+      } else {
+        freshPending.push(buy);
+      }
+    }
+    pendingBuys = freshPending;
 
     // ── Step 3: Record equity ────────────────────────────────────────
 
@@ -1071,6 +1259,11 @@ async function main() {
       console.error(`  D${dayIdx} ${date} | Eq=$${Math.round(finalEquity)} Mode=${currentMode} Cash=$${Math.round(cash)} | Pos[${positions.length}]: ${posStr} | Pend[${pendingBuys.length}]: ${pendStr} | Regime=${regime} VIX=${vixClose.toFixed(1)} | Trades=${closedTrades.length}`);
     }
 
+    // Equity checkpoints for comparison with Go
+    if (date >= '2021-06-01' && date <= '2021-08-31') {
+      process.stderr.write(`  CHECKPOINT ${date}: $${Math.round(finalEquity)} | Pos[${positions.length}]: ${positions.map(p => `${p.symbol}@${p.entry.toFixed(2)}(${((getBar(p.symbol,date)?.close||p.entry)/p.entry*100-100).toFixed(1)}%)`).join(', ')} | Mode=${currentMode} Regime=${regime}\n`);
+    }
+
     // Progress
     if ((!VERBOSE || dayIdx >= 30) && (dayIdx % 100 === 0 || dayIdx === tradingDates.length - 1)) {
       process.stderr.write(`  Day ${dayIdx + 1}/${tradingDates.length} (${date}) | Equity: $${Math.round(finalEquity).toLocaleString()} | Positions: ${positions.length} | Trades: ${closedTrades.length} | Mode: ${currentMode}\r`);
@@ -1085,6 +1278,7 @@ async function main() {
     const pnlPct = (bar.close - pos.entry) / pos.entry;
     closedTrades.push({
       symbol: pos.symbol, entry: pos.entry, exitPrice: bar.close, exitDate: lastDate,
+      openDate: pos.openDate, fillDate: pos.fillDate,
       pnlPct, pnlAbs: pos.qty * (bar.close - pos.entry),
       status: 'eod_close', holdDays: calendarDays(pos.openDate, lastDate, tradingDates),
       pattern: pos.pattern || '', score: pos.score || 0,
@@ -1092,6 +1286,17 @@ async function main() {
   }
 
   console.log('\n');
+
+  // Export trades to CSV for comparison
+  if (hasFlag('export-trades')) {
+    const csvPath = '/tmp/js_ab_trades_full.csv';
+    const header = 'symbol,buy_date,sell_date,buy_price,sell_price,pnl_pct,exit_reason,pattern\n';
+    const rows = closedTrades.map(t =>
+      `${t.symbol},${t.fillDate || t.openDate || ''},${t.exitDate},${t.entry.toFixed(4)},${t.exitPrice.toFixed(4)},${(t.pnlPct * 100).toFixed(2)},${t.status},${t.pattern}`
+    ).join('\n');
+    fs.writeFileSync(csvPath, header + rows);
+    console.log(`  Exported ${closedTrades.length} trades to ${csvPath}`);
+  }
 
   // ── Phase 4: Compute stats ─────────────────────────────────────────
 
@@ -1142,16 +1347,16 @@ async function main() {
   console.log(`  Universe:        ${priceData.size} tickers, ${totalSignals} signals`);
   console.log('═══════════════════════════════════════════════════════════════');
   console.log('  GO REFERENCE (5Y, 3300+ tickers):');
-  console.log('  1042 trades | WR 48.85% | CAGR 411.86% | DD 27.45% | R² 0.98 | Sharpe 1.44');
+  console.log('  1022 trades | WR 48.83% | CAGR 341.58% | DD 27.20% | R² 0.98 | Sharpe 1.86');
   console.log('═══════════════════════════════════════════════════════════════');
 
   // Delta comparison
   console.log('\n  DELTA (JS vs Go):');
-  console.log(`    WR:    ${wr.toFixed(1)}% vs 48.85%  (${(wr - 48.85) >= 0 ? '+' : ''}${(wr - 48.85).toFixed(1)}pp)`);
-  console.log(`    CAGR:  ${perf.cagr}% vs 411.86%`);
-  console.log(`    DD:    ${perf.maxDD}% vs 27.45%`);
+  console.log(`    WR:    ${wr.toFixed(1)}% vs 48.83%  (${(wr - 48.83) >= 0 ? '+' : ''}${(wr - 48.83).toFixed(1)}pp)`);
+  console.log(`    CAGR:  ${perf.cagr}% vs 341.58%`);
+  console.log(`    DD:    ${perf.maxDD}% vs 27.20%`);
   console.log(`    R²:    ${perf.r2} vs 0.98`);
-  console.log(`    Sharpe:${perf.sharpe} vs 1.44`);
+  console.log(`    Sharpe:${perf.sharpe} vs 1.86`);
 
   // Top patterns
   const patternCounts = {};

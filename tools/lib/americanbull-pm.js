@@ -102,11 +102,12 @@ function resolveConfig(config, mode, regime, vixRising) {
   const hc = config.hybridModes || DEFAULT_CONFIG.hybridModes;
   const modeOverrides = mode === 'AGGRESSIVE' ? hc.aggressive : mode === 'DEFENSIVE' ? hc.defensive : hc.normal;
 
-  // Go flow: ResolvedConfig(regime) → applyModeOverrides(cfg, mode)
-  // Step 1: Start from base config
+  // Go flow: ResolvedConfig(regime) → applyModeOverrides(cfg, mode) → ResolvedConfig(regime) again
+  // In Go, createConfirmationEntries/CheckStandardExits call ResolvedConfig on the ALREADY
+  // mode-overridden config. This means regime dynamics are applied AFTER mode overrides,
+  // giving REGIME the final say. E.g. risk_off maxOpenPositions=0 blocks entries even in DEFENSIVE.
   const resolved = { ...DEFAULT_CONFIG, ...config };
 
-  // Step 2: Apply dynamic regime overrides (to base config)
   const regimeKey = (regime || 'neutral').toLowerCase().replace(/[\s-]+/g, '_');
   const vixKey = vixRising ? regimeKey + '_vix_rising' : null;
 
@@ -115,19 +116,20 @@ function resolveConfig(config, mode, regime, vixRising) {
   const dmp = config.dynamicMaxPositions || DEFAULT_CONFIG.dynamicMaxPositions;
   const dps = config.dynamicPositionSize || DEFAULT_CONFIG.dynamicPositionSize;
 
-  if (vixKey && dml[vixKey] != null) resolved.maxLossPct = dml[vixKey];
-  else if (dml[regimeKey] != null) resolved.maxLossPct = dml[regimeKey];
-  if (dtp[regimeKey] != null) resolved.takeProfitPct = dtp[regimeKey];
-  if (dmp[regimeKey] != null) resolved.maxOpenPositions = dmp[regimeKey];
-  if (dps[regimeKey] != null) resolved.positionSizePct = dps[regimeKey];
-
-  // Step 3: Apply mode overrides ON TOP (mode has final say — exact Go behavior)
+  // Step 1: Apply mode overrides to BASE values
   if (modeOverrides) {
     if (modeOverrides.maxOpenPositions != null) resolved.maxOpenPositions = modeOverrides.maxOpenPositions;
     if (modeOverrides.positionSizePct != null) resolved.positionSizePct = modeOverrides.positionSizePct;
     if (modeOverrides.safetyStopMult != null) resolved.safetyStopMult = modeOverrides.safetyStopMult;
     if (modeOverrides.timeoutDays != null) resolved.timeoutDays = modeOverrides.timeoutDays;
   }
+
+  // Step 2: Apply dynamic regime overrides LAST (regime has final say — exact Go behavior)
+  if (vixKey && dml[vixKey] != null) resolved.maxLossPct = dml[vixKey];
+  else if (dml[regimeKey] != null) resolved.maxLossPct = dml[regimeKey];
+  if (dtp[regimeKey] != null) resolved.takeProfitPct = dtp[regimeKey];
+  if (dmp[regimeKey] != null) resolved.maxOpenPositions = dmp[regimeKey];
+  if (dps[regimeKey] != null) resolved.positionSizePct = dps[regimeKey];
 
   return resolved;
 }
@@ -173,8 +175,8 @@ function shouldRotate(positions, candidate, config) {
 
 // ─── Bearish exit signal check ──────────────────────────────────────────────
 
-function checkBearishExit(bars) {
-  return detectBearishExit(bars);
+function checkBearishExit(bars, regime) {
+  return detectBearishExit(bars, regime);
 }
 
 // ─── Trade simulation for sweep.js integration ─────────────────────────────

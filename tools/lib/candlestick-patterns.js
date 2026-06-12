@@ -36,9 +36,9 @@ function avgBodySize(bars, idx, n = 10) {
 // ─── Technical indicators ───────────────────────────────────────────────────
 
 function calcATR(bars, idx, period = 14) {
-  if (idx < period + 1) return 0;
+  if (idx < period) return 0;
   let sum = 0;
-  for (let i = idx - period; i < idx; i++) {
+  for (let i = idx + 1 - period; i <= idx; i++) {
     const prev = bars[i - 1], cur = bars[i];
     sum += Math.max(cur.high - cur.low, Math.abs(cur.high - prev.close), Math.abs(cur.low - prev.close));
   }
@@ -46,16 +46,16 @@ function calcATR(bars, idx, period = 14) {
 }
 
 function calcSMA(bars, idx, period) {
-  if (idx < period) return 0;
+  if (idx < period - 1) return 0;
   let sum = 0;
-  for (let i = idx - period; i < idx; i++) sum += bars[i].close;
+  for (let i = idx + 1 - period; i <= idx; i++) sum += bars[i].close;
   return sum / period;
 }
 
 function calcRSI(bars, idx, period = 14) {
-  if (idx < period + 1) return 50;
+  if (idx < period) return 50;
   let gains = 0, losses = 0;
-  for (let i = idx - period; i < idx; i++) {
+  for (let i = idx + 1 - period; i <= idx; i++) {
     const diff = bars[i].close - bars[i - 1].close;
     if (diff > 0) gains += diff; else losses -= diff;
   }
@@ -65,10 +65,10 @@ function calcRSI(bars, idx, period = 14) {
 }
 
 function calcBBPctB(bars, idx, period = 20, mult = 2.0) {
-  if (idx < period) return 0.5;
+  if (idx < period - 1) return 0.5;
   const sma = calcSMA(bars, idx, period);
   let sumSq = 0;
-  for (let i = idx - period; i < idx; i++) {
+  for (let i = idx + 1 - period; i <= idx; i++) {
     const d = bars[i].close - sma;
     sumSq += d * d;
   }
@@ -156,60 +156,60 @@ function matchPattern(c0, c1, c2, atr, avgBody) {
     if (harami && c0.close >= c2.open * 0.999) return { name: 'THREE_INSIDE_UP', score: 65, stop: stop01 };
   }
 
-  // RISING_THREE_METHODS (65)
-  if (bull2 && bull0 && body2 > largeBody && body0 > largeBody) {
-    const smallPullback = bear1 && body1 <= smallBody;
-    const insideC2 = c1.high <= c2.close && c1.low >= c2.open;
-    if (smallPullback && insideC2 && c0.close > c2.close) return { name: 'RISING_THREE_METHODS', score: 65, stop: stop01 };
-  }
-
-  // BULLISH_KICKER (65)
-  if (bear1 && bull0 && body1 > avgBody && body0 > avgBody) {
-    if (c0.open >= c1.open * 0.999) return { name: 'BULLISH_KICKER', score: 65, stop: stop01 };
-  }
-
-  // THREE_BULLISH_CONTINUATION (62)
+  // THREE_BULLISH_CONTINUATION (62) — Go order #9
   if (bull0 && bull1 && bull2) {
     const ascending = c0.close > c1.close && c1.close > c2.close;
     const atLeast1 = body0 > smallBody || body1 > smallBody || body2 > smallBody;
     if (ascending && atLeast1) return { name: 'THREE_BULLISH_CONTINUATION', score: 62, stop: stop01 };
   }
 
-  // PIERCING_PATTERN (62)
+  // RISING_THREE_METHODS (65) — Go order #10
+  if (bull2 && bull0 && body2 > largeBody && body0 > largeBody) {
+    const smallPullback = bear1 && body1 <= smallBody;
+    const insideC2 = c1.high <= c2.close && c1.low >= c2.open;
+    if (smallPullback && insideC2 && c0.close > c2.close) return { name: 'RISING_THREE_METHODS', score: 65, stop: stop01 };
+  }
+
+  // BULLISH_KICKER (65) — Go order #11
+  if (bear1 && bull0 && body1 > avgBody && body0 > avgBody) {
+    if (c0.open >= c1.open * 0.999) return { name: 'BULLISH_KICKER', score: 65, stop: stop01 };
+  }
+
+  // BULLISH_DOJI_STAR (58) — Go order #12
+  if (bear1 && body1 > largeBody) {
+    const isDoji0 = body0 <= dojiThresh || (range0 > 0 && body0 <= range0 * 0.05);
+    if (isDoji0) return { name: 'BULLISH_DOJI_STAR', score: 58, stop: stop01 };
+  }
+
+  // PIERCING_PATTERN (62) — Go order #13
   if (bull0 && bear1 && body1 > avgBody) {
     const mid1 = (c1.open + c1.close) / 2;
     if (c0.open < c1.close && c0.close > mid1 && c0.close < c1.open)
       return { name: 'PIERCING_PATTERN', score: 62, stop: stop01 };
   }
 
-  // MEETING_LINES_BULLISH (62)
+  // MEETING_LINES_BULLISH (62) — Go order #14
   if (bull0 && bear1 && body0 > avgBody && body1 > avgBody) {
     if (Math.abs(c0.close - c1.close) <= c1.close * 0.002)
       return { name: 'MEETING_LINES_BULLISH', score: 62, stop: stop01 };
   }
 
-  // WHITE_MARUBOZU (60)
+  // WHITE_MARUBOZU (60) — Go order #15
   if (bull0 && body0 > largeBody) {
     if (s0.upper <= body0 * 0.05 && s0.lower <= body0 * 0.05)
       return { name: 'WHITE_MARUBOZU', score: 60, stop: c0.low };
   }
 
-  // HOMING_PIGEON (58)
+  // HOMING_PIGEON (58) — Go order #16
   if (!bull0 && bear1 && body1 > largeBody) {
     const contained = c0.open <= c1.open * 1.001 && c0.close >= c1.close * 0.999 && body0 < body1 * 0.7;
     if (contained) return { name: 'HOMING_PIGEON', score: 58, stop: stop01 };
   }
 
-  // COUNTERATTACK_BULLISH (58)
+  // COUNTERATTACK_BULLISH (58) — Go order #17
   if (bull0 && bear1 && body0 > avgBody && body1 > avgBody) {
     if (c0.open < c1.close * 0.99 && Math.abs(c0.close - c1.close) <= c1.close * 0.003)
       return { name: 'COUNTERATTACK_BULLISH', score: 58, stop: stop01 };
-  }
-
-  // BULLISH_DOJI_STAR (58)
-  if (bear1 && body1 > largeBody) {
-    const isDoji0 = body0 <= dojiThresh || (range0 > 0 && body0 <= range0 * 0.05);
-    if (isDoji0) return { name: 'BULLISH_DOJI_STAR', score: 58, stop: stop01 };
   }
 
   // BULLISH_HARAMI_CROSS (55)
@@ -408,19 +408,89 @@ function detectPattern(bars, regime) {
 }
 
 /**
- * Detect bearish exit signals on held position.
+ * Score a bearish candidate — INVERTED scoring (exact port of Go detectBearishPattern).
+ * Momentum/trend/regime bonuses are inverted vs bullish: strong downtrend and risk-off
+ * environments boost bearish score, risk-on and uptrend suppress it.
+ */
+function scoreBearishCandidate(bars, idx, baseScore, regime) {
+  const c0 = bars[idx];
+  let score = Math.abs(baseScore);
+
+  const atr = calcATR(bars, idx);
+  const atrPct = atr > 0 ? atr / c0.close : 0;
+  const vr = volRatio(bars, idx, 20);
+  const rsi = calcRSI(bars, idx);
+  const ma20 = calcSMA(bars, idx, 20);
+  const ma50 = calcSMA(bars, idx, 50);
+
+  const distMA20 = ma20 > 0 ? (c0.close - ma20) / ma20 : 0;
+  const mom5 = idx >= 5 ? (c0.close - bars[idx - 5].close) / bars[idx - 5].close : 0;
+
+  if (atrPct > 0.09) score += 20;
+  else if (atrPct > 0.066) score += 15;
+  else if (atrPct > 0.05) score += 10;
+  else if (atrPct < 0.035) score -= 10;
+
+  if (vr >= 2.0) score += 15;
+  else if (vr >= 1.4) score += 10;
+
+  // Inverted momentum: strong dump = continuation, strong rally = exhaustion top
+  if (mom5 <= -0.11) score += 15;
+  else if (mom5 >= 0.09) score += 15;
+  else if (mom5 >= -0.03 && mom5 <= 0.02) score -= 5;
+
+  // Inverted trend: below MA20 = breakdown, far above = overbought reversal
+  if (distMA20 < -0.085) score += 15;
+  else if (distMA20 > 0.077) score += 15;
+  else if (distMA20 >= -0.02 && distMA20 <= 0.02) score -= 5;
+
+  // Inverted: below MA50 confirms bearish
+  if (ma50 > 0 && c0.close < ma50) score += 10;
+
+  // Inverted RSI: oversold confirms, overbought = reversal setup
+  if (rsi <= 34) score += 15;
+  else if (rsi >= 65) score += 15;
+  else if (rsi >= 45 && rsi <= 55) score -= 5;
+
+  // Inverted regime: risk-off/early-risk-off boost bearish, risk-on suppresses
+  if (regime) {
+    const r = regime.toLowerCase().replace(/[\s-]+/g, '_');
+    if (r === 'risk_off' || r === 'early_risk_off') score += 10;
+    else if (r === 'risk_on') score -= 10;
+  }
+
+  return score;
+}
+
+/**
+ * Detect bearish exit signals on held position (Go-faithful version).
+ * Returns pattern name only if bearish score >= minScore (default 40).
  * @param {Array} bars — OHLCV sorted ASC, min 60 bars
+ * @param {string} [regime] — current market regime
+ * @param {number} [minScore=40] — minimum bearish score to trigger exit
  * @returns {string|null} — bearish pattern name or null
  */
-function detectBearishExit(bars) {
+function detectBearishExit(bars, regime, minScore) {
   if (!bars || bars.length < 60) return null;
   const idx = bars.length - 1;
   const ab = avgBodySize(bars, idx, 10);
-  return matchBearishPattern(bars[idx], bars[idx - 1], bars[idx - 2], ab);
+  const patName = matchBearishPattern(bars[idx], bars[idx - 1], bars[idx - 2], ab);
+  if (!patName) return null;
+
+  if (minScore == null) minScore = 40;
+  if (minScore <= 0) return patName;
+
+  const baseScores = {
+    'BEARISH_ENGULFING': 68, 'BEARISH_STRONG_REVERSAL': 68,
+    'THREE_BLACK_CROWS': 80, 'THREE_OUTSIDE_DOWN': 70,
+  };
+  const base = baseScores[patName] || 60;
+  const score = scoreBearishCandidate(bars, idx, base, regime);
+  return score >= minScore ? patName : null;
 }
 
 module.exports = {
   detectPattern, detectBearishExit, matchPattern, matchBearishPattern,
-  scoreCandidate, calcATR, calcRSI, calcSMA, calcBBPctB, volRatio,
+  scoreCandidate, scoreBearishCandidate, calcATR, calcRSI, calcSMA, calcBBPctB, volRatio,
   avgBodySize, BEARISH_EXIT_PATTERNS,
 };
