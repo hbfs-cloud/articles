@@ -347,7 +347,7 @@ function maxCorrToOpen(cand, openPositions, lookbackDays) {
 
 // Module-scope strategy filter map (used by regime-aware filtering and grid search)
 const STRATEGY_FILTERS_MAP = {
-  'all': new Set(),
+  'all': new Set(['candlestick']),
   'no_sq': new Set(['short_squeeze']),
   'no_sq_pb': new Set(['short_squeeze', 'pullback']),
   'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback', 'candlestick']),

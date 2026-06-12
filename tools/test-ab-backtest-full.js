@@ -43,14 +43,15 @@ const QUICK = getArg('quick', '');
 const MIN_SCORE = parseFloat(getArg('min-score', '70'));
 const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '8.0'));
 const USE_GO_SIGNALS = hasFlag('go-signals');
-const USE_GO_CACHE = hasFlag('go-cache');
+const USE_GO_CACHE = hasFlag('go-cache') || hasFlag('parquet-cache');
 const SIGNALS_FROM = getArg('signals-from', '');
 const VERBOSE = hasFlag('verbose');
 const NO_CACHE = hasFlag('no-cache');
 const REFRESH_UNIVERSE = hasFlag('refresh');
 
 const GO_CACHE_DIR = path.join(__dirname, '..', 'cache', 'ab-ohlcv-go');
-const CACHE_DIR = USE_GO_CACHE ? GO_CACHE_DIR : path.join(__dirname, '..', 'cache', 'ab-ohlcv');
+const PARQUET_CACHE_DIR = path.join(__dirname, '..', 'cache', 'ab-ohlcv-parquet');
+const CACHE_DIR = hasFlag('parquet-cache') ? PARQUET_CACHE_DIR : USE_GO_CACHE ? GO_CACHE_DIR : path.join(__dirname, '..', 'cache', 'ab-ohlcv');
 const UNIVERSE_FILE = path.join(__dirname, '..', 'data', 'americanbull-universe.json');
 
 // Top US stocks by market cap + liquidity (captures >80% of AB signals)
@@ -533,9 +534,32 @@ function calcPerformanceMetrics(equityCurve, startDate, endDate) {
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
-// Calendar days between two dates (Go uses calendar days for daysHeld)
+// US DST: starts 2nd Sunday in March, ends 1st Sunday in November
+function usDSTStart(year) {
+  const march1 = new Date(Date.UTC(year, 2, 1));
+  const firstSunday = 1 + (7 - march1.getUTCDay()) % 7;
+  return new Date(Date.UTC(year, 2, firstSunday + 7));
+}
+function usDSTEnd(year) {
+  const nov1 = new Date(Date.UTC(year, 10, 1));
+  const firstSunday = 1 + (7 - nov1.getUTCDay()) % 7;
+  return new Date(Date.UTC(year, 10, firstSunday));
+}
+function isUSDST(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  const y = d.getUTCFullYear();
+  return d >= usDSTStart(y) && d < usDSTEnd(y);
+}
+
+// Go's daysHeld = int(ctx.Date.Sub(entryDate).Hours() / 24) where both dates
+// have NYSE open time (14:30 UTC in EST, 13:30 UTC in EDT). When DST springs
+// forward between entry and eval, the 1-hour shift causes floor(N - 1/24) = N-1.
 function calendarDays(d1, d2) {
-  return Math.round((new Date(d2) - new Date(d1)) / (24 * 3600 * 1000));
+  const days = Math.round((new Date(d2) - new Date(d1)) / (24 * 3600 * 1000));
+  const dst1 = isUSDST(d1);
+  const dst2 = isUSDST(d2);
+  if (!dst1 && dst2) return days - 1;
+  return days;
 }
 
 // ─── Portfolio simulation engine ────────────────────────────────────────────
@@ -587,6 +611,18 @@ async function main() {
         tickers = TOP_UNIVERSE.slice();
       }
     }
+  }
+
+  // When using Go signals CSV, add signal tickers missing from universe
+  if (SIGNALS_FROM) {
+    const sigLines = fs.readFileSync(SIGNALS_FROM, 'utf8').trim().split('\n').slice(1);
+    const sigTickers = new Set(sigLines.map(l => l.split(',')[1]));
+    const uniSet = new Set(tickers);
+    let added = 0;
+    for (const t of sigTickers) {
+      if (!uniSet.has(t)) { tickers.push(t); added++; }
+    }
+    if (added > 0) console.log(`  Added ${added} signal tickers missing from universe`);
   }
 
   // Count cached tickers
@@ -813,15 +849,19 @@ async function main() {
     const minCashReserve = preConfig.minCashReserve || 2.0;
 
     const candidates = signalsByDate.get(lastPreStartDate) || [];
+    // Go computes availableCash and positionSize ONCE before the entry loop
+    const availableCash = cash - (INITIAL_CAPITAL * minCashReserve / 100);
+    let posSize = availableCash > 0 ? availableCash / slotsAvail : 0;
+    if (posSize > availableCash * 0.98) posSize = availableCash * 0.98;
+
+    let entered = 0;
     for (const candidate of candidates) {
-      if (slotsAvail <= 0) break;
+      if (entered >= slotsAvail) break;
       if (heldOrPending.has(candidate.ticker)) continue;
-      const availableCash = cash - (INITIAL_CAPITAL * minCashReserve / 100);
-      if (availableCash < 100) break;
-      const posSize = Math.min(availableCash / slotsAvail, availableCash * 0.98);
       if (posSize < 100) break;
+
       const limitPrice = candidate.entry * 1.001;
-      const qty = Math.floor(posSize / limitPrice);
+      const qty = Math.floor(posSize / candidate.entry);
       if (qty <= 0) continue;
       const reservedCash = qty * limitPrice;
       if (reservedCash > cash) continue;
@@ -842,7 +882,7 @@ async function main() {
         reservedCash,
       });
       heldOrPending.add(candidate.ticker);
-      slotsAvail--;
+      entered++;
     }
     if (pendingBuys.length > 0) {
       console.log(`  Pre-start: ${lastPreStartDate} signals, mode=${preMode}, ${pendingBuys.length} pending buys (${pendingBuys.map(b => b.symbol).join(', ')})`);
@@ -868,7 +908,7 @@ async function main() {
       closedTrades.push({
         symbol: pos.symbol, entry: pos.entry, exitPrice: fillPrice, exitDate: date,
         openDate: pos.openDate, fillDate: pos.fillDate,
-        pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry),
+        pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry), qty: pos.qty,
         status: sell.reason, holdDays: calendarDays(pos.openDate, date),
         pattern: pos.pattern || '', score: pos.score || 0,
       });
@@ -882,13 +922,16 @@ async function main() {
       const pos = positions[i];
       const bar = getBar(pos.symbol, date);
       if (!bar || !pos.hardStop || pos.hardStop <= 0) continue;
+      if ((pos.symbol === 'GENI' || pos.symbol === 'OUST') && date >= '2021-04-06' && date <= '2021-04-15') {
+        console.error(`  DIAG HARDSTOP-CHECK ${date} ${pos.symbol}: hardStop=${pos.hardStop.toFixed(4)} bar.low=${bar.low.toFixed(4)} bar.open=${bar.open.toFixed(4)} triggered=${bar.low <= pos.hardStop}`);
+      }
       if (bar.low <= pos.hardStop) {
         const fillPrice = bar.open <= pos.hardStop ? bar.open : pos.hardStop;
         const pnlPct = (fillPrice - pos.entry) / pos.entry;
         closedTrades.push({
           symbol: pos.symbol, entry: pos.entry, exitPrice: fillPrice, exitDate: date,
           openDate: pos.openDate, fillDate: pos.fillDate,
-          pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry),
+          pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry), qty: pos.qty,
           status: 'hard_stop', holdDays: calendarDays(pos.openDate, date),
           pattern: pos.pattern || '', score: pos.score || 0,
         });
@@ -912,7 +955,7 @@ async function main() {
         closedTrades.push({
           symbol: pos.symbol, entry: pos.entry, exitPrice: fillPrice, exitDate: date,
           openDate: pos.openDate, fillDate: pos.fillDate,
-          pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry),
+          pnlPct, pnlAbs: pos.qty * (fillPrice - pos.entry), qty: pos.qty,
           status: 'safety_stop', holdDays: calendarDays(pos.openDate, date),
           pattern: pos.pattern || '', score: pos.score || 0,
         });
@@ -938,23 +981,46 @@ async function main() {
         else if (bar.low <= buy.limitPrice) fillPrice = buy.limitPrice;
 
         if (fillPrice && fillPrice > 0) {
-          const actualQty = Math.floor(buy.reservedCash / fillPrice);
+          const actualQty = buy.qty;
           if (actualQty <= 0) { cash += buy.reservedCash; continue; }
           const cost = actualQty * fillPrice;
           cash += buy.reservedCash - cost;
 
-          // Go: at fill time, stop = patternStop (stored in buy.softStop from entry)
-          // No Math.min with ATR, no maxLoss floor — J+1 fix handles tightening
           const softStop = buy.softStop;
           const dist = fillPrice - softStop;
           const hardStop = fillPrice - dist * (buy.safetyMult || DEFAULT_CONFIG.safetyStopMult || 3.0);
 
-          positions.push({
+          // Go's bracket stop: adjustedStop = fillPrice - (expectedPrice - bracketStopLoss)
+          // This preserves the signal's stop distance, adjusted for actual fill price.
+          let bracketStop = buy.hardStop;
+          if (buy.limitPrice > 0 && buy.hardStop > 0) {
+            const stopDistance = buy.limitPrice - buy.hardStop;
+            bracketStop = fillPrice - stopDistance;
+            if (bracketStop < 0) bracketStop = fillPrice * 0.90;
+          }
+
+          const pos = {
             symbol: buy.symbol, qty: actualQty, entry: fillPrice,
             openDate: buy.placedDate, fillDate: date,
-            softStop, origSoftStop: softStop, hardStop: Math.max(hardStop, 0),
+            softStop, origSoftStop: softStop, hardStop: Math.max(bracketStop, 0),
             pattern: buy.pattern, score: buy.score,
-          });
+          };
+          if (bracketStop > 0 && bar.low <= bracketStop) {
+            const exitPrice = bar.open <= bracketStop ? bar.open : bracketStop;
+            const pnlPct = (exitPrice - pos.entry) / pos.entry;
+            closedTrades.push({
+              symbol: pos.symbol, entry: pos.entry, exitPrice, exitDate: date,
+              openDate: pos.openDate, fillDate: pos.fillDate,
+              pnlPct, pnlAbs: pos.qty * (exitPrice - pos.entry), qty: pos.qty,
+              status: 'hard_stop', holdDays: calendarDays(pos.openDate, date),
+              pattern: pos.pattern || '', score: pos.score || 0,
+            });
+            cash += pos.qty * exitPrice;
+            if (VERBOSE) console.error(`    SAME-DAY STOP ${pos.symbol} @${exitPrice.toFixed(2)} pnl=${(pnlPct*100).toFixed(1)}% hard=${pos.hardStop.toFixed(2)}`);
+            continue;
+          }
+
+          positions.push(pos);
           if (VERBOSE && dayIdx < 60) console.error(`    FILL BUY ${buy.symbol} ${actualQty}sh @${fillPrice.toFixed(2)} cost=$${Math.round(cost)} soft=${softStop.toFixed(2)} hard=${Math.max(hardStop,0).toFixed(2)}`);
           continue;
         }
@@ -975,24 +1041,32 @@ async function main() {
     const regime = getRegime(vixClose, date);
 
     // Compute equity for mode selection
+    // Go: Step 0 updates EXISTING positions' CurrentPrice to close, then fills new positions.
+    // New positions keep CurrentPrice = fillPrice (Step 0 ran before they existed).
     let posVal = 0;
     for (const pos of positions) {
       const bar = getBar(pos.symbol, date);
-      posVal += pos.qty * (bar ? bar.close : pos.entry);
+      const price = pos.fillDate === date ? pos.entry : (bar ? bar.close : pos.entry);
+      posVal += pos.qty * price;
     }
     let pendVal = 0;
     for (const buy of pendingBuys) pendVal += buy.reservedCash;
     const equity = cash + posVal + pendVal;
+    // Go uses ctx.Balance.TotalEquity = baseCash + posVal (no pendVal, baseCash already reduced
+    // by pending buys). Match Go's deflated equity for mode selection.
+    const goTotalEquity = cash + posVal;
 
     // Select mode
     const positionsForMode = positions.map(p => {
       const bar = getBar(p.symbol, date);
-      return { currentPrice: bar ? bar.close : p.entry, entry: p.entry };
+      const price = bar ? bar.close : p.entry;
+      return { currentPrice: price, entry: p.entry };
     });
-    const currentMode = selectMode(vixClose, vixRising, equity, INITIAL_CAPITAL, positionsForMode, DEFAULT_CONFIG);
+    const currentMode = selectMode(vixClose, vixRising, goTotalEquity, INITIAL_CAPITAL, positionsForMode, DEFAULT_CONFIG);
     modeHistory[currentMode] = (modeHistory[currentMode] || 0) + 1;
     const useRegime = hasFlag('no-regime') ? null : regime;
     const config = resolveConfig(DEFAULT_CONFIG, currentMode, useRegime, vixRising);
+    if (VERBOSE) console.error(`  [${date}] MODE=${currentMode} regime=${regime} vix=${vixClose.toFixed(2)} timeout=${config.timeoutDays} maxPos=${config.maxOpenPositions} maxLoss=${(config.maxLossPct*100).toFixed(1)}%`);
 
     // Go uses piecewise linear interpolation for maxLoss based on regime score (0-1)
     // Anchors: [0.0=risk_off, 0.25=early_risk_off, 0.50=neutral, 0.67=recovery, 1.0=risk_on]
@@ -1046,33 +1120,66 @@ async function main() {
       }
     }
 
-    // J+1 fix: recalculate softStop daily based on current ATR and regime maxLoss (Go's CheckStandardExits behavior)
+    // Go's J+1 Correction (pm_base.go:79-96): recalculate idealStop daily from
+    // current ATR and tighten softStop if it's more than 1% below idealStop.
+    // Then syncStopOrders recalculates hardStop from the (possibly updated) softStop.
     for (const pos of positions) {
       const bars = priceData.get(pos.symbol);
       const bidx = getBarIdx(pos.symbol, date);
-      if (!bars || bidx == null || bidx < 15) continue;
-      // Compute current ATR
-      let atrSum = 0, atrN = 0;
-      for (let k = bidx - 13; k <= bidx; k++) {
-        if (k < 1) continue;
-        const tr = Math.max(bars[k].high - bars[k].low, Math.abs(bars[k].high - bars[k - 1].close), Math.abs(bars[k].low - bars[k - 1].close));
-        atrSum += tr; atrN++;
+      if (bars && bidx != null && bidx >= 15) {
+        let atrSum = 0, atrN = 0;
+        for (let k = bidx - 13; k <= bidx; k++) {
+          if (k < 1) continue;
+          const tr = Math.max(bars[k].high - bars[k].low, Math.abs(bars[k].high - bars[k - 1].close), Math.abs(bars[k].low - bars[k - 1].close));
+          atrSum += tr; atrN++;
+        }
+        const atr = atrN > 0 ? atrSum / atrN : pos.entry * 0.03;
+        const baseStopATR = config.baseStopATR || 1.5;
+        let idealStop = pos.entry - atr * baseStopATR;
+        if (config.maxLossPct > 0) {
+          const minStop = pos.entry * (1 - config.maxLossPct);
+          if (idealStop < minStop) idealStop = minStop;
+        }
+        if (pos.softStop > 0 && pos.softStop < idealStop * 0.99) {
+          pos.softStop = idealStop;
+        }
       }
-      const atr = atrN > 0 ? atrSum / atrN : pos.entry * 0.03;
-      const baseStopATR = config.baseStopATR || 1.5;
-      let idealStop = pos.entry - atr * baseStopATR;
-      if (config.maxLossPct > 0) {
-        const minStop = pos.entry * (1 - config.maxLossPct);
-        if (idealStop < minStop) idealStop = minStop;
-      }
-      if (pos.softStop > 0 && pos.softStop < idealStop * 0.99) {
-        pos.softStop = idealStop;
-      }
-      // syncStopOrders: ALWAYS recalculate hardStop from current mode's safetyMult (Go does this every day)
-      if (pos.softStop > 0 && pos.entry > pos.softStop) {
+      // syncStopOrders: recalculate hardStop from current mode's safetyMult
+      // Go allows negative distance (entry < softStop) → hardStop goes ABOVE entry.
+      // Go only updates if diff > $0.05 (prevents micro-adjustments on low-vol names).
+      if (pos.softStop > 0) {
         const dist = pos.entry - pos.softStop;
         const mult = config.safetyStopMult || 3.0;
-        pos.hardStop = Math.max(pos.entry - dist * mult, 0);
+        const newHardStop = Math.max(pos.entry - dist * mult, 0);
+        if ((pos.symbol === 'GENI' || pos.symbol === 'OUST') && date >= '2021-04-06' && date <= '2021-04-15') {
+          console.error(`  DIAG HARDSTOP-UPDATE ${date} ${pos.symbol}: softStop=${pos.softStop.toFixed(4)} dist=${dist.toFixed(4)} mult=${mult} newHardStop=${newHardStop.toFixed(4)} oldHardStop=${pos.hardStop.toFixed(4)} diff=${Math.abs(newHardStop - pos.hardStop).toFixed(4)} willUpdate=${Math.abs(newHardStop - pos.hardStop) > 0.05}`);
+        }
+        if (Math.abs(newHardStop - pos.hardStop) > 0.05) {
+          pos.hardStop = newHardStop;
+        }
+      }
+    }
+
+    // DIAG block: after config resolved + J+1 + syncStopOrders
+    if (hasFlag('diag')) {
+      const diagSyms = (getArg('diag-sym','') || '').split(',').filter(Boolean);
+      const diagFrom = getArg('diag-from', '');
+      const diagTo = getArg('diag-to', '');
+      const inRange = (!diagFrom || date >= diagFrom) && (!diagTo || date <= diagTo);
+      const hasP = diagSyms.length === 0 || positions.some(p => diagSyms.includes(p.symbol)) || pendingBuys.some(b => diagSyms.includes(b.symbol));
+      if (inRange && hasP) {
+        const bf = bleedingFraction(positionsForMode, config.maxLossPct || 0.07);
+        console.error(`  DIAG ${date}: mode=${currentMode} vix=${vixClose.toFixed(2)} vixR=${vixRising} eq=${goTotalEquity.toFixed(2)} cash=${cash.toFixed(2)} bleed=${bf.toFixed(4)} regime=${regime} safety=${config.safetyStopMult} maxLoss=${(config.maxLossPct*100).toFixed(1)}% timeout=${config.timeoutDays}`);
+        for (const pos of positions) {
+          if (diagSyms.length && !diagSyms.includes(pos.symbol)) continue;
+          const bar = getBar(pos.symbol, date);
+          const price = pos.fillDate === date ? pos.entry : (bar ? bar.close : pos.entry);
+          console.error(`    POS ${pos.symbol}: entry=${pos.entry.toFixed(4)} price=${price.toFixed(4)} soft=${pos.softStop.toFixed(4)} hard=${pos.hardStop.toFixed(4)} days=${calendarDays(pos.openDate, date)} fillDate=${pos.fillDate} low=${bar?bar.low.toFixed(4):'?'}`);
+        }
+        for (const b of pendingBuys) {
+          if (diagSyms.length && !diagSyms.includes(b.symbol)) continue;
+          console.error(`    PEND ${b.symbol}: limit=${b.limitPrice.toFixed(4)} soft=${b.softStop.toFixed(4)} hard=${b.hardStop.toFixed(4)} mult=${b.safetyMult} age=${calendarDays(b.placedDate, date)}`);
+        }
       }
     }
 
@@ -1101,7 +1208,6 @@ async function main() {
       if (!exitReason && daysHeld >= timeoutDays) {
         exitReason = 'timeout';
       }
-
       if (exitReason) {
         exitingSymbols.add(pos.symbol);
         pendingSells.push({ symbol: pos.symbol, qty: pos.qty, type: 'market', reason: exitReason });
@@ -1195,6 +1301,10 @@ async function main() {
       // Only MaxPositionValue cap applies (not configured in AB YAML)
       if (posSize > availableCash * 0.98) posSize = availableCash * 0.98;
 
+      if (VERBOSE && candidates.length > 0) {
+        console.error(`  [${date}] ENTRY: slots=${slotsAvailable} cash=$${cash.toFixed(2)} goEquity=$${goEquity.toFixed(2)} pendLocked=$${pendingBuyCashLocked.toFixed(2)} availCash=$${availableCash.toFixed(2)} posSize=$${posSize.toFixed(2)} pos=[${positions.map(p=>p.symbol)}] pend=[${pendingBuys.map(b=>b.symbol)}] candidates=${candidates.length}`);
+      }
+
       for (const candidate of candidates) {
         if (entered >= slotsAvailable) break;
         if (heldOrPending.has(candidate.ticker)) continue;
@@ -1202,7 +1312,7 @@ async function main() {
         if (posSize < 100) break;
 
         const limitPrice = candidate.entry * 1.001;
-        const qty = Math.floor(posSize / limitPrice);
+        const qty = Math.floor(posSize / candidate.entry);
         if (qty <= 0) continue;
         const reservedCash = qty * limitPrice;
         if (reservedCash > cash) continue;
@@ -1250,7 +1360,7 @@ async function main() {
     let finalPendVal = 0;
     for (const buy of pendingBuys) finalPendVal += buy.reservedCash;
     const finalEquity = cash + finalPosVal + finalPendVal;
-    equityCurve.push({ date, equity: finalEquity });
+    equityCurve.push({ date, equity: finalEquity, mode: currentMode, positions: positions.length, cash });
 
     // Verbose debug for first N days
     if (VERBOSE && dayIdx < 30) {
@@ -1279,7 +1389,7 @@ async function main() {
     closedTrades.push({
       symbol: pos.symbol, entry: pos.entry, exitPrice: bar.close, exitDate: lastDate,
       openDate: pos.openDate, fillDate: pos.fillDate,
-      pnlPct, pnlAbs: pos.qty * (bar.close - pos.entry),
+      pnlPct, pnlAbs: pos.qty * (bar.close - pos.entry), qty: pos.qty,
       status: 'eod_close', holdDays: calendarDays(pos.openDate, lastDate, tradingDates),
       pattern: pos.pattern || '', score: pos.score || 0,
     });
@@ -1289,13 +1399,24 @@ async function main() {
 
   // Export trades to CSV for comparison
   if (hasFlag('export-trades')) {
-    const csvPath = '/tmp/js_ab_trades_full.csv';
-    const header = 'symbol,buy_date,sell_date,buy_price,sell_price,pnl_pct,exit_reason,pattern\n';
+    const csvPath = getArg('export-trades', '/tmp/js_ab_trades_full.csv');
+    const header = 'symbol,buy_date,sell_date,buy_price,sell_price,pnl_pct,exit_reason,pattern,qty,pnl_abs\n';
     const rows = closedTrades.map(t =>
-      `${t.symbol},${t.fillDate || t.openDate || ''},${t.exitDate},${t.entry.toFixed(4)},${t.exitPrice.toFixed(4)},${(t.pnlPct * 100).toFixed(2)},${t.status},${t.pattern}`
+      `${t.symbol},${t.fillDate || t.openDate || ''},${t.exitDate},${t.entry.toFixed(4)},${t.exitPrice.toFixed(4)},${(t.pnlPct * 100).toFixed(2)},${t.status},${t.pattern},${t.qty || ''},${t.pnlAbs ? t.pnlAbs.toFixed(2) : ''}`
     ).join('\n');
     fs.writeFileSync(csvPath, header + rows);
     console.log(`  Exported ${closedTrades.length} trades to ${csvPath}`);
+  }
+
+  // Export equity curve
+  if (hasFlag('export-equity')) {
+    const eqPath = getArg('export-equity', '/tmp/js_ab_equity.csv');
+    const eqLines = ['date,equity,mode,positions,cash'];
+    for (const ep of equityCurve) {
+      eqLines.push(`${ep.date},${ep.equity.toFixed(2)},${ep.mode},${ep.positions},${ep.cash.toFixed(2)}`);
+    }
+    fs.writeFileSync(eqPath, eqLines.join('\n'));
+    console.log(`  Exported ${equityCurve.length} equity points to ${eqPath}`);
   }
 
   // ── Phase 4: Compute stats ─────────────────────────────────────────
