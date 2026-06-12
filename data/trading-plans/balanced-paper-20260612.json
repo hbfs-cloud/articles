@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-12T08:32:36.094Z",
+  "generated_at": "2026-06-12T16:15:29.764Z",
   "valid_for": "2026-06-12",
   "mode_status": {
     "state": "live",
@@ -198,6 +198,190 @@
     {
       "id": "ORD-002",
       "action": "BUY",
+      "ticker": "LPBB",
+      "broker_symbol": "LPBB",
+      "broker": {
+        "symbol": "LPBB"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 10.71,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 311,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-12T09:30:00-04:00",
+        "valid_until": "2026-06-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 10.620000000000001,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 10.89,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 10.98,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-06-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 95,
+        "strategy": "candlestick",
+        "rr": "1:2.0",
+        "sharia": false,
+        "thesis": "AmericanBull candlestick reversal signal. RSI=58.3, VR=9.4x."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "ALDF",
+      "broker_symbol": "ALDF",
+      "broker": {
+        "symbol": "ALDF"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 10.68,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 312,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-12T09:30:00-04:00",
+        "valid_until": "2026-06-12T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 10.65,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 10.74,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 10.77,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-06-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 92,
+        "strategy": "candlestick",
+        "rr": "1:2.0",
+        "sharia": false,
+        "thesis": "AmericanBull candlestick reversal signal. RSI=63.6, VR=9.5x."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
       "ticker": "GE",
       "broker_symbol": "GE",
       "broker": {
@@ -285,10 +469,10 @@
         "sharia": true,
         "thesis": "GE Aerospace surged +4.4% to $332.76 within striking distance of its 52-week high ($348.48). The aerospace and defense sector benefits from both commercial aviation recovery and defense spending tailwinds. Volume was 3.2M, in line with its average — this is steady institutional buying, not a spike-and-fade. RSI 61.9 is healthy. EMA20 ($315.77) serves as the first pullback target. The entry at $328 on a pullback from today's high gives a clean breakout setup with the stop below the EMA20."
       },
-      "priority": 2
+      "priority": 4
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-005",
       "action": "BUY",
       "ticker": "CAT",
       "broker_symbol": "CAT",
@@ -376,190 +560,6 @@
         "rr": "1:2.0",
         "sharia": true,
         "thesis": "Caterpillar closed at $897.63 (+4.8%) near its 52-week high ($946.83). The construction and mining equipment giant benefits from the US infrastructure spending cycle and global re-industrialization theme. RSI 52.4 is ideal — strong momentum without overextension. ATR 39.2 implies natural price swings, so the $30 stop width (3.4%) is appropriate at 0.77x ATR. The industrial sector led broader market gains (+5% XLI) as the risk appetite snapback from yesterday's RISK-OFF selloff drove rotation into cyclicals."
-      },
-      "priority": 3
-    },
-    {
-      "id": "ORD-004",
-      "action": "BUY",
-      "ticker": "MRK",
-      "broker_symbol": "MRK",
-      "broker": {
-        "symbol": "MRK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 119,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 28,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-12T09:30:00-04:00",
-        "valid_until": "2026-06-12T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 114,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 129,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 134,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-06-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 90,
-        "strategy": "Breakout",
-        "rr": "1:2.0",
-        "sharia": true,
-        "thesis": "Merck at $120.76 is approaching its 52-week high ($125.14) after a +1.4% session. RSI 58.8 provides ample headroom. The pharma giant's Keytruda franchise and diversified pipeline make it a defensive growth play — ideal for EARLY RISK-OFF environments. EMA20 ($117.70) provides the pullback floor. Volume at 13.1M was above average, suggesting institutional accumulation. Low correlation with cyclicals (0.13 with LRCX, 0.23 with CAT) adds diversification value to the portfolio."
-      },
-      "priority": 4
-    },
-    {
-      "id": "ORD-005",
-      "action": "BUY",
-      "ticker": "BBVA",
-      "broker_symbol": "BBVA",
-      "broker": {
-        "symbol": "BBVA"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 22.8,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 146,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-12T09:30:00-04:00",
-        "valid_until": "2026-06-12T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 21.5,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 25.400000000000002,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 27,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-06-24",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 90,
-        "strategy": "Breakout",
-        "rr": "1:2.0",
-        "sharia": false,
-        "thesis": "BBVA surged +5.1% to $23.15 on strong volume (3.3M vs 1.7M avg). The Spanish bank benefits from rising European interest rates and strong domestic loan demand. RSI 55.8 leaves significant room to run. EMA20 ($22.59) is well below price = fresh breakout. BBVA has moderate correlation with European markets (0.75 with EWJ) but low correlation with US defensives (0.07 with JNJ, 0.25 with PG). European financials are benefiting from the ECB's rate stance and improving credit conditions."
       },
       "priority": 5
     }
