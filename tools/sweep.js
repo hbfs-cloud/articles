@@ -2231,19 +2231,6 @@ async function main() {
             console.log(`  ${id}: injected ${capped.length} live positions as pending for MtM`);
           }
 
-          // Mark sim2 overflow: positions never actually held by the broker.
-          // Skip for deploying modes — simulation IS the source of truth (no real broker).
-          if (cfg.status !== 'deploying') {
-            const injectedTickers = new Set(capped.map(t => t.ticker));
-            let markedCount = 0;
-            for (const t of merged) {
-              if (t.status === 'pending' && !t._injected && !injectedTickers.has(t.ticker)) {
-                t.status = 'sim2_artifact';
-                markedCount++;
-              }
-            }
-            if (markedCount > 0) console.log(`  ${id}: marked ${markedCount} sim2 artifacts (never-held positions)`);
-          }
         }
 
         frozenTrades[id] = merged;

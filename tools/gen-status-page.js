@@ -306,7 +306,7 @@ async function main() {
   for (const [id, cfg] of Object.entries(config.modes)) {
     const raw = allTrades[id] || [];
     for (const t of raw) {
-      if (t.status === 'pending' || t.status === 'sim2_artifact' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
+      if (t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
         allPrematureTickers.add(t.ticker);
         if (!liveTickers.has(t.ticker)) prematureNeedLive.add(t.ticker);
       }
@@ -413,7 +413,7 @@ async function main() {
     }
     const _todayISOEarly = new Date().toISOString().slice(0, 10);
     const trades = raw.map(t => {
-      if (t.status === 'pending' || t.status === 'sim2_artifact' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
+      if (t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
         const scanDate = t.scanDate || t.entryDate;
         const horizonExpiryDate = addBizDays(scanDate, cfg.horizon);
         const realBizDays = bizDaysSince(scanDate);
@@ -1200,7 +1200,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
         // Trade History = closed trades only (status !== 'pending'). Open positions live in their own section.
         // Premature trades from rotation (status='expired' + _premature) ARE kept if they match keptPremature.
         const filtered = trades
-          .filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact')
+          .filter(t => t.status !== 'pending')
           .filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate))
           .map(t => {
           if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) {
