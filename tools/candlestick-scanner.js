@@ -22,12 +22,10 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const crypto = require('crypto');
 const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/candlestick-patterns');
 
 const ROOT = path.join(__dirname, '..');
 const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
-const MCP_GATEWAY = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -54,133 +52,22 @@ const MIN_MARKET_CAP = 300_000_000;
 const MIN_VOLUME = 5_000_000;
 const BLACKLIST = new Set(['DAWN', 'GLDD']);
 
-// ─── MCP JSON-RPC 2.0 transport (same as refresh-risk-metrics.js) ──────────
-
-function mcpCall(toolName, params, timeout = 60000) {
-  const url = new URL(MCP_GATEWAY);
-  const body = JSON.stringify({
-    jsonrpc: '2.0',
-    id: crypto.randomUUID(),
-    method: 'tools/call',
-    params: { name: toolName, arguments: params },
-  });
-  const mod = url.protocol === 'https:' ? https : require('http');
-  const opts = {
-    hostname: url.hostname,
-    port: url.port || (url.protocol === 'https:' ? 443 : 80),
-    path: url.pathname + (url.search || ''),
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream', 'Content-Length': Buffer.byteLength(body) },
-    timeout,
-  };
-  return new Promise((resolve, reject) => {
-    const req = mod.request(opts, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (j.error) return reject(new Error(j.error.message || 'rpc error'));
-          const r = j.result;
-          if (r && r.isError) return reject(new Error(r.content?.[0]?.text || 'MCP tool error'));
-          if (r && r.content && Array.isArray(r.content) && r.content[0]?.type === 'text') {
-            try { resolve(JSON.parse(r.content[0].text)); } catch { resolve(r.content[0].text); }
-            return;
-          }
-          resolve(r);
-        } catch (e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('MCP timeout')); });
-    req.write(body);
-    req.end();
-  });
-}
-
-// ─── Universe: dynamic via MCP RunScreener (mirrors Go's stockanalysis.com) ─
+// ─── Universe: local pre-built file (americanbull-universe.json) ────────────
 
 async function fetchScreenerUniverse() {
-  const cacheFile = path.join(CACHE_DIR, '_universe.json');
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-
-  // Use daily cache (universe doesn't change intraday)
-  if (fs.existsSync(cacheFile)) {
-    const stat = fs.statSync(cacheFile);
-    if ((Date.now() - stat.mtimeMs) / 3600000 < 18) {
-      try {
-        const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
-        if (cached.tickers && cached.tickers.length > 500) {
-          console.log(`  ♻️  Universe from cache: ${cached.tickers.length} tickers (${cached.source || 'unknown'})`);
-          return cached.tickers;
-        }
-      } catch {}
-    }
-  }
-
-  // Fetch via MCP RunScreener: mcap >= $300M, avg_volume >= 5M (exact Go filters)
-  console.log('  📡 Fetching universe via MCP RunScreener (market_cap >= $300M, avg_volume >= 5M)...');
-  const allTickers = [];
-  let page = 1;
-  let paginationToken = null;
-
-  while (true) {
-    try {
-      const params = {
-        pass_expr: `market_cap > ${MIN_MARKET_CAP} && avg_volume > ${MIN_VOLUME}`,
-        score_expr: 'market_cap',
-        region: 'us',
-        asset: 'stock',
-        top_k: 500,
-        timeout: 60,
-        page,
-      };
-      if (paginationToken) params.pagination_token = paginationToken;
-
-      const result = await mcpCall('RunScreener', params, 90000);
-      const candidates = result?.screener_results || result?.results || [];
-      if (!candidates.length) break;
-
-      for (const c of candidates) {
-        const sym = c.symbol || c.ticker;
-        if (sym && !BLACKLIST.has(sym)) allTickers.push(sym);
-      }
-
-      // Check pagination
-      if (result?.has_next && result?.pagination_token) {
-        paginationToken = result.pagination_token;
-        page++;
-        console.log(`  📡 Page ${page}: ${allTickers.length} tickers so far...`);
-      } else {
-        break;
-      }
-    } catch (err) {
-      console.error(`  ⚠️  MCP RunScreener error: ${err.message}`);
-      break;
-    }
-  }
-
-  if (allTickers.length > 100) {
-    const unique = [...new Set(allTickers)].sort();
-    console.log(`  ✅ Universe built: ${unique.length} US stocks (mcap >= $300M, vol >= 5M)`);
-    fs.writeFileSync(cacheFile, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), source: 'MCP RunScreener', minMarketCap: MIN_MARKET_CAP, minVolume: MIN_VOLUME, tickers: unique }));
-    return unique;
-  }
-
-  // Fallback: pre-built universe file
   const universeFile = path.join(ROOT, 'data', 'americanbull-universe.json');
   if (fs.existsSync(universeFile)) {
     try {
       const data = JSON.parse(fs.readFileSync(universeFile, 'utf8'));
       const tickers = (data.tickers || []).filter(t => !BLACKLIST.has(t));
       if (tickers.length > 100) {
-        console.log(`  ⚠️  MCP returned ${allTickers.length} tickers, falling back to pre-built universe: ${tickers.length} tickers`);
+        console.log(`  ✅ Universe from local file: ${tickers.length} tickers`);
         return tickers;
       }
     } catch {}
   }
 
-  console.error('ERROR: Could not build universe. Set MCP_GATEWAY_URL or provide data/americanbull-universe.json');
+  console.error('ERROR: Could not load universe. Provide data/americanbull-universe.json');
   process.exit(1);
 }
 
