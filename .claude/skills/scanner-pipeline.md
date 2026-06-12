@@ -56,6 +56,7 @@ RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('
 Après chaque scanner publié, lancer pipeline complet **sans demander confirmation** :
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
+node tools/candlestick-scanner.js --output signals  # AB candlestick signals → signals.json (bull mode)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
 MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
   node tools/refresh-risk-metrics.js    # VaR + stress + correlation + regimeProb
