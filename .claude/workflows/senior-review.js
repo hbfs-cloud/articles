@@ -9,8 +9,10 @@ export const meta = {
 
 // args = { artifacts: [{ path, type, label? }], applyFixes?: true }
 // type ∈ analyses | daily | weekly | retro | scanner | series | tech | landing | generic
-const ARTIFACTS = (args && args.artifacts) || []
-const APPLY = !args || args.applyFixes !== false  // default: reviewers FIX in place
+let _A = args
+if (typeof _A === 'string') { try { _A = JSON.parse(_A) } catch (e) { _A = {} } }
+const ARTIFACTS = (_A && _A.artifacts) || []
+const APPLY = !_A || _A.applyFixes !== false  // default: reviewers FIX in place
 
 // ---- Senior personas (each may EDIT the file to fix issues, then report) ----
 const P = {
