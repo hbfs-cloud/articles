@@ -449,11 +449,44 @@ function saveCachedPrice(ticker, history) {
   fs.writeFileSync(fp, JSON.stringify(history));
 }
 
+// Crypto OHLCV via Binance klines (crypto is Binance-native, NOT on Yahoo).
+// Tickers use the project's BTC-USD convention; Binance wants BTCUSDT.
+const isCryptoTicker = t => /-USD$/.test(t);
+function fetchBinanceOHLCV(ticker) {
+  const sym = ticker.replace(/-USD$/, '') + 'USDT';
+  const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(sym)}&interval=1d&limit=250`;
+  return new Promise((resolve) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const arr = JSON.parse(data);
+          if (!Array.isArray(arr) || !arr.length) return resolve(null); // {code:-1121} for unlisted alts
+          const history = {};
+          for (const k of arr) {
+            // kline: [openTime, open, high, low, close, volume, ...]
+            const dateStr = new Date(k[0]).toISOString().slice(0, 10);
+            history[dateStr] = { open: +k[1], high: +k[2], low: +k[3], close: +k[4] };
+          }
+          priceCache[ticker] = history;
+          saveCachedPrice(ticker, history);
+          resolve(history);
+        } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.on('timeout', () => { req.destroy(); resolve(null); });
+  });
+}
+
 async function fetchOHLCV(ticker) {
   if (priceCache[ticker]) return priceCache[ticker];
   // Try file cache first
   const cached = loadCachedPrice(ticker);
   if (cached) { priceCache[ticker] = cached; return cached; }
+  // Crypto → Binance (not Yahoo)
+  if (isCryptoTicker(ticker)) return fetchBinanceOHLCV(ticker);
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=120d`;
   return new Promise((resolve) => {
     const req = https.get(url, {
