@@ -125,6 +125,40 @@ function bizDaysBetween(dateA, dateB) {
   return count;
 }
 
+// ─── Calendar-day variants (24/7 markets: crypto, and forex-leaning) ─────────
+// Same signatures as the biz-day helpers but counting EVERY calendar day (no
+// weekend skip). Used only by modes that opt in via config.calendar='24/7'.
+function addCalDays(dateStr, n) {
+  const d = new Date(dateStr + 'T12:00:00Z');
+  d.setDate(d.getDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+function getAllCalDays(startDate, endDate) {
+  const days = [];
+  let d = new Date(startDate + 'T12:00:00Z');
+  const end = new Date(endDate + 'T12:00:00Z');
+  while (d <= end) {
+    days.push(d.toISOString().slice(0, 10));
+    d.setDate(d.getDate() + 1);
+  }
+  return days;
+}
+function calDaysBetween(dateA, dateB) {
+  const a = new Date(dateA + 'T12:00:00Z');
+  const b = new Date(dateB + 'T12:00:00Z');
+  if (a >= b) return 0;
+  return Math.round((b - a) / 86400000);
+}
+
+// Calendar selector. Equity modes (no `calendar` field) get the EXACT biz-day
+// functions → byte-identical results (parity guaranteed by construction). Only
+// modes with calendar='24/7' (crypto/forex) switch to calendar-day counting.
+const BIZ_DAY_FNS = { addDays: addBizDays, allDays: getAllBizDays, daysBetween: bizDaysBetween };
+const CAL_DAY_FNS = { addDays: addCalDays, allDays: getAllCalDays, daysBetween: calDaysBetween };
+function dayFnsFor(calendar) {
+  return calendar === '24/7' || calendar === 'cal' || calendar === 'calendar' ? CAL_DAY_FNS : BIZ_DAY_FNS;
+}
+
 // ─── Parse scan → setups (JSON-first, HTML fallback via scanner-parser.js) ───
 
 const scannerParser = require('./lib/scanner-parser');
@@ -499,6 +533,9 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const _staleRate = staleGraceDays > 0 ? staleRaiseRate : 0.002;
   const _staleAccel = staleGraceDays > 0 ? staleAccel : 'linear';
   const _blacklist = blacklist && blacklist.length ? new Set(blacklist.map(t => t.toUpperCase())) : null;
+  // Calendar selector: equities (no config.calendar) → biz-day (identical to before);
+  // crypto/forex (calendar:'24/7') → calendar-day (weekends count).
+  const DF = dayFnsFor(config.calendar);
   if (!priceHistory) return null;
 
   // v8.3 blacklist — skip serial losers
@@ -589,7 +626,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     if (actualRR < postWideningRRMin) return null;
   }
 
-  const expireDate = addBizDays(scanDate, horizonDays);
+  const expireDate = DF.addDays(scanDate, horizonDays);
   const sortedDates = Object.keys(priceHistory)
     .filter(d => d >= entryDate && d <= expireDate).sort();
 
@@ -748,7 +785,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       // Check if price data has clearly ended (delisted/no data for >10 biz days)
       // If so, resolve to terminal status instead of leaving as phantom "pending"
       const today = new Date().toISOString().slice(0, 10);
-      const gapDays = bizDaysBetween(lastDate, today);
+      const gapDays = DF.daysBetween(lastDate, today);
       if (gapDays > 10) {
         // Price data ended — resolve based on P&L
         exitDate = lastDate;
@@ -807,7 +844,8 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 // open positions at each business day's close (via priceCache).
 // Trades must have: pnlPct, exitDate, scanDate, status, holdDays, actualEntry.
 // Uses configVersion on each trade to look up the correct weight from config history.
-function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId) {
+function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId, calendar) {
+  const DF = dayFnsFor(calendar);
   const allTrades = (closedTrades || []).filter(t => t.actualEntry > 0);
   if (allTrades.length === 0) return null;
   const defaultWeight = (1 / portfolioSize) * (positionSizePct || 1);
@@ -873,7 +911,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   if (lastPriceDate > todayClamp) lastPriceDate = todayClamp;
   const endDate = lastPriceDate || lastTradeDate;
 
-  const allDays = getAllBizDays(firstDate, endDate);
+  const allDays = DF.allDays(firstDate, endDate);
   const sortedResolved = [...resolved].sort((a, b) => (a.exitDate || '').localeCompare(b.exitDate || ''));
 
   let realizedPnl = 0;
@@ -1015,6 +1053,8 @@ function simulatePortfolio(allTrades, scans, config) {
   // v8.3 blacklist — serial losers excluded at portfolio level
   const _blSet = config.blacklist && config.blacklist.length
     ? new Set(config.blacklist.map(t => t.toUpperCase())) : null;
+  // Calendar selector (equity biz-day default; crypto/forex calendar-day via config.calendar)
+  const DF = dayFnsFor(config.calendar);
 
   // Group trades by scan date; capture per-date regime as canonical source-of-truth
   // Strategy filter is deferred to per-date level for regime-aware filter switching
@@ -1078,7 +1118,7 @@ function simulatePortfolio(allTrades, scans, config) {
   // Get date range for daily equity curve
   const startDate = allScanDates[0];
   const endDate = allScanDates[allScanDates.length - 1];
-  const allDays = getAllBizDays(startDate, addBizDays(endDate, horizonDays));
+  const allDays = DF.allDays(startDate, DF.addDays(endDate, horizonDays));
 
   // Equity tracking — daily mark-to-market
   let realizedPnl = 0; // cumulative realized P&L (%)
@@ -1108,10 +1148,10 @@ function simulatePortfolio(allTrades, scans, config) {
           // v3 circuit breaker: track SL events
           if (cbMaxStops > 0) {
             cbStopDates.push(day);
-            const windowStart = addBizDays(day, -cbWindowDays);
+            const windowStart = DF.addDays(day, -cbWindowDays);
             const recentStops = cbStopDates.filter(d => d >= windowStart).length;
             if (recentStops >= cbMaxStops) {
-              cbPauseUntil = addBizDays(day, cbPauseDays);
+              cbPauseUntil = DF.addDays(day, cbPauseDays);
             }
           }
         }
@@ -1239,7 +1279,7 @@ function simulatePortfolio(allTrades, scans, config) {
         const cooldown = slCooldown.get(cand.ticker);
         if (cooldown) {
           const cd = typeof cooldown === 'string' ? { date: cooldown, days: 10 } : cooldown;
-          if (bizDaysBetween(cd.date, day) < cd.days) continue;
+          if (DF.daysBetween(cd.date, day) < cd.days) continue;
         }
         // Cross-mode dedup — skip ticker already picked by another mode this scan day
         if (config.crossModeDedup && config.crossModePicked) {
@@ -2109,6 +2149,7 @@ async function main() {
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
         regimeScoreOverride: cfg.regimeScoreOverride || false,
+        calendar: cfg.calendar || null,
         ddBreakerPct: cfg.ddBreakerPct ?? 0,
         sectorCapMax: cfg.sectorCapMax ?? 0,
         sizingMethod: cfg.sizingMethod || null,
@@ -2266,7 +2307,7 @@ async function main() {
             if (mergedKeys.has(key)) continue;
             if (!priceCache[p.ticker]) continue;
             // Skip if mode horizon already expired for this trade
-            const modeExpire = addBizDays(p.scan_date, cfg.horizon);
+            const modeExpire = dayFnsFor(cfg.calendar).addDays(p.scan_date, cfg.horizon);
             if (modeExpire <= todayISO) continue;
             seenTickers.add(p.ticker);
             // MtM from last cached bar vs actual entry (real position, not simulated)

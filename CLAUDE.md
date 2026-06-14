@@ -1,5 +1,12 @@
 # CLAUDE.md — DailyTickers Articles Project
 
+## Design Context (impeccable)
+Avant tout travail UI/design, lire **`PRODUCT.md`** (stratégie : registre=product unifié, retail
+sérieux multilingue, voix FT/Economist + précision terminal ; anti-réfs : crypto-bro néon, SaaS
+générique, Bloomberg overload, cream/sand AI) et **`DESIGN.md`** (système visuel actuel = baseline +
+direction de refonte). Refonte pilotée par le skill `impeccable` (`/impeccable <command>`). A11y :
+mobile-first dense, RTL arabe, P&L colorblind-safe, WCAG AA, reduced-motion.
+
 ## Project Overview
 Site de publication d'analyses financières institutionnelles, hébergé sur GitHub Pages.
 - **URL articles** : `https://articles.dailytickers.com/` (CNAME = `articles.dailytickers.com`)
