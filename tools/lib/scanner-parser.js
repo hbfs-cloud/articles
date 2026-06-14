@@ -89,10 +89,15 @@ function loadSignals(dir) {
         m.source = 'tkl_pool';
         return m;
       });
+      const cryptoPool = (data.crypto_pool || []).map(s => {
+        const m = mapSignal(s);
+        m.source = 'crypto_pool';
+        return m;
+      });
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, tklPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // retail fail-closed: null regime = max caution
+      return { signals, tklPool, cryptoPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // retail fail-closed: null regime = max caution
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -112,7 +117,7 @@ function loadSignals(dir) {
     thesis: thesisMap[s.ticker] || '',
   }));
   const regime = extractRegimeFromHtml(html);
-  return { signals, tklPool: [], thesis: thesisMap, regime, regimeScore: null };
+  return { signals, tklPool: [], cryptoPool: [], thesis: thesisMap, regime, regimeScore: null };
 }
 
 // ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────

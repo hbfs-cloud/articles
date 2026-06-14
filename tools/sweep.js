@@ -245,6 +245,9 @@ function parseScan(dir) {
   const signalTickers = new Set(setups.map(s => s.ticker));
   const tklPool = dedup(buildSetups(loaded.tklPool, 'tkl_pool'))
     .filter(s => !signalTickers.has(s.ticker));
+  // cryptoPool: crypto candidates (BTC-USD…) keep their raw momentum score (buildSetups only
+  // re-normalizes tkl_pool). Consumed exclusively by the crypto mode (assetClass='crypto').
+  const cryptoPool = dedup(buildSetups(loaded.cryptoPool, 'crypto_pool'));
 
   return {
     dir, scanDate,
@@ -252,6 +255,7 @@ function parseScan(dir) {
     regimeScore: loaded.regimeScore ?? null,
     setups,
     tklPool,
+    cryptoPool,
   };
 }
 
@@ -1530,10 +1534,12 @@ async function main() {
   let allSetups = scans.flatMap(s => {
     const list = s.setups.slice();
     if (includeTklPool) list.push(...(s.tklPool || []));
+    list.push(...(s.cryptoPool || [])); // crypto candidates; equity modes exclude source='crypto_pool'
     return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
-  console.log(`Setup pool composition: ${allSetups.length - tklPoolCount} top-10 + ${tklPoolCount} tkl_pool`);
+  const cryptoPoolCount = allSetups.filter(s => s.source === 'crypto_pool').length;
+  console.log(`Setup pool composition: ${allSetups.length - tklPoolCount - cryptoPoolCount} top-10 + ${tklPoolCount} tkl_pool + ${cryptoPoolCount} crypto_pool`);
   if (SHARIA) {
     const before = allSetups.length;
     // Use parsed data-sharia flag if available, fallback to SHARIA_EXCLUDED for old untagged scans
@@ -2166,8 +2172,15 @@ async function main() {
         adaptiveDrawdown: cfg.adaptiveDrawdown || null,
         excludeSources: (() => {
           const excl = [];
-          if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
-          if (cfg.tklExcludeSignals === true) excl.push('signals');
+          if (cfg.assetClass === 'crypto') {
+            // Crypto mode trades ONLY crypto_pool candidates.
+            excl.push('signals', 'tkl_pool');
+          } else {
+            // Equity/other modes NEVER trade crypto candidates → equity parity preserved.
+            excl.push('crypto_pool');
+            if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
+            if (cfg.tklExcludeSignals === true) excl.push('signals');
+          }
           return excl.length ? excl : null;
         })(),
       };
@@ -2280,6 +2293,7 @@ async function main() {
             if (scan.scanDate < cutoffISO) continue;
             const pool = [...scan.setups];
             if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
+            pool.push(...(scan.cryptoPool || [])); // crypto mode keeps these; others exclude via exclSources
             const filtered = pool
               .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))
