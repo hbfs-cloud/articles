@@ -215,9 +215,37 @@ function parseScan(dir) {
   return {
     dir, scanDate,
     regime: loaded.regime || null,
+    regimeScore: loaded.regimeScore ?? null,
     setups,
     tklPool,
   };
+}
+
+// ─── Regime-score override (proactive de-risk / "parachute") ─────────────────
+// The published regime LABEL lags: in June 2026 scans were labelled RISK-ON while the
+// regimeScore had already collapsed to 41-47 (caution territory), so momentum-heavy
+// modes loaded a correlated cluster right before the -2.58% reversal. The override maps
+// the numeric score to the regime it actually implies, then takes the MORE DEFENSIVE of
+// (label, score-implied) — fail-to-caution. Score scale is 0-100.
+// Calibrated from historical (label,score) distribution: RISK-ON medians ~55-87, but
+// laggy RISK-ON days sat at 38-49; genuine risk-on needs score >= 65.
+function scoreToRegime(score) {
+  if (score == null) return null;
+  const s = score <= 1 ? score * 100 : score; // tolerate 0-1 scale slips
+  if (s >= 65) return 'risk_on';
+  if (s >= 55) return 'recovery';
+  if (s >= 45) return 'neutral';
+  if (s >= 38) return 'early_risk_off';
+  return 'risk_off';
+}
+// Defensive ordering: lower index = more defensive. Used to take the safer of two regimes.
+const REGIME_DEFENSIVENESS = ['risk_off', 'early_risk_off', 'neutral', 'recovery', 'risk_on'];
+function moreDefensiveRegime(a, b) {
+  const ia = REGIME_DEFENSIVENESS.indexOf(a);
+  const ib = REGIME_DEFENSIVENESS.indexOf(b);
+  if (ia < 0) return b;
+  if (ib < 0) return a;
+  return ia <= ib ? a : b;
 }
 
 // VIX/regime-based sizing multiplier (risk-off halves exposure)
@@ -992,12 +1020,42 @@ function simulatePortfolio(allTrades, scans, config) {
   // Strategy filter is deferred to per-date level for regime-aware filter switching
   const byDate = {};
   const regimeByDate = {};
+  const regimeScoreByDate = {};
   for (const t of allTrades) {
     if (t.score < minScore) continue;
     if (excludeSet && excludeSet.has(t.source || 'signals')) continue;
     if (!byDate[t.scanDate]) byDate[t.scanDate] = [];
     byDate[t.scanDate].push(t);
     if (t.regime && !regimeByDate[t.scanDate]) regimeByDate[t.scanDate] = t.regime;
+    if (t.regimeScore != null && regimeScoreByDate[t.scanDate] == null) regimeScoreByDate[t.scanDate] = t.regimeScore;
+  }
+  // Trend-aware regime-score override: precompute, per scan date, the trailing max score.
+  // The override de-risks only on genuine DETERIORATION (score low AND falling from a
+  // recent high) — so stable moderate-score rally days keep their momentum upside, while
+  // a sharp decline (e.g. June 2026: 58→47→41 under a lagging RISK-ON label) flips defensive.
+  const _scoredDates = Object.keys(regimeScoreByDate).filter(d => regimeScoreByDate[d] != null).sort();
+  const _norm = v => (v != null && v <= 1 ? v * 100 : v);
+  function regimeScoreDowngrade(day) {
+    const ov = config.regimeScoreOverride;
+    if (!ov) return null;
+    const sc = _norm(regimeScoreByDate[day]);
+    if (sc == null) return null;
+    // Config forms: true → defaults; number → absolute floor only; object → {floor, drop, lookback}.
+    const floor = typeof ov === 'object' ? (ov.floor ?? 55) : (typeof ov === 'number' ? ov : 55);
+    const drop = typeof ov === 'object' ? (ov.drop ?? 8) : 0;     // 0 ⇒ pure absolute-floor mode
+    const lookback = typeof ov === 'object' ? (ov.lookback ?? 4) : 0;
+    if (sc >= floor) return null;
+    if (drop > 0) {
+      const idx = _scoredDates.indexOf(day);
+      if (idx < 0) return null;
+      let recentMax = sc;
+      for (let i = Math.max(0, idx - lookback); i < idx; i++) {
+        const v = _norm(regimeScoreByDate[_scoredDates[i]]);
+        if (v != null && v > recentMax) recentMax = v;
+      }
+      if (recentMax - sc < drop) return null; // not deteriorating enough → trust the label
+    }
+    return scoreToRegime(sc);
   }
 
   // Build portfolio: track open positions day by day
@@ -1068,14 +1126,22 @@ function simulatePortfolio(allTrades, scans, config) {
     if (scanDateSet.has(day)) {
       // Regime-aware strategy filter: override filter based on scan date's regime
       let activeFilter = strategyFilter;
-      if (config.regimeFilters) {
-        const scanRegimeRaw = regimeByDate[day];
-        if (scanRegimeRaw) {
-          const regimeKey = normalizeRegime(scanRegimeRaw);
-          const overrideName = config.regimeFilters[regimeKey];
-          if (overrideName && STRATEGY_FILTERS_MAP[overrideName]) {
-            activeFilter = STRATEGY_FILTERS_MAP[overrideName];
-          }
+      // Effective regime = label, optionally downgraded by the regime-score override
+      // (proactive de-risk: when the numeric score has deteriorated below what the label
+      // implies, treat the day as the MORE DEFENSIVE regime — the "parachute" that would
+      // have kept momentum-heavy modes out of the June correlated cluster).
+      let effectiveRegimeKey = null;
+      if (regimeByDate[day]) effectiveRegimeKey = normalizeRegime(regimeByDate[day]);
+      const scoreRegime = regimeScoreDowngrade(day);
+      if (scoreRegime) {
+        effectiveRegimeKey = effectiveRegimeKey
+          ? moreDefensiveRegime(effectiveRegimeKey, scoreRegime)
+          : scoreRegime;
+      }
+      if (config.regimeFilters && effectiveRegimeKey) {
+        const overrideName = config.regimeFilters[effectiveRegimeKey];
+        if (overrideName && STRATEGY_FILTERS_MAP[overrideName]) {
+          activeFilter = STRATEGY_FILTERS_MAP[overrideName];
         }
       }
       // Apply strategy filter per date (deferred from global loop for regime awareness)
@@ -1424,7 +1490,7 @@ async function main() {
   let allSetups = scans.flatMap(s => {
     const list = s.setups.slice();
     if (includeTklPool) list.push(...(s.tklPool || []));
-    return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime }));
+    return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
   console.log(`Setup pool composition: ${allSetups.length - tklPoolCount} top-10 + ${tklPoolCount} tkl_pool`);
@@ -1524,7 +1590,7 @@ async function main() {
                       entryGatePct: entryGate, vwapGate,
                     });
                     if (result) {
-                      trades.push({ ...result, regime: setup.regime || null, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct });
+                      trades.push({ ...result, regime: setup.regime || null, regimeScore: setup.regimeScore ?? null, _horizon: horizon, _partialTP: ptp, _ptpPct: ptpPct, _trail: trail, _maxStop: maxStop, _atrMult: atrMult, _dailyTrail: dailyTrail, _bePct: bePct });
                     }
                   }
                   tradesByKey[key] = trades;
@@ -1568,7 +1634,7 @@ async function main() {
             postWideningRRMin: cfg.postWideningRRMin || 0,
             blacklist: cfg.blacklist || null,
           });
-          if (result) trades.push({ ...result, regime: setup.regime || null });
+          if (result) trades.push({ ...result, regime: setup.regime || null, regimeScore: setup.regimeScore ?? null });
         }
         tradesByKey[fKey] = trades;
         frozenExtra++;
@@ -2042,6 +2108,7 @@ async function main() {
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
+        regimeScoreOverride: cfg.regimeScoreOverride || false,
         ddBreakerPct: cfg.ddBreakerPct ?? 0,
         sectorCapMax: cfg.sectorCapMax ?? 0,
         sizingMethod: cfg.sizingMethod || null,
