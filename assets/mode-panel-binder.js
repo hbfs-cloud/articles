@@ -128,7 +128,7 @@
         er.className = 'tm-empty-row';
         var td = document.createElement('td');
         td.colSpan = colspan;
-        td.style.cssText = 'text-align:center;color:#94a3b8;padding:.7rem .5rem;font-style:italic';
+        td.style.cssText = 'text-align:center;padding:.7rem .5rem;font-style:italic';
         td.textContent = container.dataset.empty || '—';
         er.appendChild(td);
         tbody.appendChild(er);
