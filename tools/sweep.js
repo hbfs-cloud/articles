@@ -420,6 +420,38 @@ function maxCorrToOpen(cand, openPositions, lookbackDays) {
   return signed;
 }
 
+// BTC-beta helper (v8.8 crypto cluster guard, analog of v8.7 equity correlation fix).
+// Computes the OLS beta of a ticker's 60d log returns vs BTC-USD log returns over the
+// same overlapping window. Returns null when not computable (no BTC cache, <10 overlap).
+// Uses module-scope priceCache. BTC's own beta is 1 by construction.
+function betaToBTC(ticker, lookbackDays) {
+  const btcHist = priceCache['BTC-USD'];
+  const tHist = priceCache[ticker];
+  if (!btcHist || !tHist) return null;
+  if (ticker === 'BTC-USD') return 1;
+  // Build a common date window so returns align on shared bars.
+  const btcDates = new Set(Object.keys(btcHist));
+  const common = Object.keys(tHist).filter(d => btcDates.has(d)).sort();
+  const window = common.slice(-Math.max(lookbackDays + 1, 20));
+  if (window.length < 11) return null;
+  const tRet = _logReturns(tHist, window);
+  const bRet = _logReturns(btcHist, window);
+  const n = Math.min(tRet.length, bRet.length);
+  if (n < 10) return null;
+  const tx = tRet.slice(-n), bx = bRet.slice(-n);
+  let mT = 0, mB = 0;
+  for (let i = 0; i < n; i++) { mT += tx[i]; mB += bx[i]; }
+  mT /= n; mB /= n;
+  let cov = 0, varB = 0;
+  for (let i = 0; i < n; i++) {
+    const db = bx[i] - mB;
+    cov += (tx[i] - mT) * db;
+    varB += db * db;
+  }
+  if (varB <= 0) return null;
+  return cov / varB;
+}
+
 // Module-scope strategy filter map (used by regime-aware filtering and grid search)
 const STRATEGY_FILTERS_MAP = {
   'all': new Set(['candlestick']),
@@ -1341,6 +1373,23 @@ function simulatePortfolio(allTrades, scans, config) {
         if (config.correlationCap > 0 && openPositions.length > 0) {
           const rho = maxCorrToOpen(cand, openPositions, 60);
           if (rho != null && rho > config.correlationCap) continue;
+        }
+        // BTC-beta single-cluster guard (v8.8 crypto, analog of v8.7 equity cluster fix).
+        // Gated by config.btcBetaCap: crypto mode sets 1.5; equity modes leave it unset
+        // (0/undefined) → this whole block is skipped → equity parity preserved.
+        // Reject a candidate whose 60d beta to BTC exceeds the cap, or whose addition
+        // would push the portfolio's aggregate BTC-beta past portfolioSize*btcBetaCap.
+        if (config.btcBetaCap > 0) {
+          const candBeta = betaToBTC(cand.ticker, 60);
+          if (candBeta != null) {
+            if (candBeta > config.btcBetaCap) continue;
+            let aggBeta = 0;
+            for (const pos of openPositions) {
+              const b = betaToBTC(pos.trade.ticker, 60);
+              if (b != null) aggBeta += b;
+            }
+            if (aggBeta + candBeta > portfolioSize * config.btcBetaCap) continue;
+          }
         }
         // ETF at 52w high penalty: reduce effective score by 5 for ETFs near yearly highs
         const candSector = getSector(cand.ticker);
@@ -2543,7 +2592,7 @@ module.exports = {
   parseScan, simulateTrade, simulatePortfolio, computeStatsFromTrades,
   fetchOHLCV, priceCache, getSector, normalizeRegime,
   STRATEGY_FILTERS_MAP,
-  vixKillTriggered, regimeSizeMultiplier, maxCorrToOpen,
+  vixKillTriggered, regimeSizeMultiplier, maxCorrToOpen, betaToBTC,
 };
 
 if (require.main === module) {
