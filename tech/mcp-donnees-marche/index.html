@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech" data-tab="tech">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MCP en Pratique : Brancher Claude sur tes Données de Marché | DailyTickers</title>
+  <meta name="description" content="Le Model Context Protocol expliqué pour les builders : ce qu'est un serveur MCP, outils vs ressources, comment un modèle découvre et appelle un outil, synchrone vs asynchrone (job polling), résultats structurés. Et pourquoi MCP change tout pour brancher un agent sur des données de marché temps réel.">
+  <meta property="og:title" content="MCP en Pratique : Brancher Claude sur tes Données de Marché">
+  <meta property="og:description" content="Outils vs ressources, découverte dynamique, job polling, schémas, sécurité, et comment un agent enchaîne les appels MCP pour analyser un ticker de bout en bout.">
+  <meta property="og:image" content="https://articles.dailytickers.com/scanner-daily-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="stylesheet" href="/assets/report.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <style>
+    .mcp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .mcp-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.5rem; }
+    .mcp-card h3 { font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 .5rem; display: flex; align-items: center; gap: 8px; }
+    .mcp-card h3 i { color: #0ea5e9; }
+    .mcp-card p { font-size: .82rem; color: #475569; line-height: 1.55; margin: 0; }
+    .mcp-card code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: .72rem; }
+    .mcp-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; margin: 1rem 0; font-size: .85rem; }
+    .mcp-table th { background: #f8fafc; text-align: left; padding: 10px 12px; font-size: .7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .04em; }
+    .mcp-table td { padding: 10px 12px; border-top: 1px solid #f1f5f9; vertical-align: top; }
+    .mcp-table .t-name { font-weight: 800; color: #0f172a; }
+    .mcp-table code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: .72rem; }
+    .mcp-step { background: #f8fafc; border-left: 3px solid #0ea5e9; padding: 1rem 1.25rem; border-radius: 0 10px 10px 0; margin-bottom: .75rem; }
+    .mcp-step h4 { font-size: .92rem; font-weight: 800; color: #0f172a; margin: 0 0 .35rem; }
+    .mcp-step p { font-size: .82rem; color: #475569; margin: 0; line-height: 1.55; }
+    .mcp-step code { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: .72rem; }
+    .takeaway-box { background: #ecfdf5; border: 1px solid #86efac; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    .takeaway-box h4 { color: #16a34a; margin: 0 0 .5rem; font-size: .95rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .takeaway-box ul { margin: 0; padding-left: 1.25rem; }
+    .takeaway-box li { font-size: .82rem; color: #15803d; line-height: 1.6; margin: .25rem 0; }
+    .pedagogy-box { background: #f0f9ff; border: 1px solid #7dd3fc; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    .pedagogy-box h4 { color: #0369a1; margin: 0 0 .5rem; font-size: .95rem; font-weight: 800; }
+    .pedagogy-box p { font-size: .82rem; color: #075985; line-height: 1.6; margin: 0; }
+    .alert-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 12px; padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
+    .alert-box h4 { color: #b45309; margin: 0 0 .5rem; font-size: .95rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+    .alert-box p { font-size: .82rem; color: #92400e; line-height: 1.6; margin: 0; }
+    pre.code-block { background: #0f172a; color: #e2e8f0; border-radius: 12px; padding: 1.25rem 1.5rem; font-family: 'SFMono-Regular','Consolas',monospace; font-size: .78rem; line-height: 1.55; overflow: auto; }
+    pre.code-block .k { color: #7dd3fc; }
+    pre.code-block .s { color: #86efac; }
+    pre.code-block .c { color: #64748b; font-style: italic; }
+    pre.code-block .n { color: #fbbf24; }
+    .faq-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.1rem 1.4rem; margin-bottom: .75rem; }
+    .faq-item h4 { font-size: .9rem; font-weight: 800; color: #0f172a; margin: 0 0 .4rem; }
+    .faq-item p { font-size: .82rem; color: #475569; line-height: 1.6; margin: 0; }
+    .faq-item code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: .72rem; }
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">DailyTickers</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">Séries</a>
+    </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero-section">
+  <div class="hero-date">FORMATION · IA &amp; OUTILS</div>
+  <h1>MCP en Pratique : Brancher Claude sur tes Données de Marché</h1>
+  <p>
+    Le Model Context Protocol est le standard ouvert qui laisse un modèle de langage
+    découvrir et appeler des outils externes. On démonte la mécanique — outils vs ressources,
+    découverte dynamique, synchrone vs asynchrone, schémas — puis on l'applique à un cas
+    concret : transformer Claude en analyste capable de lire des cotations, screener et filings
+    en temps réel, comme le fait la gateway DailyTickers.
+  </p>
+  <div id="article-clickable-tags" class="card-tags"></div>
+</header>
+
+<article class="report-body">
+
+  <!-- Intro -->
+  <section id="intro">
+    <h2><i class="fas fa-flag"></i> Le problème que MCP résout</h2>
+    <p>
+      Un modèle de langage est figé à sa date de coupure. Demandez à Claude le cours d'AAPL
+      aujourd'hui, et il devra deviner — au mieux il refusera poliment. Pendant des années,
+      la réponse fut de câbler des APIs en dur : un client qui sait parler à Yahoo Finance,
+      un autre à votre base de fondamentaux, un troisième à l'EDGAR de la SEC. Chaque source
+      = du code de glue, une authentification spécifique, un format de réponse à reparser.
+      Multipliez par dix sources et vous obtenez un harnais fragile que personne n'ose toucher.
+    </p>
+    <p>
+      Le <strong>Model Context Protocol (MCP)</strong> renverse la logique. Au lieu de coder
+      « comment appeler chaque API », vous exposez vos sources derrière un <em>serveur MCP</em>
+      qui décrit lui-même ce qu'il sait faire. Le modèle <em>découvre</em> les capacités
+      disponibles, <em>choisit</em> lesquelles invoquer, et enchaîne les appels tout seul.
+      C'est un standard ouvert — le même serveur fonctionne avec Claude, dans Claude Code, ou
+      dans n'importe quel client compatible. Ce site lui-même tourne sur Claude Code branché
+      sur une gateway MCP DailyTickers, dans des workflows multi-agents. Cet article ouvre
+      la boîte.
+    </p>
+  </section>
+
+  <!-- ── Anatomie d'un serveur MCP ── -->
+  <section id="anatomie">
+    <h2><i class="fas fa-cube"></i> Anatomie d'un serveur MCP</h2>
+    <p>
+      Un serveur MCP est un processus qui parle un protocole JSON-RPC bien défini. Il expose
+      trois grandes catégories de primitives — mais pour brancher un agent sur des données de
+      marché, deux comptent vraiment : les <strong>outils</strong> et les <strong>ressources</strong>.
+    </p>
+
+    <div class="mcp-grid">
+      <div class="mcp-card">
+        <h3><i class="fas fa-wrench"></i>Outils (tools)</h3>
+        <p>
+          Des fonctions que le modèle peut <em>appeler</em>, avec effets ou calculs. Chacune
+          a un nom, une description et un schéma d'entrée JSON. Exemple : <code>RunScreener</code>,
+          <code>GetMarketOverview</code>. Le modèle décide quand les appeler.
+        </p>
+      </div>
+      <div class="mcp-card">
+        <h3><i class="fas fa-folder-open"></i>Ressources</h3>
+        <p>
+          Des données <em>adressables par URI</em> que le client peut lire et injecter dans le
+          contexte — un document, un snapshot de portefeuille, un fichier de config. Lecture
+          passive, pas d'effet de bord.
+        </p>
+      </div>
+      <div class="mcp-card">
+        <h3><i class="fas fa-comment-dots"></i>Prompts</h3>
+        <p>
+          Des gabarits de conversation pré-écrits, paramétrables, que l'utilisateur peut
+          invoquer (« analyse ce ticker selon notre méthodo »). Utile mais optionnel pour
+          un serveur de données.
+        </p>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4>Outil ou ressource ? La règle simple</h4>
+      <p>
+        Si l'opération <b>fait quelque chose</b> ou prend des paramètres dynamiques (lancer un
+        screen, calculer une VaR, interroger une plage de dates), c'est un <b>outil</b>. Si
+        c'est de la donnée qu'on veut juste <b>lire</b> à une adresse stable (le manifeste des
+        instruments, un fichier watchlist), c'est une <b>ressource</b>. En finance, l'écrasante
+        majorité des capacités utiles sont des outils, parce que les requêtes sont presque
+        toujours paramétrées : un ticker, un horizon, un univers.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Découverte & appel ── -->
+  <section id="decouverte">
+    <h2><i class="fas fa-magnifying-glass"></i> Comment le modèle découvre et appelle un outil</h2>
+    <p>
+      C'est le cœur de MCP : le modèle ne connaît pas vos outils à l'avance, il les
+      <em>découvre</em>. Le cycle de vie d'un appel se déroule en quatre temps.
+    </p>
+
+    <div class="mcp-step">
+      <h4>1 &middot; Handshake &amp; capacités</h4>
+      <p>
+        Au démarrage, le client (Claude Code, l'app Claude, une extension IDE) ouvre une session
+        avec le serveur et négocie les capacités. Le serveur annonce : « je sais exposer des
+        outils, des ressources, des prompts ».
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>2 &middot; Listing — <code>tools/list</code></h4>
+      <p>
+        Le client demande le catalogue. Le serveur renvoie chaque outil avec son
+        <code>name</code>, sa <code>description</code> en langage naturel, et son
+        <code>inputSchema</code> (JSON Schema). Ces descriptions sont injectées dans le contexte
+        du modèle — c'est <em>littéralement</em> ainsi qu'il sait que <code>RunScreener</code> existe.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>3 &middot; Décision &amp; appel — <code>tools/call</code></h4>
+      <p>
+        Face à une question (« quels semis cassent leur résistance ? »), le modèle choisit un
+        outil et fabrique un objet d'arguments conforme au schéma. Le client transmet l'appel
+        au serveur via <code>tools/call</code>. Le modèle ne touche jamais à votre base —
+        il émet une intention typée, le serveur l'exécute.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>4 &middot; Résultat structuré</h4>
+      <p>
+        Le serveur exécute (requête SQL, appel screener, lecture d'un filing) et renvoie un
+        résultat — texte, JSON structuré, ou les deux. Le modèle lit ce résultat comme un
+        nouveau tour de conversation, raisonne dessus, et décide s'il enchaîne avec un autre outil.
+      </p>
+    </div>
+
+    <p>
+      Du côté builder, la beauté c'est que le modèle <strong>compose</strong> ces appels. Vous ne
+      scriptez pas « appelle A puis B puis C » — vous décrivez bien vos outils, et l'agent
+      orchestre. Voici à quoi ressemble un appel et sa réponse, vus du fil de conversation :
+    </p>
+
+<pre class="code-block"><span class="c"># L'agent émet un appel d'outil (tools/call)</span>
+{
+  <span class="k">"method"</span>: <span class="s">"tools/call"</span>,
+  <span class="k">"params"</span>: {
+    <span class="k">"name"</span>: <span class="s">"RunScreener"</span>,
+    <span class="k">"arguments"</span>: {
+      <span class="k">"universe"</span>: <span class="s">"us_equities"</span>,
+      <span class="k">"filters"</span>: <span class="s">"sector == 'Technology' AND rsi14 &gt; 60 AND price &gt; sma50"</span>,
+      <span class="k">"limit"</span>: <span class="n">15</span>
+    }
+  }
+}
+
+<span class="c"># Le serveur répond avec un résultat structuré</span>
+{
+  <span class="k">"content"</span>: [{ <span class="k">"type"</span>: <span class="s">"text"</span>, <span class="k">"text"</span>: <span class="s">"15 matches"</span> }],
+  <span class="k">"structuredContent"</span>: {
+    <span class="k">"matches"</span>: [
+      { <span class="k">"ticker"</span>: <span class="s">"NVDA"</span>, <span class="k">"rsi14"</span>: <span class="n">68.4</span>, <span class="k">"price"</span>: <span class="n">182.10</span> },
+      { <span class="k">"ticker"</span>: <span class="s">"AVGO"</span>, <span class="k">"rsi14"</span>: <span class="n">63.1</span>, <span class="k">"price"</span>: <span class="n">241.55</span> }
+    ]
+  }
+}</pre>
+
+    <div class="pedagogy-box">
+      <h4>Le schéma EST la documentation</h4>
+      <p>
+        Le modèle ne lit pas votre code source — il lit la <code>description</code> et
+        l'<code>inputSchema</code>. Un schéma flou (« filters: string ») oblige le modèle à
+        deviner la syntaxe. Un schéma riche, avec une description précise des opérateurs
+        autorisés et un ou deux exemples, fait passer le taux de bons appels de « parfois » à
+        « presque toujours ». On y revient dans la section conception.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Sync vs async ── -->
+  <section id="async">
+    <h2><i class="fas fa-hourglass-half"></i> Synchrone vs asynchrone : le job polling</h2>
+    <p>
+      Beaucoup d'outils répondent instantanément : un cours, un overview de marché, une ligne
+      de fondamentaux. Mais certains calculs sont longs — un backtest sur dix ans, une matrice
+      de corrélation sur 500 titres, un screen d'options multi-jambes. Bloquer la connexion
+      pendant 90 secondes est une mauvaise idée : timeouts, retries, agent figé.
+    </p>
+    <p>
+      Le pattern propre, c'est le <strong>job asynchrone</strong>. L'outil ne renvoie pas le
+      résultat — il renvoie un <code>jobId</code> immédiatement et lance le travail en arrière-plan.
+      L'agent <em>poll</em> ensuite le statut jusqu'à complétion. Sur la gateway DailyTickers,
+      c'est exactement le rôle de <code>CheckJobStatus</code> et <code>ListJobs</code>.
+    </p>
+
+<pre class="code-block"><span class="c"># 1. Lancer un calcul lourd — retour immédiat avec un jobId</span>
+RunScreener({ <span class="k">universe</span>: <span class="s">"sp500"</span>, <span class="k">backtest</span>: <span class="k">true</span>, <span class="k">years</span>: <span class="n">10</span> })
+<span class="c">#  → { "jobId": "job_a91f", "status": "running" }</span>
+
+<span class="c"># 2. L'agent poll le statut (synchrone, instantané)</span>
+CheckJobStatus({ <span class="k">jobId</span>: <span class="s">"job_a91f"</span> })
+<span class="c">#  → { "status": "running", "progress": 0.42 }</span>
+
+<span class="c"># 3. Quelques tours plus tard : terminé</span>
+CheckJobStatus({ <span class="k">jobId</span>: <span class="s">"job_a91f"</span> })
+<span class="c">#  → { "status": "done", "result": { "equity": [...], "sharpe": 1.8 } }</span></pre>
+
+    <div class="mcp-grid">
+      <div class="mcp-card">
+        <h3><i class="fas fa-bolt"></i>Synchrone</h3>
+        <p>
+          Réponse en un aller-retour. Idéal pour les lectures rapides : cotation, overview,
+          régime de marché, un instrument. La plupart des outils de données.
+        </p>
+      </div>
+      <div class="mcp-card">
+        <h3><i class="fas fa-clock-rotate-left"></i>Asynchrone (job)</h3>
+        <p>
+          L'outil renvoie un <code>jobId</code>, l'agent poll via <code>CheckJobStatus</code>.
+          Pour tout ce qui dépasse quelques secondes : backtests, optimisations, gros screens.
+        </p>
+      </div>
+      <div class="mcp-card">
+        <h3><i class="fas fa-list-check"></i>Suivi global</h3>
+        <p>
+          <code>ListJobs</code> donne une vue d'ensemble des travaux en cours et passés — utile
+          pour reprendre un calcul interrompu ou nettoyer une session.
+        </p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fas fa-triangle-exclamation"></i> Piège côté agent</h4>
+      <p>
+        Un agent qui poll trop agressivement gaspille des tours et du budget de tokens. Décrivez
+        dans la <code>description</code> de l'outil un rythme de poll raisonnable (« attends
+        quelques secondes entre deux statuts ») et renvoyez un champ <code>progress</code> : le
+        modèle calibre son attente sur l'avancement plutôt que de spammer le serveur.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── La gateway data ── -->
+  <section id="gateway">
+    <h2><i class="fas fa-server"></i> La forme d'une gateway de données de marché</h2>
+    <p>
+      Concrètement, à quoi ressemble un serveur MCP pour la finance ? Voici un échantillon
+      représentatif des outils exposés par la gateway DailyTickers, regroupés par usage. C'est
+      la surface qu'un agent voit — et qui suffit à mener une analyse de bout en bout.
+    </p>
+
+    <table class="mcp-table">
+      <thead>
+        <tr><th>Outil</th><th>Type</th><th>Ce qu'il fait</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="t-name"><code>GetMarketOverview</code></td>
+          <td>sync</td>
+          <td>Snapshot macro : indices, secteurs, VIX, breadth. Le point de départ de tout briefing.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>RunScreener</code></td>
+          <td>sync / job</td>
+          <td>Filtre un univers via une DSL (technique, fondamental, momentum). Rapide en live, asynchrone si backtest.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>QueryData</code></td>
+          <td>sync</td>
+          <td>Requête générique sur les séries — OHLCV, fondamentaux, dérivés — par ticker et plage de dates.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>GetInstruments</code></td>
+          <td>sync</td>
+          <td>Référentiel des instruments : tickers, ISIN, secteur, place de cotation, statut.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>GetEarningsCalendarFiltered</code></td>
+          <td>sync</td>
+          <td>Calendrier de résultats filtrable — pour éviter d'entrer juste avant une publication.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>GetRegimeProbability</code></td>
+          <td>sync</td>
+          <td>Probabilités de régime (risk-on / risk-off) dérivées du VIX et de la breadth.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>GetCorrelationMatrix</code></td>
+          <td>job</td>
+          <td>Matrice de corrélation sur un panier — calcul lourd, renvoyé via job polling.</td>
+        </tr>
+        <tr>
+          <td class="t-name"><code>CheckJobStatus</code></td>
+          <td>sync</td>
+          <td>Poll le statut d'un travail asynchrone et récupère le résultat une fois prêt.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pedagogy-box">
+      <h4>Pourquoi MCP &gt; APIs câblées en dur, en une phrase</h4>
+      <p>
+        Avec des APIs en dur, ajouter une source = modifier le code de l'agent. Avec MCP, ajouter
+        <code>GetEarningsCalendarFiltered</code> au serveur le rend immédiatement utilisable par
+        l'agent <em>sans toucher au prompt ni au code client</em> : il apparaît au prochain
+        <code>tools/list</code>, le modèle lit sa description, et s'en sert quand c'est pertinent.
+        La capacité vit côté serveur, découverte côté modèle.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Sécurité, auth, limites ── -->
+  <section id="securite">
+    <h2><i class="fas fa-shield-halved"></i> Authentification, rate limits et gestion d'erreurs</h2>
+    <p>
+      Un serveur MCP branché sur de la donnée de marché est une surface sensible. Trois sujets
+      à ne jamais laisser de côté.
+    </p>
+
+    <div class="mcp-grid">
+      <div class="mcp-card">
+        <h3><i class="fas fa-key"></i>Authentification</h3>
+        <p>
+          L'auth se règle au niveau du <em>transport</em> (jeton OAuth, clé d'API côté serveur),
+          jamais en passant des secrets dans les arguments d'outil — ces arguments transitent dans
+          le contexte du modèle. Le serveur détient les credentials du fournisseur de données ;
+          le modèle ne les voit jamais.
+        </p>
+      </div>
+      <div class="mcp-card">
+        <h3><i class="fas fa-gauge-high"></i>Rate limits</h3>
+        <p>
+          Les data providers facturent et plafonnent. Le serveur doit absorber ça : cache des
+          réponses récentes, file d'attente, et un retour d'erreur <em>explicite</em> quand la
+          limite est atteinte — pas un timeout opaque.
+        </p>
+      </div>
+      <div class="mcp-card">
+        <h3><i class="fas fa-bug"></i>Gestion d'erreurs</h3>
+        <p>
+          Une erreur d'outil doit être renvoyée comme résultat marqué <code>isError</code> avec
+          un message lisible, pas comme un crash. Le modèle lit le message et corrige son tir —
+          « ticker introuvable », « plage de dates invalide ».
+        </p>
+      </div>
+    </div>
+
+<pre class="code-block"><span class="c"># Bon : une erreur d'outil est un résultat lisible, pas un crash</span>
+{
+  <span class="k">"content"</span>: [{
+    <span class="k">"type"</span>: <span class="s">"text"</span>,
+    <span class="k">"text"</span>: <span class="s">"Ticker 'APPL' introuvable. Vouliez-vous dire 'AAPL' ?"</span>
+  }],
+  <span class="k">"isError"</span>: <span class="k">true</span>
+}</pre>
+
+    <div class="alert-box">
+      <h4><i class="fas fa-lock"></i> Règle d'or : ne jamais accepter le stub silencieusement</h4>
+      <p>
+        Si l'URL de la gateway n'est pas configurée, certains outils peuvent tomber sur un
+        <em>stub</em> qui renvoie un schéma vide au lieu d'une vraie donnée. C'est pire qu'une
+        erreur : l'agent produit une analyse confiante sur du néant. Faites échouer bruyamment
+        une gateway absente — un serveur de données muet doit lever une erreur, jamais inventer.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Concevoir de bons schémas ── -->
+  <section id="schemas">
+    <h2><i class="fas fa-ruler-combined"></i> Concevoir de bons schémas d'outils</h2>
+    <p>
+      La qualité d'un serveur MCP se joue à 80 % dans ses schémas. Le modèle n'a que la
+      description et l'<code>inputSchema</code> pour décider <em>quand</em> et <em>comment</em>
+      appeler. Quatre principes.
+    </p>
+
+    <div class="mcp-step">
+      <h4>Décrire <em>quand</em> appeler, pas seulement <em>ce que</em> fait l'outil</h4>
+      <p>
+        « Calcule la matrice de corrélation » est moins utile que « Utilise cet outil quand
+        l'utilisateur veut vérifier la diversification d'un panier ou détecter des positions
+        redondantes ». Les modèles récents (Opus 4.8, Sonnet 4.6) déclenchent les outils plus
+        sobrement : un déclencheur explicite dans la description augmente mesurablement le bon
+        taux d'appel.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>Typer fort, contraindre par <code>enum</code></h4>
+      <p>
+        Un champ <code>timeframe</code> libre invite aux fautes. Un <code>enum</code>
+        (<code>"1d" | "1w" | "1mo"</code>) ferme la porte aux valeurs invalides et guide le
+        modèle. Marquez <code>required</code> uniquement ce qui l'est vraiment.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>Donner un ou deux exemples dans la description</h4>
+      <p>
+        Pour une DSL de filtre, un exemple concret (<code>"rsi14 &gt; 60 AND price &gt; sma50"</code>)
+        vaut dix lignes de spec. Le modèle calque la forme.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>Renvoyer du <code>structuredContent</code>, pas juste du texte</h4>
+      <p>
+        Un résultat structuré (JSON typé) est réutilisable par l'agent et chaînable vers un
+        autre outil sans reparser de la prose. Doublez d'un court résumé texte pour la lisibilité.
+      </p>
+    </div>
+
+    <div id="schemaQualityChart" class="echart-box" style="height:320px;margin:1.5rem 0;"></div>
+  </section>
+
+  <!-- ── Chaînage de bout en bout ── -->
+  <section id="chainage">
+    <h2><i class="fas fa-diagram-project"></i> Un agent analyse un ticker, de bout en bout</h2>
+    <p>
+      Mettons tout ensemble. Un utilisateur demande : « Est-ce que NVDA est un bon achat
+      aujourd'hui ? ». Voici comment un agent — Claude Opus 4.8 dans Claude Code, branché sur la
+      gateway — enchaîne les appels MCP sans qu'on lui dicte la séquence. Chaque résultat
+      structuré nourrit la décision du tour suivant.
+    </p>
+
+    <div class="mcp-step">
+      <h4>1 &middot; Cadrer le marché — <code>GetMarketOverview</code> + <code>GetRegimeProbability</code></h4>
+      <p>
+        L'agent commence par le contexte : indices, VIX, breadth, probabilité de régime. Inutile
+        d'acheter du momentum en plein risk-off. Si le régime est dégradé, le verdict en tiendra
+        compte.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>2 &middot; Lire le titre — <code>QueryData</code> + <code>GetInstruments</code></h4>
+      <p>
+        OHLCV récent, moyennes mobiles, RSI, volume ; et le référentiel pour confirmer le secteur
+        et la place de cotation. L'agent se construit une image technique propre.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>3 &middot; Vérifier les risques d'agenda — <code>GetEarningsCalendarFiltered</code></h4>
+      <p>
+        Une publication de résultats dans trois jours change tout : gap risk. L'agent intègre la
+        proximité de l'événement dans son raisonnement plutôt que de l'ignorer.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>4 &middot; Tester la corrélation — <code>GetCorrelationMatrix</code> (job)</h4>
+      <p>
+        Pour juger si NVDA ajoute de la diversification ou du doublon, l'agent lance un calcul de
+        corrélation contre les positions existantes, récupère le <code>jobId</code>, puis poll
+        via <code>CheckJobStatus</code> jusqu'au résultat.
+      </p>
+    </div>
+
+    <div class="mcp-step">
+      <h4>5 &middot; Synthèse</h4>
+      <p>
+        Avec régime, technique, agenda et corrélation en main, l'agent formule un verdict nuancé —
+        et cite ses chiffres, tous tracés à un appel d'outil précis. Pas d'hallucination : chaque
+        donnée vient d'un <code>tools/call</code> identifiable.
+      </p>
+    </div>
+
+    <div class="takeaway-box">
+      <h4><i class="fas fa-lightbulb"></i> Ce que MCP débloque</h4>
+      <ul>
+        <li>Le modèle <strong>compose</strong> la séquence d'appels — vous décrivez les outils, l'agent orchestre.</li>
+        <li>Chaque chiffre est <strong>traçable</strong> à un appel MCP précis : zéro donnée inventée.</li>
+        <li>Ajouter une source = l'ajouter au serveur ; elle devient utilisable <strong>sans toucher au client</strong>.</li>
+        <li>Le même serveur sert Claude, Claude Code, ou tout client compatible — un standard, pas un adaptateur jetable.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ── FAQ ── -->
+  <section id="faq">
+    <h2><i class="fas fa-circle-question"></i> Questions fréquentes</h2>
+
+    <div class="faq-item">
+      <h4>MCP est-il propre à Anthropic ?</h4>
+      <p>
+        Non. MCP est un <em>standard ouvert</em> de connexion entre LLM et outils/données externes.
+        Anthropic l'a initié et Claude le supporte nativement — y compris dans Claude Code, avec
+        sous-agents, hooks et workflows multi-agents — mais le protocole est indépendant du modèle.
+      </p>
+    </div>
+
+    <div class="faq-item">
+      <h4>Quelle différence entre un outil MCP et un « tool use » classique ?</h4>
+      <p>
+        Le <em>tool use</em> de l'API définit les outils dans chaque requête, côté code applicatif.
+        MCP externalise cette définition dans un <em>serveur</em> réutilisable et découvrable :
+        le même serveur sert plusieurs clients et plusieurs sessions, sans redéclarer les schémas
+        à la main. Sous le capot, le client peut convertir les outils MCP en tool use pour le modèle.
+      </p>
+    </div>
+
+    <div class="faq-item">
+      <h4>Quel modèle utiliser pour piloter ces appels ?</h4>
+      <p>
+        Pour de l'agentique multi-étapes branché sur des données, on privilégie le modèle le plus
+        capable disponible : <code>claude-opus-4-8</code> par défaut, <code>claude-fable-5</code>
+        pour les tâches les plus exigeantes en raisonnement long. <code>claude-sonnet-4-6</code>
+        et <code>claude-haiku-4-5</code> conviennent aux charges plus simples ou à fort volume.
+      </p>
+    </div>
+
+    <div class="faq-item">
+      <h4>Comment gérer un outil qui met 2 minutes à répondre ?</h4>
+      <p>
+        Découpez-le en job asynchrone : l'outil renvoie un <code>jobId</code> immédiatement,
+        l'agent poll via un outil de statut (ici <code>CheckJobStatus</code>) en lisant un champ
+        <code>progress</code>. On ne bloque jamais la connexion sur un calcul long.
+      </p>
+    </div>
+
+    <div class="faq-item">
+      <h4>Et si le serveur de données est indisponible ?</h4>
+      <p>
+        Il doit lever une erreur explicite, jamais renvoyer un schéma vide. Un agent qui reçoit
+        du néant et l'interprète comme une donnée valide produira une analyse confiante et fausse —
+        le pire scénario possible en finance.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Disclaimer ── -->
+  <section id="disclaimer">
+    <h2><i class="fas fa-triangle-exclamation"></i> Avertissement</h2>
+    <p style="font-size:.85rem;color:#64748b;line-height:1.6;">
+      <strong>Ceci n'est pas un conseil financier.</strong> Cet article est un guide technique
+      sur le Model Context Protocol et son usage avec des données de marché. Les noms d'outils et
+      la forme de la gateway sont fournis à titre illustratif. Les exemples de tickers ne sont pas
+      des recommandations. Faites toujours vos propres recherches.
+    </p>
+  </section>
+
+</article>
+
+<div class="fnav" id="floatingNav">
+  <div class="fnav-menu" id="fnavMenu">
+    <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-flag"></i><span>Intro</span></a>
+    <a href="#anatomie" class="fnav-item" data-section="anatomie"><i class="fas fa-cube"></i><span>Anatomie</span></a>
+    <a href="#decouverte" class="fnav-item" data-section="decouverte"><i class="fas fa-magnifying-glass"></i><span>Découverte</span></a>
+    <a href="#async" class="fnav-item" data-section="async"><i class="fas fa-hourglass-half"></i><span>Sync/Async</span></a>
+    <a href="#gateway" class="fnav-item" data-section="gateway"><i class="fas fa-server"></i><span>Gateway</span></a>
+    <a href="#securite" class="fnav-item" data-section="securite"><i class="fas fa-shield-halved"></i><span>Sécurité</span></a>
+    <a href="#schemas" class="fnav-item" data-section="schemas"><i class="fas fa-ruler-combined"></i><span>Schémas</span></a>
+    <a href="#chainage" class="fnav-item" data-section="chainage"><i class="fas fa-diagram-project"></i><span>Chaînage</span></a>
+    <a href="#faq" class="fnav-item" data-section="faq"><i class="fas fa-circle-question"></i><span>FAQ</span></a>
+  </div>
+  <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+    <i class="fas fa-bars" id="fnavIcon"></i>
+    <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+  </button>
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+
+<script>
+(function () {
+  var el = document.getElementById('schemaQualityChart');
+  if (!el || typeof echarts === 'undefined') return;
+  var chart = echarts.init(el);
+  chart.setOption({
+    title: {
+      text: 'Taux de bons appels d’outil selon la qualité du schéma',
+      left: 'center',
+      textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' }
+    },
+    tooltip: { trigger: 'axis', valueFormatter: function (v) { return v + '%'; } },
+    grid: { left: 60, right: 30, bottom: 60, top: 50 },
+    xAxis: {
+      type: 'category',
+      data: ['Nom seul', '+ description', '+ enum / types', '+ exemples', '+ quand appeler'],
+      axisLabel: { interval: 0, rotate: 15, fontSize: 10 }
+    },
+    yAxis: { type: 'value', name: 'Bons appels %', max: 100, axisLabel: { formatter: '{value}%' } },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 41, itemStyle: { color: '#cbd5e1' } },
+        { value: 58, itemStyle: { color: '#7dd3fc' } },
+        { value: 72, itemStyle: { color: '#38bdf8' } },
+        { value: 86, itemStyle: { color: '#0ea5e9' } },
+        { value: 94, itemStyle: { color: '#0369a1' } }
+      ],
+      label: { show: true, position: 'top', formatter: '{c}%', fontWeight: 700 }
+    }]
+  });
+  window.addEventListener('resize', function () { chart.resize(); });
+})();
+</script>
+</body>
+</html>

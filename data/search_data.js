@@ -260,6 +260,32 @@ window.searchDataPrebuilt = [
     "date": "8 juin 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Contexte macro & marchés",
+    "desc": "Reprise en V après le choc du 5 juin : small caps +4,0% et Nasdaq +2,3% mènent un rebond risk-on (VIX −17% à 17,8). Le Brent chute de 3,4% à 87,33$ sur l'espoir d'un accord Iran rouvrant Ormuz, pendant que l'argent (+6,2%), l'or (+3,0%) et le cuivre (+2,7%) s'envolent. CPI à 4,2%, FOMC les 16-17 juin sous la nouvelle ère Warsh.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
+    "grade": "",
+    "href": "/weekly/20260615/",
+    "date": "15 juin 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "La semaine FOMC s’ouvre — le pétrole et l’Iran en variable d’ajustement",
+    "desc": "Ouverture de la semaine FOMC (décision mercredi 17 juin). Le S&P 500 clôture à 7 431 (+0,50%), VIX 17,68, régime risk-on. Divergence cross-asset : métaux précieux en feu (argent +6,2%, or +3,0%), pétrole sous pression (Brent 87$, −3,4%) sur signaux Iran, et débâcle du cluster aéro-défense/spatial.",
+    "tags": "us,crypto,macro,technique,trade-idea,formation,commodity,geopolitique,energy,materials",
+    "grade": "",
+    "href": "/daily/20260615/",
+    "date": "15 juin 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
@@ -947,6 +973,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "daily/20260217/",
     "date": "17 février 2026"
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "MS",
+    "exchange": "NYSE · Financials",
+    "name": "MS — Quality bank, score 95/100. Pullback entry $206–208, target $228.",
+    "title": "MS — Quality bank, score 95/100. Pullback entry $206–208, target $228.",
+    "desc": "MS analysis: Morgan Stanley pairs a record Wealth Management franchise ($1.9T AUM, 27% ROTCE) with a rebounding capital-markets engine. Four straight earnings beats, $20B buyback, 15.1% CET1 — a fortress-balance-sheet A+.",
+    "tags": "us,financials,earnings,dividende",
+    "grade": "A+",
+    "href": "/analyses/MS/",
+    "date": ""
   },
   {
     "type": "analyse",
@@ -3606,6 +3645,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Rétrospective Scanner",
+    "desc": "174 setups sur 7 scans (3 – 12 juin 2026) — Note D* (provisoire) — 18,8% de réussite sur 64 résolus — Portefeuille -2,81% (équipondéré). Meilleur : PLBL +28,29%, pire : WLD -23,67%. Le retournement cyclique du 4-5 juin a stoppé tout le book momentum/metals/crypto.",
+    "tags": "us,eu,asia,crypto,commodity,forex,etf,technique,macro,retrospective,semis,industrials,healthcare,materials,financials",
+    "grade": "D",
+    "href": "/scanner/retrospective/20260612/",
+    "date": "Semaine du 12 juin 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Top 5 A+ RISK-OFF — CASY, MUSA, XLP, XLV, MRK",
     "desc": "The regime score is 0.30, classified as RISK-OFF by the ensemble model. Ensemble probabilities: Crisis 52.3% (dominant — first time above 50% since early May), Early Risk-Off ~28%, Risk-On ~12%, Neutral ~8%. This is a significant deterioration from yesterday’s EARLY RISK-OFF (crisis was 28.1%). VIX ...",
     "tags": "us,etf,consumer,healthcare,macro,technique,trade-idea",
@@ -5093,6 +5145,32 @@ window.searchDataPrebuilt = [
     "tags": "tech,formation,technique,macro",
     "grade": "",
     "href": "/tech/inside-scanner-pipeline/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Workflows Multi-Agents : Orchestrer des Escouades d’Agents IA",
+    "desc": "Guide technique sur l'orchestration multi-agents : fan-out parallèle, pipelines, vérification adverse (war rooms), panels de juges, boucles jusqu'à épuisement. Patterns concrets, schémas, arbitrages coût/latence, et un cas réel sur le scanner DailyTickers.",
+    "tags": "formation,ai,tech",
+    "grade": "",
+    "href": "/tech/workflows-multi-agents/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "MCP en Pratique : Brancher Claude sur tes Données de Marché",
+    "desc": "Le Model Context Protocol expliqué pour les builders : ce qu'est un serveur MCP, outils vs ressources, comment un modèle découvre et appelle un outil, synchrone vs asynchrone (job polling), résultats structurés. Et pourquoi MCP change tout pour brancher un agent sur des données de marché temps réel.",
+    "tags": "formation,ai,tech",
+    "grade": "",
+    "href": "/tech/mcp-donnees-marche/",
     "date": ""
   },
   {

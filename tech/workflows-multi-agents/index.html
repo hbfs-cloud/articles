@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflows Multi-Agents : Orchestrer des Escouades d’Agents IA | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique sur l'orchestration multi-agents : fan-out parallèle, pipelines, vérification adverse (war rooms), panels de juges, boucles jusqu'à épuisement. Patterns concrets, schémas, arbitrages coût/latence, et un cas réel sur le scanner DailyTickers.">
+    <meta property="og:title" content="Workflows Multi-Agents : Orchestrer des Escouades d’Agents IA">
+    <meta property="og:description"
+        content="Pourquoi orchestrer plusieurs agents IA bat le « un gros prompt » sur les tâches complexes : patterns, schémas, et un cas réel.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/workflows-multi-agents/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent color for Multi-Agent Workflows is Violet (#7c3aed) */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+            text-align: center;
+            border-bottom: 1px solid #ddd6fe;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #7c3aed;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #7c3aed;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        /* Pédagogie + alertes — accent violet */
+        .pedagogy-box {
+            background: #f5f3ff;
+            border: 1px solid #c4b5fd;
+            border-left: 4px solid #7c3aed;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #6d28d9;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #4c1d95;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        /* Blocs de code — fond sombre type terminal */
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k {
+            color: #c4b5fd;
+        }
+
+        pre.code-block .s {
+            color: #86efac;
+        }
+
+        pre.code-block .c {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        pre.code-block .n {
+            color: #fcd34d;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #f5f3ff;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #6d28d9;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        /* Diagrammes en HTML pur */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #ddd6fe;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #6d28d9;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.orchestrator {
+            border-color: #7c3aed;
+            background: #f5f3ff;
+        }
+
+        .flow-node.verify {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .flow-node.verify b {
+            color: #b45309;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #a78bfa;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            pre.code-block {
+                font-size: 0.74rem;
+                padding: 1.1rem 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — IA &amp; ORCHESTRATION</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Workflows Multi-Agents : Orchestrer des Escouades d’Agents IA
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Pourquoi découper une tâche complexe en plusieurs agents spécialisés bat presque toujours
+            le « un gros prompt ». Fan-out parallèle, pipelines, vérification adverse, panels de juges,
+            boucles jusqu'à épuisement — avec schémas, code, arbitrages de coût, et un cas réel.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-diagram-project"></i> Orchestration</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 18 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-users-gear"></i> Patterns concrets</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- INTRODUCTION -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-rocket" style="color:#7c3aed;"></i> Pourquoi un seul agent ne suffit plus</h2>
+            <p>Quand une tâche est simple — résumer un texte, classer un e-mail, extraire un champ — un seul
+                appel à un modèle suffit. Mais dès que le travail devient <strong>complexe, ouvert et
+                composé de sous-problèmes hétérogènes</strong>, le réflexe du « un gros prompt qui fait tout »
+                se heurte à trois murs : la fenêtre de contexte sature, le modèle mélange des objectifs
+                contradictoires, et il n'existe aucun garde-fou interne pour repérer ses propres erreurs.</p>
+
+            <p>L'<strong>orchestration multi-agents</strong> répond à cela en décomposant le problème en
+                rôles : des agents spécialisés travaillent en parallèle ou en chaîne, un orchestrateur
+                assemble leurs sorties, et — c'est le point critique — d'autres agents vérifient le travail
+                de façon adverse avant qu'il ne soit publié. C'est la même logique qu'une équipe humaine :
+                on ne demande pas à une seule personne d'être à la fois chercheur, rédacteur, relecteur et
+                directeur de la publication.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">5–10×</div>
+                    <div class="metric-label">Réduction de latence sur les tâches « larges » grâce au fan-out
+                        parallèle (N recherches simultanées plutôt que séquentielles)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2 contextes</div>
+                    <div class="metric-label">Le vérificateur adverse raisonne dans une fenêtre <em>fraîche</em>,
+                        sans être biaisé par le raisonnement de l'auteur</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1 rôle</div>
+                    <div class="metric-label">Un prompt par agent = des instructions courtes, ciblées, qui ne
+                        se contredisent pas</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">Audit</div>
+                    <div class="metric-label">Chaque étape produit une sortie structurée traçable — on sait
+                        exactement quel agent a dit quoi</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pour les débutants</h4>
+                <p>Un <strong>agent</strong>, ici, c'est un appel à un modèle de langage à qui l'on confie un
+                    rôle précis, ses propres instructions, et éventuellement des outils. Un <strong>workflow
+                    multi-agents</strong> est simplement un programme qui orchestre plusieurs de ces appels —
+                    qui décide lesquels lancer, dans quel ordre, et comment combiner leurs réponses. Le code que
+                    vous écrivez n'est pas « intelligent » : il joue le rôle de chef d'orchestre.</p>
+            </div>
+        </div>
+
+        <!-- AGENT vs WORKFLOW -->
+        <div id="vocabulaire" class="content-card">
+            <h2><i class="fa-solid fa-sitemap" style="color:#7c3aed;"></i> Workflow ou agent : choisir la bonne altitude</h2>
+            <p>Avant de multiplier les agents, il faut savoir qu'on n'en a pas toujours besoin. Il existe une
+                échelle de complexité, et chaque marche coûte plus cher en tokens et en latence que la précédente.
+                La règle d'or : <strong>commencer au niveau le plus simple qui résout le problème</strong>.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Niveau</th>
+                            <th>Quand l'utiliser</th>
+                            <th>Qui pilote la boucle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Appel unique</strong></td>
+                            <td>Classification, résumé, extraction, Q&amp;R — une entrée, une sortie</td>
+                            <td>Personne, il n'y a pas de boucle</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Workflow</strong></td>
+                            <td>Pipeline multi-étapes dont la logique est connue d'avance et déterministe</td>
+                            <td>Votre code — vous enchaînez les appels</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Agent (outils)</strong></td>
+                            <td>Trajectoire ouverte : le modèle décide quels outils appeler et dans quel ordre</td>
+                            <td>Le modèle, dans une boucle d'appels d'outils que vous hébergez</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Multi-agents</strong></td>
+                            <td>Plusieurs trajectoires parallèles, ou besoin de vérification croisée indépendante</td>
+                            <td>Un orchestrateur (votre code ou un agent coordinateur)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>La distinction <strong>workflow vs agent</strong> est centrale. Un <em>workflow</em> a une structure
+                figée : « recherche → rédaction → vérification → publication ». Votre code connaît les étapes ;
+                le modèle ne fait que remplir chaque case. Un <em>agent</em>, au contraire, décide lui-même de sa
+                trajectoire — il choisit ses outils, itère, et s'arrête quand il juge avoir fini. Les deux se
+                combinent : la plupart des systèmes multi-agents robustes sont des <strong>workflows déterministes
+                dont certaines étapes sont elles-mêmes des agents</strong>.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le test à quatre questions</h4>
+                <p>Avant de construire un agent (et a fortiori plusieurs), vérifiez : la tâche est-elle vraiment
+                    <strong>complexe</strong> et difficile à spécifier d'avance ? La <strong>valeur</strong> du
+                    résultat justifie-t-elle un coût et une latence plus élevés ? Le modèle est-il
+                    <strong>capable</strong> de la traiter ? Et le <strong>coût d'une erreur</strong> est-il
+                    rattrapable (tests, relecture, rollback) ? Si une réponse est « non », restez sur un workflow
+                    ou un appel unique.</p>
+            </div>
+        </div>
+
+        <!-- LES PATTERNS -->
+        <div id="patterns" class="content-card">
+            <h2><i class="fa-solid fa-shapes" style="color:#7c3aed;"></i> Les cinq patterns d'orchestration</h2>
+            <p>Presque tous les systèmes multi-agents se ramènent à cinq motifs de base, que l'on compose. Voici
+                chacun avec son schéma, son cas d'usage, et le code conceptuel qui l'implémente.</p>
+
+            <h3>1 · Fan-out parallèle (recherche en éventail)</h3>
+            <p>L'orchestrateur découpe une question large en N sous-questions indépendantes et lance N agents
+                <strong>en parallèle</strong>, chacun avec sa propre fenêtre de contexte. Au lieu de payer la
+                latence cumulée de N recherches séquentielles, on paie celle de la plus lente. C'est le pattern
+                qui transforme une recherche de plusieurs minutes en une recherche de quelques secondes.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Orchestrateur</b>Découpe « analyser le secteur
+                        semi-conducteurs » en sous-thèmes</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> fan-out</div>
+                <div class="flow-row">
+                    <div class="flow-node"><b>Agent A</b>Demande &amp; capacités de production</div>
+                    <div class="flow-node"><b>Agent B</b>Valorisations &amp; multiples</div>
+                    <div class="flow-node"><b>Agent C</b>Géopolitique &amp; export controls</div>
+                    <div class="flow-node"><b>Agent D</b>Catalyseurs court terme</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> fan-in</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Synthèse</b>L'orchestrateur fusionne les 4 rapports
+                        en une vue unique</div>
+                </div>
+            </div>
+
+            <pre class="code-block"><span class="c"># Pseudo-code — fan-out parallèle puis synthèse</span>
+<span class="k">async def</span> recherche_eventail(sujet):
+    sous_themes = <span class="k">await</span> orchestrateur(<span class="s">"Découpe ce sujet en 3-6 axes indépendants"</span>, sujet)
+
+    <span class="c"># Lance tous les agents en parallèle — un contexte frais chacun</span>
+    rapports = <span class="k">await</span> gather(*[
+        agent_recherche(theme, modele=<span class="s">"claude-sonnet-4-6"</span>)  <span class="c"># modèle rapide pour le fan-out</span>
+        <span class="k">for</span> theme <span class="k">in</span> sous_themes
+    ])
+
+    <span class="c"># Fan-in : un agent plus capable synthétise</span>
+    <span class="k">return await</span> agent_synthese(rapports, modele=<span class="s">"claude-opus-4-8"</span>)</pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Astuce coût</h4>
+                <p>Affectez un <strong>modèle rapide et économique</strong> (Sonnet 4.6, voire Haiku 4.5) aux
+                    agents de fan-out, qui font un travail cadré et répétitif, et réservez le <strong>modèle le
+                    plus capable</strong> (Opus 4.8) à l'orchestrateur et à la synthèse, là où le jugement compte.
+                    On parle de « routage par capacité » : la bonne marche pour chaque sous-tâche.</p>
+            </div>
+
+            <h3>2 · Pipeline en étapes (chaîne de transformation)</h3>
+            <p>Ici les agents sont en <strong>série</strong> : la sortie de l'un devient l'entrée du suivant.
+                Chaque étape a une responsabilité unique et un format de sortie bien défini. C'est le motif des
+                lignes de production : extraction → enrichissement → mise en forme → contrôle qualité.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node"><b>Étape 1</b>Extraire les candidats bruts</div>
+                    <div class="flow-arrow" style="align-self:center"><i class="fas fa-arrow-right-long"></i></div>
+                    <div class="flow-node"><b>Étape 2</b>Enrichir (données marché)</div>
+                    <div class="flow-arrow" style="align-self:center"><i class="fas fa-arrow-right-long"></i></div>
+                    <div class="flow-node"><b>Étape 3</b>Filtrer &amp; scorer</div>
+                    <div class="flow-arrow" style="align-self:center"><i class="fas fa-arrow-right-long"></i></div>
+                    <div class="flow-node verify"><b>Étape 4</b>Contrôle qualité</div>
+                </div>
+            </div>
+
+            <p>Le pipeline brille quand chaque étape a besoin d'instructions très différentes. Le séparer en
+                agents distincts évite que les consignes de l'étape 1 « polluent » le raisonnement de l'étape 3,
+                et permet de <strong>remplacer ou tester une étape isolément</strong> sans toucher au reste.</p>
+
+            <h3>3 · Vérification adverse (la « war room »)</h3>
+            <p>C'est le pattern le plus sous-utilisé et le plus rentable. Après qu'un agent a produit un résultat,
+                un <strong>second agent au rôle explicitement contradictoire</strong> est chargé de le démolir :
+                trouver les failles, les hypothèses non vérifiées, les chiffres inventés. Le point clé est qu'il
+                raisonne dans une <strong>fenêtre de contexte fraîche</strong> — il ne voit pas (ou peu) le
+                raisonnement de l'auteur, donc il n'hérite pas de ses angles morts.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Auteur</b>Produit l'analyse + ses justifications</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i></div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>Avocat du diable</b>« Trouve 5 raisons pour lesquelles
+                        cette thèse est fausse »</div>
+                    <div class="flow-node verify"><b>Vérificateur de faits</b>« Chaque chiffre est-il
+                        sourcé ? Re-vérifie via les outils »</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i></div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Arbitre</b>Tranche : publier, corriger, ou rejeter</div>
+                </div>
+            </div>
+
+            <pre class="code-block"><span class="c"># Pseudo-code — war room : auteur puis vérification adverse</span>
+analyse = <span class="k">await</span> agent_auteur(donnees)
+
+<span class="c"># Le vérificateur reçoit la sortie, PAS le raisonnement de l'auteur</span>
+critique = <span class="k">await</span> agent_adverse(
+    sortie=analyse.conclusion,
+    role=<span class="s">"Tu es un risk manager hostile. Liste les failles, "</span>
+         <span class="s">"les chiffres non sourcés et les biais. Sois impitoyable."</span>,
+    outils=[verifier_chiffre, chercher_source]
+)
+
+<span class="k">if</span> critique.failles_bloquantes:
+    analyse = <span class="k">await</span> agent_auteur(donnees, retour=critique)  <span class="c"># une passe de correction</span></pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-circle-exclamation"></i> Pourquoi la fenêtre fraîche est essentielle</h4>
+                <p>Si vous demandez au <em>même</em> agent, dans le <em>même</em> contexte, de vérifier son propre
+                    travail, il a déjà « décidé » que sa conclusion était bonne — il va surtout la justifier.
+                    Un agent neuf, sans accès au raisonnement initial, attaque le résultat sans complaisance.
+                    C'est la différence entre se relire soi-même et faire relire par un collègue qui n'a rien vu.</p>
+            </div>
+
+            <h3>4 · Panel de juges (vote &amp; agrégation)</h3>
+            <p>Quand il existe plusieurs réponses candidates — soit parce que plusieurs agents ont travaillé en
+                parallèle, soit parce qu'on a généré plusieurs variantes — un <strong>panel de juges</strong>
+                les note indépendamment selon une grille (rubrique) explicite. On agrège ensuite par vote
+                majoritaire, par score moyen, ou en gardant la meilleure. Des juges <strong>indépendants</strong>
+                réduisent le bruit d'un juge unique et rendent la décision auditable.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Stratégie d'agrégation</th>
+                            <th>Quand l'utiliser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Vote majoritaire</td>
+                            <td>Réponses discrètes (classification, oui/non, choix d'un candidat)</td>
+                        </tr>
+                        <tr>
+                            <td>Score moyen sur rubrique</td>
+                            <td>Sorties à évaluer sur plusieurs critères pondérés</td>
+                        </tr>
+                        <tr>
+                            <td>« Best-of-N »</td>
+                            <td>Génération créative : on garde la meilleure variante selon les juges</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>5 · Boucle jusqu'à épuisement (loop-until-dry)</h3>
+            <p>Un agent « critique de complétude » relit le résultat et répond à une seule question :
+                <strong>« reste-t-il quelque chose d'important à couvrir ? »</strong>. Tant que la réponse est
+                oui, l'orchestrateur relance le générateur sur ce qui manque. La boucle s'arrête lorsque le
+                critique ne trouve plus rien — d'où « jusqu'à épuisement ». Un compteur d'itérations maximum
+                évite les boucles infinies.</p>
+
+            <pre class="code-block"><span class="c"># Pseudo-code — boucle pilotée par un critique de complétude</span>
+resultat = <span class="k">await</span> agent_generateur(tache)
+
+<span class="k">for</span> i <span class="k">in</span> range(<span class="n">MAX_ITER</span>):           <span class="c"># garde-fou anti-boucle infinie</span>
+    verdict = <span class="k">await</span> agent_critique(
+        resultat,
+        rubrique=<span class="s">"Liste UNIQUEMENT les manques importants. "</span>
+                 <span class="s">"Si rien ne manque, réponds {complet: true}."</span>
+    )
+    <span class="k">if</span> verdict.complet:
+        <span class="k">break</span>
+    resultat = <span class="k">await</span> agent_generateur(tache, a_combler=verdict.manques)</pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le critique doit avoir un rôle restreint</h4>
+                <p>Un critique de complétude efficace ne réécrit jamais le travail : il <strong>liste</strong>
+                    seulement ce qui manque, dans un format structuré que l'orchestrateur peut lire. Mélanger
+                    « critiquer » et « réécrire » dans le même agent brouille les deux et rend la boucle
+                    instable. Une responsabilité, une sortie.</p>
+            </div>
+        </div>
+
+        <!-- CAS RÉEL DAILYTICKERS -->
+        <div id="cas-reel" class="content-card">
+            <h2><i class="fa-solid fa-magnifying-glass-chart" style="color:#7c3aed;"></i> Cas réel : le scanner DailyTickers</h2>
+            <p>Ces patterns ne sont pas théoriques : c'est exactement ainsi que ce site sélectionne et valide ses
+                idées de trading. Le pipeline du scanner combine <strong>fan-out parallèle</strong>,
+                <strong>pipeline en étapes</strong>, <strong>war room de vérification</strong> et
+                <strong>critique de complétude</strong>. Voici la trajectoire d'un setup, du screening brut à la
+                publication.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Orchestrateur</b>Lance le screening &amp; coordonne
+                        les étapes</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> fan-out parallèle</div>
+                <div class="flow-row">
+                    <div class="flow-node"><b>Enrichissement</b>Données marché, momentum, ATR</div>
+                    <div class="flow-node"><b>Anti-dilution</b>Lecture des filings (S-3, ATM, warrants)</div>
+                    <div class="flow-node"><b>Régime &amp; risque</b>VIX, corrélations, probabilité de régime</div>
+                    <div class="flow-node"><b>Calendrier</b>Earnings &amp; événements macro proches</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> fan-in &amp; scoring</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Scoring</b>Compose un score (technique, fondamental,
+                        sentiment, R/R)</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> war room</div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>Risk manager hostile</b>Cherche la faille de chaque pick</div>
+                    <div class="flow-node verify"><b>Vérificateur de dilution</b>Re-confirme l'absence de fonds
+                        toxique</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> critique de complétude</div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>Critique QA</b>« Toutes les sections obligatoires sont-elles
+                        présentes ? »</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i></div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Publication</b>HTML + endpoints JSON + notification</div>
+                </div>
+            </div>
+
+            <p>Chaque agent a un rôle si étroit qu'on peut le tester seul. L'<strong>anti-dilution</strong>, par
+                exemple, est un vérificateur dédié : il lit les documents réglementaires et ne renvoie qu'un
+                verdict structuré (« risque toxique : oui/non, sources »). Si un setup passe le scoring mais
+                échoue à la war room, il est <em>bloquant</em> — il ne sera jamais publié, peu importe son score.
+                C'est la vérification adverse qui empêche un beau graphique de masquer un risque caché.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-shield-halved"></i> Outils via MCP — pas d'invention de données</h4>
+                <p>Les agents ne « devinent » pas les chiffres : ils interrogent une passerelle d'outils via le
+                    <strong>protocole MCP</strong> (Model Context Protocol). MCP est un standard ouvert qui
+                    expose des serveurs d'outils — données de marché, screeners, métriques de risque — que le
+                    modèle découvre et appelle au besoin. Un chiffre non vérifiable par un outil est traité comme
+                    suspect par la war room. C'est ce qui distingue une analyse sourcée d'une hallucination
+                    bien tournée.</p>
+            </div>
+        </div>
+
+        <!-- PRATIQUE -->
+        <div id="pratique" class="content-card">
+            <h2><i class="fa-solid fa-screwdriver-wrench" style="color:#7c3aed;"></i> En pratique : structurer ses agents</h2>
+
+            <h3>Un prompt par rôle, court et impératif sur le quand</h3>
+            <p>Le piège du débutant est d'écrire un prompt géant qui décrit tout. À l'inverse, chaque agent
+                multi-agents doit avoir des instructions <strong>courtes et mono-rôle</strong>. Décrivez surtout
+                <em>quand</em> l'agent doit agir et avec quel objectif, pas seulement ce qu'il fait. Les modèles
+                récents suivent les consignes de façon très littérale : un prompt avec « TU DOIS ABSOLUMENT… »
+                provoque du sur-déclenchement. Préférez « Utilise tel outil lorsque… ».</p>
+
+            <h3>Forcer des sorties structurées (schémas)</h3>
+            <p>Le ciment d'un workflow multi-agents, c'est le <strong>format de sortie</strong>. Si chaque agent
+                renvoie du texte libre, l'orchestrateur doit le re-parser à chaque fois — fragile. En contraignant
+                la sortie à un schéma JSON, l'orchestrateur lit directement des champs typés. C'est ce qui rend
+                la boucle « critique → générateur » fiable : le verdict du critique est un objet, pas une
+                dissertation.</p>
+
+            <pre class="code-block"><span class="c"># Schéma de sortie du critique de complétude (JSON Schema)</span>
+{
+  <span class="s">"type"</span>: <span class="s">"object"</span>,
+  <span class="s">"properties"</span>: {
+    <span class="s">"complet"</span>:  { <span class="s">"type"</span>: <span class="s">"boolean"</span> },
+    <span class="s">"manques"</span>: {
+      <span class="s">"type"</span>: <span class="s">"array"</span>,
+      <span class="s">"items"</span>: { <span class="s">"type"</span>: <span class="s">"string"</span> }   <span class="c"># un manque par entrée</span>
+    },
+    <span class="s">"severite"</span>: { <span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"enum"</span>: [<span class="s">"basse"</span>, <span class="s">"moyenne"</span>, <span class="s">"haute"</span>] }
+  },
+  <span class="s">"required"</span>: [<span class="s">"complet"</span>, <span class="s">"manques"</span>],
+  <span class="s">"additionalProperties"</span>: <span class="k">false</span>
+}</pre>
+
+            <p>Côté API, on obtient cette garantie en passant un schéma de sortie à la requête plutôt qu'en
+                espérant que le modèle « pense » à renvoyer du JSON. La sortie est alors validée automatiquement
+                contre le schéma. Conceptuellement&nbsp;:</p>
+
+            <pre class="code-block"><span class="c"># Pseudo-code — sortie contrainte par un schéma + routage par modèle</span>
+verdict = client.messages.create(
+    model=<span class="s">"claude-opus-4-8"</span>,            <span class="c"># jugement = modèle capable</span>
+    output_config={<span class="s">"format"</span>: {<span class="s">"type"</span>: <span class="s">"json_schema"</span>, <span class="s">"schema"</span>: SCHEMA_CRITIQUE}},
+    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: rapport}],
+)
+<span class="c"># verdict suit le schéma — l'orchestrateur lit verdict["complet"] sans re-parsing fragile</span></pre>
+
+            <h3>Éviter le débordement de contexte</h3>
+            <p>Le principal échec d'un système multi-agents naïf, c'est de tout entasser dans une seule fenêtre.
+                Les contre-mesures&nbsp;:</p>
+            <ul style="font-size:1.05rem; line-height:1.7; color:#334155;">
+                <li><strong>Isoler les contextes</strong> — chaque agent de fan-out a sa propre fenêtre ; le
+                    raisonnement de l'un ne pèse pas sur celui des autres.</li>
+                <li><strong>Ne remonter que les sorties, pas les transcriptions</strong> — l'orchestrateur reçoit
+                    les conclusions des sous-agents, pas leurs pages de réflexion intermédiaire.</li>
+                <li><strong>Synthèse asynchrone</strong> — un sous-agent à long horizon écrit ses trouvailles dans
+                    un fichier ou une mémoire partagée plutôt que de tout renvoyer d'un bloc.</li>
+                <li><strong>Mise en cache du préfixe</strong> — quand plusieurs agents partagent un gros préambule
+                    identique (instructions, données de référence), le cache de prompt évite de le re-facturer.</li>
+            </ul>
+
+            <h3>Où ces patterns vivent concrètement</h3>
+            <p>Ce site est lui-même piloté par <strong>Claude Code</strong>, l'outil agentique en ligne de commande
+                d'Anthropic (disponible aussi en desktop, sur le web et en extensions d'IDE). Claude Code sait
+                lancer des <strong>sous-agents</strong>, se connecter à des serveurs <strong>MCP</strong>, exécuter
+                des <em>hooks</em> et des commandes personnalisées (les « skills ») — c'est-à-dire exactement la
+                boîte à outils nécessaire pour composer dynamiquement les workflows décrits ici. La war room du
+                scanner, par exemple, est un panel de sous-agents au rôle adverse, coordonné par un agent
+                orchestrateur.</p>
+        </div>
+
+        <!-- ARBITRAGES -->
+        <div id="arbitrages" class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#7c3aed;"></i> Arbitrages : coût, latence, et quand NE PAS le faire</h2>
+            <p>L'orchestration multi-agents n'est pas gratuite. Chaque agent supplémentaire est un appel facturé,
+                et chaque étape en série rallonge la latence. Voici la grille de décision honnête.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Effet du multi-agents</th>
+                            <th>Atténuation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Coût (tokens)</strong></td>
+                            <td>↑ N appels au lieu d'un — peut être plusieurs fois plus cher</td>
+                            <td>Routage par modèle (Haiku/Sonnet pour le fan-out), cache de préfixe</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Latence — parallèle</strong></td>
+                            <td>↓ Le fan-out réduit la latence : on attend le plus lent, pas la somme</td>
+                            <td>Maximiser ce qui peut tourner en parallèle</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Latence — série</strong></td>
+                            <td>↑ Un pipeline en 5 étapes = 5 allers-retours cumulés</td>
+                            <td>Fusionner les étapes peu coûteuses ; ne sérialiser que le nécessaire</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Complexité</strong></td>
+                            <td>↑ Plus de pièces = plus de modes de panne (timeout, sortie mal formée)</td>
+                            <td>Sorties structurées + garde-fous d'itération + journalisation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Qualité</strong></td>
+                            <td>↑↑ La vérification adverse rattrape des erreurs qu'un seul agent ne voit pas</td>
+                            <td>C'est le gain principal — à réserver aux sorties à fort enjeu</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-ban"></i> Quand NE PAS orchestrer plusieurs agents</h4>
+                <p>Sur une tâche simple et bien spécifiée (classer, résumer, extraire), un appel unique est
+                    presque toujours plus rapide, moins cher et tout aussi bon. Multiplier les agents y ajoute du
+                    coût et des points de panne sans gain de qualité. De même, si le coût d'une erreur est nul ou
+                    trivialement corrigeable, la war room ne se justifie pas. <strong>Le multi-agents se mérite :
+                    il faut un vrai problème de complexité, de parallélisme, ou de vérification croisée.</strong></p>
+            </div>
+
+            <h3>Comparatif visuel : latence selon l'orchestration</h3>
+            <div id="latencyChart" style="height:340px; margin:1.5rem 0;"></div>
+            <p style="font-size:0.85rem; color:#64748b; margin-top:-0.5rem;">Illustration conceptuelle :
+                quatre recherches puis une synthèse. En séquentiel, les latences s'additionnent ; en fan-out
+                parallèle, on n'attend que la recherche la plus lente avant la synthèse.</p>
+        </div>
+
+        <!-- TAKEAWAY + FAQ -->
+        <div id="recap" class="content-card">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#7c3aed;"></i> À retenir &amp; quiz</h2>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-circle-check"></i> Les points clés</h4>
+                <ul>
+                    <li><strong>Commencez simple.</strong> Appel unique &lt; workflow &lt; agent &lt; multi-agents.
+                        Ne montez d'un cran que si le problème l'exige.</li>
+                    <li><strong>Un rôle par agent.</strong> Des prompts courts et mono-objectif valent mieux qu'un
+                        prompt géant aux consignes contradictoires.</li>
+                    <li><strong>Le fan-out parallèle</strong> écrase la latence sur les tâches larges ; le
+                        <strong>pipeline</strong> isole les étapes hétérogènes.</li>
+                    <li><strong>La vérification adverse</strong> (war room) dans une fenêtre fraîche est le pattern
+                        le plus rentable — elle attrape ce que l'auteur ne voit pas.</li>
+                    <li><strong>Sorties structurées</strong> (schémas JSON) : c'est le ciment qui rend
+                        l'orchestration fiable et auditable.</li>
+                    <li><strong>Routez par capacité</strong> — modèle rapide pour le travail cadré, modèle capable
+                        pour le jugement — et cachez les préfixes partagés.</li>
+                </ul>
+            </div>
+
+            <h3>Quiz éclair</h3>
+            <p><strong>1. Pourquoi un agent vérificateur doit-il raisonner dans un contexte « frais » ?</strong><br>
+                <span style="color:#64748b;">Parce qu'un agent qui voit le raisonnement de l'auteur hérite de ses
+                biais et tend à justifier la conclusion plutôt qu'à la remettre en cause. Une fenêtre fraîche permet
+                une critique réellement adverse.</span></p>
+
+            <p><strong>2. Quand le fan-out parallèle réduit-il la latence, et quand ne le fait-il pas ?</strong><br>
+                <span style="color:#64748b;">Il la réduit quand les sous-tâches sont indépendantes (on attend la plus
+                lente). Il n'aide pas si chaque étape dépend de la précédente — c'est alors un pipeline en série, par
+                définition séquentiel.</span></p>
+
+            <p><strong>3. Pourquoi imposer un schéma de sortie aux agents ?</strong><br>
+                <span style="color:#64748b;">Pour que l'orchestrateur lise des champs typés au lieu de re-parser du
+                texte libre. C'est ce qui rend les boucles (critique → générateur) et les panels de juges fiables et
+                automatisables.</span></p>
+
+            <p><strong>4. Citez un cas où il ne faut PAS utiliser le multi-agents.</strong><br>
+                <span style="color:#64748b;">Une tâche simple et bien spécifiée (classification, résumé court) dont
+                l'erreur est sans conséquence : un appel unique est plus rapide, moins cher, et aussi bon.</span></p>
+        </div>
+
+        <!-- DISCLAIMER -->
+        <div id="disclaimer" class="content-card">
+            <h2><i class="fa-solid fa-circle-info" style="color:#7c3aed;"></i> Avertissement</h2>
+            <p style="font-size:0.95rem; color:#64748b; line-height:1.65;">
+                Ce guide est <strong>pédagogique et technique</strong>. Le pipeline du scanner DailyTickers
+                décrit ici sélectionne des idées de trading à titre informatif — <strong>ceci n'est pas un
+                conseil financier</strong>. Les exemples de code sont conceptuels et destinés à illustrer les
+                patterns d'orchestration ; adaptez-les à votre stack et à la documentation officielle de votre
+                fournisseur de modèle avant tout usage en production. Les performances passées ne préjugent pas
+                des résultats futurs.
+            </p>
+        </div>
+
+    </div>
+
+    <!-- FAB -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-rocket"></i><span>Intro</span></a>
+            <a href="#vocabulaire" class="fnav-item" data-section="vocabulaire"><i class="fas fa-sitemap"></i><span>Altitude</span></a>
+            <a href="#patterns" class="fnav-item" data-section="patterns"><i class="fas fa-shapes"></i><span>Patterns</span></a>
+            <a href="#cas-reel" class="fnav-item" data-section="cas-reel"><i class="fas fa-magnifying-glass-chart"></i><span>Cas réel</span></a>
+            <a href="#pratique" class="fnav-item" data-section="pratique"><i class="fas fa-screwdriver-wrench"></i><span>Pratique</span></a>
+            <a href="#arbitrages" class="fnav-item" data-section="arbitrages"><i class="fas fa-scale-balanced"></i><span>Arbitrages</span></a>
+            <a href="#recap" class="fnav-item" data-section="recap"><i class="fas fa-flag-checkered"></i><span>Récap</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+        (function () {
+            var el = document.getElementById('latencyChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['Séquentiel', 'Fan-out parallèle'], top: 0 },
+                grid: { left: 60, right: 24, bottom: 36, top: 44 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Recherche A', 'Recherche B', 'Recherche C', 'Recherche D', 'Synthèse', 'Total'],
+                    axisLabel: { color: '#475569', fontSize: 11 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Latence (s)',
+                    axisLabel: { formatter: '{value}s', color: '#475569' }
+                },
+                series: [
+                    {
+                        name: 'Séquentiel',
+                        type: 'bar',
+                        data: [
+                            { value: 6 }, { value: 5 }, { value: 7 }, { value: 4 },
+                            { value: 8 }, { value: 30, itemStyle: { color: '#dc2626' } }
+                        ],
+                        itemStyle: { color: '#c4b5fd' },
+                        label: { show: true, position: 'top', formatter: '{c}s', fontWeight: 700, color: '#475569' }
+                    },
+                    {
+                        name: 'Fan-out parallèle',
+                        type: 'bar',
+                        data: [
+                            { value: 6 }, { value: 5 }, { value: 7 }, { value: 4 },
+                            { value: 8 }, { value: 15, itemStyle: { color: '#16a34a' } }
+                        ],
+                        itemStyle: { color: '#7c3aed' },
+                        label: { show: true, position: 'top', formatter: '{c}s', fontWeight: 700, color: '#475569' }
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>
