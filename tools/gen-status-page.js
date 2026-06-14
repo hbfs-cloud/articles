@@ -395,9 +395,12 @@ async function main() {
       bakedPrices[ticker] = { p: o.price, o: o.open||0, h: o.high||0, l: o.low||0, pc: o.close||0 };
   }
 
-  // Filter out stopped modes — they should not appear on the status page
+  // Filter out non-public modes. stopped = archived. draft = config created but never
+  // run (e.g. crypto/metals/forex — not operational yet); hidden until promoted via
+  // set-mode-status.js (draft → test/deploying), which makes them reappear automatically.
+  const NON_PUBLIC_STATUSES = new Set(['stopped', 'draft']);
   for (const [id, cfg] of Object.entries(config.modes)) {
-    if (cfg.status === 'stopped') delete config.modes[id];
+    if (NON_PUBLIC_STATUSES.has(cfg.status)) delete config.modes[id];
   }
 
   // Modes — mark premature expirations as "pending" (not enough data yet, not real exits)
@@ -1336,8 +1339,8 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   --muted:oklch(52% 0.015 250);
   --border:oklch(90% 0.006 250);
   --border-2:oklch(94% 0.005 250);
-  --accent:oklch(46% 0.13 28);
-  --accent-wk:oklch(94% 0.03 28);
+  --accent:oklch(46% 0.13 237);
+  --accent-wk:oklch(94% 0.03 237);
   --pos:oklch(52% 0.12 155);
   --pos-wk:oklch(95% 0.04 155);
   --neg:oklch(52% 0.16 25);
@@ -1590,13 +1593,13 @@ details[open] summary::after{transform:rotate(90deg)}
 .disc i{font-size:.68rem;opacity:.6}
 
 /* ── Time Machine floating trigger (FAB) ── */
-@keyframes tm-pulse{0%,100%{box-shadow:0 0 0 0 oklch(46% 0.13 28/.4)}60%{box-shadow:0 0 0 7px oklch(46% 0.13 28/0)}}
+@keyframes tm-pulse{0%,100%{box-shadow:0 0 0 0 oklch(46% 0.13 237/.4)}60%{box-shadow:0 0 0 7px oklch(46% 0.13 237/0)}}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.tm-btn-header{display:none;align-items:center;gap:.45rem;padding:.45rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:var(--pill);font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s ease;vertical-align:middle;margin-left:.85rem;letter-spacing:.01em;box-shadow:0 2px 8px oklch(46% 0.13 28/.35);animation:tm-pulse 2.4s ease-in-out infinite}
+.tm-btn-header{display:none;align-items:center;gap:.45rem;padding:.45rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:var(--pill);font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s ease;vertical-align:middle;margin-left:.85rem;letter-spacing:.01em;box-shadow:0 2px 8px oklch(46% 0.13 237/.35);animation:tm-pulse 2.4s ease-in-out infinite}
 .tm-btn-header i{font-size:.75rem;transition:transform .3s ease}
-.tm-btn-header:hover{background:oklch(40% 0.13 28);box-shadow:0 4px 16px oklch(46% 0.13 28/.5);transform:translateY(-1px);animation:none}
+.tm-btn-header:hover{background:oklch(40% 0.13 237);box-shadow:0 4px 16px oklch(46% 0.13 237/.5);transform:translateY(-1px);animation:none}
 .tm-btn-header:hover i{transform:rotate(-20deg)}
-.tm-btn-header:active{transform:translateY(0);box-shadow:0 2px 6px oklch(46% 0.13 28/.3)}
+.tm-btn-header:active{transform:translateY(0);box-shadow:0 2px 6px oklch(46% 0.13 237/.3)}
 .tm-btn-header.viewing{background:var(--warn-ink);box-shadow:0 2px 8px oklch(42% 0.10 75/.5);animation:none;color:#fff}
 .tm-btn-header.viewing i{animation:spin 2s linear infinite}
 @media(prefers-reduced-motion:reduce){.tm-btn-header,.tm-btn-header.viewing i{animation:none}.tm-btn-header i{transition:none}}
@@ -1621,8 +1624,8 @@ details[open] summary::after{transform:rotate(90deg)}
 /* Slider */
 .tm-slider-row{display:flex;align-items:center;gap:.65rem;padding:.3rem 1rem}
 .tm-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;background:oklch(100% 0 0/.12);border-radius:2px;cursor:pointer;outline:none}
-.tm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent-wk);box-shadow:0 0 0 3px oklch(46% 0.13 28/.3);cursor:pointer;transition:box-shadow .15s}
-.tm-slider::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px oklch(46% 0.13 28/.35)}
+.tm-slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent-wk);box-shadow:0 0 0 3px oklch(46% 0.13 237/.3);cursor:pointer;transition:box-shadow .15s}
+.tm-slider::-webkit-slider-thumb:hover{box-shadow:0 0 0 5px oklch(46% 0.13 237/.35)}
 .tm-slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent-wk);border:none;cursor:pointer}
 .tm-btn{border:none;background:oklch(100% 0 0/.07);border-radius:var(--r-s);padding:.35rem .5rem;cursor:pointer;color:oklch(70% 0.01 250);font-size:.72rem;line-height:1;transition:background .15s,color .15s;flex-shrink:0}
 .tm-btn:hover{background:oklch(100% 0 0/.12);color:oklch(85% 0.01 250)}

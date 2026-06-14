@@ -378,7 +378,12 @@ function writeMode(mode, prefix) {
 }
 
 // ─── Write all modes ────────────────────────────────────────────────────────
-const MODE_IDS = Object.keys(require('../data/modes-config.json').modes);
+// Public API excludes draft modes (config created, never run — e.g. crypto/metals/forex
+// not yet operational). stopped modes (tkl/alpha) stay published for their track record.
+const NON_PUBLIC_API_STATUSES = new Set(['draft']);
+const MODE_IDS = Object.entries(require('../data/modes-config.json').modes)
+  .filter(([, cfg]) => !NON_PUBLIC_API_STATUSES.has(cfg.status))
+  .map(([id]) => id);
 let count = 0;
 
 for (const id of MODE_IDS) {
@@ -524,7 +529,8 @@ write('regime.json', {
 count++;
 
 // ─── Mode status aggregate (lightweight integrations) ──────────────────────
-const allModeIds = modesConfigFull && modesConfigFull.modes ? Object.keys(modesConfigFull.modes) : MODE_IDS;
+const allModeIds = (modesConfigFull && modesConfigFull.modes ? Object.keys(modesConfigFull.modes) : MODE_IDS)
+  .filter(id => { const c = modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]; return !(c && NON_PUBLIC_API_STATUSES.has(c.status)); });
 const statusByMode = {};
 for (const id of allModeIds) statusByMode[id] = getStatusFor(id);
 let recentTransitions = [];
