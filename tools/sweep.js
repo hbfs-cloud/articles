@@ -245,9 +245,11 @@ function parseScan(dir) {
   const signalTickers = new Set(setups.map(s => s.ticker));
   const tklPool = dedup(buildSetups(loaded.tklPool, 'tkl_pool'))
     .filter(s => !signalTickers.has(s.ticker));
-  // cryptoPool: crypto candidates (BTC-USD…) keep their raw momentum score (buildSetups only
-  // re-normalizes tkl_pool). Consumed exclusively by the crypto mode (assetClass='crypto').
+  // Asset-class pools (crypto/metals/forex) keep their raw scanner score (buildSetups only
+  // re-normalizes tkl_pool). Each is consumed exclusively by the matching assetClass mode.
   const cryptoPool = dedup(buildSetups(loaded.cryptoPool, 'crypto_pool'));
+  const metalsPool = dedup(buildSetups(loaded.metalsPool, 'metals_pool'));
+  const forexPool = dedup(buildSetups(loaded.forexPool, 'forex_pool'));
 
   return {
     dir, scanDate,
@@ -256,8 +258,15 @@ function parseScan(dir) {
     setups,
     tklPool,
     cryptoPool,
+    metalsPool,
+    forexPool,
   };
 }
+
+// Asset-class pool registry: source tag → assetClass. Equity modes exclude ALL of these;
+// each asset-class mode trades ONLY its own pool. Generalizes the crypto wiring to N classes.
+const ASSET_POOL_SOURCES = { crypto: 'crypto_pool', metals: 'metals_pool', forex: 'forex_pool' };
+const ALL_ASSET_POOL_SOURCES = Object.values(ASSET_POOL_SOURCES);
 
 // ─── Regime-score override (proactive de-risk / "parachute") ─────────────────
 // The published regime LABEL lags: in June 2026 scans were labelled RISK-ON while the
@@ -1567,12 +1576,14 @@ async function main() {
   let allSetups = scans.flatMap(s => {
     const list = s.setups.slice();
     if (includeTklPool) list.push(...(s.tklPool || []));
-    list.push(...(s.cryptoPool || [])); // crypto candidates; equity modes exclude source='crypto_pool'
+    // Asset-class pools (crypto/metals/forex); equity modes exclude these via excludeSources.
+    list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []));
     return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
-  const cryptoPoolCount = allSetups.filter(s => s.source === 'crypto_pool').length;
-  console.log(`Setup pool composition: ${allSetups.length - tklPoolCount - cryptoPoolCount} top-10 + ${tklPoolCount} tkl_pool + ${cryptoPoolCount} crypto_pool`);
+  const assetCounts = ALL_ASSET_POOL_SOURCES.map(src => `${allSetups.filter(s => s.source === src).length} ${src}`).join(' + ');
+  const equityCount = allSetups.filter(s => !s.source || s.source === 'signals').length;
+  console.log(`Setup pool composition: ${equityCount} top-10 + ${tklPoolCount} tkl_pool + ${assetCounts}`);
   if (SHARIA) {
     const before = allSetups.length;
     // Use parsed data-sharia flag if available, fallback to SHARIA_EXCLUDED for old untagged scans
@@ -2205,12 +2216,14 @@ async function main() {
         adaptiveDrawdown: cfg.adaptiveDrawdown || null,
         excludeSources: (() => {
           const excl = [];
-          if (cfg.assetClass === 'crypto') {
-            // Crypto mode trades ONLY crypto_pool candidates.
-            excl.push('signals', 'tkl_pool');
+          const ownPool = ASSET_POOL_SOURCES[cfg.assetClass]; // crypto_pool / metals_pool / forex_pool, or undefined
+          if (ownPool) {
+            // Asset-class mode (crypto/metals/forex): trade ONLY its own pool — exclude equity
+            // signals, tkl, and every OTHER asset pool.
+            excl.push('signals', 'tkl_pool', ...ALL_ASSET_POOL_SOURCES.filter(s => s !== ownPool));
           } else {
-            // Equity/other modes NEVER trade crypto candidates → equity parity preserved.
-            excl.push('crypto_pool');
+            // Equity/other modes NEVER trade asset-class candidates → equity parity preserved.
+            excl.push(...ALL_ASSET_POOL_SOURCES);
             if (cfg.tklPoolEnabled === false) excl.push('tkl_pool');
             if (cfg.tklExcludeSignals === true) excl.push('signals');
           }
@@ -2326,7 +2339,8 @@ async function main() {
             if (scan.scanDate < cutoffISO) continue;
             const pool = [...scan.setups];
             if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
-            pool.push(...(scan.cryptoPool || [])); // crypto mode keeps these; others exclude via exclSources
+            // Asset-class pools; each mode keeps only its own via exclSources.
+            pool.push(...(scan.cryptoPool || []), ...(scan.metalsPool || []), ...(scan.forexPool || []));
             const filtered = pool
               .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))

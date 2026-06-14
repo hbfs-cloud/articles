@@ -53,6 +53,10 @@ const TOP_N = parseInt(getArg('top', '10'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
+// --as-of YYYY-MM-DD: point-in-time scoring. When set, OHLCV bars are sliced to
+// only those with date <= AS_OF before scoring, so historical backfills score on
+// the data that was knowable at that date. Absent = use all bars (current/default).
+const AS_OF = getArg('as-of', '');
 const CONCURRENCY = parseInt(getArg('concurrency', '8'));
 const MA_FILTER_PERIOD = parseInt(getArg('ma-filter', '200')); // bull filter (default 200)
 const KLINE_LIMIT = 250; // enough for MA200 + 30d return headroom
@@ -178,6 +182,15 @@ async function batchFetch(tickers, concurrency) {
   return results;
 }
 
+// ─── Point-in-time slicing ──────────────────────────────────────────────────
+// When --as-of is set, restrict bars to those at or before the as-of date so that
+// scores/returns are computed only from data knowable at that point in time.
+// Default (asOf falsy) returns the bars unchanged → current behavior preserved.
+function sliceAsOf(bars, asOf) {
+  if (!asOf) return bars;
+  return bars.filter(b => b.date <= asOf);
+}
+
 // ─── Scoring (port of scoreSymbol, scanner_crypto_momentum.go:101-212) ──────
 
 function scoreSymbol(ticker, bars) {
@@ -239,7 +252,7 @@ async function main() {
   const { tickers: universe, names } = loadUniverse();
   console.log(`🪙  Crypto Momentum Scanner (systematic-tss port)`);
   console.log(`   Universe: ${universe.length} tickers | minScore: ${MIN_SCORE} | top: ${TOP_N} | MA-filter: ${MA_FILTER_PERIOD}`);
-  console.log(`   Date: ${SCAN_DATE}`);
+  console.log(`   Date: ${SCAN_DATE}${AS_OF ? ` | as-of (point-in-time): ${AS_OF}` : ''}`);
 
   console.log('📡 Fetching Binance klines (daily, 250 bars)...');
   const priceData = await batchFetch(universe, CONCURRENCY);
@@ -247,7 +260,9 @@ async function main() {
   console.log('🔍 Scoring momentum...');
   const candidates = [];
 
-  for (const [ticker, bars] of priceData) {
+  for (const [ticker, allBars] of priceData) {
+    const bars = sliceAsOf(allBars, AS_OF); // point-in-time slice (no-op when --as-of absent)
+    if (bars.length < 60) continue;         // not enough history at as-of date
     const r = scoreSymbol(ticker, bars);
     if (!r) continue;                       // failed MA200 bull filter / insufficient bars
     if (r.score < MIN_SCORE) continue;      // minScore filter
