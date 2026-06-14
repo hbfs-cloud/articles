@@ -1364,24 +1364,24 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .mode-panel{min-width:0;max-width:100%;overflow-x:hidden}
 .mode-panel>*{min-width:0;max-width:100%}
 
-/* ── Mode tab rail — underline tabs, grouped by asset class ── */
-.mode-tabs{display:flex;align-items:flex-end;gap:.15rem;margin-bottom:1.5rem;padding:0;border-bottom:1px solid var(--border);position:relative}
-.mode-class{display:flex;align-items:flex-end;gap:.15rem;padding-right:.15rem}
-.mode-class+.mode-class{margin-left:.4rem;padding-left:.55rem;border-left:1px solid var(--border)}
-.mode-class-label{font-family:var(--mono);font-size:.58rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);align-self:center;padding:0 .25rem 0 0;white-space:nowrap;flex-shrink:0}
-.mode-tab{flex:0 1 auto;padding:.6rem .75rem;border:none;background:transparent;cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:40px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .18s,border-color .18s}
-.mode-tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:var(--r-s) var(--r-s) 0 0}
-.mode-tab:hover{color:var(--ink-2)}
-.mode-tab.active{color:var(--ink);border-bottom-color:var(--mc,var(--accent));font-weight:700}
+/* ── Mode tab rail — segmented control: tabs fill the bar (no dead space), grouped by asset class ── */
+.mode-tabs{display:flex;gap:.25rem;margin-bottom:1.5rem;padding:.25rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-l)}
+.mode-class{flex:1;display:flex;align-items:center;gap:.25rem;min-width:0}
+.mode-class+.mode-class{margin-left:.35rem;padding-left:.5rem;border-left:1px solid var(--border)}
+.mode-class-label{font-family:var(--mono);font-size:.56rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;flex-shrink:0;padding:0 .1rem}
+.mode-tab{flex:1;min-width:0;padding:.55rem .65rem;border:none;background:transparent;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:38px;transition:background .18s,color .18s,box-shadow .18s}
+.mode-tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.mode-tab:hover{color:var(--ink-2);background:var(--surface)}
+.mode-tab.active{background:var(--surface);color:var(--mc,var(--accent));box-shadow:0 1px 3px oklch(22% 0.02 250/.12),0 0 0 1px var(--border-2);font-weight:700}
 .mode-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;opacity:.85}
 .mode-tab.active .mode-dot{opacity:1}
 .tab-rec{font-size:.58rem;background:var(--accent-wk);color:var(--accent);padding:.1rem .35rem;border-radius:var(--r-s);font-weight:700;margin-left:.2rem;letter-spacing:.02em}
 @media(max-width:600px){
-  .mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding-left:.5rem}
+  .mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding-left:.5rem;flex-wrap:nowrap}
   .mode-tabs::-webkit-scrollbar{display:none}
   .mode-class{flex:0 0 auto}
-  .mode-class-label{font-size:.52rem}
-  .mode-tab{flex:0 0 auto;padding:.55rem .6rem;font-size:.78rem;white-space:nowrap;scroll-snap-align:start}
+  .mode-class-label{font-size:.5rem}
+  .mode-tab{flex:0 0 auto;padding:.55rem .8rem;font-size:.78rem;white-space:nowrap;scroll-snap-align:start}
 }
 @media(prefers-reduced-motion:reduce){.mode-tab{transition:none}}
 /* Time Machine FAB pulse for first-time discoverability */
