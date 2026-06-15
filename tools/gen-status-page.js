@@ -629,8 +629,11 @@ async function main() {
     const todayISO = new Date().toISOString().slice(0, 10);
 
     // Source of truth: backtest-trades.json per mode
-    // 1) Active positions: _premature (sweep hasn't resolved — still holding)
-    const openTrades = trades.filter(t => t._premature);
+    // 1) Active positions: genuinely unresolved (status 'pending'). NOT every `_premature`
+    //    trade — that flag is also set on already-closed EARLY exits (status sl/tp/expired with
+    //    holdDays<horizon), which would resurface long-dead trades (GLD/TTE from March) as
+    //    phantom positions. Only status 'pending' means "still holding, no exit recorded".
+    const openTrades = trades.filter(t => t._premature && t.status === 'pending');
     // 2) Same-day closed: resolved today, show grayed with terminal status
     const closedToday = trades.filter(t => !t._premature && t.exitDate === todayISO);
 
@@ -671,8 +674,12 @@ async function main() {
       p._expired = held >= cfg.horizon;
     }
     const live = positions.filter(p => !p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
+    // Horizon reached but still genuinely open (no real exit yet): keep it visible so the
+    // downstream closeNow logic surfaces it as "expiring", instead of silently dropping a
+    // live position (e.g. UNH +3.48% at day 8/8). It does NOT consume a live slot.
+    const expiringOpen = positions.filter(p => p._expired && !p._terminal);
     const terminal = positions.filter(p => p._terminal);
-    return [...live.slice(0, cfg.portfolioSize), ...terminal];
+    return [...live.slice(0, cfg.portfolioSize), ...expiringOpen, ...terminal];
   }
 
   // ── Panel builder ──
@@ -3081,10 +3088,16 @@ function backfillHistory() {
       const avgHold = modeTrades.length ? +(modeTrades.reduce((s, t) => s + (t.holdDays || 0), 0) / modeTrades.length).toFixed(1) : 0;
 
       // ── Open positions on this date ──
-      // A trade is open if: scanDate <= D AND exitDate > D
+      // A trade is open as-of D iff entryDate <= D AND (no exitDate OR exitDate > D).
+      // Use the ACTUAL exitDate, not a synthetic scanDate+holdDays one: holdDays for an
+      // early-closed trade (e.g. MRK sl) yields a future synthetic exit that wrongly keeps
+      // it "open" and, via slice(-N), evicts a genuinely-open position (UNH). This is the
+      // same rule qa-check uses, so snapshot positions and the QA consistency check agree.
       const openTrades = modeTrades.filter(t => {
-        const exitDate = addBizDaysBF(t.scanDate, t.holdDays || cfg.horizon);
-        return exitDate > dateISO;
+        const entry = t.entryDate || t.scanDate;
+        if (!entry || entry > dateISO) return false;
+        if (!t.exitDate) return true;
+        return t.exitDate > dateISO;
       }).slice(-cfg.portfolioSize); // max portfolioSize most recent
 
       const positions = openTrades.map(t => {
