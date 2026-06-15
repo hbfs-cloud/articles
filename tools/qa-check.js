@@ -180,7 +180,9 @@ check(`scan dernier jour ouvré: id="synthese" présent`, () => {
 check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follow/Defensive/etc.)', () => {
   // Lire signals.json (source de vérité structurée) plutôt que grep le HTML
   // (le HTML contient légitimement le mot "defensive" en prose descriptive).
-  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze']);
+  // 'Candlestick' = AmericanBulls reversal patterns appended by candlestick-scanner.js
+  // for the "bull" mode (filterName=candlestick_only). Legitimate, not the 4 core A+ labels.
+  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze', 'Candlestick']);
   const scannerDir = path.join(ROOT, 'scanner');
   const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse().slice(0, 2);
   const found = [];
@@ -202,7 +204,9 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
       } catch { /* ignore */ }
     }
     for (const label of strategies) {
-      if (!ALLOWED.has(label)) found.push(`${d}: "${label}"`);
+      // case-insensitive: "candlestick" (legacy) and "Candlestick" (current) both valid
+      const ok = [...ALLOWED].some(a => a.toLowerCase() === String(label).toLowerCase());
+      if (!ok) found.push(`${d}: "${label}"`);
     }
   }
   if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;

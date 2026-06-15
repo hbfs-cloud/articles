@@ -47,6 +47,18 @@ fi
 
 # ─── Step 3: Re-run sweep (backtest all scans with current prices) ───────────
 if [ "$SKIP_SWEEP" = false ]; then
+  # ─── Step 2c: Candlestick scan (AmericanBulls) → appends Bull-mode signals ──
+  # Feeds the "bull" mode (filterName=candlestick_only). MUST run before sweep AND
+  # gen-status-page (gen-status-page builds the per-mode "Orders to Place" panel by
+  # filtering the latest scan's signals.json — without this, bull shows 0 signals).
+  # Idempotent: candlestick-scanner dedups by ticker, safe to re-run.
+  echo ""
+  echo "🕯️  Step 2c: Candlestick scan (Bull mode signals)..."
+  CS_SCAN_DIR=$(ls -d scanner/2*/ 2>/dev/null | sort | tail -1)
+  CS_SCAN=$(basename "$CS_SCAN_DIR")
+  CS_REGIME=$(node -e "try{process.stdout.write(require('./${CS_SCAN_DIR}signals.json').regime||'')}catch(e){}" 2>/dev/null)
+  node tools/candlestick-scanner.js --output signals --date "$CS_SCAN" --regime "$CS_REGIME" || echo "⚠️  Candlestick scan failed (non-blocking)"
+
   echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)

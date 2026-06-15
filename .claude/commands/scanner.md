@@ -175,9 +175,10 @@ If publish validation fails (filter violations), return to Phase 2 with the spec
 
 ## Phase 5 — Downstream Pipeline (skip with --skip-downstream)
 
-Strict order — `update-tracking` MUST run BEFORE `sweep` (sweep reads tracked exits):
+Strict order — `update-tracking` → `candlestick-scanner` → `sweep` → ... (candlestick MUST precede sweep AND gen-status-page; sweep reads tracked exits):
 ```bash
 node tools/update-tracking.js                                                # Yahoo prices → exit triggers
+node tools/candlestick-scanner.js --output signals --date YYYYMMDD --regime <REGIME>   # AmericanBulls candlestick patterns → appends to signals.json (feeds the "bull" mode, filterName=candlestick_only). Idempotent (dedup by ticker). REQUIRED: the "bull" tab's "Orders to Place" panel is built by gen-status-page filtering the latest scan's signals.json — skip this and bull shows "0 signals". Fetches fresh Yahoo OHLCV (last bar = current session close).
 node tools/sweep.js                                                          # Append-only: new closed trades + advisor_*
 MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
   node tools/refresh-risk-metrics.js                                         # VaR + stress + correlation + regimeProb (6 modes from config)
