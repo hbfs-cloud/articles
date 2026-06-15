@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-15T21:53:13.664Z",
+  "generated_at": "2026-06-15T22:12:30.204Z",
   "valid_for": "2026-06-16",
   "mode_status": {
     "state": "live",
@@ -106,6 +106,98 @@
     {
       "id": "ORD-001",
       "action": "BUY",
+      "ticker": "PAYO",
+      "broker_symbol": "PAYO",
+      "broker": {
+        "symbol": "PAYO"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 7.03,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 1422,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-16T09:30:00-04:00",
+        "valid_until": "2026-06-16T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 6.99,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 7.12,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 7.17,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 150,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": false,
+        "thesis": "BULLISH_SPINNING_TOP pattern (base 40) with 10.2x volume spike. ATR% 5.05%, RSI 85.4, BB%B 1.026."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
       "ticker": "TSM",
       "broker_symbol": "TSM",
       "broker": {
@@ -193,10 +285,10 @@
         "sharia": true,
         "thesis": "TSM at $441.40 (+4.1%) near its 52-week high ($450) amid the AI-semis melt-up (NASDAQ +3.07%, Nikkei +4.99%). The world foundry leader makes every major AI accelerator. Options flow is heavily bullish across ITM/OTM calls. RSI 59.4 leaves room, price +9.8% above EMA50 (under the 20% cap), +30% above EMA200. Given the +4.1% session, entry favors an intraday VWAP pullback over chasing the gap."
       },
-      "priority": 1
+      "priority": 2
     },
     {
-      "id": "ORD-002",
+      "id": "ORD-003",
       "action": "BUY",
       "ticker": "SMH",
       "broker_symbol": "SMH",
@@ -285,10 +377,10 @@
         "sharia": true,
         "thesis": "SMH closes at an all-time high ($647, +4.4%) led by NVIDIA/TSM/AVGO/AMD — diversified exposure to the day's leading theme without single-name risk. RSI 65 below overbought. Extension is real (+22% above 50-DMA) but it is a broad ETF at ATH in the strongest theme; the large put OI ($380-465) is structural hedging, not smart-money short. Pullback entry after the +4.4% session, stop below EMA20 ($593)."
       },
-      "priority": 2
+      "priority": 3
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "SAN",
       "broker_symbol": "SAN",
@@ -377,10 +469,10 @@
         "sharia": false,
         "thesis": "Santander breaks its 52-week high ($13.30) at $13.14 (+2.1%) on a fresh AmericanBulls BUY (Jun 11) and bullish MACD cross. The Spanish bank benefits from the European value re-rating: rising ROTE, capital returns, LatAm + Europe footprint. Forward P/E ~10x is cheap. RSI 63 healthy. Entry on the breakout zone, stop below EMA20. Bank = non-Sharia (interest income)."
       },
-      "priority": 3
+      "priority": 4
     },
     {
-      "id": "ORD-004",
+      "id": "ORD-005",
       "action": "BUY",
       "ticker": "CSX",
       "broker_symbol": "CSX",
@@ -468,98 +560,6 @@
         "rr": "1:1.7",
         "sharia": true,
         "thesis": "CSX consolidates just below its 52-week high ($48.03) at $47.39 (-0.4% today, healthy pause). Eastern US rail benefits from re-industrialization, intermodal volume and restored pricing power. RSI 60.4 with EMA20>EMA50>EMA200. Very tight ATR (2.0%) allows a close stop at the -3.0% floor with 1:1.9 R/R. Entry near spot since it did not run today. AmericanBulls BUY Jun 2."
-      },
-      "priority": 4
-    },
-    {
-      "id": "ORD-005",
-      "action": "BUY",
-      "ticker": "RIO",
-      "broker_symbol": "RIO",
-      "broker": {
-        "symbol": "RIO"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 105.25,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 95,
-          "pct_of_portfolio": 100
-        },
-        "valid_from": "2026-06-16T09:30:00-04:00",
-        "valid_until": "2026-06-16T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 100.9,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 113.10000000000001,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 116.60000000000001,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 10,
-          "expiry_date": "2026-06-30",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 10 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 92,
-        "strategy": "Breakout",
-        "rr": "1:1.8",
-        "sharia": true,
-        "thesis": "Rio Tinto ($105.89, +0.5%) extends its uptrend 6% below its 52-week high ($112.58) on the metals rally (gold +2.2%, silver +3.1%). Diversified mining — iron, copper, aluminum, lithium — captures both AI/infra demand (copper = data-center wiring) and the precious-metals bid. Strong balance sheet (low net debt), ~3.8% yield. RSI 53.9, +3.6% above EMA50 = healthy, non-extended. AmericanBulls BUY Jun 11."
       },
       "priority": 5
     }
