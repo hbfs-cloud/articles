@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Détecter et corriger ses biais par la data | Journal & Performance — Partie 5/6 | DailyTickers</title>
+ <meta name="description" content="Le journal comme miroir sans complaisance : segmenter ses trades (par setup, par heure, par régime, par émotion) pour débusquer les fuites — revenge trading, overtrading, setups perdants, créneaux défavorables — et couper chirurgicalement ce qui ne marche pas.">
+ <meta property="og:title" content="Détecter et corriger ses biais par la data | Journal & Performance 5/6">
+ <meta property="og:description" content="Le journal comme miroir sans complaisance : segmenter ses trades (par setup, par heure, par régime, par émotion) pour débusquer les fuites — revenge trading, overtrading, setups perdants, créneaux défavorables — et couper chirurgicalement ce qui ne marche pas.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/journal-et-performance/part5-corriger-biais/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* AMBER THEME — Journal & Performance */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#b45309; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#d97706; margin-right:0.75rem; }
+ details[open] summary { border-color:#d97706; background:#fffbeb; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #451a03 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#fcd34d; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #d97706; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b45309; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(217,119,6,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,119,6,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #d97706; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Journal & Performance — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Détecter et corriger ses biais par la data</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.1rem; color:#475569; line-height:1.6;">Vos biais sont invisibles de l'intérieur — la sur-confiance, l'ancrage, l'aversion à la perte ne se déclarent jamais. Mais ils laissent une signature chiffrée dans votre journal. Bien segmentée, la data révèle exactement où vous perdez de l'argent et de la discipline. Et donc, chirurgicalement, ce qu'il faut couper.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-microscope"></i> Segmentation</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-fire"></i> Revenge & overtrading</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-scissors"></i> Couper les fuites</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-clock"></i> Créneaux & régimes</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part4-la-revue/" class="series-arrow" title="La revue : quotidienne, hebdomadaire, mensuelle"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step current" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">5/6</span><a href="/series/journal-et-performance/part6-dashboard/" class="series-arrow" title="Le tableau de bord du gérant et la boucle d'amélioration"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="miroir"><i class="fas fa-bookmark"></i><span>Le miroir</span></a>
+  <a class="fnav-item" data-section="segmenter"><i class="fas fa-bookmark"></i><span>Segmenter</span></a>
+  <a class="fnav-item" data-section="comportements"><i class="fas fa-bookmark"></i><span>Revenge & overtrading</span></a>
+  <a class="fnav-item" data-section="setups"><i class="fas fa-bookmark"></i><span>Setups perdants</span></a>
+  <a class="fnav-item" data-section="couper"><i class="fas fa-bookmark"></i><span>Couper</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <div class="section-divider" id="miroir"><i class="fa-solid fa-clone" style="color:#d97706;"></i> Le journal comme miroir</div>
+  <div class="content-card">
+    <p>Demandez à n'importe quel trader perdant pourquoi il perd. Il vous répondra par une histoire : le marché était piégeux, la nouvelle est sortie au mauvais moment, le broker a mal exécuté. Ce qu'il ne vous dira jamais, parce qu'il ne le voit pas, c'est qu'il a pris quatorze trades hors plan le mardi après-midi en six semaines, et qu'ils lui ont coûté l'équivalent de tous ses gains du trimestre.</p>
+
+    <p>C'est le cœur de cette partie. <strong>Les biais cognitifs sont structurellement invisibles de l'intérieur.</strong> La sur-confiance se vit comme de la lucidité. L'ancrage se vit comme de la conviction. L'aversion à la perte — encaisser ses gains trop tôt, laisser courir ses pertes trop longtemps — se vit comme de la prudence d'un côté et de l'espoir raisonnable de l'autre. Aucun de ces biais ne se présente à vous étiqueté « biais ». Ils se présentent comme votre jugement.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Pourquoi l'introspection ne suffit pas</h4>
+      <p>Se demander « suis-je en train de faire du revenge trading ? » au moment où on le fait revient à demander à quelqu'un en colère s'il est calme. Le biais déforme précisément la faculté qui devrait le détecter. La seule sortie est externe : un enregistrement objectif, antérieur et indépendant de votre état émotionnel du moment. C'est le journal. Il n'a pas d'ego à protéger, pas de récit à entretenir. Il enregistre l'heure, le setup, la taille, le résultat — et plus tard, la régularité qui vous trahit.</p>
+    </div>
+
+    <p>Cette série traite du même problème que la psychologie du trading, mais par l'angle opposé. La voie psychologique cherche à <em>ressentir</em> mieux : reconnaître l'émotion, respirer, prendre du recul. C'est utile, mais cela reste subjectif et difficile à vérifier. <strong>La voie que nous suivons ici est celle de la preuve par les chiffres.</strong> On ne vous demande pas de croire que vous faites de l'overtrading ; on vous montre la colonne du tableau où votre espérance de gain s'effondre dès le quatrième trade de la journée. Le biais cesse d'être une accusation morale pour devenir une ligne de données.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-route" style="margin-right:0.5rem;"></i> Où nous en sommes dans la série</h4>
+      <p>Les parties 2 et 3 vous ont donné le vocabulaire : R-multiple, expectancy, win rate, MAE/MFE. La partie 4 a installé la routine de revue. Cette partie 5 utilise ces deux acquis pour faire le travail de fond — <strong>segmenter</strong> l'historique afin de localiser les fuites, puis décider quoi couper. La partie 6 transformera ces décisions en un tableau de bord vivant. Sans la segmentation d'aujourd'hui, le dashboard de demain ne mesurerait qu'une moyenne aveugle.</p>
+    </div>
+
+    <p>Un avertissement sur les chiffres qui suivent. <strong>Tous les exemples de cet article sont illustratifs</strong> — construits pour montrer la méthode, pas tirés d'un compte réel précis. La discipline consiste justement à refaire ces calculs sur <em>vos</em> données. La méthode est universelle ; les conclusions sont strictement personnelles.</p>
+  </div>
+
+  <div class="section-divider" id="segmenter"><i class="fa-solid fa-table-cells-large" style="color:#d97706;"></i> Segmenter pour trouver les fuites</div>
+  <div class="content-card">
+    <p>Votre expectancy globale est une moyenne. Et comme toute moyenne, elle ment par omission. Un trader dont l'espérance globale est de +0,12 R par trade peut très bien cacher un setup à +0,55 R noyé sous trois setups à −0,20 R. La moyenne paraît modeste mais vivable ; la réalité est qu'une stratégie excellente finance trois stratégies destructrices. <strong>Segmenter, c'est défaire la moyenne pour voir les composantes.</strong></p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-calculator" style="margin-right:0.5rem;"></i> Rappel — l'expectancy en R</h4>
+      <p>L'espérance par trade, exprimée en multiples de risque (R), se calcule ainsi :</p>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-label">Expectancy par trade</div>
+      E = (<span class="formula-highlight">%Gagnants</span> × Gain moyen<sub>R</sub>) − (<span class="formula-highlight">%Perdants</span> × Perte moyenne<sub>R</sub>)
+    </div>
+
+    <p>Exemple de lecture : un segment qui gagne 40 % du temps, avec un gain moyen de +1,8 R et une perte moyenne de 1,0 R, a une espérance de (0,40 × 1,8) − (0,60 × 1,0) = 0,72 − 0,60 = <strong>+0,12 R par trade</strong>. Le même win rate de 40 % avec un gain moyen tombé à +1,1 R donne (0,40 × 1,1) − (0,60 × 1,0) = 0,44 − 0,60 = <strong>−0,16 R</strong> : la même stratégie devient destructrice juste parce que les gagnants sont coupés trop tôt. La segmentation sert à isoler ces deux mondes au lieu de les confondre dans une moyenne unique.</p>
+
+    <p>Rappel utile (détaillé en partie 2) : pour un <em>payoff</em> donné = gain moyen ÷ perte moyenne, le win rate minimal au-delà duquel un segment cesse de détruire de la valeur est <strong>Win% = 1 / (1 + payoff)</strong>. À payoff 1,8 (le premier exemple), le seuil de rentabilité est 1/2,8 ≈ <strong>36 %</strong> — les 40 % observés passent tout juste. À payoff 1,1 (le second), le seuil grimpe à 1/2,1 ≈ <strong>48 %</strong> : avec seulement 40 % de gagnants, le segment bascule mécaniquement dans le négatif. C'est la même bascule que l'expectancy ci-dessus, lue par l'autre bout : chaque segment porte un seuil de Win% qui lui est propre, et le comparer au win rate réel dit en une ligne s'il faut couper.</p>
+
+    <p>Cinq axes de découpe suffisent à couvrir l'essentiel des fuites. Chacun répond à une question précise.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Axe de segmentation</th><th>Question posée</th><th>Biais révélé</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Par setup</strong></td><td>Quelles configurations gagnent vraiment de l'argent ?</td><td>Attachement à un setup favori non rentable</td></tr>
+        <tr><td><strong>Par jour / heure</strong></td><td>Y a-t-il des créneaux où je suis systématiquement mauvais ?</td><td>Fatigue, ennui, créneaux à faible liquidité</td></tr>
+        <tr><td><strong>Par régime de marché</strong></td><td>Est-ce que je perds surtout en risk-off ou en range ?</td><td>Stratégie inadaptée au contexte (sur-confiance directionnelle)</td></tr>
+        <tr><td><strong>Par état émotionnel noté</strong></td><td>Les trades « énervé » ou « FOMO » coûtent-ils plus ?</td><td>Décisions sous emprise affective</td></tr>
+        <tr><td><strong>Par plan respecté (O/N)</strong></td><td>Quel est le coût des trades hors plan ?</td><td>Indiscipline pure — le plus rentable à corriger</td></tr>
+      </tbody>
+    </table>
+
+    <p>L'outil pratique est le <strong>tableau croisé</strong> (pivot table). Pour chaque valeur d'un axe, on agrège quatre colonnes : nombre de trades (n), win rate, R total cumulé et expectancy par trade. La colonne décisive est la dernière : c'est elle qui dit si le segment crée ou détruit de la valeur. Mais ne lisez jamais l'expectancy sans regarder n à côté — un segment à +0,9 R sur 3 trades n'est pas une découverte, c'est du bruit.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> La taille d'échantillon avant tout</h4>
+      <p>Une expectancy calculée sur moins de 20 trades est une indication, pas une preuve. En dessous de ~30 observations par segment, traitez le résultat comme une hypothèse à confirmer, jamais comme un verdict. Le piège classique : couper un bon setup après 5 pertes consécutives qui, statistiquement, n'ont rien d'anormal pour une stratégie à 45 % de réussite. La data corrige les biais — à condition de ne pas en créer un nouveau, celui du sur-apprentissage sur de petits échantillons.</p>
+    </div>
+
+    <p>Le segment « plan respecté oui/non » mérite une attention particulière. C'est souvent le plus brutal et le plus libérateur. Beaucoup de traders découvrent que leurs trades conformes au plan ont une espérance nettement positive, tandis que leurs trades hors plan — improvisés, sur impulsion, « parce que ça allait monter » — affichent une espérance franchement négative. <strong>La conclusion est alors d'une simplicité presque vexante : leur stratégie marche ; c'est eux qui la sabotent.</strong> Aucune optimisation de paramètres ne réparera cela. Seule la discipline le fera.</p>
+
+    <div id="chart-jour" style="width:100%;height:380px;margin:2rem 0;"></div>
+    <p style="font-size:0.85rem;color:#64748b;text-align:center;margin-top:-1rem;"><em>Illustration — Expectancy moyenne (en R) selon le créneau de la journée. Le « creux de l'après-midi » et la session de fin de journée saignent ; l'ouverture porte la performance. Données fictives.</em></p>
+  </div>
+
+  <div class="section-divider" id="comportements"><i class="fa-solid fa-fire" style="color:#d97706;"></i> Revenge trading & overtrading</div>
+  <div class="content-card">
+    <p>Deux comportements détruisent plus de comptes que n'importe quel mauvais setup, parce qu'ils ne sont pas des erreurs de jugement isolées mais des <strong>schémas</strong>. Et un schéma, par définition, laisse une trace régulière dans la data.</p>
+
+    <h3 style="color:#0f172a;margin-top:2rem;">Le revenge trading</h3>
+    <p>C'est le fait de reprendre position immédiatement après une perte, non pas parce qu'un signal se présente, mais pour « se refaire » — récupérer l'argent perdu, effacer l'humiliation. Le marché n'a aucune mémoire de votre perte précédente ; vous, si. C'est tout le problème.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-magnifying-glass-chart" style="margin-right:0.5rem;"></i> Comment le débusquer dans la data</h4>
+      <p>Trois signatures, toutes mesurables :</p>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-clock" style="color:#dc2626;"></i><strong>Délai post-perte raccourci.</strong> Calculez le temps moyen entre deux trades. Comparez-le au délai qui suit spécifiquement une perte. S'il s'effondre (par exemple de 90 minutes à 8 minutes), c'est une signature de revenge.</li>
+        <li><i class="fa-solid fa-arrows-up-to-line" style="color:#dc2626;"></i><strong>Taille gonflée après une perte.</strong> Comparez le risque moyen par trade en conditions normales et juste après une perte. Une augmentation systématique trahit la volonté de « tout récupérer d'un coup ».</li>
+        <li><i class="fa-solid fa-link" style="color:#dc2626;"></i><strong>Corrélation perte → trade hors plan.</strong> Croisez votre colonne « plan respecté » avec « trade précédent perdant ». Si les trades hors plan se concentrent après les pertes, le lien est établi.</li>
+      </ul>
+    </div>
+
+    <h3 style="color:#0f172a;margin-top:2rem;">L'overtrading</h3>
+    <p>L'overtrading, c'est prendre trop de positions — souvent hors setup, par ennui ou par besoin d'action. Sa signature est simple : <strong>l'expectancy par trade décroît à mesure que le nombre de trades dans la journée augmente.</strong> Les premiers trades sont vos meilleurs setups, choisis patiemment. Les suivants sont des justifications de plus en plus minces. Au-delà d'un certain seuil — propre à chacun — vous payez du spread et des commissions pour le plaisir de cliquer.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-coins" style="margin-right:0.5rem;"></i> Le coût chiffré — un exemple</h4>
+      <p>À titre d'illustration, prenons un trader dont les <strong>3 premiers trades quotidiens</strong> affichent une expectancy de <strong>+0,30 R</strong>, et dont les trades <strong>au-delà du troisième</strong> tombent à <strong>−0,25 R</strong>. Supposons qu'il prenne en moyenne 2 trades « en trop » par jour, sur 200 jours de trading, en risquant 1 % du capital par trade.</p>
+      <p style="margin-top:0.75rem;">Coût annuel des trades superflus : 2 × 200 × (−0,25 R) = <strong>−100 R</strong>. À 1 % de capital risqué par R, cela représente <strong>environ 100 % du capital de départ effacé sur l'année</strong> (100 R × 1 %/R = 100 %) — non pas une faillite mécanique d'un coup (le risque par trade reste fractionnaire), mais l'effacement net, cumulé sur l'année, de ce que les bons trades avaient construit. Le même trader, en s'arrêtant après son troisième trade, ne change rien à sa stratégie : il <strong>cesse simplement de la diluer</strong>.</p>
+    </div>
+
+    <p>Ce calcul illustre le principe central de la partie : <strong>la fuite n'est pas dans la qualité des bons trades, mais dans le volume des mauvais.</strong> On ne corrige pas l'overtrading en cherchant de meilleurs setups. On le corrige en plafonnant le nombre de trades — un acte de soustraction, pas d'addition.</p>
+
+    <div id="chart-impulsif" style="width:100%;height:380px;margin:2rem 0;"></div>
+    <p style="font-size:0.85rem;color:#64748b;text-align:center;margin-top:-1rem;"><em>Illustration — Espérance comparée des trades planifiés (conformes au plan) et des trades impulsifs pris dans les minutes suivant une perte. L'écart mesure le coût direct du revenge trading. Données fictives.</em></p>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-shield-halved" style="margin-right:0.5rem;"></i> Le piège de la rationalisation</h4>
+      <p>Chaque trade de revenge ou d'overtrading aura, au moment où vous le prenez, une justification convaincante : « le niveau tient », « le momentum est là », « c'est un vrai signal cette fois ». C'est précisément pourquoi la décision ne doit pas se prendre dans l'instant. Elle se prend <strong>à froid</strong>, dans la revue, en regardant les agrégats — et se traduit ensuite par une règle mécanique (délai minimum après une perte, plafond de trades) qui ne vous demande plus votre avis au moment critique.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="setups"><i class="fa-solid fa-layer-group" style="color:#d97706;"></i> Les setups qui perdent</div>
+  <div class="content-card">
+    <p>Voici l'une des découvertes les plus régulières quand un trader segmente honnêtement son journal pour la première fois : <strong>il a un, peut-être deux setups réellement rentables, et plusieurs autres qui détruisent activement de la performance.</strong> La rentabilité globale, quand elle existe, tient à la force des premiers malgré la saignée des seconds.</p>
+
+    <p>L'intuition résiste à ce constat, parce que chaque setup a une histoire séduisante et quelques trades mémorables. Mais la mémoire est sélective — elle retient les beaux gagnants et oublie la cohorte des petites pertes. <strong>L'expectancy par setup, elle, n'oublie rien.</strong> Elle additionne tout, gagnants spectaculaires comme pertes anodines, et rend un verdict net en R par trade.</p>
+
+    <div id="chart-setup" style="width:100%;height:400px;margin:2rem 0;"></div>
+    <p style="font-size:0.85rem;color:#64748b;text-align:center;margin-top:-1rem;"><em>Illustration — Expectancy par setup, en R par trade. Deux setups portent la performance ; trois la grèvent. Le nombre de trades (n) figure entre parenthèses : on ne juge pas un segment de faible n. Données fictives.</em></p>
+
+    <p>Lisez ce graphique comme un gérant lirait l'attribution de performance d'un fonds. Le « Pullback EMA20 » (+0,42 R sur 64 trades) et le « Breakout volume » (+0,31 R sur 51 trades) sont le moteur. Le « Contre-tendance » (−0,28 R sur 47 trades) et le « Range scalp » (−0,19 R sur 58 trades) sont des fuites avérées, avec assez d'observations pour qu'on les croie. Le « News fade » (−0,35 R) n'a que 9 trades : verdict suspendu, surveillance requise, échantillon insuffisant pour trancher.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-table-list" style="margin-right:0.5rem;"></i> La grille de décision par setup</h4>
+      <p>Pour chaque setup, croisez espérance et taille d'échantillon avant de décider :</p>
+      <table class="compare-table" style="margin-top:1rem;">
+        <thead><tr><th>Expectancy</th><th>n ≥ 30</th><th>n &lt; 30</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Positive</strong></td><td style="color:#10b981;font-weight:700;">Conserver / augmenter l'allocation</td><td>Continuer, sous surveillance</td></tr>
+          <tr><td><strong>Négative</strong></td><td style="color:#dc2626;font-weight:700;">Couper</td><td>Réduire la taille, collecter plus de data</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Une nuance essentielle : une expectancy négative <em>ne signifie pas toujours</em> que le setup est mauvais dans l'absolu. Elle peut signifier que <strong>vous</strong> l'exécutez mal — entrée trop tardive, stop mal placé, sortie paniquée. C'est ici que la partie 3 (MAE/MFE) se rebranche : si le setup capture mal le mouvement disponible (MFE élevé non réalisé), le problème est d'exécution, pas de conception. Avant de couper, demandez-vous toujours : <em>est-ce le setup, ou est-ce moi ?</em> La réponse change le remède — abandonner le setup, ou corriger sa propre exécution.</p>
+  </div>
+
+  <div class="section-divider" id="couper"><i class="fa-solid fa-scissors" style="color:#d97706;"></i> Couper ce qui ne marche pas</div>
+  <div class="content-card">
+    <p>Toute la segmentation précédente ne vaut que par sa conclusion : <strong>une décision concrète, datée, écrite dans le plan.</strong> Le diagnostic sans amputation est une consolation, pas une amélioration. Voici les quatre coupes, par ordre de rentabilité décroissante de l'effort.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Supprimer les setups à espérance négative</h4>
+        <p>Tout setup à E &lt; 0 confirmé sur n ≥ 30 sort du répertoire. Pas de « dernière chance ».</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Interdire les créneaux & états défavorables</h4>
+        <p>Le créneau de l'après-midi, l'état « énervé », les sessions à faible liquidité : règle de non-trade.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Plafonner le nombre de trades</h4>
+        <p>Un maximum quotidien (ex. 3) et un délai minimum après une perte tuent overtrading et revenge.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Concentrer sur ce qui gagne</h4>
+        <p>Réallouer l'attention et la taille vers les 1-2 setups à espérance positive prouvée.</p>
+      </div>
+    </div>
+
+    <p>La leçon contre-intuitive de cette partie tient en une phrase : <strong>« ne rien faire » est souvent l'amélioration la plus rentable disponible.</strong> Le trader débutant cherche à ajouter — un nouvel indicateur, un setup de plus, une opportunité supplémentaire à ne pas manquer. Le trader mûr soustrait. Il a compris que la moitié de ses pertes vient de positions qu'il n'aurait jamais dû ouvrir, et que la discipline de l'abstention vaut plus que n'importe quel système d'entrée supplémentaire.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-recycle" style="margin-right:0.5rem;"></i> Reboucler : revue → décision → plan</h4>
+      <p>Ces coupes ne sont pas des résolutions de Nouvel An. Elles sont des <strong>modifications de règles</strong>, intégrées au plan de trading et vérifiées à la revue suivante (partie 4). Le cycle est : la <strong>revue mensuelle</strong> recalcule les segments → une <strong>règle</strong> est ajoutée, modifiée ou levée → le <strong>plan de trading</strong> est mis à jour → la revue suivante mesure si la règle a tenu et si elle a payé. C'est une boucle fermée, pas un élan de volonté isolé.</p>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-clock-rotate-left" style="margin-right:0.5rem;"></i> Couper, oui — mais révisable</h4>
+      <p>Une coupe n'est pas un exil définitif. Un setup retiré peut être réintroduit en taille réduite après une période d'observation « papier » (sans engager de capital), s'il regagne une espérance positive dans un régime de marché différent. La règle d'or : <strong>aucune réintroduction sans nouvelle preuve chiffrée.</strong> Le sentiment que « ça devrait remarcher maintenant » ne suffit jamais — c'est exactement le biais que la data était censée corriger.</p>
+    </div>
+
+    <p>Pour aller plus loin sur la formalisation de ces règles dans un cadre opérationnel complet — taille de position, scénarios d'invalidation, checklist pré-trade — la série <a href="/?tab=series" style="color:#b45309;font-weight:700;">Plan de Trading</a> traite la construction du plan dont ces coupes deviennent des clauses. Le journal détecte ; le plan prescrit ; la revue contrôle. Les trois forment le système.</p>
+
+    <div class="takeaway-box">
+      <h3><i class="fa-solid fa-key" style="margin-right:0.5rem;"></i> À retenir — Partie 5</h3>
+      <ul class="takeaway-list">
+        <li><i class="fa-solid fa-circle-check"></i><strong>Vos biais sont invisibles de l'intérieur.</strong> La data les rend visibles — on prouve le biais par les chiffres, on ne le devine pas.</li>
+        <li><i class="fa-solid fa-circle-check"></i><strong>L'expectancy globale est une moyenne qui ment.</strong> Segmentez par setup, créneau, régime, émotion et « plan respecté » pour voir les composantes.</li>
+        <li><i class="fa-solid fa-circle-check"></i><strong>Revenge et overtrading ont une signature mesurable</strong> : délai post-perte raccourci, taille gonflée, expectancy décroissante avec le nombre de trades.</li>
+        <li><i class="fa-solid fa-circle-check"></i><strong>La plupart des traders ont 1-2 setups rentables</strong> qui financent plusieurs setups destructeurs. L'expectancy par setup le révèle sans complaisance.</li>
+        <li><i class="fa-solid fa-circle-check"></i><strong>Jamais de verdict sous n ≈ 30.</strong> La data corrige les biais à condition de ne pas sur-apprendre sur de petits échantillons.</li>
+        <li><i class="fa-solid fa-circle-check"></i><strong>« Ne rien faire » est souvent la meilleure amélioration.</strong> Couper bat ajouter ; soustraire les mauvais trades vaut mieux que chercher de nouveaux setups.</li>
+      </ul>
+    </div>
+
+    <a href="/series/journal-et-performance/part6-dashboard/" class="next-cta">
+      <div>
+        <div class="next-label">Partie 6 sur 6 — la suite</div>
+        <div class="next-title">Le tableau de bord du gérant</div>
+      </div>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Cinq questions pour vérifier que la méthode est acquise. Réfléchissez avant d'ouvrir la réponse.</p>
+
+    <details>
+      <summary>1. Un trader a une expectancy globale de +0,10 R. Pourquoi est-ce insuffisant pour conclure que sa stratégie est saine ?</summary>
+      <div class="quiz-answer">Parce qu'une moyenne agrège des composantes opposées. Ce +0,10 R peut masquer un setup à +0,50 R et trois setups à −0,15 R : une stratégie excellente qui finance trois stratégies destructrices. Tant qu'on n'a pas segmenté, on ne sait pas si on doit conserver l'ensemble ou amputer trois quarts du répertoire. La moyenne décrit le passé ; les segments disent quoi faire.</div>
+    </details>
+
+    <details>
+      <summary>2. Comment détecter du revenge trading dans la data, sans interroger sa mémoire ?</summary>
+      <div class="quiz-answer">En comparant le comportement post-perte au comportement normal. Trois signatures : (1) le délai entre deux trades s'effondre juste après une perte ; (2) la taille de position (risque par trade) gonfle après une perte ; (3) les trades « hors plan » se concentrent statistiquement après un trade perdant. Aucune de ces mesures ne dépend de votre souvenir ou de votre honnêteté émotionnelle — elles sont dans les horodatages et les tailles enregistrés.</div>
+    </details>
+
+    <details>
+      <summary>3. Un setup affiche une expectancy de −0,30 R… sur 8 trades seulement. Faut-il le couper ?</summary>
+      <div class="quiz-answer">Non, pas encore. Huit trades est un échantillon trop faible pour distinguer un mauvais setup d'une simple série de malchance (en dessous de ~30 observations, le résultat est une hypothèse, pas une preuve). La bonne décision : réduire la taille de position sur ce setup et continuer à collecter des données, ou le passer en observation « papier ». Couper sur 8 trades, c'est remplacer un biais par un autre — le sur-apprentissage sur petit échantillon.</div>
+    </details>
+
+    <details>
+      <summary>4. Calcul. Les 3 premiers trades du jour font +0,30 R en moyenne ; au-delà, −0,25 R. Un trader prend 2 trades « en trop » par jour, 200 jours par an. Quel est le coût annuel de l'overtrading, en R ?</summary>
+      <div class="quiz-answer">2 trades superflus × 200 jours × (−0,25 R) = <strong>−100 R par an</strong>. À 1 % de capital risqué par R, c'est l'équivalent d'environ 100 % du capital de départ effacé sur l'année (100 R × 1 %/R) — non pas par de mauvais setups, mais par le simple volume de trades inutiles. Le remède ne coûte rien : plafonner à 3 trades par jour. C'est une amélioration par soustraction.</div>
+    </details>
+
+    <details>
+      <summary>5. Un setup a une expectancy négative. Quelle question faut-il se poser avant de le supprimer ?</summary>
+      <div class="quiz-answer">« Est-ce le setup, ou est-ce moi ? » Une espérance négative peut venir d'un setup intrinsèquement mauvais, ou d'une mauvaise exécution (entrée tardive, stop mal placé, sortie paniquée). C'est là que la MAE/MFE de la partie 3 intervient : si le mouvement favorable disponible (MFE) est régulièrement gros mais non capturé, le problème est l'exécution, pas la conception. Le remède diffère radicalement : abandonner le setup, ou corriger sa propre discipline d'exécution.</div>
+    </details>
+  </div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part4-la-revue/" class="series-arrow" title="La revue : quotidienne, hebdomadaire, mensuelle"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step current" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">5/6</span><a href="/series/journal-et-performance/part6-dashboard/" class="series-arrow" title="Le tableau de bord du gérant et la boucle d'amélioration"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function(){
+  var charts = [];
+  function reg(c){ charts.push(c); return c; }
+
+  // (b) Performance par créneau de la journée
+  var elJour = document.getElementById('chart-jour');
+  if (elJour) {
+    var cJour = reg(echarts.init(elJour));
+    cJour.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+        valueFormatter: function(v){ return (v>0?'+':'') + v.toFixed(2) + ' R'; } },
+      grid: { left: '3%', right: '4%', bottom: '8%', top: '8%', containLabel: true },
+      xAxis: { type: 'category',
+        data: ['Ouverture\n9h30-11h', 'Milieu matinée\n11h-13h', 'Creux après-midi\n13h-15h', 'Fin de séance\n15h-16h'],
+        axisLabel: { color: '#475569', fontSize: 11, interval: 0, lineHeight: 14 } },
+      yAxis: { type: 'value', name: 'Expectancy (R)', nameTextStyle: { color: '#94a3b8' },
+        axisLabel: { color: '#475569', formatter: function(v){ return (v>0?'+':'') + v; } },
+        splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'bar', barWidth: '52%',
+        data: [
+          { value: 0.38, itemStyle: { color: '#10b981' } },
+          { value: 0.14, itemStyle: { color: '#10b981' } },
+          { value: -0.27, itemStyle: { color: '#dc2626' } },
+          { value: -0.11, itemStyle: { color: '#dc2626' } }
+        ],
+        label: { show: true, position: 'top', formatter: function(p){ return (p.value>0?'+':'') + p.value.toFixed(2) + ' R'; },
+          color: '#334155', fontWeight: 700, fontSize: 12 }
+      }]
+    });
+  }
+
+  // (c) Trades impulsifs (post-perte) vs trades planifiés
+  var elImp = document.getElementById('chart-impulsif');
+  if (elImp) {
+    var cImp = reg(echarts.init(elImp));
+    cImp.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+        valueFormatter: function(v){ return (v>0?'+':'') + v.toFixed(2) + ' R'; } },
+      legend: { data: ['Expectancy (R)'], bottom: 0, textStyle: { color: '#475569' } },
+      grid: { left: '3%', right: '4%', bottom: '12%', top: '8%', containLabel: true },
+      xAxis: { type: 'category',
+        data: ['Trades planifiés\n(conformes au plan)', 'Trades impulsifs\n(post-perte, hors plan)'],
+        axisLabel: { color: '#475569', fontSize: 12, interval: 0, lineHeight: 16 } },
+      yAxis: { type: 'value', name: 'Expectancy (R)', nameTextStyle: { color: '#94a3b8' },
+        axisLabel: { color: '#475569', formatter: function(v){ return (v>0?'+':'') + v; } },
+        splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        name: 'Expectancy (R)', type: 'bar', barWidth: '45%',
+        data: [
+          { value: 0.34, itemStyle: { color: '#10b981' } },
+          { value: -0.41, itemStyle: { color: '#dc2626' } }
+        ],
+        label: { show: true, position: 'top', formatter: function(p){ return (p.value>0?'+':'') + p.value.toFixed(2) + ' R'; },
+          color: '#334155', fontWeight: 700, fontSize: 13 }
+      }]
+    });
+  }
+
+  // (a) Expectancy par setup
+  var elSetup = document.getElementById('chart-setup');
+  if (elSetup) {
+    var cSetup = reg(echarts.init(elSetup));
+    cSetup.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
+        valueFormatter: function(v){ return (v>0?'+':'') + v.toFixed(2) + ' R'; } },
+      grid: { left: '3%', right: '6%', bottom: '3%', top: '6%', containLabel: true },
+      xAxis: { type: 'value', name: 'Expectancy (R)', nameTextStyle: { color: '#94a3b8' },
+        axisLabel: { color: '#475569', formatter: function(v){ return (v>0?'+':'') + v; } },
+        splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      yAxis: { type: 'category',
+        data: ['News fade (n=9)', 'Contre-tendance (n=47)', 'Range scalp (n=58)', 'Breakout volume (n=51)', 'Pullback EMA20 (n=64)'],
+        axisLabel: { color: '#334155', fontSize: 12, fontWeight: 600 } },
+      series: [{
+        type: 'bar', barWidth: '55%',
+        data: [
+          { value: -0.35, itemStyle: { color: '#fca5a5' } },
+          { value: -0.28, itemStyle: { color: '#dc2626' } },
+          { value: -0.19, itemStyle: { color: '#dc2626' } },
+          { value: 0.31, itemStyle: { color: '#10b981' } },
+          { value: 0.42, itemStyle: { color: '#10b981' } }
+        ],
+        label: { show: true, position: 'right', formatter: function(p){ return (p.value>0?'+':'') + p.value.toFixed(2) + ' R'; },
+          color: '#334155', fontWeight: 700, fontSize: 12 }
+      }]
+    });
+  }
+
+  window.addEventListener('resize', function(){
+    charts.forEach(function(c){ if (c && c.resize) c.resize(); });
+  });
+})();
+</script>
+
+<script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

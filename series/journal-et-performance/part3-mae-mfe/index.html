@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>MAE, MFE et la qualité d'exécution | Journal & Performance — Partie 3/6 | DailyTickers</title>
+ <meta name="description" content="Au-delà du résultat : la qualité d'exécution. Le MAE et le MFE pour savoir si vos stops sont trop serrés ou trop larges, si vous laissez du profit sur la table, et comment mesurer le slippage et le timing de vos entrées et sorties.">
+ <meta property="og:title" content="MAE, MFE et la qualité d'exécution | Journal & Performance 3/6">
+ <meta property="og:description" content="Au-delà du résultat : la qualité d'exécution. Le MAE et le MFE pour savoir si vos stops sont trop serrés ou trop larges, si vous laissez du profit sur la table, et comment mesurer le slippage et le timing de vos entrées et sorties.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/journal-et-performance/part3-mae-mfe/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* AMBER THEME — Journal & Performance */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#b45309; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#d97706; margin-right:0.75rem; }
+ details[open] summary { border-color:#d97706; background:#fffbeb; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #451a03 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#fcd34d; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #d97706; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b45309; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(217,119,6,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,119,6,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #d97706; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Journal & Performance — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">MAE, MFE et la qualité d'exécution</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; line-height:1.7; color:#475569;">Deux trades peuvent finir au même prix et n'avoir presque rien en commun. L'un a frôlé votre stop avant de repartir, l'autre s'est envolé puis vous avez encaissé un tiers du mouvement. Le résultat ne dit rien de tout cela. Les <strong>excursions</strong> — MAE et MFE — mesurent ce que le trade a réellement traversé, et révèlent si vos stops et vos sorties sont calibrés ou simplement chanceux.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-ruler-horizontal"></i> MAE / MFE</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-crosshairs"></i> Placement du stop</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-hand-holding-dollar"></i> Profit laissé</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-arrow-down-short-wide"></i> Slippage</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part2-metriques/" class="series-arrow" title="R-multiples, expectancy et win rate"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step current" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">3/6</span><a href="/series/journal-et-performance/part4-la-revue/" class="series-arrow" title="La revue : quotidienne, hebdomadaire, mensuelle"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="excursions"><i class="fas fa-bookmark"></i><span>Excursions</span></a>
+  <a class="fnav-item" data-section="stops"><i class="fas fa-bookmark"></i><span>Vos stops</span></a>
+  <a class="fnav-item" data-section="sorties"><i class="fas fa-bookmark"></i><span>Vos sorties</span></a>
+  <a class="fnav-item" data-section="slippage"><i class="fas fa-bookmark"></i><span>Slippage</span></a>
+  <a class="fnav-item" data-section="exploiter"><i class="fas fa-bookmark"></i><span>Exploiter</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <div class="section-divider" id="excursions"><i class="fa-solid fa-ruler-horizontal" style="color:#d97706;"></i> MAE et MFE, définis</div>
+  <div class="content-card">
+    <p>Dans la partie précédente, nous avons réduit chaque trade à un seul chiffre : son R-multiple. C'est puissant pour comparer des paris de tailles différentes, mais c'est aussi un résumé brutal. Un R-multiple ne raconte que le début et la fin de l'histoire — votre prix d'entrée et votre prix de sortie. Il efface tout ce qui s'est passé entre les deux.</p>
+    <p>Or c'est précisément entre les deux que se cache la qualité d'exécution. Considérez deux trades qui finissent tous deux à <strong>+1R</strong>. Le premier est monté en ligne droite : il n'est jamais repassé sous votre prix d'entrée, et au plus haut il valait +1,1R avant que vous ne sortiez à +1R. Le second a d'abord plongé à <strong>−0,9R</strong> — à un cheveu de votre stop — avant de se retourner, puis il a culminé à <strong>+3,4R</strong> avant de retomber jusqu'à votre sortie tardive à +1R. Même résultat. Deux trades radicalement différents. Le premier est propre. Le second a flirté avec la catastrophe puis abandonné l'essentiel d'un mouvement majeur.</p>
+    <p>Pour distinguer ces deux trades, il faut mesurer leurs <strong>excursions</strong> : jusqu'où le prix est allé contre vous, et jusqu'où il est allé en votre faveur, pendant toute la vie de la position.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-circle-info" style="color:#d97706; margin-right:0.5rem;"></i> Les deux excursions</h4>
+      <p><strong>MAE — Maximum Adverse Excursion.</strong> La perte latente maximale subie pendant la vie du trade : le point le plus défavorable que le prix a touché entre votre entrée et votre sortie. Sur un trade long, c'est le plus bas atteint ; sur un short, le plus haut. Le MAE est par convention exprimé comme un nombre négatif (ou en valeur absolue de perte).</p>
+      <p style="margin-bottom:0;"><strong>MFE — Maximum Favorable Excursion.</strong> Le gain latent maximal atteint : le point le plus profitable que le prix a touché avant que vous ne sortiez. Sur un long, c'est le plus haut ; sur un short, le plus bas. Le MFE est un nombre positif.</p>
+    </div>
+
+    <p>Comme le R-multiple, les excursions se mesurent idéalement <strong>en unités de R</strong> — c'est-à-dire en multiples de votre risque initial (la distance entre votre entrée et votre stop d'origine). On peut aussi les noter en pourcentage du prix d'entrée. Le R est préférable car il rend les trades comparables entre eux quelle que soit la volatilité du sous-jacent.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Pour un trade long</div>
+      MAE = <span class="formula-highlight">(plus bas atteint − entrée) / R</span>&nbsp;&nbsp;·&nbsp;&nbsp;MFE = <span class="formula-highlight">(plus haut atteint − entrée) / R</span>
+    </div>
+
+    <p>Prenons un exemple chiffré complet, entièrement illustratif. Vous achetez une action à <strong>100 €</strong>, stop à <strong>96 €</strong>. Votre risque par action est donc de 4 € : c'est votre <strong>1R</strong>. Pendant la vie du trade, le titre descend d'abord jusqu'à <strong>97,20 €</strong>, puis monte jusqu'à <strong>112 €</strong>, et vous sortez finalement à <strong>106 €</strong>.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Mesure</th><th>Calcul</th><th>Résultat</th></tr></thead>
+      <tbody>
+        <tr><td>Risque initial (1R)</td><td>100 − 96</td><td><strong>4 €</strong></td></tr>
+        <tr><td>MAE</td><td>(97,20 − 100) / 4 = −2,80 / 4</td><td style="color:#dc2626;"><strong>−0,70R</strong></td></tr>
+        <tr><td>MFE</td><td>(112 − 100) / 4 = +12 / 4</td><td style="color:#10b981;"><strong>+3,00R</strong></td></tr>
+        <tr><td>R réalisé (sortie)</td><td>(106 − 100) / 4 = +6 / 4</td><td style="color:#10b981;"><strong>+1,50R</strong></td></tr>
+      </tbody>
+    </table>
+
+    <p>Pour le lecteur qui raisonne en pourcentage plutôt qu'en R, les mêmes excursions se traduisent directement sur le prix d'entrée de 100 € : le MAE vaut <strong>−2,80 %</strong> (le titre n'a perdu que 2,80 € sous l'entrée) et le MFE <strong>+12,00 %</strong> (il est monté de 12 € au-dessus), pour une sortie réalisée à <strong>+6,00 %</strong>. Les deux unités décrivent le même trade ; le R les rend simplement comparables d'un titre à l'autre quelle que soit sa volatilité.</p>
+
+    <p>Ce trade gagnant raconte deux choses immédiatement. D'abord, il est descendu à −0,70R : votre stop à −1R n'a jamais été menacé de près, mais ce n'était pas non plus une promenade. Ensuite — et c'est le plus parlant — il a offert <strong>+3,00R</strong> de profit latent et vous n'en avez capté que <strong>+1,50R</strong>. La moitié du mouvement disponible vous a échappé. Un seul trade ne prouve rien ; mais répété sur des dizaines de positions, ce schéma devient une signature, et c'est exactement ce que les sections suivantes vont apprendre à lire.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-lightbulb" style="color:#d97706; margin-right:0.5rem;"></i> Pourquoi le résultat seul ment</h4>
+      <p style="margin-bottom:0;">Un trade qui finit à +1R après être passé par +3R de MFE n'est pas un « bon » trade : c'est un bon <em>setup</em> mal sorti. Inversement, un perdant à −1R dont le MFE n'a jamais dépassé +0,2R n'était peut-être pas une erreur de sortie, mais une entrée qui n'a tout simplement jamais fonctionné. Les excursions séparent la <strong>qualité de la décision</strong> du <strong>hasard du résultat</strong> — exactement ce qu'un journal sérieux doit isoler.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="stops"><i class="fa-solid fa-crosshairs" style="color:#d97706;"></i> Vos stops sont-ils bien placés ?</div>
+  <div class="content-card">
+    <p>La question la plus utile que le MAE permet de poser est aussi la plus contre-intuitive : <strong>n'analysez pas le MAE de vos perdants — analysez celui de vos gagnants.</strong> Les perdants, par définition, ont fini par toucher leur stop ; leur MAE est forcément proche de −1R. C'est mécanique, ça n'apprend rien. Les gagnants, eux, sont ceux qui se sont retournés <em>avant</em> votre stop. La profondeur à laquelle ils ont plongé avant de repartir vous dit où vit réellement le danger.</p>
+
+    <p>Imaginez que vous compiliez le MAE de tous vos trades gagnants des derniers mois et que vous obteniez la distribution suivante, purement illustrative :</p>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value" style="color:#10b981;">68%</div><div class="metric-label">des gagnants n'ont jamais dépassé −0,5R de MAE</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#d97706;">24%</div><div class="metric-label">ont plongé entre −0,5R et −0,8R avant de repartir</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#dc2626;">8%</div><div class="metric-label">ont touché −0,8R à −1,0R puis se sont retournés</div></div>
+    </div>
+
+    <p>Que lire dans ces chiffres ? Plus des deux tiers de vos trades gagnants ne sont jamais descendus au-delà de −0,5R. Cela signifie que la zone entre −0,5R et votre stop à −1R contient surtout du bruit qui mène rarement à un retournement gagnant. Deux lectures s'opposent, et l'honnêteté impose de les présenter toutes les deux :</p>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin:1.5rem 0;">
+      <div class="capability-card" style="border-top:3px solid #10b981;">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-compress"></i></div>
+        <h4>Resserrer le stop ?</h4>
+        <p>Si très peu de gagnants reviennent après −0,6R, un stop à −0,7R couperait quelques perdants plus tôt (perte réduite) en ne sacrifiant qu'une poignée de futurs gagnants. Le R moyen perdu diminue, l'expectancy peut monter.</p>
+      </div>
+      <div class="capability-card" style="border-top:3px solid #dc2626;">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-scissors"></i></div>
+        <h4>Le piège du stop trop serré</h4>
+        <p>Mais ces 8% de gagnants qui ont plongé jusqu'à −0,9R avant d'exploser sont souvent vos <em>plus gros</em> gagnants. Un stop trop serré les coupe juste avant le rebond — vous transformez vos meilleurs trades en petites pertes. Le coût est invisible dans le MAE, visible dans le MFE perdu.</p>
+      </div>
+    </div>
+
+    <p>C'est tout l'arbitrage du placement de stop, et il n'a pas de solution universelle. Un stop serré améliore le R moyen des perdants mais augmente la fréquence des sorties prématurées sur des trades qui auraient gagné. Un stop large laisse respirer les gagnants volatils mais alourdit chaque perte. Le MAE des gagnants ne tranche pas à votre place — il vous donne enfin les chiffres pour arbitrer en connaissance de cause, au lieu de déplacer votre stop au feeling.</p>
+
+    <p>Le nuage de points ci-dessous croise, pour chaque trade, son MAE (axe horizontal) et son R réalisé (axe vertical). Les gagnants sont en vert, les perdants en rouge. La zone grisée matérialise la <strong>fenêtre de stop candidate</strong> : si presque aucun point vert ne se trouve à gauche d'un certain seuil de MAE, c'est que resserrer votre stop jusqu'à ce seuil n'aurait sacrifié quasiment aucun gagnant.</p>
+
+    <div id="chart-mae-scatter" style="width:100%;height:380px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Données illustratives. Chaque point est un trade : MAE en abscisse, R réalisé en ordonnée. La bande couvre la plage à conserver (−0,6R → 0) : la tronquer sacrifierait les 6 gagnants situés plus à gauche.</p>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Un échantillon trop petit ment</h4>
+      <p style="margin-bottom:0;">Le MAE des gagnants n'a de valeur statistique qu'au-delà de plusieurs dizaines de trades, et idéalement dans un régime de marché comparable. Recalibrer un stop sur dix trades, dont deux exceptions, c'est suroptimiser sur du bruit. Et un stop n'est jamais qu'un paramètre parmi d'autres : un stop plus serré exige souvent une entrée plus précise pour rester viable.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="sorties"><i class="fa-solid fa-hand-holding-dollar" style="color:#d97706;"></i> Laissez-vous du profit sur la table ?</div>
+  <div class="content-card">
+    <p>Si le MAE éclaire vos entrées et vos stops, le MFE éclaire vos <strong>sorties</strong> — et c'est souvent là que les traders rentables perdent le plus d'argent. Non pas en prenant des pertes, mais en abandonnant des gains. La mesure est simple : comparez, sur l'ensemble de vos trades, le <strong>MFE moyen</strong> (le meilleur point atteint en moyenne) au <strong>R réalisé moyen</strong> (ce que vous avez effectivement encaissé).</p>
+
+    <p>Supposons, à titre d'illustration, que vos trades gagnants affichent un MFE moyen de <strong>+2,8R</strong> mais un R réalisé moyen de <strong>+1,1R</strong>. L'écart est massif : en moyenne, le prix vous a offert près de trois fois votre risque, et vous en avez gardé un peu plus d'un. Vous laissez systématiquement <strong>+1,7R par trade gagnant</strong> sur la table.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Taux de capture du profit</div>
+      Capture = <span class="formula-highlight">R réalisé moyen / MFE moyen</span>&nbsp;&nbsp;=&nbsp;&nbsp;1,1 / 2,8 ≈ <span class="formula-highlight">39 %</span>
+    </div>
+
+    <p>Un taux de capture de 39 % signifie que vous transformez en cash moins de deux cinquièmes du mouvement que vos setups génèrent. Sur le papier, c'est une fuite énorme. Trois pistes concrètes émergent, mais aucune n'est gratuite :</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Sorties partielles (scaling out).</strong> Encaisser une fraction de la position à +1R, puis laisser courir le reste avec un stop remonté au point mort. Vous sécurisez du concret tout en gardant une option sur la suite du mouvement.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Stop suiveur (trailing stop).</strong> Remonter votre stop à mesure que le prix progresse — par exemple sous chaque nouveau plus-bas de séance, ou à une distance d'un ATR. Vous laissez le marché vous sortir au lieu de décider trop tôt.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Cible mieux placée.</strong> Si votre MFE moyen est à +2,8R, une cible fixe à +1R est probablement trop frileuse. Caler la cible plus près de la distribution réelle des MFE.</li>
+    </ul>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Le MFE parfait est inatteignable — et c'est normal</h4>
+      <p style="margin-bottom:0;">Capturer 100 % du MFE supposerait de vendre pile au plus haut de chaque trade, ce qui est impossible : le MFE n'est connu qu'<em>a posteriori</em>. Pire, viser le sommet absolu transforme des gagnants en perdants, car le prix retombe avant que vous ne réalisiez le gain. L'objectif n'est pas 100 % de capture — c'est de faire monter un taux structurellement bas (disons 35–45 %) vers une zone plus saine (55–70 %) sans dégrader le win rate. Un trailing capture rarement le pic, mais il capture bien plus que +1,1R.</p>
+    </div>
+
+    <p>Le graphique suivant met côte à côte, par tranche de qualité de setup, le <strong>MFE moyen disponible</strong> (la barre claire) et le <strong>R réalisé moyen</strong> (la barre pleine). L'espace entre les deux est le profit laissé sur la table — la cible directe de votre travail sur les sorties.</p>
+
+    <div id="chart-mfe-bars" style="width:100%;height:360px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Données illustratives. Barre claire = MFE moyen disponible. Barre pleine = R réalisé moyen capté. L'écart = profit non capté.</p>
+  </div>
+
+  <div class="section-divider" id="slippage"><i class="fa-solid fa-arrow-down-short-wide" style="color:#d97706;"></i> Slippage et qualité du fill</div>
+  <div class="content-card">
+    <p>Les excursions mesurent le comportement du marché ; le <strong>slippage</strong> mesure la qualité de votre <em>exécution</em>. C'est l'écart entre le prix que votre plan prévoyait et le prix auquel votre ordre a réellement été exécuté — à l'entrée comme à la sortie, et tout particulièrement au déclenchement du stop.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Slippage à l'entrée (achat)</div>
+      Slippage = <span class="formula-highlight">prix d'exécution − prix prévu</span>
+    </div>
+
+    <p>Un exemple chiffré, illustratif. Votre plan prévoyait d'entrer à <strong>50,00 €</strong> mais votre ordre au marché s'est exécuté à <strong>50,12 €</strong> : slippage d'entrée de <strong>+0,12 €</strong>, défavorable. Si votre risque par action était de 1,00 € (1R), ce slippage représente à lui seul <strong>0,12R de friction</strong> avant même que le trade ne commence. Au stop, c'est souvent pire : un stop prévu à 49,00 € exécuté à 48,85 € dans un marché qui décroche ajoute 0,15 € de perte, soit 0,15R supplémentaire. Mis bout à bout sur des centaines de trades, ce frottement ronge l'expectancy aussi sûrement qu'une série de petits perdants.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-magnifying-glass" style="color:#d97706; margin-right:0.5rem;"></i> D'où vient le slippage</h4>
+      <ul class="checklist" style="margin:0.5rem 0 0;">
+        <li><i class="fa-solid fa-arrows-left-right" style="color:#9333ea;"></i> <strong>Le spread bid-ask.</strong> Acheter à l'ask et revendre au bid coûte la largeur du spread à chaque aller-retour. Sur les titres peu liquides, ce spread peut dépasser plusieurs dixièmes de R.</li>
+        <li><i class="fa-solid fa-bolt" style="color:#9333ea;"></i> <strong>Les ordres au marché sur titres peu profonds.</strong> Un ordre au marché « mange » le carnet : sur un small cap, vous pouvez balayer plusieurs niveaux de prix et obtenir un fill bien au-delà du dernier cours affiché.</li>
+        <li><i class="fa-solid fa-stairs" style="color:#9333ea;"></i> <strong>Les gaps.</strong> Un stop à 49 € ne protège pas si le titre ouvre à 46 € sur une mauvaise nouvelle : votre exécution se fait à l'ouverture, loin du niveau prévu. Aucun ordre stop ne garantit le prix, seulement le déclenchement.</li>
+      </ul>
+    </div>
+
+    <p>La parade structurelle est le choix du type d'ordre. Un <strong>ordre limité</strong> (limit order) garantit un prix maximal d'achat (ou minimal de vente) — au prix d'un risque de non-exécution si le marché ne revient pas vers vous. Sur les titres liquides et pour des entrées non urgentes, l'ordre limité réduit drastiquement le slippage. C'est le cœur de l'approche <em>set-and-forget</em> détaillée dans notre série <a href="/series/salarie-investisseur/" style="color:#d97706; font-weight:600;">« Investir quand on est salarié »</a> : passer des ordres limités calmes le soir plutôt que de courir après le marché en séance, justement pour neutraliser cette friction d'exécution.</p>
+
+    <p>Mesurer le slippage dans le journal est trivial : une colonne « prix prévu » et une colonne « prix exécuté », à l'entrée et au stop. La différence, convertie en R, agrégée sur l'historique, vous dira si votre slippage moyen est négligeable (quelques centièmes de R) ou s'il dévore une part réelle de votre edge — et sur quels titres il se concentre.</p>
+
+    <div id="chart-slippage" style="width:100%;height:340px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Données illustratives. Distribution du slippage d'exécution en R. La masse devrait se concentrer près de zéro ; une longue queue défavorable signale un problème de liquidité ou de type d'ordre.</p>
+  </div>
+
+  <div class="section-divider" id="exploiter"><i class="fa-solid fa-table-columns" style="color:#d97706;"></i> Exploiter MAE/MFE dans le journal</div>
+  <div class="content-card">
+    <p>Tout cela ne sert à rien si la donnée n'est pas capturée. La bonne nouvelle : il suffit d'<strong>ajouter deux colonnes</strong> au journal construit dans la partie 1. La moins bonne : ces deux colonnes exigent de noter les <em>extrêmes</em> du trade, pas seulement son entrée et sa sortie — un effort réel, surtout sur les trades intraday rapides.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Deux colonnes</h4>
+        <p>Ajoutez « MAE (R) » et « MFE (R) » à côté du R réalisé. Notez-les en R pour rester comparable entre tickers.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Relever les extrêmes</h4>
+        <p>À la clôture du trade, repérez sur le graphique le plus bas et le plus haut atteints pendant la détention, puis convertissez en R.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Slippage en bonus</h4>
+        <p>Deux colonnes de plus : « prix prévu » et « prix exécuté » à l'entrée et au stop. La friction se révèle à l'agrégat.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Agréger, pas trade par trade</h4>
+        <p>Les excursions ne parlent qu'en distribution : MAE moyen des gagnants, taux de capture du MFE, slippage médian. Jamais sur un trade isolé.</p>
+      </div>
+    </div>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-clock" style="color:#d97706; margin-right:0.5rem;"></i> Surtout utile pour le swing et le position trading</h4>
+      <p style="margin-bottom:0;">Relever le plus haut et le plus bas d'un trade tenu plusieurs jours est facile : ces niveaux figurent sur n'importe quel graphique journalier. Pour le scalping ou le day trading très rapide, c'est plus laborieux et le bruit intraday rend le MAE moins lisible. Si vous débutez avec les excursions, commencez par vos trades de plusieurs jours : le rapport effort/information y est imbattable. Beaucoup de plateformes et de carnets de trades (TradesViz, Edgewonk, et certains brokers) calculent désormais MAE et MFE automatiquement à partir des données de séance — vérifiez avant de tout saisir à la main.</p>
+    </div>
+
+    <p>Avec ces colonnes en place, votre journal cesse de répondre à la seule question « ai-je gagné ? » et commence à répondre aux trois questions qui font progresser : <strong>mon stop est-il bien placé</strong> (MAE des gagnants), <strong>est-ce que je sors trop tôt</strong> (MFE vs R réalisé), et <strong>mon exécution coûte-t-elle cher</strong> (slippage). C'est la matière première de la revue structurée — l'objet de la partie 4.</p>
+
+    <div class="takeaway-box">
+      <h3><i class="fa-solid fa-circle-check" style="margin-right:0.5rem;"></i> À retenir — Partie 3</h3>
+      <ul class="takeaway-list">
+        <li><i class="fa-solid fa-check"></i> <strong>Le résultat ne dit pas la qualité.</strong> Deux trades à +1R peuvent avoir des MAE et MFE opposés. Les excursions mesurent ce que le résultat efface.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>MAE = pire point atteint, MFE = meilleur point atteint</strong>, mesurés en R sur toute la vie du trade. Le R rend tout comparable.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Analysez le MAE de vos GAGNANTS</strong> pour calibrer le stop. Trop serré, vous coupez vos meilleurs trades juste avant le rebond ; trop large, chaque perte pèse plus lourd.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Capture = R réalisé / MFE.</strong> Un taux bas (≈40 %) signale du profit laissé sur la table — piste : sorties partielles, trailing, cible mieux placée. Viser le pic absolu est impossible.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Le slippage est une friction réelle.</strong> Mesurez l'écart prix prévu / prix exécuté en R. Les ordres limités sur titres liquides le neutralisent en grande partie.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Deux colonnes suffisent</strong> (MAE, MFE) — mais elles exigent de relever les extrêmes. Idéal pour le swing et le position trading.</li>
+      </ul>
+    </div>
+
+    <a href="/series/journal-et-performance/part4-la-revue/" class="next-cta">
+      <i class="fa-solid fa-magnifying-glass-chart"></i>
+      <div>
+        <div class="next-label">Partie 4 sur 6</div>
+        <div class="next-title">La revue : quotidienne, hebdomadaire, mensuelle</div>
+      </div>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </div>
+
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Quatre questions pour vérifier que les excursions sont devenues un réflexe. Cliquez pour révéler la réponse.</p>
+
+    <details>
+      <summary>1. Un trade long entré à 80 €, stop à 76 €, descend à 77 € puis monte à 92 € avant que vous ne sortiez à 88 €. Quels sont le MAE, le MFE et le R réalisé ?</summary>
+      <div class="quiz-answer">
+        Le risque (1R) = 80 − 76 = <strong>4 €</strong>. MAE = (77 − 80) / 4 = −3 / 4 = <strong>−0,75R</strong>. MFE = (92 − 80) / 4 = +12 / 4 = <strong>+3,00R</strong>. R réalisé = (88 − 80) / 4 = +8 / 4 = <strong>+2,00R</strong>. Le trade a frôlé les trois quarts du risque sans menacer le stop, et vous avez capté deux tiers du MFE — une sortie correcte mais perfectible.
+      </div>
+    </details>
+
+    <details>
+      <summary>2. Pour décider si votre stop est trop serré ou trop large, faut-il regarder le MAE de vos gagnants ou de vos perdants ? Pourquoi ?</summary>
+      <div class="quiz-answer">
+        Celui des <strong>gagnants</strong>. Les perdants ont touché leur stop par définition : leur MAE est mécaniquement proche de −1R et n'apprend rien. Le MAE des gagnants révèle jusqu'où vivent les trades qui finissent par fonctionner — donc à partir de quel niveau un stop plus serré commencerait à couper de vrais gagnants avant leur rebond.
+      </div>
+    </details>
+
+    <details>
+      <summary>3. Votre MFE moyen sur les gagnants est +3,0R et votre R réalisé moyen +0,9R. Quel est votre taux de capture, et que faut-il en conclure ?</summary>
+      <div class="quiz-answer">
+        Capture = 0,9 / 3,0 = <strong>30 %</strong>. Vous ne transformez en cash que moins d'un tiers du mouvement que vos setups génèrent : vous sortez beaucoup trop tôt. Pistes : sorties partielles, stop suiveur, cible recalée plus près de la distribution réelle des MFE. Attention toutefois — viser 100 % est impossible (le MFE n'est connu qu'après coup) ; l'objectif réaliste est de remonter vers 55–70 % sans casser le win rate.
+      </div>
+    </details>
+
+    <details>
+      <summary>4. Votre plan prévoyait une entrée à 25,00 € ; l'ordre au marché s'exécute à 25,20 €, sur un titre dont le 1R vaut 0,80 €. Quel est le slippage en R, et comment le réduire ?</summary>
+      <div class="quiz-answer">
+        Slippage = 25,20 − 25,00 = +0,20 €, défavorable. En R : 0,20 / 0,80 = <strong>0,25R</strong> de friction perdue à l'entrée — un quart de votre risque évaporé avant même le départ. Causes probables : spread large ou ordre au marché sur un titre peu profond. Parade : un <strong>ordre limité</strong> à 25,00 € (au risque de non-exécution), et privilégier les titres liquides. C'est le cœur de l'approche set-and-forget de la série « Investir quand on est salarié ».
+      </div>
+    </details>
+  </div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part2-metriques/" class="series-arrow" title="R-multiples, expectancy et win rate"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step current" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">3/6</span><a href="/series/journal-et-performance/part4-la-revue/" class="series-arrow" title="La revue : quotidienne, hebdomadaire, mensuelle"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // (a) Nuage de points MAE vs R réalisé — gagnants/perdants + fenêtre de stop
+  var elScatter = document.getElementById('chart-mae-scatter');
+  if (elScatter) {
+    var c1 = echarts.init(elScatter);
+    // Données illustratives : [MAE (R), R réalisé]
+    var winners = [
+      [-0.05, 0.8],[-0.10, 1.6],[-0.12, 0.5],[-0.18, 2.9],[-0.20, 1.1],[-0.22, 3.6],
+      [-0.25, 0.9],[-0.28, 2.2],[-0.31, 1.4],[-0.35, 4.1],[-0.38, 0.7],[-0.40, 1.9],
+      [-0.42, 2.6],[-0.45, 1.2],[-0.48, 3.0],[-0.52, 0.6],[-0.55, 1.7],[-0.58, 2.4],
+      [-0.62, 1.0],[-0.68, 3.3],[-0.72, 0.9],[-0.78, 2.8],[-0.85, 4.5],[-0.91, 3.7]
+    ];
+    var losers = [
+      [-0.55, -0.55],[-0.70, -0.70],[-0.82, -0.82],[-0.90, -0.90],[-0.95, -0.95],
+      [-0.98, -1.0],[-1.0, -1.0],[-1.0, -1.0],[-0.88, -0.88],[-0.76, -0.76],
+      [-0.60, -0.60],[-0.93, -0.93],[-1.0, -1.0],[-0.84, -0.84],[-0.66, -0.66]
+    ];
+    c1.setOption({
+      tooltip: { trigger: 'item', formatter: function(p){ return 'MAE ' + p.value[0].toFixed(2) + 'R · Résultat ' + p.value[1].toFixed(2) + 'R'; } },
+      legend: { data: ['Gagnants', 'Perdants'], top: 0, textStyle:{ color:'#475569', fontWeight:600 } },
+      grid: { left: 50, right: 24, top: 44, bottom: 50 },
+      xAxis: { type: 'value', name: 'MAE (R)', nameLocation:'middle', nameGap:30, min: -1.1, max: 0, axisLabel:{ color:'#64748b' }, splitLine:{ lineStyle:{ color:'#f1f5f9' } } },
+      yAxis: { type: 'value', name: 'R réalisé', nameLocation:'middle', nameGap:34, min: -1.5, max: 5, axisLabel:{ color:'#64748b' }, splitLine:{ lineStyle:{ color:'#f1f5f9' } } },
+      series: [
+        { name:'Gagnants', type:'scatter', symbolSize:11, itemStyle:{ color:'#10b981', opacity:0.8 }, data: winners,
+          markArea: { silent:true, itemStyle:{ color:'rgba(217,119,6,0.07)' },
+            data: [[{ xAxis:-0.6, name:'Zone à conserver — resserrer à −0,6R couperait 6 gagnants', label:{ color:'#b45309', fontSize:10, fontWeight:700, position:'insideTop' } },{ xAxis:0 }]] },
+          markLine: { silent:true, symbol:'none', lineStyle:{ color:'#94a3b8', type:'dashed' },
+            data: [{ yAxis:0, label:{ formatter:'Seuil 0', color:'#94a3b8', fontSize:10 } }] } },
+        { name:'Perdants', type:'scatter', symbolSize:11, itemStyle:{ color:'#dc2626', opacity:0.8 }, data: losers }
+      ]
+    });
+    charts.push(c1);
+  }
+
+  // (b) MFE moyen disponible vs R réalisé moyen capté, par tranche de setup
+  var elBars = document.getElementById('chart-mfe-bars');
+  if (elBars) {
+    var c2 = echarts.init(elBars);
+    var cats = ['Setups A', 'Setups B', 'Setups C', 'Ensemble'];
+    var mfe = [3.6, 2.8, 1.9, 2.8];
+    var realized = [1.4, 1.1, 0.8, 1.1];
+    c2.setOption({
+      tooltip: { trigger:'axis', axisPointer:{ type:'shadow' },
+        formatter: function(ps){ var s = ps[0].name + '<br/>'; ps.forEach(function(p){ s += p.marker + p.seriesName + ' : ' + p.value.toFixed(1) + 'R<br/>'; });
+          var cap = (ps[1].value / ps[0].value * 100).toFixed(0); s += '<b>Capture : ' + cap + '%</b>'; return s; } },
+      legend: { data: ['MFE moyen disponible', 'R réalisé moyen'], top: 0, textStyle:{ color:'#475569', fontWeight:600 } },
+      grid: { left: 48, right: 24, top: 44, bottom: 36 },
+      xAxis: { type:'category', data: cats, axisLabel:{ color:'#64748b', fontWeight:600 } },
+      yAxis: { type:'value', name:'R', axisLabel:{ color:'#64748b', formatter:'{value}R' }, splitLine:{ lineStyle:{ color:'#f1f5f9' } } },
+      series: [
+        { name:'MFE moyen disponible', type:'bar', barGap:'-100%', barWidth:'42%', z:1,
+          itemStyle:{ color:'#fcd34d', borderRadius:[4,4,0,0] }, data: mfe },
+        { name:'R réalisé moyen', type:'bar', barWidth:'42%', z:2,
+          itemStyle:{ color:'#d97706', borderRadius:[4,4,0,0] }, data: realized,
+          label:{ show:true, position:'top', color:'#b45309', fontWeight:700, formatter:'{c}R' } }
+      ]
+    });
+    charts.push(c2);
+  }
+
+  // (c) Distribution du slippage (en R)
+  var elSlip = document.getElementById('chart-slippage');
+  if (elSlip) {
+    var c3 = echarts.init(elSlip);
+    var bins = ['≤−0,30','−0,29…−0,20','−0,19…−0,10','−0,09…0','0','0…+0,09','+0,10…+0,19','+0,20…+0,29','≥+0,30'];
+    var counts = [3, 7, 16, 38, 72, 31, 12, 5, 2];
+    var colors = bins.map(function(b){ return (b.indexOf('−') === -1) ? '#10b981' : '#dc2626'; });
+    c3.setOption({
+      tooltip: { trigger:'axis', axisPointer:{ type:'shadow' }, formatter: function(ps){ return 'Slippage ' + ps[0].name + 'R<br/>' + ps[0].value + ' trades'; } },
+      grid: { left: 44, right: 24, top: 24, bottom: 48 },
+      xAxis: { type:'category', data: bins, name:'Slippage (R)', nameLocation:'middle', nameGap:32, axisLabel:{ color:'#64748b' } },
+      yAxis: { type:'value', name:'Trades', axisLabel:{ color:'#64748b' }, splitLine:{ lineStyle:{ color:'#f1f5f9' } } },
+      series: [{ type:'bar', barWidth:'62%', data: counts.map(function(v,i){ return { value:v, itemStyle:{ color: colors[i], borderRadius:[4,4,0,0] } }; }),
+        markLine:{ silent:true, symbol:'none', lineStyle:{ color:'#94a3b8', type:'dashed' }, data:[{ xAxis:'0', label:{ formatter:'fill conforme', color:'#94a3b8', fontSize:10 } }] } }]
+    });
+    charts.push(c3);
+  }
+
+  window.addEventListener('resize', function() { charts.forEach(function(c){ c.resize(); }); });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

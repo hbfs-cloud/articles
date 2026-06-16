@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Bâtir et entretenir sa watchlist | Plan & Watchlist — Partie 5/6 | DailyTickers</title>
+ <meta name="description" content="La watchlist, antichambre du plan : définir son univers, screener selon ses critères, annoter les niveaux clés, poser des alertes et la faire tourner. Comment passer du screening au candidat réellement actionnable.">
+ <meta property="og:title" content="Bâtir et entretenir sa watchlist | Plan & Watchlist 5/6">
+ <meta property="og:description" content="La watchlist, antichambre du plan : définir son univers, screener selon ses critères, annoter les niveaux clés, poser des alertes et la faire tourner. Comment passer du screening au candidat réellement actionnable.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/plan-de-trading/part5-watchlist/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* VIOLET THEME — Plan & Watchlist */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-violet { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#6d28d9; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+ details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #3b0764 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#c4b5fd; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#a78bfa; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#6d28d9; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #7c3aed; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#7c3aed; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Plan & Watchlist — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Bâtir et entretenir sa watchlist</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; line-height:1.6; color:#475569;">Le marché compte des milliers de titres ; votre attention n'en supporte qu'une poignée. La watchlist est le filtre qui transforme ce bruit permanent en quelques candidats préparés à l'avance. Elle est l'antichambre du plan : on ne découvre pas un titre en urgence, on l'attend.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-binoculars"></i> Watchlist</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-magnifying-glass-chart"></i> Screening</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-bell"></i> Alertes & niveaux</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-rotate"></i> Rotation</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-arrow" title="Le sizing et le risque dans le plan"><i class="fas fa-chevron-left"></i></a><span class="series-title">Plan & Watchlist</span><div class="series-steps"><a href="/series/plan-de-trading/part1-pourquoi-un-plan/" class="series-step" title="Pourquoi un plan de trading écrit change tout"><span class="series-num">1</span><span class="series-label">Pourquoi un plan</span></a><a href="/series/plan-de-trading/part2-edge-setups/" class="series-step" title="Définir son edge et ses setups"><span class="series-num">2</span><span class="series-label">Edge & setups</span></a><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-step" title="Règles d'entrée, de sortie et d'invalidation"><span class="series-num">3</span><span class="series-label">Entrées & sorties</span></a><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-step" title="Le sizing et le risque dans le plan"><span class="series-num">4</span><span class="series-label">Sizing & risque</span></a><a href="/series/plan-de-trading/part5-watchlist/" class="series-step current" title="Bâtir et entretenir sa watchlist"><span class="series-num">5</span><span class="series-label">Watchlist</span></a><a href="/series/plan-de-trading/part6-execution/" class="series-step" title="Du plan à l'exécution : routine et checklist"><span class="series-num">6</span><span class="series-label">Exécution</span></a></div><span class="series-counter">5/6</span><a href="/series/plan-de-trading/part6-execution/" class="series-arrow" title="Du plan à l'exécution : routine et checklist"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" href="#pourquoi-watchlist" data-section="pourquoi-watchlist"><i class="fas fa-bookmark"></i><span>Pourquoi une watchlist</span></a>
+  <a class="fnav-item" href="#univers" data-section="univers"><i class="fas fa-bookmark"></i><span>Définir son univers</span></a>
+  <a class="fnav-item" href="#screening" data-section="screening"><i class="fas fa-bookmark"></i><span>Screening</span></a>
+  <a class="fnav-item" href="#annoter" data-section="annoter"><i class="fas fa-bookmark"></i><span>Annoter & alertes</span></a>
+  <a class="fnav-item" href="#entretenir" data-section="entretenir"><i class="fas fa-bookmark"></i><span>Entretenir & faire tourner</span></a>
+  <a class="fnav-item" href="#quiz" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <!-- ============ SECTION 1 — POURQUOI ============ -->
+  <div class="section-divider" id="pourquoi-watchlist"><i class="fa-solid fa-binoculars" style="color:#7c3aed;"></i> Pourquoi une watchlist</div>
+  <div class="content-card">
+    <p>Un trader sans watchlist ressemble à un pêcheur qui jette sa ligne au hasard dans l'océan. Le marché propose chaque jour des milliers de mouvements, des centaines de gros titres, une avalanche de tickers qui « bougent ». Sans filtre, on poursuit le dernier nom qui clignote en vert sur un fil d'actualité — et l'on entre dans une position que l'on n'a jamais étudiée, à un niveau que l'on n'a jamais défini, avec un stop que l'on improvise. C'est l'inverse exact du plan que les quatre premières parties de cette série ont patiemment construit.</p>
+
+    <p>La watchlist répond à une vérité simple : <strong>l'attention est une ressource rare, et la qualité d'une décision dépend de la préparation qui la précède.</strong> Vous ne pouvez pas suivre sérieusement deux mille titres. Vous pouvez en suivre vingt ou trente, profondément. La watchlist est le mécanisme qui concentre votre attention sur ce périmètre maîtrisable, et qui fait de chaque candidat un titre que vous connaissez déjà : son comportement, ses niveaux, sa volatilité, son rythme.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="color:#7c3aed; margin-right:0.5rem;"></i> L'idée centrale</h4>
+      <p>La préparation bat la réaction. Un setup qui se présente sur un titre que vous suivez depuis des semaines déclenche une décision calme et déjà cadrée. Le même setup sur un inconnu déclenche une recherche précipitée, sous la pression du prix qui bouge — et c'est précisément dans cet état que naissent les erreurs d'exécution.</p>
+    </div>
+
+    <p>Ce point fait le lien direct avec la série <em>Salarié & Investisseur</em> : le travail du soir, à froid, marchés fermés. La watchlist annotée est ce que vous préparez en quinze minutes après le dîner, pour que la séance du lendemain ne soit qu'une exécution mécanique. Vous n'avez pas à surveiller l'écran en continu pendant vos heures de bureau : vos alertes veillent à votre place, et le travail de fond est déjà fait.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-solid fa-crosshairs"></i></div>
+        <h4>Concentrer l'attention</h4>
+        <p>Du bruit de milliers de titres à une poignée de candidats suivis sérieusement.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-fingerprint"></i></div>
+        <h4>Connaître ses titres</h4>
+        <p>Comportement, niveaux clés, volatilité typique : la familiarité réduit les surprises.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-hourglass-half"></i></div>
+        <h4>Être prêt</h4>
+        <p>Le setup arrive sur un terrain préparé, pas sur une découverte de dernière minute.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-shield-halved"></i></div>
+        <h4>Réduire l'impulsivité</h4>
+        <p>Ce qui n'est pas sur la liste n'est pas tradé : un garde-fou contre le FOMO.</p>
+      </div>
+    </div>
+
+    <p>Cette dernière fonction est sous-estimée. Une watchlist bien tenue est aussi un <strong>filtre disciplinaire</strong> : la règle « je ne trade que ce qui figure sur ma liste, étudié à l'avance » coupe net la majorité des trades impulsifs déclenchés par un tweet, une rumeur ou un titre vu en passant. Le candidat de demain doit avoir mérité sa place sur la liste aujourd'hui.</p>
+  </div>
+
+  <!-- ============ SECTION 2 — UNIVERS ============ -->
+  <div class="section-divider" id="univers"><i class="fa-solid fa-globe" style="color:#7c3aed;"></i> Définir son univers</div>
+  <div class="content-card">
+    <p>Avant même de screener, il faut décider <strong>où vous pêchez</strong>. L'univers est l'ensemble des titres dans lequel vous acceptez de chercher des candidats — et ce choix doit être cohérent avec votre edge, défini en partie 2. Un trader dont l'avantage tient à la lecture des cassures sur grandes capitalisations technologiques américaines n'a aucune raison de scruter les nano-caps biotech : il y serait sans repère, sans familiarité, sans edge.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-compass" style="color:#7c3aed; margin-right:0.5rem;"></i> La règle d'or</h4>
+      <p>L'univers se choisit là où vit votre edge. Si vous ne savez pas pourquoi un titre appartient à votre univers, il n'y a pas sa place. La cohérence édge ↔ univers est ce qui rend la familiarité possible : on ne connaît bien qu'un terrain qu'on parcourt souvent.</p>
+    </div>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Le critère qui ne se négocie pas : la liquidité</h3>
+    <p>Quel que soit votre style, un filtre de liquidité doit borner l'univers <em>en premier</em>. Un titre peu liquide se trade mal : l'écart entre le prix acheteur et le prix vendeur (le <em>spread</em>) se creuse, les ordres au marché glissent, et une sortie en urgence peut s'exécuter loin de votre niveau prévu. Le risque que vous aviez calculé en partie 4 devient alors fictif.</p>
+
+    <p>La mesure usuelle est le <strong>volume quotidien moyen</strong> (ADV, <em>Average Daily Volume</em>), souvent exprimé en valeur : prix moyen × volume moyen sur 20 à 50 séances. Un seuil pédagogique courant pour du swing retail : ne retenir que des titres dont l'ADV dépasse plusieurs millions d'euros ou de dollars, afin que votre taille de position reste une fraction négligeable du flux quotidien.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-water" style="margin-right:0.5rem;"></i> Test de liquidité simple <span style="font-weight:400; font-size:0.8rem; color:#64748b;">(seuils illustratifs)</span></h4>
+      <p>Demandez-vous : « Ma position représente-t-elle plus de 1 % du volume quotidien moyen ? » Si oui, votre propre ordre risque de déplacer le prix. Sur un ADV de 50 M$ et une position de 5 000 $, vous pesez 0,01 % du flux — vous entrez et sortez sans frottement. Sur un ADV de 200 000 $, la même position pèse 2,5 % : entrée et sortie deviennent un problème. Les chiffres ici sont purement illustratifs et servent à raisonner sur l'ordre de grandeur.</p>
+    </div>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Ni trop large, ni trop étroit</h3>
+    <p>Un univers de cinq mille titres est ingérable : vous ne connaîtrez aucun nom en profondeur, et le screening rendra trop de candidats pour les étudier sérieusement. À l'inverse, un univers de dix titres vous condamne à attendre que <em>ces dix-là</em> offrent un setup — et à forcer des trades médiocres faute de mieux. Le bon univers se situe entre les deux : assez large pour qu'un setup de qualité émerge régulièrement, assez restreint pour que chaque candidat reste connu.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Profil d'univers</th><th>Exemple</th><th>Taille indicative</th><th>Atout / risque</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Indice de référence</strong></td><td>Grandes caps US (S&P 100), CAC 40</td><td>40–100 titres</td><td>Liquidité maximale, données riches / mouvements parfois lents</td></tr>
+        <tr><td><strong>Secteur maîtrisé</strong></td><td>Semi-conducteurs, énergie, banques EU</td><td>20–60 titres</td><td>Expertise concentrée / risque de corrélation sectorielle</td></tr>
+        <tr><td><strong>Thématique</strong></td><td>Chaîne d'approvisionnement IA, défense</td><td>15–40 titres</td><td>Aligné sur une conviction macro / dépend du thème</td></tr>
+        <tr><td><strong>ETF & indices</strong></td><td>Trackers sectoriels et larges</td><td>10–30 titres</td><td>Diversifié, propre techniquement / moins de catalyseurs idiosyncratiques</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Attention au piège de la corrélation</h4>
+      <p>Un univers mono-sectoriel concentre vos paris : si vous suivez dix semi-conducteurs et que tous déclenchent un setup le même jour, vous n'avez pas dix idées indépendantes mais un seul pari sur le secteur, démultiplié. La partie 4 l'a rappelé : le risque par position ne suffit pas, il faut aussi maîtriser le risque par cluster. Un univers correctement diversifié est la première ligne de défense contre cette concentration cachée.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 3 — SCREENING ============ -->
+  <div class="section-divider" id="screening"><i class="fa-solid fa-magnifying-glass-chart" style="color:#7c3aed;"></i> Screener selon ses critères</div>
+  <div class="content-card">
+    <p>Le screening est l'opération qui traduit votre edge en <strong>filtres mécaniques</strong> et réduit l'univers à une shortlist. C'est ici que la stratégie abstraite des parties 2 et 3 devient une requête concrète : « montre-moi les titres qui ressemblent à mon setup ». Le screen ne décide rien — il <em>présélectionne</em>. La décision reste humaine, et passe par l'étude individuelle de chaque candidat retenu.</p>
+
+    <h3 style="color:#0f172a; margin-top:1rem;">Traduire son edge en filtres</h3>
+    <p>Chaque famille de setup se traduit en quelques critères objectifs. Les axes classiques :</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-arrow-trend-up" style="color:#10b981;"></i> <strong>Tendance</strong> — prix au-dessus de la moyenne mobile 50 ou 200 séances ; structure de plus-hauts/plus-bas croissants.</li>
+      <li><i class="fa-solid fa-wave-square" style="color:#2563eb;"></i> <strong>Volatilité</strong> — ATR (<em>Average True Range</em>) dans une fourchette : assez de mouvement pour un objectif réaliste, pas au point de rendre le stop intenable.</li>
+      <li><i class="fa-solid fa-chart-column" style="color:#7c3aed;"></i> <strong>Volume</strong> — ADV au-dessus du seuil de liquidité ; pic de volume relatif signalant un intérêt récent.</li>
+      <li><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> <strong>Catalyseur</strong> — résultats à venir, événement sectoriel, proximité d'un niveau technique majeur.</li>
+      <li><i class="fa-solid fa-building-columns" style="color:#dc2626;"></i> <strong>Fondamentaux</strong> — selon le style : croissance du chiffre d'affaires, marges, ou simple filtre d'exclusion (pas de société en détresse financière).</li>
+    </ul>
+
+    <p>L'erreur fréquente est d'empiler trop de filtres : un screen à quinze critères ne rend presque rien, et chaque critère ajouté risque d'être un <em>overfit</em> à l'historique. Trois à cinq critères bien choisis, alignés sur votre setup, suffisent. <strong>Le screen large produit beaucoup de candidats ; c'est l'étude manuelle, ensuite, qui taille la shortlist.</strong></p>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">L'entonnoir : de l'univers à la watchlist</h3>
+    <p>Le processus est un entonnoir. On part de l'univers, on applique le screen pour obtenir une liste brute, on l'élague par étude manuelle pour obtenir une shortlist, et seuls les noms qui méritent une surveillance active rejoignent la watchlist. Le graphique ci-dessous illustre cet effet de réduction.</p>
+
+    <div id="chart-funnel" style="width:100%;height:400px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Entonnoir illustratif. Les volumes dépendent entièrement de votre univers et de vos critères.</p>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Les sources de candidats DailyTickers</h3>
+    <p>Vous n'êtes pas obligé de tout screener vous-même. Plusieurs sorties de DailyTickers livrent des candidats déjà pré-filtrés, qu'il reste à confronter à <em>votre</em> plan avant de les retenir :</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-solid fa-tower-broadcast"></i></div>
+        <h4>Le Scanner</h4>
+        <p>Le scan quotidien classe des setups algorithmiques par score. Un score élevé est un point de départ, pas un ordre.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-code"></i></div>
+        <h4>RunScreener</h4>
+        <p>Le moteur de filtrage Gateway : traduisez vos critères en requête et obtenez la liste brute correspondante.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-satellite-dish"></i></div>
+        <h4>Le Radar</h4>
+        <p>Risques, événements, opportunités et régime de marché : du contexte pour décider quels candidats sont d'actualité.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-clipboard-list"></i></div>
+        <h4>Plans de trading générés</h4>
+        <p>Les plans publiés donnent des niveaux et des thèses déjà structurés, à adapter à votre propre cadre de risque.</p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Une source n'est pas un signal d'achat</h4>
+      <p>Aucun nom issu d'un scanner, d'un screener ou d'un radar ne constitue une recommandation d'achat. Ces outils <strong>présélectionnent</strong> ; vous décidez. Un candidat n'entre sur votre watchlist que s'il correspond à votre setup, à votre univers et à votre tolérance au risque. Les exemples cités dans cet article sont pédagogiques et ne visent aucun titre en particulier.</p>
+    </div>
+
+    <p>Au final, <strong>la watchlist est la sortie du screen, révisée régulièrement.</strong> Ce n'est pas une liste figée : c'est l'état actuel de votre présélection, mis à jour à mesure que le marché et vos critères évoluent — ce qui nous amène à l'annotation, puis à l'entretien.</p>
+  </div>
+
+  <!-- ============ SECTION 4 — ANNOTER ============ -->
+  <div class="section-divider" id="annoter"><i class="fa-solid fa-bell" style="color:#7c3aed;"></i> Annoter les niveaux et poser des alertes</div>
+  <div class="content-card">
+    <p>Une watchlist qui n'est qu'une liste de tickers est presque inutile. Sa valeur naît de <strong>l'annotation</strong> : pour chaque titre, vous notez ce que vous attendez, à quel prix, et pourquoi. Une watchlist annotée n'est plus une liste de surveillance — c'est un plan d'action prêt à l'emploi. Le jour où le déclencheur se présente, vous n'avez plus à réfléchir : vous exécutez ce que vous aviez écrit à froid.</p>
+
+    <h3 style="color:#0f172a; margin-top:1rem;">Les quatre champs minimaux par titre</h3>
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Niveaux clés</h4>
+        <p>Le support et la résistance qui structurent le titre : où le prix réagit historiquement.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Déclencheur</h4>
+        <p>L'événement précis attendu : cassure d'un niveau, repli sur une moyenne, validation d'un pattern.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Contexte</h4>
+        <p>La thèse en une phrase : pourquoi ce titre, dans quel régime, avec quel catalyseur.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Alerte</h4>
+        <p>Le prix qui déclenche une notification, posé légèrement en amont du niveau.</p>
+      </div>
+    </div>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Maquette de watchlist annotée</h3>
+    <p>Voici la forme que prend, en pratique, une watchlist tenue sérieusement. Tous les chiffres ci-dessous sont <strong>illustratifs</strong> et ne désignent aucun titre réel ni aucune recommandation.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Titre (ex.)</th><th>Setup</th><th>Niveau clé</th><th>Déclencheur</th><th>Alerte</th><th>Contexte</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>TITRE-A</strong></td><td>Cassure</td><td>Résistance 182</td><td>Clôture > 182 + volume</td><td>180,5</td><td>Range 6 semaines, résultats passés</td></tr>
+        <tr><td><strong>TITRE-B</strong></td><td>Repli sur tendance</td><td>Support / MM50 ≈ 95</td><td>Mèche sur 95 puis reprise</td><td>96,5</td><td>Tendance haussière intacte</td></tr>
+        <tr><td><strong>TITRE-C</strong></td><td>Anticipation catalyseur</td><td>Pivot 47</td><td>Résultats J+3 — surveiller</td><td>47</td><td>Forte volatilité implicite</td></tr>
+        <tr><td><strong>TITRE-D</strong></td><td>Cassure baissière</td><td>Support 210</td><td>Clôture < 210</td><td>212</td><td>Affaiblissement relatif au secteur</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-1rem;">Tableau pédagogique. « TITRE-A/B/C/D » sont des espaces réservés, sans rapport avec un instrument coté.</p>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Pourquoi l'alerte se pose en amont du niveau</h3>
+    <p>L'alerte n'est pas le prix d'entrée : c'est le prix qui vous <em>réveille</em>. On la place légèrement avant le niveau décisif, pour avoir le temps d'ouvrir le graphique, de vérifier le contexte et de préparer l'ordre <strong>avant</strong> que le déclencheur ne se produise. Une alerte posée pile sur le niveau arrive souvent trop tard : le mouvement est déjà engagé quand votre téléphone vibre.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Distance d'alerte indicative</div>
+      Alerte = Niveau clé <span class="formula-highlight">∓</span> (0,3 à 0,5 × ATR quotidien)
+    </div>
+    <p style="font-size:0.85rem; color:#64748b;">Soustraction pour une alerte de cassure haussière posée sous la résistance ; addition pour une cassure baissière posée au-dessus du support. La fraction de l'ATR adapte la marge à la volatilité propre du titre — large sur un titre nerveux, serrée sur un titre calme.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-moon" style="color:#7c3aed; margin-right:0.5rem;"></i> Le lien avec la vie de salarié</h4>
+      <p>Les alertes sont ce qui rend la watchlist compatible avec un emploi du temps chargé. Vous n'avez pas à fixer l'écran de 9h à 18h : vos alertes surveillent à votre place et ne vous sollicitent que quand un titre approche d'un niveau que <em>vous</em> avez défini. C'est exactement le mécanisme décrit dans la série <em>Salarié & Investisseur</em> — préparer le soir, déléguer la surveillance à la machine, n'agir que sur déclenchement.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 5 — ENTRETENIR ============ -->
+  <div class="section-divider" id="entretenir"><i class="fa-solid fa-rotate" style="color:#7c3aed;"></i> Entretenir et faire tourner</div>
+  <div class="content-card">
+    <p>Une watchlist n'est pas un monument : c'est un organisme vivant. Les niveaux que vous aviez notés sont franchis ou invalidés ; les catalyseurs passent ; les régimes de marché changent. Une liste laissée à l'abandon devient rapidement un cimetière de thèses périmées — et trader sur des annotations obsolètes est pire que ne rien noter du tout, car cela donne une fausse impression de préparation.</p>
+
+    <h3 style="color:#0f172a; margin-top:1rem;">Les trois gestes d'entretien</h3>
+    <div class="step-grid">
+      <div class="step-card" style="border-top-color:#dc2626;">
+        <div class="step-number" style="background:linear-gradient(135deg,#dc2626 0%,#f87171 100%);"><i class="fa-solid fa-trash"></i></div>
+        <h4>Retirer</h4>
+        <p>Le déclencheur a sauté sans vous, la thèse est cassée, le titre stagne hors de votre fenêtre : on l'enlève.</p>
+      </div>
+      <div class="step-card" style="border-top-color:#10b981;">
+        <div class="step-number" style="background:linear-gradient(135deg,#059669 0%,#34d399 100%);"><i class="fa-solid fa-plus"></i></div>
+        <h4>Ajouter</h4>
+        <p>Les nouveaux candidats issus du screen, du scanner ou du radar, une fois confrontés à votre plan.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number"><i class="fa-solid fa-pen"></i></div>
+        <h4>Mettre à jour</h4>
+        <p>Niveaux, alertes et contexte recalculés après chaque séance ou semaine marquante.</p>
+      </div>
+    </div>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Une routine de mise à jour</h3>
+    <p>L'entretien ne doit pas être une charge ; il doit être un rythme. La fréquence dépend de votre horizon, mais le principe est le même : un passage court et régulier vaut mieux qu'une refonte rare et laborieuse.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Cadence</th><th>Geste</th><th>Durée indicative</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Chaque soir</strong></td><td>Vérifier les déclencheurs touchés, ajuster les alertes du lendemain</td><td>10–15 min</td></tr>
+        <tr><td><strong>Chaque week-end</strong></td><td>Recalculer les niveaux, élaguer les noms inactifs, intégrer les nouveaux candidats</td><td>30–45 min</td></tr>
+        <tr><td><strong>Au changement de régime</strong></td><td>Réévaluer l'univers et la pertinence des setups (risk-on ↔ risk-off)</td><td>ponctuel</td></tr>
+      </tbody>
+    </table>
+
+    <p>Cette routine rejoint la revue de performance détaillée dans la série <em>Journal & Performance</em> : les deux exercices se nourrissent l'un l'autre. Le journal vous dit quels setups fonctionnent réellement ; cette information remonte vers la watchlist et affine vos critères de screening. La boucle est vertueuse — la watchlist nourrit le plan, le plan nourrit le journal, le journal corrige la watchlist.</p>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Le piège de l'inflation</h3>
+    <p>Le danger n'est pas d'avoir trop peu de candidats — c'est d'en avoir trop. Une watchlist gonfle naturellement : on ajoute, on ajoute, on n'enlève jamais. Au bout de quelques mois, elle compte cent titres que personne ne suit réellement. Cent noms ne se surveillent pas ; ils se subissent. Le graphique suivant illustre comment une liste bien tenue plafonne, là où une liste négligée enfle sans limite.</p>
+
+    <div id="chart-inflation" style="width:100%;height:360px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Trajectoires illustratives. La taille « gérable » dépend de votre disponibilité et de votre horizon.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-scissors" style="margin-right:0.5rem;"></i> La règle d'un pour un</h4>
+      <p>Pour contenir l'inflation, imposez-vous une discipline simple : <strong>n'ajouter un titre qu'en s'autorisant à en retirer un autre</strong> dès que la liste atteint son plafond (par exemple 20 ou 25 noms). Cette contrainte force un arbitrage permanent et garantit que chaque place est occupée par le meilleur candidat disponible, pas par tout ce qui est passé un jour devant vos yeux.</p>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-ghost" style="margin-right:0.5rem;"></i> Le coût caché des thèses zombies</h4>
+      <p>Un titre laissé sur la liste avec des niveaux datant d'il y a deux mois est un piège : le jour où l'alerte se déclenche, vous risquez d'agir sur un contexte qui n'existe plus. Mieux vaut une watchlist de quinze titres à jour qu'une de cinquante à moitié périmée. La qualité de l'annotation prime toujours sur la quantité de noms.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION QUIZ ============ -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#7c3aed;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Cinq questions pour vérifier que les principes de la watchlist sont solides. Cliquez pour révéler la réponse.</p>
+
+    <details>
+      <summary>1. Pourquoi une watchlist bat-elle la réaction au fil d'actualité ?</summary>
+      <div class="quiz-answer">Parce qu'elle substitue la <strong>préparation à froid</strong> à la décision sous pression. Un setup qui se présente sur un titre déjà étudié — niveaux, comportement, contexte connus — déclenche une exécution calme et cadrée. Le même setup sur un inconnu force une recherche précipitée pendant que le prix bouge, état dans lequel naissent les erreurs. La watchlist joue aussi un rôle disciplinaire : ce qui n'est pas sur la liste n'est pas tradé, ce qui coupe l'impulsivité.</div>
+    </details>
+
+    <details>
+      <summary>2. Quel critère doit borner l'univers <em>en premier</em>, et pourquoi ?</summary>
+      <div class="quiz-answer">La <strong>liquidité</strong> (volume quotidien moyen / ADV). Sur un titre peu liquide, le spread se creuse et les ordres glissent : une sortie en urgence s'exécute loin du niveau prévu, et le risque calculé devient fictif. Repère pédagogique : si votre position dépasse environ 1 % de l'ADV, votre propre ordre risque de déplacer le prix. Les seuils chiffrés sont illustratifs et dépendent de votre style.</div>
+    </details>
+
+    <details>
+      <summary>3. Combien de filtres faut-il pour un bon screen, et quel est le risque d'en mettre trop ?</summary>
+      <div class="quiz-answer"><strong>Trois à cinq filtres</strong> bien alignés sur votre setup suffisent. Empiler quinze critères ne rend presque rien et constitue un <em>overfit</em> à l'historique : on optimise pour le passé plutôt que pour un setup robuste. Le screen <strong>présélectionne</strong> ; c'est l'étude manuelle ensuite qui taille la shortlist. Le screen ne décide jamais à votre place.</div>
+    </details>
+
+    <details>
+      <summary>4. Où poser l'alerte de prix, et pourquoi pas pile sur le niveau ?</summary>
+      <div class="quiz-answer"><strong>Légèrement en amont du niveau</strong>, à environ 0,3 à 0,5 × l'ATR quotidien. L'alerte n'est pas le prix d'entrée mais le prix qui vous réveille : la poser en amont laisse le temps d'ouvrir le graphique, vérifier le contexte et préparer l'ordre <em>avant</em> que le déclencheur ne se produise. Une alerte posée pile sur le niveau arrive souvent trop tard, le mouvement étant déjà engagé.</div>
+    </details>
+
+    <details>
+      <summary>5. Comment éviter l'inflation d'une watchlist ?</summary>
+      <div class="quiz-answer">Par une <strong>rotation disciplinée</strong> : retirer les thèses cassées ou périmées, mettre à jour les niveaux après chaque séance ou week-end, et appliquer la règle « un pour un » au plafond (n'ajouter un titre qu'en acceptant d'en retirer un). Une liste de cent noms ne se suit pas ; mieux vaut quinze titres à jour que cinquante à moitié périmés. La qualité de l'annotation prime sur la quantité.</div>
+    </details>
+  </div>
+
+  <!-- ============ TAKEAWAY ============ -->
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-circle-check" style="margin-right:0.5rem;"></i> À retenir — Partie 5</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-binoculars"></i> <strong>La watchlist concentre l'attention</strong> : du bruit de milliers de titres à une poignée de candidats connus et préparés. La préparation bat la réaction.</li>
+      <li><i class="fa-solid fa-globe"></i> <strong>L'univers se choisit là où vit votre edge</strong>, borné d'abord par la liquidité — ni trop large pour rester gérable, ni trop étroit pour ne pas forcer de mauvais trades.</li>
+      <li><i class="fa-solid fa-magnifying-glass-chart"></i> <strong>Le screen traduit l'edge en 3 à 5 filtres</strong> et réduit l'univers à une shortlist. Scanner, RunScreener, Radar et plans générés sont des sources pré-filtrées — jamais des signaux d'achat.</li>
+      <li><i class="fa-solid fa-bell"></i> <strong>Une watchlist annotée est un plan d'action</strong> : niveau, déclencheur, contexte, alerte. L'alerte se pose en amont du niveau pour agir à temps, sans surveiller l'écran en continu.</li>
+      <li><i class="fa-solid fa-rotate"></i> <strong>Elle se fait tourner</strong> : retirer, ajouter, mettre à jour. La règle « un pour un » contient l'inflation ; quinze titres à jour valent mieux que cinquante périmés.</li>
+    </ul>
+  </div>
+
+  <a class="next-cta" href="/series/plan-de-trading/part6-execution/">
+    <i class="fa-solid fa-play"></i>
+    <div>
+      <div class="next-label">Partie 6 sur 6 — Pour terminer</div>
+      <div class="next-title">Du plan à l'exécution : routine et checklist</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-arrow" title="Le sizing et le risque dans le plan"><i class="fas fa-chevron-left"></i></a><span class="series-title">Plan & Watchlist</span><div class="series-steps"><a href="/series/plan-de-trading/part1-pourquoi-un-plan/" class="series-step" title="Pourquoi un plan de trading écrit change tout"><span class="series-num">1</span><span class="series-label">Pourquoi un plan</span></a><a href="/series/plan-de-trading/part2-edge-setups/" class="series-step" title="Définir son edge et ses setups"><span class="series-num">2</span><span class="series-label">Edge & setups</span></a><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-step" title="Règles d'entrée, de sortie et d'invalidation"><span class="series-num">3</span><span class="series-label">Entrées & sorties</span></a><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-step" title="Le sizing et le risque dans le plan"><span class="series-num">4</span><span class="series-label">Sizing & risque</span></a><a href="/series/plan-de-trading/part5-watchlist/" class="series-step current" title="Bâtir et entretenir sa watchlist"><span class="series-num">5</span><span class="series-label">Watchlist</span></a><a href="/series/plan-de-trading/part6-execution/" class="series-step" title="Du plan à l'exécution : routine et checklist"><span class="series-num">6</span><span class="series-label">Exécution</span></a></div><span class="series-counter">5/6</span><a href="/series/plan-de-trading/part6-execution/" class="series-arrow" title="Du plan à l'exécution : routine et checklist"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    © 2026 DailyTickers. Données via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // ---- Chart 1 : Funnel univers -> screen -> shortlist -> watchlist ----
+  var elFunnel = document.getElementById('chart-funnel');
+  if (elFunnel) {
+    var cF = echarts.init(elFunnel);
+    cF.setOption({
+      tooltip: { trigger: 'item', formatter: '{b} : ~{c} titres' },
+      series: [{
+        type: 'funnel',
+        left: '8%', right: '8%', top: 30, bottom: 20,
+        minSize: '20%', maxSize: '100%',
+        sort: 'descending', gap: 4,
+        label: { show: true, position: 'inside', color: '#fff', fontWeight: 700, fontSize: 13,
+                 formatter: '{b}\n~{c}' },
+        labelLine: { show: false },
+        itemStyle: { borderColor: '#fff', borderWidth: 2 },
+        data: [
+          { value: 500, name: 'Univers', itemStyle: { color: '#c4b5fd' } },
+          { value: 80,  name: 'Screen brut', itemStyle: { color: '#8b5cf6' } },
+          { value: 25,  name: 'Shortlist', itemStyle: { color: '#7c3aed' } },
+          { value: 12,  name: 'Watchlist', itemStyle: { color: '#6d28d9' } }
+        ]
+      }]
+    });
+    charts.push(cF);
+  }
+
+  // ---- Chart 2 : Inflation - liste gérée vs négligée ----
+  var elInf = document.getElementById('chart-inflation');
+  if (elInf) {
+    var cI = echarts.init(elInf);
+    cI.setOption({
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Liste bien tenue', 'Liste négligée', 'Seuil gérable'], top: 0, textStyle: { color: '#475569' } },
+      grid: { left: 50, right: 24, top: 50, bottom: 40 },
+      xAxis: { type: 'category', name: 'Semaines',
+               data: ['S1','S4','S8','S12','S16','S20','S24'],
+               axisLine: { lineStyle: { color: '#cbd5e1' } },
+               axisLabel: { color: '#64748b' } },
+      yAxis: { type: 'value', name: 'Nb de titres', max: 100,
+               axisLabel: { color: '#64748b' },
+               splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [
+        { name: 'Liste bien tenue', type: 'line', smooth: true, symbol: 'circle', symbolSize: 7,
+          data: [12, 18, 22, 20, 23, 21, 22],
+          lineStyle: { color: '#7c3aed', width: 3 }, itemStyle: { color: '#7c3aed' },
+          areaStyle: { color: 'rgba(124,58,237,0.10)' } },
+        { name: 'Liste négligée', type: 'line', smooth: true, symbol: 'circle', symbolSize: 7,
+          data: [12, 24, 38, 51, 64, 80, 96],
+          lineStyle: { color: '#dc2626', width: 3, type: 'dashed' }, itemStyle: { color: '#dc2626' } },
+        { name: 'Seuil gérable', type: 'line', symbol: 'none',
+          data: [25, 25, 25, 25, 25, 25, 25],
+          lineStyle: { color: '#10b981', width: 2, type: 'dotted' } }
+      ]
+    });
+    charts.push(cI);
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c) { if (c) c.resize(); });
+  });
+})();
+</script>
+
+<script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

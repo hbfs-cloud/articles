@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Pourquoi tenir un journal — et comment vraiment le faire | Journal & Performance — Partie 1/6 | DailyTickers</title>
+ <meta name="description" content="La pièce manquante de la plupart des investisseurs : le journal de trading. Pourquoi presque tout le monde l'abandonne, quoi consigner exactement (setup, contexte, émotion, capture), le journal minimal viable et les outils pour le tenir sans y passer ses soirées.">
+ <meta property="og:title" content="Pourquoi tenir un journal — et comment vraiment le faire | Journal & Performance 1/6">
+ <meta property="og:description" content="La pièce manquante de la plupart des investisseurs : le journal de trading. Pourquoi presque tout le monde l'abandonne, quoi consigner exactement (setup, contexte, émotion, capture), le journal minimal viable et les outils pour le tenir sans y passer ses soirées.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/journal-et-performance/part1-tenir-le-journal/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* AMBER THEME — Journal & Performance */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#b45309; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#d97706; margin-right:0.75rem; }
+ details[open] summary { border-color:#d97706; background:#fffbeb; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #451a03 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#fcd34d; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #d97706; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b45309; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(217,119,6,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,119,6,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #d97706; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Journal & Performance — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Pourquoi tenir un journal — et comment vraiment le faire</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; color:#475569; line-height:1.7;">On ne peut pas améliorer ce qu'on ne mesure pas. Le journal de trading est l'outil de progression le plus puissant à votre disposition — et le plus négligé. La quasi-totalité des investisseurs qui en ouvrent un l'abandonnent en quelques semaines. Cette série commence par le seul sujet qui compte vraiment : construire un journal que vous tiendrez <em>réellement</em>, et qui transforme vos impressions en données.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-book"></i> Journal de trading</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-pen-to-square"></i> Quoi consigner</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-camera"></i> Captures & contexte</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-table"></i> Modèle minimal</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step current" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">1/6</span><a href="/series/journal-et-performance/part2-metriques/" class="series-arrow" title="R-multiples, expectancy et win rate"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" href="#pourquoi" data-section="pourquoi"><i class="fas fa-bookmark"></i><span>Pourquoi un journal</span></a>
+  <a class="fnav-item" href="#abandon" data-section="abandon"><i class="fas fa-bookmark"></i><span>Pourquoi on abandonne</span></a>
+  <a class="fnav-item" href="#quoi-consigner" data-section="quoi-consigner"><i class="fas fa-bookmark"></i><span>Quoi consigner</span></a>
+  <a class="fnav-item" href="#minimal" data-section="minimal"><i class="fas fa-bookmark"></i><span>Journal minimal</span></a>
+  <a class="fnav-item" href="#outils" data-section="outils"><i class="fas fa-bookmark"></i><span>Les outils</span></a>
+  <a class="fnav-item" href="#quiz" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <!-- ===================== SECTION 1 : POURQUOI ===================== -->
+  <div class="section-divider" id="pourquoi"><i class="fa-solid fa-lightbulb" style="color:#d97706;"></i> Pourquoi un journal change tout</div>
+  <div class="content-card">
+    <p>Demandez à un investisseur où il perd de l'argent. La réponse arrive souvent sous forme d'intuition : <em>« je crois que je perds sur les cassures »</em>, <em>« j'ai l'impression de sortir trop tôt »</em>, <em>« les lundis ne me réussissent pas »</em>. Ce sont des hypothèses, pas des faits. Et tant qu'elles restent des impressions, elles ne se corrigent jamais : la mémoire est un témoin peu fiable, qui surpondère les pertes spectaculaires et oublie les dizaines de petites décisions médiocres qui grignotent un compte.</p>
+
+    <p>Le journal de trading fait une seule chose, mais elle est décisive : il transforme l'anecdote en mesure. <em>« Je crois que je perds sur les cassures »</em> devient <em>« sur mes 23 trades de cassure ce trimestre, l'espérance est de –0,4R, contre +0,6R sur mes pullbacks »</em>. À ce moment précis, le problème cesse d'être une sensation diffuse et devient une donnée que l'on peut attaquer. C'est tout l'objet de cette série : le journal (Partie 1) alimente les métriques (Partie 2), la qualité d'exécution (Partie 3), la revue (Partie 4), la correction des biais (Partie 5) et, enfin, un tableau de bord de gérant (Partie 6).</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;color:#d97706;"></i> La distinction qui change tout : décision vs résultat</h4>
+      <p>Un trade a deux dimensions indépendantes. D'un côté, <strong>la qualité de la décision</strong> : avez-vous suivi un plan testé, avec un risque défini, un ratio risque/rendement favorable, dans des conditions où votre edge existe ? De l'autre, <strong>le résultat</strong> : le trade a-t-il gagné ou perdu de l'argent ?</p>
+      <p>Ces deux dimensions ne sont pas synonymes. Une <strong>bonne décision peut perdre</strong> (le marché a son mot à dire), et une <strong>mauvaise décision peut gagner</strong> par pure chance. Si vous jugez vos trades uniquement sur le résultat, vous apprenez la mauvaise leçon : vous féliciterez un coup de poker qui a payé et punirez un trade impeccable qui a simplement rencontré un stop. Le journal vous force à noter les deux séparément. C'est la seule façon de renforcer le bon <em>process</em> plutôt que de courir après la chance.</p>
+    </div>
+
+    <p>Cette matrice 2×2 est l'image mentale à garder. Le seul quadrant qui détruit un compte à long terme est celui des mauvaises décisions — qu'elles gagnent ou perdent. Les bonnes décisions perdantes sont le coût normal de l'activité : on les accepte. Les mauvaises décisions gagnantes sont les plus dangereuses, car elles renforcent un comportement qui finira par coûter cher.</p>
+
+    <div id="chart-matrice" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <p style="font-size:0.85rem;color:#64748b;display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin:-0.5rem 0 1.5rem;">
+      <span><i class="fa-solid fa-circle" style="color:#10b981;margin-right:0.35rem;"></i>Bonne décision, gain — l'idéal</span>
+      <span><i class="fa-solid fa-circle" style="color:#f59e0b;margin-right:0.35rem;"></i>Bonne décision, perte — coût normal</span>
+      <span><i class="fa-solid fa-circle" style="color:#dc2626;margin-right:0.35rem;"></i>Mauvaise décision, gain — le plus dangereux</span>
+      <span><i class="fa-solid fa-circle" style="color:#b45309;margin-right:0.35rem;"></i>Mauvaise décision, perte — à éliminer</span>
+    </p>
+    <p style="font-size:0.85rem;color:#64748b;text-align:center;margin:-0.5rem 0 1.5rem;">Le code couleur suit la <em>dangerosité pour le compte</em>, pas le résultat : le rouge vif marque le quadrant le plus traître (une mauvaise décision récompensée par chance), tandis que la perte issue d'une bonne décision reste en ambre clair — un coût assumé.</p>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value">2</div><div class="metric-label">Dimensions à noter : décision ET résultat</div></div>
+      <div class="metric-card"><div class="metric-value">+0,6R</div><div class="metric-label">Espérance pullback (exemple illustratif)</div></div>
+      <div class="metric-card"><div class="metric-value">−0,4R</div><div class="metric-label">Espérance cassure (exemple illustratif)</div></div>
+      <div class="metric-card"><div class="metric-value">1R</div><div class="metric-label">L'unité qui rend les trades comparables</div></div>
+    </div>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-ruler" style="margin-right:0.5rem;color:#9333ea;"></i> Pourquoi penser en « R » plutôt qu'en euros</h4>
+      <p>Le <strong>R-multiple</strong> exprime le résultat d'un trade en unités de risque initial, pas en valeur absolue. Si vous risquez 100 € (distance entre votre entrée et votre stop, multipliée par la taille) et que vous gagnez 250 €, le trade vaut +2,5R. Si vous risquez 100 € et perdez 100 €, c'est −1R. Un trade plus gros qui risque 400 € et gagne 400 € vaut aussi +1R.</p>
+      <p>L'avantage : un gain de 200 € sur une position où vous risquiez 50 € (+4R) n'a rien à voir avec un gain de 200 € sur une position où vous risquiez 400 € (+0,5R). En euros, ils semblent identiques. En R, le premier est un trade brillant et le second médiocre. Le R rend tous vos trades comparables entre eux, quelle que soit leur taille. Nous y reviendrons en détail en Partie 2 — pour l'instant, retenez simplement de noter, pour chaque trade, le risque initial.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 2 : ABANDON ===================== -->
+  <div class="section-divider" id="abandon"><i class="fa-solid fa-person-walking-arrow-right" style="color:#d97706;"></i> Pourquoi on abandonne</div>
+  <div class="content-card">
+    <p>Tenir un journal est une idée que tout le monde approuve et que presque personne n'applique dans la durée. Ce n'est pas un problème de discipline morale — c'est un problème de conception. Trois causes reviennent systématiquement, et chacune a un antidote concret.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Trop lourd</h4>
+        <p>Un journal de 30 colonnes avec rédaction d'une demi-page par trade. Au troisième jour chargé, on saute une entrée, puis deux, puis on arrête. La friction tue l'habitude.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Trop tard</h4>
+        <p>On remplit « plus tard », souvent le week-end, de mémoire. Or la mémoire reconstruit : on rationalise après coup, on oublie l'émotion réelle du moment, on lisse les erreurs. Données biaisées = revue inutile.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Pas exploité</h4>
+        <p>On note consciencieusement… et on ne relit jamais. Un journal qu'on ne revisite pas est un coût sans bénéfice. Sans rendez-vous de revue, l'effort est invisible et finit par s'éteindre.</p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Le piège du journal de mémoire</h4>
+      <p>Remplir son journal le dimanche soir pour la semaine écoulée est pire qu'inutile : c'est trompeur. Vous ne vous souviendrez pas que vous étiez stressé en entrant sur ce trade, ni que vous l'avez pris « par ennui ». Vous reconstruirez une version propre et rationnelle de vos décisions. Or ce sont précisément les écarts émotionnels que le journal doit capturer. Un champ subjectif rempli à froid n'a aucune valeur diagnostique.</p>
+    </div>
+
+    <p>Les antidotes découlent directement des causes :</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>À chaud, pas à froid.</strong> Remplissez la ligne juste après avoir passé l'ordre, et complétez le résultat à la clôture du trade. L'état émotionnel et la conviction se notent <em>au moment où ils existent</em>.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Léger par défaut.</strong> Visez 10 colonnes remplissables en deux minutes. Vous pourrez toujours enrichir plus tard ; vous ne pourrez jamais récupérer les semaines non journalisées.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Un rendez-vous de revue.</strong> Bloquez un créneau récurrent — 15 minutes le vendredi suffisent pour commencer. Sans relecture programmée, le journal n'a pas de raison d'exister (Partie 4 y est entièrement consacrée).</li>
+    </ul>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-seedling" style="margin-right:0.5rem;color:#d97706;"></i> La règle d'or</h4>
+      <p><strong>Mieux vaut un journal simple tenu qu'un journal parfait abandonné.</strong> Le journal idéal n'est pas le plus complet : c'est celui que vous remplirez encore dans six mois. Commencez délibérément en dessous de votre niveau d'ambition. La complexité s'ajoute facilement ; l'habitude, elle, est fragile.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 3 : QUOI CONSIGNER ===================== -->
+  <div class="section-divider" id="quoi-consigner"><i class="fa-solid fa-list-check" style="color:#d97706;"></i> Quoi consigner exactement</div>
+  <div class="content-card">
+    <p>Un bon journal sépare deux familles de champs. Les <strong>champs objectifs</strong> sont des faits : ils se vérifient sur votre relevé de courtier et ne se discutent pas. Les <strong>champs subjectifs</strong> sont des observations sur vous-même : ils n'ont de valeur que notés à chaud, et c'est là que se cache la vraie information sur votre comportement.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;"><i class="fa-solid fa-database"></i></div>
+        <h4>Date & heure</h4>
+        <p>Permet de repérer les effets de jour de semaine et de session.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;"><i class="fa-solid fa-tag"></i></div>
+        <h4>Ticker & sens</h4>
+        <p>Quel actif, long ou short. Base de tout regroupement.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;"><i class="fa-solid fa-right-to-bracket"></i></div>
+        <h4>Entrée & stop</h4>
+        <p>Prix d'entrée et stop initial. Définit le risque par action.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1);color:#2563eb;"><i class="fa-solid fa-right-from-bracket"></i></div>
+        <h4>Sortie & taille</h4>
+        <p>Prix de sortie et nombre d'actions/contrats. Ferme le calcul du P&L.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(217,119,6,0.1);color:#d97706;"><i class="fa-solid fa-bullseye"></i></div>
+        <h4>R prévu & R réalisé</h4>
+        <p>Le R/R visé au plan, puis le R effectivement obtenu.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(217,119,6,0.1);color:#d97706;"><i class="fa-solid fa-shapes"></i></div>
+        <h4>Setup</h4>
+        <p>Le type de configuration (pullback, cassure, retour à la moyenne…).</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(217,119,6,0.1);color:#d97706;"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+        <h4>Régime de marché</h4>
+        <p>Tendance, range, volatilité (ex. VIX). Le même setup ne vaut pas pareil partout.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1);color:#9333ea;"><i class="fa-solid fa-face-meh"></i></div>
+        <h4>État émotionnel</h4>
+        <p>Calme, FOMO, vengeance, ennui. À noter à chaud, sans filtre.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1);color:#9333ea;"><i class="fa-solid fa-gauge-high"></i></div>
+        <h4>Conviction (1–5)</h4>
+        <p>Votre degré de confiance dans le setup au moment de l'entrée.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1);color:#dc2626;"><i class="fa-solid fa-clipboard-check"></i></div>
+        <h4>Respect du plan (O/N)</h4>
+        <p>Avez-vous exécuté ce que le plan disait — ni plus, ni moins ?</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1);color:#9333ea;"><i class="fa-solid fa-camera"></i></div>
+        <h4>Capture annotée</h4>
+        <p>Une image du graphique à l'entrée, avec vos repères. Vaut mille mots.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1);color:#9333ea;"><i class="fa-solid fa-pen"></i></div>
+        <h4>Note libre</h4>
+        <p>Une phrase : pourquoi ce trade, qu'avez-vous appris.</p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-star" style="margin-right:0.5rem;"></i> La colonne qui révèle l'indiscipline : « Respect du plan »</h4>
+      <p>De tous les champs, <strong>« Respect du plan : oui / non »</strong> est le plus précieux et le plus inconfortable. Il sépare votre stratégie de votre exécution. Un système peut être excellent et vous faire perdre parce que vous le saboté en route : stop déplacé, entrée anticipée, sortie de panique, taille gonflée sur un coup de tête.</p>
+      <p>En croisant cette colonne avec vos résultats, vous obtenez le diagnostic le plus utile qui soit. Si vos trades « plan respecté » ont une espérance positive et vos trades « plan non respecté » une espérance négative, le verdict est sans appel : <strong>votre problème n'est pas votre stratégie, c'est votre discipline.</strong> C'est une excellente nouvelle, car la discipline se travaille — alors qu'on peut passer des années à « améliorer » un système qui marchait déjà.</p>
+    </div>
+
+    <p>Un mot sur le <strong>régime de marché</strong> : il évite l'erreur classique de juger un setup en moyenne globale. Une stratégie de cassure peut afficher +0,9R en tendance forte et −0,7R en range. La moyenne (+0,1R) cache l'essentiel et vous pousse à continuer dans les conditions où vous perdez. Noter le contexte permet plus tard de filtrer : ne jouer le setup que lorsque le régime lui est favorable.</p>
+  </div>
+
+  <!-- ===================== SECTION 4 : MINIMAL ===================== -->
+  <div class="section-divider" id="minimal"><i class="fa-solid fa-table-list" style="color:#d97706;"></i> Le journal minimal viable</div>
+  <div class="content-card">
+    <p>Voici le modèle à copier <em>aujourd'hui</em>. Dix colonnes, remplissables en deux minutes : quelques-unes à l'entrée, le reste à la clôture du trade. Il tient dans n'importe quel tableur. C'est délibérément frugal — l'objectif est que vous le teniez, pas qu'il soit exhaustif.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Colonne</th>
+          <th>Quand</th>
+          <th>Exemple de ligne</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>1. Date</strong></td><td>Entrée</td><td>2026-06-16</td></tr>
+        <tr><td><strong>2. Ticker / Sens</strong></td><td>Entrée</td><td>NVDA — Long</td></tr>
+        <tr><td><strong>3. Setup</strong></td><td>Entrée</td><td>Pullback sur MM20</td></tr>
+        <tr><td><strong>4. Régime</strong></td><td>Entrée</td><td>Tendance haussière, VIX 16</td></tr>
+        <tr><td><strong>5. Entrée / Stop / Taille</strong><br><span style="font-size:0.8rem;color:#64748b;">(1R = entrée − stop)</span></td><td>Entrée</td><td>118,00 / 113,00 / 100 actions (1R = 5,00 $/action)</td></tr>
+        <tr><td><strong>6. Conviction (1–5)</strong></td><td>Entrée</td><td>4</td></tr>
+        <tr><td><strong>7. État émotionnel</strong></td><td>Entrée</td><td>Calme, plan clair</td></tr>
+        <tr><td><strong>8. Sortie / R réalisé</strong></td><td>Clôture</td><td>130,00 → +2,4R</td></tr>
+        <tr><td><strong>9. Respect du plan (O/N)</strong></td><td>Clôture</td><td>Oui</td></tr>
+        <tr><td><strong>10. Note (1 phrase)</strong></td><td>Clôture</td><td>Sortie au 1ᵉʳ objectif, pas de regret.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-calculator" style="margin-right:0.5rem;color:#9333ea;"></i> Vérifions l'arithmétique de l'exemple</h4>
+      <p>Entrée à 118,00 $, stop à 113,00 $ : le risque par action est de <strong>118 − 113 = 5,00 $</strong>, soit <strong>1R = 5,00 $</strong> par action. Sortie à 130,00 $ : le gain par action est de <strong>130 − 118 = 12,00 $</strong>.</p>
+      <p>Le R réalisé est donc <strong>12,00 ÷ 5,00 = 2,4R</strong>. Si la position faisait 100 actions, le risque initial était de 500 $ et le gain de 1 200 $ — soit bien +2,4 fois le risque. Le R réalisé ne dépend pas de la taille : c'est ce qui le rend universellement comparable. Notez que les frais et le slippage réduisent légèrement le R net ; nous traiterons leur impact en Partie 3.</p>
+    </div>
+
+    <div id="chart-respect" style="width:100%;height:360px;margin:2rem 0;"></div>
+
+    <p>Le graphique ci-dessus illustre l'usage le plus immédiat de la colonne « Respect du plan » : suivre, semaine après semaine, votre <strong>taux de respect du plan</strong> (part des trades où vous avez exécuté ce que le plan disait). C'est un indicateur de comportement, pas de marché. Une dérive à la baisse est un signal d'alerte précoce — souvent visible <em>avant</em> que la courbe de capital ne se dégrade. Les chiffres ici sont illustratifs ; l'important est la tendance que <em>votre</em> journal révélera.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;color:#d97706;"></i> Ajoutez seulement quand l'habitude tient</h4>
+      <p>Une fois ces dix colonnes tenues sans effort pendant un mois, vous pourrez enrichir : capture d'écran annotée, durée de détention, MAE/MFE (Partie 3), tags par erreur. Mais pas avant. La séquence correcte est <strong>habitude d'abord, richesse ensuite</strong> — jamais l'inverse.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 5 : OUTILS ===================== -->
+  <div class="section-divider" id="outils"><i class="fa-solid fa-toolbox" style="color:#d97706;"></i> Les outils pour tenir le journal</div>
+  <div class="content-card">
+    <p>L'outil parfait n'existe pas — seulement des compromis entre friction, richesse et automatisation. Le bon choix dépend de votre stade, pas de la sophistication de l'outil. Voici un panorama honnête, avantages et limites compris.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Outil</th>
+          <th>Pour qui</th>
+          <th>Avantages</th>
+          <th>Limites</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Tableur</strong><br>(Google Sheets, Excel)</td>
+          <td>Tout débutant — le point de départ recommandé</td>
+          <td>Gratuit, immédiat, 100 % personnalisable, calculs de R/expectancy maison, aucune dépendance.</td>
+          <td>Saisie manuelle, pas de captures intégrées, statistiques à construire soi-même.</td>
+        </tr>
+        <tr>
+          <td><strong>Notion / Obsidian</strong></td>
+          <td>Ceux qui veulent du qualitatif + des images</td>
+          <td>Captures annotées, notes longues, liens entre trades et leçons, base de connaissances personnelle.</td>
+          <td>Moins bon pour le calcul statistique, peut redevenir « trop lourd » si on en fait trop.</td>
+        </tr>
+        <tr>
+          <td><strong>Outils dédiés</strong><br>(Edgewonk, TraderSync, Tradervue)</td>
+          <td>Traders actifs au volume régulier</td>
+          <td>Import automatique du courtier, métriques avancées, MAE/MFE, analyses par setup prêtes à l'emploi.</td>
+          <td>Abonnement payant, courbe d'apprentissage, champs subjectifs parfois à renseigner à la main quand même.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-flag-checkered" style="margin-right:0.5rem;color:#d97706;"></i> Notre recommandation : démarrez au tableur</h4>
+      <p>Commencez avec un simple Google Sheets reprenant les dix colonnes ci-dessus. Pourquoi ? Parce que construire vous-même vos colonnes et vos formules vous oblige à <strong>comprendre ce que vous mesurez</strong> — une compréhension qu'un outil clé en main vous épargne mais ne vous enseigne pas. Le tableur a une friction nulle à l'entrée et zéro coût. Migrez vers Notion (pour le qualitatif) ou un outil dédié (pour l'automatisation) <em>seulement</em> quand votre volume rend la saisie manuelle pénible. L'outil suit l'habitude, jamais l'inverse.</p>
+    </div>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-bolt" style="margin-right:0.5rem;color:#9333ea;"></i> Un raccourci concret</h4>
+      <p>Les plans de trading générés par DailyTickers vous donnent déjà, pour chaque idée, l'<strong>entrée, le stop et l'objectif</strong>. Au lieu de tout ressaisir, recopiez ces trois valeurs directement dans les colonnes 5 et 8 de votre journal au moment où vous prenez le trade. Vous n'aurez plus qu'à compléter, à la clôture, le prix de sortie réel, le respect du plan et votre note. C'est une façon simple de réduire la friction de saisie sans sacrifier la rigueur.</p>
+    </div>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Choisissez l'outil le <strong>plus léger</strong> qui couvre vos dix colonnes.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Préférez un outil <strong>accessible partout</strong> (téléphone inclus) pour noter à chaud.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> N'investissez dans un abonnement payant <strong>qu'après</strong> trois mois de tenue régulière.</li>
+    </ul>
+  </div>
+
+  <!-- ===================== SECTION 6 : QUIZ ===================== -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Quatre questions pour vérifier les idées clés de cette partie. Réfléchissez avant de déplier la réponse.</p>
+
+    <details>
+      <summary>1. Un trade respecte parfaitement votre plan testé, mais touche son stop et perd −1R. Bonne ou mauvaise décision ?</summary>
+      <div class="quiz-answer"><strong>Bonne décision, mauvais résultat.</strong> La qualité d'une décision se juge sur le process (plan suivi, risque défini, R/R favorable, edge présent), pas sur l'issue. Une bonne décision perdante est le coût normal du métier : on la conserve. La punir reviendrait à apprendre la mauvaise leçon et à abandonner un comportement sain.</div>
+    </details>
+
+    <details>
+      <summary>2. Vous remplissez votre journal le dimanche soir, de mémoire, pour toute la semaine. Quel est le principal défaut ?</summary>
+      <div class="quiz-answer"><strong>Les champs subjectifs deviennent faux.</strong> La mémoire reconstruit et rationalise : vous oublierez le stress, le FOMO ou l'ennui qui ont réellement guidé vos entrées. Or ce sont précisément ces écarts émotionnels que le journal doit capturer. Remplissez à chaud, juste après l'ordre — l'émotion et la conviction se notent au moment où elles existent.</div>
+    </details>
+
+    <details>
+      <summary>3. Vous entrez à 50 $, stop à 48 $, et sortez à 56 $. Quel est le R réalisé ?</summary>
+      <div class="quiz-answer"><strong>+3R.</strong> Le risque par action vaut 50 − 48 = 2,00 $ (soit 1R). Le gain vaut 56 − 50 = 6,00 $. Donc 6,00 ÷ 2,00 = 3R. Le résultat ne dépend pas de la taille de la position : qu'elle fasse 10 ou 1 000 actions, le trade vaut +3R. C'est ce qui rend les trades comparables entre eux.</div>
+    </details>
+
+    <details>
+      <summary>4. Vos trades « plan respecté » ont une espérance de +0,5R ; vos trades « plan non respecté », −0,8R. Que faut-il corriger en priorité ?</summary>
+      <div class="quiz-answer"><strong>La discipline, pas la stratégie.</strong> Le système fonctionne quand vous l'exécutez fidèlement (+0,5R). La perte vient de l'indiscipline : stops déplacés, entrées anticipées, sorties de panique. C'est une bonne nouvelle — la discipline se travaille, alors que retoucher un système déjà rentable risquerait de le casser. La colonne « Respect du plan » vient de vous épargner des mois d'optimisation inutile.</div>
+    </details>
+
+    <div class="takeaway-box">
+      <h3><i class="fa-solid fa-key" style="margin-right:0.5rem;"></i> À retenir — Partie 1</h3>
+      <ul class="takeaway-list">
+        <li><i class="fa-solid fa-check"></i> <strong>On n'améliore que ce qu'on mesure.</strong> Le journal transforme les impressions (« je perds sur les cassures ») en données exploitables (« −0,4R sur les cassures »).</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Décision ≠ résultat.</strong> Notez les deux séparément : une bonne décision peut perdre, une mauvaise peut gagner. On renforce le process, pas la chance.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>On abandonne pour trois raisons</strong> — trop lourd, trop tard, pas exploité. Antidotes : à chaud, léger, avec un rendez-vous de revue.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>« Respect du plan » est la colonne reine.</strong> Elle sépare la stratégie de l'exécution et révèle l'indiscipline, le problème le plus fréquent et le plus corrigeable.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Pensez en R.</strong> Le R-multiple rend tous vos trades comparables, quelle que soit leur taille.</li>
+        <li><i class="fa-solid fa-check"></i> <strong>Démarrez au tableur, dix colonnes, deux minutes.</strong> Mieux vaut un journal simple tenu qu'un journal parfait abandonné.</li>
+      </ul>
+    </div>
+
+    <a class="next-cta" href="/series/journal-et-performance/part2-metriques/">
+      <i class="fa-solid fa-chart-line"></i>
+      <div>
+        <div class="next-label">Partie 2 sur 6</div>
+        <div class="next-title">R-multiples, expectancy et win rate : lire vraiment vos chiffres</div>
+      </div>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step current" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">1/6</span><a href="/series/journal-et-performance/part2-metriques/" class="series-arrow" title="R-multiples, expectancy et win rate"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // ---- CHART 1 : Matrice décision vs résultat (2x2) ----
+  var elM = document.getElementById('chart-matrice');
+  if (elM) {
+    var cM = echarts.init(elM);
+    // 4 quadrants : x = qualité décision (0 mauvaise, 1 bonne), y = résultat (0 perte, 1 gain)
+    var data = [
+      { value: [0.25, 0.75], name: 'Mauvaise décision\nGain (chance)', col: '#dc2626', sym: 70 },
+      { value: [0.75, 0.75], name: 'Bonne décision\nGain (idéal)', col: '#10b981', sym: 80 },
+      { value: [0.25, 0.25], name: 'Mauvaise décision\nPerte (à éliminer)', col: '#b45309', sym: 70 },
+      { value: [0.75, 0.25], name: 'Bonne décision\nPerte (coût normal)', col: '#f59e0b', sym: 70 }
+    ];
+    cM.setOption({
+      grid: { left: 80, right: 40, top: 50, bottom: 60 },
+      title: { text: 'Juger le process, pas seulement le résultat', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { formatter: function(p) { return p.data.name.replace('\n', ' — '); } },
+      xAxis: {
+        type: 'value', min: 0, max: 1, name: 'Qualité de la décision →', nameLocation: 'middle', nameGap: 35,
+        axisLabel: { formatter: function(v) { return v < 0.5 ? (v === 0 ? 'Mauvaise' : '') : (v === 1 ? 'Bonne' : ''); }, color: '#64748b' },
+        splitLine: { lineStyle: { color: '#e2e8f0' } }, axisLine: { lineStyle: { color: '#cbd5e1' } }
+      },
+      yAxis: {
+        type: 'value', min: 0, max: 1, name: 'Résultat →', nameLocation: 'middle', nameGap: 50,
+        axisLabel: { formatter: function(v) { return v < 0.5 ? (v === 0 ? 'Perte' : '') : (v === 1 ? 'Gain' : ''); }, color: '#64748b' },
+        splitLine: { lineStyle: { color: '#e2e8f0' } }, axisLine: { lineStyle: { color: '#cbd5e1' } }
+      },
+      series: [{
+        type: 'scatter',
+        symbolSize: function(d, p) { return data[p.dataIndex].sym; },
+        data: data,
+        itemStyle: { color: function(p) { return data[p.dataIndex].col; }, opacity: 0.85 },
+        label: {
+          show: true, formatter: function(p) { return p.data.name; },
+          color: '#fff', fontSize: 10, fontWeight: 600, lineHeight: 13
+        }
+      }]
+    });
+    charts.push(cM);
+  }
+
+  // ---- CHART 2 : Taux de respect du plan par semaine (illustratif) ----
+  var elR = document.getElementById('chart-respect');
+  if (elR) {
+    var cR = echarts.init(elR);
+    var weeks = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8'];
+    var rate = [92, 88, 76, 64, 58, 71, 85, 90]; // % illustratif
+    cR.setOption({
+      title: { text: 'Taux de respect du plan par semaine (illustratif)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      grid: { left: 50, right: 30, top: 55, bottom: 40 },
+      tooltip: { trigger: 'axis', formatter: '{b} : {c}%' },
+      xAxis: { type: 'category', data: weeks, axisLine: { lineStyle: { color: '#cbd5e1' } }, axisLabel: { color: '#64748b' } },
+      yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%', color: '#64748b' }, splitLine: { lineStyle: { color: '#e2e8f0' } } },
+      series: [{
+        type: 'bar',
+        data: rate.map(function(v) {
+          return { value: v, itemStyle: { color: v >= 80 ? '#10b981' : (v >= 70 ? '#f59e0b' : '#dc2626'), borderRadius: [6, 6, 0, 0] } };
+        }),
+        barWidth: '55%',
+        markLine: {
+          symbol: 'none', data: [{ yAxis: 80 }],
+          lineStyle: { color: '#9333ea', type: 'dashed', width: 2 },
+          label: { formatter: 'Seuil de vigilance 80%', color: '#9333ea', position: 'insideEndTop', fontSize: 11 }
+        }
+      }]
+    });
+    charts.push(cR);
+  }
+
+  window.addEventListener('resize', function() { charts.forEach(function(c) { c.resize(); }); });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

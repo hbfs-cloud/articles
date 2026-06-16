@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Le sizing et le risque dans le plan | Plan & Watchlist — Partie 4/6 | DailyTickers</title>
+ <meta name="description" content="Intégrer le risque au plan : le risque par trade, l'exposition maximale, les règles de corrélation et de réduction. Le plan dicte la taille de chaque position — pas l'envie du moment.">
+ <meta property="og:title" content="Le sizing et le risque dans le plan | Plan & Watchlist 4/6">
+ <meta property="og:description" content="Intégrer le risque au plan : le risque par trade, l'exposition maximale, les règles de corrélation et de réduction. Le plan dicte la taille de chaque position — pas l'envie du moment.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/plan-de-trading/part4-sizing-risque/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* VIOLET THEME — Plan & Watchlist */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-violet { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#6d28d9; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+ details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #3b0764 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#c4b5fd; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#a78bfa; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#6d28d9; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #7c3aed; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#7c3aed; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Plan & Watchlist — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Le sizing et le risque dans le plan</h1>
+  <p class="hero-subtitle">Un plan qui dit seulement <em>quoi</em> acheter est à moitié écrit. La variable qui décide de votre survie n'est pas le titre choisi — c'est le montant engagé. Cette partie transcrit les principes de gestion de portefeuille en règles chiffrées, opposables, inscrites noir sur blanc dans le document maître : combien risquer par trade, jusqu'où s'exposer, comment plafonner la corrélation et quand réduire la voilure.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-ruler-combined"></i> Sizing</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-gauge-high"></i> Exposition max</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-diagram-project"></i> Corrélation</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Règles de réduction</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-arrow" title="Règles d'entrée, de sortie et d'invalidation"><i class="fas fa-chevron-left"></i></a><span class="series-title">Plan & Watchlist</span><div class="series-steps"><a href="/series/plan-de-trading/part1-pourquoi-un-plan/" class="series-step" title="Pourquoi un plan de trading écrit change tout"><span class="series-num">1</span><span class="series-label">Pourquoi un plan</span></a><a href="/series/plan-de-trading/part2-edge-setups/" class="series-step" title="Définir son edge et ses setups"><span class="series-num">2</span><span class="series-label">Edge & setups</span></a><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-step" title="Règles d'entrée, de sortie et d'invalidation"><span class="series-num">3</span><span class="series-label">Entrées & sorties</span></a><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-step current" title="Le sizing et le risque dans le plan"><span class="series-num">4</span><span class="series-label">Sizing & risque</span></a><a href="/series/plan-de-trading/part5-watchlist/" class="series-step" title="Bâtir et entretenir sa watchlist"><span class="series-num">5</span><span class="series-label">Watchlist</span></a><a href="/series/plan-de-trading/part6-execution/" class="series-step" title="Du plan à l'exécution : routine et checklist"><span class="series-num">6</span><span class="series-label">Exécution</span></a></div><span class="series-counter">4/6</span><a href="/series/plan-de-trading/part5-watchlist/" class="series-arrow" title="Bâtir et entretenir sa watchlist"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a href="#risque-trade" class="fnav-item" data-section="risque-trade"><i class="fas fa-bookmark"></i><span>Risque par trade</span></a>
+  <a href="#exposition" class="fnav-item" data-section="exposition"><i class="fas fa-bookmark"></i><span>Exposition max</span></a>
+  <a href="#correlation" class="fnav-item" data-section="correlation"><i class="fas fa-bookmark"></i><span>Corrélation</span></a>
+  <a href="#reduction" class="fnav-item" data-section="reduction"><i class="fas fa-bookmark"></i><span>Réduction</span></a>
+  <a href="#integration" class="fnav-item" data-section="integration"><i class="fas fa-bookmark"></i><span>Intégrer au plan</span></a>
+  <a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <div class="pedagogy-box" style="margin-top:1rem;">
+    <p style="margin:0;"><strong>Où nous en sommes.</strong> La partie 3 a fixé l'entrée, la sortie et l'invalidation — c'est-à-dire <em>l'endroit où le stop se pose</em>. Cette partie répond à la seule question qui reste : <strong>combien acheter</strong> sachant que le stop est posé là. Le sizing n'est pas une décision de fin de course, prise dans l'enthousiasme de l'idée ; c'est une règle arithmétique écrite à l'avance. Tout ce qui suit est <strong>illustratif et pédagogique</strong> — les chiffres servent l'apprentissage, jamais de recommandation d'achat.</p>
+  </div>
+
+  <!-- ============ SECTION 1 ============ -->
+  <div class="section-divider" id="risque-trade"><i class="fa-solid fa-ruler-combined" style="color:#7c3aed;"></i> Le risque par trade dans le plan</div>
+  <div class="content-card">
+    <p>La première ligne de la section « Risque » de votre plan n'est pas un titre, ni un secteur, ni un prix d'objectif. C'est une phrase comme celle-ci : <strong>« Je risque au maximum 0,75 % de mon capital sur une position. »</strong> Ce chiffre — appelé <em>risque par trade</em> ou <em>R</em> — est la brique élémentaire de toute la gestion du risque. Il transforme une décision émotionnelle (« cette idée me plaît, je mets gros ») en une opération mécanique.</p>
+
+    <p>Le principe rompt avec l'intuition du débutant, qui raisonne en montant investi (« je mets 5 000 € sur ce titre »). Le trader discipliné raisonne en <strong>montant risqué</strong> : la somme réellement perdue si le stop est touché. Ces deux montants n'ont rien à voir. On peut investir 10 000 € et ne risquer que 300 € si le stop est proche ; ou investir 2 000 € et risquer 600 € si le stop est lointain. C'est le risque, pas le notionnel, qu'on plafonne.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Formule de sizing</div>
+      Taille (titres) = <span class="formula-highlight">(Capital × Risque %)</span> ÷ <span class="formula-highlight">(Prix d'entrée − Prix du stop)</span>
+    </div>
+
+    <p>Le numérateur est le <strong>budget de risque</strong> en euros — ce que vous acceptez de perdre. Le dénominateur est le <strong>risque par titre</strong> — la distance entre l'entrée et le stop défini en partie 3. Diviser l'un par l'autre donne le nombre de titres à acheter. Le stop dicte la taille : c'est le sens de la flèche, et il est contre-intuitif. Plus le stop est <em>loin</em>, plus la position est <em>petite</em>.</p>
+
+    <div class="didactic-box">
+      <h4 style="margin-top:0;"><i class="fa-solid fa-calculator" style="color:#7c3aed; margin-right:0.5rem;"></i> Exemple chiffré (illustratif)</h4>
+      <p style="margin:0 0 0.75rem;">Capital de <strong>40 000 €</strong>, risque par trade fixé à <strong>0,75 %</strong>. Budget de risque = 40 000 × 0,0075 = <strong>300 €</strong>.</p>
+      <ul style="margin:0 0 0.75rem; padding-left:1.2rem; line-height:1.7;">
+        <li>Entrée à <strong>50 €</strong>, stop à <strong>47 €</strong> → risque par titre = 3 €. Taille = 300 ÷ 3 = <strong>100 titres</strong>. Notionnel = 5 000 €.</li>
+        <li>Même budget, mais stop plus serré à <strong>48,50 €</strong> → risque par titre = 1,50 €. Taille = 300 ÷ 1,50 = <strong>200 titres</strong>. Notionnel = 10 000 €.</li>
+        <li>Même budget, stop large à <strong>44 €</strong> → risque par titre = 6 €. Taille = 300 ÷ 6 = <strong>50 titres</strong>. Notionnel = 2 500 €.</li>
+      </ul>
+      <p style="margin:0;">Dans les trois cas, la <strong>perte maximale reste 300 €</strong>. Le notionnel varie de 2 500 € à 10 000 €, mais le risque est constant. C'est exactement ce que le graphique ci-dessous illustre.</p>
+    </div>
+
+    <div id="chart-sizing" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <p>Pourquoi 0,5 à 1 % et pas 5 % ? Parce que les pertes consécutives sont inévitables — même un edge réel produit des séries de perdants. À 1 % par trade, dix pertes d'affilée coûtent environ 10 % du capital : douloureux, mais réparable. À 5 % par trade, dix pertes d'affilée effacent près de 40 % du capital, et il faut alors gagner +67 % pour revenir à l'équilibre. Le risque par trade détermine votre capacité à <strong>encaisser une mauvaise passe sans être anéanti</strong>.</p>
+
+    <div class="alert-box">
+      <p style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; margin-right:0.5rem;"></i> <strong>Le piège du sizing inversé.</strong> Beaucoup de débutants choisissent d'abord le montant à investir, puis placent le stop « là où ça leur paraît raisonnable ». C'est l'ordre inverse du plan. L'invalidation (partie 3) vient en premier ; la taille en découle mécaniquement. Si le stop correct impose une position que vous trouvez trop petite, le problème n'est pas la taille — c'est que le trade ne mérite peut-être pas votre budget de risque.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2 ============ -->
+  <div class="section-divider" id="exposition"><i class="fa-solid fa-gauge-high" style="color:#7c3aed;"></i> L'exposition maximale</div>
+  <div class="content-card">
+    <p>Risquer 0,75 % par position est sain — tant qu'on n'en ouvre pas vingt en même temps. Le risque par trade gouverne <em>une</em> ligne ; l'exposition maximale gouverne <em>le portefeuille entier</em>. Sans ce second plafond, on peut respecter parfaitement la règle ligne par ligne et néanmoins se retrouver avec un pari géant sans s'en apercevoir.</p>
+
+    <p>Le plan écrit donc trois plafonds d'exposition, distincts et cumulatifs :</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-fire"></i></div>
+        <h4>Risque total simultané</h4>
+        <p>Somme des risques de toutes les positions ouvertes. Ex. : plafond à 4 % du capital — soit ~5 lignes pleines à 0,75 % chacune (la 6e dépasserait, sauf si certaines sont déjà sécurisées au point mort).</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-solid fa-layer-group"></i></div>
+        <h4>Nombre de positions</h4>
+        <p>Plafond du nombre de lignes ouvertes (ex. 8). Au-delà, on ne suit plus rien correctement.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-industry"></i></div>
+        <h4>Exposition sectorielle</h4>
+        <p>Plafond du risque concentré sur un secteur/thème (ex. 2 % max sur la tech). Évite le pari déguisé.</p>
+      </div>
+    </div>
+
+    <p>Le plafond clé est le <strong>risque total simultané</strong> : la somme des budgets de risque de toutes les lignes ouvertes. Si chaque position risque 0,75 % et que le plafond global est 4 %, alors le portefeuille ne peut pas porter plus de cinq lignes pleines au même moment (5 × 0,75 % = 3,75 % ; la sixième la ferait franchir, car 6 × 0,75 % = 4,50 % &gt; 4 %). Ce n'est pas une limite arbitraire : c'est le scénario du « tout part de travers en même temps ». Si toutes les positions touchent leur stop le même jour — ce qui arrive lors d'un choc de marché — la perte est bornée par ce plafond.</p>
+
+    <div id="chart-exposition" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <p>Le graphique ci-dessus montre l'exposition cumulée d'un portefeuille au fil des ajouts, avec la ligne de plafond. Tant que la barre reste sous le trait, le plan autorise une nouvelle entrée. Dès qu'une entrée ferait franchir le plafond, la règle est sans appel : <strong>pas de nouvelle position avant qu'une autre ne soit fermée ou son risque réduit</strong> (stop remonté au point mort, par exemple).</p>
+
+    <div class="didactic-box">
+      <h4 style="margin-top:0;"><i class="fa-solid fa-lightbulb" style="color:#7c3aed; margin-right:0.5rem;"></i> Le risque qui « disparaît »</h4>
+      <p style="margin:0;">Une position dont le stop a été remonté au point d'entrée (break-even) ne consomme plus de budget de risque : sa perte maximale est désormais nulle (hors gap). Elle libère donc de l'espace pour une nouvelle entrée. C'est ainsi qu'un portefeuille respire : on n'ouvre du neuf que lorsque l'ancien s'est sécurisé. Le plafond de risque total est dynamique, pas statique.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 3 ============ -->
+  <div class="section-divider" id="correlation"><i class="fa-solid fa-diagram-project" style="color:#7c3aed;"></i> Les règles de corrélation</div>
+  <div class="content-card">
+    <p>Voici l'illusion la plus coûteuse de la gestion du risque : croire qu'on est diversifié parce qu'on détient dix titres différents. Si ces dix titres sont NVDA, AMD, AVGO, MU, TSM, ASML, MRVL, ALAB, SMCI et ARM, vous ne détenez pas dix positions. Vous détenez <strong>un seul pari sur les semi-conducteurs et l'IA</strong>, dupliqué dix fois. Le jour où le thème se retourne, les dix lignes plongent ensemble.</p>
+
+    <div class="alert-box">
+      <p style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; margin-right:0.5rem;"></i> <strong>10 positions corrélées = 1 seul risque.</strong> La corrélation transforme un risque « réparti » en risque concentré. Le plafond de risque total simultané de la section précédente devient une fiction si toutes les lignes bougent de concert : la somme des stops devient un effondrement coordonné, pas une série d'incidents indépendants.</p>
+    </div>
+
+    <p>Le plan écrit donc une <strong>règle de corrélation</strong>, qui plafonne le nombre — ou le risque cumulé — de positions appartenant au même cluster. Un cluster est un groupe de titres qui montent et descendent ensemble : un secteur (semis, banques régionales, minières or), un thème (IA, GLP-1, énergie nucléaire), ou un facteur macro commun (sensibilité aux taux, au dollar, au pétrole). C'est exactement le <strong>gate de corrélation</strong> décrit dans la série <em>Piloter son Portefeuille</em> : une porte qui refuse une entrée non pas sur la qualité du setup, mais sur la redondance qu'il introduit.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Règle écrite (exemple)</th><th>Ce qu'elle empêche</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Max <strong>3 noms</strong> d'un même cluster ouverts simultanément</td><td>Le portefeuille « 10 titres = 1 pari » sectoriel</td></tr>
+        <tr><td>Max <strong>2 %</strong> de risque cumulé par cluster</td><td>La concentration du budget de risque sur un seul thème</td></tr>
+        <tr><td>Si une nouvelle idée est <strong>corrélée &gt; 0,7</strong> à une ligne existante, elle compte comme un renfort, pas une diversification</td><td>L'auto-illusion de diversification</td></tr>
+        <tr><td>Pas deux <strong>earnings la même semaine</strong> sur deux noms du même cluster</td><td>Le double choc événementiel synchronisé</td></tr>
+      </tbody>
+    </table>
+
+    <p>En pratique, on n'a pas besoin de calculer des coefficients de corrélation tous les matins. Une <strong>classification manuelle par cluster</strong> suffit pour 90 % des cas : étiquetez chaque ligne (« Semis/IA », « Banques », « Énergie », « Or », « Défensif »), et comptez. Si trois lignes portent déjà l'étiquette « Semis/IA », la quatrième idée du même cluster est refusée par le plan — même si c'est le plus beau setup de la semaine. La discipline de corrélation se paie en occasions manquées ; elle se rembourse les jours de krach sectoriel.</p>
+
+    <div class="pedagogy-box">
+      <p style="margin:0;"><strong>Lien avec la partie 2.</strong> Votre edge (partie 2) attire naturellement vers les mêmes types de titres — c'est normal, un edge est spécialisé. Mais un edge concentré sur un thème produit mécaniquement des positions corrélées. La règle de corrélation est le contrepoids : elle vous laisse exploiter votre edge tout en bornant la casse quand le thème entier se retourne.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 4 ============ -->
+  <div class="section-divider" id="reduction"><i class="fa-solid fa-shield-halved" style="color:#7c3aed;"></i> Les règles de réduction</div>
+  <div class="content-card">
+    <p>Les trois sections précédentes définissent l'état normal du portefeuille. Mais le marché traverse des phases anormales — drawdowns, régimes hostiles, fenêtres événementielles — où la taille « normale » devient dangereuse. Le plan doit <strong>pré-câbler sa propre défense</strong> : décider <em>à froid</em> ce qu'on fera <em>à chaud</em>. Une décision prise en pleine perte n'est pas une décision, c'est une réaction.</p>
+
+    <p>Trois familles de règles de réduction figurent dans le plan :</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Paliers de drawdown</h4>
+        <p>Le DD breaker : à −5 % sur le mois, on divise le risque par trade par deux. À −10 %, on stoppe toute nouvelle entrée.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Réduction avant événement</h4>
+        <p>Avant earnings, FOMC, CPI : alléger ou couper les lignes exposées. On ne pré-positionne pas un gros pari sur un coup de dé binaire.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Régime défavorable</h4>
+        <p>En régime « risk-off » (VIX élevé, marché sous ses moyennes mobiles), on réduit le risque par trade et le nombre de lignes autorisées.</p>
+      </div>
+    </div>
+
+    <p>Le <strong>DD breaker</strong> (disjoncteur de drawdown) est la pièce maîtresse. Son principe : plus le portefeuille perd, plus il se met en retrait, automatiquement. C'est exactement la défense décrite dans <em>Piloter son Portefeuille</em>, transcrite en paliers chiffrés dans votre document. L'effet est double : il réduit la casse pendant une mauvaise passe, et — surtout — il empêche le réflexe destructeur de « se refaire » en augmentant la taille après une perte.</p>
+
+    <div id="chart-ddbreaker" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Drawdown depuis le plus-haut</th><th>Risque par trade autorisé</th><th>Nouvelles entrées</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>0 % à −5 %</td><td>0,75 % (normal)</td><td>Oui, selon plafonds</td></tr>
+        <tr><td>−5 % à −8 %</td><td>0,50 % (réduit)</td><td>Oui, mais conditions strictes</td></tr>
+        <tr><td>−8 % à −12 %</td><td>0,25 % (minimal)</td><td>A+ uniquement</td></tr>
+        <tr><td>Au-delà de −12 %</td><td>0 % (gel)</td><td>Aucune — revue du plan</td></tr>
+      </tbody>
+    </table>
+
+    <p>Au-delà du dernier palier, le plan n'ordonne pas seulement d'arrêter : il impose une <strong>revue</strong>. Un drawdown profond signale soit un edge qui s'est dégradé (le marché a changé de régime), soit une discipline qui a glissé (on a dévié du plan). Dans les deux cas, continuer à trader à pleine taille serait jeter de l'argent dans un trou. La pause forcée est une fonctionnalité, pas un bug.</p>
+
+    <div class="alert-box">
+      <p style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="color:#dc2626; margin-right:0.5rem;"></i> <strong>Les paliers du DD breaker sont illustratifs.</strong> 5 / 8 / 12 % conviennent à un profil donné, pas à tous. Un trader plus court terme calibrera plus serré ; un investisseur de position, plus large. Ce qui compte n'est pas le chiffre exact mais le <em>principe écrit</em> : la défense est décidée avant la tempête, pas pendant.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 5 ============ -->
+  <div class="section-divider" id="integration"><i class="fa-solid fa-file-lines" style="color:#7c3aed;"></i> Intégrer le sizing au plan</div>
+  <div class="content-card">
+    <p>Toutes ces règles n'ont de valeur que si elles tiennent en un seul endroit, relisible en trente secondes avant chaque trade. Le document maître comporte donc une <strong>section « Risque »</strong> autonome, gabarit ci-dessous. Vous la copiez, vous remplissez vos propres chiffres, et vous ne la rouvrez ensuite qu'à froid — jamais en pleine séance pour « adapter » une règle qui vous gêne.</p>
+
+    <div class="didactic-box">
+      <h4 style="margin-top:0;"><i class="fa-solid fa-clipboard-list" style="color:#7c3aed; margin-right:0.5rem;"></i> Gabarit — Section « Risque » du plan</h4>
+      <ul class="checklist" style="margin:0;">
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Risque par trade :</strong> ____ % du capital (suggéré : 0,5–1 %)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Formule de taille :</strong> (Capital × Risque %) ÷ (Entrée − Stop)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Risque total simultané max :</strong> ____ % (suggéré : 3–5 %)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Nombre de positions max :</strong> ____ (suggéré : 6–10)</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Corrélation max par cluster :</strong> ____ noms / ____ % de risque</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Paliers DD breaker :</strong> −__ % → risque ÷2 ; −__ % → entrées A+ ; −__ % → gel + revue</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Réduction événementielle :</strong> alléger __ jours avant earnings / FOMC / CPI</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#7c3aed;"></i> <strong>Levier :</strong> <span style="color:#dc2626; font-weight:700;">ZÉRO pour débuter</span></li>
+      </ul>
+    </div>
+
+    <p>La dernière ligne mérite un mot. Le <strong>levier</strong> n'augmente pas le rendement attendu d'un edge ; il multiplie la variance — gains comme pertes — et il accélère la ruine quand une série de pertes survient. Tant que le sizing à risque fixe n'est pas devenu un réflexe sur plusieurs centaines de trades, le levier transforme une erreur récupérable en erreur fatale. La règle écrite est donc « zéro », sans astérisque, pour débuter.</p>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Du gabarit au tableur</h3>
+    <p>Toute cette arithmétique gagne à être automatisée. Un simple tableur élimine le calcul mental — et donc l'erreur — au moment où l'émotion est la plus forte : juste avant de cliquer. Les colonnes minimales :</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-solid fa-table-columns"></i></div>
+        <h4>Entrées</h4>
+        <p>Capital, risque %, prix d'entrée, prix de stop, cluster du titre.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-equals"></i></div>
+        <h4>Calculs auto</h4>
+        <p>Budget de risque (€), risque/titre, taille (titres), notionnel.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <h4>Garde-fous</h4>
+        <p>Risque total cumulé vs plafond, comptage par cluster, alerte si dépassement.</p>
+      </div>
+    </div>
+
+    <p>La cellule « taille » applique littéralement la formule de la section 1 : <code>=(Capital*Risque%)/(Entrée-Stop)</code>. La colonne « garde-fous » somme les risques ouverts et passe en rouge si le plafond est franchi. À partir de là, le sizing n'est plus une décision : c'est une lecture. Vous saisissez l'entrée et le stop décidés en partie 3, le tableur rend la taille, et la seule question qui reste est binaire — le plafond global autorise-t-il cette ligne, oui ou non.</p>
+
+    <div class="pedagogy-box">
+      <p style="margin:0;"><strong>Le fil rouge de la série.</strong> Partie 2 = <em>quels</em> setups. Partie 3 = <em>où</em> entrer, sortir, s'invalider. Partie 4 = <em>combien</em>. Ensemble, ces trois sections forment le cœur opérationnel du plan : une fois écrites, chaque trade devient une exécution de règles, pas un acte d'inspiration. La partie 5 alimentera ce moteur en idées via la watchlist ; la partie 6 le mettra en routine.</p>
+    </div>
+  </div>
+
+  <!-- ============ QUIZ ============ -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#7c3aed;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Quatre questions pour vérifier que le sizing est devenu une mécanique et non une intuition.</p>
+
+    <details>
+      <summary>1. Capital de 50 000 €, risque par trade 0,5 %, entrée à 80 €, stop à 76 €. Combien de titres ?</summary>
+      <div class="quiz-answer">
+        <strong>62 titres.</strong> Budget de risque = 50 000 × 0,005 = 250 €. Risque par titre = 80 − 76 = 4 €. Taille = 250 ÷ 4 = 62,5, arrondi prudemment à <strong>62 titres</strong> (notionnel ≈ 4 960 €, perte max = 248 €). On arrondit toujours à la baisse pour ne jamais dépasser le budget de risque.
+      </div>
+    </details>
+
+    <details>
+      <summary>2. Deux trades, même budget de risque de 300 €. Le premier a un stop à 2 € de distance, le second à 6 €. Lequel donne la plus grosse position en notionnel — et est-ce plus risqué ?</summary>
+      <div class="quiz-answer">
+        Le <strong>premier</strong> (stop serré) donne la plus grosse position : 300 ÷ 2 = 150 titres, contre 300 ÷ 6 = 50 titres pour le second. Pourtant <strong>le risque est identique : 300 €</strong> dans les deux cas. C'est tout le principe — le notionnel varie, le risque reste constant. Un gros notionnel n'est pas un gros risque si le stop est proche.
+      </div>
+    </details>
+
+    <details>
+      <summary>3. Votre portefeuille détient NVDA, AVGO, MU et TSM, chacun à 0,75 % de risque. Votre règle de corrélation plafonne à 3 noms par cluster. Que dit le plan d'une cinquième idée sur ASML ?</summary>
+      <div class="quiz-answer">
+        <strong>Refus.</strong> NVDA, AVGO, MU, TSM appartiennent tous au cluster « Semis/IA » — vous êtes déjà à 4 noms, au-delà du plafond de 3 (le portefeuille était déjà en infraction). ASML est aussi du cluster semis : l'ajouter aggraverait la concentration. Ces lignes ne sont pas 4 ou 5 paris diversifiés mais <strong>un seul pari sectoriel</strong>. Le plan refuse, indépendamment de la qualité du setup ASML.
+      </div>
+    </details>
+
+    <details>
+      <summary>4. Votre portefeuille est en drawdown de −9 % sur le mois. Selon le gabarit de DD breaker présenté, que change-t-on ?</summary>
+      <div class="quiz-answer">
+        On entre dans le palier <strong>−8 % à −12 %</strong> : le risque par trade passe à <strong>0,25 %</strong> (un tiers de la normale) et les <strong>nouvelles entrées sont limitées aux setups A+</strong>. Objectif : réduire la casse et casser le réflexe de « se refaire ». Si le drawdown s'aggrave au-delà de −12 %, le plan impose un <strong>gel total + revue</strong> — on cherche si c'est l'edge ou la discipline qui a flanché.
+      </div>
+    </details>
+  </div>
+
+  <!-- ============ TAKEAWAY ============ -->
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 4</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i><span>Le plan ne dit pas seulement <strong>quoi</strong> acheter, il dit <strong>combien</strong>. Le sizing est la variable qui décide de la survie.</span></li>
+      <li><i class="fa-solid fa-check"></i><span><strong>Taille = (Capital × Risque %) ÷ (Entrée − Stop).</strong> Le stop dicte la taille : plus le stop est loin, plus la position est petite. Le risque reste constant, le notionnel varie.</span></li>
+      <li><i class="fa-solid fa-check"></i><span>Trois plafonds d'exposition écrits : <strong>risque total simultané</strong>, <strong>nombre de positions</strong>, <strong>exposition par secteur/thème</strong>.</span></li>
+      <li><i class="fa-solid fa-check"></i><span><strong>10 positions corrélées = 1 seul risque.</strong> Une règle de corrélation plafonne les noms d'un même cluster — le gate de corrélation de <em>Piloter son Portefeuille</em>.</span></li>
+      <li><i class="fa-solid fa-check"></i><span>Pré-câbler la défense : <strong>paliers de DD breaker</strong>, réduction avant événement, retrait en régime défavorable. Décidé à froid, exécuté à chaud.</span></li>
+      <li><i class="fa-solid fa-check"></i><span>Une section « Risque » unique dans le plan + un <strong>tableur</strong> qui calcule la taille et surveille les plafonds. <strong>Levier : zéro pour débuter.</strong></span></li>
+    </ul>
+  </div>
+
+  <a href="/series/plan-de-trading/part5-watchlist/" class="next-cta">
+    <i class="fa-solid fa-list-check"></i>
+    <div>
+      <div class="next-label">Partie 5 sur 6 — Suite</div>
+      <div class="next-title">Bâtir et entretenir sa watchlist</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-arrow" title="Règles d'entrée, de sortie et d'invalidation"><i class="fas fa-chevron-left"></i></a><span class="series-title">Plan & Watchlist</span><div class="series-steps"><a href="/series/plan-de-trading/part1-pourquoi-un-plan/" class="series-step" title="Pourquoi un plan de trading écrit change tout"><span class="series-num">1</span><span class="series-label">Pourquoi un plan</span></a><a href="/series/plan-de-trading/part2-edge-setups/" class="series-step" title="Définir son edge et ses setups"><span class="series-num">2</span><span class="series-label">Edge & setups</span></a><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-step" title="Règles d'entrée, de sortie et d'invalidation"><span class="series-num">3</span><span class="series-label">Entrées & sorties</span></a><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-step current" title="Le sizing et le risque dans le plan"><span class="series-num">4</span><span class="series-label">Sizing & risque</span></a><a href="/series/plan-de-trading/part5-watchlist/" class="series-step" title="Bâtir et entretenir sa watchlist"><span class="series-num">5</span><span class="series-label">Watchlist</span></a><a href="/series/plan-de-trading/part6-execution/" class="series-step" title="Du plan à l'exécution : routine et checklist"><span class="series-num">6</span><span class="series-label">Exécution</span></a></div><span class="series-counter">4/6</span><a href="/series/plan-de-trading/part5-watchlist/" class="series-arrow" title="Bâtir et entretenir sa watchlist"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function(){
+  var charts = [];
+
+  // ===== Chart 1 : taille de position vs distance au stop, à risque constant (300 €) =====
+  var el1 = document.getElementById('chart-sizing');
+  if (el1) {
+    var c1 = echarts.init(el1);
+    var dist = [1, 1.5, 2, 3, 4, 6, 8];           // distance entrée-stop en €
+    var budget = 300;                              // budget de risque constant
+    var taille = dist.map(function(d){ return Math.round(budget / d); });
+    c1.setOption({
+      title: { text: 'Taille de position à risque constant (budget 300 €)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', formatter: function(p){ var i = p[0].dataIndex; return 'Distance au stop : <b>' + dist[i] + ' €</b><br/>Taille : <b>' + taille[i] + ' titres</b><br/>Risque : <b>' + budget + ' €</b> (constant)'; } },
+      grid: { left: 55, right: 30, top: 55, bottom: 50 },
+      xAxis: { type: 'category', name: 'Distance entrée → stop (€)', nameLocation: 'middle', nameGap: 32, data: dist, axisLabel: { color: '#64748b' }, nameTextStyle: { color: '#64748b', fontSize: 11 } },
+      yAxis: { type: 'value', name: 'Titres', axisLabel: { color: '#64748b' }, nameTextStyle: { color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'bar', data: taille, itemStyle: { color: '#7c3aed', borderRadius: [6,6,0,0] },
+        label: { show: true, position: 'top', color: '#6d28d9', fontWeight: 700, formatter: '{c}' }
+      }]
+    });
+    charts.push(c1);
+  }
+
+  // ===== Chart 2 : exposition cumulée vs plafonds (markLine) =====
+  var el2 = document.getElementById('chart-exposition');
+  if (el2) {
+    var c2 = echarts.init(el2);
+    // risque cumulé en % du capital, position par position
+    var lignes = ['1 ligne', '2 lignes', '3 lignes', '4 lignes', '5 lignes', '6 lignes'];
+    var cumule = [0.75, 1.50, 2.25, 3.00, 3.75, 4.50];
+    var couleurs = cumule.map(function(v){ return v > 4 ? '#dc2626' : '#7c3aed'; });
+    c2.setOption({
+      title: { text: 'Risque cumulé du portefeuille vs plafond (4 %)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' %'; } },
+      grid: { left: 50, right: 30, top: 55, bottom: 40 },
+      xAxis: { type: 'category', data: lignes, axisLabel: { color: '#64748b' } },
+      yAxis: { type: 'value', name: 'Risque cumulé (%)', max: 5, axisLabel: { color: '#64748b', formatter: '{value} %' }, nameTextStyle: { color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'bar',
+        data: cumule.map(function(v, i){ return { value: v, itemStyle: { color: couleurs[i], borderRadius: [6,6,0,0] } }; }),
+        label: { show: true, position: 'top', color: '#475569', fontWeight: 600, formatter: '{c} %' },
+        markLine: {
+          symbol: 'none', silent: true,
+          data: [{ yAxis: 4, name: 'Plafond' }],
+          lineStyle: { color: '#dc2626', type: 'dashed', width: 2 },
+          label: { formatter: 'Plafond risque total : 4 %', color: '#dc2626', position: 'insideEndTop', fontWeight: 700 }
+        }
+      }]
+    });
+    charts.push(c2);
+  }
+
+  // ===== Chart 3 : paliers du DD breaker =====
+  var el3 = document.getElementById('chart-ddbreaker');
+  if (el3) {
+    var c3 = echarts.init(el3);
+    var paliers = ['0 → −5 %', '−5 → −8 %', '−8 → −12 %', '> −12 %'];
+    var risque = [0.75, 0.50, 0.25, 0];
+    var palCoul = ['#10b981', '#f59e0b', '#dc2626', '#0f172a'];
+    c3.setOption({
+      title: { text: 'DD breaker : risque par trade selon le drawdown', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' %'; } },
+      grid: { left: 50, right: 30, top: 55, bottom: 50 },
+      xAxis: { type: 'category', name: 'Drawdown depuis le plus-haut', nameLocation: 'middle', nameGap: 32, data: paliers, axisLabel: { color: '#64748b' }, nameTextStyle: { color: '#64748b', fontSize: 11 } },
+      yAxis: { type: 'value', name: 'Risque/trade (%)', max: 0.9, axisLabel: { color: '#64748b', formatter: '{value} %' }, nameTextStyle: { color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'bar',
+        data: risque.map(function(v, i){ return { value: v, itemStyle: { color: palCoul[i], borderRadius: [6,6,0,0] } }; }),
+        label: { show: true, position: 'top', color: '#475569', fontWeight: 700, formatter: function(p){ return p.value === 0 ? 'GEL' : p.value + ' %'; } }
+      }]
+    });
+    charts.push(c3);
+  }
+
+  window.addEventListener('resize', function(){ charts.forEach(function(c){ c.resize(); }); });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Le tableau de bord du gérant et la boucle d'amélioration | Journal & Performance — Partie 6/6 | DailyTickers</title>
+ <meta name="description" content="Tout assembler : bâtir son tableau de bord de performance, les KPIs à suivre, et refermer la boucle plan → trade → journal → revue → ajustement. La checklist maître de la mesure et de l'amélioration continue.">
+ <meta property="og:title" content="Le tableau de bord du gérant et la boucle d'amélioration | Journal & Performance 6/6">
+ <meta property="og:description" content="Tout assembler : bâtir son tableau de bord de performance, les KPIs à suivre, et refermer la boucle plan → trade → journal → revue → ajustement. La checklist maître de la mesure et de l'amélioration continue.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/journal-et-performance/part6-dashboard/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* AMBER THEME — Journal & Performance */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#b45309; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#d97706; margin-right:0.75rem; }
+ details[open] summary { border-color:#d97706; background:#fffbeb; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #451a03 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#fcd34d; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #d97706; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b45309; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(217,119,6,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,119,6,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #d97706; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Journal & Performance — Partie 6 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Le tableau de bord du gérant et la boucle d'amélioration</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; color:#475569; line-height:1.7;">Mesurer ne sert à rien si la mesure ne nourrit pas une décision. Cette dernière partie assemble cinq épisodes en un seul instrument : un tableau de bord vivant qui transforme le journal en jugements, et une boucle qui transforme les jugements en progrès. Vous repartez avec la checklist maître de toute la série.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-gauge-high"></i> Tableau de bord</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-arrows-spin"></i> Boucle d'amélioration</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-key"></i> KPIs</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-list-check"></i> Checklist maître</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-arrow" title="Détecter et corriger ses biais par la data"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step current" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a href="#kpis" class="fnav-item" data-section="kpis"><i class="fas fa-bookmark"></i><span>KPIs</span></a>
+  <a href="#dashboard" class="fnav-item" data-section="dashboard"><i class="fas fa-bookmark"></i><span>Tableau de bord</span></a>
+  <a href="#boucle" class="fnav-item" data-section="boucle"><i class="fas fa-bookmark"></i><span>La boucle</span></a>
+  <a href="#frequence" class="fnav-item" data-section="frequence"><i class="fas fa-bookmark"></i><span>Fréquence</span></a>
+  <a href="#checklist" class="fnav-item" data-section="checklist"><i class="fas fa-bookmark"></i><span>Checklist maître</span></a>
+  <a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <p style="font-size:1.1rem; color:#475569; line-height:1.8; max-width:760px; margin:2.5rem auto 1rem;">Au fil de cette série, vous avez appris à tenir un journal honnête (partie 1), à le réduire en métriques exploitables (partie 2), à juger la qualité d'exécution via MAE et MFE (partie 3), à structurer une revue à trois échelles (partie 4) et à débusquer vos biais par la donnée (partie 5). Il manquait l'instrument qui relie le tout et le rend opérationnel jour après jour. C'est l'objet de cette clôture : un tableau de bord et une boucle. Sans eux, mesurer reste un passe-temps comptable. Avec eux, mesurer devient un avantage.</p>
+
+  <div class="section-divider" id="kpis"><i class="fa-solid fa-key" style="color:#d97706;"></i> Les KPIs à suivre</div>
+  <div class="content-card">
+    <p>Un gérant débutant collectionne les chiffres ; un gérant mûr en ignore la plupart. La discipline ici n'est pas d'en mesurer plus, mais d'en mesurer moins et mieux. Quelques indicateurs suivis fidèlement valent infiniment mieux que vingt indicateurs consultés une fois puis abandonnés. La question n'est jamais « quel chiffre puis-je calculer ? » mais « quelle décision ce chiffre va-t-il informer ? ».</p>
+
+    <p>Commençons par hiérarchiser. Le P&L absolu — vos gains et pertes en euros — est le KPI le plus regardé et le moins informatif à court terme. Sur un petit échantillon, il est dominé par la chance (la variance de la partie 4) et par la taille de vos positions, deux choses qui n'ont rien à voir avec la qualité de vos décisions. Deux indicateurs doivent passer devant lui : le <strong>taux de respect du plan</strong> et l'<strong>expectancy en R</strong>. Le premier mesure votre processus ; le second mesure l'avantage statistique de ce processus. Le P&L absolu n'est que leur conséquence mécanique sur la durée.</p>
+
+    <div class="pedagogy-box">
+      <p style="margin:0;"><strong>Rappel des formules (parties 2 et 3).</strong> Le R-multiple d'un trade est son résultat divisé par le risque initial : un trade risquant 100&nbsp;€ qui en rapporte 250&nbsp;€ vaut +2,5&nbsp;R ; le même qui perd 100&nbsp;€ vaut −1&nbsp;R. L'expectancy est le R-multiple moyen sur l'échantillon. Le payoff (ratio gain/perte) est le gain moyen des trades gagnants divisé par la perte moyenne des trades perdants, exprimé en R.</p>
+    </div>
+
+    <p>Voici la formule centrale, celle que votre tableau de bord doit afficher en grand. L'expectancy se décompose proprement :</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Espérance par trade</div>
+      Expectancy = (<span class="formula-highlight">Win&nbsp;%</span> &times; Gain&nbsp;moyen<sub>R</sub>) &minus; (<span class="formula-highlight">Loss&nbsp;%</span> &times; Perte&nbsp;moyenne<sub>R</sub>)
+    </div>
+
+    <p>Prenons un exemple chiffré à titre d'illustration. Supposons un win rate de 45&nbsp;%, un gain moyen de 2,2&nbsp;R sur les trades gagnants et une perte moyenne de 0,9&nbsp;R sur les perdants. L'expectancy vaut alors :</p>
+
+    <p style="text-align:center; font-size:1.05rem; color:#334155;">(0,45 &times; 2,2) − (0,55 &times; 0,9) = 0,99 − 0,495 = <strong style="color:#10b981;">+0,495&nbsp;R par trade</strong>.</p>
+
+    <p>Autrement dit, chaque trade rapporte en moyenne un demi-R. Sur 200 trades dans l'année, cela fait environ +99&nbsp;R cumulés — avant même de parler d'euros. Le payoff ici est de 2,2 / 0,9 ≈ <strong>2,4</strong>, ce qui signifie que vos gagnants paient 2,4 fois ce que coûtent vos perdants. C'est ce couple win rate / payoff, et non le win rate seul, qui détermine si vous avez un avantage. Un système à 38&nbsp;% de réussite avec un payoff de 3 reste très rentable ; un système à 65&nbsp;% avec un payoff de 0,4 perd de l'argent. La partie 2 l'avait démontré : le win rate isolé est le KPI le plus trompeur du métier.</p>
+
+    <div class="didactic-box">
+      <p style="margin:0;"><strong>Le seuil de rentabilité (rappel partie 2).</strong> Pour un payoff donné, le win rate minimal qui vous fait passer à l'équilibre est <code>Win&nbsp;% = 1 / (1 + payoff)</code>. Avec un payoff de 2,4, le seuil tombe à <code>1 / 3,4 ≈ 29,4&nbsp;%</code>&nbsp;: notre système à 45&nbsp;% de réussite est donc largement au-dessus du point mort. C'est bien le couple win rate / payoff — et non le win rate seul — qui décide.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>KPI</th><th>Ce qu'il mesure</th><th>Priorité</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Taux de respect du plan</strong></td><td>La discipline d'exécution — combien de trades suivent le scénario écrit</td><td><span style="color:#10b981; font-weight:700;">Maximale</span></td></tr>
+        <tr><td><strong>Expectancy (R/trade)</strong></td><td>L'avantage statistique du système, indépendant de la taille</td><td><span style="color:#10b981; font-weight:700;">Maximale</span></td></tr>
+        <tr><td><strong>Payoff (gain/perte en R)</strong></td><td>L'asymétrie gain/perte — le moteur de la rentabilité</td><td><span style="color:#d97706; font-weight:700;">Haute</span></td></tr>
+        <tr><td><strong>R cumulés</strong></td><td>La performance brute du processus, nettoyée du sizing</td><td><span style="color:#d97706; font-weight:700;">Haute</span></td></tr>
+        <tr><td><strong>Max drawdown (R ou %)</strong></td><td>La pire série de pertes — votre tolérance au risque réelle</td><td><span style="color:#d97706; font-weight:700;">Haute</span></td></tr>
+        <tr><td><strong>Expectancy par setup</strong></td><td>Quels schémas paient, lesquels vous coûtent (partie 5)</td><td><span style="color:#d97706; font-weight:700;">Haute</span></td></tr>
+        <tr><td><strong>Nombre de trades</strong></td><td>La taille d'échantillon — gage de fiabilité des autres KPIs</td><td><span style="color:#9333ea; font-weight:700;">Contextuelle</span></td></tr>
+        <tr><td>Win rate seul</td><td>Peu, hors couple avec le payoff — flatte ou trompe</td><td><span style="color:#dc2626; font-weight:700;">À relativiser</span></td></tr>
+        <tr><td>P&L absolu quotidien</td><td>Dominé par la variance et le sizing sur petit échantillon</td><td><span style="color:#dc2626; font-weight:700;">À ignorer (court terme)</span></td></tr>
+      </tbody>
+    </table>
+
+    <div class="didactic-box">
+      <p style="margin:0;"><strong>La règle des sept.</strong> Si vous deviez n'afficher que sept chiffres, prenez : respect du plan, expectancy, payoff, R cumulés, max drawdown, expectancy par setup, et nombre de trades. Ces sept-là couvrent processus, avantage, risque et fiabilité. Tout le reste est de la décoration, ou se déduit de ces sept.</p>
+    </div>
+
+    <p>Le max drawdown mérite une note. C'est le seul KPI dont une seule valeur peut mettre fin à votre carrière : un avantage positif ne sert à rien si le drawdown qui le précède vous fait abandonner le système — ou vide le compte. Suivez-le en R (indépendant du capital) <em>et</em> en pourcentage du compte (ce que vous ressentez vraiment). Si votre drawdown maximal historique est de 14&nbsp;R, posez-vous la question : sauriez-vous tenir 14 pertes pleines d'affilée sans dévier ? La série « Piloter son Portefeuille » traite cette question du risque de ruine en profondeur.</p>
+  </div>
+
+  <div class="section-divider" id="dashboard"><i class="fa-solid fa-gauge-high" style="color:#d97706;"></i> Bâtir son tableau de bord</div>
+  <div class="content-card">
+    <p>Le tableau de bord n'est pas un nouveau document : c'est un onglet de synthèse, alimenté automatiquement par le journal que vous tenez déjà. La règle d'or est la séparation stricte entre <strong>saisie</strong> et <strong>lecture</strong>. Vous saisissez un trade une seule fois, ligne par ligne, dans un onglet brut ; le tableau de bord lit ces lignes et recalcule tout. Aucune saisie manuelle de KPI — chaque chiffre recopié à la main est un chiffre faux en sursis.</p>
+
+    <p>Voici la structure minimale, en deux onglets (tableur ou base no-code, peu importe l'outil).</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-table-list"></i></div>
+        <h4>Onglet « Journal »</h4>
+        <p>Une ligne par trade : date, ticker, setup, sens, entrée, stop, sortie, taille, risque initial (€), R réalisé, MAE, MFE, respect-du-plan (O/N), note émotion.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(217,119,6,0.1); color:#d97706;"><i class="fa-solid fa-chart-pie"></i></div>
+        <h4>Onglet « Synthèse »</h4>
+        <p>Aucune saisie. Uniquement des formules qui agrègent le Journal : les sept KPIs, la courbe d'equity, l'expectancy par setup.</p>
+      </div>
+    </div>
+
+    <p>Dans l'onglet Synthèse, organisez trois zones. <strong>Zone 1 — la bande de KPIs</strong> en haut : sept grandes cellules, une par indicateur, chacune issue d'une formule. Le R réalisé se calcule directement comme <code>= résultat / risque_initial</code> à la saisie. L'expectancy globale est alors <code>= MOYENNE(colonne_R)</code>. Le taux de respect du plan est <code>= NB.SI(colonne_plan ; "O") / NBVAL(colonne_plan)</code>. Le payoff est <code>= MOYENNE.SI(R ; "&gt;0") / ABS(MOYENNE.SI(R ; "&lt;0"))</code>. Les R cumulés sont une simple <code>SOMME</code>.</p>
+
+    <p><strong>Zone 2 — la courbe d'equity</strong>, au centre, est le seul graphique que vous devez regarder tous les jours. Ajoutez à côté du Journal une colonne « R cumulé » en <code>= cellule_précédente + R_du_trade</code>, puis tracez-la. Une courbe d'equity en R, et non en euros, vous montre la santé du processus sans le bruit du sizing : une pente régulièrement ascendante avec des creux contenus est exactement ce que vous cherchez. Une pente plate suivie d'un décrochage signale en général un changement de régime de marché ou une dérive de discipline — à investiguer en revue.</p>
+
+    <p><strong>Zone 3 — l'expectancy par setup</strong>, en bas, est le tableau qui fait gagner de l'argent. Un tableau croisé dynamique sur la colonne « setup » donne, pour chaque schéma : nombre de trades, expectancy, payoff. C'est là que vous découvrez que votre setup « cassure de range » paie +0,8&nbsp;R quand votre setup « rattrapage de baisse » coûte −0,3&nbsp;R. La conséquence est directe : faites davantage du premier, supprimez ou retravaillez le second. C'est la partie 5 rendue mécanique.</p>
+
+    <p>La maquette ci-dessous montre l'allure visée : une bande de jauges en haut (respect du plan à 86&nbsp;%, expectancy à +0,5&nbsp;R, payoff à 2,4) et la courbe d'equity en R qui domine la lecture. Les valeurs sont illustratives, mais cohérentes entre elles : la courbe trace exactement le même échantillon que les jauges — 45&nbsp;% de réussite, gagnants à +2,4&nbsp;R en moyenne, perdants à −1&nbsp;R, soit +0,5&nbsp;R par trade et un payoff de 2,4.</p>
+
+    <div id="chart-dashboard" style="width:100%;height:420px;margin:2rem 0;"></div>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Le piège du tableau de bord trop beau.</strong> Plus un tableau de bord est riche, moins on le regarde. Si le vôtre demande plus de dix secondes pour répondre à « mon processus est-il sain cette semaine ? », il est trop chargé. Coupez. Un bon tableau de bord se lit comme un cockpit : d'un coup d'œil, vous savez si vous devez agir.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="boucle"><i class="fa-solid fa-arrows-spin" style="color:#d97706;"></i> La boucle d'amélioration continue</div>
+  <div class="content-card">
+    <p>Voici la thèse de toute la série en une phrase : <strong>la mesure n'a de valeur que dans une boucle</strong>. Un tableau de bord qui n'aboutit à aucune décision est un musée. La boucle ferme le circuit : elle transforme l'observation en action, puis l'action en nouvelle observation.</p>
+
+    <div class="step-grid">
+      <div class="step-card"><div class="step-number">1</div><h4>Plan</h4><p>Vous écrivez le scénario : setup, niveau d'entrée, stop, objectif, taille, conditions d'invalidation. C'est l'objet de la série « Plan de Trading ».</p></div>
+      <div class="step-card"><div class="step-number">2</div><h4>Trade</h4><p>Vous exécutez le plan dans le marché réel, avec ses contraintes de temps et d'émotion. La série « Salarié & Investisseur » traite cette exécution dans une vie chargée.</p></div>
+      <div class="step-card"><div class="step-number">3</div><h4>Journal</h4><p>Vous consignez ce qui s'est réellement passé, sans enjoliver. Partie 1 de cette série.</p></div>
+      <div class="step-card"><div class="step-number">4</div><h4>Revue</h4><p>Vous lisez le tableau de bord aux trois échelles — jour, semaine, mois. Parties 2 à 5.</p></div>
+      <div class="step-card"><div class="step-number">5</div><h4>Ajustement</h4><p>Vous corrigez le plan ou le comportement à partir d'un constat fondé sur la donnée. Puis la boucle recommence.</p></div>
+    </div>
+
+    <p>Le schéma ci-dessous figure ce cycle. Notez qu'il n'a pas de fin : l'ajustement réécrit le plan, qui produit de nouveaux trades, qui alimentent un journal plus riche, qui rend la revue plus fine. C'est une spirale, pas un cercle — chaque tour devrait vous laisser un peu plus précis que le précédent.</p>
+
+    <div id="chart-boucle" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+    <div class="pedagogy-box">
+      <p style="margin:0 0 0.75rem;"><strong>Chaque série de la collection occupe une case de la boucle.</strong> C'est ainsi que les quatre séries pédagogiques s'emboîtent — non pas en parallèle, mais comme les maillons d'un même circuit&nbsp;:</p>
+      <ul style="margin:0; padding-left:1.2rem; line-height:1.8;">
+        <li><strong>Plan de Trading</strong> — le <em>Plan</em>&nbsp;: comment écrire un scénario qui tient.</li>
+        <li><strong>Salarié &amp; Investisseur</strong> — le <em>Trade</em>&nbsp;: exécuter sans y consacrer ses journées.</li>
+        <li><strong>Piloter son Portefeuille</strong> — le <em>pilotage du risque</em> qui encadre l'exécution : sizing, corrélations, drawdown, forward test.</li>
+        <li><strong>Journal &amp; Performance</strong> (cette série) — la <em>mesure</em> : journal, métriques, revue, qui referme la boucle vers l'ajustement.</li>
+      </ul>
+    </div>
+
+    <p>L'ajustement, dernière case, est aussi la plus délicate. C'est là que se joue la différence entre un trader qui progresse et un trader qui tourne en rond. Un mauvais ajustement n'est pas l'absence d'ajustement : c'est le mauvais ajustement, fondé sur une seule séance, sur une émotion ou sur le dernier trade encore chaud en mémoire. D'où la question suivante.</p>
+  </div>
+
+  <div class="section-divider" id="frequence"><i class="fa-solid fa-clock-rotate-left" style="color:#d97706;"></i> À quelle fréquence ajuster</div>
+  <div class="content-card">
+    <p>Deux erreurs symétriques guettent. La première est la <strong>sur-réaction au bruit</strong> : changer de système après chaque trade perdant. Trois pertes d'affilée — parfaitement normales pour un système à 45&nbsp;% de réussite — et l'on retouche le stop, on change de setup, on abandonne la stratégie. La seconde est le <strong>déni</strong> : ne jamais rien ajuster, garder un setup qui saigne depuis trois mois parce que « c'est mon style ». L'une confond la variance avec un signal ; l'autre ignore un signal pour ne pas avoir à changer.</p>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>La leçon de la variance (partie 4).</strong> Sur un système à expectancy positive mais win rate de 45&nbsp;%, une série de 5 à 7 pertes consécutives survient régulièrement, sans que rien soit cassé. Tirer une conclusion sur le système à partir de 3 ou 5 trades, c'est lire le bruit comme s'il était le signal. Un échantillon de 30 trades reste mince ; 50 à 100 commencent à être parlants.</p>
+    </div>
+
+    <p>La sortie de ce dilemme est de distinguer deux natures d'ajustement, à deux cadences différentes.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Type d'ajustement</th><th>Exemples</th><th>Cadence</th><th>Déclencheur</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Micro-ajustement de comportement</strong></td><td>Mieux respecter le stop, attendre la clôture avant d'entrer, réduire la taille un jour de fatigue, couper le scalp impulsif du vendredi</td><td><span style="color:#10b981; font-weight:700;">Hebdomadaire</span></td><td>Un écart de discipline observé en revue, même sur 1 ou 2 trades</td></tr>
+        <tr><td><strong>Ajustement de système</strong></td><td>Retirer un setup, modifier une règle de sortie, élargir un stop ATR, changer le filtre de régime</td><td><span style="color:#d97706; font-weight:700;">Sur échantillon suffisant</span></td><td>Une expectancy par setup confirmée sur 30 à 50 trades minimum, validée hors échantillon</td></tr>
+      </tbody>
+    </table>
+
+    <p>La clé est là : on peut corriger un <em>comportement</em> dès qu'on l'observe, parce que la discipline ne dépend pas de la taille d'échantillon — si vous avez sauté votre stop deux fois cette semaine, c'est un fait, pas du bruit. Mais on ne touche au <em>système</em> qu'avec un échantillon qui le justifie, parce qu'un système se juge sur une distribution de résultats, pas sur un cas. C'est exactement la logique du <strong>forward test</strong> détaillée dans « Piloter son Portefeuille » : avant d'adopter un changement de règle, on le teste sur des données qu'il n'a jamais vues, on attend assez de trades pour que la statistique ait un sens, et seulement ensuite on déploie.</p>
+
+    <div class="didactic-box">
+      <p style="margin:0;"><strong>Règle de cadence opérationnelle.</strong> Revue quotidienne&nbsp;: aucun ajustement de système, uniquement noter les faits. Revue hebdomadaire&nbsp;: micro-ajustements de comportement autorisés. Revue mensuelle&nbsp;: c'est le seul moment où l'on envisage un ajustement de système, et uniquement si l'échantillon et un forward test le soutiennent. En clair : la fréquence à laquelle vous touchez aux <em>règles</em> doit être basse ; la fréquence à laquelle vous corrigez votre <em>conduite</em> peut être élevée.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="checklist"><i class="fa-solid fa-list-check" style="color:#d97706;"></i> La checklist maître</div>
+  <div class="content-card">
+    <p>Voici le livrable phare de la série : la checklist maître de la mesure et de l'amélioration. Elle condense les six parties en une routine vérifiable. Imprimez-la, collez-la près de votre poste, et passez-la en revue à votre rythme de revue (quotidien pour les premières lignes, mensuel pour les dernières).</p>
+
+    <h3 style="color:#b45309; margin-top:1.5rem;">Tenue du journal (partie 1)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Chaque trade est consigné le jour même, sans exception ni rétro-correction.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Le journal capture le <em>scénario prévu</em> et le <em>résultat réel</em>, pas seulement le P&L.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Une note d'état émotionnel accompagne chaque entrée (fatigue, FOMO, sérénité).</li>
+    </ul>
+
+    <h3 style="color:#b45309; margin-top:1.5rem;">Calcul des métriques (partie 2)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Chaque trade est exprimé en R-multiple (<code>résultat / risque initial</code>).</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Expectancy, payoff et win rate sont lus <em>ensemble</em>, jamais isolément.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Les R cumulés et le max drawdown sont suivis en continu.</li>
+    </ul>
+
+    <h3 style="color:#b45309; margin-top:1.5rem;">Qualité d'exécution — MAE / MFE (partie 3)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> MAE (excursion adverse max) et MFE (excursion favorable max) sont relevés sur chaque trade.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Les stops sont calibrés au regard de la distribution de MAE des trades gagnants.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Les sorties prématurées sont identifiées via l'écart MFE − R réalisé.</li>
+    </ul>
+
+    <h3 style="color:#b45309; margin-top:1.5rem;">Revue à trois échelles (partie 4)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Revue quotidienne&nbsp;: faits du jour, respect du plan, aucune décision de système.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Revue hebdomadaire&nbsp;: micro-ajustements de comportement.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Revue mensuelle&nbsp;: bilan d'expectancy, décision éventuelle de système.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> La variance est prise en compte avant toute conclusion sur petit échantillon.</li>
+    </ul>
+
+    <h3 style="color:#b45309; margin-top:1.5rem;">Segmentation et biais (partie 5)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> L'expectancy est segmentée par setup, par jour, par régime, par état émotionnel.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Les setups à expectancy négative confirmée sont retravaillés ou supprimés.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Les biais identifiés (surconfiance, revenge trade, sortie anticipée) sont suivis dans le temps.</li>
+    </ul>
+
+    <h3 style="color:#b45309; margin-top:1.5rem;">Tableau de bord et boucle (partie 6)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Un onglet Synthèse agrège automatiquement le journal — aucune saisie de KPI à la main.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> La courbe d'equity en R est lisible d'un coup d'œil.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> La boucle Plan → Trade → Journal → Revue → Ajustement est bouclée à chaque cycle.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> Les ajustements de système exigent un échantillon suffisant + un forward test.</li>
+    </ul>
+
+    <div class="takeaway-box">
+      <h3><i class="fa-solid fa-flag-checkered" style="margin-right:0.5rem;"></i> À retenir — Partie 6</h3>
+      <ul class="takeaway-list">
+        <li><i class="fas fa-circle-dot"></i> Mesurez moins, mais mieux&nbsp;: sept KPIs suivis fidèlement battent vingt KPIs ignorés. Le respect du plan et l'expectancy passent devant le P&L absolu.</li>
+        <li><i class="fas fa-circle-dot"></i> Le tableau de bord se construit en deux onglets&nbsp;: un journal de saisie, une synthèse 100&nbsp;% calculée. La courbe d'equity en R est le seul graphe quotidien.</li>
+        <li><i class="fas fa-circle-dot"></i> La mesure n'a de valeur que dans une boucle&nbsp;: Plan → Trade → Journal → Revue → Ajustement, qui se réécrit sans fin.</li>
+        <li><i class="fas fa-circle-dot"></i> Ajustez le comportement chaque semaine&nbsp;; le système seulement sur échantillon suffisant et après forward test. Ni sur-réaction au bruit, ni déni.</li>
+        <li><i class="fas fa-circle-dot"></i> La checklist maître referme la série&nbsp;: c'est votre routine vérifiable, du journal à la boucle.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Vérifiez votre maîtrise de cette dernière partie — et de la série entière.</p>
+
+    <details>
+      <summary>1. Un système affiche un win rate de 40&nbsp;%, un gain moyen de 3&nbsp;R et une perte moyenne de 1&nbsp;R. Quelle est son expectancy ?</summary>
+      <div class="quiz-answer">Expectancy = (0,40 × 3) − (0,60 × 1) = 1,2 − 0,6 = <strong>+0,6&nbsp;R par trade</strong>. Le système est largement rentable malgré un win rate inférieur à 50&nbsp;%, parce que son payoff de 3 compense un taux de réussite modeste. C'est l'illustration directe de la leçon de la partie 2 : le win rate seul ne dit rien — c'est le couple win rate / payoff qui décide.</div>
+    </details>
+
+    <details>
+      <summary>2. Vous venez d'essuyer 4 pertes consécutives sur un système à 45&nbsp;% de réussite. Faut-il changer le système ?</summary>
+      <div class="quiz-answer"><strong>Non.</strong> Une série de 4 à 7 pertes d'affilée est statistiquement banale pour un système à 45&nbsp;% de réussite — c'est de la variance, pas un signal. Conclure sur le système à partir de 4 trades, c'est lire le bruit. On peut en revanche corriger un <em>comportement</em> si la revue révèle un écart de discipline (stop non respecté, taille trop grosse). La décision de système attend un échantillon de 30 à 50 trades et un forward test.</div>
+    </details>
+
+    <details>
+      <summary>3. Pourquoi le P&L absolu quotidien est-il un mauvais KPI à court terme ?</summary>
+      <div class="quiz-answer">Parce qu'il est dominé par deux facteurs qui n'ont rien à voir avec la qualité de vos décisions : la variance (la chance, sur petit échantillon) et la taille de vos positions. Un excellent processus peut afficher un P&L rouge sur une semaine, et un mauvais processus un P&L vert par chance. Le respect du plan et l'expectancy en R mesurent le processus lui-même, et passent donc devant le P&L absolu, qui n'en est que la conséquence sur la durée.</div>
+    </details>
+
+    <details>
+      <summary>4. Quelle est la règle d'or de la construction du tableau de bord ?</summary>
+      <div class="quiz-answer">La séparation stricte entre <strong>saisie</strong> et <strong>lecture</strong>. On saisit un trade une seule fois dans un onglet « Journal » brut ; l'onglet « Synthèse » ne contient que des formules qui recalculent les KPIs, la courbe d'equity et l'expectancy par setup. Aucun KPI n'est saisi à la main — chaque chiffre recopié manuellement est une source d'erreur. Bonus : un bon tableau de bord se lit en moins de dix secondes.</div>
+    </details>
+
+    <details>
+      <summary>5. Comment les quatre séries de la collection s'articulent-elles dans la boucle d'amélioration ?</summary>
+      <div class="quiz-answer">Chacune occupe une case du cycle Plan → Trade → Journal → Revue → Ajustement. <strong>Plan de Trading</strong> = le Plan (écrire le scénario). <strong>Salarié &amp; Investisseur</strong> = le Trade (exécuter dans une vie réelle). <strong>Piloter son Portefeuille</strong> = le pilotage du risque qui encadre l'exécution (sizing, drawdown, forward test). <strong>Journal &amp; Performance</strong> = la mesure, qui referme la boucle vers l'ajustement. Elles ne sont pas parallèles mais emboîtées comme les maillons d'un même circuit.</div>
+    </details>
+  </div>
+
+  <a href="/?tab=series" class="next-cta">
+    <i class="fa-solid fa-flag-checkered"></i>
+    <div>
+      <div class="next-label">Série complète — 6 parties terminées</div>
+      <div class="next-title">Explorer toutes les séries DailyTickers</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+
+  <div class="didactic-box" style="margin-top:2.5rem;">
+    <p style="margin:0 0 0.75rem;"><strong><i class="fa-solid fa-layer-group" style="margin-right:0.4rem; color:#d97706;"></i> Série complète en 6 parties — Journal &amp; Performance</strong></p>
+    <ol style="margin:0; padding-left:1.3rem; line-height:1.9; color:#334155;">
+      <li><a href="/series/journal-et-performance/part1-tenir-le-journal/" style="color:#b45309;">Tenir le journal</a> — pourquoi, et comment vraiment le faire.</li>
+      <li><a href="/series/journal-et-performance/part2-metriques/" style="color:#b45309;">Métriques clés</a> — R-multiples, expectancy, win rate et payoff.</li>
+      <li><a href="/series/journal-et-performance/part3-mae-mfe/" style="color:#b45309;">Qualité d'exécution</a> — MAE, MFE et le calibrage des stops.</li>
+      <li><a href="/series/journal-et-performance/part4-la-revue/" style="color:#b45309;">La revue</a> — quotidienne, hebdomadaire, mensuelle, et la variance.</li>
+      <li><a href="/series/journal-et-performance/part5-corriger-biais/" style="color:#b45309;">Corriger ses biais</a> — détecter et corriger par la data.</li>
+      <li><strong>Le tableau de bord du gérant et la boucle d'amélioration</strong> — vous y êtes.</li>
+    </ol>
+    <p style="margin:1.25rem 0 0;"><strong>Pour aller plus loin — les séries jumelles&nbsp;:</strong></p>
+    <ul style="margin:0.5rem 0 0; padding-left:1.3rem; line-height:1.9; color:#334155;">
+      <li><a href="/series/plan-de-trading/" style="color:#b45309;">Plan de Trading</a> — écrire un scénario qui tient (la case <em>Plan</em>).</li>
+      <li><a href="/series/salarie-investisseur/" style="color:#b45309;">Investir Quand On Est Salarié</a> — exécuter dans une vie chargée (la case <em>Trade</em>).</li>
+      <li><a href="/series/piloter-son-portefeuille/" style="color:#b45309;">Piloter son Portefeuille</a> — sizing, corrélations, drawdown et forward test (le pilotage du risque).</li>
+    </ul>
+  </div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-arrow" title="Détecter et corriger ses biais par la data"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step current" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // === CHART 1 : Maquette de tableau de bord ===
+  var elDash = document.getElementById('chart-dashboard');
+  if (elDash) {
+    var cDash = echarts.init(elDash);
+    // Courbe d'equity en R (cumulé) — illustrative
+    // win rate 45 %, payoff 2,4, expectancy ≈ +0,5 R — calé sur les jauges ci-dessus
+    var trades = [2.6, -1, 1.9, -1, 3.2, -1, 2.1, -1, 2.4, -1, 1.6, -1, 3.5, -1, 2.0, -1, 2.3, -1, -1, -1];
+    var equity = [];
+    var run = 0;
+    for (var i = 0; i < trades.length; i++) { run += trades[i]; equity.push(+run.toFixed(2)); }
+    var labels = equity.map(function(_, i) { return 'T' + (i + 1); });
+
+    var optDash = {
+      title: [
+        { text: 'Maquette de tableau de bord (valeurs illustratives)', left: 'center', top: 0, textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+        { text: 'Respect du plan', left: '8%', top: '22%', textStyle: { fontSize: 11, color: '#64748b', fontWeight: 600 } },
+        { text: 'Expectancy', left: '40%', top: '22%', textStyle: { fontSize: 11, color: '#64748b', fontWeight: 600 } },
+        { text: 'Payoff', left: '72%', top: '22%', textStyle: { fontSize: 11, color: '#64748b', fontWeight: 600 } },
+        { text: 'Courbe d’equity (R cumulés)', left: 'center', top: '52%', textStyle: { fontSize: 12, color: '#0f172a', fontWeight: 700 } }
+      ],
+      tooltip: { trigger: 'axis', formatter: function(p) { return p[0].axisValue + '<br/>R cumulés : <b>' + p[0].data + '</b>'; } },
+      series: [
+        { type: 'gauge', center: ['16%', '34%'], radius: '24%', min: 0, max: 100, startAngle: 210, endAngle: -30,
+          axisLine: { lineStyle: { width: 8, color: [[0.6, '#dc2626'], [0.8, '#f59e0b'], [1, '#10b981']] } },
+          pointer: { width: 4, length: '55%', itemStyle: { color: '#0f172a' } },
+          axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+          detail: { valueAnimation: true, fontSize: 16, fontWeight: 800, color: '#10b981', offsetCenter: [0, '45%'], formatter: '{value} %' },
+          data: [{ value: 86 }] },
+        { type: 'gauge', center: ['48%', '34%'], radius: '24%', min: -0.5, max: 1.5, startAngle: 210, endAngle: -30,
+          axisLine: { lineStyle: { width: 8, color: [[0.25, '#dc2626'], [0.5, '#f59e0b'], [1, '#10b981']] } },
+          pointer: { width: 4, length: '55%', itemStyle: { color: '#0f172a' } },
+          axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+          detail: { valueAnimation: true, fontSize: 16, fontWeight: 800, color: '#d97706', offsetCenter: [0, '45%'], formatter: '+{value} R' },
+          data: [{ value: 0.50 }] },
+        { type: 'gauge', center: ['80%', '34%'], radius: '24%', min: 0, max: 4, startAngle: 210, endAngle: -30,
+          axisLine: { lineStyle: { width: 8, color: [[0.25, '#dc2626'], [0.5, '#f59e0b'], [1, '#10b981']] } },
+          pointer: { width: 4, length: '55%', itemStyle: { color: '#0f172a' } },
+          axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
+          detail: { valueAnimation: true, fontSize: 16, fontWeight: 800, color: '#2563eb', offsetCenter: [0, '45%'], formatter: '{value}' },
+          data: [{ value: 2.4 }] },
+        { name: 'R cumulés', type: 'line', smooth: true, data: equity,
+          xAxisIndex: 0, yAxisIndex: 0,
+          lineStyle: { color: '#d97706', width: 3 }, symbol: 'circle', symbolSize: 5, itemStyle: { color: '#b45309' },
+          areaStyle: { color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: 'rgba(217,119,6,0.25)' }, { offset: 1, color: 'rgba(217,119,6,0.02)' }]) } }
+      ],
+      grid: { top: '60%', left: '8%', right: '5%', bottom: '6%' },
+      xAxis: { type: 'category', data: labels, axisLabel: { color: '#94a3b8', fontSize: 9 }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+      yAxis: { type: 'value', name: 'R', axisLabel: { color: '#94a3b8', fontSize: 10 }, splitLine: { lineStyle: { color: '#f1f5f9' } } }
+    };
+    cDash.setOption(optDash);
+    charts.push(cDash);
+  }
+
+  // === CHART 2 : Boucle Plan -> Trade -> Journal -> Revue -> Ajustement ===
+  var elLoop = document.getElementById('chart-boucle');
+  if (elLoop) {
+    var cLoop = echarts.init(elLoop);
+    var R = 38, cx = 50, cy = 52;
+    var stepsLoop = [
+      { name: 'Plan', color: '#2563eb' },
+      { name: 'Trade', color: '#9333ea' },
+      { name: 'Journal', color: '#d97706' },
+      { name: 'Revue', color: '#10b981' },
+      { name: 'Ajustement', color: '#dc2626' }
+    ];
+    var nodes = stepsLoop.map(function(s, i) {
+      var ang = (-90 + i * (360 / stepsLoop.length)) * Math.PI / 180;
+      return {
+        name: s.name,
+        x: cx + R * Math.cos(ang),
+        y: cy + R * Math.sin(ang),
+        symbolSize: 62,
+        itemStyle: { color: s.color },
+        label: { show: true, color: '#fff', fontWeight: 700, fontSize: 11 }
+      };
+    });
+    var links = nodes.map(function(_, i) {
+      return { source: i, target: (i + 1) % nodes.length };
+    });
+    var optLoop = {
+      title: { text: 'La boucle d’amélioration continue', left: 'center', top: 4, textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { show: false },
+      xAxis: { show: false, min: 0, max: 100 },
+      yAxis: { show: false, min: 0, max: 100 },
+      graphic: [{ type: 'text', left: 'center', top: 'middle', style: { text: 'CYCLE\nSANS FIN', textAlign: 'center', fill: '#cbd5e1', fontSize: 13, fontWeight: 800, lineHeight: 18 } }],
+      series: [{
+        type: 'graph',
+        layout: 'none',
+        coordinateSystem: 'cartesian2d',
+        data: nodes,
+        links: links,
+        edgeSymbol: ['none', 'arrow'],
+        edgeSymbolSize: 12,
+        lineStyle: { color: '#94a3b8', width: 2, curveness: 0.25 },
+        label: { position: 'inside' },
+        emphasis: { focus: 'adjacency', lineStyle: { width: 3 } }
+      }]
+    };
+    cLoop.setOption(optLoop);
+    charts.push(cLoop);
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c) { if (c && c.resize) c.resize(); });
+  });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

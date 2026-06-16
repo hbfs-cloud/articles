@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>La revue : quotidienne, hebdomadaire, mensuelle | Journal & Performance — Partie 4/6 | DailyTickers</title>
+ <meta name="description" content="Le rituel de revue à trois échelles : le débrief quotidien à chaud, la revue hebdomadaire des process, le bilan mensuel de performance. Lire sa courbe d'equity, analyser ses drawdowns et distinguer la variance d'un vrai problème de système.">
+ <meta property="og:title" content="La revue : quotidienne, hebdomadaire, mensuelle | Journal & Performance 4/6">
+ <meta property="og:description" content="Le rituel de revue à trois échelles : le débrief quotidien à chaud, la revue hebdomadaire des process, le bilan mensuel de performance. Lire sa courbe d'equity, analyser ses drawdowns et distinguer la variance d'un vrai problème de système.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/journal-et-performance/part4-la-revue/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* AMBER THEME — Journal & Performance */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #fffbeb 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#d97706; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#b45309; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#d97706; margin-right:0.75rem; }
+ details[open] summary { border-color:#d97706; background:#fffbeb; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #451a03 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#fcd34d; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#fbbf24; }
+
+ .takeaway-box { background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border:1px solid #d97706; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#b45309; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(217,119,6,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#d97706; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(217,119,6,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #d97706; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #b45309 0%, #f59e0b 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#d97706; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Journal & Performance — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">La revue : quotidienne, hebdomadaire, mensuelle</h1>
+  <p class="hero-subtitle">Un journal qu'on ne relit jamais n'est qu'un cimetière de données. La revue est le moment où ces données deviennent progression — à condition de regarder la bonne chose à la bonne fréquence. Trois échelles, trois objectifs : l'exécution à chaud le soir, le process le week-end, le système une fois par mois. Et une discipline qui sépare les bons traders des inquiets : savoir reconnaître la variance avant de toucher à ce qui marche.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-calendar-week"></i> Revue à 3 échelles</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-chart-line"></i> Courbe d'equity</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-magnifying-glass"></i> Variance vs système</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-list-check"></i> Rituel</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-arrow" title="MAE, MFE et la qualité d'exécution"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step current" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">4/6</span><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-arrow" title="Détecter et corriger ses biais par la data"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" href="#cadence" data-section="cadence"><i class="fas fa-bookmark"></i><span>Trois échelles</span></a>
+  <a class="fnav-item" href="#quotidienne" data-section="quotidienne"><i class="fas fa-bookmark"></i><span>Débrief quotidien</span></a>
+  <a class="fnav-item" href="#hebdo" data-section="hebdo"><i class="fas fa-bookmark"></i><span>Revue hebdo</span></a>
+  <a class="fnav-item" href="#mensuelle" data-section="mensuelle"><i class="fas fa-bookmark"></i><span>Bilan mensuel</span></a>
+  <a class="fnav-item" href="#variance" data-section="variance"><i class="fas fa-bookmark"></i><span>Variance ou système</span></a>
+  <a class="fnav-item" href="#quiz" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <div class="section-divider" id="cadence"><i class="fa-solid fa-layer-group" style="color:#d97706;"></i> Trois échelles de revue</div>
+  <div class="content-card">
+    <p>Dans les trois premières parties de cette série, vous avez appris à <strong>capturer</strong> : tenir le journal (Partie 1), calculer les métriques qui comptent — R-multiples, expectancy, win rate (Partie 2), et lire la qualité d'exécution à travers le MAE et le MFE (Partie 3). Mais capturer ne suffit pas. Un journal rempli avec rigueur puis jamais relu produit exactement zéro amélioration. La donnée brute n'est pas de la connaissance ; elle ne le devient qu'au moment de la <strong>revue</strong>.</p>
+
+    <p>La faute la plus courante n'est pas d'oublier de relire. C'est de tout regarder, tout le temps, à la mauvaise fréquence. Le trader qui consulte sa courbe d'equity quinze fois par jour ne pilote rien : il alimente son anxiété et se prépare à des décisions impulsives. Celui qui calcule son expectancy chaque soir confond le bruit d'une séance avec un signal de système. La revue efficace repose sur un principe simple : <strong>chaque échelle de temps a son objet, et un seul</strong>.</p>
+
+    <div class="pedagogy-box">
+      <p style="margin:0;"><strong>Le principe directeur.</strong> Plus la fréquence est élevée, plus on regarde <em>le comportement</em> (qu'on contrôle) ; plus la fréquence est basse, plus on regarde <em>le résultat</em> (qu'on ne contrôle qu'indirectement, à travers le comportement). Le quotidien parle d'exécution et d'émotion. L'hebdomadaire parle de process et de discipline. Le mensuel parle de performance et de système. Inverser ces objets — juger sa performance chaque jour, ou son émotion une fois par mois — est la source de la plupart des erreurs de pilotage.</p>
+    </div>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">J</div>
+        <h4>Quotidien</h4>
+        <p>5–10 min, le soir. À chaud. Objet : exécution &amp; émotion. Ai-je respecté mon plan ? Aucune conclusion de performance.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">S</div>
+        <h4>Hebdomadaire</h4>
+        <p>30–45 min, le week-end. À froid. Objet : process &amp; discipline. Erreurs récurrentes, taux de respect du plan, préparation.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">M</div>
+        <h4>Mensuel</h4>
+        <p>1 h, fin de mois. Objet : performance &amp; système. Métriques agrégées, courbe d'equity, drawdowns, ajustements éventuels.</p>
+      </div>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Échelle</th><th>Quand</th><th>Question centrale</th><th>Ce qu'on regarde</th><th>Ce qu'on NE regarde PAS</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Quotidienne</strong></td><td>Le soir, 5–10 min</td><td>Ai-je bien exécuté ?</td><td>Respect du plan, trades impulsifs, état émotionnel</td><td>Le P&amp;L du jour comme verdict</td></tr>
+        <tr><td><strong>Hebdomadaire</strong></td><td>Le week-end, 30–45 min</td><td>Mon process tient-il ?</td><td>Tous les trades de la semaine, % de respect, erreurs récurrentes, MAE/MFE</td><td>L'expectancy comme métrique « finale »</td></tr>
+        <tr><td><strong>Mensuelle</strong></td><td>Fin de mois, ~1 h</td><td>Mon système fonctionne-t-il ?</td><td>Expectancy, payoff, R cumulés, max DD, equity vs indice</td><td>Une décision majeure sur un seul mois</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Anti-anxiété.</strong> Regarder l'equity en intraday n'apporte aucune information utile — la valeur d'un portefeuille bouge en permanence pour des raisons que vous ne contrôlez pas. On regarde la courbe d'equity au pas mensuel, pas toutes les heures. Cette hygiène d'attention est traitée en profondeur dans notre série <a href="/series/salarie-investisseur/">« Investir Quand On Est Salarié »</a> : moins on regarde, mieux on décide.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="quotidienne"><i class="fa-solid fa-moon" style="color:#d97706;"></i> Le débrief quotidien</div>
+  <div class="content-card">
+    <p>Le débrief quotidien est le plus court et le plus émotionnel des trois. Il se fait <strong>le soir, à chaud</strong>, pendant que le souvenir des décisions est encore vif. Son but n'est pas de juger le résultat — un jour de bourse est un échantillon de taille 1 à 3 trades, c'est-à-dire du pur bruit — mais de capturer <em>comment vous avez agi</em> et <em>dans quel état</em>.</p>
+
+    <p>La question pivot est toujours la même : <strong>« Ai-je respecté mon plan ? »</strong> Pas « Ai-je gagné ? ». Un trade perdant exécuté exactement selon le plan est un bon trade. Un trade gagnant pris en violation du plan — entrée impulsive, taille doublée sur un coup de tête, stop déplacé pour « laisser respirer » — est un mauvais trade qui a eu de la chance. Le débrief quotidien sert précisément à attraper ce second cas avant qu'il ne devienne une habitude.</p>
+
+    <h3 style="color:#0f172a;">La check-list du soir (5 questions)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Chaque trade avait-il un plan écrit avant l'entrée ?</strong> Entrée, stop, objectif, taille — définis <em>avant</em>, pas reconstruits après.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Y a-t-il eu un trade impulsif ?</strong> Un trade non planifié, hors setup, ou « parce que ça bougeait ». Si oui, on le marque d'un tag spécifique.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Ai-je dévié sur un trade existant ?</strong> Stop élargi, objectif coupé trop tôt, taille modifiée en cours de route.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Quel était mon état émotionnel ?</strong> Un mot suffit : calme, FOMO, vengeance, ennui, peur. L'émotion est une donnée.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Une chose à faire différemment demain ?</strong> Une seule. Concrète. Actionnable.</li>
+    </ul>
+
+    <div class="didactic-box">
+      <p style="margin:0 0 0.5rem;"><strong>Pourquoi noter l'émotion à chaud ?</strong></p>
+      <p style="margin:0;">L'émotion ressentie pendant un trade est invisible une semaine plus tard. Or c'est souvent la cause racine de la déviation : on n'élargit pas un stop par analyse, on l'élargit par <em>refus de perdre</em>. En taguant « revenge », « FOMO » ou « ennui » le soir même, vous construisez un jeu de données qui révélera, au pas hebdomadaire, sous quelles conditions émotionnelles vous cassez votre discipline. C'est le matériau de la Partie 5 (corriger ses biais par la data).</p>
+    </div>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Le piège du verdict quotidien.</strong> Conclure « ma stratégie marche » après une bonne journée, ou « elle ne marche plus » après une mauvaise, est l'erreur statistique fondamentale du débutant. Sur 1 à 3 trades, le résultat est dominé par le hasard, même si votre espérance de gain est positive. <strong>Aucune conclusion de performance ne se tire sur un jour.</strong> Le quotidien juge le comportement, jamais le système.</p>
+    </div>
+
+    <p>Comptez 5 à 10 minutes. Si votre débrief quotidien dure une heure, vous faites en réalité de l'analyse de performance — au mauvais moment, avec un échantillon trop petit, et probablement sous le coup de l'émotion du jour. Gardez-le court, factuel, et orienté comportement.</p>
+  </div>
+
+  <div class="section-divider" id="hebdo"><i class="fa-solid fa-calendar-week" style="color:#d97706;"></i> La revue hebdomadaire</div>
+  <div class="content-card">
+    <p>Si une seule échelle devait survivre, ce serait celle-ci. <strong>La revue hebdomadaire est la plus utile pour corriger le comportement</strong> : assez d'échantillon pour voir des motifs (5 à 15 trades), assez de recul pour que l'émotion soit retombée, assez de fréquence pour que la correction arrive avant que la mauvaise habitude ne s'installe. Elle se fait <strong>le week-end, à froid, en 30 à 45 minutes</strong>.</p>
+
+    <h3 style="color:#0f172a;">Le protocole en cinq temps</h3>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Relire chaque trade</h4>
+        <p>Tous, sans exception. Entrée, gestion, sortie, à côté du graphique. Le gagnant comme le perdant.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Taux de respect du plan</h4>
+        <p>Combien de trades exécutés selon le plan / total. C'est votre métrique de discipline n°1.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Erreurs récurrentes</h4>
+        <p>Regrouper par type : entrée anticipée, sortie précoce, stop élargi, sur-taille. Compter les occurrences.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Qualité d'exécution</h4>
+        <p>MAE/MFE de la semaine : ai-je laissé courir mes gagnants ? coupé mes perdants au bon endroit ?</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">5</div>
+        <h4>Préparer la semaine</h4>
+        <p>Watchlist, niveaux, catalyseurs (earnings, macro), et UNE correction comportementale prioritaire.</p>
+      </div>
+    </div>
+
+    <p>Le <strong>taux de respect du plan</strong> est la métrique reine de cette échelle. Elle se calcule simplement :</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Taux de respect du plan</div>
+      Respect&nbsp;% = <span class="formula-highlight">Trades exécutés selon le plan</span> / Total des trades &times; 100
+    </div>
+
+    <p>À titre d'illustration : sur une semaine de 12 trades, si 9 ont été exécutés exactement comme planifiés (entrée, stop et taille respectés), votre taux de respect est de 9&nbsp;/&nbsp;12 = <strong>75&nbsp;%</strong>. Ce chiffre est plus important que votre P&amp;L hebdomadaire, parce qu'il mesure ce que vous contrôlez. Un trader qui maintient 90&nbsp;%+ de respect, semaine après semaine, finira par exprimer pleinement l'edge de son système. Un trader à 60&nbsp;% sabote son propre avantage, même avec une excellente stratégie sur le papier.</p>
+
+    <p>Le graphique ci-dessous illustre une trajectoire typique : un trader qui suit sa revue hebdomadaire voit son taux de respect progresser et se stabiliser au-dessus du seuil de 85&nbsp;% qu'il s'est fixé. Une rechute ponctuelle (semaine 6) est repérée et corrigée la semaine suivante — c'est exactement le rôle de la boucle hebdomadaire.</p>
+
+    <div id="chart-respect" style="width:100%;height:360px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Données illustratives. Le taux de respect du plan par semaine, avec seuil-cible à 85 %.</p>
+
+    <div class="didactic-box">
+      <p style="margin:0 0 0.5rem;"><strong>Distinguer erreur de process et issue défavorable.</strong></p>
+      <p style="margin:0;">Quand vous relisez un trade perdant, posez la question dans le bon ordre. D'abord : <em>le process était-il bon ?</em> (setup valide, stop placé, taille correcte). Si oui, la perte est une issue normale d'un bon process — rien à corriger. Si non, identifiez l'erreur précise. On ne corrige <strong>jamais</strong> un bon process à cause d'un mauvais résultat, ni on ne valide un mauvais process à cause d'un bon résultat. C'est la matrice process × résultat : seul le quadrant « bon process, peu importe le résultat » est durable.</p>
+    </div>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Une seule correction à la fois.</strong> La tentation, en fin de revue, est de lister huit choses à améliorer. C'est le meilleur moyen de n'en améliorer aucune. Choisissez <em>la</em> correction au plus fort impact pour la semaine à venir, écrivez-la en haut de votre plan, et concentrez-vous dessus. Vous mesurerez le résultat la revue suivante. Le changement durable est séquentiel, pas simultané.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="mensuelle"><i class="fa-solid fa-chart-line" style="color:#d97706;"></i> Le bilan mensuel</div>
+  <div class="content-card">
+    <p>Le bilan mensuel est la seule échelle où l'on s'autorise à juger <strong>la performance et le système</strong>. À ce pas, l'échantillon (typiquement 20 à 60 trades selon l'activité) commence à porter de l'information statistique. On agrège, on calcule, on compare, et — seulement si nécessaire — on ajuste.</p>
+
+    <h3 style="color:#0f172a;">Les métriques à calculer</h3>
+    <p>Ce sont celles posées en Partie 2, appliquées au mois écoulé. Rappel des formules, vérifiées :</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Espérance par trade (expectancy, en R)</div>
+      E = (<span class="formula-highlight">Win%</span> &times; Gain moyen<sub>R</sub>) &minus; (Loss% &times; Perte moyenne<sub>R</sub>)
+    </div>
+
+    <p>Exemple chiffré, à titre d'illustration. Sur 40 trades du mois : 22 gagnants (Win% = 55&nbsp;%), 18 perdants (Loss% = 45&nbsp;%). Le gain moyen des gagnants vaut +1,8&nbsp;R, la perte moyenne des perdants &minus;1,0&nbsp;R (les pertes sont coupées au stop, soit 1&nbsp;R).</p>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value" style="color:#2563eb;">55 %</div><div class="metric-label">Win rate</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#9333ea;">1,80</div><div class="metric-label">Payoff (gain / perte)</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#10b981;">+0,54 R</div><div class="metric-label">Expectancy / trade</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#d97706;">+21,6 R</div><div class="metric-label">R cumulés (40 trades)</div></div>
+    </div>
+
+    <p>Vérifions l'arithmétique. <strong>Payoff</strong> = gain moyen / perte moyenne = 1,8 / 1,0 = <strong>1,80</strong>. <strong>Expectancy</strong> = (0,55 × 1,8) &minus; (0,45 × 1,0) = 0,99 &minus; 0,45 = <strong>+0,54&nbsp;R</strong> par trade. <strong>R cumulés</strong> sur 40 trades = 40 × 0,54 = <strong>+21,6&nbsp;R</strong>. Si chaque R représente 1&nbsp;% du capital, le mois rapporte mécaniquement de l'ordre de +21&nbsp;% avant frais — un chiffre volontairement flatteur ici pour la démonstration, pas une promesse. Cette équivalence 21&nbsp;R ≈ +21&nbsp;% ne tient que sous des hypothèses fortes : risque fixe de 1&nbsp;% par trade, aucun compounding et pas de positions concurrentes. Dès qu'on compose les gains, qu'on risque plus ou moins d'1&nbsp;% par trade, ou qu'on détient plusieurs positions à la fois, 21&nbsp;R cesse d'égaler +21&nbsp;%.</p>
+
+    <div class="pedagogy-box">
+      <p style="margin:0;"><strong>Le seuil de rentabilité (break-even win rate).</strong> Pour un payoff donné, le win rate minimum qui rend l'espérance nulle vaut : <strong>WR<sub>BE</sub> = 1 / (1 + payoff)</strong>. Avec un payoff de 1,80 : WR<sub>BE</sub> = 1 / (1 + 1,80) = 1 / 2,80 = <strong>35,7&nbsp;%</strong>. Votre win rate réel de 55&nbsp;% est très au-dessus : le système a une marge confortable. Cette formule est l'outil le plus rapide pour savoir si un système <em>peut</em> être profitable avant même de regarder le P&amp;L.</p>
+    </div>
+
+    <h3 style="color:#0f172a;">Lire la courbe d'equity</h3>
+    <p>Les métriques résument ; la courbe d'equity raconte. On y lit trois choses qu'un tableau de chiffres masque :</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fas fa-arrow-trend-up"></i></div>
+        <h4>La pente</h4>
+        <p>Direction et vigueur de la progression. Une pente positive régulière vaut mieux qu'une pente raide et erratique.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fas fa-wave-square"></i></div>
+        <h4>La régularité</h4>
+        <p>Une courbe lisse signale un edge stable ; une courbe en dents de scie révèle une dépendance à quelques gros coups.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fas fa-arrow-trend-down"></i></div>
+        <h4>Les paliers de drawdown</h4>
+        <p>Profondeur et durée des replis. Combien de temps sous le dernier sommet ? Le DD se résorbe-t-il ou s'enfonce-t-il ?</p>
+      </div>
+    </div>
+
+    <p>Le graphique ci-dessous montre une courbe d'equity illustrative sur un an, avec les phases de drawdown (sous le dernier plus-haut) ombrées en rouge. On voit que la progression n'est pas linéaire : elle alterne paliers de hausse et replis. C'est <em>normal</em> — l'absence totale de drawdown serait le vrai signal d'alarme (sur-optimisation ou échantillon trop court).</p>
+
+    <div id="chart-equity" style="width:100%;height:380px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Données illustratives. Courbe d'equity et zones de drawdown (repli sous le dernier sommet) ombrées en rouge.</p>
+
+    <h3 style="color:#0f172a;">Comparer à un indice — honnêtement</h3>
+    <p>Battre le marché est le seul juge de paix d'une gestion active. Mais la comparaison doit être <strong>honnête</strong>, sinon elle se transforme en outil d'auto-illusion :</p>
+    <ul class="checklist">
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Même période, même devise.</strong> Comparer votre mois à la performance de l'indice sur exactement le même mois, dividendes réinvestis (total return).</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Le bon indice.</strong> Un portefeuille de tech US se compare au Nasdaq, pas au CAC 40 ni au Livret A. Choisissez le benchmark qui reflète votre univers.</li>
+      <li><i class="fas fa-circle-check" style="color:#10b981;"></i> <strong>Net de frais.</strong> Vos commissions, le spread et la fiscalité comptent. L'indice, lui, n'en paie pas. Comparez net pour rester lucide.</li>
+      <li><i class="fas fa-circle-triangle-exclamation" style="color:#dc2626;"></i> <strong>Ajusté du risque.</strong> +12&nbsp;% avec un drawdown de 30&nbsp;% n'est pas meilleur que +8&nbsp;% avec un DD de 6&nbsp;%. Regardez le rendement <em>par unité de risque pris</em>.</li>
+    </ul>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>La règle de décision du mois.</strong> On ne modifie <em>jamais</em> son système sur la base d'un seul mois isolé — un mois reste un petit échantillon dominé par la variance. La seule exception est une <strong>alerte de risque</strong> : un drawdown qui dépasse votre seuil de tolérance, une perte qui viole vos règles de sizing, une corrélation cachée qui a fait perdre toutes vos positions ensemble. Dans ce cas, on réduit l'exposition immédiatement — la préservation du capital prime toujours sur l'optimisation.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="variance"><i class="fa-solid fa-dice" style="color:#d97706;"></i> Variance ou vrai problème ?</div>
+  <div class="content-card">
+    <p>Voici la compétence qui sépare le trader mûr de l'inquiet : <strong>savoir reconnaître une série de pertes comme du bruit statistique plutôt que comme la preuve d'un système cassé</strong>. C'est contre-intuitif, mais un système à espérance positive produit régulièrement des séquences de pertes consécutives. Les ignorer mène à la ruine ; les sur-interpréter mène à saboter ce qui marche.</p>
+
+    <div class="pedagogy-box">
+      <p style="margin:0 0 0.5rem;"><strong>L'intuition par les chiffres.</strong></p>
+      <p style="margin:0;">Reprenons un système gagnant 55&nbsp;% du temps. La probabilité de perdre 5 trades d'affilée est de (0,45)<sup>5</sup> ≈ <strong>1,8&nbsp;%</strong> par séquence — rare, mais sur un an de plusieurs centaines de trades, cela <em>arrivera</em>. Pire : un système gagnant seulement 40&nbsp;% du temps mais avec un fort payoff (donc très profitable) perd 5 fois de suite avec une probabilité de (0,60)<sup>5</sup> ≈ <strong>7,8&nbsp;%</strong> — soit, en moyenne, environ une fois toutes les 13 séquences. Une longue série de pertes n'est <em>pas</em> une preuve que le système ne marche plus. C'est souvent juste la queue gauche d'une distribution parfaitement saine.</p>
+    </div>
+
+    <p>Le graphique ci-dessous illustre ce phénomène : cinq trajectoires d'equity simulées à partir du <em>même</em> système à espérance positive (+0,3&nbsp;R par trade), sur 100 trades chacune. Toutes finissent positives en espérance, mais certaines connaissent des replis sévères et prolongés en cours de route. Si vous abandonniez le système au creux de la trajectoire rouge, vous jetteriez un avantage réel à cause de la pure variance.</p>
+
+    <div id="chart-variance" style="width:100%;height:400px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; margin-top:-1rem;">Données illustratives. Cinq trajectoires d'un même système à espérance positive (+0,3 R/trade) — la variance seule produit des écarts considérables.</p>
+
+    <h3 style="color:#0f172a;">Le test en trois questions</h3>
+    <p>Face à une mauvaise passe, ne réagissez pas — diagnostiquez. Trois questions, dans cet ordre, séparent la variance d'un vrai problème :</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Taille d'échantillon</h4>
+        <p>Combien de trades ? Sous ~30, c'est presque toujours du bruit. Les conclusions de système exigent des dizaines à des centaines de trades.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Dégradation structurelle ?</h4>
+        <p>L'expectancy baisse-t-elle <em>durablement</em> sur fenêtre glissante, ou est-ce un creux ponctuel ? Tendance vs accident.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Le plan est-il en cause ?</h4>
+        <p>Le taux de respect du plan a-t-il chuté ? Souvent, le « système qui ne marche plus » est un trader qui a cessé de l'exécuter.</p>
+      </div>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Signal</th><th>Plutôt de la variance</th><th>Plutôt un vrai problème</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Taille d'échantillon</td><td>Petit (&lt; 30 trades)</td><td>Grand (plusieurs dizaines+)</td></tr>
+        <tr><td>Expectancy sur fenêtre glissante</td><td>Stable, creux ponctuel</td><td>En baisse continue et structurelle</td></tr>
+        <tr><td>Respect du plan</td><td>Maintenu (85 %+)</td><td>Dégradé (le comportement a changé)</td></tr>
+        <tr><td>Drawdown actuel</td><td>Dans la plage historique attendue</td><td>Au-delà du DD max observé / toléré</td></tr>
+        <tr><td>Contexte de marché</td><td>Régime défavorable connu et temporaire</td><td>Le marché a structurellement changé (edge disparu)</td></tr>
+      </tbody>
+    </table>
+
+    <div class="didactic-box">
+      <p style="margin:0 0 0.5rem;"><strong>Drawdown attendu vs drawdown anormal.</strong></p>
+      <p style="margin:0;">Tout système a un drawdown maximal <em>attendu</em>, qu'on estime par backtest ou simulation. Un repli qui reste dans cette plage est une information neutre : le système se comporte comme prévu. Un repli qui <em>dépasse</em> nettement le DD max historique est une alerte — soit le marché a changé, soit votre exécution a dérivé, soit votre estimation du risque était trop optimiste. Cette distinction, et la manière de calibrer le DD attendu, sont au cœur de notre série <a href="/series/piloter-son-portefeuille/">« Piloter son Portefeuille »</a>.</p>
+    </div>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Les deux erreurs symétriques.</strong> Ne <em>saboter</em> pas un bon système à cause de la variance : changer de stratégie au pire creux est le moyen le plus sûr de réaliser toutes les pertes sans capter le rebond. Mais ne vous <em>accrochez</em> pas non plus à un mauvais système par déni : si l'expectancy se dégrade structurellement sur un large échantillon et que le respect du plan est intact, l'edge a peut-être disparu. La discipline n'est pas l'entêtement. La donnée — taille d'échantillon, tendance d'expectancy, respect du plan — tranche entre les deux.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#d97706;"></i> Quiz</div>
+  <div class="content-card">
+    <p>Cinq questions pour vérifier que la mécanique de la revue est acquise. Cliquez pour révéler la réponse.</p>
+
+    <details>
+      <summary>1. Quelle échelle de revue est la plus utile pour corriger le comportement, et pourquoi ?</summary>
+      <div class="quiz-answer">La revue <strong>hebdomadaire</strong>. Elle réunit le meilleur compromis : un échantillon suffisant (5–15 trades) pour repérer des motifs, assez de recul pour que l'émotion soit retombée, et une fréquence assez élevée pour corriger une mauvaise habitude avant qu'elle ne s'installe. Le quotidien est trop bruité (1–3 trades), le mensuel trop espacé pour une boucle de correction comportementale rapide.</div>
+    </details>
+
+    <details>
+      <summary>2. Vous avez fait +3 % aujourd'hui sur deux trades. Que pouvez-vous conclure sur votre système ?</summary>
+      <div class="quiz-answer"><strong>Rien.</strong> Deux trades sont un échantillon dominé par le hasard, même si votre espérance est positive. Le débrief quotidien juge l'<em>exécution</em> (ai-je respecté mon plan ? un trade impulsif ?) et l'<em>émotion</em>, jamais la performance du système. Aucune conclusion de performance ne se tire sur un jour.</div>
+    </details>
+
+    <details>
+      <summary>3. Win rate 50 %, gain moyen +2,0 R, perte moyenne −1,0 R. Quelle est l'expectancy par trade ?</summary>
+      <div class="quiz-answer">E = (0,50 × 2,0) − (0,50 × 1,0) = 1,0 − 0,5 = <strong>+0,5 R par trade</strong>. Le payoff vaut 2,0 / 1,0 = 2,0. Le seuil de rentabilité serait WR<sub>BE</sub> = 1 / (1 + 2,0) = 33,3 % — votre 50 % est largement au-dessus, le système a une bonne marge.</div>
+    </details>
+
+    <details>
+      <summary>4. Votre système gagne 55 % du temps. Une série de 5 pertes consécutives prouve-t-elle qu'il est cassé ?</summary>
+      <div class="quiz-answer"><strong>Non.</strong> La probabilité de 5 pertes d'affilée est (0,45)<sup>5</sup> ≈ 1,8 % par séquence — rare, mais inévitable sur des centaines de trades. C'est la queue gauche normale d'une distribution saine. Avant de réagir, appliquez le test : taille d'échantillon, l'expectancy se dégrade-t-elle structurellement, le respect du plan a-t-il chuté ? Si l'échantillon est petit et le plan respecté, c'est de la variance.</div>
+    </details>
+
+    <details>
+      <summary>5. Quand est-il légitime de modifier son système sur la base d'un seul mois ?</summary>
+      <div class="quiz-answer">Presque jamais — sauf en cas d'<strong>alerte de risque</strong> : un drawdown qui dépasse votre seuil de tolérance, une violation des règles de sizing, ou une corrélation cachée qui a fait perdre toutes vos positions ensemble. Dans ce cas, on réduit l'exposition immédiatement. Pour toute décision d'optimisation (changer un paramètre, abandonner un setup), un mois reste un échantillon trop petit : attendez plus de données.</div>
+    </details>
+
+    <div class="takeaway-box">
+      <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 4</h3>
+      <ul class="takeaway-list">
+        <li><i class="fas fa-check"></i> <strong>Trois échelles, trois objets.</strong> Quotidien = exécution &amp; émotion (à chaud). Hebdomadaire = process &amp; discipline (à froid). Mensuel = performance &amp; système. Ne pas inverser les objets.</li>
+        <li><i class="fas fa-check"></i> <strong>Le débrief quotidien (5–10 min)</strong> répond à « ai-je respecté mon plan ? », note l'émotion et l'impulsivité — et ne tire <em>aucune</em> conclusion de performance sur un jour.</li>
+        <li><i class="fas fa-check"></i> <strong>La revue hebdomadaire</strong> est la plus puissante pour corriger : taux de respect du plan, erreurs récurrentes, MAE/MFE, préparation. Une seule correction prioritaire à la fois.</li>
+        <li><i class="fas fa-check"></i> <strong>Le bilan mensuel</strong> agrège les métriques (expectancy, payoff, R cumulés, max DD), lit la courbe d'equity (pente, régularité, paliers de DD) et compare à un indice honnêtement.</li>
+        <li><i class="fas fa-check"></i> <strong>Variance ≠ système cassé.</strong> Une série de pertes peut être du bruit même avec une espérance positive. Diagnostiquez par taille d'échantillon, tendance d'expectancy et respect du plan avant de réagir.</li>
+        <li><i class="fas fa-check"></i> <strong>Ni sabotage, ni déni.</strong> Ne pas jeter un bon système au pire creux ; ne pas s'accrocher à un mauvais système quand l'edge a structurellement disparu. La donnée tranche.</li>
+      </ul>
+    </div>
+
+    <a class="next-cta" href="/series/journal-et-performance/part5-corriger-biais/">
+      <i class="fa-solid fa-brain"></i>
+      <div>
+        <div class="next-label">Partie 5 sur 6 — la suite</div>
+        <div class="next-title">Détecter et corriger ses biais par la data</div>
+      </div>
+      <i class="fa-solid fa-arrow-right"></i>
+    </a>
+  </div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-arrow" title="MAE, MFE et la qualité d'exécution"><i class="fas fa-chevron-left"></i></a><span class="series-title">Journal & Performance</span><div class="series-steps"><a href="/series/journal-et-performance/part1-tenir-le-journal/" class="series-step" title="Pourquoi tenir un journal — et comment vraiment le faire"><span class="series-num">1</span><span class="series-label">Tenir le journal</span></a><a href="/series/journal-et-performance/part2-metriques/" class="series-step" title="R-multiples, expectancy et win rate"><span class="series-num">2</span><span class="series-label">Métriques clés</span></a><a href="/series/journal-et-performance/part3-mae-mfe/" class="series-step" title="MAE, MFE et la qualité d'exécution"><span class="series-num">3</span><span class="series-label">Qualité d'exécution</span></a><a href="/series/journal-et-performance/part4-la-revue/" class="series-step current" title="La revue : quotidienne, hebdomadaire, mensuelle"><span class="series-num">4</span><span class="series-label">La revue</span></a><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-step" title="Détecter et corriger ses biais par la data"><span class="series-num">5</span><span class="series-label">Corriger ses biais</span></a><a href="/series/journal-et-performance/part6-dashboard/" class="series-step" title="Le tableau de bord du gérant et la boucle d'amélioration"><span class="series-num">6</span><span class="series-label">Tableau de bord</span></a></div><span class="series-counter">4/6</span><a href="/series/journal-et-performance/part5-corriger-biais/" class="series-arrow" title="Détecter et corriger ses biais par la data"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // ─── Chart 1 : Taux de respect du plan par semaine ───
+  var elR = document.getElementById('chart-respect');
+  if (elR) {
+    var cR = echarts.init(elR);
+    var weeks = ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11','S12'];
+    var respect = [68, 72, 75, 81, 86, 71, 88, 90, 87, 91, 93, 92];
+    cR.setOption({
+      title: { text: "Taux de respect du plan par semaine", left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' %'; } },
+      grid: { left: 50, right: 24, top: 56, bottom: 36 },
+      xAxis: { type: 'category', data: weeks, axisLabel: { color: '#64748b' }, axisLine: { lineStyle: { color: '#cbd5e1' } } },
+      yAxis: { type: 'value', min: 50, max: 100, axisLabel: { color: '#64748b', formatter: '{value} %' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        name: 'Respect du plan', type: 'bar', data: respect, barWidth: '55%',
+        itemStyle: { borderRadius: [6,6,0,0], color: function(p){ return p.value >= 85 ? '#10b981' : (p.value >= 75 ? '#f59e0b' : '#dc2626'); } },
+        markLine: { silent: true, symbol: 'none', data: [{ yAxis: 85, label: { formatter: 'Cible 85 %', color: '#b45309', position: 'insideEndTop' }, lineStyle: { color: '#b45309', type: 'dashed', width: 2 } }] }
+      }]
+    });
+    charts.push(cR);
+  }
+
+  // ─── Chart 2 : Courbe d'equity + zones de drawdown ───
+  var elE = document.getElementById('chart-equity');
+  if (elE) {
+    var cE = echarts.init(elE);
+    var months = ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Aoû','Sep','Oct','Nov','Déc'];
+    var equity = [100, 108, 104, 113, 121, 116, 109, 119, 128, 124, 135, 142];
+    // drawdown areas (sous le dernier plus-haut) — markArea sur les replis
+    cE.setOption({
+      title: { text: "Courbe d'equity (base 100) — zones de drawdown ombrées", left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis' },
+      grid: { left: 50, right: 24, top: 56, bottom: 36 },
+      xAxis: { type: 'category', boundaryGap: false, data: months, axisLabel: { color: '#64748b' }, axisLine: { lineStyle: { color: '#cbd5e1' } } },
+      yAxis: { type: 'value', min: 90, scale: true, axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        name: 'Equity', type: 'line', data: equity, smooth: true, symbol: 'circle', symbolSize: 6,
+        lineStyle: { width: 3, color: '#d97706' }, itemStyle: { color: '#b45309' },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(217,119,6,0.18)'},{offset:1,color:'rgba(217,119,6,0.01)'}]) },
+        markArea: {
+          itemStyle: { color: 'rgba(220,38,38,0.10)' },
+          data: [
+            // Bornes recadrées sur les vrais creux (points sous le dernier sommet) :
+            // Mar (−3,7 %), Juin→Aoû (−4,1/−9,9/−1,7 %, plus bas en Juil), Oct (−3,1 %).
+            [{ xAxis: 'Fév', label: { show:true, color:'#dc2626', fontSize:10, position:'insideTop', formatter:'DD' } }, { xAxis: 'Avr' }],
+            [{ xAxis: 'Mai' }, { xAxis: 'Sep' }],
+            [{ xAxis: 'Sep' }, { xAxis: 'Nov' }]
+          ]
+        }
+      }]
+    });
+    charts.push(cE);
+  }
+
+  // ─── Chart 3 : Variance — 5 trajectoires d'un même système à espérance positive ───
+  var elV = document.getElementById('chart-variance');
+  if (elV) {
+    var cV = echarts.init(elV);
+    var N = 100;            // trades
+    var edge = 0.3;         // espérance +0,3 R / trade
+    var winP = 0.5;         // win rate
+    var g = 1.3, l = -0.7;  // gain/perte en R cohérents avec E = 0.5*1.3 + 0.5*(-0.7) = 0.30
+    // RNG déterministe (mulberry32) pour reproductibilité visuelle
+    function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+    // Ordre choisi pour que la trajectoire au repli sévère (seed 7 : +16 R mais −13 R de drawdown)
+    // soit la dernière, en ROUGE — celle que le texte désigne comme l'exemple à ne pas abandonner.
+    var seeds = [137, 23, 42, 88, 7];
+    var colors = ['#2563eb', '#10b981', '#9333ea', '#f59e0b', '#dc2626'];
+    var xAxis = []; for (var i=0;i<=N;i++) xAxis.push(i);
+    var series = seeds.map(function(s, k){
+      var r = rng(s);
+      var cum = 0; var arr = [0];
+      for (var t=0; t<N; t++){ cum += (r() < winP) ? g : l; arr.push(+cum.toFixed(2)); }
+      return {
+        name: 'Trajectoire ' + (k+1), type: 'line', data: arr, smooth: true, symbol: 'none',
+        lineStyle: { width: 2, color: colors[k] }, emphasis: { focus: 'series' }
+      };
+    });
+    cV.setOption({
+      title: { text: "Même système (+0,3 R/trade) — 5 trajectoires, 100 trades", left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' R'; } },
+      legend: { bottom: 0, textStyle: { color: '#64748b', fontSize: 11 } },
+      grid: { left: 50, right: 24, top: 56, bottom: 56 },
+      xAxis: { type: 'category', data: xAxis, name: 'Trade n°', nameLocation: 'middle', nameGap: 28, axisLabel: { color: '#64748b', interval: 19 }, axisLine: { lineStyle: { color: '#cbd5e1' } } },
+      yAxis: { type: 'value', name: 'R cumulés', axisLabel: { color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: series.concat([{ type:'line', data: xAxis.map(function(){return 0;}), symbol:'none', lineStyle:{ color:'#94a3b8', type:'dashed', width:1 }, silent:true, tooltip:{show:false}, name:'Zéro' }])
+    });
+    charts.push(cV);
+  }
+
+  window.addEventListener('resize', function(){ charts.forEach(function(c){ c && c.resize(); }); });
+})();
+</script>
+
+<script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

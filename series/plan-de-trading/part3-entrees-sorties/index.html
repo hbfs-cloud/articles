@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,technique,macro" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Règles d'entrée, de sortie et d'invalidation | Plan & Watchlist — Partie 3/6 | DailyTickers</title>
+ <meta name="description" content="Le squelette opérationnel du trade : déclencheurs d'entrée précis, placement du stop sur l'invalidation de la thèse (pas un montant arbitraire), objectifs et sorties partielles, et ce qui invalide un trade avant même d'entrer.">
+ <meta property="og:title" content="Règles d'entrée, de sortie et d'invalidation | Plan & Watchlist 3/6">
+ <meta property="og:description" content="Le squelette opérationnel du trade : déclencheurs d'entrée précis, placement du stop sur l'invalidation de la thèse (pas un montant arbitraire), objectifs et sorties partielles, et ce qui invalide un trade avant même d'entrer.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/plan-de-trading/part3-entrees-sorties/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* VIOLET THEME — Plan & Watchlist */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f5f3ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#7c3aed; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-violet { background:rgba(124,58,237,0.1); color:#7c3aed; border:1px solid rgba(124,58,237,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#6d28d9; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#7c3aed; margin-right:0.75rem; }
+ details[open] summary { border-color:#7c3aed; background:#f5f3ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #3b0764 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#c4b5fd; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#a78bfa; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border:1px solid #7c3aed; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#6d28d9; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(124,58,237,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#7c3aed; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(124,58,237,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #7c3aed; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #6d28d9 0%, #8b5cf6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#7c3aed; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Plan & Watchlist — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Règles d'entrée, de sortie et d'invalidation</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; color:#475569; line-height:1.7;">Un trade n'est pas défini par son entrée mais par ses sorties. Le stop n'est pas un montant qu'on « accepte de perdre » : c'est le prix qui prouve qu'on avait tort. Cette partie transforme une intuition en un objet exécutable — déclencheur, invalidation, objectifs — écrit avant la première bougie.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-right-to-bracket"></i> Entrée</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-circle-xmark"></i> Invalidation</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-flag-checkered"></i> Sorties</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-split-up-and-left"></i> Sorties partielles</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/plan-de-trading/part2-edge-setups/" class="series-arrow" title="Définir son edge et ses setups"><i class="fas fa-chevron-left"></i></a><span class="series-title">Plan & Watchlist</span><div class="series-steps"><a href="/series/plan-de-trading/part1-pourquoi-un-plan/" class="series-step" title="Pourquoi un plan de trading écrit change tout"><span class="series-num">1</span><span class="series-label">Pourquoi un plan</span></a><a href="/series/plan-de-trading/part2-edge-setups/" class="series-step" title="Définir son edge et ses setups"><span class="series-num">2</span><span class="series-label">Edge & setups</span></a><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-step current" title="Règles d'entrée, de sortie et d'invalidation"><span class="series-num">3</span><span class="series-label">Entrées & sorties</span></a><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-step" title="Le sizing et le risque dans le plan"><span class="series-num">4</span><span class="series-label">Sizing & risque</span></a><a href="/series/plan-de-trading/part5-watchlist/" class="series-step" title="Bâtir et entretenir sa watchlist"><span class="series-num">5</span><span class="series-label">Watchlist</span></a><a href="/series/plan-de-trading/part6-execution/" class="series-step" title="Du plan à l'exécution : routine et checklist"><span class="series-num">6</span><span class="series-label">Exécution</span></a></div><span class="series-counter">3/6</span><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-arrow" title="Le sizing et le risque dans le plan"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="entree"><i class="fas fa-bookmark"></i><span>Déclencheur</span></a>
+  <a class="fnav-item" data-section="invalidation"><i class="fas fa-bookmark"></i><span>Invalidation</span></a>
+  <a class="fnav-item" data-section="objectifs"><i class="fas fa-bookmark"></i><span>Objectifs</span></a>
+  <a class="fnav-item" data-section="avant-entree"><i class="fas fa-bookmark"></i><span>Avant d'entrer</span></a>
+  <a class="fnav-item" data-section="gestion"><i class="fas fa-bookmark"></i><span>Gérer le trade</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <p style="font-size:1.05rem; color:#475569; line-height:1.8; margin:2rem 0;">Dans la partie 2, vous avez défini votre <em>edge</em> et vos <em>setups</em> : les configurations récurrentes que vous estimez avoir une espérance positive. Mais un setup repéré sur un graphique n'est pas encore un trade. Entre « ce titre forme une belle base » et « j'ai un ordre vivant sur le marché », il manque trois pièces que la plupart des opérateurs improvisent en temps réel — au pire moment pour réfléchir. Ces trois pièces sont l'<strong>entrée</strong> (à quel signal, déclenché par quel événement), l'<strong>invalidation</strong> (le prix qui réfute la thèse) et les <strong>objectifs</strong> (où l'on récolte). Écrites à l'avance, elles transforment une opinion en procédure. C'est l'objet de cette partie.</p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-lightbulb" style="color:#7c3aed; margin-right:0.5rem;"></i> L'idée maîtresse</h4>
+    <p>On entre dans un trade pour une raison. Le stop doit être placé là où <strong>cette raison disparaît</strong> — pas là où votre douleur financière devient insupportable. Les deux sont indépendants : le marché décide où se situe l'invalidation, votre gestion du risque décide combien d'argent vous mettez en face. Confondre les deux est l'erreur la plus coûteuse du trading discrétionnaire.</p>
+  </div>
+
+  <!-- ====================== SECTION 1 : ENTREE ====================== -->
+  <div class="section-divider" id="entree"><i class="fa-solid fa-right-to-bracket" style="color:#7c3aed;"></i> Le déclencheur d'entrée</div>
+  <div class="content-card">
+    <h2 style="font-size:1.6rem; color:#0f172a; margin-top:0;">Signal et déclencheur : deux choses différentes</h2>
+    <p style="line-height:1.8; color:#334155;">La première discipline est de séparer deux notions que le langage courant confond. Le <strong>signal</strong>, c'est la condition de fond réunie : le titre est dans une tendance haussière, il a construit une base de trois semaines, le volume se contracte. Le <strong>déclencheur</strong>, c'est l'événement précis et observable qui fait passer l'ordre : la clôture au-dessus du plus-haut de la base, le repli sur la moyenne mobile suivi d'une bougie de retournement. Le signal vous dit <em>quoi</em> surveiller ; le déclencheur vous dit <em>quand</em> agir.</p>
+
+    <p style="line-height:1.8; color:#334155;">La règle d'or : <strong>on entre sur le déclencheur, jamais sur l'anticipation du déclencheur</strong>. Acheter parce que « ça va probablement casser le niveau aujourd'hui » revient à parier sur un événement qui n'a pas eu lieu. Si le marché ne valide pas, vous êtes déjà engagé sur une thèse non confirmée — et votre stop, calé sous un niveau jamais franchi, n'a plus de sens. Attendre la confirmation coûte quelques pourcents de point d'entrée moins favorable. Anticiper coûte la rigueur de tout le plan.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-diagram-project" style="color:#7c3aed; margin-right:0.5rem;"></i> Trois familles de déclencheurs</h4>
+      <p>Selon votre setup, le déclencheur prend une forme différente. Choisissez-en un <em>par setup</em> et écrivez-le mot pour mot.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Type de setup</th><th>Déclencheur d'entrée (exemple à écrire)</th><th>Confirmation exigée</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Cassure (breakout)</strong></td><td>Clôture quotidienne &gt; plus-haut de la base sur ≥ 5 séances</td><td>Volume du jour &gt; moyenne 20 j</td></tr>
+        <tr><td><strong>Repli sur support (pullback)</strong></td><td>Test de la MM50 puis bougie de reprise (clôture &gt; ouverture)</td><td>Le support n'a pas cédé en clôture</td></tr>
+        <tr><td><strong>Retournement (reversal)</strong></td><td>Franchissement d'un plus-haut de pivot après divergence</td><td>2 clôtures au-dessus du pivot</td></tr>
+        <tr><td><strong>Continuation (drapeau)</strong></td><td>Sortie du canal de consolidation par le haut</td><td>Clôture hors du canal, pas seulement une mèche</td></tr>
+      </tbody>
+    </table>
+
+    <p style="line-height:1.8; color:#334155;">Notez le rôle de la <strong>clôture</strong>. Une mèche intraday qui dépasse un niveau puis revient ne prouve rien — elle traduit souvent une chasse aux stops. Exiger une clôture (quotidienne, hebdomadaire ou sur votre unité de temps de référence) filtre une part importante des faux signaux. Pour l'investisseur retail qui ne surveille pas l'écran en continu, c'est aussi un avantage pratique : un ordre déclenché « à la clôture confirmée » se gère le soir, à froid.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-ruler-combined" style="color:#7c3aed; margin-right:0.5rem;"></i> Limite, marché, ou stop d'achat ?</h4>
+      <p>Le déclencheur définit aussi le <em>type d'ordre</em>. Sur un pullback, un ordre <strong>limite</strong> sous le prix attend le repli. Sur une cassure, un ordre <strong>stop d'achat</strong> (buy-stop) au-dessus du niveau ne se déclenche que si le prix y vient vraiment — vous n'achetez pas si la cassure n'a pas lieu. L'ordre <strong>au marché</strong> au lendemain d'une clôture confirmée est le plus simple et convient au retail. Choisissez selon votre disponibilité, pas selon l'humeur du jour.</p>
+    </div>
+
+    <p style="line-height:1.8; color:#334155;">Un dernier point sur l'objectivité. Un bon déclencheur est <strong>vérifiable par un tiers</strong> : si vous donniez votre règle à un ami, il prendrait exactement le même trade que vous. « Quand ça a l'air solide » échoue ce test ; « clôture &gt; 152,40 € avec volume supérieur à la moyenne 20 j » le réussit. Écrire le déclencheur sous forme falsifiable est ce qui vous protégera, plus tard, du biais de confirmation qui voit des signaux partout.</p>
+  </div>
+
+  <!-- ====================== SECTION 2 : INVALIDATION ====================== -->
+  <div class="section-divider" id="invalidation"><i class="fa-solid fa-circle-xmark" style="color:#7c3aed;"></i> Le stop : invalidation, pas montant</div>
+  <div class="content-card">
+    <h2 style="font-size:1.6rem; color:#0f172a; margin-top:0;">Le stop est un prix qui prouve que vous aviez tort</h2>
+    <p style="line-height:1.8; color:#334155;">Voici l'erreur la plus répandue, et la plus chère. Un opérateur se dit : « Je suis prêt à perdre 200 €, donc je place mon stop à l'endroit qui correspond à 200 € de perte. » Ce raisonnement inverse l'ordre logique. Le marché ne sait pas combien vous êtes prêt à perdre. Il sait seulement où votre thèse cesse d'être vraie. Le stop doit être placé <strong>là où le setup n'est plus valide</strong> — sous le support qui définissait l'idée, sous le plus-bas du pullback, sous la base de la cassure. <em>Ensuite</em>, et seulement ensuite, vous ajustez la taille pour que cette distance ne coûte qu'un pourcentage défini de votre capital.</p>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> L'inversion fatale</h4>
+      <p>Placer le stop selon ce qu'on accepte de perdre, c'est le poser <strong>dans le bruit</strong> — assez près pour être touché par une oscillation normale qui n'invalide rien. Vous sortez au pire moment, sur une respiration du marché, puis vous regardez le titre repartir dans votre sens. Le stop trop serré ne protège pas : il transforme des trades gagnants en pertes par mille coupures.</p>
+    </div>
+
+    <p style="line-height:1.8; color:#334155;">L'ordre des opérations est donc strict, et c'est lui qui relie cette partie à la partie 4 (<a href="/series/plan-de-trading/part4-sizing-risque/" style="color:#7c3aed; font-weight:600;">Sizing & risque</a>) :</p>
+
+    <div class="step-grid">
+      <div class="step-card"><div class="step-number">1</div><h4>Le marché place le stop</h4><p>Identifiez le prix d'invalidation technique : sous le support, le plus-bas, la base. Indépendant de votre capital.</p></div>
+      <div class="step-card"><div class="step-number">2</div><h4>Vous mesurez la distance</h4><p>Distance = prix d'entrée − prix du stop. C'est le risque par action, votre « 1 R ».</p></div>
+      <div class="step-card"><div class="step-number">3</div><h4>Le risque % fixe la taille</h4><p>Taille = (capital × risque %) ÷ distance. Le stop large impose une position plus petite, pas un stop plus serré.</p></div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-label">Taille de position — la séquence correcte</div>
+      Nombre d'actions = <span class="formula-highlight">(Capital × Risque %)</span> ÷ <span class="formula-highlight">(Entrée − Stop)</span>
+    </div>
+
+    <p style="line-height:1.8; color:#334155;">Prenons un exemple <strong>purement illustratif</strong>. Capital de 20 000 €, risque accepté de 1 % par trade, soit 200 €. Le setup : une cassure à 50,00 €, avec une base dont le plus-bas — le prix d'invalidation — se situe à 47,00 €. La distance au stop est de 3,00 € par action. La taille n'est donc pas un choix arbitraire : 200 € ÷ 3,00 € = <strong>66 actions</strong> (environ), pour une exposition de 3 300 €. Si vous aviez voulu « risquer 200 € » avec un stop placé à 1,5 € (dans le bruit), vous auriez pris 133 actions — une position deux fois plus grosse, calée sur un niveau qui n'invalide rien. Le stop honnête vous a protégé d'un sur-engagement.</p>
+
+    <p style="line-height:1.8; color:#334155;">Une nuance pratique : le stop technique se place <strong>légèrement au-delà</strong> du niveau, pas pile dessus. Les niveaux ronds et les supports évidents attirent les ordres ; un coussin de l'ordre de l'ATR (Average True Range) du jour, ou un petit pourcentage, évite d'être sorti par une mèche qui effleure le support sans le casser réellement. L'objectif reste le même : le stop ne doit sauter que si la thèse est <em>vraiment</em> morte.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-shield-halved" style="color:#7c3aed; margin-right:0.5rem;"></i> Stop mental ou stop placé ?</h4>
+      <p>Le « stop mental » — décider de sortir si le prix atteint X, sans poser d'ordre — repose entièrement sur votre discipline au moment exact où elle est la plus fragile. Pour la majorité des opérateurs, et particulièrement le retail qui ne regarde pas l'écran en continu, un <strong>stop réellement placé chez le courtier</strong> est préférable. Il exécute la décision prise à froid, sans vous laisser la renégocier dans la panique.</p>
+    </div>
+  </div>
+
+  <!-- Chart A : schéma du trade complet -->
+  <div class="content-card">
+    <h3 style="font-size:1.3rem; color:#0f172a; margin-top:0;"><i class="fa-solid fa-chart-line" style="color:#7c3aed; margin-right:0.5rem;"></i> Anatomie d'un trade complet</h3>
+    <p style="line-height:1.7; color:#475569;">Le schéma ci-dessous (parcours de prix <strong>illustratif</strong>) montre les quatre prix décidés <em>avant</em> l'entrée : le déclencheur d'entrée, le stop sur l'invalidation, et deux objectifs où l'on récolte. La zone rouge est le risque (1 R) ; les zones vertes sont les récompenses (1,5 R et 3 R).</p>
+    <div id="chart-anatomie" style="width:100%;height:400px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; font-style:italic;">Schéma pédagogique illustratif — ne représente aucun titre ni aucune recommandation réelle.</p>
+  </div>
+
+  <!-- ====================== SECTION 3 : OBJECTIFS ====================== -->
+  <div class="section-divider" id="objectifs"><i class="fa-solid fa-flag-checkered" style="color:#7c3aed;"></i> Objectifs et sorties partielles</div>
+  <div class="content-card">
+    <h2 style="font-size:1.6rem; color:#0f172a; margin-top:0;">Où récolter, et en combien de fois</h2>
+    <p style="line-height:1.8; color:#334155;">Une fois le risque borné, la question symétrique est : où prend-on les profits ? Deux logiques cohabitent. La première est <strong>technique</strong> : on vise une résistance, un plus-haut historique, le sommet d'un range — des prix où l'offre est susceptible de réapparaître. La seconde est exprimée en <strong>multiples de R</strong> : si votre risque initial (la distance entrée−stop) vaut 1 R, vous pouvez décider de récolter à 2 R, 3 R, etc. Les deux se combinent : on cherche un objectif technique qui se trouve aussi à un multiple de R acceptable.</p>
+
+    <p style="line-height:1.8; color:#334155;">De là découle le critère qui gouverne <em>tout</em> : le <strong>ratio risque/récompense</strong> (R/R). C'est la distance jusqu'à l'objectif rapportée à la distance jusqu'au stop. Un trade dont l'objectif raisonnable se situe à 1,5 R ou 2 R offre une marge ; un trade dont l'objectif réaliste est à 0,8 R demande un taux de réussite irréaliste pour être rentable. La discipline consiste à <strong>fixer un R/R minimal et à refuser tout trade qui ne l'atteint pas au prix actuel</strong>.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Ratio risque / récompense</div>
+      R/R = <span class="formula-highlight">(Objectif − Entrée)</span> ÷ <span class="formula-highlight">(Entrée − Stop)</span> &nbsp;→&nbsp; exiger ≥ <span class="formula-highlight">1,5 à 2</span>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-calculator" style="color:#7c3aed; margin-right:0.5rem;"></i> Pourquoi le R/R et le taux de réussite sont liés</h4>
+      <p>Le seuil de rentabilité (break-even) dépend du R/R. Avec un R/R de 1, il faut gagner plus de 50 % des trades. Avec un R/R de 2, le seuil tombe à ~33 % : <strong>1 ÷ (1 + R/R) = 1 ÷ 3 ≈ 33 %</strong>. Autrement dit, un R/R de 2 vous laisse perdre deux trades sur trois et rester à l'équilibre (hors frais). C'est pourquoi exiger un R/R ≥ 1,5–2 desserre l'étau sur le taux de réussite : vous n'avez plus besoin d'avoir « souvent raison », seulement d'avoir tort à bas coût et raison avec ampleur.</p>
+    </div>
+
+    <h3 style="font-size:1.25rem; color:#0f172a;">Les sorties partielles : sécuriser sans étouffer</h3>
+    <p style="line-height:1.8; color:#334155;">Sortir en une seule fois force un choix binaire : tout vendre tôt (et regarder le titre continuer sans vous) ou tout garder (et rendre les gains sur un retournement). La <strong>sortie partielle</strong> résout ce dilemme. Le schéma le plus courant : vendre une fraction de la position à un premier objectif proche (par exemple la moitié à 1,5 R ou 2 R), puis <strong>remonter le stop au point mort</strong> (break-even) sur le reste. À partir de là, le trade est « gratuit » : le pire cas est une sortie à l'équilibre, et la part restante peut courir vers un objectif lointain avec un <em>trailing stop</em>.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Étape</th><th>Action sur la position</th><th>Effet sur le risque</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Entrée</strong></td><td>100 % de la position, stop sur l'invalidation</td><td>Risque = 1 R</td></tr>
+        <tr><td><strong>Atteinte de l'objectif 1 (≈ 2 R)</strong></td><td>Vendre 50 %, remonter le stop du reste au point mort</td><td>Profit sécurisé ; risque résiduel ≈ 0</td></tr>
+        <tr><td><strong>Le titre continue</strong></td><td>Laisser courir 50 % avec trailing stop</td><td>Upside ouvert, downside verrouillé à l'équilibre</td></tr>
+        <tr><td><strong>Le trailing déclenche</strong></td><td>Sortie du reste</td><td>Capture la part de la tendance qui a tenu</td></tr>
+      </tbody>
+    </table>
+
+    <p style="line-height:1.8; color:#334155;">Pour calibrer <em>où</em> placer ces objectifs, la partie sur le <a href="/series/journal-et-performance/" style="color:#7c3aed; font-weight:600;">journal et la performance</a> apporte une donnée décisive : le <strong>MFE</strong> (Maximum Favorable Excursion), c'est-à-dire le gain latent maximal atteint avant la clôture, mesuré sur vos trades passés. Si votre journal montre que vos trades de cassure atteignent en moyenne 2,8 R de MFE mais que vous sortez systématiquement à 1,2 R, vos objectifs sont trop timides — vous laissez de l'argent sur la table. À l'inverse, si le MFE plafonne à 1,5 R, viser 3 R est un vœu pieux. Les objectifs ne se devinent pas : ils se calibrent sur vos propres données.</p>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> Ne pas confondre sortie partielle et stop qui rétrécit</h4>
+      <p>La sortie partielle réduit la <em>taille</em> de la position à un objectif favorable ; elle ne consiste jamais à resserrer le stop sur la part restante <strong>en dessous</strong> du point mort. Une fois le break-even atteint, le stop ne redescend plus jamais. Toute « gestion » qui remet du risque sur la table après l'avoir retiré annule l'intérêt de la manœuvre.</p>
+    </div>
+  </div>
+
+  <!-- Chart B : R/R et seuil minimal -->
+  <div class="content-card">
+    <h3 style="font-size:1.3rem; color:#0f172a; margin-top:0;"><i class="fa-solid fa-scale-balanced" style="color:#7c3aed; margin-right:0.5rem;"></i> R/R et taux de réussite minimal</h3>
+    <p style="line-height:1.7; color:#475569;">Plus le R/R est élevé, plus le taux de réussite nécessaire pour atteindre l'équilibre <strong>baisse</strong>. La courbe ci-dessous (calcul exact : break-even = 1 ÷ (1 + R/R), hors frais) montre pourquoi un R/R minimal de 1,5 à 2 desserre la contrainte sur la fréquence de réussite.</p>
+    <div id="chart-rr" style="width:100%;height:360px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; font-style:italic;">Courbe exacte de break-even hors frais — illustration pédagogique, pas une prévision de performance.</p>
+  </div>
+
+  <!-- ====================== SECTION 4 : AVANT-ENTREE ====================== -->
+  <div class="section-divider" id="avant-entree"><i class="fa-solid fa-ban" style="color:#7c3aed;"></i> Ce qui invalide avant d'entrer</div>
+  <div class="content-card">
+    <h2 style="font-size:1.6rem; color:#0f172a; margin-top:0;">Les vétos : pré-écrire les raisons de ne pas prendre le trade</h2>
+    <p style="line-height:1.8; color:#334155;">Le meilleur trade est parfois celui qu'on ne prend pas. Avant même de regarder le déclencheur, une série de <strong>filtres d'exclusion</strong> doit pouvoir tuer l'idée. Leur force vient du fait qu'ils sont écrits <em>à l'avance</em> : dans l'instant, l'envie de participer trouve toujours une justification. Un véto pré-écrit n'a pas à argumenter — il s'applique.</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <span><strong>R/R insuffisant au prix actuel.</strong> Si l'objectif raisonnable est déjà à moins de 1,5 R parce que le titre a déjà couru, on ne court pas après. Le trade existait peut-être il y a trois jours ; il n'existe plus aujourd'hui.</span></li>
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <span><strong>Publication de résultats imminente.</strong> Détenir une position swing au travers d'un rapport trimestriel, c'est remplacer une thèse technique par un pari binaire sur un communiqué. Sauf si jouer l'earnings <em>est</em> la thèse (et alors la taille est réduite en conséquence).</span></li>
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <span><strong>News ou catalyseur non digéré.</strong> Un titre suspendu, une annonce en cours d'analyse, un dossier réglementaire ouvert : le prix ne reflète pas encore l'information. Le graphique ment.</span></li>
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <span><strong>Liquidité faible.</strong> Un volume quotidien trop mince signifie un spread large et un stop qui s'exécute loin de son prix. Si votre position représente une fraction notable du volume moyen, vous êtes le marché — mauvaise place.</span></li>
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <span><strong>Corrélation avec une position existante.</strong> Ajouter un second titre du même secteur ou du même facteur, c'est doubler une exposition en croyant diversifier. Trois positions « tech IA » corrélées ne sont qu'un seul gros pari.</span></li>
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <span><strong>Régime de marché défavorable.</strong> Un setup haussier dans un marché en repli généralisé a une espérance dégradée. Le régime (tendance de l'indice, volatilité, ampleur) module la taille, voire interdit le trade selon votre plan.</span></li>
+    </ul>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-clipboard-check" style="color:#7c3aed; margin-right:0.5rem;"></i> Gabarit de fiche-trade (à pré-remplir avant d'agir)</h4>
+      <p style="line-height:1.8;">Copiez ce gabarit dans votre journal. Une ligne qui reste vide est un trade qui n'est pas prêt.</p>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-square-pen" style="color:#7c3aed;"></i> <span><strong>Ticker / setup :</strong> ____ &nbsp;|&nbsp; Thèse en une phrase : ____</span></li>
+        <li><i class="fa-solid fa-square-pen" style="color:#7c3aed;"></i> <span><strong>Déclencheur d'entrée :</strong> ____ (condition objective, vérifiable)</span></li>
+        <li><i class="fa-solid fa-square-pen" style="color:#7c3aed;"></i> <span><strong>Stop / invalidation :</strong> ____ (le prix qui réfute la thèse)</span></li>
+        <li><i class="fa-solid fa-square-pen" style="color:#7c3aed;"></i> <span><strong>Objectif 1 / Objectif 2 :</strong> ____ / ____ &nbsp;|&nbsp; R/R : ____</span></li>
+        <li><i class="fa-solid fa-square-pen" style="color:#7c3aed;"></i> <span><strong>Taille :</strong> ____ actions = (capital × risque %) ÷ (entrée − stop)</span></li>
+        <li><i class="fa-solid fa-square-pen" style="color:#7c3aed;"></i> <span><strong>Vétos vérifiés :</strong> earnings ☐ &nbsp; news ☐ &nbsp; liquidité ☐ &nbsp; corrélation ☐ &nbsp; régime ☐</span></li>
+      </ul>
+    </div>
+
+    <p style="line-height:1.8; color:#334155;">Remarquez que la majorité de ces vétos sont vérifiables sans jugement : un calendrier de résultats, un volume moyen, une matrice de corrélation, un indicateur de régime. C'est précisément ce qui les rend robustes. Là où l'entrée demande de l'interprétation, les vétos demandent surtout de la <strong>discipline procédurale</strong> — cocher des cases avant de cliquer. Tous les exemples ci-dessus sont <strong>pédagogiques</strong> et n'expriment aucune vue sur un titre particulier.</p>
+  </div>
+
+  <!-- ====================== SECTION 5 : GESTION ====================== -->
+  <div class="section-divider" id="gestion"><i class="fa-solid fa-gears" style="color:#7c3aed;"></i> Gérer le trade une fois entré</div>
+  <div class="content-card">
+    <h2 style="font-size:1.6rem; color:#0f172a; margin-top:0;">La discipline, c'est suivre les règles écrites — pas l'émotion du moment</h2>
+    <p style="line-height:1.8; color:#334155;">Une fois l'ordre exécuté, votre travail change de nature. Vous n'avez plus à décider <em>si</em> vous êtes dans le trade — vous l'êtes. Vous avez à exécuter les règles décidées à froid. La gestion se résume à un petit nombre de mouvements autorisés, et surtout à un mouvement strictement interdit.</p>
+
+    <h3 style="font-size:1.25rem; color:#0f172a;">Déplacer le stop : seulement dans le bon sens</h3>
+    <p style="line-height:1.8; color:#334155;">Deux déplacements sont légitimes. Le passage au <strong>point mort</strong> : une fois qu'un premier objectif est atteint (ou que le prix a parcouru, disons, 1 R en votre faveur), remonter le stop au prix d'entrée. Le trade devient sans risque. Puis le <strong>trailing</strong> : faire suivre le stop sous les plus-bas successifs, ou à une distance d'ATR du prix, pour verrouiller une part croissante du gain à mesure que la tendance progresse. Ces deux mouvements ne font qu'une chose : <strong>réduire le risque</strong>.</p>
+
+    <div class="alert-box">
+      <h4><i class="fa-solid fa-hand" style="margin-right:0.5rem;"></i> La règle d'or : ne jamais déplacer le stop à la perte</h4>
+      <p>Le stop ne descend jamais (pour une position longue). Reculer le stop pour « donner de l'air » au trade qui va contre vous, c'est augmenter la perte que vous aviez décidé d'accepter — au moment précis où le marché vous dit que vous avez tort. C'est ainsi que des pertes de 1 R deviennent des pertes de 4 R qui dévastent un compte. Le stop initial était la décision rationnelle ; le déplacer dans la douleur est la décision émotionnelle. Une seule de ces deux a une espérance positive.</p>
+    </div>
+
+    <h3 style="font-size:1.25rem; color:#0f172a;">Le cas du gap</h3>
+    <p style="line-height:1.8; color:#334155;">Un <em>gap</em> — ouverture loin de la clôture de la veille — peut sauter votre stop sans exécution au prix prévu : le marché « passe par-dessus ». Que faire ? La réponse est écrite à l'avance, pas inventée à l'ouverture. Si le gap est <strong>baissier et franchit votre invalidation</strong>, la thèse est morte : on sort au marché à l'ouverture, sans espérer un retour qui « refermerait le gap ». Espérer, ici, c'est rouvrir un trade que les règles ont déjà clôturé. Si le gap est <strong>haussier et dépasse un objectif</strong>, on applique le plan de récolte (sortie partielle, trailing resserré) plutôt que de fantasmer la suite. Le gap ne crée pas de nouvelle décision ; il accélère l'exécution d'une décision déjà prise.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(16,185,129,0.12); color:#10b981;"><i class="fa-solid fa-check"></i></div><h4>Autorisé</h4><p>Stop au point mort après 1 R ; trailing sous les plus-bas ; sortie partielle aux objectifs.</p></div>
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-xmark"></i></div><h4>Interdit</h4><p>Reculer le stop ; moyenner à la baisse un perdant ; annuler le stop « juste pour aujourd'hui ».</p></div>
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(37,99,235,0.1); color:#2563eb;"><i class="fa-solid fa-clock"></i></div><h4>Sur déclencheur</h4><p>Gap au-delà du stop → sortie au marché ; gap au-delà de l'objectif → plan de récolte.</p></div>
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(124,58,237,0.1); color:#7c3aed;"><i class="fa-solid fa-book"></i></div><h4>Toujours</h4><p>Noter chaque décision dans le journal : ce qui a été suivi, ce qui a dévié, pourquoi.</p></div>
+    </div>
+
+    <p style="line-height:1.8; color:#334155;">La gestion d'un trade ressemble moins à du pilotage actif qu'à de la <strong>conformité</strong> : faire ce que le plan dit, surtout quand l'émotion pousse à faire autre chose. C'est d'ailleurs le critère qui sépare un bon trade d'un trade gagnant. Un trade peut être <em>bien exécuté et perdant</em> (vous avez suivi vos règles, le marché a invalidé) — c'est un bon trade. Un trade peut être <em>mal exécuté et gagnant</em> (vous avez reculé le stop, ça a fini par remonter) — c'est un mauvais trade qui vous apprend une habitude qui vous ruinera. Jugez vos trades sur le respect du plan, pas sur le résultat de l'unité.</p>
+  </div>
+
+  <!-- Chart C : effet des sorties partielles -->
+  <div class="content-card">
+    <h3 style="font-size:1.3rem; color:#0f172a; margin-top:0;"><i class="fa-solid fa-arrows-split-up-and-left" style="color:#7c3aed; margin-right:0.5rem;"></i> Effet des sorties partielles sur la distribution des résultats</h3>
+    <p style="line-height:1.7; color:#475569;">Comparaison <strong>illustrative</strong> de deux gestions d'un même flux de trades : « tout ou rien » (sortie unique) contre « partielle + break-even ». La gestion partielle réduit la fréquence des grosses pertes et des gros gains, et concentre les résultats autour de zones modérément positives — moins de variance, plus de trades « gratuits ».</p>
+    <div id="chart-partielles" style="width:100%;height:380px;margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; text-align:center; font-style:italic;">Distributions illustratives, à but pédagogique — ne reflètent aucune performance réelle ni garantie de résultat.</p>
+  </div>
+
+  <!-- ====================== TAKEAWAY ====================== -->
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 3</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-circle-check"></i> <span>Le <strong>signal</strong> est la condition réunie ; le <strong>déclencheur</strong> est l'événement qui passe l'ordre. On entre sur le déclencheur (clôture confirmée), jamais sur l'anticipation.</span></li>
+      <li><i class="fa-solid fa-circle-check"></i> <span>Le <strong>stop est l'invalidation de la thèse</strong>, un prix décidé par le marché — pas un montant qu'on accepte de perdre. La taille s'ajuste ensuite : actions = (capital × risque %) ÷ (entrée − stop).</span></li>
+      <li><i class="fa-solid fa-circle-check"></i> <span>Exiger un <strong>R/R ≥ 1,5–2</strong> desserre la contrainte sur le taux de réussite (break-even = 1 ÷ (1 + R/R)). Les objectifs se calibrent sur le <strong>MFE</strong> de votre journal, pas à l'intuition.</span></li>
+      <li><i class="fa-solid fa-circle-check"></i> <span>Les <strong>sorties partielles</strong> + stop au point mort rendent le trade « gratuit » : downside verrouillé, upside ouvert.</span></li>
+      <li><i class="fa-solid fa-circle-check"></i> <span>Pré-écrire les <strong>vétos</strong> (R/R faible, earnings, news, liquidité, corrélation, régime) tue les mauvais trades avant l'entrée.</span></li>
+      <li><i class="fa-solid fa-circle-check"></i> <span><strong>Règle d'or :</strong> on ne déplace jamais le stop à la perte. La discipline, c'est suivre les règles écrites — jugez vos trades sur le respect du plan, pas sur le résultat.</span></li>
+    </ul>
+  </div>
+
+  <a href="/series/plan-de-trading/part4-sizing-risque/" class="next-cta">
+    <div>
+      <div class="next-label">Partie 4 sur 6</div>
+      <div class="next-title">Le sizing et le risque dans le plan</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+
+  <!-- ====================== QUIZ ====================== -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#7c3aed;"></i> Quiz</div>
+  <div class="content-card">
+    <h2 style="font-size:1.6rem; color:#0f172a; margin-top:0;">Vérifiez votre compréhension</h2>
+    <p style="line-height:1.7; color:#475569;">Cinq questions pour ancrer les réflexes de cette partie. Réfléchissez avant d'ouvrir la réponse.</p>
+
+    <details>
+      <summary>1. Quelle est la différence entre un signal et un déclencheur ?</summary>
+      <div class="quiz-answer">Le <strong>signal</strong> est la condition de fond réunie (tendance, base construite, contraction du volume) : il dit <em>quoi</em> surveiller. Le <strong>déclencheur</strong> est l'événement précis et objectif qui passe l'ordre (clôture au-dessus du niveau, bougie de reprise sur le support) : il dit <em>quand</em> agir. On entre sur le déclencheur, jamais sur l'anticipation qu'il va se produire.</div>
+    </details>
+
+    <details>
+      <summary>2. Où placer le stop : à l'endroit correspondant à 200 € de perte, ou sous le support qui définit l'idée ?</summary>
+      <div class="quiz-answer">Sous le support — c'est-à-dire <strong>là où la thèse est invalidée</strong>. Le marché décide où se situe l'invalidation ; votre tolérance au risque (les 200 €) ne sert ensuite qu'à fixer la <em>taille</em> de la position via actions = (capital × risque %) ÷ (entrée − stop). Caler le stop sur un montant le place souvent dans le bruit, et vous sort sur une oscillation qui n'invalidait rien.</div>
+    </details>
+
+    <details>
+      <summary>3. Capital 20 000 €, risque 1 % (200 €), entrée à 50 €, stop d'invalidation à 47 €. Combien d'actions ?</summary>
+      <div class="quiz-answer">Distance au stop = 50 − 47 = 3 € par action. Taille = 200 € ÷ 3 € ≈ <strong>66 actions</strong> (exposition ≈ 3 300 €). Exemple <em>purement illustratif</em>. Notez qu'un stop plus large (donc plus honnête) impose mécaniquement une position plus petite — c'est le stop, pas la taille, qui s'aligne sur le marché.</div>
+    </details>
+
+    <details>
+      <summary>4. Avec un R/R de 2, quel taux de réussite faut-il pour atteindre l'équilibre (hors frais) ?</summary>
+      <div class="quiz-answer">Environ <strong>33 %</strong>, car break-even = 1 ÷ (1 + R/R) = 1 ÷ 3 ≈ 33 %. Un R/R de 2 permet donc de perdre deux trades sur trois et rester à l'équilibre. C'est la raison d'exiger un R/R minimal de 1,5–2 : on n'a plus besoin d'avoir souvent raison, seulement d'avoir tort à bas coût.</div>
+    </details>
+
+    <details>
+      <summary>5. Un gap baissier ouvre sous votre stop d'invalidation. Que faites-vous ?</summary>
+      <div class="quiz-answer">On <strong>sort au marché à l'ouverture</strong> : le gap a franchi l'invalidation, la thèse est morte. Espérer un retour qui « refermerait le gap » revient à rouvrir un trade que les règles ont déjà clôturé — et à reculer mentalement le stop, ce qui est interdit. Le plan, écrit à froid, a déjà tranché ; l'ouverture ne fait qu'exécuter.</div>
+    </details>
+  </div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/plan-de-trading/part2-edge-setups/" class="series-arrow" title="Définir son edge et ses setups"><i class="fas fa-chevron-left"></i></a><span class="series-title">Plan & Watchlist</span><div class="series-steps"><a href="/series/plan-de-trading/part1-pourquoi-un-plan/" class="series-step" title="Pourquoi un plan de trading écrit change tout"><span class="series-num">1</span><span class="series-label">Pourquoi un plan</span></a><a href="/series/plan-de-trading/part2-edge-setups/" class="series-step" title="Définir son edge et ses setups"><span class="series-num">2</span><span class="series-label">Edge & setups</span></a><a href="/series/plan-de-trading/part3-entrees-sorties/" class="series-step current" title="Règles d'entrée, de sortie et d'invalidation"><span class="series-num">3</span><span class="series-label">Entrées & sorties</span></a><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-step" title="Le sizing et le risque dans le plan"><span class="series-num">4</span><span class="series-label">Sizing & risque</span></a><a href="/series/plan-de-trading/part5-watchlist/" class="series-step" title="Bâtir et entretenir sa watchlist"><span class="series-num">5</span><span class="series-label">Watchlist</span></a><a href="/series/plan-de-trading/part6-execution/" class="series-step" title="Du plan à l'exécution : routine et checklist"><span class="series-num">6</span><span class="series-label">Exécution</span></a></div><span class="series-counter">3/6</span><a href="/series/plan-de-trading/part4-sizing-risque/" class="series-arrow" title="Le sizing et le risque dans le plan"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // ---- Chart A : anatomie d'un trade complet ----
+  var elA = document.getElementById('chart-anatomie');
+  if (elA) {
+    var cA = echarts.init(elA);
+    // parcours de prix illustratif : base -> cassure -> objectifs
+    var px = [49.2, 48.8, 49.5, 49.0, 49.7, 50.0, 51.2, 52.4, 53.0, 53.8, 53.2, 54.6, 56.0, 56.4, 57.5, 56.8, 58.2, 59.0];
+    var labels = px.map(function(_, i){ return 'J' + (i + 1); });
+    cA.setOption({
+      grid: { left: 52, right: 110, top: 30, bottom: 36 },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v != null ? v.toFixed(2) + ' €' : ''; } },
+      xAxis: { type: 'category', data: labels, axisLabel: { color: '#94a3b8', fontSize: 10 }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+      yAxis: { type: 'value', min: 46, max: 60, axisLabel: { color: '#94a3b8', formatter: '{value} €' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'line', data: px, smooth: true, symbol: 'none',
+        lineStyle: { color: '#7c3aed', width: 3 },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1, [{offset:0,color:'rgba(124,58,237,0.18)'},{offset:1,color:'rgba(124,58,237,0.01)'}]) },
+        markArea: {
+          silent: true,
+          data: [
+            [{ yAxis: 47, itemStyle: { color: 'rgba(220,38,38,0.10)' } }, { yAxis: 50 }],
+            [{ yAxis: 50, itemStyle: { color: 'rgba(16,185,129,0.07)' } }, { yAxis: 54.5 }],
+            [{ yAxis: 54.5, itemStyle: { color: 'rgba(16,185,129,0.12)' } }, { yAxis: 59 }]
+          ]
+        },
+        markLine: {
+          symbol: 'none',
+          data: [
+            { yAxis: 50.0, label: { formatter: 'Entrée 50,00 € (déclencheur)', position: 'insideEndTop', color: '#6d28d9', fontWeight: 700, fontSize: 11 }, lineStyle: { color: '#7c3aed', type: 'solid', width: 2 } },
+            { yAxis: 47.0, label: { formatter: 'Stop / invalidation 47,00 € (−1 R)', position: 'insideEndBottom', color: '#dc2626', fontWeight: 700, fontSize: 11 }, lineStyle: { color: '#dc2626', type: 'dashed', width: 2 } },
+            { yAxis: 54.5, label: { formatter: 'Objectif 1 54,50 € (+1,5 R) — vendre 50 %', position: 'insideEndTop', color: '#059669', fontWeight: 700, fontSize: 11 }, lineStyle: { color: '#10b981', type: 'dashed', width: 2 } },
+            { yAxis: 59.0, label: { formatter: 'Objectif 2 59,00 € (+3 R) — trailing', position: 'insideEndTop', color: '#059669', fontWeight: 700, fontSize: 11 }, lineStyle: { color: '#10b981', type: 'dashed', width: 2 } }
+          ]
+        }
+      }]
+    });
+    charts.push(cA);
+  }
+
+  // ---- Chart B : R/R vs taux de réussite minimal (break-even exact) ----
+  var elB = document.getElementById('chart-rr');
+  if (elB) {
+    var cB = echarts.init(elB);
+    var rrVals = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4, 5];
+    var beData = rrVals.map(function(rr){ return [rr, +(100 / (1 + rr)).toFixed(1)]; });
+    cB.setOption({
+      grid: { left: 56, right: 30, top: 40, bottom: 50 },
+      tooltip: { trigger: 'axis', formatter: function(p){ var d = p[0].data; return 'R/R = ' + d[0] + '<br/>Réussite mini : <b>' + d[1] + ' %</b>'; } },
+      xAxis: { type: 'value', name: 'Ratio R/R', nameLocation: 'middle', nameGap: 30, min: 0, max: 5, axisLabel: { color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      yAxis: { type: 'value', name: 'Taux de réussite mini (%)', nameLocation: 'middle', nameGap: 38, min: 0, max: 70, axisLabel: { color: '#94a3b8', formatter: '{value} %' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'line', data: beData, smooth: true, symbol: 'circle', symbolSize: 7,
+        lineStyle: { color: '#7c3aed', width: 3 }, itemStyle: { color: '#6d28d9' },
+        areaStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1, [{offset:0,color:'rgba(124,58,237,0.15)'},{offset:1,color:'rgba(124,58,237,0.01)'}]) },
+        markArea: { silent: true, data: [[{ xAxis: 1.5, itemStyle: { color: 'rgba(16,185,129,0.08)' }, label: { show: true, position: 'insideTop', color: '#059669', fontWeight: 700, fontSize: 11, formatter: 'Zone exigée\nR/R ≥ 1,5' } }, { xAxis: 5 }]] },
+        markLine: { symbol: 'none', data: [{ yAxis: 50, label: { formatter: 'Seuil 50 %', color: '#f59e0b', fontWeight: 700 }, lineStyle: { color: '#f59e0b', type: 'dashed' } }] }
+      }]
+    });
+    charts.push(cB);
+  }
+
+  // ---- Chart C : effet des sorties partielles sur la distribution ----
+  var elC = document.getElementById('chart-partielles');
+  if (elC) {
+    var cC = echarts.init(elC);
+    var buckets = ['≤ −1 R', '−0,5 R', '0 R (BE)', '+0,5 R', '+1 R', '+2 R', '+3 R', '≥ +4 R'];
+    // distributions illustratives (% des trades)
+    var allOrNothing = [38, 0, 4, 0, 6, 22, 18, 12];
+    var partial      = [22, 6, 14, 10, 18, 18, 8, 4];
+    cC.setOption({
+      grid: { left: 48, right: 24, top: 50, bottom: 44 },
+      legend: { data: ['Tout ou rien', 'Partielle + break-even'], top: 8, textStyle: { color: '#475569', fontSize: 12 } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' %'; } },
+      xAxis: { type: 'category', data: buckets, axisLabel: { color: '#94a3b8', fontSize: 11 }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+      yAxis: { type: 'value', name: '% des trades', nameTextStyle: { color: '#94a3b8' }, axisLabel: { color: '#94a3b8', formatter: '{value} %' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [
+        { name: 'Tout ou rien', type: 'bar', data: allOrNothing, itemStyle: { color: '#c4b5fd', borderRadius: [4,4,0,0] } },
+        { name: 'Partielle + break-even', type: 'bar', data: partial, itemStyle: { color: '#7c3aed', borderRadius: [4,4,0,0] } }
+      ]
+    });
+    charts.push(cC);
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c) { if (c) c.resize(); });
+  });
+})();
+</script>
+
+<script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
