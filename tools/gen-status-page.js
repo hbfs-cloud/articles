@@ -624,6 +624,8 @@ async function main() {
   // Each position is matched to a mode by checking if its ticker+scan_date appeared
   // in the mode's filtered signals for that scan date. Sweep-resolved trades excluded.
   function posFor(cfg, trades) {
+    // Stopped/liquidated modes hold nothing — never surface stale positions.
+    if (cfg.status === 'stopped' || cfg.status === 'liquidated') return [];
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
     const todayISO = new Date().toISOString().slice(0, 10);
@@ -649,7 +651,9 @@ async function main() {
         return_pct: ret, score: t.score || 0,
         stop, tp1: t.tp1 || 0, tp2: t.tp2 || null,
         vwap: t.vwap || (lp && lp.vwap) || null,
-        days_remaining: (lp && lp.days_remaining) || 0,
+        // days_remaining MUST reflect THIS mode's horizon (not scanner-positions.json's
+        // per-ticker expire_date, which ignored the mode and showed e.g. 22d in a H8 mode).
+        days_remaining: Math.max(0, cfg.horizon - Math.round(Math.round((Date.now() - new Date(t.scanDate)) / 86400000) * 5 / 7)),
         strategy: t.strategy || '', thesis: thesisMap[t.ticker] || '',
       });
     }
@@ -673,13 +677,13 @@ async function main() {
       const held = Math.round(age * 5 / 7);
       p._expired = held >= cfg.horizon;
     }
+    // "Open positions" = genuinely open AND within horizon only. Excluded:
+    //   • _terminal  → closed today (already has an exit; lives in Trade History)
+    //   • _expired   → held >= horizon (closure pending its exit-bar, not an open position)
+    // This keeps the positions list = exactly what is held right now (e.g. drops LLY 10/10
+    // which closed today, and any expired-but-still-pending row).
     const live = positions.filter(p => !p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
-    // Horizon reached but still genuinely open (no real exit yet): keep it visible so the
-    // downstream closeNow logic surfaces it as "expiring", instead of silently dropping a
-    // live position (e.g. UNH +3.48% at day 8/8). It does NOT consume a live slot.
-    const expiringOpen = positions.filter(p => p._expired && !p._terminal);
-    const terminal = positions.filter(p => p._terminal);
-    return [...live.slice(0, cfg.portfolioSize), ...expiringOpen, ...terminal];
+    return live.slice(0, cfg.portfolioSize);
   }
 
   // ── Panel builder ──
