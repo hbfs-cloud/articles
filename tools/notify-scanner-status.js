@@ -226,7 +226,7 @@ function buildTelegramMessage(d) {
     manageBlock += `\n🗂 <b>Open positions — action required</b>\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  now ${p.current_price}  → <b>CLOSE</b> (horizon reached)\n`;
+      manageBlock += `  ⛔ <b>${p.ticker}</b>  ${pnl}  now ${(+p.current_price).toFixed(2)}  → <b>CLOSE</b> (horizon reached)\n`;
     });
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
@@ -295,7 +295,7 @@ function buildDiscordMessage(d) {
     manageBlock += `\n🗂 **Open positions — action required**\n`;
     closeNow.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      manageBlock += `> ⛔ **${p.ticker}**  ${pnl}  now \`${p.current_price}\`  → **CLOSE** (horizon reached)\n`;
+      manageBlock += `> ⛔ **${p.ticker}**  ${pnl}  now \`${(+p.current_price).toFixed(2)}\`  → **CLOSE** (horizon reached)\n`;
     });
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
@@ -749,7 +749,10 @@ async function main() {
   console.log(dcMsg);
 
   // Send to all 3 mode topics
-  const modeTopics = [
+  const modeTopics = (process.env.ONLY_MODE
+    ? [{ turbo: 'TELEGRAM_TOPIC_TURBO', dynamic: 'TELEGRAM_TOPIC_DYNAMIC', balanced: 'TELEGRAM_TOPIC_BALANCED', secured: 'TELEGRAM_TOPIC_SECURED', fortress: 'TELEGRAM_TOPIC_FORTRESS', tkl: 'TELEGRAM_TOPIC_TKL', alpha: 'TELEGRAM_TOPIC_ALPHA' }]
+        .flatMap(map => process.env.ONLY_MODE.split(',').map(k => ({ key: k.trim(), topicEnv: map[k.trim()] })))
+    : [
     { key: 'turbo',    topicEnv: 'TELEGRAM_TOPIC_TURBO' },
     { key: 'dynamic',  topicEnv: 'TELEGRAM_TOPIC_DYNAMIC' },
     { key: 'balanced', topicEnv: 'TELEGRAM_TOPIC_BALANCED' },
@@ -757,7 +760,7 @@ async function main() {
     { key: 'fortress', topicEnv: 'TELEGRAM_TOPIC_FORTRESS' },
     { key: 'tkl',      topicEnv: 'TELEGRAM_TOPIC_TKL' },
     { key: 'alpha',    topicEnv: 'TELEGRAM_TOPIC_ALPHA' },
-  ];
+  ]);
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
   function getScannerMediaPaths(scanDir) {
