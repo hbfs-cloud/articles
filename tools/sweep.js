@@ -1242,8 +1242,16 @@ function simulatePortfolio(allTrades, scans, config) {
 
     // ─── On scan dates: rotation + new entries ────────────────────────
     if (scanDateSet.has(day)) {
+      // Config-version-aware entry: scans STRICTLY BEFORE the current config's effective date
+      // were traded under the PRIOR config — re-sim them with the prior filter so a forward-only
+      // config change never retroactively rewrites realized history (the displayed return must
+      // not move when only future trading is affected). Gated by config._effectiveFrom, which is
+      // set ONLY by the frozen re-sim path → validator / live executor / other modes unaffected.
+      const _preChange = config._effectiveFrom && day < config._effectiveFrom;
+      const _baseFilter = (_preChange && config._priorStrategyFilter) ? config._priorStrategyFilter : strategyFilter;
+      const _rf = (_preChange && config._priorRegimeFilters) ? config._priorRegimeFilters : config.regimeFilters;
       // Regime-aware strategy filter: override filter based on scan date's regime
-      let activeFilter = strategyFilter;
+      let activeFilter = _baseFilter;
       // Effective regime = label, optionally downgraded by the regime-score override
       // (proactive de-risk: when the numeric score has deteriorated below what the label
       // implies, treat the day as the MORE DEFENSIVE regime — the "parachute" that would
@@ -1256,8 +1264,8 @@ function simulatePortfolio(allTrades, scans, config) {
           ? moreDefensiveRegime(effectiveRegimeKey, scoreRegime)
           : scoreRegime;
       }
-      if (config.regimeFilters && effectiveRegimeKey) {
-        const overrideName = config.regimeFilters[effectiveRegimeKey];
+      if (_rf && effectiveRegimeKey) {
+        const overrideName = _rf[effectiveRegimeKey];
         if (overrideName && STRATEGY_FILTERS_MAP[overrideName]) {
           activeFilter = STRATEGY_FILTERS_MAP[overrideName];
         }
@@ -2158,10 +2166,12 @@ async function main() {
     try { configHistory = JSON.parse(fs.readFileSync(HISTORY_PATH)).versions || []; } catch(e) {}
   }
   function getConfigVersion(scanDate) {
-    // Find the config version active at scanDate (last version with timestamp <= scanDate)
+    // Find the config version active at scanDate. Use effectiveFrom (the first scan date a
+    // forward-only change applies to) when present, else fall back to the timestamp date —
+    // a same-day config change applies to the NEXT session, not the scan already traded.
     let ver = configHistory.length ? configHistory[0].id : 'unknown';
     for (const h of configHistory) {
-      const hDate = (h.timestamp || '').slice(0, 10); // "2026-04-18T..." → "2026-04-18"
+      const hDate = h.effectiveFrom || (h.timestamp || '').slice(0, 10);
       if (hDate <= scanDate) ver = h.id;
       else break;
     }
@@ -2241,7 +2251,28 @@ async function main() {
     for (const id of orderedModeIds) {
       const cfg = modesConfig.modes[id];
       const frozenKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
+      // Config-version-aware immutability: if the current config carries an effectiveFrom (a
+      // forward-only change), scans BEFORE it were traded under the prior config — re-sim them
+      // with the prior entry-filter so a forward change never rewrites realized history. Only
+      // engages when the mode's entry filter actually changed; no-op otherwise.
+      let _effFrom = null, _priorRF = null, _priorSF = null;
+      if (configHistory.length >= 2) {
+        const curVer = configHistory[configHistory.length - 1];
+        const priorVer = configHistory[configHistory.length - 2];
+        const priorModeCfg = priorVer && priorVer.config && priorVer.config[id];
+        if (curVer && curVer.effectiveFrom && priorModeCfg) {
+          const priorRF = priorModeCfg.regimeFilters || null;
+          const filterChanged = priorModeCfg.filterName !== cfg.filterName;
+          const rfChanged = JSON.stringify(priorRF) !== JSON.stringify(cfg.regimeFilters || null);
+          if (filterChanged || rfChanged) {
+            _effFrom = curVer.effectiveFrom;
+            _priorRF = priorRF;
+            _priorSF = STRATEGY_FILTERS[priorModeCfg.filterName] || null;
+          }
+        }
+      }
       const cfg2 = {
+        _effectiveFrom: _effFrom, _priorRegimeFilters: _priorRF, _priorStrategyFilter: _priorSF,
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
