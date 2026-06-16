@@ -113,6 +113,30 @@ const SF_NOTIFY = {
   mom_bo: s => /momentum|breakout/i.test(s),
 };
 function buildPositions(cfg, modeKey) {
+  // ── Source of truth: portfolio/v1/<mode>/positions.json ──
+  // gen-api.js derives this from the SAME status snapshot the status page renders,
+  // so the notification matches scanner/status/#<mode> exactly. Previously this
+  // reconstructed positions from backtest-trades.json with a different filter,
+  // producing positions unrelated to the status page. Legacy reconstruction is
+  // kept only as a fallback if the API file is missing.
+  try {
+    const api = JSON.parse(fs.readFileSync(path.join(ROOT, 'portfolio', 'v1', modeKey, 'positions.json'), 'utf8'));
+    if (Array.isArray(api.positions)) {
+      return api.positions.map(p => ({
+        ticker: p.ticker,
+        scan_date: p.scanDate,
+        entry: p.entry || 0,
+        current_price: p.currentPrice || 0,
+        return_pct: typeof p.returnPct === 'number' ? +p.returnPct.toFixed(2) : 0,
+        stop: p.stop || 0,
+        tp1: p.tp1 || 0,
+        tp2: p.tp2 || null,
+        left: typeof p.daysRemaining === 'number' ? p.daysRemaining : 0,
+      }));  // No slice: the API set IS what the status page renders (match exactly).
+    }
+  } catch (_) { /* fall through to legacy reconstruction */ }
+
+  // ── Legacy fallback: reconstruct from backtest-trades ──
   const modeMap = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress', tkl: 'tkl', alpha: 'alpha' };
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
   const livePositions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json'))).open_positions || [];
@@ -120,10 +144,8 @@ function buildPositions(cfg, modeKey) {
   for (const p of livePositions) liveLookup[p.ticker] = p;
 
   const raw = allTrades[modeMap[modeKey] || modeKey] || [];
-  const trades = raw.map(t =>
-    (t.status === 'expired' && t.holdDays < cfg.horizon) ? { ...t, _premature: true } : t
-  );
-  let pending = trades.filter(t => t._premature);
+  // Match gen-status-page: positions = pending OR (expired & holdDays < horizon).
+  let pending = raw.filter(t => t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon));
 
   const seen = new Set();
   return pending.map(t => {
