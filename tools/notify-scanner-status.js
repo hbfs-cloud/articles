@@ -68,16 +68,22 @@ function readStatusMetrics(modeKey = 'balanced') {
   const statusHtml = fs.readFileSync(path.join(ROOT, 'scanner/status/index.html'), 'utf8');
   // Map mode keys to panel IDs in the status page
   const panelId = `p-${modeKey}`;
-  const section = statusHtml.match(new RegExp(`id="${panelId}"[\\s\\S]{0,8000}`));
-  if (!section) return null;
-  const html = section[0];
+  const start = statusHtml.indexOf(`id="${panelId}"`);
+  if (start < 0) return null;
+  // Bound the panel to the NEXT panel id. The perf-stats block can sit ~10k chars
+  // into a panel; a fixed 8000-char window silently missed it and zeroed every
+  // metric (D0/DD/WR/PF) in the Telegram notification.
+  const nextRel = statusHtml.slice(start + 5).search(/id="p-[a-z]+"/);
+  const end = nextRel >= 0 ? start + 5 + nextRel : start + 20000;
+  const html = statusHtml.slice(start, end);
 
-  // Extract perf-stats block only (contains ps-v spans with real metrics)
-  const perfBlock = html.match(/class="perf-stats"[\s\S]{0,1500}?<\/div>\s*<\/div>/);
-  const perfHtml = perfBlock ? perfBlock[0] : '';
+  // Extract the perf-stats block (contains ps-v spans with the real metrics)
+  const perfIdx = html.indexOf('perf-stats');
+  const perfHtml = perfIdx >= 0 ? html.slice(perfIdx, perfIdx + 2000) : '';
 
-  // Perf stats from ps-v spans only (Total Return, Max DD, Win Rate, Profit Factor)
-  const nums = perfHtml.match(/class="ps-v"[^>]*>([+\-]?[\d.]+[%x]?)<\/span/g) || [];
+  // Perf stats from ps-v spans (Total Return, Max DD, Win Rate, Profit Factor).
+  // Tolerate modifier classes: class="ps-v pos" / "ps-v neg" / "ps-v".
+  const nums = perfHtml.match(/class="ps-v[^"]*"[^>]*>([+\-]?[\d.]+)/g) || [];
   const extract = s => { const m = s.match(/>([+\-]?[\d.]+)/); return m ? parseFloat(m[1]) : NaN; };
   const vals = nums.map(extract).filter(n => !isNaN(n));
 
