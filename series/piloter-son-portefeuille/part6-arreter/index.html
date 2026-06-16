@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Arrêter proprement et la checklist du gérant | Piloter son Portefeuille — Partie 6/6 | DailyTickers</title>
+ <meta name="description" content="Clore le cycle : stopped (arrêt ordonné) vs liquidated (urgence, force-close), quand tirer la prise selon des critères pré-définis, le wind-down vs la panique, le post-mortem honnête, et la checklist maître du cycle de vie complet.">
+ <meta property="og:title" content="Arrêter proprement et la checklist du gérant | Piloter son Portefeuille 6/6">
+ <meta property="og:description" content="Clore le cycle : stopped (arrêt ordonné) vs liquidated (urgence, force-close), quand tirer la prise selon des critères pré-définis, le wind-down vs la panique, le post-mortem honnête, et la checklist maître du cycle de vie complet.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/piloter-son-portefeuille/part6-arreter/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL THEME — Piloter son Portefeuille */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#0f766e; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; margin-right:0.75rem; }
+ details[open] summary { border-color:#0d9488; background:#f0fdfa; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #134e4a 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#5eead4; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#2dd4bf; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0f766e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#0d9488; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Piloter son Portefeuille — Partie 6 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Arrêter proprement et la checklist du gérant</h1>
+  <p class="hero-subtitle">Savoir arrêter est aussi important que savoir démarrer. La différence entre un gérant amateur et un professionnel ne se joue pas sur les entrées — elle se joue sur la sortie. Un arrêt se décide sur des critères écrits à l'avance, jamais sous le coup de l'émotion. Cette dernière partie clôt le cycle : différencier l'arrêt ordonné de la liquidation d'urgence, fixer les seuils qui tirent la prise, conduire un post-mortem honnête, et synthétiser tout le parcours dans une checklist maître.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-flag-checkered"></i> Arrêt propre</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-triangle-exclamation"></i> Liquidation d'urgence</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-magnifying-glass-chart"></i> Post-mortem</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-list-check"></i> Checklist maître</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-arrow" title="Pause, réduction et vacances : piloter l'activité"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step current" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="stopped-vs-liquidated"><i class="fas fa-bookmark"></i><span>Stopped vs liquidated</span></a>
+  <a class="fnav-item" data-section="quand-arreter"><i class="fas fa-bookmark"></i><span>Quand arrêter</span></a>
+  <a class="fnav-item" data-section="wind-down"><i class="fas fa-bookmark"></i><span>Arrêt vs panique</span></a>
+  <a class="fnav-item" data-section="post-mortem"><i class="fas fa-bookmark"></i><span>Post-mortem</span></a>
+  <a class="fnav-item" data-section="cycle-complet"><i class="fas fa-bookmark"></i><span>Cycle complet</span></a>
+  <a class="fnav-item" data-section="checklist"><i class="fas fa-bookmark"></i><span>Checklist maître</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+<!-- ============================================================ -->
+<!-- SECTION 1 : STOPPED VS LIQUIDATED                             -->
+<!-- ============================================================ -->
+<div class="section-divider" id="stopped-vs-liquidated"><i class="fa-solid fa-power-off" style="color:#0d9488;"></i> Stopped vs liquidated</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-power-off" style="color:#0d9488;"></i> Deux façons d'éteindre la machine</h2>
+
+  <p>Il existe une différence radicale entre <em>fermer une stratégie</em> et <em>fuir une stratégie</em>. Les deux aboutissent à un capital sans positions ouvertes, mais le chemin emprunté, le coût payé, et l'état d'esprit qui les déclenche n'ont rien à voir. Dans la machine d'états qui gouverne nos modes DailyTickers, ces deux chemins portent un nom précis : <strong>stopped</strong> et <strong>liquidated</strong>. Comprendre lequel utiliser, et surtout <em>quand</em>, est l'une des compétences les plus sous-estimées du gérant.</p>
+
+  <div class="capability-grid">
+    <div class="capability-card" style="border-top:4px solid #0d9488;">
+      <div class="capability-icon" style="background:rgba(13,148,136,0.12); color:#0d9488;"><i class="fa-solid fa-flag-checkered"></i></div>
+      <h4>stopped — arrêt ordonné</h4>
+      <p>Arrêt définitif et planifié. Plus aucune gestion active. On a laissé les positions se clôturer proprement (SL/TP/horizon) <em>avant</em> de couper. La décision est froide, datée, documentée.</p>
+    </div>
+    <div class="capability-card" style="border-top:4px solid #dc2626;">
+      <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h4>liquidated — urgence</h4>
+      <p>Toutes les positions fermées au marché à la prochaine séance, sans regarder SL/TP ni horizon. Réservé aux vraies urgences : compliance, panique justifiée, black swan, thèse cassée nette.</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-lightbulb"></i> La règle d'or de la sortie</h4>
+    <p style="margin:0;">Un arrêt <strong>stopped</strong> respecte le plan de chaque position jusqu'à sa fin naturelle ; c'est l'équivalent de débrancher un appareil après l'avoir éteint proprement. Un arrêt <strong>liquidated</strong> coupe le courant d'un coup, quitte à abîmer ce qui tournait : c'est un bouton rouge, pas un interrupteur. Le réflexe par défaut doit toujours être l'arrêt ordonné. La liquidation forcée est l'exception, pas la norme — et elle se paie.</p>
+  </div>
+
+  <p>La nuance opérationnelle compte. Dans nos modes, <strong>stopped</strong> est en réalité l'aboutissement d'une séquence : on passe d'abord en <code>pausing</code> (sortie organique : plus d'entrées ni de rotation, mais les stops et objectifs continuent de travailler), puis en <code>paused</code> une fois toutes les positions refermées, et enfin en <code>stopped</code> pour acter la fin définitive. À l'inverse, <strong>liquidated</strong> est un raccourci d'urgence accessible directement depuis <code>live</code> ou <code>pausing</code> : il déclenche une passe de fermeture forcée au marché, sans attendre.</p>
+
+  <h3>Quand utiliser lequel</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Situation</th>
+        <th>Bon choix</th>
+        <th>Coût relatif</th>
+        <th>Pourquoi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>L'edge a disparu sur un échantillon suffisant</td><td><strong>stopped</strong> (via pausing)</td><td style="color:#0f766e; font-weight:700;">Faible</td><td>Aucune urgence : on laisse les positions finir, on coupe ensuite à froid.</td></tr>
+      <tr><td>Le DD de mandat est dépassé mais le marché est calme</td><td><strong>stopped</strong> (via pausing)</td><td style="color:#0f766e; font-weight:700;">Faible</td><td>On arrête d'alimenter, on laisse la défense des positions opérer.</td></tr>
+      <tr><td>Vous changez de stratégie / réallouez le capital</td><td><strong>stopped</strong></td><td style="color:#0f766e; font-weight:700;">Faible</td><td>Décision business froide, planifiable, sans pression temporelle.</td></tr>
+      <tr><td>Choc systémique soudain (gap brutal, halt généralisé)</td><td><strong>liquidated</strong></td><td style="color:#dc2626; font-weight:700;">Élevé</td><td>Attendre les stops naturels reviendrait à subir un effondrement.</td></tr>
+      <tr><td>Contrainte compliance / interdiction de détenir</td><td><strong>liquidated</strong></td><td style="color:#dc2626; font-weight:700;">Élevé</td><td>Obligation immédiate de ne plus porter le risque.</td></tr>
+      <tr><td>Thèse cassée nette (fraude, faillite, événement irréversible)</td><td><strong>liquidated</strong></td><td style="color:#dc2626; font-weight:700;">Élevé</td><td>Le scénario qui justifiait les positions n'existe plus du tout.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4 style="margin-top:0;"><i class="fa-solid fa-circle-exclamation"></i> Le coût caché de la liquidation forcée</h4>
+    <p style="margin:0;">Fermer tout au marché en même temps, c'est accepter un <strong>slippage de liquidation</strong> : vous traversez le spread du mauvais côté, vous bougez le carnet d'ordres sur vos lignes les moins liquides, et vous le faites souvent au pire moment (quand tout le monde vend aussi). À titre d'illustration pédagogique, une sortie organique étalée peut coûter de l'ordre de quelques points de base par ligne, là où une liquidation forcée en panique peut multiplier ce coût par cinq à huit sur les titres peu liquides. Ce différentiel — quantifié plus bas dans cet article — est le prix de la précipitation. On l'accepte volontiers en cas de vraie urgence, jamais par confort émotionnel.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 2 : QUAND ARRÊTER                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quand-arreter"><i class="fa-solid fa-plug-circle-xmark" style="color:#0d9488;"></i> Quand tirer la prise</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-plug-circle-xmark" style="color:#0d9488;"></i> Décider d'arrêter avant d'avoir à le décider</h2>
+
+  <p>Le piège classique : on ne définit les critères d'arrêt qu'au moment où l'on souffre. Or, au cœur d'un drawdown, le cerveau est le pire conseiller qui soit — il oscille entre le déni (« ça va remonter ») et la capitulation (« je n'y arriverai jamais »). La parade est simple à formuler, difficile à tenir : <strong>écrivez vos critères d'arrêt le jour où vous démarrez</strong>, quand vous êtes lucide, et engagez-vous à les respecter mécaniquement.</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Le principe directeur</div>
+    On <span class="formula-highlight">coupe une stratégie morte</span>, on ne <span class="formula-highlight">capitule pas</span> sur une stratégie en drawdown normal.
+  </div>
+
+  <p>Toute la difficulté tient dans cette distinction. Une stratégie au profil de risque connu <em>doit</em> traverser des drawdowns ; c'est le prix de l'edge. Le drawdown attendu n'est pas un signal d'arrêt — c'est un signal de discipline. Ce qui justifie un arrêt, c'est la preuve que l'edge lui-même a cessé d'exister, ou que le mandat de risque est violé. Voici les quatre critères objectifs à pré-définir.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Edge disparu</h4>
+      <p>Le profit factor en live tombe sous un seuil pré-défini — un repère lisible : <strong>PF live durablement &lt; 1,0</strong> (ou sous ~70 % du PF backtest) — sur un nombre de trades statistiquement suffisant, pas sur 8 trades de malchance.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>DD de mandat dépassé</h4>
+      <p>Le drawdown franchit la limite que vous vous étiez fixée comme intolérable. Ligne rouge non négociable, décidée à froid.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Thèse invalidée</h4>
+      <p>La raison structurelle qui justifiait la stratégie a disparu (changement de microstructure, règle de marché, mécanique exploitée comblée).</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Régime hostile durable</h4>
+      <p>Le régime de marché est devenu durablement défavorable à ce style, sans horizon de retour raisonnable.</p>
+    </div>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-calculator"></i> Combien de trades avant de conclure « edge disparu » ?</h4>
+    <p>La plus grosse erreur statistique du gérant retail est de tuer une stratégie sur un échantillon minuscule. Avec un edge réel mais modeste, des séquences de 6, 8, voire 12 trades perdants surviennent <em>par pur hasard</em>. Conclure « l'edge est mort » sur 10 trades, c'est confondre le bruit avec le signal.</p>
+    <p style="margin-bottom:0;">À titre d'illustration : pour distinguer un profit factor réellement dégradé (disons passé de 1,5 à 0,8) d'une simple mauvaise passe, on raisonne plutôt sur plusieurs dizaines de trades. Un seuil de décision lisible : <strong>n'envisager l'arrêt pour « edge disparu » qu'à partir de ~30 trades live</strong>, et seulement si le profit factor reste sous le seuil — par exemple un PF live durablement &lt; 1,0, ou retombé sous environ 70 % du PF de backtest — sur une fenêtre glissante, pas sur un seul point. En dessous de cet échantillon, le bon réflexe est de réduire la taille (voir <a href="/series/piloter-son-portefeuille/part3-drawdown/">Partie 3</a>), pas de couper.</p>
+  </div>
+
+  <p>Le graphique ci-dessous formalise cet arbre de décision. Chaque branche mène soit à <em>continuer</em> (et éventuellement réduire la voilure), soit à un arrêt — ordonné dans la quasi-totalité des cas, forcé seulement quand l'urgence l'impose.</p>
+
+  <div id="chart-decision" style="width:100%; height:480px; margin:2rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-scale-balanced"></i> Couper vs capituler — le test en une question</h4>
+    <p style="margin:0;">Posez-vous : « <em>Si je n'avais aucune position en cours et que je découvrais cette stratégie aujourd'hui avec ses chiffres live actuels, est-ce que je la lancerais ?</em> » Si la réponse est oui, vous êtes en drawdown normal — tenez. Si la réponse est non parce que l'edge ne tient plus, vous coupez. Cette question neutralise l'effet de possession et la douleur de la perte latente, qui sont des émotions, pas des données.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 3 : WIND-DOWN                                         -->
+<!-- ============================================================ -->
+<div class="section-divider" id="wind-down"><i class="fa-solid fa-arrow-down-wide-short" style="color:#0d9488;"></i> Arrêt ordonné vs panique</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-arrow-down-wide-short" style="color:#0d9488;"></i> L'arrêt ordonné, par défaut</h2>
+
+  <p>Une fois la décision d'arrêter prise, la <em>manière</em> d'exécuter cet arrêt détermine combien vous laissez sur la table. La règle est limpide : <strong>préférez systématiquement le wind-down ordonné</strong> — <code>pausing → paused → stopped</code> — et réservez la liquidation forcée aux urgences réelles. La précipitation coûte en slippage, et elle cristallise presque toujours au pire moment, parce que les moments où l'on panique sont précisément ceux où la liquidité s'évapore.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>pausing</h4>
+      <p>On coupe le robinet : plus de nouvelles entrées, plus de rotation. Mais SL, TP, horizon et trailing continuent de gérer les positions ouvertes vers une sortie naturelle.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>paused</h4>
+      <p>Toutes les positions se sont refermées proprement, à leur prix prévu. Le capital est désormais en cash, sans avoir subi de sortie forcée.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>stopped</h4>
+      <p>On acte la fin définitive. Décision froide, datée, documentée. Plus de gestion active de cette stratégie.</p>
+    </div>
+  </div>
+
+  <p>Le sens de cette gradation est de <strong>découpler la décision d'arrêter de l'exécution de l'arrêt</strong>. Décider d'arrêter peut être instantané ; refermer le book ne devrait pas l'être. En passant par <code>pausing</code>, vous laissez chaque position atteindre son point de sortie prévu, au prix prévu, sans payer la prime de panique.</p>
+
+  <p>Le graphique ci-dessous illustre l'écart de coût, à titre pédagogique, entre une sortie organique étalée et une liquidation forcée en une séance, pour des lignes de liquidité décroissante. Plus le titre est illiquide, plus la précipitation se paie cher.</p>
+
+  <div id="chart-slippage" style="width:100%; height:380px; margin:2rem 0;"></div>
+
+  <div class="alert-box">
+    <h4 style="margin-top:0;"><i class="fa-solid fa-clock"></i> Quand la panique se justifie quand même</h4>
+    <p style="margin:0;">Il existe des cas où attendre coûterait <em>plus</em> que le slippage de liquidation : une fraude révélée, un titre en route vers zéro, un halt qui ne rouvrira pas au même niveau, une obligation compliance immédiate. Dans ces cas, <code>liquidated</code> est le bon choix — non pas malgré son coût, mais parce que le coût d'attendre est supérieur. Le test est toujours le même : <strong>est-ce que le risque d'attendre dépasse le coût de sortir maintenant ?</strong> Si oui, on liquide. Sinon, on déroule le wind-down. Pour le rendre chiffrable, posez un repère même grossier : <em>liquider dès que la perte additionnelle attendue en attendant la sortie organique dépasse le surcoût de slippage estimé</em>. Exemple illustratif : si une ligne illiquide menace de perdre encore 8 % avant d'atteindre son stop naturel et que la liquidation forcée ne coûte qu'environ 1,5 % de slippage en plus de la sortie organique, le risque d'attendre (8 %) écrase le surcoût (1,5 %) — on liquide. Si les ordres de grandeur s'inversent (titre liquide, perte additionnelle marginale), on déroule le wind-down.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 4 : POST-MORTEM                                       -->
+<!-- ============================================================ -->
+<div class="section-divider" id="post-mortem"><i class="fa-solid fa-magnifying-glass-chart" style="color:#0d9488;"></i> Le post-mortem honnête</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-magnifying-glass-chart" style="color:#0d9488;"></i> Apprendre de la fin sans se mentir</h2>
+
+  <p>Toute stratégie arrêtée mérite un post-mortem. Pas un exercice de flagellation, ni une justification rétrospective — un diagnostic. La question centrale est d'une difficulté redoutable : <strong>la stratégie a-t-elle échoué parce que l'edge n'existait pas (ou plus), ou parce que la variance a frappé un edge pourtant réel ?</strong> Ce sont deux conclusions opposées, qui appellent deux leçons opposées.</p>
+
+  <div class="capability-grid">
+    <div class="capability-card" style="border-top:4px solid #dc2626;">
+      <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-skull"></i></div>
+      <h4>Échec d'edge (vrai échec)</h4>
+      <p>Le profit factor live diverge durablement du backtest, les pertes ne s'expliquent pas par la chance, la thèse ne tient plus. Leçon : ne pas relancer telle quelle.</p>
+    </div>
+    <div class="capability-card" style="border-top:4px solid #f59e0b;">
+      <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-dice"></i></div>
+      <h4>Malchance (variance)</h4>
+      <p>Les métriques restent dans l'enveloppe statistique attendue ; on a simplement vécu une mauvaise séquence. Leçon : l'arrêt était peut-être prématuré, ou bien justifié par le mandat de DD mais pas par l'edge.</p>
+    </div>
+  </div>
+
+  <div class="alert-box">
+    <h4 style="margin-top:0;"><i class="fa-solid fa-eye-slash"></i> Le piège du biais rétrospectif</h4>
+    <p style="margin:0;">Après coup, tout semble évident : « <em>j'aurais dû voir que ça allait casser</em> ». Le biais rétrospectif (<em>hindsight bias</em>) réécrit le passé en le rendant prévisible, alors qu'il ne l'était pas au moment de la décision. La parade est documentaire : jugez vos décisions sur l'information dont vous disposiez <strong>à l'instant T</strong>, pas sur ce que vous savez aujourd'hui. Une bonne décision peut avoir un mauvais résultat, et inversement. C'est précisément pourquoi l'historique doit être figé.</p>
+  </div>
+
+  <h3>Le track record figé : la mémoire honnête</h3>
+
+  <p>Un post-mortem n'a de valeur que si les données sont fiables. D'où une règle de gouvernance que nous appliquons à nos modes : <strong>l'historique réalisé est archivé en append-only / frozen</strong>. On n'efface jamais une perte, on ne réécrit jamais un trade pour faire « comme si » la config actuelle avait toujours été en place. Le track record inclut les pertes, les drawdowns, les mauvaises séquences — sinon il ment, et un track record qui ment ne sert à rien pour apprendre.</p>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-clipboard-question"></i> Les questions du post-mortem</h4>
+    <p>À conduire systématiquement, par écrit, après tout arrêt :</p>
+    <ul class="checklist" style="margin-top:0.5rem;">
+      <li><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Les métriques live sont-elles restées dans l'enveloppe statistique du backtest, ou ont-elles divergé durablement ?</li>
+      <li><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Les pertes s'expliquent-elles par la variance attendue, ou par un facteur structurel nouveau ?</li>
+      <li><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Ai-je respecté mes propres critères d'arrêt, ou ai-je coupé sous l'émotion (trop tôt) ou trop tard (par déni) ?</li>
+      <li><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Le sizing et la défense DD ont-ils fonctionné comme prévu pendant la dégradation ?</li>
+      <li><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Sur la base de l'information disponible à chaque décision, et non avec le recul, mes choix étaient-ils corrects ?</li>
+      <li><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Que garderais-je, que changerais-je si je relançais une stratégie de ce type ?</li>
+    </ul>
+  </div>
+
+  <p>Le but n'est pas de transformer chaque arrêt en verdict moral, mais d'en extraire une ou deux leçons transférables. Un gérant qui archive honnêtement ses échecs accumule un capital d'expérience qui vaut souvent plus que les gains de la stratégie elle-même.</p>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 5 : CYCLE COMPLET                                     -->
+<!-- ============================================================ -->
+<div class="section-divider" id="cycle-complet"><i class="fa-solid fa-diagram-project" style="color:#0d9488;"></i> Le cycle de vie complet</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-diagram-project" style="color:#0d9488;"></i> Toute la vie d'une stratégie, en une carte</h2>
+
+  <p>Les six parties de cette série tracent ensemble le cycle de vie complet d'une stratégie pilotée. Plutôt qu'une suite de décisions isolées, il faut le voir comme une <strong>machine d'états</strong> : à chaque instant, une stratégie occupe un état précis, et seules certaines transitions sont autorisées. C'est cette discipline d'états qui empêche les décisions chaotiques.</p>
+
+  <div id="chart-states" style="width:100%; height:480px; margin:2rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>État</th>
+        <th>Signification</th>
+        <th>Couvert dans</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>draft</strong></td><td>Idée et backtest. Rien n'est engagé, on conçoit et on valide en simulation.</td><td><a href="/series/piloter-son-portefeuille/part2-backtest-forward/">Partie 2</a></td></tr>
+      <tr><td><strong>test</strong></td><td>Forward test / paper. On vérifie en conditions réelles sans risquer le capital.</td><td><a href="/series/piloter-son-portefeuille/part2-backtest-forward/">Partie 2</a></td></tr>
+      <tr><td><strong>deploying</strong></td><td>Ramp-up progressif. Entrées acceptées en paper-ramp pour valider les conditions réelles avant le flip.</td><td><a href="/series/piloter-son-portefeuille/part1-demarrer/">Partie 1</a></td></tr>
+      <tr><td><strong>live</strong></td><td>Capital réel engagé, gestion active complète. Sizing et défense DD opérationnels.</td><td><a href="/series/piloter-son-portefeuille/part3-drawdown/">Parties 3 & 4</a></td></tr>
+      <tr><td><strong>pausing</strong></td><td>Sortie organique : plus d'entrées ni de rotation, mais SL/TP/horizon/trailing continuent.</td><td><a href="/series/piloter-son-portefeuille/part5-pause-vacances/">Partie 5</a></td></tr>
+      <tr><td><strong>paused</strong></td><td>Positions refermées, capital en cash. Réversible : on peut reprendre vers live (resume).</td><td><a href="/series/piloter-son-portefeuille/part5-pause-vacances/">Partie 5</a></td></tr>
+      <tr><td><strong>stopped</strong></td><td>Arrêt définitif ordonné. Fin de vie de la stratégie.</td><td>Partie 6 (ici)</td></tr>
+      <tr><td><strong>liquidated</strong></td><td>Urgence : force-close au marché depuis live ou pausing. Puis paused ou stopped.</td><td>Partie 6 (ici)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-route"></i> Lire le diagramme</h4>
+    <p style="margin:0;">Le chemin nominal descend en cascade : <code>draft → test → deploying → live</code>. Depuis <code>live</code>, on peut entrer en sortie organique (<code>pausing → paused → stopped</code>) — c'est la voie reposée, en teal. La flèche <strong>resume</strong> (<code>paused → live</code>) montre qu'une pause n'est pas une fin : on peut redémarrer. Les flèches rouges représentent la voie d'urgence (<code>liquidated</code>), accessible directement depuis <code>live</code> ou <code>pausing</code>. Une stratégie bien pilotée passe l'essentiel de sa vie sur la voie teal et n'emprunte la voie rouge qu'en cas de force majeure.</p>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- SECTION 6 : CHECKLIST MAÎTRE                                  -->
+<!-- ============================================================ -->
+<div class="section-divider" id="checklist"><i class="fa-solid fa-list-check" style="color:#0d9488;"></i> La checklist maître</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-list-check" style="color:#0d9488;"></i> La checklist du gérant, du démarrage à l'arrêt</h2>
+
+  <p>Voici le livrable phare de cette série : une checklist actionnable couvrant tout le cycle de vie. Elle synthétise les six parties en un document opérationnel. L'idée n'est pas de la lire une fois, mais de la <strong>revisiter à chaque phase</strong> — comme un pilote parcourt sa check-list avant chaque décollage, quel que soit son nombre d'heures de vol.</p>
+
+  <div class="didactic-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-rocket"></i> Démarrage (Partie 1)</h4>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Stratégie écrite : règles d'entrée, de sortie, de sizing, sans ambiguïté.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Démarrage en taille réduite (deploying / ramp-up), jamais à pleine voilure le jour 1.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Critères d'arrêt définis <strong>maintenant</strong>, à froid (seuils PF, DD de mandat, invalidation de thèse).</li>
+    </ul>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-bridge"></i> Validation forward (Partie 2)</h4>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Backtest honnête : pas de surapprentissage, coûts et slippage inclus.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Forward test / paper avant capital réel ; les métriques live restent dans l'enveloppe du backtest.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Échantillon suffisant avant de conclure quoi que ce soit (~30 trades, pas 8).</li>
+    </ul>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-ruler-combined"></i> Sizing & défense DD (Partie 3)</h4>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Taille de position dérivée du risque, pas de l'envie ; risque par trade plafonné.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> DD de mandat chiffré et non négociable ; réduction de voilure programmée avant la ligne rouge.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Drawdown normal anticipé : on ne capitule pas sur une mauvaise passe attendue.</li>
+    </ul>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-chart-line"></i> Scaling (Partie 4)</h4>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Scaler seulement après preuve d'edge en live, par paliers, jamais d'un coup.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Vérifier que la liquidité et la microstructure encaissent la taille supérieure.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Surveiller la dégradation de l'edge à mesure que la taille augmente.</li>
+    </ul>
+  </div>
+
+  <div class="didactic-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-pause"></i> Pause & vacances (Partie 5)</h4>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Avant une absence : passer en pausing (sortie organique) plutôt que tout laisser sans surveillance.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Réduire l'exposition si l'on ne peut pas gérer activement ; les stops doivent rester armés.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Une pause est réversible (resume) — elle ne préjuge pas d'un arrêt définitif.</li>
+    </ul>
+  </div>
+
+  <div class="didactic-box" style="border:1px solid #0d9488; background:#f0fdfa;">
+    <h4 style="color:#0f766e;"><i class="fa-solid fa-flag-checkered"></i> Arrêt (Partie 6 — ici)</h4>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Arrêt déclenché sur un critère pré-défini atteint, pas sous l'émotion.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Par défaut : wind-down ordonné (pausing → paused → stopped). Liquidation forcée réservée aux urgences réelles.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Test « le risque d'attendre dépasse-t-il le coût de sortir maintenant ? » avant toute liquidation.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Post-mortem écrit : malchance ou échec d'edge ? Décisions jugées sur l'information de l'instant T.</li>
+      <li><i class="fa-solid fa-square-check" style="color:#0d9488;"></i> Track record figé en append-only, pertes incluses — la mémoire honnête pour la prochaine fois.</li>
+    </ul>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-value" style="color:#0d9488;">6</div>
+      <div class="metric-label">Phases du cycle de vie</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#10b981;">8</div>
+      <div class="metric-label">États de la machine</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#f59e0b;">4</div>
+      <div class="metric-label">Critères d'arrêt objectifs</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value" style="color:#9333ea;">~30</div>
+      <div class="metric-label">Trades min. avant « edge disparu »</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- TAKEAWAY                                                       -->
+<!-- ============================================================ -->
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-flag-checkered"></i> À retenir — Partie 6</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-circle-check"></i> <strong>Deux façons d'arrêter.</strong> <em>stopped</em> = arrêt ordonné, positions refermées proprement avant de couper. <em>liquidated</em> = urgence, force-close au marché à la prochaine séance — réservé aux vraies urgences.</li>
+    <li><i class="fa-solid fa-circle-check"></i> <strong>Décider à froid.</strong> Les critères d'arrêt (edge disparu sur n suffisant, DD de mandat, thèse invalidée, régime hostile durable) s'écrivent le jour du démarrage, pas au cœur de la douleur.</li>
+    <li><i class="fa-solid fa-circle-check"></i> <strong>Couper ≠ capituler.</strong> On coupe une stratégie morte ; on ne capitule pas sur un drawdown normal. Le test : la relancerais-je aujourd'hui avec ses chiffres actuels ?</li>
+    <li><i class="fa-solid fa-circle-check"></i> <strong>Ordonné par défaut.</strong> Le wind-down (pausing → paused → stopped) évite le slippage de panique. La liquidation forcée ne se justifie que si le risque d'attendre dépasse le coût de sortir.</li>
+    <li><i class="fa-solid fa-circle-check"></i> <strong>Post-mortem honnête.</strong> Distinguer malchance et échec d'edge, neutraliser le biais rétrospectif, archiver en append-only — pertes incluses.</li>
+    <li><i class="fa-solid fa-circle-check"></i> <strong>La checklist maître</strong> couvre tout le cycle : démarrage, validation forward, sizing, défense DD, scaling, pause, arrêt. À revisiter à chaque phase.</li>
+  </ul>
+</div>
+
+<a href="/" class="next-cta">
+  <i class="fa-solid fa-house"></i>
+  <div>
+    <div class="next-label">Série complète — 6 parties</div>
+    <div class="next-title">Vous avez bouclé le cycle. Retour à l'accueil</div>
+  </div>
+  <i class="fa-solid fa-arrow-right"></i>
+</a>
+
+<div class="content-card" style="text-align:center; background:#f8fafc;">
+  <h3 style="margin-top:0; color:#0f766e;"><i class="fa-solid fa-layer-group"></i> La série « Piloter son Portefeuille » en 6 parties</h3>
+  <p style="color:#64748b; max-width:680px; margin:0 auto 1.5rem;">Du premier jour de capital réel jusqu'à l'arrêt propre, six étapes pour piloter une stratégie comme un gérant, pas comme un parieur.</p>
+  <div class="step-grid">
+    <a href="/series/piloter-son-portefeuille/part1-demarrer/" class="step-card" style="text-decoration:none;"><div class="step-number">1</div><h4>Démarrer</h4><p>Démarrer sans se faire détruire le jour 1.</p></a>
+    <a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="step-card" style="text-decoration:none;"><div class="step-number">2</div><h4>Forward test</h4><p>Du backtest au forward test : franchir le pont.</p></a>
+    <a href="/series/piloter-son-portefeuille/part3-drawdown/" class="step-card" style="text-decoration:none;"><div class="step-number">3</div><h4>Drawdown</h4><p>Dimensionner et défendre contre le drawdown.</p></a>
+    <a href="/series/piloter-son-portefeuille/part4-scale-up/" class="step-card" style="text-decoration:none;"><div class="step-number">4</div><h4>Scale up</h4><p>Scaler une stratégie gagnante.</p></a>
+    <a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="step-card" style="text-decoration:none;"><div class="step-number">5</div><h4>Pause & vacances</h4><p>Piloter l'activité, réduire, partir l'esprit tranquille.</p></a>
+    <a href="/series/piloter-son-portefeuille/part6-arreter/" class="step-card" style="text-decoration:none; border-top-color:#0f766e;"><div class="step-number">6</div><h4>Arrêter</h4><p>Arrêter proprement et la checklist du gérant.</p></a>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- QUIZ                                                          -->
+<!-- ============================================================ -->
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Vérifiez votre compréhension</h2>
+
+  <details>
+    <summary>1. Quelle est la différence fondamentale entre « stopped » et « liquidated » ?</summary>
+    <div class="quiz-answer"><strong>stopped</strong> est un arrêt ordonné : on laisse les positions se clôturer proprement (SL/TP/horizon) avant de couper définitivement, sans payer de prime de panique. <strong>liquidated</strong> est une procédure d'urgence : toutes les positions sont fermées au marché à la prochaine séance, sans regarder SL/TP ni horizon. Le réflexe par défaut doit être l'arrêt ordonné ; la liquidation forcée est l'exception, réservée aux vraies urgences (compliance, black swan, thèse cassée nette), et elle se paie en slippage.</div>
+  </details>
+
+  <details>
+    <summary>2. Pourquoi ne faut-il pas conclure « l'edge est mort » après 8 trades perdants ?</summary>
+    <div class="quiz-answer">Parce qu'avec un edge réel mais modeste, des séquences de 6 à 12 trades perdants surviennent par pur hasard. Conclure sur un échantillon minuscule revient à confondre le bruit avec le signal. On raisonne plutôt sur plusieurs dizaines de trades (~30 en repère) et sur une fenêtre glissante du profit factor, pas sur un point isolé. En dessous de cet échantillon, le bon réflexe est de <em>réduire la taille</em>, pas de couper la stratégie.</div>
+  </details>
+
+  <details>
+    <summary>3. Quel test simple permet de distinguer « couper » de « capituler » ?</summary>
+    <div class="quiz-answer">Se demander : « Si je n'avais aucune position en cours et que je découvrais cette stratégie aujourd'hui avec ses chiffres live actuels, est-ce que je la lancerais ? » Si oui, on est en drawdown normal — on tient. Si non parce que l'edge ne tient plus, on coupe. Cette question neutralise l'effet de possession et la douleur de la perte latente, qui sont des émotions, pas des données.</div>
+  </details>
+
+  <details>
+    <summary>4. Pourquoi la liquidation forcée coûte-t-elle plus cher qu'une sortie organique ?</summary>
+    <div class="quiz-answer">Parce qu'en fermant tout au marché en même temps, on traverse le spread du mauvais côté, on bouge le carnet d'ordres sur ses lignes les moins liquides, et on le fait souvent au pire moment, quand la liquidité s'évapore. Une sortie organique étalée laisse chaque position atteindre son point de sortie prévu, au prix prévu. La liquidation ne se justifie que si le risque d'attendre dépasse ce surcoût de slippage.</div>
+  </details>
+
+  <details>
+    <summary>5. Qu'est-ce que le biais rétrospectif et comment s'en protéger dans un post-mortem ?</summary>
+    <div class="quiz-answer">Le biais rétrospectif (<em>hindsight bias</em>) réécrit le passé en le rendant prévisible alors qu'il ne l'était pas au moment de la décision (« j'aurais dû voir que ça allait casser »). La parade est documentaire : juger ses décisions sur l'information disponible <strong>à l'instant T</strong>, pas avec le recul. Une bonne décision peut avoir un mauvais résultat, et inversement — d'où l'importance d'un track record figé, en append-only, qui conserve les pertes et la chronologie réelle.</div>
+  </details>
+
+  <details>
+    <summary>6. Pourquoi archiver l'historique en append-only / frozen ?</summary>
+    <div class="quiz-answer">Parce qu'un track record qui efface les pertes ou réécrit les trades pour « comme si » la config actuelle avait toujours été en place est un track record qui ment — et il ne sert à rien pour apprendre. L'append-only garantit que les drawdowns, les mauvaises séquences et la chronologie réelle restent intacts. C'est la mémoire honnête sur laquelle s'appuient des post-mortems crédibles et des décisions futures mieux informées.</div>
+  </details>
+</div>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-arrow" title="Pause, réduction et vacances : piloter l'activité"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step current" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+  function register(c) { if (c) charts.push(c); }
+
+  // --- CHART 1 : Machine d'états (graph) ---
+  var elStates = document.getElementById('chart-states');
+  if (elStates && window.echarts) {
+    var cStates = echarts.init(elStates);
+    register(cStates);
+    var teal = '#0d9488', tealDark = '#0f766e', red = '#dc2626', amber = '#f59e0b', green = '#10b981';
+    cStates.setOption({
+      tooltip: { formatter: function(p){
+        if (p.dataType === 'edge') return '';
+        return p.data.name + (p.data.desc ? ('<br><span style="color:#94a3b8;">' + p.data.desc + '</span>') : '');
+      } },
+      animationDuration: 900,
+      series: [{
+        type: 'graph',
+        layout: 'none',
+        roam: true,
+        label: { show: true, color: '#fff', fontWeight: 700, fontSize: 12 },
+        edgeSymbol: ['none', 'arrow'],
+        edgeSymbolSize: 9,
+        edgeLabel: { show: true, fontSize: 10, color: '#64748b', formatter: function(p){ return p.data.label || ''; } },
+        lineStyle: { color: '#94a3b8', width: 1.5, curveness: 0.08 },
+        symbolSize: 58,
+        data: [
+          { name: 'draft',      x: 60,  y: 60,  itemStyle:{ color: tealDark }, desc: 'Conception. Stratégie écrite, pas encore testée.' },
+          { name: 'test',       x: 220, y: 60,  itemStyle:{ color: tealDark }, desc: 'Validation hors-ligne (backtest, forward test papier).' },
+          { name: 'deploying',  x: 380, y: 60,  itemStyle:{ color: teal }, desc: 'Ramp-up : montée en taille progressive sur le marché réel.' },
+          { name: 'live',       x: 540, y: 60,  itemStyle:{ color: teal }, symbolSize: 66, desc: 'En production. Entrées, rotation et défense actives.' },
+          { name: 'pausing',    x: 540, y: 230, itemStyle:{ color: '#14b8a6' }, desc: 'Sortie organique : plus d’entrées ni de rotation, mais SL/TP/horizon continuent.' },
+          { name: 'paused',     x: 360, y: 230, itemStyle:{ color: '#5eead4' }, label:{ color:'#0f172a' }, desc: 'Toutes positions refermées. Capital au repos, réactivable (resume).' },
+          { name: 'stopped',    x: 180, y: 230, itemStyle:{ color: '#334155' }, desc: 'Arrêt définitif ordonné. Fin de vie de la stratégie.' },
+          { name: 'liquidated', x: 540, y: 400, itemStyle:{ color: red }, desc: 'Urgence : force-close au marché, sans attendre les stops naturels.' }
+        ],
+        links: [
+          { source: 'draft', target: 'test', label: 'valider' },
+          { source: 'test', target: 'deploying', label: 'ramp-up' },
+          { source: 'deploying', target: 'live', label: 'flip' },
+          { source: 'live', target: 'pausing', label: 'arrêt ordonné' },
+          { source: 'pausing', target: 'paused', label: 'positions closes' },
+          { source: 'paused', target: 'stopped', label: 'fin définitive' },
+          { source: 'paused', target: 'live', label: 'resume', lineStyle:{ color: green, type:'dashed', curveness: 0.3 } },
+          { source: 'live', target: 'liquidated', label: 'urgence', lineStyle:{ color: red, width: 2, curveness: 0.25 } },
+          { source: 'pausing', target: 'liquidated', label: 'urgence', lineStyle:{ color: red, width: 2, curveness: 0.2 } },
+          { source: 'liquidated', target: 'paused', label: 'puis paused', lineStyle:{ color: red, type:'dashed', curveness: 0.4 } },
+          { source: 'liquidated', target: 'stopped', label: 'ou stopped', lineStyle:{ color: red, type:'dashed', curveness: 0.35 } }
+        ]
+      }]
+    });
+  }
+
+  // --- CHART 2 : Arbre de décision d'arrêt (graph horizontal) ---
+  var elDec = document.getElementById('chart-decision');
+  if (elDec && window.echarts) {
+    var cDec = echarts.init(elDec);
+    register(cDec);
+    cDec.setOption({
+      tooltip: { trigger: 'item', triggerOn: 'mousemove' },
+      series: [{
+        type: 'tree',
+        data: [{
+          name: 'Faut-il arrêter ?',
+          children: [
+            { name: 'Urgence ?\n(fraude, halt, compliance)', children: [
+              { name: 'Oui → LIQUIDATED', itemStyle:{ color:'#dc2626' }, label:{ color:'#dc2626', fontWeight:700 } },
+              { name: 'Non ↓\nEdge disparu ?\n(PF live < ~1,0 durable, n ≥ ~30)', children: [
+                { name: 'Oui → STOPPED (ordonné)', itemStyle:{ color:'#0f766e' }, label:{ color:'#0f766e', fontWeight:700 } },
+                { name: 'Non ↓\nDD de mandat dépassé ?', children: [
+                  { name: 'Oui → STOPPED (ordonné)', itemStyle:{ color:'#0f766e' }, label:{ color:'#0f766e', fontWeight:700 } },
+                  { name: 'Non ↓\nThèse invalidée /\nrégime hostile durable ?', children: [
+                    { name: 'Oui → STOPPED (ordonné)', itemStyle:{ color:'#0f766e' }, label:{ color:'#0f766e', fontWeight:700 } },
+                    { name: 'Non → drawdown normal\n→ tenir / réduire', itemStyle:{ color:'#10b981' }, label:{ color:'#10b981' } }
+                  ]}
+                ]}
+              ]}
+            ]}
+          ]
+        }],
+        top: '4%', left: '10%', bottom: '4%', right: '24%',
+        symbolSize: 11,
+        itemStyle: { color: '#0d9488' },
+        label: { position: 'left', verticalAlign: 'middle', align: 'right', fontSize: 11, color: '#334155' },
+        leaves: { label: { position: 'right', verticalAlign: 'middle', align: 'left' } },
+        lineStyle: { color: '#cbd5e1', width: 1.5 },
+        expandAndCollapse: false,
+        initialTreeDepth: -1,
+        animationDuration: 700
+      }]
+    });
+  }
+
+  // --- CHART 3 : Coût de slippage (bar) ---
+  var elSlip = document.getElementById('chart-slippage');
+  if (elSlip && window.echarts) {
+    var cSlip = echarts.init(elSlip);
+    register(cSlip);
+    cSlip.setOption({
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: function(v){ return v + ' bps'; } },
+      legend: { data: ['Sortie organique', 'Liquidation forcée'], bottom: 0, textStyle:{ color:'#475569' } },
+      grid: { left: '3%', right: '4%', top: '12%', bottom: '15%', containLabel: true },
+      xAxis: { type: 'category', data: ['Large cap\n(liquide)', 'Mid cap', 'Small cap', 'Micro cap\n(illiquide)'], axisLabel:{ color:'#475569', fontSize: 11 } },
+      yAxis: { type: 'value', name: 'Coût (bps, illustratif)', nameTextStyle:{ color:'#94a3b8' }, axisLabel:{ color:'#475569' }, splitLine:{ lineStyle:{ color:'#f1f5f9' } } },
+      series: [
+        { name: 'Sortie organique', type: 'bar', data: [3, 6, 12, 25], itemStyle:{ color: '#14b8a6', borderRadius:[4,4,0,0] } },
+        { name: 'Liquidation forcée', type: 'bar', data: [9, 25, 70, 180], itemStyle:{ color: '#dc2626', borderRadius:[4,4,0,0] } }
+      ]
+    });
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c) { try { c.resize(); } catch(e){} });
+  });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

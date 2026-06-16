@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Ordres, automatisation et DCA : le « set and forget » | Salarié & Investisseur — Partie 4/6 | DailyTickers</title>
+ <meta name="description" content="L'arsenal technique du salarié : ordres à cours limité, stop, OCO et brackets pour s'exécuter sans surveillance pendant le travail, swing sur clôtures, DCA programmé, et l'usage des signaux du scanner DailyTickers exécutés le soir.">
+ <meta property="og:title" content="Ordres, automatisation et DCA : le « set and forget » | Salarié & Investisseur 4/6">
+ <meta property="og:description" content="L'arsenal technique du salarié : ordres à cours limité, stop, OCO et brackets pour s'exécuter sans surveillance pendant le travail, swing sur clôtures, DCA programmé, et l'usage des signaux du scanner DailyTickers exécutés le soir.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/salarie-investisseur/part4-set-and-forget/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* INDIGO THEME — Salarié & Investisseur */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #eef2ff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#4f46e5; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-indigo { background:rgba(79,70,229,0.1); color:#4f46e5; border:1px solid rgba(79,70,229,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#4338ca; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#4f46e5; margin-right:0.75rem; }
+ details[open] summary { border-color:#4f46e5; background:#eef2ff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #312e81 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#a5b4fc; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#818cf8; }
+
+ .takeaway-box { background:linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border:1px solid #4f46e5; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#4338ca; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(79,70,229,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#4f46e5; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #4338ca 0%, #6366f1 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(79,70,229,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #4f46e5; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #4338ca 0%, #6366f1 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#4f46e5; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Salarié & Investisseur — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Ordres, automatisation et DCA : le « set and forget »</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; line-height:1.6; color:#475569;">Ce que vous ne pouvez pas surveiller, vous devez l'automatiser. Le marché parisien ouvre à 9h, ferme à 17h30 — exactement vos heures de bureau. La solution n'est pas de regarder l'écran en cachette : c'est de poser le plan le soir et de laisser le courtier l'exécuter à votre place pendant la réunion de 11h. Voici l'arsenal technique du salarié.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-robot"></i> Automatisation</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-repeat"></i> DCA programmé</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-bullseye"></i> Bracket / OCO</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-calendar-day"></i> Swing sur clôtures</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/salarie-investisseur/part3-routine-soir/" class="series-arrow" title="Construire une routine soutenable autour du job"><i class="fas fa-chevron-left"></i></a><span class="series-title">Salarié & Investisseur</span><div class="series-steps"><a href="/series/salarie-investisseur/part1-contrainte-horaire/" class="series-step" title="Trader quand on bosse de 9h à 18h"><span class="series-num">1</span><span class="series-label">Contrainte horaire</span></a><a href="/series/salarie-investisseur/part2-cadre-fiscal-legal/" class="series-step" title="Le cadre fiscal et légal du salarié-investisseur"><span class="series-num">2</span><span class="series-label">Cadre fiscal & légal</span></a><a href="/series/salarie-investisseur/part3-routine-soir/" class="series-step" title="Construire une routine soutenable autour du job"><span class="series-num">3</span><span class="series-label">Routine du soir</span></a><a href="/series/salarie-investisseur/part4-set-and-forget/" class="series-step current" title="Ordres, automatisation et DCA : le « set and forget »"><span class="series-num">4</span><span class="series-label">Set & forget</span></a><a href="/series/salarie-investisseur/part5-psychologie-risque/" class="series-step" title="Psychologie et risque : l'avantage caché du salarié"><span class="series-num">5</span><span class="series-label">Psycho & risque</span></a><a href="/series/salarie-investisseur/part6-plan-action/" class="series-step" title="Le plan d'action complet du salarié-investisseur"><span class="series-num">6</span><span class="series-label">Plan d'action</span></a></div><span class="series-counter">4/6</span><a href="/series/salarie-investisseur/part5-psychologie-risque/" class="series-arrow" title="Psychologie et risque : l'avantage caché du salarié"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="ordres"><i class="fas fa-bookmark"></i><span>Types d'ordres</span></a>
+  <a class="fnav-item" data-section="bracket"><i class="fas fa-bookmark"></i><span>Bracket & OCO</span></a>
+  <a class="fnav-item" data-section="swing-cloture"><i class="fas fa-bookmark"></i><span>Swing sur clôtures</span></a>
+  <a class="fnav-item" data-section="dca"><i class="fas fa-bookmark"></i><span>DCA programmé</span></a>
+  <a class="fnav-item" data-section="signaux"><i class="fas fa-bookmark"></i><span>Signaux du soir</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <p style="font-size:1.05rem; line-height:1.75; color:#334155; margin:2rem 0;">Les parties précédentes ont posé le diagnostic (la contrainte horaire), le cadre (fiscal et légal) et l'hygiène (la routine du soir). Cette partie est la plus opérationnelle de la série : <strong>la mécanique d'exécution</strong>. Un salarié qui découvre que le marché et son emploi occupent rigoureusement le même créneau a deux options. La mauvaise : tenter de voler des regards à l'écran entre deux dossiers, prendre des décisions à chaud sur le bruit intraday, et terminer la journée épuisé et perdant. La bonne : transformer chaque décision en un <strong>ordre conditionnel</strong> qui s'exécute tout seul. Le principe directeur de cette partie tient en une phrase : <em>vous décidez le soir, à tête reposée ; le courtier exécute en séance, sans vous.</em></p>
+
+  <div class="section-divider" id="ordres"><i class="fa-solid fa-list-check" style="color:#4f46e5;"></i> Les types d'ordres qui travaillent pour vous</div>
+  <div class="content-card">
+    <p>Un <strong>ordre de Bourse</strong> est une instruction donnée à votre intermédiaire (courtier, banque en ligne) : achète ou vends tel titre, à telle condition. La condition est tout ce qui compte pour le salarié. Un ordre bien paramétré transforme votre absence en non-événement : peu importe que vous soyez en réunion, en déplacement ou au déjeuner, l'instruction reste active et se déclenche au prix défini. Quatre familles couvrent 95 % des besoins.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-bolt"></i></div>
+        <h4>Ordre au marché</h4>
+        <p>Exécution immédiate au meilleur prix disponible. Rapide mais sans contrôle du prix réel.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(79,70,229,0.1); color:#4f46e5;"><i class="fa-solid fa-ruler-horizontal"></i></div>
+        <h4>Ordre à cours limité</h4>
+        <p>« Achète à 100 € ou moins, vends à 120 € ou plus. » Vous fixez le prix, jamais dépassé.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-shield-halved"></i></div>
+        <h4>Ordre stop</h4>
+        <p>Se déclenche quand le cours franchit un seuil. Coupe la perte (stop-loss) ou protège un gain.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-flag-checkered"></i></div>
+        <h4>Take-profit</h4>
+        <p>Ordre limité de sortie à l'objectif. Encaisse le gain sans que vous touchiez l'écran.</p>
+      </div>
+    </div>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Marché vs limité : la différence qui compte au bureau</h3>
+    <p>L'<strong>ordre au marché</strong> dit « exécute maintenant, peu importe le prix exact ». Il est garanti d'être exécuté, mais pas garanti sur le prix : sur un titre peu liquide ou un mouvement violent, vous pouvez être servi nettement plus loin que le dernier cours affiché (le <em>slippage</em>). Pour un salarié qui ne regarde pas l'écran, c'est précisément le risque à éviter : vous passez l'ordre le soir, il participe au fixing d'ouverture le lendemain (9h00 sur Euronext) à un prix que vous n'avez pas validé.</p>
+    <p>L'<strong>ordre à cours limité</strong> (ou <em>limit</em>) renverse la logique : « exécute seulement si le prix est au moins aussi bon que celui que je fixe ». Vous gardez le contrôle total du prix d'entrée ou de sortie. Le compromis : l'ordre peut ne jamais s'exécuter si le marché ne touche pas votre niveau. Pour le salarié-investisseur, c'est presque toujours le bon choix — mieux vaut un trade non pris qu'un trade pris à un mauvais prix pendant que vous étiez en visioconférence.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> L'arme secrète : la validité « jusqu'à révocation »</h4>
+      <p>Par défaut, un ordre n'est valable que pour la journée (validité « jour »). Pour le salarié, cela impose de re-saisir l'ordre chaque soir — fastidieux et source d'oubli. La solution est la <strong>validité étendue</strong> : « GTC » (<em>Good Till Cancelled</em>, jusqu'à annulation) ou, chez les courtiers français, « à révocation » / « jusqu'au » (validité de quelques semaines à environ un an selon l'établissement — souvent fin de mois ou date choisie chez les banques en ligne, plafonnée par les règles d'Euronext). Vous posez votre ordre limité d'entrée une fois, et il reste en embuscade pendant des jours. Le titre vient vous chercher au prix voulu — même un mardi à 14h pendant votre point d'équipe.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Type d'ordre</th><th>Ce qu'il garantit</th><th>Ce qu'il ne garantit pas</th><th>Usage salarié</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Marché</strong></td><td>L'exécution</td><td>Le prix (slippage possible)</td><td>À éviter en différé ; réserver aux titres très liquides</td></tr>
+        <tr><td><strong>Limité</strong></td><td>Le prix (au mieux)</td><td>L'exécution (peut être manqué)</td><td>Choix par défaut pour entrer et sortir</td></tr>
+        <tr><td><strong>Take-profit / limité de sortie</strong></td><td>Le prix de sortie à l'objectif</td><td>L'exécution si le cours n'atteint pas l'objectif</td><td>Encaisser le gain visé — c'est un ordre limité de vente</td></tr>
+        <tr><td><strong>Stop</strong></td><td>Le déclenchement au seuil</td><td>Le prix d'exécution (devient marché)</td><td>Protection systématique du capital</td></tr>
+        <tr><td><strong>Stop limité</strong></td><td>Déclenchement + prix plancher</td><td>L'exécution si gap au-delà</td><td>Stop maîtrisé, mais risque de non-exécution</td></tr>
+        <tr><td><strong>Stop suiveur</strong></td><td>Le suivi automatique du cours</td><td>Le prix exact (devient marché)</td><td>Verrouiller un gain sans surveiller</td></tr>
+      </tbody>
+    </table>
+
+    <h3 style="color:#0f172a; margin-top:2rem;">Le stop suiveur (trailing stop) : laisser courir sans regarder</h3>
+    <p>Le <strong>stop suiveur</strong> est l'outil le plus élégant pour un salarié. Au lieu de fixer un stop à un prix figé, vous le définissez en distance : « reste 8 % sous le plus haut atteint », ou « à 1,5 fois l'ATR (l'amplitude moyenne) sous le sommet ». Quand le cours monte, le stop monte avec lui ; quand le cours redescend, le stop reste où il était et finit par déclencher la sortie. Résultat : vous laissez courir un gagnant pendant des jours <em>et</em> vous protégez automatiquement les profits acquis, sans jamais ouvrir l'application. C'est exactement la logique des stops dynamiques des modes swing DailyTickers, qui combinent un stop ATR et un verrouillage progressif des gains.</p>
+
+    <div class="alert-box">
+      <p><strong>Attention au déclenchement de nuit et aux gaps.</strong> Un ordre stop ne vous protège pas contre un <em>gap</em> — un saut de prix entre la clôture et l'ouverture suivante (annonce de résultats, nouvelle macro). Si le titre ouvre 12 % plus bas que votre stop, l'ordre se déclenche, mais à ce prix d'ouverture, pas au vôtre. Aucun ordre ne supprime ce risque ; seul le <strong>dimensionnement de la position</strong> (vu en partie 5) le contient. Les chiffres de cet article sont illustratifs et ne préjugent d'aucune performance.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="bracket"><i class="fa-solid fa-object-group" style="color:#4f46e5;"></i> Bracket & OCO : entrée, stop, objectif en un seul geste</div>
+  <div class="content-card">
+    <p>Si vous ne deviez retenir qu'un seul outil de cette partie, ce serait celui-ci. Le <strong>bracket order</strong> (ordre « encadré ») est la brique reine du salarié-investisseur : il regroupe en une seule instruction <strong>trois ordres liés</strong> — l'entrée, un stop de protection en dessous, et un objectif de prise de profit au-dessus. Une fois posé le soir, le trade est entièrement géré : quoi qu'il arrive en séance, le résultat est borné, encadré, sous contrôle.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-link" style="margin-right:0.5rem;"></i> L'OCO : « One-Cancels-the-Other »</h4>
+      <p>Le cœur du bracket est le couple <strong>OCO</strong> : <em>One-Cancels-the-Other</em>, « l'un annule l'autre ». Le stop et l'objectif sont liés. Si le cours monte et touche votre objectif, l'ordre de vente au take-profit s'exécute — et le stop s'annule automatiquement. Si au contraire le cours baisse et touche le stop, la vente de protection s'exécute — et l'objectif s'annule. <strong>Vous ne pouvez jamais vous retrouver à découvert ou doublement vendu.</strong> Le système garantit qu'une seule des deux sorties se réalise. C'est précisément ce dont a besoin quelqu'un qui ne peut pas surveiller : la position se solde toute seule, dans un sens ou dans l'autre.</p>
+    </div>
+
+    <h3 style="color:#0f172a;">Un exemple chiffré (illustratif)</h3>
+    <p>Prenons une action fictive à <strong>100 €</strong>. Le soir, vous décidez de la structure complète du trade — sans rien laisser au hasard ni à l'improvisation du lendemain :</p>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value">100 €</div><div class="metric-label">Entrée (ordre limité)</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#dc2626;">95 €</div><div class="metric-label">Stop-loss (−5 %)</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#10b981;">112,50 €</div><div class="metric-label">Objectif (+12,5 %)</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#4f46e5;">2,5 : 1</div><div class="metric-label">Ratio risque / récompense</div></div>
+    </div>
+
+    <p>Le <strong>risque</strong> est de 5 € par action (100 → 95). La <strong>récompense visée</strong> est de 12,50 € (100 → 112,50). Le ratio risque/récompense (R/R) est donc de 2,5 : 1 — vous risquez 1 pour viser 2,5. Ce chiffre est le juge de paix d'un trade encadré : il vous dit, avant même d'entrer, si le jeu en vaut la chandelle. Un R/R inférieur à 1,5 mérite rarement qu'on engage du capital qu'on ne pourra pas surveiller.</p>
+
+    <div id="chart-bracket" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <p>Une fois ce bracket posé avec une validité étendue, votre journée de travail peut se dérouler intégralement sans intervention. Quatre issues possibles, toutes gérées :</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>L'objectif est touché</strong> → vente à 112,50 €, gain de +12,5 %, le stop s'annule. Vous le découvrez le soir.</li>
+      <li><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> <strong>Le stop est touché</strong> → vente à 95 €, perte limitée à −5 %, l'objectif s'annule. La perte était prévue et bornée.</li>
+      <li><i class="fa-solid fa-arrows-left-right" style="color:#d97706;"></i> <strong>Le cours stagne</strong> → rien ne se déclenche, la position reste ouverte avec sa protection. Vous réévaluez le soir.</li>
+      <li><i class="fa-solid fa-ban" style="color:#94a3b8;"></i> <strong>L'entrée n'est jamais touchée</strong> → aucun engagement de capital. Le trade ne s'est simplement pas présenté.</li>
+    </ul>
+
+    <div class="didactic-box">
+      <p><i class="fa-solid fa-circle-info" style="margin-right:0.5rem; color:#4f46e5;"></i> <strong>Disponibilité chez les courtiers.</strong> Tous les courtiers ne nomment pas ces ordres de la même façon, et tous ne les proposent pas. Les plateformes orientées trading (Interactive Brokers, Trading 212, Saxo, certaines offres pro) gèrent nativement les brackets et l'OCO. Les banques en ligne et PEA classiques proposent généralement l'ordre limité, le stop et le stop suiveur, mais pas toujours le bracket complet en un clic — il faut alors poser le stop et l'objectif manuellement après l'entrée. Vérifiez ce que votre intermédiaire autorise <em>avant</em> de bâtir votre routine dessus.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="swing-cloture"><i class="fa-solid fa-calendar-day" style="color:#4f46e5;"></i> Le swing sur clôtures : décider une fois par jour</div>
+  <div class="content-card">
+    <p>Les ordres conditionnels résolvent l'<em>exécution</em>. Reste la <em>décision</em> : à quel moment la prendre ? Pour un salarié, la réponse est sans ambiguïté — <strong>sur les clôtures, pas sur le bruit intraday</strong>. Le swing trading consiste à tenir des positions sur plusieurs jours à plusieurs semaines, et à prendre toutes ses décisions à la fermeture des bougies journalières ou hebdomadaires. Vous ne regardez le marché qu'une fois par jour, le soir, quand la séance est close et que le verdict est tombé.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-wave-square" style="margin-right:0.5rem;"></i> Pourquoi la clôture filtre le bruit</h4>
+      <p>En séance, un titre peut osciller de plusieurs pour cent en quelques minutes sur un rien — un gros ordre, une rumeur, un algorithme. C'est le <strong>bruit intraday</strong> : du signal pour le day-trader professionnel rivé à six écrans, du poison pour le salarié qui jetterait un œil paniqué entre deux mails. La <strong>clôture journalière</strong>, elle, est le prix sur lequel le marché s'est mis d'accord après une journée entière de confrontation. C'est une donnée robuste, stable, sur laquelle on peut raisonner posément le soir. Décider sur la clôture, c'est remplacer le réflexe par le jugement.</p>
+    </div>
+
+    <p>Cette approche n'est pas un pis-aller imposé par votre emploi : c'est une <strong>discipline reconnue</strong> qui colle parfaitement à la contrainte du salarié. Les modes swing de DailyTickers fonctionnent exactement sur ce principe. Leurs horizons de détention — typiquement <strong>H10</strong> (autour de dix séances) et <strong>H20</strong> (autour de vingt séances) — signifient que les positions sont pensées pour être tenues plusieurs jours, voire plusieurs semaines. À cette échelle, ce qui se passe entre 11h15 et 11h40 un mardi n'a aucune importance. Seule compte la trajectoire de clôture à clôture.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Clôture</h4>
+        <p>Le marché ferme (17h30 à Paris pour les actions françaises). Le prix de clôture est figé.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Lecture du soir</h4>
+        <p>Vous lisez la bougie du jour. Le setup est-il toujours valide ? Le stop a-t-il tenu ?</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Décision</h4>
+        <p>Entrer, ajuster le stop, prendre un profit partiel, ou ne rien faire. Le « ne rien faire » est souvent la bonne réponse.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Ordre posé</h4>
+        <p>Vous traduisez la décision en bracket ou en ordre limité, validité étendue. Puis vous fermez l'écran.</p>
+      </div>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr><th>Style</th><th>Horizon</th><th>Surveillance requise</th><th>Compatible salarié ?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Scalping</strong></td><td>Secondes à minutes</td><td>Permanente, écran obligatoire</td><td style="color:#dc2626; font-weight:700;">Non</td></tr>
+        <tr><td><strong>Day trading</strong></td><td>Intraday (clôture le soir)</td><td>Continue en séance</td><td style="color:#dc2626; font-weight:700;">Non</td></tr>
+        <tr><td><strong>Swing (H10 / H20)</strong></td><td>Jours à semaines</td><td>Une lecture par jour, le soir</td><td style="color:#10b981; font-weight:700;">Oui — idéal</td></tr>
+        <tr><td><strong>Investissement long terme</strong></td><td>Mois à années</td><td>Hebdomadaire à mensuelle</td><td style="color:#10b981; font-weight:700;">Oui</td></tr>
+      </tbody>
+    </table>
+
+    <p>La leçon est mécanique : plus l'horizon est long, moins la surveillance est requise, plus l'approche est compatible avec un emploi de 9h à 18h. Le salarié n'a pas à choisir un style « inférieur » — il choisit le style dont le <strong>profil de surveillance correspond à sa vie réelle</strong>. Et sur des horizons de plusieurs jours, l'edge n'est pas dans la vitesse de réaction mais dans la qualité du setup et la rigueur de l'exécution — deux choses qu'on prépare très bien le soir.</p>
+  </div>
+
+  <div class="section-divider" id="dca"><i class="fa-solid fa-repeat" style="color:#4f46e5;"></i> Le DCA programmé : l'automatisation du socle long terme</div>
+  <div class="content-card">
+    <p>À côté de la poche de trading swing, tout salarié devrait disposer d'un <strong>socle d'investissement long terme</strong> qui se construit tout seul. L'outil est le <strong>DCA</strong> — <em>Dollar Cost Averaging</em>, ou en euros, l'investissement programmé : verser un montant fixe à intervalle régulier (par exemple le même jour chaque mois), quel que soit le niveau du marché. C'est l'automatisation poussée à son terme : zéro décision, zéro timing, zéro surveillance.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Principe du DCA</div>
+      Montant fixe <span class="formula-highlight">×</span> Intervalle régulier <span class="formula-highlight">=</span> Prix d'entrée lissé
+    </div>
+
+    <p>La mécanique est puissante par sa simplicité. Avec un montant fixe — disons <strong>300 € par mois</strong> — vous achetez automatiquement <em>plus</em> de parts quand le cours est bas et <em>moins</em> quand il est haut. Sur la durée, votre prix de revient moyen se rapproche d'une moyenne lissée, et vous évitez l'erreur classique du débutant : investir une grosse somme d'un coup, juste avant une baisse, au pire moment. Vous supprimez purement et simplement la question du <em>market timing</em> — celle qui ruine le sommeil et fait prendre de mauvaises décisions à chaud.</p>
+
+    <div id="chart-dca" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+    <p>Le graphique ci-dessus illustre (chiffres fictifs) le contraste entre deux comportements face à un marché volatil sur douze mois : l'investisseur qui place toute sa somme en une fois au mois 1 (achat unique mal timé, juste avant une correction) et celui qui étale ses versements (DCA). Le second n'atteint jamais le sommet de chance ni le creux de malchance — il atterrit sur une <strong>moyenne</strong>, et surtout il dort la nuit. Pour le salarié, l'avantage décisif n'est pas mathématique, il est comportemental : l'opération est automatique et invisible.</p>
+
+    <h3 style="color:#0f172a;">En pratique, sur les enveloppes françaises</h3>
+    <p>Le DCA s'implémente nativement sur les enveloppes du salarié français :</p>
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(79,70,229,0.1); color:#4f46e5;"><i class="fa-solid fa-piggy-bank"></i></div>
+        <h4>PEA</h4>
+        <p>Versement programmé mensuel et, selon les fonctionnalités du courtier, achat automatique d'un ETF éligible. Le cœur du socle actions Europe.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-umbrella"></i></div>
+        <h4>Assurance-vie</h4>
+        <p>« Versements libres programmés » + option d'investissement progressif vers des unités de compte.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1); color:#9333ea;"><i class="fa-solid fa-building-columns"></i></div>
+        <h4>PER</h4>
+        <p>Versements programmés pour la retraite, avec déductibilité possible des versements dans certaines limites, selon votre situation (à vérifier).</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-chart-line"></i></div>
+        <h4>CTO</h4>
+        <p>Achats programmés chez les courtiers qui le proposent. Plus de flexibilité, fiscalité moins clémente.</p>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <p><strong>Information générale, pas un conseil.</strong> Les règles fiscales et les conditions des enveloppes (plafonds, durée de détention, éligibilité des titres, fiscalité des gains) évoluent et dépendent de votre situation personnelle. Tout point fiscal évoqué ici l'est <em>à titre indicatif et susceptible d'évoluer</em>. Vérifiez les conditions exactes auprès de votre établissement et, le cas échéant, d'un conseiller agréé. Cet article ne constitue ni un conseil en investissement ni un conseil fiscal personnalisé.</p>
+    </div>
+
+    <h3 style="color:#0f172a;">Les limites honnêtes du DCA</h3>
+    <p>Le DCA n'est pas magique, et le présenter comme tel serait malhonnête. Deux nuances :</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> <strong>En marché durablement haussier, le DCA sous-performe l'investissement immédiat.</strong> Statistiquement, plus on attend pour investir, plus on rate de hausse. Le DCA achète la tranquillité d'esprit au prix d'un rendement espéré légèrement inférieur quand le marché ne fait que monter.</li>
+      <li><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> <strong>Il ne protège pas contre une baisse de fond.</strong> Si le marché baisse pendant cinq ans, le DCA réduit la perte par rapport à un achat unique au sommet, mais ne l'efface pas. Le DCA lisse le risque de timing, pas le risque de marché.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> <strong>Son vrai bénéfice est comportemental.</strong> Pour un salarié qui ne peut ni ne veut surveiller, l'automatisation supprime les décisions émotionnelles. Un DCA tenu cinq ans bat presque toujours un investissement « optimal » jamais exécuté par peur ou par procrastination.</li>
+    </ul>
+  </div>
+
+  <div class="section-divider" id="signaux"><i class="fa-solid fa-satellite-dish" style="color:#4f46e5;"></i> Exécuter des signaux pré-mâchés le soir</div>
+  <div class="content-card">
+    <p>Nous tenons maintenant les deux moitiés du dispositif : l'<strong>exécution</strong> (ordres conditionnels, bracket, OCO) et le <strong>rythme</strong> (décision sur clôture, une fois par jour). Il manque l'<strong>idée</strong> — quel titre, quelle entrée, quel stop, quel objectif. C'est là que les signaux pré-mâchés font gagner au salarié les deux ressources qui lui manquent le plus : le temps et l'attention.</p>
+
+    <p>Le <strong>scanner DailyTickers</strong> balaie le marché chaque soir et produit des setups notés. Les <strong>plans de trading générés</strong> vont plus loin : ils fournissent une structure complète et prête à l'emploi — entrée, stop, objectif et dimensionnement de position déjà calculés. Le <strong>radar</strong> contextualise (risques, événements, opportunités, régime de marché). Le salarié n'a pas à scanner lui-même des centaines de titres après sa journée de travail : il reçoit une présélection structurée qu'il transforme en bracket order en quelques minutes.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-gears" style="margin-right:0.5rem;"></i> Le workflow du soir, en cinq minutes</h4>
+      <p>L'enchaînement est volontairement court : un salarié fatigué a besoin d'un processus qui tient en quelques minutes, pas d'une session d'analyse d'une heure. Signal → vérification rapide → bracket order → on oublie. La répétition de ce micro-rituel, soir après soir, vaut bien mieux qu'une analyse héroïque mais ponctuelle.</p>
+    </div>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Signal</h4>
+        <p>Vous ouvrez le scanner / plan du jour. Vous lisez les setups les mieux notés et leur structure.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Vérif rapide</h4>
+        <p>Le R/R est-il ≥ 1,5 ? Pas de résultats imminents ? Le titre colle-t-il à votre plan ? 60 secondes.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Bracket order</h4>
+        <p>Vous saisissez entrée + stop + objectif, validité étendue. Le dimensionnement suit votre règle de risque.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>On oublie</h4>
+        <p>Écran fermé. Le courtier exécute en séance. Vous reviendrez demain soir lire le verdict.</p>
+      </div>
+    </div>
+
+    <p>La <strong>vérification rapide</strong> est l'étape que le salarié ne doit jamais sauter, même fatigué. Un signal n'est pas un ordre de marche : c'est une candidature. Trois questions suffisent à éliminer l'essentiel des pièges, et elles tiennent en moins d'une minute :</p>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-magnifying-glass" style="color:#4f46e5;"></i> <strong>Le ratio risque/récompense est-il acceptable au cours actuel ?</strong> Un setup dont le mouvement est déjà largement consommé offre un R/R dégradé — on le laisse passer.</li>
+      <li><i class="fa-solid fa-calendar-xmark" style="color:#4f46e5;"></i> <strong>Y a-t-il un événement à risque imminent ?</strong> Résultats, réunion de banque centrale, décision attendue : autant de sources de gaps qui rendent un stop illusoire.</li>
+      <li><i class="fa-solid fa-scale-balanced" style="color:#4f46e5;"></i> <strong>La taille respecte-t-elle ma règle de risque ?</strong> Le dimensionnement (détaillé en partie 5) prime sur l'enthousiasme. Un bon setup mal dimensionné reste un mauvais trade.</li>
+    </ul>
+
+    <div id="chart-rr" style="width:100%;height:340px;margin:2rem 0;"></div>
+
+    <div class="didactic-box">
+      <p><i class="fa-solid fa-circle-info" style="margin-right:0.5rem; color:#4f46e5;"></i> <strong>Le signal n'est pas une obligation d'agir.</strong> Un scanner peut afficher dix setups un soir et zéro le lendemain. Le salarié discipliné n'a aucune obligation de prendre un trade chaque jour — l'absence d'action est une position parfaitement valable. Les setups sont des candidats à évaluer, jamais des injonctions. Et aucun signal, aussi bien noté soit-il, ne garantit un résultat : les performances passées ne préjugent pas des performances futures.</p>
+    </div>
+  </div>
+
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#4f46e5;"></i> Quiz — Vérifiez vos acquis</div>
+  <div class="content-card">
+    <p>Cinq questions pour tester votre maîtrise de l'arsenal « set and forget ». Cliquez pour révéler la réponse.</p>
+
+    <details>
+      <summary>1. Pourquoi un salarié devrait-il privilégier l'ordre à cours limité plutôt que l'ordre au marché ?</summary>
+      <div class="quiz-answer">Parce que l'ordre limité <strong>garantit le prix</strong> (au mieux), tandis que l'ordre au marché garantit l'exécution mais pas le prix. Pour quelqu'un qui passe ses ordres le soir et ne surveille pas l'exécution en séance, le risque de <em>slippage</em> d'un ordre au marché — être servi loin du dernier cours — est inacceptable. Mieux vaut un trade non pris qu'un trade pris à un mauvais prix pendant une réunion.</div>
+    </details>
+
+    <details>
+      <summary>2. Qu'est-ce qu'un ordre OCO et pourquoi est-il central pour le salarié ?</summary>
+      <div class="quiz-answer">OCO = <em>One-Cancels-the-Other</em>, « l'un annule l'autre ». Le stop et l'objectif sont liés : si l'un se déclenche, l'autre s'annule automatiquement. C'est central pour le salarié car cela <strong>solde la position toute seule</strong>, dans un sens ou dans l'autre, sans qu'il ait à intervenir. On ne peut jamais se retrouver doublement vendu ou exposé sans protection.</div>
+    </details>
+
+    <details>
+      <summary>3. Dans l'exemple chiffré du bracket (entrée 100 €, stop 95 €, objectif 112,50 €), quel est le ratio risque/récompense ?</summary>
+      <div class="quiz-answer">Le risque est de 5 € (100 → 95), la récompense visée de 12,50 € (100 → 112,50). Le R/R est donc de <strong>2,5 : 1</strong> — on risque 1 pour viser 2,5. Un R/R inférieur à 1,5 justifie rarement d'engager du capital qu'on ne pourra pas surveiller. (Chiffres illustratifs.)</div>
+    </details>
+
+    <details>
+      <summary>4. Pourquoi décider « sur la clôture » plutôt qu'en séance convient-il particulièrement au salarié ?</summary>
+      <div class="quiz-answer">La clôture journalière est le prix sur lequel le marché s'est mis d'accord après une séance entière : une donnée robuste, débarrassée du <strong>bruit intraday</strong>. Le salarié n'a alors qu'à regarder le marché <strong>une fois par jour, le soir</strong>, quand il est disponible et à tête reposée. Cela s'aligne sur les horizons swing H10 / H20, où ce qui se passe entre 11h et 11h30 n'a aucune importance — seule compte la trajectoire de clôture à clôture.</div>
+    </details>
+
+    <details>
+      <summary>5. Le DCA est-il toujours la meilleure stratégie ? Citez une limite honnête.</summary>
+      <div class="quiz-answer">Non. En marché durablement haussier, le DCA <strong>sous-performe l'investissement immédiat</strong> (attendre pour investir fait rater de la hausse). Et il ne protège pas contre une baisse de fond — il lisse le risque de <em>timing</em>, pas le risque de marché. Son vrai avantage est <strong>comportemental</strong> : pour un salarié qui ne peut pas surveiller, l'automatisation supprime les décisions émotionnelles et garantit que le plan est réellement exécuté.</div>
+    </details>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 4</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> <strong>Ce que vous ne pouvez pas surveiller, automatisez-le.</strong> L'ordre conditionnel exécute votre plan en séance pendant que vous travaillez.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>L'ordre limité est votre défaut</strong> : il garantit le prix. Couplez-le à une validité étendue (GTC / à révocation) pour poser un ordre une fois et l'oublier.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Le bracket / OCO est la brique reine</strong> : entrée, stop et objectif liés. Le trade se solde tout seul, le résultat est borné d'avance.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Décidez sur la clôture, pas sur le bruit intraday.</strong> Une lecture par jour, le soir. Les horizons swing H10 / H20 sont taillés pour ce rythme.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Le DCA programmé construit le socle long terme tout seul</strong> — zéro timing, zéro surveillance. Son atout majeur est comportemental, ses limites sont réelles.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Transformez les signaux du soir en brackets</strong> : signal → vérif rapide (R/R, événement, taille) → bracket order → on oublie.</li>
+    </ul>
+  </div>
+
+  <a href="/series/salarie-investisseur/part5-psychologie-risque/" class="next-cta">
+    <div>
+      <div class="next-label">Partie 5 sur 6</div>
+      <div class="next-title">Psychologie et risque : l'avantage caché du salarié</div>
+    </div>
+    <i class="fas fa-arrow-right"></i>
+  </a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/salarie-investisseur/part3-routine-soir/" class="series-arrow" title="Construire une routine soutenable autour du job"><i class="fas fa-chevron-left"></i></a><span class="series-title">Salarié & Investisseur</span><div class="series-steps"><a href="/series/salarie-investisseur/part1-contrainte-horaire/" class="series-step" title="Trader quand on bosse de 9h à 18h"><span class="series-num">1</span><span class="series-label">Contrainte horaire</span></a><a href="/series/salarie-investisseur/part2-cadre-fiscal-legal/" class="series-step" title="Le cadre fiscal et légal du salarié-investisseur"><span class="series-num">2</span><span class="series-label">Cadre fiscal & légal</span></a><a href="/series/salarie-investisseur/part3-routine-soir/" class="series-step" title="Construire une routine soutenable autour du job"><span class="series-num">3</span><span class="series-label">Routine du soir</span></a><a href="/series/salarie-investisseur/part4-set-and-forget/" class="series-step current" title="Ordres, automatisation et DCA : le « set and forget »"><span class="series-num">4</span><span class="series-label">Set & forget</span></a><a href="/series/salarie-investisseur/part5-psychologie-risque/" class="series-step" title="Psychologie et risque : l'avantage caché du salarié"><span class="series-num">5</span><span class="series-label">Psycho & risque</span></a><a href="/series/salarie-investisseur/part6-plan-action/" class="series-step" title="Le plan d'action complet du salarié-investisseur"><span class="series-num">6</span><span class="series-label">Plan d'action</span></a></div><span class="series-counter">4/6</span><a href="/series/salarie-investisseur/part5-psychologie-risque/" class="series-arrow" title="Psychologie et risque : l'avantage caché du salarié"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+
+  // --- Chart 1 : schéma d'un bracket order ---
+  var elBracket = document.getElementById('chart-bracket');
+  if (elBracket) {
+    var cBracket = echarts.init(elBracket);
+    // Trajectoire de prix illustrative autour d'une entrée à 100
+    var days = ['J','J+1','J+2','J+3','J+4','J+5','J+6','J+7','J+8'];
+    var price = [100, 101.5, 99.8, 102.4, 104.1, 103.0, 106.8, 109.5, 112.5];
+    cBracket.setOption({
+      title: { text: 'Anatomie d’un bracket order (illustratif)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' €'; } },
+      grid: { left: 55, right: 90, top: 50, bottom: 35 },
+      xAxis: { type: 'category', data: days, axisLine: { lineStyle: { color: '#cbd5e1' } } },
+      yAxis: { type: 'value', min: 92, max: 116, axisLabel: { formatter: '{value} €' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        name: 'Cours', type: 'line', data: price, smooth: true, symbol: 'circle', symbolSize: 6,
+        lineStyle: { color: '#4f46e5', width: 3 }, itemStyle: { color: '#4f46e5' },
+        markLine: {
+          symbol: 'none', label: { position: 'end', fontWeight: 700, fontSize: 11 },
+          data: [
+            { yAxis: 100, name: 'Entrée 100 €', lineStyle: { color: '#64748b', type: 'dashed', width: 2 }, label: { formatter: 'Entrée 100 €', color: '#64748b' } },
+            { yAxis: 95, name: 'Stop 95 €', lineStyle: { color: '#dc2626', type: 'dashed', width: 2 }, label: { formatter: 'Stop 95 €', color: '#dc2626' } },
+            { yAxis: 112.5, name: 'Objectif 112,50 €', lineStyle: { color: '#10b981', type: 'dashed', width: 2 }, label: { formatter: 'Objectif 112,50 €', color: '#10b981' } }
+          ]
+        },
+        markArea: {
+          silent: true,
+          data: [
+            [{ yAxis: 95, itemStyle: { color: 'rgba(220,38,38,0.06)' } }, { yAxis: 100 }],
+            [{ yAxis: 100, itemStyle: { color: 'rgba(16,185,129,0.06)' } }, { yAxis: 112.5 }]
+          ]
+        }
+      }]
+    });
+    charts.push(cBracket);
+  }
+
+  // --- Chart 2 : DCA vs achat unique mal timé ---
+  var elDca = document.getElementById('chart-dca');
+  if (elDca) {
+    var cDca = echarts.init(elDca);
+    var months = ['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
+    // Prix d'une part fictive : baisse puis reprise (volatil)
+    var partPrice = [100, 92, 85, 88, 80, 83, 90, 95, 98, 102, 99, 105];
+    // Coût moyen DCA : 300 € investis chaque mois, prix de revient cumulé
+    var totalInvested = 0, totalShares = 0, dcaAvg = [];
+    partPrice.forEach(function(p) { totalInvested += 300; totalShares += 300 / p; dcaAvg.push(+(totalInvested / totalShares).toFixed(2)); });
+    // Achat unique au M1 : prix de revient figé à 100
+    var lumpAvg = months.map(function() { return 100; });
+    cDca.setOption({
+      title: { text: 'Prix de revient : DCA lissé vs achat unique mal timé (illustratif)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' €'; } },
+      legend: { bottom: 0, data: ['Prix de la part', 'Prix de revient DCA', 'Achat unique au M1 (prix de revient)'] },
+      grid: { left: 55, right: 30, top: 50, bottom: 50 },
+      xAxis: { type: 'category', data: months, axisLine: { lineStyle: { color: '#cbd5e1' } } },
+      yAxis: { type: 'value', min: 75, max: 110, axisLabel: { formatter: '{value} €' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [
+        { name: 'Prix de la part', type: 'line', data: partPrice, smooth: true, symbol: 'none', lineStyle: { color: '#a5b4fc', width: 2 }, areaStyle: { color: 'rgba(165,180,252,0.12)' } },
+        { name: 'Prix de revient DCA', type: 'line', data: dcaAvg, smooth: true, symbol: 'circle', symbolSize: 5, lineStyle: { color: '#10b981', width: 3 }, itemStyle: { color: '#10b981' } },
+        { name: 'Achat unique au M1 (prix de revient)', type: 'line', data: lumpAvg, symbol: 'none', lineStyle: { color: '#dc2626', width: 3, type: 'dashed' } }
+      ]
+    });
+    charts.push(cDca);
+  }
+
+  // --- Chart 3 : R/R d'un trade encadré ---
+  var elRr = document.getElementById('chart-rr');
+  if (elRr) {
+    var cRr = echarts.init(elRr);
+    cRr.setOption({
+      title: { text: 'Risque encadré vs récompense visée (exemple illustratif)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, valueFormatter: function(v){ return v + ' € / action'; } },
+      grid: { left: 90, right: 40, top: 50, bottom: 30 },
+      xAxis: { type: 'value', axisLabel: { formatter: '{value} €' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      yAxis: { type: 'category', data: ['Risque (entrée → stop)', 'Récompense (entrée → objectif)'], axisLine: { lineStyle: { color: '#cbd5e1' } } },
+      series: [{
+        type: 'bar', barWidth: '45%',
+        data: [
+          { value: 5, itemStyle: { color: '#dc2626', borderRadius: [0, 6, 6, 0] } },
+          { value: 12.5, itemStyle: { color: '#10b981', borderRadius: [0, 6, 6, 0] } }
+        ],
+        label: { show: true, position: 'right', fontWeight: 700, formatter: '{c} €' }
+      }]
+    });
+    charts.push(cRr);
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c) { if (c && c.resize) c.resize(); });
+  });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

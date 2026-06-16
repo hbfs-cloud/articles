@@ -5991,5 +5991,31 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/series/scanner-strategy/",
     "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Démarrer sans se faire détruire le jour 1",
+    "desc": "Comment lancer un portefeuille ou une stratégie sans encaisser un gros drawdown dès le départ : déploiement progressif (ramp-up), dimensionnement initial sous-calibré, échelonnement des entrées et garde-fous jour 1.",
+    "tags": "formation,macro,technique",
+    "grade": "",
+    "href": "/series/piloter-son-portefeuille/part1-demarrer/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Trader quand on bosse de 9h à 18h",
+    "desc": "La contrainte de temps du salarié français : quelles stratégies sont réellement compatibles avec un emploi à plein temps (swing, position, investissement, DCA) et lesquelles sont à proscrire (day trading, scalping). Choisir un style aligné sur le temps réellement disponible.",
+    "tags": "formation,macro,technique",
+    "grade": "",
+    "href": "/series/salarie-investisseur/part1-contrainte-horaire/",
+    "date": ""
   }
 ];

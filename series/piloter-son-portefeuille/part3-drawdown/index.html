@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Dimensionner et défendre contre le drawdown | Piloter son Portefeuille — Partie 3/6 | DailyTickers</title>
+ <meta name="description" content="Le cœur de la survie : risque par trade, vol targeting et ATR sizing, Kelly fractionné, gate de corrélation, DD breaker (coupe-circuit de drawdown) et trailing stops pour ne jamais subir un gros drawdown.">
+ <meta property="og:title" content="Dimensionner et défendre contre le drawdown | Piloter son Portefeuille 3/6">
+ <meta property="og:description" content="Le cœur de la survie : risque par trade, vol targeting et ATR sizing, Kelly fractionné, gate de corrélation, DD breaker (coupe-circuit de drawdown) et trailing stops pour ne jamais subir un gros drawdown.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/piloter-son-portefeuille/part3-drawdown/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL THEME — Piloter son Portefeuille */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#0f766e; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; margin-right:0.75rem; }
+ details[open] summary { border-color:#0d9488; background:#f0fdfa; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #134e4a 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#5eead4; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#2dd4bf; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0f766e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#0d9488; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Piloter son Portefeuille — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Dimensionner et défendre contre le drawdown</h1>
+  <p class="hero-subtitle">On ne contrôle pas les gains : ils dépendent du marché. On contrôle l'exposition. Un drawdown sévère n'est presque jamais le fruit d'un mauvais trade isolé — c'est un défaut de dimensionnement ou de corrélation qui transforme dix paris en un seul. Cette partie est le cœur de la survie : comment calibrer la taille, plafonner les clusters et pré-câbler les coupe-circuits pour viser une perte maximale maîtrisée.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-ruler-combined"></i> Position sizing</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-arrow-trend-down"></i> DD breaker</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-diagram-project"></i> Gate de corrélation</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-lock"></i> Lock-in des gains</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-arrow" title="Du backtest au forward test : franchir le pont"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step current" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">3/6</span><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-arrow" title="Scaler une stratégie gagnante"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+<a class="fnav-item" href="#risque-par-trade" data-section="risque-par-trade"><i class="fas fa-bookmark"></i><span>Risque par trade</span></a>
+<a class="fnav-item" href="#vol-targeting" data-section="vol-targeting"><i class="fas fa-bookmark"></i><span>Vol targeting</span></a>
+<a class="fnav-item" href="#kelly" data-section="kelly"><i class="fas fa-bookmark"></i><span>Kelly fractionné</span></a>
+<a class="fnav-item" href="#correlation" data-section="correlation"><i class="fas fa-bookmark"></i><span>Gate de corrélation</span></a>
+<a class="fnav-item" href="#dd-breaker" data-section="dd-breaker"><i class="fas fa-bookmark"></i><span>DD breaker</span></a>
+<a class="fnav-item" href="#trailing" data-section="trailing"><i class="fas fa-bookmark"></i><span>Trailing & lock-in</span></a>
+<a class="fnav-item" href="#quiz" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <div class="content-card" style="border-left:4px solid #0d9488;">
+    <p style="font-size:1.05rem; line-height:1.7; color:#334155; margin:0;">Reprenons le fil de la série. La <strong>Partie 1</strong> a posé les fondations psychologiques et structurelles : démarrer petit, avec un journal et des règles écrites. La <strong>Partie 2</strong> a montré comment passer du backtest au forward test sans se mentir sur l'edge réel. Vous avez désormais une stratégie qui semble avoir un avantage statistique. La question de cette partie n'est plus <em>« est-ce que ça gagne ? »</em> mais <em>« comment ne jamais sauter ? »</em>. Car la différence entre un système rentable qui survit dix ans et le même système qui meurt en six mois ne tient presque jamais à la qualité des signaux. Elle tient à la <strong>taille des positions</strong>, à la <strong>corrélation cachée</strong> du portefeuille, et à la présence — ou l'absence — d'un <strong>coupe-circuit pré-câblé</strong>.</p>
+  </div>
+
+  <div class="alert-box">
+    <strong>La mathématique cruelle du drawdown.</strong> Le retour à l'équilibre n'est pas symétrique. Une perte de 10 % demande +11 % pour revenir au point mort. Une perte de 25 % demande +33 %. Une perte de 50 % demande +100 %. Et une perte de 80 % exige +400 %. Plus on creuse, plus la pente du retour devient verticale — un drawdown profond ne vous coûte pas seulement de l'argent, il vous vole des années de capitalisation. Toute la discipline de cette partie sert à garder le drawdown dans une zone d'où l'on revient <em>facilement</em>, à titre d'illustration un <strong>maximum maîtrisé autour de 8 %</strong>.
+  </div>
+
+  <div class="section-divider" id="risque-par-trade"><i class="fa-solid fa-ruler-combined" style="color:#0d9488;"></i> Le risque par trade</div>
+  <div class="content-card">
+    <h2>La brique de base : risquer un % fixe du capital</h2>
+    <p>La première décision de tout gérant n'est pas <em>« quelle action acheter ? »</em> mais <em>« combien suis-je prêt à perdre si j'ai tort ? »</em>. Le cadre le plus robuste — celui qui a survécu à des décennies de tests et que l'on retrouve dans presque toutes les tables de trading institutionnelles — est le <strong>fixed fractional</strong> : on risque une fraction fixe et identique du capital sur chaque trade, par exemple <strong>0,5 % à 1 %</strong>.</p>
+
+    <p>Le point contre-intuitif, celui que les débutants inversent systématiquement : <strong>ce n'est pas la taille qui définit le stop, c'est le stop qui définit la taille.</strong> On décide d'abord où l'on aura tort (le niveau d'invalidation technique), puis on déduit le nombre d'actions pour que toucher ce stop ne coûte que la fraction de risque autorisée.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Taille de position — fixed fractional</div>
+      Taille = <span class="formula-highlight">(Capital × Risque %)</span> ÷ <span class="formula-highlight">(Prix d'entrée − Prix de stop)</span>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4>Exemple chiffré (illustratif)</h4>
+      <p>Disons un capital de <strong>50 000 €</strong> et un risque par trade de <strong>0,75 %</strong>, soit <strong>375 €</strong> de perte maximale acceptée. Vous repérez un titre à <strong>40 €</strong> dont l'invalidation technique se situe à <strong>37 €</strong> : le risque par action est de <strong>3 €</strong>.</p>
+      <p>Taille = 375 € ÷ 3 € = <strong>125 actions</strong>, soit une exposition notionnelle de 5 000 € (10 % du capital). Si le stop est touché, la perte est de 375 € — exactement 0,75 %, quel que soit le titre.</p>
+      <p>Maintenant, un titre plus serré à <strong>40 €</strong> avec stop à <strong>39 €</strong> (risque 1 €/action) autoriserait <strong>375 actions</strong> (15 000 € de notionnel). Même perte en euros, mais position trois fois plus grosse — parce que le stop est trois fois plus proche. La perte en euros est <em>constante</em> ; l'exposition s'ajuste mécaniquement.</p>
+    </div>
+
+    <p>Cette constance est précisément l'objectif. Quand chaque trade risque la même fraction, une série de pertes — inévitable, même avec un bon edge — entame le capital de façon linéaire et contrôlée, jamais par à-coups. Et comme le risque est exprimé en pourcentage du capital <em>courant</em>, la taille se réduit naturellement quand on perd (on protège le capital restant) et s'étend quand on gagne (capitalisation). C'est un anti-martingale intégré.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Risque par trade</th><th>Pertes consécutives avant −10 %</th><th>Profil</th></tr></thead>
+      <tbody>
+        <tr><td><strong>0,25 %</strong></td><td>~42 trades</td><td>Très conservateur — capital quasi inusable, progression lente</td></tr>
+        <tr><td><strong>0,50 %</strong></td><td>~21 trades</td><td>Conservateur — bon équilibre survie / croissance</td></tr>
+        <tr><td><strong>1,00 %</strong></td><td>~11 trades</td><td>Standard institutionnel — référence courante</td></tr>
+        <tr><td><strong>2,00 %</strong></td><td>~5 trades</td><td>Agressif — une mauvaise passe fait très mal</td></tr>
+        <tr><td><strong>5,00 %</strong></td><td>~2 trades</td><td>Zone de ruine — un cluster de pertes suffit à tuer le compte</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.85rem; color:#64748b;">Calculs cumulés illustratifs (chaque perte calculée sur le capital restant). À retenir : à 1 % par trade, dix pertes d'affilée ne coûtent qu'environ 9,6 % — survivable. À 5 %, le même scénario coûte environ 40 %.</p>
+
+    <div class="didactic-box">
+      <strong>Le piège du « stop mental ».</strong> Le fixed fractional ne fonctionne que si le stop est <em>réel</em> et <em>placé dès l'entrée</em>. Un stop « dans la tête » se déplace toujours vers le bas sous l'effet de l'espoir, et la perte de 0,75 % devient une perte de 4 %. Le stop n'est pas une intention, c'est un ordre.
+    </div>
+  </div>
+
+  <div class="section-divider" id="vol-targeting"><i class="fa-solid fa-wave-square" style="color:#0d9488;"></i> Vol targeting & ATR sizing</div>
+  <div class="content-card">
+    <h2>Dimensionner à l'inverse de la volatilité</h2>
+    <p>Le fixed fractional répond à <em>« combien je perds si le stop saute ? »</em>. Le <strong>vol targeting</strong> répond à une question voisine mais distincte : <em>« combien ma position fait-elle bouger mon portefeuille au quotidien ? »</em>. Deux titres peuvent partager le même stop en pourcentage tout en ayant des amplitudes journalières radicalement différentes. Acheter le même montant en euros d'un titre calme et d'un titre nerveux, c'est laisser le titre nerveux dominer le P&L du portefeuille — sans l'avoir décidé.</p>
+
+    <p>L'outil pratique est l'<strong>ATR (Average True Range)</strong>, qui mesure l'amplitude moyenne réelle d'une bougie sur une période donnée (typiquement 14 jours). L'idée : dimensionner la position pour qu'un mouvement de N×ATR représente le même montant en euros, quel que soit l'actif. Position plus petite sur un actif volatil, plus grande sur un actif calme — à risque égal.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">ATR sizing — risque équivalent</div>
+      Taille = <span class="formula-highlight">(Capital × Risque %)</span> ÷ <span class="formula-highlight">(k × ATR)</span>
+    </div>
+    <p style="font-size:0.85rem; color:#64748b; text-align:center; margin-top:-0.5rem;">où <strong>k</strong> est le multiple d'ATR choisi pour le stop (par exemple 2,0 à 3,0× selon l'horizon).</p>
+
+    <div class="pedagogy-box">
+      <h4>Deux titres, même risque, tailles inverses (illustratif)</h4>
+      <p>Capital 50 000 €, risque 0,75 % = 375 €, stop à 2,5× ATR.</p>
+      <ul>
+        <li><strong>Titre A — « calme »</strong> : prix 40 €, ATR = 0,80 €. Stop = 2,5 × 0,80 = 2,00 €. Taille = 375 ÷ 2,00 = <strong>187 actions</strong> (~7 500 € notionnel).</li>
+        <li><strong>Titre B — « nerveux »</strong> : prix 40 €, ATR = 2,40 €. Stop = 2,5 × 2,40 = 6,00 €. Taille = 375 ÷ 6,00 = <strong>62 actions</strong> (~2 500 € notionnel).</li>
+      </ul>
+      <p>Même prix, même risque en euros, mais le titre nerveux reçoit une position <strong>trois fois plus petite</strong>. Sans ATR sizing, on aurait acheté le même notionnel des deux — et le titre B aurait pesé trois fois plus lourd dans la volatilité du portefeuille.</p>
+    </div>
+
+    <div id="chart-vol" style="width:100%;height:360px;margin:2rem 0;"></div>
+
+    <p>Au niveau du portefeuille, le vol targeting permet de viser une <strong>volatilité cible constante</strong> (par exemple 10 % annualisé). Quand le marché s'agite et que les ATR gonflent, les tailles se réduisent automatiquement ; quand le calme revient, elles s'étendent. C'est une forme de gestion du risque <em>réactive</em> qui ne demande aucune prévision : on ne devine pas la volatilité future, on s'adapte à celle qui se manifeste. C'est l'un des piliers de la gestion systématique moderne (CTA, risk parity).</p>
+
+    <div class="didactic-box">
+      <strong>Pourquoi pas le notionnel fixe ?</strong> Allouer « 5 000 € par position » paraît égalitaire mais ne l'est pas : on charge mécaniquement plus de risque sur les actifs volatils. Le vol targeting égalise la <em>contribution au risque</em>, pas le montant investi — c'est cette contribution qui détermine le drawdown.
+    </div>
+
+    <p>Attention au saut d'échelle : viser une volatilité cible au niveau du <strong>portefeuille</strong> n'est pas la simple somme des volatilités par trade. La vol du book = somme des contributions au risque, et cette contribution dépend des <strong>corrélations</strong> entre lignes. Dix positions calibrées individuellement à risque égal peuvent peser comme une seule si elles montent et descendent ensemble — c'est précisément l'angle mort que la <a href="#correlation">section suivante (gate de corrélation)</a> vient verrouiller.</p>
+  </div>
+
+  <div class="section-divider" id="kelly"><i class="fa-solid fa-dice" style="color:#0d9488;"></i> Kelly fractionné</div>
+  <div class="content-card">
+    <h2>Combien parier quand on a un edge ?</h2>
+    <p>Les sections précédentes calibrent la taille à partir du <em>stop</em>. Le critère de <strong>Kelly</strong> aborde le problème par l'autre bout : étant donné un avantage statistique (taux de réussite, ratio gain/perte), quelle fraction du capital maximise la <strong>croissance géométrique</strong> à long terme ? La réponse de Kelly est mathématiquement optimale… et dangereuse à appliquer telle quelle.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Critère de Kelly (pari binaire)</div>
+      f* = <span class="formula-highlight">p − (q ÷ b)</span> = <span class="formula-highlight">(edge ÷ odds)</span>
+    </div>
+    <p style="font-size:0.9rem; color:#475569; text-align:center; margin-top:-0.5rem;"><strong>p</strong> = probabilité de gagner · <strong>q = 1 − p</strong> = probabilité de perdre · <strong>b</strong> = ratio gain/perte (montant gagné par unité risquée)</p>
+
+    <div class="pedagogy-box">
+      <h4>Exemple chiffré (illustratif)</h4>
+      <p>Une stratégie gagne <strong>55 %</strong> du temps (p = 0,55) avec un ratio gain/perte de <strong>1,5</strong> (b = 1,5). Alors :</p>
+      <p style="text-align:center; font-size:1.05rem;">f* = 0,55 − (0,45 ÷ 1,5) = 0,55 − 0,30 = <strong>0,25</strong></p>
+      <p>Kelly « plein » recommanderait de risquer <strong>25 % du capital</strong> sur ce pari. Sur le papier, c'est ce qui maximise la croissance composée. En pratique, parier 25 % du capital par trade est une voie quasi certaine vers un drawdown brutal.</p>
+    </div>
+
+    <h3>Pourquoi le Kelly plein ruine (ou s'en approche)</h3>
+    <ul class="checklist">
+      <li><i class="fas fa-triangle-exclamation" style="color:#dc2626;"></i><span><strong>Variance énorme.</strong> Le Kelly plein maximise la croissance <em>moyenne</em>, mais au prix d'oscillations extrêmes. Statistiquement, un système à plein Kelly traverse régulièrement des drawdowns de 50 % et plus — psychologiquement et structurellement intenable.</span></li>
+      <li><i class="fas fa-triangle-exclamation" style="color:#dc2626;"></i><span><strong>Sensibilité aux erreurs d'estimation.</strong> p et b ne sont jamais connus avec précision — ils sont <em>estimés</em> sur un historique limité. Si vous surestimez votre edge ne serait-ce qu'un peu, le Kelly plein vous met immédiatement en sur-pari. Le critère est optimal seulement si les paramètres sont exacts, ce qui n'arrive jamais en marché.</span></li>
+      <li><i class="fas fa-triangle-exclamation" style="color:#dc2626;"></i><span><strong>Asymétrie du sur-pari.</strong> La courbe de croissance en fonction de la fraction est concave : sous-parier coûte un peu de rendement, mais <em>sur</em>-parier fait chuter la croissance très vite, puis la rend négative. Parier au-delà de 2× Kelly conduit à la ruine quasi certaine, même avec un vrai edge.</span></li>
+    </ul>
+
+    <div id="chart-kelly" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <p>C'est pour cela que les praticiens utilisent le <strong>Kelly fractionné</strong> — typiquement <strong>1/4 à 1/2 Kelly</strong>. À demi-Kelly, on capture environ <strong>75 % de la croissance</strong> du Kelly plein tout en <em>divisant la volatilité par deux</em>. Ce n'est pas un hasard arithmétique : près de l'optimum, la vitesse de croissance <em>g(f)</em> est une parabole concave dont le sommet est plat — réduire la fraction de moitié ne fait perdre qu'un quart de la croissance (g(½f*) ≈ ¾·g(f*)) — alors que la volatilité, elle, varie à peu près <em>linéairement</em> avec la fraction et tombe donc de moitié. On échange un quart de rendement contre la moitié du risque : un marché très favorable. À quart de Kelly, on est encore plus robuste aux erreurs d'estimation. Dans notre exemple, 25 % de Kelly plein donnerait une fraction de <strong>6,25 %</strong> — et même celle-là devrait être plafonnée par les règles de risque par trade des sections précédentes.</p>
+
+    <div class="alert-box">
+      <strong>Le sur-dimensionnement est la première cause de ruine des bons systèmes.</strong> Un edge réel, mal dimensionné, perd quand même — non parce que les signaux sont faux, mais parce que la variance autour d'un sur-pari finit par toucher un seuil de non-retour. Kelly enseigne une leçon humble : il vaut mieux parier <em>trop peu</em> que trop. Le coût de la prudence est linéaire ; le coût de l'excès est terminal.
+    </div>
+
+    <div class="didactic-box">
+      <strong>En pratique.</strong> N'utilisez pas Kelly comme une commande de taille directe. Utilisez-le comme un <em>plafond de raison</em> : si vos règles de risque par trade impliquent une fraction supérieure à votre demi ou quart de Kelly estimé, c'est le signe que vous sur-pariez. La taille finale = le <em>minimum</em> entre le fixed fractional, le vol targeting et le plafond de Kelly fractionné.
+    </div>
+  </div>
+
+  <div class="section-divider" id="correlation"><i class="fa-solid fa-diagram-project" style="color:#0d9488;"></i> Le gate de corrélation</div>
+  <div class="content-card">
+    <h2>Dix positions corrélées = un seul pari géant</h2>
+    <p>Voici l'erreur la plus coûteuse et la plus invisible du retail sérieux : croire qu'on est diversifié parce qu'on détient dix lignes différentes, alors qu'elles montent et descendent ensemble. NVDA, AMD, AVGO, TSM, MU, ARM, SMCI, MRVL… ce sont dix tickers, mais c'est <strong>un seul pari sur le cycle des semis et de l'IA</strong>. Le jour où ce thème se retourne, les dix lignes plongent à l'unisson, et le drawdown du portefeuille ressemble à celui d'une position unique sur-dimensionnée.</p>
+
+    <p>La diversification n'est pas un nombre de lignes — c'est un nombre de <strong>paris indépendants</strong>. Dix positions parfaitement corrélées (ρ = 1) n'apportent aucune réduction de risque par rapport à une seule. Dix positions non corrélées (ρ = 0) divisent la volatilité du book par environ √10 ≈ 3,2. La corrélation est le levier silencieux du drawdown.</p>
+
+    <div id="chart-corr" style="width:100%;height:420px;margin:2rem 0;"></div>
+    <p style="font-size:0.85rem; color:#64748b; text-align:center; margin-top:-1rem;">Matrice de corrélation illustrative. Les blocs sombres (semis/IA et énergie) révèlent des clusters internes très corrélés ; l'or et l'obligataire (TLT) sont quasi décorrélés du reste.</p>
+
+    <h3>Le gate de corrélation, concrètement</h3>
+    <p>La parade est un <strong>plafond explicite par cluster</strong> : on définit des familles d'actifs corrélés et on limite le nombre — ou le poids total en risque — de positions simultanées dans chaque famille. C'est une règle <em>mécanique</em>, appliquée avant l'entrée, pas une appréciation au cas par cas.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Cluster</th><th>Exemples</th><th>Plafond positions</th><th>Poids max en risque book</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Semis / IA</strong></td><td>NVDA, AMD, AVGO, MU, ARM…</td><td>Max 2-3 positions</td><td>≤ 30 % du risque book</td></tr>
+        <tr><td><strong>Mega-cap tech</strong></td><td>AAPL, MSFT, GOOGL, META…</td><td>Max 2-3 positions</td><td>≤ 30 % du risque book</td></tr>
+        <tr><td><strong>Énergie</strong></td><td>XOM, CVX, OXY, SLB…</td><td>Max 2 positions</td><td>≤ 20 % du risque book</td></tr>
+        <tr><td><strong>Financières</strong></td><td>JPM, BAC, GS, WFC…</td><td>Max 2 positions</td><td>≤ 20 % du risque book</td></tr>
+        <tr><td><strong>Or / refuges</strong></td><td>GLD, GDX, TLT…</td><td>Décorrélant — favoriser</td><td>Pas de plafond (réduit le risque)</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:0.85rem; color:#64748b;">Le « risque book » est la somme des risques par trade (en % du capital) des positions ouvertes — pas le notionnel. Ces plafonds par cluster traduisent le mandat de DD maîtrisé (~8 %) : même si un cluster entier se retourne d'un coup, le risque concentré qu'il porte (≤ 20-30 % du risque total) reste compatible avec une perte de portefeuille bornée. C'est le pont entre la corrélation et le budget de risque global.</p>
+
+    <div class="pedagogy-box">
+      <h4>Comment estimer la corrélation sans tableur compliqué</h4>
+      <p>Trois approches, du plus simple au plus rigoureux :</p>
+      <ul>
+        <li><strong>Par bon sens sectoriel</strong> : même secteur + même thème macro = présumé corrélé. Suffit pour 90 % des cas.</li>
+        <li><strong>Par bêta directionnel</strong> : si tout votre book monte et descend avec le Nasdaq, vous avez un pari beta déguisé, pas un portefeuille diversifié.</li>
+        <li><strong>Par matrice glissante</strong> : calculer la corrélation des rendements sur 60-90 jours. Au-delà de <strong>ρ ≈ 0,6</strong>, traiter deux positions comme un même cluster.</li>
+      </ul>
+    </div>
+
+    <div class="didactic-box">
+      <strong>La corrélation monte quand on en a le plus besoin de la voir baisser.</strong> En régime de stress, les corrélations convergent vers 1 — tout vend en même temps. Un book qui paraissait diversifié en marché calme devient un pari unique en krach. C'est pourquoi le gate de corrélation doit être <em>conservateur</em> : on plafonne en pensant au pire jour, pas au jour moyen.
+    </div>
+  </div>
+
+  <div class="section-divider" id="dd-breaker"><i class="fa-solid fa-arrow-trend-down" style="color:#0d9488;"></i> Le DD breaker</div>
+  <div class="content-card">
+    <h2>Le coupe-circuit de drawdown</h2>
+    <p>Toutes les règles précédentes limitent le risque <em>par trade</em> et <em>par cluster</em>. Le <strong>DD breaker</strong> agit au niveau supérieur : le portefeuille entier. C'est un coupe-circuit qui réduit ou suspend l'activité quand le drawdown global franchit des paliers définis <em>à l'avance</em>. L'objectif est de pré-câbler la défense pour ne jamais avoir à improviser une décision sous stress — précisément le moment où le jugement est le plus défaillant.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">−4%</div>
+        <h4>Vigilance</h4>
+        <p>On revoit le book : clusters trop chargés ? régime en train de tourner ? On resserre les nouvelles entrées, sans réduire encore.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">−8%</div>
+        <h4>Demi-taille</h4>
+        <p>Le risque par trade est divisé par deux (0,75 % → 0,375 %). On continue à trader, mais chaque nouveau pari pèse moitié moins.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">−12%</div>
+        <h4>Pause</h4>
+        <p>Plus aucune nouvelle entrée. On laisse vivre les positions ouvertes (stops/objectifs actifs) jusqu'à fermeture naturelle. Mode défensif.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">Reset</div>
+        <h4>Réactivation</h4>
+        <p>Retour progressif à pleine taille seulement après stabilisation (par ex. equity revenue au-dessus d'un seuil, ou X séances sans nouveau plus-bas).</p>
+      </div>
+    </div>
+
+    <p style="font-size:0.85rem; color:#64748b;">Paliers illustratifs. Le mandat implicite de cette série — un drawdown maximal maîtrisé autour de <strong>8 %</strong> — implique que le palier « demi-taille » se déclenche tôt, avant que le DD ne devienne difficile à rattraper. Calibrez les seuils à votre tolérance, mais fixez-les <em>avant</em>, par écrit.</p>
+
+    <div id="chart-ddbreaker" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <p>Le graphique ci-dessus illustre la logique sur deux trajectoires d'equity partant du même chemin de pertes : <strong>sans DD breaker</strong>, le portefeuille continue à pleine taille pendant la mauvaise passe et creuse un drawdown profond ; <strong>avec DD breaker</strong>, la réduction de taille à −8 % puis la pause à −12 % bornent la perte et préservent le capital pour le rebond. La courbe « avec » se stabilise juste au-dessus du palier de pause : un léger <em>bleed résiduel</em> subsiste après le déclenchement — les positions déjà ouvertes continuent de se déboucler sur leurs stops, ce qui explique que la perte effleure −12 % sans le franchir — mais le breaker empêche tout creusement au-delà, là où le retour deviendrait vertical. Elle récupère moins fort en valeur absolue à court terme — c'est le prix de la prudence — mais ne descend jamais dans la zone de non-retour.</p>
+
+    <div class="didactic-box">
+      <strong>Le lien avec le gating des modes.</strong> Cette logique est exactement celle des coupe-circuits de risque que l'on retrouve dans les stratégies automatisées : un <em>regime filter</em> qui coupe les entrées en marché hostile, un <em>DD breaker</em> qui réduit la taille, un état « pause » qui laisse les positions se déboucler sans en ouvrir de nouvelles. Le pilotage manuel d'un portefeuille gagne à emprunter cette discipline d'état : on ne décide pas <em>si</em> on se défend, on décide <em>à l'avance à quel seuil</em>.
+    </div>
+
+    <div class="alert-box">
+      <strong>Le piège du « ça va rebondir ».</strong> Sans seuil pré-câblé, le réflexe humain en drawdown est d'augmenter la taille pour « se refaire » — exactement l'inverse de ce qu'il faut faire. Le DD breaker existe pour rendre cette tentation impossible : la règle décide, pas l'émotion du moment.
+    </div>
+  </div>
+
+  <div class="section-divider" id="trailing"><i class="fa-solid fa-lock" style="color:#0d9488;"></i> Trailing stops & lock-in</div>
+  <div class="content-card">
+    <h2>Protéger les gains accumulés</h2>
+    <p>Les sections précédentes protègent contre les pertes. Le <strong>trailing stop</strong> protège contre la <em>restitution des gains</em> — ce moment douloureux où un trade gagnant redevient perdant parce qu'on n'a rien verrouillé. L'idée : remonter le stop au fur et à mesure que le prix progresse, de sorte que le capital déjà gagné soit de plus en plus protégé.</p>
+
+    <h3>Le trade « sans risque »</h3>
+    <p>L'étape charnière est de remonter le stop au <strong>point mort (breakeven)</strong> une fois qu'un trade a suffisamment avancé, par exemple après +1R (un multiple du risque initial). À partir de là, le pire scénario est une sortie à zéro : le trade ne peut plus coûter d'argent. On a transformé une position risquée en une <strong>option gratuite sur la hausse</strong>. Psychologiquement, cela change tout : on peut laisser courir un gagnant sans la peur de tout rendre.</p>
+    <p>Attention toutefois : « gratuite » ne veut pas dire <em>sans coût en espérance</em>. Remonter le stop au point mort <strong>trop tôt</strong> — avant que le trade ait franchi son +1R et se soit dégagé du bruit — multiplie les sorties au bruit : on est éjecté à zéro par une simple respiration du marché, juste avant que le mouvement reparte. C'est exactement la tension <a href="#trailing">protection vs bruit</a> développée plus bas, appliquée au breakeven : le seuil de +1R n'est pas arbitraire, il laisse à la position l'amplitude nécessaire pour respirer avant de verrouiller. Verrouiller au point mort réduit le risque de perte, mais payé d'un risque accru de sortie prématurée si le déclencheur est placé trop près de l'entrée.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(13,148,136,0.1); color:#0d9488;"><i class="fas fa-wave-square"></i></div>
+        <h4>Trailing par ATR</h4>
+        <p>Stop suiveur placé à k×ATR sous le plus-haut. S'adapte à la volatilité : large quand ça bouge, serré quand c'est calme.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fas fa-stairs"></i></div>
+        <h4>Trailing par paliers</h4>
+        <p>Remonter le stop à chaque +1R franchi. Simple, mécanique, verrouille la progression par crans.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1); color:#9333ea;"><i class="fas fa-chart-line"></i></div>
+        <h4>Trailing par structure</h4>
+        <p>Stop sous le dernier plus-bas significatif (swing low) ou une moyenne mobile. Respecte la structure du marché.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fas fa-percent"></i></div>
+        <h4>Trailing par pourcentage</h4>
+        <p>Stop à X % sous le plus-haut. Le plus simple, mais ignore la volatilité — à réserver aux actifs homogènes.</p>
+      </div>
+    </div>
+
+    <h3>L'équilibre protection vs bruit</h3>
+    <p>Tout le métier du trailing tient dans une tension : un stop <strong>trop serré</strong> vous fait sortir au premier hoquet — le « bruit » normal du marché vous éjecte d'un trade qui repart ensuite sans vous. Un stop <strong>trop large</strong> protège mal et rend une partie du gain. Le bon réglage laisse respirer la position dans son amplitude normale (d'où l'intérêt de l'ATR, qui mesure exactement ce bruit) tout en coupant net dès que le mouvement s'inverse vraiment.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Réglage du trailing</th><th>Risque</th><th>Quand l'utiliser</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Serré (1-1,5× ATR)</strong></td><td>Sorties prématurées fréquentes</td><td>Tendances explosives, prises de profit rapides, marché euphorique</td></tr>
+        <tr><td><strong>Moyen (2-2,5× ATR)</strong></td><td>Équilibré</td><td>Swing classique — le réglage par défaut</td></tr>
+        <tr><td><strong>Large (3-4× ATR)</strong></td><td>Restitution importante en cas de retournement</td><td>Tendances longues à fort potentiel, position cœur</td></tr>
+      </tbody>
+    </table>
+
+    <div class="didactic-box">
+      <strong>Ne jamais redescendre un trailing stop.</strong> Un trailing stop ne fait que <em>monter</em> (sur un long). S'il vous démange de l'abaisser « pour laisser un peu plus de marge », c'est l'espoir qui parle, pas la méthode. Le jour où vous redescendez un stop, vous avez supprimé la protection que toute cette partie sert à construire.
+    </div>
+  </div>
+
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz</div>
+  <div class="content-card">
+    <h2>Vérifiez votre compréhension</h2>
+    <p>Cinq questions pour ancrer les réflexes de dimensionnement et de défense. Réfléchissez avant d'ouvrir la réponse.</p>
+
+    <details>
+      <summary>1. Vous voulez risquer 1 % d'un capital de 30 000 € sur un titre à 50 € dont le stop est à 47 €. Combien d'actions ?</summary>
+      <div class="quiz-answer">Risque autorisé = 30 000 × 1 % = <strong>300 €</strong>. Risque par action = 50 − 47 = <strong>3 €</strong>. Taille = 300 ÷ 3 = <strong>100 actions</strong> (5 000 € de notionnel). C'est le stop qui a fixé la taille, pas l'inverse.</div>
+    </details>
+
+    <details>
+      <summary>2. Deux titres ont le même prix et le même risque en euros, mais l'un a un ATR trois fois plus grand. Lequel reçoit la plus grosse position ?</summary>
+      <div class="quiz-answer">Le titre <strong>le moins volatil</strong> (ATR faible). En vol targeting / ATR sizing, la taille est inversement proportionnelle à la volatilité : actif calme = position plus grande, actif nerveux = position plus petite, pour une contribution au risque identique. Le titre à fort ATR reçoit ~1/3 de la position de l'autre.</div>
+    </details>
+
+    <details>
+      <summary>3. Une stratégie a p = 0,55 et b = 1,5. Le Kelly plein vaut 0,25. Pourquoi ne pas risquer 25 % par trade ?</summary>
+      <div class="quiz-answer">Parce que le Kelly plein produit une <strong>variance ingérable</strong> (drawdowns de 50 %+), et qu'il suppose p et b <em>parfaitement connus</em> — or ils sont estimés et probablement surévalués. Toute surestimation de l'edge met en sur-pari. Les pros utilisent 1/4 à 1/2 Kelly : à demi-Kelly on garde ~75 % de la croissance pour la moitié de la volatilité. Sur-parier est la première cause de ruine des bons systèmes.</div>
+    </details>
+
+    <details>
+      <summary>4. Vous détenez NVDA, AMD, AVGO, MU et ARM. Combien de paris indépendants avez-vous réellement ?</summary>
+      <div class="quiz-answer">Essentiellement <strong>un seul</strong> — un pari concentré sur le cycle semis/IA. Ces cinq titres sont fortement corrélés ; en stress ils plongent ensemble. Cinq lignes ≠ cinq paris. Le gate de corrélation plafonnerait ce cluster (ex. 2-3 positions max) et imposerait d'ajouter des actifs décorrélants pour vraiment diversifier le risque.</div>
+    </details>
+
+    <details>
+      <summary>5. Votre portefeuille est en drawdown de −9 % et votre DD breaker prévoit demi-taille à −8 %. Que faites-vous, et que ne faites-vous surtout pas ?</summary>
+      <div class="quiz-answer">Vous <strong>divisez le risque par trade par deux</strong> (la règle s'est déclenchée à −8 %) et vous surveillez le palier −12 % qui imposerait la pause totale. Ce qu'il ne faut <strong>surtout pas</strong> faire : augmenter la taille pour « se refaire ». Le DD breaker est pré-câblé précisément pour que la règle décide à votre place quand l'émotion pousse à l'erreur inverse.</div>
+    </details>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-circle-check" style="margin-right:0.5rem;"></i> À retenir — Partie 3</h3>
+    <ul class="takeaway-list">
+      <li><i class="fas fa-check"></i><span><strong>Le stop définit la taille, jamais l'inverse.</strong> Risquez une fraction fixe (0,5-1 %) du capital par trade ; la taille se déduit de la distance au stop.</span></li>
+      <li><i class="fas fa-check"></i><span><strong>Dimensionnez à l'inverse de la volatilité.</strong> Via l'ATR : position plus petite sur actif nerveux, plus grande sur actif calme, pour une contribution au risque constante.</span></li>
+      <li><i class="fas fa-check"></i><span><strong>Kelly est un plafond, pas une commande.</strong> Le plein Kelly ruine par excès de variance et sensibilité aux erreurs ; utilisez 1/4 à 1/2 Kelly. Sur-parier tue les bons systèmes.</span></li>
+      <li><i class="fas fa-check"></i><span><strong>La diversification se compte en paris, pas en lignes.</strong> Plafonnez chaque cluster corrélé : dix positions corrélées = un seul pari géant.</span></li>
+      <li><i class="fas fa-check"></i><span><strong>Pré-câblez la défense.</strong> Le DD breaker (−8 % demi-taille, −12 % pause) décide à votre place quand le stress fausse le jugement. Mandat : DD max maîtrisé (~8 %).</span></li>
+      <li><i class="fas fa-check"></i><span><strong>Verrouillez les gains.</strong> Remontez le stop au point mort après +1R pour un trade « sans risque », puis trailez par ATR — sans jamais redescendre le stop.</span></li>
+    </ul>
+  </div>
+
+  <a class="next-cta" href="/series/piloter-son-portefeuille/part4-scale-up/">
+    <i class="fas fa-arrow-up-right-dots"></i>
+    <div>
+      <div class="next-label">Partie 4 sur 6</div>
+      <div class="next-title">Scaler une stratégie gagnante</div>
+    </div>
+    <i class="fas fa-chevron-right"></i>
+  </a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-arrow" title="Du backtest au forward test : franchir le pont"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step current" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">3/6</span><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-arrow" title="Scaler une stratégie gagnante"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function(){
+  var charts = [];
+  function reg(c){ if(c) charts.push(c); }
+
+  // --- Chart A : Vol targeting — deux actifs, tailles inverses à la vol ---
+  var elVol = document.getElementById('chart-vol');
+  if (elVol) {
+    var cVol = echarts.init(elVol);
+    cVol.setOption({
+      title: { text: 'Vol targeting : taille inverse à la volatilité', left: 'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'} },
+      tooltip: { trigger:'axis', axisPointer:{type:'shadow'} },
+      legend: { data:['Volatilité (ATR, €)','Taille de position (actions)'], top:30 },
+      grid: { left:'3%', right:'4%', bottom:'3%', containLabel:true },
+      xAxis: { type:'category', data:['Titre A — calme','Titre B — nerveux'], axisLabel:{color:'#475569',fontWeight:600} },
+      yAxis: [
+        { type:'value', name:'ATR (€)', axisLabel:{color:'#dc2626'}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+        { type:'value', name:'Actions', axisLabel:{color:'#0d9488'}, splitLine:{show:false} }
+      ],
+      series: [
+        { name:'Volatilité (ATR, €)', type:'bar', yAxisIndex:0, data:[0.80, 2.40], itemStyle:{color:'#dc2626',borderRadius:[6,6,0,0]}, barWidth:'28%' },
+        { name:'Taille de position (actions)', type:'bar', yAxisIndex:1, data:[187, 62], itemStyle:{color:'#0d9488',borderRadius:[6,6,0,0]}, barWidth:'28%' }
+      ]
+    });
+    reg(cVol);
+  }
+
+  // --- Chart B : Kelly — croissance vs fraction de Kelly ---
+  var elK = document.getElementById('chart-kelly');
+  if (elK) {
+    var cK = echarts.init(elK);
+    // Courbe de croissance géométrique relative en fonction du multiple de Kelly.
+    // Forme illustrative concave : pic à 1×, sous-pari coûte peu, sur-pari s'effondre, négatif au-delà de 2×.
+    var mult = [0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5];
+    var growthY = [0, 56, 80, 95, 100, 94, 78, 50, 0, -75, -180];
+    // Couleur pilotée par la VALEUR réelle du multiple (> 2× = rouge),
+    // pas par l'index de catégorie — robuste si l'on densifie/réordonne `mult`.
+    var growth = mult.map(function(mx, i){
+      return { value:growthY[i], itemStyle:{ color: mx > 2 ? '#dc2626' : '#0d9488' } };
+    });
+    cK.setOption({
+      title: { text: 'Croissance composée selon la fraction de Kelly', subtext:'Illustratif — pic au plein Kelly, effondrement au-delà', left:'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}, subtextStyle:{color:'#94a3b8'} },
+      tooltip: { trigger:'axis', formatter:function(p){ return (p[0].axisValue)+'× Kelly<br/>Croissance relative : '+(p[0].data && p[0].data.value!==undefined ? p[0].data.value : p[0].data)+'%'; } },
+      grid: { left:'3%', right:'5%', bottom:'8%', top:70, containLabel:true },
+      xAxis: { type:'category', data:mult, name:'× Kelly', nameLocation:'middle', nameGap:30, axisLabel:{color:'#475569'} },
+      yAxis: { type:'value', name:'Croissance relative (%)', axisLabel:{color:'#475569'}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+      series: [{
+        type:'line', data:growth, smooth:true, symbol:'circle', symbolSize:7,
+        lineStyle:{width:3,color:'#0d9488'},
+        areaStyle:{color:'rgba(13,148,136,0.10)'},
+        markLine:{ silent:true, symbol:'none', data:[
+          { xAxis:1, lineStyle:{color:'#f59e0b',type:'dashed'}, label:{formatter:'¼ Kelly',color:'#d97706'} },
+          { xAxis:2, lineStyle:{color:'#f59e0b',type:'dashed'}, label:{formatter:'½ Kelly',color:'#d97706'} },
+          { xAxis:8, lineStyle:{color:'#dc2626',type:'dashed'}, label:{formatter:'2× = croissance nulle',color:'#dc2626'} }
+        ]}
+      }]
+    });
+    reg(cK);
+  }
+
+  // --- Chart C : matrice de corrélation (heatmap) ---
+  var elC = document.getElementById('chart-corr');
+  if (elC) {
+    var cC = echarts.init(elC);
+    var assets = ['NVDA','AMD','AVGO','XOM','CVX','GLD','TLT'];
+    // matrice symétrique illustrative
+    var m = [
+      [1.00,0.82,0.78,0.10,0.08,-0.05,-0.20],
+      [0.82,1.00,0.75,0.12,0.09,-0.04,-0.18],
+      [0.78,0.75,1.00,0.15,0.11,-0.02,-0.16],
+      [0.10,0.12,0.15,1.00,0.88,0.20,-0.10],
+      [0.08,0.09,0.11,0.88,1.00,0.18,-0.08],
+      [-0.05,-0.04,-0.02,0.20,0.18,1.00,0.35],
+      [-0.20,-0.18,-0.16,-0.10,-0.08,0.35,1.00]
+    ];
+    var data = [];
+    for (var i=0;i<assets.length;i++){ for(var j=0;j<assets.length;j++){ data.push([j,i,m[i][j]]); } }
+    cC.setOption({
+      title: { text: 'Matrice de corrélation (illustrative)', left:'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'} },
+      tooltip: { position:'top', formatter:function(p){ return assets[p.data[1]]+' / '+assets[p.data[0]]+' : ρ = '+p.data[2].toFixed(2); } },
+      grid: { left:'12%', right:'8%', top:60, bottom:'12%' },
+      xAxis: { type:'category', data:assets, splitArea:{show:true}, axisLabel:{color:'#475569',fontWeight:600} },
+      yAxis: { type:'category', data:assets, splitArea:{show:true}, axisLabel:{color:'#475569',fontWeight:600} },
+      visualMap: { min:-0.3, max:1, calculable:true, orient:'horizontal', left:'center', bottom:0,
+        inRange:{ color:['#5eead4','#f8fafc','#0f766e'] } },
+      series: [{
+        name:'Corrélation', type:'heatmap', data:data,
+        label:{ show:true, formatter:function(p){ return p.data[2].toFixed(2); }, fontSize:10, color:'#0f172a' },
+        emphasis:{ itemStyle:{ shadowBlur:10, shadowColor:'rgba(0,0,0,0.4)' } }
+      }]
+    });
+    reg(cC);
+  }
+
+  // --- Chart D : equity avec / sans DD breaker ---
+  var elDD = document.getElementById('chart-ddbreaker');
+  if (elDD) {
+    var cDD = echarts.init(elDD);
+    var x = []; for (var t=0;t<=24;t++){ x.push('S'+t); }
+    // chemin commun de baisse jusqu'à S10, puis divergence
+    var sans = [100,99,97,95,93,91,89,87,85,82,80,77,74,71,68,70,73,76,80,83,86,88,90,92,94];
+    var avec = [100,99,97,95,93,91,89,88.4,88.3,88.25,88.2,88.25,88.4,88.7,89.1,89.6,90.3,91.2,92.3,93.5,95,96.5,98,100,102];
+    cDD.setOption({
+      title: { text: 'Equity avec vs sans DD breaker', subtext:'Illustratif — le breaker borne la perte et préserve le capital', left:'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'}, subtextStyle:{color:'#94a3b8'} },
+      tooltip: { trigger:'axis' },
+      legend: { data:['Sans DD breaker','Avec DD breaker'], top:48 },
+      grid: { left:'3%', right:'5%', bottom:'5%', top:90, containLabel:true },
+      xAxis: { type:'category', data:x, boundaryGap:false, axisLabel:{color:'#475569'} },
+      yAxis: { type:'value', name:'Equity (base 100)', min:60, axisLabel:{color:'#475569'}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+      series: [
+        { name:'Sans DD breaker', type:'line', data:sans, smooth:true, symbol:'none', lineStyle:{width:3,color:'#dc2626'}, areaStyle:{color:'rgba(220,38,38,0.08)'} },
+        { name:'Avec DD breaker', type:'line', data:avec, smooth:true, symbol:'none', lineStyle:{width:3,color:'#0d9488'}, areaStyle:{color:'rgba(13,148,136,0.10)'},
+          markLine:{ silent:true, symbol:'none', data:[
+            { yAxis:92, lineStyle:{color:'#f59e0b',type:'dashed'}, label:{formatter:'−8% : demi-taille',color:'#d97706',position:'insideEndTop'} },
+            { yAxis:88, lineStyle:{color:'#dc2626',type:'dashed'}, label:{formatter:'−12% : pause',color:'#dc2626',position:'insideEndBottom'} }
+          ]},
+          markPoint:{ symbol:'pin', symbolSize:54, data:[
+            { coord:['S10',88.2], value:'bleed\nrésiduel', itemStyle:{color:'#475569'}, label:{color:'#fff',fontSize:9,fontWeight:600,lineHeight:11} }
+          ]}
+        }
+      ]
+    });
+    reg(cDD);
+  }
+
+  window.addEventListener('resize', function(){ charts.forEach(function(c){ c.resize(); }); });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Scaler une stratégie gagnante | Piloter son Portefeuille — Partie 4/6 | DailyTickers</title>
+ <meta name="description" content="Comment faire grossir une stratégie qui marche sans casser ce qui marche : quand scaler (edge confirmé, pas une bonne série), paliers conditionnels anti-martingale, pyramidage, contrainte de capacité et liquidité, risque constant en %.">
+ <meta property="og:title" content="Scaler une stratégie gagnante | Piloter son Portefeuille 4/6">
+ <meta property="og:description" content="Comment faire grossir une stratégie qui marche sans casser ce qui marche : quand scaler (edge confirmé, pas une bonne série), paliers conditionnels anti-martingale, pyramidage, contrainte de capacité et liquidité, risque constant en %.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/piloter-son-portefeuille/part4-scale-up/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL THEME — Piloter son Portefeuille */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#0f766e; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; margin-right:0.75rem; }
+ details[open] summary { border-color:#0d9488; background:#f0fdfa; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #134e4a 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#5eead4; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#2dd4bf; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0f766e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#0d9488; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Piloter son Portefeuille — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Scaler une stratégie gagnante</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto; font-size:1.15rem; color:#475569; line-height:1.6;">Faire grossir ce qui marche est plus dangereux qu'il n'y paraît. Scaler trop tôt ou trop vite tue plus de stratégies que les pertes elles-mêmes. La règle du gérant : on ne scale qu'un edge confirmé, par paliers conditionnels, en gardant le risque relatif rigoureusement constant.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-chart-line"></i> Scale up</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-stairs"></i> Paliers conditionnels</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-water"></i> Capacité &amp; liquidité</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-arrows-up-to-line"></i> Anti-martingale</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-arrow" title="Dimensionner et défendre contre le drawdown"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step current" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause &amp; vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">4/6</span><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-arrow" title="Pause, réduction et vacances : piloter l'activité"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="quand-scaler"><i class="fas fa-bookmark"></i><span>Quand scaler</span></a>
+  <a class="fnav-item" data-section="comment-scaler"><i class="fas fa-bookmark"></i><span>Paliers</span></a>
+  <a class="fnav-item" data-section="pyramiding"><i class="fas fa-bookmark"></i><span>Pyramidage</span></a>
+  <a class="fnav-item" data-section="capacite"><i class="fas fa-bookmark"></i><span>Capacité</span></a>
+  <a class="fnav-item" data-section="discipline"><i class="fas fa-bookmark"></i><span>Risque constant</span></a>
+  <a class="fnav-item" data-section="decorrelate"><i class="fas fa-bookmark"></i><span>Diversifier</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <p style="font-size:1.05rem; color:#475569; line-height:1.7; margin:2rem 0;">Vous avez fait le plus dur. Vous avez démarré petit (Partie 1), franchi le pont entre backtest et live (Partie 2), et appris à dimensionner et défendre vos positions contre le drawdown (Partie 3). Votre stratégie fonctionne. Vient alors la question qui sépare les gérants des amateurs : <strong>comment faire grossir ce qui marche sans casser ce qui marche ?</strong> La réponse contre-intuitive est que la majorité des stratégies rentables ne meurent pas d'un mauvais marché, mais d'un scaling mal piloté — un capital multiplié par dix après une bonne série, suivi d'un drawdown qui frappe désormais sur une taille intenable. Scaler est une discipline, pas une récompense.</p>
+
+  <!-- ===================== SECTION 1 ===================== -->
+  <div class="section-divider" id="quand-scaler"><i class="fa-solid fa-traffic-light" style="color:#0d9488;"></i> Quand scaler (et quand surtout pas)</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">Une bonne série n'est pas une preuve d'edge</h2>
+    <p>Le réflexe le plus répandu — et le plus coûteux — consiste à scaler après une suite de gains. C'est précisément l'inverse de ce qu'il faut faire. Une série de huit trades gagnants d'affilée ne démontre rien sur la robustesse d'une stratégie : sur un edge faible mais réel, voire sur une stratégie à espérance nulle, ce genre de séquence survient régulièrement par pur hasard. Augmenter la taille à ce moment-là revient à parier gros sur ce qui n'est peut-être que du bruit favorable. C'est le <strong>biais de récence</strong> à l'état pur : on extrapole le passé immédiat comme s'il prédisait l'avenir.</p>
+
+    <p>Un edge se confirme dans la durée et dans la diversité des conditions, pas dans l'intensité d'un instant. Avant d'envisager le moindre palier supplémentaire, quatre conditions cumulatives doivent être réunies.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Échantillon significatif</h4>
+        <p>Un nombre de trades suffisant pour que la performance ne soit pas un accident statistique — à titre d'illustration, plusieurs dizaines de trades indépendants, pas une poignée.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Plusieurs régimes traversés</h4>
+        <p>La stratégie a vécu du risk-on, du risk-off, de la volatilité élevée et calme. Un edge qui ne tient que dans un seul régime n'est pas un edge, c'est un pari directionnel déguisé.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Un drawdown réel encaissé</h4>
+        <p>Vous avez subi une perte conforme à ce que le modèle annonçait, et vous l'avez tenue sans dévier. Le drawdown vécu est le meilleur test de votre discipline et de la validité de vos hypothèses.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">4</div>
+        <h4>Métriques live ≈ attendues</h4>
+        <p>Win rate, gain moyen, perte moyenne et facteur de profit observés en réel restent dans la fourchette du forward test. Pas de dérive inexpliquée.</p>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Le drawdown comme rite de passage</h4>
+      <p>Tant que vous n'avez pas vécu un drawdown réel à votre taille actuelle <em>et</em> respecté votre plan jusqu'au bout, vous ne savez pas comment vous réagissez sous stress. Scaler avant ce test, c'est multiplier la mise sur une discipline que vous n'avez jamais éprouvée. Le premier vrai drawdown à grande taille révèle souvent que l'investisseur ne supporte pas la volatilité absolue qu'il croyait pouvoir tenir — et il coupe au pire moment.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead><tr><th>Signal</th><th>Mauvais déclencheur de scaling</th><th>Bon déclencheur de scaling</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Source</strong></td><td>Une bonne série récente</td><td>Un edge confirmé sur la durée</td></tr>
+        <tr><td><strong>Émotion</strong></td><td>Euphorie, sentiment d'invincibilité</td><td>Confiance froide, étayée par les chiffres</td></tr>
+        <tr><td><strong>Échantillon</strong></td><td>5 à 10 trades</td><td>Échantillon significatif, multi-régime</td></tr>
+        <tr><td><strong>Drawdown</strong></td><td>Jamais réellement testé à cette taille</td><td>Vécu et encaissé conformément au plan</td></tr>
+        <tr><td><strong>Métriques</strong></td><td>Non suivies, ressenti</td><td>Win rate / PF / DD dans la fourchette attendue</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <p style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> <strong>Règle d'or.</strong> Le scaling se décide à froid, sur la base de critères écrits à l'avance, jamais à chaud après un gain. Si la décision d'augmenter la taille vous procure de l'excitation, c'est probablement le mauvais moment.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 2 ===================== -->
+  <div class="section-divider" id="comment-scaler"><i class="fa-solid fa-stairs" style="color:#0d9488;"></i> Comment scaler par paliers</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">Paliers conditionnels, anti-martingale, définis à l'avance</h2>
+    <p>Scaler ne se fait pas d'un coup ni au feeling. La bonne méthode est <strong>conditionnelle</strong> : la taille n'augmente qu'après que de nouveaux gains ont été réellement réalisés et que les conditions de la section précédente restent vérifiées. C'est l'opposé exact de la martingale.</p>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Anti-martingale, en une phrase</h4>
+      <p>La <strong>martingale</strong> augmente la mise après une perte pour « se refaire » — c'est une trajectoire vers la ruine, car une série de pertes finit toujours par arriver et la mise explose au pire moment. L'<strong>anti-martingale</strong> fait l'inverse : on augmente la taille seulement après des gains réalisés, et on la réduit après des pertes. On presse l'avantage quand le capital travaille pour nous, on le protège quand il recule.</p>
+    </div>
+
+    <p>Un cadre simple et robuste consiste à définir des paliers d'equity. À titre d'illustration, on peut augmenter la taille de chaque position d'<strong>environ +25 %</strong> chaque fois que l'equity du compte franchit un nouveau seuil — disons tous les <strong>+10 %</strong> de capital atteints — et inversement réduire d'un palier si l'on retombe sous le seuil précédent. Le tableau ci-dessous illustre une grille à trois paliers ; les chiffres sont purement pédagogiques.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Palier</th><th>Equity atteinte (illustration)</th><th>Taille par position</th><th>Condition pour monter</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Base</strong></td><td>100 (référence)</td><td>1,0×</td><td>Edge confirmé (Section 1)</td></tr>
+        <tr><td><strong>Palier 1</strong></td><td>≥ 110</td><td>1,25×</td><td>Nouveau plus-haut + métriques OK</td></tr>
+        <tr><td><strong>Palier 2</strong></td><td>≥ 121</td><td>1,55×</td><td>Idem + capacité vérifiée (Section 4)</td></tr>
+        <tr><td><strong>Palier 3</strong></td><td>≥ 133</td><td>1,95×</td><td>Idem + exécution testée à la nouvelle taille</td></tr>
+      </tbody>
+    </table>
+
+    <p>Visuellement, la taille suit l'equity comme un escalier : elle monte par marches après des gains réalisés, et redescend si l'equity reflue. Jamais de saut vertical, jamais d'augmentation pendant un drawdown.</p>
+
+    <div id="chart-paliers" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-ruler" style="margin-right:0.5rem;"></i> Pourquoi des paliers et pas une montée continue ?</h4>
+      <p>Les paliers créent des points de contrôle. À chaque marche, vous vous arrêtez, vous vérifiez que les conditions tiennent toujours (capacité, exécution, régime, métriques), et seulement ensuite vous franchissez la suivante. Une montée continue, proportionnelle à chaque gain, ne laisse aucune respiration pour observer si l'edge survit à la nouvelle taille. Les paliers transforment le scaling en une succession de petites décisions réversibles plutôt qu'en un pari unique irréversible.</p>
+    </div>
+
+    <p>Définissez la grille <strong>par écrit, avant</strong> de commencer à scaler. Le piège classique est d'improviser les seuils en cours de route, ce qui rouvre la porte à l'émotion — on monte un peu plus vite parce qu'« on le sent », on hésite à redescendre parce qu'« ça va repartir ». Une grille écrite est un contrat avec soi-même.</p>
+  </div>
+
+  <!-- ===================== SECTION 3 ===================== -->
+  <div class="section-divider" id="pyramiding"><i class="fa-solid fa-layer-group" style="color:#0d9488;"></i> Pyramidage vs scaling du book</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">Deux décisions, deux logiques</h2>
+    <p>On confond souvent deux gestes qui n'ont rien à voir. Les distinguer clairement évite des erreurs de risque grossières.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(13,148,136,0.12); color:#0d9488;"><i class="fa-solid fa-arrow-up-right-dots"></i></div>
+        <h4>Pyramidage</h4>
+        <p>Ajouter à une <strong>position gagnante individuelle</strong>, au fur et à mesure qu'elle confirme. On remonte le stop sur l'ensemble pour que le risque total reste borné.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.12); color:#9333ea;"><i class="fa-solid fa-layer-group"></i></div>
+        <h4>Scaling du book</h4>
+        <p>Augmenter la <strong>taille de toutes les positions</strong> de la stratégie, parce que l'edge global est confirmé et que le capital a grandi.</p>
+      </div>
+    </div>
+
+    <h3>Le pyramidage : presser une position qui a raison</h3>
+    <p>Le pyramidage consiste à entrer en plusieurs fois sur une même idée qui se déroule en votre faveur. La clé absolue est de <strong>remonter le stop à chaque ajout</strong> pour que le risque agrégé de la position ne dépasse jamais le risque que vous aviez accepté au départ. Sans cette discipline, le pyramidage devient une accumulation aveugle qui transforme un gain latent en désastre lors du premier retournement.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Étape</th><th>Action (illustration)</th><th>Stop</th><th>Risque agrégé visé</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Entrée 1</strong></td><td>Position initiale à 100</td><td>96</td><td>≈ 1,0R</td></tr>
+        <tr><td><strong>Ajout 1</strong></td><td>+50 % de taille à 106 (confirmation)</td><td>relevé à 102</td><td>≤ 1,0R sur le total</td></tr>
+        <tr><td><strong>Ajout 2</strong></td><td>+50 % à 112 (poursuite)</td><td>relevé à 108</td><td>≤ 1,0R sur le total</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <p style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> <strong>Le piège du pyramidage.</strong> Ajouter sans remonter le stop fait croître le risque à chaque ajout. La position devient lourde exactement au moment où elle est la plus étendue, et un simple retour à la moyenne efface plusieurs trades gagnants. Le pyramidage discipliné garde le risque <em>constant ou décroissant</em> à mesure qu'on ajoute.</p>
+    </div>
+
+    <h3>Le scaling du book : une décision de capital</h3>
+    <p>Le scaling du book est une décision distincte, prise au niveau du portefeuille entier, selon les paliers de la Section 2. Elle ne concerne pas une position particulière mais la taille de référence appliquée à toutes les nouvelles entrées. On peut très bien scaler le book sans jamais pyramider, et pyramider sur une idée sans avoir scalé le book. Ne mélangez pas les deux décisions dans votre tête : l'une parle d'une conviction sur un trade précis, l'autre d'une conviction sur la stratégie globale.</p>
+  </div>
+
+  <!-- ===================== SECTION 4 ===================== -->
+  <div class="section-divider" id="capacite"><i class="fa-solid fa-water" style="color:#0d9488;"></i> La contrainte de capacité &amp; liquidité</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">Une stratégie qui marche à 10 k$ peut mourir à 1 M$</h2>
+    <p>Voici la contrainte que les débutants ignorent et qui rattrape les ambitieux : <strong>la taille a une capacité maximale</strong>. Une stratégie peut afficher un edge magnifique sur de petits montants et le voir s'évaporer une fois le capital multiplié, simplement parce que vos ordres deviennent trop gros pour le marché que vous tradez.</p>
+
+    <p>Trois mécanismes érodent l'edge à mesure que la taille grossit :</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-arrows-left-right-to-line"></i></div>
+        <h4>Slippage</h4>
+        <p>Vous ne remplissez plus au prix affiché. Un gros ordre balaie plusieurs niveaux du carnet, et le prix moyen d'exécution dérive contre vous.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-wave-square"></i></div>
+        <h4>Impact de marché</h4>
+        <p>Votre ordre déplace lui-même le prix. Acheter gros pousse le cours à la hausse avant que vous ayez fini — vous payez votre propre demande.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-percent"></i></div>
+        <h4>% de l'ADV</h4>
+        <p>Quand votre position représente une fraction trop grande du volume quotidien moyen (ADV), entrer et sortir proprement devient impossible sans bouger le marché.</p>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-label">Edge net réel</div>
+      Edge brut <span class="formula-highlight">−</span> (slippage + impact + coûts) <span class="formula-highlight">= Edge net</span>
+    </div>
+
+    <p>L'edge brut est constant ; le coût d'exécution, lui, croît avec la taille. Il existe donc un point au-delà duquel l'edge net devient nul, puis négatif. C'est la <strong>capacité</strong> de la stratégie. Le graphique ci-dessous illustre cette érosion : l'edge net reste solide tant que la position pèse peu dans l'ADV, puis chute lorsque le slippage et l'impact prennent le dessus.</p>
+
+    <div id="chart-capacite" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-flask-vial" style="margin-right:0.5rem;"></i> Estimer et tester sa capacité — méthode pratique</h4>
+      <ul class="checklist" style="margin:0.75rem 0 0;">
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> <strong>Plafond en % de l'ADV.</strong> Fixez une limite stricte par instrument — par exemple ne jamais représenter plus d'un petit pourcentage du volume quotidien moyen pour pouvoir entrer/sortir en une séance sans tout bouger.</li>
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> <strong>Mesurez votre slippage réel.</strong> Comparez systématiquement prix attendu et prix exécuté. Tenez un journal du slippage par taille d'ordre : c'est votre donnée la plus précieuse.</li>
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> <strong>Testez l'exécution à taille croissante.</strong> Avant de scaler, passez quelques ordres réels à la taille du palier suivant et observez le remplissage. Si le slippage explose, vous avez trouvé votre plafond.</li>
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> <strong>Fractionnez les gros ordres.</strong> À grande taille, découper l'ordre dans le temps (ou utiliser des ordres limites patients) réduit l'impact — mais allonge le délai d'exécution, ce qui a son propre coût.</li>
+      </ul>
+    </div>
+
+    <div class="alert-box">
+      <p style="margin:0;"><i class="fa-solid fa-triangle-exclamation" style="margin-right:0.5rem;"></i> <strong>La capacité dépend de ce que vous tradez.</strong> Une stratégie sur méga-caps liquides ou sur des contrats à terme profonds a une capacité énorme. La même logique appliquée aux small-caps, aux micro-caps ou aux cryptos peu échangées sature très vite. Avant de scaler, demandez-vous toujours : à quelle taille mon propre ordre devient-il le marché ?</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 5 ===================== -->
+  <div class="section-divider" id="discipline"><i class="fa-solid fa-scale-balanced" style="color:#0d9488;"></i> Garder le risque constant</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">On scale la taille absolue, pas le risque relatif</h2>
+    <p>Voici le principe le plus important de toute cette partie, et le plus facile à trahir sans s'en rendre compte. Scaler signifie augmenter le <strong>montant absolu</strong> engagé à mesure que le capital grandit. Cela ne signifie <em>jamais</em> augmenter le <strong>risque relatif par trade</strong>. Si vous risquiez 1 % de votre capital par trade à 10 k$, vous risquez toujours 1 % à 100 k$ — soit dix fois plus en dollars, mais exactement la même fraction de votre compte.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Le principe</div>
+      Taille absolue <span class="formula-highlight">↑</span> &nbsp; | &nbsp; Risque en % du capital <span class="formula-highlight">= constant</span>
+    </div>
+
+    <p>Le danger ne vient presque jamais d'une décision consciente d'augmenter le risque. Il vient de la <strong>dérive</strong> : le succès gonfle l'ego, la confiance se transforme en complaisance, et le risque par trade glisse insensiblement de 1 % à 2 % puis 3 %. Chaque pas paraît minuscule, mais l'effet cumulé est brutal. Une stratégie qui dérive son risque par trade ne ressemble plus du tout, en matière de drawdown, à celle qui l'a fait gagner.</p>
+
+    <p>Le graphique ci-dessous compare deux trajectoires sur la même séquence de trades : un scaling <strong>discipliné</strong> (risque maintenu constant en %) et un scaling <strong>agressif</strong> (risque qui dérive vers le haut). Les deux montent plus vite côté agressif tant que tout va bien — mais quand le drawdown inévitable arrive, le second creuse un trou bien plus profond, et met beaucoup plus longtemps à s'en remettre. Les chiffres sont illustratifs.</p>
+
+    <div id="chart-discipline" style="width:100%;height:400px;margin:2rem 0;"></div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value" style="color:#0d9488;">−12 %</div><div class="metric-label">DD max — scaling discipliné (illustration)</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#dc2626;">−34 %</div><div class="metric-label">DD max — scaling agressif (illustration)</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#0d9488;">1,0 %</div><div class="metric-label">Risque/trade maintenu</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#dc2626;">3,0 %</div><div class="metric-label">Risque/trade après dérive</div></div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-eye" style="margin-right:0.5rem;"></i> Comment détecter la dérive avant qu'elle vous coûte cher</h4>
+      <p>Suivez votre risque par trade comme une métrique à part entière, séparée de votre P&amp;L. À chaque trade, notez le risque en pourcentage du capital <em>du moment</em>. Tracez-le dans le temps : il doit former une ligne plate. La moindre pente ascendante est un signal d'alarme — vous êtes en train de scaler le risque, pas seulement la taille. Beaucoup d'investisseurs talentueux ont rendu des années de gains en quelques semaines parce que personne, eux compris, ne surveillait cette ligne.</p>
+    </div>
+  </div>
+
+  <!-- ===================== SECTION 6 ===================== -->
+  <div class="section-divider" id="decorrelate"><i class="fa-solid fa-diagram-project" style="color:#0d9488;"></i> Scaler en diversifiant</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">Ajouter des stratégies décorrélées plutôt que concentrer la même</h2>
+    <p>Quand vous atteignez les limites de capacité d'une stratégie (Section 4), la tentation est de pousser encore plus fort sur le même filon. C'est rarement la bonne réponse. La voie la plus saine pour scaler le rendement consiste à <strong>ajouter des stratégies ou des marchés décorrélés</strong> plutôt qu'à concentrer davantage le même pari.</p>
+
+    <p>La raison est mathématique. Quand vous doublez la taille d'une seule stratégie, vous doublez son rendement attendu <em>et</em> son risque, à peu près proportionnellement. Mais quand vous répartissez le capital sur deux stratégies peu corrélées, leurs gains s'additionnent tandis que leurs pertes ne surviennent pas toujours en même temps : le risque agrégé croît <em>moins vite</em> que la somme des risques. C'est le seul vrai « repas gratuit » de la finance — diversifier permet de scaler le rendement sans scaler le risque proportionnellement.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Façon de scaler</th><th>Effet sur le rendement</th><th>Effet sur le risque</th><th>Verdict</th></tr></thead>
+      <tbody>
+        <tr><td>Concentrer la même stratégie ×2</td><td>≈ ×2</td><td>≈ ×2 (proportionnel)</td><td>Bute sur la capacité, risque non amélioré</td></tr>
+        <tr><td>Pyramider sur les mêmes idées</td><td>Variable</td><td>Concentration accrue, corrélations cachées</td><td>Fragile en cas de choc de marché</td></tr>
+        <tr><td><strong>Ajouter une stratégie décorrélée</strong></td><td>≈ ×2</td><td>&lt; ×2 (sous-additif)</td><td><strong>Meilleur rapport rendement/risque</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="didactic-box">
+      <h4><i class="fa-solid fa-circle-info" style="margin-right:0.5rem;"></i> Décorrélation, pas simple multiplication</h4>
+      <p>Décorréler ne veut pas dire empiler dix variantes de la même idée. Deux stratégies momentum sur des actions tech sont fortement corrélées : en cas de retournement sectoriel, elles plongent ensemble. La vraie décorrélation vient de logiques différentes (par exemple tendance vs retour à la moyenne), de classes d'actifs différentes, ou d'horizons de temps différents. Vérifiez la corrélation réelle de vos courbes d'equity, pas la corrélation supposée des récits.</p>
+      <p style="margin-bottom:0;"><strong>Le piège du « repas gratuit ».</strong> La sous-additivité du risque ne tient que tant que la corrélation reste franchement inférieure à 1. Or, en cas de choc systémique — krach, crise de liquidité, panique généralisée — les corrélations convergent brutalement vers 1 : tout baisse ensemble, et la diversification cesse précisément de protéger au moment où vous en auriez le plus besoin. Diversifier reste le meilleur outil disponible, mais dimensionnez votre risque agrégé en supposant que, le pire jour, vos stratégies plongeront de concert.</p>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-list-check" style="margin-right:0.5rem;"></i> Le réflexe à adopter quand on veut scaler</h4>
+      <ul class="checklist" style="margin:0.75rem 0 0;">
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> Ma stratégie principale est-elle proche de sa capacité ? Si oui, concentrer davantage est contre-productif.</li>
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> Ai-je une seconde stratégie, déjà confirmée selon les critères de la Section 1, dont la courbe d'equity est peu corrélée à la première ?</li>
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> Le capital ajouté à cette seconde stratégie respecte-t-il le même risque constant en % (Section 5) ?</li>
+        <li><i class="fa-solid fa-check" style="color:#0d9488;"></i> Au niveau du portefeuille global, mon risque agrégé reste-t-il dans mon budget de drawdown (Partie 3) ?</li>
+      </ul>
+    </div>
+
+    <p>Diversifier pour scaler est aussi la transition naturelle vers la suite de cette série : un portefeuille de stratégies multiples doit être <em>piloté</em> dans le temps — on apprend à le mettre en pause, à le réduire, et finalement à l'arrêter proprement. C'est l'objet des deux dernières parties.</p>
+  </div>
+
+  <!-- ===================== QUIZ ===================== -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz</div>
+  <div class="content-card">
+    <h2 style="margin-top:0;">Vérifiez votre compréhension</h2>
+    <p>Quatre questions pour ancrer les réflexes de cette partie. Réfléchissez avant d'ouvrir la réponse.</p>
+
+    <details>
+      <summary>1. Vous venez d'enchaîner huit trades gagnants. Faut-il scaler ?</summary>
+      <div class="quiz-answer">Non. Une bonne série n'est pas une preuve d'edge — sur un avantage faible, voire nul, ce genre de séquence arrive régulièrement par hasard. Scaler ici serait du biais de récence. On ne scale qu'après un edge confirmé sur un échantillon significatif, à travers plusieurs régimes, avec un drawdown réel déjà encaissé conformément au plan. La décision se prend à froid, sur critères écrits, jamais dans l'euphorie d'une série.</div>
+    </details>
+
+    <details>
+      <summary>2. Quelle est la différence entre martingale et anti-martingale ?</summary>
+      <div class="quiz-answer">La martingale augmente la mise après une perte pour « se refaire » — c'est une trajectoire vers la ruine, car la série de pertes finit toujours par arriver et la mise explose au pire moment. L'anti-martingale fait l'inverse : on augmente la taille uniquement après des gains réalisés, et on la réduit après des pertes. Le scaling sain est strictement anti-martingale : on presse l'avantage quand le capital travaille pour nous, on se protège quand il recule.</div>
+    </details>
+
+    <details>
+      <summary>3. Quelle différence entre pyramider une position et scaler le book ?</summary>
+      <div class="quiz-answer">Pyramider, c'est ajouter à une position gagnante individuelle, en remontant le stop à chaque ajout pour que le risque agrégé reste borné (constant ou décroissant). Scaler le book, c'est augmenter la taille de référence de toutes les positions de la stratégie parce que l'edge global est confirmé et que le capital a grandi. Ce sont deux décisions différentes : l'une porte sur la conviction d'un trade précis, l'autre sur la conviction de la stratégie entière. On peut faire l'une sans l'autre.</div>
+    </details>
+
+    <details>
+      <summary>4. Vous risquiez 1 % du capital par trade à 20 k$. À 200 k$, combien risquez-vous ?</summary>
+      <div class="quiz-answer">Toujours 1 % — soit dix fois plus en valeur absolue (de 200 $ à 2 000 $ par trade), mais exactement la même fraction du compte. On scale la taille absolue, jamais le risque relatif. Le danger n'est pas une hausse consciente du risque mais la dérive insidieuse de 1 % vers 2 % puis 3 % à mesure que le succès gonfle l'ego. Suivez votre risque par trade dans le temps : il doit former une ligne plate.</div>
+    </details>
+  </div>
+
+  <!-- ===================== TAKEAWAY ===================== -->
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 4</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-circle-check"></i> <strong>On ne scale qu'un edge confirmé</strong>, pas une bonne série : échantillon significatif, plusieurs régimes, un drawdown réel encaissé, métriques live conformes. La décision se prend à froid, sur critères écrits.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Scaler par paliers conditionnels et anti-martingale</strong> : la taille monte après des gains réalisés, jamais après une perte « pour se refaire ». La grille est définie par écrit, à l'avance.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Pyramidage ≠ scaling du book.</strong> Pyramider une position gagnante en remontant le stop (risque borné) est distinct d'augmenter la taille de tout le portefeuille. Deux décisions, deux logiques.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>La capacité est réelle.</strong> Slippage, impact de marché et % de l'ADV érodent l'edge net à mesure que la taille grossit. Estimez et testez votre capacité avant de scaler.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Risque constant en %.</strong> On scale la taille absolue, pas le risque relatif. Surveillez la dérive : c'est elle, et non le marché, qui rend des années de gains.</li>
+      <li><i class="fa-solid fa-circle-check"></i> <strong>Diversifier est la meilleure façon de scaler</strong> le rendement sans scaler le risque proportionnellement : ajoutez des stratégies réellement décorrélées plutôt que concentrer le même pari.</li>
+    </ul>
+  </div>
+
+  <a class="next-cta" href="/series/piloter-son-portefeuille/part5-pause-vacances/">
+    <i class="fa-solid fa-pause"></i>
+    <div>
+      <div class="next-label">Partie 5 sur 6</div>
+      <div class="next-title">Pause, réduction et vacances : piloter l'activité</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-arrow" title="Dimensionner et défendre contre le drawdown"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step current" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause &amp; vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">4/6</span><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-arrow" title="Pause, réduction et vacances : piloter l'activité"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+  function reg(c) { if (c) charts.push(c); }
+
+  // --- Chart 1 : Paliers de scaling conditionnels (escalier equity -> taille) ---
+  var elP = document.getElementById('chart-paliers');
+  if (elP && window.echarts) {
+    var cP = echarts.init(elP);
+    var trades = ['T0','T5','T10','T15','T20','T25','T30','T35','T40','T45','T50','T55','T60'];
+    var equity = [100,104,110,112,116,121,119,124,128,133,131,137,142];
+    var size   = [1.0,1.0,1.25,1.25,1.25,1.55,1.25,1.55,1.55,1.95,1.55,1.95,1.95];
+    cP.setOption({
+      title:{ text:'Paliers conditionnels — la taille suit l\'equity en escalier', left:'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'} },
+      tooltip:{ trigger:'axis' },
+      legend:{ data:['Equity (illustration)','Taille par position (×)'], bottom:0, textStyle:{color:'#475569'} },
+      grid:{ left:55, right:60, top:55, bottom:50 },
+      xAxis:{ type:'category', data:trades, axisLabel:{color:'#64748b'} },
+      yAxis:[
+        { type:'value', name:'Equity', position:'left', axisLabel:{color:'#64748b'}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+        { type:'value', name:'Taille ×', position:'right', min:0.5, max:2.2, axisLabel:{color:'#0d9488',formatter:'{value}×'}, splitLine:{show:false} }
+      ],
+      series:[
+        { name:'Equity (illustration)', type:'line', smooth:true, data:equity, lineStyle:{width:3,color:'#14b8a6'}, itemStyle:{color:'#0d9488'}, areaStyle:{color:'rgba(20,184,166,0.10)'} },
+        { name:'Taille par position (×)', type:'line', step:'end', yAxisIndex:1, data:size, lineStyle:{width:3,color:'#9333ea'}, itemStyle:{color:'#9333ea'} }
+      ]
+    });
+    reg(cP);
+  }
+
+  // --- Chart 2 : Capacite -- edge net vs taille du book (% de l'ADV) ---
+  var elC = document.getElementById('chart-capacite');
+  if (elC && window.echarts) {
+    var cC = echarts.init(elC);
+    var adv = ['0,5%','1%','2%','3%','5%','8%','12%','18%','25%'];
+    var edgeBrut = [2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0,2.0];
+    var cout     = [0.15,0.25,0.45,0.70,1.10,1.65,2.30,3.10,4.00];
+    var edgeNet  = edgeBrut.map(function(e,i){ return +(e-cout[i]).toFixed(2); });
+    cC.setOption({
+      title:{ text:'Capacité — l\'edge net s\'érode quand la taille monte (illustration)', left:'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'} },
+      tooltip:{ trigger:'axis', valueFormatter:function(v){return v+'%';} },
+      legend:{ data:['Edge brut','Coût d\'exécution','Edge net'], bottom:0, textStyle:{color:'#475569'} },
+      grid:{ left:55, right:30, top:55, bottom:50 },
+      xAxis:{ type:'category', data:adv, name:'Position en % de l\'ADV', nameLocation:'middle', nameGap:32, axisLabel:{color:'#64748b'} },
+      yAxis:{ type:'value', name:'%', axisLabel:{color:'#64748b',formatter:'{value}%'}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+      series:[
+        { name:'Edge brut', type:'line', data:edgeBrut, lineStyle:{width:2,type:'dashed',color:'#94a3b8'}, itemStyle:{color:'#94a3b8'}, symbol:'none' },
+        { name:'Coût d\'exécution', type:'line', smooth:true, data:cout, lineStyle:{width:3,color:'#f59e0b'}, itemStyle:{color:'#f59e0b'}, areaStyle:{color:'rgba(245,158,11,0.10)'} },
+        { name:'Edge net', type:'line', smooth:true, data:edgeNet, lineStyle:{width:3,color:'#0d9488'}, itemStyle:{color:'#0d9488'},
+          markLine:{ silent:true, symbol:'none', lineStyle:{color:'#dc2626',type:'dashed'}, data:[{ yAxis:0, label:{formatter:'Edge net = 0',color:'#dc2626',position:'insideEndTop'} }] } }
+      ]
+    });
+    reg(cC);
+  }
+
+  // --- Chart 3 : Scaling discipline (risque constant) vs agressif (risque qui derive) ---
+  var elD = document.getElementById('chart-discipline');
+  if (elD && window.echarts) {
+    var cD = echarts.init(elD);
+    var t = ['0','10','20','30','40','50','60','70','80','90','100'];
+    var discipline = [100,108,116,123,131,115,121,129,137,146,154];
+    var agressif   = [100,114,129,146,165,128,109,124,140,156,168];
+    cD.setOption({
+      title:{ text:'Risque constant vs risque qui dérive — même séquence de trades (illustration)', left:'center', textStyle:{fontSize:14,fontWeight:700,color:'#0f172a'} },
+      tooltip:{ trigger:'axis' },
+      legend:{ data:['Scaling discipliné (risque constant)','Scaling agressif (risque qui dérive)'], bottom:0, textStyle:{color:'#475569'} },
+      grid:{ left:55, right:30, top:55, bottom:55 },
+      xAxis:{ type:'category', data:t, name:'Trades', nameLocation:'middle', nameGap:30, axisLabel:{color:'#64748b'} },
+      yAxis:{ type:'value', name:'Equity', scale:true, axisLabel:{color:'#64748b'}, splitLine:{lineStyle:{color:'#f1f5f9'}} },
+      series:[
+        { name:'Scaling discipliné (risque constant)', type:'line', smooth:true, data:discipline, lineStyle:{width:3,color:'#0d9488'}, itemStyle:{color:'#0d9488'}, areaStyle:{color:'rgba(13,148,136,0.08)'} },
+        { name:'Scaling agressif (risque qui dérive)', type:'line', smooth:true, data:agressif, lineStyle:{width:3,color:'#dc2626'}, itemStyle:{color:'#dc2626'} }
+      ]
+    });
+    reg(cD);
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c){ try { c.resize(); } catch(e){} });
+  });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

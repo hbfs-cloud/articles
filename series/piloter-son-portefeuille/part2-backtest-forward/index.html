@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Du backtest au forward test : franchir le pont | Piloter son Portefeuille — Partie 2/6 | DailyTickers</title>
+ <meta name="description" content="Quand le backtest est bon, comment valider en réel avant d'engager du capital : walk-forward et out-of-sample, paper trading puis paper-ramp, critères de promotion GO/NO-GO chiffrés, évaluation régime-consciente et dégradation attendue de l'edge.">
+ <meta property="og:title" content="Du backtest au forward test : franchir le pont | Piloter son Portefeuille 2/6">
+ <meta property="og:description" content="Quand le backtest est bon, comment valider en réel avant d'engager du capital : walk-forward et out-of-sample, paper trading puis paper-ramp, critères de promotion GO/NO-GO chiffrés, évaluation régime-consciente et dégradation attendue de l'edge.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/piloter-son-portefeuille/part2-backtest-forward/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL THEME — Piloter son Portefeuille */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#0f766e; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; margin-right:0.75rem; }
+ details[open] summary { border-color:#0d9488; background:#f0fdfa; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #134e4a 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#5eead4; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#2dd4bf; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0f766e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#0d9488; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Piloter son Portefeuille — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Du backtest au forward test : franchir le pont</h1>
+  <p class="hero-subtitle">Un backtest brillant n'est qu'une hypothèse élégamment formulée sur le passé. Le réel, lui, ne lit pas votre courbe d'equity. Voici comment franchir le pont entre simulation et capital engagé — par étapes mesurées, avec des critères de promotion fixés à l'avance, et sans se mentir sur la dégradation à venir.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-flask-vial"></i> Forward test</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-shuffle"></i> Walk-forward / OOS</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-circle-check"></i> Critères GO/NO-GO</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-bug"></i> Anti-overfit</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-arrow" title="Démarrer sans se faire détruire le jour 1"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step current" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">2/6</span><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-arrow" title="Dimensionner et défendre contre le drawdown"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+  <a class="fnav-item" data-section="pourquoi-fwd"><i class="fas fa-bookmark"></i><span>Pourquoi le forward</span></a>
+  <a class="fnav-item" data-section="walk-forward"><i class="fas fa-bookmark"></i><span>Walk-forward & OOS</span></a>
+  <a class="fnav-item" data-section="paper-ramp"><i class="fas fa-bookmark"></i><span>Paper & paper-ramp</span></a>
+  <a class="fnav-item" data-section="criteres-go"><i class="fas fa-bookmark"></i><span>Critères GO/NO-GO</span></a>
+  <a class="fnav-item" data-section="regime-aware"><i class="fas fa-bookmark"></i><span>Régime-conscient</span></a>
+  <a class="fnav-item" data-section="degradation"><i class="fas fa-bookmark"></i><span>Dégradation de l'edge</span></a>
+  <a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <!-- ============================================================ -->
+  <!-- SECTION 1 : POURQUOI LE FORWARD                              -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="pourquoi-fwd"><i class="fa-solid fa-bug" style="color:#0d9488;"></i> Pourquoi un backtest ne suffit jamais</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-bug" style="color:#0d9488;"></i> Un backtest mesure le passé optimisé, pas le futur inconnu</h2>
+
+    <p>Voici l'asymétrie qu'aucun débutant n'aime entendre : un backtest est calculé sur des données que vous connaissez déjà, avec des paramètres que vous avez choisis <em>parce qu'ils marchaient sur ces données</em>. Le futur, lui, n'a jamais vu votre stratégie et ne lui doit rien. Entre les deux, il y a un gouffre que le forward test sert précisément à mesurer. Un backtest « OK » n'est pas une preuve — c'est une hypothèse, et la plupart des hypothèses sont fausses.</p>
+
+    <p>Avant d'engager le moindre euro, il faut comprendre les cinq mécanismes qui font qu'une courbe d'equity flatteuse en simulation s'effondre en réel. Ce ne sont pas des cas rares : ce sont les modes de défaillance par défaut.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+        <h4>Overfitting</h4>
+        <p>La stratégie a appris le bruit, pas le signal. Trop de paramètres calés sur trop peu de données.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-eye"></i></div>
+        <h4>Look-ahead bias</h4>
+        <p>Une information du futur a fui dans la décision passée. Clôture utilisée pour entrer à l'ouverture, par exemple.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(147,51,234,0.1); color:#9333ea;"><i class="fa-solid fa-skull"></i></div>
+        <h4>Survivorship bias</h4>
+        <p>L'univers ne contient que les survivants. Les faillites et radiations ont disparu de l'historique.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(13,148,136,0.1); color:#0d9488;"><i class="fa-solid fa-coins"></i></div>
+        <h4>Coûts sous-estimés</h4>
+        <p>Spread, slippage, commissions, impact de marché. En réel, chaque aller-retour coûte plus que prévu.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-cloud-sun-rain"></i></div>
+        <h4>Régime unique</h4>
+        <p>Le test ne couvre qu'un seul climat de marché. Un bull market de 2 ans n'a jamais vu un vrai krach.</p>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#0d9488;"><i class="fa-solid fa-lightbulb"></i> Overfitting : l'erreur la plus chère et la plus séduisante</h4>
+      <p style="margin:0 0 0.75rem;">Le <strong>surapprentissage</strong> survient quand vous augmentez le nombre de réglages (seuils, filtres, fenêtres) jusqu'à ce que la courbe historique devienne magnifique. Le problème : avec assez de degrés de liberté, on peut faire passer une courbe par n'importe quel nuage de points — y compris du bruit pur. La stratégie ne capture alors pas une dynamique réelle du marché, mais les accidents particuliers de votre échantillon.</p>
+      <p style="margin:0;">Règle de pouce illustrative : si votre stratégie a, disons, 8 paramètres optimisés et seulement 40 trades dans le backtest, vous avez environ 5 trades par paramètre — beaucoup trop peu pour distinguer le signal du hasard. Moins de paramètres, plus de trades, et surtout une validation sur des données <em>jamais vues</em> pendant l'optimisation.</p>
+    </div>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Le piège du regard rétrospectif.</strong> Le look-ahead bias est insidieux parce qu'il ne ressemble pas à de la triche. Utiliser le plus-haut de la journée pour décider d'une entrée intraday, supposer un fill au prix exact d'un signal calculé après la clôture, ou inclure un titre dans l'univers avant son introduction en bourse — autant de fuites d'information future qui gonflent artificiellement le résultat. En réel, vous n'aurez jamais accès à ces données au moment de la décision.</p>
+    </div>
+
+    <p>La conclusion est simple à énoncer, difficile à accepter : <strong>le backtest mesure le passé optimisé ; le forward test mesure le futur inconnu</strong>. Tout ce qui suit dans cet article sert à réduire — sans jamais l'annuler — l'écart entre les deux.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 2 : WALK-FORWARD & OOS                               -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="walk-forward"><i class="fa-solid fa-shuffle" style="color:#0d9488;"></i> Walk-forward & out-of-sample</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-shuffle" style="color:#0d9488;"></i> La première barrière contre l'overfit</h2>
+
+    <p>L'idée fondatrice tient en une phrase : <strong>n'évaluez jamais une stratégie sur les données qui ont servi à la calibrer</strong>. On découpe donc l'historique en deux rôles distincts. L'<strong>in-sample</strong> (IS) sert à optimiser : c'est là qu'on choisit les seuils, les filtres, les fenêtres. L'<strong>out-of-sample</strong> (OOS) sert uniquement à valider : ces données restent dans un coffre, jamais regardées pendant l'optimisation, et on n'y touche qu'une seule fois — pour vérifier si l'edge survit.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Le test de survie</div>
+      Performance OOS <span class="formula-highlight">≈</span> Performance IS <span class="formula-highlight">→</span> robuste &nbsp;|&nbsp; Performance OOS <span class="formula-highlight">≪</span> Performance IS <span class="formula-highlight">→</span> overfit
+    </div>
+
+    <p>Si la performance s'effondre dès qu'on sort de l'échantillon d'optimisation, vous n'avez pas une stratégie : vous avez une description très détaillée du passé. À l'inverse, si l'OOS reste dans le même ordre de grandeur que l'IS — un peu en-dessous, c'est normal et sain — vous tenez un candidat sérieux.</p>
+
+    <div class="didactic-box">
+      <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Walk-forward : valider en continu, pas une fois pour toutes</h4>
+      <p style="margin:0 0 0.75rem;">La <strong>walk-forward analysis</strong> généralise l'idée du OOS : au lieu d'un seul découpage, on enchaîne plusieurs fenêtres successives. On optimise sur une fenêtre, on valide sur la fenêtre suivante (jamais vue), puis on avance d'un cran et on recommence. La performance OOS de chaque fenêtre est ensuite assemblée en une courbe « walk-forward » — une simulation bien plus honnête de ce qu'aurait donné un pilotage réel et ré-optimisé périodiquement.</p>
+      <p style="margin:0 0 0.75rem;">Deux variantes : la fenêtre <strong>ancrée</strong> (<em>anchored</em>) garde toujours le même point de départ et allonge l'IS à chaque pas — utile quand on croit que l'histoire ancienne reste informative. La fenêtre <strong>glissante</strong> (<em>rolling</em>) fait avancer le début comme la fin, gardant une taille d'IS constante — utile quand le marché change de structure et que les vieilles données deviennent trompeuses.</p>
+      <p style="margin:0;"><strong>Le piège qui annule tout :</strong> l'OOS ne protège que si vous ne le touchez <strong>qu'une seule fois</strong>. Si vous ré-optimisez et re-testez assez de jeux de paramètres et de découpages de fenêtres, l'un d'eux finira par « passer » par pur hasard (<em>multiple testing</em> / <em>data snooping</em>) — et votre out-of-sample, désormais sur-regardé, redevient un in-sample déguisé. La walk-forward elle-même n'échappe pas à cette faille : chaque fenêtre re-testée use une cartouche. Décidez du protocole et des seuils <strong>avant</strong> de regarder, puis tenez-vous-y.</p>
+    </div>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Approche</th>
+          <th>Fenêtre IS</th>
+          <th>Quand la préférer</th>
+          <th>Limite</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Split IS / OOS simple</strong></td><td>Fixe (ex. 70% / 30%)</td><td>Premier filtre rapide, prototype</td><td>Une seule période OOS, peu de robustesse statistique</td></tr>
+        <tr><td><strong>Walk-forward ancré</strong></td><td>Point de départ fixe, fin qui avance</td><td>Marchés à mémoire longue, régimes stables</td><td>Donne du poids à des données peut-être obsolètes</td></tr>
+        <tr><td><strong>Walk-forward glissant</strong></td><td>Taille constante, glisse dans le temps</td><td>Marchés non-stationnaires, changements de régime</td><td>Jette de l'historique, plus sensible au bruit récent</td></tr>
+      </tbody>
+    </table>
+
+    <p>Le graphique ci-dessous illustre le motif que vous devez chercher : une courbe in-sample qui monte joliment, une courbe OOS qui reste dans la même direction mais un cran en-dessous, et enfin la courbe <em>live</em> encore un peu plus basse. Tant que les trois pointent dans le même sens, l'edge tient. Le jour où l'OOS diverge franchement de l'IS, c'est le signal d'alarme.</p>
+
+    <!-- ECharts: equity IS vs OOS vs live -->
+    <div id="chart-equity" style="width:100%; height:380px; margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-1rem;">Illustration pédagogique. Courbes d'equity normalisées (base 100) : in-sample optimisé, out-of-sample (validation), et live (réel). Le tassement progressif IS → OOS → live est le comportement <em>attendu</em> d'une stratégie saine.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 3 : PAPER & PAPER-RAMP                               -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="paper-ramp"><i class="fa-solid fa-flask-vial" style="color:#0d9488;"></i> Paper trading puis paper-ramp</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-flask-vial" style="color:#0d9488;"></i> Valider l'exécution avant le capital</h2>
+
+    <p>Le OOS valide la <em>logique</em> de la stratégie. Il ne dit rien sur la <em>plomberie</em> : vos ordres passent-ils comme prévu ? Le spread observé correspond-il au backtest ? La latence entre signal et exécution dégrade-t-elle l'entrée ? Le carnet d'ordres absorbe-t-il votre taille sans bouger le prix ? Ces questions ne se répondent qu'en temps réel. D'où une progression en deux temps avant tout capital significatif.</p>
+
+    <div class="step-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h4>Paper trading</h4>
+        <p>Exécution simulée en temps réel, sans argent. On vérifie fills, spreads, latence et comportement des ordres face aux conditions live, sur plusieurs semaines.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h4>Paper-ramp</h4>
+        <p>Premières entrées en conditions réelles, à taille minime. On valide l'exécution réelle (slippage, rejets, partiels) là où le simulateur ment encore.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h4>Montée en taille</h4>
+        <p>Si les critères GO/NO-GO sont remplis, on augmente la taille par paliers. Sinon, on reste — ou on revient en arrière. Aucune promotion automatique.</p>
+      </div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#0d9488;"><i class="fa-solid fa-diagram-project"></i> Pourquoi le paper trading ne suffit pas non plus</h4>
+      <p style="margin:0;">Un simulateur de paper trading reste optimiste sur un point clé : il vous donne presque toujours un fill, au prix affiché, instantanément. La réalité est plus rugueuse — ordres partiellement exécutés, rejets, slippage sur les titres peu liquides, déclenchement de stops à un prix pire que prévu en cas de gap. Le <strong>paper-ramp</strong> (premières entrées réelles à taille minime) existe précisément pour mesurer cet écart-là, avec un risque en capital plancher. C'est la seule façon de savoir si votre backtest a sous-estimé les coûts.</p>
+    </div>
+
+    <p>Cette progression n'est pas une invention théorique : elle est <strong>codée dans la machine d'états des modes DailyTickers</strong>. Un mode de trading ne saute jamais directement de l'idée au capital plein. Il transite par des états explicites, chacun avec ses règles d'admission.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>État du mode</th>
+          <th>Ce qui s'y passe</th>
+          <th>Capital engagé</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong><code>draft</code></strong></td><td>Conception et backtest. La config existe mais ne tourne pas en réel.</td><td>Aucun</td></tr>
+        <tr><td><strong><code>test</code></strong></td><td>Paper trading temps réel. Validation des fills, spreads, latence sans risque.</td><td>Simulé</td></tr>
+        <tr><td><strong><code>deploying</code></strong></td><td>Ramp-up : entrées acceptées en <em>paper-ramp</em> pour valider les conditions réelles d'exécution avant le flip vers live.</td><td>Minime, croissant</td></tr>
+        <tr><td><strong><code>live</code></strong></td><td>Mode pleinement actif. Capital alloué selon le dimensionnement cible.</td><td>Plein</td></tr>
+      </tbody>
+    </table>
+
+    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-1rem;">Extrait de la machine d'états des modes (états <code>test</code> → <code>deploying</code> → <code>live</code>). La promotion d'un état au suivant n'est jamais automatique : elle dépend des critères de la section suivante.</p>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 4 : CRITÈRES GO / NO-GO                              -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="criteres-go"><i class="fa-solid fa-circle-check" style="color:#0d9488;"></i> Critères de promotion GO/NO-GO</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-circle-check" style="color:#0d9488;"></i> Décider à l'avance, pas dans l'émotion</h2>
+
+    <p>La règle d'or de la promotion : <strong>les critères se définissent AVANT de voir les résultats live</strong>. Sinon, le biais de confirmation fait son œuvre — on trouve toujours une bonne raison de promouvoir une stratégie qu'on aime, ou de tuer une stratégie qui nous a fait peur. Un tableau de décision chiffré, écrit à froid, vous protège de vous-même.</p>
+
+    <p>Voici un tableau GO/NO-GO illustratif. Les seuils sont des <em>exemples</em> à calibrer selon votre fréquence de trading et votre tolérance ; ce qui compte, c'est la <strong>structure</strong> : chaque dimension a un seuil binaire, et un seul échec suffit à bloquer la promotion.</p>
+
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Critère</th>
+          <th>Seuil GO (exemple)</th>
+          <th>NO-GO si…</th>
+          <th>Pourquoi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Nombre de trades live</strong></td><td>n ≥ 20 à 30</td><td>n &lt; 20</td><td>En-dessous, le résultat n'est pas statistiquement significatif — c'est du bruit.</td></tr>
+        <tr><td><strong>Profit Factor live</strong></td><td>PF live ≥ 0,7 × PF backtest</td><td>PF live &lt; 0,7 × backtest</td><td>On tolère une dégradation, mais bornée. Au-delà, l'edge a probablement disparu.</td></tr>
+        <tr><td><strong>Drawdown live</strong></td><td>DD live ≤ DD backtest + marge</td><td>DD live &gt; DD backtest + marge</td><td>Un drawdown qui dépasse l'enveloppe historique signale un risque non modélisé.</td></tr>
+        <tr><td><strong>Hit rate live</strong></td><td>Dans l'intervalle de confiance du backtest</td><td>Hors intervalle, durablement</td><td>Un taux de réussite hors plage attendue casse les hypothèses du dimensionnement.</td></tr>
+        <tr><td><strong>Slippage réalisé</strong></td><td>≤ budget de coûts prévu</td><td>Coûts réels &gt; budget</td><td>Si l'exécution coûte plus que prévu, le backtest était trop optimiste.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Un seul critère cassé = NO-GO.</strong> La promotion n'est pas une moyenne pondérée où un bon Profit Factor rachète un drawdown excessif. Chaque critère est une condition nécessaire. Si un seul casse, on ne promeut pas : on reste à l'état courant (paper ou taille minime), ou on revient en arrière le temps de comprendre. La discipline, ici, vaut plus que l'optimisme.</p>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#0d9488;"><i class="fa-solid fa-calculator"></i> Le Profit Factor, en clair</h4>
+      <p style="margin:0;">Le <strong>Profit Factor</strong> (PF) est le rapport entre la somme des gains et la somme des pertes (en valeur absolue). PF = 1 signifie que vous rentrez juste dans vos frais ; PF = 1,5 signifie 1,50 € gagné pour 1 € perdu. Exiger un PF live ≥ 0,7 × PF backtest revient à dire : « j'accepte de perdre jusqu'à 30% de mon edge en passant au réel, mais pas davantage ». Si le backtest affichait un PF de 1,6, le plancher live serait donc d'environ 1,12 — encore profitable, mais à surveiller de près.</p>
+    </div>
+
+    <ul class="checklist">
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Les seuils sont écrits et datés <strong>avant</strong> le premier trade live.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Chaque critère est binaire : pas de « presque bon ».</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Un échec unique déclenche le NO-GO, sans débat.</li>
+      <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Le seuil minimal de trades (n) précède toute lecture de performance.</li>
+      <li><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> Aucun seuil n'est révisé après avoir vu les résultats — sous peine de tout invalider.</li>
+    </ul>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 5 : ÉVALUATION RÉGIME-CONSCIENTE                     -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="regime-aware"><i class="fa-solid fa-cloud-sun-rain" style="color:#0d9488;"></i> Évaluation régime-consciente</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-cloud-sun-rain" style="color:#0d9488;"></i> Ne jamais juger par une moyenne plate</h2>
+
+    <div class="alert-box">
+      <p style="margin:0;"><strong>Règle critique.</strong> Ne JAMAIS évaluer une stratégie par un <em>replay uniforme</em> sur toute la période d'historique. Les configs sérieuses sont <strong>régime-conscientes</strong> (elles contiennent des filtres de régime) et <strong>adaptatives</strong> (leur comportement change selon le climat de marché). Les rejouer à plat, sur la moyenne, mesure une stratégie qui n'existe pas.</p>
+    </div>
+
+    <p>Une moyenne full-period est une moyenne menteuse. Elle peut afficher un résultat « correct » qui masque la vérité : la stratégie gagne franchement en marché porteur (risk-on) et se fait découper en marché de stress (risk-off). La moyenne lisse ces deux réalités opposées en un chiffre rassurant — et trompeur. Ce qui vous tuera en réel, ce n'est pas la moyenne ; c'est le pire régime, au pire moment.</p>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#0d9488;"><i class="fa-solid fa-temperature-half"></i> Lire le régime via le VIX</h4>
+      <p style="margin:0 0 0.75rem;">Un découpage simple et opérationnel des régimes de marché s'appuie sur le <strong>VIX</strong>, l'indice de volatilité implicite (la « jauge de peur »). À titre d'illustration :</p>
+      <ul class="checklist" style="margin:0;">
+        <li><i class="fa-solid fa-circle" style="color:#10b981; font-size:0.6rem;"></i> <strong>Risk-on</strong> — VIX bas (disons &lt; 15) : marché calme et porteur.</li>
+        <li><i class="fa-solid fa-circle" style="color:#f59e0b; font-size:0.6rem;"></i> <strong>Neutre</strong> — VIX intermédiaire (≈ 15 à 20) : marché hésitant.</li>
+        <li><i class="fa-solid fa-circle" style="color:#dc2626; font-size:0.6rem;"></i> <strong>Risk-off</strong> — VIX élevé (&gt; 20, et a fortiori &gt; 28) : stress, fuite vers la qualité.</li>
+      </ul>
+    </div>
+
+    <p>La bonne pratique : <strong>évaluer la performance régime par régime</strong>, ET en walk-forward. On veut savoir comment la stratégie se comporte spécifiquement en risk-off — c'est là que se cachent les drawdowns qui font abandonner. Le graphique ci-dessous illustre le danger : une moyenne flatteuse construite sur un excellent risk-on et un risk-off destructeur.</p>
+
+    <!-- ECharts: perf par régime -->
+    <div id="chart-regime" style="width:100%; height:360px; margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-1rem;">Illustration pédagogique. Profit Factor par régime pour une stratégie hypothétique : la moyenne (pondérée par le temps passé dans chaque régime) masque un risk-off déficitaire (PF &lt; 1). Et comme le risk-off est rare, il est dilué dans la moyenne — qui devient d'autant plus flatteuse qu'elle est dominée par le beau temps. Évaluer à plat reviendrait à valider une stratégie qui meurt précisément quand on en a le plus besoin.</p>
+
+    <div class="didactic-box">
+      <h4 style="color:#10b981;"><i class="fa-solid fa-graduation-cap"></i> Conséquence pratique pour vos critères GO/NO-GO</h4>
+      <p style="margin:0;">Ajoutez une condition régime à votre tableau de décision : la stratégie doit rester <strong>au moins survivable</strong> (par exemple PF ≥ 0,9 ou drawdown contenu) dans le régime risk-off, même si elle ne gagne qu'en risk-on. Une stratégie qui ne tient que par beau temps n'est pas une stratégie — c'est un pari sur l'absence d'orage. Et l'orage finit toujours par arriver.</p>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SECTION 6 : DÉGRADATION DE L'EDGE                            -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="degradation"><i class="fa-solid fa-chart-line-down" style="color:#0d9488;"></i> Budgéter la dégradation de l'edge</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-chart-line-down" style="color:#0d9488;"></i> Anticiper la perte, pas la subir</h2>
+
+    <p>Même une stratégie honnête, validée en OOS et en walk-forward, perd une part de son edge en passant au réel. C'est normal et attendu. Deux causes additionnent leurs effets : les <strong>coûts réels</strong> (spread, slippage, commissions, impact de marché) que le backtest sous-estime presque toujours, et le <strong>léger overfit résiduel</strong> qui survit même aux meilleures précautions. À titre d'illustration, on observe souvent une dégradation de l'ordre de <strong>20 à 40% de l'edge</strong> entre backtest et live.</p>
+
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value" style="color:#0d9488;">-20 à -40%</div>
+        <div class="metric-label">Dégradation typique de l'edge (illustratif)</div>
+      </div>
+    </div>
+
+    <div class="capability-grid">
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-money-bill-trend-up"></i></div>
+        <h4>Coûts réels</h4>
+        <p>Spread + slippage + commissions + impact de marché, presque toujours sous-estimés par le backtest.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(217,119,6,0.12); color:#d97706;"><i class="fa-solid fa-magnifying-glass"></i></div>
+        <h4>Overfit résiduel</h4>
+        <p>La part d'optimisation au passé qui survit même aux meilleures précautions OOS.</p>
+      </div>
+      <div class="capability-card">
+        <div class="capability-icon" style="background:rgba(16,185,129,0.1); color:#10b981;"><i class="fa-solid fa-shield-halved"></i></div>
+        <h4>Marge de survie</h4>
+        <p>L'edge doit rester profitable APRÈS dégradation, pas seulement dans le backtest brut.</p>
+      </div>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-label">Le test de viabilité</div>
+      Edge live <span class="formula-highlight">≈</span> Edge backtest <span class="formula-highlight">×</span> (1 − dégradation) <span class="formula-highlight">&gt;</span> seuil de rentabilité
+    </div>
+
+    <p>La règle de viabilité est brutale et libératrice : <strong>si la stratégie n'est rentable QUE sans dégradation, elle n'est pas viable</strong>. Budgétez la perte à l'avance. Prenez votre edge backtest, retranchez 30 à 40% par prudence, et regardez ce qu'il reste. Si le résidu est encore confortablement profitable après coûts, vous avez une marge de sécurité. S'il passe juste au-dessus de zéro, la moindre surprise (un régime nouveau, un coût mal estimé) vous fera basculer dans le rouge.</p>
+
+    <p>Le graphique ci-dessous compare un Profit Factor backtest à son équivalent live après dégradation, pour quelques cas de figure. Notez le dernier : un backtest qui semblait correct (PF 1,3) mais qui, une fois dégradé, tombe sous 1,0 — c'est-à-dire en territoire perdant. Ce candidat-là <em>passait</em> le backtest et <em>échoue</em> le test de viabilité.</p>
+
+    <!-- ECharts: PF backtest vs live -->
+    <div id="chart-pf" style="width:100%; height:380px; margin:2rem 0;"></div>
+    <p style="font-size:0.8rem; color:#94a3b8; margin-top:-1rem;">Illustration pédagogique. Profit Factor backtest (teal) vs live après dégradation (ambre/rouge). La ligne PF = 1 sépare le profitable du perdant. Un edge mince au backtest devient souvent négatif une fois les coûts réels intégrés.</p>
+
+    <div class="pedagogy-box">
+      <h4 style="color:#0d9488;"><i class="fa-solid fa-shield-halved"></i> Comment budgéter concrètement</h4>
+      <ul class="checklist" style="margin:0;">
+        <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Estimez vos coûts réels par aller-retour (spread moyen + commission + slippage observé en paper-ramp).</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Soustrayez ces coûts de chaque trade dans le backtest, pas seulement une fois à la fin.</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Appliquez un haircut de prudence sur l'edge restant (par exemple -30%) pour l'overfit résiduel.</li>
+        <li><i class="fa-solid fa-circle-check" style="color:#10b981;"></i> Validez que le résultat dégradé bat encore votre référence (cash, indice) avec une marge confortable.</li>
+        <li><i class="fa-solid fa-triangle-exclamation" style="color:#d97706;"></i> Si l'edge ne survit que sans dégradation : ne déployez pas. Retournez à la planche à dessin.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- QUIZ                                                          -->
+  <!-- ============================================================ -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz</div>
+
+  <div class="content-card">
+    <h2><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Vérifiez votre compréhension</h2>
+    <p>Cinq questions pour ancrer les réflexes. Cliquez pour révéler la réponse.</p>
+
+    <details>
+      <summary>1. Pourquoi un excellent backtest ne prouve-t-il rien ?</summary>
+      <div class="quiz-answer"><strong>Parce qu'il est calculé sur des données connues, avec des paramètres choisis parce qu'ils marchaient sur ces données.</strong> Le backtest mesure le passé optimisé ; le futur n'a jamais vu votre stratégie. Entre les deux se glissent l'overfitting, le look-ahead bias, le survivorship bias, des coûts sous-estimés et souvent un seul régime de marché couvert. Un bon backtest est une hypothèse, pas une preuve.</div>
+    </details>
+
+    <details>
+      <summary>2. Quelle est la différence entre in-sample et out-of-sample ?</summary>
+      <div class="quiz-answer"><strong>L'in-sample sert à optimiser ; l'out-of-sample sert uniquement à valider, sur des données jamais vues pendant l'optimisation.</strong> Si la performance OOS reste proche de l'IS (un cran en-dessous, normal), la stratégie est robuste. Si elle s'effondre dès qu'on sort de l'échantillon d'optimisation, c'est de l'overfit. La walk-forward analysis enchaîne plusieurs fenêtres pour une validation continue, en mode ancré ou glissant.</div>
+    </details>
+
+    <details>
+      <summary>3. À quoi sert le paper-ramp, puisque le paper trading existe déjà ?</summary>
+      <div class="quiz-answer"><strong>Le paper-ramp valide l'exécution RÉELLE à taille minime, là où le simulateur ment encore.</strong> Le paper trading donne presque toujours un fill, au prix affiché, instantanément. En réel apparaissent les ordres partiels, rejets, slippage et stops déclenchés à un prix pire que prévu. Le paper-ramp (états <code>deploying</code> de la machine d'états DailyTickers) mesure cet écart avec un risque en capital plancher avant le flip vers <code>live</code>.</div>
+    </details>
+
+    <details>
+      <summary>4. Que se passe-t-il si un seul critère du tableau GO/NO-GO casse ?</summary>
+      <div class="quiz-answer"><strong>C'est un NO-GO, sans débat.</strong> La promotion n'est pas une moyenne pondérée : chaque critère (n ≥ 20-30 trades, PF live ≥ 0,7× backtest, DD live ≤ DD backtest + marge, hit rate dans l'intervalle de confiance, slippage ≤ budget) est une condition nécessaire. Un seul échec et on reste en paper, ou on revient en arrière. Et les seuils sont écrits AVANT de voir les résultats, pour neutraliser le biais de confirmation.</div>
+    </details>
+
+    <details>
+      <summary>5. Pourquoi ne jamais juger une stratégie par un replay uniforme sur toute la période ?</summary>
+      <div class="quiz-answer"><strong>Parce que les configs sérieuses sont régime-conscientes et adaptatives : une moyenne full-period masque une stratégie qui gagne en risk-on et meurt en risk-off.</strong> Il faut évaluer régime par régime (risk-on / neutre / risk-off via le VIX) ET en walk-forward. Ce qui vous tuera en réel n'est pas la moyenne, mais le pire régime au pire moment. Exigez au minimum la survie (PF ≥ ~0,9, DD contenu) en risk-off.</div>
+    </details>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- TAKEAWAY + CTA                                               -->
+  <!-- ============================================================ -->
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark"></i> À retenir — Partie 2</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Un backtest « OK » est une <strong>hypothèse</strong>, jamais une preuve. Il mesure le passé optimisé ; le forward test mesure le futur inconnu.</li>
+      <li><i class="fa-solid fa-check"></i> Le <strong>out-of-sample</strong> est la première barrière contre l'overfit : valider uniquement sur des données jamais vues. La walk-forward généralise l'idée sur plusieurs fenêtres (ancrées ou glissantes).</li>
+      <li><i class="fa-solid fa-check"></i> Progresser par étapes : <strong>paper trading → paper-ramp → montée en taille</strong>, comme les états <code>test → deploying → live</code> des modes DailyTickers. Aucune promotion automatique.</li>
+      <li><i class="fa-solid fa-check"></i> Des <strong>critères GO/NO-GO chiffrés, écrits à l'avance</strong> : un seul critère cassé = NO-GO. La discipline bat l'optimisme.</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Évaluer régime par régime</strong>, jamais par une moyenne plate. Une stratégie doit au moins survivre au risk-off.</li>
+      <li><i class="fa-solid fa-check"></i> Budgéter la <strong>dégradation de l'edge (souvent -20 à -40%)</strong> : si la stratégie n'est viable que sans dégradation, elle n'est pas viable.</li>
+    </ul>
+  </div>
+
+  <a href="/series/piloter-son-portefeuille/part3-drawdown/" class="next-cta"><div><div class="next-label">Partie 3 sur 6</div><div class="next-title">Dimensionner et défendre contre le drawdown <i class="fa-solid fa-arrow-right"></i></div></div></a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-arrow" title="Démarrer sans se faire détruire le jour 1"><i class="fas fa-chevron-left"></i></a><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step current" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">2/6</span><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-arrow" title="Dimensionner et défendre contre le drawdown"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Donn&eacute;es via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+// ===== Chart 1 : Equity IS vs OOS vs Live =====
+var chartEquity = echarts.init(document.getElementById('chart-equity'));
+var months = ['M1','M2','M3','M4','M5','M6','M7','M8','M9','M10','M11','M12'];
+chartEquity.setOption({
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['In-sample (optimisé)', 'Out-of-sample (validation)', 'Live (réel)'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '8%', right: '4%', top: '10%', bottom: '15%' },
+  xAxis: { type: 'category', data: months, axisLabel: { fontSize: 10 } },
+  yAxis: { type: 'value', name: 'Equity (base 100)', min: 95, axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'In-sample (optimisé)', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 3, color: '#0d9488' }, data: [100,103,107,110,114,119,123,128,132,137,142,148] },
+    { name: 'Out-of-sample (validation)', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 3, color: '#14b8a6', type: 'dashed' }, data: [100,102,104,107,109,112,114,117,119,122,125,128] },
+    { name: 'Live (réel)', type: 'line', smooth: true, symbol: 'none', lineStyle: { width: 3, color: '#f59e0b' }, data: [100,101,103,104,106,107,109,110,112,113,115,117] }
+  ]
+});
+
+// ===== Chart 2 : PF backtest vs live (après dégradation) =====
+var chartPf = echarts.init(document.getElementById('chart-pf'));
+chartPf.setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  legend: { data: ['PF backtest', 'PF live (après dégradation)'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '8%', right: '4%', top: '10%', bottom: '15%' },
+  xAxis: { type: 'category', data: ['Stratégie A', 'Stratégie B', 'Stratégie C', 'Stratégie D'], axisLabel: { fontSize: 11 } },
+  yAxis: { type: 'value', name: 'Profit Factor', min: 0, max: 2.2, axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'PF backtest', type: 'bar', barGap: '10%', itemStyle: { color: '#0d9488', borderRadius: [4,4,0,0] }, data: [2.0, 1.7, 1.5, 1.3] },
+    { name: 'PF live (après dégradation)', type: 'bar', itemStyle: { color: '#f59e0b', borderRadius: [4,4,0,0] },
+      data: [
+        { value: 1.45, itemStyle: { color: '#10b981' } },
+        { value: 1.22, itemStyle: { color: '#14b8a6' } },
+        { value: 1.05, itemStyle: { color: '#f59e0b' } },
+        { value: 0.88, itemStyle: { color: '#dc2626' } }
+      ],
+      markLine: { silent: true, symbol: 'none', lineStyle: { color: '#dc2626', type: 'dashed' }, data: [{ yAxis: 1.0, label: { formatter: 'Seuil PF = 1', fontSize: 10, color: '#dc2626' } }] }
+    }
+  ]
+});
+
+// ===== Chart 3 : Performance par régime =====
+var chartRegime = echarts.init(document.getElementById('chart-regime'));
+chartRegime.setOption({
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+  grid: { left: '8%', right: '4%', top: '12%', bottom: '12%' },
+  xAxis: { type: 'category', data: ['Risk-on\n(VIX < 15)', 'Neutre\n(15-20)', 'Risk-off\n(VIX > 20)', 'Moyenne\npondérée'], axisLabel: { fontSize: 10, lineHeight: 13, interval: 0 } },
+  yAxis: { type: 'value', name: 'Profit Factor', min: 0, max: 2.4, axisLabel: { fontSize: 10 } },
+  series: [
+    { name: 'Profit Factor', type: 'bar', barWidth: '50%',
+      data: [
+        { value: 2.1, itemStyle: { color: '#10b981' } },
+        { value: 1.3, itemStyle: { color: '#f59e0b' } },
+        { value: 0.7, itemStyle: { color: '#dc2626' } },
+        { value: 1.37, itemStyle: { color: '#0d9488' } }
+      ],
+      itemStyle: { borderRadius: [4,4,0,0] },
+      markLine: { silent: true, symbol: 'none', lineStyle: { color: '#94a3b8', type: 'dashed' }, data: [{ yAxis: 1.0, label: { formatter: 'PF = 1', fontSize: 10, color: '#94a3b8' } }] }
+    }
+  ]
+});
+
+window.addEventListener('resize', function() {
+  chartEquity.resize();
+  chartPf.resize();
+  chartRegime.resize();
+});
+</script>
+
+<script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

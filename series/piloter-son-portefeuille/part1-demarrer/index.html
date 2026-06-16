@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Démarrer sans se faire détruire le jour 1 | Piloter son Portefeuille — Partie 1/6 | DailyTickers</title>
+ <meta name="description" content="Comment lancer un portefeuille ou une stratégie sans encaisser un gros drawdown dès le départ : déploiement progressif (ramp-up), dimensionnement initial sous-calibré, échelonnement des entrées et garde-fous jour 1.">
+ <meta property="og:title" content="Démarrer sans se faire détruire le jour 1 | Piloter son Portefeuille 1/6">
+ <meta property="og:description" content="Comment lancer un portefeuille ou une stratégie sans encaisser un gros drawdown dès le départ : déploiement progressif (ramp-up), dimensionnement initial sous-calibré, échelonnement des entrées et garde-fous jour 1.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/piloter-son-portefeuille/part1-demarrer/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL THEME — Piloter son Portefeuille */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdfa 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#0f766e; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; margin-right:0.75rem; }
+ details[open] summary { border-color:#0d9488; background:#f0fdfa; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #134e4a 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#5eead4; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#2dd4bf; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0f766e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #0d9488; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ .capability-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; margin:2rem 0; }
+ .capability-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem; transition:all 0.3s; }
+ .capability-card:hover { border-color:#0d9488; transform:translateY(-2px); box-shadow:0 8px 25px -5px rgba(0,0,0,0.08); }
+ .capability-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1rem; margin-bottom:0.75rem; }
+ .capability-card h4 { font-size:0.9rem; font-weight:700; color:#0f172a; margin:0 0 0.3rem; }
+ .capability-card p { font-size:0.8rem; color:#64748b; margin:0; line-height:1.4; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+   .capability-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-arrow-trend-up" style="margin-right:0.4rem;"></i> Piloter son Portefeuille — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Démarrer sans se faire détruire le jour 1</h1>
+  <p class="hero-subtitle" style="max-width:720px; margin:0 auto;">Le premier jour d'un portefeuille est le plus dangereux de toute son existence. L'edge n'est pas encore confirmé en conditions réelles, il n'existe aucun coussin de gains, et une simple séquence de pertes initiale peut détruire à la fois le capital et la discipline. Voici comment lancer une stratégie comme on déploie un système critique : par paliers, sous-calibré, avec des garde-fous armés dès la première seconde.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-rocket"></i> Ramp-up progressif</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-shield-halved"></i> Garde-fous jour 1</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-layer-group"></i> Déploiement par paliers</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-skull"></i> Anti-ruine</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step current" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">1/6</span><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-arrow" title="Du backtest au forward test : franchir le pont"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu">
+<a class="fnav-item" data-section="cold-start"><i class="fas fa-bookmark"></i><span>Démarrage à froid</span></a>
+<a class="fnav-item" data-section="ramp-up"><i class="fas fa-bookmark"></i><span>Déploiement progressif</span></a>
+<a class="fnav-item" data-section="sizing-initial"><i class="fas fa-bookmark"></i><span>Sizing initial</span></a>
+<a class="fnav-item" data-section="echelonner"><i class="fas fa-bookmark"></i><span>Échelonner</span></a>
+<a class="fnav-item" data-section="garde-fous"><i class="fas fa-bookmark"></i><span>Garde-fous</span></a>
+<a class="fnav-item" data-section="plan"><i class="fas fa-bookmark"></i><span>Plan 8 semaines</span></a>
+<a class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a>
+</div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+
+<div class="container">
+
+  <p style="font-size:1.05rem; color:#475569; line-height:1.75; max-width:760px; margin:2rem auto;">
+    Vous avez une stratégie. Elle a passé le backtest, peut-être un début de forward test. Le compte est ouvert, le capital est sur la table, et la tentation est immense : <strong>tout déployer dès la première séance</strong> pour ne pas «&nbsp;rater le mouvement&nbsp;». C'est précisément le réflexe qui ruine le plus de portefeuilles débutants — non pas parce que la stratégie est mauvaise, mais parce que le moment du lancement concentre toutes les fragilités au pire endroit du parcours. Cette première partie traite le jour 1 comme un ingénieur traite la mise en production d'un système critique : déploiement progressif, capacité bridée, et coupe-circuit armés avant le premier trade.
+  </p>
+
+  <!-- ============ SECTION 1 : COLD START ============ -->
+  <div class="section-divider" id="cold-start"><i class="fa-solid fa-snowflake" style="color:#0d9488;"></i> Le problème du démarrage à froid</div>
+  <div class="content-card">
+    <h2>Pourquoi le jour 1 concentre tous les risques</h2>
+    <p>Un portefeuille mature dispose de trois protections invisibles qu'un portefeuille neuf n'a pas : un <strong>edge confirmé en conditions réelles</strong>, un <strong>coussin de gains accumulés</strong>, et une <strong>discipline rodée</strong>. Le jour 1, les trois manquent simultanément. C'est ce qu'on appelle le démarrage à froid (<em>cold start</em>), et c'est structurellement le moment le plus fragile du cycle de vie.</p>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value" style="color:#dc2626;">0 %</div><div class="metric-label">Coussin de gains au jour 1</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#0d9488;">n = 0</div><div class="metric-label">Trades réels confirmant l'edge</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#f59e0b;">100 %</div><div class="metric-label">Capital exposé si l'on déploie tout</div></div>
+    </div>
+
+    <h3>1. L'edge n'est pas encore confirmé en réel</h3>
+    <p>Un backtest mesure un comportement <em>historique</em>, dans des conditions idéalisées : exécution parfaite, pas de slippage, fills garantis au prix théorique, aucune latence. La réalité diverge toujours. Le spread bid-ask, les ordres partiellement remplis, les <em>gaps</em> d'ouverture qui sautent vos stops, le comportement émotionnel face à un écran qui clignote en rouge — rien de tout cela n'existe dans un backtest. Tant que vous n'avez pas vu votre stratégie tourner avec de l'argent réel sur un échantillon suffisant, vous ne savez pas si l'edge survit au contact du marché. À titre d'illustration, une stratégie qui affiche un <em>profit factor</em> de 1,6 en backtest peut tomber à 1,1 une fois le slippage et les fills réels intégrés.</p>
+
+    <h3>2. Le biais d'optimisme post-backtest</h3>
+    <p>Juste après un backtest réussi, le cerveau est dans son état le plus dangereux : il a vu une courbe d'equity qui monte et il en conclut, implicitement, que l'avenir lui ressemblera. C'est le <strong>biais d'optimisme post-backtest</strong>. Il pousse à surdimensionner les positions précisément au moment où l'incertitude sur l'edge est maximale. Plus le backtest est beau, plus le piège est profond — un résultat trop propre signale souvent du surajustement (<em>overfitting</em>) plutôt qu'un edge robuste.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-graduation-cap" style="margin-right:0.5rem;"></i> Le risque de ruine, en clair</h4>
+      <p>Le <strong>risque de ruine</strong> (<em>risk of ruin</em>) est la probabilité qu'une séquence de pertes vide le compte sous un seuil critique avant que l'edge n'ait eu le temps de s'exprimer. Il dépend de trois variables : le taux de réussite, le ratio gain/perte, et surtout la <strong>fraction du capital risquée par trade</strong>. Cette dernière est la seule que vous contrôlez totalement — et c'est elle qui explose le risque de ruine quand on démarre trop gros.</p>
+    </div>
+
+    <div class="formula-box">
+      <div class="formula-label">Forme classique du risque de ruine</div>
+      R = <span class="formula-highlight">((1 − edge) / (1 + edge))</span><sup>N</sup>
+    </div>
+    <p style="font-size:0.9rem; color:#64748b; line-height:1.6; max-width:760px; margin:-0.5rem auto 1.5rem; text-align:center;">Forme illustrative simplifiée (modèle du joueur à mise fixe, <strong>payoff symétrique 1:1</strong> où gain = perte) : ici <em>edge</em> = taux de réussite − taux d'échec (soit <em>p − q</em>, un nombre entre 0 et 1, pas un montant en euros) et <strong>N le nombre d'unités de capital risquées</strong> — c.-à-d. capital ÷ mise par trade. Le risque de ruine réel intègre aussi le <strong>ratio gain/perte</strong> quand le payoff n'est pas symétrique&nbsp;; cette forme isole volontairement le levier qui compte le plus. La conséquence est mécanique&nbsp;: diviser la fraction risquée par trade <strong>multiplie</strong> N, et le risque de ruine s'effondre de façon <strong>non linéaire</strong>. C'est exactement le levier que vous contrôlez au démarrage.</p>
+
+    <h3>3. Pourquoi une perte au jour 1 fait beaucoup plus mal</h3>
+    <p>Voici le point que la plupart des débutants ignorent : <strong>une perte au démarrage n'a pas le même coût qu'une perte identique en milieu de parcours</strong>. La raison est mathématique. Une fois que vous avez engrangé des gains, vous jouez en partie avec «&nbsp;l'argent de la maison&nbsp;» — votre capital de départ est protégé par le profit accumulé. Au jour 1, ce coussin n'existe pas : chaque euro perdu est un euro de votre capital initial.</p>
+
+    <p>Prenons deux portefeuilles identiques avec une perte de -10&nbsp;%, à titre d'illustration :</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Scénario</th><th>Capital avant la perte</th><th>Après -10 %</th><th>Gain requis pour revenir au capital initial</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Perte au jour 1</strong> (aucun coussin)</td><td>10 000 € (capital initial)</td><td>9 000 €</td><td style="color:#dc2626; font-weight:700;">+11,1 % sur le capital de départ</td></tr>
+        <tr><td><strong>Perte après +30 % de gains</strong></td><td>13 000 €</td><td>11 700 €</td><td style="color:#10b981; font-weight:700;">Toujours +17 % au-dessus du capital initial</td></tr>
+      </tbody>
+    </table>
+
+    <p>Dans le second cas, la perte de 1&nbsp;300&nbsp;€ entame le profit, pas le capital. Le portefeuille reste largement positif et la discipline n'est pas attaquée. Dans le premier cas, vous êtes immédiatement en territoire de récupération, avec la pression psychologique qui va avec. Et c'est là que se déclenche le vrai danger : <strong>la perte de capital se double d'une perte de discipline</strong>. Un débutant qui voit -10&nbsp;% au jour 1 ne suit plus son plan — il double les positions pour «&nbsp;se refaire&nbsp;», déplace ses stops, abandonne le système. La spirale ne vient presque jamais de la stratégie ; elle vient de ce qui se passe dans la tête après le premier coup dur.</p>
+
+    <div class="alert-box">
+      <strong>La règle du jour 1 :</strong> ne jamais exposer au démarrage un capital dont la perte modifierait votre comportement. Si perdre la mise du premier mois vous empêcherait de dormir ou de suivre votre plan, c'est que la mise est trop grosse — pas que la stratégie est trop risquée.
+    </div>
+  </div>
+
+  <!-- ============ SECTION 2 : RAMP-UP ============ -->
+  <div class="section-divider" id="ramp-up"><i class="fa-solid fa-stairs" style="color:#0d9488;"></i> Le déploiement progressif</div>
+  <div class="content-card">
+    <h2>Ne jamais passer de 0 à 100 %</h2>
+    <p>La règle cardinale du démarrage tient en une phrase : <strong>on ne déploie jamais 100 % du capital cible d'un coup</strong>. On monte par paliers, et chaque palier n'est débloqué que si le précédent s'est comporté comme attendu. C'est le <em>ramp-up</em> — le même principe que le déploiement progressif d'une nouvelle version logicielle, qu'on n'envoie pas à tous les utilisateurs en une fois mais à 1 %, puis 10 %, puis 100 % en surveillant les erreurs à chaque étape.</p>
+
+    <p>Un schéma de paliers illustratif&nbsp;:</p>
+
+    <div id="chart-rampup" style="width:100%;height:360px;margin:2rem 0;"></div>
+
+    <div class="step-grid">
+      <div class="step-card"><div class="step-number">1</div><h4>Palier 10 %</h4><p>Validation des fills, du slippage réel et du comportement des stops. On observe, on note, on ne juge pas encore la performance.</p></div>
+      <div class="step-card"><div class="step-number">2</div><h4>Palier 25 %</h4><p>L'exécution est conforme au backtest. On augmente l'exposition mais le risque par trade reste bridé.</p></div>
+      <div class="step-card"><div class="step-number">3</div><h4>Palier 50 %</h4><p>Plusieurs cycles de trades couvrant au moins un mini-régime de marché. L'edge commence à se confirmer en réel.</p></div>
+      <div class="step-card"><div class="step-number">4</div><h4>Palier 100 %</h4><p>Capital cible atteint, risque par trade en régime de croisière. Le déploiement est terminé, la gestion courante commence.</p></div>
+    </div>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-diagram-project" style="margin-right:0.5rem;"></i> Le parallèle avec la machine d'états DailyTickers</h4>
+      <p>Ce principe n'est pas une métaphore vague : c'est exactement la logique de la <strong>machine d'états des modes</strong> qui pilote les stratégies DailyTickers. Un mode ne passe jamais directement de la conception au plein capital. Il traverse une séquence d'états&nbsp;:</p>
+      <p style="text-align:center; font-weight:700; color:#0f766e; font-size:1.05rem; margin:1rem 0;">draft → test → deploying → live</p>
+      <ul class="checklist">
+        <li><i class="fa-solid fa-circle-dot" style="color:#94a3b8;"></i> <strong>draft</strong> — la stratégie est définie mais ne trade pas.</li>
+        <li><i class="fa-solid fa-circle-dot" style="color:#0d9488;"></i> <strong>test</strong> — validation en conditions contrôlées, sans capital plein.</li>
+        <li><i class="fa-solid fa-circle-dot" style="color:#f59e0b;"></i> <strong>deploying</strong> — le ramp-up «&nbsp;au fil de l'eau&nbsp;» : les entrées sont acceptées en mode <em>paper-ramp</em> pour valider les conditions réelles d'exécution avant le passage en plein régime.</li>
+        <li><i class="fa-solid fa-circle-dot" style="color:#10b981;"></i> <strong>live</strong> — capital cible, fonctionnement nominal.</li>
+      </ul>
+      <p>L'état <strong>deploying</strong> est précisément votre palier 10–50 %. On y valide que la réalité ressemble au backtest <em>avant</em> d'engager le capital plein. Si l'exécution dérape — slippage anormal, fills manquants, stops sautés sur des gaps — on ne monte pas de palier&nbsp;: on reste, on corrige, ou on redescend.</p>
+    </div>
+
+    <h3>La condition de passage : objective, jamais émotionnelle</h3>
+    <p>Le piège du ramp-up mal exécuté, c'est de monter de palier «&nbsp;parce qu'on se sent confiant&nbsp;». La confiance n'est pas un critère. Un palier ne se débloque que si des conditions <strong>mesurables</strong> sont remplies sur les N séances ou trades précédents&nbsp;:</p>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Le slippage moyen reste dans la fourchette anticipée (par exemple &lt; 0,15 % par entrée). Mieux qu'un seuil en % absolu, raisonnez en <strong>multiple du spread ou de l'ATR moyen</strong> — typiquement &lt; 0,5× spread ou &lt; 0,1× ATR — puisque le slippage tolérable dépend mécaniquement de la liquidité&nbsp;: cette borne reste large pour un large-cap liquide, et beaucoup plus serrée pour un small-cap volatil.</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Les ordres sont remplis intégralement et au prix attendu, sans rejets répétés.</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Les stops se déclenchent comme prévu, y compris sur ouverture en gap.</li>
+      <li><i class="fa-solid fa-check" style="color:#10b981;"></i> Aucun garde-fou (kill-switch DD, plafond de positions) n'a été déclenché.</li>
+    </ul>
+    <p>Notez que ces critères portent sur le <strong>comportement mécanique</strong> du système, pas sur le P&L. On ne monte pas de palier parce qu'on a gagné — un palier validé sur trois trades gagnants n'apprend rien d'autre que «&nbsp;le marché était favorable&nbsp;». On monte de palier parce que <strong>la plomberie fonctionne</strong>.</p>
+  </div>
+
+  <!-- ============ SECTION 3 : SIZING INITIAL ============ -->
+  <div class="section-divider" id="sizing-initial"><i class="fa-solid fa-down-left-and-up-right-to-center" style="color:#0d9488;"></i> Dimensionnement initial sous-calibré</div>
+  <div class="content-card">
+    <h2>Démarrer volontairement trop petit</h2>
+    <p>Le ramp-up gère <em>la part du capital déployée</em>. Le sizing initial gère une seconde dimension, indépendante : <strong>le risque pris sur chaque trade individuel</strong>. Au démarrage, les deux doivent être bridés simultanément. Concrètement, on démarre avec une taille de position réduite à <strong>la moitié ou le tiers</strong> de la taille cible, et un risque par trade de <strong>0,25 à 0,5 %</strong> du capital — contre environ <strong>1 %</strong> en régime de croisière.</p>
+
+    <div id="chart-risk" style="width:100%;height:340px;margin:2rem 0;"></div>
+
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-value" style="color:#dc2626;">0,25–0,5 %</div><div class="metric-label">Risque/trade au démarrage</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#10b981;">~1 %</div><div class="metric-label">Risque/trade en croisière</div></div>
+      <div class="metric-card"><div class="metric-value" style="color:#0d9488;">1/2 à 1/3</div><div class="metric-label">Taille de position vs cible</div></div>
+    </div>
+
+    <h3>Pourquoi accepter de gagner moins au début</h3>
+    <p>L'objection est immédiate : «&nbsp;à risque réduit, je gagne moins&nbsp;». C'est vrai, et c'est le but. Au démarrage, <strong>l'objectif n'est pas de maximiser le gain, c'est d'acheter de l'information à bas prix</strong>. Chaque trade en taille réduite vous apprend comment la stratégie se comporte en réel — slippage, fills, votre propre psychologie — pour un coût en risque divisé par deux ou trois. Vous payez le droit d'apprendre, et vous le payez le moins cher possible.</p>
+
+    <div class="didactic-box">
+      <p><strong>L'analogie du pilote.</strong> Un pilote ne décolle pas pour la première fois aux commandes d'un long-courrier plein de passagers. Il accumule des centaines d'heures sur des appareils légers, puis en simulateur, puis comme copilote. Le sizing réduit du jour 1, c'est votre vol en simulateur — sauf qu'il a lieu avec de l'argent réel. Un compte de démonstration garde toute son utilité&nbsp;: c'est précisément le mode <em>paper-ramp</em> évoqué plus haut, idéal pour valider la <strong>plomberie</strong> (passage d'ordres, déclenchement des stops, fills) avant d'engager le moindre euro. Sa limite tient à une seule chose&nbsp;: l'absence d'émotion réelle. La pression psychologique d'un capital qui recule ne se simule pas — et c'est justement cette variable que le sizing réduit en réel vous apprend à gérer.</p>
+    </div>
+
+    <h3>Le coût réel d'un sizing initial réduit</h3>
+    <p>Mettons des chiffres dessus, à titre d'illustration. Sur un capital de 10&nbsp;000&nbsp;€, risquer 0,5 % au lieu de 1 % par trade signifie 50&nbsp;€ de risque au lieu de 100&nbsp;€. Sur le premier mois — disons 20 trades — l'écart de gain potentiel se chiffre en quelques centaines d'euros. C'est le prix d'une assurance contre un scénario où l'edge ne tient pas en réel et où vous auriez perdu deux fois plus, au pire moment, sans le moindre coussin. Le calcul est asymétrique en votre faveur&nbsp;: le manque à gagner est borné et modeste&nbsp;; la perte évitée, elle, peut être terminale pour le portefeuille comme pour la discipline.</p>
+
+    <div class="formula-box">
+      <div class="formula-label">Sizing de démarrage</div>
+      Risque/trade démarrage = <span class="formula-highlight">Risque cible × 0,25 à 0,5</span>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 4 : ECHELONNER ============ -->
+  <div class="section-divider" id="echelonner"><i class="fa-solid fa-calendar-week" style="color:#0d9488;"></i> Échelonner les entrées</div>
+  <div class="content-card">
+    <h2>Étaler le déploiement dans le temps</h2>
+    <p>Le ramp-up et le sizing répondent à la question «&nbsp;combien risquer&nbsp;?&nbsp;». L'échelonnement répond à «&nbsp;quand entrer&nbsp;?&nbsp;». Déployer tout son capital sur une ou deux séances, c'est miser que ce moment précis est un bon point d'entrée pour l'ensemble du portefeuille. Or vous n'en savez rien — et statistiquement, vous avez autant de chances de démarrer au sommet d'un régime que dans un creux. <strong>L'échelonnement (<em>time-diversification</em>) étale les entrées sur 4 à 8 semaines</strong> pour neutraliser ce risque de timing.</p>
+
+    <h3>Déploiement bloc vs déploiement échelonné</h3>
+    <p>La différence se voit le mieux sur une courbe d'equity. Imaginez deux investisseurs qui démarrent le même jour avec la même stratégie, juste avant une correction de marché de quelques semaines, à titre d'illustration&nbsp;:</p>
+
+    <div id="chart-equity" style="width:100%;height:380px;margin:2rem 0;"></div>
+
+    <table class="compare-table">
+      <thead><tr><th>Critère</th><th>Déploiement bloc (100 % jour 1)</th><th>Déploiement échelonné (sur 6 semaines)</th></tr></thead>
+      <tbody>
+        <tr><td>Exposition au moment du creux</td><td style="color:#dc2626;">Capital plein</td><td style="color:#10b981;">Capital partiel</td></tr>
+        <tr><td>Drawdown d'entrée potentiel</td><td style="color:#dc2626; font-weight:700;">Profond (toute la baisse)</td><td style="color:#10b981; font-weight:700;">Amorti (fraction de la baisse)</td></tr>
+        <tr><td>Prix d'entrée moyen</td><td>Un seul point, subi</td><td>Moyenné sur plusieurs points</td></tr>
+        <tr><td>Capacité à profiter d'un creux</td><td style="color:#dc2626;">Nulle (déjà tout investi)</td><td style="color:#10b981;">Réelle (cash restant déployable plus bas)</td></tr>
+        <tr><td>Coût en cas de marché haussier</td><td style="color:#10b981;">Aucun (gain maximal)</td><td style="color:#f59e0b;">Léger manque à gagner</td></tr>
+      </tbody>
+    </table>
+
+    <p>Le déploiement bloc gagne <em>seulement</em> dans le scénario où le marché monte tout droit dès le jour 1 — un scénario que vous ne pouvez ni prévoir ni contrôler. Dans tous les autres cas, l'échelonnement réduit le drawdown d'entrée et améliore le prix moyen. C'est un arbitrage asymétrique : on renonce à un gain marginal dans le meilleur des cas pour éviter un drawdown sévère dans le pire — exactement la logique que vous voulez au démarrage, quand un drawdown sévère peut casser la discipline.</p>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-lightbulb" style="margin-right:0.5rem;"></i> Échelonner ≠ attendre le bon moment</h4>
+      <p>L'échelonnement n'est <strong>pas</strong> du <em>market timing</em>. On ne suspend pas le déploiement parce qu'on «&nbsp;sent&nbsp;» une baisse. On déploie mécaniquement une tranche à intervalle régulier (par exemple chaque semaine), quel que soit l'état du marché. C'est cette discipline mécanique qui élimine le biais émotionnel — la même logique qu'un investissement programmé, appliquée à la phase de lancement d'une stratégie active.</p>
+    </div>
+  </div>
+
+  <!-- ============ SECTION 5 : GARDE-FOUS ============ -->
+  <div class="section-divider" id="garde-fous"><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> Les garde-fous du jour 1</div>
+  <div class="content-card">
+    <h2>Armer les coupe-circuits avant le premier trade</h2>
+    <p>Un système critique n'est jamais mis en production sans disjoncteurs. Votre portefeuille naissant non plus. Ces garde-fous doivent être <strong>définis et armés avant le premier trade</strong> — pas improvisés sous le stress d'une perte. Les improviser en plein drawdown, c'est précisément le moment où votre jugement est le moins fiable.</p>
+
+    <div class="capability-grid">
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(220,38,38,0.1); color:#dc2626;"><i class="fa-solid fa-power-off"></i></div><h4>Kill-switch drawdown</h4><p>À -3 % sur le capital déployé : pause automatique de toute nouvelle entrée. On gère l'existant, on n'ouvre plus rien.</p></div>
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(13,148,136,0.1); color:#0d9488;"><i class="fa-solid fa-layer-group"></i></div><h4>Plafond de positions</h4><p>Nombre maximal de positions ouvertes simultanément. Limite la corrélation cachée et le risque agrégé.</p></div>
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(245,158,11,0.12); color:#d97706;"><i class="fa-solid fa-ban"></i></div><h4>Zéro levier</h4><p>Aucun effet de levier au démarrage. Le levier amplifie le risque de ruine au moment exact où il est déjà maximal.</p></div>
+      <div class="capability-card"><div class="capability-icon" style="background:rgba(147,51,234,0.1); color:#9333ea;"><i class="fa-solid fa-book"></i></div><h4>Journal de trades</h4><p>Obligatoire et systématique. Chaque trade : thèse, entrée, stop, sortie, slippage observé, état émotionnel.</p></div>
+    </div>
+
+    <h3>Le kill-switch drawdown, en détail</h3>
+    <p>Le coupe-circuit le plus important est le <strong>kill-switch sur drawdown</strong>. Sa logique : si le capital déployé recule d'un seuil prédéfini — par exemple -3 % — toute nouvelle entrée est suspendue automatiquement. Les positions ouvertes continuent d'être gérées normalement (stops, objectifs, horizon), mais le système arrête de prendre de nouveaux risques. C'est exactement l'état <strong>pausing</strong> de la machine d'états DailyTickers : sortie organique, pas de nouvelles entrées, mais les positions existantes vivent jusqu'à leur clôture naturelle.</p>
+
+    <p>Pourquoi -3 % et pas -10 %&nbsp;? Parce qu'au démarrage, sur un capital partiellement déployé et un sizing réduit, atteindre -3 % signifie déjà qu'<strong>une série de trades s'est mal comportée</strong>. C'est un signal, pas un accident statistique acceptable. Plutôt que de continuer à creuser, on s'arrête, on lit le journal de trades, et on diagnostique : est-ce le marché (régime défavorable) ou le système (edge qui ne tient pas) ? Cette pause vous sauve du scénario le plus destructeur — celui où l'on continue à trader un système cassé en espérant «&nbsp;que ça revienne&nbsp;».</p>
+
+    <div class="alert-box">
+      <strong>Le levier au jour 1 est l'erreur capitale.</strong> Le risque de ruine croît de façon non linéaire avec la fraction de capital risquée par trade. Le levier multiplie directement cette fraction. L'utiliser au démarrage, quand l'edge n'est pas confirmé et qu'aucun coussin n'existe, revient à empiler le facteur de risque le plus dangereux sur le moment le plus fragile. Zéro levier tant que la stratégie n'est pas passée en <em>live</em> confirmé.
+    </div>
+
+    <h3>Le journal de trades : votre seule source de vérité</h3>
+    <p>Sans journal, vous n'avez aucun moyen objectif de savoir si vos paliers de ramp-up sont validés. Le journal n'est pas de la paperasse : c'est l'instrument de mesure qui distingue «&nbsp;j'ai gagné par chance&nbsp;» de «&nbsp;mon système fonctionne&nbsp;». Pour chaque trade, consignez la thèse, le point d'entrée, le stop, la sortie, le slippage réellement observé, et — point souvent négligé — votre <strong>état émotionnel</strong>. Au démarrage, vos propres réactions sous stress sont une donnée aussi importante que le P&L.</p>
+  </div>
+
+  <!-- ============ SECTION 6 : PLAN ============ -->
+  <div class="section-divider" id="plan"><i class="fa-solid fa-list-check" style="color:#0d9488;"></i> Plan de démarrage en 8 semaines</div>
+  <div class="content-card">
+    <h2>Le plan semaine par semaine</h2>
+    <p>Voici un plan de démarrage concret et chiffré, synthétisant ramp-up, sizing et échelonnement. Les chiffres sont <strong>illustratifs</strong> — calez-les sur votre propre capital, votre fréquence de trade et votre tolérance au risque. L'essentiel n'est pas les nombres exacts, mais la <strong>discipline de progression conditionnelle</strong> : chaque palier ne se débloque que si le précédent a tenu mécaniquement.</p>
+
+    <p style="font-size:0.9rem; color:#64748b; line-height:1.6;"><i class="fa-solid fa-circle-info" style="color:#0d9488; margin-right:0.4rem;"></i> Les deux dernières colonnes ne se cumulent pas&nbsp;: le <strong>risque/trade est déjà la résultante</strong> de la taille de position multipliée par la distance au stop (risque = taille × distance entrée→stop). La colonne «&nbsp;taille de position&nbsp;» décrit l'exposition nominale&nbsp;; la colonne «&nbsp;risque/trade&nbsp;» en exprime la perte maximale acceptée. On lit la ligne comme un seul réglage cohérent, pas comme deux risques empilés.</p>
+
+    <table class="compare-table">
+      <thead><tr><th>Semaine</th><th>Capital déployé</th><th>Taille position</th><th>Risque / trade</th><th>Condition de passage au palier suivant</th></tr></thead>
+      <tbody>
+        <tr><td><strong>S1–S2</strong></td><td>10 %</td><td>1/3 de la cible</td><td>0,25 %</td><td>Fills conformes, slippage dans la fourchette, stops déclenchés correctement</td></tr>
+        <tr><td><strong>S3–S4</strong></td><td>25 %</td><td>1/3 de la cible</td><td>0,25–0,4 %</td><td>Aucun kill-switch déclenché, exécution stable sur ≥ 10 trades</td></tr>
+        <tr><td><strong>S5–S6</strong></td><td>50 %</td><td>1/2 de la cible</td><td>0,5 %</td><td>Edge cohérent avec le backtest sur un mini-régime, journal à jour</td></tr>
+        <tr><td><strong>S7–S8</strong></td><td>75 %</td><td>2/3 de la cible</td><td>0,5–0,75 %</td><td>Comportement nominal confirmé, discipline tenue sous au moins une perte</td></tr>
+        <tr><td><strong>S9+</strong></td><td>100 %</td><td>Cible pleine</td><td>~1 %</td><td>Régime de croisière — fin du déploiement, début de la gestion courante</td></tr>
+      </tbody>
+    </table>
+
+    <div class="pedagogy-box">
+      <h4><i class="fa-solid fa-rotate-left" style="margin-right:0.5rem;"></i> La règle de rétrogradation</h4>
+      <p>Le plan n'est pas à sens unique. Si un palier déclenche le kill-switch DD ou si l'exécution dérape, on ne reste pas figé&nbsp;: on <strong>redescend d'un palier</strong>, on diagnostique via le journal, et on ne remonte qu'une fois le problème compris et corrigé. Un démarrage réussi n'est pas une montée linéaire vers 100 % — c'est une montée <em>conditionnelle</em> qui accepte de reculer. Mieux vaut huit semaines de plus en sécurité qu'un retour précipité au plein capital sur un système non encore validé.</p>
+    </div>
+
+    <h3>Les conditions de passage, traduites en règles</h3>
+    <ul class="checklist">
+      <li><i class="fa-solid fa-arrow-up-right-dots" style="color:#0d9488;"></i> <strong>Monter de palier</strong> uniquement si TOUTES les conditions mécaniques de la ligne sont vertes — pas la majorité, toutes.</li>
+      <li><i class="fa-solid fa-equals" style="color:#f59e0b;"></i> <strong>Rester au palier</strong> si l'exécution est correcte mais qu'il manque des données (trop peu de trades pour conclure).</li>
+      <li><i class="fa-solid fa-arrow-down-right-dots" style="color:#dc2626;"></i> <strong>Redescendre d'un palier</strong> si le kill-switch s'est déclenché ou si l'exécution s'est dégradée de façon répétée.</li>
+    </ul>
+  </div>
+
+  <!-- ============ QUIZ ============ -->
+  <div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz</div>
+  <div class="content-card">
+    <h2>Vérifiez votre compréhension</h2>
+    <p>Cinq questions pour ancrer les réflexes du démarrage. Réfléchissez avant d'ouvrir la réponse.</p>
+
+    <details>
+      <summary>1. Pourquoi une perte de -10 % au jour 1 est-elle plus dangereuse qu'une perte identique après +30 % de gains ?</summary>
+      <div class="quiz-answer">Parce qu'au jour 1 il n'existe aucun coussin de gains&nbsp;: chaque euro perdu est un euro du capital initial, et le portefeuille passe immédiatement en territoire de récupération. Après +30 % de gains, la même perte entame le profit accumulé («&nbsp;l'argent de la maison&nbsp;») et le portefeuille reste largement au-dessus du capital de départ. Le danger n'est pas que financier&nbsp;: la perte au jour 1 attaque aussi la discipline, poussant à abandonner le plan pour «&nbsp;se refaire&nbsp;».</div>
+    </details>
+
+    <details>
+      <summary>2. Sur quel critère débloque-t-on le passage d'un palier de ramp-up au suivant ?</summary>
+      <div class="quiz-answer">Sur des critères <strong>mécaniques et mesurables</strong> — slippage dans la fourchette, fills intégraux au prix attendu, stops déclenchés correctement, aucun garde-fou activé — et <strong>jamais</strong> sur le P&L ni sur un sentiment de confiance. Un palier validé sur trois trades gagnants n'apprend rien d'autre que «&nbsp;le marché était favorable&nbsp;». On monte de palier parce que la plomberie fonctionne, pas parce qu'on a gagné.</div>
+    </details>
+
+    <details>
+      <summary>3. À quel état de la machine d'états DailyTickers correspond la phase de ramp-up à capital partiel ?</summary>
+      <div class="quiz-answer">À l'état <strong>deploying</strong>, dans la séquence draft → test → deploying → live. C'est le ramp-up «&nbsp;au fil de l'eau&nbsp;»&nbsp;: les entrées sont acceptées en mode <em>paper-ramp</em> pour valider les conditions réelles d'exécution avant le passage en plein capital (<em>live</em>). Le kill-switch DD qui suspend les nouvelles entrées tout en gérant l'existant correspond, lui, à l'état <strong>pausing</strong>.</div>
+    </details>
+
+    <details>
+      <summary>4. Quel est le risque par trade recommandé au démarrage, et pourquoi accepter de gagner moins ?</summary>
+      <div class="quiz-answer">Entre <strong>0,25 et 0,5 %</strong> du capital par trade, contre environ 1 % en régime de croisière. On accepte de gagner moins parce que l'objectif du démarrage n'est pas de maximiser le gain mais d'<strong>acheter de l'information à bas prix</strong>&nbsp;: chaque trade en taille réduite révèle le comportement réel de la stratégie (slippage, fills, psychologie) pour un coût en risque divisé par deux ou trois. L'arbitrage est asymétrique&nbsp;: le manque à gagner est borné, la perte évitée peut être terminale.</div>
+    </details>
+
+    <details>
+      <summary>5. Pourquoi l'échelonnement des entrées n'est-il pas du market timing ?</summary>
+      <div class="quiz-answer">Parce qu'on déploie une tranche <strong>mécaniquement, à intervalle régulier</strong> (par exemple chaque semaine), quel que soit l'état du marché — sans jamais suspendre le déploiement parce qu'on «&nbsp;sent&nbsp;» une baisse. C'est cette absence de décision discrétionnaire qui élimine le biais émotionnel. L'échelonnement diversifie le risque de timing dans le temps&nbsp;; le market timing prétend prévoir ce timing.</div>
+    </details>
+  </div>
+
+  <!-- ============ TAKEAWAY ============ -->
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 1</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-circle-check"></i> Le jour 1 cumule trois fragilités&nbsp;: edge non confirmé en réel, zéro coussin de gains, discipline non rodée. C'est le moment le plus dangereux du cycle de vie.</li>
+      <li><i class="fa-solid fa-circle-check"></i> Une perte au démarrage fait plus mal qu'une perte en cours de route&nbsp;: pas d'«&nbsp;argent de la maison&nbsp;» pour l'amortir, et elle attaque la discipline autant que le capital.</li>
+      <li><i class="fa-solid fa-circle-check"></i> Ne jamais déployer 100 % d'un coup&nbsp;: ramp-up par paliers (10 → 25 → 50 → 100 %), débloqués sur des critères mécaniques mesurables, jamais sur le P&L ou la confiance.</li>
+      <li><i class="fa-solid fa-circle-check"></i> Démarrer sous-calibré&nbsp;: 0,25–0,5 % de risque/trade au lieu de ~1 %, taille de position à 1/2 ou 1/3 de la cible. On paie le droit d'apprendre, au plus bas prix.</li>
+      <li><i class="fa-solid fa-circle-check"></i> Échelonner les entrées sur 4 à 8 semaines pour neutraliser le risque de démarrer au sommet d'un régime&nbsp;: arbitrage asymétrique en votre faveur.</li>
+      <li><i class="fa-solid fa-circle-check"></i> Armer les garde-fous AVANT le premier trade&nbsp;: kill-switch DD à -3 %, plafond de positions, zéro levier, journal de trades obligatoire.</li>
+    </ul>
+  </div>
+
+  <a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="next-cta">
+    <i class="fa-solid fa-flask-vial"></i>
+    <div>
+      <div class="next-label">Partie 2 sur 6 — à suivre</div>
+      <div class="next-title">Du backtest au forward test : franchir le pont</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+
+</div>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Piloter son Portefeuille</span><div class="series-steps"><a href="/series/piloter-son-portefeuille/part1-demarrer/" class="series-step current" title="Démarrer sans se faire détruire le jour 1"><span class="series-num">1</span><span class="series-label">Démarrer</span></a><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-step" title="Du backtest au forward test : franchir le pont"><span class="series-num">2</span><span class="series-label">Forward test</span></a><a href="/series/piloter-son-portefeuille/part3-drawdown/" class="series-step" title="Dimensionner et défendre contre le drawdown"><span class="series-num">3</span><span class="series-label">Drawdown</span></a><a href="/series/piloter-son-portefeuille/part4-scale-up/" class="series-step" title="Scaler une stratégie gagnante"><span class="series-num">4</span><span class="series-label">Scale up</span></a><a href="/series/piloter-son-portefeuille/part5-pause-vacances/" class="series-step" title="Pause, réduction et vacances : piloter l'activité"><span class="series-num">5</span><span class="series-label">Pause & vacances</span></a><a href="/series/piloter-son-portefeuille/part6-arreter/" class="series-step" title="Arrêter proprement et la checklist du gérant"><span class="series-num">6</span><span class="series-label">Arrêter</span></a></div><span class="series-counter">1/6</span><a href="/series/piloter-son-portefeuille/part2-backtest-forward/" class="series-arrow" title="Du backtest au forward test : franchir le pont"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+(function() {
+  var charts = [];
+  function reg(c) { if (c) charts.push(c); }
+
+  // --- Chart 1 : paliers de ramp-up ---
+  var elRamp = document.getElementById('chart-rampup');
+  if (elRamp) {
+    var cRamp = echarts.init(elRamp);
+    cRamp.setOption({
+      title: { text: 'Capital déployé par palier de ramp-up', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' %'; } },
+      grid: { left: '8%', right: '5%', bottom: '12%', top: '18%' },
+      xAxis: { type: 'category', data: ['Palier 1', 'Palier 2', 'Palier 3', 'Palier 4'], axisLabel: { color: '#64748b' } },
+      yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value} %', color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'bar', data: [
+          { value: 10, itemStyle: { color: '#5eead4' } },
+          { value: 25, itemStyle: { color: '#14b8a6' } },
+          { value: 50, itemStyle: { color: '#0d9488' } },
+          { value: 100, itemStyle: { color: '#0f766e' } }
+        ],
+        barWidth: '52%',
+        label: { show: true, position: 'top', formatter: '{c} %', fontWeight: 700, color: '#0f172a' },
+        itemStyle: { borderRadius: [8, 8, 0, 0] }
+      }]
+    });
+    reg(cRamp);
+  }
+
+  // --- Chart 2 : risque par trade démarrage vs croisière ---
+  var elRisk = document.getElementById('chart-risk');
+  if (elRisk) {
+    var cRisk = echarts.init(elRisk);
+    cRisk.setOption({
+      title: { text: 'Risque par trade : démarrage vs régime de croisière', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + ' % du capital'; } },
+      grid: { left: '10%', right: '6%', bottom: '12%', top: '18%' },
+      xAxis: { type: 'category', data: ['Démarrage\n(prudent)', 'Démarrage\n(haut)', 'Croisière'], axisLabel: { color: '#64748b', interval: 0, lineHeight: 14 } },
+      yAxis: { type: 'value', max: 1.2, axisLabel: { formatter: '{value} %', color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [{
+        type: 'bar', data: [
+          { value: 0.25, itemStyle: { color: '#dc2626' } },
+          { value: 0.5, itemStyle: { color: '#f59e0b' } },
+          { value: 1.0, itemStyle: { color: '#10b981' } }
+        ],
+        barWidth: '46%',
+        label: { show: true, position: 'top', formatter: '{c} %', fontWeight: 700, color: '#0f172a' },
+        itemStyle: { borderRadius: [8, 8, 0, 0] }
+      }]
+    });
+    reg(cRisk);
+  }
+
+  // --- Chart 3 : equity déploiement bloc vs échelonné ---
+  var elEq = document.getElementById('chart-equity');
+  if (elEq) {
+    var cEq = echarts.init(elEq);
+    var weeks = ['S0', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10'];
+    // illustratif : marché baisse puis se reprend ; bloc = exposé plein dès S0, échelonné = entre par tranches
+    var bloc =       [100, 96, 92, 88, 91, 94, 98, 102, 105, 108, 111];
+    var echelonne =  [100, 99, 98, 97, 98, 100, 102, 105, 108, 111, 114];
+    cEq.setOption({
+      title: { text: "Courbe d'equity : déploiement bloc vs échelonné (illustratif)", left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Déploiement bloc', 'Déploiement échelonné'], bottom: 0, textStyle: { color: '#475569' } },
+      grid: { left: '8%', right: '5%', bottom: '14%', top: '18%' },
+      xAxis: { type: 'category', boundaryGap: false, data: weeks, axisLabel: { color: '#64748b' } },
+      yAxis: { type: 'value', min: 84, axisLabel: { formatter: '{value}', color: '#64748b' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
+      series: [
+        { name: 'Déploiement bloc', type: 'line', data: bloc, smooth: true, symbol: 'circle', symbolSize: 6,
+          lineStyle: { color: '#dc2626', width: 3 }, itemStyle: { color: '#dc2626' },
+          areaStyle: { color: 'rgba(220,38,38,0.06)' },
+          markPoint: { data: [{ type: 'min', name: 'DD bloc', value: '-12 %', itemStyle: { color: '#dc2626' } }], symbolSize: 48, label: { fontSize: 10, formatter: '-12 %', color: '#fff', fontWeight: 700 } } },
+        { name: 'Déploiement échelonné', type: 'line', data: echelonne, smooth: true, symbol: 'circle', symbolSize: 6,
+          lineStyle: { color: '#0d9488', width: 3 }, itemStyle: { color: '#0d9488' },
+          areaStyle: { color: 'rgba(13,148,136,0.06)' },
+          markPoint: { data: [{ type: 'min', name: 'DD échelonné', value: '-3 %', itemStyle: { color: '#0d9488' } }], symbolSize: 48, label: { fontSize: 10, formatter: '-3 %', color: '#fff', fontWeight: 700 } } }
+      ]
+    });
+    reg(cEq);
+  }
+
+  window.addEventListener('resize', function() {
+    charts.forEach(function(c) { c.resize(); });
+  });
+})();
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
