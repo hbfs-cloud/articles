@@ -253,7 +253,7 @@ function buildTelegramMessage(d) {
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      manageBlock += `  ⏰ <b>${p.ticker}</b>  ${pnl}  TP1 ${p.tp1}${toTp1 ? ` (+${toTp1}%)` : ''}  stop ${p.stop}  → decision in 2 days\n`;
+      manageBlock += `  ⏰ <b>${p.ticker}</b>  ${pnl}${p.tp1 ? `  TP1 ${(+p.tp1).toFixed(2)}${toTp1 ? ` (+${toTp1}%)` : ''}` : ''}  stop ${(+p.stop).toFixed(2)}  → decision in 2 days\n`;
     });
   }
 
@@ -322,7 +322,7 @@ function buildDiscordMessage(d) {
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
       const toTp1 = p.tp1 && p.current_price ? (((p.tp1 - p.current_price) / p.current_price) * 100).toFixed(1) : null;
-      manageBlock += `> ⏰ **${p.ticker}**  ${pnl}  TP1 \`${p.tp1}\`${toTp1 ? ` (+${toTp1}%)` : ''}  stop \`${p.stop}\`  → decision in 2 days\n`;
+      manageBlock += `> ⏰ **${p.ticker}**  ${pnl}${p.tp1 ? `  TP1 \`${(+p.tp1).toFixed(2)}\`${toTp1 ? ` (+${toTp1}%)` : ''}` : ''}  stop \`${(+p.stop).toFixed(2)}\`  → decision in 2 days\n`;
     });
   }
 
@@ -396,7 +396,7 @@ function buildAudioCaption(d, ytUrl) {
     });
     decideSoon.forEach(p => {
       const pnl = (p.return_pct >= 0 ? '+' : '') + p.return_pct + '%';
-      lines.push(`⏰ <b>${p.ticker}</b> ${pnl} TP1 ${p.tp1} · 2d left`);
+      lines.push(`⏰ <b>${p.ticker}</b> ${pnl}${p.tp1 ? ` TP1 ${(+p.tp1).toFixed(2)}` : ''} · 2d left`);
     });
   }
 
