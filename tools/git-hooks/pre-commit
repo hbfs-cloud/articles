@@ -1,0 +1,37 @@
+#!/bin/bash
+# Pre-commit hook: secret guard + generate search index and sitemap
+#
+# Version-controlled reference copy. Install with:
+#   cp tools/git-hooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# (.git/hooks/ is NOT versioned, so re-run after a fresh clone.)
+
+# ── Secret guard (SEC-001) — block staging of .env or obvious secrets ──
+STAGED=$(git diff --cached --name-only)
+if echo "$STAGED" | grep -qE '(^|/)\.env($|\.)'; then
+  echo "🛑 [pre-commit] Refus : un fichier .env est en staging (secrets interdits). git restore --staged <file>."
+  exit 1
+fi
+if git diff --cached -U0 -- . ':(exclude)assets/search-index.json' ':(exclude)data/search_data.js' \
+   | grep -nE 'sk-ant-(api|oauth)[0-9A-Za-z_-]{8,}|AIza[0-9A-Za-z_-]{30,}|[0-9]{8,10}:AA[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{10,}' >/dev/null; then
+  echo "🛑 [pre-commit] Refus : motif de secret détecté dans le diff (clé Anthropic/Google, token Telegram/Slack). Retire-le avant de committer."
+  exit 1
+fi
+
+echo "📈 [Pre-commit] Updating search index and sitemap..."
+
+# Run the python scripts to rebuild the index and sitemap
+python3 tools/build_search_index.py
+python3 tools/build_sitemap_rss.py
+node tools/build_rss.js
+
+# Update search_data.js cache buster in index.html
+TODAY=$(date '+%Y%m%d%H%M')
+sed -i '' "s|search_data\.js?v=[0-9]*|search_data.js?v=${TODAY}|g" index.html
+
+# Add the updated files to the staging area so they are committed
+git add assets/search-index.json
+git add sitemap.xml
+git add feed.xml
+git add index.html
+
+echo "✅ [Pre-commit] Finished successfully. Committing..."

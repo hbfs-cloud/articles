@@ -196,7 +196,10 @@ function buildScannerSlides(html, content, dateStr) {
     if (s.includes('NEUTRAL')) return 'NEUTRAL';
     return 'RISK-OFF'; // default when unknown
   }
-  const regimeRaw = regimeMatch ? (regimeMatch[2] || regimeMatch[1]) : null;
+  // JSON-first: structured scanner data (robust); HTML regex is fallback only
+  let _wl = null;
+  try { const _j = JSON.parse(fs.readFileSync(path.join(ROOT, 'mcp/watchlist.json'), 'utf8')); if (Array.isArray(_j.picks) && _j.picks.length) _wl = _j; } catch {}
+  const regimeRaw = (_wl && _wl.regime) || (regimeMatch ? (regimeMatch[2] || regimeMatch[1]) : null);
   const regime = normalizeRegime(regimeRaw);
   const regimeEmoji = regime === 'RISK-OFF' || regime === 'EARLY RISK-OFF' ? '🔴'
     : regime === 'RISK-ON' ? '🟢'
@@ -212,24 +215,34 @@ function buildScannerSlides(html, content, dateStr) {
     ? regimeThesisMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 250)
     : '';
 
-  // 4. Parse top sectors from setup badges
+  // 4. Top sectors — HTML badges, with JSON-derived fallback below
   const sectorBadges = [...html.matchAll(/badge badge-orange">([^<]+)<\/span>/g)].map(m => m[1]);
-  const topSectors = [...new Set(sectorBadges)].slice(0, 4);
+  let topSectors = [...new Set(sectorBadges)].slice(0, 4);
 
-  // 5. Parse open positions for slide 1 — timeout & watch
+  // 5. Open positions count — JSON-first (number of active picks), HTML fallback
   const openPosMatch = html.match(/tracking\s*<strong>(\d+)\s*open positions/i);
-  const openCount = openPosMatch ? parseInt(openPosMatch[1]) : 0;
+  const openCount = _wl ? _wl.picks.length : (openPosMatch ? parseInt(openPosMatch[1]) : 0);
 
-  // 6. Parse the synthese table for all 10 setups
+  // 6. Setups — JSON-first (mcp/watchlist.json structured), brittle HTML table as fallback only
   const setups = [];
-  const tableRows = [...html.matchAll(/<tr><td>\d+<\/td><td><strong>([A-Z.]+)<\/strong><\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>(\d+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><\/tr>/g)];
-  for (const m of tableRows) {
-    setups.push({
-      ticker: m[1], name: m[2].replace(/&amp;/g, '&'), sector: m[3],
-      strategy: m[4], score: parseInt(m[5]),
-      entry: m[6], stop: m[7], tp1: m[8], tp2: m[9], rr: m[10],
+  if (_wl) {
+    for (const p of _wl.picks) setups.push({
+      ticker: p.symbol, name: p.name || p.symbol, sector: p.sector || p.strategy || '',
+      strategy: p.strategy || '', score: Number(p.score) || 0,
+      entry: p.entry != null ? `$${p.entry}` : '', stop: p.stop != null ? `$${p.stop}` : '',
+      tp1: p.tp1 != null ? `$${p.tp1}` : '', tp2: p.tp2 != null ? `$${p.tp2}` : '', rr: p.rr != null ? String(p.rr) : '',
     });
+  } else {
+    const tableRows = [...html.matchAll(/<tr><td>\d+<\/td><td><strong>([A-Z.]+)<\/strong><\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>(\d+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><td>([^<]+)<\/td><\/tr>/g)];
+    for (const m of tableRows) {
+      setups.push({
+        ticker: m[1], name: m[2].replace(/&amp;/g, '&'), sector: m[3],
+        strategy: m[4], score: parseInt(m[5]),
+        entry: m[6], stop: m[7], tp1: m[8], tp2: m[9], rr: m[10],
+      });
+    }
   }
+  if (!topSectors.length) topSectors = [...new Set(setups.map(s => s.sector || s.strategy).filter(Boolean))].slice(0, 4);
 
   // 7. Parse investment thesis per ticker (first 3 setups for slides 4-6)
   const theses = {};
@@ -249,9 +262,10 @@ function buildScannerSlides(html, content, dateStr) {
   const wtiMatch = html.match(/WTI[^<]*?\$(\d+\.?\d*)/);
   const wtiPrice = wtiMatch ? '$' + wtiMatch[1] : '';
 
-  // 9. Parse KPI values
+  // 9. Avg score — computed from setups (robust), HTML KPI as fallback
   const avgScoreMatch = html.match(/Avg Score<\/span>\s*<span[^>]*>(\d+\.?\d*)/);
-  const avgScore = avgScoreMatch ? avgScoreMatch[1] : '';
+  const avgScore = setups.length ? (setups.reduce((a, s) => a + (Number(s.score) || 0), 0) / setups.length).toFixed(1)
+    : (avgScoreMatch ? avgScoreMatch[1] : '');
 
   // Build 6 slides
   const slides = [];
@@ -267,7 +281,7 @@ function buildScannerSlides(html, content, dateStr) {
     newSetups: setups.slice(0, 5).map(s => ({
       ticker: s.ticker, entry: s.entry, stop: s.stop, tp1: s.tp1, rr: s.rr,
     })),
-    narration: `${setups.length} new A-plus setups today. ${regime} regime — ${topSectors.join(', ')} leading. Here are your orders.`,
+    narration: `${setups.length} new A-plus setups today. ${regime} regime${topSectors.length ? ` — ${topSectors.join(', ')} leading` : ''}. Here are your orders.`,
   });
 
   // ── Slide 2: Portfolio State (dark blue)
@@ -281,7 +295,7 @@ function buildScannerSlides(html, content, dateStr) {
       regime, avgScore,
       spChange, nasdaqChange, wtiPrice,
     },
-    narration: `Portfolio running ${openCount} slots. Average score ${avgScore}. S and P ${spChange}, NASDAQ ${nasdaqChange}. Energy dominates the book.`,
+    narration: `Portfolio running ${openCount} slots.${avgScore ? ` Average score ${avgScore}.` : ''}${(spChange || nasdaqChange) ? ` S and P ${spChange || 'flat'}, NASDAQ ${nasdaqChange || 'flat'}.` : ''}`,
   });
 
   // ── Slide 3: Market Analysis (neutral)
@@ -293,7 +307,7 @@ function buildScannerSlides(html, content, dateStr) {
     thesis: regimeThesis,
     topSectors,
     metrics: { spChange, nasdaqChange, wtiPrice },
-    narration: `${regime} confirmed. ${regimeThesis.slice(0, 100)}. The scanner leans into ${topSectors.slice(0, 2).join(' and ')}.`,
+    narration: `${regime} confirmed.${regimeThesis ? ` ${regimeThesis.slice(0, 100)}.` : ''}${topSectors.length ? ` The scanner leans into ${topSectors.slice(0, 2).join(' and ')}.` : ''}`,
   });
 
   // ── Slides 4-6: Top 3 Setup cards with Finviz
