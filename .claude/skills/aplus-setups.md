@@ -38,6 +38,9 @@ Post-filter: `market_cap >= 2-3e9`, drop tickers already covered (existing `anal
 - `QueryData types=stats` → pegRatio, enterpriseToEbitda, priceToBook, beta, shares, shortPercentOfFloat.
 - `QueryData types=flags` → is_compliance_issue / halted / ftd.
 - **Dilution:** `WebSearch "<company> SEC EDGAR S-3 ATM offering"` + `"<company> shares outstanding"` + check for M&A stock deals / mandatory convertibles / SBC. For recent IPOs (e.g. CRDO/ALAB) scrutinize post-IPO share growth — these FAIL the clean-flags axis if an ATM/S-3 is active.
+- **Event / corporate-action screen (MANDATORY — FOXA lesson):** `QueryData types=news` + `WebSearch "<company> acquisition merger split spinoff secondary"`. **REJECT if a pending binary corporate action can gap the stock through the stop** — including the company as **ACQUIRER** (FOXA A+ −17% gap when it announced a $22B Roku acquisition), a pending secondary, a stock-split, or a litigation/regulatory ruling inside the trade window. Earnings already covered by the ±3d rule.
+- **Abnormal-volume / informed-flow check:** `QueryData types=quote` → if today's volume > 3× the 50-day avg (or a one-day move >2×ATR) **without a known benign catalyst**, treat as informed flow → demote or reject (a pending news event is likely).
+- **Price-scale sanity (MANDATORY — KLAC lesson):** the entry/stop/TP printed in the article MUST be in the **same scale as the live quote**. Cross-check entry vs `QueryData types=quote` price — if it deviates by ≥2× (or ≈10×), it's a **stock-split / unadjusted-quote / typo error** (KLAC printed $2120 entry on a $212 stock post a ~10:1 split). Also sanity-check ATR, EMAs and the 52-week range are in the same scale.
 - **R/R-at-spot:** entry near EMA20/support, stop below EMA50 or ~1.6×ATR, TP1 at structure. R/R must be ≥1.5 at that entry. Reject "fictional R/R" names.
 
 ### 4. Select ~10 with sector diversity + basket sanity
