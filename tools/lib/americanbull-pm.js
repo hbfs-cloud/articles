@@ -289,7 +289,19 @@ function computeATRFromHistory(priceHistory, beforeDate, periods) {
   return count > 0 ? sum / count : null;
 }
 
+function isPatternInvalidated(setup, bar, entryPrice) {
+  if (!setup.pattern || setup.pattern.invalidation == null) {
+    return { invalidated: false };
+  }
+  const invPrice = setup.pattern.invalidation;
+  if (bar.low <= invPrice) {
+    return { invalidated: true, reason: 'price_below_invalidation', level: invPrice };
+  }
+  return { invalidated: false };
+}
+
 module.exports = {
   DEFAULT_CONFIG, selectMode, resolveConfig, computeEntry, computeStop, computeTP,
   shouldRotate, checkBearishExit, simulateAmericanBullTrade, bleedingFraction,
+  isPatternInvalidated,
 };

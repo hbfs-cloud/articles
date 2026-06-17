@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-17T20:43:26.000Z",
+  "generated_at": "2026-06-17T20:43:27.222Z",
   "valid_for": "2026-06-18",
   "mode_status": {
     "state": "live",
@@ -15,51 +15,51 @@
     "nextReviewAt": null
   },
   "broker": {
-    "name": "alpaca",
+    "name": "ibkr",
     "type": "live",
     "credentials": {
       "api_key": "${BROKER_API_KEY}",
       "api_secret": "${BROKER_API_SECRET}",
-      "base_url": "https://paper-api.alpaca.markets",
+      "base_url": "https://localhost:5000/v1/api",
       "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
     }
   },
   "account": {
     "nominal_usd": 10000,
     "currency": "USD",
-    "position_size_pct": 100,
-    "max_positions": 1
+    "position_size_pct": 33.33,
+    "max_positions": 3
   },
   "mode": {
-    "name": "dynamic",
-    "horizon_days": 10,
+    "name": "balanced",
+    "horizon_days": 8,
     "filter": "mom_bo",
     "min_score": 88,
     "rotation": "none",
     "breakeven_pct": 0,
     "be_grace_days": 0,
-    "vix_kill": 30,
+    "vix_kill": 25,
     "trailing_stop": true,
     "daily_trail_pct": 0,
     "max_stop_pct": 0,
-    "atr_stop_mult": 2.5,
+    "atr_stop_mult": 1,
     "stale_days": 0,
     "entry_gate_pct": 0,
-    "partial_tp": true,
+    "partial_tp": false,
     "partial_tp_pct": 0.3,
-    "sector_cap_max": 1,
+    "sector_cap_max": 2,
     "sizing_method": "inverse_atr",
     "target_risk_pct": 1,
-    "correlation_cap": 0,
+    "correlation_cap": 0.5,
     "cross_mode_dedup": false,
     "regime_filters": {
       "risk_on": "mom_bo",
       "early_risk_off": "breakout_only",
       "risk_off": "breakout_only",
-      "neutral": "mom_bo",
+      "neutral": "breakout_only",
       "recovery": "mom_bo"
     },
-    "dd_breaker_pct": 8
+    "dd_breaker_pct": 5
   },
   "session": {
     "market": "US_EQUITY",
@@ -71,17 +71,17 @@
     "extended_hours": false
   },
   "risk": {
-    "max_portfolio_heat_pct": "1.0",
+    "max_portfolio_heat_pct": "3.0",
     "max_single_loss_pct": 3,
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
     "circuit_breaker": {
-      "daily_loss_pct": 8,
+      "daily_loss_pct": 5,
       "action": "HALT_ALL_ORDERS",
-      "description": "If portfolio drops 8% intraday, cancel all pending orders and alert."
+      "description": "If portfolio drops 5% intraday, cancel all pending orders and alert."
     },
-    "correlation_limit": 0.85,
-    "max_sector_concentration": 1
+    "correlation_limit": 0.5,
+    "max_sector_concentration": 2
   },
   "close_now": [],
   "orders": [
@@ -92,9 +92,10 @@
       "broker_symbol": "QURE",
       "broker": {
         "symbol": "QURE",
-        "exchange": "NASDAQ",
+        "exchange": "SMART",
+        "isin": "NL0010696654",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -106,9 +107,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 207,
-          "pct_of_portfolio": 100
+          "nominal_usd": 3333,
+          "shares": 69,
+          "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-18T09:30:00-04:00",
         "valid_until": "2026-06-18T16:00:00-04:00",
@@ -121,7 +122,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 1
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -136,10 +137,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 10,
-          "expiry_date": "2026-07-02",
+          "horizon_days": 8,
+          "expiry_date": "2026-06-30",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 10 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -187,9 +188,10 @@
       "broker_symbol": "HIMS",
       "broker": {
         "symbol": "HIMS",
-        "exchange": "NYSE",
+        "exchange": "SMART",
+        "isin": "US4330001060",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -201,9 +203,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 317,
-          "pct_of_portfolio": 100
+          "nominal_usd": 3333,
+          "shares": 105,
+          "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-18T09:30:00-04:00",
         "valid_until": "2026-06-18T16:00:00-04:00",
@@ -216,7 +218,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 1
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -231,10 +233,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 10,
-          "expiry_date": "2026-07-02",
+          "horizon_days": 8,
+          "expiry_date": "2026-06-30",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 10 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -282,9 +284,10 @@
       "broker_symbol": "SAN",
       "broker": {
         "symbol": "SAN",
-        "exchange": "NYSE",
+        "exchange": "SMART",
+        "isin": "US05964H1059",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -296,9 +299,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 751,
-          "pct_of_portfolio": 100
+          "nominal_usd": 3333,
+          "shares": 250,
+          "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-18T09:30:00-04:00",
         "valid_until": "2026-06-18T16:00:00-04:00",
@@ -311,7 +314,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 1
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -326,10 +329,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 10,
-          "expiry_date": "2026-07-02",
+          "horizon_days": 8,
+          "expiry_date": "2026-06-30",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 10 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -377,9 +380,10 @@
       "broker_symbol": "AAL",
       "broker": {
         "symbol": "AAL",
-        "exchange": "NASDAQ",
+        "exchange": "SMART",
+        "isin": "US02376R1023",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -391,9 +395,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 649,
-          "pct_of_portfolio": 100
+          "nominal_usd": 3333,
+          "shares": 216,
+          "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-18T09:30:00-04:00",
         "valid_until": "2026-06-18T16:00:00-04:00",
@@ -406,7 +410,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 1
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -421,10 +425,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 10,
-          "expiry_date": "2026-07-02",
+          "horizon_days": 8,
+          "expiry_date": "2026-06-30",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 10 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -472,9 +476,10 @@
       "broker_symbol": "HBAN",
       "broker": {
         "symbol": "HBAN",
-        "exchange": "NASDAQ",
+        "exchange": "SMART",
+        "isin": "US4461501045",
         "currency": "USD",
-        "asset_type": "STOCK"
+        "asset_type": "Stock"
       },
       "entry": {
         "type": "LIMIT",
@@ -486,9 +491,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 595,
-          "pct_of_portfolio": 100
+          "nominal_usd": 3333,
+          "shares": 198,
+          "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-18T09:30:00-04:00",
         "valid_until": "2026-06-18T16:00:00-04:00",
@@ -501,7 +506,7 @@
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
+          "atr_stop_mult": 1
         },
         "take_profit_1": {
           "type": "LIMIT",
@@ -516,10 +521,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 10,
-          "expiry_date": "2026-07-02",
+          "horizon_days": 8,
+          "expiry_date": "2026-06-30",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 10 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -624,9 +629,9 @@
       },
       {
         "step": "CHECK_VIX",
-        "threshold": 30,
+        "threshold": 25,
         "action": "HALT_IF_ABOVE",
-        "description": "If VIX > 30, halt all new orders"
+        "description": "If VIX > 25, halt all new orders"
       },
       {
         "step": "LOG_STATE",
@@ -720,11 +725,10 @@
     ]
   },
   "broker_notes": {
-    "pdt_rule": "Pattern Day Trader: max 3 day trades in 5 business days if account < $25K",
-    "fractional": "Alpaca supports fractional shares — use exact nominal instead of rounding to whole shares",
-    "paper_url": "https://paper-api.alpaca.markets",
-    "live_url": "https://api.alpaca.markets",
-    "websocket": "wss://stream.data.alpaca.markets/v2/iex",
-    "auth": "Headers: APCA-API-KEY-ID + APCA-API-SECRET-KEY"
+    "gateway": "Requires IB Gateway or TWS running locally on port 5000",
+    "auth": "Session-based — authenticate via Client Portal then use session token",
+    "order_types": "Supports all order types including adaptive, pegged, TWAP",
+    "fractional": "No fractional shares on IBKR",
+    "min_commission": "$1.00 per trade"
   }
 }

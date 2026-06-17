@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-17T20:44:35.834Z",
+  "generated_at": "2026-06-17T20:43:26.289Z",
   "valid_for": "2026-06-18",
   "mode_status": {
     "state": "live",
@@ -87,6 +87,101 @@
   "orders": [
     {
       "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "QURE",
+      "broker_symbol": "QURE",
+      "broker": {
+        "symbol": "QURE",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 48.160000000000004,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 207,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-18T09:30:00-04:00",
+        "valid_until": "2026-06-18T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 26.650000000000002,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 91.18,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 112.69,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-06-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 183,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "BULLISH_STRONG_REVERSAL pattern (base 68) with 15x volume spike. ATR% 7.55%, RSI 81.9, BB%B 1.541."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
       "action": "BUY",
       "ticker": "HIMS",
       "broker_symbol": "HIMS",
@@ -178,10 +273,10 @@
         "sharia": true,
         "thesis": "HIMS surges +1.33% to $31.89 on a -1.21% SPX day — massive relative strength. Fresh BUY signal Jun 16 with RSI 64.5 in momentum sweet spot. MACD strongly bullish (1.36 > 0.87 signal). Price reclaimed EMA200 ($30.39) and sits +21% above EMA50 ($26.37). Options flow is the most bullish in the scan — 20+ call IV/volume spikes at strikes $20-$45 with OI up to 12,379 on $40 calls. DTC healthcare disruptor capturing market share. Entry on VWAP pullback toward EMA200; stop below $29 support zone."
       },
-      "priority": 1
+      "priority": 2
     },
     {
-      "id": "ORD-002",
+      "id": "ORD-003",
       "action": "BUY",
       "ticker": "SAN",
       "broker_symbol": "SAN",
@@ -273,10 +368,10 @@
         "sharia": false,
         "thesis": "Santander at $13.33 sits 97% of its 52-week high ($13.78) as the EU bank re-rating continues. BUY signal Jun 11, MACD bullish (0.26 > 0.15 signal). EMA20 ($12.55) > EMA50 ($12.26) > EMA200 ($11.19) = textbook uptrend stack. Forward P/E ~10x remains cheap vs US peers. 2.1% dividend yield. RSI 64.4 well below overbought. Selected for 4th consecutive scan — trend persistence is the strongest signal. Entry on VWAP pullback; stop below EMA20."
       },
-      "priority": 2
+      "priority": 3
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "AAL",
       "broker_symbol": "AAL",
@@ -368,10 +463,10 @@
         "sharia": false,
         "thesis": "AAL at $15.42 (-1.85%) on 130M shares volume — massive institutional activity. BUY signal Jun 12 at $14.93 (+3.3% since). Price +15% above EMA50 ($13.38), +21% above EMA200 ($12.77). RSI 64.8 in momentum sweet spot. Fwd P/E 6.9x = deep value for an airline benefiting from summer travel demand. Options flow is strongly bullish — large ITM call IV spikes at $10-$14.50 strikes with OI up to 56,694. Airlines decoupled from tech selloff. Stop below EMA20."
       },
-      "priority": 3
+      "priority": 4
     },
     {
-      "id": "ORD-004",
+      "id": "ORD-005",
       "action": "BUY",
       "ticker": "HBAN",
       "broker_symbol": "HBAN",
@@ -462,101 +557,6 @@
         "rr": "1:1.7",
         "sharia": false,
         "thesis": "HBAN at $16.85 sits above all EMAs (EMA20 $16.64, EMA50 $16.43, EMA200 $16.36) with financials leading the session. BUY signal May 18 at $15.57 still active (+8.2%). MACD bullish (0.29 > 0.20 signal). RSI 55 signals early-to-mid momentum — plenty of room. 3.6% dividend yield adds carry. Bullish call volume spikes at $15-$16 strikes. Regional bank benefiting from steepening yield curve + deposit stability. Tight stop below EMA20."
-      },
-      "priority": 4
-    },
-    {
-      "id": "ORD-005",
-      "action": "BUY",
-      "ticker": "D",
-      "broker_symbol": "D",
-      "broker": {
-        "symbol": "D",
-        "exchange": "NYSE",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 67.8,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 10000,
-          "shares": 147,
-          "pct_of_portfolio": 100
-        },
-        "valid_from": "2026-06-18T09:30:00-04:00",
-        "valid_until": "2026-06-18T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 65,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2.5
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 72.5,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 75,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-06-30",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 91,
-        "strategy": "Momentum",
-        "rr": "1:1.7",
-        "sharia": false,
-        "thesis": "Dominion at $68.02 (-0.70%) holds near its 52-week high ($69.25) while SPX drops -1.21% — strong relative strength. BUY signal Jun 4 still active. EMA20 ($66.66) > EMA50 ($65.15) > EMA200 ($61.77) = clean uptrend. MACD (0.92 > 0.86 signal) confirms. RSI 59.2 in healthy zone. Dividend yield 3.9% adds carry. Regulated utility with visible earnings, capturing defensive rotation capital. 2nd consecutive scan selection — trend persists."
       },
       "priority": 5
     }
