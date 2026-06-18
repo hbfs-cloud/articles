@@ -129,6 +129,19 @@ function buildPayload(mode, modeData, modeCfg, initialEquity) {
     .filter(pt => pt.date && pt.value != null)
     .map(pt => ({ date: pt.date, value: pt.value }));
 
+  // ── Invariant assertions ─────────────────────────────────────────────────────
+  for (const t of closed_trades) {
+    if (!t.entry_date) throw new Error(`${mode}: closed trade ${t.symbol} missing entry_date`);
+    if (!t.exit_date) throw new Error(`${mode}: closed trade ${t.symbol} missing exit_date`);
+    if (t.entry_price <= 0) throw new Error(`${mode}: closed trade ${t.symbol} entry_price=${t.entry_price} (must be >0)`);
+    if (t.exit_price <= 0) throw new Error(`${mode}: closed trade ${t.symbol} exit_price=${t.exit_price} (must be >0)`);
+  }
+  for (const p of open_positions) {
+    if (!p.entry_date) throw new Error(`${mode}: open position ${p.symbol} missing entry_date`);
+    if (p.entry_price <= 0) throw new Error(`${mode}: open position ${p.symbol} entry_price=${p.entry_price} (must be >0)`);
+  }
+  console.log(`  [export] ${mode}: ${closed_trades.length} closed + ${open_positions.length} open + ${equity_curve.length} curve pts, initial_equity=${initialEquity}`);
+
   return { initial_equity: initialEquity, closed_trades, open_positions, equity_curve };
 }
 

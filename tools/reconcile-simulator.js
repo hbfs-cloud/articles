@@ -34,10 +34,11 @@ const LOG_FILE = path.join(ROOT, 'data', 'reconciliation-log.json');
 const DISCORD_CHANNEL = '1483382014588747778'; // same alert channel as notify-scanner-status.js
 
 function parseArgs(argv) {
-  const out = { dryRun: false, mode: null, noLog: false };
+  const out = { dryRun: false, mode: null, noLog: false, verbose: false };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--dry-run') out.dryRun = true;
     else if (argv[i] === '--no-log') out.noLog = true;
+    else if (argv[i] === '--verbose' || argv[i] === '-v') out.verbose = true;
     else if (argv[i] === '--mode') out.mode = argv[++i];
   }
   return out;
@@ -62,8 +63,41 @@ function loadArticlesPrices() {
 const pctDiff = (a, b) => (b === 0 ? (a === 0 ? 0 : Infinity) : Math.abs(a - b) / Math.abs(b) * 100);
 
 // ── compare one mode ────────────────────────────────────────────────────────────
-function compareMode(mode, modeData, portfolio, equityCurve, artPrices, initialEquity, tol) {
+function compareMode(mode, modeData, portfolio, equityCurve, artPrices, initialEquity, tol, asOf, verbose) {
   const breaches = [];
+  const warnings = [];
+
+  // ── PRE-FLIGHT: date sanity ──────────────────────────────────────────────────
+  if (asOf && equityCurve.length) {
+    const target = asOf.slice(0, 10);
+    const firstTs = (equityCurve[0].ts || '').slice(0, 10);
+    const lastTs  = (equityCurve[equityCurve.length - 1].ts || '').slice(0, 10);
+    const hasDataAtAsOf = equityCurve.some(p => (p.ts || '').slice(0, 10) === target)
+      || equityCurve.some(p => {
+        const d = (p.ts || '').slice(0, 10);
+        // Within 1 business day tolerance (±3 calendar days covers weekends)
+        return Math.abs(new Date(d) - new Date(target)) <= 3 * 86400000;
+      });
+    if (!hasDataAtAsOf) {
+      breaches.push(`no sim equity-curve data at or near asOf=${target} (sim range: ${firstTs}..${lastTs})`);
+    }
+    // Stale data detection
+    const asOfDate = new Date(target);
+    const now = new Date();
+    const staleDays = Math.floor((now - asOfDate) / 86400000);
+    if (staleDays > 2 && lastTs > target) {
+      warnings.push(`pit-state is ${staleDays} days stale (asOf=${target}), sim has data up to ${lastTs}`);
+    }
+  }
+
+  if (verbose) {
+    const artCurve = modeData.equityCurve || [];
+    console.log(`    [verbose] articles asOf: ${asOf || 'unknown'}`);
+    console.log(`    [verbose] articles curve: ${artCurve.length} pts, ${artCurve[0]?.date || '?'}..${artCurve[artCurve.length-1]?.date || '?'}`);
+    if (equityCurve.length) {
+      console.log(`    [verbose] sim curve: ${equityCurve.length} pts, ${(equityCurve[0].ts||'').slice(0,10)}..${(equityCurve[equityCurve.length-1].ts||'').slice(0,10)}`);
+    }
+  }
 
   // 1. open-position set identity.
   const artSet = new Set((modeData.positions || []).map(p => (p.ticker || '').toUpperCase()).filter(Boolean));
@@ -74,39 +108,76 @@ function compareMode(mode, modeData, portfolio, equityCurve, artPrices, initialE
     breaches.push(`position set mismatch: articles-only=[${onlyArticles}] sim-only=[${onlySim}]`);
   }
 
-  // 2. price check per matched symbol (+/- tol.pricePct).
+  // 2. entry price sanity — articles entryPrice vs sim avg_price must match within 0.01%.
+  const simAvgPrice = {};
   const simPrice = {};
   for (const d of portfolio.positions || []) {
     const sym = (d.position?.symbol || d.symbol || '').toUpperCase();
     const cp  = d.position?.current_price ?? d.current_price;
+    const ap  = d.position?.avg_price ?? d.avg_price;
     if (sym && cp != null) simPrice[sym] = cp;
+    if (sym && ap != null) simAvgPrice[sym] = ap;
   }
+  const artPositions = modeData.positions || [];
+  for (const p of artPositions) {
+    const sym = (p.ticker || '').toUpperCase();
+    if (!simAvgPrice[sym]) continue;
+    const artEntry = p.entryPrice;
+    const simEntry = simAvgPrice[sym];
+    if (artEntry > 0 && simEntry > 0) {
+      const entryDiff = pctDiff(simEntry, artEntry);
+      if (entryDiff > 0.01) {
+        warnings.push(`${sym} entry price diverges: articles=${artEntry.toFixed(4)} sim=${simEntry.toFixed(4)} (${entryDiff.toFixed(4)}%)`);
+      }
+      if (verbose) {
+        const simQty = (portfolio.positions || []).find(d => ((d.position?.symbol || d.symbol || '').toUpperCase()) === sym);
+        const qty = simQty?.qty || simQty?.position?.qty || '?';
+        const simWeight = simEntry > 0 ? (qty * simEntry / initialEquity) : '?';
+        console.log(`    [verbose] ${sym}: art.entry=${artEntry.toFixed(4)} sim.avg=${simEntry.toFixed(4)} diff=${entryDiff.toFixed(4)}% | art.weight=${p.weight} sim.weight≈${typeof simWeight === 'number' ? simWeight.toFixed(4) : simWeight}`);
+      }
+    }
+  }
+
+  // 3. live price check per matched symbol (+/- tol.pricePct). Only informational when
+  // comparing at asOf — live prices won't match the frozen snapshot. Skip breach if stale.
   for (const sym of artSet) {
     if (!simSet.has(sym)) continue;
     const a = artPrices[sym];
     const s = simPrice[sym];
-    if (a == null || s == null) continue; // no reference price either side — skip
+    if (a == null || s == null) continue;
     const dp = pctDiff(s, a);
     if (dp > tol.pricePct) breaches.push(`${sym} price ${s} vs articles ${a} (${dp.toFixed(2)}% > ${tol.pricePct}%)`);
   }
 
-  // 3. equity / P&L check (+/- tol.pnlPct): per-mode NAV.
+  // 4. equity / P&L check: compare at the SAME date (pit-state asOf).
   const curve = modeData.equityCurve || [];
   const artNav = curve.length ? curve[curve.length - 1].value / 100 * initialEquity : null;
-  // For equity-only modes (no sim positions, e.g. bull) the backfill leaves account cash ==
-  // initial_equity, so portfolio.total_equity is always exactly initial_equity and a frozen
-  // curve ending != 100 would fire a false NAV breach every night. The backfill DID write the
-  // correct value into the equity-curve snapshots (total_equity = value/100*init,
-  // store.go:1263), so when there are no positions the curve is the right source of truth.
+
+  let simNavAtAsOf = null;
+  let simNavSource = 'none';
+  if (asOf && equityCurve.length) {
+    const target = asOf.slice(0, 10);
+    for (let i = equityCurve.length - 1; i >= 0; i--) {
+      const ts = (equityCurve[i].ts || '').slice(0, 10);
+      if (ts <= target) { simNavAtAsOf = equityCurve[i].total_equity; simNavSource = `curve@${ts}`; break; }
+    }
+  }
   const curveNav = equityCurve.length ? equityCurve[equityCurve.length - 1].total_equity : null;
-  const hasSimPositions = (portfolio.positions || []).length > 0;
-  const simNav = hasSimPositions
-               ? (portfolio.total_equity != null ? portfolio.total_equity : curveNav)
+  const simNav = simNavAtAsOf != null ? simNavAtAsOf
                : (curveNav != null ? curveNav : portfolio.total_equity);
+  if (simNavAtAsOf == null && simNav != null) {
+    simNavSource = curveNav != null ? 'curve@latest' : 'portfolio.live';
+    warnings.push(`NAV comparison fell back to ${simNavSource} (no sim curve data at asOf=${asOf})`);
+  }
+
   let navDiff = null;
   if (artNav != null && simNav != null) {
     navDiff = pctDiff(simNav, artNav);
     if (navDiff > tol.pnlPct) breaches.push(`NAV sim ${simNav.toFixed(2)} vs articles ${artNav.toFixed(2)} (${navDiff.toFixed(2)}% > ${tol.pnlPct}%)`);
+  }
+
+  if (verbose) {
+    console.log(`    [verbose] NAV: articles=${artNav != null ? artNav.toFixed(2) : 'null'} sim=${simNav != null ? simNav.toFixed(2) : 'null'} (source=${simNavSource}) diff=${navDiff != null ? navDiff.toFixed(4) + '%' : 'n/a'}`);
   }
 
   return {
@@ -115,6 +186,8 @@ function compareMode(mode, modeData, portfolio, equityCurve, artPrices, initialE
     simPositions: [...simSet],
     artNav, simNav,
     navDiffPct: navDiff,
+    simNavSource,
+    warnings,
     breaches,
     ok: breaches.length === 0,
   };
@@ -164,11 +237,13 @@ async function main() {
       const accountId   = await client.resolveAccountId(mode);
       const portfolio   = await client.getPortfolio(accountId);
       const equityCurve = await client.getEquityCurve(accountId);
-      const r = compareMode(mode, modeData, portfolio, equityCurve || [], artPrices, initialEquity, tol);
+      const r = compareMode(mode, modeData, portfolio, equityCurve || [], artPrices, initialEquity, tol, pit.asOf, args.verbose);
       results.push(r);
-      const tag = r.ok ? 'OK' : `BREACH(${r.breaches.length})`;
-      console.log(`  ${mode}: ${tag} navDiff=${r.navDiffPct == null ? 'n/a' : r.navDiffPct.toFixed(2) + '%'}`);
-      r.breaches.forEach(b => console.log(`      - ${b}`));
+      const warnCount = (r.warnings || []).length;
+      const tag = r.ok ? (warnCount ? `OK(${warnCount} warn)` : 'OK') : `BREACH(${r.breaches.length})`;
+      console.log(`  ${mode}: ${tag} navDiff=${r.navDiffPct == null ? 'n/a' : r.navDiffPct.toFixed(4) + '%'} [${r.simNavSource || '?'}]`);
+      (r.warnings || []).forEach(w => console.log(`      ⚠ ${w}`));
+      r.breaches.forEach(b => console.log(`      ✗ ${b}`));
     } catch (e) {
       results.push({ mode, error: e.message, ok: false, breaches: [`reconcile error: ${e.message}`] });
       console.error(`  ${mode}: ERROR ${e.message}`);

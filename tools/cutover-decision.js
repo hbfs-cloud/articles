@@ -50,13 +50,15 @@ function readJSON(file, fallback) {
 }
 
 // A mode's per-entry reconcile result is "zero-divergence" iff it exists, ok===true, carries no
-// breaches and no error. Anything else (breach, reconcile error, or absent from the entry) breaks
-// the streak — absence is treated as non-zero so a mode that stops reconciling can't drift to sim.
+// breaches and no error, AND the NAV divergence is effectively zero (<0.001%). A 1.99% diff that
+// merely stays under the 2% tolerance is NOT clean — backfilled data must match exactly.
+// Absence is treated as non-zero so a mode that stops reconciling can't drift to sim.
+const EXACT_NAV_THRESHOLD = 0.001; // 0.001% — anything above this breaks the streak
 function isClean(modeResult) {
-  return !!modeResult
-    && modeResult.ok === true
-    && !modeResult.error
-    && (!Array.isArray(modeResult.breaches) || modeResult.breaches.length === 0);
+  if (!modeResult || modeResult.ok !== true || modeResult.error) return false;
+  if (Array.isArray(modeResult.breaches) && modeResult.breaches.length > 0) return false;
+  if (modeResult.navDiffPct != null && modeResult.navDiffPct > EXACT_NAV_THRESHOLD) return false;
+  return true;
 }
 
 // Walk the log newest→oldest; count consecutive entries where the mode is clean, stopping at the
