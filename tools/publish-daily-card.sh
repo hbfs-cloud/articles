@@ -66,6 +66,13 @@ if [ "$SKIP_SWEEP" = false ]; then
   SWEEP_END=$(date +%s)
   echo "   Sweep done in $((SWEEP_END - SWEEP_START))s"
 
+  # ─── Step 3b: Publish new mirror intents to broker-simulator (non-blocking) ──
+  # sweep.js just rewrote data/pit-state.json; push each pilot mode's NEW entries as
+  # mirror-order intents. The SIM executes them next morning. Never break the pipeline.
+  echo ""
+  echo "🛰️  Step 3b: Publishing mirror intents to broker-simulator..."
+  node tools/publish-to-simulator.js || echo "⚠️  publish-to-simulator failed (non-blocking)"
+
   # ─── Step 4: Refresh risk metrics (VaR + stress + correlation + regime) ────
   echo ""
   echo "🛡️  Step 4: Refreshing risk metrics from MCP gateway..."

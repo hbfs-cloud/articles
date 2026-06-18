@@ -9,6 +9,20 @@ echo "Scan date (next session): $SCAN_DATE"
 # Export Anthopic API key
 export ANTHROPIC_API_KEY=$(grep -E "^export ANTHROPIC_API_KEY=" ~/.profile | head -1 | cut -d= -f2- | tr -d "'") 2>/dev/null || echo "Warning: ANTHROPIC_API_KEY not found"
 
+# Export broker-simulator service token (same source as ANTHROPIC_API_KEY). Without it the
+# articles->broker-sim parallel-run (reconcile + publish) is a silent no-op; warn loudly so a
+# missing token is visible in the nightly log instead of being swallowed by || true / || echo.
+export BROKERSIM_SERVICE_TOKEN=$(grep -E "^export BROKERSIM_SERVICE_TOKEN=" ~/.profile | head -1 | cut -d= -f2- | tr -d "'") 2>/dev/null || true
+if [ -z "$BROKERSIM_SERVICE_TOKEN" ]; then
+    echo "WARNING: parallel-run disabled — BROKERSIM_SERVICE_TOKEN not set (reconcile + publish will skip)"
+fi
+
+# Reconcile yesterday's parallel-run state (articles vs broker-simulator) BEFORE the new
+# scan mutates pit-state. Logs to data/reconciliation-log.json and alerts on breach; a breach
+# (exit 1) must NOT abort the nightly scan (|| true), the Discord alert is the signal.
+echo "Reconciling broker-simulator parallel-run..."
+node tools/reconcile-simulator.js || true
+
 # Run the daily scanner via claude command
 echo "Running claude --print with 'articles scan du jour'..."
 timeout 1800 ~/.npm-global/bin/claude --print \
