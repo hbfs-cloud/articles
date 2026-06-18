@@ -2379,11 +2379,19 @@ async function main() {
             }));
           }
 
-          // Seed circuit breaker with SL history from existing (already-closed) trades
-          // so sim2 can fire the CB when cumulative SL count reaches the threshold
-          const slHistory = existing.filter(t => t.status === 'sl' && t.exitDate).map(t => t.exitDate);
-          if (slHistory.length > 0) {
-            cfg2.initialCBHistory = slHistory;
+          // Seed circuit breaker with RECENT SL history only (within CB window before
+          // the first new scan). Seeding ALL historical SLs would retroactively block
+          // entries that were legitimately accepted under the original simulation.
+          const cbWin = cfg.circuitBreakerWindow || 5;
+          if (firstNewScan && (cfg.circuitBreakerStops || 0) > 0) {
+            const dfLocal = dayFnsFor(cfg.calendar);
+            const windowStart = dfLocal.addDays(firstNewScan, -(cbWin + 2));
+            const slHistory = existing
+              .filter(t => t.status === 'sl' && t.exitDate && t.exitDate >= windowStart)
+              .map(t => t.exitDate);
+            if (slHistory.length > 0) {
+              cfg2.initialCBHistory = slHistory;
+            }
           }
 
           if (newTrades.length > 0) {

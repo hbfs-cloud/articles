@@ -1809,7 +1809,12 @@ document.addEventListener('DOMContentLoaded',function(){
     }
     var spyVals=null;
     if(typeof _spyData!=='undefined'&&Object.keys(_spyData).length>0){
-      spyVals=dates.map(function(d){return _spyData[d]||null;});
+      var rawSpy=dates.map(function(d){return _spyData[d]||null;});
+      var spyFirst=null;
+      for(var si=0;si<rawSpy.length;si++){if(rawSpy[si]!=null){spyFirst=rawSpy[si];break;}}
+      if(spyFirst&&spyFirst!==0){
+        spyVals=rawSpy.map(function(v){return v!=null?+(v/spyFirst*100).toFixed(2):null;});
+      }else{spyVals=rawSpy;}
     }
     var series=[
       {name:'Strategy',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
