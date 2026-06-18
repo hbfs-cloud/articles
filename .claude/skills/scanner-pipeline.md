@@ -122,3 +122,26 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
    ```bash
    node tools/publish.js --type retro --path scanner/retrospective/YYYYMMDD/index.html
    ```
+
+## Analyses Refresh (à chaque run scanner)
+
+À chaque exécution du pipeline `/scanner`, après la Phase 5 (downstream) et avant le commit final, **rafraîchir les analyses de la watchlist**.
+
+### Watchlist
+Fichier : `data/analyses-watchlist.json` — liste de tickers dont l'analyse doit être mise à jour à chaque scan.
+```json
+{ "tickers": ["ALT", "IOVA", "ALLR"], "frequency": "each_scanner_run" }
+```
+
+### Process par ticker
+1. **Archiver** l'analyse existante : `mv analyses/{TICKER}/index.html analyses/{TICKER}/archive/YYYYMMDD/index.html` (date de l'ancienne analyse, pas d'aujourd'hui)
+2. **Collecter données fraîches** via MCP (`GetInstruments` + `QueryData types=sec_filings,flags,insider_transactions,news`)
+3. **Générer** la nouvelle analyse en français niveau intermédiaire, même template que les autres analyses (17 sections, ECharts, Trade Idea, sources inline)
+4. **Mettre à jour la modale Historique** dans le nouveau `index.html` avec lien vers la version archivée
+5. **Publier** : `node tools/publish.js --type analysis --path analyses/{TICKER}/index.html --no-notify`
+
+### Contraintes
+- **Versioning** : toujours archiver avant d'écraser. La modale historique doit lister toutes les versions passées.
+- **Pas de doublons** : vérifier `data/analyses.json` avant `add_card.js` — le publish script gère l'archivage de la carte.
+- **Qualité** : même standard que les analyses manuelles. Pas de raccourci sous prétexte que c'est automatique.
+- **Parallélisable** : les analyses sont indépendantes, lancer les agents en parallèle.
