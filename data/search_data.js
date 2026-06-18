@@ -1003,6 +1003,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "DMLP",
+    "exchange": "NASDAQ • Energy • Oil & Gas Royalties — Permian Basin",
+    "name": "DMLP — Royalties Permian Basin, ~10% yield, $713K de dette, marge brute 94%. Pullback sous tou...",
+    "title": "DMLP — Royalties Permian Basin, ~10% yield, $713K de dette, marge brute 94%. Pullback sous tou...",
+    "desc": "Analyse Dorchester Minerals : royalties pétrole/gaz Permian Basin, rendement ~10%, dette quasi-nulle, beta 0.51. Pullback sur supports = opportunité income.",
+    "tags": "us,energy,dividende,trade-idea",
+    "grade": "A",
+    "href": "/analyses/DMLP/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "KO",
     "exchange": "NYSE · Consumer Staples",
     "name": "KO — Defensive compounder near ATH. Entry $81.80, target $88.00. Grade A+.",
