@@ -1003,6 +1003,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALT",
+    "exchange": "NASDAQ • Healthcare • Biotechnologie",
+    "name": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $225M levés...",
+    "title": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $225M levés...",
+    "desc": "Analyse Altimmune : pemvidutide Phase 3 MASH imminente, FDA Breakthrough Therapy, cash $225M post-offering, market cap $544M. Grade B+.",
+    "tags": "us,healthcare,speculative,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/ALT/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALLR",
     "exchange": "NASDAQ • Healthcare • Oncologie — Stenoparib (PARP+WNT)",
     "name": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $24M avec programme de...",
@@ -1648,19 +1661,6 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,trade-idea,dividende",
     "grade": "B+",
     "href": "/analyses/SHEL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALT",
-    "exchange": "NASDAQ • Healthcare • Biotechnologie\n            — Agoniste Dual GLP-1/Glucagon / Obésité & MASH",
-    "name": "ALT — ALT trade au prix de sa trésorerie nette ($2.71/sh vs cours $2.88). Phase 3 MASH immine...",
-    "title": "ALT — ALT trade au prix de sa trésorerie nette ($2.71/sh vs cours $2.88). Phase 3 MASH immine...",
-    "desc": "Analyse experte Altimmune : pemvidutide Phase 3 MASH 2026, FDA Breakthrough Therapy, cash net $271M (~$2.71/action), RSI 26.6 extrême survente, 52W low. Conviction B+ — accumuler au prix cash.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative,glp1,mash,obesity",
-    "grade": "B+",
-    "href": "/analyses/ALT/",
     "date": ""
   },
   {
