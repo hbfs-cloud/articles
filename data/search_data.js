@@ -1003,6 +1003,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ • Healthcare • Biotechnologie — Thérapie Cellulaire TIL",
+    "name": "IOVA — première thérapie TIL approuvée, revenue $71M Q1 (+45%), guidance $350-370M. 35% short ...",
+    "title": "IOVA — première thérapie TIL approuvée, revenue $71M Q1 (+45%), guidance $350-370M. 35% short ...",
+    "desc": "Analyse complète Iovance Biotherapeutics : Amtagvi $71M Q1 (+45% YoY), guidance $350-370M, IOV-5001 IND cleared. Short squeeze potential (35% SI). EV/Rev 5.0×. Grade A-.",
+    "tags": "us,healthcare,trade-idea",
+    "grade": "A-",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALT",
     "exchange": "NASDAQ • Healthcare • Biotechnologie",
     "name": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $225M levés...",
@@ -1024,19 +1037,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,speculative",
     "grade": "C+",
     "href": "/analyses/ALLR/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ • Healthcare • Biotechnologie — Thérapie Cellulaire TIL",
-    "name": "IOVA — première thérapie TIL approuvée, $71M Q1 2026 (+45%), guidance $350-370M, pipeline en e...",
-    "title": "IOVA — première thérapie TIL approuvée, $71M Q1 2026 (+45%), guidance $350-370M, pipeline en e...",
-    "desc": "Analyse Iovance Biotherapeutics : Amtagvi (TIL therapy) $71M Q1 revenue (+45% YoY), guidance $350-370M FY2026, IOV-5001 IND cleared. Biotech avec revenus en forte croissance.",
-    "tags": "us,healthcare,trade-idea",
-    "grade": "A-",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
