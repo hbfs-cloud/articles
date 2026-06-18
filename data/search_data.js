@@ -1003,6 +1003,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "IOVA",
+    "exchange": "NASDAQ • Healthcare • Biotechnologie — Thérapie Cellulaire TIL",
+    "name": "IOVA — première thérapie TIL approuvée, $71M Q1 2026 (+45%), guidance $350-370M, pipeline en e...",
+    "title": "IOVA — première thérapie TIL approuvée, $71M Q1 2026 (+45%), guidance $350-370M, pipeline en e...",
+    "desc": "Analyse Iovance Biotherapeutics : Amtagvi (TIL therapy) $71M Q1 revenue (+45% YoY), guidance $350-370M FY2026, IOV-5001 IND cleared. Biotech avec revenus en forte croissance.",
+    "tags": "us,healthcare,trade-idea",
+    "grade": "A-",
+    "href": "/analyses/IOVA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "DMLP",
     "exchange": "NASDAQ • Energy • Oil & Gas Royalties — Permian Basin",
     "name": "DMLP — Royalties Permian Basin, ~10% yield, $713K de dette, marge brute 94%. Pullback sous tou...",
@@ -1583,19 +1596,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,ai,speculative,trade-idea",
     "grade": "B+",
     "href": "/analyses/IONQ/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "IOVA",
-    "exchange": "NASDAQ • Healthcare • Biotechnology\n            — Thérapie Cellulaire TIL / Oncologie",
-    "name": "IOVA — breakout explosif +17% le 9 avril, Jefferies relève à $12, données sarcoma 50% ORR, SI ...",
-    "title": "IOVA — breakout explosif +17% le 9 avril, Jefferies relève à $12, données sarcoma 50% ORR, SI ...",
-    "desc": "Analyse experte Iovance Biotherapeutics : AMTAGVI $264M revenue FY2025, breakout +17% le 9 avril, sarcoma 50% ORR, Jefferies $12 PT. Thérapie cellulaire TIL leader.",
-    "tags": "us,healthcare,biotech,trade-idea,speculative",
-    "grade": "A-",
-    "href": "/analyses/IOVA/",
     "date": ""
   },
   {
