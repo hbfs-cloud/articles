@@ -13,6 +13,24 @@
  */
 'use strict';
 
+const REGIME_RANK = { 'RISK-OFF': 0, 'EARLY RISK-OFF': 1, 'NEUTRAL': 2, 'RECOVERY': 3, 'RISK-ON': 4 };
+
+function scoreToRegime(score) {
+  if (score >= 65) return 'RISK-ON';
+  if (score >= 55) return 'RECOVERY';
+  if (score >= 45) return 'NEUTRAL';
+  if (score >= 38) return 'EARLY RISK-OFF';
+  return 'RISK-OFF';
+}
+
+function adjustRegimeLabel(label, score) {
+  if (score == null || !label) return label;
+  const implied = scoreToRegime(score);
+  const labelRank = REGIME_RANK[String(label).toUpperCase().trim()] ?? 2;
+  const scoreRank = REGIME_RANK[implied] ?? 2;
+  return labelRank > scoreRank ? implied : label;
+}
+
 const fs = require('fs');
 const path = require('path');
 const cfg = require('../config');
@@ -217,6 +235,8 @@ module.exports = {
   parsePrice,
   parseSynthese,
   parseSetupCards,
+  scoreToRegime,
+  adjustRegimeLabel,
   parseScannerHtml,
   parseThesisMap,
   extractRegimeFromHtml,

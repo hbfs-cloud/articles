@@ -448,8 +448,11 @@ function buildPage(d) {
   const setups   = d.setups || [];
   const tagStr   = (d.tags || []).join(',');
   const tickers  = setups.map(s => s.ticker).join(', ');
-  const regime   = d.regime || 'RISK-ON';
-  const regColor = d.regime_color || '#16a34a';
+  const { adjustRegimeLabel } = require('./lib/scanner-parser');
+  const rawRegime = d.regime || 'RISK-ON';
+  const regime = adjustRegimeLabel(rawRegime, d.regime_score);
+  const REGIME_COLORS = { 'RISK-ON': '#16a34a', 'RECOVERY': '#3b82f6', 'NEUTRAL': '#94a3b8', 'EARLY RISK-OFF': '#f59e0b', 'RISK-OFF': '#ef4444' };
+  const regColor = REGIME_COLORS[regime] || d.regime_color || '#16a34a';
 
   // Register top-level charts early (before flush)
   addChart('regimeGauge',  regimeGaugeConfig(d.regime_score || 0));

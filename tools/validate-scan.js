@@ -43,7 +43,7 @@ function loadScanSignals(arg) {
   if (!loaded || !loaded.signals.length) {
     throw new Error(`No signals found in ${dir}`);
   }
-  return { dir, dirName, signals: loaded.signals, tklPool: loaded.tklPool || [], regime: loaded.regime || null };
+  return { dir, dirName, signals: loaded.signals, tklPool: loaded.tklPool || [], regime: loaded.regime || null, regimeScore: loaded.regimeScore ?? null };
 }
 
 function loadOpenPositions() {
@@ -74,7 +74,7 @@ async function main() {
   const skipEdgar = process.argv.includes('--skip-edgar');
 
   const filters = loadFilters();
-  const { dir, dirName, signals, tklPool, regime } = loadScanSignals(arg);
+  const { dir, dirName, signals, tklPool, regime, regimeScore } = loadScanSignals(arg);
   const openPositions = loadOpenPositions();
 
   const violations = [];
@@ -95,6 +95,24 @@ async function main() {
       violations.push({
         rule: 'regime_labels',
         message: `Regime "${regime}" not in allowed set: ${filters.regime_labels.allowed.join(', ')}`
+      });
+    }
+  }
+
+  // 2b. Regime score / label coherence (parachute)
+  if (regimeScore != null && regime) {
+    const scoreRegime = regimeScore >= 65 ? 'RISK-ON'
+      : regimeScore >= 55 ? 'RECOVERY'
+      : regimeScore >= 45 ? 'NEUTRAL'
+      : regimeScore >= 38 ? 'EARLY RISK-OFF'
+      : 'RISK-OFF';
+    const RANK = { 'RISK-OFF': 0, 'EARLY RISK-OFF': 1, 'NEUTRAL': 2, 'RECOVERY': 3, 'RISK-ON': 4 };
+    const labelRank = RANK[String(regime).toUpperCase().trim()] ?? 2;
+    const scoreRank = RANK[scoreRegime] ?? 2;
+    if (labelRank > scoreRank) {
+      violations.push({
+        rule: 'regime_score_coherence',
+        message: `Regime label "${regime}" is more bullish than score ${regimeScore} implies (→ ${scoreRegime}). Use the more defensive label or justify the override.`
       });
     }
   }
