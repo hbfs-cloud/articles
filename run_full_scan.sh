@@ -9,12 +9,16 @@ echo "Scan date (next session): $SCAN_DATE"
 # Export Anthopic API key
 export ANTHROPIC_API_KEY=$(grep -E "^export ANTHROPIC_API_KEY=" ~/.profile | head -1 | cut -d= -f2- | tr -d "'") 2>/dev/null || echo "Warning: ANTHROPIC_API_KEY not found"
 
-# Export broker-simulator service token (same source as ANTHROPIC_API_KEY). Without it the
-# articles->broker-sim parallel-run (reconcile + publish) is a silent no-op; warn loudly so a
-# missing token is visible in the nightly log instead of being swallowed by || true / || echo.
-export BROKERSIM_SERVICE_TOKEN=$(grep -E "^export BROKERSIM_SERVICE_TOKEN=" ~/.profile | head -1 | cut -d= -f2- | tr -d "'") 2>/dev/null || true
-if [ -z "$BROKERSIM_SERVICE_TOKEN" ]; then
-    echo "WARNING: parallel-run disabled — BROKERSIM_SERVICE_TOKEN not set (reconcile + publish will skip)"
+# Broker-simulator service token. Primary home is articles/.env (read by the node tools'
+# loadEnv); ~/.profile is an optional override for the cron env. Only export from ~/.profile
+# when it actually holds a value — exporting an EMPTY string here would SHADOW the .env value
+# (loadEnv only fills vars that are `undefined`, not empty), silently disabling the parallel-run.
+PROFILE_TOK=$(grep -E "^export BROKERSIM_SERVICE_TOKEN=" ~/.profile 2>/dev/null | head -1 | cut -d= -f2- | tr -d "'\"")
+[ -n "$PROFILE_TOK" ] && export BROKERSIM_SERVICE_TOKEN="$PROFILE_TOK"
+# Effective token = env (above) OR articles/.env — warn only if neither has it.
+EFF_TOK="${BROKERSIM_SERVICE_TOKEN:-$(grep -E "^BROKERSIM_SERVICE_TOKEN=" "$(dirname "$0")/.env" 2>/dev/null | head -1 | cut -d= -f2- | tr -d "'\"")}"
+if [ -z "$EFF_TOK" ]; then
+    echo "WARNING: parallel-run disabled — BROKERSIM_SERVICE_TOKEN not in ~/.profile nor articles/.env"
 fi
 
 # Bootstrap-once: auto-onboard any pilot mode whose mirror:<mode> account has no fills yet but
