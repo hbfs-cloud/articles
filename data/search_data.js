@@ -1031,9 +1031,9 @@ window.searchDataPrebuilt = [
     "icon": "fa-chart-column",
     "ticker": "ALLR",
     "exchange": "NASDAQ • Healthcare • Oncologie — Stenoparib (PARP+WNT)",
-    "name": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $24M avec programme de...",
-    "title": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $24M avec programme de...",
-    "desc": "Analyse Allarity Therapeutics : biotech Phase 2 stenoparib (dual PARP+WNT), micro-cap $24M, dilution active via Tumim, cash $29.8M. Profil hautement spéculatif.",
+    "name": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap ~$23M avec programme de...",
+    "title": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap ~$23M avec programme de...",
+    "desc": "Analyse Allarity Therapeutics : biotech Phase 2 stenoparib (dual PARP+WNT), micro-cap ~$23M, dilution active via Tumim, cash $29.8M. Profil hautement spéculatif.",
     "tags": "us,healthcare,speculative",
     "grade": "C+",
     "href": "/analyses/ALLR/",
@@ -3872,6 +3872,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-OFF — INTC, HIMS, JBL, SAN, AXP, SMH, EWJ, SMR, JHG, QCOM",
+    "desc": "Regime score 0.50 — classified NEUTRAL. The ensemble model returned a \"risk_on\" label but with only 36.7% confidence, and the score of 6.6/100 is the lowest this cycle. Previous scan scored 40. Per the regime-score-label-lag lesson: two consecutive scans below 50 = treat as NEUTRAL regardless of lab...",
+    "tags": "us,eu,asia,semis,financials,healthcare,energy,etf,ai,geopolitique,technique,trade-idea",
+    "grade": "",
+    "href": "/scanner/20260622/",
+    "date": "22 juin 2026"
   },
   {
     "type": "scanner",
