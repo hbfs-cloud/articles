@@ -1003,6 +1003,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ALLR",
+    "exchange": "NASDAQ • Healthcare • Oncologie — Stenoparib (PARP+WNT)",
+    "name": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $24M avec programme de...",
+    "title": "ALLR — Stenoparib Phase 2 SCLC/ovaire, brevet DRP 2039+, mais micro-cap $24M avec programme de...",
+    "desc": "Analyse Allarity Therapeutics : biotech Phase 2 stenoparib (dual PARP+WNT), micro-cap $24M, dilution active via Tumim, cash $29.8M. Profil hautement spéculatif.",
+    "tags": "us,healthcare,speculative",
+    "grade": "C+",
+    "href": "/analyses/ALLR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "IOVA",
     "exchange": "NASDAQ • Healthcare • Biotechnologie — Thérapie Cellulaire TIL",
     "name": "IOVA — première thérapie TIL approuvée, $71M Q1 2026 (+45%), guidance $350-370M, pipeline en e...",
@@ -3455,19 +3468,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,speculative",
     "grade": "D+",
     "href": "analyses/ALLO",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALLR",
-    "exchange": "NASDAQ • Healthcare",
-    "name": "Allarity Therapeutics",
-    "title": "Allarity Therapeutics",
-    "desc": "Analyse complete d'Allarity Therapeutics (ALLR) : biotech clinique\n    specialisee dans le stenoparib, inhibiteur dual PARP/Wnt pour le\n    cancer ovarien. Phase 2 en cours, FDA Fast Track",
-    "tags": "us,healthcare,speculative,trade-idea",
-    "grade": "D+",
-    "href": "analyses/ALLR",
     "date": ""
   },
   {
