@@ -942,15 +942,20 @@ p {
     border-left: 4px solid var(--pos);
 }
 
-/* Force dark text inside light-background box variants */
+/* ── Contrast safety: override global p{color:var(--ink-2)} ────────────── */
+
+/* Light-background boxes → dark text */
 .alert-box > p, .alert-box > p strong,
 .didactic-box > p, .didactic-box > p strong,
 .pedagogy-box > p, .pedagogy-box > p strong {
     color: var(--ink);
 }
-/* Dark-background variant — white text */
-.alert-box.alert-dark > p, .alert-box.alert-dark > p strong,
-.alert-box.alert-dark > ul li {
+
+/* Dark-background containers → white text on all children */
+.score-card p, .score-card div, .score-card strong, .score-card span,
+.disclaimer-mega p, .disclaimer-mega strong, .disclaimer-mega a,
+.alert-box.alert-dark p, .alert-box.alert-dark strong, .alert-box.alert-dark li,
+.trade-box p, .trade-box div, .trade-box strong, .trade-box span {
     color: white !important;
 }
 
@@ -1351,12 +1356,7 @@ p {
         line-height: 1.5 !important;
     }
 
-    /* Preserve white text on genuinely dark backgrounds only */
-    [style*="background:var(--ink)"] p,
-    [style*="background: var(--ink)"] p,
-    .score-card p, .score-card strong {
-        color: white !important;
-    }
+    /* Dark-bg white text handled by global rule above — no mobile override needed */
 
     /* ===== ALL TABLES - RESPONSIVE ===== */
     .data-table,
