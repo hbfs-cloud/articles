@@ -1186,10 +1186,28 @@ function simulatePortfolio(allTrades, scans, config) {
   const slCooldown = new Map(); // ticker → exitDate (10 biz day re-entry ban after SL)
   // v3 circuit breaker (systematic-tss inspired): pause entries after stop streak
   const cbStopDates = []; // dates of SL events for circuit breaker window
-  let cbPauseUntil = null;
+  // Seed CB history from existing trades (FROZEN_ONLY sim2 fix — without this,
+  // sim2 starts with empty cbStopDates and never triggers the circuit breaker)
+  if (config.initialCBHistory && config.initialCBHistory.length > 0) {
+    cbStopDates.push(...config.initialCBHistory);
+  }
   const cbMaxStops = config.circuitBreakerStops || 0; // 0 = disabled
   const cbWindowDays = config.circuitBreakerWindow || 5;
   const cbPauseDays = config.circuitBreakerPause || 3;
+  // Pre-compute cbPauseUntil from seeded history so sim2 starts with CB already
+  // active if existing trades already exceeded the SL threshold
+  let cbPauseUntil = null;
+  if (cbMaxStops > 0 && cbStopDates.length >= cbMaxStops) {
+    const sorted = [...cbStopDates].sort();
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      const windowStart = DF.addDays(sorted[i], -cbWindowDays);
+      const recentStops = sorted.filter(d => d >= windowStart && d <= sorted[i]).length;
+      if (recentStops >= cbMaxStops) {
+        cbPauseUntil = DF.addDays(sorted[i], cbPauseDays);
+        break;
+      }
+    }
+  }
   const allScanDates = Object.keys(byDate).sort();
   if (allScanDates.length === 0) return null;
 
@@ -2359,6 +2377,13 @@ async function main() {
               trade: { ...t, _phantom: true },
               weight: (1 / (cfg.portfolioSize || 10)) * (cfg.positionSizePct || 1),
             }));
+          }
+
+          // Seed circuit breaker with SL history from existing (already-closed) trades
+          // so sim2 can fire the CB when cumulative SL count reaches the threshold
+          const slHistory = existing.filter(t => t.status === 'sl' && t.exitDate).map(t => t.exitDate);
+          if (slHistory.length > 0) {
+            cfg2.initialCBHistory = slHistory;
           }
 
           if (newTrades.length > 0) {
