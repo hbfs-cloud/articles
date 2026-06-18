@@ -17,9 +17,12 @@ if [ -z "$BROKERSIM_SERVICE_TOKEN" ]; then
     echo "WARNING: parallel-run disabled — BROKERSIM_SERVICE_TOKEN not set (reconcile + publish will skip)"
 fi
 
-# Reconcile yesterday's parallel-run state (articles vs broker-simulator) BEFORE the new
-# scan mutates pit-state. Logs to data/reconciliation-log.json and alerts on breach; a breach
-# (exit 1) must NOT abort the nightly scan (|| true), the Discord alert is the signal.
+# Catch the broker-simulator up to the last completed session (enter pending mirror-orders
+# at the next-open + replay intraday SL/TP), THEN reconcile articles vs the sim BEFORE the new
+# scan mutates pit-state. Both are non-blocking (|| true): a sim outage/breach never aborts the
+# nightly — the Discord alert from reconcile is the signal.
+echo "Running broker-simulator mirror engine for the last session..."
+node tools/run-mirror.js || true
 echo "Reconciling broker-simulator parallel-run..."
 node tools/reconcile-simulator.js || true
 

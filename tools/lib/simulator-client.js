@@ -95,6 +95,7 @@ class SimulatorClient {
 
   backfill(accountId, payload)    { return this.request('POST', `/api/accounts/${accountId}/backfill`, payload); }
   mirrorOrder(accountId, intent)  { return this.request('POST', `/api/accounts/${accountId}/mirror-order`, intent); }
+  mirrorRun(accountId, day, interval) { return this.request('POST', `/api/accounts/${accountId}/mirror-run?day=${day}&interval=${interval || '5m'}`); }
   getPortfolio(accountId)         { return this.request('GET',  `/api/accounts/${accountId}/portfolio`); }
   getEquityCurve(accountId)       { return this.request('GET',  `/api/accounts/${accountId}/equity-curve`); }
 }
