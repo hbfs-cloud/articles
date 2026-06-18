@@ -98,6 +98,10 @@ class SimulatorClient {
   mirrorRun(accountId, day, interval) { return this.request('POST', `/api/accounts/${accountId}/mirror-run?day=${day}&interval=${interval || '5m'}`); }
   getPortfolio(accountId)         { return this.request('GET',  `/api/accounts/${accountId}/portfolio`); }
   getEquityCurve(accountId)       { return this.request('GET',  `/api/accounts/${accountId}/equity-curve`); }
+  listPositions(accountId)        { return this.request('GET',  `/api/accounts/${accountId}/positions`); }
+  // GET /api/accounts/{id}/fills — used by the --sync bootstrap to detect whether a
+  // mirror:<mode> account already has any executed history (empty [] ⇒ never bootstrapped).
+  listFills(accountId, limit)     { return this.request('GET',  `/api/accounts/${accountId}/fills?limit=${limit || 1}`); }
 }
 
 module.exports = { SimulatorClient, loadConfig, loadEnv };

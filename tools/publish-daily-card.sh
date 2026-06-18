@@ -85,6 +85,15 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/replay-trades.js 2>&1 | tail -15
   echo "   Replay done."
 
+  # ─── Step 4c: Refresh the sim read-switch cache (non-blocking) ──────────────
+  # For each mode flagged "sim" in data/source-of-truth.json, pull its broker-simulator
+  # portfolio + equity into data/sim-source-cache.json so the render scripts below can
+  # read it SYNCHRONOUSLY. gen-status-page / gen-api fall back to pit-state on any miss,
+  # so a sim outage here just means the public page keeps showing articles' shadow state.
+  echo ""
+  echo "🛰️  Step 4c: Refreshing sim source-of-truth cache..."
+  node tools/lib/sim-source.js --refresh || echo "⚠️  sim-source refresh failed (non-blocking)"
+
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
   echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."

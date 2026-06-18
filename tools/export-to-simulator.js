@@ -23,9 +23,18 @@
  * re-running is a no-op on the sim side.
  *
  * Usage:
- *   node tools/export-to-simulator.js                 # backfill all pilot modes
+ *   node tools/export-to-simulator.js                 # backfill all pilot modes (force)
  *   node tools/export-to-simulator.js --mode dynamic  # one mode only
  *   node tools/export-to-simulator.js --dry-run       # print payloads, no POST
+ *   node tools/export-to-simulator.js --sync          # BOOTSTRAP-ONCE: backfill a mode ONLY
+ *                                                     # if its mirror account has no fills yet
+ *                                                     # AND pit-state has data for it. Non-blocking.
+ *
+ * --sync is the nightly auto-onboard step: it seeds each mode's frozen history exactly once,
+ * the first night a mirror:<mode> account exists with pit-state data. Once the account has any
+ * fill (the backfill wrote them, or the forward mirror-run did), it is skipped forever — the
+ * forward loop (mirror-order + mirror-run) now owns the open positions, so re-importing would
+ * fight it. Any sim/token/network problem is swallowed (exit 0) so it never aborts the nightly.
  *
  * Env: BROKERSIM_SERVICE_TOKEN (service token; never hardcoded).
  */
@@ -38,9 +47,10 @@ const ROOT = path.join(__dirname, '..');
 
 // ── tiny CLI parser ────────────────────────────────────────────────────────────
 function parseArgs(argv) {
-  const out = { dryRun: false, mode: null };
+  const out = { dryRun: false, mode: null, sync: false };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--dry-run') out.dryRun = true;
+    else if (argv[i] === '--sync') out.sync = true;
     else if (argv[i] === '--mode') out.mode = argv[++i];
   }
   return out;
@@ -140,7 +150,11 @@ async function main() {
 
   for (const mode of targetModes) {
     const modeData = modes[mode];
-    if (!modeData) { console.log(`  ${mode}: no pit-state entry — skip`); continue; }
+    if (!modeData) {
+      // --sync: a mode with no pit-state data yet is simply not ready to onboard — quiet skip.
+      console.log(`  ${mode}: no pit-state entry — skip`);
+      continue;
+    }
 
     const payload = buildPayload(mode, modeData, modesCfg[mode] || {}, initialEquity);
     const counts = `closed=${payload.closed_trades.length} open=${payload.open_positions.length} equity=${payload.equity_curve.length}`;
@@ -153,14 +167,65 @@ async function main() {
 
     try {
       const accountId = await client.resolveAccountId(mode);
+
+      // ── BOOTSTRAP-ONCE gate (--sync) ───────────────────────────────────────────
+      // Seed the frozen history only if the account has been seeded with NOTHING yet — no
+      // fill AND no position. As soon as it has either — a fill from a prior backfill/closed
+      // trade OR an open position seeded by the backfill / opened by a forward mirror-run —
+      // the forward loop owns the open positions and we must NOT re-import them. (The server
+      // gate alone is insufficient for open-only modes: it keys on sim.orders, which open
+      // positions never write — see fix note below.)
+      if (args.sync) {
+        // "Already bootstrapped" must be detected from ANY persisted seed, not just fills.
+        // The server writes fills ONLY for closed trades (backfill.go:181-189 via backfillLeg);
+        // an OPEN position seeds a sim.positions row + a sim.mirror_orders row and NO fill
+        // (confirmed backfill_test.go "open position has no backfill fill"). So an open-only mode
+        // (the normal early state — positions open before any close) has 0 fills, and a fills-only
+        // gate would RE-import it every night, clobbering the forward-managed qty/stop. Detect the
+        // seeded POSITION too. A read error on either source skips the bootstrap (stay safe).
+        let fills = [], positions = [];
+        try { fills = await client.listFills(accountId, 1); } catch (fe) {
+          console.warn(`  ${mode}: cannot read fills (${fe.message}) — skip bootstrap`);
+          continue;
+        }
+        try { positions = await client.listPositions(accountId); } catch (pe) {
+          console.warn(`  ${mode}: cannot read positions (${pe.message}) — skip bootstrap`);
+          continue;
+        }
+        const fillCount = Array.isArray(fills) ? fills.length : 0;
+        const posCount  = Array.isArray(positions) ? positions.length : 0;
+        if (fillCount > 0 || posCount > 0) {
+          console.log(`  ${mode}: already bootstrapped (${fillCount} fill(s), ${posCount} position(s)) — skip`);
+          continue;
+        }
+        if (payload.closed_trades.length === 0 && payload.open_positions.length === 0 && payload.equity_curve.length === 0) {
+          console.log(`  ${mode}: pit-state empty for this mode — nothing to bootstrap`);
+          continue;
+        }
+        const res = await client.backfill(accountId, payload);
+        const applied = res && res.applied === false ? `skipped (${res.reason || 'already_backfilled'})` : 'BOOTSTRAPPED';
+        console.log(`  ${mode}: ${applied} ${counts} -> account ${accountId}`);
+        continue;
+      }
+
       const res = await client.backfill(accountId, payload);
       const applied = res && res.applied === false ? `skipped (${res.reason || 'already_backfilled'})` : 'applied';
       console.log(`  ${mode}: ${applied} ${counts} -> account ${accountId}`);
     } catch (e) {
       console.error(`  ${mode}: ERROR ${e.message}`);
-      process.exitCode = 1;
+      // --sync must never break the nightly: a per-mode failure is logged, not fatal.
+      if (!args.sync) process.exitCode = 1;
     }
   }
 }
 
-main().catch(e => { console.error(e); process.exit(1); });
+// --sync is non-blocking by contract: a missing token / config / network must exit 0 so the
+// nightly continues. A plain (force) run keeps its exit-1-on-error behaviour for manual use.
+main().catch(e => {
+  if (process.argv.slice(2).includes('--sync')) {
+    console.error(`export-to-simulator --sync disabled: ${e.message}`);
+    process.exit(0);
+  }
+  console.error(e);
+  process.exit(1);
+});

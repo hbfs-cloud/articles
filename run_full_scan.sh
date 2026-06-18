@@ -17,6 +17,13 @@ if [ -z "$BROKERSIM_SERVICE_TOKEN" ]; then
     echo "WARNING: parallel-run disabled — BROKERSIM_SERVICE_TOKEN not set (reconcile + publish will skip)"
 fi
 
+# Bootstrap-once: auto-onboard any pilot mode whose mirror:<mode> account has no fills yet but
+# does have pit-state data (seeds its frozen history exactly once; skips forever after). This is
+# how a NEW mode self-onboards the first night its sim account exists — no manual step. The tool
+# always exits 0, so a missing token / sim outage never aborts the nightly.
+echo "Bootstrapping broker-simulator mirror accounts (once per new mode)..."
+node tools/export-to-simulator.js --sync || true
+
 # Catch the broker-simulator up to the last completed session (enter pending mirror-orders
 # at the next-open + replay intraday SL/TP), THEN reconcile articles vs the sim BEFORE the new
 # scan mutates pit-state. Both are non-blocking (|| true): a sim outage/breach never aborts the
@@ -25,6 +32,13 @@ echo "Running broker-simulator mirror engine for the last session..."
 node tools/run-mirror.js || true
 echo "Reconciling broker-simulator parallel-run..."
 node tools/reconcile-simulator.js || true
+
+# Auto cutover decision (self-reverting): read the freshly-appended reconciliation log and, per
+# mode, flip data/source-of-truth.json to "sim" after CUTOVER_DAYS consecutive zero-divergence
+# days (auto-revert to "articles" on any fresh divergence). The read-switch in gen-api.js /
+# gen-status-page.js consumes this with a HARD FALLBACK to pit-state. Non-blocking (exit 0).
+echo "Computing broker-simulator cutover decision..."
+node tools/cutover-decision.js || true
 
 # Run the daily scanner via claude command
 echo "Running claude --print with 'articles scan du jour'..."

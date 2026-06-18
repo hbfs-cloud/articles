@@ -11,6 +11,11 @@
 const fs = require('fs');
 const path = require('path');
 const ms = require('./lib/mode-status');
+// Sim read-switch (Stage 5). When source-of-truth.json marks a mode "sim", render that mode's
+// positions + equity from the broker-simulator cache instead of the articles snapshot — with a
+// HARD FALLBACK to the snapshot on any error / missing token / missing cache / "articles" flag.
+let simSrc = null;
+try { simSrc = require('./lib/sim-source'); } catch (_) { simSrc = null; }
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
@@ -137,10 +142,62 @@ const ordersStale = scanDir !== todayKey && scanDir !== nextBizDay;
 
 console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${ordersStale ? ` [orders stale: scanDir=${scanDir} != today=${todayKey}]` : ''}`);
 
+// ─── Sim read-switch config + overlay helpers ─────────────────────────────────
+// initial_equity used to convert the sim NAV curve back to articles' base-100 shape.
+let SIM_INITIAL_EQUITY = 100000;
+try {
+  const _scfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'simulator-config.json'), 'utf8'));
+  if (_scfg && _scfg.initialEquity > 0) SIM_INITIAL_EQUITY = _scfg.initialEquity;
+} catch (_) { /* keep default */ }
+
+// effectivePositions(modeId, snapshotPositions): when the mode is flagged "sim" and the sim cache
+// has positions, render those (price + return from the sim) while PRESERVING articles' per-ticker
+// metadata (stop / tp1 / tp2 / score / scanDate) by ticker. Any error / no flag / no cache ⇒ the
+// original snapshot positions, untouched (hard fallback).
+function effectivePositions(modeId, snapshotPositions) {
+  if (!simSrc || !modeId) return snapshotPositions;
+  let simPos = null;
+  try { simPos = simSrc.simPositions(modeId); } catch (_) { simPos = null; }
+  if (!simPos || simPos.length === 0) return snapshotPositions;
+  const byTicker = {};
+  for (const ap of snapshotPositions || []) if (ap && ap.ticker) byTicker[ap.ticker.toUpperCase()] = ap;
+  return simPos.map(sp => {
+    const meta = byTicker[(sp.ticker || '').toUpperCase()] || {};
+    return {
+      ...meta,                       // stop/tp1/tp2/score/scan_date/days_remaining from articles
+      ticker: sp.ticker,
+      entry: sp.entry,               // sim avg fill price (the position's real cost basis)
+      current_price: sp.current_price,
+      return_pct: sp.return_pct,
+      _source: 'sim',
+    };
+  });
+}
+
+// effectiveEquity(modeId, snapshotEquity): the {d,v} equity payload. When "sim" + cache present,
+// rebuild {d,v} from the sim NAV curve (base-100); otherwise return the snapshot equity as-is.
+function effectiveEquity(modeId, snapshotEquity) {
+  if (!simSrc || !modeId) return snapshotEquity;
+  let curve = null;
+  try { curve = simSrc.simEquityCurve(modeId, SIM_INITIAL_EQUITY); } catch (_) { curve = null; }
+  if (!curve || curve.length === 0) return snapshotEquity;
+  return {
+    d: curve.map(pt => pt.date.slice(5).replace('-', '/')),
+    v: curve.map(pt => pt.value),
+    _source: 'sim',
+  };
+}
+
 // ─── Helper: write all 7 endpoints for a mode ─────────────────────────────────
 function writeMode(mode, prefix) {
   const p = prefix ? `${prefix}/` : '';
   const status = getStatusFor(prefix || 'balanced');
+  const modeId = prefix || 'balanced';
+
+  // Sim read-switch: resolve the effective positions + equity ONCE per mode. Falls back to the
+  // articles snapshot transparently when the mode isn't "sim" or the sim cache is unavailable.
+  const effPositions = effectivePositions(modeId, mode.positions || []);
+  const effEquity = effectiveEquity(modeId, mode.equity || {});
 
   // 1. signals.json
   write(`${p}signals.json`, {
@@ -165,7 +222,7 @@ function writeMode(mode, prefix) {
     updatedAt: now, date: snap.date, mode: prefix || 'balanced',
     status,
     allocPct,
-    positions: (mode.positions || []).map(p => {
+    positions: effPositions.map(p => {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
       // riskPct = % loss IF stop hits (per-trade). Use riskPctOfPortfolio for portfolio-level exposure.
@@ -180,6 +237,7 @@ function writeMode(mode, prefix) {
         allocPct,
         scanDate: p.scan_date, daysRemaining: p.days_remaining,
         broker_symbols: getBrokerSymbols(p.ticker),
+        ...(p._source === 'sim' ? { source: 'sim' } : {}),
       };
     })
   });
@@ -203,8 +261,9 @@ function writeMode(mode, prefix) {
   });
 
   // 4. equity.json (with reliability disclosures)
-  // Compute sample period from equity curve (first → last data point)
-  const ec = mode.equity && Array.isArray(mode.equity.d) ? mode.equity : null;
+  // Compute sample period from equity curve (first → last data point). effEquity is the
+  // sim NAV curve when the mode is "sim", else the articles snapshot equity (hard fallback).
+  const ec = effEquity && Array.isArray(effEquity.d) ? effEquity : null;
   let samplePeriodDays = null, samplePeriodStart = null, samplePeriodEnd = null;
   if (ec && ec.d.length >= 2) {
     samplePeriodStart = ec.d[0];
@@ -242,7 +301,8 @@ function writeMode(mode, prefix) {
     status,
     config: mode.config || {}, stats: mode.stats || {},
     reliability,
-    equityCurve: mode.equity || {}
+    equityCurve: effEquity || {},
+    ...(effEquity && effEquity._source === 'sim' ? { source: 'sim' } : {}),
   });
 
   // 5. orders.json — orders only valid on scan date
@@ -284,7 +344,8 @@ function writeMode(mode, prefix) {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
     config: mode.config || {}, stats: mode.stats || {},
-    equityCurve: mode.equity || {},
+    equityCurve: effEquity || {},
+    ...(effEquity && effEquity._source === 'sim' ? { source: 'sim' } : {}),
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
@@ -295,7 +356,7 @@ function writeMode(mode, prefix) {
       broker_symbols: getBrokerSymbols(s.ticker),
     })),
     orders: modeOrders,
-    positions: (mode.positions || []).map(p => {
+    positions: effPositions.map(p => {
       const entry = p.entry || 0;
       const stop = p.stop || 0;
       const riskPct = entry > 0 && stop > 0 ? +((entry - stop) / entry * 100).toFixed(2) : 0;
@@ -309,6 +370,7 @@ function writeMode(mode, prefix) {
         allocPct,
         scanDate: p.scan_date, daysRemaining: p.days_remaining,
         broker_symbols: getBrokerSymbols(p.ticker),
+        ...(p._source === 'sim' ? { source: 'sim' } : {}),
       };
     }),
     closeNow: (mode.closeNow || []).map(p => ({
