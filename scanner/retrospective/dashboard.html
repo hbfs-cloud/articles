@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr" dir="ltr" data-tags="technique,retrospective" data-tab="scanner">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tableau de Bord Rétrospectives Scanner | DailyTickers</title>
+<meta property="og:title" content="Tableau de Bord Rétrospectives | DailyTickers Scanner">
+<meta property="og:description" content="17 rétrospectives, 1099 signaux, 39 règles — évolution des grades, hit rates par stratégie, corrélation régime/performance. Février – juin 2026.">
+<meta property="og:url" content="https://articles.dailytickers.com/scanner/retrospective/dashboard.html">
+<meta property="og:type" content="article">
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+<link rel="stylesheet" href="/assets/report.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+<style>
+:root{--db-accent:#334155;--db-accent-muted:#64748b;--db-green:#16a34a;--db-red:#dc2626;--db-amber:#d97706;--db-blue:#2563eb;--db-indigo:#4f46e5}
+.db-hero{text-align:center;padding:2.5rem 1rem 1.5rem}
+.db-hero h1{font-size:1.6rem;font-weight:800;color:var(--text-primary);margin:0 0 .4rem}
+.db-hero .sub{font-size:.9rem;color:var(--text-muted);margin:0}
+.db-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem;margin:1.5rem 0}
+.db-kpi{background:#fff;border:1px solid var(--border-color);border-radius:10px;padding:1rem;text-align:center}
+.db-kpi-val{font-size:1.5rem;font-weight:800;line-height:1.2}
+.db-kpi-lbl{font-size:.7rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-top:.2rem}
+.db-section{background:#fff;border:1px solid var(--border-color);border-radius:12px;padding:1.25rem;margin:1.25rem 0}
+.db-section h2{font-size:1.05rem;font-weight:700;margin:0 0 .75rem;padding-bottom:.6rem;border-bottom:1px solid var(--border-color);display:flex;align-items:center;gap:.5rem}
+.db-section h2 i{font-size:.9rem;color:var(--db-accent-muted)}
+.chart-host{width:100%;height:320px;margin:.5rem 0}
+.db-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.db-table th{background:#f8fafc;padding:.5rem .6rem;text-align:left;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);border-bottom:2px solid var(--border-color)}
+.db-table td{padding:.45rem .6rem;border-bottom:1px solid #f1f5f9}
+.db-table tr:hover td{background:#f8fafc}
+.up{color:var(--db-green);font-weight:600}
+.down{color:var(--db-red);font-weight:600}
+.grade-pill{display:inline-block;padding:.1rem .4rem;border-radius:4px;font-weight:700;font-size:.72rem;color:#fff}
+.gp-a{background:var(--db-green)}.gp-b{background:var(--db-blue)}.gp-c{background:var(--db-amber)}.gp-d{background:var(--db-red)}
+.sev-pill{display:inline-block;padding:.1rem .35rem;border-radius:3px;font-size:.65rem;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.03em}
+.sev-hard{background:var(--db-red)}.sev-filter{background:var(--db-blue)}.sev-advisory{background:var(--db-accent-muted)}.sev-infra{background:var(--db-indigo)}.sev-dep{background:#94a3b8}
+.regime-pill{display:inline-block;padding:.15rem .45rem;border-radius:4px;font-size:.72rem;font-weight:600;border:1px solid}
+.rp-risk-on{background:#f0fdf4;color:var(--db-green);border-color:#bbf7d0}
+.rp-early-risk-off{background:#fffbeb;color:var(--db-amber);border-color:#fde68a}
+.rp-risk-off{background:#fef2f2;color:var(--db-red);border-color:#fecaca}
+.rp-oscillating{background:#f5f3ff;color:var(--db-indigo);border-color:#c4b5fd}
+.rp-override{background:#1e293b;color:#f8fafc;border-color:#334155}
+.trend-insight{background:#f8fafc;border-left:3px solid var(--db-accent-muted);padding:.75rem 1rem;margin:.75rem 0;font-size:.85rem;color:var(--text-muted);line-height:1.5}
+.trend-insight strong{color:var(--text-primary)}
+.split-charts{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:768px){.split-charts{grid-template-columns:1fr}.chart-host{height:280px}}
+@media(prefers-color-scheme:dark){
+  .db-kpi,.db-section{background:var(--bg-secondary,#1e293b);border-color:var(--border-color,#334155)}
+  .db-table th{background:var(--bg-tertiary,#0f172a)}
+  .db-table tr:hover td{background:var(--bg-tertiary,#0f172a)}
+  .trend-insight{background:var(--bg-tertiary,#0f172a);border-left-color:var(--db-accent-muted)}
+}
+</style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-bar-logo"><img src="/logo.svg" alt="DailyTickers" height="32"></a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">S&eacute;ries</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+
+<div class="db-hero">
+  <h1>Tableau de Bord Rétrospectives</h1>
+  <p class="sub">17 rétrospectives &middot; février – juin 2026 &middot; Données en direct depuis <code>retro-summary.json</code></p>
+</div>
+
+<div class="db-kpis" id="kpis"></div>
+
+<section class="db-section">
+  <h2><i class="fas fa-chart-line"></i>Évolution des Notes</h2>
+  <div class="trend-insight" id="grade-insight"></div>
+  <div class="chart-host" id="chart-grades"></div>
+</section>
+
+<section class="db-section">
+  <h2><i class="fas fa-bullseye"></i>Taux de Réussite (Hit Rate)</h2>
+  <div class="chart-host" id="chart-hr"></div>
+</section>
+
+<section class="db-section">
+  <h2><i class="fas fa-layer-group"></i>Performance par Stratégie</h2>
+  <div class="chart-host" id="chart-strategy" style="height:380px"></div>
+</section>
+
+<section class="db-section">
+  <h2><i class="fas fa-compass"></i>Corrélation Régime &harr; Performance</h2>
+  <div class="split-charts">
+    <div class="chart-host" id="chart-regime"></div>
+    <div class="chart-host" id="chart-regime-scatter"></div>
+  </div>
+</section>
+
+<section class="db-section">
+  <h2><i class="fas fa-trophy"></i>Hall of Fame &amp; Hall of Shame</h2>
+  <div class="split-charts">
+    <div>
+      <h3 style="font-size:.85rem;font-weight:700;margin:0 0 .5rem;color:var(--db-green)"><i class="fas fa-arrow-trend-up"></i> Top 10 Meilleurs Trades</h3>
+      <table class="db-table" id="table-best"></table>
+    </div>
+    <div>
+      <h3 style="font-size:.85rem;font-weight:700;margin:0 0 .5rem;color:var(--db-red)"><i class="fas fa-arrow-trend-down"></i> Top 10 Pires Trades</h3>
+      <table class="db-table" id="table-worst"></table>
+    </div>
+  </div>
+</section>
+
+<section class="db-section">
+  <h2><i class="fas fa-shield-halved"></i>Règles Scanner (v2.0 — 39 règles)</h2>
+  <div id="rules-section"></div>
+</section>
+
+<section class="db-section">
+  <h2><i class="fas fa-table"></i>Historique Complet</h2>
+  <table class="db-table" id="table-history"></table>
+</section>
+
+</main>
+
+<footer class="article-footer">
+  <div class="footer-inner">
+    <p>&copy; 2026 DailyTickers. Donn&eacute;es g&eacute;n&eacute;r&eacute;es par analyse algorithmique — ne constituent pas un conseil en investissement.</p>
+    <p style="font-size:.75rem;color:var(--text-muted)">Dashboard g&eacute;n&eacute;r&eacute; depuis <code>data/retro-summary.json</code> + <code>data/scanner-lessons.json</code></p>
+  </div>
+</footer>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+(async function() {
+  const isDark = window.matchMedia('(prefers-color-scheme:dark)').matches;
+  const C = {
+    ink: isDark ? '#e2e8f0' : '#1e293b',
+    muted: isDark ? '#94a3b8' : '#64748b',
+    border: isDark ? '#334155' : '#e2e8f0',
+    bg: isDark ? '#0f172a' : '#ffffff',
+    green: '#16a34a', red: '#dc2626', amber: '#d97706',
+    blue: '#2563eb', indigo: '#4f46e5', slate: '#64748b'
+  };
+  const GRADE_MAP = {'A+':10,'A':9,'A*':9,'B+':8,'B+*':8,'B':7,'B*':7,'B-':6,'B-*':6,'C+':5,'C+*':5,'C':4,'C*':4,'D':2,'D*':2,'F':0};
+
+  function gradeColor(g) {
+    const n = GRADE_MAP[g] || 0;
+    if (n >= 9) return C.green;
+    if (n >= 6) return C.blue;
+    if (n >= 4) return C.amber;
+    return C.red;
+  }
+  function gradePillClass(g) {
+    const n = GRADE_MAP[g] || 0;
+    if (n >= 9) return 'gp-a';
+    if (n >= 6) return 'gp-b';
+    if (n >= 4) return 'gp-c';
+    return 'gp-d';
+  }
+  function fmtDate(d) {
+    const parts = d.split('-');
+    const months = ['','jan','fév','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+    return parseInt(parts[2]) + ' ' + months[parseInt(parts[1])] + ' ' + parts[0].slice(2);
+  }
+
+  let data, lessons;
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch('/data/retro-summary.json').then(r => r.json()),
+      fetch('/data/scanner-lessons.json').then(r => r.json())
+    ]);
+    data = r1; lessons = r2;
+  } catch(e) {
+    document.getElementById('kpis').innerHTML = '<p style="color:var(--db-red);padding:2rem;text-align:center">Erreur de chargement des données. Vérifiez que retro-summary.json et scanner-lessons.json existent.</p>';
+    return;
+  }
+
+  const retros = data.retros;
+  const agg = data.aggregate;
+
+  // KPIs
+  const avgGrade = Object.entries(agg.grade_distribution).reduce((s,[g,c]) => s + (GRADE_MAP[g]||0)*c, 0) / agg.total_retros;
+  const avgGradeLabel = avgGrade >= 8 ? 'B+' : avgGrade >= 7 ? 'B' : avgGrade >= 6 ? 'B-' : avgGrade >= 5 ? 'C+' : avgGrade >= 4 ? 'C' : 'D';
+  document.getElementById('kpis').innerHTML = [
+    {val: agg.total_retros, lbl: 'Rétrospectives', color: C.ink},
+    {val: agg.total_signals.toLocaleString('fr'), lbl: 'Signaux analysés', color: C.ink},
+    {val: agg.total_resolved, lbl: 'Signaux résolus', color: C.ink},
+    {val: agg.overall_hit_rate_pct + '%', lbl: 'Hit Rate global', color: agg.overall_hit_rate_pct >= 50 ? C.green : agg.overall_hit_rate_pct >= 35 ? C.amber : C.red},
+    {val: (agg.overall_avg_return_pct >= 0 ? '+' : '') + agg.overall_avg_return_pct + '%', lbl: 'Rendement moyen', color: agg.overall_avg_return_pct >= 0 ? C.green : C.red},
+    {val: avgGradeLabel, lbl: 'Note moyenne', color: gradeColor(avgGradeLabel)},
+    {val: lessons.rules.length, lbl: 'Règles actives', color: C.blue},
+    {val: agg.best_retro.grade, lbl: 'Meilleure note', color: C.green}
+  ].map(k => `<div class="db-kpi"><div class="db-kpi-val" style="color:${k.color}">${k.val}</div><div class="db-kpi-lbl">${k.lbl}</div></div>`).join('');
+
+  // Grade trend insight
+  document.getElementById('grade-insight').innerHTML = `<strong>Tendance :</strong> ${agg.grade_trend_summary}`;
+
+  // Chart: Grade Trend
+  const dates = retros.map(r => fmtDate(r.date));
+  const gradeNums = retros.map(r => GRADE_MAP[r.grade] || 0);
+  const gradeChart = echarts.init(document.getElementById('chart-grades'));
+  gradeChart.setOption({
+    tooltip: {trigger:'axis', formatter: function(p) {
+      const r = retros[p[0].dataIndex];
+      return `<strong>${r.date}</strong><br/>Note: <strong>${r.grade}</strong> (${p[0].value}/10)<br/>HR: ${r.hit_rate_pct}%<br/>Signaux: ${r.total_signals}`;
+    }},
+    grid: {left:50,right:20,top:30,bottom:40},
+    xAxis: {type:'category', data:dates, axisLabel:{fontSize:10,color:C.muted,rotate:45}, axisLine:{lineStyle:{color:C.border}}},
+    yAxis: {type:'value', min:0, max:10, interval:1, axisLabel:{fontSize:10,color:C.muted, formatter:v=>['F','','D','','C','C+','B-','B','B+','A','A+'][v]||''}, splitLine:{lineStyle:{color:C.border,type:'dashed'}}},
+    series: [{
+      type:'line', data:gradeNums, smooth:false, symbol:'circle', symbolSize:8,
+      lineStyle:{width:2.5,color:C.ink},
+      itemStyle:{color: function(p){return gradeColor(retros[p.dataIndex].grade)}},
+      areaStyle:{
+        color: {type:'linear',x:0,y:0,x2:0,y2:1, colorStops:[
+          {offset:0,color:isDark?'rgba(37,99,235,.15)':'rgba(37,99,235,.08)'},
+          {offset:1,color:'transparent'}
+        ]}
+      },
+      markLine:{silent:true, data:[
+        {yAxis:7, lineStyle:{color:C.green,type:'dashed',width:1}, label:{formatter:'B',fontSize:9,color:C.green}},
+        {yAxis:4, lineStyle:{color:C.amber,type:'dashed',width:1}, label:{formatter:'C',fontSize:9,color:C.amber}}
+      ]},
+      markPoint:{
+        data:[
+          {coord:[dates.indexOf(fmtDate('2026-04-17')),9], value:'A*', itemStyle:{color:C.green}},
+          {coord:[dates.indexOf(fmtDate('2026-06-12')),2], value:'D*', itemStyle:{color:C.red}}
+        ],
+        symbolSize:36, label:{fontSize:10,fontWeight:700,color:'#fff'}
+      }
+    }]
+  });
+
+  // Chart: Hit Rate Trend
+  const hrs = retros.map(r => r.hit_rate_pct);
+  const hrMA = hrs.map((v,i) => i < 2 ? v : Math.round((hrs[i]+hrs[i-1]+hrs[i-2])/3*10)/10);
+  const hrChart = echarts.init(document.getElementById('chart-hr'));
+  hrChart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['Hit Rate','MM3','Objectif 50%'], textStyle:{fontSize:10,color:C.muted}, top:0},
+    grid:{left:50,right:20,top:35,bottom:40},
+    xAxis:{type:'category',data:dates,axisLabel:{fontSize:10,color:C.muted,rotate:45},axisLine:{lineStyle:{color:C.border}}},
+    yAxis:{type:'value',min:0,max:100,axisLabel:{fontSize:10,color:C.muted,formatter:'{value}%'},splitLine:{lineStyle:{color:C.border,type:'dashed'}}},
+    series:[
+      {name:'Hit Rate',type:'bar',data:hrs,barWidth:'40%',
+        itemStyle:{color:function(p){return hrs[p.dataIndex]>=50?C.green:hrs[p.dataIndex]>=30?C.amber:C.red},borderRadius:[3,3,0,0]}
+      },
+      {name:'MM3',type:'line',data:hrMA,smooth:true,lineStyle:{width:2,color:C.blue},symbol:'none'},
+      {name:'Objectif 50%',type:'line',data:Array(hrs.length).fill(50),lineStyle:{width:1.5,color:C.green,type:'dashed'},symbol:'none'}
+    ]
+  });
+
+  // Chart: Strategy Performance (aggregated)
+  const stratMap = {};
+  retros.forEach(r => {
+    (r.strategy_breakdown||[]).forEach(s => {
+      const key = s.strategy.replace(/\/.*/,'').replace(/ .*$/,'').replace(/Expansion$/,'Momentum').replace(/Squeeze$/,'Squeeze');
+      const norm = key.includes('Momentum') ? 'Momentum' : key.includes('Breakout') ? 'Breakout' : key.includes('Pullback') ? 'Pullback' : key.includes('Squeeze') ? 'Pre-Squeeze' : key.includes('Candlestick') ? 'Candlestick' : key.includes('Forex') ? 'Forex' : key.includes('Crypto') ? 'Crypto' : key.includes('Metals') ? 'Metals' : 'Other';
+      if (!stratMap[norm]) stratMap[norm] = {count:0,tp1:0,stopped:0};
+      stratMap[norm].count += s.count;
+      stratMap[norm].tp1 += (s.tp1_count||0);
+      stratMap[norm].stopped += (s.stopped_count||0);
+    });
+  });
+  const strats = Object.entries(stratMap).sort((a,b)=>b[1].count-a[1].count);
+  const stratChart = echarts.init(document.getElementById('chart-strategy'));
+  stratChart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['TP1','Stoppés','Non résolus'],textStyle:{fontSize:10,color:C.muted},top:0},
+    grid:{left:90,right:60,top:35,bottom:10},
+    xAxis:{type:'value',axisLabel:{fontSize:10,color:C.muted},splitLine:{lineStyle:{color:C.border,type:'dashed'}}},
+    yAxis:{type:'category',data:strats.map(s=>s[0]),axisLabel:{fontSize:11,color:C.ink,fontWeight:600}},
+    series:[
+      {name:'TP1',type:'bar',stack:'t',data:strats.map(s=>s[1].tp1),itemStyle:{color:C.green,borderRadius:[0,0,0,0]},
+        label:{show:true,position:'inside',fontSize:9,color:'#fff',formatter:p=>{const s=strats[p.dataIndex];const res=s[1].tp1+s[1].stopped;return res>0?Math.round(s[1].tp1/res*100)+'%':''}}},
+      {name:'Stoppés',type:'bar',stack:'t',data:strats.map(s=>s[1].stopped),itemStyle:{color:C.red}},
+      {name:'Non résolus',type:'bar',stack:'t',data:strats.map(s=>s[1].count-s[1].tp1-s[1].stopped),itemStyle:{color:'#e2e8f0'}}
+    ]
+  });
+
+  // Chart: Regime correlation
+  const regimeData = agg.regime_grade_correlation;
+  const regLabels = Object.keys(regimeData);
+  const regHrs = regLabels.map(k => regimeData[k].avg_hit_rate);
+  const regGrades = regLabels.map(k => regimeData[k].avg_grade);
+  const regimeChart = echarts.init(document.getElementById('chart-regime'));
+  const regColors = {'risk_on_sustained':C.green,'early_risk_off':C.amber,'risk_off':C.red,'oscillating':C.indigo,'forced_override':'#1e293b'};
+  regimeChart.setOption({
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:100,right:30,top:20,bottom:10},
+    xAxis:{type:'value',min:0,max:60,axisLabel:{fontSize:10,color:C.muted,formatter:'{value}%'},splitLine:{lineStyle:{color:C.border,type:'dashed'}}},
+    yAxis:{type:'category',data:regLabels.map(k=>k.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())),
+      axisLabel:{fontSize:10,color:C.ink,fontWeight:500}},
+    series:[{
+      type:'bar',data:regHrs.map((v,i)=>({value:v,itemStyle:{color:regColors[regLabels[i]]||C.slate}})),
+      barWidth:'55%',
+      label:{show:true,position:'right',fontSize:10,fontWeight:700,formatter:p=>regGrades[p.dataIndex]+' ('+p.value+'%)'}
+    }]
+  });
+
+  // Scatter: per-retro regime vs HR
+  const regimeTypes = retros.map(r => {
+    const reg = (r.regime||'').toLowerCase();
+    if (reg.includes('forced')) return 'forced_override';
+    if (reg.includes('oscillat') || (reg.match(/->/g)||[]).length >= 2) return 'oscillating';
+    if (reg.includes('risk-on') && !reg.includes('risk-off')) return 'risk_on_sustained';
+    if (reg.includes('early risk-off') || reg.includes('early r-off')) return 'early_risk_off';
+    if (reg.includes('risk-off')) return 'risk_off';
+    return 'oscillating';
+  });
+  const regScatter = echarts.init(document.getElementById('chart-regime-scatter'));
+  const scatterData = retros.map((r,i) => ({
+    value: [r.hit_rate_pct, GRADE_MAP[r.grade]||0],
+    name: r.date,
+    regime: regimeTypes[i],
+    itemStyle: {color: regColors[regimeTypes[i]]||C.slate}
+  }));
+  regScatter.setOption({
+    tooltip:{formatter:p=>`<strong>${p.data.name}</strong><br/>Régime: ${p.data.regime.replace(/_/g,' ')}<br/>HR: ${p.data.value[0]}%<br/>Grade: ${retros.find(r=>r.date===p.data.name).grade}`},
+    grid:{left:50,right:20,top:20,bottom:40},
+    xAxis:{name:'Hit Rate %',nameLocation:'middle',nameGap:25,min:0,max:110,axisLabel:{fontSize:10,color:C.muted},splitLine:{lineStyle:{color:C.border,type:'dashed'}}},
+    yAxis:{name:'Grade',min:0,max:10,interval:1,axisLabel:{fontSize:9,color:C.muted,formatter:v=>['F','','D','','C','C+','B-','B','B+','A','A+'][v]||''},splitLine:{lineStyle:{color:C.border,type:'dashed'}}},
+    series:[{type:'scatter',data:scatterData,symbolSize:14,emphasis:{scale:1.5}}]
+  });
+
+  // Tables: Best / Worst
+  const allBest = retros.map(r=>({...r.best_trade,date:r.date})).filter(t=>t.ticker).sort((a,b)=>b.return_pct-a.return_pct).slice(0,10);
+  const allWorst = retros.map(r=>({...r.worst_trade,date:r.date})).filter(t=>t.ticker).sort((a,b)=>a.return_pct-b.return_pct).slice(0,10);
+  function renderTradeTable(el, trades, isBest) {
+    el.innerHTML = `<thead><tr><th>#</th><th>Ticker</th><th>Stratégie</th><th>Retour</th><th>Rétro</th></tr></thead><tbody>`+
+      trades.map((t,i)=>`<tr><td>${i+1}</td><td><strong>${t.ticker}</strong></td><td>${t.strategy||'-'}</td><td class="${isBest?'up':'down'}">${t.return_pct>=0?'+':''}${t.return_pct}%</td><td>${fmtDate(t.date)}</td></tr>`).join('')+
+      '</tbody>';
+  }
+  renderTradeTable(document.getElementById('table-best'), allBest, true);
+  renderTradeTable(document.getElementById('table-worst'), allWorst, false);
+
+  // Rules section
+  const rulesBySev = {};
+  lessons.rules.forEach(r => {
+    const s = r.severity.includes('hard') ? 'hard_block' : r.severity.includes('filter') ? 'selection_filter' : r.severity.includes('advisory') ? 'advisory' : r.severity.includes('infra') ? 'infrastructure' : r.severity.includes('deprecated') ? 'deprecated' : 'other';
+    if (!rulesBySev[s]) rulesBySev[s] = [];
+    rulesBySev[s].push(r);
+  });
+  const sevOrder = ['hard_block','selection_filter','advisory','infrastructure','deprecated'];
+  const sevLabels = {hard_block:'Hard Block',selection_filter:'Filtre Sélection',advisory:'Conseil',infrastructure:'Infrastructure',deprecated:'Obsolète'};
+  const sevClasses = {hard_block:'sev-hard',selection_filter:'sev-filter',advisory:'sev-advisory',infrastructure:'sev-infra',deprecated:'sev-dep'};
+  let rulesHtml = '';
+  sevOrder.forEach(sev => {
+    const rules = rulesBySev[sev];
+    if (!rules) return;
+    rulesHtml += `<h3 style="font-size:.85rem;font-weight:700;margin:1rem 0 .5rem;display:flex;align-items:center;gap:.4rem"><span class="sev-pill ${sevClasses[sev]}">${sevLabels[sev]}</span> <span style="color:var(--text-muted);font-weight:400;font-size:.75rem">${rules.length} règle${rules.length>1?'s':''}</span></h3>`;
+    rulesHtml += '<table class="db-table"><thead><tr><th>ID</th><th>Description</th><th>Sources</th></tr></thead><tbody>';
+    rules.forEach(r => {
+      const srcs = (r.from_retros||[]).map(d=>'<code style="font-size:.65rem">'+d+'</code>').join(' ');
+      rulesHtml += `<tr><td><code style="font-size:.72rem;font-weight:600">${r.id}</code></td><td style="max-width:500px">${r.description||r.rule||'-'}</td><td>${srcs}</td></tr>`;
+    });
+    rulesHtml += '</tbody></table>';
+  });
+  document.getElementById('rules-section').innerHTML = rulesHtml;
+
+  // History table
+  const histEl = document.getElementById('table-history');
+  histEl.innerHTML = '<thead><tr><th>Date</th><th>Note</th><th>Signaux</th><th>Résolus</th><th>HR</th><th>Retour moy.</th><th>Meilleur</th><th>Pire</th><th>Régime</th></tr></thead><tbody>'+
+    retros.map(r => {
+      const gc = gradePillClass(r.grade);
+      return `<tr>
+        <td><a href="/scanner/retrospective/${r.date.replace(/-/g,'')}/" style="color:var(--db-blue);text-decoration:none;font-weight:600">${fmtDate(r.date)}</a></td>
+        <td><span class="grade-pill ${gc}">${r.grade}</span></td>
+        <td>${r.total_signals}</td>
+        <td>${r.resolved||'-'}</td>
+        <td style="font-weight:600;color:${r.hit_rate_pct>=50?C.green:r.hit_rate_pct>=30?C.amber:C.red}">${r.hit_rate_pct}%</td>
+        <td class="${(r.avg_return_pct||0)>=0?'up':'down'}">${r.avg_return_pct>=0?'+':''}${r.avg_return_pct||0}%</td>
+        <td class="up">${r.best_trade?r.best_trade.ticker+' +'+r.best_trade.return_pct+'%':'-'}</td>
+        <td class="down">${r.worst_trade?r.worst_trade.ticker+' '+r.worst_trade.return_pct+'%':'-'}</td>
+        <td style="font-size:.72rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.regime||''}">${(r.regime||'').substring(0,40)}</td>
+      </tr>`;
+    }).join('')+
+    '</tbody>';
+
+  // Responsive resize
+  window.addEventListener('resize', () => {
+    [gradeChart, hrChart, stratChart, regimeChart, regScatter].forEach(c => c.resize());
+  });
+})();
+</script>
+</body>
+</html>

@@ -261,16 +261,100 @@ async function main() {
     console.log('  Skipping SEC EDGAR dilution check (--skip-edgar).');
   }
 
+  // ── HARD BLOCKS from scanner-lessons.json v2.0 ─────────────────────────────
+  // These rules BLOCK publication. They encode confirmed failure patterns from
+  // 17 retrospectives (285 lessons mined). No override without --force.
+
+  // 8. entry-price-spot-validation (hard_block) — catches stale cache/pre-split prices
+  for (const s of signals) {
+    if (typeof s.entry !== 'number' || typeof s.extension?.atr !== 'number') continue;
+    // Use last close from extension or fallback to entry (can't check without spot)
+    // This rule is primarily enforced at Phase 2 with live MCP spot data.
+    // validate-scan.js checks TP1 > entry > stop ordering as a proxy.
+    if (s.tp1 && s.entry >= s.tp1) {
+      violations.push({
+        rule: 'entry_price_validation',
+        message: `${s.ticker}: entry ${s.entry} >= TP1 ${s.tp1} — nonsensical setup (entry-price-spot-validation).`
+      });
+    }
+    if (s.stop && s.entry <= s.stop) {
+      violations.push({
+        rule: 'entry_price_validation',
+        message: `${s.ticker}: entry ${s.entry} <= stop ${s.stop} — inverted setup.`
+      });
+    }
+  }
+
+  // 9. degenerate-band-rejection (hard_block) — entry-stop band < 0.5× ATR
+  for (const s of signals) {
+    if (typeof s.entry !== 'number' || typeof s.stop !== 'number' || typeof s.extension?.atr !== 'number') continue;
+    if (s.extension.atr <= 0) continue;
+    const band = Math.abs(s.entry - s.stop);
+    const atrMult = band / s.extension.atr;
+    if (atrMult < 0.5) {
+      violations.push({
+        rule: 'degenerate_band',
+        message: `${s.ticker}: entry-stop band ${band.toFixed(2)} = ${atrMult.toFixed(2)}× ATR (min 0.5×) — degenerate setup guaranteed to stop out.`
+      });
+    }
+  }
+
   // ── ADVISORY CHECKS (warnings only, do NOT block publish) ─────────────────
-  // Lessons from scanner-lessons.json are SELECTION-TIME inputs at /scanner Phase 2.
-  // validate-scan.js only blocks gross errors (strategy whitelist, sector cap, stops abs %).
-  // The advisory section below surfaces lesson-rule deviations so Claude can iterate at
-  // selection time — but a passing scan with warnings still publishes.
+  // Lessons from scanner-lessons.json v2.0 are SELECTION-TIME inputs at /scanner Phase 2.
+  // validate-scan.js blocks hard errors above; advisory deviations are surfaced below
+  // so Claude can iterate — but a passing scan with warnings still publishes.
   const advisories = [];
 
-  // R/R minimum by regime (advisory)
+  // 10. tp1-horizon-calibration — TP1 too far for horizon
+  for (const s of signals) {
+    if (typeof s.entry !== 'number' || typeof s.stop !== 'number' || typeof s.tp1 !== 'number') continue;
+    const risk = Math.abs(s.entry - s.stop);
+    if (risk <= 0) continue;
+    const reward = Math.abs(s.tp1 - s.entry);
+    const rMultiple = reward / risk;
+    const horizon = s.horizon || 10;
+    const maxR = horizon <= 10 ? 1.5 : 2.0;
+    if (rMultiple > maxR + 0.1) {
+      advisories.push(`${s.ticker}: TP1 at ${rMultiple.toFixed(1)}R > max ${maxR}R for H${horizon} [tp1_horizon_calibration]`);
+    }
+  }
+
+  // 11. high-score-low-rsi-conflict — score >= 93 AND RSI < 55 = value trap
+  for (const s of signals) {
+    if (typeof s.score !== 'number' || typeof s.extension?.rsi !== 'number') continue;
+    if (s.score >= 93 && s.extension.rsi < 55) {
+      advisories.push(`${s.ticker}: score ${s.score} + RSI ${s.extension.rsi.toFixed(1)} < 55 — value trap pattern (0 winners/2 losers) [high_score_low_rsi]`);
+    }
+  }
+
+  // 12. rsi-no-mans-land-momentum — Momentum + RSI 40-50 = no edge
+  for (const s of signals) {
+    if (s.strategy !== 'Momentum' || typeof s.extension?.rsi !== 'number') continue;
+    if (s.extension.rsi >= 40 && s.extension.rsi <= 50) {
+      advisories.push(`${s.ticker}: Momentum with RSI ${s.extension.rsi.toFixed(1)} in 40-50 no-man's-land — 7:1 loser ratio [rsi_no_mans_land]`);
+    }
+  }
+
+  // 13. breakout-early-risk-off-block — Breakout in EARLY RISK-OFF
+  if (regime && String(regime).toUpperCase().includes('EARLY RISK-OFF')) {
+    for (const s of signals) {
+      if (s.strategy === 'Breakout') {
+        advisories.push(`${s.ticker}: Breakout in EARLY RISK-OFF — stopped in 3+ consecutive retros [breakout_early_risk_off]`);
+      }
+    }
+  }
+
+  // 14. overextension — distance 50-DMA > 20% for Momentum/Breakout
+  for (const s of signals) {
+    if (typeof s.extension?.distance_50dma_pct !== 'number') continue;
+    if (s.extension.distance_50dma_pct > 20 && ['Momentum', 'Breakout'].includes(s.strategy)) {
+      advisories.push(`${s.ticker}: ${s.extension.distance_50dma_pct.toFixed(1)}% above 50-DMA — overextended for ${s.strategy} [limit_high_beta_ai_infra]`);
+    }
+  }
+
+  // R/R minimum by regime (advisory) — harmonized with tp1-horizon-calibration
   const RR_MIN_BY_REGIME = {
-    'RISK-ON': 1.5, 'RECOVERY': 1.7, 'NEUTRAL': 1.7,
+    'RISK-ON': 1.5, 'RECOVERY': 1.5, 'NEUTRAL': 1.5,
     'EARLY RISK-OFF': 2.0, 'RISK-OFF': 2.0
   };
   if (regime) {
