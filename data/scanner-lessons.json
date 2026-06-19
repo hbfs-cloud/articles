@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v1.2-20260606",
-  "_updated": "2026-06-06",
+  "_version": "v1.3-20260619",
+  "_updated": "2026-06-19",
   "_source_retros": [
     "20260327",
     "20260403",
@@ -12,7 +12,8 @@
     "20260515",
     "20260522",
     "20260529",
-    "20260606"
+    "20260606",
+    "20260619"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2 (preferred path: surface better picks upstream).\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright (strategy whitelist, sector cap, scan size, sharia ETF blocklist, absolute stop %).\n\n  Philosophy: retros must FUEL the candidate selection debate at Phase 2, NOT block legitimate trades at publish time. validate-scan.js surfaces lesson-rule deviations as advisories (non-blocking warnings) so Claude can iterate at the NEXT scan — never to fail-close a scan that's already in flight.",
   "rules": [
@@ -316,6 +317,49 @@
       }
     },
     {
+      "id": "stopped-ticker-cooldown",
+      "from_retros": [
+        "20260619"
+      ],
+      "rule": "Si un ticker a été stoppé dans les 3 derniers scans, il est exclu de la sélection Phase 2 pendant 5 jours de bourse. Vérifié contre signals.json[-3] + backtest-trades.json statut 'stopped'.",
+      "rationale": "RIO stoppé 16/06 (breakout -4,13%) puis re-sélectionné 17/06 (pullback -2,65%) = -6,78% cumulé sur un seul nom. Double perte évitable. GDX aussi sélectionné 2× à -2,82% et -5,16% MtM.",
+      "applies_to": [
+        "top_10",
+        "tkl_pool"
+      ],
+      "enforced_by": "advisory — Claude checks last 3 scans signals.json + resolved trades for stopped status during Phase 2.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "gap-up-preflight-phase2",
+      "from_retros": [
+        "20260619"
+      ],
+      "rule": "Si le cours de clôture du jour dépasse l'entrée de plus de 2% au moment de la Phase 2, proposer une entrée ajustée (VWAP estimé J+1) ou exclure le setup. Cible : réduire le no-fill rate sous 15%.",
+      "rationale": "14/45 signaux (31%) en no-fill cette semaine à cause du rallye post-cessez-le-feu Iran. Les gap-ups > 2% sont prévisibles quand SPX a gagné > 2% la veille. Pré-filtrer réduit le gaspillage de slots.",
+      "applies_to": [
+        "top_10"
+      ],
+      "enforced_by": "advisory — Claude checks close vs entry spread at Phase 2 and adjusts entries proactively after major rally sessions.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "high-atr-sizing-oscillating-regime",
+      "from_retros": [
+        "20260619"
+      ],
+      "rule": "Quand le régime a changé ≥ 1× dans les 3 derniers jours scanner, réduire le sizing de ×0,7 sur les tickers avec ATR relatif > 4% (ATR/prix). Combinable avec regime-rotation-penalty.",
+      "rationale": "SAIA (ATR 22,66 = 4,8% relatif) a produit -7,01% — la plus large perte de la semaine 20260615-18. ATR élevé en dollars absolus amplifie le drawdown par position en régime oscillant.",
+      "applies_to": [
+        "top_10"
+      ],
+      "enforced_by": "advisory — Claude applies via OptimizeSizing constraint override for high-ATR tickers in oscillating regime.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
       "id": "regime-score-label-lag",
       "from_retros": [
         "20260606"
@@ -333,19 +377,19 @@
   ],
   "_open_questions": [
     {
-      "id": "momentum-regime-score-threshold",
-      "question": "Momentum 0% WR (8/8 SL) quand regime score < 50 (juin 1-3). Est-ce un seuil absolu (score < 50 → jamais Momentum) ou contextuel ? Si la prochaine semaine avec score > 70 retrouve WR Momentum > 40%, le seuil 50 est confirmé comme borne inférieure.",
-      "next_retro_check": "20260613"
-    },
-    {
-      "id": "fortress-same-day-exit-pattern",
-      "question": "Fortress a eu 2 same-day exits le 03/06 (HUBS -5%, HON -5%). Est-ce un problème de stop sizing (5% max trop serré sur H10 horizon) ou d'entrée (ouverture immédiatement adverse) ? Vérifier si le pattern se répète avec les prochains scans à score < 50.",
-      "next_retro_check": "20260613"
-    },
-    {
       "id": "mcp-gateway-quality-tag",
       "question": "Reporté de la rétro 20260529. Ajouter flag _mcp_quality dans signals.json pour pondérer l'évaluation rétro quand incidents MCP détectés.",
-      "next_retro_check": "20260620"
+      "next_retro_check": "20260627"
+    },
+    {
+      "id": "stopped-ticker-cooldown-effectiveness",
+      "question": "La règle cooldown 5j post-stop (stopped-ticker-cooldown) empêchera-t-elle les doubles pertes type RIO ? Vérifier si des cas de re-sélection post-stop apparaissent et si le cooldown les bloque.",
+      "next_retro_check": "20260627"
+    },
+    {
+      "id": "no-fill-rate-reduction",
+      "question": "Le pré-filtrage gap-up Phase 2 (gap-up-preflight-phase2) réduit-il le no-fill rate sous 15% ? Cette semaine = 31% — objectif ambitieux.",
+      "next_retro_check": "20260627"
     }
   ],
   "_closed_questions": [
@@ -362,7 +406,21 @@
       "verdict": "Reporté. Chantier infrastructure, pas de levier performance immédiat. Pas de corrélation démontrée incidents MCP ↔ performance cette semaine.",
       "resolved_at": "20260606",
       "status": "deferred",
-      "next_retro_check": "20260620"
+      "next_retro_check": "20260627"
+    },
+    {
+      "id": "momentum-regime-score-threshold",
+      "question": "Momentum 0% WR (8/8 SL) quand regime score < 50 (juin 1-3). Seuil absolu ou contextuel ?",
+      "verdict": "Confirmé contextuel. Semaine 15-18 juin : scores 42-44-40-40 (tous < 50 sauf un à 44), Momentum WR = 50% (ARM +10,40% TP1, SAIA -7,01% SL). Le seuil score < 50 n'est pas absolu — ARM en NEUTRAL 42 a délivré le 2e meilleur trade de la semaine. La clé est la qualité individuelle du setup (RSI, ATR, catalyseur), pas le score de régime seul.",
+      "resolved_at": "20260619",
+      "status": "resolved"
+    },
+    {
+      "id": "fortress-same-day-exit-pattern",
+      "question": "Fortress same-day exits — stop sizing ou timing d'entrée ?",
+      "verdict": "Non reproduit. Aucun same-day exit Fortress sur la période 15-18 juin. Le pattern semble spécifique au choc du 3 juin (score 41, 8 Momentum stops en cascade). Avec les scores 40-44 de cette semaine, le gate VWAP + diversification ont protégé. Question fermée mais à surveiller si score < 40.",
+      "resolved_at": "20260619",
+      "status": "resolved"
     },
     {
       "id": "vwap-gate-gap-up-calibration",
