@@ -1,8 +1,13 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v1.3-20260619",
+  "_version": "v2.0-20260619",
   "_updated": "2026-06-19",
   "_source_retros": [
+    "20260220",
+    "20260228",
+    "20260306",
+    "20260313",
+    "20260320",
     "20260327",
     "20260403",
     "20260410",
@@ -13,427 +18,541 @@
     "20260522",
     "20260529",
     "20260606",
+    "20260612",
     "20260619"
   ],
-  "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2 (preferred path: surface better picks upstream).\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright (strategy whitelist, sector cap, scan size, sharia ETF blocklist, absolute stop %).\n\n  Philosophy: retros must FUEL the candidate selection debate at Phase 2, NOT block legitimate trades at publish time. validate-scan.js surfaces lesson-rule deviations as advisories (non-blocking warnings) so Claude can iterate at the NEXT scan — never to fail-close a scan that's already in flight.",
+  "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright. Scan FAILS validation if violated.\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2. validate-scan.js surfaces violations as WARNINGS that should be fixed before publish.\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'infrastructure' = always-on execution logic in sweep.js/signal-monitor.js, not a selection rule.\n  - 'deprecated' = rule is no longer active, kept for historical context.\n\n  v2.0 UPGRADE NOTES (20260619 audit):\n  - Promoted regime-score-label-lag from advisory to hard_block (prevented D* grade week)\n  - Promoted rr-min-by-regime from selection_filter to hard_block (100% violation rate with zero enforcement)\n  - Promoted stopped-ticker-cooldown from selection_filter to hard_block (RIO double loss pattern)\n  - Deprecated energy-early-risk-off-sizing (redundant with energy-early-risk-off-block)\n  - Added 12 new rules from audit of 17 retros\n  - All '?' values resolved, all rules have complete field sets",
   "rules": [
     {
       "id": "stops-min-atr-multiple",
-      "from_retros": [
-        "20260327",
-        "20260515",
-        "20260522"
-      ],
-      "rule": "Stop minimum 1.5× ATR(14) du ticker. JAMAIS de stop < 3% absolu, JAMAIS > 8%.",
-      "rationale": "Pattern récurrent sur 3 rétros : stops < 1.5× ATR ont déclenché intraday avant rebond (VRT -7.9% 20260518, COP -3.5% 20260520, COST -3.0% 20260520, IBM 20260327, etc.). Régimes volatiles amplifient le problème.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
-      "enforced_by": "scanner-filters.json#stops.min_atr_multiple=1.5, min_pct_from_entry=3, max_pct_from_entry=8",
-      "validation": "validate-scan.js doit rejeter tout setup avec stop_pct < 3% ou stop_pct < 1.5*atr_pct",
+      "description": "Enforce minimum stop distance of 1.5x ATR(14) with absolute bounds of 3-8% from entry. Prevents intraday noise stops and degenerate tight/loose bands.",
+      "from_retros": ["20260327", "20260515", "20260522", "20260612", "20260619"],
+      "rule": "Stop minimum 1.5x ATR(14) du ticker. JAMAIS de stop < 3% absolu, JAMAIS > 8%. Applies to ALL strategies including Candlestick.",
+      "rationale": "Stops < 1.5x ATR triggered intraday before rebound (VRT -7.9%, COP -3.5%, COST -3.0%, IBM). Candlestick signals bypassed the check: QURE 44.66% stop, GRAF 0.55% stop published in 20260617-20260622 despite being far outside the 3-8% range.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#stops.min_atr_multiple=1.5, min_pct_from_entry=3, max_pct_from_entry=8 + validate-scan.js (must apply to ALL strategies including Candlestick)",
       "status": "active",
-      "severity": "selection_filter"
+      "severity": "hard_block"
     },
     {
       "id": "rr-min-by-regime",
-      "from_retros": [
-        "20260522"
-      ],
-      "rule": "R/R minimum (depuis entry midpoint) : RISK-ON 1:1.5, RECOVERY/NEUTRAL 1:1.7, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. Régime déterminé via RunAutoScreener#regime_score.",
-      "rationale": "R/R 1:1.5 jugé insuffisant en EARLY RISK-OFF — COP/COST/TTE setups 20260520 ont tous failed avec R/R trop courts. Régime défensif réduit la tolérance à des trades à faible asymétrie.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "validate-scan.js R/R check by regime label",
+      "description": "Enforce minimum risk/reward ratio per regime. RISK-ON 1:1.5, RECOVERY/NEUTRAL 1:1.7, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. Scan fails validation if any signal violates.",
+      "from_retros": ["20260522", "20260529", "20260619"],
+      "rule": "R/R minimum: RISK-ON 1:1.5, RECOVERY/NEUTRAL 1:1.7, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. validate-scan.js must emit VIOLATION (not advisory) when signals breach the floor.",
+      "rationale": "20260618 scan: ALL 10 signals at R/R 1:1.7 in EARLY RISK-OFF requiring 1:2.0 -- 100% violation rate with zero enforcement. validate-scan.js lines 272-284 generated ADVISORY only. The single most egregiously ignored rule in the system.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js R/R check by regime label — MUST be violation-level, not advisory",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "regime-score-label-lag",
+      "description": "When regime score drops below 50 for 2+ consecutive scans while label remains RISK-ON, treat regime as NEUTRAL effective. Block publication if label diverges 2+ levels from score-implied regime.",
+      "from_retros": ["20260606", "20260612", "20260619"],
+      "rule": "When regime label rank exceeds score-implied rank by 2+ levels, validate-scan.js emits a HARD VIOLATION blocking publication. Score < 50 with RISK-ON label = at minimum NEUTRAL; score < 40 = EARLY RISK-OFF regardless of label. 2+ consecutive scans below 50 triggers strategy weight override: Momentum capped at 20%.",
+      "rationale": "Jun 1-3 2026: score 58->47->41 but label stayed RISK-ON. 8 Momentum entries stopped in <=2 days (AMZN -3.85%, LLY -3.15%, GOOGL -2.04%, PLTR -4.83%). Jun 17: RISK-ON label with score 40 (EARLY RISK-OFF territory) passed validation as advisory only. This single change would have prevented the D* grade week (20260612) and the 8-stop cascade.",
+      "applies_to": ["top_10", "all modes"],
+      "enforced_by": "validate-scan.js regime_score_coherence check — MUST be hard violation when label diverges 2+ levels from score-implied regime",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "stopped-ticker-cooldown",
+      "description": "Block re-selection of stopped tickers for 5 trading days. Prevents compounding losses from consecutive-scan re-entries on the same name.",
+      "from_retros": ["20260619"],
+      "rule": "If a ticker was stopped in the last 3 scans, it is EXCLUDED from Phase 2 selection for 5 trading days. validate-scan.js checks signals.json[-3] + resolved trades for stopped status. Additionally, any ticker appearing in 3+ consecutive scans is blocked regardless of stop status.",
+      "rationale": "RIO stopped 16/06 (breakout -4.13%) then re-selected 17/06 (pullback -2.65%) = -6.78% cumulative on one name. GDX selected 2x at -2.82% and -5.16% MtM. SAN appeared in 4 consecutive scans. The rule was created AFTER the violation (20260619) and was only selection_filter -- audit demands hard_block.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "validate-scan.js — check last 3 scans signals.json + resolved trades for stopped status. Hard block on re-selection within 5 trading days.",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "regime-override-ensemble-block",
+      "description": "Block manual regime overrides that diverge >0.2 from ensemble model near binary catalysts. Forced RISK-ON against ensemble NEUTRAL caused the D* week.",
+      "from_retros": ["20260612"],
+      "rule": "If forced_regime_label diverges > 0.2 from ensemble probability AND a binary catalyst (FOMC, NFP, CPI, geopolitical) is within 48h, BLOCK the override. validate-scan.js must reject scans with forced regime labels.",
+      "rationale": "Jun 4 scan forced RISK-ON 0.87 against ensemble NEUTRAL, producing 15 stops on 19 resolved signals. This single override caused the worst-ever D* grade (20260612). Impact score 10 -- the most damaging single event in scanner history.",
+      "applies_to": ["top_10", "all modes"],
+      "enforced_by": "validate-scan.js — detect regime_override flag and compare to ensemble output. Hard block when divergence > 0.2 near catalysts.",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "no-short-squeeze-strategy",
+      "description": "Short Squeeze strategy is permanently banned. 0% win rate across Feb-Mar 2026 retros.",
+      "from_retros": ["20260228", "20260327"],
+      "rule": "Short Squeeze EXCLU de toutes les strategies. Strategies autorisees UNIQUEMENT: Momentum, Pre-Squeeze, Breakout, Pullback, Candlestick.",
+      "rationale": "0% WR documented across 2 consecutive months. Dead strategy.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#strategies.forbidden + validate-scan.js rule 3",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "entry-price-spot-validation",
+      "description": "Reject setups where entry price diverges >10% from current spot. Catches stale cache, pre-split prices, and data errors.",
+      "from_retros": ["20260220"],
+      "rule": "abs(entry - spot_price) / spot_price > 0.10 -> REJECT. Entry must be validated against real-time market price at Phase 2.",
+      "rationale": "25% of early setups had entry prices diverging >10% from market (ADBE at $430 vs real $260, ADP at $303 vs $216). Stale cache or pre-split prices feeding the scanner. Impact score 9.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "validate-scan.js — compare entry to last close from MCP QueryData. Hard block on >10% divergence.",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "degenerate-band-rejection",
+      "description": "Reject setups with entry-stop band < 0.5x ATR14 or where closing price at scan time already exceeds TP1 (stale entry).",
+      "from_retros": ["20260612", "20260619"],
+      "rule": "abs(entry - stop) / ATR14 < 0.5 -> REJECT. close_at_scan > tp1 -> REJECT as stale entry. FCX 0.5% band, KRSP/RDAG 2-4 cents stops produce rule-resolved trades with no predictive value.",
+      "rationale": "Degenerate stop distances produce trades resolved by noise, not signal. FCX had a 0.5% band, PAYO 0.57%, GRAF 0.55% too tight; QURE 44.66%, NMRA 46.79% too loose. The 3-8% range check was bypassed by Candlestick signals.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "validate-scan.js — ATR-relative band check + stale entry check against current close. Hard block.",
+      "status": "active",
+      "severity": "hard_block"
+    },
+    {
+      "id": "tp1-horizon-calibration",
+      "description": "TP1 must be calibrated to horizon. H10 -> TP1 at 1.5R max, H15+ -> TP1 at 2R max. Prevents unreachable targets that convert into expired-positive (money left on table).",
+      "from_retros": ["20260327", "20260403", "20260410", "20260417", "20260502", "20260522"],
+      "rule": "if horizon <= 10 then tp1_distance <= 1.5 * risk_distance; if horizon > 10 then tp1_distance <= 2.0 * risk_distance. Encode in scanner-filters.json and validate-scan.js.",
+      "rationale": "Most persistently identified gap across 6 retros. 87%+ setups expire positive without hitting TP1 in one retro. Every retro since March flagged TP1 targets as too ambitious, yet no rule existed. Converting expired-positive into TP1 hits would significantly improve the grade (Pillar 1 = Setup HR).",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "validate-scan.js — check tp1_distance / risk_distance against horizon-based cap. Advisory initially, promote to selection_filter after 2 retros of confirmed improvement.",
       "status": "active",
       "severity": "selection_filter"
     },
     {
-      "id": "regime-rotation-penalty",
-      "from_retros": [
-        "20260515",
-        "20260522"
-      ],
-      "rule": "Si le régime change ≥ 2× dans les 5 derniers jours scanner : réduire taille position 30% + élargir stops ×1.5 ATR sur tous les nouveaux setups. Détecté via comparaison data/scanner.json[-5].regime.",
-      "rationale": "Semaine 20260518-22 a connu 4 rotations RECOVERY→RISK-ON→EARLY R-OFF→RISK-ON en 5j — les Breakouts/Momentum entrés en conditions rapidement invalidées ont saigné. Volatilité de régime = facteur limitant principal depuis 3 rétros.",
-      "applies_to": [
-        "top_10",
-        "all modes"
-      ],
-      "enforced_by": "advisory — applied by Claude during Phase 2 sizing + OptimizeSizing constraint",
+      "id": "min-composite-score",
+      "description": "Minimum composite score of 80 for top 10 selection. Setups under 75 have systematically underperformed.",
+      "from_retros": ["20260228", "20260313"],
+      "rule": "score < 80 -> REJECT from top_10. If fewer than 10 candidates above 80, reduce scan size rather than dilute quality.",
+      "rationale": "Setups under score 75 have systematically underperformed across multiple retros. Quality floor prevents bottom-of-barrel picks from diluting the top 10.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check composite score >= 80 for all top 10 signals. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "correlated-pool-exposure-cap",
+      "description": "Treat correlated asset pools (crypto, metals) as single positions for sizing. Cap exposure when regime score < 50.",
+      "from_retros": ["20260612"],
+      "rule": "if regime_score < 50: max 1 crypto-momentum signal, max 2 metals signals per scan. WLD/NEAR/INJ and FCX/SCCO/COPX must be treated as correlated pools.",
+      "rationale": "WLD/NEAR/INJ (crypto) and FCX/SCCO/COPX (metals) were stopped in bloc during the same shock in the D* week. Correlated pools amplify drawdown when they move together. Impact score 8.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check correlation pool membership and enforce caps per regime score. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "sector-regime-alignment",
+      "description": "Apply score penalty (-10 to -15) to sectors misaligned with dominant regime theme. Counter-theme sectors fail systematically.",
+      "from_retros": ["20260313", "20260320", "20260327"],
+      "rule": "if regime favors energy/commodity and candidate is tech/growth breakout -> score -= 10. if regime favors tech/growth and candidate is defensive/commodity -> score -= 10. FSLR solar in oil rally, tech momentum in Risk-Off all failed.",
+      "rationale": "Counter-theme sectors fail systematically across 4 retros. FSLR solar in oil rally failed, tech momentum in Risk-Off failed. Sector-regime alignment is a necessary condition for setup success.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — apply score penalty based on regime analysis. Pending encode in validate-scan.js.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "winner-reentry-pullback-gate",
+      "description": "Require minimum 10% pullback before re-entering a ticker that was in the top 3 of the previous retro. Prevents chasing extended winners.",
+      "from_retros": ["20260306"],
+      "rule": "if ticker in top_3_previous_retro AND pullback_from_recent_high < 10% -> REJECT.",
+      "rationale": "AG re-entered at $31 after +32% run, got stopped at -11.3%. Extended winners need a meaningful pullback before re-entry offers a valid risk/reward.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check previous retro top 3 and pullback from recent high. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "vix-defensive-tilt",
+      "description": "When VIX > 28, force minimum 5/10 picks to be defensive/commodity/short-hedge. Suspend tech and EU ETF momentum until VIX < 22.",
+      "from_retros": ["20260313"],
+      "rule": "if VIX > 28: min 5 of 10 signals must be defensive/commodity/hedge sector. Tech and EU ETF momentum suspended until VIX < 22.",
+      "rationale": "VIX > 28 = Full Defensive Tilt. During Mar 3-13 Risk-Off (VIX >25), Defensive/Hedge had 100% hit rate while EU/Asia ETFs had 0%. Impact score 8.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check VIX level and enforce minimum defensive allocation. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "open-portfolio-cap",
+      "description": "When open positions >= 12, reduce new setups to 5. Portfolio crowding degrades scan quality.",
+      "from_retros": ["20260417"],
+      "rule": "if count(scanner-positions.json.open_positions) >= 12 then max_new_setups = 5.",
+      "rationale": "Apr 16 scan quality degraded from portfolio crowding. The A* grade week (20260417) was achieved with focused 50-signal scans, not 80-90 signal bloat.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check open position count before setting scan size. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "breakout-early-risk-off-block",
+      "description": "Block Breakout strategy in EARLY RISK-OFF. Institutional buyers step back and liquidity thins in risk-off transitions.",
+      "from_retros": ["20260403", "20260515", "20260529"],
+      "rule": "if early_risk_off_prob > 0.40 AND strategy == Breakout -> REJECT. Breakout in EARLY RISK-OFF produced stops in 3+ consecutive retros.",
+      "rationale": "Breakout hit rate in EARLY RISK-OFF: 0% (20260515), 0% (20260403). Institutional buyers step back during risk-off transitions, leaving breakout entries without follow-through liquidity. Impact score 7.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check regime probability and block Breakout when early_risk_off > 0.40. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "same-day-strategy-cap",
+      "description": "Cap same-strategy signals per scan: max 1 Pullback in EARLY RISK-OFF, max 2 of any single strategy in any regime.",
+      "from_retros": ["20260425"],
+      "rule": "if regime in [EARLY RISK-OFF, RISK-OFF]: max 1 Pullback per scan; any regime: max 2 of same strategy per scan.",
+      "rationale": "LLY+DE double stop on same day caused by 2 pullback entries in EARLY RISK-OFF. Correlated strategy exposure amplifies single-factor losses.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — count strategies per scan and enforce caps. Advisory.",
       "status": "active",
       "severity": "advisory"
     },
     {
+      "id": "regime-persistence-gate",
+      "description": "Check regime persistence before placing pullback entries. Transient EARLY RISK-OFF (1-2 days) creates opportunities; structural (3+ days) destroys them.",
+      "from_retros": ["20260425"],
+      "rule": "if same regime label for >= 3 consecutive sessions -> apply regime-specific strategy caps (Pullback near-zero in sustained EARLY RISK-OFF). Check signals.json[-3] for consecutive regime labels.",
+      "rationale": "Transient EARLY RISK-OFF creates pullback opportunities but structural EARLY RISK-OFF (3+ days) produces mean-reversion failures. Regime persistence matters more than regime label.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check consecutive regime labels before placing Pullback entries. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
+      "id": "repeat-pick-fatigue",
+      "description": "Penalize tickers appearing in 3+ consecutive scans. Exhausted momentum produces diminishing returns.",
+      "from_retros": ["20260327", "20260403", "20260410"],
+      "rule": "if ticker appeared in 3+ of last 5 scans -> score -= 5 * (appearances - 2). SAN in 4 consecutive scans is the reference violation.",
+      "rationale": "SAN in 4 consecutive scans, RIO/GDX in 2 consecutive scans. When a ticker fails after repeated picks, double-exposure compounds losses. Frequency across 4 retros.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check scan history and apply score penalty. Advisory.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "cyclicals-macro-context-gate",
+      "description": "Gate materials/industrials breakouts on macro alignment. CLF, FCX collapsed on tariff/China demand headwinds.",
+      "from_retros": ["20260320", "20260425"],
+      "rule": "if sector in [Materials, Industrials] AND strategy == Breakout AND macro_headwind_detected (tariff escalation, China PMI contraction, VIX > 25) -> score -= 10.",
+      "rationale": "CLF, FCX collapsed on tariff/China demand headwinds. Materials/industrials breakouts without macro tailwind are fragile. Frequency across 3 retros.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check macro context before selecting cyclical breakouts. Advisory.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "regime-rotation-penalty",
+      "description": "When regime changes 2+ times in 5 scanner days, reduce position size 30% and widen stops 1.5x ATR on all new setups.",
+      "from_retros": ["20260515", "20260522"],
+      "rule": "If regime changed >= 2x in last 5 scanner days: reduce sizing 30% + widen stops x1.5 ATR. Detected via data/scanner.json[-5].regime comparison.",
+      "rationale": "Week 20260518-22 had 4 rotations RECOVERY->RISK-ON->EARLY R-OFF->RISK-ON in 5 days. Breakouts/Momentum entered in quickly-invalidated conditions bled out. Audit found this rule is dead letter -- 20260617 scan showed no sizing reduction despite 4 regime changes across 4 consecutive scans.",
+      "applies_to": ["top_10", "all modes"],
+      "enforced_by": "validate-scan.js — detect regime change frequency and enforce sizing reduction. Must be upgraded from advisory.",
+      "status": "active",
+      "severity": "selection_filter"
+    },
+    {
       "id": "limit-high-beta-ai-infra",
-      "from_retros": [
-        "20260522"
-      ],
-      "rule": "Maximum 1 setup high-beta AI infra (Vertiv/Eaton/Modine/VRT-type) par scan en régime RECOVERY ou EARLY RISK-OFF. RISK-ON : pas de limite.",
-      "rationale": "VRT 20260518 (RECOVERY, +38% au-dessus 50-DMA, RSI 75) a crashé -7.9% same-day. Setups d'AI capex avec extension extrême sont des traps en régime instable.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "scanner-filters.json#overextension (max_distance_50dma_pct_by_strategy, max_rsi14_daily=72, min_consolidation_bars=5)",
-      "validation": "validate-scan.js doit rejeter Momentum > 20% au-dessus 50-DMA OU RSI > 72 daily",
+      "description": "Limit high-beta AI infra setups to max 1 per scan in RECOVERY or EARLY RISK-OFF. Block if RSI > 72 or distance from 50-DMA exceeds 2x strategy cap.",
+      "from_retros": ["20260522", "20260515", "20260606"],
+      "rule": "Maximum 1 high-beta AI infra setup per scan in RECOVERY/EARLY RISK-OFF. Hard block if distance_50dma_pct exceeds 2x strategy cap (ARM at 59.6% vs 20% cap = 3x limit should hard-block). RSI > 72 daily = hard block.",
+      "rationale": "VRT 20260518 (RECOVERY, +38% above 50-DMA, RSI 75) crashed -7.9%. ARM at 59.6% above 50-DMA (cap 20% for Momentum) published without block. INTC at 34.1% (cap 25%), HIMS at 34.8% -- all published without block. The overextension checks generate advisory only, never violations.",
+      "applies_to": ["top_10"],
+      "enforced_by": "scanner-filters.json#overextension + validate-scan.js — hard violation tier when distance exceeds 2x strategy cap",
       "status": "active",
       "severity": "selection_filter"
     },
     {
       "id": "trailing-stop-delay",
-      "from_retros": [
-        "20260515"
-      ],
-      "rule": "Trailing stop ne s'active pas avant 50% du parcours vers TP1 quand R/R initial ≥ 1:2.4. Sur PANW 20260518 (R/R 1:2.4, entry $236 → +2.5% le 19/05), un trailing prématuré aurait sorti à BE sans capturer la suite.",
-      "rationale": "Trailing trop précoce sur breakouts à fort R/R coupe la queue de distribution. Règle déjà encodée dans mode-config v5.2+ pour balanced/secured.",
-      "applies_to": [
-        "all modes"
-      ],
+      "description": "Trailing stop does not activate before 50% of the path to TP1 when initial R/R >= 1:2.4. Prevents premature exit on strong breakouts.",
+      "from_retros": ["20260515"],
+      "rule": "Trailing stop ne s'active pas avant 50% du parcours vers TP1 quand R/R initial >= 1:2.4.",
+      "rationale": "Trailing too early on high-R/R breakouts cuts the distribution tail. Already encoded in modes-config v5.2+ for balanced/secured. Working as designed but not verifiable from signals.json alone.",
+      "applies_to": ["all modes"],
       "enforced_by": "modes-config.json (sweep-optimized trail params per mode)",
       "status": "active",
       "severity": "advisory"
     },
     {
       "id": "momentum-favored-risk-on",
-      "from_retros": [
-        "20260425",
-        "20260522"
-      ],
-      "rule": "En régime RISK-ON continu (≥ 2 jours), favoriser Momentum (45% target weight) > Breakout (30%). En EARLY RISK-OFF, inverser : Breakout 40%, Pullback 30%, Momentum 20%.",
-      "rationale": "Retro 20260425 a montré Momentum > Breakout sous RISK-ON continu (HR Momentum 65%, Breakout 45%). Retro 20260522 confirme : 4 Momentum sur top 10 ont surperformé les 2 Breakouts en RISK-ON terminal vendredi.",
-      "applies_to": [
-        "top_10 strategy mix"
-      ],
-      "enforced_by": "advisory — Claude aligns regime_strategy_weights with regime detected",
+      "description": "In sustained RISK-ON (2+ days), target 45% Momentum / 30% Breakout. In EARLY RISK-OFF, invert: 40% Breakout, 30% Pullback, 20% Momentum.",
+      "from_retros": ["20260425", "20260522", "20260619"],
+      "rule": "RISK-ON continu >= 2j: Momentum 45%, Breakout 30%. EARLY RISK-OFF: Breakout 40%, Pullback 30%, Momentum 20%. Claude MUST respect these weights -- audit found 80% Momentum in EARLY RISK-OFF (20260618) vs 20% target.",
+      "rationale": "Retro 20260425: Momentum > Breakout under sustained RISK-ON (HR 65% vs 45%). But 20260617-18: 60-80% Momentum allocation in weak regimes (score 40) completely ignored the regime-based weights. Claude overrides these weights without consequence.",
+      "applies_to": ["top_10 strategy mix"],
+      "enforced_by": "validate-scan.js — surface strategy weight deviation as advisory. Claude Phase 2 alignment.",
       "status": "active",
-      "severity": "advisory"
+      "severity": "selection_filter"
     },
     {
       "id": "pre-squeeze-early-risk-off",
-      "from_retros": [
-        "20260502"
-      ],
-      "rule": "Pre-Squeeze est SOUS-EXPLOITÉ en EARLY RISK-OFF. Si régime = EARLY RISK-OFF et compression volatilité détectée (bbw < hhv20(bbw)*0.6), allouer 25% du top 10 à Pre-Squeeze.",
-      "rationale": "Rétro 20260502 a montré Pre-Squeeze HR 70% en EARLY RISK-OFF — meilleure stratégie du régime, mais sous-représentée dans les scans (3 occurrences sur 50 setups la semaine 20260427-01).",
-      "applies_to": [
-        "top_10 strategy mix"
-      ],
-      "enforced_by": "advisory — Claude prioritizes Pre-Squeeze candidates from RunAutoScreener when regime = EARLY RISK-OFF",
+      "description": "Allocate 25% of top 10 to Pre-Squeeze when regime is EARLY RISK-OFF and volatility compression detected.",
+      "from_retros": ["20260502"],
+      "rule": "Si regime = EARLY RISK-OFF et compression volatilite detectee (bbw < hhv20(bbw)*0.6), allouer 25% du top 10 a Pre-Squeeze.",
+      "rationale": "Retro 20260502: Pre-Squeeze HR 70% in EARLY RISK-OFF -- best strategy for that regime. But 20260618 is EARLY RISK-OFF with 0/10 Pre-Squeeze signals. Rule has never been enforced in recent scans.",
+      "applies_to": ["top_10 strategy mix"],
+      "enforced_by": "validate-scan.js — surface Pre-Squeeze underallocation as advisory when regime is EARLY RISK-OFF",
       "status": "active",
-      "severity": "advisory"
+      "severity": "selection_filter"
     },
     {
       "id": "earnings-window-strict",
-      "from_retros": [
-        "20260403"
-      ],
-      "rule": "Aucun ticker avec earnings dans ±3 jours de bourse. Pas de tag 'earnings risk', DISQUALIFICATION dure.",
-      "rationale": "TimesFM accuracy chute à 40% (vs 56% baseline) près des earnings. Multiple retros ont confirmé hit rate désastreux sur setups près du print.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
-      "enforced_by": "scanner-filters.json#earnings_window + GetEarningsCalendarFiltered cross-check",
-      "validation": "validate-scan.js doit rejeter tout setup avec report_date dans exclusion_window",
+      "description": "Hard disqualification for any ticker with earnings within 3 trading days. No exceptions.",
+      "from_retros": ["20260403"],
+      "rule": "Aucun ticker avec earnings dans +/-3 jours de bourse. DISQUALIFICATION dure.",
+      "rationale": "TimesFM accuracy drops to 40% (vs 56% baseline) near earnings. Multiple retros confirmed disastrous hit rate on setups near the print. Working as intended -- all recent signals have earnings_clear=true.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "scanner-filters.json#earnings_window + GetEarningsCalendarFiltered cross-check + validate-scan.js",
       "status": "active",
       "severity": "selection_filter"
     },
     {
       "id": "dilution-block-toxic-underwriters",
-      "from_retros": [
-        "20260406"
-      ],
-      "rule": "DISQUALIFICATION immédiate si recent SEC filing (S-1, S-3, 424B) < 90 jours mentionne aggressive underwriter (H.C. Wainwright, Maxim, Roth Capital, Ladenburg, Dawson James, Aegis, EF Hutton, Boustead).",
-      "rationale": "INDO 20260406 a dilué 80% du float dans les 30j suivants — fund toxique + warrants ITM. Pattern récurrent sur micro/small-caps.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
+      "description": "Immediate disqualification if recent SEC filing (<90 days) mentions aggressive underwriters. Prevents micro/small-cap dilution traps.",
+      "from_retros": ["20260406"],
+      "rule": "DISQUALIFICATION immediate si SEC filing (S-1, S-3, 424B) < 90j mentionne aggressive underwriter (H.C. Wainwright, Maxim, Roth Capital, Ladenburg, Dawson James, Aegis, EF Hutton, Boustead).",
+      "rationale": "INDO 20260406 diluted 80% of float within 30 days -- toxic fund + ITM warrants. Working as intended -- all recent signals have dilution_clear=true.",
+      "applies_to": ["top_10", "tkl_pool"],
       "enforced_by": "scanner-filters.json#dilution_blocklist + QueryData types=sec_filings,flags",
-      "validation": "validate-scan.js doit rejeter si flags.aggressive_underwriter=true OR dilution_risk_score >= 70",
       "status": "active",
       "severity": "selection_filter"
     },
     {
-      "id": "no-short-squeeze-strategy",
-      "from_retros": [
-        "20260327"
-      ],
-      "rule": "Short Squeeze EXCLU de toutes les stratégies (0% win rate Feb-Mar 2026 sur retros). Stratégies autorisées UNIQUEMENT : Momentum, Pre-Squeeze, Breakout, Pullback.",
-      "rationale": "0% WR documenté sur 2 mois consécutifs. Stratégie morte.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
-      "enforced_by": "scanner-filters.json#strategies.forbidden",
-      "validation": "validate-scan.js rejects Short Squeeze label (rule 3)",
-      "status": "active",
-      "severity": "hard_block"
-    },
-    {
       "id": "vwap-entry-gate",
-      "from_retros": [
-        "validated-by-sweep-2026-04"
-      ],
-      "rule": "Entry effective = min(open_next_session, VWAP_next_session) clamped à day_low (no-lookahead). Si open > entry_high * 1.02, fill uniquement à VWAP pullback.",
-      "rationale": "Sweep optimization validée +29% PnL, +16pp WR, 2.5× PF (commit 91596bd9). Évite gap-up traps systématiquement.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
+      "description": "Entry effective = min(open_next_session, VWAP_next_session) clamped to day_low. Gap-up > 2% triggers VWAP pullback fill only.",
+      "from_retros": ["20260403", "20260619"],
+      "rule": "Entry effective = min(open_next_session, VWAP_next_session) clamped a day_low. Si open > entry_high * 1.02, fill uniquement a VWAP pullback.",
+      "rationale": "Sweep optimization validated +29% PnL, +16pp WR, 2.5x PF (commit 91596bd9). Protected the book from 14 gap-up traps in 20260619 retro (31% no-fill rate). Always-on infrastructure.",
+      "applies_to": ["top_10", "tkl_pool"],
       "enforced_by": "sweep.js + signal-monitor.js + portfolio API (always-on, not grid-searched)",
       "status": "active",
       "severity": "infrastructure"
     },
     {
       "id": "diversification-floor",
-      "from_retros": [
-        "accumulated"
-      ],
-      "rule": "Diversification minimum sur top 10 : 5 US + 2 EU + 1 APAC + 2 ETFs. Max 3 setups par secteur (sector_map). Max 3 repeats vs scan précédent.",
-      "rationale": "Concentration sectorielle = principal vecteur de drawdown corrélé. Encodé pour limiter le tail risk.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "scanner-filters.json#diversification + validate-scan.js max_per_sector (hard block); min country counts surfaced as advisory",
-      "validation": "validate-scan.js rule 6 hard-blocks max_per_sector violations; min US/EU/APAC/ETF counts emitted as warnings",
+      "description": "Minimum diversification: 5 US + 2 EU + 1 APAC + 2 ETFs, max 3 per sector, max 3 repeats vs previous scan.",
+      "from_retros": ["20260220", "20260228", "20260313"],
+      "rule": "Top 10: 5 US + 2 EU + 1 APAC + 2 ETFs. Max 3 setups par secteur. Max 3 repeats vs scan precedent.",
+      "rationale": "Sector concentration = principal correlated drawdown vector. max_per_sector is hard_block; country floors are selection_filter.",
+      "applies_to": ["top_10"],
+      "enforced_by": "scanner-filters.json#diversification + validate-scan.js rule 6 (max_per_sector=hard_block, country_floors=advisory)",
       "status": "active",
       "severity": "mixed (max_per_sector=hard_block, country_floors=selection_filter)"
     },
     {
       "id": "energy-early-risk-off-block",
-      "from_retros": [
-        "20260515",
-        "20260522",
-        "20260529"
-      ],
-      "rule": "DISQUALIFIER tout setup Energy (sector_map = Energy) quand GetRegimeProbability montre early_risk_off > 0.30. Applicable à Momentum ET Breakout sur tickers Energy.",
-      "rationale": "3ème rétro consécutive : COP -3.51% (20260520), TTE -2.47% (20260520), plus patterns similaires 20260515 et 20260522. Pétrole crashe systématiquement dans les fenêtres EARLY RISK-OFF. Secteur Energy = -5.98% de pertes évitables sur cette seule période.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
-      "enforced_by": "Claude Phase 2 — check GetRegimeProbability early_risk_off probability, cross-ref sector_map. Pending encode in validate-scan.js.",
-      "validation": "pending-implementation — needs regime-aware sector block in validate-scan.js",
+      "description": "Disqualify all Energy sector setups when early_risk_off probability > 0.30. Energy crashes systematically in EARLY RISK-OFF windows.",
+      "from_retros": ["20260515", "20260522", "20260529"],
+      "rule": "DISQUALIFIER tout setup Energy quand GetRegimeProbability early_risk_off > 0.30.",
+      "rationale": "3 consecutive retros: COP -3.51%, TTE -2.47%, plus similar patterns. Energy sector = -5.98% avoidable losses. 20260618 EARLY RISK-OFF had no energy signals, suggesting Claude applied the rule, but validate-scan.js has no safety net.",
+      "applies_to": ["top_10", "tkl_pool"],
+      "enforced_by": "validate-scan.js — regime-aware sector block needed. Currently Claude Phase 2 only.",
       "status": "active",
       "severity": "selection_filter"
     },
     {
       "id": "gap-up-pullback-entry",
-      "from_retros": [
-        "20260529",
-        "20260606"
-      ],
-      "rule": "En RISK-ON > 70 confidence, si open > entry_high * 1.01, attendre un pullback intraday de -0.3% depuis l'open avant d'entrer. Évite les gap-up traps qui produisent des breakevens.",
-      "rationale": "RISK-ON 85 (May 26-28) a produit majoritairement des breakevens — entries trop tardives après gap-ups. 40% BE rate sur la période est anormalement élevé. Le VWAP gate protège déjà mais insuffisamment quand le gap est modéré (+1-2%). UPDATE 20260606: BE rate 0% sur la période suivante (balanced/fortress), confirmant que le 40% était spécifique à l'oscillation régime mai 19-29, pas un pattern structurel. Règle reste active comme garde mais urgence réduite.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "advisory — Claude mentions in setup thesis when gap-up risk is elevated. Infrastructure pending for sweep.js gap-up filter.",
+      "description": "In high-confidence RISK-ON (>70), wait for -0.3% intraday pullback before entering gap-up setups. Urgency reduced after 0% BE rate follow-up.",
+      "from_retros": ["20260529", "20260606"],
+      "rule": "En RISK-ON > 70 confidence, si open > entry_high * 1.01, attendre pullback -0.3% depuis l'open.",
+      "rationale": "RISK-ON 85 (May 26-28) produced mostly breakevens. UPDATE 20260606: BE rate 0% on following period, confirming 40% was specific to May regime oscillation. Rule active as guard but urgency reduced. No infrastructure implementation.",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude mentions gap-up risk in setup thesis. No sweep.js implementation.",
       "status": "active",
       "severity": "advisory"
     },
     {
       "id": "mega-cap-regime-oscillation",
-      "from_retros": [
-        "20260529"
-      ],
-      "rule": "Quand le régime a changé ≥ 2× dans les 5 derniers jours scanner, augmenter le seuil mcap minimum à $50B et réduire l'allocation commodity/small-cap à max 1 par scan.",
-      "rationale": "TSM (+6.35%), MS (+5.33%), ARM (+4.22%) = top 3 de la période, tous mega-caps. COP, TTE (commodities), BTBT (small-cap) = les 3 pires. Les mega-caps avec drivers séculaires (AI semis, M&A banking) survivent aux oscillations de régime, les cycliques non.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "advisory — Claude checks regime change count via data/scanner.json[-5] and adjusts mcap floor + commodity allocation during Phase 2.",
+      "description": "When regime oscillated 2+ times in 5 days, raise mcap floor to $50B and cap commodity/small-cap to max 1 per scan.",
+      "from_retros": ["20260529", "20260619"],
+      "rule": "Quand regime change >= 2x dans 5 derniers jours: mcap minimum $50B, commodity/small-cap max 1 par scan.",
+      "rationale": "TSM (+6.35%), MS (+5.33%), ARM (+4.22%) = top 3, all mega-caps. COP, TTE (commodities), BTBT (small-cap) = worst 3. HIMS ($7.5B) selected in 20260618 during regime oscillation. RBLX ($28B) selected in 20260617. Multiple sub-$50B names pass through. Audit recommends upgrade to selection_filter.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check regime change count and adjust mcap floor. Must be upgraded from advisory.",
       "status": "active",
-      "severity": "advisory"
+      "severity": "selection_filter"
     },
     {
       "id": "pullback-regime-confidence-gate",
-      "from_retros": [
-        "20260529"
-      ],
-      "rule": "Stratégie Pullback UNIQUEMENT si regime confidence > 60% (GetRegimeProbability current_state_confidence). En régime oscillant (confidence < 60%), Pullback → remplacer par Momentum ou Breakout.",
-      "rationale": "Pullback 0% WR sur la période 20260519-29. Seuls des breakevens defensifs (JPM). En régime oscillant, les pullbacks font face au mean-reversion risk — les entrées en repli ne rebondissent pas car le régime peut se dégrader davantage.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "advisory — Claude gates Pullback strategy at Phase 2 behind regime confidence check.",
+      "description": "Pullback strategy only allowed when regime confidence > 60%. In oscillating regime, replace Pullback with Momentum or Breakout.",
+      "from_retros": ["20260529", "20260619"],
+      "rule": "Pullback UNIQUEMENT si regime confidence > 60%. En regime oscillant (confidence < 60%), Pullback -> remplacer par Momentum ou Breakout.",
+      "rationale": "Pullback 0% WR on 20260519-29. RIO Pullback in 20260617 with regime score 40 (well below 60% confidence) -- the rule should have blocked this but was ignored. Audit recommends upgrade from advisory.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check regime confidence and block Pullback below 60%. Selection filter.",
       "status": "active",
-      "severity": "advisory"
-    },
-    {
-      "id": "energy-early-risk-off-sizing",
-      "from_retros": [
-        "20260529"
-      ],
-      "rule": "Si EARLY RISK-OFF détecté ET tickers Energy/cycliques encore présents (par exception manuelle), réduire sizing de x0.7 à x0.5 pour ces tickers spécifiquement.",
-      "rationale": "Le regime-rotation-penalty existant (x0.7 global) était insuffisant pour energy spécifiquement. COP et TTE ont été stoppés malgré le penalty — sizing x0.5 aurait réduit la perte de -5.98% à -2.99%.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "advisory — Claude applies via OptimizeSizing constraint override for energy sector in EARLY RISK-OFF.",
-      "status": "active",
-      "severity": "advisory"
+      "severity": "selection_filter"
     },
     {
       "id": "high-score-low-rsi-conflict",
-      "description": "Reject signals with score >= 93 AND RSI14 < 55. High score + weak price action = value trap. Evidence: 0 winners, 2 losers on resolved trades. Zero false positives.",
-      "severity": "selection_filter",
-      "filter": "score >= 93 AND rsi14 < 55 → REJECT",
-      "from_retros": [
-        "backtest-v8-20260604"
-      ],
-      "evidence": {
-        "trades_tested": 229,
-        "losers_saved": 2,
-        "winners_lost": 0
-      }
+      "description": "Reject signals with score >= 93 AND RSI14 < 55. High score + weak price action = value trap.",
+      "from_retros": ["20260604"],
+      "rule": "score >= 93 AND rsi14 < 55 -> REJECT.",
+      "rationale": "Backtest v8: 0 winners, 2 losers on resolved trades matching this pattern. Zero false positives. Narrow but functional.",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check score/RSI combination. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
     },
     {
       "id": "rsi-no-mans-land-momentum",
-      "description": "For Momentum strategy, reject if RSI14 between 40-50. Directional limbo, no momentum edge. 7:1 ratio. EXCEPTION: skip for turbo (LMT false positive).",
-      "severity": "selection_filter",
-      "filter": "strategy == Momentum AND rsi14 in [40,50] → REJECT (except turbo)",
-      "from_retros": [
-        "backtest-v8-20260604"
-      ],
-      "evidence": {
-        "losers_saved": 7,
-        "winners_lost": 1
-      }
+      "description": "For Momentum strategy, reject if RSI14 between 40-50. Directional limbo with no momentum edge.",
+      "from_retros": ["20260604"],
+      "rule": "strategy == Momentum AND rsi14 in [40,50] -> REJECT (except turbo mode).",
+      "rationale": "Backtest v8: 7 losers saved, 1 winner lost (7:1 ratio). EXCEPTION: skip for turbo (LMT false positive).",
+      "applies_to": ["top_10"],
+      "enforced_by": "validate-scan.js — check RSI for Momentum signals. Selection filter.",
+      "status": "active",
+      "severity": "selection_filter"
     },
     {
       "id": "tkl-momentum-quality-gate",
-      "description": "TKL pool: minimum price $5, score >= 88. Prevents penny stock day-1 blowups. 8 day-1 SLs at avg -7% = -5.63% portfolio.",
-      "severity": "selection_filter",
-      "filter": "source == tkl_pool AND (price < 5 OR score < 88) → REJECT",
-      "from_retros": [
-        "backtest-v8-20260604"
-      ],
-      "evidence": {
-        "day1_blowups_saved": 8,
-        "portfolio_impact": "+5.63%"
-      }
-    },
-    {
-      "id": "stopped-ticker-cooldown",
-      "from_retros": [
-        "20260619"
-      ],
-      "rule": "Si un ticker a été stoppé dans les 3 derniers scans, il est exclu de la sélection Phase 2 pendant 5 jours de bourse. Vérifié contre signals.json[-3] + backtest-trades.json statut 'stopped'.",
-      "rationale": "RIO stoppé 16/06 (breakout -4,13%) puis re-sélectionné 17/06 (pullback -2,65%) = -6,78% cumulé sur un seul nom. Double perte évitable. GDX aussi sélectionné 2× à -2,82% et -5,16% MtM.",
-      "applies_to": [
-        "top_10",
-        "tkl_pool"
-      ],
-      "enforced_by": "advisory — Claude checks last 3 scans signals.json + resolved trades for stopped status during Phase 2.",
+      "description": "TKL pool minimum quality: price >= $5, score >= 88. Prevents penny stock day-1 blowups.",
+      "from_retros": ["20260604"],
+      "rule": "source == tkl_pool AND (price < 5 OR score < 88) -> REJECT.",
+      "rationale": "Backtest v8: 8 day-1 stop-losses at avg -7% = -5.63% portfolio impact prevented.",
+      "applies_to": ["tkl_pool"],
+      "enforced_by": "validate-scan.js — check price and score for TKL pool signals. Selection filter.",
       "status": "active",
       "severity": "selection_filter"
     },
     {
       "id": "gap-up-preflight-phase2",
-      "from_retros": [
-        "20260619"
-      ],
-      "rule": "Si le cours de clôture du jour dépasse l'entrée de plus de 2% au moment de la Phase 2, proposer une entrée ajustée (VWAP estimé J+1) ou exclure le setup. Cible : réduire le no-fill rate sous 15%.",
-      "rationale": "14/45 signaux (31%) en no-fill cette semaine à cause du rallye post-cessez-le-feu Iran. Les gap-ups > 2% sont prévisibles quand SPX a gagné > 2% la veille. Pré-filtrer réduit le gaspillage de slots.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "advisory — Claude checks close vs entry spread at Phase 2 and adjusts entries proactively after major rally sessions.",
+      "description": "If closing price exceeds entry by >2% at Phase 2 time, adjust entry to estimated VWAP J+1 or exclude. Reduces no-fill waste.",
+      "from_retros": ["20260619"],
+      "rule": "Si close > entry * 1.02 au moment Phase 2, proposer entree ajustee (VWAP estime J+1) ou exclure. Cible: no-fill rate < 15%.",
+      "rationale": "14/45 signals (31%) no-fill due to Iran ceasefire rally. Gap-ups > 2% are predictable when SPX gained > 2% the prior day. Pre-filtering reduces slot waste. No infrastructure implementation yet.",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude checks close vs entry spread at Phase 2.",
       "status": "active",
       "severity": "advisory"
     },
     {
       "id": "high-atr-sizing-oscillating-regime",
-      "from_retros": [
-        "20260619"
-      ],
-      "rule": "Quand le régime a changé ≥ 1× dans les 3 derniers jours scanner, réduire le sizing de ×0,7 sur les tickers avec ATR relatif > 4% (ATR/prix). Combinable avec regime-rotation-penalty.",
-      "rationale": "SAIA (ATR 22,66 = 4,8% relatif) a produit -7,01% — la plus large perte de la semaine 20260615-18. ATR élevé en dollars absolus amplifie le drawdown par position en régime oscillant.",
-      "applies_to": [
-        "top_10"
-      ],
-      "enforced_by": "advisory — Claude applies via OptimizeSizing constraint override for high-ATR tickers in oscillating regime.",
+      "description": "Reduce sizing by 0.7x on tickers with ATR relative > 4% when regime oscillated in last 3 days.",
+      "from_retros": ["20260619"],
+      "rule": "Quand regime change >= 1x dans 3 derniers jours: sizing x0.7 sur tickers ATR/prix > 4%.",
+      "rationale": "SAIA (ATR 22.66 = 4.8% relative) produced -7.01% -- largest loss of week 20260615-18. High absolute ATR amplifies per-position drawdown in oscillating regime. No enforcement metadata visible in signals.",
+      "applies_to": ["top_10"],
+      "enforced_by": "advisory — Claude applies via OptimizeSizing constraint override.",
       "status": "active",
       "severity": "advisory"
     },
     {
-      "id": "regime-score-label-lag",
-      "from_retros": [
-        "20260606"
-      ],
-      "rule": "Quand le regime score descend sous 50 pendant ≥ 2 scans consécutifs alors que le label reste RISK-ON, traiter le régime comme NEUTRAL effectif pour la sélection Phase 2. Réduire allocation Momentum à 20%, favoriser Breakout (40%) et Pullback (30%).",
-      "rationale": "Juin 1-3 2026 — score 58→47→41 mais label resté RISK-ON. 8 entrées Momentum en Fortress stoppées en ≤2 jours (AMZN -3.85%, LLY -3.15%, GOOGL -2.04%, PLTR -4.83%, SPOT -2.15%, HUBS -5%, HON -5%, NVDA -4%). Le label a retardé de 3 jours par rapport au score, causant une cascade de SL. La règle existante 'regime-rotation-penalty' ne couvre pas ce cas car il n'y a pas eu de changement de label — seulement une érosion du score.",
-      "applies_to": [
-        "top_10",
-        "all modes"
-      ],
-      "enforced_by": "advisory — Claude checks signals.json[-2:] regime scores during Phase 0/2. If both < 50, override strategy weights regardless of label.",
-      "status": "active",
-      "severity": "advisory"
+      "id": "energy-early-risk-off-sizing",
+      "description": "DEPRECATED: Reduce energy sizing to x0.5 in EARLY RISK-OFF. Redundant with energy-early-risk-off-block which prevents energy entirely.",
+      "from_retros": ["20260529"],
+      "rule": "Si EARLY RISK-OFF ET tickers Energy encore presents, sizing x0.5.",
+      "rationale": "Redundant. If energy-early-risk-off-block works, energy never appears and this rule never triggers. If the block fails, this advisory also fails. Audit recommends removal.",
+      "applies_to": ["top_10"],
+      "enforced_by": "deprecated — superseded by energy-early-risk-off-block",
+      "status": "deprecated",
+      "severity": "deprecated"
     }
   ],
   "_open_questions": [
     {
       "id": "mcp-gateway-quality-tag",
-      "question": "Reporté de la rétro 20260529. Ajouter flag _mcp_quality dans signals.json pour pondérer l'évaluation rétro quand incidents MCP détectés.",
+      "question": "Ajouter flag _mcp_quality dans signals.json pour ponderer l'evaluation retro quand incidents MCP detectes.",
       "next_retro_check": "20260627"
     },
     {
       "id": "stopped-ticker-cooldown-effectiveness",
-      "question": "La règle cooldown 5j post-stop (stopped-ticker-cooldown) empêchera-t-elle les doubles pertes type RIO ? Vérifier si des cas de re-sélection post-stop apparaissent et si le cooldown les bloque.",
+      "question": "La regle cooldown 5j post-stop (stopped-ticker-cooldown) -- maintenant hard_block -- bloque-t-elle effectivement les doubles pertes? Verifier que validate-scan.js rejette les scans violant la regle.",
       "next_retro_check": "20260627"
     },
     {
       "id": "no-fill-rate-reduction",
-      "question": "Le pré-filtrage gap-up Phase 2 (gap-up-preflight-phase2) réduit-il le no-fill rate sous 15% ? Cette semaine = 31% — objectif ambitieux.",
+      "question": "Le pre-filtrage gap-up Phase 2 (gap-up-preflight-phase2) reduit-il le no-fill rate sous 15%? Semaine 20260619 = 31%.",
       "next_retro_check": "20260627"
+    },
+    {
+      "id": "regime-hard-block-impact",
+      "question": "Les promotions hard_block de regime-score-label-lag et rr-min-by-regime reduisent-elles le taux de cascades de stops? Comparer grades pre/post v2.0.",
+      "next_retro_check": "20260627"
+    },
+    {
+      "id": "candlestick-stop-validation",
+      "question": "Candlestick signals are confirmed to bypass stops validation (QURE 44.66%, GRAF 0.55% published). Does validate-scan.js exclude Candlestick from the strategy whitelist, or is the stops check itself bypassed?",
+      "next_retro_check": "20260627"
+    },
+    {
+      "id": "tp1-calibration-hit-rate-improvement",
+      "question": "Does the tp1-horizon-calibration rule (H10->1.5R, H15+->2R) improve TP1 hit rate measurably? Compare expired-positive rate before/after.",
+      "next_retro_check": "20260704"
+    },
+    {
+      "id": "correlated-pool-detection",
+      "question": "Is the correlated-pool-exposure-cap rule detecting correlation pools automatically, or does it rely on a hardcoded list? Need dynamic correlation detection for new asset classes.",
+      "next_retro_check": "20260704"
     }
   ],
   "_closed_questions": [
     {
       "id": "tkl-pool-rsi-ceiling",
-      "question": "Faut-il abaisser le plafond RSI TKL pool de 75 à 70 ?",
-      "verdict": "Non justifié. Pertes TKL récentes (CRDO RSI=64.7 → -8.02%, KVYO RSI=60 → -5.03%) viennent d'entrées bien sous 70. Baisser le plafond n'aurait rien changé. Pertes dues au stress marché général.",
+      "question": "Faut-il abaisser le plafond RSI TKL pool de 75 a 70?",
+      "verdict": "Non justifie. Pertes TKL recentes (CRDO RSI=64.7, KVYO RSI=60) viennent d'entrees bien sous 70. Baisser le plafond n'aurait rien change.",
       "resolved_at": "20260606",
       "status": "resolved"
     },
     {
-      "id": "mcp-gateway-quality-tag",
-      "question": "Ajouter un flag `_mcp_quality` dans signals.json ?",
-      "verdict": "Reporté. Chantier infrastructure, pas de levier performance immédiat. Pas de corrélation démontrée incidents MCP ↔ performance cette semaine.",
+      "id": "mcp-gateway-quality-tag-deferred",
+      "question": "Ajouter un flag _mcp_quality dans signals.json?",
+      "verdict": "Reporte. Chantier infrastructure, pas de levier performance immediat.",
       "resolved_at": "20260606",
       "status": "deferred",
       "next_retro_check": "20260627"
     },
     {
       "id": "momentum-regime-score-threshold",
-      "question": "Momentum 0% WR (8/8 SL) quand regime score < 50 (juin 1-3). Seuil absolu ou contextuel ?",
-      "verdict": "Confirmé contextuel. Semaine 15-18 juin : scores 42-44-40-40 (tous < 50 sauf un à 44), Momentum WR = 50% (ARM +10,40% TP1, SAIA -7,01% SL). Le seuil score < 50 n'est pas absolu — ARM en NEUTRAL 42 a délivré le 2e meilleur trade de la semaine. La clé est la qualité individuelle du setup (RSI, ATR, catalyseur), pas le score de régime seul.",
+      "question": "Momentum 0% WR (8/8 SL) quand regime score < 50. Seuil absolu ou contextuel?",
+      "verdict": "Confirme contextuel. ARM en NEUTRAL 42 a delivre le 2e meilleur trade de la semaine. La cle est la qualite individuelle du setup, pas le score de regime seul.",
       "resolved_at": "20260619",
       "status": "resolved"
     },
     {
       "id": "fortress-same-day-exit-pattern",
-      "question": "Fortress same-day exits — stop sizing ou timing d'entrée ?",
-      "verdict": "Non reproduit. Aucun same-day exit Fortress sur la période 15-18 juin. Le pattern semble spécifique au choc du 3 juin (score 41, 8 Momentum stops en cascade). Avec les scores 40-44 de cette semaine, le gate VWAP + diversification ont protégé. Question fermée mais à surveiller si score < 40.",
+      "question": "Fortress same-day exits -- stop sizing ou timing d'entree?",
+      "verdict": "Non reproduit. Aucun same-day exit Fortress sur la periode 15-18 juin. Pattern specifique au choc du 3 juin.",
       "resolved_at": "20260619",
       "status": "resolved"
     },
     {
       "id": "vwap-gate-gap-up-calibration",
       "question": "VWAP gate gap-up variant needed?",
-      "verdict": "Non confirmé. Analyse entry/VWAP montre que le gate fonctionne — entries à ±0.5% du VWAP. BE rate tombé à 0% (vs 40% période précédente). Le problème était lié à l'oscillation régime, pas au VWAP gate.",
+      "verdict": "Non confirme. Gate fonctionne -- entries a +/-0.5% du VWAP. BE rate tombe a 0%.",
       "resolved_at": "20260606",
       "status": "resolved"
     },
     {
       "id": "breakeven-rate-persistence",
-      "question": "40% BE rate persistent ou spécifique ?",
-      "verdict": "Non persistant. BE rates depuis dernière rétro : balanced 0%, fortress 0%, TKL 14% (1/7). Le 40% était spécifique à la semaine d'oscillation régime (mai 19-29). Pas besoin d'encoder gap-up pullback entry comme infrastructure rule.",
+      "question": "40% BE rate persistent ou specifique?",
+      "verdict": "Non persistant. BE rates: balanced 0%, fortress 0%, TKL 14%. Specifique a la semaine d'oscillation regime (mai 19-29).",
       "resolved_at": "20260606",
+      "status": "resolved"
+    },
+    {
+      "id": "regime-score-label-lag-severity",
+      "question": "Should regime-score-label-lag be upgraded from advisory to hard_block?",
+      "verdict": "YES. v2.0 audit confirmed: 20260617 had RISK-ON label with score 40 (EARLY RISK-OFF territory) and passed validation as advisory only. This single rule as hard_block would have prevented the D* grade week. Promoted to hard_block in v2.0.",
+      "resolved_at": "20260619",
+      "status": "resolved"
+    },
+    {
+      "id": "rr-min-enforcement-level",
+      "question": "Should rr-min-by-regime be upgraded from advisory to hard_block?",
+      "verdict": "YES. 20260618 scan had ALL 10 signals at R/R 1:1.7 in EARLY RISK-OFF requiring 1:2.0 -- 100% violation rate with zero enforcement. Promoted to hard_block in v2.0.",
+      "resolved_at": "20260619",
+      "status": "resolved"
+    },
+    {
+      "id": "energy-sizing-rule-redundancy",
+      "question": "Is energy-early-risk-off-sizing redundant with energy-early-risk-off-block?",
+      "verdict": "YES. If the block works, energy never appears and the sizing rule never triggers. If the block fails, the sizing rule (also advisory) also fails. Deprecated in v2.0.",
+      "resolved_at": "20260619",
       "status": "resolved"
     }
   ]
