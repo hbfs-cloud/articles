@@ -1,6 +1,6 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v2.0-20260619",
+  "_version": "v2.1-20260619",
   "_updated": "2026-06-19",
   "_source_retros": [
     "20260220",
@@ -36,10 +36,10 @@
     },
     {
       "id": "rr-min-by-regime",
-      "description": "Enforce minimum risk/reward ratio per regime. RISK-ON 1:1.5, RECOVERY/NEUTRAL 1:1.7, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. Scan fails validation if any signal violates.",
+      "description": "Enforce minimum risk/reward ratio per regime and horizon. H10: RISK-ON 1:1.5, NEUTRAL 1:1.5, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. H15+: NEUTRAL/RECOVERY 1:1.7. Harmonized with tp1-horizon-calibration: RISK-ON/NEUTRAL use H10, ERO/RO extend to H15.",
       "from_retros": ["20260522", "20260529", "20260619"],
-      "rule": "R/R minimum: RISK-ON 1:1.5, RECOVERY/NEUTRAL 1:1.7, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. validate-scan.js must emit VIOLATION (not advisory) when signals breach the floor.",
-      "rationale": "20260618 scan: ALL 10 signals at R/R 1:1.7 in EARLY RISK-OFF requiring 1:2.0 -- 100% violation rate with zero enforcement. validate-scan.js lines 272-284 generated ADVISORY only. The single most egregiously ignored rule in the system.",
+      "rule": "R/R minimum (H10): RISK-ON 1:1.5, NEUTRAL 1:1.5, EARLY RISK-OFF 1:2.0, RISK-OFF 1:2.0. For H15+, NEUTRAL/RECOVERY R/R can target 1:1.7. validate-scan.js must emit VIOLATION (not advisory). Regime-horizon linkage: RISK-ON/NEUTRAL default to H10, EARLY RISK-OFF/RISK-OFF extend to H15.",
+      "rationale": "20260618 scan: ALL 10 signals at R/R 1:1.7 in EARLY RISK-OFF requiring 1:2.0 -- 100% violation rate with zero enforcement. Lowered NEUTRAL from 1.7 to 1.5 because 87%+ of H10 setups expire positive without hitting 1.7R TP1 (evidence: 6 retros). Setting R/R=1.5 with TP1=1.5R for H10 maximizes TP1 hit rate.",
       "applies_to": ["top_10"],
       "enforced_by": "validate-scan.js R/R check by regime label — MUST be violation-level, not advisory",
       "status": "active",
@@ -113,10 +113,10 @@
     },
     {
       "id": "tp1-horizon-calibration",
-      "description": "TP1 must be calibrated to horizon. H10 -> TP1 at 1.5R max, H15+ -> TP1 at 2R max. Prevents unreachable targets that convert into expired-positive (money left on table).",
+      "description": "TP1 must be calibrated to horizon. H10 -> TP1 at 1.5R max, H15+ -> TP1 at 2R max. Regime-horizon linkage: RISK-ON/NEUTRAL use H10 (TP1 max 1.5R), EARLY RISK-OFF/RISK-OFF use H15 (TP1 max 2.0R).",
       "from_retros": ["20260327", "20260403", "20260410", "20260417", "20260502", "20260522"],
-      "rule": "if horizon <= 10 then tp1_distance <= 1.5 * risk_distance; if horizon > 10 then tp1_distance <= 2.0 * risk_distance. Encode in scanner-filters.json and validate-scan.js.",
-      "rationale": "Most persistently identified gap across 6 retros. 87%+ setups expire positive without hitting TP1 in one retro. Every retro since March flagged TP1 targets as too ambitious, yet no rule existed. Converting expired-positive into TP1 hits would significantly improve the grade (Pillar 1 = Setup HR).",
+      "rule": "if horizon <= 10 then tp1_distance <= 1.5 * risk_distance; if horizon > 10 then tp1_distance <= 2.0 * risk_distance. Regime-horizon linkage: RISK-ON/NEUTRAL default to H10 (R/R 1.5, TP1 1.5R), EARLY RISK-OFF/RISK-OFF extend to H15 (R/R 2.0, TP1 2.0R). Encode in scanner-filters.json and validate-scan.js.",
+      "rationale": "Most persistently identified gap across 6 retros. 87%+ setups expire positive without hitting TP1 in H10 horizon. Harmonized with rr-min-by-regime: lowering NEUTRAL R/R from 1.7 to 1.5 and capping TP1 at 1.5R for H10 means realistic targets that actually get hit. For higher-risk regimes, extending horizon to H15 with 2.0R targets preserves the asymmetry needed.",
       "applies_to": ["top_10", "tkl_pool"],
       "enforced_by": "validate-scan.js — check tp1_distance / risk_distance against horizon-based cap. Advisory initially, promote to selection_filter after 2 retros of confirmed improvement.",
       "status": "active",
