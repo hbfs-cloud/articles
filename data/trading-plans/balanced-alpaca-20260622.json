@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-19T08:49:07.724Z",
+  "generated_at": "2026-06-19T19:44:13.572Z",
   "valid_for": "2026-06-22",
   "mode_status": {
     "state": "live",
@@ -109,17 +109,17 @@
     {
       "id": "ORD-001",
       "action": "BUY",
-      "ticker": "QURE",
-      "broker_symbol": "QURE",
+      "ticker": "AVGO",
+      "broker_symbol": "AVGO",
       "broker": {
-        "symbol": "QURE",
+        "symbol": "AVGO",
         "exchange": "NASDAQ",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 48.160000000000004,
+        "price": 405.5,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -128,7 +128,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 69,
+          "shares": 8,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-22T09:30:00-04:00",
@@ -138,7 +138,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 26.650000000000002,
+          "price": 385.22,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 5,
@@ -146,13 +146,108 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 91.18,
+          "price": 453,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 112.69,
+          "price": 500,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-07-02",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 93,
+        "strategy": "Momentum",
+        "rr": "1:1.5",
+        "sharia": true,
+        "thesis": "RSI 46.1 optimal momentum. 12+ bullish call volume spikes $405-$450. AI networking leader $12B+ AI revenue. SOX +6.4% peace dividend. Anti-dilution clean (6× 424B5 = debt)."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "BFLY",
+      "broker_symbol": "BFLY",
+      "broker": {
+        "symbol": "BFLY",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 8.9,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 374,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-22T09:30:00-04:00",
+        "valid_until": "2026-06-22T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 5.63,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 5,
+          "atr_stop_mult": 1
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 15.44,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 18.71,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -197,119 +292,24 @@
         "strategy": "Candlestick",
         "rr": "1:2.0",
         "sharia": null,
-        "thesis": "BULLISH_STRONG_REVERSAL pattern (base 68) with 15.1x volume spike. ATR% 7.55%, RSI 81.9, BB%B 1.541."
-      },
-      "priority": 1
-    },
-    {
-      "id": "ORD-002",
-      "action": "BUY",
-      "ticker": "INTC",
-      "broker_symbol": "INTC",
-      "broker": {
-        "symbol": "INTC",
-        "exchange": "NASDAQ",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 132,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 25,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-22T09:30:00-04:00",
-        "valid_until": "2026-06-22T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 122,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 5,
-          "atr_stop_mult": 1
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 149,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 157,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-07-02",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 94,
-        "strategy": "Breakout",
-        "rr": "1:1.7",
-        "sharia": true,
-        "thesis": "New ATH on Apple chip partnership. SOX +6.4% peace dividend. BUY signal Jun 11. EMA stack bullish. Entry on VWAP pullback Monday."
+        "thesis": "BULLISH_STRONG_REVERSAL pattern (base 68) with 12.4x volume spike. ATR% 7.17%, RSI 84.6, BB%B 1.456."
       },
       "priority": 2
     },
     {
       "id": "ORD-003",
       "action": "BUY",
-      "ticker": "HIMS",
-      "broker_symbol": "HIMS",
+      "ticker": "SLDB",
+      "broker_symbol": "SLDB",
       "broker": {
-        "symbol": "HIMS",
-        "exchange": "NYSE",
+        "symbol": "SLDB",
+        "exchange": "NASDAQ",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 34.25,
+        "price": 8.33,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -318,7 +318,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 97,
+          "shares": 400,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-22T09:30:00-04:00",
@@ -328,7 +328,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 31.55,
+          "price": 7.09,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 5,
@@ -336,13 +336,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 38.84,
+          "price": 10.81,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 41.5,
+          "price": 12.05,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -383,28 +383,28 @@
         }
       ],
       "metadata": {
-        "score": 93,
-        "strategy": "Momentum",
-        "rr": "1:1.7",
-        "sharia": true,
-        "thesis": "2nd consecutive selection. +11.23% surge, BUY signal Jun 16 active. Reclaimed EMA200. 20+ bullish call IV spikes. Entry on pullback toward EMA200."
+        "score": 155,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "THREE_OUTSIDE_UP pattern (base 70) with 11.5x volume spike. ATR% 6.55%, RSI 60.1, BB%B 1.276."
       },
       "priority": 3
     },
     {
       "id": "ORD-004",
       "action": "BUY",
-      "ticker": "JBL",
-      "broker_symbol": "JBL",
+      "ticker": "WBI",
+      "broker_symbol": "WBI",
       "broker": {
-        "symbol": "JBL",
+        "symbol": "WBI",
         "exchange": "NYSE",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 368.5,
+        "price": 33.19,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -413,7 +413,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 9,
+          "shares": 100,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-22T09:30:00-04:00",
@@ -423,7 +423,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 340,
+          "price": 29.2,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 5,
@@ -431,13 +431,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 417,
+          "price": 41.160000000000004,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 440,
+          "price": 45.14,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -478,28 +478,28 @@
         }
       ],
       "metadata": {
-        "score": 93,
-        "strategy": "Pullback",
-        "rr": "1:1.7",
-        "sharia": true,
-        "thesis": "Pullback to SMA20 in uptrend. 9 analyst upgrades. BUY signal Jun 11. AI server manufacturing. 1.50× ATR stop."
+        "score": 153,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "BULLISH_ENGULFING pattern (base 68) with 16.4x volume spike. ATR% 5.83%, RSI 67.2, BB%B 1.07."
       },
       "priority": 4
     },
     {
       "id": "ORD-005",
       "action": "BUY",
-      "ticker": "SAN",
-      "broker_symbol": "SAN",
+      "ticker": "PRTH",
+      "broker_symbol": "PRTH",
       "broker": {
-        "symbol": "SAN",
-        "exchange": "NYSE",
+        "symbol": "PRTH",
+        "exchange": "NASDAQ",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 13.4,
+        "price": 7.17,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -508,7 +508,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 248,
+          "shares": 464,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-22T09:30:00-04:00",
@@ -518,7 +518,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 12.8,
+          "price": 6.36,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 5,
@@ -526,13 +526,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 14.42,
+          "price": 8.790000000000001,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 14.9,
+          "price": 9.6,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -573,11 +573,11 @@
         }
       ],
       "metadata": {
-        "score": 92,
-        "strategy": "Breakout",
-        "rr": "1:1.7",
-        "sharia": false,
-        "thesis": "3rd consecutive selection. 98% of 52W high. EU bank re-rating. BUY signal Jun 11. Fwd P/E 10×. Iran peace tailwind for EU equities."
+        "score": 137,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 9.7x volume spike. ATR% 4.78%, RSI 64.9, BB%B 1.241."
       },
       "priority": 5
     }
