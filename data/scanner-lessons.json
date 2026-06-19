@@ -1,6 +1,6 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v2.1-20260619",
+  "_version": "v2.2-20260619",
   "_updated": "2026-06-19",
   "_source_retros": [
     "20260220",
@@ -366,14 +366,16 @@
     },
     {
       "id": "mega-cap-regime-oscillation",
-      "description": "When regime oscillated 2+ times in 5 days, raise mcap floor to $50B and cap commodity/small-cap to max 1 per scan.",
+      "description": "When regime oscillated 2+ times in 5 days: tiered mcap sizing. Sub-$2B hard-blocked, $2-10B sizing x0.5 + stops x1.5 ATR, $10-50B sizing x0.7, $50B+ normal. Commodity/small-cap max 2 per scan.",
       "from_retros": ["20260529", "20260619"],
-      "rule": "Quand regime change >= 2x dans 5 derniers jours: mcap minimum $50B, commodity/small-cap max 1 par scan.",
-      "rationale": "TSM (+6.35%), MS (+5.33%), ARM (+4.22%) = top 3, all mega-caps. COP, TTE (commodities), BTBT (small-cap) = worst 3. HIMS ($7.5B) selected in 20260618 during regime oscillation. RBLX ($28B) selected in 20260617. Multiple sub-$50B names pass through. Audit recommends upgrade to selection_filter.",
+      "rule": "Quand regime change >= 2x dans 5 derniers jours: (a) mcap < $2B -> REJECT sauf TKL pool; (b) mcap $2B-$10B -> sizing x0.5 + stops x1.5 ATR; (c) mcap $10B-$50B -> sizing x0.7 (stacks with regime-rotation-penalty); (d) mcap >= $50B -> normal sizing. Commodity/small-cap max 2 par scan en oscillation. Rule does NOT apply when regime-rotation-penalty is already reducing sizing 30%+ AND overextension-check is active — avoid triple-stacking.",
+      "rationale": "War room 20260619 (5 experts + adversarial + synthesis, confidence 88%): original $50B floor derived from N=3 observation (TSM/MS/ARM) confounded by sector effects (COP/TTE losses = energy, not mcap). BTBT 0.00%. Three of top 5 all-time trades are sub-$10B (SM +14.76%, CHRD +12.68%, BBIO +11.64%). 6 other rules already stack during oscillation. Tiered approach preserves the valid insight (mega-caps safer in oscillation) while keeping alpha-generating $5-50B universe accessible. Revert to hard floor $20B if next 3 oscillation retros show sub-$20B averaging worse than -6% per stop.",
       "applies_to": ["top_10"],
-      "enforced_by": "Claude Phase 2 — check regime change count and adjust mcap floor. Must be upgraded from advisory.",
+      "enforced_by": "Claude Phase 2 — apply tiered sizing based on mcap tier during oscillation. validate-scan.js advisory for sub-$10B names.",
       "status": "active",
-      "severity": "selection_filter"
+      "severity": "selection_filter",
+      "_open_question": "Does the tiered mcap-sizing approach during oscillation reduce small-cap stop frequency without killing alpha? Compare pre/post on next 3 oscillation-regime scans.",
+      "_next_retro_check": "20260711"
     },
     {
       "id": "pullback-regime-confidence-gate",

@@ -3879,9 +3879,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-OFF — INTC, HIMS, JBL, SAN, AXP, SMH, EWJ, SMR, JHG, QCOM",
-    "desc": "Regime score 0.50 — classified NEUTRAL. The ensemble model returned a \"risk_on\" label but with only 36.7% confidence, and the score of 6.6/100 is the lowest this cycle. Previous scan scored 40. Per the regime-score-label-lag lesson: two consecutive scans below 50 = treat as NEUTRAL regardless of lab...",
-    "tags": "us,eu,asia,semis,financials,healthcare,energy,etf,ai,geopolitique,technique,trade-idea",
+    "title": "Top 10 A+ RISK-OFF — AVGO, CAT, MS, QCOM, LLY, ASML, HIMS, JHG, EWJ, QQQ",
+    "desc": "Regime score 0.50 — classifié NEUTRAL. L’ensemble model retourne une probabilité neutral 0.376 > ERO 0.302 > risk_on 0.252. Le score de 6/100 est le plus bas du cycle, et c’est le 2ème scan consécutif sous 50. Per la règle regime-score-label-lag : deux scans consécutifs sous 50 = NEUTRAL quelque soi...",
+    "tags": "us,eu,asia,semis,financials,healthcare,industrials,etf,ai,geopolitique,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260622/",
     "date": "22 juin 2026"
