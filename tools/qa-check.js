@@ -636,32 +636,60 @@ warn('backtest-trades: pending position price cache fresh & consistent', () => {
     } catch (e) { issues.push(`${ticker}: cache parse error`); }
   }
 
-  // Check 1: staleness — cache > 4 calendar days old (covers weekends + 1 holiday)
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  for (const [ticker, lastBar] of Object.entries(lastBarByTicker)) {
-    const diffMs = new Date(todayStr) - new Date(lastBar);
-    const diffDays = diffMs / 86400000;
-    if (diffDays > 4) {
-      issues.push(`${ticker}: cache ends ${lastBar} (${Math.round(diffDays)}d ago — likely stale)`);
+  // Count weekdays (Mon-Fri) between two YYYY-MM-DD strings
+  function weekdaysBetween(fromStr, toStr) {
+    let count = 0;
+    const d = new Date(fromStr);
+    const end = new Date(toStr);
+    d.setDate(d.getDate() + 1);
+    while (d <= end) {
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) count++;
+      d.setDate(d.getDate() + 1);
+    }
+    return count;
+  }
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  // Split into equity vs non-equity (crypto, forex have different calendars)
+  const equityEntries = Object.entries(lastBarByTicker)
+    .filter(([tk]) => !tk.includes('-USD') && !tk.includes('=X'));
+  const nonEquityEntries = Object.entries(lastBarByTicker)
+    .filter(([tk]) => tk.includes('-USD') || tk.includes('=X'));
+
+  // Check 1: consistency — all equity tickers must share the same last bar date
+  // The newest date across equity caches = reference trading day
+  if (equityEntries.length >= 2) {
+    const sorted = equityEntries.map(([, d]) => d).sort();
+    const refDate = sorted[sorted.length - 1];
+    const behind = equityEntries
+      .filter(([, d]) => d < refDate)
+      .map(([tk, d]) => `${tk}(${d})`);
+    if (behind.length) {
+      issues.push(`cache date mismatch — ref=${refDate}, behind: ${behind.join(', ')}`);
     }
   }
 
-  // Check 2: consistency — equity tickers should share the same last bar date
-  const equityDates = Object.entries(lastBarByTicker)
-    .filter(([tk]) => !tk.includes('-USD') && !tk.includes('=X'))
-    .map(([, d]) => d);
-  if (equityDates.length >= 2) {
-    const unique = [...new Set(equityDates)].sort();
-    if (unique.length > 1) {
-      const earliest = unique[0], latest = unique[unique.length - 1];
-      const diffMs = new Date(latest) - new Date(earliest);
-      if (diffMs / 86400000 >= 1) {
-        const staleOnes = Object.entries(lastBarByTicker)
-          .filter(([tk, d]) => d < latest && !tk.includes('-USD') && !tk.includes('=X'))
-          .map(([tk, d]) => `${tk}(${d})`);
-        issues.push(`cache date mismatch — newest=${latest}, behind: ${staleOnes.join(', ')}`);
-      }
+  // Check 2: absolute staleness — reference date > 2 weekdays behind today
+  // Tolerates weekends + up to 1 holiday; flags genuine staleness (sweep not run)
+  const refDate = equityEntries.length
+    ? equityEntries.map(([, d]) => d).sort().pop()
+    : null;
+  if (refDate) {
+    const gap = weekdaysBetween(refDate, todayStr);
+    if (gap > 2) {
+      issues.push(`all equity caches end ${refDate} (${gap} weekdays behind today — sweep likely not run)`);
+    }
+  }
+
+  // Check 3: non-equity staleness (crypto trades 24/7, forex 5.5d/week)
+  for (const [ticker, lastBar] of nonEquityEntries) {
+    const calDays = (new Date(todayStr) - new Date(lastBar)) / 86400000;
+    if (ticker.includes('-USD') && calDays > 2) {
+      issues.push(`${ticker}: cache ends ${lastBar} (${Math.round(calDays)}d ago — crypto trades daily)`);
+    } else if (ticker.includes('=X') && calDays > 4) {
+      issues.push(`${ticker}: cache ends ${lastBar} (${Math.round(calDays)}d ago)`);
     }
   }
 
