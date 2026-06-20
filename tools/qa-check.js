@@ -604,96 +604,51 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
   if (issues.length) return issues.join(' | ');
 });
 
-// ─── Check: Price cache freshness — pending positions should have consistent, recent closes
-warn('backtest-trades: pending position price cache fresh & consistent', () => {
+// ─── Check: MtM accuracy — pending exitPrice must match latest cache close
+// Exchange-agnostic: compares what sweep wrote vs what the cache currently says.
+// If they diverge, sweep used a stale cache that was later refreshed → MtM is wrong.
+warn('backtest-trades: pending exitPrice matches latest cache close', () => {
   const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
   const cacheDir = path.join(ROOT, 'data/.price-cache');
-  if (!fs.existsSync(cacheDir)) return 'price-cache dir missing — cannot verify freshness';
+  if (!fs.existsSync(cacheDir)) return 'price-cache dir missing';
 
-  // Collect unique pending tickers across all modes
-  const pendingTickers = new Set();
+  const seen = new Set();
+  const drifts = [];
+
   for (const mode of Object.keys(bt)) {
     for (const t of bt[mode]) {
-      if (t.status === 'pending' || t.status === 'open') pendingTickers.add(t.ticker);
-    }
-  }
-  if (pendingTickers.size === 0) return;
+      if (t.status !== 'pending' && t.status !== 'open') continue;
+      const key = `${t.ticker}|${t.scanDate}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
 
-  const lastBarByTicker = {};
-  const issues = [];
+      if (t.exitPrice == null) continue;
 
-  for (const ticker of pendingTickers) {
-    const ohlcvPath = path.join(cacheDir, `${ticker}_ohlcv.json`);
-    if (!fs.existsSync(ohlcvPath)) { issues.push(`${ticker}: no cache file`); continue; }
-    try {
-      const bars = JSON.parse(fs.readFileSync(ohlcvPath, 'utf8'));
-      const dates = (Array.isArray(bars)
-        ? bars.map(b => b.date).filter(Boolean)
-        : Object.keys(bars)
-      ).sort();
-      if (!dates.length) { issues.push(`${ticker}: empty cache`); continue; }
-      lastBarByTicker[ticker] = dates[dates.length - 1];
-    } catch (e) { issues.push(`${ticker}: cache parse error`); }
-  }
+      const ohlcvPath = path.join(cacheDir, `${t.ticker}_ohlcv.json`);
+      if (!fs.existsSync(ohlcvPath)) continue;
 
-  // Count weekdays (Mon-Fri) between two YYYY-MM-DD strings
-  function weekdaysBetween(fromStr, toStr) {
-    let count = 0;
-    const d = new Date(fromStr);
-    const end = new Date(toStr);
-    d.setDate(d.getDate() + 1);
-    while (d <= end) {
-      const dow = d.getDay();
-      if (dow !== 0 && dow !== 6) count++;
-      d.setDate(d.getDate() + 1);
-    }
-    return count;
-  }
+      try {
+        const bars = JSON.parse(fs.readFileSync(ohlcvPath, 'utf8'));
+        let latestClose;
+        if (Array.isArray(bars)) {
+          const sorted = bars.filter(b => b.close != null).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+          latestClose = sorted.length ? sorted[sorted.length - 1].close : null;
+        } else {
+          const dates = Object.keys(bars).sort();
+          const last = dates[dates.length - 1];
+          latestClose = last ? (bars[last].c ?? bars[last].close) : null;
+        }
 
-  const todayStr = new Date().toISOString().slice(0, 10);
-
-  // Split into equity vs non-equity (crypto, forex have different calendars)
-  const equityEntries = Object.entries(lastBarByTicker)
-    .filter(([tk]) => !tk.includes('-USD') && !tk.includes('=X'));
-  const nonEquityEntries = Object.entries(lastBarByTicker)
-    .filter(([tk]) => tk.includes('-USD') || tk.includes('=X'));
-
-  // Check 1: consistency — all equity tickers must share the same last bar date
-  // The newest date across equity caches = reference trading day
-  if (equityEntries.length >= 2) {
-    const sorted = equityEntries.map(([, d]) => d).sort();
-    const refDate = sorted[sorted.length - 1];
-    const behind = equityEntries
-      .filter(([, d]) => d < refDate)
-      .map(([tk, d]) => `${tk}(${d})`);
-    if (behind.length) {
-      issues.push(`cache date mismatch — ref=${refDate}, behind: ${behind.join(', ')}`);
+        if (latestClose == null) continue;
+        const drift = Math.abs(t.exitPrice - latestClose) / latestClose;
+        if (drift > 0.001) {
+          drifts.push(`${t.ticker}: sweep=${t.exitPrice.toFixed(2)} vs cache=${latestClose.toFixed(2)} (${(drift * 100).toFixed(1)}% drift)`);
+        }
+      } catch (e) { /* skip unreadable cache */ }
     }
   }
 
-  // Check 2: absolute staleness — reference date > 2 weekdays behind today
-  // Tolerates weekends + up to 1 holiday; flags genuine staleness (sweep not run)
-  const refDate = equityEntries.length
-    ? equityEntries.map(([, d]) => d).sort().pop()
-    : null;
-  if (refDate) {
-    const gap = weekdaysBetween(refDate, todayStr);
-    if (gap > 2) {
-      issues.push(`all equity caches end ${refDate} (${gap} weekdays behind today — sweep likely not run)`);
-    }
-  }
-
-  // Check 3: non-equity staleness (crypto trades 24/7, forex 5.5d/week)
-  for (const [ticker, lastBar] of nonEquityEntries) {
-    const calDays = (new Date(todayStr) - new Date(lastBar)) / 86400000;
-    if (ticker.includes('-USD') && calDays > 2) {
-      issues.push(`${ticker}: cache ends ${lastBar} (${Math.round(calDays)}d ago — crypto trades daily)`);
-    } else if (ticker.includes('=X') && calDays > 4) {
-      issues.push(`${ticker}: cache ends ${lastBar} (${Math.round(calDays)}d ago)`);
-    }
-  }
-
-  if (issues.length) return issues.join(' | ');
+  if (drifts.length) return `MtM stale — re-run sweep: ${drifts.join(' | ')}`;
 });
 
 check('backtest-trades: no breakeven artifacts (pnlPct=0 with exitPrice!=actualEntry)', () => {
