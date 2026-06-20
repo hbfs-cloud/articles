@@ -604,6 +604,70 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
   if (issues.length) return issues.join(' | ');
 });
 
+// ─── Check: Price cache freshness — pending positions should have consistent, recent closes
+warn('backtest-trades: pending position price cache fresh & consistent', () => {
+  const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
+  const cacheDir = path.join(ROOT, 'data/.price-cache');
+  if (!fs.existsSync(cacheDir)) return 'price-cache dir missing — cannot verify freshness';
+
+  // Collect unique pending tickers across all modes
+  const pendingTickers = new Set();
+  for (const mode of Object.keys(bt)) {
+    for (const t of bt[mode]) {
+      if (t.status === 'pending' || t.status === 'open') pendingTickers.add(t.ticker);
+    }
+  }
+  if (pendingTickers.size === 0) return;
+
+  const lastBarByTicker = {};
+  const issues = [];
+
+  for (const ticker of pendingTickers) {
+    const ohlcvPath = path.join(cacheDir, `${ticker}_ohlcv.json`);
+    if (!fs.existsSync(ohlcvPath)) { issues.push(`${ticker}: no cache file`); continue; }
+    try {
+      const bars = JSON.parse(fs.readFileSync(ohlcvPath, 'utf8'));
+      const dates = (Array.isArray(bars)
+        ? bars.map(b => b.date).filter(Boolean)
+        : Object.keys(bars)
+      ).sort();
+      if (!dates.length) { issues.push(`${ticker}: empty cache`); continue; }
+      lastBarByTicker[ticker] = dates[dates.length - 1];
+    } catch (e) { issues.push(`${ticker}: cache parse error`); }
+  }
+
+  // Check 1: staleness — cache > 4 calendar days old (covers weekends + 1 holiday)
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  for (const [ticker, lastBar] of Object.entries(lastBarByTicker)) {
+    const diffMs = new Date(todayStr) - new Date(lastBar);
+    const diffDays = diffMs / 86400000;
+    if (diffDays > 4) {
+      issues.push(`${ticker}: cache ends ${lastBar} (${Math.round(diffDays)}d ago — likely stale)`);
+    }
+  }
+
+  // Check 2: consistency — equity tickers should share the same last bar date
+  const equityDates = Object.entries(lastBarByTicker)
+    .filter(([tk]) => !tk.includes('-USD') && !tk.includes('=X'))
+    .map(([, d]) => d);
+  if (equityDates.length >= 2) {
+    const unique = [...new Set(equityDates)].sort();
+    if (unique.length > 1) {
+      const earliest = unique[0], latest = unique[unique.length - 1];
+      const diffMs = new Date(latest) - new Date(earliest);
+      if (diffMs / 86400000 >= 1) {
+        const staleOnes = Object.entries(lastBarByTicker)
+          .filter(([tk, d]) => d < latest && !tk.includes('-USD') && !tk.includes('=X'))
+          .map(([tk, d]) => `${tk}(${d})`);
+        issues.push(`cache date mismatch — newest=${latest}, behind: ${staleOnes.join(', ')}`);
+      }
+    }
+  }
+
+  if (issues.length) return issues.join(' | ');
+});
+
 check('backtest-trades: no breakeven artifacts (pnlPct=0 with exitPrice!=actualEntry)', () => {
   const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
   let artifacts = 0;
