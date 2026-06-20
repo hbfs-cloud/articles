@@ -2229,10 +2229,15 @@ async function main() {
       if (livePositions.length > 0) {
         console.log(`\nLoaded ${livePositions.length} live positions for MtM injection`);
         const liveTickers = [...new Set(livePositions.map(p => p.ticker))];
-        const missing = liveTickers.filter(t => !priceCache[t]);
-        if (missing.length > 0) {
-          console.log(`  Fetching prices for ${missing.length} live-only tickers...`);
-          for (const t of missing) { await fetchOHLCV(t); await sleep(120); }
+        // Force-refresh ALL live position tickers — bypass 12h TTL cache.
+        // Stale cache caused TSM MtM to lag by a full trading day (2026-06-19 incident).
+        console.log(`  Force-refreshing ${liveTickers.length} live tickers (bypass cache TTL)...`);
+        for (const t of liveTickers) {
+          delete priceCache[t];
+          const fp = path.join(PRICE_CACHE_DIR, `${t}.json`);
+          if (fs.existsSync(fp)) fs.unlinkSync(fp);
+          await fetchOHLCV(t);
+          await sleep(120);
         }
         // Seed priceCache from scanner-positions.json current_price for dates
         // where Yahoo hasn't delivered a bar yet (entry day = nextBizDay of scan,

@@ -604,10 +604,11 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
   if (issues.length) return issues.join(' | ');
 });
 
-// ─── Check: MtM accuracy — pending exitPrice must match latest cache close
-// Exchange-agnostic: compares what sweep wrote vs what the cache currently says.
-// If they diverge, sweep used a stale cache that was later refreshed → MtM is wrong.
-warn('backtest-trades: pending exitPrice matches latest cache close', () => {
+// ─── Check: MtM accuracy — pending exitPrice must match sweep's own cache
+// sweep.js writes {ticker}.json (dict {date: {open,high,low,close}}), TTL 12h.
+// candlestick-scanner writes {ticker}_ohlcv.json (array) — different tool, different timing.
+// We read the SWEEP cache ({ticker}.json) since that's what determined exitPrice.
+warn('backtest-trades: pending exitPrice matches sweep cache', () => {
   const bt = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json'), 'utf8'));
   const cacheDir = path.join(ROOT, 'data/.price-cache');
   if (!fs.existsSync(cacheDir)) return 'price-cache dir missing';
@@ -618,37 +619,34 @@ warn('backtest-trades: pending exitPrice matches latest cache close', () => {
   for (const mode of Object.keys(bt)) {
     for (const t of bt[mode]) {
       if (t.status !== 'pending' && t.status !== 'open') continue;
-      const key = `${t.ticker}|${t.scanDate}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-
       if (t.exitPrice == null) continue;
+      const tk = t.ticker;
+      if (seen.has(tk)) continue;
+      seen.add(tk);
 
-      const ohlcvPath = path.join(cacheDir, `${t.ticker}_ohlcv.json`);
-      if (!fs.existsSync(ohlcvPath)) continue;
+      // sweep's cache: {ticker}.json (dict keyed by date)
+      const sweepCachePath = path.join(cacheDir, `${tk}.json`);
+      if (!fs.existsSync(sweepCachePath)) continue;
 
       try {
-        const bars = JSON.parse(fs.readFileSync(ohlcvPath, 'utf8'));
-        let latestClose;
-        if (Array.isArray(bars)) {
-          const sorted = bars.filter(b => b.close != null).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-          latestClose = sorted.length ? sorted[sorted.length - 1].close : null;
-        } else {
-          const dates = Object.keys(bars).sort();
-          const last = dates[dates.length - 1];
-          latestClose = last ? (bars[last].c ?? bars[last].close) : null;
-        }
+        const history = JSON.parse(fs.readFileSync(sweepCachePath, 'utf8'));
+        if (typeof history !== 'object' || Array.isArray(history)) continue;
+        const dates = Object.keys(history).sort();
+        if (!dates.length) continue;
+        const lastDate = dates[dates.length - 1];
+        const lastBar = history[lastDate];
+        const latestClose = lastBar?.close ?? lastBar?.c;
+        if (latestClose == null || latestClose === 0) continue;
 
-        if (latestClose == null) continue;
         const drift = Math.abs(t.exitPrice - latestClose) / latestClose;
         if (drift > 0.001) {
-          drifts.push(`${t.ticker}: sweep=${t.exitPrice.toFixed(2)} vs cache=${latestClose.toFixed(2)} (${(drift * 100).toFixed(1)}% drift)`);
+          drifts.push(`${tk}: exitPrice=${t.exitPrice.toFixed(2)} vs cache[${lastDate}]=${latestClose.toFixed(2)} (${(drift * 100).toFixed(1)}%)`);
         }
-      } catch (e) { /* skip unreadable cache */ }
+      } catch (e) { /* skip */ }
     }
   }
 
-  if (drifts.length) return `MtM stale — re-run sweep: ${drifts.join(' | ')}`;
+  if (drifts.length) return `MtM drift — re-run sweep: ${drifts.join(' | ')}`;
 });
 
 check('backtest-trades: no breakeven artifacts (pnlPct=0 with exitPrice!=actualEntry)', () => {
