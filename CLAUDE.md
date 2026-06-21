@@ -43,6 +43,14 @@ MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp
 ```
 **TOUJOURS exporter, JAMAIS accepter le stub silencieusement.** Sans cette URL, `refresh-risk-metrics.js --stub` écrit un schéma vide.
 
+## ⛔ MCP HARD STOP (IMMUABLE)
+Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **renvoie des données incohérentes** (prix aberrants, NaN, valeurs stale > 48h) :
+1. **STOP IMMÉDIAT** — ne pas continuer la génération/correction d'article
+2. **Ne JAMAIS substituer** par des données inventées, estimées, ou issues de mémoire
+3. **Signaler** au user : « MCP indisponible, tâche suspendue »
+4. **Reprendre** uniquement quand le MCP est reconnecté ET qu'un test QueryData de contrôle renvoie des données fraîches
+Cette règle s'applique à TOUS les workflows : scanner, daily, weekly, analyses, retrospectives, refresh-analyses.
+
 ## ⚠️ LECTURE OBLIGATOIRE AVANT GÉNÉRATION
 Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fichier JSON cible** (`data/daily.json`, `data/weekly.json`, etc.) pour :
 1. Vérifier l'absence de doublon par URL
