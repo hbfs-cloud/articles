@@ -38,6 +38,9 @@ const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
+/** Escape HTML entities to prevent XSS */
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
 /** badge(text, color) → <span class="badge badge-{color}">{text}</span> */
 function badge(text, color) {
   return `<span class="badge badge-${color}">${text}</span>`;
@@ -234,8 +237,8 @@ function sankeyConfig(setups) {
   const nodes = new Set();
   const linkMap = {};
   setups.forEach(s => {
-    const sector = s.sector || s.region_label || s.region || 'US';
-    const strategy = s.pattern || 'Momentum';
+    const sector = `sect:${s.sector || s.region_label || s.region || 'US'}`;
+    const strategy = `strat:${s.pattern || 'Momentum'}`;
     const ticker = s.ticker;
     nodes.add(sector); nodes.add(strategy); nodes.add(ticker);
     const k1 = `${sector}→${strategy}`;
@@ -243,22 +246,13 @@ function sankeyConfig(setups) {
     const k2 = `${strategy}→${ticker}`;
     linkMap[k2] = (linkMap[k2] || 0) + 1;
   });
-  const COLORS = { Momentum: '#22c55e', Breakout: '#3b82f6', Pullback: '#f59e0b', 'Pre-Squeeze': '#8b5cf6' };
-  const nodeArr = [...nodes].map(n => ({ name: n, itemStyle: { color: COLORS[n] || '#64748b' } }));
+  const STRAT_COLORS = { 'strat:Momentum': '#22c55e', 'strat:Breakout': '#3b82f6', 'strat:Pullback': '#f59e0b', 'strat:Pre-Squeeze': '#8b5cf6' };
+  const nodeArr = [...nodes].map(n => ({ name: n, itemStyle: { color: STRAT_COLORS[n] || '#64748b' } }));
   const links = Object.entries(linkMap).map(([k, v]) => {
     const [src, tgt] = k.split('→');
     return { source: src, target: tgt, value: v };
   });
-  return JSON.stringify({
-    tooltip: { trigger: 'item', triggerOn: 'mousemove' },
-    series: [{
-      type: 'sankey', layout: 'none', emphasis: { focus: 'adjacency' },
-      nodeAlign: 'left', orient: 'horizontal',
-      data: nodeArr, links: links,
-      lineStyle: { color: 'gradient', curveness: 0.5 },
-      label: { fontSize: 12, fontWeight: 600 }
-    }]
-  });
+  return `{tooltip:{trigger:'item',triggerOn:'mousemove'},series:[{type:'sankey',layout:'none',emphasis:{focus:'adjacency'},nodeAlign:'left',orient:'horizontal',data:${JSON.stringify(nodeArr)},links:${JSON.stringify(links)},lineStyle:{color:'gradient',curveness:0.5},label:{fontSize:12,fontWeight:600,formatter:function(p){return p.name.replace(/^(sect|strat):/,'')}}}]}`;
 }
 
 // ─── PER-SETUP GAUGE & RADAR ──────────────────────────────────────────────────
@@ -328,9 +322,9 @@ function setupCard(s, idx) {
   const extraBadges = (s.extra_badges || []).map(b => badge(b, 'amber')).join('');
 
   // Confirmations
-  const confirmItems = (s.confirmations || []).map(c => `<li>${c}</li>`).join('');
+  const confirmItems = (s.confirmations || []).map(c => `<li>${esc(c)}</li>`).join('');
   // Invalidations
-  const invalidItems = (s.invalidations || []).map(c => `<li>${c}</li>`).join('');
+  const invalidItems = (s.invalidations || []).map(c => `<li>${esc(c)}</li>`).join('');
 
   // Entry display
   const entryDisplay = s.entry_display
@@ -338,14 +332,14 @@ function setupCard(s, idx) {
     : (s.entry_low && s.entry_high ? `$${s.entry_low}&ndash;$${s.entry_high}` : fmtPrice(s.entry_low || s.entry_high || 0));
 
   return `
-<!-- SETUP ${idx + 1}: ${s.ticker} -->
-<div class="section-header"><h2>#${idx + 1} ${s.ticker} &mdash; ${s.name}</h2></div>
-<div class="setup-card" id="setup-${s.ticker}" data-ticker="${s.ticker}" data-sharia="${s.sharia ? 'true' : 'false'}" data-entry="${s.entry_low || s.entry_high || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">
+<!-- SETUP ${idx + 1}: ${esc(s.ticker)} -->
+<div class="section-header"><h2>#${idx + 1} ${esc(s.ticker)} &mdash; ${esc(s.name)}</h2></div>
+<div class="setup-card" id="setup-${esc(s.ticker)}" data-ticker="${esc(s.ticker)}" data-sharia="${s.sharia ? 'true' : 'false'}" data-entry="${s.entry_low || s.entry_high || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">
   <div class="setup-header">
-    <div class="scanner-ticker-logo" style="${gradStyle}">${s.ticker}</div>
+    <div class="scanner-ticker-logo" style="${gradStyle}">${esc(s.ticker)}</div>
     <div class="setup-header-info">
-      <h3>${s.ticker} &mdash; ${s.name}</h3>
-      <div class="setup-name">${s.description || ''}</div>
+      <h3>${esc(s.ticker)} &mdash; ${esc(s.name)}</h3>
+      <div class="setup-name">${esc(s.description || '')}</div>
     </div>
     <div class="setup-header-price">
       <div class="price">${fmtPrice(s.price)}</div>
@@ -360,21 +354,21 @@ function setupCard(s, idx) {
     ${shariaBadge}
   </div>
 
-  <img class="finviz-chart" src="https://finviz.com/chart.ashx?t=${s.ticker}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l" alt="${s.ticker} FinViz Chart" loading="lazy">
+  <img class="finviz-chart" src="https://finviz.com/chart.ashx?t=${esc(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l" alt="${esc(s.ticker)} FinViz Chart" loading="lazy">
 
   <div class="chart-grid-2col">
     <div>${echartDiv(gaugeId, 250)}</div>
     <div>${echartDiv(radarId, 250)}</div>
   </div>
 
-  <p>${s.thesis || ''}</p>
+  <p>${esc(s.thesis || '')}</p>
 
   <div class="confirm-box">
-    <h4>&#x2705; Confirmations</h4>
+    <h3>&#x2705; Confirmations</h3>
     <ul>${confirmItems}</ul>
   </div>
   <div class="invalid-box">
-    <h4>&#x274C; Invalidations</h4>
+    <h3>&#x274C; Invalidations</h3>
     <ul>${invalidItems}</ul>
   </div>
 
@@ -397,7 +391,7 @@ function navGrid(setups) {
       ? `background:${s.logo_gradient[0]};`
       : 'background:#64748b;';
     const flag = s.region_flag ? ` ${s.region_flag}` : '';
-    return `    <a href="#setup-${s.ticker}"><span style="${gradStyle}color:white;padding:2px 8px;border-radius:6px;font-size:0.8rem;">${s.ticker}</span> ${s.name.split(' ').slice(0,2).join(' ')}${flag}</a>`;
+    return `    <a href="#setup-${esc(s.ticker)}"><span style="${gradStyle}color:white;padding:2px 8px;border-radius:6px;font-size:0.8rem;">${esc(s.ticker)}</span> ${esc(s.name.split(' ').slice(0,2).join(' '))}${flag}</a>`;
   });
   return `<div class="nav-grid">\n${links.join('\n')}\n</div>`;
 }
@@ -408,16 +402,16 @@ function syntheseTable(setups) {
   const rows = setups.map((s, i) => {
     const shariaAttr = `data-sharia="${s.sharia ? 'true' : 'false'}"`;
     const entryVal = s.entry_low || s.entry_high || 0;
-    return `        <tr ${shariaAttr}><td>${i + 1}</td><td><strong>${s.ticker}</strong></td><td>${s.name}</td><td>${s.region_label || s.region || 'US'}</td><td>${s.pattern || 'Momentum'}</td><td class="up"><strong>${s.score}</strong></td><td>$${entryVal}</td><td>$${s.stop || ''}</td><td>$${s.tp1 || ''}</td><td>${s.rr || ''}</td></tr>`;
+    return `        <tr ${shariaAttr}><td>${i + 1}</td><td><strong>${esc(s.ticker)}</strong></td><td>${esc(s.name)}</td><td>${esc(s.region_label || s.region || 'US')}</td><td>${esc(s.pattern || 'Momentum')}</td><td class="up"><strong>${s.score}</strong></td><td>$${entryVal}</td><td>$${s.stop || ''}</td><td>$${s.tp1 || ''}</td><td>${s.rr || ''}</td></tr>`;
   });
-  return `    <table class="data-table">
+  return `    <div style="overflow-x:auto"><table class="data-table">
       <thead>
         <tr><th>#</th><th>Ticker</th><th>Name</th><th>Region</th><th>Strategy</th><th>Score</th><th>Entry</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
       </thead>
       <tbody>
 ${rows.join('\n')}
       </tbody>
-    </table>`;
+    </table></div>`;
 }
 
 // ─── DIVERSIFICATION TABLE ───────────────────────────────────────────────────
@@ -425,17 +419,17 @@ ${rows.join('\n')}
 function divmatTable(data) {
   if (!data || !data.length) return '';
   const rows = data.map(r =>
-    `        <tr><td><strong>${r.region}</strong></td><td>${r.tickers}</td><td>${r.count}</td><td>${r.strategies}</td></tr>`
+    `        <tr><td><strong>${esc(r.region)}</strong></td><td>${esc(r.tickers)}</td><td>${r.count}</td><td>${esc(r.strategies)}</td></tr>`
   );
   // Total row
   const total = data.reduce((a, r) => a + r.count, 0);
-  return `    <table class="divmat-table">
+  return `    <div style="overflow-x:auto"><table class="divmat-table">
       <thead><tr><th>Region</th><th>Tickers</th><th>Count</th><th>Strategies</th></tr></thead>
       <tbody>
 ${rows.join('\n')}
         <tr style="background:#eff6ff;font-weight:700;"><td><strong>Total</strong></td><td>${total} setups</td><td>${total}</td><td>&mdash;</td></tr>
       </tbody>
-    </table>`;
+    </table></div>`;
 }
 
 // ─── THEMATIC TABLE ──────────────────────────────────────────────────────────
@@ -443,12 +437,12 @@ ${rows.join('\n')}
 function thematicTable(data) {
   if (!data || !data.length) return '';
   const rows = data.map(r =>
-    `        <tr><td><strong>${r.theme}</strong></td><td>${r.tickers}</td><td>${r.rationale}</td></tr>`
+    `        <tr><td><strong>${esc(r.theme)}</strong></td><td>${esc(r.tickers)}</td><td>${esc(r.rationale)}</td></tr>`
   );
-  return `    <table class="divmat-table">
+  return `    <div style="overflow-x:auto"><table class="divmat-table">
       <thead><tr><th>Theme</th><th>Tickers</th><th>Rationale</th></tr></thead>
       <tbody>${rows.join('\n')}</tbody>
-    </table>`;
+    </table></div>`;
 }
 
 // ─── ALERTS ──────────────────────────────────────────────────────────────────
@@ -456,8 +450,10 @@ function thematicTable(data) {
 function alertsHtml(alerts) {
   if (!alerts || !alerts.length) return '';
   return alerts.map(a => {
-    const cls = a.type === 'warning' ? 'iran-alert' : 'risk-on-banner';
-    return `  <div class="${cls}">\n    <strong>&#x26A0; ${a.title}:</strong> ${a.text}\n  </div>`;
+    const isWarning = a.type === 'warning';
+    const cls = isWarning ? 'pedagogy-box' : 'risk-on-banner';
+    const warnStyle = isWarning ? ' style="background:#fef2f2;border-left:4px solid #ef4444;"' : '';
+    return `  <div class="${cls}"${warnStyle}>\n    <strong>&#x26A0; ${esc(a.title)}:</strong> ${esc(a.text)}\n  </div>`;
   }).join('\n');
 }
 
@@ -468,12 +464,12 @@ function macroCalendarTable(rows) {
   const trs = rows.map(r => {
     const dirClass = r.dir === 'up' ? 'up' : r.dir === 'down' ? 'down' : '';
     const impactClass = (r.impact || '').toUpperCase().includes('HIGH') ? 'up' : '';
-    return `            <tr><td><strong>${r.date}</strong></td><td>${r.event}</td><td class="${impactClass}"><strong>${r.impact || ''}</strong></td><td>${r.note || ''}</td></tr>`;
+    return `            <tr><td><strong>${esc(r.date)}</strong></td><td>${esc(r.event)}</td><td class="${impactClass}"><strong>${esc(r.impact || '')}</strong></td><td>${esc(r.note || '')}</td></tr>`;
   });
-  return `        <table class="data-table">
+  return `        <div style="overflow-x:auto"><table class="data-table">
           <thead><tr><th>Date</th><th>Event</th><th>Impact</th><th>Direction Risk</th></tr></thead>
           <tbody>${trs.join('')}</tbody>
-        </table>`;
+        </table></div>`;
 }
 
 // ─── SECTOR ROTATION TABLE ───────────────────────────────────────────────────
@@ -482,12 +478,12 @@ function sectorRotationTable(rows) {
   if (!Array.isArray(rows) || !rows.length) return '';
   const trs = rows.map(r => {
     const dirClass = r.dir === 'up' ? 'up' : r.dir === 'down' ? 'down' : '';
-    return `            <tr><td>${r.sector}</td><td class="${dirClass}">${r.perf}</td><td>${r.signal}</td><td><strong>${r.exposure}</strong></td></tr>`;
+    return `            <tr><td>${esc(r.sector)}</td><td class="${dirClass}">${esc(r.perf)}</td><td>${esc(r.signal)}</td><td><strong>${esc(r.exposure)}</strong></td></tr>`;
   });
-  return `        <table class="data-table">
+  return `        <div style="overflow-x:auto"><table class="data-table">
           <thead><tr><th>Sector (ETF)</th><th>Week Performance</th><th>Regime Signal</th><th>Our Exposure</th></tr></thead>
           <tbody>${trs.join('')}</tbody>
-        </table>`;
+        </table></div>`;
 }
 
 // ─── MAIN PAGE ASSEMBLER ─────────────────────────────────────────────────────
@@ -583,7 +579,7 @@ function buildPage(d) {
 
 <nav class="brand-bar">
   <div class="brand-bar-inner">
-    <a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a>
+    <a href="/" class="brand-logo"><img src="/logo.svg" alt="DailyTickers" width="36" height="36"><span class="brand-title">DailyTickers</span></a>
     <div class="brand-nav">
       <a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a>
     </div>
@@ -630,13 +626,13 @@ ${alertsHtml(d.alerts)}
       <div>${echartDiv('strategyPie', 280)}</div>
     </div>
 
-    <h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h4>
-    <table class="data-table">
+    <h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
+    <div style="overflow-x:auto"><table class="data-table">
       <thead><tr><th>Index / Asset</th><th>Price</th><th>Change</th><th>Signal</th></tr></thead>
       <tbody>
-${(d.market_snapshot || []).map(r => `        <tr><td><strong>${r.name}</strong></td><td>${r.price}</td><td class="${r.dir === 'up' ? 'up' : 'down'}">${r.change}</td><td>${r.signal}</td></tr>`).join('\n')}
+${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name)}</strong></td><td>${esc(r.price)}</td><td class="${r.dir === 'up' ? 'up' : 'down'}">${esc(r.change)}</td><td>${esc(r.signal)}</td></tr>`).join('\n')}
       </tbody>
-    </table>
+    </table></div>
 
     ${d.pedagogy ? `<div class="pedagogy-box">
       <h4><i class="fas fa-graduation-cap"></i> ${d.pedagogy.title}</h4>
@@ -653,7 +649,7 @@ ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${r.name}</strong>
       <div>${echartDiv('radarOverview', 350)}</div>
       <div>${echartDiv('treemapSector', 350)}</div>
     </div>
-    ${hasCorrPairs ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Matrix</h4>\n    ${echartDiv('corrHeatmap', 400)}` : (corrExtra.note ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Summary</h4>
+    ${hasCorrPairs ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Matrix</h3>\n    ${echartDiv('corrHeatmap', 400)}` : (corrExtra.note ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Summary</h3>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
       <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Avg ρ:</strong> ${corrExtra.avg_off_diagonal || '—'}</div>
       <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Max pair:</strong> ${corrExtra.max_pair ? corrExtra.max_pair.pair + ' (' + corrExtra.max_pair.rho + ')' : '—'}</div>
@@ -670,11 +666,11 @@ ${navGrid(setups)}
   <div class="content-card">
     <div class="chart-grid-2col">
       <div>
-        <h4 style="font-weight:700;margin-bottom:0.75rem;">Global Events Calendar</h4>
+        <h3 style="font-weight:700;margin-bottom:0.75rem;">Global Events Calendar</h3>
 ${macroCalendarTable(d.macro_calendar)}
       </div>
       <div>
-        <h4 style="font-weight:700;margin-bottom:0.75rem;">Sector Rotation Scorecard</h4>
+        <h3 style="font-weight:700;margin-bottom:0.75rem;">Sector Rotation Scorecard</h3>
 ${sectorRotationTable(d.sector_rotation)}
       </div>
     </div>
@@ -696,11 +692,11 @@ ${setupCardsHtml}
 ${syntheseTable(setups)}
     ${echartDiv('scoreBar', 280)}
 
-    <h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Sector &rarr; Strategy &rarr; Setup Flow</h4>
+    <h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Sector &rarr; Strategy &rarr; Setup Flow</h3>
     ${echartDiv('sankey', 320)}
 
-    ${divMatHtml ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Diversification Matrix</h4>\n${divMatHtml}` : ''}
-    ${thematicHtml ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Thematic Allocation</h4>\n${thematicHtml}` : ''}
+    ${divMatHtml ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Diversification Matrix</h3>\n${divMatHtml}` : ''}
+    ${thematicHtml ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Thematic Allocation</h3>\n${thematicHtml}` : ''}
   </div>
 </section>
 
@@ -708,10 +704,10 @@ ${syntheseTable(setups)}
 <section id="performance" class="section-block">
   <div class="section-header"><h2><i class="fas fa-chart-bar"></i> Portfolio Parameters &amp; Historical Performance</h2></div>
   <div class="content-card">
-    ${perfRows ? `<table class="data-table">
+    ${perfRows ? `<div style="overflow-x:auto"><table class="data-table">
       <thead><tr><th>Metric</th><th>Value</th></tr></thead>
       <tbody>${perfRows}</tbody>
-    </table>` : '<p>Performance data will be available after the sweep cycle completes.</p>'}
+    </table></div>` : '<p>Performance data will be available after the sweep cycle completes.</p>'}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> How to use these levels</h4>
       <p>Entry zones are ranges &mdash; enter at the open (9:30&ndash;9:45 ET) if price falls within range. For EU setups, enter at the London open or early US session ADR price. Stop losses are hard exits, not mental stops. TP1 is the primary profit target: take 50% off at TP1, move stop to breakeven, trail the remainder to TP2. R/R ratios assume entry at the midpoint of the range. Horizon is the expected time to TP1 &mdash; if TP1 is not hit within 2&times; the horizon, reassess.</p>

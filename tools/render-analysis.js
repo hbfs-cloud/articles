@@ -52,7 +52,7 @@ function validate(data, schema, loc) {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
 function gradeColor(g) {
   if (!g) return '#64748b';
@@ -200,7 +200,7 @@ function renderBrandBar() {
     <nav class="brand-bar">
       <div class="brand-bar-inner">
         <a href="/" class="brand-logo">
-          <img src="/logo.svg" alt="" width="36" height="36">
+          <img src="/logo.svg" alt="DailyTickers" width="36" height="36">
           <span class="brand-title">DailyTickers</span>
         </a>
         <div class="brand-nav">
@@ -259,7 +259,7 @@ function renderHeader(d) {
       <div class="ticker-name" style="display:none">${esc(header.name)} &mdash; ${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
       <div class="ticker-exchange" style="display:none">${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
       <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
-        <img src="/logo.svg" alt="" width="44" height="44" style="border-radius:10px;">
+        <img src="/logo.svg" alt="DailyTickers" width="44" height="44" style="border-radius:10px;">
         <div>
           <h1 style="margin:0;font-size:1.8rem;font-weight:800;">${esc(header.ticker)} <span style="font-weight:400;font-size:1rem;color:#64748b;">&mdash; ${esc(header.name)}</span></h1>
           <div style="font-size:0.85rem;color:#64748b;">${esc(header.exchange)} &middot; ${esc(header.sector)} &middot; ${esc(meta.dateDisplay || meta.date)}</div>
@@ -900,7 +900,7 @@ function renderScripts(d) {
     (function(){var el=document.getElementById('gaugeScore');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',axisLine:{lineStyle:{width:12,color:[[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#3b82f6'],[1,'#22c55e']]}},pointer:{itemStyle:{color:'auto'}},axisTick:{distance:-12,length:6,lineStyle:{color:'#fff',width:1}},splitLine:{distance:-14,length:12,lineStyle:{color:'#fff',width:2}},axisLabel:{color:'auto',distance:16,fontSize:11},detail:{valueAnimation:true,formatter:'{value}',color:'auto',fontSize:28,fontWeight:800,offsetCenter:[0,'70%']},data:[{value:${d.verdict.score}}]}]});window.addEventListener('resize',function(){c.resize();});})();
     (function(){var el=document.getElementById('radarTech${chartId}');if(!el)return;var c=echarts.init(el);c.setOption({radar:{indicator:[{name:'RSI',max:100},{name:'Trend',max:100},{name:'Volume',max:100},{name:'Momentum',max:100},{name:'Volatility',max:100},{name:'Support',max:100}],shape:'circle',splitArea:{areaStyle:{color:['rgba(59,130,246,0.02)','rgba(59,130,246,0.04)']}}},series:[{type:'radar',data:[{value:[${rv.rsi||50},${rv.trend||50},${rv.volume||50},${rv.momentum||50},${rv.volatility||50},${rv.support||50}],name:'${t}',areaStyle:{color:'rgba(59,130,246,0.15)'},lineStyle:{color:'#3b82f6'},itemStyle:{color:'#3b82f6'}}]}]});window.addEventListener('resize',function(){c.resize();});})();
     (function(){var el=document.getElementById('riskGaugeChart');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',center:['50%','60%'],startAngle:200,endAngle:-20,min:0,max:10,axisLine:{lineStyle:{width:10,color:[[0.3,'#22c55e'],[0.5,'#3b82f6'],[0.7,'#f59e0b'],[1,'#ef4444']]}},pointer:{length:'60%',width:4,itemStyle:{color:'auto'}},axisTick:{show:false},splitLine:{show:false},axisLabel:{show:false},detail:{valueAnimation:true,formatter:'{value}/10',color:'auto',fontSize:16,fontWeight:800,offsetCenter:[0,'40%']},data:[{value:${d.risks.riskScore}}]}]});window.addEventListener('resize',function(){c.resize();});})();
-${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('riskRadarChart');if(!el)return;var rr=${JSON.stringify(d.risks.riskRadarValues)};var c=echarts.init(el);c.setOption({radar:{indicator:[{name:'Dilution',max:100},{name:'Burn Rate',max:100},{name:'Beta',max:100},{name:'Short Int.',max:100},{name:'Insider Sell',max:100},{name:'Macro Risk',max:100}],shape:'circle',splitArea:{areaStyle:{color:['rgba(239,68,68,0.02)','rgba(239,68,68,0.04)']}}},series:[{type:'radar',data:[{value:[rr.dilution||0,rr.burnRate||0,rr.beta||0,rr.shortInterest||0,rr.insiderSelling||0,rr.macroRisk||0],areaStyle:{color:'rgba(239,68,68,0.15)'},lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
+${d.risks.riskRadarValues ? `    (function(){var el=document.getElementById('riskRadarChart');if(!el)return;var rr=${JSON.stringify(d.risks.riskRadarValues).replace(/<\//g, '<\\/')};var c=echarts.init(el);c.setOption({radar:{indicator:[{name:'Dilution',max:100},{name:'Burn Rate',max:100},{name:'Beta',max:100},{name:'Short Int.',max:100},{name:'Insider Sell',max:100},{name:'Macro Risk',max:100}],shape:'circle',splitArea:{areaStyle:{color:['rgba(239,68,68,0.02)','rgba(239,68,68,0.04)']}}},series:[{type:'radar',data:[{value:[rr.dilution||0,rr.burnRate||0,rr.beta||0,rr.shortInterest||0,rr.insiderSelling||0,rr.macroRisk||0],areaStyle:{color:'rgba(239,68,68,0.15)'},lineStyle:{color:'#ef4444'},itemStyle:{color:'#ef4444'}}]}]});window.addEventListener('resize',function(){c.resize();});})();` : ''}
     </script>
     <script>
     function openChartModal(){document.getElementById('chartModal').style.display='flex';}
