@@ -215,23 +215,35 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
 
 ## Analyses Refresh (à chaque run scanner)
 
-À chaque exécution du pipeline `/scanner`, après la Phase 5 (downstream) et avant le commit final, **rafraîchir les analyses de la watchlist**.
+À chaque exécution du pipeline `/scanner`, après la Phase 5 (downstream) et avant le commit final :
 
-### Watchlist
-Fichier : `data/analyses-watchlist.json` — liste de tickers dont l'analyse doit être mise à jour à chaque scan.
+### Étape 1 — Grade Auto-Refresh (AUTOMATIQUE)
+```bash
+node tools/refresh-analyses.js --max-age 30 --commit
+```
+Rafraîchit toutes les analyses < 30 jours :
+- Fetch prix courants via MCP Gateway (fallback Yahoo/allorigins)
+- Re-évalue le grade basé sur : prix vs stop/entry/TP, R/R courant, signaux techniques
+- Si grade change → met à jour le JSON, re-rend le HTML, ajoute badge `⬇ A+ → A` sur la carte
+- Si trade complété (prix > TP2) → marque `status: completed` sans dégrader le grade
+- Ajoute `gradeHistory[]` pour traçabilité
+- `--dry` pour preview, `--tickers AAPL,MSFT` pour forcer des tickers spécifiques
+
+### Étape 2 — Watchlist Deep Refresh (MANUEL, tickers critiques)
+Fichier : `data/analyses-watchlist.json` — liste de tickers dont l'analyse doit être régénérée complètement.
 ```json
 { "tickers": ["ALT", "IOVA", "ALLR"], "frequency": "each_scanner_run" }
 ```
 
-### Process par ticker
-1. **Archiver** l'analyse existante : `mv analyses/{TICKER}/index.html analyses/{TICKER}/archive/YYYYMMDD/index.html` (date de l'ancienne analyse, pas d'aujourd'hui)
+### Process par ticker (watchlist uniquement)
+1. **Archiver** l'analyse existante : `mv analyses/{TICKER}/index.html analyses/{TICKER}/archive/YYYYMMDD/index.html`
 2. **Collecter données fraîches** via MCP (`GetInstruments` + `QueryData types=sec_filings,flags,insider_transactions,news`)
-3. **Générer** la nouvelle analyse en français niveau intermédiaire, même template que les autres analyses (17 sections, ECharts, Trade Idea, sources inline)
-4. **Mettre à jour la modale Historique** dans le nouveau `index.html` avec lien vers la version archivée
+3. **Générer** la nouvelle analyse en français niveau intermédiaire
+4. **Mettre à jour la modale Historique** avec lien vers la version archivée
 5. **Publier** : `node tools/publish.js --type analysis --path analyses/{TICKER}/index.html --no-notify`
 
 ### Contraintes
-- **Versioning** : toujours archiver avant d'écraser. La modale historique doit lister toutes les versions passées.
-- **Pas de doublons** : vérifier `data/analyses.json` avant `add_card.js` — le publish script gère l'archivage de la carte.
-- **Qualité** : même standard que les analyses manuelles. Pas de raccourci sous prétexte que c'est automatique.
-- **Parallélisable** : les analyses sont indépendantes, lancer les agents en parallèle.
+- **Versioning** : toujours archiver avant d'écraser
+- **Pas de doublons** : vérifier `data/analyses.json` avant `add_card.js`
+- **Qualité** : même standard que les analyses manuelles
+- **Parallélisable** : les analyses sont indépendantes, lancer les agents en parallèle

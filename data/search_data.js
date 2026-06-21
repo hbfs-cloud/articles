@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Warsh's first FOMC rewrites the playbook: median dot jumps to 3.8%, hinting at a rate hike. Markets digest the hawkish surprise while PCE data (Thursday) and Russell Reconstitution (Friday) loom. Gold slides to $4,150, BTC drops below $63K, and US-Iran sign MOU. Week ahead: FedEx earnings, GDP revision, Michigan Sentiment.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
+    "grade": "",
+    "href": "/weekly/20260622/",
+    "date": "22 juin 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Contexte macro & marchés",
     "desc": "Reprise en V après le choc du 5 juin : small caps +4,0% et Nasdaq +2,3% mènent un rebond risk-on (VIX −17% à 17,8). Le Brent chute de 3,4% à 87,33$ sur l'espoir d'un accord Iran rouvrant Ormuz, pendant que l'argent (+6,2%), l'or (+3,0%) et le cuivre (+2,7%) s'envolent. CPI à 4,2%, FOMC les 16-17 juin sous la nouvelle ère Warsh.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
@@ -273,17 +286,30 @@ window.searchDataPrebuilt = [
     "date": "8 juin 2026"
   },
   {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
+    "type": "daily",
+    "icon": "fa-sun",
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Macro & Markets Context",
-    "desc": "Warsh's first FOMC rewrites the playbook: median dot jumps to 3.8%, hinting at a rate hike. Markets digest the hawkish surprise while PCE data (Thursday) and Russell Reconstitution (Friday) loom. Gold slides to $4,150, BTC drops below $63K, and US-Iran sign MOU. Week ahead: FedEx earnings, GDP revision, Michigan Sentiment.",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
+    "title": "Vue Macro — Le Semestre de Tous les Paradoxes",
+    "desc": "Le premier semestre 2026 restera dans les annales comme une période de contradictions remarquables. Les marchés actions américains ont continué leur trajectoire ascendante malgré un conflit militaire majeur au Moyen-Orient, une inflation réaccélérant bien au-dessus de la cible, et un changement de l...",
+    "tags": "macro,retrospective,us,eu,asia,crypto,commodity,geopolitique,energy,financials,tech",
     "grade": "",
-    "href": "/weekly/20260622/",
-    "date": "22 juin 2026"
+    "href": "/daily/20260621-retrospective-h1/",
+    "date": "21 juin 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "The Warsh Era Begins — Hawkish Dot Plot Rattles Markets, Iran MOU Reshapes Energy",
+    "desc": "Kevin Warsh’s first FOMC meeting brought a visible philosophical shift. The statement was dramatically shortened — stripped of the deliberate ambiguity that characterized the Powell/Yellen era. Key changes:",
+    "tags": "us,eu,asia,crypto,macro,technique,trade-idea,formation,geopolitique,energy,financials",
+    "grade": "",
+    "href": "/daily/20260621/",
+    "date": "21 juin 2026"
   },
   {
     "type": "daily",
@@ -5275,7 +5301,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,ai,tech",
     "grade": "",
     "href": "/tech/workflows-multi-agents/",
-    "date": ""
+    "date": "2026"
   },
   {
     "type": "tech",
@@ -5288,7 +5314,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,ai,tech",
     "grade": "",
     "href": "/tech/mcp-donnees-marche/",
-    "date": ""
+    "date": "2026"
   },
   {
     "type": "tech",
@@ -5561,7 +5587,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,macro,technique",
     "grade": "",
     "href": "/series/piloter-son-portefeuille/part1-demarrer/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
@@ -5574,7 +5600,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,macro,technique",
     "grade": "",
     "href": "/series/salarie-investisseur/part1-contrainte-horaire/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
@@ -5587,7 +5613,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,technique,macro",
     "grade": "",
     "href": "/series/journal-et-performance/part1-tenir-le-journal/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
@@ -5600,7 +5626,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,technique,macro",
     "grade": "",
     "href": "/series/plan-de-trading/part1-pourquoi-un-plan/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
@@ -5613,7 +5639,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,us,tech,macro",
     "grade": "",
     "href": "/series/grandes-ipo/part1-mecanique/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
@@ -5626,7 +5652,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,commodity,energy,geopolitique,macro",
     "grade": "",
     "href": "/series/iran-petrole/part1-ormuz/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
@@ -5639,7 +5665,7 @@ window.searchDataPrebuilt = [
     "tags": "formation,us,tech,ai,semis",
     "grade": "",
     "href": "/series/acceleration-ia/part1-supercycle/",
-    "date": ""
+    "date": "Part 1 / 6 • 2026"
   },
   {
     "type": "série",
