@@ -295,6 +295,15 @@ function updateCardBadge(ticker, oldGrade, newGrade) {
       `$1${newGrade}`
     );
 
+    // Update card date to today
+    const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const now = new Date();
+    const todayStr = `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()}`;
+    updated = updated.replace(
+      /(<div class="report-card-meta">)\s*[^<]+/,
+      `$1\n        ${todayStr}\n       `
+    );
+
     return updated;
   });
 
