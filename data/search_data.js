@@ -273,6 +273,19 @@ window.searchDataPrebuilt = [
     "date": "8 juin 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets",
+    "desc": "S&P 500 notches 11th winning week in 12 as Warsh’s hawkish debut sends dollar to 100.78 and crypto tumbling. Micron earnings (rev +276% YoY), PCE inflation, and the historic first semi-annual Russell reconstitution headline the week ahead.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260623/",
+    "date": "23 juin 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
