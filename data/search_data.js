@@ -278,19 +278,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Macro & Markets",
-    "desc": "S&P 500 notches 11th winning week in 12 as Warsh’s hawkish debut sends dollar to 100.78 and crypto tumbling. Micron earnings (rev +276% YoY), PCE inflation, and the historic first semi-annual Russell reconstitution headline the week ahead.",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
-    "grade": "",
-    "href": "/weekly/20260623/",
-    "date": "23 juin 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "Macro & Markets Context",
     "desc": "Warsh's first FOMC rewrites the playbook: median dot jumps to 3.8%, hinting at a rate hike. Markets digest the hawkish surprise while PCE data (Thursday) and Russell Reconstitution (Friday) loom. Gold slides to $4,150, BTC drops below $63K, and US-Iran sign MOU. Week ahead: FedEx earnings, GDP revision, Michigan Sentiment.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
@@ -5263,6 +5250,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/20260310-2300/",
     "date": "Monday, March 10, 2026"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ RISK-OFF — AEHR, TGTX, TNGX, CELC, SPXC, LXFR, SMR, ACHR, OPEN, IWM",
+    "desc": "Regime score 0.35 — classified RISK-ON. VIX at 16.78 (sub-20, 2nd session). S&P 500 at 7,500 above both 50-DMA and 200-DMA. Russell 2000 outperforming large-caps as rate cuts accelerate small-cap earnings recovery. Dollar weak (DXY ~98) supporting multinational small-caps with export exposure. Credi...",
+    "tags": "us,tech,semis,healthcare,industrials,materials,energy,small-cap,technique,trade-idea,ai",
+    "grade": "",
+    "href": "/scanner/special-smallcap-20260621/",
+    "date": "21 juin 2026"
   },
   {
     "type": "tech",
