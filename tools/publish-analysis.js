@@ -93,6 +93,27 @@ function quickUpdate(ticker, updates) {
   return jsonPath;
 }
 
+// ─── Archive ──────────────────────────────────────────────────────────────
+
+function archiveIfExists(ticker) {
+  const htmlPath = path.join(ROOT, 'analyses', ticker, 'index.html');
+  if (!fs.existsSync(htmlPath)) return null;
+
+  const content = fs.readFileSync(htmlPath, 'utf8');
+  const dateMatch = content.match(/data-date="([^"]+)"/);
+  const folderDate = dateMatch
+    ? dateMatch[1].replace(/-/g, '')
+    : new Date().toISOString().slice(0, 10).replace(/-/g, '');
+
+  const archiveDir = path.join(ROOT, 'analyses', ticker, 'archive', folderDate);
+  if (fs.existsSync(path.join(archiveDir, 'index.html'))) return archiveDir;
+
+  fs.mkdirSync(archiveDir, { recursive: true });
+  fs.copyFileSync(htmlPath, path.join(archiveDir, 'index.html'));
+  console.log(`[ARCHIVED] ${ticker} → analyses/${ticker}/archive/${folderDate}/`);
+  return archiveDir;
+}
+
 // ─── Render ────────────────────────────────────────────────────────────────
 
 function renderFile(jsonPath, dryRun) {
@@ -114,6 +135,8 @@ function renderFile(jsonPath, dryRun) {
     console.log(`[DRY] ${ticker} (${data.meta.grade}) — valid, would render to analyses/${ticker}/index.html`);
     return ticker;
   }
+
+  archiveIfExists(ticker);
 
   try {
     execSync(`node "${path.join(__dirname, 'render-analysis.js')}" "${jsonPath}"`, { stdio: 'inherit', cwd: ROOT });
@@ -146,12 +169,20 @@ function indexTicker(ticker) {
 // ─── Git ───────────────────────────────────────────────────────────────────
 
 function commitTickers(tickers, message) {
-  const files = tickers.flatMap(t => [
-    `analyses/${t}/index.html`,
-    `data/analyses-data/${t}.json`
-  ]).filter(f => fs.existsSync(path.join(ROOT, f)));
+  const files = tickers.flatMap(t => {
+    const base = [
+      `analyses/${t}/index.html`,
+      `data/analyses-data/${t}.json`
+    ];
+    const archiveDir = path.join(ROOT, 'analyses', t, 'archive');
+    if (fs.existsSync(archiveDir)) base.push(`analyses/${t}/archive/`);
+    return base;
+  }).filter(f => fs.existsSync(path.join(ROOT, f)));
 
   files.push('data/analyses.json', 'data/search_data.js');
+  if (fs.existsSync(path.join(ROOT, 'data/analyses_archive.json'))) {
+    files.push('data/analyses_archive.json');
+  }
 
   try {
     execSync(`git add ${files.join(' ')}`, { cwd: ROOT, stdio: 'inherit' });
