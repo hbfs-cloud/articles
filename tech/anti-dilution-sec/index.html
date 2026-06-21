@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,tech,technique,trading" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Dilution : Détecter les Pièges SEC avant d'Investir | DailyTickers</title>
+    <meta name="description"
+        content="Guide complet sur la détection des risques de dilution via les SEC filings : ATM offerings, convertibles toxiques, warrants, PIPE. Cas réels INDO, PANW, CRDO/ALAB. Pipeline automatisé et protocole en 5 étapes.">
+    <meta property="og:title" content="Anti-Dilution : Détecter les Pièges SEC avant d'Investir">
+    <meta property="og:description"
+        content="Le risque #1 sur les small/mid-caps que l'analyse technique ne voit pas. Comment le détecter en 5 minutes sur EDGAR.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/anti-dilution-sec/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
+            text-align: center;
+            border-bottom: 1px solid #fecaca;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #dc2626;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #dc2626;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .pedagogy-box {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #b91c1c;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #991b1b;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k {
+            color: #fca5a5;
+        }
+
+        pre.code-block .s {
+            color: #86efac;
+        }
+
+        pre.code-block .c {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        pre.code-block .n {
+            color: #fcd34d;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #fef2f2;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #b91c1c;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .severity-critical {
+            color: #dc2626;
+            font-weight: 800;
+        }
+
+        .severity-high {
+            color: #ea580c;
+            font-weight: 700;
+        }
+
+        .severity-medium {
+            color: #d97706;
+            font-weight: 600;
+        }
+
+        .severity-low {
+            color: #65a30d;
+            font-weight: 600;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #fecaca;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #b91c1c;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.danger {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .flow-node.danger b {
+            color: #dc2626;
+        }
+
+        .flow-node.safe {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .flow-node.safe b {
+            color: #15803d;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #f87171;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        .red-flag-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            padding: 1rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .red-flag-item:last-child {
+            border-bottom: none;
+        }
+
+        .red-flag-number {
+            min-width: 2rem;
+            height: 2rem;
+            border-radius: 50%;
+            background: #dc2626;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        .red-flag-content h4 {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 0.25rem;
+        }
+
+        .red-flag-content p {
+            font-size: 0.9rem;
+            margin: 0;
+            color: #475569;
+            line-height: 1.5;
+        }
+
+        .case-study {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.25rem 0;
+            background: #fafafa;
+        }
+
+        .case-study.loss {
+            border-left: 4px solid #dc2626;
+        }
+
+        .case-study.win {
+            border-left: 4px solid #16a34a;
+        }
+
+        .case-study.neutral {
+            border-left: 4px solid #3b82f6;
+        }
+
+        .case-study h4 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .case-study .case-meta {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .case-study .case-meta span {
+            font-size: 0.78rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .case-study p {
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            pre.code-block {
+                font-size: 0.74rem;
+                padding: 1.1rem 1.25rem;
+            }
+
+            .flow-row {
+                flex-direction: column;
+            }
+
+            .case-study .case-meta {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — RISK MANAGEMENT</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Anti-Dilution : Détecter les Pièges SEC avant d'Investir
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Le risque numéro un sur les small et mid-caps que l'analyse technique ne voit pas.
+            ATM offerings, convertibles toxiques, warrants, PIPE — comment les détecter en 5 minutes
+            sur EDGAR, les intégrer dans un pipeline automatisé, et ne plus jamais se faire piéger.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Risk Management</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 18 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-file-contract"></i> SEC Filings</div>
+            <div class="hero-badge"><i class="fa-solid fa-triangle-exclamation"></i> Cas réels</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- SECTION 1: INTRO -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-bomb" style="color:#dc2626;"></i> Le Risque Invisible qui Détruit les Positions
+            </h2>
+
+            <p>Vous trouvez un small-cap à $5. RSI survendu, catalyst imminent, volume en hausse.
+                Le setup technique est parfait. Vous achetez. Le lendemain, un filing S-3 annonce
+                20 millions de nouvelles actions à prix de marché. Le cours chute de 30%.
+                Vous n'aviez pas vérifié les SEC filings.</p>
+
+            <p>Ce scénario n'est pas hypothétique. C'est <strong>le risque numéro un</strong> sur les
+                small et mid-caps — et il a une particularité cruelle : <strong>ni l'analyse technique
+                ni l'analyse fondamentale classique ne le détectent</strong>. Un graphique parfait,
+                un RSI idéal, un P/E attractif — tout cela devient sans valeur quand la société
+                s'apprête à inonder le marché de nouvelles actions.</p>
+
+            <p>La dilution n'est pas un événement rare. Sur les titres de capitalisation inférieure
+                à 2 milliards de dollars, c'est un mécanisme de financement <em>standard</em>.
+                Les biotech en phase clinique, les sociétés technologiques pré-revenue, les
+                entreprises en retournement — toutes dépendent de l'émission d'actions pour
+                survivre. Et les documents qui annoncent cette dilution sont publics, disponibles
+                gratuitement, et lisibles en cinq minutes sur EDGAR. La plupart des investisseurs
+                ne les consultent jamais.</p>
+
+            <h3>La leçon INDO</h3>
+
+            <p>Chez DailyTickers, nous avons appris cette leçon de la manière la plus coûteuse.
+                Le ticker <strong>INDO</strong> (PT Indonesia Energy) présentait un setup technique
+                convaincant — breakout sur volume, momentum sectoriel porteur dans l'énergie.
+                Le scanner algorithmique l'avait identifié, scoré et recommandé. Ce que le scanner
+                ne vérifiait pas à l'époque : les SEC filings.</p>
+
+            <p>Un programme ATM (At-The-Market) était actif. La société vendait des actions
+                directement sur le marché ouvert, au prix du moment, via un courtier mandaté.
+                Pas d'annonce publique, pas de communiqué de presse — juste un flux continu
+                de nouvelles actions qui diluait mécaniquement les positions existantes. La position
+                a perdu une valeur significative avant que nous comprenions ce qui se passait.</p>
+
+            <p>Ce jour-là, nous avons ajouté une étape obligatoire au pipeline :
+                le <strong>check anti-dilution</strong>. Depuis, plus aucun ticker ne passe en
+                recommandation sans vérification SEC préalable.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">-30%</div>
+                    <div class="metric-label">Chute typique post-annonce dilutive sur un small-cap.
+                        Les convertibles toxiques peuvent provoquer -50% ou plus.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">$2B</div>
+                    <div class="metric-label">Seuil de capitalisation sous lequel la dilution
+                        devient un risque critique — les sociétés ont peu d'alternatives de financement.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">S-3</div>
+                    <div class="metric-label">Le filing SEC à surveiller en priorité.
+                        Un « shelf registration » autorise la société à émettre des actions à tout moment.</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">5 min</div>
+                    <div class="metric-label">Temps nécessaire pour vérifier les filings récents
+                        sur EDGAR. Cinq minutes qui peuvent sauver une position entière.</div>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.sec.gov/edgar/searchedgar/companysearch" target="_blank"
+                    rel="noopener">SEC EDGAR — Full-Text Search</a></p>
+        </div>
+
+        <!-- SECTION 2: TYPES DE DILUTION -->
+        <div id="types-dilution" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#dc2626;"></i> Les 6 Types de Dilution Expliqués</h2>
+
+            <p>Tous les mécanismes de dilution ne se valent pas. Certains sont visibles et prévisibles,
+                d'autres sont délibérément opaques. Comprendre les six types principaux permet de calibrer
+                le risque et de savoir exactement quoi chercher dans les filings SEC.</p>
+
+            <!-- Type 1: ATM -->
+            <h3>1. ATM — At-The-Market Offering</h3>
+
+            <p>La société mandate un courtier (typiquement Cowen, Cantor Fitzgerald, ou H.C. Wainwright)
+                pour vendre des actions <strong>directement sur le marché ouvert</strong>, au prix du moment,
+                sans annonce préalable. C'est le mécanisme de dilution le plus insidieux parce qu'il est
+                invisible en temps réel — les actions sont vendues au fil de l'eau, mélangées au volume
+                normal du marché.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node danger">
+                        <b>Étape 1</b>
+                        La société dépose un S-3 (shelf registration) auprès de la SEC avec un prospectus
+                        ATM. Montant autorisé : par exemple $50M.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>Étape 2</b>
+                        Le courtier mandaté vend des actions au prix du marché, progressivement,
+                        sans annonce. Le volume augmente légèrement sans explication visible.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>Étape 3</b>
+                        L'investisseur découvre la dilution dans le rapport trimestriel (10-Q)
+                        quand le nombre d'actions en circulation a augmenté de 15%.
+                    </div>
+                </div>
+            </div>
+
+            <p><strong>Sévérité : <span class="severity-high">HAUTE</span></strong> — L'ATM est le type
+                de dilution le plus courant sur les micro et small-caps. Sa discrétion le rend
+                particulièrement dangereux.</p>
+
+            <p><strong>Détection :</strong> Rechercher le filing <code>S-3</code> sur EDGAR + le
+                prospectus supplement mentionnant « at-the-market ». Vérifier si des ventes récentes
+                ont eu lieu en consultant les 10-Q trimestriels (variation du nombre d'actions).</p>
+
+            <!-- Type 2: Secondary Offering -->
+            <h3>2. Secondary Offering (Follow-On)</h3>
+
+            <p>Contrairement à l'ATM, le secondary offering est <strong>annoncé publiquement</strong>.
+                La société émet un bloc massif de nouvelles actions, souvent à un prix inférieur au marché
+                (discount de 5-15%). Le cours chute mécaniquement le jour de l'annonce — l'offre et la demande
+                imposent leur loi.</p>
+
+            <p>Le secondary offering a au moins le mérite d'être transparent. Le marché réagit
+                immédiatement, et le cours s'ajuste en une séance. Le risque est de détenir la position
+                <em>avant</em> l'annonce — d'où l'intérêt de repérer les S-3 shelf actifs qui sont
+                le préalable à un secondary.</p>
+
+            <p><strong>Sévérité : <span class="severity-high">HAUTE</span></strong> — Impact immédiat
+                et souvent brutal. Un secondary sur un small-cap peut provoquer -20% à -40% en une séance.</p>
+
+            <p><strong>Détection :</strong> Filing <code>S-1</code> ou <code>S-3</code> + pricing supplement.
+                Un shelf registration actif est le canon chargé — le secondary est le tir.</p>
+
+            <!-- Type 3: Convertible Notes -->
+            <h3>3. Convertible Notes — La Spirale Mortelle</h3>
+
+            <p>Les obligations convertibles sont le mécanisme de dilution le plus destructeur sur les
+                micro-caps. Le principe : un fonds (souvent un hedge fund spécialisé) prête de l'argent
+                à la société sous forme d'obligation, avec le droit de <strong>convertir cette dette
+                en actions</strong> à un prix fixé par une formule.</p>
+
+            <p>Le piège est dans la formule. Sur les convertibles « toxiques », le prix de conversion
+                est un <strong>pourcentage du prix de marché</strong> (par exemple 80% du prix moyen
+                des 5 derniers jours). Voici pourquoi c'est mortel :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>1. Prêt</b>
+                        Le fonds prête $1M à la société. Prix de conversion = 80% du VWAP 5 jours.
+                        Action à $10 → conversion à $8.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>2. Short</b>
+                        Le fonds shorte massivement l'action. Le cours tombe à $7.
+                        Nouveau prix de conversion = $5.60.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>3. Convert</b>
+                        Le fonds convertit à $5.60, reçoit ~178,571 actions,
+                        les vend pour couvrir son short. Profit garanti.
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ Le cours continue de baisser → le fonds recommence ↓</div>
+                <div class="flow-row">
+                    <div class="flow-node danger">
+                        <b>4. Spirale</b>
+                        Plus le cours baisse, plus le fonds reçoit d'actions par conversion.
+                        Plus d'actions = plus de dilution = cours encore plus bas. Boucle infinie.
+                    </div>
+                </div>
+            </div>
+
+            <p><strong>Sévérité : <span class="severity-critical">CRITIQUE</span></strong> sur les
+                small-caps. Les convertibles à prix de conversion flottant sont littéralement conçues
+                pour extraire de la valeur aux actionnaires existants.</p>
+
+            <p><strong>Détection :</strong> Filing <code>8-K</code> mentionnant « convertible note »
+                ou « convertible debenture ». Lire attentivement les termes de conversion — un prix de
+                conversion fixe est acceptable, un prix flottant (« discount to VWAP ») est un signal
+                d'alarme majeur.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> La différence cruciale</h4>
+                <p><strong>Convertible à prix fixe :</strong> « Le prêteur peut convertir à $12 par action. »
+                    Risque modéré — si le cours reste au-dessus de $12, pas de dilution effective.
+                    <br><strong>Convertible à prix flottant :</strong> « Le prêteur peut convertir à 80%
+                    du VWAP des 5 derniers jours de trading. » Signal d'alarme — c'est la spirale mortelle.</p>
+            </div>
+
+            <!-- Type 4: Warrants -->
+            <h3>4. Warrants</h3>
+
+            <p>Un warrant est un droit d'acheter une action à un prix fixe (le « strike ») avant
+                une date d'expiration. Les warrants sont souvent émis en complément d'une offre publique
+                ou d'un PIPE — c'est un « bonus » pour attirer les investisseurs institutionnels.
+                Quand le cours de l'action dépasse le strike, les détenteurs exercent leurs warrants,
+                de nouvelles actions sont créées, et la dilution se matérialise.</p>
+
+            <p>Le risque est proportionnel au volume de warrants en circulation par rapport au
+                flottant. Un « warrant overhang » de 5% est gérable. Un overhang de 20% est une
+                épée de Damoclès — chaque hausse du cours déclenche des exercices qui freinent
+                mécaniquement l'appréciation.</p>
+
+            <p><strong>Sévérité : <span class="severity-medium">MOYENNE</span></strong> — Impact
+                graduel et prévisible. Le prix d'exercice est connu, donc le « plafond de dilution »
+                est calculable.</p>
+
+            <p><strong>Détection :</strong> Notes de bas de page des <code>10-K</code> et <code>10-Q</code>
+                (section « Stockholders' Equity » ou « Warrants »). Le tableau des warrants liste
+                les quantités, les strikes et les dates d'expiration.</p>
+
+            <!-- Type 5: SBC -->
+            <h3>5. Stock-Based Compensation (SBC)</h3>
+
+            <p>Les employés, dirigeants et administrateurs reçoivent des actions ou des options
+                dans le cadre de leur rémunération. C'est une dilution <strong>lente mais constante</strong>,
+                qui grignote le flottant année après année. En soi, le SBC est un mécanisme normal
+                et sain — il aligne les intérêts des employés avec ceux des actionnaires.</p>
+
+            <p>Le SBC devient problématique quand il dépasse 3% du flottant par an (dilution
+                significative) ou 5% du chiffre d'affaires (la société « paie » ses employés en
+                diluant les actionnaires plutôt qu'en cash). Certaines tech companies distribuent
+                plus de 10% de leur revenue en SBC — à ce niveau, la dilution annule une part
+                significative de la croissance pour les actionnaires.</p>
+
+            <p><strong>Sévérité : <span class="severity-low">FAIBLE à MOYENNE</span></strong> —
+                Acceptable sous 3% du float/an. Au-delà de 5% du CA, c'est un red flag.</p>
+
+            <p><strong>Détection :</strong> Proxy statement (<code>DEF 14A</code>) pour la rémunération
+                des dirigeants. Cash flow statement (ligne « Stock-based compensation expense »)
+                dans le <code>10-K</code>/<code>10-Q</code>.</p>
+
+            <!-- Type 6: PIPE -->
+            <h3>6. PIPE — Private Investment in Public Equity</h3>
+
+            <p>Un placement privé où des investisseurs institutionnels achètent des actions
+                <strong>à un prix réduit</strong> par rapport au marché, souvent avec des warrants
+                attachés. C'est une double dilution : les actions elles-mêmes + les warrants qui
+                seront exercés plus tard. Les PIPE sont fréquents sur les sociétés qui n'ont pas
+                accès au marché du crédit conventionnel — c'est un signal que les banques considèrent
+                le risque trop élevé.</p>
+
+            <p><strong>Sévérité : <span class="severity-high">HAUTE</span></strong> — Le discount
+                + les warrants créent un effet dilutif immédiat et différé. Le cours chute souvent
+                au niveau du prix PIPE après l'annonce.</p>
+
+            <p><strong>Détection :</strong> Filing <code>8-K</code> + registration statement
+                pour l'enregistrement des actions PIPE (nécessaire pour que les investisseurs
+                puissent revendre).</p>
+
+            <!-- ECharts Radar -->
+            <h3>Vue comparative</h3>
+            <div id="dilution-radar" style="width:100%; height:420px; margin:1.5rem 0;"></div>
+
+            <p class="source-ref">Source : <a
+                    href="https://www.sec.gov/education/smallbusiness/exemptofferings/pipes" target="_blank"
+                    rel="noopener">SEC — Private Placements and PIPE Transactions</a></p>
+        </div>
+
+        <!-- SECTION 3: EDGAR HOW-TO -->
+        <div id="edgar-howto" class="content-card">
+            <h2><i class="fa-solid fa-magnifying-glass" style="color:#dc2626;"></i> EDGAR : Le Guide Pratique de
+                Détection</h2>
+
+            <p>EDGAR (Electronic Data Gathering, Analysis, and Retrieval) est la base de données
+                publique de la SEC. Tous les filings réglementaires des sociétés cotées y sont
+                disponibles gratuitement et immédiatement. Voici le protocole de vérification
+                en quatre étapes.</p>
+
+            <h3>Étape 1 : Accéder aux filings</h3>
+
+            <p>Rendez-vous sur <strong>efts.sec.gov/LATEST/search-index?q=TICKER</strong> ou
+                utilisez la recherche EDGAR Full-Text Search. Tapez le ticker ou le nom de la société.
+                Vous arrivez sur la page de résultats avec tous les filings déposés.</p>
+
+            <h3>Étape 2 : Filtrer par type de document</h3>
+
+            <p>Les filings pertinents pour la dilution sont, par ordre de priorité :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Filing</th>
+                            <th>Ce qu'il signifie</th>
+                            <th>Urgence</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>S-3</code></td>
+                            <td><strong>Shelf registration</strong> — la société s'est pré-autorisée
+                                à émettre des actions (ou de la dette) jusqu'à un montant donné.
+                                Le canon est chargé.</td>
+                            <td><span class="severity-critical">CRITIQUE</span></td>
+                            <td>Vérifier la date de dépôt, le montant autorisé, et chercher
+                                les prospectus supplements associés.</td>
+                        </tr>
+                        <tr>
+                            <td><code>424B5</code></td>
+                            <td><strong>Prospectus supplement</strong> — les termes exacts d'une
+                                offre (nombre d'actions, prix, underwriter). Le tir a eu lieu.</td>
+                            <td><span class="severity-critical">CRITIQUE</span></td>
+                            <td>Lire les termes : prix, volume, type (ATM, secondary, PIPE).
+                                Calculer la dilution en % du float.</td>
+                        </tr>
+                        <tr>
+                            <td><code>8-K</code></td>
+                            <td><strong>Événement matériel</strong> — Item 1.01 (nouvel accord
+                                financier), Item 3.02 (vente d'actions non enregistrées).</td>
+                            <td><span class="severity-high">HAUTE</span></td>
+                            <td>Chercher les mots-clés : « convertible », « warrant »,
+                                « purchase agreement », « equity line ».</td>
+                        </tr>
+                        <tr>
+                            <td><code>10-K / 10-Q</code></td>
+                            <td>Rapports annuel/trimestriel. Section « Dilution » ou
+                                « Stockholders' Equity » pour le décompte des actions.</td>
+                            <td><span class="severity-medium">MOYENNE</span></td>
+                            <td>Comparer le nombre d'actions en circulation entre périodes.
+                                Une hausse > 5% est un signal d'alarme.</td>
+                        </tr>
+                        <tr>
+                            <td><code>DEF 14A</code></td>
+                            <td><strong>Proxy statement</strong> — rémunération des dirigeants,
+                                plans d'options, SBC total.</td>
+                            <td><span class="severity-low">FAIBLE</span></td>
+                            <td>Vérifier le SBC en % du CA. > 5% = dilution chronique.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Étape 3 : Chercher les mots-clés critiques</h3>
+
+            <p>Dans les filings identifiés, utilisez Ctrl+F pour rechercher ces termes :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Terme</th>
+                            <th>Signification</th>
+                            <th>Danger</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>at-the-market</code></td>
+                            <td>Programme ATM — vente continue d'actions au prix du marché</td>
+                            <td><span class="severity-critical">CRITIQUE</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>shelf registration</code></td>
+                            <td>Autorisation de vente d'actions « à la demande »</td>
+                            <td><span class="severity-high">HAUTE</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>convertible</code></td>
+                            <td>Dette convertible en actions — vérifier si prix fixe ou flottant</td>
+                            <td><span class="severity-high">HAUTE</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>equity line of credit</code></td>
+                            <td>ATM sous un autre nom — même mécanisme, même risque</td>
+                            <td><span class="severity-critical">CRITIQUE</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>warrant</code></td>
+                            <td>Droits d'achat à prix fixe — quantifier l'overhang</td>
+                            <td><span class="severity-medium">MOYENNE</span></td>
+                        </tr>
+                        <tr>
+                            <td><code>dilutive</code></td>
+                            <td>La société elle-même reconnaît l'effet dilutif</td>
+                            <td><span class="severity-high">HAUTE</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Étape 4 : Évaluer la chronologie</h3>
+
+            <p>Un filing ancien n'a pas la même signification qu'un filing récent. La chronologie
+                est essentielle pour juger du risque réel :</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> S-3 actif ≠ dilution</h4>
+                <p>Un S-3 est une <strong>permission</strong> de diluer, pas une dilution.
+                    La question n'est pas « ont-ils un S-3 ? » mais « l'ont-ils <em>utilisé</em>
+                    récemment ? ». Cherchez les <code>424B5</code> (prospectus supplements)
+                    déposés <em>après</em> le S-3. Si le dernier supplément date de plus d'un an,
+                    le shelf est probablement dormant. S'il date du mois dernier, la dilution est
+                    active.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://efts.sec.gov/LATEST/search-index?q=%22at-the-market%22"
+                    target="_blank" rel="noopener">SEC EDGAR — Full-Text Search pour « at-the-market »</a></p>
+        </div>
+
+        <!-- SECTION 4: PIPELINE INTEGRATION -->
+        <div id="pipeline-integration" class="content-card">
+            <h2><i class="fa-solid fa-microchip" style="color:#dc2626;"></i> Intégration dans le Pipeline Scanner</h2>
+
+            <p>La vérification manuelle sur EDGAR prend cinq minutes par ticker. Quand le scanner
+                évalue 40 à 80 candidats par nuit, ça représente des heures de travail humain.
+                DailyTickers a automatisé cette étape via un agent IA spécialisé qui interroge
+                les filings SEC pour chaque candidat.</p>
+
+            <h3>Architecture du check anti-dilution</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>1. Screening</b>
+                        RunScreener identifie 60-80 candidats sur critères techniques et fondamentaux.
+                    </div>
+                    <div class="flow-node">
+                        <b>2. Enrichment MCP</b>
+                        QueryData récupère quote, bars, fundamentals pour chaque ticker.
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-row">
+                    <div class="flow-node danger">
+                        <b>3. Anti-Dilution Check</b>
+                        Pour chaque ticker : vérifier EDGAR pour S-3, 8-K, prospectus récents.
+                        Flaguer : ATM actif, convertible toxique, warrant overhang > 10%.
+                    </div>
+                    <div class="flow-node safe">
+                        <b>4. Decision Matrix</b>
+                        Appliquer le sizing tiered selon mcap et risque dilutif.
+                        REJECT / REDUCE / PASS.
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>5. Risk Gating</b>
+                        Les tickers survivants passent le risk gating standard
+                        (regime, corrélation, earnings proximity).
+                    </div>
+                    <div class="flow-node safe">
+                        <b>6. Publication</b>
+                        Seuls les tickers validés sont publiés dans le scan.
+                    </div>
+                </div>
+            </div>
+
+            <h3>La matrice de décision tiered</h3>
+
+            <p>Initialement, le pipeline rejetait tout ticker avec un risque dilutif et une
+                capitalisation inférieure à 50 milliards de dollars. C'était trop agressif —
+                cela excluait des opportunités légitimes sur des mid-caps solides. Après une
+                war room en juin 2026, nous avons adopté une approche par paliers :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Capitalisation</th>
+                            <th>Risque dilutif détecté</th>
+                            <th>Décision</th>
+                            <th>Sizing</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>< $2B</td>
+                            <td>Oui (ATM, convertible, PIPE)</td>
+                            <td><span class="severity-critical">REJECT</span></td>
+                            <td>0 — position interdite</td>
+                        </tr>
+                        <tr>
+                            <td>$2B – $10B</td>
+                            <td>Oui</td>
+                            <td><span class="severity-high">REDUCE</span></td>
+                            <td>×0.5 — demi-position</td>
+                        </tr>
+                        <tr>
+                            <td>$10B – $50B</td>
+                            <td>Oui</td>
+                            <td><span class="severity-medium">REDUCE</span></td>
+                            <td>×0.7 — position réduite</td>
+                        </tr>
+                        <tr>
+                            <td>> $50B</td>
+                            <td>Oui</td>
+                            <td><span class="severity-low">PASS</span></td>
+                            <td>×1.0 — les large-caps ont accès au crédit, la dilution est
+                                généralement stratégique (M&A) et non survie</td>
+                        </tr>
+                        <tr>
+                            <td>Toute</td>
+                            <td>Non</td>
+                            <td><span class="severity-low">PASS</span></td>
+                            <td>×1.0 — position standard</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Implémentation simplifiée</h3>
+
+            <pre class="code-block"><span class="c">// anti-dilution-check.js — version simplifiée</span>
+
+<span class="k">async function</span> <span class="n">checkDilution</span>(ticker, mcap) {
+  <span class="c">// 1. Chercher les S-3 et prospectus supplements récents</span>
+  <span class="k">const</span> filings = <span class="k">await</span> searchEdgar(ticker, {
+    forms: [<span class="s">'S-3'</span>, <span class="s">'424B5'</span>, <span class="s">'8-K'</span>],
+    dateRange: <span class="s">'last12months'</span>
+  });
+
+  <span class="k">const</span> flags = [];
+
+  <span class="c">// 2. Détecter les ATM actifs</span>
+  <span class="k">const</span> atmFilings = filings.filter(f =>
+    f.text.includes(<span class="s">'at-the-market'</span>) ||
+    f.text.includes(<span class="s">'equity line of credit'</span>)
+  );
+  <span class="k">if</span> (atmFilings.length > <span class="n">0</span>) {
+    flags.push({ type: <span class="s">'ATM'</span>, severity: <span class="s">'HIGH'</span>,
+      detail: <span class="s">`${atmFilings.length} ATM filing(s) in last 12mo`</span> });
+  }
+
+  <span class="c">// 3. Détecter les convertibles toxiques</span>
+  <span class="k">const</span> convertibles = filings.filter(f =>
+    f.text.includes(<span class="s">'convertible'</span>) &&
+    (f.text.includes(<span class="s">'VWAP'</span>) || f.text.includes(<span class="s">'discount'</span>))
+  );
+  <span class="k">if</span> (convertibles.length > <span class="n">0</span>) {
+    flags.push({ type: <span class="s">'TOXIC_CONVERT'</span>, severity: <span class="s">'CRITICAL'</span>,
+      detail: <span class="s">'Floating-price convertible detected'</span> });
+  }
+
+  <span class="c">// 4. Appliquer le sizing tiered</span>
+  <span class="k">if</span> (flags.length === <span class="n">0</span>) <span class="k">return</span> { decision: <span class="s">'PASS'</span>, sizing: <span class="n">1.0</span> };
+
+  <span class="k">if</span> (mcap < <span class="n">2e9</span>)  <span class="k">return</span> { decision: <span class="s">'REJECT'</span>, sizing: <span class="n">0</span>, flags };
+  <span class="k">if</span> (mcap < <span class="n">10e9</span>) <span class="k">return</span> { decision: <span class="s">'REDUCE'</span>, sizing: <span class="n">0.5</span>, flags };
+  <span class="k">if</span> (mcap < <span class="n">50e9</span>) <span class="k">return</span> { decision: <span class="s">'REDUCE'</span>, sizing: <span class="n">0.7</span>, flags };
+  <span class="k">return</span> { decision: <span class="s">'PASS'</span>, sizing: <span class="n">1.0</span>, flags };
+}</pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Étape non-skippable</h4>
+                <p>Le check anti-dilution est une étape <strong>obligatoire</strong> du pipeline scanner.
+                    Il ne peut être sauté qu'avec l'accord explicite de l'opérateur. Cette règle a été
+                    instaurée après l'incident INDO et s'applique sans exception, même quand le score
+                    technique du ticker est excellent.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://efts.sec.gov/LATEST/search-index?q=%22shelf+registration%22&dateRange=custom&startdt=2025-06-01&enddt=2026-06-21"
+                    target="_blank" rel="noopener">SEC EDGAR — Shelf registrations récents</a></p>
+        </div>
+
+        <!-- SECTION 5: CASE STUDIES -->
+        <div id="case-studies" class="content-card">
+            <h2><i class="fa-solid fa-microscope" style="color:#dc2626;"></i> 5 Cas Réels : Ce Que Nous Avons Détecté
+                (et Raté)</h2>
+
+            <p>La théorie est utile, mais ce sont les cas réels qui forment l'intuition. Voici cinq
+                situations que le pipeline DailyTickers a rencontrées — deux ratés et trois réussites.</p>
+
+            <!-- Case 1: INDO -->
+            <div class="case-study loss">
+                <h4><i class="fa-solid fa-circle-xmark" style="color:#dc2626;"></i> Cas n°1 — INDO :
+                    La Leçon Fondatrice</h4>
+                <div class="case-meta">
+                    <span>ATM actif</span>
+                    <span>Small-cap energy</span>
+                    <span>Perte significative</span>
+                </div>
+                <p><strong>Contexte :</strong> PT Indonesia Energy Corporation. Ticker identifié par le scanner
+                    sur un breakout technique dans le secteur énergie. RSI en zone de momentum, volume en hausse,
+                    catalyst sectoriel (prix du pétrole en hausse).</p>
+                <p><strong>Ce qui a été raté :</strong> Un programme ATM actif via H.C. Wainwright. La société
+                    vendait des actions au fil de l'eau pour financer ses opérations. Le S-3 shelf registration
+                    et le prospectus supplement étaient publics sur EDGAR — personne ne les avait vérifiés.</p>
+                <p><strong>Résultat :</strong> La position a subi une perte significative. La dilution continue
+                    a empêché toute recovery malgré un secteur porteur.</p>
+                <p><strong>Leçon :</strong> Le check anti-dilution a été ajouté comme étape obligatoire
+                    du pipeline. Plus aucun ticker ne passe en recommandation sans vérification EDGAR.</p>
+            </div>
+
+            <!-- Case 2: PANW -->
+            <div class="case-study win">
+                <h4><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> Cas n°2 — PANW :
+                    Détection lors du Screening A+</h4>
+                <div class="case-meta">
+                    <span>Acquisition stock</span>
+                    <span>Large-cap cybersecurity</span>
+                    <span>Correctement exclu</span>
+                </div>
+                <p><strong>Contexte :</strong> Palo Alto Networks, identifié comme candidat A+ en juin 2026.
+                    Fondamentaux excellents, leader cybersécurité, croissance forte.</p>
+                <p><strong>Ce qui a été détecté :</strong> Une acquisition matérielle avec composante stock
+                    significative. Le filing 8-K révélait un deal impliquant l'émission de nouvelles actions
+                    pour financer l'acquisition.</p>
+                <p><strong>Résultat :</strong> Correctement exclu de la liste A+. Même sur un large-cap,
+                    une acquisition financée par dilution peut peser sur le cours à court terme (intégration,
+                    incertitude).</p>
+                <p><strong>Leçon :</strong> La dilution n'est pas réservée aux small-caps. Les acquisitions
+                    financées par stock sont un risque dilutif réel, même sur les blue chips.</p>
+            </div>
+
+            <!-- Case 3: CRDO/ALAB -->
+            <div class="case-study win">
+                <h4><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> Cas n°3 — CRDO / ALAB :
+                    ATM Actifs sur des Semis IA</h4>
+                <div class="case-meta">
+                    <span>ATM actif</span>
+                    <span>Mid-cap semiconductors</span>
+                    <span>Disqualifiés du label A+</span>
+                </div>
+                <p><strong>Contexte :</strong> CRDO (Credo Technology) et ALAB (Astera Labs), tous deux
+                    dans le secteur des semiconducteurs IA. Momentum exceptionnel, croissance explosive,
+                    thématique porteuse. Candidats naturels pour le label A+.</p>
+                <p><strong>Ce qui a été détecté :</strong> Programmes ATM actifs sur les deux tickers.
+                    Les deux sociétés profitaient de leur valorisation élevée pour lever du capital via
+                    des ventes d'actions « at-the-market ». Les prospectus supplements confirmaient
+                    des ventes récentes.</p>
+                <p><strong>Résultat :</strong> Les deux ont été disqualifiés du label A+ malgré des
+                    fondamentaux et un momentum exceptionnels. Le risque de dilution active invalidait
+                    le setup d'entrée — le R/R n'était pas fiable si la société pouvait vendre des
+                    actions à tout moment, créant une pression vendeuse invisible.</p>
+                <p><strong>Leçon :</strong> Un ticker peut avoir tous les mérites du monde — si un ATM
+                    est actif, le R/R affiché est trompeur. La société est un vendeur permanent caché
+                    dans le carnet d'ordres.</p>
+            </div>
+
+            <!-- Case 4: Saved trade -->
+            <div class="case-study win">
+                <h4><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> Cas n°4 — Un Trade
+                    Sauvé par le 8-K</h4>
+                <div class="case-meta">
+                    <span>Convertible toxique</span>
+                    <span>Micro-cap biotech</span>
+                    <span>Perte évitée : ~40%</span>
+                </div>
+                <p><strong>Contexte :</strong> Un micro-cap biotech avec un setup technique parfait —
+                    breakout au-dessus de la résistance, volume 3× la moyenne, RSI en zone de force
+                    sans être suracheté. Le screener fondamental montrait un cash runway de 18 mois
+                    et un pipeline prometteur.</p>
+                <p><strong>Ce qui a été détecté :</strong> Un 8-K récent (moins de 3 semaines) révélait
+                    un accord de financement par convertible avec un fonds spécialisé. Les termes :
+                    conversion à 80% du VWAP des 5 derniers jours, avec un floor de conversion à $1.
+                    Le stock tradait à $4 — la spirale mortelle était mathématiquement programmée.</p>
+                <p><strong>Résultat :</strong> Ticker rejeté par le pipeline. Dans les semaines suivantes,
+                    le cours a chuté de 40% sous la pression des conversions et du short associé.</p>
+                <p><strong>Leçon :</strong> Le cash runway n'est pas suffisant comme indicateur de santé
+                    financière. La question n'est pas « ont-ils du cash ? » mais « comment l'ont-ils
+                    obtenu ? ».</p>
+            </div>
+
+            <!-- Case 5: False positive -->
+            <div class="case-study neutral">
+                <h4><i class="fa-solid fa-circle-info" style="color:#3b82f6;"></i> Cas n°5 — Faux Positif :
+                    Le S-3 Dormant</h4>
+                <div class="case-meta">
+                    <span>S-3 expiré</span>
+                    <span>Mid-cap industrials</span>
+                    <span>Réintégré après analyse</span>
+                </div>
+                <p><strong>Contexte :</strong> Un ticker industriel mid-cap avec un bon setup. Le pipeline
+                    l'a initialement flagué pour un filing S-3 détecté sur EDGAR.</p>
+                <p><strong>Analyse approfondie :</strong> Le S-3 datait de 2023 (shelf registration de
+                    3 ans, donc encore techniquement valide). Mais aucun prospectus supplement n'avait
+                    été déposé depuis — le shelf n'avait jamais été utilisé. La société avait entre-temps
+                    généré suffisamment de cash flow pour ne pas avoir besoin de lever du capital.</p>
+                <p><strong>Résultat :</strong> Ticker réintégré dans la liste après analyse manuelle.
+                    Le S-3 était un vestige administratif, pas un risque actif.</p>
+                <p><strong>Leçon :</strong> Un S-3 seul n'est pas suffisant pour rejeter un ticker. Il faut
+                    vérifier les prospectus supplements — c'est l'utilisation effective du shelf qui compte,
+                    pas son existence.</p>
+            </div>
+
+            <h3>Tableau récapitulatif</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cas</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                            <th>Issue</th>
+                            <th>Leçon</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>INDO</td>
+                            <td>ATM</td>
+                            <td>S-3 + 424B5</td>
+                            <td><span class="severity-critical">Raté</span></td>
+                            <td>Ajout du check obligatoire</td>
+                        </tr>
+                        <tr>
+                            <td>PANW</td>
+                            <td>Acquisition stock</td>
+                            <td>8-K</td>
+                            <td><span class="severity-low">Détecté</span></td>
+                            <td>Dilution ≠ small-cap only</td>
+                        </tr>
+                        <tr>
+                            <td>CRDO/ALAB</td>
+                            <td>ATM</td>
+                            <td>S-3 + 424B5</td>
+                            <td><span class="severity-low">Détecté</span></td>
+                            <td>ATM invalide le R/R</td>
+                        </tr>
+                        <tr>
+                            <td>Biotech X</td>
+                            <td>Convertible toxique</td>
+                            <td>8-K</td>
+                            <td><span class="severity-low">Détecté</span></td>
+                            <td>Cash ≠ cash propre</td>
+                        </tr>
+                        <tr>
+                            <td>Industriel Y</td>
+                            <td>S-3 dormant</td>
+                            <td>S-3 (pas de 424B5)</td>
+                            <td><span class="severity-medium">Faux positif</span></td>
+                            <td>Shelf ≠ usage</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=S-3&dateb=&owner=include&count=40&search_text=&action=getcompany"
+                    target="_blank" rel="noopener">SEC EDGAR — Recent S-3 filings</a></p>
+        </div>
+
+        <!-- SECTION 6: RED FLAGS -->
+        <div id="red-flags" class="content-card">
+            <h2><i class="fa-solid fa-flag" style="color:#dc2626;"></i> Les 10 Red Flags qui Doivent Déclencher
+                l'Alarme</h2>
+
+            <p>Voici les dix signaux d'alarme qui, individuellement ou combinés, doivent déclencher
+                une analyse approfondie avant toute prise de position.</p>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">1</div>
+                <div class="red-flag-content">
+                    <h4>S-3 shelf registration déposé dans les 12 derniers mois</h4>
+                    <p>La société a obtenu l'autorisation d'émettre des actions à tout moment.
+                        Le montant autorisé donne l'échelle du risque — un shelf de $500M sur un
+                        small-cap de $1B est un signal critique.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">2</div>
+                <div class="red-flag-content">
+                    <h4>Prospectus supplement (424B5) déposé dans les 6 derniers mois</h4>
+                    <p>Le shelf a été <em>utilisé</em>. C'est la preuve que la société a effectivement
+                        vendu des actions récemment. Vérifier les termes : prix, volume, type d'offre.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">3</div>
+                <div class="red-flag-content">
+                    <h4>Accord ATM avec une banque d'investissement</h4>
+                    <p>Les courtiers habituels : Cowen (TD Cowen), Cantor Fitzgerald, H.C. Wainwright,
+                        B. Riley, Oppenheimer. La présence d'un de ces noms dans un S-3 ou un 8-K
+                        avec les mots « at-the-market » confirme un programme ATM.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">4</div>
+                <div class="red-flag-content">
+                    <h4>Convertible notes à prix de conversion flottant</h4>
+                    <p>Le terme à chercher : « discount to VWAP » ou « variable conversion price ».
+                        Un prix de conversion fixe est acceptable (dilution bornée). Un prix flottant
+                        est la spirale mortelle — rejet immédiat.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">5</div>
+                <div class="red-flag-content">
+                    <h4>Warrant overhang > 10% des actions en circulation</h4>
+                    <p>Calculer : (nombre total de warrants outstanding) ÷ (actions en circulation).
+                        Au-dessus de 10%, chaque hausse du cours déclenche des exercices qui freinent
+                        mécaniquement la progression. Au-dessus de 20%, c'est un plafond de verre.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">6</div>
+                <div class="red-flag-content">
+                    <h4>Cash runway < 12 mois sans revenu significatif</h4>
+                    <p>Si la société brûle du cash et n'a pas de revenu pour le remplacer,
+                        elle <em>devra</em> lever du capital. La question n'est pas « si » mais
+                        « quand et comment ». Les biotechs pré-revenue sont le cas classique.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">7</div>
+                <div class="red-flag-content">
+                    <h4>Historique de reverse stock splits</h4>
+                    <p>Un reverse split (regroupement d'actions) est souvent le signe que la société
+                        a tellement dilué que le cours est tombé sous $1 (risque de delisting Nasdaq).
+                        Le reverse split « nettoie » le cours, mais l'historique de dilution reste.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">8</div>
+                <div class="red-flag-content">
+                    <h4>« Equity line of credit » dans un filing</h4>
+                    <p>C'est un programme ATM sous un autre nom. La société signe un accord avec
+                        un fonds qui lui permet de « tirer » du capital en émettant des actions.
+                        Même mécanisme, même risque, même traitement dans le pipeline.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">9</div>
+                <div class="red-flag-content">
+                    <h4>SBC > 5% du chiffre d'affaires annuel</h4>
+                    <p>La société distribue une part significative de sa valeur en rémunération action
+                        plutôt qu'en cash. Acceptable chez les grandes tech (Google, Meta), mais signal
+                        d'alarme chez les mid/small-caps où le float est limité.</p>
+                </div>
+            </div>
+
+            <div class="red-flag-item">
+                <div class="red-flag-number">10</div>
+                <div class="red-flag-content">
+                    <h4>Multiple underwriters pour de petites offres</h4>
+                    <p>Quand une société engage 3-4 courtiers pour placer une offre de $10-20M,
+                        c'est un signe de difficulté de placement. Les investisseurs institutionnels
+                        ne veulent pas du deal — seul le « réseau de distribution » forcé des
+                        courtiers permet de placer les actions. Financement désespéré.</p>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Règle du pipeline DailyTickers</h4>
+                <p><strong>3 red flags ou plus sur un micro-cap (< $500M)</strong> = position interdite
+                    dans le scanner, quel que soit le score technique. Cette règle n'a pas d'override
+                    automatique — seule une validation manuelle avec justification documentée peut
+                    passer outre.</p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://www.sec.gov/education/smallbusiness/exemptofferings/regdofferings" target="_blank"
+                    rel="noopener">SEC — Regulation D Offerings (private placements)</a></p>
+        </div>
+
+        <!-- SECTION 7: TOOLS & RESOURCES -->
+        <div id="tools-resources" class="content-card">
+            <h2><i class="fa-solid fa-toolbox" style="color:#dc2626;"></i> Outils et Ressources pour la Détection</h2>
+
+            <p>La détection de la dilution repose sur une combinaison de sources. Aucun outil unique
+                ne couvre tout — c'est la triangulation qui donne la confiance.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Outil</th>
+                            <th>Usage</th>
+                            <th>Coût</th>
+                            <th>Vitesse</th>
+                            <th>Limites</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>SEC EDGAR</strong></td>
+                            <td>Source primaire. Tous les filings réglementaires, full-text search.</td>
+                            <td>Gratuit</td>
+                            <td>Rapide</td>
+                            <td>Interface datée, pas d'alertes automatiques</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Finviz</strong></td>
+                            <td>Détection rapide de la variation du nombre d'actions en circulation
+                                entre trimestres (colonnes « Shares Outstanding » et « Float »).</td>
+                            <td>Gratuit / Pro</td>
+                            <td>Instantané</td>
+                            <td>Pas de détail sur le type de dilution</td>
+                        </tr>
+                        <tr>
+                            <td><strong>OpenInsider</strong></td>
+                            <td>Ventes d'insiders post-offering. Si les dirigeants vendent juste
+                                après une levée, c'est un signal supplémentaire.</td>
+                            <td>Gratuit</td>
+                            <td>Rapide</td>
+                            <td>Ne couvre que les ventes d'insiders, pas les émissions</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DilutionTracker</strong></td>
+                            <td>Service spécialisé dans le suivi de la dilution. Alertes en temps
+                                réel sur les nouveaux filings dilutifs.</td>
+                            <td>Abonnement</td>
+                            <td>Temps réel</td>
+                            <td>Couverture limitée aux US, payant</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Yahoo Finance</strong></td>
+                            <td>Onglet Statistics : comparer « Shares Outstanding » vs « Float ».
+                                Un delta important signale des actions restreintes ou des warrants.</td>
+                            <td>Gratuit</td>
+                            <td>Instantané</td>
+                            <td>Données parfois retardées d'un trimestre</td>
+                        </tr>
+                        <tr>
+                            <td><strong>10-K / 10-Q</strong></td>
+                            <td>Notes de bas de page : tableaux de warrants, termes des convertibles,
+                                SBC détaillé par catégorie d'employé.</td>
+                            <td>Gratuit (EDGAR)</td>
+                            <td>Lent</td>
+                            <td>Lecture dense, nécessite de l'expérience</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>L'approche automatisée DailyTickers</h3>
+
+            <p>Le pipeline combine plusieurs de ces sources en séquence :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>1. Quick check</b>
+                        Finviz : variation shares outstanding. Si hausse > 5% en 6 mois → flag.
+                    </div>
+                    <div class="flow-node">
+                        <b>2. EDGAR deep</b>
+                        Agent IA interroge EDGAR full-text : S-3, 424B5, 8-K des 12 derniers mois.
+                    </div>
+                    <div class="flow-node">
+                        <b>3. Terms parse</b>
+                        Si filing trouvé : extraction des termes (type, montant, prix, conversion terms).
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>4. Decision</b>
+                        Matrice tiered : mcap × severity → REJECT / REDUCE / PASS.
+                    </div>
+                    <div class="flow-node safe">
+                        <b>5. Report</b>
+                        Résultat annexé au scan : flag dilution dans le profil du ticker,
+                        sizing ajusté automatiquement.
+                    </div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> L'outil le plus important</h4>
+                <p>L'outil le plus important n'est pas un logiciel — c'est <strong>l'habitude de vérifier</strong>.
+                    Cinq minutes sur EDGAR avant chaque position. C'est moins de temps qu'il n'en faut pour analyser
+                    un graphique, et ça protège contre le risque que le graphique ne voit pas. Faites-en un réflexe,
+                    pas une option.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.finviz.com/screener.ashx" target="_blank"
+                    rel="noopener">Finviz Stock Screener</a></p>
+        </div>
+
+        <!-- SECTION 8: CONCLUSION -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-shield-check" style="color:#dc2626;"></i> Protocole Anti-Dilution en 5 Étapes
+            </h2>
+
+            <p>La dilution n'est pas un risque exotique réservé aux penny stocks. C'est le risque
+                le plus commun et le plus prévisible sur les small et mid-caps — et paradoxalement,
+                c'est celui que la plupart des investisseurs ignorent. L'analyse technique ne le voit pas.
+                L'analyse fondamentale classique (P/E, croissance, marges) ne le capture pas non plus.
+                Seule la lecture des SEC filings le révèle.</p>
+
+            <p>Le protocole que nous avons développé chez DailyTickers après l'incident INDO
+                tient en cinq étapes. Il prend cinq minutes par ticker et a évité des pertes
+                significatives sur chaque scan depuis son implémentation.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-circle"></i> Les 5 étapes du protocole</h4>
+                <ul>
+                    <li><strong>1. Vérifier EDGAR</strong> — Chercher les S-3, 8-K et prospectus supplements
+                        des 12 derniers mois. Un S-3 actif est un canon chargé. Un 424B5 récent est un
+                        tir confirmé.</li>
+                    <li><strong>2. Calculer l'overhang</strong> — (Warrants + convertibles + options) ÷
+                        actions en circulation. Au-dessus de 15%, le risque de dilution est matériel.
+                        Au-dessus de 25%, c'est un plafond de verre sur le cours.</li>
+                    <li><strong>3. Évaluer le cash runway</strong> — Si la société brûle du cash sans
+                        revenu significatif et a moins de 12 mois de runway, la dilution est quasi-certaine.
+                        La question est le timing, pas le « si ».</li>
+                    <li><strong>4. Appliquer le sizing tiered</strong> — mcap < $2B avec risque dilutif =
+                        REJECT. $2-10B = ×0.5. $10-50B = ×0.7. > $50B = PASS (les large-caps ont
+                        d'autres options de financement).</li>
+                    <li><strong>5. Surveiller post-entrée</strong> — Mettre des alertes sur les nouveaux
+                        8-K et prospectus supplements. La dilution peut commencer après votre entrée —
+                        la vigilance ne s'arrête pas à l'achat.</li>
+                </ul>
+            </div>
+
+            <p>Chaque dollar perdu à cause d'une dilution non détectée est un dollar que cinq minutes
+                de due diligence auraient sauvé. La dilution est le seul risque majeur du marché actions
+                qui est <strong>entièrement prévisible</strong> — les documents sont publics, les signaux
+                sont clairs, et les mécanismes sont bien compris. Ne pas les vérifier est une négligence,
+                pas un manque de chance.</p>
+
+            <h3>Pour aller plus loin</h3>
+
+            <p>Ce guide fait partie d'une série technique sur la construction de pipelines de trading
+                fiables :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Sujet</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="/tech/ai-harness-finance/">Harnesses IA en Finance</a></td>
+                            <td>Contraindre les modèles pour des résultats fiables : schemas, war rooms,
+                                validation dynamique</td>
+                        </tr>
+                        <tr>
+                            <td><a href="/tech/inside-scanner-pipeline/">Inside the Scanner Pipeline</a></td>
+                            <td>Architecture complète du scanner algorithmique DailyTickers</td>
+                        </tr>
+                        <tr>
+                            <td><a href="/tech/backtesting-honest/">Backtesting Honnête</a></td>
+                            <td>Pourquoi 90% des backtests mentent et comment construire les vôtres
+                                correctement</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.sec.gov/investor/pubs/regsho.htm" target="_blank"
+                    rel="noopener">SEC — Regulation SHO (Short Selling)</a></p>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- ECharts: Radar des types de dilution -->
+    <script>
+        (function () {
+            var chart = echarts.init(document.getElementById('dilution-radar'));
+            var option = {
+                backgroundColor: 'transparent',
+                title: {
+                    text: 'Profil de risque par type de dilution',
+                    left: 'center',
+                    top: 10,
+                    textStyle: { fontSize: 14, fontWeight: 800, color: '#0f172a', fontFamily: 'Inter' }
+                },
+                tooltip: {
+                    trigger: 'item'
+                },
+                legend: {
+                    bottom: 10,
+                    textStyle: { fontFamily: 'Inter', fontSize: 11 },
+                    data: ['ATM', 'Secondary', 'Convertible toxique', 'Warrants', 'SBC', 'PIPE']
+                },
+                radar: {
+                    indicator: [
+                        { name: 'Sévérité', max: 10 },
+                        { name: 'Fréquence', max: 10 },
+                        { name: 'Détectabilité', max: 10 },
+                        { name: 'Vitesse d\'impact', max: 10 },
+                        { name: 'Réversibilité', max: 10 }
+                    ],
+                    center: ['50%', '50%'],
+                    radius: '60%',
+                    splitArea: {
+                        areaStyle: { color: ['#fef2f2', '#fff5f5', '#fff', '#fff5f5', '#fef2f2'] }
+                    },
+                    axisLine: { lineStyle: { color: '#fecaca' } },
+                    splitLine: { lineStyle: { color: '#fecaca' } }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [
+                        {
+                            value: [8, 9, 4, 3, 2],
+                            name: 'ATM',
+                            lineStyle: { color: '#dc2626', width: 2 },
+                            areaStyle: { color: 'rgba(220,38,38,0.1)' },
+                            itemStyle: { color: '#dc2626' }
+                        },
+                        {
+                            value: [8, 6, 8, 9, 3],
+                            name: 'Secondary',
+                            lineStyle: { color: '#ea580c', width: 2 },
+                            areaStyle: { color: 'rgba(234,88,12,0.1)' },
+                            itemStyle: { color: '#ea580c' }
+                        },
+                        {
+                            value: [10, 4, 5, 7, 1],
+                            name: 'Convertible toxique',
+                            lineStyle: { color: '#9333ea', width: 2 },
+                            areaStyle: { color: 'rgba(147,51,234,0.1)' },
+                            itemStyle: { color: '#9333ea' }
+                        },
+                        {
+                            value: [5, 7, 7, 4, 5],
+                            name: 'Warrants',
+                            lineStyle: { color: '#0284c7', width: 2 },
+                            areaStyle: { color: 'rgba(2,132,199,0.1)' },
+                            itemStyle: { color: '#0284c7' }
+                        },
+                        {
+                            value: [3, 10, 8, 1, 4],
+                            name: 'SBC',
+                            lineStyle: { color: '#16a34a', width: 2 },
+                            areaStyle: { color: 'rgba(22,163,74,0.1)' },
+                            itemStyle: { color: '#16a34a' }
+                        },
+                        {
+                            value: [8, 5, 6, 8, 2],
+                            name: 'PIPE',
+                            lineStyle: { color: '#d97706', width: 2 },
+                            areaStyle: { color: 'rgba(217,119,6,0.1)' },
+                            itemStyle: { color: '#d97706' }
+                        }
+                    ]
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i
+                    class="fas fa-bomb"></i><span>Risque</span></a>
+            <a href="#types-dilution" class="fnav-item" data-section="types-dilution"><i
+                    class="fas fa-layer-group"></i><span>6 Types</span></a>
+            <a href="#edgar-howto" class="fnav-item" data-section="edgar-howto"><i
+                    class="fas fa-magnifying-glass"></i><span>EDGAR</span></a>
+            <a href="#pipeline-integration" class="fnav-item" data-section="pipeline-integration"><i
+                    class="fas fa-microchip"></i><span>Pipeline</span></a>
+            <a href="#case-studies" class="fnav-item" data-section="case-studies"><i
+                    class="fas fa-microscope"></i><span>Cas réels</span></a>
+            <a href="#red-flags" class="fnav-item" data-section="red-flags"><i
+                    class="fas fa-flag"></i><span>Red Flags</span></a>
+            <a href="#tools-resources" class="fnav-item" data-section="tools-resources"><i
+                    class="fas fa-toolbox"></i><span>Outils</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i
+                    class="fas fa-shield-check"></i><span>Protocole</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>

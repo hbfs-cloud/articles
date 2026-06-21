@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech,trading" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code pour le Trading : De Zéro à un Système Autonome | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique complet : comment un bot Discord orchestre Claude Code via tmux pour publier automatiquement 4 articles financiers par jour — scanner, daily, weekly, rétrospective. Architecture, schedules, pipeline scanner, error recovery, prompt engineering.">
+    <meta property="og:title" content="Claude Code pour le Trading : De Zéro à un Système Autonome qui Publie 4× par Jour">
+    <meta property="og:description"
+        content="Comment automatiser la publication d'analyses financières avec Claude Code, un bot Discord et zéro intervention humaine.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/claude-code-trading-bot/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #eef2ff 0%, #e0e7ff 100%);
+            text-align: center;
+            border-bottom: 1px solid #c7d2fe;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #5865F2;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(88, 101, 242, 0.1);
+            color: #5865F2;
+            border: 1px solid rgba(88, 101, 242, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #5865F2;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .pedagogy-box {
+            background: #eef2ff;
+            border: 1px solid #a5b4fc;
+            border-left: 4px solid #5865F2;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #4338ca;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #3730a3;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k { color: #a5b4fc; }
+        pre.code-block .s { color: #86efac; }
+        pre.code-block .c { color: #64748b; font-style: italic; }
+        pre.code-block .n { color: #fcd34d; }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #eef2ff;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #4338ca;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #c7d2fe;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #4338ca;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.orchestrator {
+            border-color: #5865F2;
+            background: #eef2ff;
+        }
+
+        .flow-node.verify {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .flow-node.verify b { color: #b45309; }
+
+        .flow-node.success {
+            border-color: #16a34a;
+            background: #ecfdf5;
+        }
+
+        .flow-node.success b { color: #15803d; }
+
+        .flow-arrow {
+            text-align: center;
+            color: #818cf8;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .metric-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+            .metric-card { padding: 1.25rem !important; }
+            h2 { font-size: 1.4rem; }
+            h3 { font-size: 1.15rem; }
+            .flow-row { flex-direction: column; }
+            pre.code-block { font-size: 0.74rem; padding: 1.1rem 1.25rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — AUTOMATISATION &amp; TRADING</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Claude Code pour le Trading : De Zéro à un Système Autonome qui Publie 4× par Jour
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Comment un bot Discord orchestre Claude Code via tmux pour publier automatiquement
+            scanner, daily, weekly et rétrospective — sans aucune intervention humaine.
+            Architecture, schedules, pipeline scanner, gestion d'erreurs et prompt engineering.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-brands fa-discord"></i> Discord Bot</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 20 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-robot"></i> Automatisation complète</div>
+            <div class="hero-badge"><i class="fa-solid fa-terminal"></i> tmux + CLI</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 1 — INTRO
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-rocket" style="color:#5865F2;"></i> Pourquoi automatiser la publication financière</h2>
+
+            <p>Chaque jour à 7h, un briefing marché est publié. À 23h, un scan algorithmique de
+                6 000+ tickers tourne. Le dimanche à 18h, une revue hebdomadaire sort.
+                <strong>Aucun humain n'appuie sur un bouton.</strong></p>
+
+            <p>Avant l'automatisation, la publication financière sur DailyTickers était un processus
+                manuel, fragile et inconstant. Un opérateur humain devait lancer chaque pipeline,
+                vérifier les données, formatter le HTML, ajouter les tags GTM, mettre à jour l'index,
+                committer et pusher. Le résultat : certains jours pas de daily (oubli, fatigue, voyage),
+                des tags GTM manquants sur 15% des pages (tracking perdu), des formats de dates
+                incohérents (tantôt anglais, tantôt français), des mises à jour radar oubliées,
+                et surtout — des données stale parce que personne n'avait relancé le MCP.</p>
+
+            <p>Le système actuel repose sur une chaîne simple mais robuste : un <strong>bot Discord</strong>
+                (Node.js) déclenche des sessions <strong>Claude Code</strong> via <strong>tmux</strong>,
+                selon un calendrier défini dans <code>schedules.json</code>. Claude Code exécute le
+                pipeline complet — de la requête MCP à la publication GitHub Pages — avec des règles
+                immuables qui empêchent toute dérive (pas de données inventées, pas de publication
+                incomplète, pas de skip d'étape).</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">4×/jour</div>
+                    <div class="metric-label">Publications automatiques : scanner, daily briefing,
+                        weekly review, rétrospective — chacune sur son schedule</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">486</div>
+                    <div class="metric-label">Pages HTML statiques servies sans framework, sans build
+                        system, sans base de données — juste GitHub Pages</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0</div>
+                    <div class="metric-label">Intervention humaine dans la boucle quotidienne.
+                        L'humain supervise, il ne déclenche plus</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">99,7%</div>
+                    <div class="metric-label">Uptime sur 3 mois. Les 0,3% restants : expirations
+                        de token MCP, correctement gérées par le HARD STOP</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Ce que cet article n'est pas</h4>
+                <p>Ce n'est pas un guide pour construire un trading bot qui passe des ordres.
+                    C'est un guide pour construire un <strong>système de publication autonome</strong>
+                    qui produit des analyses financières vérifiées, les formate en HTML, et les
+                    publie sur un site statique — le tout piloté par une IA contrainte par des
+                    règles strictes. L'exécution des trades est un sujet séparé, couvert dans
+                    le guide <a href="/tech/automated-trading/">Automated Trading</a>.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://docs.anthropic.com/en/docs/claude-code/cli-usage" target="_blank" rel="noopener">Anthropic — Claude Code CLI usage</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 2 — ARCHITECTURE
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fa-solid fa-diagram-project" style="color:#5865F2;"></i> Architecture du Système</h2>
+
+            <p>L'architecture est volontairement linéaire. Pas de microservices, pas de queue,
+                pas de Kubernetes. Chaque publication suit le même chemin :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b>Discord Bot</b>
+                        Node.js + discord.js<br>
+                        Déclenche les schedules via <code>schedules.json</code>.
+                        Notifications en temps réel dans un channel dédié.
+                    </div>
+                    <div class="flow-node orchestrator">
+                        <b>tmux Session</b>
+                        Isolation par run<br>
+                        Chaque pipeline tourne dans sa propre session nommée.
+                        Logs capturés. Pas d'interférence entre runs parallèles.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>Claude Code CLI</b>
+                        <code>claude -p "prompt"</code><br>
+                        Charge CLAUDE.md + sub-CLAUDE.md + skills.
+                        Exécute le pipeline avec accès fichiers et outils.
+                    </div>
+                    <div class="flow-node">
+                        <b>MCP DailyTickers</b>
+                        Données marché temps réel<br>
+                        QueryData, GetMarketOverview, RunScreener,
+                        GetRegimeProbability, OptimizeSizing.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼</div>
+                <div class="flow-row">
+                    <div class="flow-node success">
+                        <b>HTML Generation</b>
+                        Article complet<br>
+                        Fichier HTML statique avec ECharts, données MCP
+                        vérifiées, et structure conforme au template.
+                    </div>
+                    <div class="flow-node success">
+                        <b>git + GitHub Pages</b>
+                        Publication<br>
+                        <code>add_card.js</code> → <code>git commit</code> →
+                        <code>git push</code> → déploiement auto.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Les 5 composants</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Composant</th>
+                            <th>Technologie</th>
+                            <th>Rôle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Discord Bot</strong></td>
+                            <td>Node.js, discord.js</td>
+                            <td>Scheduler (cron-like via <code>schedules.json</code>), slash commands
+                                pour déclenchements manuels, notifications de succès/échec,
+                                threads de logs par run</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Claude Code CLI</strong></td>
+                            <td><code>claude -p</code></td>
+                            <td>Cerveau du pipeline. Lit le contexte projet (CLAUDE.md, 60KB de
+                                conventions), appelle le MCP, génère le HTML, gère le git.
+                                Chaque type d'article a son sub-CLAUDE.md (template complet)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>MCP Gateway</strong></td>
+                            <td>FastAPI, 15+ outils</td>
+                            <td>Source de vérité pour les données marché. QueryData (quotes,
+                                bars, fundamentals), RunScreener (DSL filters), GetMarketOverview,
+                                OptimizeSizing. Authentification par token</td>
+                        </tr>
+                        <tr>
+                            <td><strong>GitHub Pages</strong></td>
+                            <td>Static hosting</td>
+                            <td>Déploiement automatique sur push main. Zero config, zero build,
+                                CNAME vers <code>articles.dailytickers.com</code>.
+                                Pre-commit hooks régénèrent search index, sitemap, feed</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pre-commit hooks</strong></td>
+                            <td>Shell + Node.js</td>
+                            <td>À chaque commit : rebuild search_data.js (485 documents),
+                                sitemap.xml (486 URLs), feed.xml (50 items).
+                                Garantit la cohérence sans intervention</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Pourquoi Discord ?</h3>
+
+            <p>Le choix de Discord comme orchestrateur peut surprendre. Pourquoi pas un simple cron ?
+                Trois raisons :</p>
+
+            <p><strong>1. Monitoring natif.</strong> Chaque run poste son résultat dans un channel
+                dédié. Un succès montre le lien vers l'article publié. Un échec montre le message
+                d'erreur et le contexte. Pas besoin d'un dashboard séparé — Discord est déjà
+                ouvert sur le téléphone.</p>
+
+            <p><strong>2. Commandes manuelles.</strong> Slash commands pour déclencher un run
+                hors-schedule, relancer un pipeline échoué, ou forcer un refresh. Utile quand
+                un événement marché inattendu justifie une publication immédiate.</p>
+
+            <p><strong>3. Threads de logs.</strong> Chaque run crée un thread avec les logs
+                de progression. On peut suivre en temps réel où en est le scanner dans ses
+                45 minutes de pipeline sans se connecter en SSH.</p>
+
+            <p class="source-ref">Source : <a href="https://discord.js.org/docs/packages/discord.js/main" target="_blank" rel="noopener">discord.js — Documentation</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 3 — SCHEDULES
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="schedules" class="content-card">
+            <h2><i class="fa-solid fa-calendar-days" style="color:#5865F2;"></i> Les 4 Schedules : Quand et Quoi</h2>
+
+            <p>Quatre tâches tournent sur des schedules fixes. Chacune est définie dans
+                <code>schedules.json</code> avec son heure, sa fréquence et son prompt.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Tâche</th>
+                            <th>Schedule</th>
+                            <th>Durée</th>
+                            <th>Détail</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1</strong></td>
+                            <td>Scanner</td>
+                            <td>Lun–Ven, 23h</td>
+                            <td>~45 min</td>
+                            <td>Scan algorithmique de 6 000+ tickers. 10 étapes :
+                                regime check → screening → anti-dilution → enrichissement →
+                                risk gating → scoring → génération → status page → publication</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2</strong></td>
+                            <td>Daily Briefing</td>
+                            <td>Tous les jours, 7h</td>
+                            <td>~15 min</td>
+                            <td>17 sections obligatoires : indices, secteurs, macro, crypto,
+                                commodities, forex, earnings, géopolitique, formation, trade of
+                                the day. Samedi = récap + bilan semaine. Dimanche = crypto-only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3</strong></td>
+                            <td>Weekly Review</td>
+                            <td>Dimanche, 18h</td>
+                            <td>~30 min</td>
+                            <td>18 sections : revue de la semaine, performance indices,
+                                rotations sectorielles, macro outlook, risques, opportunités,
+                                semaine à venir, allocations, watchlist</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4</strong></td>
+                            <td>Rétrospective</td>
+                            <td>Vendredi, 23h</td>
+                            <td>~20 min</td>
+                            <td>Bilan des trades scanner de la semaine. Outcomes réels
+                                (MCP bars), win rate, profit factor, meilleures/pires positions,
+                                leçons. Tourne après le scanner du vendredi</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Cas spéciaux</h3>
+
+            <p><strong>Daily du samedi.</strong> Les marchés US sont fermés, mais il y a du contenu :
+                récapitulatif de la séance de vendredi (souvent la plus volatile de la semaine),
+                bilan hebdomadaire condensé, et preview de ce qui attend lundi (earnings, données
+                macro, events géopolitiques). Le MCP fournit les données du vendredi — pas besoin
+                de données live.</p>
+
+            <p><strong>Daily du dimanche.</strong> Marchés fermés + pas de données de la veille à
+                récapituler. Le contenu se concentre sur deux axes : crypto (marché 24/7, il se passe
+                toujours quelque chose le weekend) et géopolitique (les décisions politiques ne
+                s'arrêtent pas le dimanche). Format plus court, ~12 sections au lieu de 17.</p>
+
+            <p><strong>Convention de date du scanner.</strong> Le dossier du scanner porte la date
+                de la <em>prochaine séance de trading</em>, pas celle de l'exécution. Un scan
+                lancé le lundi 16 à 23h crée le dossier <code>scanner/20260617/</code> (mardi).
+                Un scan lancé le vendredi 20 à 23h crée <code>scanner/20260623/</code> (lundi).
+                Cette convention évite toute ambiguïté sur la validité des setups.</p>
+
+            <div id="scheduleChart" style="width:100%; height:320px; margin:1.75rem 0;"></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi des heures fixes ?</h4>
+                <p>Les heures ne sont pas arbitraires. Le scanner tourne à 23h parce que les marchés
+                    US ferment à 22h (heure de Paris) — il faut les données de clôture. Le daily sort
+                    à 7h pour être lisible avant l'ouverture européenne. La weekly à 18h le dimanche
+                    laisse le temps de la lire avant le lundi matin. Chaque schedule est calé sur
+                    le rythme des marchés, pas sur la convenance technique.</p>
+            </div>
+
+            <h3>Le prompt de chaque schedule</h3>
+
+            <p>Chaque schedule envoie un prompt structuré à Claude Code. Le prompt n'est pas un
+                bloc de texte libre — c'est une invocation de <strong>skill</strong> avec du contexte :</p>
+
+<pre class="code-block"><span class="c">// Exemple : prompt du scanner (simplifié)</span>
+<span class="k">const</span> prompt = <span class="s">`
+Nous sommes le ${dateStr} à ${timeStr} (heure de Paris).
+C'est un ${dayOfWeek}.
+
+Lance le pipeline /scanner pour la prochaine séance
+(${nextTradingDay}).
+
+Utilise EXCLUSIVEMENT le MCP DailyTickers pour les données.
+Ne jamais inventer de données financières.
+Publie via add_card.js. Commit et push si tout est ok.
+`</span>;
+
+<span class="c">// Le skill /scanner contient le playbook complet :</span>
+<span class="c">// 10 étapes, chacune avec ses règles, ses checks,</span>
+<span class="c">// et ses conditions d'arrêt.</span></pre>
+
+            <p>Le prompt est court parce que le gros du travail est dans le skill et le CLAUDE.md.
+                Le prompt fournit le contexte temporel (date, jour, prochaine séance) et les
+                contraintes critiques (MCP obligatoire, pas d'invention). Tout le reste — les
+                17 sections du daily, les critères du scanner, le template HTML — est chargé
+                automatiquement par Claude Code depuis les fichiers du projet.</p>
+
+            <p class="source-ref">Source : <a href="https://docs.anthropic.com/en/docs/claude-code/memory" target="_blank" rel="noopener">Anthropic — Claude Code CLAUDE.md memory</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 4 — SCANNER PIPELINE
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="scanner-pipeline" class="content-card">
+            <h2><i class="fa-solid fa-filter" style="color:#5865F2;"></i> Le Pipeline Scanner : 45 Minutes Chrono</h2>
+
+            <p>Le scanner est la tâche la plus complexe du système. En 45 minutes, il analyse
+                6 000+ tickers, en filtre la grande majorité, enrichit les survivants avec des
+                données MCP, vérifie l'absence de pièges (dilution, événements proches), calcule
+                des scores, optimise les tailles de position, et génère un article HTML complet
+                avec des setup cards interactives.</p>
+
+            <h3>Les 10 étapes</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étape</th>
+                            <th>Durée</th>
+                            <th>Outil</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>1. Regime Check</strong></td>
+                            <td>~2 min</td>
+                            <td>GetRegimeProbability</td>
+                            <td>Détermine le budget de risque : Risk-On (VIX &lt; 15), Neutral
+                                (15–20), Early Risk-Off (20–28), Risk-Off (&gt; 28).
+                                Ajuste le nombre de positions et la taille max</td>
+                        </tr>
+                        <tr>
+                            <td><strong>2. Screening</strong></td>
+                            <td>~5 min</td>
+                            <td>RunScreener (DSL)</td>
+                            <td>Filtres techniques et fondamentaux : volume &gt; 500K,
+                                momentum, structure EMA, secteur. 100+ candidats</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3. Candlestick Scan</strong></td>
+                            <td>~3 min</td>
+                            <td>candlestick-scanner.js</td>
+                            <td>Détection de patterns (engulfing, hammer, doji) sur le fichier
+                                universe local. Jamais le MCP pour le listing des tickers</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4. Anti-Dilution</strong></td>
+                            <td>~10 min</td>
+                            <td>SEC EDGAR</td>
+                            <td>Vérification S-3, ATM programs, warrants actifs, fonds
+                                toxiques, convertibles obligatoires. Élimination impitoyable</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5. MCP Enrichment</strong></td>
+                            <td>~8 min</td>
+                            <td>QueryData</td>
+                            <td>Quote, bars_daily, fundamentals, technicals pour chaque
+                                candidat survivant. Données fraîches, vérifiées</td>
+                        </tr>
+                        <tr>
+                            <td><strong>6. Risk Gating</strong></td>
+                            <td>~3 min</td>
+                            <td>Calcul local + MCP</td>
+                            <td>Market cap tiers (&lt; $2B reject, $2–10B ×0.5, $10–50B ×0.7),
+                                corrélation matrice, proximité earnings, concentration sectorielle</td>
+                        </tr>
+                        <tr>
+                            <td><strong>7. Scoring</strong></td>
+                            <td>~5 min</td>
+                            <td>OptimizeSizing</td>
+                            <td>Score composite (technique + fondamental + risque),
+                                taille de position optimisée par ATR et régime</td>
+                        </tr>
+                        <tr>
+                            <td><strong>8. HTML Generation</strong></td>
+                            <td>~5 min</td>
+                            <td>Claude Code</td>
+                            <td>Article complet avec setup cards, ECharts, ticker-headers,
+                                métriques, table de synthèse, disclaimer</td>
+                        </tr>
+                        <tr>
+                            <td><strong>9. Status Page</strong></td>
+                            <td>~2 min</td>
+                            <td>gen-status-page.js</td>
+                            <td>Mise à jour du dashboard scanner avec positions ouvertes,
+                                performance live, time machine, historique</td>
+                        </tr>
+                        <tr>
+                            <td><strong>10. Publish</strong></td>
+                            <td>~2 min</td>
+                            <td>add_card.js + git</td>
+                            <td>Indexation dans scanner.json, mise à jour radar.json,
+                                commit, push, déploiement GitHub Pages</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="funnelChart" style="width:100%; height:380px; margin:1.75rem 0;"></div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> JAMAIS skipper une étape</h4>
+                <p>L'étape anti-dilution seule a empêché 3 recommandations catastrophiques.
+                    INDO avait un programme ATM actif qui aurait dilué les actionnaires de 30%.
+                    PANW et HPE avaient des shelf registrations actives. Sans ce check, ces tickers
+                    auraient été publiés avec un grade A — et les lecteurs auraient pu investir
+                    dans des pièges à dilution. Chaque étape existe pour une raison. On ne skippe
+                    jamais sans accord explicite de l'opérateur.</p>
+            </div>
+
+            <h3>Le market cap tiering</h3>
+
+            <p>Depuis la war room du 19 juin 2026, le scanner n'applique plus un plancher
+                market cap uniforme de $50B. À la place, un <strong>sizing tiered</strong> :</p>
+
+<pre class="code-block"><span class="c">// Market cap tiering — war room 2026-06-19</span>
+<span class="k">if</span> (mcap < <span class="n">2e9</span>)  <span class="k">return</span> <span class="s">'REJECT'</span>;     <span class="c">// &lt; $2B → rejet</span>
+<span class="k">if</span> (mcap < <span class="n">10e9</span>) <span class="k">return</span> size * <span class="n">0.5</span>;     <span class="c">// $2–10B → demi-position</span>
+<span class="k">if</span> (mcap < <span class="n">50e9</span>) <span class="k">return</span> size * <span class="n">0.7</span>;     <span class="c">// $10–50B → position réduite</span>
+<span class="k">return</span> size;                            <span class="c">// $50B+ → position pleine</span></pre>
+
+            <p>Ce tiering sera reversé si les tickers sub-$20B montrent un stop moyen
+                supérieur à -6% sur 3 rétrospectives consécutives.</p>
+
+            <p class="source-ref">Source : <a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany" target="_blank" rel="noopener">SEC EDGAR — Company filings search</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 5 — ERROR RECOVERY
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="error-recovery" class="content-card">
+            <h2><i class="fa-solid fa-shield-halved" style="color:#5865F2;"></i> Gestion des Erreurs et Recovery</h2>
+
+            <p>Dans un système autonome, les erreurs ne sont pas des exceptions — elles sont
+                la norme. Le MCP expire, GitHub rate-limit, le contexte sature, le disque se
+                remplit. Ce qui distingue un système fiable d'un système fragile, ce n'est pas
+                l'absence d'erreurs — c'est la <strong>visibilité</strong> des échecs et la
+                <strong>sûreté</strong> des dégradations.</p>
+
+            <h3>Les 5 modes de défaillance</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Défaillance</th>
+                            <th>Fréquence</th>
+                            <th>Détection</th>
+                            <th>Recovery</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Token MCP expiré</strong></td>
+                            <td>~1×/semaine</td>
+                            <td>Erreur auth sur QueryData</td>
+                            <td>MCP HARD STOP immédiat. Pipeline suspendu.
+                                Notification Discord avec lien de reconnexion.
+                                Reprise manuelle après re-auth</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Push git échoué</strong></td>
+                            <td>~1×/mois</td>
+                            <td>Exit code non-zéro sur <code>git push</code></td>
+                            <td>Retry avec <code>git pull --rebase</code> puis re-push.
+                                Si conflit : notification, résolution manuelle</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contexte saturé</strong></td>
+                            <td>Rare (scanner long)</td>
+                            <td>Claude Code conversation compaction</td>
+                            <td>Auto-géré par Claude Code : les messages anciens sont
+                                résumés, le contexte essentiel est préservé. Transparent</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rate limiting API</strong></td>
+                            <td>~2×/mois</td>
+                            <td>HTTP 429 ou timeout</td>
+                            <td>Backoff exponentiel intégré au CLI Claude Code.
+                                Retry automatique jusqu'à 5 tentatives</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Espace disque</strong></td>
+                            <td>Rare</td>
+                            <td>Check pré-génération</td>
+                            <td>Alerte si &lt; 1GB libre. Nettoyage des sessions
+                                tmux terminées et des logs anciens</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Les règles immuables</h3>
+
+            <p>Cinq règles sont gravées dans le CLAUDE.md du projet. Elles ne peuvent pas être
+                overridées par un prompt, un skill, ou un agent. Elles forment le
+                <strong>filet de sécurité</strong> du système :</p>
+
+<pre class="code-block"><span class="c">// Les 5 règles immuables du système</span>
+
+<span class="n">1.</span> <span class="s">MCP HARD STOP</span>
+   Si le MCP bloque (auth, timeout, réseau)
+   OU renvoie des données incohérentes (NaN, prix aberrants, stale > 48h)
+   → STOP IMMÉDIAT. Jamais substituer. Jamais inventer.
+
+<span class="n">2.</span> <span class="s">NO HALLUCINATION</span>
+   Ne JAMAIS fabriquer de données financières.
+   Pas de prix estimés, pas de market cap "de mémoire",
+   pas de 52W range deviné.
+
+<span class="n">3.</span> <span class="s">SIZE CHECK</span>
+   Ne pas push un HTML < 10KB.
+   Un article complet fait 30-100KB.
+   En dessous = génération incomplète.
+
+<span class="n">4.</span> <span class="s">READ BEFORE WRITE</span>
+   Toujours lire le JSON cible (daily.json, scanner.json)
+   AVANT d'appeler add_card.js.
+   Prévient les doublons.
+
+<span class="n">5.</span> <span class="s">NO SKIP</span>
+   Jamais skipper une étape du pipeline
+   sans accord explicite de l'opérateur.
+   Chaque étape existe pour une raison.</span></pre>
+
+            <h3>Notifications Discord</h3>
+
+            <p>Chaque run produit une notification dans le channel dédié :</p>
+
+<pre class="code-block"><span class="c">// Succès</span>
+<span class="s">✅ Scanner 20260621 publié</span>
+<span class="s">   8 setups (3 Dynamic, 3 TKL, 2 Orbit)</span>
+<span class="s">   Régime : Neutral (VIX 17.2)</span>
+<span class="s">   https://articles.dailytickers.com/scanner/20260623/</span>
+<span class="s">   Durée : 43m12s</span>
+
+<span class="c">// Échec</span>
+<span class="s">❌ Scanner 20260621 SUSPENDU</span>
+<span class="s">   Raison : MCP HARD STOP — token expiré</span>
+<span class="s">   Étape : 5/10 (MCP Enrichment)</span>
+<span class="s">   Action requise : re-auth MCP puis relancer</span></pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le pire scénario</h4>
+                <p>Le pire scénario n'est pas un échec visible. C'est un <strong>succès silencieux
+                    avec des données fausses</strong>. Le 21 juin 2026, un fork agent a halluciné
+                    100% des données d'une rétrospective H1 — META affiché à +32% alors qu'il
+                    était à -15%, l'énergie à +36% alors qu'elle était à -1%. L'article avait
+                    l'air parfait. Les chiffres étaient faux. C'est ce type de défaillance qui
+                    a motivé la règle MCP HARD STOP.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank" rel="noopener">Anthropic — Claude Code overview</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 6 — TMUX ORCHESTRATION
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="tmux-orchestration" class="content-card">
+            <h2><i class="fa-solid fa-terminal" style="color:#5865F2;"></i> Orchestration tmux : Isolation et Logs</h2>
+
+            <p>Chaque run Claude Code a besoin de son propre terminal. Le scanner de 23h et la
+                rétrospective du vendredi peuvent se chevaucher. Deux sessions qui partagent un
+                terminal finissent par corrompre leurs sorties respectives. tmux résout ce
+                problème avec des sessions nommées et isolées.</p>
+
+            <h3>Gestion des sessions</h3>
+
+<pre class="code-block"><span class="c">// Le bot Discord lance chaque pipeline dans une session tmux dédiée</span>
+
+<span class="k">const</span> { execSync } = <span class="k">require</span>(<span class="s">'child_process'</span>);
+
+<span class="k">function</span> <span class="n">launchPipeline</span>(type, dateStr, prompt) {
+  <span class="k">const</span> session = <span class="s">`${type}-${dateStr}`</span>;
+
+  <span class="c">// Vérifier qu'une session du même nom n'existe pas déjà</span>
+  <span class="k">try</span> {
+    execSync(<span class="s">`tmux has-session -t ${session} 2>/dev/null`</span>);
+    console.log(<span class="s">`Session ${session} déjà active, skip`</span>);
+    <span class="k">return</span> <span class="k">false</span>;
+  } <span class="k">catch</span> (e) {
+    <span class="c">// Session n'existe pas — on peut la créer</span>
+  }
+
+  <span class="c">// Créer la session et lancer Claude Code</span>
+  execSync(<span class="s">`tmux new-session -d -s ${session} \
+    'cd ~/GolandProjects/articles && \
+     claude -p "${prompt}" 2>&1 | \
+     tee ~/logs/${session}.log; \
+     echo "EXIT_CODE=$?" >> ~/logs/${session}.log'`</span>);
+
+  <span class="c">// Activer la capture de logs</span>
+  execSync(<span class="s">`tmux pipe-pane -t ${session} \
+    'cat >> ~/logs/${session}-pipe.log'`</span>);
+
+  <span class="k">return</span> <span class="k">true</span>;
+}
+
+<span class="c">// Exemples d'appels</span>
+launchPipeline(<span class="s">'scanner'</span>, <span class="s">'20260621'</span>, scannerPrompt);
+launchPipeline(<span class="s">'daily'</span>,   <span class="s">'20260621'</span>, dailyPrompt);
+launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</span>, weeklyPrompt);</pre>
+
+            <h3>Conventions de nommage</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Session</th>
+                            <th>Pattern</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scanner</td>
+                            <td><code>scanner-YYYYMMDD</code></td>
+                            <td><code>scanner-20260621</code></td>
+                        </tr>
+                        <tr>
+                            <td>Daily</td>
+                            <td><code>daily-YYYYMMDD</code></td>
+                            <td><code>daily-20260621</code></td>
+                        </tr>
+                        <tr>
+                            <td>Weekly</td>
+                            <td><code>weekly-YYYYMMDD</code></td>
+                            <td><code>weekly-20260622</code></td>
+                        </tr>
+                        <tr>
+                            <td>Rétrospective</td>
+                            <td><code>retro-YYYYMMDD</code></td>
+                            <td><code>retro-20260620</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Health check et nettoyage</h3>
+
+<pre class="code-block"><span class="c">// Vérifier les sessions actives</span>
+<span class="k">function</span> <span class="n">getActiveSessions</span>() {
+  <span class="k">try</span> {
+    <span class="k">const</span> output = execSync(
+      <span class="s">'tmux list-sessions -F "#{session_name}|#{session_activity}"'</span>,
+      { encoding: <span class="s">'utf8'</span> }
+    );
+    <span class="k">return</span> output.trim().split(<span class="s">'\n'</span>).map(line => {
+      <span class="k">const</span> [name, activity] = line.split(<span class="s">'|'</span>);
+      <span class="k">return</span> { name, lastActivity: <span class="k">new</span> Date(parseInt(activity) * <span class="n">1000</span>) };
+    });
+  } <span class="k">catch</span> (e) {
+    <span class="k">return</span> [];
+  }
+}
+
+<span class="c">// Nettoyer les sessions terminées (inactives > 2h)</span>
+<span class="k">function</span> <span class="n">cleanupSessions</span>() {
+  <span class="k">const</span> sessions = getActiveSessions();
+  <span class="k">const</span> cutoff = Date.now() - <span class="n">2</span> * <span class="n">3600000</span>;
+
+  sessions.forEach(s => {
+    <span class="k">if</span> (s.lastActivity.getTime() < cutoff) {
+      execSync(<span class="s">`tmux kill-session -t ${s.name}`</span>);
+      console.log(<span class="s">`Cleaned up session: ${s.name}`</span>);
+    }
+  });
+}</pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Timestamps obligatoires</h4>
+                <p>Toujours inclure l'heure (HH:MM) dans les updates de progression.
+                    Quand un scanner prend 43 minutes, il est impossible de débugger un
+                    problème sans savoir à quelle heure chaque étape a commencé et fini.
+                    « Étape 4 terminée » ne dit rien. « [23:17] Étape 4 anti-dilution
+                    terminée — 3 tickers éliminés (INDO, PANW, HPE) » dit tout.</p>
+            </div>
+
+            <h3>Chevauchement du vendredi soir</h3>
+
+            <p>Le vendredi soir à 23h, deux tâches démarrent : le scanner (schedule #1) et,
+                quand le scanner termine, la rétrospective (schedule #4). Grâce à tmux, les
+                deux tournent dans des sessions séparées. La rétrospective attend que le scanner
+                ait pushé ses résultats (elle a besoin des setups du jour pour les ajouter
+                à son bilan). Le bot vérifie le commit du scanner avant de lancer la rétro :</p>
+
+<pre class="code-block"><span class="c">// Attendre que le scanner ait pushé avant de lancer la rétro</span>
+<span class="k">async function</span> <span class="n">waitForScannerThenRetro</span>(dateStr) {
+  <span class="k">const</span> maxWait = <span class="n">60</span> * <span class="n">60000</span>; <span class="c">// 60 min max</span>
+  <span class="k">const</span> start = Date.now();
+
+  <span class="k">while</span> (Date.now() - start < maxWait) {
+    <span class="k">const</span> log = fs.readFileSync(
+      <span class="s">`~/logs/scanner-${dateStr}.log`</span>, <span class="s">'utf8'</span>
+    );
+    <span class="k">if</span> (log.includes(<span class="s">'git push origin main'</span>) &&
+        log.includes(<span class="s">'EXIT_CODE=0'</span>)) {
+      launchPipeline(<span class="s">'retro'</span>, dateStr, retroPrompt);
+      <span class="k">return</span>;
+    }
+    <span class="k">await</span> sleep(<span class="n">30000</span>); <span class="c">// Check toutes les 30s</span>
+  }
+  notify(<span class="s">'⚠️ Scanner timeout — rétrospective non lancée'</span>);
+}</pre>
+
+            <p class="source-ref">Source : <a href="https://man7.org/linux/man-pages/man1/tmux.1.html" target="_blank" rel="noopener">tmux — terminal multiplexer manual</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 7 — PROMPT ENGINEERING
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="prompt-engineering" class="content-card">
+            <h2><i class="fa-solid fa-pen-ruler" style="color:#5865F2;"></i> Prompt Engineering pour la Publication</h2>
+
+            <p>Le prompt envoyé par le bot Discord à Claude Code n'est que la pointe de l'iceberg.
+                Le vrai travail de « prompt engineering » est dans les fichiers de contexte persistant
+                que Claude Code charge automatiquement à chaque session.</p>
+
+            <h3>Anatomie d'un prompt automatisé</h3>
+
+            <p>Un bon prompt de publication contient exactement 4 éléments :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Élément</th>
+                            <th>Rôle</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Contexte temporel</strong></td>
+                            <td>Date, jour, heure — le modèle n'a pas de notion fiable du temps</td>
+                            <td><code>Nous sommes le samedi 21 juin 2026. Les marchés US sont fermés.</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Invocation de skill</strong></td>
+                            <td>Active le playbook complet de la tâche</td>
+                            <td><code>Lance le pipeline /scanner pour la prochaine séance (lundi 23 juin).</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Contraintes critiques</strong></td>
+                            <td>Rappels des règles immuables dans le contexte du prompt</td>
+                            <td><code>Utilise EXCLUSIVEMENT le MCP. Ne jamais inventer de données.</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Output attendu</strong></td>
+                            <td>Ce qui doit se passer à la fin</td>
+                            <td><code>Publie via add_card.js. Commit et push si tout est ok.</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>La pyramide de contexte</h3>
+
+            <p>Claude Code charge automatiquement une pyramide de fichiers de contexte, du plus
+                général au plus spécifique :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator" style="text-align:center;">
+                        <b>CLAUDE.md (13KB)</b>
+                        Conventions transversales : HTML, CSS, tags, dates, brand-bar, footer,
+                        scripts, GTM, i18n. Règles immuables : MCP HARD STOP, no hallucination.
+                        Workflows par commande.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>daily/CLAUDE.md (10KB)</b>
+                        Template du daily briefing.
+                        17 sections obligatoires,
+                        format de chaque section,
+                        cas spéciaux (samedi, dimanche).
+                    </div>
+                    <div class="flow-node">
+                        <b>weekly/CLAUDE.md (12KB)</b>
+                        Template de la weekly review.
+                        18 sections, outlook macro,
+                        rotations sectorielles,
+                        allocations.
+                    </div>
+                    <div class="flow-node">
+                        <b>scanner/CLAUDE.md (25KB)</b>
+                        Pipeline scanner complet.
+                        10 étapes, critères Sharia,
+                        anti-dilution v2,
+                        setup card format.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼</div>
+                <div class="flow-row">
+                    <div class="flow-node" style="text-align:center;">
+                        <b>Skills (.claude/skills/)</b>
+                        Chargés à la demande par mots-clés du prompt.
+                        <code>scanner-pipeline</code>, <code>daily-weekly-analysis-workflows</code>,
+                        <code>mcp-gateway-tools</code>, etc.
+                    </div>
+                </div>
+            </div>
+
+            <p>Total : ~60KB (~15 000 tokens) de contexte persistant. C'est le « cerveau » du
+                système. Chaque modification du CLAUDE.md change le comportement de tous les
+                runs futurs — c'est pourquoi on le versionne dans git et on le traite comme
+                du code, pas comme de la documentation.</p>
+
+            <h3>Le pattern « Skill »</h3>
+
+            <p>Au lieu de tout mettre dans le prompt, on référence un <strong>skill</strong> —
+                un playbook versionné qui contient le workflow complet :</p>
+
+<pre class="code-block"><span class="c">// ❌ AVANT : prompt monolithique (500+ mots)</span>
+<span class="k">const</span> prompt = <span class="s">`
+Nous sommes le 21 juin 2026. Lance le scanner.
+Étape 1 : appelle GetRegimeProbability...
+Étape 2 : appelle RunScreener avec les filtres...
+Étape 3 : pour chaque ticker, vérifie sur SEC EDGAR...
+Étape 4 : appelle QueryData types=quote,bars_daily...
+... (200 lignes de plus)
+`</span>;
+
+<span class="c">// ✅ APRÈS : invocation de skill (4 lignes)</span>
+<span class="k">const</span> prompt = <span class="s">`
+Nous sommes le samedi 21 juin 2026.
+Lance le pipeline /scanner pour la prochaine séance (lundi 23 juin).
+MCP obligatoire. Commit et push si ok.
+`</span>;
+
+<span class="c">// Le skill scanner-pipeline.md (25KB) est chargé</span>
+<span class="c">// automatiquement quand Claude Code détecte le mot "scanner"</span>
+<span class="c">// dans le prompt. Pas besoin de le répéter.</span></pre>
+
+            <p>L'avantage est triple : le prompt est court (moins de tokens par run = moins cher),
+                le playbook est versionné (modifiable sans toucher au bot), et les mises à jour
+                s'appliquent à tous les runs futurs sans redéploiement.</p>
+
+            <h3>Avant / Après : la même tâche</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Prompt brut</th>
+                            <th>Skill-backed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Longueur prompt</td>
+                            <td>~500 mots</td>
+                            <td>~40 mots</td>
+                        </tr>
+                        <tr>
+                            <td>Contexte total</td>
+                            <td>~500 mots (prompt seul)</td>
+                            <td>~60KB (CLAUDE.md + skills)</td>
+                        </tr>
+                        <tr>
+                            <td>Maintenance</td>
+                            <td>Modifier le bot + redéployer</td>
+                            <td>Modifier le fichier skill + git push</td>
+                        </tr>
+                        <tr>
+                            <td>Cohérence</td>
+                            <td>Chaque prompt peut diverger</td>
+                            <td>Un seul playbook pour tous les runs</td>
+                        </tr>
+                        <tr>
+                            <td>Coût par run</td>
+                            <td>~500 tokens de prompt</td>
+                            <td>~50 tokens de prompt (le reste est cache)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> CLAUDE.md = code, pas documentation</h4>
+                <p>Le CLAUDE.md n'est pas un README. C'est du code qui s'exécute à chaque session.
+                    Une faute de frappe dans une règle CLAUDE.md peut provoquer un comportement
+                    incorrect sur tous les runs futurs. On le review comme du code, on le teste
+                    comme du code, et on le versionne comme du code. Quand on ajoute la règle
+                    « MCP HARD STOP », elle prend effet immédiatement sur le prochain run —
+                    pas besoin de redéployer quoi que ce soit.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://docs.anthropic.com/en/docs/claude-code/memory" target="_blank" rel="noopener">Anthropic — Claude Code project memory (CLAUDE.md)</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════
+             SECTION 8 — CONCLUSION
+             ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#5865F2;"></i> Construire son Propre Système</h2>
+
+            <p>Le système décrit dans cet article n'a pas été construit en un jour. Il a commencé
+                par un seul schedule (le daily briefing), avec un prompt brut de 200 lignes et
+                un cron job. Puis les erreurs ont forgé les règles. Le MCP HARD STOP est né d'un
+                incident réel. L'anti-dilution check est né d'une recommandation catastrophique
+                évitée de justesse. Le tiering market cap est né d'une war room. Chaque contrainte
+                du système est une cicatrice — elle marque un problème qui s'est produit et qui
+                ne se reproduira plus.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-circle"></i> 7 principes pour construire le vôtre</h4>
+                <ul>
+                    <li><strong>Commencer par UN schedule.</strong> Le daily briefing est le plus simple :
+                        données du jour + format fixe + publication. Pas besoin de scanner, de risk gating,
+                        ou de war room pour commencer</li>
+                    <li><strong>MCP ou API de données = non-négociable.</strong> Un système qui publie des
+                        données financières sans source vérifiable est un système qui publiera des données
+                        fausses. C'est une question de quand, pas de si</li>
+                    <li><strong>Discord &gt; cron pour le monitoring.</strong> Un cron job échoue en silence.
+                        Un bot Discord poste son échec dans un channel que vous lisez sur votre téléphone.
+                        La visibilité des erreurs est plus importante que leur prévention</li>
+                    <li><strong>tmux pour l'isolation.</strong> Chaque run dans sa propre session. Pas
+                        d'interférence, pas de corruption, et la possibilité de runs parallèles
+                        (scanner + rétro le vendredi)</li>
+                    <li><strong>Pre-commit hooks pour la cohérence.</strong> Le search index, le sitemap et
+                        le feed sont régénérés à chaque commit. Pas de « j'ai oublié de mettre à jour
+                        le sitemap » — c'est automatique et incontournable</li>
+                    <li><strong>CLAUDE.md = cerveau persistant.</strong> Les conventions, les contraintes et
+                        les templates vivent dans des fichiers versionnés qui sont chargés à chaque
+                        session. Modifier le comportement du système = modifier un fichier et pusher</li>
+                    <li><strong>Paper mode d'abord.</strong> Faire tourner le système pendant 2 semaines
+                        sans publier (ou publier en draft). Mesurer le taux d'erreur. Passer en auto
+                        quand il descend sous 1%</li>
+                </ul>
+            </div>
+
+            <h3>Estimation de coût</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tâche</th>
+                            <th>Tokens/run</th>
+                            <th>Coût/run</th>
+                            <th>Fréquence</th>
+                            <th>Coût/mois</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scanner</td>
+                            <td>~200K output</td>
+                            <td>~$8</td>
+                            <td>22×/mois</td>
+                            <td>~$176</td>
+                        </tr>
+                        <tr>
+                            <td>Daily Briefing</td>
+                            <td>~80K output</td>
+                            <td>~$3</td>
+                            <td>30×/mois</td>
+                            <td>~$90</td>
+                        </tr>
+                        <tr>
+                            <td>Weekly Review</td>
+                            <td>~120K output</td>
+                            <td>~$5</td>
+                            <td>4×/mois</td>
+                            <td>~$20</td>
+                        </tr>
+                        <tr>
+                            <td>Rétrospective</td>
+                            <td>~60K output</td>
+                            <td>~$2.50</td>
+                            <td>4×/mois</td>
+                            <td>~$10</td>
+                        </tr>
+                        <tr style="font-weight:800; background:#eef2ff;">
+                            <td>Total</td>
+                            <td></td>
+                            <td></td>
+                            <td>60×/mois</td>
+                            <td>~$296</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>~$10/jour pour un système qui publie 4 articles financiers vérifiés, avec
+                données temps réel, mise en page professionnelle, et zéro intervention humaine.
+                Le coût marginal d'un article supplémentaire (une analyse ticker, une série
+                thématique) est de ~$3–5.</p>
+
+            <h3>Articles liés</h3>
+
+            <p>Ce guide fait partie d'une série technique sur l'infrastructure DailyTickers :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b><a href="/tech/workflows-multi-agents/" style="color:#4338ca;">Workflows Multi-Agents</a></b>
+                        Comment orchestrer des escouades d'agents IA pour les tâches complexes.
+                        Fan-out parallèle, pipelines, vérification adverse.
+                    </div>
+                    <div class="flow-node">
+                        <b><a href="/tech/ai-harness-finance/" style="color:#4338ca;">Harnesses IA en Finance</a></b>
+                        Contraindre les modèles à produire des résultats fiables.
+                        Schemas JSON, war rooms, MCP HARD STOP.
+                    </div>
+                    <div class="flow-node">
+                        <b><a href="/tech/inside-scanner-pipeline/" style="color:#4338ca;">Inside the Scanner Pipeline</a></b>
+                        Vue détaillée du pipeline scanner de DailyTickers.
+                        Comment on passe de 6 000 tickers à 8 setups.
+                    </div>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://docs.anthropic.com/en/docs/claude-code/overview" target="_blank" rel="noopener">Anthropic — Claude Code documentation</a></p>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-rocket"></i><span>Introduction</span></a>
+            <a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-diagram-project"></i><span>Architecture</span></a>
+            <a href="#schedules" class="fnav-item" data-section="schedules"><i class="fas fa-calendar-days"></i><span>Schedules</span></a>
+            <a href="#scanner-pipeline" class="fnav-item" data-section="scanner-pipeline"><i class="fas fa-filter"></i><span>Pipeline Scanner</span></a>
+            <a href="#error-recovery" class="fnav-item" data-section="error-recovery"><i class="fas fa-shield-halved"></i><span>Error Recovery</span></a>
+            <a href="#tmux-orchestration" class="fnav-item" data-section="tmux-orchestration"><i class="fas fa-terminal"></i><span>tmux</span></a>
+            <a href="#prompt-engineering" class="fnav-item" data-section="prompt-engineering"><i class="fas fa-pen-ruler"></i><span>Prompt Engineering</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-flag-checkered"></i><span>Conclusion</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- ECharts scripts at bottom -->
+    <script>
+        // Schedule timeline chart
+        (function () {
+            var el = document.getElementById('scheduleChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+
+            var days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+            var data = [];
+
+            // Scanner: Mon-Fri 23h (45min)
+            for (var i = 0; i < 5; i++) {
+                data.push({ name: 'Scanner', value: [i, 23, 23.75, 45], itemStyle: { color: '#5865F2' } });
+            }
+            // Daily: every day 7h (15min)
+            for (var i = 0; i < 7; i++) {
+                var color = i >= 5 ? '#818cf8' : '#22c55e';
+                data.push({ name: 'Daily', value: [i, 7, 7.25, 15], itemStyle: { color: color } });
+            }
+            // Weekly: Sunday 18h (30min)
+            data.push({ name: 'Weekly', value: [6, 18, 18.5, 30], itemStyle: { color: '#f59e0b' } });
+            // Retro: Friday 23:45 (20min)
+            data.push({ name: 'Rétro', value: [4, 23.75, 24, 20], itemStyle: { color: '#ef4444' } });
+
+            function renderItem(params, api) {
+                var dayIndex = api.value(0);
+                var startHour = api.value(1);
+                var endHour = api.value(2);
+
+                var start = api.coord([dayIndex - 0.35, startHour]);
+                var end = api.coord([dayIndex + 0.35, endHour]);
+
+                var rectShape = echarts.graphic.clipRectByRect(
+                    { x: start[0], y: start[1], width: end[0] - start[0], height: end[1] - start[1] },
+                    { x: params.coordSys.x, y: params.coordSys.y, width: params.coordSys.width, height: params.coordSys.height }
+                );
+
+                return rectShape && {
+                    type: 'rect',
+                    transition: ['shape'],
+                    shape: rectShape,
+                    style: api.style({ fill: api.visual('color') })
+                };
+            }
+
+            chart.setOption({
+                tooltip: {
+                    formatter: function (params) {
+                        return '<b>' + params.data.name + '</b><br/>' +
+                            days[params.data.value[0]] + ' ' +
+                            Math.floor(params.data.value[1]) + 'h' +
+                            (params.data.value[1] % 1 ? '45' : '00') +
+                            ' — ' + params.data.value[3] + ' min';
+                    }
+                },
+                grid: { left: 60, right: 30, top: 30, bottom: 40 },
+                xAxis: {
+                    type: 'category',
+                    data: days,
+                    axisLabel: { color: '#475569', fontSize: 12, fontWeight: 700 }
+                },
+                yAxis: {
+                    type: 'value',
+                    min: 6,
+                    max: 24,
+                    inverse: true,
+                    axisLabel: {
+                        formatter: function (v) { return v + 'h'; },
+                        color: '#475569'
+                    },
+                    splitLine: { lineStyle: { color: '#f1f5f9' } }
+                },
+                series: [{
+                    type: 'custom',
+                    renderItem: renderItem,
+                    encode: { x: 0, y: [1, 2] },
+                    data: data,
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: function (params) { return params.data.name; },
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: '#fff'
+                    }
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+
+        // Funnel chart — scanner pipeline attrition
+        (function () {
+            var el = document.getElementById('funnelChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: { trigger: 'item', formatter: '{b}: {c} tickers' },
+                legend: { show: false },
+                series: [{
+                    name: 'Pipeline',
+                    type: 'funnel',
+                    left: '10%',
+                    top: 10,
+                    bottom: 10,
+                    width: '80%',
+                    sort: 'descending',
+                    gap: 4,
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        formatter: '{b}\n{c}',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#fff'
+                    },
+                    itemStyle: { borderWidth: 0 },
+                    data: [
+                        { value: 6000, name: 'Univers', itemStyle: { color: '#94a3b8' } },
+                        { value: 120, name: 'Post-Screen', itemStyle: { color: '#5865F2' } },
+                        { value: 80, name: 'Post-Candlestick', itemStyle: { color: '#818cf8' } },
+                        { value: 45, name: 'Post-Dilution', itemStyle: { color: '#f59e0b' } },
+                        { value: 25, name: 'Post-Risk Gate', itemStyle: { color: '#22c55e' } },
+                        { value: 8, name: 'Publiés', itemStyle: { color: '#16a34a' } }
+                    ]
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>

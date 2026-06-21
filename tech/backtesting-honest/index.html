@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,tech,technique,trading" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backtesting Honnête : Pourquoi 90% des Backtests Mentent | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique sur le backtesting honnête : les 7 péchés capitaux, le piège du breakeven, le segment replay, l'évaluation regime-aware, la validation OOS, la méthode war room et le coût de l'honnêteté. Cas réels DailyTickers.">
+    <meta property="og:title" content="Backtesting Honnête : Pourquoi 90% des Backtests Mentent">
+    <meta property="og:description"
+        content="Les 7 biais systémiques du backtesting, le piège du breakeven, et comment la méthode war room produit des résultats qu'on peut croire.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/backtesting-honest/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+            text-align: center;
+            border-bottom: 1px solid #fcd34d;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(245, 158, 11, 0.1);
+            color: #b45309;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #b45309;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .pedagogy-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #dc2626;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #991b1b;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k {
+            color: #fcd34d;
+        }
+
+        pre.code-block .s {
+            color: #86efac;
+        }
+
+        pre.code-block .c {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        pre.code-block .n {
+            color: #fca5a5;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #fffbeb;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #b45309;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #fcd34d;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #b45309;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.danger {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .flow-node.danger b {
+            color: #dc2626;
+        }
+
+        .flow-node.success {
+            border-color: #16a34a;
+            background: #ecfdf5;
+        }
+
+        .flow-node.success b {
+            color: #15803d;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #f59e0b;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        .sin-number {
+            display: inline-flex;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f59e0b;
+            color: white;
+            font-weight: 900;
+            font-size: 0.9rem;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .sin-item {
+            margin: 1.75rem 0;
+            padding: 1.5rem;
+            background: #fefce8;
+            border-radius: 12px;
+            border: 1px solid #fef08a;
+        }
+
+        .sin-item h4 {
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 0 0 0.75rem;
+        }
+
+        .sin-item p {
+            font-size: 0.95rem;
+            margin: 0.5rem 0;
+        }
+
+        .sin-solution {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #ecfdf5;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #166534;
+        }
+
+        .sin-solution i {
+            color: #16a34a;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            pre.code-block {
+                font-size: 0.74rem;
+                padding: 1.1rem 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — TRADING &amp; BACKTESTING</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Backtesting Honnête : Pourquoi 90% des Backtests Mentent
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Les 7 biais systémiques qui gonflent artificiellement les résultats, le piège du breakeven
+            qui masque les pertes, et la méthode war room qui transforme un backtest complaisant en
+            outil de décision fiable. Avec des cas réels du scanner DailyTickers.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-triangle-exclamation"></i> Biais critiques</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 22 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-flask-vial"></i> Cas réels</div>
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> War rooms</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- =============================================================== -->
+        <!-- SECTION 1 — INTRO                                               -->
+        <!-- =============================================================== -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-ghost" style="color:#f59e0b;"></i> Le mirage du backtest parfait</h2>
+
+            <p>Un backtest qui montre +200% par an n'est pas un signal d'achat — c'est un signal d'alarme.
+                Le backtesting est le <strong>seul domaine</strong> où l'on connaît déjà la réponse avant de
+                poser la question. On sait comment les prix ont évolué. On sait quels tickers ont survécu.
+                On sait quand les crises ont commencé et fini. Et cette omniscience crée des biais systémiques
+                qui <em>tous</em>, sans exception, favorisent les résultats optimistes.</p>
+
+            <p>Ce n'est pas un problème théorique. Chez DailyTickers, nous avons découvert — après
+                <strong>trois war rooms successives</strong> sur les configurations v6 et v7 du scanner —
+                qu'une fonctionnalité appelée « stale tightening » fermait entre 38% et 46% de nos trades
+                au breakeven. Le backtest « avait l'air bien » : drawdown faible, pas de grosses pertes.
+                Mais en réalité, ces fermetures prématurées laissaient entre +19% et +64% de profit sur
+                la table, par mode. Le backtest ne mentait pas sur les chiffres — il mentait par omission.</p>
+
+            <p>Ce guide documente les leçons tirées de ces war rooms. Pas de théorie abstraite : chaque
+                section s'appuie sur un bug réel, une découverte concrète, ou une métrique vérifiable.
+                L'objectif est de transformer votre backtest d'un outil de confirmation en un outil
+                de <strong>falsification</strong> — parce que la valeur d'un backtest n'est pas de vous
+                dire que votre stratégie marche, mais de vous montrer <em>comment</em> elle peut échouer.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">38–46%</div>
+                    <div class="metric-label">des trades fermés au breakeven par le stale tightening —
+                        invisible dans les métriques agrégées</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">+19–64%</div>
+                    <div class="metric-label">de profit laissé sur la table par mode, découvert uniquement
+                        par autopsie trade-par-trade</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3 war rooms</div>
+                    <div class="metric-label">nécessaires pour identifier, quantifier et corriger le
+                        problème — le backtest seul n'avait rien signalé</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0%</div>
+                    <div class="metric-label">des métriques standard (Sharpe, PF, win rate) qui avaient
+                        détecté l'anomalie avant les war rooms</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pour les débutants</h4>
+                <p>Un <strong>backtest</strong> consiste à simuler une stratégie de trading sur des données
+                    historiques pour voir comment elle aurait performé. C'est comme regarder un match de foot
+                    enregistré en prétendant que vous ne connaissez pas le score : vous allez inconsciemment
+                    repérer les « bonnes » actions et ignorer les mauvaises. Le backtesting souffre exactement
+                    du même biais, à grande échelle.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.investopedia.com/terms/b/backtesting.asp"
+                    target="_blank" rel="noopener">Investopedia — Backtesting definition</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 2 — LES 7 PÉCHÉS CAPITAUX                              -->
+        <!-- =============================================================== -->
+        <div id="seven-sins" class="content-card">
+            <h2><i class="fa-solid fa-skull-crossbones" style="color:#f59e0b;"></i> Les 7 péchés capitaux du
+                backtesting</h2>
+
+            <p>Chaque péché est un biais systémique qui gonfle les résultats dans la même direction : vers le
+                haut. Pris individuellement, chacun peut ajouter 5 à 30% de performance fictive. Combinés —
+                et ils le sont presque toujours — ils peuvent transformer une stratégie médiocre en machine
+                à rendement apparent.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Péché</th>
+                            <th>Biais</th>
+                            <th>Impact typique</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Survivorship Bias</td>
+                            <td>+15–30%</td>
+                            <td>Ignore les faillites, delistings</td>
+                            <td>Univers frozen par date</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Look-Ahead Bias</td>
+                            <td>+10–25%</td>
+                            <td>Signaux calculés sur données futures</td>
+                            <td>Shift +1 barre minimum</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Overfitting</td>
+                            <td>+20–50%</td>
+                            <td>Paramètres optimisés sur le bruit</td>
+                            <td>Train/test split + OOS</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Coûts oubliés</td>
+                            <td>-5–15%</td>
+                            <td>Spread, slippage, market impact</td>
+                            <td>Coûts par tier de mcap</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Regime Blindness</td>
+                            <td>±20%</td>
+                            <td>Moyenne bull + bear = rien</td>
+                            <td>Évaluation par régime</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>Cherry-Picking</td>
+                            <td>+10–40%</td>
+                            <td>Période qui flatte</td>
+                            <td>Rolling windows</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>Stale Data Artifacts</td>
+                            <td>Variable</td>
+                            <td>Données fantômes</td>
+                            <td>Replay temps réel</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Sin 1 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">1</span> Survivorship Bias</h4>
+                <p>Vous testez votre stratégie sur le S&P 500 d'aujourd'hui. Mais le S&P 500 de 2015 contenait
+                    des sociétés qui ont depuis fait faillite, été rachetées, ou délistées. En ne testant que sur
+                    les survivants, vous excluez automatiquement toutes les positions qui auraient été des pertes
+                    totales.</p>
+                <p>Chez DailyTickers, le cas <strong>INDO</strong> illustre parfaitement le problème. Ce ticker
+                    apparaissait dans les screeners avec des signaux techniques positifs, mais une analyse de
+                    dilution a révélé des programmes ATM toxiques. Sur un univers survivorship-biased, INDO
+                    n'apparaîtrait même plus — le ticker a été radié après effondrement.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Constituer un univers <em>frozen</em> à chaque date de
+                        rebalancement. Le scanner DailyTickers utilise un snapshot de l'univers tel qu'il existait
+                        au moment du screening, incluant les tickers qui ont ensuite disparu.</span>
+                </div>
+            </div>
+
+            <!-- Sin 2 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">2</span> Look-Ahead Bias</h4>
+                <p>« Acheter quand le RSI croise 30 par le bas. » Le RSI est calculé sur le prix de clôture.
+                    Mais dans un backtest naïf, le signal et l'exécution se font sur la même barre — vous
+                    « savez » que le RSI va croiser 30 avant que la barre ne se ferme. En réalité, vous ne
+                    pouvez exécuter qu'à l'ouverture de la barre suivante, au plus tôt.</p>
+                <p>Le look-ahead bias est particulièrement insidieux avec les indicateurs qui utilisent des
+                    moyennes mobiles (EMA, SMA) : le dernier point de la moyenne change jusqu'à la clôture.
+                    Un backtest qui entre « au moment du croisement » capture un prix qui n'était pas disponible
+                    au moment de la décision.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Décaler tous les signaux d'au moins 1 barre. Le pit-engine
+                        de DailyTickers calcule les signaux sur la barre D et exécute sur l'ouverture de D+1.
+                        Pour le scanner intraday, le décalage est de la barre complète suivante.</span>
+                </div>
+            </div>
+
+            <!-- Sin 3 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">3</span> Overfitting</h4>
+                <p>Vous testez 100 combinaisons de paramètres (période RSI × multiplicateur ATR × horizon).
+                    5 combinaisons montrent des résultats « exceptionnels ». Est-ce du signal ou du bruit ?
+                    Avec 100 essais, la probabilité de trouver au moins un résultat à 2 écarts-types par
+                    pur hasard est de 95%.</p>
+                <p>L'overfitting est le piège le plus courant parce qu'il est le plus gratifiant : on « trouve »
+                    toujours les bons paramètres quand on cherche assez longtemps. Le résultat est une stratégie
+                    qui fonctionne parfaitement sur le passé et échoue immédiatement en live.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Split train/test obligatoire. Les war rooms DailyTickers
+                        utilisent 60% train / 40% OOS (out-of-sample). Les paramètres retenus doivent performer
+                        sur les deux périodes, pas seulement sur le train set. Le ratio de dégradation OOS/IS
+                        est la métrique clé : > 30% de dégradation = overfitting probable.</span>
+                </div>
+            </div>
+
+            <!-- Sin 4 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">4</span> Transaction Cost Amnesia</h4>
+                <p>« Ma stratégie fait +80% par an. » Avec combien de trades ? Si c'est 500 trades sur des
+                    small-caps à $50M de market cap, le slippage seul peut manger 2% par trade aller-retour.
+                    500 × 2% = 1000% de coûts de friction. La stratégie à +80% est en réalité à -920%.</p>
+                <p>Même sur les large caps, le spread bid-ask et l'impact de marché ne sont pas négligeables
+                    pour les stratégies haute fréquence. Un spread de 0,05% sur 200 trades/an = 10% de friction
+                    annuelle.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Modéliser les coûts par tier de market cap. Le pit-engine
+                        utilise un modèle tiered : &lt;$2B = reject (pas de liquidité suffisante), $2-10B = ×0.5
+                        sizing, $10-50B = ×0.7. Les coûts de transaction incluent spread estimé + slippage
+                        proportionnel au volume moyen quotidien.</span>
+                </div>
+            </div>
+
+            <!-- Sin 5 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">5</span> Regime Blindness</h4>
+                <p>Votre stratégie momentum fait +40% en 2023 (bull) et -25% en 2022 (bear). La moyenne
+                    sur 2 ans est +7,5%. Mais cette moyenne est un mensonge : la stratégie ne fonctionne que
+                    dans un seul régime. Si le marché entre en bear au moment où vous la déployez, vous
+                    subirez -25% — pas +7,5%.</p>
+                <p>Le problème est aggravé par le fait que les régimes ne sont pas distribués uniformément :
+                    les marchés passent ~70% du temps en mode haussier. Un backtest sur 10 ans capture
+                    majoritairement du bull — la stratégie semble « robuste » alors qu'elle n'a jamais été
+                    vraiment testée en bear.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Évaluation par régime séparément. Le scanner DailyTickers
+                        définit 4 régimes via le VIX (Risk-On &lt;15, Neutral 15-20, Early Risk-Off 20-28,
+                        Risk-Off &gt;28) et évalue chaque config <em>dans</em> son régime cible via
+                        <code>regimeFilters</code>. On n'agrège qu'après, en pondérant par la fréquence
+                        historique de chaque régime.</span>
+                </div>
+            </div>
+
+            <!-- Sin 6 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">6</span> Selection Bias (Cherry-Picking)</h4>
+                <p>« Testé de janvier 2020 à décembre 2024. » Cette période inclut le crash COVID de mars 2020
+                    suivi du plus grand rally de l'histoire. Toute stratégie qui achète les creux montre des
+                    résultats spectaculaires sur cette fenêtre — parce que chaque dip a été suivi d'un rebond
+                    violent. Testez la même stratégie de 2000 à 2003, ou de 2007 à 2009, et les résultats
+                    s'inversent.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Rolling windows sur multiple périodes, incluant au moins
+                        un bear market prolongé (2000-2003 ou 2007-2009). Les war rooms DailyTickers évaluent
+                        systématiquement sur 3 fenêtres glissantes de 3 mois, plus une fenêtre « stress test »
+                        sur un épisode de volatilité extrême.</span>
+                </div>
+            </div>
+
+            <!-- Sin 7 -->
+            <div class="sin-item">
+                <h4><span class="sin-number">7</span> Stale Data Artifacts</h4>
+                <p>Les données historiques ne reflètent pas ce qui était visible en temps réel. Les cours
+                    sont souvent ajustés rétroactivement (splits, dividendes). Les indicateurs fondamentaux
+                    sont révisés. Et certains « événements » dans les données n'ont jamais existé dans le
+                    flux temps réel.</p>
+                <p>Le bug du <strong>stale tightening</strong> de DailyTickers est un cas d'école : la
+                    fonctionnalité serrait les stops au breakeven après N jours sans nouveau plus haut. En
+                    backtest, le prix de breakeven était exact (prix d'entrée). Mais en réalité, le stop
+                    au breakeven exact est rarement touché — le prix peut osciller autour sans le déclencher,
+                    ou le déclencher sur un wick intraday invisible dans les barres daily. Le backtest créait
+                    des fermetures « fantômes » au breakeven qui n'auraient pas eu lieu en live.</p>
+                <div class="sin-solution">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span><strong>Solution :</strong> Replay avec les mêmes feeds temps réel. Le pit-engine
+                        utilise des barres <em>non ajustées</em> pour le calcul des stops et des entries, et
+                        applique les ajustements uniquement pour le P&L final. Le paper-ramp (mode
+                        <code>deploying</code>) sert précisément à comparer les résultats live vs backtest
+                        sur la même période.</span>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2326253" target="_blank"
+                    rel="noopener">Bailey, Borwein, López de Prado — « Pseudo-Mathematics and Financial
+                    Charlatanism » (SSRN)</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 3 — LE PIÈGE DU BREAKEVEN                              -->
+        <!-- =============================================================== -->
+        <div id="breakeven-trap" class="content-card">
+            <h2><i class="fa-solid fa-equals" style="color:#f59e0b;"></i> Le piège du breakeven : autopsie d'un
+                bug réel</h2>
+
+            <p>Le stale tightening semblait être une bonne idée de gestion du risque : si une position ne
+                fait pas de nouveau plus haut pendant N jours, serrer le stop au prix d'entrée (breakeven)
+                pour « protéger le capital ». En théorie, c'est prudent. En pratique, c'est une machine
+                à tuer les gagnants.</p>
+
+            <h3>Le mécanisme</h3>
+
+            <p>Le stale tightening fonctionne comme suit :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>Jour 0</b>
+                        Entrée à $100. Stop initial à $94 (ATR 2.0×). TP à $112.
+                    </div>
+                    <div class="flow-node">
+                        <b>Jours 1–5</b>
+                        Le prix monte à $104, puis consolide autour de $102. Pas de nouveau plus haut.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>Jour 6 (stale trigger)</b>
+                        N jours sans nouveau high → le stop passe de $94 à $100 (breakeven).
+                    </div>
+                </div>
+                <div class="flow-arrow">&#x25BC;</div>
+                <div class="flow-row">
+                    <div class="flow-node danger">
+                        <b>Jour 7</b>
+                        Le prix fait un dip intraday à $99.80 → stop touché au breakeven. Position fermée
+                        à ±0%.
+                    </div>
+                    <div class="flow-node success">
+                        <b>Jour 15 (sans stale)</b>
+                        Le prix casse $104, atteint $108. Le trade original aurait capturé +8%.
+                    </div>
+                </div>
+            </div>
+
+            <h3>L'ampleur du dégât</h3>
+
+            <p>Les war rooms v6/v7 ont analysé chaque trade sur 6 mois. Voici les résultats par mode :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mode</th>
+                            <th>Trades totaux</th>
+                            <th>Breakevens</th>
+                            <th>% BE</th>
+                            <th>Profit laissé sur la table</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dynamic</strong></td>
+                            <td>127</td>
+                            <td>48</td>
+                            <td style="color:#dc2626; font-weight:700;">38%</td>
+                            <td style="color:#dc2626; font-weight:700;">+19%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Balanced</strong></td>
+                            <td>89</td>
+                            <td>37</td>
+                            <td style="color:#dc2626; font-weight:700;">42%</td>
+                            <td style="color:#dc2626; font-weight:700;">+31%</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TKL</strong></td>
+                            <td>74</td>
+                            <td>34</td>
+                            <td style="color:#dc2626; font-weight:700;">46%</td>
+                            <td style="color:#dc2626; font-weight:700;">+64%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>TKL est le mode le plus touché parce que c'est un mode momentum : les noms momentum ont
+                besoin de temps pour développer leur mouvement. Serrer le stop après 5-7 jours revient
+                à couper la jambe d'un sprinter au milieu de sa course.</p>
+
+            <h3>Avant / après : l'impact de la correction</h3>
+
+            <div id="beChart" style="width:100%; height:360px; margin:1.5rem 0;"></div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège des métriques</h4>
+                <p>Le backtest avec stale tightening montrait un drawdown plus faible — évidemment, quand 40%
+                    de vos trades ferment à zéro, le DD est mécaniquement bas. Mais le rendement aussi. Les
+                    métriques standard (Sharpe, profit factor, win rate) ne distinguent pas un « bon » drawdown
+                    bas (peu de pertes) d'un « mauvais » drawdown bas (peu de gains). Il a fallu l'autopsie
+                    trade-par-trade pour voir le problème.</p>
+            </div>
+
+            <h3>Le correctif</h3>
+
+            <p>La solution a été double :</p>
+            <ol style="font-size:1rem; line-height:1.7; color:#334155;">
+                <li><strong>Désactiver le stale tightening</strong> sur tous les modes. Aucune fermeture
+                    automatique sur absence de mouvement — laisser le stop initial (ATR-based) et le TP
+                    faire leur travail.</li>
+                <li><strong>Élargir les stops ATR</strong> de 2.0× à 2.5–3.5× selon le mode. Des stops
+                    plus larges donnent plus de « room to breathe » aux positions, réduisant les stops-out
+                    sur bruit intraday.</li>
+            </ol>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Un breakeven n'est pas neutre</h4>
+                <p>Un trade fermé au breakeven coûte réellement : le spread aller-retour (0,05–0,20%), le
+                    coût d'opportunité (le capital était bloqué pendant 5-7 jours), et le coût psychologique
+                    (une « non-opération » qui consomme de l'attention et de la discipline). Un système qui
+                    génère 40% de breakevens est un système qui brûle 40% de sa capacité pour rien.</p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://www.investopedia.com/terms/b/breakevenpoint.asp" target="_blank"
+                    rel="noopener">Investopedia — Break-Even Point</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 4 — SEGMENT REPLAY                                      -->
+        <!-- =============================================================== -->
+        <div id="segment-replay" class="content-card">
+            <h2><i class="fa-solid fa-clone" style="color:#f59e0b;"></i> Segment Replay : l'illusion de l'absolu
+            </h2>
+
+            <p>Quand un bug est identifié ou qu'une config change, le réflexe est de « rejouer » la nouvelle
+                config sur un segment historique pour quantifier l'impact. « Avant : DD -16%. Après : DD -4%.
+                Amélioration de 75%. » Sauf que ces deux chiffres sont potentiellement faux.</p>
+
+            <h3>Pourquoi le segment replay ment</h3>
+
+            <p>Le segment replay — prendre une config et la simuler sur une fenêtre passée — souffre de
+                trois problèmes fondamentaux :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node danger">
+                        <b>1. ConfigVersion Blend</b>
+                        Si la config a changé en cours de période (configVersion v1 → v2), le replay applique
+                        la config finale sur toute la période. Les trades de la première moitié utilisent des
+                        paramètres qui n'existaient pas encore.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>2. Phantom MtM</b>
+                        Le mark-to-market est recalculé aux bornes du segment. Une position ouverte avant
+                        le début du segment apparaît avec un « gain » ou une « perte » instantanée qui
+                        n'a jamais existé.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>3. Regime Filter Drift</b>
+                        L'état du filtre de régime (VIX, momentum) au début du replay ne correspond pas à
+                        l'état réel à cette date. Les signaux d'entrée diffèrent → les trades diffèrent →
+                        le P&L diffère.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Le cas Dynamic -16% → -4,59%</h3>
+
+            <p>En juin 2026, un segment replay du mode Dynamic sur avril-mai a signalé un drawdown de -16%.
+                C'était alarmant — au-delà du seuil de tolérance de -8%. La réaction initiale était de
+                modifier la config d'urgence.</p>
+
+            <p>Mais la vérification par les données <em>frozen</em> (les snapshots temps réel sauvegardés
+                par le pit-engine à chaque séance) a montré un DD réel de -4,59%. Le segment replay
+                surestimait par un facteur <strong>3,5×</strong>. La cause : un phantom MtM de -8%
+                sur une position NVDA ouverte avant le début du segment, combinée à un configVersion
+                blend qui appliquait les stops v7 (plus larges) aux entries v6 (plus serrées).</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrique</th>
+                            <th>Segment Replay</th>
+                            <th>Frozen Reality</th>
+                            <th>Erreur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Max Drawdown</td>
+                            <td style="color:#dc2626; font-weight:700;">-16,0%</td>
+                            <td style="color:#16a34a; font-weight:700;">-4,59%</td>
+                            <td>×3,5</td>
+                        </tr>
+                        <tr>
+                            <td>Return sur la période</td>
+                            <td>+2,1%</td>
+                            <td>+5,8%</td>
+                            <td>-64%</td>
+                        </tr>
+                        <tr>
+                            <td>Win rate</td>
+                            <td>52%</td>
+                            <td>58%</td>
+                            <td>-6 pts</td>
+                        </tr>
+                        <tr>
+                            <td>Trades comptés</td>
+                            <td>31</td>
+                            <td>27</td>
+                            <td>+4 fantômes</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>La bonne méthode : deltas relatifs A/B</h3>
+
+            <p>La solution n'est pas d'abandonner le replay — c'est d'abandonner les <em>valeurs absolues</em>
+                qui en sortent. Au lieu de dire « la config A donne DD -16% et la config B donne DD -8% »,
+                on compare A et B <strong>sur le même replay</strong> avec le même modèle de MtM. Le delta
+                relatif (B est meilleur de X% que A) est fiable, même si les valeurs absolues ne le sont pas.</p>
+
+            <pre class="code-block"><span class="c">// Correct : comparer A/B en relatif sur le même modeling</span>
+<span class="k">const</span> resultA = replay(configA, segment, { mtmModel: <span class="s">'frozen'</span> });
+<span class="k">const</span> resultB = replay(configB, segment, { mtmModel: <span class="s">'frozen'</span> });
+<span class="k">const</span> delta  = {
+  dd:     resultB.maxDD - resultA.maxDD,        <span class="c">// relatif → fiable</span>
+  ret:    resultB.totalReturn - resultA.totalReturn,
+  sharpe: resultB.sharpe - resultA.sharpe
+};
+
+<span class="c">// INCORRECT : utiliser les valeurs absolues du replay</span>
+<span class="c">// if (resultA.maxDD &lt; -0.08) panic();  // peut être un phantom MtM</span></pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Règle d'or</h4>
+                <p>Pour les valeurs absolues (DD réel, return réel, PF réel), ne faites confiance qu'aux
+                    données <code>frozen_*</code> du pit-engine et aux resweeps append-only. Jamais aux
+                    reconstructions après-coup. Le segment replay ne sert qu'à comparer des configs
+                    entre elles — pas à mesurer la réalité.</p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://www.investopedia.com/terms/w/walk-forward_testing.asp" target="_blank"
+                    rel="noopener">Investopedia — Walk-Forward Testing</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 5 — ÉVALUATION REGIME-AWARE                            -->
+        <!-- =============================================================== -->
+        <div id="regime-aware" class="content-card">
+            <h2><i class="fa-solid fa-chart-area" style="color:#f59e0b;"></i> Évaluation regime-aware</h2>
+
+            <p>Un backtest qui agrège tous les régimes de marché dans une seule métrique commet la même
+                erreur qu'un médecin qui moyenne la température de patients sains et fiévreux : la moyenne
+                est « normale », mais elle ne décrit aucun patient réel.</p>
+
+            <h3>Le système de régimes DailyTickers</h3>
+
+            <p>Le scanner utilise le VIX (CBOE Volatility Index) comme proxy de régime de marché.
+                Quatre niveaux sont définis, chacun avec des implications différentes pour les stratégies :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Régime</th>
+                            <th>VIX</th>
+                            <th>Fréquence historique</th>
+                            <th>Caractéristiques</th>
+                            <th>Implication stratégie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color:#16a34a; font-weight:700;">Risk-On</td>
+                            <td>&lt; 15</td>
+                            <td>~35%</td>
+                            <td>Tendance haussière, faible volatilité</td>
+                            <td>Momentum plein, stops serrés OK</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#3b82f6; font-weight:700;">Neutral</td>
+                            <td>15–20</td>
+                            <td>~35%</td>
+                            <td>Range-bound, rotation sectorielle</td>
+                            <td>Sélectif, diversifié, stops moyens</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#f59e0b; font-weight:700;">Early Risk-Off</td>
+                            <td>20–28</td>
+                            <td>~20%</td>
+                            <td>Volatilité croissante, incertitude</td>
+                            <td>Réduire taille, élargir stops, défensifs</td>
+                        </tr>
+                        <tr>
+                            <td style="color:#dc2626; font-weight:700;">Risk-Off</td>
+                            <td>&gt; 28</td>
+                            <td>~10%</td>
+                            <td>Panique, corrélations → 1</td>
+                            <td>Cash ou couvertures uniquement</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Pourquoi l'agrégation est trompeuse</h3>
+
+            <p>Considérons une stratégie momentum testée sur 2 ans :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Régime</th>
+                            <th>Durée (jours)</th>
+                            <th>Rendement cumulé</th>
+                            <th>Drawdown max</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Risk-On (VIX &lt; 15)</td>
+                            <td>175</td>
+                            <td style="color:#16a34a; font-weight:700;">+32%</td>
+                            <td>-3%</td>
+                        </tr>
+                        <tr>
+                            <td>Neutral (15-20)</td>
+                            <td>175</td>
+                            <td style="color:#3b82f6; font-weight:700;">+8%</td>
+                            <td>-6%</td>
+                        </tr>
+                        <tr>
+                            <td>Early Risk-Off (20-28)</td>
+                            <td>100</td>
+                            <td style="color:#f59e0b; font-weight:700;">-4%</td>
+                            <td>-12%</td>
+                        </tr>
+                        <tr>
+                            <td>Risk-Off (&gt; 28)</td>
+                            <td>50</td>
+                            <td style="color:#dc2626; font-weight:700;">-18%</td>
+                            <td>-22%</td>
+                        </tr>
+                        <tr style="background:#f8fafc; font-weight:700;">
+                            <td>Agrégé (trompeur)</td>
+                            <td>500</td>
+                            <td>+18%</td>
+                            <td>-22%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>L'agrégé montre +18% avec un DD de -22%. Ça semble acceptable. Mais ce qui compte pour
+                l'opérateur, c'est : <em>en quoi crois-tu, là, maintenant ?</em> Si le VIX est à 25
+                (early risk-off), la stratégie perd -4% en moyenne sur ce régime. Le +18% agrégé
+                n'est pas le monde dans lequel vous vivez.</p>
+
+            <h3>Walk-forward par régime</h3>
+
+            <div id="regimeChart" style="width:100%; height:340px; margin:1.5rem 0;"></div>
+
+            <p>La méthode walk-forward adapte les paramètres au régime courant :</p>
+
+            <ol style="font-size:1rem; line-height:1.7; color:#334155;">
+                <li><strong>Fenêtre train</strong> — 3 mois de données dans le régime courant (pas un
+                    calendrier fixe, mais les N derniers jours dans ce régime spécifique).</li>
+                <li><strong>Fenêtre test</strong> — le mois suivant dans le même régime. Aucun changement
+                    de paramètre autorisé.</li>
+                <li><strong>Avancer</strong> — le régime change, on bascule vers la config appropriée.
+                    Nouveau train/test pour le nouveau régime.</li>
+                <li><strong>Agréger les OOS</strong> — la performance finale est la moyenne pondérée
+                    des performances OOS par régime.</li>
+            </ol>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> optimize-param : artefact statique</h4>
+                <p>L'outil <code>optimize-param</code> du scanner est utile pour explorer l'espace des
+                    paramètres, mais ses résultats sont des <em>artefacts statiques</em> : il applique
+                    des filtres figés sur toute la période, ignorant les changements de régime et de
+                    <code>configVersion</code>. Les résultats surestiment systématiquement. Toute
+                    modification de config suggérée par optimize-param doit être re-validée par
+                    <code>validate-config-change.js</code>, qui est regime-aware et teste en OOS.</p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://www.cboe.com/tradable_products/vix/" target="_blank"
+                    rel="noopener">CBOE — VIX Index methodology</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 6 — OUT-OF-SAMPLE                                       -->
+        <!-- =============================================================== -->
+        <div id="oos-validation" class="content-card">
+            <h2><i class="fa-solid fa-vial" style="color:#f59e0b;"></i> Out-of-Sample : la seule vérité</h2>
+
+            <p>La question fondamentale n'est pas « ma stratégie a-t-elle marché dans le passé ? » mais
+                « ma stratégie marchera-t-elle sur des données qu'elle n'a jamais vues ? » La seule façon
+                de répondre est le test out-of-sample (OOS) : réserver une portion des données que la
+                stratégie n'a pas vue pendant l'optimisation, puis mesurer sa performance sur cette
+                portion vierge.</p>
+
+            <h3>In-sample vs Out-of-sample</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>In-Sample (train)</b>
+                        60% des données. Optimisation des paramètres autorisée. C'est ici que vous ajustez
+                        RSI, ATR, horizon, trailing.
+                    </div>
+                    <div class="flow-node success">
+                        <b>Out-of-Sample (test)</b>
+                        40% des données. Aucune modification autorisée. On applique les paramètres trouvés
+                        en IS et on mesure.
+                    </div>
+                </div>
+                <div class="flow-arrow">&#x25BC;</div>
+                <div class="flow-row">
+                    <div class="flow-node success">
+                        <b>IS ≈ OOS (&lt; 30% dégradation)</b>
+                        Les paramètres sont robustes. La stratégie capture un vrai signal, pas du bruit.
+                        Prêt pour le paper-ramp.
+                    </div>
+                    <div class="flow-node danger">
+                        <b>IS ≫ OOS (&gt; 30% dégradation)</b>
+                        Overfitting probable. Les paramètres sont ajustés au bruit du train set. Retour
+                        à la case départ.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Le paper-ramp : OOS en temps réel</h3>
+
+            <p>Le split train/test est nécessaire mais pas suffisant. Même un bon OOS historique peut
+                échouer en live à cause de différences d'exécution (slippage, latence, partial fills).
+                Le paper-ramp est l'étape suivante : exécuter la stratégie en <em>paper trading</em>
+                (sans argent réel) sur le marché live.</p>
+
+            <p>Le scanner DailyTickers utilise le statut <code>deploying</code> pour le paper-ramp :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mode</th>
+                            <th>Statut</th>
+                            <th>Début paper-ramp</th>
+                            <th>Review date</th>
+                            <th>Critère de passage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Alpha</strong> (Mode 7)</td>
+                            <td><span style="color:#3b82f6;">deploying</span></td>
+                            <td>4 juin 2026</td>
+                            <td>4 juillet 2026</td>
+                            <td>Battre le DD du Nasdaq sur la même période</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Orbit</strong> (ex-Secured)</td>
+                            <td><span style="color:#3b82f6;">deploying</span></td>
+                            <td>3 juin 2026</td>
+                            <td>3 juillet 2026</td>
+                            <td>DD max ≤ 8%, win rate ≥ 50%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Pourquoi le paper trading ne suffit pas</h3>
+
+            <p>Le paper trading élimine le risque financier mais introduit ses propres biais :</p>
+
+            <ul style="font-size:1rem; line-height:1.7; color:#334155;">
+                <li><strong>Pas de slippage réel</strong> — les ordres paper sont remplis au prix exact,
+                    jamais en réalité.</li>
+                <li><strong>Pas de partial fills</strong> — en paper, l'ordre est 100% rempli
+                    instantanément.</li>
+                <li><strong>Pas de market impact</strong> — votre ordre n'affecte pas le prix en paper,
+                    mais en live, un ordre de $50K sur un small-cap peut déplacer le prix de 0,5%.</li>
+                <li><strong>Pas de psychologie</strong> — il est facile de respecter le plan quand il n'y
+                    a pas d'argent en jeu. Le vrai test est de ne pas paniquer sur un DD de -5% avec de
+                    l'argent réel.</li>
+            </ul>
+
+            <h3>Critères de transition deploying → live</h3>
+
+            <p>La war room a défini des critères stricts pour le passage en live :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>Seuil</th>
+                            <th>Pourquoi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Surperformance hebdo vs SPY</td>
+                            <td>≥ 3× pendant 4 semaines</td>
+                            <td>Prouver que le mode ajoute de l'alpha, pas juste du beta</td>
+                        </tr>
+                        <tr>
+                            <td>Drawdown max</td>
+                            <td>≤ 8%</td>
+                            <td>Seuil de tolérance opérationnel</td>
+                        </tr>
+                        <tr>
+                            <td>Win rate</td>
+                            <td>≥ 50%</td>
+                            <td>Seuil minimal pour la viabilité psychologique</td>
+                        </tr>
+                        <tr>
+                            <td>Profit factor</td>
+                            <td>≥ 1.3</td>
+                            <td>Marge suffisante pour absorber les coûts réels</td>
+                        </tr>
+                        <tr>
+                            <td>Ratio breakevens</td>
+                            <td>&lt; 15%</td>
+                            <td>Leçon du stale tightening — trop de BE = problème</td>
+                        </tr>
+                        <tr>
+                            <td>OOS/IS dégradation</td>
+                            <td>&lt; 30%</td>
+                            <td>Robustesse des paramètres</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le paradoxe du paper trading</h4>
+                <p>Un mode qui performe en paper et échoue en live révèle un problème d'exécution ou de
+                    psychologie — pas de stratégie. Un mode qui échoue en paper n'a même pas besoin d'être
+                    testé en live. Le paper-ramp est un filtre, pas une preuve. La preuve, c'est la
+                    performance live sur 3+ mois.</p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://www.investopedia.com/terms/o/out-of-sample.asp" target="_blank"
+                    rel="noopener">Investopedia — Out-of-Sample Testing</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 7 — MÉTHODE WAR ROOM                                   -->
+        <!-- =============================================================== -->
+        <div id="war-room-method" class="content-card">
+            <h2><i class="fa-solid fa-shield-halved" style="color:#f59e0b;"></i> La méthode war room : 3 rounds
+                pour la vérité</h2>
+
+            <p>Une war room est une session structurée d'analyse adverse où plusieurs perspectives
+                indépendantes examinent le même système à la recherche de défauts. Ce n'est pas un brainstorm
+                — c'est une chasse aux bugs systématique, avec des rôles définis et un protocole strict.</p>
+
+            <h3>Le protocole en 3 rounds</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>Round 1 — Identifier</b>
+                        Chaque perspective (quant, trader, risk, QA) examine le système indépendamment
+                        et liste les anomalies. Pas de correction à ce stade — uniquement du diagnostic.
+                        Durée : 2-4 heures.
+                    </div>
+                </div>
+                <div class="flow-arrow">&#x25BC;</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>Round 2 — Proposer & Quantifier</b>
+                        Pour chaque anomalie confirmée : proposer un correctif, quantifier l'impact via
+                        A/B replay (config avant vs après), et estimer les effets de bord. Durée : 4-8 heures.
+                    </div>
+                </div>
+                <div class="flow-arrow">&#x25BC;</div>
+                <div class="flow-row">
+                    <div class="flow-node success">
+                        <b>Round 3 — Vérifier & Régresser</b>
+                        Appliquer les correctifs et vérifier que chacun produit l'amélioration attendue
+                        SANS introduire de régression. Tout correctif qui améliore une métrique en dégradant
+                        une autre est rejeté ou modifié. Durée : 2-4 heures.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Les bugs découverts sur 3 war rooms</h3>
+
+            <p>Voici les bugs majeurs identifiés lors des war rooms v6 → v7 → v7.1 du scanner DailyTickers.
+                Aucun n'avait été détecté par les métriques standard du backtest :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bug</th>
+                            <th>War room</th>
+                            <th>Impact</th>
+                            <th>Correctif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Dead Optimizer</strong></td>
+                            <td>v6</td>
+                            <td>L'optimiseur de paramètres ne tournait plus — les clés de config ne
+                                correspondaient plus aux clés du moteur d'exécution</td>
+                            <td>Aligner les noms de clés config/engine</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Score Mutation</strong></td>
+                            <td>v6</td>
+                            <td>Les scores de screening changeaient entre le moment de la sélection et
+                                l'exécution. Un ticker sélectionné à 92 pouvait être exécuté à 78</td>
+                            <td>Figer le score au moment du screening</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Correlation Sign Error</strong></td>
+                            <td>v7</td>
+                            <td>La matrice de corrélation traitait les corrélations négatives comme
+                                positives — résultat : des positions corrélées à 0.9 passaient le filtre
+                                de diversification</td>
+                            <td>Utiliser <code>Math.abs()</code> dans le gate de corrélation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>BE-as-Loss</strong></td>
+                            <td>v7</td>
+                            <td>Les breakevens étaient comptés comme des pertes dans le calcul du profit
+                                factor, le faisant paraître meilleur qu'il ne l'était (dénominateur gonflé)</td>
+                            <td>Exclure les BE du calcul du PF</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stale Tightening</strong></td>
+                            <td>v6/v7</td>
+                            <td>38-46% de breakevens, +19-64% de profit abandonné</td>
+                            <td>Désactiver, élargir ATR</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>L'overhaul v7.1</h3>
+
+            <p>La war room v7.1 a produit un ensemble de correctifs systémiques, chacun validé par
+                A/B replay avec delta relatif :</p>
+
+            <ul style="font-size:1rem; line-height:1.7; color:#334155;">
+                <li><strong>DD Breaker</strong> — seuil de drawdown par mode au-delà duquel le mode
+                    passe automatiquement en statut <code>pausing</code> (sortie organique, pas de nouvelles
+                    entrées).</li>
+                <li><strong>Correlation Gate</strong> — rejet des entrées si la corrélation avec les
+                    positions existantes dépasse 0.7 (calculée sur 30 jours de barres).</li>
+                <li><strong>ATR Widen</strong> — multiplicateurs ATR élargis de 2.0× à 2.5–3.5× selon
+                    le mode et le régime.</li>
+                <li><strong>Stale Off</strong> — désactivation complète du stale tightening sur tous
+                    les modes.</li>
+            </ul>
+
+            <pre class="code-block"><span class="c">// Extrait de validate-config-change.js</span>
+<span class="c">// Compare l'ancienne et la nouvelle config en delta relatif</span>
+
+<span class="k">async function</span> validateChange(oldConfig, newConfig, segment) {
+  <span class="k">const</span> old = <span class="k">await</span> replay(oldConfig, segment);
+  <span class="k">const</span> cur = <span class="k">await</span> replay(newConfig, segment);
+
+  <span class="k">const</span> delta = {
+    dd:     cur.maxDD - old.maxDD,
+    ret:    cur.totalReturn - old.totalReturn,
+    pf:     cur.profitFactor - old.profitFactor,
+    winRate: cur.winRate - old.winRate,
+    beRate: cur.breakEvenRate - old.breakEvenRate,
+  };
+
+  <span class="c">// Régression check : aucune métrique ne doit se dégrader de plus de 5%</span>
+  <span class="k">const</span> regressions = Object.entries(delta)
+    .filter(([k, v]) => {
+      <span class="k">if</span> (k === <span class="s">'dd'</span> || k === <span class="s">'beRate'</span>) <span class="k">return</span> v > <span class="n">0.05</span>;  <span class="c">// plus haut = pire</span>
+      <span class="k">return</span> v &lt; <span class="n">-0.05</span>;  <span class="c">// plus bas = pire</span>
+    });
+
+  <span class="k">return</span> {
+    approved: regressions.length === <span class="n">0</span>,
+    delta,
+    regressions,
+  };
+}</pre>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Quand lancer une war room</h4>
+                <ul>
+                    <li>Après tout changement de configuration (paramètres, filtres, sizing)</li>
+                    <li>Quand un mode sous-performe SPY pendant 2 semaines consécutives</li>
+                    <li>Quand le ratio de breakevens dépasse 15%</li>
+                    <li>Quand le drawdown approche le seuil de tolérance (8%)</li>
+                    <li>Avant toute transition <code>deploying → live</code></li>
+                </ul>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://docs.anthropic.com/en/docs/build-with-claude/agentic-tool-use"
+                    target="_blank" rel="noopener">Anthropic — Agentic tool use (war room pattern)</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 8 — LE COÛT DE L'HONNÊTETÉ                             -->
+        <!-- =============================================================== -->
+        <div id="cost-of-honesty" class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#f59e0b;"></i> Le coût de l'honnêteté</h2>
+
+            <p>Un backtest honnête produit des rendements plus faibles qu'un backtest malhonnête. C'est
+                structurellement garanti : chaque biais corrigé retire de la performance fictive. Ce qui
+                reste est la <em>vraie</em> capacité de la stratégie — et elle est toujours inférieure
+                à ce que le backtest naïf promettait.</p>
+
+            <h3>Avant / après honnêteté</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrique</th>
+                            <th>Backtest naïf</th>
+                            <th>Backtest honnête</th>
+                            <th>Live (3 mois)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Return annualisé</td>
+                            <td style="color:#16a34a;">+45%</td>
+                            <td>+18%</td>
+                            <td>+15%</td>
+                        </tr>
+                        <tr>
+                            <td>Max Drawdown</td>
+                            <td>-6%</td>
+                            <td>-11%</td>
+                            <td style="color:#dc2626;">-9%</td>
+                        </tr>
+                        <tr>
+                            <td>Sharpe Ratio</td>
+                            <td style="color:#16a34a;">2.8</td>
+                            <td>1.4</td>
+                            <td>1.2</td>
+                        </tr>
+                        <tr>
+                            <td>Win Rate</td>
+                            <td>68%</td>
+                            <td>55%</td>
+                            <td>53%</td>
+                        </tr>
+                        <tr>
+                            <td>Profit Factor</td>
+                            <td style="color:#16a34a;">3.2</td>
+                            <td>1.6</td>
+                            <td>1.5</td>
+                        </tr>
+                        <tr style="background:#f8fafc;">
+                            <td><strong>Écart BT→Live</strong></td>
+                            <td style="color:#dc2626;"><strong>-67%</strong></td>
+                            <td style="color:#16a34a;"><strong>-17%</strong></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le backtest naïf promet +45% et livre +15% : un écart de -67%. Le backtest honnête promet
+                +18% et livre +15% : un écart de -17%. Les deux convergent vers la même réalité live, mais
+                le backtest honnête vous y prépare au lieu de vous décevoir.</p>
+
+            <h3>La leçon Fortress</h3>
+
+            <p>Le mode Fortress de DailyTickers illustre le danger de l'optimisation malhonnête. Le mandat
+                de Fortress est clair : « participer à la hausse SANS plafonner les rendements + parachute
+                toujours actif contre les retournements soudains ». Autrement dit, capturer l'upside avec
+                un filet de sécurité contre le downside.</p>
+
+            <p>Un backtest naïf suggérait « breakout-only everywhere » — n'acheter que sur cassure de
+                résistance, avec des stops serrés. En backtest, les résultats étaient spectaculaires :
+                aucun drawdown significatif (parce que les stops serrés coupent vite). Mais en réalité,
+                cette approche <strong>bride les rendements</strong> : on n'entre que sur les cassures
+                (manquant les accumulations), et les stops serrés sortent trop tôt des trades gagnants.</p>
+
+            <p>La solution honnête, identifiée par la war room, était un mécanisme de <strong>trailing
+                locks</strong> (qui verrouillent les gains progressivement) combiné à la
+                <strong>décorrélation de cluster</strong> (diversifier les positions pour qu'un retournement
+                sectoriel ne les touche pas toutes) et le <strong>de-risking sur détérioration de régime</strong>
+                (réduire l'exposition quand le VIX monte).</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le Sharpe gap : mesure de l'honnêteté</h4>
+                <p>Le <strong>Sharpe gap</strong> = Sharpe du backtest – Sharpe du live. C'est la métrique
+                    la plus simple pour évaluer l'honnêteté d'un backtest. Un gap &lt; 0.3 est excellent
+                    (le backtest est réaliste). Un gap entre 0.3 et 1.0 suggère des biais non corrigés. Un
+                    gap &gt; 1.0 indique un backtest fondamentalement malhonnête — les paramètres sont
+                    overfittés et la stratégie ne survivra pas en live.</p>
+            </div>
+
+            <h3>Le paradoxe du gestionnaire</h3>
+
+            <p>Les gestionnaires qui montrent des backtests conservateurs (Sharpe 1.2–1.5, return modéré)
+                et les <em>matchent</em> en live surperforment systématiquement ceux qui montrent des
+                backtests spectaculaires (Sharpe 2.5+, return élevé) et sous-performent en live. La raison
+                est simple : le premier groupe a éliminé les biais et mesure la vraie capacité de sa
+                stratégie. Le second groupe a optimisé les biais et découvre en live que sa stratégie
+                est beaucoup moins bonne que prévu.</p>
+
+            <p>En tant qu'investisseur, un backtest « trop beau » devrait vous rendre <em>plus</em>
+                sceptique, pas moins. La beauté des résultats est inversement corrélée à leur fiabilité.
+                Les meilleurs signaux sont les backtests modestes qui tiennent leurs promesses.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Quand sauter la vérification</h4>
+                <p>Jamais. Si le backtest est destiné à guider une décision d'investissement — même
+                    indirectement, même « juste pour voir » — il doit passer par le filtre OOS et
+                    idéalement par une war room. La seule exception est un backtest explicitement
+                    exploratoire, marqué comme tel, et jamais utilisé pour communiquer des résultats
+                    à un tiers.</p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=2308659" target="_blank"
+                    rel="noopener">Harvey, Liu, Zhu — « …and the Cross-Section of Expected Returns »
+                    (SSRN)</a></p>
+        </div>
+
+        <!-- =============================================================== -->
+        <!-- SECTION 9 — CONCLUSION / CHECKLIST                              -->
+        <!-- =============================================================== -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-clipboard-check" style="color:#f59e0b;"></i> Checklist : avant de croire un
+                backtest</h2>
+
+            <p>Cette checklist résume les leçons de trois war rooms, des centaines d'heures d'analyse, et
+                des milliers de trades autopsiés. Chaque point correspond à un bug réel que nous avons
+                découvert — et que nous aurions voulu connaître avant de l'apprendre à nos dépens.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-lightbulb"></i> Les 10 questions à poser à tout backtest</h4>
+                <ul>
+                    <li><strong>1. Univers frozen ?</strong> — L'univers de tickers est-il celui qui existait
+                        à chaque date de rebalancement, incluant les delistings et faillites ?</li>
+                    <li><strong>2. Décalage de signal ?</strong> — Les signaux sont-ils calculés sur la barre D
+                        et exécutés à l'ouverture de D+1 (minimum +1 barre) ?</li>
+                    <li><strong>3. Coûts modélisés ?</strong> — Le spread, le slippage et le market impact
+                        sont-ils modélisés par tier de market cap (&lt;$2B, $2-10B, $10-50B, &gt;$50B) ?</li>
+                    <li><strong>4. OOS validé ?</strong> — Le test est-il effectué sur des données que la
+                        stratégie n'a jamais vues, avec un split minimum 60/40 ?</li>
+                    <li><strong>5. Regime-aware ?</strong> — L'évaluation est-elle segmentée par régime
+                        (VIX/vol) ou moyennée sur un seul régime dominant ?</li>
+                    <li><strong>6. DD frozen ?</strong> — Le drawdown rapporté vient-il des snapshots temps
+                        réel (<code>frozen_*</code>) ou d'un segment replay reconstruit ?</li>
+                    <li><strong>7. Ratio BE sain ?</strong> — Le pourcentage de breakevens est-il cohérent
+                        (&lt;15%) ? Un ratio élevé masque un problème de gestion de position.</li>
+                    <li><strong>8. Paper-ramp passé ?</strong> — Un paper-ramp (mode <code>deploying</code>)
+                        d'au moins 4 semaines a-t-il confirmé les résultats avant le passage live ?</li>
+                    <li><strong>9. War room validé ?</strong> — Les résultats ont-ils été examinés par des
+                        perspectives adverses (quant, trader, risk) cherchant à les <em>invalider</em> ?</li>
+                    <li><strong>10. Sharpe gap acceptable ?</strong> — L'écart entre le Sharpe backtesté et
+                        le Sharpe live est-il inférieur à 30% ? Au-delà, les biais ne sont pas corrigés.</li>
+                </ul>
+            </div>
+
+            <h3>La valeur de l'honnêteté</h3>
+
+            <p>Un backtest honnête ne vous dit pas ce que vous voulez entendre — il vous dit ce que vous
+                avez besoin de savoir. La différence entre un trader qui survit 10 ans et un qui explose
+                en 10 mois n'est pas la qualité de sa stratégie, mais la qualité de sa validation.</p>
+
+            <p>Les war rooms coûtent du temps. L'OOS réduit la taille de l'échantillon d'entraînement.
+                Le paper-ramp retarde le passage en live de 4 semaines. Les coûts modélisés réduisent
+                les rendements affichés. Chacune de ces « concessions » est un investissement dans
+                la survie à long terme — et aucune n'est négociable.</p>
+
+            <p>Le backtest parfait n'existe pas. Mais le backtest <em>honnête</em> — celui qui a survécu
+                à une war room, passé l'OOS, confirmé en paper-ramp, et dont le Sharpe gap est inférieur
+                à 0.3 — est le meilleur outil dont dispose un trader systématique.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-link"></i> Articles connexes</h4>
+                <p>
+                    <a href="/tech/ai-harness-finance/">Harnesses IA en Finance</a> —
+                    comment contraindre les modèles à produire des résultats fiables.
+                    <br>
+                    <a href="/tech/workflows-multi-agents/">Workflows Multi-Agents</a> —
+                    orchestrer des escouades d'agents pour la vérification adverse.
+                    <br>
+                    <a href="/tech/inside-scanner-pipeline/">Inside the Scanner Pipeline</a> —
+                    comment le scanner DailyTickers transforme les signaux en positions.
+                </p>
+            </div>
+
+            <p class="source-ref">Source : <a
+                    href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=3544431" target="_blank"
+                    rel="noopener">López de Prado — « Machine Learning for Asset Managers » (SSRN)</a></p>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i
+                    class="fas fa-ghost"></i><span>Intro</span></a>
+            <a href="#seven-sins" class="fnav-item" data-section="seven-sins"><i
+                    class="fas fa-skull-crossbones"></i><span>7 Péchés</span></a>
+            <a href="#breakeven-trap" class="fnav-item" data-section="breakeven-trap"><i
+                    class="fas fa-equals"></i><span>Breakeven</span></a>
+            <a href="#segment-replay" class="fnav-item" data-section="segment-replay"><i
+                    class="fas fa-clone"></i><span>Segment</span></a>
+            <a href="#regime-aware" class="fnav-item" data-section="regime-aware"><i
+                    class="fas fa-chart-area"></i><span>Régimes</span></a>
+            <a href="#oos-validation" class="fnav-item" data-section="oos-validation"><i
+                    class="fas fa-vial"></i><span>OOS</span></a>
+            <a href="#war-room-method" class="fnav-item" data-section="war-room-method"><i
+                    class="fas fa-shield-halved"></i><span>War Room</span></a>
+            <a href="#cost-of-honesty" class="fnav-item" data-section="cost-of-honesty"><i
+                    class="fas fa-scale-balanced"></i><span>Coût</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i
+                    class="fas fa-clipboard-check"></i><span>Checklist</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Cas réels issus du scanner DailyTickers.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <!-- ECharts: Breakeven before/after chart -->
+    <script>
+        (function () {
+            var el = document.getElementById('beChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        var s = params[0].axisValue + '<br>';
+                        params.forEach(function (p) {
+                            s += p.marker + ' ' + p.seriesName + ': ' + (p.value > 0 ? '+' : '') + p.value + '%<br>';
+                        });
+                        return s;
+                    }
+                },
+                legend: { data: ['Avant (stale ON)', 'Après (stale OFF)'], top: 0 },
+                grid: { left: 60, right: 24, bottom: 36, top: 44 },
+                xAxis: {
+                    type: 'category',
+                    data: ['Dynamic', 'Balanced', 'TKL'],
+                    axisLabel: { color: '#475569', fontSize: 12, fontWeight: 700 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Rendement (%)',
+                    axisLabel: { formatter: '{value}%', color: '#475569' }
+                },
+                series: [
+                    {
+                        name: 'Avant (stale ON)',
+                        type: 'bar',
+                        data: [
+                            { value: 12, itemStyle: { color: '#fca5a5' } },
+                            { value: 8, itemStyle: { color: '#fca5a5' } },
+                            { value: 6, itemStyle: { color: '#fca5a5' } }
+                        ],
+                        label: { show: true, position: 'top', formatter: '+{c}%', fontWeight: 700, color: '#dc2626' }
+                    },
+                    {
+                        name: 'Après (stale OFF)',
+                        type: 'bar',
+                        data: [
+                            { value: 31, itemStyle: { color: '#86efac' } },
+                            { value: 39, itemStyle: { color: '#86efac' } },
+                            { value: 70, itemStyle: { color: '#86efac' } }
+                        ],
+                        label: { show: true, position: 'top', formatter: '+{c}%', fontWeight: 700, color: '#16a34a' }
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <!-- ECharts: Regime timeline chart -->
+    <script>
+        (function () {
+            var el = document.getElementById('regimeChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+
+            var months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+            var vixData = [14, 16, 28, 22, 18, 13, 15, 32, 26, 19, 14, 12];
+
+            chart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (params) {
+                        var vix = params[0].value;
+                        var regime = vix < 15 ? 'Risk-On' : vix < 20 ? 'Neutral' : vix < 28 ? 'Early Risk-Off' : 'Risk-Off';
+                        return params[0].axisValue + '<br>VIX: ' + vix + '<br>Régime: ' + regime;
+                    }
+                },
+                grid: { left: 60, right: 24, bottom: 36, top: 24 },
+                xAxis: {
+                    type: 'category',
+                    data: months,
+                    axisLabel: { color: '#475569', fontSize: 11 }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'VIX',
+                    axisLabel: { color: '#475569' },
+                    min: 0,
+                    max: 40
+                },
+                visualMap: {
+                    show: false,
+                    pieces: [
+                        { lt: 15, color: '#22c55e' },
+                        { gte: 15, lt: 20, color: '#3b82f6' },
+                        { gte: 20, lt: 28, color: '#f59e0b' },
+                        { gte: 28, color: '#dc2626' }
+                    ]
+                },
+                series: [{
+                    type: 'line',
+                    data: vixData,
+                    smooth: true,
+                    lineStyle: { width: 3 },
+                    areaStyle: { opacity: 0.15 },
+                    symbol: 'circle',
+                    symbolSize: 8,
+                    markLine: {
+                        silent: true,
+                        lineStyle: { type: 'dashed', color: '#94a3b8' },
+                        data: [
+                            { yAxis: 15, label: { formatter: 'Risk-On / Neutral', position: 'end', fontSize: 10 } },
+                            { yAxis: 20, label: { formatter: 'Neutral / Early R-Off', position: 'end', fontSize: 10 } },
+                            { yAxis: 28, label: { formatter: 'Early R-Off / Risk-Off', position: 'end', fontSize: 10 } }
+                        ]
+                    }
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>

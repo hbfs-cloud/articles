@@ -1,0 +1,1666 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,tech,trading,architecture" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Broker & Ledger Interne : Gérer N Comptes de Trading comme un Seul Système | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique sur l'architecture multi-broker : ledger interne append-only, routage d'ordres, réconciliation broker vs ledger, monitoring temps réel, multi-devises, settlement, et scaling de 1 à N modes × M brokers. Patterns concrets, schémas, cas réels DailyTickers.">
+    <meta property="og:title" content="Multi-Broker & Ledger Interne : Gérer N Comptes comme un Seul Système">
+    <meta property="og:description"
+        content="Comment unifier plusieurs brokers (Alpaca, IBKR, Binance, Saxo) derrière un ledger interne unique. Architecture, réconciliation, monitoring, multi-devises.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/multibroker-ledger/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #ecfeff 0%, #cffafe 100%);
+            text-align: center;
+            border-bottom: 1px solid #a5f3fc;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #0891b2;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(8, 145, 178, 0.1);
+            color: #0891b2;
+            border: 1px solid rgba(8, 145, 178, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #0891b2;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .pedagogy-box {
+            background: #ecfeff;
+            border: 1px solid #67e8f9;
+            border-left: 4px solid #0891b2;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #0e7490;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #155e75;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k {
+            color: #67e8f9;
+        }
+
+        pre.code-block .s {
+            color: #86efac;
+        }
+
+        pre.code-block .c {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        pre.code-block .n {
+            color: #fcd34d;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #ecfeff;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #0e7490;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #a5f3fc;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #0e7490;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.orchestrator {
+            border-color: #0891b2;
+            background: #ecfeff;
+        }
+
+        .flow-node.verify {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .flow-node.verify b {
+            color: #b45309;
+        }
+
+        .flow-node.ledger {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .flow-node.ledger b {
+            color: #15803d;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #06b6d4;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        .state-diagram {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .state-node {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .state-arrow {
+            display: flex;
+            align-items: center;
+            color: #94a3b8;
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            pre.code-block {
+                font-size: 0.74rem;
+                padding: 1.1rem 1.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — INFRASTRUCTURE TRADING</div>
+        <h1
+            style="font-size:2.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Multi-Broker & Ledger Interne : Gérer N Comptes comme un Seul Système
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Comment unifier Alpaca, IBKR, Binance et Saxo derrière un ledger interne unique.
+            Routage d'ordres, réconciliation quotidienne, monitoring temps réel, multi-devises,
+            et scaling de 1 à N modes × M brokers — avec du code, des schémas, et des cas réels.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-building-columns"></i> Multi-Broker</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 22 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-book-open"></i> Architecture</div>
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Réconciliation</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 1 — INTRO
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#0891b2;"></i> Pourquoi un compte ne suffit plus</h2>
+
+            <p>Vous avez un compte Alpaca pour le paper trading US, un IBKR pour le live, un Trading212
+                pour les ETF européens, un Binance pour le crypto, et un Saxo pour le forex. Chaque broker
+                a sa propre API, ses propres formats, ses propres limites. <strong>Comment savoir votre P&L
+                global à l'instant T ?</strong></p>
+
+            <p>La question semble triviale. Elle ne l'est pas. Chaque broker rapporte les positions dans
+                un format différent. IBKR utilise des contrats et affiche les P&L en devise locale. Alpaca
+                parle en shares avec un unrealized_pnl en USD. Binance fonctionne en base/quote pairs avec
+                des précisions décimales variables. Et Trading212 ajoute sa propre couche d'abstraction avec
+                des "pies" et des fractions de shares.</p>
+
+            <p>Quand vous exécutez <strong>6+ stratégies</strong> (Dynamic, Balanced, TKL, Orbit, Alpha,
+                Fortress — plus crypto, métaux et forex en expansion) à travers <strong>4+ brokers</strong>,
+                vous perdez la source unique de vérité. Le P&L de votre mode Dynamic est réparti entre
+                Alpaca (paper) et IBKR (live). Votre exposition globale est la somme de N dashboards que
+                personne ne regarde simultanément. Et quand un broker tombe, vous ne savez même pas
+                quelles positions sont affectées.</p>
+
+            <p>DailyTickers a résolu ce problème en construisant un <strong>ledger interne</strong> —
+                un journal comptable unique qui enregistre chaque transaction, indépendamment du broker
+                qui l'a exécutée. Le broker devient un simple canal d'exécution. La vérité est dans le
+                ledger. Et pour s'assurer que la vérité est correcte, un <strong>broker-simulator</strong>
+                tourne en parallèle, miroir fidèle des trades, pour valider avant de basculer la source
+                de vérité.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">6+</div>
+                    <div class="metric-label">Modes de trading actifs, chacun avec ses propres paramètres
+                        de risque, régime filters, et position sizing</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">4+</div>
+                    <div class="metric-label">Brokers potentiels : Alpaca (paper US), IBKR (live US/EU),
+                        Binance (crypto), Saxo (forex/EU)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">T+0 à T+2</div>
+                    <div class="metric-label">Settlement times différents : crypto instantané, US T+1,
+                        Europe T+2 — impact direct sur le buying power</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1</div>
+                    <div class="metric-label">Un seul ledger comme source de vérité, indépendant de tout
+                        broker, reconstructible à partir des transactions</div>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.interactivebrokers.com/en/trading/multi-currency.php" target="_blank" rel="noopener">IBKR — Multi-Currency Trading</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 2 — ARCHITECTURE
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fa-solid fa-diagram-project" style="color:#0891b2;"></i> Architecture Multi-Broker</h2>
+
+            <p>L'architecture repose sur un principe simple : <strong>séparer l'exécution de la comptabilité</strong>.
+                Les brokers exécutent les ordres. Le ledger enregistre les faits. Le monitoring surveille les écarts.
+                Et le portfolio API expose une vue unifiée à tous les consommateurs.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>Alpaca</b>
+                        Paper US, REST API, WebSocket fills, T+1
+                    </div>
+                    <div class="flow-node">
+                        <b>IBKR</b>
+                        Live US/EU, TWS API, complex order types, multi-devise
+                    </div>
+                    <div class="flow-node">
+                        <b>Binance</b>
+                        Crypto spot/futures, REST + WS, T+0, base/quote pairs
+                    </div>
+                    <div class="flow-node">
+                        <b>Saxo</b>
+                        Forex/EU, OpenAPI, T+2, multi-leg
+                    </div>
+                </div>
+                <div class="flow-arrow">▼ Adapters (normalisation vers format commun)</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator" style="flex:2;">
+                        <b>Unified Order Router</b>
+                        Reçoit les signaux des modes, sélectionne le broker optimal (asset class, coûts,
+                        disponibilité), route l'ordre, track le lifecycle (PENDING → FILLED/REJECTED)
+                    </div>
+                    <div class="flow-node orchestrator">
+                        <b>Broker Simulator</b>
+                        Mirror-run parallèle, exécute les mêmes trades indépendamment pour valider le ledger
+                    </div>
+                </div>
+                <div class="flow-arrow">▼ Fill events</div>
+                <div class="flow-row">
+                    <div class="flow-node ledger" style="flex:3;">
+                        <b>Internal Ledger (Source de Vérité)</b>
+                        Append-only. Chaque transaction : ticker, qty, price, broker, mode, fees, timestamp, FX rate.
+                        Positions dérivées. Balances recalculées. Jamais de mutation, jamais de suppression.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼ Events + Snapshots</div>
+                <div class="flow-row">
+                    <div class="flow-node verify">
+                        <b>Réconciliation Engine</b>
+                        Compare ledger vs positions broker. Classe les écarts : missing, phantom, price drift.
+                        Alerte si divergence > seuil.
+                    </div>
+                    <div class="flow-node orchestrator">
+                        <b>Monitoring</b>
+                        P&L par mode, drawdown, exposure par broker, fill rate, cash utilization. Alertes Discord.
+                    </div>
+                    <div class="flow-node">
+                        <b>Portfolio API</b>
+                        <code>portfolio/v1/</code> — 6 modes × endpoints JSON standardisés. Status, positions,
+                        performance, trades.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Le pattern Adapter</h3>
+
+            <p>Chaque broker a son propre langage. L'adapter traduit vers un format commun <em>avant</em>
+                que les données n'entrent dans le système. C'est le même principe que les pilotes d'imprimante :
+                votre application envoie un document, le pilote traduit pour le matériel spécifique.</p>
+
+            <pre class="code-block"><span class="c">// Interface commune — chaque broker implémente ces méthodes</span>
+<span class="k">class</span> BrokerAdapter {
+  <span class="c">// Normalise une position broker → format interne</span>
+  <span class="k">normalizePosition</span>(rawPosition) {
+    <span class="k">return</span> {
+      ticker:        <span class="k">this</span>.mapTicker(rawPosition),     <span class="c">// AAPL, BTC-USD, ASML.AS → symbole unifié</span>
+      qty:           <span class="k">this</span>.parseQuantity(rawPosition),  <span class="c">// gère les fractions (T212)</span>
+      avgCost:       <span class="k">this</span>.parsePrice(rawPosition),     <span class="c">// en devise de trading</span>
+      avgCostBase:   <span class="k">this</span>.toBaseCurrency(rawPosition), <span class="c">// converti en USD</span>
+      unrealizedPnl: <span class="k">this</span>.parsePnl(rawPosition),
+      broker:        <span class="k">this</span>.name,                        <span class="c">// 'alpaca' | 'ibkr' | 'binance' | 'saxo'</span>
+      assetClass:    <span class="k">this</span>.detectAssetClass(rawPosition),
+      currency:      <span class="k">this</span>.parseCurrency(rawPosition),
+      lastUpdate:    <span class="k">new</span> Date().toISOString()
+    };
+  }
+
+  <span class="c">// Normalise un fill event → transaction ledger</span>
+  <span class="k">normalizeOrder</span>(rawOrder) {
+    <span class="k">return</span> {
+      id:           <span class="k">this</span>.generateTxId(),
+      brokerOrderId: rawOrder.id || rawOrder.orderId,
+      side:         <span class="k">this</span>.parseSide(rawOrder),        <span class="c">// 'BUY' | 'SELL'</span>
+      ticker:       <span class="k">this</span>.mapTicker(rawOrder),
+      qty:          <span class="k">this</span>.parseQuantity(rawOrder),
+      price:        <span class="k">this</span>.parseFillPrice(rawOrder),
+      fees:         <span class="k">this</span>.parseFees(rawOrder),
+      broker:       <span class="k">this</span>.name,
+      timestamp:    <span class="k">this</span>.parseTimestamp(rawOrder),
+      settlementDate: <span class="k">this</span>.computeSettlement(rawOrder),
+      fxRate:       <span class="k">this</span>.getCurrentFxRate(rawOrder),
+    };
+  }
+}</pre>
+
+            <h3>Pourquoi plusieurs brokers ?</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Raison</th>
+                            <th>Détail</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Couverture d'actifs</strong></td>
+                            <td>Aucun broker ne couvre toutes les classes d'actifs</td>
+                            <td>IBKR pour actions + options, Binance pour crypto, Saxo pour forex</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Régulation</strong></td>
+                            <td>Certains brokers ne sont pas disponibles dans certaines juridictions</td>
+                            <td>Alpaca = US-only paper, Trading212 = EU résident</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Redondance</strong></td>
+                            <td>Si un broker tombe (maintenance, incident), le routage bascule</td>
+                            <td>IBKR down le 15/03 → ordres routés vers Alpaca temporairement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Optimisation des frais</strong></td>
+                            <td>Les structures de commission varient fortement</td>
+                            <td>Alpaca = $0 US equities, IBKR = $0.005/share, Binance = 0.1% spot</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Paper vs Live</strong></td>
+                            <td>Tester en paper avant de passer live sur un broker différent</td>
+                            <td>Alpaca paper → IBKR live (status: deploying → live)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://alpaca.markets/docs/trading/" target="_blank" rel="noopener">Alpaca — Trading API Documentation</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 3 — LEDGER DESIGN
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="ledger-design" class="content-card">
+            <h2><i class="fa-solid fa-book" style="color:#0891b2;"></i> Le Ledger Interne : Design et Invariants</h2>
+
+            <p>Un ledger interne est un <strong>journal comptable append-only</strong> qui enregistre chaque
+                événement financier indépendamment de tout broker. Le broker dit "vous avez 100 AAPL" — c'est
+                son opinion. Le ledger dit "vous avez acheté 50 AAPL le 3 mars et 50 le 15 mars" — ce sont
+                des <em>faits</em>.</p>
+
+            <h3>Les 4 entités du ledger</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Entité</th>
+                            <th>Nature</th>
+                            <th>Stockage</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Transaction</strong></td>
+                            <td>Fait atomique — immuable une fois écrit</td>
+                            <td>Append-only (.jsonl)</td>
+                            <td>BUY 100 AAPL @ $150.00, IBKR, fee $1.00, mode=dynamic, 2026-03-15T14:30:00Z</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Position</strong></td>
+                            <td>Vue agrégée — dérivée des transactions</td>
+                            <td>Calculé (snapshot quotidien)</td>
+                            <td>AAPL: qty=100, avgCost=$150.00, unrealizedPnl=+$320</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Balance</strong></td>
+                            <td>Cash + valeur positions par broker et par mode</td>
+                            <td>Calculé</td>
+                            <td>IBKR: cash=$45,200, positions=$82,400, total=$127,600</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Transfer</strong></td>
+                            <td>Mouvement entre brokers ou modes — pas un trade</td>
+                            <td>Append-only</td>
+                            <td>MOVE $10,000 from Alpaca/dynamic to IBKR/dynamic (paper → live cutover)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Les 4 invariants</h3>
+
+            <p>Le ledger repose sur quatre invariants qui doivent <strong>toujours</strong> être vrais.
+                Si un invariant est violé, c'est un bug — pas une approximation acceptable.</p>
+
+            <pre class="code-block"><span class="c">// Invariant 1 — Reconstructibilité</span>
+<span class="c">// La somme de toutes les transactions = les positions courantes</span>
+<span class="k">assert</span>(
+  sumTransactions(ledger.transactions, <span class="s">'AAPL'</span>).qty
+  === ledger.positions[<span class="s">'AAPL'</span>].qty
+);
+
+<span class="c">// Invariant 2 — Réconciliation cash</span>
+<span class="k">assert</span>(
+  cash_start + deposits - withdrawals + realized_pnl - total_fees
+  === cash_current
+);
+
+<span class="c">// Invariant 3 — Cross-check mode/broker</span>
+<span class="c">// La somme des positions par mode = la somme des positions par broker</span>
+<span class="k">assert</span>(
+  sumByMode(positions).totalValue
+  === sumByBroker(positions).totalValue
+);
+
+<span class="c">// Invariant 4 — Unicité et traçabilité</span>
+<span class="c">// Chaque transaction a un ID unique, un broker_order_id, et un mode</span>
+<span class="k">for</span> (<span class="k">const</span> tx <span class="k">of</span> ledger.transactions) {
+  <span class="k">assert</span>(tx.id);            <span class="c">// UUID interne</span>
+  <span class="k">assert</span>(tx.brokerOrderId); <span class="c">// ID côté broker</span>
+  <span class="k">assert</span>(tx.mode);           <span class="c">// 'dynamic' | 'balanced' | 'tkl' | ...</span>
+}</pre>
+
+            <h3>La règle append-only</h3>
+
+            <p>On ne <strong>modifie jamais</strong> une entrée du ledger. Jamais. Si une transaction est
+                erronée, on écrit une <em>correction</em> : une entrée de reversal (qui annule l'originale)
+                suivie d'une entrée correcte. C'est exactement comme la comptabilité en partie double : on ne
+                gomme pas, on passe une écriture inverse.</p>
+
+            <pre class="code-block"><span class="c">// Transaction originale (erreur : prix 150 au lieu de 155)</span>
+{ <span class="s">"id"</span>: <span class="s">"tx-001"</span>, <span class="s">"side"</span>: <span class="s">"BUY"</span>, <span class="s">"ticker"</span>: <span class="s">"AAPL"</span>, <span class="s">"qty"</span>: <span class="n">100</span>, <span class="s">"price"</span>: <span class="n">150.00</span> }
+
+<span class="c">// Correction : reversal + nouvelle entrée</span>
+{ <span class="s">"id"</span>: <span class="s">"tx-002"</span>, <span class="s">"type"</span>: <span class="s">"REVERSAL"</span>, <span class="s">"refTxId"</span>: <span class="s">"tx-001"</span>, <span class="s">"side"</span>: <span class="s">"SELL"</span>, <span class="s">"qty"</span>: <span class="n">100</span>, <span class="s">"price"</span>: <span class="n">150.00</span> }
+{ <span class="s">"id"</span>: <span class="s">"tx-003"</span>, <span class="s">"type"</span>: <span class="s">"CORRECTION"</span>, <span class="s">"refTxId"</span>: <span class="s">"tx-001"</span>, <span class="s">"side"</span>: <span class="s">"BUY"</span>, <span class="s">"qty"</span>: <span class="n">100</span>, <span class="s">"price"</span>: <span class="n">155.00</span> }</pre>
+
+            <p>Le stockage chez DailyTickers utilise des fichiers JSON (<code>pit-state.json</code> pour
+                les positions courantes, <code>modes-config-history.json</code> pour l'audit trail des
+                configurations). Pour des volumes plus importants, SQLite ou PostgreSQL avec des tables
+                append-only et des vues matérialisées pour les positions.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le ledger n'est pas une base de données</h4>
+                <p>C'est un <strong>journal comptable</strong>. Chaque ligne est un fait historique immuable.
+                    Les positions et les balances sont des <em>vues dérivées</em> que l'on peut toujours
+                    recalculer à partir du journal. Si vous perdez les snapshots de positions, vous pouvez
+                    les reconstruire. Si vous perdez le journal, vous avez tout perdu.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://martinfowler.com/eaaDev/EventSourcing.html" target="_blank" rel="noopener">Martin Fowler — Event Sourcing</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 4 — ORDER ROUTING
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="order-routing" class="content-card">
+            <h2><i class="fa-solid fa-route" style="color:#0891b2;"></i> Routage des Ordres : Du Signal au Fill</h2>
+
+            <p>Le parcours d'un ordre suit une chaîne précise : le scanner génère un signal, le mode
+                l'assigne, le routeur sélectionne le broker, le broker exécute, le fill event remonte,
+                et le ledger enregistre. Chaque maillon est indépendant et peut échouer sans corrompre
+                les autres.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b>1. Signal</b>
+                        Scanner détecte un setup : AAPL, score 92, entry $188.50, stop $182.00, TP1 $198.00
+                    </div>
+                    <div class="flow-node orchestrator">
+                        <b>2. Mode Assignment</b>
+                        Le signal correspond aux filtres du mode Dynamic (score ≥ 85, mcap > $10B, RSI < 70)
+                    </div>
+                </div>
+                <div class="flow-arrow">▼</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator" style="flex:3;">
+                        <b>3. Broker Selection</b>
+                        Routeur consulte la matrice : US equity + mode live = IBKR. Vérifie : IBKR up ? Cash suffisant ?
+                        Ordre pas déjà soumis (idempotency) ? Si oui → route. Si non → fallback ou queue.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>4. Execution</b>
+                        IBKR reçoit : LIMIT BUY 50 AAPL @ $188.50 GTC. Status: SUBMITTED.
+                    </div>
+                    <div class="flow-node ledger">
+                        <b>5. Fill → Ledger</b>
+                        Fill event reçu : 50 AAPL @ $188.42, fee $0.25. Le ledger enregistre la transaction.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Logique de sélection du broker</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Critère</th>
+                            <th>Règle</th>
+                            <th>Exemples</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Classe d'actif</strong></td>
+                            <td>Crypto → Binance, US equities → Alpaca/IBKR, EU equities → Saxo, Forex → Saxo</td>
+                            <td>BTC-USD → Binance, ASML → Saxo, AAPL → IBKR</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mode</strong></td>
+                            <td>Paper modes → Alpaca paper, live modes → IBKR</td>
+                            <td>Alpha (deploying) → Alpaca paper, Dynamic (live) → IBKR</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fallback</strong></td>
+                            <td>Si broker primaire down → secondaire, avec retry exponentiel</td>
+                            <td>IBKR timeout → tentative Alpaca live (si disponible)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Coûts</strong></td>
+                            <td>À volume équivalent, router vers le broker le moins cher</td>
+                            <td>1000 shares AAPL : Alpaca $0 vs IBKR $5 → Alpaca si disponible</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Lifecycle d'un ordre</h3>
+
+            <div class="state-diagram">
+                <span class="state-node" style="background:#dbeafe;color:#1d4ed8;">PENDING</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#e0e7ff;color:#4338ca;">SUBMITTED</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#fef9c3;color:#a16207;">PARTIAL_FILL</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#dcfce7;color:#15803d;">FILLED</span>
+            </div>
+            <div class="state-diagram" style="margin-top:-0.5rem;">
+                <span style="color:#94a3b8;font-size:0.85rem;">Ou :</span>
+                <span class="state-node" style="background:#e0e7ff;color:#4338ca;">SUBMITTED</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#fee2e2;color:#dc2626;">REJECTED</span>
+                <span style="color:#94a3b8;font-size:0.85rem;margin:0 0.5rem;">|</span>
+                <span class="state-node" style="background:#f1f5f9;color:#64748b;">CANCELLED</span>
+            </div>
+
+            <h3>Idempotency et race conditions</h3>
+
+            <p>Trois scénarios critiques que le routeur doit gérer :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scénario</th>
+                            <th>Risque</th>
+                            <th>Solution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Le même signal fire deux fois</td>
+                            <td>Double exécution → position 2× trop grande</td>
+                            <td>Order ID idempotent : <code>mode-ticker-date-signal_id</code>. Le broker rejette le doublon.</td>
+                        </tr>
+                        <tr>
+                            <td>Un fill arrive après un cancel</td>
+                            <td>Position non souhaitée dans le portefeuille</td>
+                            <td>Le fill gagne toujours (il a déjà eu lieu sur l'exchange). Le ledger l'enregistre, le monitoring alerte.</td>
+                        </tr>
+                        <tr>
+                            <td>Deux modes veulent le même ticker</td>
+                            <td>Confusion sur l'attribution de la position</td>
+                            <td>Chaque mode a sa propre position. AAPL/dynamic et AAPL/balanced sont deux entrées distinctes dans le ledger.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Un ordre envoyé est un fait</h4>
+                <p>Même si le code crashe après l'envoi, le fill existe sur le broker. Le ledger <strong>DOIT</strong>
+                    enregistrer tout ce qui est envoyé, pas seulement ce qui est confirmé. Au redémarrage,
+                    le premier réflexe est de réconcilier les ordres en vol avec le broker pour rattraper
+                    les fills manqués.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.interactivebrokers.com/campus/ibkr-api-page/twsapi-doc/" target="_blank" rel="noopener">IBKR — TWS API Documentation</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 5 — RECONCILIATION
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="reconciliation" class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#0891b2;"></i> Réconciliation : Broker vs Ledger</h2>
+
+            <p>Le ledger dit que vous avez 100 AAPL. IBKR dit 95. Qui a raison ? La réponse n'est jamais
+                évidente, et <strong>les deux peuvent avoir tort</strong>. La réconciliation est le processus
+                qui détecte ces écarts, les classe, et génère des actions correctives.</p>
+
+            <h3>Les 3 types de divergence</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Symptôme</th>
+                            <th>Cause fréquente</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Missing transaction</strong></td>
+                            <td>Broker montre une position que le ledger ne connaît pas</td>
+                            <td>Fill reçu pendant un crash, WebSocket déconnecté, latence réseau</td>
+                            <td>Interroger l'API fills du broker, recréer la transaction dans le ledger</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phantom position</strong></td>
+                            <td>Le ledger montre une position que le broker ne connaît pas</td>
+                            <td>Ordre annulé mais enregistré comme filled, corporate action (merger)</td>
+                            <td>Vérifier l'historique des ordres, passer une écriture de reversal</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Price divergence</strong></td>
+                            <td>Quantité identique mais prix moyen différent</td>
+                            <td>Split/reverse-split non traité, conversion FX à un moment différent, fill partiel à prix différent</td>
+                            <td>Ajuster le prix moyen avec une écriture de correction, appliquer le split</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>L'algorithme de réconciliation</h3>
+
+            <pre class="code-block"><span class="k">async function</span> <span class="n">reconcile</span>(broker, ledger) {
+  <span class="k">const</span> brokerPositions = <span class="k">await</span> broker.getPositions();
+  <span class="k">const</span> ledgerPositions = ledger.getPositionsByBroker(broker.name);
+
+  <span class="k">const</span> discrepancies = [];
+
+  <span class="c">// 1. Positions chez le broker mais pas dans le ledger → Missing</span>
+  <span class="k">for</span> (<span class="k">const</span> bp <span class="k">of</span> brokerPositions) {
+    <span class="k">const</span> lp = ledgerPositions.find(p => p.ticker === bp.ticker);
+    <span class="k">if</span> (!lp) {
+      discrepancies.push({ type: <span class="s">'MISSING'</span>, ticker: bp.ticker, brokerQty: bp.qty, ledgerQty: <span class="n">0</span> });
+      <span class="k">continue</span>;
+    }
+    <span class="c">// Quantité différente → Price divergence ou partial missing</span>
+    <span class="k">if</span> (Math.abs(bp.qty - lp.qty) > <span class="n">0.001</span>) {
+      discrepancies.push({ type: <span class="s">'QTY_MISMATCH'</span>, ticker: bp.ticker, brokerQty: bp.qty, ledgerQty: lp.qty });
+    }
+    <span class="c">// Prix moyen diverge > 1%</span>
+    <span class="k">if</span> (Math.abs(bp.avgCost - lp.avgCost) / lp.avgCost > <span class="n">0.01</span>) {
+      discrepancies.push({ type: <span class="s">'PRICE_DRIFT'</span>, ticker: bp.ticker, brokerPrice: bp.avgCost, ledgerPrice: lp.avgCost });
+    }
+  }
+
+  <span class="c">// 2. Positions dans le ledger mais pas chez le broker → Phantom</span>
+  <span class="k">for</span> (<span class="k">const</span> lp <span class="k">of</span> ledgerPositions) {
+    <span class="k">if</span> (!brokerPositions.find(p => p.ticker === lp.ticker)) {
+      discrepancies.push({ type: <span class="s">'PHANTOM'</span>, ticker: lp.ticker, brokerQty: <span class="n">0</span>, ledgerQty: lp.qty });
+    }
+  }
+
+  <span class="c">// 3. Alerter si nécessaire</span>
+  <span class="k">if</span> (discrepancies.length > <span class="n">0</span>) {
+    <span class="k">await</span> alertDiscord(<span class="s">`⚠️ ${discrepancies.length} écarts détectés sur ${broker.name}`</span>);
+    <span class="k">for</span> (<span class="k">const</span> d <span class="k">of</span> discrepancies) {
+      <span class="k">if</span> (valueOfDiscrepancy(d) > <span class="n">500</span>) {
+        <span class="k">await</span> alertDiscord(<span class="s">`🚨 CRITIQUE: ${d.ticker} ${d.type} — broker:${d.brokerQty} vs ledger:${d.ledgerQty}`</span>);
+      }
+    }
+  }
+  <span class="k">return</span> discrepancies;
+}</pre>
+
+            <h3>Le parallel-run DailyTickers</h3>
+
+            <p>Plutôt que de faire confiance aveuglément au ledger, DailyTickers fait tourner un
+                <strong>broker-simulator</strong> en parallèle. Ce simulateur reçoit les mêmes signaux,
+                exécute les mêmes trades de façon indépendante, et maintient son propre état. Chaque
+                nuit, le <code>reconcile</code> compare les deux :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b>Pit-Engine (Ledger)</b>
+                        Source de vérité actuelle. pit-state.json.
+                        Positions, P&L, drawdown.
+                    </div>
+                    <div class="flow-node verify">
+                        <b>Broker-Simulator (Mirror)</b>
+                        Juge indépendant. Même trades, exécution propre.
+                        État parallèle isolé.
+                    </div>
+                </div>
+                <div class="flow-arrow">▼ Réconciliation nocturne</div>
+                <div class="flow-row">
+                    <div class="flow-node ledger" style="flex:3;">
+                        <b>Décision de cutover</b>
+                        Si les deux concordent pendant N jours consécutifs → le simulateur devient
+                        la nouvelle source de vérité. Avec fallback dur sur pit-state.json si le
+                        simulateur diverge.
+                    </div>
+                </div>
+            </div>
+
+            <div style="width:100%; height:350px; margin:1.5rem 0;" id="reconChart"></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Réconcilier TOUS LES JOURS</h4>
+                <p>Pas toutes les semaines. Pas quand quelque chose semble bizarre. <strong>Tous les jours</strong>.
+                    Les erreurs de 24h se corrigent en 5 minutes. Les erreurs de 30 jours se corrigent en 3 heures —
+                    si vous arrivez à retrouver ce qui s'est passé. L'expérience montre que les divergences non
+                    détectées pendant plus de 5 jours deviennent exponentiellement plus coûteuses à résoudre.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html" target="_blank" rel="noopener">Martin Fowler — Patterns of Distributed Systems</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 6 — MONITORING
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="monitoring" class="content-card">
+            <h2><i class="fa-solid fa-chart-line" style="color:#0891b2;"></i> Monitoring : Alertes et Tableau de Bord</h2>
+
+            <p>Le monitoring n'est pas un nice-to-have — c'est le système nerveux du multi-broker. Sans
+                lui, vous découvrez les problèmes quand il est trop tard : un drawdown qui a dépassé le
+                seuil il y a 3 jours, un broker déconnecté depuis ce matin, un fill manqué qui a créé
+                une exposition non couverte.</p>
+
+            <h3>Les 6 métriques essentielles</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrique</th>
+                            <th>Source</th>
+                            <th>Fréquence</th>
+                            <th>Seuil d'alerte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>P&L par mode</strong></td>
+                            <td>Ledger (transactions + MtM)</td>
+                            <td>Chaque fill + EOD</td>
+                            <td>Perte journalière > 2% du capital mode</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Drawdown par mode</strong></td>
+                            <td>Ledger (peak-to-trough)</td>
+                            <td>Temps réel</td>
+                            <td>> 5% = warning, > 8% = HARD STOP → pausing</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Exposure par broker</strong></td>
+                            <td>Ledger + broker API</td>
+                            <td>Horaire</td>
+                            <td>> 80% du capital chez un seul broker</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fill rate</strong></td>
+                            <td>Order router logs</td>
+                            <td>Par batch d'ordres</td>
+                            <td>Rejection rate > 10% = investigation</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Réconciliation</strong></td>
+                            <td>Reconciliation engine</td>
+                            <td>Quotidienne</td>
+                            <td>Écart > $500 ou > 1% d'une position</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cash utilization</strong></td>
+                            <td>Ledger (cash / total capital)</td>
+                            <td>EOD</td>
+                            <td>< 10% = sous-investi, > 95% = pas de marge d'erreur</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Le seuil de drawdown et la state machine</h3>
+
+            <p>Quand le drawdown d'un mode dépasse le seuil, le monitoring déclenche une transition
+                de statut via la <strong>mode status state machine</strong> — 8 états qui protègent
+                contre les décisions précipitées :</p>
+
+            <div class="state-diagram">
+                <span class="state-node" style="background:#f1f5f9;color:#475569;">draft</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#dbeafe;color:#1d4ed8;">test</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#fef9c3;color:#a16207;">deploying</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#dcfce7;color:#15803d;">live</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#ffedd5;color:#c2410c;">pausing</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#f1f5f9;color:#475569;">paused</span>
+            </div>
+            <div class="state-diagram" style="margin-top:0.5rem;">
+                <span style="color:#94a3b8;font-size:0.85rem;">Urgence :</span>
+                <span class="state-node" style="background:#dcfce7;color:#15803d;">live</span>
+                <span class="state-arrow">→</span>
+                <span class="state-node" style="background:#fee2e2;color:#dc2626;">liquidated</span>
+                <span style="color:#94a3b8;font-size:0.85rem;margin:0 0.25rem;">(toutes positions fermées au marché)</span>
+            </div>
+
+            <p><strong>pausing</strong> est l'état critique : pas de nouvelles entrées, pas de rotation,
+                mais les stops/TP/horizon/trailing continuent sur les positions ouvertes. C'est une sortie
+                organique, pas un panic sell. Le mode bascule vers <code>paused</code> quand toutes les
+                positions sont fermées naturellement.</p>
+
+            <p><strong>liquidated</strong> est l'urgence absolue : toutes les positions sont fermées au
+                marché à la prochaine séance, sans regarder SL/TP/horizon. Compliance, panic, black swan.</p>
+
+            <div style="width:100%; height:400px; margin:1.5rem 0;" id="pnlChart"></div>
+
+            <h3>Le portfolio API</h3>
+
+            <p>Le monitoring alimente le <code>portfolio/v1/</code> — une API JSON publique qui expose
+                l'état de chaque mode dans un format standardisé. Chaque mode a ses propres endpoints :
+                positions, performance, trades récents, configuration, et statut. Le dashboard
+                (<code>gen-status-page.js</code>) consomme cette API pour afficher la vue unifiée.</p>
+
+            <pre class="code-block"><span class="c">// portfolio/v1/status.json — vue agrégée de tous les modes</span>
+{
+  <span class="s">"generated"</span>: <span class="s">"2026-06-21T22:00:00Z"</span>,
+  <span class="s">"modes"</span>: {
+    <span class="s">"dynamic"</span>:  { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">8</span>,  <span class="s">"dd"</span>: <span class="s">"-2.1%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+1.4%"</span> },
+    <span class="s">"balanced"</span>: { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">12</span>, <span class="s">"dd"</span>: <span class="s">"-3.2%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.8%"</span> },
+    <span class="s">"tkl"</span>:      { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">6</span>,  <span class="s">"dd"</span>: <span class="s">"-1.5%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+2.3%"</span> },
+    <span class="s">"orbit"</span>:    { <span class="s">"status"</span>: <span class="s">"deploying"</span>, <span class="s">"positions"</span>: <span class="n">4</span>,  <span class="s">"dd"</span>: <span class="s">"-0.8%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.5%"</span> },
+    <span class="s">"alpha"</span>:    { <span class="s">"status"</span>: <span class="s">"deploying"</span>, <span class="s">"positions"</span>: <span class="n">3</span>,  <span class="s">"dd"</span>: <span class="s">"-1.1%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+1.7%"</span> },
+    <span class="s">"fortress"</span>: { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">10</span>, <span class="s">"dd"</span>: <span class="s">"-0.5%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.3%"</span> }
+  }
+}</pre>
+
+            <p class="source-ref">Source : <a href="https://docs.alpaca.markets/docs/account-activities" target="_blank" rel="noopener">Alpaca — Account Activities API</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 7 — MULTI-CURRENCY
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="multi-currency" class="content-card">
+            <h2><i class="fa-solid fa-coins" style="color:#0891b2;"></i> Multi-Devises et Settlement</h2>
+
+            <p>Vous achetez ASML sur Euronext en euros. Votre base currency est le dollar. Le broker
+                vous montre la position en euros. Votre ledger doit la convertir en dollars — mais à
+                quel taux ? Celui du moment de l'achat ? Celui de la clôture ? Celui du broker, qui
+                peut différer de l'ECB de 15 bps ?</p>
+
+            <h3>Les 4 couches de devise</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Couche</th>
+                            <th>Définition</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Trade currency</strong></td>
+                            <td>La devise de l'instrument — déterminée par l'exchange</td>
+                            <td>EUR pour ASML (Euronext), USD pour AAPL (NYSE), BTC pour BTC-USD</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Settlement currency</strong></td>
+                            <td>La devise dans laquelle le broker règle — peut différer de la trade currency</td>
+                            <td>IBKR peut régler ASML en EUR ou en USD (conversion automatique)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Base currency</strong></td>
+                            <td>Votre devise de reporting — celle dans laquelle vous mesurez la performance</td>
+                            <td>USD pour DailyTickers (tous les P&L sont exprimés en USD)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>FX rate source</strong></td>
+                            <td>Le taux de change utilisé pour la conversion</td>
+                            <td>Broker rate (IBKR), ECB mid-rate, Yahoo Finance spot</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Gestion dans le ledger</h3>
+
+            <p>La règle fondamentale : stocker <strong>les deux montants</strong>. Le montant en devise
+                de trading ET l'équivalent en base currency, plus le taux FX utilisé. Cela permet de
+                calculer a posteriori les gains/pertes de change réalisés.</p>
+
+            <pre class="code-block"><span class="c">// Transaction multi-devise dans le ledger</span>
+{
+  <span class="s">"id"</span>: <span class="s">"tx-4201"</span>,
+  <span class="s">"side"</span>: <span class="s">"BUY"</span>,
+  <span class="s">"ticker"</span>: <span class="s">"ASML"</span>,
+  <span class="s">"qty"</span>: <span class="n">10</span>,
+  <span class="s">"price"</span>: <span class="n">920.50</span>,           <span class="c">// en EUR (trade currency)</span>
+  <span class="s">"tradeCurrency"</span>: <span class="s">"EUR"</span>,
+  <span class="s">"fxRate"</span>: <span class="n">1.0845</span>,           <span class="c">// EUR/USD au moment du fill</span>
+  <span class="s">"priceBase"</span>: <span class="n">998.28</span>,        <span class="c">// 920.50 × 1.0845 = USD</span>
+  <span class="s">"totalBase"</span>: <span class="n">9982.82</span>,       <span class="c">// 10 × 998.28</span>
+  <span class="s">"fees"</span>: <span class="n">4.00</span>,              <span class="c">// EUR</span>
+  <span class="s">"feesBase"</span>: <span class="n">4.34</span>,           <span class="c">// USD</span>
+  <span class="s">"broker"</span>: <span class="s">"ibkr"</span>,
+  <span class="s">"mode"</span>: <span class="s">"balanced"</span>,
+  <span class="s">"timestamp"</span>: <span class="s">"2026-06-15T09:15:00Z"</span>
+}
+
+<span class="c">// Plus tard, à la vente — le FX a bougé</span>
+{
+  <span class="s">"id"</span>: <span class="s">"tx-4315"</span>,
+  <span class="s">"side"</span>: <span class="s">"SELL"</span>,
+  <span class="s">"ticker"</span>: <span class="s">"ASML"</span>,
+  <span class="s">"qty"</span>: <span class="n">10</span>,
+  <span class="s">"price"</span>: <span class="n">940.00</span>,           <span class="c">// +2.1% en EUR</span>
+  <span class="s">"fxRate"</span>: <span class="n">1.0720</span>,           <span class="c">// EUR/USD a baissé de 1.15%</span>
+  <span class="s">"priceBase"</span>: <span class="n">1007.68</span>,       <span class="c">// 940.00 × 1.0720</span>
+  <span class="c">// P&L en EUR : +195 (gain)</span>
+  <span class="c">// P&L en USD : +94 (le gain EUR est mangé par le FX adverse)</span>
+  <span class="c">// FX P&L seul : -101 (perte de change)</span>
+}</pre>
+
+            <h3>Settlement timing</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Marché</th>
+                            <th>Settlement</th>
+                            <th>Exemple</th>
+                            <th>Impact buying power</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>US Equities</td>
+                            <td>T+1</td>
+                            <td>Achat lundi → cash débité mardi</td>
+                            <td>Le cash est bloqué mais la position existe immédiatement</td>
+                        </tr>
+                        <tr>
+                            <td>EU Equities</td>
+                            <td>T+2</td>
+                            <td>Achat lundi → cash débité mercredi</td>
+                            <td>2 jours de float — attention au double-spending</td>
+                        </tr>
+                        <tr>
+                            <td>Crypto (spot)</td>
+                            <td>T+0</td>
+                            <td>Achat instantané → cash débité immédiatement</td>
+                            <td>Pas de float, pas de risque de settlement</td>
+                        </tr>
+                        <tr>
+                            <td>Forex (spot)</td>
+                            <td>T+2</td>
+                            <td>Trade lundi → settlement mercredi</td>
+                            <td>Le P&L est comptabilisé immédiatement mais le cash bouge en T+2</td>
+                        </tr>
+                        <tr>
+                            <td>Futures</td>
+                            <td>Daily MtM</td>
+                            <td>Margin ajustée chaque jour à la clôture</td>
+                            <td>Cash impacté quotidiennement, pas au settlement final</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le ledger doit tracker <strong>les deux dates</strong> : la trade date (quand vous décidez)
+                et la settlement date (quand le cash bouge). La trade date détermine le P&L. La settlement
+                date détermine le buying power. Confondre les deux mène à des ordres rejetés pour
+                insuffisance de fonds.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Le FX n'est pas un détail</h4>
+                <p>Sur un portefeuille global, les gains et pertes de change peuvent représenter
+                    <strong>5 à 15% du P&L total</strong> — dans un sens ou dans l'autre. Un trade gagnant
+                    de +2% en euros peut devenir un trade perdant en dollars si l'EUR/USD chute de 3%.
+                    Ne jamais ignorer le FX dans le reporting.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html" target="_blank" rel="noopener">ECB — Euro Reference Exchange Rates</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 8 — SCALING
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="scaling" class="content-card">
+            <h2><i class="fa-solid fa-arrow-up-right-dots" style="color:#0891b2;"></i> Scaling : De 1 à N Modes × M Brokers</h2>
+
+            <p>DailyTickers n'est pas né avec 6 modes et 4 brokers. Le système a évolué en 5 phases,
+                chacune forçant une refonte architecturale. Voici la chronologie — et surtout, ce qui
+                a cassé à chaque étape.</p>
+
+            <h3>Les 5 phases de scaling</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Phase</th>
+                            <th>Configuration</th>
+                            <th>Ce qui a cassé</th>
+                            <th>Ce qui a été construit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Phase 1</strong><br><span style="color:#64748b;font-size:0.8rem;">Début 2026</span></td>
+                            <td>1 mode (dynamic), 1 broker (Alpaca paper)</td>
+                            <td>Rien — mais le P&L était dans un seul fichier JSON sans structure</td>
+                            <td><code>pit-state.json</code> — premier ledger, format plat</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 2</strong><br><span style="color:#64748b;font-size:0.8rem;">Mars 2026</span></td>
+                            <td>3 modes (dynamic, balanced, secured), Alpaca</td>
+                            <td>Les 3 modes écrivaient dans le même pit-state.json → conflits, positions mélangées</td>
+                            <td><code>modes-config.json</code> — séparation par mode, config per-mode</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 3</strong><br><span style="color:#64748b;font-size:0.8rem;">Avril 2026</span></td>
+                            <td>3 modes + IBKR pour le live</td>
+                            <td>Les formats Alpaca et IBKR sont incompatibles. Le routeur ne savait pas vers quel broker envoyer.</td>
+                            <td>Adapter pattern + Unified Order Router + Reconciliation engine</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 4</strong><br><span style="color:#64748b;font-size:0.8rem;">Mai-Juin 2026</span></td>
+                            <td>6 modes (+ TKL, Orbit/Alpha, Fortress) + crypto/forex en test</td>
+                            <td>Problème de status management (quand pauser un mode ? comment relancer ?), FX non géré</td>
+                            <td>Mode Status State Machine (8 états), multi-currency support, Portfolio API v1</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Phase 5</strong><br><span style="color:#64748b;font-size:0.8rem;">Planifié</span></td>
+                            <td>+ metals/mines, forex dédié, geographic routing</td>
+                            <td>(À venir) Volume de transactions, latence de réconciliation, regulatory per-broker</td>
+                            <td>Daily snapshots, archive cold storage, routing géographique</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Configuration management</h3>
+
+            <p>Tout le système est piloté par un fichier unique : <code>modes-config.json</code>.
+                Il contient, pour chaque mode :</p>
+
+            <pre class="code-block"><span class="c">// Extrait de modes-config.json — configuration du mode Dynamic</span>
+{
+  <span class="s">"dynamic"</span>: {
+    <span class="s">"label"</span>: <span class="s">"Dynamic"</span>,
+    <span class="s">"status"</span>: <span class="s">"live"</span>,
+    <span class="s">"statusSince"</span>: <span class="s">"2026-03-01"</span>,
+    <span class="s">"statusReason"</span>: <span class="s">"Initial launch"</span>,
+    <span class="s">"statusNextReviewAt"</span>: <span class="s">"2026-07-01"</span>,
+    <span class="s">"broker"</span>: <span class="s">"ibkr"</span>,
+    <span class="s">"brokerFallback"</span>: <span class="s">"alpaca"</span>,
+    <span class="s">"portfolioSize"</span>: <span class="n">50000</span>,
+    <span class="s">"maxPositions"</span>: <span class="n">10</span>,
+    <span class="s">"maxDD"</span>: <span class="n">0.08</span>,            <span class="c">// 8% → triggers pausing</span>
+    <span class="s">"atrMultiplier"</span>: <span class="n">2.5</span>,
+    <span class="s">"trailingActivation"</span>: <span class="n">1.5</span>, <span class="c">// R-multiples</span>
+    <span class="s">"regimeFilters"</span>: {
+      <span class="s">"riskOff"</span>: { <span class="s">"maxNewEntries"</span>: <span class="n">0</span> },
+      <span class="s">"earlyRiskOff"</span>: { <span class="s">"maxNewEntries"</span>: <span class="n">2</span>, <span class="s">"sizingMultiplier"</span>: <span class="n">0.5</span> }
+    },
+    <span class="s">"mcapTiers"</span>: {
+      <span class="s">"reject"</span>: <span class="s">"< 2B"</span>,
+      <span class="s">"halfSize"</span>: <span class="s">"2B-10B"</span>,
+      <span class="s">"reducedSize"</span>: <span class="s">"10B-50B"</span>
+    }
+  }
+}</pre>
+
+            <p>Chaque modification de configuration est loguée dans
+                <code>modes-config-history.json</code> — un fichier append-only qui sert d'audit trail.
+                On peut reconstruire l'état exact de n'importe quel mode à n'importe quelle date.</p>
+
+            <h3>Performance à l'échelle</h3>
+
+            <p>Quand le nombre de transactions dépasse 10 000, les requêtes sur le ledger brut deviennent
+                lentes. Trois optimisations :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Optimisation</th>
+                            <th>Mécanisme</th>
+                            <th>Gain</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Daily snapshots</strong></td>
+                            <td>Chaque soir, matérialiser les positions courantes dans un fichier séparé.
+                                Pour le P&L du jour, lire le snapshot d'hier + les transactions d'aujourd'hui.</td>
+                            <td>O(transactions_du_jour) au lieu de O(toutes_transactions)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Archive cold storage</strong></td>
+                            <td>Transactions > 1 an → compressées et archivées. Le ledger actif ne contient
+                                que l'année en cours.</td>
+                            <td>Taille du fichier réduite de 90%, parsing 10× plus rapide</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Index par mode + ticker</strong></td>
+                            <td>Un index secondaire qui mappe (mode, ticker) → liste de transaction IDs
+                                pour des lookups rapides sans scanner le ledger complet.</td>
+                            <td>Lookup d'une position spécifique en O(1) au lieu de O(n)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="width:100%; height:350px; margin:1.5rem 0;" id="scalingChart"></div>
+
+            <p class="source-ref">Source : <a href="https://www.sqlite.org/whentouse.html" target="_blank" rel="noopener">SQLite — When to Use SQLite</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 9 — CONCLUSION
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#0891b2;"></i> Checklist Multi-Broker</h2>
+
+            <p>Gérer plusieurs brokers semble complexe. En réalité, c'est <em>plus explicite</em> qu'un
+                système mono-broker — et cette explicité est un avantage. Chaque décision est traçable,
+                chaque flux est vérifiable, chaque erreur est détectable. Voici la checklist pour
+                construire le vôtre.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-double"></i> Les 8 principes du multi-broker</h4>
+                <ul>
+                    <li><strong>Un ledger, une vérité</strong> — Append-only, immuable, reconstructible à partir
+                        des transactions brutes. Le broker est un canal d'exécution, pas la source de vérité.</li>
+                    <li><strong>Adapter par broker</strong> — Normaliser les formats (positions, ordres, fills, devises)
+                        AVANT qu'ils n'entrent dans le système. Le reste du code ne voit qu'un format unifié.</li>
+                    <li><strong>Réconcilier quotidiennement</strong> — Comparer ledger vs broker chaque jour.
+                        Classer les écarts (missing, phantom, price drift). Alerter au-dessus du seuil.</li>
+                    <li><strong>Router intelligemment</strong> — Asset class → broker primaire, avec fallback.
+                        Optimiser les coûts. Vérifier la disponibilité avant de router.</li>
+                    <li><strong>Monitorer en temps réel</strong> — P&L, drawdown, exposure, fill rate,
+                        réconciliation, cash utilization. Seuils d'alerte connectés à Discord.</li>
+                    <li><strong>Gérer les devises explicitement</strong> — Stocker montant trade + montant base +
+                        taux FX. Le P&L inclut les gains/pertes de change. Tracker trade date ET settlement date.</li>
+                    <li><strong>Statuer chaque mode</strong> — La state machine 8 états (draft → live → paused)
+                        protège contre les transitions dangereuses. Un mode en <code>pausing</code> ne prend plus
+                        de nouvelles positions mais laisse les existantes se fermer naturellement.</li>
+                    <li><strong>Versionner la config</strong> — <code>modes-config-history.json</code> = audit
+                        trail complet. On peut reconstruire l'état de n'importe quel mode à n'importe quelle date.
+                        Les war rooms utilisent cet historique pour analyser les décisions passées.</li>
+                </ul>
+            </div>
+
+            <p>Un système multi-broker n'est pas plus complexe qu'un système mono-broker. Il est
+                <strong>plus explicite</strong>. Cette explicité est un avantage : chaque décision est
+                traçable, chaque flux est vérifiable, chaque erreur est détectable. Le coût de cette
+                explicité est un investissement initial en architecture — le schéma ci-dessus, les
+                adapters, le ledger, la réconciliation. Mais une fois en place, le système est plus
+                robuste, plus auditable, et plus extensible qu'un mono-broker ne le sera jamais.</p>
+
+            <h3>Pour aller plus loin</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sujet</th>
+                            <th>Article</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Valider les données avant publication</td>
+                            <td><a href="/tech/ai-harness-finance/">Harnesses IA en Finance</a></td>
+                        </tr>
+                        <tr>
+                            <td>Le pipeline scanner de bout en bout</td>
+                            <td><a href="/tech/inside-scanner-pipeline/">Inside the Scanner Pipeline</a></td>
+                        </tr>
+                        <tr>
+                            <td>Tester honnêtement les stratégies</td>
+                            <td><a href="/tech/backtesting-honest/">Backtesting Honnête</a></td>
+                        </tr>
+                        <tr>
+                            <td>Automatiser la publication</td>
+                            <td><a href="/tech/claude-code-trading-bot/">Claude Code Trading Bot</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://www.investopedia.com/terms/r/reconciliation.asp" target="_blank" rel="noopener">Investopedia — Reconciliation in Accounting</a></p>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-layer-group"></i><span>Intro</span></a>
+            <a href="#architecture" class="fnav-item" data-section="architecture"><i class="fas fa-diagram-project"></i><span>Architecture</span></a>
+            <a href="#ledger-design" class="fnav-item" data-section="ledger-design"><i class="fas fa-book"></i><span>Ledger</span></a>
+            <a href="#order-routing" class="fnav-item" data-section="order-routing"><i class="fas fa-route"></i><span>Routage</span></a>
+            <a href="#reconciliation" class="fnav-item" data-section="reconciliation"><i class="fas fa-scale-balanced"></i><span>Réconciliation</span></a>
+            <a href="#monitoring" class="fnav-item" data-section="monitoring"><i class="fas fa-chart-line"></i><span>Monitoring</span></a>
+            <a href="#multi-currency" class="fnav-item" data-section="multi-currency"><i class="fas fa-coins"></i><span>Devises</span></a>
+            <a href="#scaling" class="fnav-item" data-section="scaling"><i class="fas fa-arrow-up-right-dots"></i><span>Scaling</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-flag-checkered"></i><span>Checklist</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <!-- ECharts: Reconciliation Scatter Plot -->
+    <script>
+        (function () {
+            var el = document.getElementById('reconChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                title: { text: 'Réconciliation Ledger vs Broker', left: 'center', textStyle: { fontSize: 14, color: '#0f172a' } },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (p) {
+                        return p.data[3] + '<br>Ledger: ' + p.data[0] + ' shares<br>Broker: ' + p.data[1] + ' shares'
+                            + (p.data[0] !== p.data[1] ? '<br><strong style="color:#dc2626;">Écart: ' + (p.data[1] - p.data[0]) + '</strong>' : '<br><span style="color:#16a34a;">✓ Match</span>');
+                    }
+                },
+                grid: { left: 60, right: 40, bottom: 50, top: 50 },
+                xAxis: { name: 'Ledger (shares)', nameLocation: 'center', nameGap: 30, min: 0, max: 250, axisLabel: { color: '#475569' } },
+                yAxis: { name: 'Broker (shares)', nameLocation: 'center', nameGap: 40, min: 0, max: 250, axisLabel: { color: '#475569' } },
+                series: [
+                    {
+                        name: 'Diagonal (parfait)',
+                        type: 'line',
+                        data: [[0, 0], [250, 250]],
+                        lineStyle: { color: '#cbd5e1', type: 'dashed', width: 1 },
+                        symbol: 'none',
+                        silent: true
+                    },
+                    {
+                        name: 'Positions',
+                        type: 'scatter',
+                        symbolSize: function (data) { return Math.max(8, Math.abs(data[0] - data[1]) * 3 + 8); },
+                        data: [
+                            [100, 100, 0, 'AAPL'], [50, 50, 0, 'MSFT'], [200, 200, 0, 'NVDA'],
+                            [30, 30, 0, 'GOOGL'], [75, 75, 0, 'AMZN'], [150, 150, 0, 'META'],
+                            [40, 40, 0, 'TSLA'], [25, 25, 0, 'JPM'],
+                            [100, 95, 5, 'CRWD'], [60, 65, -5, 'PLTR']
+                        ],
+                        itemStyle: {
+                            color: function (p) { return p.data[0] === p.data[1] ? '#0891b2' : '#dc2626'; }
+                        }
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <!-- ECharts: P&L by Mode -->
+    <script>
+        (function () {
+            var el = document.getElementById('pnlChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            var weeks = ['S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12'];
+            chart.setOption({
+                title: { text: 'P&L Cumulé par Mode (12 semaines)', left: 'center', textStyle: { fontSize: 14, color: '#0f172a' } },
+                tooltip: { trigger: 'axis', formatter: function (ps) { return ps.map(function (p) { return '<span style="color:' + p.color + '">●</span> ' + p.seriesName + ': ' + (p.value >= 0 ? '+' : '') + p.value + '%'; }).join('<br>'); } },
+                legend: { bottom: 0, textStyle: { fontSize: 11 } },
+                grid: { left: 50, right: 20, bottom: 50, top: 50 },
+                xAxis: { type: 'category', data: weeks, axisLabel: { color: '#475569' } },
+                yAxis: { type: 'value', name: 'P&L (%)', axisLabel: { formatter: '{value}%', color: '#475569' } },
+                series: [
+                    { name: 'Dynamic', type: 'line', data: [0.5, 1.2, 0.8, 2.1, 3.0, 2.5, 3.8, 4.2, 3.9, 5.1, 5.8, 6.2], smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#3b82f6' } },
+                    { name: 'Balanced', type: 'line', data: [0.3, 0.8, 1.1, 1.5, 1.2, 1.8, 2.3, 2.0, 2.5, 3.0, 3.4, 3.8], smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#8b5cf6' } },
+                    { name: 'TKL', type: 'line', data: [0.8, 1.5, 2.2, 1.8, 3.5, 4.0, 3.2, 5.0, 6.1, 5.5, 7.2, 8.1], smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#f59e0b' } },
+                    { name: 'Orbit', type: 'line', data: [0, 0, 0, 0, 0.2, 0.5, 0.8, 1.2, 1.0, 1.5, 1.8, 2.1], smooth: true, lineStyle: { width: 2, type: 'dashed' }, itemStyle: { color: '#14b8a6' } },
+                    { name: 'Fortress', type: 'line', data: [0.1, 0.3, 0.5, 0.8, 0.6, 0.9, 1.1, 1.3, 1.5, 1.8, 2.0, 2.2], smooth: true, lineStyle: { width: 2 }, itemStyle: { color: '#64748b' } },
+                    { name: 'SPY', type: 'line', data: [0.3, 0.7, 0.4, 1.0, 1.5, 1.2, 1.8, 2.0, 1.7, 2.3, 2.8, 3.0], smooth: true, lineStyle: { width: 2, type: 'dotted' }, itemStyle: { color: '#dc2626' } }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <!-- ECharts: Scaling Timeline -->
+    <script>
+        (function () {
+            var el = document.getElementById('scalingChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                title: { text: 'Scaling : Modes × Brokers au Fil du Temps', left: 'center', textStyle: { fontSize: 14, color: '#0f172a' } },
+                tooltip: { trigger: 'axis' },
+                legend: { bottom: 0, textStyle: { fontSize: 11 } },
+                grid: { left: 50, right: 40, bottom: 50, top: 50 },
+                xAxis: { type: 'category', data: ['Jan 2026', 'Fév', 'Mars', 'Avr', 'Mai', 'Juin', 'Juil (plan)'], axisLabel: { color: '#475569', fontSize: 11 } },
+                yAxis: [
+                    { type: 'value', name: 'Modes', min: 0, max: 10, axisLabel: { color: '#0891b2' } },
+                    { type: 'value', name: 'Brokers', min: 0, max: 6, axisLabel: { color: '#f59e0b' } }
+                ],
+                series: [
+                    {
+                        name: 'Modes actifs',
+                        type: 'bar',
+                        data: [1, 1, 3, 3, 5, 6, 8],
+                        itemStyle: { color: '#0891b2', borderRadius: [4, 4, 0, 0] },
+                        label: { show: true, position: 'top', fontWeight: 700, color: '#0e7490' }
+                    },
+                    {
+                        name: 'Brokers connectés',
+                        type: 'line',
+                        yAxisIndex: 1,
+                        data: [1, 1, 1, 2, 3, 4, 5],
+                        smooth: true,
+                        lineStyle: { width: 3, color: '#f59e0b' },
+                        itemStyle: { color: '#f59e0b' },
+                        symbol: 'circle',
+                        symbolSize: 8,
+                        label: { show: true, position: 'top', fontWeight: 700, color: '#b45309' }
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>

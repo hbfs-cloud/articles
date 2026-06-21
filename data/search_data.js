@@ -5590,6 +5590,58 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Claude Code pour le Trading : De Zéro à un Système Autonome",
+    "desc": "Guide technique complet : comment un bot Discord orchestre Claude Code via tmux pour publier automatiquement 4 articles financiers par jour — scanner, daily, weekly, rétrospective. Architecture, schedules, pipeline scanner, error recovery, prompt engineering.",
+    "tags": "formation,ai,tech,trading",
+    "grade": "",
+    "href": "/tech/claude-code-trading-bot/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Backtesting Honnête : Pourquoi 90% des Backtests Mentent",
+    "desc": "Guide technique sur le backtesting honnête : les 7 péchés capitaux, le piège du breakeven, le segment replay, l'évaluation regime-aware, la validation OOS, la méthode war room et le coût de l'honnêteté. Cas réels DailyTickers.",
+    "tags": "formation,tech,technique,trading",
+    "grade": "",
+    "href": "/tech/backtesting-honest/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Anti-Dilution : Détecter les Pièges SEC avant d'Investir",
+    "desc": "Guide complet sur la détection des risques de dilution via les SEC filings : ATM offerings, convertibles toxiques, warrants, PIPE. Cas réels INDO, PANW, CRDO/ALAB. Pipeline automatisé et protocole en 5 étapes.",
+    "tags": "formation,tech,technique,trading",
+    "grade": "",
+    "href": "/tech/anti-dilution-sec/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Multi-Broker & Ledger Interne : Gérer N Comptes de Trading comme un Seul Système",
+    "desc": "Guide technique sur l'architecture multi-broker : ledger interne append-only, routage d'ordres, réconciliation broker vs ledger, monitoring temps réel, multi-devises, settlement, et scaling de 1 à N modes × M brokers. Patterns concrets, schémas, cas réels DailyTickers.",
+    "tags": "formation,tech,trading,architecture",
+    "grade": "",
+    "href": "/tech/multibroker-ledger/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",
