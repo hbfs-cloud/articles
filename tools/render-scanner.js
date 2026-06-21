@@ -213,6 +213,54 @@ function scoreBarConfig(setups) {
   });
 }
 
+// ─── CORRELATION HEATMAP ────────────────────────────────────────────────────
+
+function correlationHeatmapConfig(pairs, tickers) {
+  const n = tickers.length;
+  const data = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < n; j++) {
+      const key = i <= j ? `${tickers[i]}-${tickers[j]}` : `${tickers[j]}-${tickers[i]}`;
+      const val = i === j ? 1.0 : (pairs[key] != null ? pairs[key] : 0);
+      data.push([j, i, +val.toFixed(2)]);
+    }
+  }
+  return `{tooltip:{position:'top',formatter:function(p){return p.name+': \\u03C1 = '+p.data[2]}},grid:{left:'15%',right:'5%',top:'5%',bottom:'15%'},xAxis:{type:'category',data:${JSON.stringify(tickers)},axisLabel:{fontSize:11,fontWeight:700},splitArea:{show:true}},yAxis:{type:'category',data:${JSON.stringify(tickers)},axisLabel:{fontSize:11,fontWeight:700},splitArea:{show:true}},visualMap:{min:-1,max:1,calculable:true,orient:'horizontal',left:'center',bottom:0,inRange:{color:['#ef4444','#fbbf24','#f8fafc','#86efac','#22c55e']}},series:[{type:'heatmap',data:${JSON.stringify(data)},label:{show:true,fontSize:10},emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.5)'}}}]}`;
+}
+
+// ─── SANKEY CHART (Sector → Strategy → Ticker) ─────────────────────────────
+
+function sankeyConfig(setups) {
+  const nodes = new Set();
+  const linkMap = {};
+  setups.forEach(s => {
+    const sector = s.sector || s.region_label || s.region || 'US';
+    const strategy = s.pattern || 'Momentum';
+    const ticker = s.ticker;
+    nodes.add(sector); nodes.add(strategy); nodes.add(ticker);
+    const k1 = `${sector}→${strategy}`;
+    linkMap[k1] = (linkMap[k1] || 0) + 1;
+    const k2 = `${strategy}→${ticker}`;
+    linkMap[k2] = (linkMap[k2] || 0) + 1;
+  });
+  const COLORS = { Momentum: '#22c55e', Breakout: '#3b82f6', Pullback: '#f59e0b', 'Pre-Squeeze': '#8b5cf6' };
+  const nodeArr = [...nodes].map(n => ({ name: n, itemStyle: { color: COLORS[n] || '#64748b' } }));
+  const links = Object.entries(linkMap).map(([k, v]) => {
+    const [src, tgt] = k.split('→');
+    return { source: src, target: tgt, value: v };
+  });
+  return JSON.stringify({
+    tooltip: { trigger: 'item', triggerOn: 'mousemove' },
+    series: [{
+      type: 'sankey', layout: 'none', emphasis: { focus: 'adjacency' },
+      nodeAlign: 'left', orient: 'horizontal',
+      data: nodeArr, links: links,
+      lineStyle: { color: 'gradient', curveness: 0.5 },
+      label: { fontSize: 12, fontWeight: 600 }
+    }]
+  });
+}
+
 // ─── PER-SETUP GAUGE & RADAR ──────────────────────────────────────────────────
 
 function setupGaugeConfig(score, tickerColor) {
@@ -460,6 +508,14 @@ function buildPage(d) {
   addChart('radarOverview',radarOverviewConfig(setups));
   addChart('treemapSector',treemapConfig(setups));
   addChart('scoreBar',     scoreBarConfig(setups));
+  addChart('sankey',       sankeyConfig(setups));
+
+  // Correlation heatmap — only if full pair data is provided
+  const corrExtra = (d.synthese_extra || {}).correlation_matrix || d.correlation_matrix || {};
+  const hasCorrPairs = corrExtra.pairs && typeof corrExtra.pairs === 'object' && Object.keys(corrExtra.pairs).length > 0;
+  if (hasCorrPairs) {
+    addChart('corrHeatmap', correlationHeatmapConfig(corrExtra.pairs, setups.map(s => s.ticker)));
+  }
 
   // Build per-setup HTML (also registers per-setup charts)
   const setupCardsHtml = setups.map((s, i) => setupCard(s, i)).join('\n');
@@ -597,6 +653,13 @@ ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${r.name}</strong>
       <div>${echartDiv('radarOverview', 350)}</div>
       <div>${echartDiv('treemapSector', 350)}</div>
     </div>
+    ${hasCorrPairs ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Matrix</h4>\n    ${echartDiv('corrHeatmap', 400)}` : (corrExtra.note ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Summary</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
+      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Avg ρ:</strong> ${corrExtra.avg_off_diagonal || '—'}</div>
+      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Max pair:</strong> ${corrExtra.max_pair ? corrExtra.max_pair.pair + ' (' + corrExtra.max_pair.rho + ')' : '—'}</div>
+      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Min pair:</strong> ${corrExtra.min_pair ? corrExtra.min_pair.pair + ' (' + corrExtra.min_pair.rho + ')' : '—'}</div>
+    </div>
+    <p style="font-size:0.85rem;color:#64748b;">${corrExtra.note || ''}</p>` : '')}
   </div>
 ${navGrid(setups)}
 </section>
@@ -632,6 +695,9 @@ ${setupCardsHtml}
   <div class="content-card">
 ${syntheseTable(setups)}
     ${echartDiv('scoreBar', 280)}
+
+    <h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Sector &rarr; Strategy &rarr; Setup Flow</h4>
+    ${echartDiv('sankey', 320)}
 
     ${divMatHtml ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Diversification Matrix</h4>\n${divMatHtml}` : ''}
     ${thematicHtml ? `<h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Thematic Allocation</h4>\n${thematicHtml}` : ''}

@@ -114,6 +114,13 @@
       <div><div id="radarOverview" class="echart-box" style="height:350px;"></div></div>
       <div><div id="treemapSector" class="echart-box" style="height:350px;"></div></div>
     </div>
+    <h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Summary</h4>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
+      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Avg ρ:</strong> 0.34</div>
+      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Max pair:</strong> EWJ-QQQ (0.793)</div>
+      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Min pair:</strong> HIMS-JHG (-0.107)</div>
+    </div>
+    <p style="font-size:0.85rem;color:#64748b;">D&eacute;corr&eacute;lation excellente. JHG near-zero avec tout le portefeuille (avg rho 0.05). AVGO-LLY = -0.05 (couverture naturelle tech/healthcare).</p>
   </div>
 <div class="nav-grid">
     <a href="#setup-AVGO"><span style="background:#b91c1c;color:white;padding:2px 8px;border-radius:6px;font-size:0.8rem;">AVGO</span> Broadcom Inc. &#x1F1FA;&#x1F1F8;</a>
@@ -682,6 +689,9 @@
     </table>
     <div id="scoreBar" class="echart-box" style="height:280px;"></div>
 
+    <h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Sector &rarr; Strategy &rarr; Setup Flow</h4>
+    <div id="sankey" class="echart-box" style="height:320px;"></div>
+
     <h4 style="margin:1.5rem 0 0.75rem;font-weight:700;">Diversification Matrix</h4>
     <table class="divmat-table">
       <thead><tr><th>Region</th><th>Tickers</th><th>Count</th><th>Strategies</th></tr></thead>
@@ -838,6 +848,13 @@
 })();
 
 (function(){
+  var el=document.getElementById("sankey");
+  if(!el)return;
+  var c=echarts.init(el);
+  c.setOption({"tooltip":{"trigger":"item","triggerOn":"mousemove"},"series":[{"type":"sankey","layout":"none","emphasis":{"focus":"adjacency"},"nodeAlign":"left","orient":"horizontal","data":[{"name":"US","itemStyle":{"color":"#64748b"}},{"name":"Momentum","itemStyle":{"color":"#22c55e"}},{"name":"AVGO","itemStyle":{"color":"#64748b"}},{"name":"Breakout","itemStyle":{"color":"#3b82f6"}},{"name":"CAT","itemStyle":{"color":"#64748b"}},{"name":"MS","itemStyle":{"color":"#64748b"}},{"name":"QCOM","itemStyle":{"color":"#64748b"}},{"name":"LLY","itemStyle":{"color":"#64748b"}},{"name":"EU","itemStyle":{"color":"#64748b"}},{"name":"ASML","itemStyle":{"color":"#64748b"}},{"name":"HIMS","itemStyle":{"color":"#64748b"}},{"name":"UK","itemStyle":{"color":"#64748b"}},{"name":"JHG","itemStyle":{"color":"#64748b"}},{"name":"APAC","itemStyle":{"color":"#64748b"}},{"name":"EWJ","itemStyle":{"color":"#64748b"}},{"name":"ETF","itemStyle":{"color":"#64748b"}},{"name":"QQQ","itemStyle":{"color":"#64748b"}}],"links":[{"source":"US","target":"Momentum","value":4},{"source":"Momentum","target":"AVGO","value":1},{"source":"US","target":"Breakout","value":2},{"source":"Breakout","target":"CAT","value":1},{"source":"Breakout","target":"MS","value":1},{"source":"Momentum","target":"QCOM","value":1},{"source":"Momentum","target":"LLY","value":1},{"source":"EU","target":"Breakout","value":1},{"source":"Breakout","target":"ASML","value":1},{"source":"Momentum","target":"HIMS","value":1},{"source":"UK","target":"Breakout","value":1},{"source":"Breakout","target":"JHG","value":1},{"source":"APAC","target":"Breakout","value":1},{"source":"Breakout","target":"EWJ","value":1},{"source":"ETF","target":"Momentum","value":1},{"source":"Momentum","target":"QQQ","value":1}],"lineStyle":{"color":"gradient","curveness":0.5},"label":{"fontSize":12,"fontWeight":600}}]});
+})();
+
+(function(){
   var el=document.getElementById("gaugeSetupAVGO");
   if(!el)return;
   var c=echarts.init(el);
@@ -979,7 +996,7 @@
 
 // Resize on window change
 window.addEventListener('resize',function(){
-  ["regimeGauge","strategyPie","radarOverview","treemapSector","scoreBar","gaugeSetupAVGO","radarSetupAVGO","gaugeSetupCAT","radarSetupCAT","gaugeSetupMS","radarSetupMS","gaugeSetupQCOM","radarSetupQCOM","gaugeSetupLLY","radarSetupLLY","gaugeSetupASML","radarSetupASML","gaugeSetupHIMS","radarSetupHIMS","gaugeSetupJHG","radarSetupJHG","gaugeSetupEWJ","radarSetupEWJ","gaugeSetupQQQ","radarSetupQQQ"].forEach(function(id){
+  ["regimeGauge","strategyPie","radarOverview","treemapSector","scoreBar","sankey","gaugeSetupAVGO","radarSetupAVGO","gaugeSetupCAT","radarSetupCAT","gaugeSetupMS","radarSetupMS","gaugeSetupQCOM","radarSetupQCOM","gaugeSetupLLY","radarSetupLLY","gaugeSetupASML","radarSetupASML","gaugeSetupHIMS","radarSetupHIMS","gaugeSetupJHG","radarSetupJHG","gaugeSetupEWJ","radarSetupEWJ","gaugeSetupQQQ","radarSetupQQQ"].forEach(function(id){
     var el=document.getElementById(id);
     if(el){var ch=echarts.getInstanceByDom(el);if(ch)ch.resize();}
   });
