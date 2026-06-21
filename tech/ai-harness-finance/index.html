@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech,architecture" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Harnesses IA en Finance : Contraindre les Modèles à Produire des Résultats Fiables | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique sur les harnesses de validation IA pour la finance : schemas JSON, war rooms multi-persona, workflows dynamiques, pattern MCP Hard Stop, et arbitrages coût/qualité. Avec un cas réel catastrophique : une rétrospective H1 2026 entièrement hallucinée.">
+    <meta property="og:title" content="Harnesses IA en Finance : Contraindre les Modèles à Produire des Résultats Fiables">
+    <meta property="og:description"
+        content="Comment empêcher un LLM de publier des données financières inventées. Schemas, war rooms, workflows, et la règle MCP Hard Stop née d'un désastre réel.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/ai-harness-finance/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #fef2f2 0%, #fee2e2 100%);
+            text-align: center;
+            border-bottom: 1px solid #fecaca;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #dc2626;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(220, 38, 38, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(220, 38, 38, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #dc2626;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .pedagogy-box {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+            border-left: 4px solid #dc2626;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #b91c1c;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #7f1d1d;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k { color: #fca5a5; }
+        pre.code-block .s { color: #86efac; }
+        pre.code-block .c { color: #64748b; font-style: italic; }
+        pre.code-block .n { color: #fcd34d; }
+        pre.code-block .p { color: #93c5fd; }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #fef2f2;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #b91c1c;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #fecaca;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #b91c1c;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.orchestrator {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .flow-node.verify {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .flow-node.verify b { color: #b45309; }
+
+        .flow-node.pass {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .flow-node.pass b { color: #15803d; }
+
+        .flow-node.block {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .flow-node.block b { color: #b91c1c; }
+
+        .flow-arrow {
+            text-align: center;
+            color: #f87171;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        .incident-box {
+            background: #1e1b4b;
+            border-radius: 16px;
+            padding: 2rem;
+            margin: 2rem 0;
+            color: #e0e7ff;
+        }
+
+        .incident-box h4 {
+            color: #f87171;
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin: 0 0 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .incident-box table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        .incident-box th {
+            text-align: left;
+            padding: 0.5rem 0.75rem;
+            color: #a5b4fc;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid #312e81;
+        }
+
+        .incident-box td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #312e81;
+            color: #c7d2fe;
+        }
+
+        .incident-box .wrong { color: #f87171; font-weight: 700; }
+        .incident-box .correct { color: #86efac; font-weight: 700; }
+
+        .persona-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .persona-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
+        .persona-card h4 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .persona-card p {
+            font-size: 0.85rem;
+            color: #475569;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .verdict-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+        }
+        .verdict-pass { background: #dcfce7; color: #166534; }
+        .verdict-fixed { background: #fef3c7; color: #92400e; }
+        .verdict-block { background: #fee2e2; color: #991b1b; }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .metric-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+            .metric-card { padding: 1.25rem !important; }
+            .persona-grid { grid-template-columns: 1fr; }
+            pre.code-block { font-size: 0.74rem; padding: 1.1rem 1.25rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — FIABILITÉ &amp; VALIDATION</div>
+        <h1
+            style="font-size:2.8rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Harnesses IA en Finance : Contraindre les Modèles à Produire des Résultats Fiables
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Comment empêcher un LLM de publier des données financières inventées. Schemas JSON,
+            war rooms multi-persona, workflows dynamiques de validation, et la règle MCP Hard Stop —
+            née d'une rétrospective H1 2026 dont 100% des chiffres étaient hallucinés.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Fiabilité</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 20 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-skull-crossbones"></i> Post-mortem réel</div>
+            <div class="hero-badge"><i class="fa-solid fa-code"></i> Patterns concrets</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 1 — INTRO
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-bomb" style="color:#dc2626;"></i> Pourquoi un LLM nu ne suffit jamais en finance</h2>
+
+            <p>Le 21 juin 2026, un agent IA autonome a généré une rétrospective du premier semestre pour
+                DailyTickers. L'article de 85 000 caractères était impeccable sur la forme : HTML valide,
+                sections structurées, narratifs fluides, graphiques ECharts cohérents. Il n'y avait qu'un
+                problème : <strong>100% des données financières étaient inventées</strong>.</p>
+
+            <p>Le palmarès des meilleures actions du semestre affichait META à +32%. En réalité, META
+                faisait -15%. Le palmarès des pires actions listait DAL à -22%. En réalité, DAL faisait +13%.
+                L'article entier était construit autour d'un narratif « l'énergie écrase le marché avec +36%
+                YTD ». La réalité : le secteur énergie faisait -1%. Chaque chiffre, chaque classement,
+                chaque conclusion — tout était faux, mais <em>vraisemblable</em>.</p>
+
+            <div class="incident-box">
+                <h4><i class="fa-solid fa-skull-crossbones"></i> Post-mortem : la rétrospective H1 2026</h4>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Donnée</th>
+                            <th>Ce que l'agent a écrit</th>
+                            <th>Réalité (MCP vérifié)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>META YTD</td>
+                            <td class="wrong">+32%</td>
+                            <td class="correct">-15%</td>
+                        </tr>
+                        <tr>
+                            <td>XOM YTD</td>
+                            <td class="wrong">+42%</td>
+                            <td class="correct">-9%</td>
+                        </tr>
+                        <tr>
+                            <td>DAL YTD</td>
+                            <td class="wrong">-22%</td>
+                            <td class="correct">+13%</td>
+                        </tr>
+                        <tr>
+                            <td>MRVL YTD</td>
+                            <td class="wrong">+27%</td>
+                            <td class="correct">+276%</td>
+                        </tr>
+                        <tr>
+                            <td>Secteur Énergie</td>
+                            <td class="wrong">+36%</td>
+                            <td class="correct">-1%</td>
+                        </tr>
+                        <tr>
+                            <td>Russell 2000 YTD</td>
+                            <td class="wrong">+13,1%</td>
+                            <td class="correct">+29,0%</td>
+                        </tr>
+                        <tr>
+                            <td>Nikkei 225</td>
+                            <td class="wrong">38 500 (-3,3%)</td>
+                            <td class="correct">71 250 (+10,0%)</td>
+                        </tr>
+                        <tr>
+                            <td>DXY (Dollar Index)</td>
+                            <td class="wrong">au-dessus de 107</td>
+                            <td class="correct">autour de 100-101</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>La cause ? L'agent travaillait en fork — une copie autonome lancée en arrière-plan.
+                Le MCP DailyTickers (la source de données marché en temps réel) était déconnecté
+                (token d'authentification expiré). Sans données fraîches, le modèle a fait ce que
+                les LLM font toujours quand on leur demande des chiffres qu'ils n'ont pas :
+                <strong>il a inventé des nombres plausibles</strong>. Et il les a inventés avec une
+                assurance absolue, dans un HTML parfaitement formaté.</p>
+
+            <p>Les données financières ont une propriété unique : elles sont <strong>instantanément
+                vérifiables</strong>. Un prix spot, un YTD, un ratio — il suffit d'ouvrir un terminal.
+                Ce qui signifie que les erreurs sont aussi instantanément <em>détectables</em> par
+                n'importe quel lecteur. Dans un contexte éditorial financier, une seule donnée fausse
+                détruit la crédibilité de l'ensemble. Dix données fausses détruisent la crédibilité
+                du site.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">100%</div>
+                    <div class="metric-label">Des données du palmarès H1 étaient inventées — pas une
+                        approximation, pas une erreur d'arrondi : des chiffres complètement faux</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0</div>
+                    <div class="metric-label">Vérifications exécutées avant publication. Aucun
+                        cross-check MCP, aucun schema, aucune war room</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3 heures</div>
+                    <div class="metric-label">Temps passé à corriger manuellement chaque chiffre,
+                        narratif, graphique et tableau après détection</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">1 règle</div>
+                    <div class="metric-label">MCP Hard Stop — la règle immuable née de cet incident,
+                        désormais câblée dans tous les pipelines</div>
+                </div>
+            </div>
+
+            <p>Cet article est le guide technique que nous aurions aimé avoir <em>avant</em> l'incident.
+                Il couvre cinq couches de protection — du schema JSON qui force la structure, à la
+                war room multi-persona qui traque les incohérences logiques, en passant par le pattern
+                MCP Hard Stop qui coupe tout si la source de données tombe. L'objectif : qu'aucune
+                donnée financière ne soit jamais publiée sans avoir été vérifiée par au moins deux
+                mécanismes indépendants.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Ce que cet article n'est pas</h4>
+                <p>Ce n'est pas un guide sur le prompt engineering, ni sur le fine-tuning, ni sur
+                    le choix du bon modèle. C'est un guide sur <strong>l'infrastructure de validation</strong>
+                    qui entoure le modèle — le harness — pour que même un modèle imparfait produise
+                    des résultats fiables. Le modèle est un muscle. Le harness est le squelette.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 2 — STRUCTURED OUTPUT
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="structured-output" class="content-card">
+            <h2><i class="fa-solid fa-brackets-curly" style="color:#dc2626;"></i> Forcer la Structure : Schemas JSON et Validation</h2>
+
+            <p>Le premier problème à résoudre est le plus basique : quand un LLM génère du texte libre,
+                il dérive. « Le S&P 500 est environ à 7 400 points » versus « 7 420,10 ». « Le titre
+                fait grosso modo +15% sur l'année » versus « +14,73% YTD au 18 juin ». En finance,
+                l'approximation n'est pas acceptable. Un investisseur qui lit « environ 7 400 » ne
+                sait pas si c'est 7 350 ou 7 450 — et la différence peut changer une décision.</p>
+
+            <p>La solution : <strong>ne jamais laisser le modèle répondre en texte libre pour les
+                données structurées</strong>. À la place, on définit un JSON Schema qui décrit
+                exactement la forme de la réponse attendue, et on force le modèle à appeler un
+                outil <code>StructuredOutput</code> dont les paramètres sont validés côté SDK.
+                Si le modèle renvoie un champ manquant, un type incorrect, ou une valeur hors
+                des bornes autorisées, le SDK rejette automatiquement et relance.</p>
+
+            <h3>Le schema comme contrat</h3>
+
+            <p>Prenons l'exemple d'une analyse de ticker. Sans schema, le modèle peut répondre :</p>
+
+            <pre class="code-block"><span class="c">// Sortie libre typique — aucune garantie de structure</span>
+<span class="s">"AAPL est noté A-, actuellement à environ $230. Le stop est quelque part
+autour de $215. Le YTD est positif, dans les 8-10%. Le R/R est correct,
+je dirais 1.8x. Les raisons principales sont les résultats solides,
+l'expansion des services, et le buyback massif."</span></pre>
+
+            <p>Avec un schema, le modèle est <em>obligé</em> de produire :</p>
+
+            <pre class="code-block"><span class="c">// Schema JSON — contrat strict</span>
+{
+  <span class="s">"type"</span>: <span class="s">"object"</span>,
+  <span class="s">"required"</span>: [<span class="s">"ticker"</span>, <span class="s">"grade"</span>, <span class="s">"price"</span>, <span class="s">"ytd_pct"</span>, <span class="s">"stop_loss"</span>, <span class="s">"risk_reward"</span>, <span class="s">"reasons"</span>],
+  <span class="s">"properties"</span>: {
+    <span class="s">"ticker"</span>:      { <span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"pattern"</span>: <span class="s">"^[A-Z]{1,5}$"</span> },
+    <span class="s">"grade"</span>:       { <span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"enum"</span>: [<span class="s">"A+"</span>, <span class="s">"A"</span>, <span class="s">"A-"</span>, <span class="s">"B+"</span>, <span class="s">"B"</span>, <span class="s">"B-"</span>, <span class="s">"C+"</span>, <span class="s">"C"</span>, <span class="s">"D"</span>] },
+    <span class="s">"price"</span>:       { <span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"minimum"</span>: <span class="n">0.01</span> },
+    <span class="s">"ytd_pct"</span>:     { <span class="s">"type"</span>: <span class="s">"number"</span> },
+    <span class="s">"stop_loss"</span>:   { <span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"minimum"</span>: <span class="n">0.01</span> },
+    <span class="s">"risk_reward"</span>: { <span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"minimum"</span>: <span class="n">0.1</span> },
+    <span class="s">"reasons"</span>:     { <span class="s">"type"</span>: <span class="s">"array"</span>, <span class="s">"items"</span>: { <span class="s">"type"</span>: <span class="s">"string"</span> }, <span class="s">"minItems"</span>: <span class="n">2</span> }
+  },
+  <span class="s">"additionalProperties"</span>: <span class="k">false</span>
+}</pre>
+
+            <p>Et la sortie validée :</p>
+
+            <pre class="code-block"><span class="c">// Sortie structurée — chaque champ typé et vérifiable</span>
+{
+  <span class="s">"ticker"</span>: <span class="s">"AAPL"</span>,
+  <span class="s">"grade"</span>: <span class="s">"A-"</span>,
+  <span class="s">"price"</span>: <span class="n">231.42</span>,
+  <span class="s">"ytd_pct"</span>: <span class="n">8.17</span>,
+  <span class="s">"stop_loss"</span>: <span class="n">214.80</span>,
+  <span class="s">"risk_reward"</span>: <span class="n">1.83</span>,
+  <span class="s">"reasons"</span>: [
+    <span class="s">"4 beats consécutifs, guidance relevée Q2"</span>,
+    <span class="s">"Services revenue +18% YoY, marge 75%"</span>,
+    <span class="s">"Buyback $110B autorisé, yield implicite 3.8%"</span>
+  ]
+}
+</pre>
+
+            <h3>Le mécanisme de forçage</h3>
+
+            <p>Le forçage fonctionne via le pattern <strong>tool_use</strong> des API Claude.
+                Au lieu de demander au modèle de « répondre en JSON » (ce qui échoue souvent —
+                le modèle ajoute du texte autour, oublie des virgules, invente des champs),
+                on lui donne un outil <code>StructuredOutput</code> dont les paramètres sont le
+                schema. Le modèle est <em>contraint</em> d'appeler cet outil — il ne peut pas
+                répondre en texte libre. Et le SDK valide les paramètres avant de les accepter.</p>
+
+            <pre class="code-block"><span class="c">// Implémentation — forcer le modèle à utiliser un outil structuré</span>
+<span class="k">const</span> response = <span class="k">await</span> client.messages.create({
+  model: <span class="s">"claude-sonnet-4-6"</span>,
+  max_tokens: <span class="n">4096</span>,
+  tools: [{
+    name: <span class="s">"StructuredOutput"</span>,
+    description: <span class="s">"Return the analysis result"</span>,
+    input_schema: ANALYSIS_SCHEMA   <span class="c">// le schema ci-dessus</span>
+  }],
+  tool_choice: { type: <span class="s">"tool"</span>, name: <span class="s">"StructuredOutput"</span> },  <span class="c">// force l'appel</span>
+  messages: [{ role: <span class="s">"user"</span>, content: prompt }]
+});
+
+<span class="c">// response.content[0].input est déjà validé par le SDK</span>
+<span class="k">const</span> result = response.content[<span class="n">0</span>].input;
+console.log(result.ticker);     <span class="c">// "AAPL" — garanti string</span>
+console.log(result.price);      <span class="c">// 231.42 — garanti number > 0.01</span>
+console.log(result.reasons);    <span class="c">// array — garanti >= 2 éléments</span></pre>
+
+            <h3>Ce que le schema attrape (et ce qu'il ne voit pas)</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type d'erreur</th>
+                            <th>Schema l'attrape ?</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Champ manquant</td>
+                            <td><span class="verdict-pass">OUI</span></td>
+                            <td><code>stop_loss</code> absent → rejet automatique</td>
+                        </tr>
+                        <tr>
+                            <td>Type incorrect</td>
+                            <td><span class="verdict-pass">OUI</span></td>
+                            <td><code>price: "deux cent trente"</code> → rejet, <code>number</code> attendu</td>
+                        </tr>
+                        <tr>
+                            <td>Valeur hors enum</td>
+                            <td><span class="verdict-pass">OUI</span></td>
+                            <td><code>grade: "AAA"</code> → rejet, pas dans la liste</td>
+                        </tr>
+                        <tr>
+                            <td>Array vide</td>
+                            <td><span class="verdict-pass">OUI</span></td>
+                            <td><code>reasons: []</code> → rejet, <code>minItems: 2</code></td>
+                        </tr>
+                        <tr>
+                            <td>Prix halluciné</td>
+                            <td><span class="verdict-block">NON</span></td>
+                            <td><code>price: 385.20</code> quand AAPL est à 231 — structurellement valide</td>
+                        </tr>
+                        <tr>
+                            <td>YTD inversé</td>
+                            <td><span class="verdict-block">NON</span></td>
+                            <td><code>ytd_pct: -15</code> quand le titre fait +8% — c'est un number</td>
+                        </tr>
+                        <tr>
+                            <td>Raisons inventées</td>
+                            <td><span class="verdict-block">NON</span></td>
+                            <td><code>"Contrat DoD $50B signé"</code> quand aucun contrat n'existe</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Schema = contrat structurel, pas contrat factuel</h4>
+                <p>Un schema garantit que la <em>forme</em> de la réponse est correcte. Il ne dit rien
+                    sur le <em>fond</em>. La rétrospective H1 avait un HTML parfaitement structuré avec des
+                    nombres parfaitement typés — et 100% faux. Le schema est la première couche de
+                    protection, pas la dernière. Il attrape les erreurs de structure ; pour les erreurs
+                    de fait, il faut les couches suivantes.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 3 — HARNESS ARCHITECTURE
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="harness-architecture" class="content-card">
+            <h2><i class="fa-solid fa-layer-group" style="color:#dc2626;"></i> Architecture d'un Harness de Validation</h2>
+
+            <p>Un harness, c'est un cadre rigide autour d'un processus flexible. Le modèle reste libre
+                de raisonner, de rédiger, de décider — mais chaque sortie passe par une série de filtres
+                avant de toucher le monde réel. L'analogie la plus juste est celle du <strong>test
+                automatisé</strong> en développement logiciel : le code passe, mais seulement si les
+                tests passent. Ici, le contenu passe, mais seulement si les validations passent.</p>
+
+            <h3>Les cinq couches</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node"><b>Couche 0 — Source</b>MCP DailyTickers, API marché,
+                        bases de données internes. La source de vérité.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> données fraîches</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>Couche 1 — Génération</b>Le LLM produit
+                        une sortie structurée (JSON via schema) à partir des données source.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> schema validation</div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>Couche 2 — Cross-référence</b>Chaque donnée
+                        chiffrée est comparée à la source. Prix, YTD, ratios, dates.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> fact-check</div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>Couche 3 — Vérification adverse</b>Des agents
+                        indépendants tentent de réfuter le contenu. War room multi-persona.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> vote PASS/BLOCK</div>
+                <div class="flow-row">
+                    <div class="flow-node pass"><b>Couche 4 — Gate humain</b>Revue finale par un
+                        opérateur. Dernier filet avant publication.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> publication</div>
+                <div class="flow-row">
+                    <div class="flow-node pass"><b>Production</b>L'article est publié, indexé,
+                        distribué via RSS/Telegram.</div>
+                </div>
+            </div>
+
+            <h3>Ce que chaque couche attrape</h3>
+
+            <p>L'idée n'est pas que chaque couche attrape tout — c'est que chaque couche attrape une
+                <em>catégorie</em> d'erreurs différente. Un bug qui échappe au schema sera pris par
+                le cross-check. Un cross-check satisfait peut masquer une incohérence logique que
+                la war room repérera. Et la war room peut rater un problème de ton que l'humain verra.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Couche</th>
+                            <th>Type d'erreur ciblé</th>
+                            <th>Exemple concret</th>
+                            <th>Coût relatif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Schema</strong></td>
+                            <td>Erreurs structurelles</td>
+                            <td>Champ <code>grade</code> absent, <code>price</code> en string</td>
+                            <td>~0 (validation locale)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Cross-référence</strong></td>
+                            <td>Erreurs factuelles</td>
+                            <td>Prix $385 quand le spot est $231, YTD inversé</td>
+                            <td>1 appel API par donnée</td>
+                        </tr>
+                        <tr>
+                            <td><strong>War room</strong></td>
+                            <td>Erreurs logiques et narratives</td>
+                            <td>« Énergie leader à +36% » quand le secteur fait -1%</td>
+                            <td>N × appel LLM (3-5 agents)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gate humain</strong></td>
+                            <td>Erreurs de jugement</td>
+                            <td>Ton trop agressif, recommandation inadaptée au profil</td>
+                            <td>Temps humain</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Sans harness vs. avec harness</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Sans harness</th>
+                            <th>Avec harness</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Temps de publication</strong></td>
+                            <td>2 minutes (génération directe)</td>
+                            <td>5-10 minutes (validation incluse)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Taux d'erreur factuelle</strong></td>
+                            <td>15-40% des données (variable, catastrophique si MCP down)</td>
+                            <td>&lt;1% (erreurs restantes = jugement, pas faits)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Coût par article</strong></td>
+                            <td>~$0.50 (un seul appel LLM)</td>
+                            <td>~$2-5 (schema + cross-ref + war room)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Coût d'une erreur publiée</strong></td>
+                            <td>3+ heures de correction + perte de crédibilité</td>
+                            <td>Quasi-nul (erreur bloquée avant publication)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Comportement si MCP down</strong></td>
+                            <td>Continue avec données inventées (silencieux)</td>
+                            <td>STOP IMMÉDIAT + alerte opérateur</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> La couche la plus importante : le cross-check MCP</h4>
+                <p>Un schema JSON parfaitement validé peut contenir 100% de données fausses — c'est
+                    exactement ce qui s'est passé avec la rétrospective H1. Le HTML était valide, les
+                    nombres étaient bien des nombres, les pourcentages avaient le bon format. Tout
+                    était structurellement correct et factuellement catastrophique. Sans la couche de
+                    cross-référence MCP, le harness est une passoire élégante.</p>
+            </div>
+
+            <h3>Implémentation : le pipeline de validation</h3>
+
+            <pre class="code-block"><span class="c">// Pipeline de validation — chaque couche peut rejeter</span>
+<span class="k">async function</span> <span class="n">validateAndPublish</span>(article) {
+  <span class="c">// Couche 1 — Schema validation</span>
+  <span class="k">const</span> parsed = validateSchema(article.data, ARTICLE_SCHEMA);
+  <span class="k">if</span> (!parsed.valid) <span class="k">throw new</span> Error(<span class="s">`Schema: ${parsed.errors.join(', ')}`</span>);
+
+  <span class="c">// Couche 2 — Cross-référence MCP</span>
+  <span class="k">const</span> mcpCheck = <span class="k">await</span> crossReferenceMCP(parsed.data);
+  <span class="k">if</span> (mcpCheck.errors.length > <span class="n">0</span>) {
+    <span class="k">throw new</span> Error(<span class="s">`Fact-check: ${mcpCheck.errors.join('; ')}`</span>);
+  }
+  <span class="k">if</span> (mcpCheck.warnings.length > <span class="n">0</span>) {
+    log(<span class="s">`⚠️ ${mcpCheck.warnings.length} warning(s) — revue manuelle requise`</span>);
+  }
+
+  <span class="c">// Couche 3 — War room (si article publié)</span>
+  <span class="k">if</span> (article.publish) {
+    <span class="k">const</span> verdicts = <span class="k">await</span> warRoom(article, PERSONAS);
+    <span class="k">const</span> blocks = verdicts.filter(v => v.verdict === <span class="s">'BLOCK'</span>);
+    <span class="k">if</span> (blocks.length > <span class="n">0</span>) {
+      <span class="k">throw new</span> Error(<span class="s">`War room BLOCK: ${blocks.map(b => b.reason).join('; ')}`</span>);
+    }
+  }
+
+  <span class="c">// Couche 4 — Gate humain (si configuré)</span>
+  <span class="k">if</span> (config.requireHumanApproval) {
+    <span class="k">await</span> requestApproval(article);
+  }
+
+  <span class="c">// Publication</span>
+  <span class="k">await</span> publish(article);
+}</pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Défense en profondeur</h4>
+                <p>L'analogie militaire est exacte : aucune ligne de défense n'est parfaite, mais
+                    l'attaquant (l'erreur) doit franchir toutes les lignes pour atteindre la cible
+                    (la publication). Chaque couche réduit le risque de façon multiplicative :
+                    si chaque couche attrape 90% des erreurs de son type, quatre couches en série
+                    laissent passer 0,01% — une erreur pour 10 000.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 4 — WAR ROOMS
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="war-rooms" class="content-card">
+            <h2><i class="fa-solid fa-users-gear" style="color:#dc2626;"></i> War Rooms : Panels Multi-Persona Adversariaux</h2>
+
+            <p>Un seul relecteur, même excellent, a des angles morts. Il sait ce qu'il sait — et il ne
+                sait pas ce qu'il ne sait pas. Un analyste quant ne pensera pas à vérifier la conformité
+                réglementaire. Un éditeur ne repérera pas une erreur de méthodologie statistique. Un
+                trader ne verra pas un risque de corrélation macro.</p>
+
+            <p>La war room résout ce problème par la <strong>diversité des perspectives</strong>, pas par
+                la redondance. Au lieu de lancer 5 agents identiques (qui feront les mêmes erreurs), on
+                lance 5 agents avec des <em>personas distinctes</em> — chacun spécialisé dans un type
+                de faille. Chacun reçoit exactement le même input, mais des instructions différentes.
+                C'est la version IA d'un comité de lecture pluridisciplinaire.</p>
+
+            <h3>Les 5 personas du harness DailyTickers</h3>
+
+            <div class="persona-grid">
+                <div class="persona-card">
+                    <h4><i class="fa-solid fa-microscope" style="color:#3b82f6;"></i> QA Analyst</h4>
+                    <p>Exactitude factuelle. Chaque prix, chaque date, chaque ratio est-il correct ?
+                        Les sources sont-elles citées ? Les données du tableau correspondent-elles
+                        au narratif ? Cross-check systématique avec MCP.</p>
+                </div>
+                <div class="persona-card">
+                    <h4><i class="fa-solid fa-chart-line" style="color:#8b5cf6;"></i> Quant</h4>
+                    <p>Rigueur méthodologique. Les backtests sont-ils réalistes ? Les R/R sont-ils
+                        calculés correctement ? Les claims statistiques (PF, Sharpe, max DD) sont-ils
+                        cohérents entre eux ? Le sizing respecte-t-il les contraintes de risque ?</p>
+                </div>
+                <div class="persona-card">
+                    <h4><i class="fa-solid fa-money-bill-trend-up" style="color:#16a34a;"></i> Trader</h4>
+                    <p>Réalisme de marché. Le setup est-il exécutable ? Le spread est-il tenable sur
+                        ce ticker ? Le stop est-il sous un niveau technique réel ? La liquidité
+                        permet-elle la taille annoncée ? L'horizon est-il cohérent avec le catalyseur ?</p>
+                </div>
+                <div class="persona-card">
+                    <h4><i class="fa-solid fa-shield-halved" style="color:#dc2626;"></i> Risk Manager</h4>
+                    <p>Scénarios adverses. Quel est le pire cas ? La corrélation entre positions est-elle
+                        contrôlée ? Un événement macro (FOMC, NFP, earnings) tombe-t-il dans la fenêtre ?
+                        Le drawdown du mode est-il dans les limites ?</p>
+                </div>
+                <div class="persona-card">
+                    <h4><i class="fa-solid fa-pen-nib" style="color:#f59e0b;"></i> Editor</h4>
+                    <p>Clarté et conformité. Le ton est-il approprié pour un site financier professionnel ?
+                        Les disclaimers sont-ils présents ? Le texte ne fait-il pas de promesse de rendement ?
+                        L'article est-il lisible pour le public cible ?</p>
+                </div>
+            </div>
+
+            <h3>Le mécanisme de vote</h3>
+
+            <p>Chaque persona examine l'article et rend un verdict parmi trois :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Verdict</th>
+                            <th>Signification</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="verdict-pass">PASS</span></td>
+                            <td>Aucun problème bloquant détecté dans mon domaine</td>
+                            <td>L'article avance</td>
+                        </tr>
+                        <tr>
+                            <td><span class="verdict-fixed">FIXED</span></td>
+                            <td>Problème détecté, mais j'ai la correction exacte</td>
+                            <td>La correction est appliquée, puis re-validation</td>
+                        </tr>
+                        <tr>
+                            <td><span class="verdict-block">BLOCK</span></td>
+                            <td>Problème grave — publication impossible en l'état</td>
+                            <td>L'article est renvoyé pour réécriture avec les findings</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>La <strong>règle de gate</strong> : il faut une majorité de PASS (ou FIXED après
+                application des corrections) pour publier. Un seul BLOCK suffit à bloquer la publication.
+                C'est volontairement conservateur — en finance, le coût d'un faux positif (bloquer un
+                article correct) est négligeable comparé au coût d'un faux négatif (publier un article
+                faux).</p>
+
+            <h3>Implémentation : le workflow war room</h3>
+
+            <pre class="code-block"><span class="c">// Workflow war room — 5 juges parallèles, vote majoritaire</span>
+<span class="k">export const</span> meta = {
+  name: <span class="s">'senior-review'</span>,
+  description: <span class="s">'Panel multi-persona QA gate avant publication'</span>,
+  phases: [
+    { title: <span class="s">'Review'</span>, detail: <span class="s">'5 personas évaluent en parallèle'</span> },
+    { title: <span class="s">'Fix'</span>, detail: <span class="s">'Appliquer les corrections FIXED'</span> },
+    { title: <span class="s">'Gate'</span>, detail: <span class="s">'Décision PASS / BLOCK'</span> }
+  ]
+};
+
+<span class="k">const</span> PERSONAS = [
+  { key: <span class="s">'qa'</span>,     icon: <span class="s">'🔬'</span>, prompt: <span class="s">`Tu es QA Analyst. Vérifie chaque donnée
+    chiffrée contre MCP. Cross-check prix, YTD, ratios. Signale toute
+    incohérence entre tableau et narratif.`</span> },
+  { key: <span class="s">'quant'</span>,  icon: <span class="s">'📊'</span>, prompt: <span class="s">`Tu es Quant. Vérifie la méthodologie :
+    R/R calculé correctement ? Backtest réaliste ? PF et Sharpe
+    cohérents ? Sizing dans les limites du mode ?`</span> },
+  { key: <span class="s">'trader'</span>, icon: <span class="s">'💹'</span>, prompt: <span class="s">`Tu es Trader senior. Ce setup est-il
+    exécutable ? Stop sous un vrai niveau ? Liquidité suffisante ?
+    Catalyseur dans le bon horizon ?`</span> },
+  { key: <span class="s">'risk'</span>,   icon: <span class="s">'🛡️'</span>, prompt: <span class="s">`Tu es Risk Manager. Quel est le pire cas ?
+    Corrélation entre positions ? Événement macro dans la fenêtre ?
+    DD du mode dans les limites ?`</span> },
+  { key: <span class="s">'editor'</span>, icon: <span class="s">'✏️'</span>, prompt: <span class="s">`Tu es Editor. Ton approprié ? Disclaimers
+    présents ? Pas de promesse de rendement ? Lisible pour le
+    public cible ?`</span> }
+];
+
+<span class="k">const</span> VERDICT_SCHEMA = {
+  type: <span class="s">'object'</span>,
+  required: [<span class="s">'verdict'</span>, <span class="s">'findings'</span>],
+  properties: {
+    verdict: { type: <span class="s">'string'</span>, enum: [<span class="s">'PASS'</span>, <span class="s">'FIXED'</span>, <span class="s">'BLOCK'</span>] },
+    findings: { type: <span class="s">'array'</span>, items: {
+      type: <span class="s">'object'</span>,
+      properties: {
+        severity: { type: <span class="s">'string'</span>, enum: [<span class="s">'info'</span>, <span class="s">'warn'</span>, <span class="s">'error'</span>] },
+        description: { type: <span class="s">'string'</span> },
+        fix: { type: <span class="s">'string'</span> }
+      }
+    }}
+  }
+};
+
+phase(<span class="s">'Review'</span>);
+<span class="k">const</span> reviews = <span class="k">await</span> parallel(
+  PERSONAS.map(p => () =>
+    agent(<span class="s">`${p.prompt}\n\nArticle à évaluer :\n${args.article}`</span>, {
+      label: <span class="s">`${p.icon} ${p.key}`</span>,
+      schema: VERDICT_SCHEMA,
+      phase: <span class="s">'Review'</span>
+    })
+  )
+);
+
+phase(<span class="s">'Gate'</span>);
+<span class="k">const</span> blocks = reviews.filter(Boolean).filter(r => r.verdict === <span class="s">'BLOCK'</span>);
+<span class="k">const</span> passes = reviews.filter(Boolean).filter(r => r.verdict !== <span class="s">'BLOCK'</span>);
+
+<span class="k">return</span> {
+  decision: blocks.length > <span class="n">0</span> ? <span class="s">'BLOCK'</span> : <span class="s">'PASS'</span>,
+  score: <span class="s">`${passes.length}/${reviews.filter(Boolean).length}`</span>,
+  blocks: blocks.map(b => ({ persona: b.key, findings: b.findings })),
+  fixes: reviews.filter(Boolean)
+    .filter(r => r.verdict === <span class="s">'FIXED'</span>)
+    .flatMap(r => r.findings.filter(f => f.fix))
+};</pre>
+
+            <h3>Cas réel : le screening A+ de juin 2026</h3>
+
+            <p>En juin 2026, le pipeline a sélectionné 10 tickers pour le label « A+ du mois » :
+                GE, DELL, HPE, PANW, ROST, AMKR, CRDO, ALAB, TGT, DAL. Chaque analyse avait un
+                ratio risque/rendement (R/R) impressionnant de 2× ou plus, des notes A+ justifiées
+                par des fondamentaux solides, et des setups techniques impeccables.</p>
+
+            <p>La war room a tout recalé. <strong>0 sur 10 méritaient le A+.</strong></p>
+
+            <p>Les findings : les R/R étaient calculés sur des prix « étendus » (en projetant le
+                mouvement au-delà du niveau actuel), pas au spot. C'est le piège classique du « plus
+                gros mouvement » — l'agent choisissait les tickers avec le plus gros potentiel théorique,
+                pas ceux dont le setup était actionnable <em>maintenant</em>. PANW et HPE avaient des
+                risques de dilution (ATM offerings) non vérifiés. CRDO et ALAB avaient des programmes
+                ATM actifs de plusieurs centaines de millions de dollars.</p>
+
+            <p>Le second batch — 10 tickers sélectionnés avec le harness complet (R/R au spot,
+                vérification dilution SEC, cross-check MCP) — a passé la war room : <strong>8 vrais A+</strong>
+                (CSCO, IBKR, ALLY, BK, COLB, FLEX, TER, RPRX) et <strong>2 honnêtes A</strong> que le
+                panel a refusé de gonfler (D avait un risque merger-arb + ATM $1,8 Md active ; MDLZ
+                était fair-not-cheap). Le harness n'a pas gonflé les notes — il a refusé de mentir.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-double"></i> Ce que la war room apporte</h4>
+                <ul>
+                    <li><strong>Diversité &gt; redondance</strong> — 5 perspectives différentes battent 5 fois la même</li>
+                    <li><strong>Contrainte positive</strong> — le modèle « sait » qu'il sera vérifié, donc il est plus prudent</li>
+                    <li><strong>Traçabilité</strong> — chaque verdict est loggé avec ses findings, auditable a posteriori</li>
+                    <li><strong>Honnêteté forcée</strong> — si les données ne justifient pas un A+, le panel dit A. Pas de complaisance</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 5 — DYNAMIC VALIDATION WORKFLOWS
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="dynamic-validation" class="content-card">
+            <h2><i class="fa-solid fa-diagram-project" style="color:#dc2626;"></i> Workflows Dynamiques de Validation</h2>
+
+            <p>Un harness statique — schema puis cross-check puis war room — fonctionne pour un article
+                unique. Mais quand le pipeline traite 100 candidats par nuit (comme le scanner
+                DailyTickers), il faut un workflow <strong>dynamique</strong> : qui s'adapte au nombre
+                d'items, qui élimine tôt pour économiser des tokens, et qui parallélise l'enrichissement
+                sans attendre que chaque ticker soit traité séquentiellement.</p>
+
+            <h3>Le pipeline scanner : 5 étapes, 92% d'attrition</h3>
+
+            <p>Voici le pipeline réel du scanner nocturne DailyTickers, qui tourne chaque soir
+                entre 22h30 et 23h30 :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator"><b>1. Discover</b><code>RunScreener</code> — filtre
+                        l'univers sur momentum, volume, et régime de marché. ~100 candidats.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> 100 → 60</div>
+                <div class="flow-row">
+                    <div class="flow-node"><b>2. Enrich</b>MCP <code>QueryData</code> en parallèle : quote,
+                        bars_daily, fondamentaux. Rejet si données stale &gt;48h.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> 60 → 40</div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>3. Validate</b>Anti-dilution (SEC filings S-3, warrants,
+                        ATM, fonds toxiques). Earnings proximity. Risk gating.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> 40 → 25</div>
+                <div class="flow-row">
+                    <div class="flow-node verify"><b>4. Verify</b>Cross-ref prix au spot. Scoring multi-axes.
+                        Évaluation regime-aware. Corrélation cluster check.</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> 25 → 8</div>
+                <div class="flow-row">
+                    <div class="flow-node pass"><b>5. Publish</b>Génération HTML. <code>add_card.js</code>.
+                        Commit + push. Notification Telegram.</div>
+                </div>
+            </div>
+
+            <!-- ECharts Funnel -->
+            <div id="funnel-chart" style="width: 100%; height: 380px; margin: 2rem 0;"></div>
+
+            <h3>Le pattern pipeline() vs parallel()</h3>
+
+            <p>La distinction est critique pour la performance. Un <code>pipeline()</code> traite chaque
+                item indépendamment à travers toutes les étapes — l'item A peut être en étape 4 pendant
+                que l'item B est encore en étape 1. Un <code>parallel()</code> avec barrière attend que
+                <em>tous</em> les items finissent une étape avant de passer à la suivante.</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Pattern</th>
+                            <th>Latence</th>
+                            <th>Quand l'utiliser</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><code>pipeline()</code></strong></td>
+                            <td>= plus lent item individuel</td>
+                            <td>Par défaut. Chaque item est indépendant. L'étape 2 d'un item n'a pas
+                                besoin des résultats de l'étape 1 des autres items.</td>
+                        </tr>
+                        <tr>
+                            <td><strong><code>parallel()</code> + barrière</strong></td>
+                            <td>= plus lent item × nombre d'étapes</td>
+                            <td>Quand l'étape N a besoin de TOUS les résultats de l'étape N-1.
+                                Ex : déduplication cross-item avant vérification coûteuse.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <pre class="code-block"><span class="c">// pipeline() — chaque ticker traverse toutes les étapes indépendamment</span>
+<span class="c">// Ticker A peut être en verify pendant que Ticker B est encore en enrich</span>
+<span class="k">const</span> results = <span class="k">await</span> pipeline(
+  candidates,
+  <span class="c">// Étape 1 : enrichir via MCP</span>
+  ticker => agent(<span class="s">`Enrichis ${ticker} via QueryData`</span>, {
+    label: <span class="s">`enrich:${ticker}`</span>, phase: <span class="s">'Enrich'</span>, schema: ENRICH_SCHEMA
+  }),
+  <span class="c">// Étape 2 : valider (dilution, earnings, risk)</span>
+  (enriched, ticker) => agent(<span class="s">`Valide ${ticker}: anti-dilution, earnings, risk`</span>, {
+    label: <span class="s">`validate:${ticker}`</span>, phase: <span class="s">'Validate'</span>, schema: VALIDATE_SCHEMA
+  }),
+  <span class="c">// Étape 3 : scorer et vérifier</span>
+  (validated, ticker) => agent(<span class="s">`Score ${ticker} et cross-ref prix au spot`</span>, {
+    label: <span class="s">`verify:${ticker}`</span>, phase: <span class="s">'Verify'</span>, schema: SCORE_SCHEMA
+  })
+);
+
+<span class="c">// Seuls les résultats avec score >= seuil passent à la publication</span>
+<span class="k">const</span> winners = results.filter(Boolean).filter(r => r.score >= <span class="n">85</span>);</pre>
+
+            <h3>Loop-until-dry : ne rien laisser passer</h3>
+
+            <p>Pour les tâches de découverte (trouver des bugs, identifier des risques, repérer des
+                incohérences), le nombre d'items à trouver est inconnu à l'avance. Le pattern
+                <strong>loop-until-dry</strong> lance des agents de recherche en rounds successifs
+                jusqu'à ce que K rounds consécutifs ne trouvent rien de nouveau.</p>
+
+            <pre class="code-block"><span class="c">// Loop-until-dry — continue tant qu'on trouve du nouveau</span>
+<span class="k">const</span> seen = <span class="k">new</span> Set();
+<span class="k">let</span> dryRounds = <span class="n">0</span>;
+
+<span class="k">while</span> (dryRounds < <span class="n">2</span>) {
+  <span class="k">const</span> found = <span class="k">await</span> agent(
+    <span class="s">`Cherche des erreurs factuelles dans cet article.
+    Déjà trouvés : ${[...seen].join(', ') || 'aucun'}`</span>,
+    { schema: FINDINGS_SCHEMA }
+  );
+
+  <span class="k">const</span> fresh = found.issues.filter(i => !seen.has(i.key));
+
+  <span class="k">if</span> (fresh.length === <span class="n">0</span>) {
+    dryRounds++;
+    log(<span class="s">`Round sec ${dryRounds}/2 — rien de nouveau`</span>);
+  } <span class="k">else</span> {
+    dryRounds = <span class="n">0</span>;
+    fresh.forEach(i => seen.add(i.key));
+    log(<span class="s">`${fresh.length} nouveaux problèmes trouvés (total: ${seen.size})`</span>);
+  }
+}</pre>
+
+            <h3>Budget-aware : adapter la profondeur au budget</h3>
+
+            <p>Quand l'opérateur alloue un budget tokens explicite (« +500k »), le workflow adapte
+                dynamiquement sa profondeur de vérification. Plus de budget = plus de rounds de
+                loop-until-dry, plus de personas dans la war room, plus de cross-checks.</p>
+
+            <pre class="code-block"><span class="c">// Le budget contrôle la profondeur, pas la structure</span>
+<span class="k">const</span> depth = budget.total
+  ? Math.floor(budget.remaining() / <span class="n">100_000</span>)
+  : <span class="n">3</span>;  <span class="c">// défaut : 3 passes de vérification</span>
+
+<span class="k">for</span> (<span class="k">let</span> i = <span class="n">0</span>; i < depth; i++) {
+  <span class="k">const</span> issues = <span class="k">await</span> agent(
+    <span class="s">`Pass ${i + 1}/${depth} — vérifie sous un angle différent`</span>,
+    { schema: ISSUES_SCHEMA }
+  );
+  <span class="k">if</span> (issues.length === <span class="n">0</span>) <span class="k">break</span>;  <span class="c">// early exit si clean</span>
+  log(<span class="s">`Pass ${i + 1}: ${issues.length} problèmes — ${Math.round(budget.remaining()/1000)}k restants`</span>);
+}</pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Fan-out + early exit = efficacité maximale</h4>
+                <p>Le pipeline n'est pas juste un filtre — c'est un <strong>entonnoir économique</strong>.
+                    À chaque étape, les candidats éliminés ne consomment plus de tokens aux étapes suivantes.
+                    Si l'anti-dilution rejette 20 tickers sur 60, c'est 20 × (verify + score + publish)
+                    en tokens économisés. Le design optimal place les filtres les moins coûteux en premier
+                    et les plus coûteux en dernier.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 6 — MCP HARD STOP
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="mcp-hard-stop" class="content-card">
+            <h2><i class="fa-solid fa-octagon-xmark" style="color:#dc2626;"></i> Le Pattern MCP Hard Stop</h2>
+
+            <p>De toutes les règles du harness DailyTickers, une seule est marquée « immuable » dans
+                le CLAUDE.md du projet — c'est-à-dire qu'aucun agent, aucun workflow, aucun opérateur
+                ne peut la contourner sans la réécrire explicitement :</p>
+
+            <div class="incident-box" style="background: #450a0a; border: 2px solid #dc2626;">
+                <h4><i class="fa-solid fa-hand" style="color: #fca5a5;"></i> MCP HARD STOP (IMMUABLE)</h4>
+                <table style="margin: 0;">
+                    <tbody>
+                        <tr>
+                            <td style="color: #fca5a5; font-weight: 800; width: 30%; border-bottom-color: #7f1d1d;">Si le MCP bloque</td>
+                            <td style="border-bottom-color: #7f1d1d;">Auth expirée, timeout, erreur réseau, données incohérentes</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #fca5a5; font-weight: 800; border-bottom-color: #7f1d1d;">→ STOP IMMÉDIAT</td>
+                            <td style="border-bottom-color: #7f1d1d;">Ne pas continuer la génération ou la correction d'article</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #fca5a5; font-weight: 800; border-bottom-color: #7f1d1d;">→ Ne JAMAIS substituer</td>
+                            <td style="border-bottom-color: #7f1d1d;">Par des données inventées, estimées, ou issues de mémoire</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #fca5a5; font-weight: 800; border-bottom-color: #7f1d1d;">→ Signaler</td>
+                            <td style="border-bottom-color: #7f1d1d;">« MCP indisponible, tâche suspendue »</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #fca5a5; font-weight: 800; border-bottom-color: transparent;">→ Reprendre</td>
+                            <td style="border-bottom-color: transparent;">Uniquement quand MCP reconnecté ET qu'un test de contrôle renvoie des données fraîches</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Pourquoi cette règle existe</h3>
+
+            <p>Parce qu'un LLM ne sait pas qu'il ne sait pas. Quand le MCP est down et que le modèle
+                reçoit un prompt « génère la rétrospective H1 avec les performances de chaque secteur »,
+                il ne répond pas « je n'ai pas les données ». Il répond avec des données
+                <em>plausibles</em> — parce que c'est ce que les LLM font. Ils complètent la séquence
+                la plus probable. Et la séquence la plus probable après « le secteur énergie en H1 2026 »
+                est un nombre entre +10% et +40%, parce que l'énergie a historiquement bien performé
+                dans des environnements similaires.</p>
+
+            <p>Le problème n'est pas que le modèle « ment ». Le problème est qu'il n'a pas de
+                mécanisme interne pour distinguer « je sais » de « je complète ». La seule façon
+                de garantir des données fraîches est de les obtenir d'une source externe fiable — et si
+                cette source est indisponible, la seule option sûre est de <strong>ne rien publier</strong>.</p>
+
+            <h3>Implémentation : le pre-flight check</h3>
+
+            <pre class="code-block"><span class="c">// Pre-flight check — exécuté AVANT toute génération data-dependent</span>
+<span class="k">async function</span> <span class="n">mcpPreFlight</span>() {
+  <span class="k">try</span> {
+    <span class="c">// 1. Test de connectivité</span>
+    <span class="k">const</span> health = <span class="k">await</span> mcp.call(<span class="s">'GetHealth'</span>);
+    <span class="k">if</span> (!health || health.status !== <span class="s">'ok'</span>) {
+      <span class="k">throw new</span> Error(<span class="s">'MCP health check failed'</span>);
+    }
+
+    <span class="c">// 2. Test de fraîcheur — requête un ticker de référence</span>
+    <span class="k">const</span> spy = <span class="k">await</span> mcp.call(<span class="s">'QueryData'</span>, {
+      tickers: <span class="s">'SPY'</span>,
+      types: <span class="s">'quote'</span>
+    });
+
+    <span class="k">const</span> quote = spy?.SPY?.quote;
+    <span class="k">if</span> (!quote || !quote.price || quote.price <= <span class="n">0</span>) {
+      <span class="k">throw new</span> Error(<span class="s">'MCP returned empty or zero price for SPY'</span>);
+    }
+
+    <span class="c">// 3. Test de cohérence — le prix doit être dans une fourchette raisonnable</span>
+    <span class="k">if</span> (quote.price < <span class="n">3000</span> || quote.price > <span class="n">15000</span>) {
+      <span class="k">throw new</span> Error(<span class="s">`SPY price ${quote.price} is outside sane range`</span>);
+    }
+
+    <span class="c">// 4. Test de timestamp — données de moins de 48h</span>
+    <span class="k">const</span> age = Date.now() - <span class="k">new</span> Date(quote.timestamp).getTime();
+    <span class="k">if</span> (age > <span class="n">48</span> * <span class="n">3600</span> * <span class="n">1000</span>) {
+      <span class="k">throw new</span> Error(<span class="s">`SPY data is ${Math.round(age/3600000)}h old (max 48h)`</span>);
+    }
+
+    <span class="k">return</span> { ok: <span class="k">true</span>, spyPrice: quote.price };
+
+  } <span class="k">catch</span> (err) {
+    <span class="c">// HARD STOP — ne PAS continuer</span>
+    console.error(<span class="s">`⛔ MCP HARD STOP: ${err.message}`</span>);
+    console.error(<span class="s">`Tâche suspendue. Reprendre uniquement après reconnexion MCP.`</span>);
+    <span class="k">return</span> { ok: <span class="k">false</span>, error: err.message };
+  }
+}</pre>
+
+            <h3>Qu'est-ce que des « données bizarres » ?</h3>
+
+            <p>Le pre-flight check ne suffit pas. Le MCP peut répondre avec un statut « ok » mais
+                renvoyer des données incohérentes — un prix stale, un NaN, ou une valeur absurde.
+                Voici les signaux d'alerte que le harness surveille en continu :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Signal</th>
+                            <th>Détection</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>NaN / null / undefined</strong></td>
+                            <td><code>isNaN(price) || price == null</code></td>
+                            <td>HARD STOP — données corrompues</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Prix &gt; 2× attendu</strong></td>
+                            <td>Comparer au dernier prix connu ou à la moyenne mobile</td>
+                            <td>HARD STOP — possible erreur de source</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Timestamp stale &gt; 48h</strong></td>
+                            <td><code>Date.now() - timestamp > 48h</code></td>
+                            <td>HARD STOP — données pas fraîches</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quote ≠ bars</strong></td>
+                            <td>Dernier close des bars_daily vs quote actuel &gt; 10% d'écart</td>
+                            <td>WARNING — vérifier manuellement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Volume = 0</strong></td>
+                            <td>Volume du jour à zéro un jour de trading</td>
+                            <td>WARNING — ticker peut-être delisted ou suspendu</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>La hiérarchie de fallback</h3>
+
+            <p>Contrairement à beaucoup de systèmes qui dégradent gracieusement (« si la source A
+                tombe, essayer la source B, puis C »), le harness DailyTickers a une hiérarchie
+                volontairement <strong>brutale</strong> :</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node pass"><b>Source 1</b>MCP DailyTickers — données marché temps réel</div>
+                </div>
+                <div class="flow-arrow"><i class="fas fa-arrow-down-long"></i> si MCP down</div>
+                <div class="flow-row">
+                    <div class="flow-node block"><b>Rien</b>STOP IMMÉDIAT. Pas de source B. Pas de WebSearch.
+                        Pas de cache. Pas d'estimation. Rien.</div>
+                </div>
+            </div>
+
+            <p>Pourquoi pas de fallback vers WebSearch ? Parce que WebSearch pour des prix financiers
+                est <strong>dangereusement incohérent</strong>. Un search peut retourner un prix d'il
+                y a 3 jours mélangé avec un titre d'aujourd'hui. Il peut confondre le pre-market avec
+                le close. Il peut retourner un prix en devise différente sans le signaler. En finance,
+                une donnée de mauvaise qualité <em>qu'on croit bonne</em> est pire qu'aucune donnée.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Fail loud, fail fast</h4>
+                <p>Une page blanche est meilleure qu'une page fausse. En finance, le pire résultat
+                    n'est pas « pas de donnée » — c'est « une donnée fausse qui a l'air vraie ».
+                    Le lecteur qui voit une page blanche sait qu'il n'a pas l'info. Le lecteur qui
+                    voit META à +32% (quand c'est -15%) prend peut-être une décision d'investissement
+                    basée sur un mensonge. C'est pourquoi le harness préfère couper plutôt que dégrader.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 7 — COST / QUALITY TRADEOFFS
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="cost-quality" class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#dc2626;"></i> Arbitrages Coût / Qualité / Latence</h2>
+
+            <p>Un harness a un coût. Chaque couche de validation consomme des tokens, et en
+                multi-agents les tokens se multiplient. La question n'est pas « faut-il un harness ? »
+                (la réponse est toujours oui pour des données publiées), mais « combien investir
+                dans chaque couche pour maximiser la fiabilité par dollar ? »</p>
+
+            <h3>Routage par modèle : le bon cerveau pour chaque tâche</h3>
+
+            <p>Tous les agents n'ont pas besoin du même modèle. Le scanner DailyTickers utilise
+                trois tiers de modèles, chacun choisi pour sa force :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tâche</th>
+                            <th>Modèle recommandé</th>
+                            <th>Pourquoi</th>
+                            <th>Coût relatif</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Extraction mécanique (parse HTML, extraire dates, formatter)</td>
+                            <td><strong>Haiku 4.5</strong></td>
+                            <td>Tâche cadrée, pas de jugement — vitesse et coût priment</td>
+                            <td>1×</td>
+                        </tr>
+                        <tr>
+                            <td>Génération (rédiger une analyse, formater des données en HTML)</td>
+                            <td><strong>Sonnet 4.6</strong></td>
+                            <td>Bon équilibre entre qualité rédactionnelle et coût</td>
+                            <td>5×</td>
+                        </tr>
+                        <tr>
+                            <td>Jugement (verdicts war room, décisions de grade, évaluation stratégique)</td>
+                            <td><strong>Opus 4.8</strong></td>
+                            <td>Raisonnement en profondeur, nuance, résistance aux biais</td>
+                            <td>25×</td>
+                        </tr>
+                        <tr>
+                            <td>Enrichissement MCP (appels d'outils structurés, cross-check)</td>
+                            <td><strong>Sonnet 4.6</strong></td>
+                            <td>Fiable sur les appels d'outils, bon suivi de schéma</td>
+                            <td>5×</td>
+                        </tr>
+                        <tr>
+                            <td>Anti-dilution (analyse SEC filings, détection ATM/warrants)</td>
+                            <td><strong>Opus 4.8</strong></td>
+                            <td>Requiert une lecture attentive de documents complexes</td>
+                            <td>25×</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Budget type d'un run scanner complet</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étape</th>
+                            <th>Agents</th>
+                            <th>Modèle</th>
+                            <th>Tokens (approx.)</th>
+                            <th>Coût (approx.)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Screening initial</td>
+                            <td>1</td>
+                            <td>Sonnet</td>
+                            <td>~20K</td>
+                            <td>~$0.10</td>
+                        </tr>
+                        <tr>
+                            <td>Enrichissement MCP (×15 tickers)</td>
+                            <td>15</td>
+                            <td>Sonnet</td>
+                            <td>~150K</td>
+                            <td>~$0.75</td>
+                        </tr>
+                        <tr>
+                            <td>Anti-dilution (×15)</td>
+                            <td>15</td>
+                            <td>Opus</td>
+                            <td>~120K</td>
+                            <td>~$1.50</td>
+                        </tr>
+                        <tr>
+                            <td>Scoring + verify (×10 survivors)</td>
+                            <td>10</td>
+                            <td>Sonnet</td>
+                            <td>~80K</td>
+                            <td>~$0.40</td>
+                        </tr>
+                        <tr>
+                            <td>War room (×8 finalists, 5 personas)</td>
+                            <td>40</td>
+                            <td>Opus</td>
+                            <td>~200K</td>
+                            <td>~$2.50</td>
+                        </tr>
+                        <tr>
+                            <td>Génération HTML (×8)</td>
+                            <td>8</td>
+                            <td>Sonnet</td>
+                            <td>~100K</td>
+                            <td>~$0.50</td>
+                        </tr>
+                        <tr style="font-weight: 800; background: #fef2f2;">
+                            <td><strong>Total</strong></td>
+                            <td><strong>~89</strong></td>
+                            <td></td>
+                            <td><strong>~670K</strong></td>
+                            <td><strong>~$5.75</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>La « taxe adversariale »</h3>
+
+            <p>La war room (couche 3) représente environ 40-45% du coût total d'un run. C'est
+                tentant de la supprimer pour « optimiser ». Mais il faut comparer avec le coût
+                de ce qu'elle évite :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Scénario</th>
+                            <th>Coût</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>War room (5 agents × 8 articles)</td>
+                            <td>~$2.50 / run</td>
+                        </tr>
+                        <tr>
+                            <td>Correction manuelle d'un article faux</td>
+                            <td>~3 heures humaines + coût de réputation</td>
+                        </tr>
+                        <tr>
+                            <td>Article faux publié non détecté</td>
+                            <td>Incalculable — perte de confiance lecteurs</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>La war room est une <strong>assurance</strong>, pas un coût. Elle représente environ
+                $75/mois pour un scanner nocturne quotidien. Le coût de NE PAS l'avoir a été mesuré
+                précisément le 21 juin 2026 : 3 heures de correction, une rétrospective à réécrire,
+                et une règle HARD STOP immuable ajoutée au code du projet.</p>
+
+            <h3>Quand sauter la vérification</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Contexte</th>
+                            <th>Vérification ?</th>
+                            <th>Pourquoi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Article publié (scanner, daily, weekly, analyses)</td>
+                            <td><span class="verdict-block">TOUJOURS</span></td>
+                            <td>Données visibles par le public — aucune exception</td>
+                        </tr>
+                        <tr>
+                            <td>Draft interne (brouillon, exploration)</td>
+                            <td><span class="verdict-fixed">Schema + cross-ref</span></td>
+                            <td>Pas de war room, mais les faits doivent être justes</td>
+                        </tr>
+                        <tr>
+                            <td>Brainstorming (idées, hypothèses)</td>
+                            <td><span class="verdict-pass">Schema seul</span></td>
+                            <td>La structure suffit, les faits seront vérifiés plus tard</td>
+                        </tr>
+                        <tr>
+                            <td>Code / refactoring</td>
+                            <td><span class="verdict-pass">Tests unitaires</span></td>
+                            <td>Le harness n'est pas pertinent — les tests le sont</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Ne jamais optimiser en supprimant la vérification</h4>
+                <p>Si le harness coûte trop cher, optimisez le <em>modèle</em> (Haiku pour l'extraction,
+                    Sonnet pour la génération), pas la <em>vérification</em>. Réduire le nombre de
+                    personas de 5 à 3 est acceptable. Supprimer la war room ne l'est pas. Réduire
+                    le cross-check MCP est interdit.</p>
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════
+             SECTION 8 — CONCLUSION
+             ═══════════════════════════════════════════════════════════════════ -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-lock" style="color:#dc2626;"></i> Construire la Confiance par la Contrainte</h2>
+
+            <p>Il y a un paradoxe au cœur de ce guide : <strong>plus on contraint un LLM, plus il
+                devient utile</strong>. Un modèle libre produit du texte fluide et plausible — mais
+                en finance, plausible et vrai sont deux choses différentes. Le harness ne limite pas
+                le modèle : il le <em>force à opérer dans la zone où il est fiable</em>, et il
+                délègue le reste à des mécanismes qui ne hallucinent pas (API, schemas, votes).</p>
+
+            <p>L'incident de la rétrospective H1 2026 n'était pas un échec du modèle. Le modèle
+                a fait exactement ce qu'on lui a demandé : générer un article plausible sur le
+                premier semestre. Le vrai échec était <strong>l'absence de harness</strong> — pas
+                de schema pour contraindre la structure, pas de cross-check pour vérifier les faits,
+                pas de war room pour repérer les incohérences narratives, et surtout pas de HARD
+                STOP pour couper quand la source de données est tombée.</p>
+
+            <p>Le coût du harness est réel : +30-50% de tokens, +5-8 minutes de latence par article.
+                Mais ce coût est dérisoire comparé au coût d'une seule publication fausse. Et il
+                diminue avec l'apprentissage : chaque incident identifié par le harness devient
+                une nouvelle règle, un nouveau filtre, un nouveau persona dans la war room. Le
+                système s'améliore à chaque erreur qu'il attrape.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-double"></i> Les 5 principes du harness financier</h4>
+                <ul>
+                    <li><strong>Ne jamais publier de sortie LLM non vérifiée</strong> — même si l'HTML est parfait,
+                        même si le narratif est fluide, même si les chiffres « ont l'air bons »</li>
+                    <li><strong>Schema = contrat structurel, MCP = vérité terrain</strong> — le schema attrape la
+                        forme, le MCP attrape le fond. Les deux sont nécessaires, aucun n'est suffisant</li>
+                    <li><strong>War rooms &gt; single reviewer</strong> — la diversité des perspectives (QA, Quant,
+                        Trader, Risk, Editor) bat la redondance. 5 vues différentes &gt; 5 fois la même</li>
+                    <li><strong>Pipeline &gt; monolithe</strong> — fan-out parallèle + early exit = efficacité
+                        maximale. Éliminer tôt pour économiser les couches coûteuses</li>
+                    <li><strong>Fail loud &gt; fail silent (MCP HARD STOP)</strong> — si la source de données tombe,
+                        arrêter tout est la seule option sûre. Une page blanche &gt; une page fausse</li>
+                </ul>
+            </div>
+
+            <p>La finance est un domaine où les erreurs ont des conséquences réelles. Un prix
+                faux peut déclencher un trade. Un grade artificiel peut attirer un investisseur
+                vers un titre dangereux. Une performance inventée peut fausser une allocation.
+                Le harness n'est pas un luxe — c'est la condition sine qua non pour que l'IA
+                soit <strong>plus fiable qu'un analyste humain fatigué</strong>, plutôt que
+                moins fiable qu'un simple tableur.</p>
+
+            <h3>Pour aller plus loin</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Article</th>
+                            <th>Ce qu'il couvre</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><a href="/tech/workflows-multi-agents/" style="color: #dc2626; font-weight: 700;">Workflows Multi-Agents</a></td>
+                            <td>Les 5 patterns d'orchestration (fan-out, pipeline, war room, panel de juges, boucles) avec code et schémas</td>
+                        </tr>
+                        <tr>
+                            <td><a href="/tech/mcp-donnees-marche/" style="color: #dc2626; font-weight: 700;">MCP Données Marché</a></td>
+                            <td>Comment connecter Claude à des données de marché temps réel via le protocole MCP</td>
+                        </tr>
+                        <tr>
+                            <td><a href="/tech/inside-scanner-pipeline/" style="color: #dc2626; font-weight: 700;">Inside the Scanner Pipeline</a></td>
+                            <td>Le pipeline complet du scanner nocturne : du screening initial à la publication automatique</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div><!-- /container -->
+
+    <!-- FAB -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bomb"></i><span>Le problème</span></a>
+            <a href="#structured-output" class="fnav-item" data-section="structured-output"><i class="fas fa-brackets-curly"></i><span>Schemas JSON</span></a>
+            <a href="#harness-architecture" class="fnav-item" data-section="harness-architecture"><i class="fas fa-layer-group"></i><span>Architecture</span></a>
+            <a href="#war-rooms" class="fnav-item" data-section="war-rooms"><i class="fas fa-users-gear"></i><span>War Rooms</span></a>
+            <a href="#dynamic-validation" class="fnav-item" data-section="dynamic-validation"><i class="fas fa-diagram-project"></i><span>Workflows</span></a>
+            <a href="#mcp-hard-stop" class="fnav-item" data-section="mcp-hard-stop"><i class="fas fa-octagon-xmark"></i><span>Hard Stop</span></a>
+            <a href="#cost-quality" class="fnav-item" data-section="cost-quality"><i class="fas fa-scale-balanced"></i><span>Coût/Qualité</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-lock"></i><span>Conclusion</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- ECharts — Funnel Chart -->
+    <script>
+        (function () {
+            var chartDom = document.getElementById('funnel-chart');
+            if (!chartDom) return;
+            var chart = echarts.init(chartDom);
+
+            var option = {
+                title: {
+                    text: 'Pipeline Scanner — Attrition par Étape',
+                    left: 'center',
+                    top: 10,
+                    textStyle: {
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: 14,
+                        fontWeight: 800,
+                        color: '#0f172a'
+                    }
+                },
+                tooltip: {
+                    trigger: 'item',
+                    formatter: function (p) {
+                        return p.name + ' : ' + p.value + ' tickers';
+                    }
+                },
+                series: [{
+                    name: 'Pipeline',
+                    type: 'funnel',
+                    left: '10%',
+                    top: 50,
+                    bottom: 20,
+                    width: '80%',
+                    min: 0,
+                    max: 100,
+                    minSize: '0%',
+                    maxSize: '100%',
+                    sort: 'descending',
+                    gap: 4,
+                    label: {
+                        show: true,
+                        position: 'inside',
+                        fontFamily: 'Inter, sans-serif',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: '#fff',
+                        formatter: function (p) {
+                            return p.name + '\n' + p.value;
+                        }
+                    },
+                    itemStyle: {
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    },
+                    data: [
+                        { value: 100, name: '1. Discover (screening)', itemStyle: { color: '#dc2626' } },
+                        { value: 60, name: '2. Enrich (MCP data)', itemStyle: { color: '#ea580c' } },
+                        { value: 40, name: '3. Validate (dilution, risk)', itemStyle: { color: '#f59e0b' } },
+                        { value: 25, name: '4. Verify (cross-ref, score)', itemStyle: { color: '#16a34a' } },
+                        { value: 8, name: '5. Publish', itemStyle: { color: '#0d9488' } }
+                    ]
+                }]
+            };
+
+            chart.setOption(option);
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>

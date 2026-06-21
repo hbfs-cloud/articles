@@ -5577,6 +5577,19 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Harnesses IA en Finance : Contraindre les Modèles à Produire des Résultats Fiables",
+    "desc": "Guide technique sur les harnesses de validation IA pour la finance : schemas JSON, war rooms multi-persona, workflows dynamiques, pattern MCP Hard Stop, et arbitrages coût/qualité. Avec un cas réel catastrophique : une rétrospective H1 2026 entièrement hallucinée.",
+    "tags": "formation,ai,tech,architecture",
+    "grade": "",
+    "href": "/tech/ai-harness-finance/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",
