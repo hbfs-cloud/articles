@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 /**
- * render-analysis.js — DailyTickers Analysis JSON → HTML Renderer
+ * render-analysis.js — DailyTickers Analysis JSON → HTML Renderer (V2)
  *
- * Usage:  node tools/render-analysis.js analyses/DKNG/data.json
- *         node tools/render-analysis.js analyses/DKNG/
- *         node tools/render-analysis.js --batch analyses/batch.json
+ * The LLM produces structured JSON (~5KB). This engine renders it
+ * deterministically to a complete HTML article (~30-60KB).
  *
- * Reads  analyses/{TICKER}/data.json
- * Writes analyses/{TICKER}/index.html
+ * Usage:
+ *   node tools/render-analysis.js data/analyses-data/MATX.json
+ *   node tools/render-analysis.js data/analyses-data/MATX.json --dry    # validate only
+ *   node tools/render-analysis.js --batch data/analyses-data/*.json     # batch render
+ *   node tools/render-analysis.js --re-render                          # re-render ALL
  *
- * Batch mode: reads a JSON array of ticker data objects,
- * writes each to analyses/{ticker}/index.html
+ * Schema: tools/lib/analysis-schema.json
+ * Data:   data/analyses-data/{TICKER}.json
+ * Output: analyses/{TICKER}/index.html
  */
 
 'use strict';
@@ -18,65 +21,38 @@
 const fs   = require('fs');
 const path = require('path');
 
-// ─── CLI ────────────────────────────────────────────────────────────────────
+const ROOT = path.resolve(__dirname, '..');
+const DATA_DIR = path.join(ROOT, 'data', 'analyses-data');
+const SCHEMA = JSON.parse(fs.readFileSync(path.join(__dirname, 'lib', 'analysis-schema.json'), 'utf8'));
 
-const args = process.argv.slice(2);
-const isBatch = args[0] === '--batch';
-
-if (!args.length) {
-  console.error('Usage: node tools/render-analysis.js analyses/TICKER/data.json');
-  console.error('       node tools/render-analysis.js --batch analyses/batch.json');
-  process.exit(1);
-}
-
-if (isBatch) {
-  const batchPath = args[1];
-  if (!batchPath || !fs.existsSync(batchPath)) {
-    console.error('Batch file not found:', batchPath);
-    process.exit(1);
+// ─── Minimal JSON Schema validator ──────────────────────────────────────────
+function validate(data, schema, loc) {
+  loc = loc || '';
+  const errs = [];
+  if (!data && data !== 0 && data !== false && data !== '') return errs;
+  if (schema.required && schema.type === 'object' && typeof data === 'object') {
+    for (const k of schema.required) {
+      if (data[k] === undefined || data[k] === null) errs.push(`${loc}.${k} is required`);
+    }
   }
-  const items = JSON.parse(fs.readFileSync(batchPath, 'utf8'));
-  for (const d of items) {
-    const outDir = path.join('analyses', d.ticker);
-    if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-    const outPath = path.join(outDir, 'index.html');
-    fs.writeFileSync(outPath, render(d), 'utf8');
-    console.log(`✅ ${d.ticker} → ${outPath} (${(fs.statSync(outPath).size / 1024).toFixed(1)}KB)`);
+  if (schema.type === 'object' && schema.properties && typeof data === 'object' && data !== null) {
+    for (const [k, sub] of Object.entries(schema.properties)) {
+      if (data[k] !== undefined) errs.push(...validate(data[k], sub, `${loc}.${k}`));
+    }
   }
-  process.exit(0);
+  if (schema.type === 'array' && Array.isArray(data) && schema.items) {
+    data.forEach((item, i) => errs.push(...validate(item, schema.items, `${loc}[${i}]`)));
+  }
+  if (schema.type === 'number' && typeof data !== 'number') errs.push(`${loc} must be number, got ${typeof data}`);
+  if (schema.type === 'integer' && (!Number.isInteger(data))) errs.push(`${loc} must be integer`);
+  if (schema.type === 'string' && typeof data !== 'string') errs.push(`${loc} must be string, got ${typeof data}`);
+  if (schema.minimum != null && data < schema.minimum) errs.push(`${loc} must be >= ${schema.minimum}`);
+  if (schema.maximum != null && data > schema.maximum) errs.push(`${loc} must be <= ${schema.maximum}`);
+  return errs;
 }
 
-const arg = args[0];
-const isJson = arg.endsWith('.json');
-const dataPath = isJson ? arg : path.join(arg.replace(/\/$/, ''), 'data.json');
-const outDir = isJson ? path.dirname(arg) : arg.replace(/\/$/, '');
-const outPath = path.join(outDir, 'index.html');
-
-if (!fs.existsSync(dataPath)) {
-  console.error('data.json not found at', dataPath);
-  process.exit(1);
-}
-
-const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-fs.writeFileSync(outPath, render(d), 'utf8');
-console.log(`✅ ${d.ticker} → ${outPath} (${(fs.statSync(outPath).size / 1024).toFixed(1)}KB)`);
-
-// ─── HELPERS ────────────────────────────────────────────────────────────────
-
-function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-function fmtNum(n) {
-  if (n == null) return 'N/A';
-  if (Math.abs(n) >= 1e12) return (n / 1e12).toFixed(2) + 'T';
-  if (Math.abs(n) >= 1e9) return (n / 1e9).toFixed(2) + 'B';
-  if (Math.abs(n) >= 1e6) return (n / 1e6).toFixed(1) + 'M';
-  if (Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1) + 'K';
-  return String(n);
-}
-
-function fmtPct(n) { return n != null ? n.toFixed(2) + '%' : 'N/A'; }
-function fmtPrice(n) { return n != null ? '$' + Number(n).toFixed(2) : 'N/A'; }
-function badge(text, color) { return `<span class="badge badge-${color}">${text}</span>`; }
+// ─── Helpers ────────────────────────────────────────────────────────────────
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
 function gradeColor(g) {
   if (!g) return '#64748b';
@@ -86,47 +62,66 @@ function gradeColor(g) {
   return '#ef4444';
 }
 
-function severityColor(s) {
-  const m = { critical: '#ef4444', high: '#f59e0b', medium: '#3b82f6', low: '#22c55e' };
-  return m[s] || '#64748b';
+function gradeBadgeClass(g) {
+  if (!g) return 'gray';
+  if (g.startsWith('A')) return 'green';
+  if (g.startsWith('B')) return 'blue';
+  if (g.startsWith('C')) return 'amber';
+  return 'red';
+}
+
+const changePctColor = v => (v || 0) >= 0 ? '#22c55e' : '#ef4444';
+const changePctSign  = v => (v || 0) >= 0 ? '+' : '';
+
+function severityClass(s) {
+  return ({ critical: 'risk-card-critical', high: 'risk-card-high', medium: 'risk-card-medium', low: 'risk-card-low' })[s] || 'risk-card-medium';
 }
 
 function severityIcon(s) {
-  const m = { critical: 'fa-skull-crossbones', high: 'fa-triangle-exclamation', medium: 'fa-circle-info', low: 'fa-circle-check' };
-  return m[s] || 'fa-circle-info';
+  return ({ critical: 'fa-skull-crossbones', high: 'fa-triangle-exclamation', medium: 'fa-circle-info', low: 'fa-circle-check' })[s] || 'fa-circle-info';
 }
 
-function strategyColor(s) {
-  const m = { Momentum: 'purple', Breakout: 'blue', 'Pre-Squeeze': 'green', Pullback: 'amber' };
-  return m[s] || 'blue';
+function riskGaugeColor(score) {
+  if (score <= 3) return '#22c55e';
+  if (score <= 5) return '#3b82f6';
+  if (score <= 7) return '#f59e0b';
+  return '#ef4444';
 }
 
-// ─── RENDER ─────────────────────────────────────────────────────────────────
+function signalBadgeClass(c) {
+  return ({ green: 'badge-green', red: 'badge-red', blue: 'badge-blue', amber: 'badge-purple', gray: 'badge-gray' })[c] || 'badge-blue';
+}
 
-function render(d) {
-  const q = d.quote || {};
-  const fin = d.financials || {};
-  const tech = d.technicals || {};
-  const trade = d.trade || {};
-  const verdict = d.verdict || {};
-  const isEtf = d.type === 'etf';
-  const changePctAbs = Math.abs(q.change_pct || 0);
-  const changeSign = (q.change_pct || 0) >= 0 ? '+' : '';
-  const debtMcap = q.market_cap ? ((fin.total_debt || 0) / q.market_cap * 100).toFixed(1) : 'N/A';
-  const chartId = d.ticker.replace(/[^a-zA-Z0-9]/g, '');
+function impactBadge(i) {
+  return ({ positive: 'badge-green', negative: 'badge-red', neutral: 'badge-blue' })[i] || 'badge-blue';
+}
 
+function sourceRefsHtml(refs) {
+  if (!refs || !refs.length) return '';
+  return `\n      <div class="source-refs" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;margin-top:0.75rem;padding-top:0.5rem;border-top:1px solid #e2e8f0;">\n` +
+    refs.map(r => `        <a href="${esc(r.url)}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(r.name)}</span>${r.date ? `<span class="source-date">&middot; ${esc(r.date)}</span>` : ''}</a>`).join('\n') +
+    `\n      </div>`;
+}
+
+// ─── Section renderers ──────────────────────────────────────────────────────
+
+function renderHead(d) {
+  const { meta, header, verdict } = d;
+  const title = `DailyTickers | ${header.ticker} Analysis — ${header.name} | ${meta.dateDisplay || meta.date}`;
+  const desc = esc(meta.description || `${header.ticker} analysis: ${(verdict.summary || '').slice(0, 160)}`);
+  const ogDesc = esc(meta.ogDescription || `${header.ticker}: ${verdict.bias} setup, score ${verdict.score}/100.`);
   return `<!DOCTYPE html>
-<html lang="${d.lang || 'en'}" data-tags="${esc(d.tags)}" data-tab="analyses" data-grade="${esc(d.grade || 'B+')}">
+<html lang="${meta.lang || 'en'}"${meta.dir === 'rtl' ? ' dir="rtl"' : ''} data-tags="${meta.tags.join(',')}" data-tab="analyses" data-grade="${meta.grade}"${meta.level ? ` data-level="${meta.level}"` : ''}>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DailyTickers | ${esc(d.ticker)} Analysis — ${esc(d.name)} | ${d.date}</title>
-    <meta name="description" content="${esc(d.ticker)} analysis: ${esc(verdict.summary || trade.thesis || '').slice(0, 160)}">
-    <meta property="og:title" content="DailyTickers — ${esc(d.ticker)} Analysis">
-    <meta property="og:description" content="${esc(d.ticker)}: ${esc(trade.strategy)} setup, score ${trade.score}/100. Entry ${fmtPrice(trade.entry)}, target ${fmtPrice(trade.tp1)}.">
-    <meta property="og:image" content="https://assets.parqet.com/logos/symbol/${esc(d.ticker)}?format=jpg">
+    <title>${title}</title>
+    <meta name="description" content="${desc}">
+    <meta property="og:title" content="DailyTickers — ${header.ticker} Analysis">
+    <meta property="og:description" content="${ogDesc}">
+    <meta property="og:image" content="https://assets.parqet.com/logos/symbol/${header.ticker}?format=jpg">
     <meta property="og:type" content="article">
-    <meta property="og:url" content="https://articles.dailytickers.com/analyses/${esc(d.ticker)}/">
+    <meta property="og:url" content="https://articles.dailytickers.com/analyses/${header.ticker}/">
     <meta name="twitter:card" content="summary_large_image">
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
     <link rel="icon" href="/favicon.ico">
@@ -136,8 +131,11 @@ function render(d) {
     <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body>
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>`;
+}
 
+function renderBrandBar() {
+  return `
     <nav class="brand-bar">
       <div class="brand-bar-inner">
         <a href="/" class="brand-logo">
@@ -156,228 +154,421 @@ function render(d) {
           <a href="/" class="brand-home-btn" title="Home"><i class="fas fa-house"></i></a>
         </div>
       </div>
-    </nav>
+    </nav>`;
+}
 
+function renderStatusBanner(d) {
+  if (d.meta.status === 'invalidated') {
+    return `\n    <div style="background:#dc2626;color:#fff;text-align:center;padding:1rem;font-weight:700;font-size:1.1rem;">
+      <i class="fa-solid fa-triangle-exclamation"></i> GRADE DOWNGRADED &mdash; ${esc(d.meta.invalidationNote || 'Setup invalidated')}
+    </div>`;
+  }
+  if (d.meta.status === 'archived') {
+    return `\n    <div style="background:#64748b;color:#fff;text-align:center;padding:0.75rem;font-weight:600;">
+      <i class="fa-solid fa-archive"></i> ARCHIVED &mdash; This analysis is no longer maintained.
+    </div>`;
+  }
+  return '';
+}
+
+function renderHeader(d) {
+  const { header, meta, verdict } = d;
+  const m = header.metrics || {};
+  const badges = (header.badges || []).map(b => `<span class="badge badge-${b.color}">${esc(b.text)}</span>`).join('\n        ');
+  const halalBadge = header.halal
+    ? `<span class="badge badge-green">☪ ${header.halalStatus === 'disputed' ? 'Disputed' : 'Halal'}</span>`
+    : '';
+
+  const metrics = [
+    m.marketCap      && ['Market Cap', m.marketCap],
+    m.volume         && ['Volume', m.volume],
+    m.fwdPE          && ['Fwd P/E', m.fwdPE],
+    m.beta != null   && ['Beta', m.beta],
+    m.range52w       && ['52W Range', m.range52w],
+    m.shortInterest  && ['Short Interest', m.shortInterest],
+    m.divYield       && ['Div Yield', m.divYield],
+    m.analystTarget  && ['Analyst Target', m.analystTarget],
+    m.pegRatio       && ['PEG', m.pegRatio],
+    m.evEbitda       && ['EV/EBITDA', m.evEbitda],
+  ].filter(Boolean);
+
+  return `
     <header class="ticker-header">
-      <div class="ticker-symbol" style="display:none">${esc(d.ticker)}</div>
-      <div class="ticker-name" style="display:none">${esc(d.name)} — ${esc(d.exchange || 'NASDAQ')} · ${isEtf ? 'ETF' : esc(d.sector || '')}</div>
-      <div class="ticker-exchange" style="display:none">${esc(d.exchange || 'NASDAQ')} · ${isEtf ? 'ETF' : esc(d.sector || '')}</div>
+      <div class="ticker-symbol" style="display:none">${esc(header.ticker)}</div>
+      <div class="ticker-name" style="display:none">${esc(header.name)} &mdash; ${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
+      <div class="ticker-exchange" style="display:none">${esc(header.exchange)} &middot; ${esc(header.sector)}</div>
       <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
         <img src="/logo.svg" alt="" width="44" height="44" style="border-radius:10px;">
         <div>
-          <h1 style="margin:0;font-size:1.8rem;font-weight:800;">${esc(d.ticker)} <span style="font-weight:400;font-size:1rem;color:#64748b;">— ${esc(d.name)}</span></h1>
-          <div style="font-size:0.85rem;color:#64748b;">${esc(d.exchange || 'NASDAQ')} · ${isEtf ? 'ETF' : esc(d.sector || '')} · ${d.date}</div>
+          <h1 style="margin:0;font-size:1.8rem;font-weight:800;">${esc(header.ticker)} <span style="font-weight:400;font-size:1rem;color:#64748b;">&mdash; ${esc(header.name)}</span></h1>
+          <div style="font-size:0.85rem;color:#64748b;">${esc(header.exchange)} &middot; ${esc(header.sector)} &middot; ${esc(meta.dateDisplay || meta.date)}</div>
         </div>
       </div>
-
       <div style="display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
-        <span style="font-size:2.2rem;font-weight:800;">${fmtPrice(q.price)}</span>
-        <span style="font-size:1.1rem;font-weight:600;color:${(q.change_pct||0) >= 0 ? '#22c55e' : '#ef4444'};">${changeSign}${fmtPct(q.change_pct)}</span>
-        ${badge(trade.strategy, strategyColor(trade.strategy))}
-        ${badge('Score ' + trade.score, 'blue')}
-        ${badge(d.grade, gradeColor(d.grade).includes('22c55e') ? 'green' : gradeColor(d.grade).includes('3b82f6') ? 'blue' : 'amber')}
-        ${d.sharia ? badge('☪ Halal', 'green') : badge('CONV', 'gray')}
+        <span style="font-size:2.2rem;font-weight:800;">$${header.price.toFixed(2)}</span>
+        <span style="font-size:1.1rem;font-weight:600;color:${changePctColor(header.changePct)};">${changePctSign(header.changePct)}${(header.changePct || 0).toFixed(2)}%</span>
+        ${badges}
+        <span class="badge badge-blue">Score ${verdict.score}</span>
+        <span style="background:${gradeColor(meta.grade)};color:#fff;padding:0.3rem 0.7rem;border-radius:8px;font-weight:800;">${meta.grade}</span>
+        ${halalBadge}
       </div>
-
       <div class="ticker-metrics" style="display:flex;flex-wrap:wrap;gap:1rem;">
-        ${q.market_cap ? `<div class="ticker-metric"><div class="tm-value">$${fmtNum(q.market_cap)}</div><div class="tm-label">Market Cap</div></div>` : ''}
-        ${q.volume ? `<div class="ticker-metric"><div class="tm-value">${fmtNum(q.volume)}</div><div class="tm-label">Volume</div></div>` : ''}
-        ${q.pe_forward ? `<div class="ticker-metric"><div class="tm-value">${q.pe_forward.toFixed(1)}x</div><div class="tm-label">Fwd P/E</div></div>` : ''}
-        <div class="ticker-metric"><div class="tm-value">${q.beta ? q.beta.toFixed(2) : 'N/A'}</div><div class="tm-label">Beta</div></div>
-        <div class="ticker-metric"><div class="tm-value">$${q.low_52w ? q.low_52w.toFixed(0) : '?'} – $${q.high_52w ? q.high_52w.toFixed(0) : '?'}</div><div class="tm-label">52W Range</div></div>
-        ${q.short_pct ? `<div class="ticker-metric"><div class="tm-value">${q.short_pct.toFixed(1)}%</div><div class="tm-label">Short Interest</div></div>` : ''}
-        ${q.dividend_yield > 0 ? `<div class="ticker-metric"><div class="tm-value">${(q.dividend_yield * 100).toFixed(2)}%</div><div class="tm-label">Div Yield</div></div>` : ''}
+${metrics.map(([label, val]) => `        <div class="ticker-metric"><div class="tm-value">${esc(val)}</div><div class="tm-label">${esc(label)}</div></div>`).join('\n')}
       </div>
-
       <div id="article-clickable-tags" class="card-tags"></div>
     </header>
 
-    <!-- Finviz Chart -->
-    ${!isEtf ? `<div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
       <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${esc(d.ticker)}&ty=c&ta=1&p=d&s=l" alt="${esc(d.ticker)} Chart" style="width:100%;display:block;" loading="lazy">
+        <img src="https://charts2.finviz.com/chart.ashx?t=${header.ticker}&ty=c&ta=1&p=d&s=l" alt="${header.ticker} Chart" style="width:100%;display:block;" loading="lazy">
         <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;">
           <span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span>
         </div>
       </div>
-    </div>` : ''}
+    </div>`;
+}
 
-    <div class="container">
-
-      <!-- ═══ VERDICT EXPRESS ═══ -->
+function renderVerdict(d) {
+  const { verdict, meta } = d;
+  return `
       <div id="verdict" class="content-card">
         <h2><i class="fa-solid fa-gavel"></i> Verdict Express</h2>
-
         <div style="display:flex;gap:2rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;">
           <div style="text-align:center;">
             <div id="gaugeScore" class="echart-box" style="width:180px;height:180px;"></div>
           </div>
           <div style="flex:1;min-width:200px;">
             <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.75rem;">
-              <span style="background:${gradeColor(d.grade)};color:#fff;padding:0.3rem 0.8rem;border-radius:8px;font-weight:800;font-size:1.2rem;">${esc(d.grade)}</span>
-              ${badge(verdict.bias || 'Neutral', verdict.bias === 'Bullish' ? 'green' : verdict.bias === 'Bearish' ? 'red' : 'blue')}
-              ${badge((verdict.confidence || 70) + '% confidence', 'purple')}
+              <span style="background:${gradeColor(meta.grade)};color:#fff;padding:0.3rem 0.8rem;border-radius:8px;font-weight:800;font-size:1.2rem;">${meta.grade}</span>
+              <span class="badge badge-${verdict.bias === 'Bullish' ? 'green' : verdict.bias === 'Bearish' ? 'red' : 'blue'}">${verdict.bias}</span>
+              <span class="badge badge-purple">${esc(verdict.confidence || verdict.conviction)}</span>
             </div>
-            <p style="font-size:0.95rem;line-height:1.6;color:#334155;">${esc(verdict.summary || '')}</p>
+            <p style="font-size:0.95rem;line-height:1.6;color:#334155;">${esc(verdict.summary)}</p>
           </div>
         </div>
-
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;">
           <div style="background:#f0fdf4;border:1px solid #86efac;padding:1.25rem;border-radius:12px;">
             <h4 style="color:#16a34a;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-up"></i> Why Buy</h4>
             <ul style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
-              ${(verdict.pros || []).map(p => `<li style="font-size:0.9rem;line-height:1.5;">${esc(p)}</li>`).join('\n              ')}
+${(verdict.whyBuy || []).map(p => `              <li style="font-size:0.9rem;line-height:1.5;">${esc(p)}</li>`).join('\n')}
             </ul>
           </div>
           <div style="background:#fef2f2;border:1px solid #fecaca;padding:1.25rem;border-radius:12px;">
             <h4 style="color:#dc2626;margin:0 0 0.75rem;font-size:1rem;"><i class="fa-solid fa-thumbs-down"></i> Why Avoid</h4>
             <ul style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:0.5rem;">
-              ${(verdict.cons || []).map(c => `<li style="font-size:0.9rem;line-height:1.5;">${esc(c)}</li>`).join('\n              ')}
+${(verdict.whyAvoid || []).map(p => `              <li style="font-size:0.9rem;line-height:1.5;">${esc(p)}</li>`).join('\n')}
             </ul>
           </div>
         </div>
-      </div>
+      </div>`;
+}
 
-      <!-- ═══ BUSINESS OVERVIEW ═══ -->
+function renderBusiness(d) {
+  if (!d.business) return '';
+  const b = d.business;
+  let html = `
       <div id="business" class="content-card">
-        <h2><i class="fa-solid fa-building"></i> ${isEtf ? 'ETF Overview' : 'Business Overview'}</h2>
-        ${d.business_html || '<p>Business overview not available.</p>'}
-      </div>
+        <h2><i class="fa-solid fa-building"></i> Business Overview</h2>
+        ${b.overview}`;
+  if (b.segments && b.segments.length) {
+    html += `\n        <h4 style="margin-top:1rem;">Segments</h4>
+        <table class="data-table">
+          <thead><tr><th>Segment</th><th>Revenue</th><th>% Total</th><th>Description</th></tr></thead>
+          <tbody>
+${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><td>${esc(s.revenue || '')}</td><td>${esc(s.pct || '')}</td><td>${esc(s.description || '')}</td></tr>`).join('\n')}
+          </tbody>
+        </table>`;
+  }
+  html += `\n      </div>`;
+  return html;
+}
 
-      <!-- ═══ FUNDAMENTALS ═══ -->
-      ${isEtf ? renderEtfFundamentals(d) : renderStockFundamentals(d)}
+function renderNews(d) {
+  if (!d.news || !d.news.length) return '';
+  return `
+      <div id="news" class="content-card">
+        <h2><i class="fa-solid fa-newspaper"></i> Recent News</h2>
+${d.news.map(n => `        <div style="display:flex;gap:0.75rem;align-items:flex-start;margin-bottom:0.75rem;padding-bottom:0.75rem;border-bottom:1px solid #f1f5f9;">
+          <span style="font-size:0.75rem;color:#64748b;white-space:nowrap;min-width:5rem;">${esc(n.date)}</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;">${esc(n.title)} <span class="badge ${impactBadge(n.impact)}" style="font-size:0.65rem;">${n.impact}</span></div>
+${n.detail ? `            <div style="font-size:0.82rem;color:#64748b;margin-top:0.25rem;">${esc(n.detail)}</div>` : ''}
+${n.sourceUrl ? `            <a href="${esc(n.sourceUrl)}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(n.source || 'Source')}</span></a>` : ''}
+          </div>
+        </div>`).join('\n')}
+      </div>`;
+}
 
-      <!-- ═══ TECHNICAL ANALYSIS ═══ -->
+function renderFundamentals(d) {
+  const f = d.fundamentals;
+  return `
+      <div id="fondamentaux" class="content-card">
+        <h2><i class="fa-solid fa-chart-line"></i> Fundamentals</h2>
+        <table class="data-table">
+          <thead><tr><th>Metric</th><th>Value</th><th>Signal</th></tr></thead>
+          <tbody>
+${f.rows.map(r => `            <tr><td>${esc(r.metric)}</td><td><strong>${esc(r.value)}</strong></td><td>${r.signal ? `<span class="badge ${signalBadgeClass(r.signalColor)}">${esc(r.signal)}</span>` : ''}</td></tr>`).join('\n')}
+          </tbody>
+        </table>${sourceRefsHtml(f.sourceRefs)}
+      </div>`;
+}
+
+function renderEarnings(d) {
+  if (!d.earnings || !d.earnings.quarters || !d.earnings.quarters.length) return '';
+  const e = d.earnings;
+  return `
+      <div id="earnings" class="content-card">
+        <h2><i class="fa-solid fa-chart-bar"></i> Earnings History</h2>
+        <table class="data-table">
+          <thead><tr><th>Quarter</th><th>EPS Actual</th><th>EPS Est.</th><th>Surprise</th><th>Revenue</th></tr></thead>
+          <tbody>
+${e.quarters.map(q => {
+    const beat = q.epsActual > q.epsEstimate;
+    return `            <tr><td>${esc(q.quarter)}</td><td><strong>$${q.epsActual.toFixed(2)}</strong></td><td>$${q.epsEstimate.toFixed(2)}</td><td><span class="badge badge-${beat ? 'green' : q.epsActual === q.epsEstimate ? 'blue' : 'red'}">${esc(q.surprise || (beat ? 'Beat' : q.epsActual === q.epsEstimate ? 'Inline' : 'Miss'))}</span></td><td>${esc(q.revActual || '-')}</td></tr>`;
+  }).join('\n')}
+          </tbody>
+        </table>
+${e.beatNote ? `        <div class="pedagogy-box" style="margin-top:1rem;"><p><strong>${esc(e.beatNote)}</strong>${e.nextEarnings ? ` &mdash; Next: ${esc(e.nextEarnings)}` : ''}</p></div>` : ''}
+      </div>`;
+}
+
+function renderInsiders(d) {
+  if (!d.insiders) return '';
+  const ins = d.insiders;
+  let html = `
+      <div id="insiders" class="content-card">
+        <h2><i class="fa-solid fa-user-tie"></i> Insiders &amp; Institutions</h2>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="ticker-metric"><div class="tm-value">${esc(ins.insiderPct || 'N/A')}</div><div class="tm-label">Insider Own.</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(ins.institutionPct || 'N/A')}</div><div class="tm-label">Institution Own.</div></div>
+        </div>`;
+  if (ins.topHolders && ins.topHolders.length) {
+    html += `\n        <table class="data-table"><thead><tr><th>Holder</th><th>%</th><th>Role</th></tr></thead><tbody>
+${ins.topHolders.map(h => `            <tr><td>${esc(h.name)}</td><td>${esc(h.pct)}</td><td>${esc(h.role || '')}</td></tr>`).join('\n')}
+          </tbody></table>`;
+  }
+  if (ins.recentTransactions && ins.recentTransactions.length) {
+    html += `\n        <h4 style="margin-top:1rem;">Recent Transactions</h4>
+        <table class="data-table"><thead><tr><th>Date</th><th>Insider</th><th>Type</th><th>Shares</th><th>Value</th></tr></thead><tbody>
+${ins.recentTransactions.map(t => `            <tr><td>${esc(t.date)}</td><td>${esc(t.insider)}</td><td><span class="badge badge-${t.type === 'buy' ? 'green' : 'red'}">${t.type}</span></td><td>${esc(t.shares)}</td><td>${esc(t.value)}</td></tr>`).join('\n')}
+          </tbody></table>`;
+  }
+  if (ins.signal) html += `\n        <div class="pedagogy-box"><p>${esc(ins.signal)}</p></div>`;
+  html += sourceRefsHtml(ins.sourceRefs);
+  html += `\n      </div>`;
+  return html;
+}
+
+function renderCapitalStructure(d) {
+  if (!d.capitalStructure) return '';
+  const cs = d.capitalStructure;
+  let html = `
+      <div id="capital" class="content-card">
+        <h2><i class="fa-solid fa-money-bill-trend-up"></i> Capital Structure &amp; Dilution</h2>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="ticker-metric"><div class="tm-value">${esc(cs.sharesOutstanding || 'N/A')}</div><div class="tm-label">Shares Out.</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(cs.sharesAuthorized || 'N/A')}</div><div class="tm-label">Authorized</div></div>
+          <div class="ticker-metric"><div class="tm-value"><span class="badge badge-${cs.dilutionRisk === 'low' ? 'green' : cs.dilutionRisk === 'moderate' ? 'blue' : 'red'}">${esc(cs.dilutionRisk || 'N/A')}</span></div><div class="tm-label">Dilution Risk</div></div>
+        </div>`;
+  if (cs.warrants && cs.warrants.length) {
+    html += `\n        <h4>Warrants</h4>
+        <table class="data-table"><thead><tr><th>Series</th><th>Type</th><th>Strike</th><th>Shares</th><th>Exp.</th><th>Dilution</th><th>Status</th></tr></thead><tbody>
+${cs.warrants.map(w => `            <tr><td>${esc(w.series)}</td><td>${esc(w.type)}</td><td>$${w.strike}</td><td>${esc(w.shares)}</td><td>${esc(w.expiration)}</td><td>${esc(w.dilutionPct)}</td><td><span class="badge badge-${w.status === 'OTM' ? 'green' : w.status === 'ITM' ? 'red' : 'blue'}">${w.status}</span></td></tr>`).join('\n')}
+          </tbody></table>`;
+  }
+  if (cs.atm && cs.atm.active) {
+    html += `\n        <div class="alert-box" style="margin-top:1rem;"><h4 style="margin:0;"><i class="fa-solid fa-triangle-exclamation"></i> Active ATM Program</h4><p>Authorized: ${esc(cs.atm.authorized)} | Used: ${esc(cs.atm.used)} | Remaining: ${esc(cs.atm.remaining)}</p></div>`;
+  }
+  if (cs.shareHistory) html += `\n        <div class="pedagogy-box"><p>${esc(cs.shareHistory)}</p></div>`;
+  html += sourceRefsHtml(cs.sourceRefs);
+  html += `\n      </div>`;
+  return html;
+}
+
+function renderShortInterest(d) {
+  if (!d.shortInterest) return '';
+  const si = d.shortInterest;
+  return `
+      <div id="short" class="content-card">
+        <h2><i class="fa-solid fa-arrow-down-up-across-line"></i> Short Interest</h2>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="ticker-metric"><div class="tm-value">${esc(si.siPct || 'N/A')}</div><div class="tm-label">SI % Float</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(si.daysToCover || 'N/A')}</div><div class="tm-label">Days to Cover</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(si.ctb || 'N/A')}</div><div class="tm-label">CTB</div></div>
+        </div>
+${si.trend ? `        <p style="font-size:0.9rem;color:#64748b;">${esc(si.trend)}</p>` : ''}${sourceRefsHtml(si.sourceRefs)}
+      </div>`;
+}
+
+function renderOptions(d) {
+  if (!d.options) return '';
+  const o = d.options;
+  return `
+      <div id="options" class="content-card">
+        <h2><i class="fa-solid fa-chart-gantt"></i> Options / Derivatives</h2>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <div class="ticker-metric"><div class="tm-value">${esc(o.callOI || 'N/A')}</div><div class="tm-label">Call OI</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.putOI || 'N/A')}</div><div class="tm-label">Put OI</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.cpRatio || 'N/A')}</div><div class="tm-label">C/P Ratio</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.maxPain || 'N/A')}</div><div class="tm-label">Max Pain</div></div>
+          <div class="ticker-metric"><div class="tm-value">${esc(o.ivMean || 'N/A')}</div><div class="tm-label">IV Mean</div></div>
+        </div>
+${o.unusual ? `        <div class="alert-box"><p><strong>Unusual Activity:</strong> ${esc(o.unusual)}</p></div>` : ''}${sourceRefsHtml(o.sourceRefs)}
+      </div>`;
+}
+
+function renderTechnicals(d) {
+  const t = d.technicals;
+  const rv = t.radarValues || {};
+  return `
       <div id="technique" class="content-card">
         <h2><i class="fa-solid fa-chart-area"></i> Technical Analysis</h2>
-
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;margin-bottom:1.5rem;">
+          <div><div id="radarTech${d.header.ticker.replace(/[^a-zA-Z0-9]/g,'')}" class="echart-box" style="height:320px;"></div></div>
           <div>
-            <div id="radarTech${chartId}" class="echart-box" style="height:320px;"></div>
-          </div>
-          <div>
-            <table class="data-table">
-              <tbody>
-                <tr><td><strong>RSI (14)</strong></td><td style="color:${tech.rsi > 70 ? '#ef4444' : tech.rsi < 30 ? '#22c55e' : '#334155'};font-weight:600;">${tech.rsi ? tech.rsi.toFixed(1) : 'N/A'}</td></tr>
-                <tr><td><strong>EMA 20</strong></td><td>${fmtPrice(tech.ema20)}</td></tr>
-                <tr><td><strong>EMA 50</strong></td><td>${fmtPrice(tech.ema50)}</td></tr>
-                <tr><td><strong>EMA 200</strong></td><td>${fmtPrice(tech.ema200)}</td></tr>
-                <tr><td><strong>MACD</strong></td><td style="color:${(tech.macd||0) > (tech.signal||0) ? '#22c55e' : '#ef4444'};font-weight:600;">${tech.macd ? tech.macd.toFixed(3) : 'N/A'}</td></tr>
-                <tr><td><strong>Signal</strong></td><td>${tech.signal ? tech.signal.toFixed(3) : 'N/A'}</td></tr>
-                <tr><td><strong>ATR (14)</strong></td><td>${fmtPrice(tech.atr)}</td></tr>
-              </tbody>
-            </table>
+            <table class="data-table"><tbody>
+              <tr><td><strong>RSI (14)</strong></td><td style="color:${t.rsi14 > 70 ? '#ef4444' : t.rsi14 < 30 ? '#22c55e' : '#334155'};font-weight:600;">${t.rsi14.toFixed(1)}</td></tr>
+              <tr><td><strong>EMA 20</strong></td><td>$${t.ema20.toFixed(2)}</td></tr>
+              <tr><td><strong>EMA 50</strong></td><td>$${t.ema50.toFixed(2)}</td></tr>
+              <tr><td><strong>EMA 200</strong></td><td>$${t.ema200.toFixed(2)}</td></tr>
+              <tr><td><strong>MACD</strong></td><td style="color:${(t.macd||0) >= 0 ? '#22c55e' : '#ef4444'};font-weight:600;">${(t.macd||0).toFixed(3)}</td></tr>
+${t.macdSignal != null ? `              <tr><td><strong>Signal</strong></td><td>${t.macdSignal.toFixed(3)}</td></tr>` : ''}
+              <tr><td><strong>ATR (14)</strong></td><td>$${t.atr14.toFixed(2)}</td></tr>
+${t.wyckoff ? `              <tr><td><strong>Wyckoff</strong></td><td>${esc(t.wyckoff)}</td></tr>` : ''}
+            </tbody></table>
             <div style="margin-top:1rem;">
-              ${q.price > (tech.ema200 || 0) ? badge('Above EMA200', 'green') : badge('Below EMA200', 'red')}
-              ${q.price > (tech.ema50 || 0) ? badge('Above EMA50', 'green') : badge('Below EMA50', 'red')}
-              ${(tech.macd||0) > (tech.signal||0) ? badge('MACD Bullish', 'green') : badge('MACD Bearish', 'red')}
-              ${tech.rsi > 70 ? badge('Overbought', 'red') : tech.rsi < 30 ? badge('Oversold', 'green') : badge('RSI Neutral', 'blue')}
+${(t.badges || []).map(b => `              <span class="badge badge-${b.includes('Above') || b.includes('Bullish') || b.includes('rising') ? 'green' : b.includes('Below') || b.includes('Bearish') ? 'red' : 'blue'}">${esc(b)}</span>`).join('\n')}
             </div>
           </div>
         </div>
+${t.supports && t.supports.length ? `        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;"><div><strong>Supports:</strong> ${t.supports.map(s => '$' + s.toFixed(2)).join(' / ')}</div><div><strong>Resistances:</strong> ${(t.resistances||[]).map(r => '$' + r.toFixed(2)).join(' / ')}</div></div>` : ''}
+${t.setupNote ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> Technical Setup</h4><p>${esc(t.setupNote)}</p></div>` : ''}${sourceRefsHtml(t.sourceRefs)}
+      </div>`;
+}
 
-        <div class="pedagogy-box">
-          <h4><i class="fa-solid fa-lightbulb"></i> Technical Setup</h4>
-          <p>${esc(d.technical_summary || `${d.ticker} is trading at ${fmtPrice(q.price)}, ${q.price > (tech.ema50||0) ? 'above' : 'below'} its 50-day EMA (${fmtPrice(tech.ema50)}) and ${q.price > (tech.ema200||0) ? 'above' : 'below'} its 200-day EMA (${fmtPrice(tech.ema200)}). RSI at ${(tech.rsi||0).toFixed(1)} indicates ${tech.rsi > 70 ? 'overbought conditions' : tech.rsi < 30 ? 'oversold conditions' : 'neutral momentum'}. MACD is ${(tech.macd||0) > (tech.signal||0) ? 'bullish (above signal line)' : 'bearish (below signal line)'}.`)}</p>
-        </div>
-      </div>
+function renderSectorComparison(d) {
+  if (!d.sectorComparison || !d.sectorComparison.peers || !d.sectorComparison.peers.length) return '';
+  const sc = d.sectorComparison;
+  return `
+      <div id="peers" class="content-card">
+        <h2><i class="fa-solid fa-building"></i> Sector / Peers</h2>
+        <table class="data-table"><thead><tr><th>Ticker</th><th>Name</th><th>Price</th><th>P/E</th><th>YTD</th><th>MCap</th></tr></thead><tbody>
+${sc.peers.map(p => `            <tr><td><strong>${esc(p.ticker)}</strong></td><td>${esc(p.name||'')}</td><td>${esc(p.price||'-')}</td><td>${esc(p.pe||'-')}</td><td>${esc(p.ytd||'-')}</td><td>${esc(p.marketCap||'-')}</td></tr>`).join('\n')}
+          </tbody></table>
+${sc.positioning ? `        <div class="pedagogy-box"><p>Positioning: <strong>${esc(sc.positioning)}</strong>${sc.sectorEtf ? ` vs ${esc(sc.sectorEtf)}` : ''}</p></div>` : ''}${sourceRefsHtml(sc.sourceRefs)}
+      </div>`;
+}
 
-      <!-- ═══ RISK ANALYSIS ═══ -->
+function renderMacro(d) {
+  if (!d.macro || !d.macro.indicators || !d.macro.indicators.length) return '';
+  const mc = d.macro;
+  return `
+      <div id="macro" class="content-card">
+        <h2><i class="fa-solid fa-globe"></i> Macro Context</h2>
+        <table class="data-table"><thead><tr><th>Indicator</th><th>Value</th><th>Signal</th></tr></thead><tbody>
+${mc.indicators.map(i => `            <tr><td>${esc(i.name)}</td><td><strong>${esc(i.value)}</strong></td><td>${esc(i.signal||'')}</td></tr>`).join('\n')}
+          </tbody></table>
+${mc.regime ? `        <p style="margin-top:0.75rem;"><strong>Regime:</strong> <span class="badge badge-${mc.regime === 'risk-on' ? 'green' : mc.regime === 'risk-off' ? 'red' : 'blue'}">${mc.regime}</span></p>` : ''}
+${mc.impact ? `        <div class="pedagogy-box"><p>${esc(mc.impact)}</p></div>` : ''}${sourceRefsHtml(mc.sourceRefs)}
+      </div>`;
+}
+
+function renderRisks(d) {
+  const r = d.risks;
+  const gc = riskGaugeColor(r.riskScore);
+  return `
       <div id="risques" class="content-card">
         <h2><i class="fa-solid fa-shield-halved"></i> Risk Analysis</h2>
-
         <div class="risk-summary">
-          <div class="risk-gauge" style="border-color:${severityColor(d.risk_level || 'medium')};">
-            <div class="risk-gauge-score" style="color:${severityColor(d.risk_level || 'medium')};">${d.risk_score || 5}/10</div>
-            <div class="risk-gauge-label">Risk</div>
-          </div>
-          <div class="risk-summary-detail">
-            <h3>Risk Profile: ${d.risk_level === 'low' ? 'Low' : d.risk_level === 'high' ? 'High' : d.risk_level === 'critical' ? 'Very High' : 'Moderate'}</h3>
-            <p>${esc(d.risk_summary || '')}</p>
-          </div>
+          <div class="risk-gauge" style="border-color:${gc};"><div class="risk-gauge-score" style="color:${gc};">${r.riskScore}/10</div><div class="risk-gauge-label">Risk</div></div>
+          <div class="risk-summary-detail"><h3>Risk Profile: ${esc(r.riskProfile || 'Moderate')}</h3><p>${esc(r.riskSummary || '')}</p></div>
         </div>
-
         <div class="risk-grid">
-          ${(d.risks || []).map(r => `
-          <div class="risk-card risk-card-${r.severity}">
-            <div class="risk-card-header">
-              <div class="risk-card-icon"><i class="fa-solid ${r.icon || 'fa-circle-info'}"></i></div>
-              <h4>${esc(r.title)}</h4>
-              <span class="risk-severity">${r.severity === 'critical' ? 'Critical' : r.severity === 'high' ? 'High' : r.severity === 'low' ? 'Low' : 'Medium'}</span>
+${r.riskCards.map(rc => `          <div class="risk-card ${severityClass(rc.severity)}">
+            <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${rc.icon || 'fa-triangle-exclamation'}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(rc.severity.charAt(0).toUpperCase() + rc.severity.slice(1))}</span></div>
+            <div class="risk-card-body"><ul>${(rc.points||[]).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
+              <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">Probability</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${rc.probability||50}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${rc.impact||50}%;"></div></div></div></div>
             </div>
-            <div class="risk-card-body">
-              <ul>${(r.points || []).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-              <div class="risk-meters">
-                <div class="risk-meter">
-                  <div class="risk-meter-label">Probability</div>
-                  <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${r.probability || 50}%;"></div></div>
-                </div>
-                <div class="risk-meter">
-                  <div class="risk-meter-label">Impact</div>
-                  <div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${r.impact || 50}%;"></div></div>
-                </div>
-              </div>
-            </div>
-            <div class="risk-verdict"><i class="fa-solid ${severityIcon(r.severity)}"></i> ${esc(r.verdict || '')}</div>
+            <div class="risk-verdict"><i class="fa-solid ${severityIcon(rc.severity)}"></i> ${esc(rc.verdict||'')}</div>
           </div>`).join('\n')}
         </div>
-      </div>
+${r.pedagogy ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> Risk Synthesis</h4><p>${esc(r.pedagogy)}</p></div>` : ''}${sourceRefsHtml(r.sourceRefs)}
+      </div>`;
+}
 
-      <!-- ═══ TRADE IDEA ═══ -->
+function renderSocial(d) {
+  if (!d.social || !d.social.platforms || !d.social.platforms.length) return '';
+  const soc = d.social;
+  return `
+      <div id="social" class="content-card">
+        <h2><i class="fa-solid fa-satellite-dish"></i> Social Radar</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;">
+${soc.platforms.map(p => `          <div style="padding:1rem;border:1px solid #e2e8f0;border-radius:12px;text-align:center;">
+            <i class="${esc(p.icon)}" style="font-size:1.5rem;color:#64748b;"></i>
+            <div style="font-weight:600;font-size:0.85rem;margin:0.5rem 0 0.25rem;">${esc(p.platform)}</div>
+            <div style="font-size:0.8rem;color:#64748b;">${esc(p.mentions||'-')}</div>
+            <span class="badge badge-${p.trendColor||'gray'}">${esc(p.trend||'-')}</span>
+            <div style="font-size:0.72rem;color:#94a3b8;margin-top:0.25rem;">${esc(p.detail||'')}</div>
+          </div>`).join('\n')}
+        </div>
+${soc.pumpDumpScore != null ? `        <div style="margin-top:1rem;"><h4>Pump &amp; Dump Score: ${soc.pumpDumpScore}/6</h4><span class="badge badge-${soc.pumpDumpScore <= 1 ? 'green' : soc.pumpDumpScore <= 3 ? 'purple' : 'red'}">${soc.pumpDumpScore <= 1 ? 'Clean' : soc.pumpDumpScore <= 3 ? 'Suspect' : 'Alert P&D'}</span></div>` : ''}${sourceRefsHtml(soc.sourceRefs)}
+      </div>`;
+}
+
+function renderTradeIdea(d) {
+  const t = d.tradeIdea;
+  const isInvalidated = t.status === 'invalidated' || t.status === 'stopped';
+  const op = isInvalidated ? 'opacity:0.45;' : '';
+  const statusBanner = isInvalidated
+    ? `\n        <div style="background:#dc2626;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-ban"></i> TRADE ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
+    : t.status === 'tp1-hit' || t.status === 'tp2-hit'
+    ? `\n        <div style="background:#22c55e;color:#fff;padding:0.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-weight:600;text-align:center;"><i class="fa-solid fa-check"></i> ${t.status.toUpperCase()}${t.statusNote ? ' &mdash; ' + esc(t.statusNote) : ''}</div>`
+    : '';
+
+  const cards = [
+    { label: 'Entry Zone', value: `$${t.entry.toFixed(2)}`, note: t.entryNote || '', color: '#3b82f6', bg: '#f8fafc', tc: '#0f172a' },
+    { label: 'Stop Loss',  value: `$${t.stop.toFixed(2)}`,  note: t.stopPct || '',  color: '#ef4444', bg: '#fef2f2', tc: '#ef4444' },
+    { label: 'Target 1',   value: `$${t.tp1.toFixed(2)}`,   note: t.tp1Pct || '',   color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' },
+  ];
+  if (t.tp2) cards.push({ label: 'Target 2', value: `$${t.tp2.toFixed(2)}`, note: t.tp2Pct || '', color: '#22c55e', bg: '#f0fdf4', tc: '#22c55e' });
+  cards.push({ label: 'Risk/Reward', value: t.rr, note: t.horizon || '', color: '#7c3aed', bg: '#f5f3ff', tc: '#7c3aed' });
+
+  return `
       <div id="trade" class="content-card">
-        <h2><i class="fa-solid fa-crosshairs"></i> Trade Idea</h2>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;">
-          <div style="border-left:4px solid #3b82f6;padding:1rem;background:#f8fafc;border-radius:0 8px 8px 0;">
-            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Entry Zone</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0.25rem 0;">${fmtPrice(trade.entry)}</div>
-            <div style="font-size:0.78rem;color:#64748b;">${esc(trade.strategy)} entry</div>
-          </div>
-          <div style="border-left:4px solid #ef4444;padding:1rem;background:#fef2f2;border-radius:0 8px 8px 0;">
-            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Stop Loss</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#ef4444;margin:0.25rem 0;">${fmtPrice(trade.stop)}</div>
-            <div style="font-size:0.78rem;color:#64748b;">${trade.entry && trade.stop ? (-((trade.entry - trade.stop) / trade.entry * 100)).toFixed(1) : '?'}% risk</div>
-          </div>
-          <div style="border-left:4px solid #22c55e;padding:1rem;background:#f0fdf4;border-radius:0 8px 8px 0;">
-            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Target 1</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#22c55e;margin:0.25rem 0;">${fmtPrice(trade.tp1)}</div>
-            <div style="font-size:0.78rem;color:#64748b;">+${trade.entry && trade.tp1 ? ((trade.tp1 - trade.entry) / trade.entry * 100).toFixed(1) : '?'}% upside</div>
-          </div>
-          <div style="border-left:4px solid #22c55e;padding:1rem;background:#f0fdf4;border-radius:0 8px 8px 0;">
-            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Target 2</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#22c55e;margin:0.25rem 0;">${fmtPrice(trade.tp2)}</div>
-            <div style="font-size:0.78rem;color:#64748b;">+${trade.entry && trade.tp2 ? ((trade.tp2 - trade.entry) / trade.entry * 100).toFixed(1) : '?'}% stretch</div>
-          </div>
-          <div style="border-left:4px solid #7c3aed;padding:1rem;background:#f5f3ff;border-radius:0 8px 8px 0;">
-            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">Risk/Reward</div>
-            <div style="font-size:1.5rem;font-weight:800;color:#7c3aed;margin:0.25rem 0;">${esc(trade.rr || '1:2.0')}</div>
-            <div style="font-size:0.78rem;color:#64748b;">${trade.horizon || 10}-day horizon</div>
-          </div>
+        <h2><i class="fa-solid fa-crosshairs"></i> Trade Idea</h2>${statusBanner}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem;${op}">
+${cards.map(c => `          <div style="border-left:4px solid ${c.color};padding:1rem;background:${c.bg};border-radius:0 8px 8px 0;">
+            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(c.label)}</div>
+            <div style="font-size:1.5rem;font-weight:800;color:${c.tc};margin:0.25rem 0;">${esc(c.value)}</div>
+            <div style="font-size:0.78rem;color:#64748b;">${esc(c.note)}</div>
+          </div>`).join('\n')}
         </div>
+${t.thesis ? `        <div class="pedagogy-box"${isInvalidated ? ' style="opacity:0.45;"' : ''}><h4><i class="fa-solid fa-lightbulb"></i> Thesis</h4><p>${esc(t.thesis)}</p></div>` : ''}
+${t.catalysts && t.catalysts.length ? `        <div style="margin-top:1rem;${op}"><h4 style="font-size:0.95rem;margin-bottom:0.5rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Catalysts</h4><ul style="display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem;">${t.catalysts.map(c => `<li style="font-size:0.9rem;">${esc(c)}</li>`).join('')}</ul></div>` : ''}
+${t.invalidation && t.invalidation.length ? `        <div class="alert-box" style="margin-top:1rem;${op}"><h4 style="margin:0 0 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Invalidation</h4><ul style="margin:0;padding-left:1.2rem;">${t.invalidation.map(i => `<li style="font-size:0.9rem;">${esc(i)}</li>`).join('')}</ul></div>` : ''}
+${t.forecast ? `        <div class="pedagogy-box" style="margin-top:1rem;"><h4>Price Forecast (${esc(t.forecast.horizon || '10 Days')})</h4><p>Probabilistic range 80%: <strong>[$${t.forecast.ciLow.toFixed(2)} &ndash; $${t.forecast.ciHigh.toFixed(2)}]</strong></p><p style="font-size:0.75rem;color:#64748b;">Quantitative projection only. Exclude earnings windows (&pm;3 days).</p></div>` : ''}
+      </div>`;
+}
 
-        <div class="pedagogy-box">
-          <h4><i class="fa-solid fa-lightbulb"></i> Thesis</h4>
-          <p>${esc(trade.thesis || '')}</p>
+function renderGlobalScore(d) {
+  if (!d.globalScore) return '';
+  const gs = d.globalScore;
+  return `
+      <div id="score" class="content-card">
+        <h2><i class="fa-solid fa-star"></i> Global Score</h2>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;">
+          <span style="background:${gradeColor(d.meta.grade)};color:#fff;padding:0.5rem 1.2rem;border-radius:10px;font-weight:800;font-size:1.5rem;">${d.meta.grade}</span>
+          <span class="badge badge-purple">${esc(gs.profile || '')}</span>
+          <span class="badge badge-${d.verdict.bias === 'Bullish' ? 'green' : d.verdict.bias === 'Bearish' ? 'red' : 'blue'}">${d.verdict.bias}</span>
         </div>
+${gs.keyTakeawaysPositive && gs.keyTakeawaysPositive.length ? `        <div style="background:#f0fdf4;border:1px solid #86efac;padding:1rem;border-radius:10px;margin-bottom:1rem;"><h4 style="color:#16a34a;margin:0 0 0.5rem;">Key Takeaways &mdash; Positive</h4><ul style="margin:0;padding-left:1.2rem;">${gs.keyTakeawaysPositive.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+${gs.keyTakeawaysNegative && gs.keyTakeawaysNegative.length ? `        <div style="background:#fef2f2;border:1px solid #fecaca;padding:1rem;border-radius:10px;margin-bottom:1rem;"><h4 style="color:#dc2626;margin:0 0 0.5rem;">Key Takeaways &mdash; Risks</h4><ul style="margin:0;padding-left:1.2rem;">${gs.keyTakeawaysNegative.map(p => `<li>${esc(p)}</li>`).join('')}</ul></div>` : ''}
+${gs.mindsetTip ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-brain"></i> Mindset Tip</h4><p>${esc(gs.mindsetTip)}</p></div>` : ''}
+      </div>`;
+}
 
-        ${trade.catalysts && trade.catalysts.length ? `
-        <div style="margin-top:1rem;">
-          <h4 style="font-size:0.95rem;margin-bottom:0.5rem;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Catalysts</h4>
-          <ul style="display:flex;flex-direction:column;gap:0.4rem;padding-left:1.2rem;">
-            ${trade.catalysts.map(c => `<li style="font-size:0.9rem;">${esc(c)}</li>`).join('\n            ')}
-          </ul>
-        </div>` : ''}
-
-        ${trade.invalidations && trade.invalidations.length ? `
-        <div class="alert-box" style="margin-top:1rem;">
-          <h4 style="margin:0 0 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Invalidation</h4>
-          <ul style="margin:0;padding-left:1.2rem;">
-            ${trade.invalidations.map(inv => `<li style="font-size:0.9rem;">${esc(inv)}</li>`).join('\n            ')}
-          </ul>
-        </div>` : ''}
-      </div>
-
-      <!-- ═══ DISCLAIMER ═══ -->
+function renderDisclaimer() {
+  return `
       <div id="disclaimer" class="content-card">
         <h2><i class="fa-solid fa-triangle-exclamation"></i> Disclaimer</h2>
         <div class="disclaimer-mega">
@@ -385,176 +576,185 @@ function render(d) {
           <p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p>
           <p>Data sourced from DailyTickers Gateway, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>
         </div>
-      </div>
+      </div>`;
+}
 
-    </div><!-- /container -->
-
-    <!-- ═══ FAB ═══ -->
+function renderFab(d) {
+  const items = [
+    d.verdict           && { id: 'verdict',      icon: 'fa-gavel',                    label: 'Verdict' },
+    d.business          && { id: 'business',      icon: 'fa-building',                 label: 'Business' },
+    d.news && d.news.length && { id: 'news',      icon: 'fa-newspaper',                label: 'News' },
+    d.fundamentals      && { id: 'fondamentaux',  icon: 'fa-chart-line',               label: 'Fundamentals' },
+    d.earnings && d.earnings.quarters && { id: 'earnings', icon: 'fa-chart-bar',       label: 'Earnings' },
+    d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: 'Insiders' },
+    d.capitalStructure  && { id: 'capital',       icon: 'fa-money-bill-trend-up',      label: 'Capital' },
+    d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: 'Technical' },
+    d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: 'Sector' },
+    d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: 'Risks' },
+    d.social && d.social.platforms && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
+    d.tradeIdea         && { id: 'trade',         icon: 'fa-crosshairs',               label: 'Trade' },
+    d.globalScore       && { id: 'score',         icon: 'fa-star',                     label: 'Score' },
+  ].filter(Boolean);
+  return `
     <div class="fnav" id="floatingNav">
       <div class="fnav-menu" id="fnavMenu">
-        <a href="#verdict" class="fnav-item" data-section="verdict"><i class="fas fa-gavel"></i><span>Verdict</span></a>
-        <a href="#business" class="fnav-item" data-section="business"><i class="fas fa-building"></i><span>${isEtf ? 'Overview' : 'Business'}</span></a>
-        <a href="#fondamentaux" class="fnav-item" data-section="fondamentaux"><i class="fas fa-chart-line"></i><span>Fundamentals</span></a>
-        <a href="#technique" class="fnav-item" data-section="technique"><i class="fas fa-chart-area"></i><span>Technical</span></a>
-        <a href="#risques" class="fnav-item" data-section="risques"><i class="fas fa-shield-halved"></i><span>Risks</span></a>
-        <a href="#trade" class="fnav-item" data-section="trade"><i class="fas fa-crosshairs"></i><span>Trade Idea</span></a>
+${items.map(s => `        <a href="#${s.id}" class="fnav-item" data-section="${s.id}"><i class="fas ${s.icon}"></i><span>${s.label}</span></a>`).join('\n')}
       </div>
-      <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
-        <i class="fas fa-bars" id="fnavIcon"></i>
-        <span class="fnav-btn-label" id="fnavLabel">Menu</span>
-      </button>
-    </div>
+      <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button>
+    </div>`;
+}
 
-    <!-- ═══ CHART MODAL ═══ -->
+function renderModals(d) {
+  const t = d.header.ticker;
+  const archives = d.archiveHistory || [];
+  return `
     <div id="chartModal" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,0.95);z-index:1000;align-items:center;justify-content:center;padding:1rem;" onclick="if(event.target===this)this.style.display='none'">
       <div style="max-width:1000px;width:100%;text-align:center;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${esc(d.ticker)}&ty=c&ta=1&p=d&s=l" alt="${esc(d.ticker)}" style="width:100%;border-radius:12px;margin-bottom:1rem;">
+        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;border-radius:12px;margin-bottom:1rem;">
         <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;">
-          <a href="https://finviz.com/quote.ashx?t=${esc(d.ticker)}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
-          <a href="https://www.tradingview.com/chart/?symbol=${esc(d.ticker)}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> TradingView</a>
-          <a href="https://finance.yahoo.com/quote/${esc(d.ticker)}/" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Yahoo Finance</a>
+          <a href="https://finviz.com/quote.ashx?t=${t}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Finviz</a>
+          <a href="https://www.tradingview.com/chart/?symbol=${t}" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> TradingView</a>
+          <a href="https://finance.yahoo.com/quote/${t}/" target="_blank" rel="noopener" style="color:#60a5fa;font-size:0.85rem;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Yahoo Finance</a>
         </div>
         <button onclick="document.getElementById('chartModal').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;">&times;</button>
       </div>
     </div>
+    <div id="historyModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000;align-items:center;justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+      <div style="background:white;border-radius:16px;padding:2rem;max-width:420px;width:90%;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;"><h3 style="margin:0;font-size:1.2rem;">History &mdash; ${t}</h3><button onclick="document.getElementById('historyModal').style.display='none'" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#64748b;">&times;</button></div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;">
+          <div style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #22c55e;border-radius:10px;background:#f0fdf4;"><div style="width:40px;height:40px;border-radius:8px;background:#dcfce7;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-star" style="color:#22c55e;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(d.meta.dateDisplay || d.meta.date)} <span style="background:#22c55e;color:white;font-size:0.65rem;padding:2px 6px;border-radius:4px;margin-left:6px;">CURRENT</span></div><div style="font-size:0.75rem;color:#64748b;">${t} Analysis (${d.meta.grade})</div></div></div>
+${archives.map(a => `          <a href="archive/${a.date}/" style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1rem;border:1px solid #e2e8f0;border-radius:10px;text-decoration:none;color:#0f172a;"><div style="width:40px;height:40px;border-radius:8px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="fa-solid fa-file-lines" style="color:#64748b;"></i></div><div><div style="font-weight:600;font-size:0.9rem;">${esc(a.dateDisplay || a.date)}</div><div style="font-size:0.75rem;color:#64748b;">${esc(a.note || 'Previous version')}${a.grade ? ` (${a.grade})` : ''}</div></div></a>`).join('\n')}
+        </div>
+      </div>
+    </div>`;
+}
 
+function renderFooter() {
+  return `
     <footer class="article-footer">
       &copy; 2026 DailyTickers. Data via DailyTickers Gateway. Not financial advice.
       <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
-    </footer>
+    </footer>`;
+}
 
-    <!-- ═══ ECHARTS ═══ -->
+function renderScripts(d) {
+  const t = d.header.ticker;
+  const chartId = t.replace(/[^a-zA-Z0-9]/g, '');
+  const rv = (d.technicals && d.technicals.radarValues) || {};
+  return `
     <script>
-    // Score Gauge
-    (function(){
-      var el=document.getElementById('gaugeScore');
-      if(!el)return;
-      var c=echarts.init(el);
-      c.setOption({
-        series:[{
-          type:'gauge',radius:'90%',
-          axisLine:{lineStyle:{width:12,color:[[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#3b82f6'],[1,'#22c55e']]}},
-          pointer:{itemStyle:{color:'auto'}},
-          axisTick:{distance:-12,length:6,lineStyle:{color:'#fff',width:1}},
-          splitLine:{distance:-14,length:12,lineStyle:{color:'#fff',width:2}},
-          axisLabel:{color:'auto',distance:16,fontSize:11},
-          detail:{valueAnimation:true,formatter:'{value}',color:'auto',fontSize:28,fontWeight:800,offsetCenter:[0,'70%']},
-          data:[{value:${trade.score || 75}}]
-        }]
-      });
-      window.addEventListener('resize',function(){c.resize();});
-    })();
-
-    // Technical Radar
-    (function(){
-      var el=document.getElementById('radarTech${chartId}');
-      if(!el)return;
-      var c=echarts.init(el);
-      c.setOption({
-        radar:{
-          indicator:[
-            {name:'RSI',max:100},
-            {name:'Trend',max:100},
-            {name:'Volume',max:100},
-            {name:'Momentum',max:100},
-            {name:'Volatility',max:100},
-            {name:'Support',max:100}
-          ],
-          shape:'circle',
-          splitArea:{areaStyle:{color:['rgba(59,130,246,0.02)','rgba(59,130,246,0.04)']}}
-        },
-        series:[{
-          type:'radar',
-          data:[{
-            value:[${tech.rsi ? Math.round(tech.rsi) : 50}, ${q.price > (tech.ema50||0) ? (q.price > (tech.ema200||0) ? 85 : 65) : 35}, ${q.volume ? Math.min(90, Math.round((q.volume / 10000000) * 20)) : 50}, ${(tech.macd||0) > (tech.signal||0) ? 75 : 35}, ${tech.atr && q.price ? Math.min(90, Math.round((tech.atr / q.price * 100) * 15)) : 50}, ${q.price > (tech.ema200||0) ? 80 : 30}],
-            name:'${esc(d.ticker)}',
-            areaStyle:{color:'rgba(59,130,246,0.15)'},
-            lineStyle:{color:'#3b82f6'},
-            itemStyle:{color:'#3b82f6'}
-          }]
-        }]
-      });
-      window.addEventListener('resize',function(){c.resize();});
-    })();
+    (function(){var el=document.getElementById('gaugeScore');if(!el)return;var c=echarts.init(el);c.setOption({series:[{type:'gauge',radius:'90%',axisLine:{lineStyle:{width:12,color:[[0.3,'#ef4444'],[0.5,'#f59e0b'],[0.7,'#3b82f6'],[1,'#22c55e']]}},pointer:{itemStyle:{color:'auto'}},axisTick:{distance:-12,length:6,lineStyle:{color:'#fff',width:1}},splitLine:{distance:-14,length:12,lineStyle:{color:'#fff',width:2}},axisLabel:{color:'auto',distance:16,fontSize:11},detail:{valueAnimation:true,formatter:'{value}',color:'auto',fontSize:28,fontWeight:800,offsetCenter:[0,'70%']},data:[{value:${d.verdict.score}}]}]});window.addEventListener('resize',function(){c.resize();});})();
+    (function(){var el=document.getElementById('radarTech${chartId}');if(!el)return;var c=echarts.init(el);c.setOption({radar:{indicator:[{name:'RSI',max:100},{name:'Trend',max:100},{name:'Volume',max:100},{name:'Momentum',max:100},{name:'Volatility',max:100},{name:'Support',max:100}],shape:'circle',splitArea:{areaStyle:{color:['rgba(59,130,246,0.02)','rgba(59,130,246,0.04)']}}},series:[{type:'radar',data:[{value:[${rv.rsi||50},${rv.trend||50},${rv.volume||50},${rv.momentum||50},${rv.volatility||50},${rv.support||50}],name:'${t}',areaStyle:{color:'rgba(59,130,246,0.15)'},lineStyle:{color:'#3b82f6'},itemStyle:{color:'#3b82f6'}}]}]});window.addEventListener('resize',function(){c.resize();});})();
     </script>
-
     <script>
     function openChartModal(){document.getElementById('chartModal').style.display='flex';}
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){var m=document.getElementById('chartModal');if(m)m.style.display='none';}});
-
-    // FAB
-    (function(){
-      var btn=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),open=false;
-      if(!btn||!menu)return;
-      btn.addEventListener('click',function(){open=!open;menu.classList.toggle('open',open);});
-      menu.querySelectorAll('.fnav-item').forEach(function(a){a.addEventListener('click',function(){open=false;menu.classList.remove('open');});});
-      var obs=new IntersectionObserver(function(entries){
-        entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;menu.querySelectorAll('.fnav-item').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-section')===id);});}});
-      },{threshold:0.3});
-      document.querySelectorAll('[id]').forEach(function(el){if(menu.querySelector('[data-section="'+el.id+'"]'))obs.observe(el);});
-    })();
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){['chartModal','historyModal'].forEach(function(id){var m=document.getElementById(id);if(m)m.style.display='none';});}});
+    (function(){var btn=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),open=false;if(!btn||!menu)return;btn.addEventListener('click',function(){open=!open;menu.classList.toggle('open',open);});menu.querySelectorAll('.fnav-item').forEach(function(a){a.addEventListener('click',function(){open=false;menu.classList.remove('open');});});var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;menu.querySelectorAll('.fnav-item').forEach(function(a){a.classList.toggle('active',a.getAttribute('data-section')===id);});}});},{threshold:0.3});document.querySelectorAll('[id]').forEach(function(el){if(menu.querySelector('[data-section="'+el.id+'"]'))obs.observe(el);});})();
     </script>
     <script src="/assets/core.js"></script>
     <script src="/assets/tag-renderer.js"></script>
-</body>
-</html>`;
+    <script src="/assets/echarts-responsive.js"></script>`;
 }
 
-// ─── STOCK FUNDAMENTALS ─────────────────────────────────────────────────────
+// ─── Main render pipeline ───────────────────────────────────────────────────
 
-function renderStockFundamentals(d) {
-  const fin = d.financials || {};
-  const q = d.quote || {};
-  const debtMcap = q.market_cap && fin.total_debt ? (fin.total_debt / q.market_cap * 100).toFixed(1) : 'N/A';
-
-  return `
-      <div id="fondamentaux" class="content-card">
-        <h2><i class="fa-solid fa-chart-line"></i> Fundamentals</h2>
-        <table class="data-table">
-          <thead><tr><th>Metric</th><th>Value</th><th>Signal</th></tr></thead>
-          <tbody>
-            <tr><td>Revenue (TTM)</td><td><strong>$${fmtNum(fin.revenue)}</strong></td><td>${(fin.revenue_growth||0) > 0 ? badge('+' + fmtPct(fin.revenue_growth) + ' YoY', 'green') : badge(fmtPct(fin.revenue_growth) + ' YoY', 'red')}</td></tr>
-            <tr><td>EBITDA</td><td><strong>$${fmtNum(fin.ebitda)}</strong></td><td>${(fin.ebitda||0) > 0 ? badge('Positive', 'green') : badge('Negative', 'red')}</td></tr>
-            <tr><td>Gross Margin</td><td><strong>${fmtPct(fin.gross_margin)}</strong></td><td>${(fin.gross_margin||0) > 50 ? badge('Strong', 'green') : (fin.gross_margin||0) > 30 ? badge('Decent', 'blue') : badge('Weak', 'red')}</td></tr>
-            <tr><td>Operating Margin</td><td><strong>${fmtPct(fin.op_margin)}</strong></td><td>${(fin.op_margin||0) > 15 ? badge('Strong', 'green') : (fin.op_margin||0) > 0 ? badge('Positive', 'blue') : badge('Negative', 'red')}</td></tr>
-            <tr><td>Net Margin</td><td><strong>${fmtPct(fin.profit_margin)}</strong></td><td>${(fin.profit_margin||0) > 10 ? badge('Healthy', 'green') : (fin.profit_margin||0) > 0 ? badge('Thin', 'amber') : badge('Loss', 'red')}</td></tr>
-            <tr><td>ROE</td><td><strong>${fmtPct(fin.roe)}</strong></td><td>${(fin.roe||0) > 15 ? badge('Excellent', 'green') : (fin.roe||0) > 0 ? badge('Positive', 'blue') : badge('Negative', 'red')}</td></tr>
-            <tr><td>Cash</td><td><strong>$${fmtNum(fin.total_cash)}</strong></td><td></td></tr>
-            <tr><td>Debt</td><td><strong>$${fmtNum(fin.total_debt)}</strong></td><td>${badge('Debt/MCap ' + debtMcap + '%', parseFloat(debtMcap) > 50 ? 'red' : parseFloat(debtMcap) > 30 ? 'amber' : 'green')}</td></tr>
-            <tr><td>Fwd P/E</td><td><strong>${q.pe_forward ? q.pe_forward.toFixed(1) + 'x' : 'N/A'}</strong></td><td>${q.pe_forward && q.pe_forward < 15 ? badge('Value', 'green') : q.pe_forward && q.pe_forward < 30 ? badge('Fair', 'blue') : badge('Growth', 'purple')}</td></tr>
-            <tr><td>Analyst Target</td><td><strong>${fmtPrice(fin.analyst_target)}</strong></td><td>${fin.analyst_target && q.price ? badge((fin.analyst_target > q.price ? '+' : '') + ((fin.analyst_target - q.price) / q.price * 100).toFixed(0) + '% upside', fin.analyst_target > q.price ? 'green' : 'red') : ''}</td></tr>
-          </tbody>
-        </table>
-      </div>`;
+function render(data) {
+  return [
+    renderHead(data),
+    renderBrandBar(),
+    renderStatusBanner(data),
+    renderHeader(data),
+    '\n    <div class="container">',
+    renderVerdict(data),
+    renderBusiness(data),
+    renderNews(data),
+    renderFundamentals(data),
+    renderEarnings(data),
+    renderInsiders(data),
+    renderCapitalStructure(data),
+    renderShortInterest(data),
+    renderOptions(data),
+    renderTechnicals(data),
+    renderSectorComparison(data),
+    renderMacro(data),
+    renderRisks(data),
+    renderSocial(data),
+    renderTradeIdea(data),
+    renderGlobalScore(data),
+    renderDisclaimer(),
+    '\n    </div>',
+    renderFab(data),
+    renderModals(data),
+    renderFooter(),
+    renderScripts(data),
+    '\n</body>\n</html>',
+  ].filter(Boolean).join('\n');
 }
 
-// ─── ETF FUNDAMENTALS ───────────────────────────────────────────────────────
+// ─── CLI ────────────────────────────────────────────────────────────────────
 
-function renderEtfFundamentals(d) {
-  const q = d.quote || {};
-  const holdings = d.holdings || [];
+function main() {
+  const args = process.argv.slice(2);
+  const dryRun = args.includes('--dry');
+  const reRenderAll = args.includes('--re-render');
 
-  return `
-      <div id="fondamentaux" class="content-card">
-        <h2><i class="fa-solid fa-chart-line"></i> ETF Fundamentals</h2>
-        ${holdings.length ? `
-        <h4 style="margin-bottom:0.75rem;">Top Holdings</h4>
-        <table class="data-table">
-          <thead><tr><th>#</th><th>Holding</th><th>Weight</th></tr></thead>
-          <tbody>
-            ${holdings.map((h, i) => `<tr><td>${i+1}</td><td><strong>${esc(h.name || h.ticker)}</strong></td><td>${h.weight}%</td></tr>`).join('\n            ')}
-          </tbody>
-        </table>` : ''}
-        <table class="data-table" style="margin-top:1rem;">
-          <thead><tr><th>Metric</th><th>Value</th></tr></thead>
-          <tbody>
-            <tr><td>P/E Ratio</td><td><strong>${q.pe_trailing ? q.pe_trailing.toFixed(1) + 'x' : 'N/A'}</strong></td></tr>
-            <tr><td>52-Week High</td><td><strong>${fmtPrice(q.high_52w)}</strong></td></tr>
-            <tr><td>52-Week Low</td><td><strong>${fmtPrice(q.low_52w)}</strong></td></tr>
-            <tr><td>Avg Volume</td><td><strong>${fmtNum(q.volume)}</strong></td></tr>
-            ${d.expense_ratio ? `<tr><td>Expense Ratio</td><td><strong>${d.expense_ratio}%</strong></td></tr>` : ''}
-            ${d.aum ? `<tr><td>AUM</td><td><strong>$${fmtNum(d.aum)}</strong></td></tr>` : ''}
-          </tbody>
-        </table>
-      </div>`;
+  let files;
+  if (reRenderAll) {
+    if (!fs.existsSync(DATA_DIR)) { console.error('No data dir:', DATA_DIR); process.exit(1); }
+    files = fs.readdirSync(DATA_DIR).filter(f => f.endsWith('.json')).map(f => path.join(DATA_DIR, f));
+  } else {
+    files = args.filter(a => !a.startsWith('--'));
+  }
+
+  if (!files.length) {
+    console.error('Usage: node tools/render-analysis.js <json-file> [--dry]');
+    console.error('       node tools/render-analysis.js --re-render');
+    process.exit(1);
+  }
+
+  let exitCode = 0;
+  let rendered = 0;
+
+  for (const file of files) {
+    const absFile = path.resolve(file);
+    let data;
+    try {
+      data = JSON.parse(fs.readFileSync(absFile, 'utf8'));
+    } catch (e) {
+      console.error(`[ERROR] ${file}: ${e.message}`);
+      exitCode = 1;
+      continue;
+    }
+
+    const errors = validate(data, SCHEMA);
+    if (errors.length) {
+      console.error(`[VALIDATION] ${file}:`);
+      errors.forEach(e => console.error(`  - ${e}`));
+      if (errors.some(e => e.includes('is required'))) { exitCode = 1; if (dryRun) continue; }
+    }
+
+    if (dryRun) {
+      const ticker = data.header ? data.header.ticker : '?';
+      const grade = data.meta ? data.meta.grade : '?';
+      console.log(`[OK] ${file} — valid (${ticker}, grade ${grade})`);
+      continue;
+    }
+
+    const html = render(data);
+    const ticker = data.header.ticker;
+    const outDir = path.join(ROOT, 'analyses', ticker);
+    fs.mkdirSync(outDir, { recursive: true });
+    const outPath = path.join(outDir, 'index.html');
+    fs.writeFileSync(outPath, html, 'utf8');
+    rendered++;
+
+    const sizeKb = (Buffer.byteLength(html) / 1024).toFixed(1);
+    console.log(`[RENDERED] ${ticker} -> analyses/${ticker}/index.html (${sizeKb}KB, grade ${data.meta.grade})`);
+  }
+
+  if (rendered) console.log(`\nDone: ${rendered} article(s) rendered.`);
+  process.exit(exitCode);
 }
+
+main();
