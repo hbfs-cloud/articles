@@ -286,6 +286,19 @@ window.searchDataPrebuilt = [
     "date": "23 juin 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Warsh's first FOMC rewrites the playbook: median dot jumps to 3.8%, hinting at a rate hike. Markets digest the hawkish surprise while PCE data (Thursday) and Russell Reconstitution (Friday) loom. Gold slides to $4,150, BTC drops below $63K, and US-Iran sign MOU. Week ahead: FedEx earnings, GDP revision, Michigan Sentiment.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
+    "grade": "",
+    "href": "/weekly/20260622/",
+    "date": "22 juin 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
