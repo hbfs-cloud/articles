@@ -1016,6 +1016,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EURUSD",
+    "exchange": "Forex · Major Pair",
+    "name": "EURUSD — EUR/USD: Range play, score 65/100. Entry 1.1430, target 1.1670.",
+    "title": "EURUSD — EUR/USD: Range play, score 65/100. Entry 1.1430, target 1.1670.",
+    "desc": "EUR/USD analysis: caught between hawkish ECB (2.25%) and hawkish Fed (3.50–3.75%). Mid-range consolidation with institutional year-end targets of 1.20–1.30.",
+    "tags": "forex,macro,trade-idea,technique",
+    "grade": "B+",
+    "href": "/analyses/EURUSD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "XAUUSD",
+    "exchange": "COMEX · Precious Metals",
+    "name": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
+    "title": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
+    "desc": "Gold (XAU/USD) analysis: 12% pullback from all-time highs creates a contrarian opportunity backed by structural central bank demand of 60 tonnes/month.",
+    "tags": "commodity,macro,trade-idea,technique",
+    "grade": "A",
+    "href": "/analyses/XAUUSD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MTB",
     "exchange": "NYSE · Financial Services",
     "name": "MTB — Quality regional bank, score 88/100. Entry $225.12, target $239.00, R/R 1.94.",
@@ -2259,19 +2285,6 @@ window.searchDataPrebuilt = [
     "tags": "asia,semis,technique",
     "grade": "B+",
     "href": "analyses/KOSPI",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EUR/USD",
-    "exchange": "Forex • Major Pair • Long Terme",
-    "name": "Euro / Dollar US — Analyse Long Terme",
-    "title": "Euro / Dollar US — Analyse Long Terme",
-    "desc": "Analyse complete EUR/USD : 1.1867 | Fed dovish vs ECB stable | DXY\n    < 97 | EUR vs CHF, GBP, JPY | MAD, DZD, AED | Previsions\n    institutionnelles 1.20-1.25",
-    "tags": "forex,macro",
-    "grade": "B+",
-    "href": "analyses/EURUSD",
     "date": ""
   },
   {
