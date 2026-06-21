@@ -51,7 +51,7 @@
         }},
         "metrics": {
           "type": "object",
-          "additionalProperties": false,
+          "additionalProperties": { "type": ["string", "number"] },
           "properties": {
             "marketCap":     { "type": "string", "description": "Formatted, e.g. '$5.88B'" },
             "volume":        { "type": "string", "description": "Formatted, e.g. '268.1K'" },
@@ -479,6 +479,77 @@
       }
     },
 
+    "performance": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ytd":       { "type": "string" },
+        "oneYear":   { "type": "string" },
+        "threeYear": { "type": "string" },
+        "benchmarks": { "type": "array", "items": {
+          "type": "object",
+          "required": ["name", "ytd"],
+          "properties": {
+            "name":    { "type": "string" },
+            "ticker":  { "type": "string" },
+            "ytd":     { "type": "string" },
+            "oneYear": { "type": "string" }
+          }
+        }},
+        "alpha":      { "type": "string", "description": "vs benchmark, e.g. '+3.2% alpha vs SPY'" },
+        "sourceRefs": { "$ref": "#/$defs/sourceRefs" }
+      }
+    },
+
+    "forecast": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Standalone Price Forecast section. Never mention model name or 'AI' in the article.",
+      "properties": {
+        "ciLow":             { "type": "number" },
+        "ciHigh":            { "type": "number" },
+        "horizon":           { "type": "string", "description": "e.g. '10 days'" },
+        "mape":              { "type": "string", "description": "e.g. '±3.2%'" },
+        "direction":         { "type": "string", "enum": ["bullish", "bearish", "neutral"] },
+        "directionAccuracy": { "type": "string", "description": "Only show if >60% accuracy, e.g. '68%'" },
+        "note":              { "type": "string", "description": "Didactic explanation" },
+        "sourceRefs":        { "$ref": "#/$defs/sourceRefs" }
+      }
+    },
+
+    "capitalFlow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "netFlow":           { "type": "string", "description": "e.g. '+$245M (30d)'" },
+        "institutionalFlow": { "type": "string" },
+        "retailFlow":        { "type": "string" },
+        "darkPoolPct":       { "type": "string" },
+        "signal":            { "type": "string" },
+        "sourceRefs":        { "$ref": "#/$defs/sourceRefs" }
+      }
+    },
+
+    "predictionMarkets": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "markets": { "type": "array", "items": {
+          "type": "object",
+          "required": ["question", "probability"],
+          "properties": {
+            "question":    { "type": "string" },
+            "probability": { "type": "string" },
+            "volume":      { "type": "string" },
+            "source":      { "type": "string" },
+            "sourceUrl":   { "type": "string", "format": "uri" }
+          }
+        }},
+        "interpretation": { "type": "string" },
+        "sourceRefs":     { "$ref": "#/$defs/sourceRefs" }
+      }
+    },
+
     "tradeIdea": {
       "type": "object",
       "required": ["entry", "stop", "tp1", "rr"],
@@ -515,7 +586,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "profile":    { "type": "string", "enum": ["Speculative", "Growth", "Value", "Momentum", "Contrarian", "Income"] },
+        "profile":    { "type": "string", "description": "Investment profile, e.g. 'Value + Income', 'Macro Range Play', 'Growth'" },
         "keyTakeawaysPositive": { "type": "array", "items": { "type": "string" }, "maxItems": 3 },
         "keyTakeawaysNegative": { "type": "array", "items": { "type": "string" }, "maxItems": 3 },
         "mindsetTip": { "type": "string" }

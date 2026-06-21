@@ -500,6 +500,45 @@ ${t.setupNote ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lig
       </div>`;
 }
 
+function renderPerformance(d) {
+  if (!d.performance) return '';
+  const p = d.performance;
+  let html = `
+      <div id="performance" class="content-card">
+        <h2><i class="fa-solid fa-trophy"></i> Performance &amp; Benchmarks</h2>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+          ${p.ytd ? `<div class="ticker-metric"><div class="tm-value">${esc(p.ytd)}</div><div class="tm-label">YTD</div></div>` : ''}
+          ${p.oneYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.oneYear)}</div><div class="tm-label">1Y</div></div>` : ''}
+          ${p.threeYear ? `<div class="ticker-metric"><div class="tm-value">${esc(p.threeYear)}</div><div class="tm-label">3Y</div></div>` : ''}
+          ${p.alpha ? `<div class="ticker-metric"><div class="tm-value">${esc(p.alpha)}</div><div class="tm-label">Alpha</div></div>` : ''}
+        </div>`;
+  if (p.benchmarks && p.benchmarks.length) {
+    html += `\n        <table class="data-table"><thead><tr><th>Benchmark</th><th>Ticker</th><th>YTD</th>${p.benchmarks[0].oneYear ? '<th>1Y</th>' : ''}</tr></thead><tbody>
+${p.benchmarks.map(b => `            <tr><td>${esc(b.name)}</td><td>${esc(b.ticker||'')}</td><td>${esc(b.ytd)}</td>${b.oneYear ? `<td>${esc(b.oneYear)}</td>` : ''}</tr>`).join('\n')}
+          </tbody></table>`;
+  }
+  html += sourceRefsHtml(p.sourceRefs);
+  html += `\n      </div>`;
+  return html;
+}
+
+function renderForecast(d) {
+  if (!d.forecast) return '';
+  const f = d.forecast;
+  return `
+      <div id="forecast" class="content-card">
+        <h2><i class="fa-solid fa-chart-line"></i> Price Forecast (${esc(f.horizon || '10 Days')})</h2>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;margin-bottom:1rem;">
+          <div style="font-size:0.85rem;color:#64748b;margin-bottom:0.5rem;">Probabilistic Zone (80%)</div>
+          <div style="font-size:1.8rem;font-weight:800;color:#0f172a;">$${f.ciLow.toFixed(2)} &mdash; $${f.ciHigh.toFixed(2)}</div>
+          ${f.mape ? `<div style="font-size:0.8rem;color:#64748b;margin-top:0.25rem;">Expected error: ${esc(f.mape)}</div>` : ''}
+          ${f.direction && f.directionAccuracy ? `<div style="margin-top:0.5rem;"><span class="badge badge-${f.direction === 'bullish' ? 'green' : f.direction === 'bearish' ? 'red' : 'blue'}">${f.direction}</span> <span style="font-size:0.75rem;color:#64748b;">(historical accuracy ~${esc(f.directionAccuracy)})</span></div>` : ''}
+        </div>
+        ${f.note ? `<div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> How to Read This</h4><p>${esc(f.note)}</p></div>` : ''}
+        <p style="font-size:0.72rem;color:#94a3b8;">Quantitative projection only. Exclude earnings windows (&pm;3 days).</p>${sourceRefsHtml(f.sourceRefs)}
+      </div>`;
+}
+
 function renderSectorComparison(d) {
   if (!d.sectorComparison || !d.sectorComparison.peers || !d.sectorComparison.peers.length) return '';
   const sc = d.sectorComparison;
@@ -566,6 +605,40 @@ ${soc.platforms.map(p => `          <div style="padding:1rem;border:1px solid #e
           </div>`).join('\n')}
         </div>
 ${soc.pumpDumpScore != null ? `        <div style="margin-top:1rem;"><h4>Pump &amp; Dump Score: ${soc.pumpDumpScore}/6</h4><span class="badge badge-${soc.pumpDumpScore <= 1 ? 'green' : soc.pumpDumpScore <= 3 ? 'purple' : 'red'}">${soc.pumpDumpScore <= 1 ? 'Clean' : soc.pumpDumpScore <= 3 ? 'Suspect' : 'Alert P&D'}</span></div>` : ''}${sourceRefsHtml(soc.sourceRefs)}
+      </div>`;
+}
+
+function renderCapitalFlow(d) {
+  if (!d.capitalFlow) return '';
+  const cf = d.capitalFlow;
+  return `
+      <div id="capitalflow" class="content-card">
+        <h2><i class="fa-solid fa-water"></i> Capital Flow</h2>
+        <div style="display:flex;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;">
+          ${cf.netFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.netFlow)}</div><div class="tm-label">Net Flow</div></div>` : ''}
+          ${cf.institutionalFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.institutionalFlow)}</div><div class="tm-label">Institutional</div></div>` : ''}
+          ${cf.retailFlow ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.retailFlow)}</div><div class="tm-label">Retail</div></div>` : ''}
+          ${cf.darkPoolPct ? `<div class="ticker-metric"><div class="tm-value">${esc(cf.darkPoolPct)}</div><div class="tm-label">Dark Pool %</div></div>` : ''}
+        </div>
+        ${cf.signal ? `<div class="pedagogy-box"><p>${esc(cf.signal)}</p></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
+      </div>`;
+}
+
+function renderPredictionMarkets(d) {
+  if (!d.predictionMarkets || !d.predictionMarkets.markets || !d.predictionMarkets.markets.length) return '';
+  const pm = d.predictionMarkets;
+  return `
+      <div id="predictions" class="content-card">
+        <h2><i class="fa-solid fa-chart-pie"></i> Prediction Markets</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem;">
+${pm.markets.map(m => `          <div style="padding:1rem;border:1px solid #e2e8f0;border-radius:12px;">
+            <div style="font-size:0.85rem;font-weight:600;margin-bottom:0.5rem;">${esc(m.question)}</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#6366f1;">${esc(m.probability)}</div>
+            ${m.volume ? `<div style="font-size:0.72rem;color:#94a3b8;">Vol: ${esc(m.volume)}</div>` : ''}
+            ${m.source ? `<a href="${m.sourceUrl || '#'}" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">${esc(m.source)}</span></a>` : ''}
+          </div>`).join('\n')}
+        </div>
+        ${pm.interpretation ? `<div class="pedagogy-box"><p>${esc(pm.interpretation)}</p></div>` : ''}${sourceRefsHtml(pm.sourceRefs)}
       </div>`;
 }
 
@@ -643,9 +716,13 @@ function renderFab(d) {
     d.insiders          && { id: 'insiders',      icon: 'fa-user-tie',                 label: 'Insiders' },
     d.capitalStructure  && { id: 'capital',       icon: 'fa-money-bill-trend-up',      label: 'Capital' },
     d.technicals        && { id: 'technique',     icon: 'fa-chart-area',               label: 'Technical' },
+    d.performance       && { id: 'performance',   icon: 'fa-trophy',                   label: 'Perf' },
+    d.forecast          && { id: 'forecast',      icon: 'fa-chart-line',               label: 'Forecast' },
     d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: 'Sector' },
     d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: 'Risks' },
     d.social && d.social.platforms && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
+    d.capitalFlow       && { id: 'capitalflow',   icon: 'fa-water',                    label: 'Flow' },
+    d.predictionMarkets && d.predictionMarkets.markets && { id: 'predictions', icon: 'fa-chart-pie', label: 'Predict' },
     d.tradeIdea         && { id: 'trade',         icon: 'fa-crosshairs',               label: 'Trade' },
     d.globalScore       && { id: 'score',         icon: 'fa-star',                     label: 'Score' },
   ].filter(Boolean);
@@ -730,10 +807,14 @@ function render(data) {
     renderShortInterest(data),
     renderOptions(data),
     renderTechnicals(data),
+    renderPerformance(data),
+    renderForecast(data),
     renderSectorComparison(data),
     renderMacro(data),
     renderRisks(data),
     renderSocial(data),
+    renderCapitalFlow(data),
+    renderPredictionMarkets(data),
     renderTradeIdea(data),
     renderGlobalScore(data),
     renderDisclaimer(),
