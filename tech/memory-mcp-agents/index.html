@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech,architecture" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory MCP : Donner une Mémoire Long-Terme aux Agents IA | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique sur Memory MCP : mémoire persistante partagée entre agents IA. Protocole de session, types de mémoire, coordination multi-agents, workflows, et intégration dans un projet finance. Cas réel DailyTickers.">
+    <meta property="og:title" content="Memory MCP : Donner une Mémoire Long-Terme aux Agents IA">
+    <meta property="og:description"
+        content="Comment donner une mémoire persistante aux agents IA pour éliminer la redécouverte, assurer la cohérence, et coordonner le travail multi-agents.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/memory-mcp-agents/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent color: Purple #8b5cf6 — memory / intelligence */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #f5f3ff 0%, #ede9fe 100%);
+            text-align: center;
+            border-bottom: 1px solid #ddd6fe;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #8b5cf6;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(139, 92, 246, 0.1);
+            color: #8b5cf6;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #8b5cf6;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        .pedagogy-box {
+            background: #f5f3ff;
+            border: 1px solid #c4b5fd;
+            border-left: 4px solid #8b5cf6;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #6d28d9;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #4c1d95;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k { color: #c4b5fd; }
+        pre.code-block .s { color: #86efac; }
+        pre.code-block .c { color: #64748b; font-style: italic; }
+        pre.code-block .n { color: #fcd34d; }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #f5f3ff;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #6d28d9;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #ddd6fe;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #6d28d9;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.orchestrator {
+            border-color: #8b5cf6;
+            background: #f5f3ff;
+        }
+
+        .flow-node.verify {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .flow-node.verify b { color: #b45309; }
+
+        .flow-node.success {
+            border-color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        .flow-node.success b { color: #15803d; }
+
+        .flow-node.danger {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .flow-node.danger b { color: #dc2626; }
+
+        .flow-arrow {
+            text-align: center;
+            color: #a78bfa;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        .source-ref {
+            font-size: 0.78rem;
+            color: #94a3b8;
+            margin-top: -0.5rem;
+        }
+
+        .source-ref a {
+            color: #8b5cf6;
+            text-decoration: none;
+        }
+
+        .source-ref a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .content-card { padding: 1.5rem; }
+            .hero-section { padding: 3rem 1rem 6rem; }
+            .metric-grid { grid-template-columns: 1fr !important; gap: 0.75rem !important; }
+            .metric-card { padding: 1.25rem !important; }
+            .flow-row { flex-direction: column; }
+            pre.code-block { font-size: 0.74rem; padding: 1.1rem 1.25rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — IA &amp; MÉMOIRE</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Memory MCP : Donner une Mémoire Long-Terme aux Agents IA
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Chaque session d'un agent IA commence de zéro. Memory MCP change ça : une mémoire persistante,
+            partagée entre agents, qui élimine la redécouverte, assure la cohérence, et coordonne le travail
+            d'équipe. Protocole, architecture, types de mémoire, et cas réel DailyTickers.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-brain"></i> Mémoire long-terme</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 20 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-users-gear"></i> Multi-agents</div>
+            <div class="hero-badge"><i class="fa-solid fa-link"></i> MCP Standard</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- ═══════════════════ 1. INTRO ═══════════════════ -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-eraser" style="color:#8b5cf6;"></i> Le Problème de l'Amnésie des Agents IA</h2>
+
+            <p>Imaginez un collaborateur brillant — rapide, polyvalent, capable de lire 100 fichiers en
+                quelques secondes. Mais chaque matin, il arrive au bureau sans aucun souvenir de la veille.
+                Il relit les mêmes documents, redécouvre les mêmes bugs, pose les mêmes questions. C'est
+                exactement ce que fait un agent IA sans mémoire persistante.</p>
+
+            <p>Chaque session de Claude Code commence tabula rasa. L'agent lit le <code>CLAUDE.md</code>,
+                parcourt le dépôt, comprend le projet... puis la session se termine. Session suivante ?
+                <strong>Amnésie totale.</strong> Les mêmes erreurs sont redécouvertes, les mêmes décisions
+                sont re-prises, les mêmes leçons sont ré-apprises.</p>
+
+            <h3>Le coût réel de l'amnésie</h3>
+
+            <p>Sur le projet DailyTickers, une équipe de 5 agents travaille en parallèle : un pour le
+                scanner nocturne, un pour le briefing quotidien, un pour l'hebdomadaire, un pour les analyses,
+                et un pour la maintenance technique. Sans mémoire partagée, chacun redécouvrait
+                indépendamment les mêmes pièges :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Leçon redécouverte</th>
+                            <th>Nb de redécouvertes</th>
+                            <th>Temps perdu/fois</th>
+                            <th>Total gaspillé</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>MCP Hard Stop (ne jamais inventer de données quand le MCP est down)</td>
+                            <td>5 agents × 3 sessions</td>
+                            <td>~15 min</td>
+                            <td>~3h45</td>
+                        </tr>
+                        <tr>
+                            <td>Convention date scanner (dossier = prochaine séance, D+1 après 22h30)</td>
+                            <td>4 agents × 5 sessions</td>
+                            <td>~8 min</td>
+                            <td>~2h40</td>
+                        </tr>
+                        <tr>
+                            <td>Anti-dilution obligatoire (vérifier SEC filings avant de recommander)</td>
+                            <td>3 agents × 4 sessions</td>
+                            <td>~12 min</td>
+                            <td>~2h24</td>
+                        </tr>
+                        <tr>
+                            <td>Format date cartes (DD mois YYYY, français minuscule, jamais anglais)</td>
+                            <td>5 agents × 6 sessions</td>
+                            <td>~5 min</td>
+                            <td>~2h30</td>
+                        </tr>
+                        <tr style="font-weight:800; background:#f5f3ff;">
+                            <td>Total estimé par mois</td>
+                            <td colspan="2"></td>
+                            <td>~11h+</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>11 heures par mois perdues en redécouverte. Et ce ne sont que les 4 leçons les plus fréquentes —
+                le projet en compte plus de 50.</p>
+
+            <h3>La solution : une mémoire partagée</h3>
+
+            <p><strong>Memory MCP</strong> est un serveur MCP (Model Context Protocol) qui donne aux agents
+                IA une mémoire long-terme persistante et partagée. Chaque leçon apprise, chaque décision
+                prise, chaque règle établie est stockée une fois et accessible par tous les agents, dans
+                toutes les sessions futures.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">50+</div>
+                    <div class="metric-label">Mémoires actives dans le workspace <code>dailystocks</code> —
+                        règles, feedbacks, décisions projet, références</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Workspaces isolés : <code>global</code> (transversal),
+                        <code>dailystocks</code>, <code>hbfs</code></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">N</div>
+                    <div class="metric-label">Agents connectés simultanément — chacun voit les mêmes mémoires
+                        et reçoit les mêmes règles CRITICAL</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0</div>
+                    <div class="metric-label">Redécouvertes de bugs déjà documentés depuis l'activation
+                        de Memory MCP sur DailyTickers</div>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/introduction" target="_blank"
+                    rel="noopener">Model Context Protocol — Introduction</a></p>
+        </div>
+
+        <!-- ═══════════════════ 2. ARCHITECTURE ═══════════════════ -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fa-solid fa-diagram-project" style="color:#8b5cf6;"></i> Architecture du Système de
+                Mémoire</h2>
+
+            <p>Memory MCP s'insère dans l'écosystème MCP comme n'importe quel autre serveur d'outils.
+                La différence : au lieu de fournir des données de marché ou des capacités de calcul,
+                il fournit de la <strong>mémoire</strong> — la capacité de se souvenir et de partager
+                des connaissances entre sessions.</p>
+
+            <h3>Vue d'ensemble</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b>Agent A</b>
+                        Claude Code<br>Scanner nocturne
+                    </div>
+                    <div class="flow-node">
+                        <b>Agent B</b>
+                        Claude Code<br>Daily briefing
+                    </div>
+                    <div class="flow-node">
+                        <b>Agent C</b>
+                        Cursor / Windsurf<br>Maintenance code
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ MCP Protocol (SSE / JSON-RPC) ↓</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator" style="flex:3;">
+                        <b>Memory MCP Server</b>
+                        <code>memory.hbfs-cloud.com/mcp</code><br>
+                        Expose 40+ outils via le standard MCP :<br>
+                        <code>remember</code>, <code>get_context</code>, <code>find_similar</code>,
+                        <code>claim_topic</code>, <code>vote</code>, <code>create_task</code>...
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ Storage Layer ↓</div>
+                <div class="flow-row">
+                    <div class="flow-node success">
+                        <b>Graph Database</b>
+                        Nœuds (mémoires) + arêtes (liens)<br>
+                        Recherche sémantique par embeddings
+                    </div>
+                    <div class="flow-node">
+                        <b>Vector Store</b>
+                        Embeddings pour <code>find_similar</code><br>
+                        et <code>get_context</code>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Le graphe de mémoire</h3>
+
+            <p>Les mémoires ne sont pas de simples documents isolés — elles forment un <strong>graphe de
+                    connaissances</strong>. Chaque mémoire est un nœud, et les liens entre mémoires sont
+                des arêtes. Ce graphe permet de naviguer par contexte :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type de nœud</th>
+                            <th>Rôle</th>
+                            <th>Exemple</th>
+                            <th>Durée de vie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>rule</strong></td>
+                            <td>Contrainte immuable</td>
+                            <td>MCP Hard Stop : si le MCP bloque → stop tout</td>
+                            <td>Permanente</td>
+                        </tr>
+                        <tr>
+                            <td><strong>feedback</strong></td>
+                            <td>Correction ou validation utilisateur</td>
+                            <td>Ne jamais inventer de données financières</td>
+                            <td>Long terme</td>
+                        </tr>
+                        <tr>
+                            <td><strong>project</strong></td>
+                            <td>Décision, initiative, bug en cours</td>
+                            <td>Orbit Mode : deploying paper-ramp depuis le 3 juin</td>
+                            <td>Moyen terme</td>
+                        </tr>
+                        <tr>
+                            <td><strong>reference</strong></td>
+                            <td>Pointeur vers une ressource externe</td>
+                            <td>MCP Gateway : gateway.dailytickers.com/mcp</td>
+                            <td>Jusqu'à changement</td>
+                        </tr>
+                        <tr>
+                            <td><strong>task</strong></td>
+                            <td>Travail à effectuer</td>
+                            <td>Migrer les 5 modes vers le broker-simulator</td>
+                            <td>Jusqu'à complétion</td>
+                        </tr>
+                        <tr>
+                            <td><strong>skill</strong></td>
+                            <td>Playbook versionné</td>
+                            <td>Skill « scanner-pipeline » : 10 étapes</td>
+                            <td>Permanente</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Workspaces : isolation par projet</h3>
+
+            <p>Chaque projet a son propre workspace. Les mémoires d'un workspace sont invisibles
+                pour les autres — sauf le workspace <code>global</code> qui est partagé transversalement.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b>global</b>
+                        Règles transversales<br>
+                        (conventions Python, style de code, préférences utilisateur)
+                    </div>
+                    <div class="flow-node" style="border-color:#16a34a;">
+                        <b>dailystocks</b>
+                        50+ mémoires<br>
+                        (scanner, modes, MCP, harness, analyses)
+                    </div>
+                    <div class="flow-node" style="border-color:#0891b2;">
+                        <b>hbfs</b>
+                        Infra & services<br>
+                        (broker-simulator, forecast, MCP gateway)
+                    </div>
+                </div>
+            </div>
+
+            <p>Quand un agent appelle <code>get_context()</code>, il reçoit les mémoires pertinentes
+                de son workspace <strong>plus</strong> les règles CRITICAL du workspace <code>global</code>.
+                L'isolation empêche les fuites de contexte entre projets indépendants.</p>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi MCP et pas une base de données ?</h4>
+                <p>Une base de données nécessite du code côté client pour décider quand lire et écrire.
+                    Avec MCP, c'est l'<strong>agent lui-même</strong> qui décide — il appelle
+                    <code>remember()</code> quand il apprend quelque chose d'important, et
+                    <code>get_context()</code> quand il a besoin de contexte. Le développeur n'a rien
+                    à coder : la mémoire est une capacité native de l'agent.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/docs/concepts/architecture"
+                    target="_blank" rel="noopener">MCP — Architecture</a></p>
+        </div>
+
+        <!-- ═══════════════════ 3. SESSION PROTOCOL ═══════════════════ -->
+        <div id="session-protocol" class="content-card">
+            <h2><i class="fa-solid fa-list-check" style="color:#8b5cf6;"></i> Le Protocole de Session : 3 Appels
+                Obligatoires</h2>
+
+            <p>Chaque session d'un agent connecté à Memory MCP commence par une séquence de 3 appels.
+                Cet ordre n'est pas arbitraire — chaque étape dépend de la précédente.</p>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator" style="flex:1;">
+                        <b>Étape 1 — get_context</b>
+                        Injecte les mémoires pertinentes dans le contexte de l'agent.
+                        Les règles CRITICAL sont <strong>toujours</strong> incluses.
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-row">
+                    <div class="flow-node" style="border-color:#0891b2; flex:1;">
+                        <b>Étape 2 — get_delta</b>
+                        Montre ce que les autres agents ont changé depuis la dernière session.
+                        Empêche de travailler sur des hypothèses périmées.
+                    </div>
+                </div>
+                <div class="flow-arrow">↓</div>
+                <div class="flow-row">
+                    <div class="flow-node verify" style="flex:1;">
+                        <b>Étape 3 — get_inbox</b>
+                        Traite les votes en attente, les conflits, et les messages
+                        des autres agents. Résout la coordination.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Étape 1 : get_context — « Qu'est-ce que je dois savoir ? »</h3>
+
+<pre class="code-block"><span class="c">// L'agent décrit sa tâche — Memory MCP retourne les mémoires pertinentes</span>
+<span class="k">const</span> context = <span class="k">await</span> mcp.call(<span class="s">'get_context'</span>, {
+  query: <span class="s">'scanner pipeline nocturne, risk gating, anti-dilution'</span>,
+  workspace: <span class="s">'dailystocks'</span>
+});
+
+<span class="c">// Résultat : les mémoires les plus pertinentes, triées par score sémantique</span>
+<span class="c">// Les règles CRITICAL sont TOUJOURS incluses, quel que soit le query</span>
+<span class="c">// → "MCP Hard Stop", "No Hallucination", "Scanner Date Convention", etc.</span></pre>
+
+            <p>La recherche sémantique utilise des embeddings vectoriels pour trouver les mémoires
+                les plus proches du contexte de la tâche. Un agent qui travaille sur le scanner reçoit
+                automatiquement les mémoires sur le pipeline, le risk gating, l'anti-dilution — sans
+                avoir à les demander explicitement.</p>
+
+            <h3>Étape 2 : get_delta — « Qu'est-ce qui a changé ? »</h3>
+
+<pre class="code-block"><span class="c">// Voir les changements depuis la dernière session</span>
+<span class="k">const</span> delta = <span class="k">await</span> mcp.call(<span class="s">'get_delta'</span>, {
+  workspace: <span class="s">'dailystocks'</span>,
+  since: <span class="s">'2026-06-21T18:00:00Z'</span>  <span class="c">// dernière session</span>
+});
+
+<span class="c">// Résultat : liste des mémoires créées, modifiées, ou supprimées</span>
+<span class="c">// → "project/orbit-mode: status changed to pausing"</span>
+<span class="c">// → "feedback/tiered-mcap: nouveau seuil $2B reject"</span>
+<span class="c">// → "rule/mcp-hard-stop: NOUVELLE RÈGLE CRITIQUE"</span></pre>
+
+            <p>Sans le delta, un agent pourrait travailler avec des hypothèses périmées. Par exemple,
+                si le mode Orbit est passé de <code>live</code> à <code>pausing</code> entre deux sessions,
+                un agent qui ne consulte pas le delta continuerait à générer des entrées pour ce mode.</p>
+
+            <h3>Étape 3 : get_inbox — « Est-ce qu'on me parle ? »</h3>
+
+<pre class="code-block"><span class="c">// Vérifier les messages et votes en attente</span>
+<span class="k">const</span> inbox = <span class="k">await</span> mcp.call(<span class="s">'get_inbox'</span>, {
+  workspace: <span class="s">'dailystocks'</span>,
+  agent_id: <span class="s">'scanner-agent'</span>
+});
+
+<span class="c">// Résultat possible :</span>
+<span class="c">// → vote: "Approuver le nouveau seuil mcap $2B ?" (2 pour, 1 contre, ton vote manque)</span>
+<span class="c">// → notify: "Agent daily a trouvé un conflit dans radar.json"</span>
+<span class="c">// → conflict: "Deux agents ont modifié data/analyses.json simultanément"</span></pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Que se passe-t-il si on saute une étape ?</h4>
+                <p><strong>Sans get_context</strong> : l'agent ne connaît pas les règles CRITICAL. Il pourrait
+                    inventer des données quand le MCP est down (violation du Hard Stop).
+                    <strong>Sans get_delta</strong> : l'agent travaille sur des hypothèses périmées (un mode
+                    paused traité comme live). <strong>Sans get_inbox</strong> : les votes non traités
+                    s'accumulent, les conflits ne sont pas résolus, la coordination se dégrade.</p>
+            </div>
+
+            <h3>L'ordre compte</h3>
+
+            <p>Contexte d'abord (savoir les règles), puis delta (savoir ce qui a changé), puis inbox
+                (traiter la coordination). Inverser l'ordre — par exemple, traiter un vote avant de
+                connaître le contexte — peut mener à des décisions incohérentes.</p>
+
+            <p>Ce protocole en 3 étapes prend moins de 2 secondes. Le coût est négligeable comparé
+                aux minutes (ou heures) économisées en évitant la redécouverte.</p>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/docs/concepts/transports"
+                    target="_blank" rel="noopener">MCP — Transports (SSE)</a></p>
+        </div>
+
+        <!-- ═══════════════════ 4. MEMORY TYPES ═══════════════════ -->
+        <div id="memory-types" class="content-card">
+            <h2><i class="fa-solid fa-tags" style="color:#8b5cf6;"></i> Types de Mémoire : Rules, Feedback, Project,
+                Reference</h2>
+
+            <p>Toutes les mémoires ne se valent pas. Une règle immuable sur la sécurité des données
+                n'a pas la même durée de vie qu'une note sur un bug en cours de résolution. Memory MCP
+                distingue 4 types principaux, chacun avec son propre cycle de vie.</p>
+
+            <h3>1. Rules — Les contraintes immuables</h3>
+
+            <p>Les règles sont des mémoires qui s'appliquent <strong>dans toutes les sessions</strong>,
+                quelles que soient la tâche ou l'agent. Elles sont injectées automatiquement par
+                <code>get_context()</code>, marquées comme CRITICAL.</p>
+
+<pre class="code-block"><span class="c">// Exemple réel — DailyTickers</span>
+<span class="k">await</span> mcp.call(<span class="s">'remember'</span>, {
+  workspace: <span class="s">'dailystocks'</span>,
+  type: <span class="s">'rule'</span>,
+  title: <span class="s">'MCP Hard Stop'</span>,
+  content: <span class="s">`Si le MCP DailyTickers bloque (auth expirée, timeout, erreur réseau)
+ou renvoie des données incohérentes (prix aberrants, NaN, valeurs stale > 48h) :
+1. STOP IMMÉDIAT — ne pas continuer la génération
+2. Ne JAMAIS substituer par des données inventées
+3. Signaler au user : « MCP indisponible, tâche suspendue »
+4. Reprendre uniquement quand le MCP est reconnecté`</span>,
+  tags: [<span class="s">'critical-rule'</span>, <span class="s">'mcp'</span>, <span class="s">'data-integrity'</span>]
+});</pre>
+
+            <p>Cette règle est née d'un incident réel : le 21 juin 2026, un agent fork a halluciné
+                100% des données d'une rétrospective H1 (META +32% au lieu de -15%, palmarès
+                entièrement inversé). Le MCP était down, l'agent a inventé tous les chiffres.
+                La règle a été écrite une seule fois. Depuis, aucun agent ne l'a enfreinte.</p>
+
+            <h3>2. Feedback — Les leçons apprises</h3>
+
+            <p>Les feedbacks capturent les corrections et validations de l'utilisateur. Ils incluent
+                le <strong>pourquoi</strong> (l'incident déclencheur) et le <strong>comment appliquer</strong>
+                (quand et où cette leçon s'applique).</p>
+
+<pre class="code-block"><span class="c">// Structure d'un feedback</span>
+{
+  type: <span class="s">'feedback'</span>,
+  title: <span class="s">'Ne jamais inventer de données financières'</span>,
+  content: <span class="s">`Règle : toujours vérifier via MCP avant de publier des chiffres.
+**Why:** Session du 2026-06-14 — un fork a halluciné 52W range, cash,
+et market cap pour ALT, IOVA, ALLR. Publié sans vérification.
+**How to apply:** Avant chaque publication contenant des prix, YTD,
+ou performances : QueryData + cross-check. Jamais WebSearch pour les prix.`</span>
+}</pre>
+
+            <p>Quelques feedbacks réels du projet DailyTickers :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feedback</th>
+                            <th>Origine</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Scanner date = prochaine séance (D+1 après 22h30, D+3 le vendredi)</td>
+                            <td>Confusion récurrente sur les noms de dossiers</td>
+                            <td>0 erreur de date depuis l'enregistrement</td>
+                        </tr>
+                        <tr>
+                            <td>Ne jamais ajouter de section Portfolio dans les dailys</td>
+                            <td>Agent ajoutait des positions dans le template</td>
+                            <td>Pas dans le template, plus de débordement</td>
+                        </tr>
+                        <tr>
+                            <td>Toujours inclure l'heure (HH:MM) dans les updates de progression</td>
+                            <td>Debugging sans timestamps = impossible</td>
+                            <td>Toutes les progressions sont horodatées</td>
+                        </tr>
+                        <tr>
+                            <td>Ne jamais supprimer de données sur le disque externe sans validation</td>
+                            <td>Agent a failli supprimer des vidéos de 200 GB</td>
+                            <td>Confirmation explicite requise pour toute suppression</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>3. Project — Les décisions en cours</h3>
+
+            <p>Les mémoires de type <code>project</code> capturent les décisions, initiatives et bugs
+                actifs. Elles sont plus éphémères que les rules et feedbacks — un mode en déploiement
+                finira par être live, un bug sera fixé.</p>
+
+<pre class="code-block"><span class="c">// Exemple de mémoire projet</span>
+{
+  type: <span class="s">'project'</span>,
+  title: <span class="s">'Orbit Mode — paper-ramp depuis le 3 juin'</span>,
+  content: <span class="s">`H20/3.5×ATR swing mode remplaçant Secured. Internal ID=secured, label=Orbit.
+**Why:** OOS PF=0.53 sur n=11 pour l'ancien Secured. Besoin d'un mode swing long.
+**How to apply:** Mode en status 'deploying'. Entries en paper-ramp seulement.
+Review prévue le 3 juillet 2026. Ne pas passer en live avant.`</span>
+}</pre>
+
+            <p>Le <strong>why</strong> est crucial pour les mémoires projet : sans lui, un agent futur
+                ne saurait pas pourquoi le mode est en deploying (est-ce un choix ou un problème ?).
+                Le contexte permet de prendre des décisions éclairées.</p>
+
+            <h3>4. Reference — Les pointeurs externes</h3>
+
+            <p>Les références sont des pointeurs vers des ressources en dehors du projet : URLs,
+                dashboards, canaux de communication, API endpoints.</p>
+
+<pre class="code-block"><span class="c">// Exemples de références</span>
+{ type: <span class="s">'reference'</span>, title: <span class="s">'MCP Gateway URL'</span>,
+  content: <span class="s">'gateway.dailytickers.com/mcp — pour le risk pipeline'</span> }
+
+{ type: <span class="s">'reference'</span>, title: <span class="s">'Grafana latency dashboard'</span>,
+  content: <span class="s">'grafana.internal/d/api-latency — vérifié par oncall'</span> }
+
+{ type: <span class="s">'reference'</span>, title: <span class="s">'Bugs pipeline dans Linear'</span>,
+  content: <span class="s">'Projet INGEST — tous les bugs pipeline sont trackés ici'</span> }</pre>
+
+            <h3>La règle de déduplication</h3>
+
+            <p>Avant de créer une mémoire, <strong>toujours</strong> appeler <code>find_similar()</code>.
+                Si une mémoire similaire existe déjà (cosine similarity &gt; 0.92), il faut la mettre
+                à jour plutôt que d'en créer une nouvelle.</p>
+
+<pre class="code-block"><span class="c">// Avant d'écrire</span>
+<span class="k">const</span> similar = <span class="k">await</span> mcp.call(<span class="s">'find_similar'</span>, {
+  content: <span class="s">'MCP hard stop rule when gateway is down'</span>,
+  workspace: <span class="s">'dailystocks'</span>
+});
+
+<span class="k">if</span> (similar.results[<span class="n">0</span>]?.score > <span class="n">0.92</span>) {
+  <span class="c">// Mettre à jour la mémoire existante</span>
+  <span class="k">await</span> mcp.call(<span class="s">'update_memory'</span>, { id: similar.results[<span class="n">0</span>].id, ... });
+} <span class="k">else</span> {
+  <span class="c">// Créer une nouvelle mémoire</span>
+  <span class="k">await</span> mcp.call(<span class="s">'remember'</span>, { ... });
+}</pre>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi le seuil 0.92 ?</h4>
+                <p>En dessous de 0.92, deux mémoires sont suffisamment différentes pour coexister.
+                    Au-dessus, elles sont quasi-identiques et créer un doublon polluera le contexte.
+                    Ce seuil a été calibré empiriquement sur le corpus DailyTickers — assez strict
+                    pour éviter les doublons, assez souple pour autoriser des mémoires proches mais
+                    complémentaires.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/docs/concepts/tools"
+                    target="_blank" rel="noopener">MCP — Tools specification</a></p>
+        </div>
+
+        <!-- ═══════════════════ 5. COORDINATION ═══════════════════ -->
+        <div id="coordination" class="content-card">
+            <h2><i class="fa-solid fa-people-arrows" style="color:#8b5cf6;"></i> Coordination Multi-Agents : Claims,
+                Votes et Notifications</h2>
+
+            <p>La mémoire seule ne suffit pas quand plusieurs agents travaillent en parallèle.
+                Deux agents qui éditent le même fichier simultanément produisent des conflits.
+                Deux agents qui prennent des décisions contradictoires créent de l'incohérence.
+                Memory MCP fournit des primitives de coordination pour résoudre ces problèmes.</p>
+
+            <h3>claim_topic — Verrouillage de ressource</h3>
+
+            <p>Avant de modifier un fichier ou un domaine partagé, un agent « réserve » le sujet.
+                Les autres agents voient que c'est occupé et attendent ou travaillent ailleurs.</p>
+
+<pre class="code-block"><span class="c">// Agent Scanner commence à travailler sur le scanner du jour</span>
+<span class="k">await</span> mcp.call(<span class="s">'claim_topic'</span>, {
+  topic_name: <span class="s">'scanner-20260622'</span>,
+  agent_id: <span class="s">'scanner-agent'</span>
+});
+
+<span class="c">// ... le scanner travaille (screening, enrichment, publication) ...</span>
+
+<span class="c">// Travail terminé — relâcher le topic</span>
+<span class="k">await</span> mcp.call(<span class="s">'release_topic'</span>, {
+  topic_name: <span class="s">'scanner-20260622'</span>
+});</pre>
+
+            <p>Si l'agent B essaie de <code>claim_topic</code> sur le même sujet pendant que A
+                le détient, il reçoit une erreur explicite avec l'identité de l'agent qui le détient
+                et depuis quand. Pas de course silencieuse, pas de données corrompues.</p>
+
+            <h3>vote — Décisions collectives</h3>
+
+            <p>Certaines décisions ne devraient pas être prises par un seul agent. Le mécanisme
+                de vote permet de soumettre une proposition et de collecter les avis.</p>
+
+<pre class="code-block"><span class="c">// Un agent propose un changement de configuration</span>
+<span class="k">await</span> mcp.call(<span class="s">'vote'</span>, {
+  memory_id: <span class="s">'mem_tiered_mcap_threshold'</span>,
+  verdict: <span class="s">'approve'</span>,
+  comment: <span class="s">'Le seuil $2B reject semble correct pour les sub-micro-caps'</span>
+});
+
+<span class="c">// Résultat collecté : 3 pour, 1 contre → majorité atteinte → décision appliquée</span></pre>
+
+            <h3>notify — Communication inter-agents</h3>
+
+            <p>Pour envoyer un message direct à un agent spécifique, sans que les autres ne le voient :</p>
+
+<pre class="code-block"><span class="c">// L'agent scanner prévient l'agent daily</span>
+<span class="k">await</span> mcp.call(<span class="s">'notify'</span>, {
+  agent_id: <span class="s">'daily-agent'</span>,
+  message: <span class="s">'Scanner publié avec 8 setups. MRVL en tête, score 94. radar.json mis à jour.'</span>
+});</pre>
+
+            <h3>Scénario réel : scanner + daily en parallèle</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b>23h00 — Agent Scanner</b>
+                        1. <code>claim_topic("scanner-20260622")</code><br>
+                        2. Screening → enrichment → publication<br>
+                        3. Mise à jour <code>radar.json</code><br>
+                        4. <code>notify("daily-agent", "Scanner publié")</code><br>
+                        5. <code>release_topic("scanner-20260622")</code>
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ notification ↓</div>
+                <div class="flow-row">
+                    <div class="flow-node success">
+                        <b>07h00 — Agent Daily</b>
+                        1. <code>get_context()</code> → reçoit les règles<br>
+                        2. <code>get_delta()</code> → voit le scanner publié<br>
+                        3. <code>get_inbox()</code> → lit le message du scanner<br>
+                        4. Intègre les résultats du scanner dans le briefing<br>
+                        5. Publication du daily
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> L'anti-pattern : ne pas réserver</h4>
+                <p>Sans <code>claim_topic</code>, deux agents peuvent lancer <code>add_card.js</code>
+                    simultanément sur le même JSON. Résultat : doublons dans les cartes, index
+                    corrompu, cartes qui disparaissent. Ce scénario s'est produit deux fois avant
+                    l'activation du système de claims — depuis, zéro conflit de ce type.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/docs/concepts/tools"
+                    target="_blank" rel="noopener">MCP — Tool invocation</a></p>
+        </div>
+
+        <!-- ═══════════════════ 6. WORKFLOWS & TASKS ═══════════════════ -->
+        <div id="workflows-tasks" class="content-card">
+            <h2><i class="fa-solid fa-diagram-successor" style="color:#8b5cf6;"></i> Workflows et Tâches :
+                Orchestration Persistante</h2>
+
+            <p>Les tâches et workflows de Memory MCP se distinguent des outils natifs de Claude Code
+                par une propriété essentielle : ils <strong>persistent entre les sessions</strong> et sont
+                <strong>visibles par tous les agents</strong>.</p>
+
+            <h3>Tâches persistantes</h3>
+
+            <p>Une tâche créée dans la session 1 peut être reprise et complétée dans la session 5,
+                par un agent différent. L'historique complet est conservé.</p>
+
+<pre class="code-block"><span class="c">// Session 1 — Agent A crée une tâche</span>
+<span class="k">await</span> mcp.call(<span class="s">'create_task'</span>, {
+  workspace: <span class="s">'dailystocks'</span>,
+  title: <span class="s">'Migrer les 5 modes vers le broker-simulator'</span>,
+  description: <span class="s">'Backfill dynamic, balanced, bull, turbo, secured via export-to-simulator.js'</span>,
+  assignee: <span class="s">'infra-agent'</span>
+});
+
+<span class="c">// Session 3 — Agent B reprend la tâche</span>
+<span class="k">await</span> mcp.call(<span class="s">'update_task'</span>, {
+  task_id: <span class="s">'task_migrate_modes'</span>,
+  status: <span class="s">'in_progress'</span>,
+  comment: <span class="s">'Dynamic et balanced backfillés. Bull en cours.'</span>
+});
+
+<span class="c">// Session 5 — Agent C termine</span>
+<span class="k">await</span> mcp.call(<span class="s">'update_task'</span>, {
+  task_id: <span class="s">'task_migrate_modes'</span>,
+  status: <span class="s">'completed'</span>,
+  comment: <span class="s">'5/5 modes migrés. Reconciliation 0% divergence.'</span>
+});</pre>
+
+            <h3>Claude Code Tasks vs Memory Tasks</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Propriété</th>
+                            <th>Claude Code Tasks</th>
+                            <th>Memory MCP Tasks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Persistance</td>
+                            <td>Session uniquement</td>
+                            <td><strong>Permanent</strong> (cross-session)</td>
+                        </tr>
+                        <tr>
+                            <td>Visibilité</td>
+                            <td>Agent courant uniquement</td>
+                            <td><strong>Tous les agents</strong> du workspace</td>
+                        </tr>
+                        <tr>
+                            <td>Historique</td>
+                            <td>Status actuel seulement</td>
+                            <td><strong>Historique complet</strong> avec commentaires</td>
+                        </tr>
+                        <tr>
+                            <td>Assignation</td>
+                            <td>Non</td>
+                            <td><strong>Oui</strong> — par agent_id</td>
+                        </tr>
+                        <tr>
+                            <td>Recherche</td>
+                            <td>Par ID</td>
+                            <td><strong>Sémantique</strong> + par statut/assignee</td>
+                        </tr>
+                        <tr>
+                            <td>Cas d'usage</td>
+                            <td>Suivi intra-session</td>
+                            <td>Projets multi-sessions, backlog</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Workflow DAGs</h3>
+
+            <p>Pour les processus complexes avec des dépendances entre étapes, Memory MCP supporte
+                les <strong>DAG (Directed Acyclic Graphs)</strong> :</p>
+
+<pre class="code-block"><span class="c">// Définir un pipeline comme un DAG</span>
+<span class="k">await</span> mcp.call(<span class="s">'create_workflow_dag'</span>, {
+  workspace: <span class="s">'dailystocks'</span>,
+  name: <span class="s">'nightly-pipeline'</span>,
+  nodes: [
+    { id: <span class="s">'scan'</span>, task: <span class="s">'Scanner nocturne'</span>, deps: [] },
+    { id: <span class="s">'retro'</span>, task: <span class="s">'Rétrospective'</span>, deps: [<span class="s">'scan'</span>] },
+    { id: <span class="s">'daily'</span>, task: <span class="s">'Daily briefing'</span>, deps: [<span class="s">'scan'</span>] },
+    { id: <span class="s">'radar'</span>, task: <span class="s">'Mise à jour radar'</span>, deps: [<span class="s">'scan'</span>, <span class="s">'daily'</span>] },
+    { id: <span class="s">'weekly'</span>, task: <span class="s">'Weekly review'</span>, deps: [<span class="s">'scan'</span>, <span class="s">'daily'</span>] }
+  ]
+});
+
+<span class="c">// Le workflow respecte les dépendances : radar attend scan + daily,</span>
+<span class="c">// weekly attend scan + daily. Scan est la racine de tout.</span></pre>
+
+            <h3>Skills : playbooks versionnés</h3>
+
+            <p>Les skills sont des procédures stockées dans la mémoire. Quand un agent demande
+                « comment lancer un scanner ? », Memory MCP retourne le playbook complet, versionné :</p>
+
+<pre class="code-block"><span class="c">// Récupérer un skill</span>
+<span class="k">const</span> skill = <span class="k">await</span> mcp.call(<span class="s">'render_skill'</span>, {
+  slug: <span class="s">'scanner-pipeline'</span>
+});
+
+<span class="c">// Résultat : les 10 étapes du pipeline scanner, dans l'ordre,</span>
+<span class="c">// avec les commandes exactes, les gotchas connus, et les liens</span>
+<span class="c">// vers les mémoires pertinentes.</span></pre>
+
+            <p>Les skills sont versionnés — quand le pipeline évolue, le skill est mis à jour
+                une fois et tous les agents utilisent la nouvelle version.</p>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/docs/concepts/resources"
+                    target="_blank" rel="noopener">MCP — Resources</a></p>
+        </div>
+
+        <!-- ═══════════════════ 7. GAINS ═══════════════════ -->
+        <div id="gains" class="content-card">
+            <h2><i class="fa-solid fa-chart-line" style="color:#8b5cf6;"></i> Les Gains Concrets</h2>
+
+            <p>La théorie est élégante, mais les résultats sont-ils mesurables ? Sur DailyTickers,
+                Memory MCP est actif depuis plusieurs mois. Voici ce que les données montrent.</p>
+
+            <h3>Avant / Après</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrique</th>
+                            <th>Sans Memory MCP</th>
+                            <th>Avec Memory MCP</th>
+                            <th>Gain</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Temps de re-learning par session</td>
+                            <td>10-15 min (relire les conventions, redécouvrir les gotchas)</td>
+                            <td>~2 sec (get_context + get_delta + get_inbox)</td>
+                            <td><strong>~500×</strong> plus rapide</td>
+                        </tr>
+                        <tr>
+                            <td>Cohérence inter-agents</td>
+                            <td>Variable (chaque agent a sa propre compréhension)</td>
+                            <td>100% (mêmes règles CRITICAL injectées partout)</td>
+                            <td><strong>Cohérence parfaite</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Onboarding d'un nouvel agent</td>
+                            <td>~20 min (parcourir CLAUDE.md, git log, README)</td>
+                            <td>~5 sec (get_context retourne tout le nécessaire)</td>
+                            <td><strong>~240×</strong> plus rapide</td>
+                        </tr>
+                        <tr>
+                            <td>Conflits d'édition simultanée</td>
+                            <td>2-3 par semaine (doublons JSON, fichiers écrasés)</td>
+                            <td>0 depuis activation (claim_topic empêche)</td>
+                            <td><strong>Éliminés</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Redécouverte de bugs documentés</td>
+                            <td>3-5 par semaine (MCP hard stop, scanner date, etc.)</td>
+                            <td>0 (mémoires injectées automatiquement)</td>
+                            <td><strong>Éliminées</strong></td>
+                        </tr>
+                        <tr>
+                            <td>Décisions incohérentes entre agents</td>
+                            <td>Fréquentes (un agent traite un mode paused comme live)</td>
+                            <td>0 (get_delta synchronise l'état)</td>
+                            <td><strong>Éliminées</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Gain #1 : Zéro redécouverte</h3>
+
+            <p>Le gain le plus impactant est l'élimination de la redécouverte. Un bug trouvé une fois,
+                documenté via <code>remember()</code>, n'est jamais re-trouvé. L'exemple emblématique :
+                la règle MCP Hard Stop a été écrite le 21 juin 2026 après l'incident de la rétro H1.
+                Depuis, aucun des 5+ agents n'a inventé de données quand le MCP était down. La règle
+                est injectée dans chaque session, sans exception.</p>
+
+            <h3>Gain #2 : Cohérence parfaite</h3>
+
+            <p>Sur un projet comme DailyTickers avec des dizaines de conventions (format de date,
+                structure HTML, convention de nommage des dossiers, taxonomie de tags), maintenir
+                la cohérence entre 5 agents est un cauchemar sans mémoire partagée. Avec Memory MCP,
+                les conventions sont des mémoires de type <code>feedback</code> : écrites une fois,
+                appliquées partout.</p>
+
+            <h3>Gain #3 : Onboarding instantané</h3>
+
+            <p>Quand un nouvel agent se connecte au workspace, il appelle <code>get_context()</code>
+                et reçoit immédiatement toutes les règles du projet, les décisions en cours, les
+                conventions, et les feedbacks. Pas besoin de lire 60 KB de CLAUDE.md ni de parcourir
+                l'historique git — la mémoire fournit le contexte pertinent, trié par pertinence.</p>
+
+            <h3>Gain #4 : Audit trail</h3>
+
+            <p>Chaque mémoire a un historique : date de création, dernière mise à jour, agent
+                créateur, liens vers d'autres mémoires. Quand une décision est contestée, on peut
+                remonter à la source : qui a décidé quoi, quand, et pourquoi.</p>
+
+            <div id="gainsChart" style="width:100%; height:400px; margin:2rem 0;"></div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le coût de la mémoire</h4>
+                <p>Le stockage de 50+ mémoires textuelles avec leurs embeddings vectoriels coûte
+                    quelques centimes par mois. Le protocole de session (3 appels) prend &lt;2 secondes.
+                    Le ROI est massif : quelques centimes pour économiser des heures de redécouverte.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/introduction"
+                    target="_blank" rel="noopener">Model Context Protocol — Introduction</a></p>
+        </div>
+
+        <!-- ═══════════════════ 8. CONCLUSION ═══════════════════ -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-rocket" style="color:#8b5cf6;"></i> Intégrer Memory MCP dans votre Projet</h2>
+
+            <p>Intégrer Memory MCP dans un projet existant prend quelques minutes. Le gain est
+                immédiat dès la première mémoire enregistrée.</p>
+
+            <h3>Setup en une commande</h3>
+
+<pre class="code-block"><span class="c"># Ajouter Memory MCP à votre configuration Claude Code</span>
+claude mcp add memory --transport sse --url <span class="s">https://memory.hbfs-cloud.com/mcp</span>
+
+<span class="c"># Ou en local pour le développement</span>
+claude mcp add memory-local --transport sse --url <span class="s">http://localhost:8083/mcp</span>
+
+<span class="c"># Vérifier que le serveur est connecté</span>
+claude mcp list</pre>
+
+            <p>Une fois connecté, tous les outils de Memory MCP sont disponibles dans vos sessions
+                Claude Code. L'agent peut appeler <code>remember()</code>, <code>get_context()</code>,
+                <code>claim_topic()</code>, etc. — directement, sans configuration supplémentaire.</p>
+
+            <h3>Premiers pas recommandés</h3>
+
+            <p>Ne cherchez pas à tout documenter d'un coup. Commencez par les mémoires à plus fort impact :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Étape</th>
+                            <th>Type</th>
+                            <th>Contenu</th>
+                            <th>Impact</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1. Les règles critiques</td>
+                            <td><code>rule</code></td>
+                            <td>Les 3-5 contraintes que l'agent ne doit JAMAIS violer</td>
+                            <td>Élimine les erreurs catastrophiques</td>
+                        </tr>
+                        <tr>
+                            <td>2. Les gotchas récurrents</td>
+                            <td><code>feedback</code></td>
+                            <td>Les erreurs que vous corrigez régulièrement</td>
+                            <td>Élimine la redécouverte</td>
+                        </tr>
+                        <tr>
+                            <td>3. Les décisions actives</td>
+                            <td><code>project</code></td>
+                            <td>Les initiatives en cours avec leur contexte</td>
+                            <td>Synchronise les agents</td>
+                        </tr>
+                        <tr>
+                            <td>4. Les pointeurs externes</td>
+                            <td><code>reference</code></td>
+                            <td>URLs, dashboards, API endpoints</td>
+                            <td>Accès instantané aux ressources</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Le protocole dans CLAUDE.md</h3>
+
+            <p>Ajoutez le protocole de session à votre <code>CLAUDE.md</code> pour que chaque agent
+                le suive automatiquement :</p>
+
+<pre class="code-block"><span class="c">## Memory MCP</span>
+<span class="c">URL : memory.hbfs-cloud.com/mcp</span>
+
+<span class="s">**À chaque début de session :**</span>
+<span class="n">1.</span> get_context(query=&lt;tâche&gt;, workspace=&lt;projet&gt;)
+<span class="n">2.</span> get_delta(workspace=&lt;projet&gt;, since=&lt;dernière_session&gt;)
+<span class="n">3.</span> get_inbox(workspace=&lt;projet&gt;, agent_id=&lt;id&gt;)
+
+<span class="s">**Avant d'écrire :**</span> find_similar() pour détecter les doublons.</pre>
+
+            <h3>Maintenance</h3>
+
+            <p>Les mémoires ne sont pas éternelles. Les décisions projet deviennent obsolètes,
+                les références changent. Memory MCP fournit <code>get_stale_memories()</code> pour
+                identifier les mémoires qui n'ont pas été consultées depuis longtemps et qui
+                pourraient être périmées. Nettoyez régulièrement pour garder un graphe pertinent.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-circle"></i> Les 6 principes de Memory MCP</h4>
+                <ul>
+                    <li><strong>Connecter</strong> : ajoutez le serveur MCP à votre configuration en une commande</li>
+                    <li><strong>Protocole de session</strong> : <code>get_context</code> → <code>get_delta</code> →
+                        <code>get_inbox</code> à chaque démarrage, dans cet ordre</li>
+                    <li><strong>Documenter les décisions</strong> : <code>remember()</code> chaque règle,
+                        feedback, et décision projet, avec le WHY et le HOW TO APPLY</li>
+                    <li><strong>Dédupliquer</strong> : <code>find_similar()</code> avant chaque écriture —
+                        cosine &gt; 0.92 = update, pas create</li>
+                    <li><strong>Coordonner</strong> : <code>claim_topic</code> avant d'éditer des fichiers partagés,
+                        <code>notify</code> pour communiquer entre agents</li>
+                    <li><strong>Évoluer</strong> : <code>get_stale_memories()</code> pour détecter et nettoyer
+                        les mémoires périmées</li>
+                </ul>
+            </div>
+
+            <p>La mémoire ne rend pas l'agent plus intelligent — elle le rend <strong>moins amnésique</strong>.
+                Et dans un environnement où 5 agents travaillent en parallèle sur un projet financier complexe,
+                l'amnésie est le défaut le plus coûteux qu'on puisse corriger.</p>
+
+            <h3>Articles liés</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <a href="/tech/ai-harness-finance/" class="flow-node" style="text-decoration:none;">
+                        <b>Harnesses IA en Finance</b>
+                        Contraindre les modèles à produire des résultats fiables — la couche de vérification
+                    </a>
+                    <a href="/tech/workflows-multi-agents/" class="flow-node" style="text-decoration:none;">
+                        <b>Workflows Multi-Agents</b>
+                        Orchestrer des escouades d'agents — fan-out, pipelines, war rooms
+                    </a>
+                    <a href="/tech/claude-code-trading-bot/" class="flow-node" style="text-decoration:none;">
+                        <b>Claude Code Trading Bot</b>
+                        De zéro à un système autonome qui publie 4× par jour
+                    </a>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://modelcontextprotocol.io/quickstart/server"
+                    target="_blank" rel="noopener">MCP — Server quickstart</a></p>
+        </div>
+
+    </div>
+
+    <!-- FAB Navigation -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bookmark"></i><span>L'amnésie des
+                    agents</span></a>
+            <a href="#architecture" class="fnav-item" data-section="architecture"><i
+                    class="fas fa-bookmark"></i><span>Architecture</span></a>
+            <a href="#session-protocol" class="fnav-item" data-section="session-protocol"><i
+                    class="fas fa-bookmark"></i><span>Protocole de session</span></a>
+            <a href="#memory-types" class="fnav-item" data-section="memory-types"><i
+                    class="fas fa-bookmark"></i><span>Types de mémoire</span></a>
+            <a href="#coordination" class="fnav-item" data-section="coordination"><i
+                    class="fas fa-bookmark"></i><span>Coordination</span></a>
+            <a href="#workflows-tasks" class="fnav-item" data-section="workflows-tasks"><i
+                    class="fas fa-bookmark"></i><span>Workflows & tâches</span></a>
+            <a href="#gains" class="fnav-item" data-section="gains"><i class="fas fa-bookmark"></i><span>Gains
+                    concrets</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i
+                    class="fas fa-bookmark"></i><span>Intégration</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+
+    <script>
+        (function () {
+            var el = document.getElementById('gainsChart');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' }
+                },
+                legend: {
+                    data: ['Sans Memory MCP', 'Avec Memory MCP'],
+                    top: 0
+                },
+                grid: { left: 60, right: 24, bottom: 60, top: 44 },
+                xAxis: {
+                    type: 'category',
+                    data: [
+                        'Re-learning\n(min/session)',
+                        'Conflits\n(/semaine)',
+                        'Redécouvertes\n(/semaine)',
+                        'Onboarding\n(min)',
+                        'Incohérences\n(/semaine)'
+                    ],
+                    axisLabel: {
+                        color: '#475569',
+                        fontSize: 11,
+                        interval: 0,
+                        rotate: 0
+                    }
+                },
+                yAxis: {
+                    type: 'value',
+                    name: 'Occurrences / Minutes',
+                    axisLabel: { color: '#475569' }
+                },
+                series: [
+                    {
+                        name: 'Sans Memory MCP',
+                        type: 'bar',
+                        data: [
+                            { value: 12, itemStyle: { color: '#ef4444' } },
+                            { value: 3, itemStyle: { color: '#ef4444' } },
+                            { value: 4, itemStyle: { color: '#ef4444' } },
+                            { value: 20, itemStyle: { color: '#ef4444' } },
+                            { value: 3, itemStyle: { color: '#ef4444' } }
+                        ],
+                        label: { show: true, position: 'top', fontWeight: 700, color: '#ef4444' }
+                    },
+                    {
+                        name: 'Avec Memory MCP',
+                        type: 'bar',
+                        data: [
+                            { value: 0.03, itemStyle: { color: '#8b5cf6' } },
+                            { value: 0, itemStyle: { color: '#8b5cf6' } },
+                            { value: 0, itemStyle: { color: '#8b5cf6' } },
+                            { value: 0.08, itemStyle: { color: '#8b5cf6' } },
+                            { value: 0, itemStyle: { color: '#8b5cf6' } }
+                        ],
+                        label: {
+                            show: true, position: 'top', fontWeight: 700, color: '#8b5cf6',
+                            formatter: function (p) { return p.value === 0 ? '0' : p.value < 1 ? '<1' : p.value; }
+                        }
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+</body>
+
+</html>

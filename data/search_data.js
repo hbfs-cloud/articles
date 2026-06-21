@@ -5642,6 +5642,32 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Broker Simulator : Valider vos Trades en Miroir avant le Passage Live",
+    "desc": "Guide technique sur le broker simulator DailyTickers : parallel-run, réconciliation automatique, cutover progressif, hard fallback. Architecture complète pour valider un système de trading avant de lui faire confiance.",
+    "tags": "formation,tech,trading,architecture",
+    "grade": "",
+    "href": "/tech/broker-simulator/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Memory MCP : Donner une Mémoire Long-Terme aux Agents IA",
+    "desc": "Guide technique sur Memory MCP : mémoire persistante partagée entre agents IA. Protocole de session, types de mémoire, coordination multi-agents, workflows, et intégration dans un projet finance. Cas réel DailyTickers.",
+    "tags": "formation,ai,tech,architecture",
+    "grade": "",
+    "href": "/tech/memory-mcp-agents/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",

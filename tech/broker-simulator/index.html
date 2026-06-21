@@ -1,0 +1,1551 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,tech,trading,architecture" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broker Simulator : Valider vos Trades en Miroir avant le Passage Live | DailyTickers</title>
+    <meta name="description"
+        content="Guide technique sur le broker simulator DailyTickers : parallel-run, réconciliation automatique, cutover progressif, hard fallback. Architecture complète pour valider un système de trading avant de lui faire confiance.">
+    <meta property="og:title" content="Broker Simulator : Valider vos Trades en Miroir avant le Passage Live">
+    <meta property="og:description"
+        content="Comment un système indépendant qui exécute les mêmes trades en miroir permet de valider la fiabilité de votre tracking de positions — et de migrer sans risque.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/broker-simulator/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        /* Accent color: Emerald Green #059669 — validation/trust theme */
+        .hero-section {
+            padding: 5rem 2rem 8rem 2rem;
+            background: linear-gradient(180deg, #ecfdf5 0%, #d1fae5 100%);
+            text-align: center;
+            border-bottom: 1px solid #a7f3d0;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(5, 150, 105, 0.1);
+            color: #059669;
+            border: 1px solid rgba(5, 150, 105, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #0f172a;
+            margin: 1.5rem 0 1.5rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 0.75rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 1rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin-bottom: 1.25rem;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            text-transform: none;
+            letter-spacing: normal;
+            line-height: 1.5;
+            color: #475569;
+            text-align: left;
+        }
+
+        .metric-card {
+            padding: 1.5rem;
+            text-align: left;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #059669;
+        }
+
+        .metric-grid {
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+
+        /* Pédagogie + alertes — accent émeraude */
+        .pedagogy-box {
+            background: #ecfdf5;
+            border: 1px solid #6ee7b7;
+            border-left: 4px solid #059669;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .pedagogy-box h4 {
+            color: #047857;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pedagogy-box p {
+            font-size: 0.95rem;
+            color: #065f46;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .alert-box {
+            background: #fffbeb;
+            border: 1px solid #fcd34d;
+            border-left: 4px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.75rem 0;
+        }
+
+        .alert-box h4 {
+            color: #b45309;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alert-box p {
+            font-size: 0.95rem;
+            color: #92400e;
+            margin: 0;
+            line-height: 1.65;
+        }
+
+        .takeaway-box {
+            background: #ecfdf5;
+            border: 1px solid #86efac;
+            border-left: 4px solid #16a34a;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .takeaway-box h4 {
+            color: #15803d;
+            margin: 0 0 0.6rem;
+            font-size: 1rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .takeaway-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .takeaway-box li {
+            font-size: 0.95rem;
+            color: #166534;
+            line-height: 1.65;
+            margin: 0.4rem 0;
+        }
+
+        /* Blocs de code — fond sombre type terminal */
+        pre.code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem 1.75rem;
+            font-family: 'SFMono-Regular', 'Consolas', 'Menlo', monospace;
+            font-size: 0.82rem;
+            line-height: 1.6;
+            overflow: auto;
+            margin: 1.5rem 0;
+        }
+
+        pre.code-block .k {
+            color: #6ee7b7;
+        }
+
+        pre.code-block .s {
+            color: #86efac;
+        }
+
+        pre.code-block .c {
+            color: #64748b;
+            font-style: italic;
+        }
+
+        pre.code-block .n {
+            color: #fcd34d;
+        }
+
+        .data-table table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .data-table th {
+            background: #ecfdf5;
+            text-align: left;
+            padding: 0.7rem 0.9rem;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: #047857;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .data-table td {
+            padding: 0.7rem 0.9rem;
+            border-top: 1px solid #f1f5f9;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        /* Flow diagrams */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin: 1.75rem 0;
+        }
+
+        .flow-row {
+            display: flex;
+            align-items: stretch;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .flow-node {
+            flex: 1;
+            min-width: 150px;
+            background: #fff;
+            border: 1.5px solid #a7f3d0;
+            border-radius: 12px;
+            padding: 0.9rem 1rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: #1e293b;
+        }
+
+        .flow-node b {
+            display: block;
+            color: #047857;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+
+        .flow-node.orchestrator {
+            border-color: #059669;
+            background: #ecfdf5;
+        }
+
+        .flow-node.verify {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .flow-node.verify b {
+            color: #b45309;
+        }
+
+        .flow-node.fallback {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .flow-node.fallback b {
+            color: #dc2626;
+        }
+
+        .flow-arrow {
+            text-align: center;
+            color: #34d399;
+            font-size: 1.1rem;
+            margin: -0.25rem 0;
+        }
+
+        /* Step cards */
+        .step-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1.75rem 0;
+        }
+
+        .step-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-top: 3px solid #059669;
+        }
+
+        .step-card .step-num {
+            display: inline-flex;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #059669;
+            color: white;
+            font-weight: 800;
+            font-size: 0.8rem;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-card h4 {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0.25rem 0 0.4rem;
+        }
+
+        .step-card p {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .step-card code {
+            font-size: 0.75rem;
+            background: #f1f5f9;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .source-ref {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin: 0.5rem 0 1.5rem;
+        }
+
+        .source-ref a {
+            color: #64748b;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .hero-section {
+                padding: 3rem 1rem 6rem;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.75rem !important;
+            }
+
+            .metric-card {
+                padding: 1.25rem !important;
+            }
+
+            pre.code-block {
+                font-size: 0.74rem;
+                padding: 1.1rem 1.25rem;
+            }
+
+            .step-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — TRADING &amp; INFRASTRUCTURE</div>
+        <h1
+            style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
+            Broker Simulator : Valider vos Trades en Miroir avant le Passage Live
+        </h1>
+        <p
+            style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Comment un système indépendant qui exécute les mêmes trades en parallèle permet de valider
+            la fiabilité de votre tracking de positions — et de migrer la source de vérité sans risque,
+            sans big-bang, et sans downtime.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> Parallel-Run</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 20 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-code-compare"></i> Réconciliation</div>
+            <div class="hero-badge"><i class="fa-solid fa-arrows-rotate"></i> Cutover Automatique</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 1 — INTRO -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="intro" class="content-card">
+            <h2><i class="fa-solid fa-circle-question" style="color:#059669;"></i> Pourquoi Simuler avant de Faire
+                Confiance</h2>
+
+            <p>Vous avez construit un système de trading algorithmique. Chaque nuit, il scanne 6&nbsp;000+
+                tickers, sélectionne les meilleurs setups, calcule les positions, applique les stops et
+                les take-profits. Le pipeline génère un fichier <code>pit-state.json</code> qui représente
+                l'état de chaque portefeuille à chaque instant. Mais comment <strong>savez-vous</strong>
+                que ce fichier est correct ?</p>
+
+            <p>La réponse courte : vous ne le savez pas. Un bug de prix stale, un fill manqué, un
+                arrondi de position, un stop qui se déclenche au mauvais moment — chacun de ces
+                problèmes peut silencieusement corrompre votre état de portefeuille sans qu'aucun
+                test unitaire ne le détecte. Parce que le problème n'est pas dans le code : il est
+                dans l'<strong>interaction entre le code et les données réelles du marché</strong>.</p>
+
+            <p>La solution de DailyTickers : le <strong>Broker Simulator</strong>
+                (<a href="https://simulator.dailytickers.com/" target="_blank" rel="noopener">simulator.dailytickers.com</a>).
+                Un service Go indépendant qui reçoit exactement les mêmes trades que le système principal,
+                les exécute de façon autonome, puis compare ses résultats avec <code>pit-state.json</code>
+                chaque nuit. Si les deux systèmes sont d'accord pendant 20 jours consécutifs, le
+                simulateur devient la source de vérité. S'ils divergent : alerte immédiate, revert
+                automatique, investigation.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">0.0%</div>
+                    <div class="metric-label">Divergence initiale lors du premier backfill du mode
+                        <code>dynamic</code> — parité parfaite dès le jour 1</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">20 jours</div>
+                    <div class="metric-label">Seuil de convergence avant cutover automatique — confiance
+                        statistique, pas confiance aveugle</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">5 modes</div>
+                    <div class="metric-label">Pilotés en parallèle : turbo, dynamic, balanced, bull, secured
+                        — chaque mode indépendamment validé</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0 impact</div>
+                    <div class="metric-label">Sur la production en cas de panne du simulateur — hard fallback
+                        sur <code>pit-state.json</code> systématique</div>
+                </div>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> Le principe du « miroir indépendant »</h4>
+                <p>Le simulateur ne connaît <strong>rien</strong> des internals de DailyTickers. Il ne lit
+                    pas <code>pit-state.json</code>. Il ne connaît pas les scores, les régimes, ni les
+                    configurations des modes. Il reçoit des <em>intents</em> (« acheter 50 AAPL demain
+                    à l'ouverture ») et les exécute selon ses propres règles. C'est cette
+                    <strong>indépendance</strong> qui fait la valeur de la validation : si deux systèmes
+                    qui ne partagent aucun code arrivent au même résultat, la probabilité d'un bug
+                    commun est quasi nulle.</p>
+            </div>
+
+            <p>Ce guide technique détaille l'architecture complète du parallel-run : les 6 étapes du cycle
+                autonome, le mécanisme de réconciliation, le cutover automatique avec auto-revert, et
+                comment intégrer le simulateur dans votre propre pipeline de trading.</p>
+
+            <p class="source-ref">Source : <a href="https://martinfowler.com/bliki/ParallelChange.html"
+                    target="_blank" rel="noopener">Martin Fowler — Parallel Change</a> (le pattern
+                architectural derrière le parallel-run)</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 2 — ARCHITECTURE -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="architecture" class="content-card">
+            <h2><i class="fa-solid fa-sitemap" style="color:#059669;"></i> Architecture du Parallel-Run</h2>
+
+            <p>Le parallel-run s'intègre dans le pipeline scanner nocturne sans le ralentir ni le
+                bloquer. Chaque étape est <strong>non-bloquante</strong> : si le simulateur est
+                indisponible, le scan continue normalement et un avertissement Discord est émis.</p>
+
+            <h3>Vue d'ensemble</h3>
+
+            <div class="flow-diagram">
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b><i class="fa-solid fa-magnifying-glass-chart"></i> Scanner Pipeline</b>
+                        Screening → Anti-dilution → Risk Gating → Scoring → Génération HTML
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ intents (trades du jour)</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b><i class="fa-solid fa-upload"></i> publish-to-simulator.js</b>
+                        Poste les intents d'entrée pour la prochaine séance au simulateur via REST API
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ POST /api/accounts/{id}/mirror-order</div>
+                <div class="flow-row">
+                    <div class="flow-node orchestrator">
+                        <b><i class="fa-solid fa-server"></i> Broker Simulator (Go)</b>
+                        Service indépendant — exécute les ordres au next-open + VWAP gate, replay
+                        intraday pour SL/TP/horizon
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ résultats indépendants</div>
+                <div class="flow-row">
+                    <div class="flow-node verify">
+                        <b><i class="fa-solid fa-code-compare"></i> reconcile-simulator.js</b>
+                        Compare sim vs pit-state.json : prix ±0.5%, NAV ±2%, positions identiques
+                    </div>
+                    <div class="flow-node">
+                        <b><i class="fa-solid fa-gavel"></i> cutover-decision.js</b>
+                        20 jours zéro-divergence → flip source-of-truth.json vers "sim"
+                    </div>
+                </div>
+                <div class="flow-arrow">↓ lecture conditionnelle</div>
+                <div class="flow-row">
+                    <div class="flow-node">
+                        <b><i class="fa-solid fa-toggle-on"></i> sim-source.js (read-switch)</b>
+                        gen-api.js + gen-status-page.js lisent depuis le sim pour les modes cutover
+                    </div>
+                    <div class="flow-node fallback">
+                        <b><i class="fa-solid fa-life-ring"></i> Hard Fallback</b>
+                        Toute erreur sim → retour automatique à pit-state.json. L'API publique ne casse
+                        JAMAIS.
+                    </div>
+                </div>
+            </div>
+
+            <h3>Le simulateur : un service Go séparé</h3>
+
+            <p>Le broker simulator est un service Go hébergé sur
+                <a href="https://simulator.dailytickers.com/" target="_blank" rel="noopener">simulator.dailytickers.com</a>,
+                développé dans le repo <code>dailystocks-platform</code>. Il expose une API REST :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Méthode</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/api/accounts/{id}/mirror-order</code></td>
+                            <td>POST</td>
+                            <td>Soumettre un ordre miroir (achat/vente avec prix cible et stops)</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/accounts/{id}/mirror-run</code></td>
+                            <td>POST</td>
+                            <td>Lancer le replay intraday (SL/TP/horizon/trailing exits)</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/accounts/{id}/backfill</code></td>
+                            <td>POST</td>
+                            <td>Injecter l'historique gelé pour le bootstrap initial</td>
+                        </tr>
+                        <tr>
+                            <td><code>/api/accounts</code></td>
+                            <td>GET</td>
+                            <td>Lister les comptes (auto-scoped par token de service)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Chaque mode de trading a un compte dédié dans le simulateur, nommé par convention
+                <code>mirror:&lt;mode&gt;</code> (ex: <code>mirror:dynamic</code>,
+                <code>mirror:balanced</code>). Le token de service scope automatiquement l'accès
+                au workspace <code>pilot</code> — pas besoin de header <code>X-Org-Id</code>.</p>
+
+            <h3>L'insight clé : l'indépendance</h3>
+
+            <p>Le simulateur ne lit pas le code du scanner, ne connaît pas les scores, ne consulte
+                pas les configurations de modes. Il reçoit des <strong>intents</strong> atomiques :</p>
+
+<pre class="code-block"><span class="c">// Intent publié par publish-to-simulator.js</span>
+{
+  <span class="s">"ticker"</span>: <span class="s">"AAPL"</span>,
+  <span class="s">"side"</span>: <span class="s">"buy"</span>,
+  <span class="s">"qty"</span>: <span class="n">50</span>,
+  <span class="s">"entry"</span>: <span class="s">"next-open"</span>,
+  <span class="s">"vwapGate"</span>: <span class="k">true</span>,
+  <span class="s">"stopLoss"</span>: <span class="n">185.50</span>,
+  <span class="s">"takeProfit"</span>: <span class="n">210.00</span>,
+  <span class="s">"horizonDays"</span>: <span class="n">10</span>,
+  <span class="s">"trailingStop"</span>: { <span class="s">"activateR"</span>: <span class="n">2.0</span>, <span class="s">"lockPct"</span>: <span class="n">0.5</span> }
+}</pre>
+
+            <p>Et les exécute selon ses propres règles de pricing et de timing. Si le résultat
+                final (positions, P&L, NAV) correspond à celui de <code>pit-state.json</code>,
+                c'est que les deux systèmes sont corrects — ou qu'ils ont exactement le même bug,
+                ce qui est statistiquement improbable sur 20 jours.</p>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Design non-bloquant</h4>
+                <p>Si le token de service est absent (<code>BROKERSIM_SERVICE_TOKEN</code> non défini
+                    dans <code>.env</code>), le parallel-run est un <strong>no-op propre</strong> :
+                    le scan logge un WARNING et continue normalement. Le simulateur ne peut
+                    <strong>jamais</strong> bloquer la publication des résultats du scanner.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://docs.github.com/en/actions/deployment/about-deployments/deploying-with-github-actions"
+                    target="_blank" rel="noopener">GitHub — Deployment patterns</a> (le parallel-run est
+                une variante du canary deployment appliquée aux données)</p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 3 — LES 6 ÉTAPES -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="six-steps" class="content-card">
+            <h2><i class="fa-solid fa-list-ol" style="color:#059669;"></i> Les 6 Étapes du Cycle Autonome</h2>
+
+            <p>Chaque nuit, le pipeline scanner exécute les 6 étapes du parallel-run dans l'ordre.
+                Chaque étape est <strong>idempotente</strong> (relançable sans effet de bord) et
+                <strong>résiliente</strong> (une erreur à l'étape N n'empêche pas l'étape N+1).</p>
+
+            <div class="step-grid">
+                <div class="step-card">
+                    <div class="step-num">1</div>
+                    <h4>Bootstrap-Once</h4>
+                    <p>Backfill de l'historique gelé pour les nouveaux modes. Exécuté une seule fois
+                        par mode, puis ignoré pour toujours.</p>
+                    <code>export-to-simulator.js --sync</code>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">2</div>
+                    <h4>Mirror-Run</h4>
+                    <p>Exécution des intents d'entrée au next-open + VWAP gate. Replay intraday
+                        pour les exits (SL/TP/horizon/trailing).</p>
+                    <code>run-mirror.js</code>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">3</div>
+                    <h4>Reconcile</h4>
+                    <p>Comparaison sim vs pit-state.json par mode. Prix ±0.5%, NAV ±2%. Append
+                        dans reconciliation-log.json.</p>
+                    <code>reconcile-simulator.js</code>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">4</div>
+                    <h4>Cutover-Decision</h4>
+                    <p>Après 20 jours consécutifs sans divergence → flip source-of-truth.json
+                        vers "sim". Auto-revert sur toute divergence.</p>
+                    <code>cutover-decision.js</code>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">5</div>
+                    <h4>Read-Switch</h4>
+                    <p>gen-api.js et gen-status-page.js lisent depuis le sim pour les modes cutover.
+                        Hard fallback sur pit-state.json si erreur.</p>
+                    <code>sim-source.js</code>
+                </div>
+                <div class="step-card">
+                    <div class="step-num">6</div>
+                    <h4>Publish</h4>
+                    <p>Après le sweep, poste les intents d'entrée du lendemain au simulateur
+                        pour préparer le prochain cycle.</p>
+                    <code>publish-to-simulator.js</code>
+                </div>
+            </div>
+
+            <h3>Étape 1 : Bootstrap-Once — Le point de départ</h3>
+
+            <p>Quand un mode est ajouté au pilote (par exemple, le mode <code>bull</code> rejoint
+                le parallel-run), le bootstrap injecte tout l'historique gelé de
+                <code>pit-state.json</code> dans le compte <code>mirror:bull</code> du simulateur.
+                C'est un backfill complet : toutes les positions ouvertes, tous les trades clôturés,
+                l'equity courante.</p>
+
+<pre class="code-block"><span class="c">// Commande</span>
+<span class="k">node</span> tools/export-to-simulator.js --sync
+
+<span class="c">// Ce qui se passe :</span>
+<span class="c">// 1. Lire les modes pilotes depuis simulator-config.json</span>
+<span class="c">// 2. Pour chaque mode sans fills dans mirror:&lt;mode&gt; → backfill</span>
+<span class="c">// 3. Pour chaque mode déjà backfillé → skip (idempotent)</span>
+
+<span class="c">// Résultat attendu :</span>
+<span class="s">✅ dynamic: already backfilled (skip)</span>
+<span class="s">✅ balanced: already backfilled (skip)</span>
+<span class="s">🔄 bull: backfilling 12 positions, 47 closed trades...</span>
+<span class="s">✅ bull: backfill complete — equity parity 0.0%</span></pre>
+
+            <p>Le flag « déjà backfillé » est persisté côté simulateur. Même si vous relancez
+                <code>--sync</code> 100 fois, le backfill ne se produit qu'une fois par mode.</p>
+
+            <h3>Étape 2 : Mirror-Run — L'exécution indépendante</h3>
+
+            <p>C'est le cœur du parallel-run. Le mirror-run prend les intents publiés la veille
+                et les exécute selon les règles du simulateur :</p>
+
+            <ul style="font-size:0.95rem; color:#334155; line-height:1.7; padding-left:1.5rem;">
+                <li><strong>Entrée</strong> : au prix d'ouverture du lendemain, avec un gate VWAP
+                    (le prix doit être confirmé par le volume pondéré)</li>
+                <li><strong>Stop-loss</strong> : déclenché si le prix intraday touche le niveau défini</li>
+                <li><strong>Take-profit</strong> : déclenché si le prix intraday atteint la cible</li>
+                <li><strong>Horizon</strong> : clôture automatique après N jours si ni SL ni TP touché</li>
+                <li><strong>Trailing stop</strong> : activé après X × R de profit, verrouille Y% des gains</li>
+            </ul>
+
+            <p>Le simulateur utilise les données Yahoo Finance 1-minute pour le replay intraday,
+                ce qui lui permet de détecter les touches de SL/TP avec une précision de 1 minute.</p>
+
+            <h3>Étape 3 : Reconcile — La comparaison qui compte</h3>
+
+            <p>La réconciliation compare, mode par mode, l'état du simulateur avec
+                <code>pit-state.json</code>. Trois métriques sont vérifiées :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrique</th>
+                            <th>Tolérance</th>
+                            <th>Pourquoi cette marge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Prix moyen d'entrée</td>
+                            <td>±0.5%</td>
+                            <td>Différences de timing d'exécution (ouverture vs VWAP)</td>
+                        </tr>
+                        <tr>
+                            <td>NAV (Net Asset Value)</td>
+                            <td>±2%</td>
+                            <td>MtM intraday, dividendes, corporate actions</td>
+                        </tr>
+                        <tr>
+                            <td>Positions</td>
+                            <td>Exacte</td>
+                            <td>Même ticker, même quantité, même direction</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p>Le résultat est appendé dans <code>data/reconciliation-log.json</code>, un fichier
+                append-only qui constitue l'audit trail complet de chaque comparaison.</p>
+
+            <h3>Étapes 4-6 : Cutover, Read-Switch, Publish</h3>
+
+            <p>L'<strong>étape 4</strong> (cutover-decision) est l'algorithme de promotion :
+                si le mode a 20 entrées consécutives dans le log de réconciliation avec
+                divergence = 0, le flag dans <code>source-of-truth.json</code> passe de
+                <code>"articles"</code> à <code>"sim"</code>. Le revert est automatique :
+                dès qu'une divergence apparaît, le flag revient à <code>"articles"</code>.</p>
+
+            <p>L'<strong>étape 5</strong> (read-switch) fait que <code>gen-api.js</code> et
+                <code>gen-status-page.js</code> lisent les positions depuis le simulateur pour
+                les modes qui ont été promus. Le hard fallback est intégré : si l'appel au sim
+                échoue (réseau, token expiré, service down), le système revient silencieusement
+                à <code>pit-state.json</code>.</p>
+
+            <p>L'<strong>étape 6</strong> (publish) est la boucle : après que le sweep a
+                déterminé les trades du lendemain, les intents sont postés au simulateur pour
+                que le prochain mirror-run puisse les exécuter.</p>
+
+            <div style="width:100%; height:350px; margin:2rem 0;" id="chart-pipeline"></div>
+
+            <p class="source-ref">Source : <a href="https://martinfowler.com/bliki/CanaryRelease.html"
+                    target="_blank" rel="noopener">Martin Fowler — Canary Release</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 4 — RÉCONCILIATION -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="reconciliation" class="content-card">
+            <h2><i class="fa-solid fa-code-compare" style="color:#059669;"></i> La Réconciliation : Comparer deux
+                Vérités</h2>
+
+            <p>La réconciliation est le moment de vérité du parallel-run. Chaque nuit, après le
+                mirror-run, le script <code>reconcile-simulator.js</code> compare position par
+                position, mode par mode, les résultats du simulateur avec ceux de
+                <code>pit-state.json</code>.</p>
+
+            <h3>Qu'est-ce qui est comparé</h3>
+
+            <p>Pour chaque mode pilote (turbo, dynamic, balanced, bull, secured), la réconciliation
+                vérifie :</p>
+
+            <ul style="font-size:0.95rem; color:#334155; line-height:1.7; padding-left:1.5rem;">
+                <li><strong>Positions ouvertes</strong> : même ensemble de tickers, mêmes quantités</li>
+                <li><strong>Prix moyen d'entrée</strong> : dans la tolérance de ±0.5%</li>
+                <li><strong>Equity du mode</strong> : NAV (cash + positions mark-to-market) dans ±2%</li>
+                <li><strong>Trades clôturés</strong> : même P&L réalisé (dans la tolérance)</li>
+            </ul>
+
+            <h3>Le format du log</h3>
+
+<pre class="code-block"><span class="c">// Entrée dans reconciliation-log.json</span>
+{
+  <span class="s">"date"</span>: <span class="s">"2026-06-19"</span>,
+  <span class="s">"mode"</span>: <span class="s">"dynamic"</span>,
+  <span class="s">"status"</span>: <span class="s">"MATCH"</span>,
+  <span class="s">"simEquity"</span>: <span class="n">127450.32</span>,
+  <span class="s">"pitEquity"</span>: <span class="n">127389.18</span>,
+  <span class="s">"equityDiffPct"</span>: <span class="n">0.048</span>,
+  <span class="s">"positionsMatch"</span>: <span class="k">true</span>,
+  <span class="s">"openPositions"</span>: <span class="n">8</span>,
+  <span class="s">"divergences"</span>: [],
+  <span class="s">"consecutiveMatches"</span>: <span class="n">14</span>
+}
+
+<span class="c">// Entrée avec divergence</span>
+{
+  <span class="s">"date"</span>: <span class="s">"2026-06-20"</span>,
+  <span class="s">"mode"</span>: <span class="s">"balanced"</span>,
+  <span class="s">"status"</span>: <span class="s">"DIVERGENCE"</span>,
+  <span class="s">"simEquity"</span>: <span class="n">98200.44</span>,
+  <span class="s">"pitEquity"</span>: <span class="n">95100.77</span>,
+  <span class="s">"equityDiffPct"</span>: <span class="n">3.26</span>,
+  <span class="s">"positionsMatch"</span>: <span class="k">false</span>,
+  <span class="s">"divergences"</span>: [
+    { <span class="s">"type"</span>: <span class="s">"missing_position"</span>, <span class="s">"ticker"</span>: <span class="s">"CRDO"</span>, <span class="s">"inSim"</span>: <span class="k">true</span>, <span class="s">"inPit"</span>: <span class="k">false</span> }
+  ],
+  <span class="s">"consecutiveMatches"</span>: <span class="n">0</span>
+}</pre>
+
+            <h3>Types de divergences</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Signification</th>
+                            <th>Cause probable</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>missing_position</code></td>
+                            <td>Position dans un système mais pas l'autre</td>
+                            <td>Fill manqué, intent non publié, ou bug de clôture</td>
+                            <td>Investiguer le log d'intents, vérifier le mirror-order</td>
+                        </tr>
+                        <tr>
+                            <td><code>price_drift</code></td>
+                            <td>Prix moyen diverge de &gt;0.5%</td>
+                            <td>Timing d'exécution différent, données Yahoo stale</td>
+                            <td>Vérifier les fills bruts des deux côtés</td>
+                        </tr>
+                        <tr>
+                            <td><code>nav_mismatch</code></td>
+                            <td>Equity du mode diverge de &gt;2%</td>
+                            <td>Split/dividende non appliqué, cash accounting</td>
+                            <td>Recalculer le MtM manuellement, vérifier corporate actions</td>
+                        </tr>
+                        <tr>
+                            <td><code>qty_mismatch</code></td>
+                            <td>Même ticker mais quantités différentes</td>
+                            <td>Partial fill, sizing différent, arrondi</td>
+                            <td>Comparer les ordres originaux et les fills</td>
+                        </tr>
+                        <tr>
+                            <td><code>staleness_artifact</code></td>
+                            <td>Grande divergence NAV sur positions backfillées</td>
+                            <td>Yahoo 1m limité à ~30 jours — pas de replay précis</td>
+                            <td>Attendu au début, se résout naturellement (forward-only)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-graduation-cap"></i> L'artefact de staleness</h4>
+                <p>Lors du premier backfill, les positions anciennes (ouvertes depuis plus de 30 jours)
+                    ne peuvent pas être rejouées en intraday car Yahoo Finance ne fournit les données
+                    1-minute que sur les ~30 derniers jours. Cela crée une divergence NAV initiale qui
+                    est un <strong>artefact</strong>, pas un bug. Les trades <em>forward</em> (à partir
+                    du moment où le parallel-run est actif) ne sont pas affectés. La divergence se
+                    résorbe naturellement à mesure que les vieilles positions se ferment.</p>
+            </div>
+
+            <h3>Alertes Discord</h3>
+
+            <p>Chaque divergence déclenche une alerte Discord dans le canal de monitoring, avec :</p>
+
+            <ul style="font-size:0.95rem; color:#334155; line-height:1.7; padding-left:1.5rem;">
+                <li>Le mode concerné et la date</li>
+                <li>Le type de divergence et les détails</li>
+                <li>L'equity sim vs pit-state</li>
+                <li>Le compteur de jours consécutifs (remis à 0)</li>
+                <li>L'action prise (AUTO-REVERTED si le mode était cutover)</li>
+            </ul>
+
+            <p>Les matchs ne déclenchent pas d'alerte (bruit inutile) — seul le franchissement du
+                seuil de 20 jours génère une notification positive (AUTO-CUTOVER).</p>
+
+            <p class="source-ref">Source : <a href="https://en.wikipedia.org/wiki/Reconciliation_(accounting)"
+                    target="_blank" rel="noopener">Wikipedia — Reconciliation (accounting)</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 5 — CUTOVER -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="cutover" class="content-card">
+            <h2><i class="fa-solid fa-right-left" style="color:#059669;"></i> Le Cutover Automatique : Zéro Humain
+                dans la Boucle</h2>
+
+            <p>Le cutover est le moment où le simulateur passe de « miroir de validation » à
+                « source de vérité ». C'est la transition la plus critique du système, et elle
+                est entièrement automatique — par design.</p>
+
+            <h3>L'algorithme de cutover</h3>
+
+<pre class="code-block"><span class="c">// Pseudo-code de cutover-decision.js</span>
+<span class="k">for</span> (<span class="k">const</span> mode <span class="k">of</span> pilotModes) {
+  <span class="k">const</span> log = readReconciliationLog(mode);
+  <span class="k">const</span> recent = log.slice(-<span class="n">20</span>);  <span class="c">// 20 dernières entrées</span>
+
+  <span class="k">const</span> currentSource = readSourceOfTruth(mode);
+  <span class="k">const</span> allMatch = recent.length === <span class="n">20</span>
+    && recent.every(e => e.status === <span class="s">'MATCH'</span>);
+  <span class="k">const</span> latestDiverged = log.at(-<span class="n">1</span>)?.status === <span class="s">'DIVERGENCE'</span>;
+
+  <span class="k">if</span> (allMatch && currentSource === <span class="s">'articles'</span>) {
+    <span class="c">// PROMOTION : 20 jours consécutifs de convergence</span>
+    flipSourceOfTruth(mode, <span class="s">'sim'</span>);
+    discordAlert(<span class="s">`AUTO-CUTOVER: ${mode} → sim`</span>);
+  }
+
+  <span class="k">if</span> (latestDiverged && currentSource === <span class="s">'sim'</span>) {
+    <span class="c">// REVERT : divergence détectée sur un mode promu</span>
+    flipSourceOfTruth(mode, <span class="s">'articles'</span>);
+    discordAlert(<span class="s">`AUTO-REVERTED: ${mode} → articles`</span>);
+  }
+}</pre>
+
+            <h3>Pourquoi 20 jours ?</h3>
+
+            <p>Le seuil de 20 jours de trading n'est pas arbitraire :</p>
+
+            <ul style="font-size:0.95rem; color:#334155; line-height:1.7; padding-left:1.5rem;">
+                <li><strong>Couverture statistique</strong> : 20 jours ≈ 1 mois de trading. Suffisant
+                    pour couvrir différentes conditions de marché (trend, range, volatilité).</li>
+                <li><strong>Cycle d'expiration</strong> : un mois couvre au moins un cycle d'expiration
+                    d'options et un rapport de résultats (earnings).</li>
+                <li><strong>Confiance pratique</strong> : si deux systèmes indépendants sont d'accord
+                    pendant 20 jours sur des données de marché réelles (pas simulées), la probabilité
+                    d'un bug latent commun est extrêmement faible.</li>
+                <li><strong>Configurable</strong> : le seuil est dans <code>simulator-config.json</code>
+                    (clé <code>cutoverDays</code>), modifiable sans toucher au code.</li>
+            </ul>
+
+            <h3>source-of-truth.json</h3>
+
+<pre class="code-block"><span class="c">// data/source-of-truth.json</span>
+{
+  <span class="s">"dynamic"</span>: <span class="s">"sim"</span>,       <span class="c">// ← cutover effectué après 20j</span>
+  <span class="s">"balanced"</span>: <span class="s">"articles"</span>,  <span class="c">// ← encore en validation (jour 14)</span>
+  <span class="s">"turbo"</span>: <span class="s">"articles"</span>,     <span class="c">// ← en validation (jour 7)</span>
+  <span class="s">"bull"</span>: <span class="s">"articles"</span>,      <span class="c">// ← récemment onboardé (jour 3)</span>
+  <span class="s">"secured"</span>: <span class="s">"articles"</span>    <span class="c">// ← en validation (jour 11)</span>
+}</pre>
+
+            <p>Ce fichier est la seule source de décision pour le read-switch. Un simple
+                <code>JSON.parse</code> suffit pour savoir d'où lire les données de chaque mode.</p>
+
+            <h3>Le Hard Fallback : la production ne casse jamais</h3>
+
+            <p>C'est la règle la plus importante du système : <strong>l'API publique ne peut
+                jamais être vide, en erreur, ou stale à cause du simulateur</strong>. Le
+                fallback est implémenté dans <code>sim-source.js</code> :</p>
+
+<pre class="code-block"><span class="k">async function</span> getPositions(mode) {
+  <span class="k">const</span> source = readSourceOfTruth(mode);
+
+  <span class="k">if</span> (source === <span class="s">'sim'</span>) {
+    <span class="k">try</span> {
+      <span class="k">const</span> simData = <span class="k">await</span> fetchFromSimulator(mode);
+      <span class="k">if</span> (isStale(simData)) <span class="k">throw new</span> Error(<span class="s">'stale sim data'</span>);
+      <span class="k">return</span> simData;
+    } <span class="k">catch</span> (err) {
+      <span class="c">// HARD FALLBACK — toujours pit-state.json</span>
+      console.warn(<span class="s">`Sim error for ${mode}: ${err.message} — falling back`</span>);
+      <span class="k">return</span> readPitState(mode);  <span class="c">// JAMAIS null, JAMAIS vide</span>
+    }
+  }
+
+  <span class="k">return</span> readPitState(mode);  <span class="c">// source = 'articles'</span>
+}</pre>
+
+            <p>Ce design garantit trois propriétés :</p>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Propriété</th>
+                            <th>Garantie</th>
+                            <th>Comment</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Disponibilité</strong></td>
+                            <td>L'API publique retourne toujours des données</td>
+                            <td>Le fallback lit un fichier local (pas de réseau)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Fraîcheur</strong></td>
+                            <td>Les données ne sont jamais plus stale que pit-state.json</td>
+                            <td>Le check <code>isStale()</code> rejette les données sim trop vieilles</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Réversibilité</strong></td>
+                            <td>Un cutover peut être annulé en &lt;1 seconde</td>
+                            <td>Un seul champ dans un fichier JSON</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-triangle-exclamation"></i> Anti-pattern : le big-bang cutover</h4>
+                <p>Ne jamais basculer tous les modes en même temps. Le cutover par mode permet
+                    de <strong>limiter le blast radius</strong> : si le mode <code>dynamic</code>
+                    a un problème après cutover, les 4 autres modes ne sont pas affectés.
+                    C'est le même principe que le canary deployment en infrastructure.</p>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://sre.google/sre-book/reliable-product-launches/"
+                    target="_blank" rel="noopener">Google SRE Book — Reliable Product Launches at Scale</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 6 — INTÉGRATION -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="integration" class="content-card">
+            <h2><i class="fa-solid fa-plug" style="color:#059669;"></i> Intégrer le Simulator dans votre Propre
+                Pipeline</h2>
+
+            <p>Le simulateur est conçu pour être intégré dans n'importe quel pipeline de trading
+                qui produit des intents structurés. Voici comment connecter votre système.</p>
+
+            <h3>1. Configuration du token</h3>
+
+<pre class="code-block"><span class="c"># Dans articles/.env (gitignored)</span>
+<span class="c"># IMPORTANT : valeur NON-QUOTÉE (loadEnv ne strip pas les quotes)</span>
+BROKERSIM_SERVICE_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+<span class="c"># Alternative : export dans ~/.profile</span>
+<span class="k">export</span> BROKERSIM_SERVICE_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...</pre>
+
+            <div class="alert-box">
+                <h4><i class="fa-solid fa-key"></i> Sécurité du token</h4>
+                <p>Le token scope automatiquement l'accès au workspace <code>pilot</code>. Il ne
+                    permet pas d'accéder aux données d'autres workspaces. Ne le commitez
+                    <strong>jamais</strong> dans le repo — <code>.env</code> est dans
+                    <code>.gitignore</code>.</p>
+            </div>
+
+            <h3>2. simulator-client.js : la bibliothèque client</h3>
+
+            <p>Le fichier <code>tools/lib/simulator-client.js</code> encapsule toute la communication
+                avec le simulateur :</p>
+
+<pre class="code-block"><span class="k">const</span> { SimulatorClient } = require(<span class="s">'./lib/simulator-client'</span>);
+
+<span class="c">// Initialisation (charge le token depuis .env automatiquement)</span>
+<span class="k">const</span> sim = <span class="k">new</span> SimulatorClient();
+
+<span class="c">// Vérifier la connexion</span>
+<span class="k">const</span> accounts = <span class="k">await</span> sim.listAccounts();
+console.log(accounts);
+<span class="c">// → [{ id: 'abc123', label: 'mirror:dynamic' }, ...]</span>
+
+<span class="c">// Publier un intent</span>
+<span class="k">await</span> sim.mirrorOrder(<span class="s">'abc123'</span>, {
+  ticker: <span class="s">'AAPL'</span>,
+  side: <span class="s">'buy'</span>,
+  qty: <span class="n">50</span>,
+  entry: <span class="s">'next-open'</span>,
+  vwapGate: <span class="k">true</span>,
+  stopLoss: <span class="n">185.50</span>,
+  takeProfit: <span class="n">210.00</span>,
+  horizonDays: <span class="n">10</span>
+});
+
+<span class="c">// Lancer le mirror-run</span>
+<span class="k">await</span> sim.mirrorRun(<span class="s">'abc123'</span>);
+
+<span class="c">// Lire l'état pour la réconciliation</span>
+<span class="k">const</span> simState = <span class="k">await</span> sim.getAccountState(<span class="s">'abc123'</span>);
+console.log(simState.equity, simState.positions);</pre>
+
+            <h3>3. Ajouter un nouveau mode</h3>
+
+            <p>Pour ajouter un mode au parallel-run, deux étapes suffisent :</p>
+
+            <ol style="font-size:0.95rem; color:#334155; line-height:1.8; padding-left:1.5rem;">
+                <li>Ajouter le mode dans <code>simulator-config.json</code> (clé <code>pilotModes</code>)</li>
+                <li>S'assurer que <code>pit-state.json</code> contient les données du mode</li>
+            </ol>
+
+            <p>Au prochain run de <code>export-to-simulator.js --sync</code>, le mode sera
+                automatiquement backfillé et intégré au cycle de réconciliation.</p>
+
+            <h3>4. simulator-config.json</h3>
+
+<pre class="code-block">{
+  <span class="s">"baseUrl"</span>: <span class="s">"https://simulator.dailytickers.com"</span>,
+  <span class="s">"pilotModes"</span>: [<span class="s">"turbo"</span>, <span class="s">"dynamic"</span>, <span class="s">"balanced"</span>, <span class="s">"bull"</span>, <span class="s">"secured"</span>],
+  <span class="s">"tolerances"</span>: {
+    <span class="s">"pricePct"</span>: <span class="n">0.5</span>,   <span class="c">// ±0.5% sur les prix moyens</span>
+    <span class="s">"navPct"</span>: <span class="n">2.0</span>,     <span class="c">// ±2% sur l'equity du mode</span>
+    <span class="s">"qtyExact"</span>: <span class="k">true</span>   <span class="c">// quantités doivent matcher exactement</span>
+  },
+  <span class="s">"cutoverDays"</span>: <span class="n">20</span>,    <span class="c">// jours consécutifs de convergence</span>
+  <span class="s">"workspace"</span>: <span class="s">"pilot"</span>  <span class="c">// workspace du simulateur</span>
+}</pre>
+
+            <h3>5. Extension à de nouvelles classes d'actifs</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Classe d'actif</th>
+                            <th>Statut</th>
+                            <th>Limitation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Equities US</td>
+                            <td style="color:#059669; font-weight:700;">✅ Actif</td>
+                            <td>Aucune — couverture complète via Yahoo 1m</td>
+                        </tr>
+                        <tr>
+                            <td>Crypto</td>
+                            <td style="color:#d97706; font-weight:700;">🔜 Planifié</td>
+                            <td>Binance fournit les données 1m, intégration en cours</td>
+                        </tr>
+                        <tr>
+                            <td>Forex</td>
+                            <td style="color:#dc2626; font-weight:700;">❌ Exclu</td>
+                            <td>Pas de données intraday FX fiables et gratuites</td>
+                        </tr>
+                        <tr>
+                            <td>Metals / Futures</td>
+                            <td style="color:#dc2626; font-weight:700;">❌ Exclu</td>
+                            <td>Pas de pricing intraday sur les futures metals</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://12factor.net/config"
+                    target="_blank" rel="noopener">The Twelve-Factor App — Config</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 7 — GAINS -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="gains" class="content-card">
+            <h2><i class="fa-solid fa-chart-line" style="color:#059669;"></i> Les Gains Concrets du Parallel-Run
+            </h2>
+
+            <p>Le parallel-run n'est pas un exercice académique. Il apporte des bénéfices concrets
+                et mesurables à chaque étape de la chaîne de valeur.</p>
+
+            <h3>1. Confiance vérifiable</h3>
+
+            <p>Sans le simulateur, la seule façon de savoir si <code>pit-state.json</code> est correct
+                est de le vérifier manuellement — un exercice fastidieux, sujet aux erreurs, et qui
+                ne scale pas avec 5 modes et des dizaines de positions. Avec le parallel-run, la
+                confiance est <strong>quantifiée</strong> : le compteur de jours consécutifs est
+                une métrique objective de fiabilité.</p>
+
+            <h3>2. Détection de bugs en 24h</h3>
+
+            <p>Tout bug de tracking dans <code>pit-state.json</code> — un fill manqué, un stop
+                déclenché au mauvais prix, un arrondi de quantité — apparaît comme une divergence
+                dans la réconciliation du lendemain. Pas besoin d'attendre un audit mensuel ou
+                une anomalie visible dans les résultats.</p>
+
+            <h3>3. Migration sans risque</h3>
+
+            <p>Le cutover progressif par mode transforme une migration terrifiante (« on bascule
+                tout d'un coup ») en une série de micro-migrations réversibles. Chaque mode est
+                promu individuellement, et un revert prend moins d'une seconde.</p>
+
+            <h3>Comparaison : avant vs après</h3>
+
+            <div class="data-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Sans Simulator</th>
+                            <th>Avec Simulator</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Confiance dans les données</strong></td>
+                            <td>Subjective — « ça a l'air correct »</td>
+                            <td>Quantifiée — 20 jours de convergence indépendante</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Détection de bugs</strong></td>
+                            <td>Semaines/mois — découvert à la prochaine rétrospective</td>
+                            <td>24 heures — divergence détectée au prochain reconcile</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Risque de migration</strong></td>
+                            <td>Big-bang — tout ou rien, revert complexe</td>
+                            <td>Progressif — par mode, réversible en &lt;1 seconde</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Audit trail</strong></td>
+                            <td>Inexistant — git blame sur pit-state.json</td>
+                            <td>Complet — reconciliation-log.json append-only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Impact d'une panne</strong></td>
+                            <td>N/A (pas de second système)</td>
+                            <td>Zéro — hard fallback transparent</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Coût opérationnel</strong></td>
+                            <td>Vérifications manuelles chronophages</td>
+                            <td>Entièrement automatique, &lt;2 min par nuit</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>Bugs que la réconciliation attraperait</h3>
+
+            <p>Exemples concrets de problèmes que le parallel-run détecterait en 24h :</p>
+
+            <ul style="font-size:0.95rem; color:#334155; line-height:1.7; padding-left:1.5rem;">
+                <li><strong>Prix stale</strong> : le sweep utilise un prix caché de 12h au lieu du
+                    prix temps réel → le stop se déclenche au mauvais moment → divergence de position</li>
+                <li><strong>Fill manqué</strong> : un intent « buy 30 MSFT » est publié mais le
+                    sweep oublie de l'enregistrer dans pit-state → <code>missing_position</code></li>
+                <li><strong>Position fantôme</strong> : une position clôturée par horizon n'est pas
+                    retirée de pit-state → le sim l'a bien fermée → <code>qty_mismatch</code></li>
+                <li><strong>Split non appliqué</strong> : un stock split 4:1 n'est pas traité →
+                    le prix moyen est 4× trop élevé → <code>price_drift</code> massif</li>
+                <li><strong>Trailing stop mal calculé</strong> : le trailing lock verrouille 50%
+                    au lieu de 30% → position fermée trop tôt → divergence de P&L réalisé</li>
+            </ul>
+
+            <div style="width:100%; height:400px; margin:2rem 0;" id="chart-gains"></div>
+
+            <p class="source-ref">Source : <a href="https://increment.com/testing/i-test-in-production/"
+                    target="_blank" rel="noopener">Increment — Testing in Production</a></p>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <!-- SECTION 8 — CONCLUSION -->
+        <!-- ═══════════════════════════════════════════════════════════════════════ -->
+        <div id="conclusion" class="content-card">
+            <h2><i class="fa-solid fa-flag-checkered" style="color:#059669;"></i> Construire la Confiance par la
+                Vérification Indépendante</h2>
+
+            <p>Le parallel-run du broker simulator incarne un principe fondamental en ingénierie
+                des systèmes critiques : <strong>ne faites pas confiance — vérifiez</strong>.
+                Mais vérifiez de façon structurée, automatique, et réversible.</p>
+
+            <p>Le pattern est transposable à tout système qui produit des données critiques :
+                systèmes de facturation, pipelines de données financières, moteurs de recommandation,
+                systèmes de scoring. À chaque fois que la question « est-ce que ces données sont
+                correctes ? » est importante, un miroir indépendant est la réponse la plus robuste.</p>
+
+            <div class="takeaway-box">
+                <h4><i class="fa-solid fa-check-double"></i> Les 6 principes du parallel-run</h4>
+                <ul>
+                    <li><strong>Indépendance totale</strong> — le miroir ne partage aucun code avec
+                        le système principal. C'est cette indépendance qui fait la valeur de la validation.</li>
+                    <li><strong>20 jours de convergence</strong> — pas de cutover sur un coup de chance.
+                        La confiance se construit statistiquement, sur des données de marché réelles.</li>
+                    <li><strong>Auto-revert sur divergence</strong> — le filet de sécurité est permanent.
+                        Un bug post-cutover ne corrompt pas les données plus de 24h.</li>
+                    <li><strong>Hard fallback</strong> — la production ne casse jamais. Le simulateur est
+                        un bonus, pas une dépendance. <code>pit-state.json</code> est toujours là.</li>
+                    <li><strong>Non-blocking</strong> — le pipeline ne dépend pas du simulateur. Token
+                        absent = no-op propre + warning. Pas d'interruption de service.</li>
+                    <li><strong>Append-only audit trail</strong> — chaque réconciliation est persistée.
+                        L'historique complet est disponible pour l'analyse et le debugging.</li>
+                </ul>
+            </div>
+
+            <p>Le résultat validé sur le mode <code>dynamic</code> — 0.0% de divergence dès le
+                premier backfill le 18 juin 2026 — est un point de données encourageant. Mais
+                c'est le <em>processus</em> qui compte, pas le résultat ponctuel : la réconciliation
+                quotidienne, l'auto-revert, le cutover progressif. Ce sont ces mécanismes qui
+                transforment un « ça marche aujourd'hui » en « ça marche, et on le sait ».</p>
+
+            <h3>Articles liés</h3>
+
+            <div class="step-grid">
+                <div class="step-card" style="border-top-color:#0891b2;">
+                    <h4><a href="/tech/multibroker-ledger/" style="color:#0891b2; text-decoration:none;">
+                            Multi-Broker & Ledger Interne</a></h4>
+                    <p>L'architecture multi-broker et le ledger append-only qui alimente le simulateur</p>
+                </div>
+                <div class="step-card" style="border-top-color:#dc2626;">
+                    <h4><a href="/tech/ai-harness-finance/" style="color:#dc2626; text-decoration:none;">
+                            Harnesses IA en Finance</a></h4>
+                    <p>Contraindre les modèles à produire des résultats fiables — le même esprit
+                        de validation appliqué à l'IA</p>
+                </div>
+                <div class="step-card" style="border-top-color:#5865F2;">
+                    <h4><a href="/tech/claude-code-trading-bot/" style="color:#5865F2; text-decoration:none;">
+                            Claude Code Trading Bot</a></h4>
+                    <p>Le bot Discord qui orchestre le pipeline scanner — dont le parallel-run
+                        fait partie</p>
+                </div>
+            </div>
+
+            <p class="source-ref">Source : <a href="https://sre.google/sre-book/testing-reliability/"
+                    target="_blank" rel="noopener">Google SRE Book — Testing for Reliability</a></p>
+        </div>
+
+    </div> <!-- /container -->
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- FAB Navigation -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bookmark"></i><span>Pourquoi
+                    Simuler</span></a>
+            <a href="#architecture" class="fnav-item" data-section="architecture"><i
+                    class="fas fa-bookmark"></i><span>Architecture</span></a>
+            <a href="#six-steps" class="fnav-item" data-section="six-steps"><i class="fas fa-bookmark"></i><span>6
+                    Étapes</span></a>
+            <a href="#reconciliation" class="fnav-item" data-section="reconciliation"><i
+                    class="fas fa-bookmark"></i><span>Réconciliation</span></a>
+            <a href="#cutover" class="fnav-item" data-section="cutover"><i
+                    class="fas fa-bookmark"></i><span>Cutover</span></a>
+            <a href="#integration" class="fnav-item" data-section="integration"><i
+                    class="fas fa-bookmark"></i><span>Intégration</span></a>
+            <a href="#gains" class="fnav-item" data-section="gains"><i class="fas fa-bookmark"></i><span>Gains
+                    Concrets</span></a>
+            <a href="#conclusion" class="fnav-item" data-section="conclusion"><i
+                    class="fas fa-bookmark"></i><span>Conclusion</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- Footer -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+        Ceci n'est pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ECharts — Pipeline Timeline -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <script>
+        (function () {
+            var el = document.getElementById('chart-pipeline');
+            if (!el) return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                grid: { left: 160, right: 30, top: 30, bottom: 40 },
+                xAxis: {
+                    type: 'value',
+                    name: 'Minutes',
+                    nameLocation: 'end',
+                    max: 50,
+                    axisLabel: { formatter: '{value} min' }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: ['6. Publish', '5. Read-Switch', '4. Cutover', '3. Reconcile', '2. Mirror-Run', '1. Bootstrap'],
+                    axisLabel: { fontWeight: 700, fontSize: 12 }
+                },
+                series: [{
+                    name: 'Durée',
+                    type: 'bar',
+                    data: [
+                        { value: 2, itemStyle: { color: '#059669' } },
+                        { value: 1, itemStyle: { color: '#34d399' } },
+                        { value: 1, itemStyle: { color: '#6ee7b7' } },
+                        { value: 5, itemStyle: { color: '#f59e0b' } },
+                        { value: 15, itemStyle: { color: '#059669' } },
+                        { value: 3, itemStyle: { color: '#94a3b8', borderRadius: [0, 4, 4, 0] } }
+                    ],
+                    barWidth: 24,
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function (p) {
+                            var labels = ['~3 min (1ère fois)', '~15 min', '~5 min', '~1 min', '~1 min', '~2 min'];
+                            return labels[p.dataIndex];
+                        },
+                        fontWeight: 600,
+                        fontSize: 11,
+                        color: '#475569'
+                    }
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <!-- ECharts — Gains Radar -->
+    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+    <script>
+        (function () {
+            var el = document.getElementById('chart-gains');
+            if (!el) return;
+            var chart = echarts.init(el);
+            chart.setOption({
+                tooltip: {},
+                legend: { data: ['Sans Simulator', 'Avec Simulator'], bottom: 0 },
+                radar: {
+                    indicator: [
+                        { name: 'Confiance', max: 10 },
+                        { name: 'Détection\nbugs', max: 10 },
+                        { name: 'Risque\nmigration', max: 10 },
+                        { name: 'Audit\ntrail', max: 10 },
+                        { name: 'Résilience', max: 10 },
+                        { name: 'Coût\nopérationnel', max: 10 }
+                    ],
+                    shape: 'polygon',
+                    splitArea: { areaStyle: { color: ['#ecfdf5', '#fff', '#ecfdf5', '#fff'] } }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [
+                        {
+                            value: [3, 2, 2, 1, 5, 3],
+                            name: 'Sans Simulator',
+                            areaStyle: { color: 'rgba(148,163,184,0.2)' },
+                            lineStyle: { color: '#94a3b8' },
+                            itemStyle: { color: '#94a3b8' }
+                        },
+                        {
+                            value: [9, 9, 9, 10, 10, 9],
+                            name: 'Avec Simulator',
+                            areaStyle: { color: 'rgba(5,150,105,0.2)' },
+                            lineStyle: { color: '#059669' },
+                            itemStyle: { color: '#059669' }
+                        }
+                    ]
+                }]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>
