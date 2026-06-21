@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Calls, Puts et les Bases | Les Options de A à Z — Partie 1/6 | DailyTickers</title>
+ <meta name="description" content="Série Les Options de A à Z — Partie 1/6 : qu'est-ce qu'une option, calls vs puts, strike, premium, expiration, ITM/ATM/OTM, valeur intrinsèque vs valeur temps. Exemples concrets et payoff diagrams.">
+ <meta property="og:title" content="Calls, Puts et les Bases | Les Options de A à Z 1/6 | DailyTickers">
+ <meta property="og:description" content="Comprendre les options financières de zéro : calls, puts, strike, premium, expiration, ITM/ATM/OTM. Avec payoff diagrams interactifs.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/options-trading/part1-fondamentaux/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* GREEN THEME for Les Options de A à Z */ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #f0fdf4 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#16a34a; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-green { background:rgba(22,163,74,0.1); color:#16a34a; border:1px solid rgba(22,163,74,0.2); }
+ .hero-badge-emerald { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-amber { background:rgba(217,119,6,0.1); color:#d97706; border:1px solid rgba(217,119,6,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+ .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#1e293b; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .pedagogy-box { background:#f0fdf4; border:1px solid #86efac; border-left:4px solid #16a34a; border-radius:12px; padding:1.5rem; margin:1.75rem 0; }
+ .pedagogy-box h4 { color:#15803d; margin:0 0 0.6rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.5rem; }
+ .pedagogy-box p, .pedagogy-box li { font-size:0.95rem; color:#166534; margin:0; line-height:1.65; }
+
+ .alert-box { background:#fffbeb; border:1px solid #fcd34d; border-left:4px solid #f59e0b; border-radius:12px; padding:1.5rem; margin:1.75rem 0; }
+ .alert-box h4 { color:#b45309; margin:0 0 0.6rem; font-size:1rem; font-weight:800; display:flex; align-items:center; gap:0.5rem; }
+ .alert-box p { font-size:0.95rem; color:#92400e; margin:0; line-height:1.65; }
+
+ .formula-box { background:linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color:white; padding:1.5rem 2rem; border-radius:12px; margin:1.5rem 0; text-align:center; font-size:1.3rem; font-weight:700; letter-spacing:0.02em; }
+ .formula-box .formula-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:0.5rem; font-weight:600; }
+ .formula-box .formula-highlight { color:#4ade80; }
+
+ .takeaway-box { background:linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border:1px solid #16a34a; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#15803d; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(22,163,74,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#16a34a; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #15803d 0%, #16a34a 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(22,163,74,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .next-cta i { font-size:1.5rem; }
+
+ .step-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin:2rem 0; }
+ .step-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; border-top:4px solid #16a34a; }
+ .step-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .step-number { width:42px; height:38px; border-radius:12px; background:linear-gradient(135deg, #15803d 0%, #16a34a 100%); display:flex; align-items:center; justify-content:center; font-size:1.1rem; font-weight:900; color:white; margin:0 auto 0.75rem; }
+ .step-card h4 { font-size:1rem; font-weight:800; color:#0f172a; margin:0 0 0.5rem; }
+ .step-card p { font-size:0.85rem; color:#64748b; line-height:1.5; margin:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#16a34a; margin-right:0.75rem; }
+ details[open] summary { border-color:#16a34a; background:#f0fdf4; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdf4; border:1px solid #86efac; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; } .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .formula-box { font-size:1rem; padding:1rem 1.25rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .step-grid { grid-template-columns:1fr 1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; } .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+   .hero-badges { gap:0.4rem; margin-top:1rem; }
+   .formula-box { font-size:0.9rem; padding:0.75rem 1rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:0.4rem;"></i> Série Les Options de A à Z — Partie 1 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Calls, Puts et les Bases</h1>
+  <p class="hero-subtitle">Une option est un droit, pas une obligation. Avant de parler stratégies, Greeks ou spreads, il faut comprendre cette mécanique fondamentale. On part de zéro : calls, puts, strikes, premiums, et pourquoi ce marché de $40 000 milliards existe.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-phone"></i> Calls & Puts</span>
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-crosshairs"></i> Strike & Premium</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-bullseye"></i> ITM / ATM / OTM</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-chart-area"></i> Payoff Diagrams</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><span class="series-arrow disabled"><i class="fas fa-chevron-left"></i></span><span class="series-title">Les Options de A à Z</span><div class="series-steps"><a href="/series/options-trading/part1-fondamentaux/" class="series-step current" title="Calls, Puts et les Bases"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/options-trading/part2-les-greeks/" class="series-step" title="Les Greeks"><span class="series-num">2</span><span class="series-label">Greeks</span></a><a href="/series/options-trading/part3-strategies-base/" class="series-step" title="Stratégies de Base"><span class="series-num">3</span><span class="series-label">Strat. Base</span></a><a href="/series/options-trading/part4-spreads/" class="series-step" title="Les Spreads"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/options-trading/part5-strategies-avancees/" class="series-step" title="Stratégies Avancées"><span class="series-num">5</span><span class="series-label">Avancées</span></a><a href="/series/options-trading/part6-gestion-risque/" class="series-step" title="Gestion du Risque"><span class="series-num">6</span><span class="series-label">Risque</span></a></div><span class="series-counter">1/6</span><a href="/series/options-trading/part2-les-greeks/" class="series-arrow" title="Les Greeks"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#quest-ce" class="fnav-item" data-section="quest-ce"><i class="fas fa-bookmark"></i><span>Qu'est-ce qu'une option</span></a><a href="#call-put" class="fnav-item" data-section="call-put"><i class="fas fa-bookmark"></i><span>Call vs Put</span></a><a href="#vocabulaire" class="fnav-item" data-section="vocabulaire"><i class="fas fa-bookmark"></i><span>Le vocabulaire clé</span></a><a href="#moneyness" class="fnav-item" data-section="moneyness"><i class="fas fa-bookmark"></i><span>ITM / ATM / OTM</span></a><a href="#valeur" class="fnav-item" data-section="valeur"><i class="fas fa-bookmark"></i><span>Valeur intrinsèque</span></a><a href="#pourquoi" class="fnav-item" data-section="pourquoi"><i class="fas fa-bookmark"></i><span>Pourquoi les options</span></a><a href="#exemple" class="fnav-item" data-section="exemple"><i class="fas fa-bookmark"></i><span>Exemple concret</span></a><a href="#payoff" class="fnav-item" data-section="payoff"><i class="fas fa-bookmark"></i><span>Payoff Diagrams</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var offset = target.getBoundingClientRect().top + window.scrollY - 80;
+        window.scrollTo({ top: offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+
+  window.addEventListener('scroll', function() {
+    var scrollPos = window.scrollY + 120;
+    var current = null;
+    sections.forEach(function(s) { if (s.el.offsetTop <= scrollPos) current = s; });
+    items.forEach(function(item) { item.classList.remove('active'); });
+    if (current) { current.item.classList.add('active'); label.textContent = current.item.querySelector('span').textContent; }
+  });
+})();
+</script>
+
+<div style="max-width:900px; margin:0 auto; padding:0 1rem;">
+
+<!-- SECTION 1: Qu'est-ce qu'une option -->
+<div id="quest-ce" class="content-card" style="margin-top:-4rem; padding-top:5rem;">
+  <div class="section-divider">Section 1</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-file-contract" style="color:#16a34a;"></i> Qu'est-ce qu'une option ?
+  </h2>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Une option est un <strong>contrat financier</strong> qui donne à son acheteur le <strong>droit — mais pas l'obligation</strong> — d'acheter ou de vendre un actif sous-jacent (action, indice, ETF, matière première) à un prix fixé d'avance, avant une date limite. Ce droit a un prix : le <strong>premium</strong>.
+  </p>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    C'est la distinction fondamentale avec les futures ou les actions : l'acheteur d'une option choisit s'il exerce son droit. Si le marché lui donne tort, il laisse l'option expirer et perd uniquement le premium payé. Le vendeur, lui, a une <strong>obligation</strong> : si l'acheteur exerce, le vendeur doit honorer le contrat.
+  </p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Analogie simple</h4>
+    <p>Pensez à un <strong>billet de réservation pour un concert</strong>. Vous payez 50 € pour réserver une place à 200 €. Si le concert affiche complet et que les places se revendent 400 €, votre réservation vaut 200 € de profit. Si le concert est annulé, vous perdez vos 50 € de réservation — mais pas les 200 €, car vous n'étiez pas obligé d'acheter la place. Le billet de réservation est votre <strong>premium</strong>. Le prix de 200 € est votre <strong>strike</strong>.</p>
+  </div>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Chaque contrat d'option porte sur <strong>100 actions</strong> du sous-jacent. Quand on dit qu'une option coûte $5, on paie en réalité $500 (5 × 100). C'est le <em>multiplicateur standard</em> sur les marchés américains.
+  </p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Contrat</h4>
+      <p>Un accord standardisé entre acheteur et vendeur, coté sur un exchange (CBOE, NYSE Arca)</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Droit, pas obligation</h4>
+      <p>L'acheteur choisit d'exercer ou non. Le vendeur est obligé si l'acheteur exerce</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Risque défini</h4>
+      <p>L'acheteur ne peut perdre que le premium payé. Le vendeur a un risque potentiellement illimité</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Effet de levier</h4>
+      <p>Contrôler 100 actions pour une fraction du prix. Un mouvement de 5% sur le sous-jacent peut valoir 50%+ sur l'option</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: Call vs Put -->
+<div id="call-put" class="content-card">
+  <div class="section-divider">Section 2</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-arrows-left-right" style="color:#16a34a;"></i> Call vs Put : Les Deux Familles
+  </h2>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Le Call — Droit d'acheter</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Un <strong>call</strong> donne à son acheteur le droit d'acheter 100 actions du sous-jacent au prix du strike, avant l'expiration. On achète un call quand on est <strong>haussier</strong> (bullish) : on pense que le prix du sous-jacent va monter au-dessus du strike + premium payé.
+  </p>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    <strong>Profit potentiel</strong> : théoriquement illimité (le cours peut monter indéfiniment).<br>
+    <strong>Perte maximale</strong> : le premium payé.<br>
+    <strong>Breakeven</strong> : strike + premium.
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">Profit d'un Long Call à l'expiration</div>
+    Profit = (<span class="formula-highlight">Prix du sous-jacent</span> − Strike) × 100 − Premium payé
+  </div>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Le Put — Droit de vendre</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Un <strong>put</strong> donne à son acheteur le droit de vendre 100 actions au prix du strike. On achète un put quand on est <strong>baissier</strong> (bearish) ou quand on veut <strong>protéger</strong> une position existante contre une baisse.
+  </p>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    <strong>Profit potentiel</strong> : le strike × 100 − premium (le cours ne peut pas descendre sous 0).<br>
+    <strong>Perte maximale</strong> : le premium payé.<br>
+    <strong>Breakeven</strong> : strike − premium.
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">Profit d'un Long Put à l'expiration</div>
+    Profit = (Strike − <span class="formula-highlight">Prix du sous-jacent</span>) × 100 − Premium payé
+  </div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th></th><th>Call</th><th>Put</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Direction</strong></td><td>Haussier (bullish)</td><td>Baissier (bearish)</td></tr>
+      <tr><td><strong>Droit de</strong></td><td>Acheter au strike</td><td>Vendre au strike</td></tr>
+      <tr><td><strong>Profit max (acheteur)</strong></td><td>Illimité</td><td>Strike × 100 − premium</td></tr>
+      <tr><td><strong>Perte max (acheteur)</strong></td><td>Premium payé</td><td>Premium payé</td></tr>
+      <tr><td><strong>Breakeven</strong></td><td>Strike + premium</td><td>Strike − premium</td></tr>
+      <tr><td><strong>Utilisé pour</strong></td><td>Spéculer à la hausse, hedger un short</td><td>Protéger un long, spéculer à la baisse</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Acheteur vs Vendeur</h4>
+    <p>Tout ce qui précède concerne l'<strong>acheteur</strong> (long). Le <strong>vendeur</strong> (short, ou « writer ») a le profil inverse : il encaisse le premium mais prend un risque potentiellement illimité (short call) ou substantiel (short put). La vente d'options nues est réservée aux traders expérimentés avec un compte margin approuvé.</p>
+  </div>
+</div>
+
+<!-- SECTION 3: Vocabulaire clé -->
+<div id="vocabulaire" class="content-card">
+  <div class="section-divider">Section 3</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-book" style="color:#16a34a;"></i> Le Vocabulaire Clé
+  </h2>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Terme</th><th>Définition</th><th>Exemple</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Strike (prix d'exercice)</strong></td>
+        <td>Le prix auquel l'acheteur peut acheter (call) ou vendre (put) le sous-jacent</td>
+        <td>AAPL Call Strike $200 → droit d'acheter AAPL à $200</td>
+      </tr>
+      <tr>
+        <td><strong>Premium</strong></td>
+        <td>Le prix du contrat d'option, payé par l'acheteur au vendeur</td>
+        <td>Premium $5 = $500 par contrat (5 × 100 actions)</td>
+      </tr>
+      <tr>
+        <td><strong>Expiration</strong></td>
+        <td>La date limite après laquelle l'option cesse d'exister</td>
+        <td>AAPL Jul 18 2026 Call $200 → expire le 18 juillet 2026</td>
+      </tr>
+      <tr>
+        <td><strong>Exercice</strong></td>
+        <td>Activer le droit : l'acheteur achète (call) ou vend (put) au strike</td>
+        <td>Exercer un call AAPL $200 → acheter 100 AAPL à $200 chacune</td>
+      </tr>
+      <tr>
+        <td><strong>Sous-jacent (underlying)</strong></td>
+        <td>L'actif sur lequel porte l'option</td>
+        <td>AAPL, SPY, QQQ, TSLA, GLD</td>
+      </tr>
+      <tr>
+        <td><strong>Multiplicateur</strong></td>
+        <td>Nombre d'actions par contrat (100 pour les equity options US)</td>
+        <td>1 contrat = 100 actions. Premium $3 = coût total $300</td>
+      </tr>
+      <tr>
+        <td><strong>Open Interest (OI)</strong></td>
+        <td>Nombre de contrats ouverts (ni fermés ni exercés) pour un strike/expiration donné</td>
+        <td>OI 15,000 = 15 000 contrats actifs sur ce strike</td>
+      </tr>
+      <tr>
+        <td><strong>Volume</strong></td>
+        <td>Nombre de contrats échangés dans la journée</td>
+        <td>Volume 2,500 = 2 500 contrats tradés aujourd'hui</td>
+      </tr>
+      <tr>
+        <td><strong>Bid / Ask</strong></td>
+        <td>Prix d'achat (bid) et de vente (ask) du contrat. L'écart = spread</td>
+        <td>Bid $4.80 / Ask $5.10 → spread de $0.30</td>
+      </tr>
+      <tr>
+        <td><strong>Assignment</strong></td>
+        <td>Le vendeur est « assigné » quand l'acheteur exerce : il doit livrer (call) ou acheter (put) les actions</td>
+        <td>Short call AAPL $200 assigné → vendre 100 AAPL à $200</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Options européennes vs américaines</h4>
+    <p>Les options <strong>américaines</strong> peuvent être exercées à tout moment avant l'expiration. Les options <strong>européennes</strong> ne peuvent être exercées qu'à l'expiration. Presque toutes les options sur actions US sont de style américain. Les options sur indices (SPX, NDX) sont souvent européennes. En pratique, l'exercice anticipé est rare — il est presque toujours plus profitable de <em>revendre</em> l'option que de l'exercer.</p>
+  </div>
+</div>
+
+<!-- SECTION 4: Moneyness -->
+<div id="moneyness" class="content-card">
+  <div class="section-divider">Section 4</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-bullseye" style="color:#16a34a;"></i> ITM, ATM, OTM — La « Moneyness »
+  </h2>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    La <strong>moneyness</strong> décrit la relation entre le prix du sous-jacent et le strike de l'option. C'est le concept le plus important pour comprendre comment les options sont tarifées.
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Moneyness</th><th>Call</th><th>Put</th><th>Caractéristique</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>ITM</strong> (In The Money)</td>
+        <td>Prix &gt; Strike</td>
+        <td>Prix &lt; Strike</td>
+        <td>L'option a de la valeur intrinsèque. Plus chère, mais plus de chances de profit</td>
+      </tr>
+      <tr>
+        <td><strong>ATM</strong> (At The Money)</td>
+        <td>Prix ≈ Strike</td>
+        <td>Prix ≈ Strike</td>
+        <td>Le strike est proche du cours actuel. Maximum de valeur temps (theta)</td>
+      </tr>
+      <tr>
+        <td><strong>OTM</strong> (Out of The Money)</td>
+        <td>Prix &lt; Strike</td>
+        <td>Prix &gt; Strike</td>
+        <td>Pas de valeur intrinsèque. Moins chère, mais probabilité de profit plus faible</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Exemple concret</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    AAPL se négocie à <strong>$210</strong>. Voici comment la moneyness s'applique à différents calls :
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Strike</th><th>Premium</th><th>Moneyness</th><th>Valeur intrinsèque</th><th>Valeur temps</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>$190</td><td>$23.50</td><td style="color:#16a34a; font-weight:700;">Deep ITM</td><td>$20.00</td><td>$3.50</td></tr>
+      <tr><td>$200</td><td>$14.00</td><td style="color:#16a34a; font-weight:700;">ITM</td><td>$10.00</td><td>$4.00</td></tr>
+      <tr><td>$210</td><td>$6.50</td><td style="color:#2563eb; font-weight:700;">ATM</td><td>$0.00</td><td>$6.50</td></tr>
+      <tr><td>$220</td><td>$2.80</td><td style="color:#f59e0b; font-weight:700;">OTM</td><td>$0.00</td><td>$2.80</td></tr>
+      <tr><td>$230</td><td>$0.90</td><td style="color:#ef4444; font-weight:700;">Deep OTM</td><td>$0.00</td><td>$0.90</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du « pas cher »</h4>
+    <p>Un call OTM à $0.90 semble « pas cher » comparé à $23.50 pour le deep ITM. Mais le call OTM a besoin que AAPL monte de $20 (presque 10%) juste pour atteindre le breakeven. Le deep ITM, lui, gagne dès qu'AAPL bouge de $0.01. Le prix bas d'une option OTM reflète sa faible probabilité de profit — pas une « bonne affaire ».</p>
+  </div>
+</div>
+
+<!-- SECTION 5: Valeur intrinsèque vs temps -->
+<div id="valeur" class="content-card">
+  <div class="section-divider">Section 5</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-hourglass-half" style="color:#16a34a;"></i> Valeur Intrinsèque vs Valeur Temps
+  </h2>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Le premium d'une option se décompose en deux composantes :
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">Décomposition du premium</div>
+    Premium = <span class="formula-highlight">Valeur intrinsèque</span> + Valeur temps
+  </div>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">La valeur intrinsèque</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    C'est la valeur « réelle » de l'option si elle était exercée immédiatement. Pour un call : <strong>max(0, Prix − Strike)</strong>. Pour un put : <strong>max(0, Strike − Prix)</strong>. Seules les options ITM ont une valeur intrinsèque. Les options ATM et OTM ont une valeur intrinsèque de zéro.
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">La valeur temps (extrinsèque)</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    C'est ce que le marché paie pour le <strong>potentiel</strong> de l'option — la possibilité qu'elle devienne (plus) profitable avant l'expiration. La valeur temps dépend de trois facteurs principaux :
+  </p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-clock" style="font-size:0.9rem;"></i></div>
+      <h4>Temps restant</h4>
+      <p>Plus il reste de temps, plus la valeur temps est élevée. À l'expiration, la valeur temps = 0</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-wave-square" style="font-size:0.9rem;"></i></div>
+      <h4>Volatilité implicite</h4>
+      <p>Plus le marché anticipe de mouvements, plus l'option coûte cher (on paie l'incertitude)</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-percent" style="font-size:0.9rem;"></i></div>
+      <h4>Taux d'intérêt</h4>
+      <p>Impact mineur mais réel : les calls valent légèrement plus quand les taux montent (coût de portage)</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi la valeur temps s'érode</h4>
+    <p>La valeur temps s'érode chaque jour — c'est ce qu'on appelle le <strong>theta decay</strong> (on en parlera en détail dans la Partie 2 : Les Greeks). L'érosion est non-linéaire : elle s'accélère fortement dans les 30 derniers jours avant l'expiration. C'est pourquoi les options à court terme sont moins chères en valeur absolue mais <em>perdent plus vite</em> en pourcentage.</p>
+  </div>
+</div>
+
+<!-- SECTION 6: Pourquoi les options existent -->
+<div id="pourquoi" class="content-card">
+  <div class="section-divider">Section 6</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-question" style="color:#16a34a;"></i> Pourquoi les Options Existent
+  </h2>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Le marché des options représente plus de <strong>$40 000 milliards</strong> de notionnel échangé chaque année. Trois utilisations principales expliquent cette taille :
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">1. Le Hedging (couverture)</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Un gérant de fonds qui détient $10M en actions tech peut acheter des puts sur le QQQ pour limiter sa perte en cas de crash. C'est une <strong>assurance</strong> : le premium est le « coût de la police ». Si le marché s'effondre, les puts prennent de la valeur et compensent les pertes sur les actions. C'est l'utilisation originale des options — et la raison pour laquelle elles ont été inventées.
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">2. La Spéculation</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    L'effet de levier des options permet de prendre des paris directionnels avec un risque défini. Au lieu d'acheter 100 actions NVDA à $140 ($14 000), on peut acheter un call à $5 ($500). Si NVDA monte de 10%, l'action gagne $1 400 (10%) mais le call peut gagner $800+ (160%). L'effet de levier fonctionne dans les deux sens : si NVDA ne bouge pas ou baisse, on peut perdre 100% du premium.
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">3. La Génération de Revenus</h3>
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Les stratégies comme le <strong>covered call</strong> (vendre des calls sur des actions qu'on possède) génèrent un revenu régulier. Le vendeur encaisse le premium immédiatement. En contrepartie, il accepte de limiter son upside potentiel. C'est une stratégie populaire chez les investisseurs long-terme qui veulent extraire un rendement supplémentaire de leurs positions.
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Utilisation</th><th>Qui</th><th>Objectif</th><th>Stratégie typique</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Hedging</strong></td><td>Institutionnels, gérants</td><td>Limiter les pertes</td><td>Protective put, collar</td></tr>
+      <tr><td><strong>Spéculation</strong></td><td>Traders actifs, retail</td><td>Effet de levier directionnel</td><td>Long call/put, spreads</td></tr>
+      <tr><td><strong>Revenus</strong></td><td>Investisseurs long-terme</td><td>Cash flow régulier</td><td>Covered call, cash-secured put</td></tr>
+      <tr><td><strong>Arbitrage</strong></td><td>Market makers, quants</td><td>Profit sans risque directionnel</td><td>Put-call parity, conversion</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 7: Exemple concret -->
+<div id="exemple" class="content-card">
+  <div class="section-divider">Section 7</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-lightbulb" style="color:#16a34a;"></i> Exemple Concret : Un Call AAPL
+  </h2>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Mettons les concepts en pratique avec un trade complet.
+  </p>
+
+  <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:16px; padding:2rem; margin:1.5rem 0;">
+    <h3 style="color:#0f172a; margin-top:0;">Le Setup</h3>
+    <ul style="font-size:1rem; line-height:1.8; color:#334155; margin:1rem 0;">
+      <li><strong>Action</strong> : Apple (AAPL), actuellement à <strong>$210</strong></li>
+      <li><strong>Thèse</strong> : AAPL va monter après les earnings dans 3 semaines</li>
+      <li><strong>Contrat</strong> : Achat de 1 Call AAPL Strike $215, expiration dans 30 jours</li>
+      <li><strong>Premium</strong> : $4.50 par action → coût total = <strong>$450</strong></li>
+      <li><strong>Breakeven</strong> : $215 + $4.50 = <strong>$219.50</strong></li>
+    </ul>
+  </div>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Scénarios à l'expiration</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Prix AAPL</th><th>Moneyness</th><th>Valeur de l'option</th><th>Profit/Perte</th><th>Rendement</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>$230</td>
+        <td style="color:#16a34a; font-weight:700;">Deep ITM</td>
+        <td>$15.00 ($1 500)</td>
+        <td style="color:#16a34a; font-weight:700;">+$1 050</td>
+        <td style="color:#16a34a; font-weight:700;">+233%</td>
+      </tr>
+      <tr>
+        <td>$225</td>
+        <td style="color:#16a34a; font-weight:700;">ITM</td>
+        <td>$10.00 ($1 000)</td>
+        <td style="color:#16a34a; font-weight:700;">+$550</td>
+        <td style="color:#16a34a; font-weight:700;">+122%</td>
+      </tr>
+      <tr>
+        <td>$219.50</td>
+        <td style="color:#2563eb; font-weight:700;">Breakeven</td>
+        <td>$4.50 ($450)</td>
+        <td style="font-weight:700;">$0</td>
+        <td>0%</td>
+      </tr>
+      <tr>
+        <td>$215</td>
+        <td style="color:#f59e0b; font-weight:700;">ATM</td>
+        <td>$0 (expire sans valeur)</td>
+        <td style="color:#ef4444; font-weight:700;">−$450</td>
+        <td style="color:#ef4444; font-weight:700;">−100%</td>
+      </tr>
+      <tr>
+        <td>$210</td>
+        <td style="color:#ef4444; font-weight:700;">OTM</td>
+        <td>$0 (expire sans valeur)</td>
+        <td style="color:#ef4444; font-weight:700;">−$450</td>
+        <td style="color:#ef4444; font-weight:700;">−100%</td>
+      </tr>
+      <tr>
+        <td>$200</td>
+        <td style="color:#ef4444; font-weight:700;">Deep OTM</td>
+        <td>$0 (expire sans valeur)</td>
+        <td style="color:#ef4444; font-weight:700;">−$450</td>
+        <td style="color:#ef4444; font-weight:700;">−100%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Observation clé : AAPL doit monter de <strong>4.5%</strong> (de $210 à $219.50) juste pour ne pas perdre d'argent. Si AAPL finit à $215 — en hausse de 2.4% — l'option perd <strong>100%</strong>. C'est l'asymétrie fondamentale : l'effet de levier amplifie les gains ET l'exigence de performance.
+  </p>
+
+  <details>
+    <summary>Quiz : Si AAPL monte de 10% (à $231), quel est le rendement du call ?</summary>
+    <div class="quiz-answer">
+      <p>AAPL à $231 → l'option vaut ($231 − $215) × 100 = $1 600. Profit = $1 600 − $450 = <strong>$1 150</strong>, soit un rendement de <strong>+256%</strong>. Avec 100 actions achetées en direct ($21 000), le gain serait de $2 100 (+10%). L'option multiplie le rendement par 25× pour une mise 47× plus petite.</p>
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 8: Payoff Diagrams -->
+<div id="payoff" class="content-card">
+  <div class="section-divider">Section 8</div>
+  <h2 style="font-size:1.8rem; font-weight:900; color:#0f172a; display:flex; align-items:center; gap:0.75rem; border-bottom:2px solid #f1f5f9; padding-bottom:0.75rem;">
+    <i class="fa-solid fa-chart-area" style="color:#16a34a;"></i> Payoff Diagrams : Visualiser le Profit
+  </h2>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Le <strong>payoff diagram</strong> (ou diagramme de profit/perte) est l'outil visuel fondamental pour comprendre une position options. L'axe X représente le prix du sous-jacent à l'expiration, l'axe Y le profit ou la perte.
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Long Call — Payoff</h3>
+  <div id="chart-long-call" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Le diagramme du long call montre clairement : la perte est <strong>plafonnée</strong> au premium ($450) en dessous du strike, puis le profit monte <strong>linéairement</strong> au-dessus du breakeven. Le coude se situe au strike ($215) et la ligne coupe l'axe zéro au breakeven ($219.50).
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Long Put — Payoff</h3>
+  <div id="chart-long-put" style="width:100%; height:350px; margin:1.5rem 0;"></div>
+
+  <p style="font-size:1.1rem; line-height:1.7; color:#334155;">
+    Le long put est le miroir : la perte est plafonnée au-dessus du strike, et le profit augmente quand le cours <strong>baisse</strong> sous le breakeven. Le profit maximal est atteint quand le sous-jacent tombe à $0 (peu probable mais théoriquement possible).
+  </p>
+
+  <h3 style="font-size:1.3rem; font-weight:800; color:#1e293b; margin:2rem 0 1rem;">Les 4 positions de base</h3>
+  <div id="chart-four-positions" style="width:100%; height:400px; margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Lire un payoff diagram</h4>
+    <p>Trois choses à repérer immédiatement : <strong>1)</strong> où la ligne coupe le zéro (breakeven), <strong>2)</strong> le maximum de perte (point le plus bas), <strong>3)</strong> si le profit est plafonné ou illimité (la ligne continue-t-elle à monter ?). Ces trois informations résument entièrement le profil risque/rendement de la position.</p>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#16a34a;"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Une option est un <strong>droit, pas une obligation</strong> — l'acheteur choisit, le vendeur subit</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Call</strong> = haussier (droit d'acheter), <strong>Put</strong> = baissier (droit de vendre)</li>
+      <li><i class="fa-solid fa-check"></i> Le premium = <strong>valeur intrinsèque + valeur temps</strong>. La valeur temps s'érode chaque jour</li>
+      <li><i class="fa-solid fa-check"></i> <strong>ITM</strong> = l'option a de la valeur réelle, <strong>OTM</strong> = pari sur un mouvement futur</li>
+      <li><i class="fa-solid fa-check"></i> 1 contrat = 100 actions. Un premium de $5 coûte <strong>$500</strong></li>
+      <li><i class="fa-solid fa-check"></i> L'effet de levier amplifie gains ET exigences. Le breakeven n'est pas le strike mais <strong>strike ± premium</strong></li>
+      <li><i class="fa-solid fa-check"></i> Le payoff diagram résume tout : breakeven, perte max, profit plafonné ou non</li>
+    </ul>
+  </div>
+
+  <a href="/series/options-trading/part2-les-greeks/" class="next-cta" style="background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);"><div><div class="next-label">Partie 2 sur 6</div><div class="next-title">Les Greeks : Delta, Gamma, Theta, Vega <i class="fa-solid fa-arrow-right"></i></div></div></a>
+</div>
+
+</div><!-- /container -->
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway.
+  Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Long Call Payoff
+var chartCall = echarts.init(document.getElementById('chart-long-call'));
+var strikeCall = 215, premiumCall = 4.5;
+var pricesCall = [];
+var profitCall = [];
+for (var p = 195; p <= 240; p += 0.5) {
+  pricesCall.push(p.toFixed(1));
+  var val = Math.max(p - strikeCall, 0) * 100 - premiumCall * 100;
+  profitCall.push(val);
+}
+chartCall.setOption({
+  title: { text: 'Long Call — AAPL Strike $215, Premium $4.50', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return 'AAPL à $' + p[0].name + '<br>P&L: ' + (p[0].value >= 0 ? '+' : '') + '$' + p[0].value.toFixed(0); } },
+  grid: { left: '8%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: pricesCall, name: 'Prix AAPL à expiration ($)', nameLocation: 'middle', nameGap: 30, axisLabel: { fontSize: 10, interval: 9 } },
+  yAxis: { type: 'value', name: 'Profit / Perte ($)', axisLabel: { fontSize: 11, formatter: function(v) { return (v >= 0 ? '+' : '') + v; } } },
+  series: [{
+    type: 'line',
+    data: profitCall,
+    smooth: false,
+    lineStyle: { color: '#16a34a', width: 3 },
+    areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(22,163,74,0.15)' }, { offset: 1, color: 'rgba(22,163,74,0)' }] } },
+    itemStyle: { color: '#16a34a' },
+    symbol: 'none',
+    markLine: {
+      silent: true,
+      lineStyle: { color: '#94a3b8', type: 'dashed' },
+      data: [{ yAxis: 0, label: { formatter: 'Breakeven', fontSize: 10 } }]
+    },
+    markPoint: {
+      data: [
+        { coord: ['215.0', -450], name: 'Strike', symbol: 'circle', symbolSize: 10, itemStyle: { color: '#2563eb' }, label: { show: true, formatter: 'Strike\n$215', position: 'bottom', fontSize: 10, color: '#2563eb' } },
+        { coord: ['219.5', 0], name: 'Breakeven', symbol: 'diamond', symbolSize: 12, itemStyle: { color: '#f59e0b' }, label: { show: true, formatter: 'BE\n$219.50', position: 'top', fontSize: 10, color: '#f59e0b' } }
+      ]
+    }
+  }]
+});
+
+// Chart 2: Long Put Payoff
+var chartPut = echarts.init(document.getElementById('chart-long-put'));
+var strikePut = 210, premiumPut = 5;
+var pricesPut = [];
+var profitPut = [];
+for (var p = 180; p <= 230; p += 0.5) {
+  pricesPut.push(p.toFixed(1));
+  var val = Math.max(strikePut - p, 0) * 100 - premiumPut * 100;
+  profitPut.push(val);
+}
+chartPut.setOption({
+  title: { text: 'Long Put — AAPL Strike $210, Premium $5.00', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', formatter: function(p) { return 'AAPL à $' + p[0].name + '<br>P&L: ' + (p[0].value >= 0 ? '+' : '') + '$' + p[0].value.toFixed(0); } },
+  grid: { left: '8%', right: '4%', bottom: '12%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: pricesPut, name: 'Prix AAPL à expiration ($)', nameLocation: 'middle', nameGap: 30, axisLabel: { fontSize: 10, interval: 9 } },
+  yAxis: { type: 'value', name: 'Profit / Perte ($)', axisLabel: { fontSize: 11, formatter: function(v) { return (v >= 0 ? '+' : '') + v; } } },
+  series: [{
+    type: 'line',
+    data: profitPut,
+    smooth: false,
+    lineStyle: { color: '#ef4444', width: 3 },
+    areaStyle: { color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1, colorStops: [{ offset: 0, color: 'rgba(239,68,68,0.15)' }, { offset: 1, color: 'rgba(239,68,68,0)' }] } },
+    itemStyle: { color: '#ef4444' },
+    symbol: 'none',
+    markLine: {
+      silent: true,
+      lineStyle: { color: '#94a3b8', type: 'dashed' },
+      data: [{ yAxis: 0, label: { formatter: 'Breakeven', fontSize: 10 } }]
+    },
+    markPoint: {
+      data: [
+        { coord: ['210.0', -500], name: 'Strike', symbol: 'circle', symbolSize: 10, itemStyle: { color: '#2563eb' }, label: { show: true, formatter: 'Strike\n$210', position: 'bottom', fontSize: 10, color: '#2563eb' } },
+        { coord: ['205.0', 0], name: 'Breakeven', symbol: 'diamond', symbolSize: 12, itemStyle: { color: '#f59e0b' }, label: { show: true, formatter: 'BE\n$205', position: 'top', fontSize: 10, color: '#f59e0b' } }
+      ]
+    }
+  }]
+});
+
+// Chart 3: Four basic positions
+var chartFour = echarts.init(document.getElementById('chart-four-positions'));
+var strike4 = 215, prem4 = 5;
+var prices4 = [];
+var longCallData = [], shortCallData = [], longPutData = [], shortPutData = [];
+for (var p = 195; p <= 235; p += 0.5) {
+  prices4.push(p.toFixed(1));
+  var lc = Math.max(p - strike4, 0) * 100 - prem4 * 100;
+  var sc = -(Math.max(p - strike4, 0) * 100 - prem4 * 100);
+  var lp = Math.max(strike4 - p, 0) * 100 - prem4 * 100;
+  var sp = -(Math.max(strike4 - p, 0) * 100 - prem4 * 100);
+  longCallData.push(lc);
+  shortCallData.push(sc);
+  longPutData.push(lp);
+  shortPutData.push(sp);
+}
+chartFour.setOption({
+  title: { text: 'Les 4 positions de base (Strike $215, Premium $5)', left: 'center', textStyle: { fontSize: 13, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis' },
+  legend: { data: ['Long Call', 'Short Call', 'Long Put', 'Short Put'], bottom: 0, textStyle: { fontSize: 11 } },
+  grid: { left: '8%', right: '4%', bottom: '15%', top: '18%', containLabel: true },
+  xAxis: { type: 'category', data: prices4, name: 'Prix à expiration ($)', nameLocation: 'middle', nameGap: 30, axisLabel: { fontSize: 10, interval: 19 } },
+  yAxis: { type: 'value', name: 'P&L ($)', axisLabel: { fontSize: 11 } },
+  series: [
+    { name: 'Long Call', type: 'line', data: longCallData, lineStyle: { color: '#16a34a', width: 2.5 }, itemStyle: { color: '#16a34a' }, symbol: 'none' },
+    { name: 'Short Call', type: 'line', data: shortCallData, lineStyle: { color: '#ef4444', width: 2.5, type: 'dashed' }, itemStyle: { color: '#ef4444' }, symbol: 'none' },
+    { name: 'Long Put', type: 'line', data: longPutData, lineStyle: { color: '#2563eb', width: 2.5 }, itemStyle: { color: '#2563eb' }, symbol: 'none' },
+    { name: 'Short Put', type: 'line', data: shortPutData, lineStyle: { color: '#f59e0b', width: 2.5, type: 'dashed' }, itemStyle: { color: '#f59e0b' }, symbol: 'none' }
+  ]
+});
+
+window.addEventListener('resize', function() {
+  chartCall.resize(); chartPut.resize(); chartFour.resize();
+});
+</script>
+
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

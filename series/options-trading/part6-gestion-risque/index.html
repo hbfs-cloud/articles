@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Gestion du Risque : Sizing, Rolling, Discipline | Les Options de A à Z — Partie 6/6 | DailyTickers</title>
+ <meta name="description" content="Série Les Options de A à Z — Partie 6/6 : position sizing, gestion des perdants, rolling, plan de trading, discipline psychologique. La partie qui sépare les survivants des disparus.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdf4 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-green{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}.hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .pedagogy-box{background:#f0fdf4;border:1px solid #86efac;border-left:4px solid #16a34a;border-radius:12px;padding:1.5rem;margin:1.75rem 0}.pedagogy-box h4{color:#15803d;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}.pedagogy-box p,.pedagogy-box li{font-size:.95rem;color:#166534;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}.alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}.alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .danger-box{background:#fef2f2;border:1px solid #fca5a5;border-left:4px solid #ef4444;border-radius:12px;padding:1.5rem;margin:1.75rem 0}.danger-box h4{color:#b91c1c;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}.danger-box p{font-size:.95rem;color:#991b1b;margin:0;line-height:1.65}
+ .formula-box{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#4ade80}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:1px solid #16a34a;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#15803d;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(22,163,74,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#16a34a;margin-top:.2rem;flex-shrink:0}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}.step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #16a34a}.step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}.step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}.step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}.step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .checklist{list-style:none;padding:0;margin:1.5rem 0}.checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:1rem;line-height:1.6;color:#334155;border-bottom:1px solid #f1f5f9}.checklist li:last-child{border-bottom:none}.checklist li::before{content:'\f0c8';font-family:'Font Awesome 6 Free';font-weight:400;color:#16a34a;margin-top:.2rem;flex-shrink:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#16a34a;margin-right:.75rem}details[open] summary{border-color:#16a34a;background:#f0fdf4;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ .final-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.final-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.3)}.final-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.final-cta .next-title{font-size:1.25rem;font-weight:800}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.step-grid{grid-template-columns:1fr 1fr}.formula-box{font-size:1rem}}@media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.step-grid{grid-template-columns:1fr}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:.4rem"></i> Série Les Options de A à Z — Partie 6 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Gestion du Risque</h1>
+  <p class="hero-subtitle">La stratégie la plus brillante ne survit pas sans gestion du risque. Sizing, stops, rolling, discipline : les règles qui séparent les traders qui durent de ceux qui disparaissent.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-calculator"></i> Position Sizing</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-hand"></i> Stops & Exits</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-rotate"></i> Rolling</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-brain"></i> Psychologie</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/options-trading/part5-strategies-avancees/" class="series-arrow" title="Stratégies Avancées"><i class="fas fa-chevron-left"></i></a><span class="series-title">Les Options de A à Z</span><div class="series-steps"><a href="/series/options-trading/part1-fondamentaux/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/options-trading/part2-les-greeks/" class="series-step"><span class="series-num">2</span><span class="series-label">Greeks</span></a><a href="/series/options-trading/part3-strategies-base/" class="series-step"><span class="series-num">3</span><span class="series-label">Strat. Base</span></a><a href="/series/options-trading/part4-spreads/" class="series-step"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/options-trading/part5-strategies-avancees/" class="series-step"><span class="series-num">5</span><span class="series-label">Avancées</span></a><a href="/series/options-trading/part6-gestion-risque/" class="series-step current"><span class="series-num">6</span><span class="series-label">Risque</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#sizing" class="fnav-item" data-section="sizing"><i class="fas fa-bookmark"></i><span>Position Sizing</span></a><a href="#stops" class="fnav-item" data-section="stops"><i class="fas fa-bookmark"></i><span>Stops & Exits</span></a><a href="#rolling" class="fnav-item" data-section="rolling"><i class="fas fa-bookmark"></i><span>Rolling</span></a><a href="#portfolio" class="fnav-item" data-section="portfolio"><i class="fas fa-bookmark"></i><span>Portefeuille</span></a><a href="#psychologie" class="fnav-item" data-section="psychologie"><i class="fas fa-bookmark"></i><span>Psychologie</span></a><a href="#plan" class="fnav-item" data-section="plan"><i class="fas fa-bookmark"></i><span>Plan de Trading</span></a><a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-bookmark"></i><span>Conclusion</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var t=document.getElementById(this.getAttribute('data-section'));if(t)window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'});if(isOpen)toggle()})});window.addEventListener('scroll',function(){var sp=window.scrollY+120,c=null;sections.forEach(function(s){if(s.el.offsetTop<=sp)c=s});items.forEach(function(i){i.classList.remove('active')});if(c){c.item.classList.add('active');label.textContent=c.item.querySelector('span').textContent}})})();</script>
+
+<div style="max-width:900px;margin:0 auto;padding:0 1rem">
+
+<!-- SECTION 1: Position Sizing -->
+<div id="sizing" class="content-card" style="margin-top:-4rem;padding-top:5rem">
+  <div class="section-divider">Section 1</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-calculator" style="color:#16a34a"></i> Position Sizing — La Règle n°1</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">La première cause de ruine des traders d'options n'est ni la mauvaise stratégie ni le mauvais timing — c'est le <strong>sizing excessif</strong>. Perdre 100% d'une position n'est pas un problème si cette position représente 2% du portefeuille. C'est un désastre si elle représente 30%.</p>
+
+  <div class="danger-box">
+    <h4><i class="fa-solid fa-skull-crossbones"></i> La règle de survie absolue</h4>
+    <p>Ne <strong>jamais</strong> risquer plus de <strong>1-5%</strong> de votre capital total sur un seul trade d'options. Si votre compte fait $50 000, le risque maximal par trade est de $500 à $2 500. C'est la perte maximale acceptable, pas le coût de la position — pour un spread, c'est le debit payé ou la largeur moins le credit.</p>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">Calcul du nombre de contrats</div>
+    Nb contrats = <span class="formula-highlight">Capital × %risque</span> / Perte max par contrat
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Exemples par taille de compte</h3>
+  <table class="compare-table">
+    <thead><tr><th>Capital</th><th>Risque max (3%)</th><th>Bull call spread $450/contrat</th><th>Iron condor $700/contrat</th></tr></thead>
+    <tbody>
+      <tr><td>$10 000</td><td>$300</td><td style="color:#ef4444;font-weight:700">0 contrats (trop cher)</td><td style="color:#ef4444;font-weight:700">0 contrats</td></tr>
+      <tr><td>$25 000</td><td>$750</td><td>1 contrat</td><td>1 contrat</td></tr>
+      <tr><td>$50 000</td><td>$1 500</td><td>3 contrats</td><td>2 contrats</td></tr>
+      <tr><td>$100 000</td><td>$3 000</td><td>6 contrats</td><td>4 contrats</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> L'illusion du compte à $10K</h4>
+    <p>Avec un compte de $10 000, le trading d'options multi-jambes est <em>difficile</em> à gérer correctement. Un seul iron condor qui tourne mal peut coûter $700 — soit 7% du compte. La solution : commencer avec des stratégies à 1 seule jambe (covered calls sur des actions que vous possédez déjà) ou des spreads très étroits ($2.50 de largeur). Ne cherchez pas à compenser un petit compte par du levier — c'est le chemin vers la ruine.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">La règle du « 2% par trade, 6% simultané »</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Au-delà du risque par trade, limitez votre <strong>exposition totale</strong> simultanée. Si vous avez 5 iron condors ouverts en même temps et que le marché s'effondre, tous peuvent perdre simultanément. Règles :</p>
+  <ul style="font-size:1.05rem;line-height:1.8;color:#334155">
+    <li>Max <strong>2-3%</strong> de risque par trade individuel</li>
+    <li>Max <strong>6-10%</strong> de risque total en positions ouvertes</li>
+    <li>Max <strong>3-5</strong> positions ouvertes simultanément pour un débutant</li>
+    <li>Diversifier les sous-jacents (pas 5 trades sur des tech stocks corrélées)</li>
+  </ul>
+</div>
+
+<!-- SECTION 2: Stops & Exits -->
+<div id="stops" class="content-card">
+  <div class="section-divider">Section 2</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-hand" style="color:#ef4444"></i> Stops & Règles de Sortie</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Les options ont une particularité : elles peuvent perdre 100% de leur valeur. Un stop-loss à −50% sur une action est une perte de la moitié. Un stop-loss à −50% sur une option peut être trop tard — l'option qui valait $5 est déjà à $2.50 et peut fondre à $0. Les règles de sortie doivent être <strong>définies avant l'entrée</strong>.</p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Règles de sortie par stratégie</h3>
+  <table class="compare-table">
+    <thead><tr><th>Stratégie</th><th>Prendre profit</th><th>Couper la perte</th><th>Sortie temps</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Long call/put</strong></td><td>+50-100% du premium</td><td>−50% du premium</td><td>Fermer à 21 DTE (theta accélère)</td></tr>
+      <tr><td><strong>Debit spread</strong></td><td>+50-75% du max profit</td><td>−100% du debit (ou 2× le debit perdu)</td><td>Fermer à 14 DTE</td></tr>
+      <tr><td><strong>Credit spread</strong></td><td>+50% du credit reçu</td><td>Perte = 2× le credit reçu</td><td>Fermer à 21 DTE</td></tr>
+      <tr><td><strong>Iron condor</strong></td><td>+50% du credit total</td><td>Perte = 2× le credit total</td><td>Fermer à 21 DTE</td></tr>
+      <tr><td><strong>Calendar spread</strong></td><td>+25-50% du debit</td><td>−50% du debit</td><td>Fermer à l'expiration du front month</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi prendre profit à 50% et pas 100% ?</h4>
+    <p>Statistiquement, la probabilité d'atteindre 50% du max profit est <em>bien supérieure</em> à celle d'atteindre 100%. Un iron condor avec credit de $300 atteint $150 de profit environ 85% du temps, mais atteint $300 (les options expirent à $0) seulement 60% du temps. En prenant profit à 50%, vous augmentez drastiquement votre win rate et libérez du capital pour le trade suivant. L'objectif n'est pas de maximiser chaque trade, mais de maximiser le rendement <em>par unité de temps et de risque</em>.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">La règle des 21 DTE</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Si votre position n'a pas atteint ni votre objectif de profit ni votre stop-loss, <strong>fermez-la à 21 jours de l'expiration</strong> (21 DTE). Pourquoi ? Le gamma augmente exponentiellement après 21 DTE pour les options ATM — votre position devient imprévisible. Le risque d'assignment augmente aussi. Fermez, prenez un petit gain ou une petite perte, et ouvrez une nouvelle position plus loin dans le temps.</p>
+
+  <div id="chart-exit-timing" style="width:100%;height:350px;margin:1.5rem 0"></div>
+</div>
+
+<!-- SECTION 3: Rolling -->
+<div id="rolling" class="content-card">
+  <div class="section-divider">Section 3</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-rotate" style="color:#2563eb"></i> Rolling — Prolonger une Position</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Le <strong>rolling</strong> consiste à fermer une position existante et en ouvrir une nouvelle simultanément, généralement à une expiration plus lointaine (roll out) et/ou à un strike différent (roll up/down). C'est un outil de gestion, pas une stratégie en soi.</p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Les 3 types de roll</h3>
+  <table class="compare-table">
+    <thead><tr><th>Type</th><th>Action</th><th>Quand</th><th>Objectif</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Roll Out</strong></td><td>Même strike, expiration plus lointaine</td><td>L'option approche l'expiration mais votre thèse est intacte</td><td>Gagner du temps (plus de theta à venir)</td></tr>
+      <tr><td><strong>Roll Up (call) / Down (put)</strong></td><td>Expiration identique, strike plus OTM</td><td>Le sous-jacent a bougé vers votre strike vendu</td><td>Déplacer le risque, souvent pour un debit</td></tr>
+      <tr><td><strong>Roll Out & Up/Down</strong></td><td>Expiration plus lointaine ET strike différent</td><td>Besoin de temps ET d'espace</td><td>Combiner les deux ajustements</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Exemple : Rolling un covered call</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Vous avez vendu un call AAPL $225 expiration juillet pour $3.00. AAPL monte à $223 — le call est presque ITM et menace d'être assigné.</p>
+  <ul style="font-size:1.05rem;line-height:1.8;color:#334155">
+    <li><strong>Rachat</strong> : Call $225 juillet à $6.00 → perte de $3.00 sur cette jambe</li>
+    <li><strong>Vente</strong> : Call $230 août à $5.00 → encaissement $5.00</li>
+    <li><strong>Résultat net</strong> : −$6.00 + $5.00 = <strong>debit de $1.00</strong></li>
+    <li>Vous avez gagné $5 d'espace (strike $225 → $230) et 30 jours de temps, pour un coût de $1.00</li>
+  </ul>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Quand ne PAS rouler</h4>
+    <p>Ne roulez pas si <strong>1)</strong> le roll coûte un debit supérieur au premium initial (vous doublez votre perte) ; <strong>2)</strong> votre thèse fondamentale a changé (ne défendez pas un trade mort) ; <strong>3)</strong> le roll est à un credit trop faible (risquer $1 000 pour $50 de credit net). Si le roll ne peut pas être fait à un credit net raisonnable, acceptez la perte et passez au trade suivant.</p>
+  </div>
+</div>
+
+<!-- SECTION 4: Gestion de portefeuille -->
+<div id="portfolio" class="content-card">
+  <div class="section-divider">Section 4</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-chart-pie" style="color:#16a34a"></i> Gestion de Portefeuille Options</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Un portefeuille d'options bien géré n'est pas une collection de trades indépendants — c'est un <strong>système</strong> avec des Greeks agrégés, une exposition sectorielle contrôlée, et une allocation de capital disciplinée.</p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Surveiller les Greeks du portefeuille</h3>
+  <table class="compare-table">
+    <thead><tr><th>Greek</th><th>Mesure portefeuille</th><th>Objectif</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Delta total</strong></td><td>Somme des deltas × 100 de toutes les positions</td><td>±300 deltas max pour un $50K account (équivalent ±300 actions)</td></tr>
+      <tr><td><strong>Theta total</strong></td><td>$ gagné/perdu par jour si rien ne bouge</td><td>Positif si vendeur net, négatif si acheteur net. Monitorer</td></tr>
+      <tr><td><strong>Vega total</strong></td><td>Impact d'un changement de 1pt d'IV sur le portefeuille</td><td>Si full short vega, un VIX spike détruit le P&L. Diversifier</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Corrélation et diversification</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">5 iron condors sur AAPL, MSFT, GOOGL, META et AMZN ne sont <strong>pas</strong> diversifiés — ce sont 5 paris sur la même chose (tech US). Si le Nasdaq baisse de 5%, les 5 iron condors peuvent perdre simultanément. Diversifiez par :</p>
+  <ul style="font-size:1.05rem;line-height:1.8;color:#334155">
+    <li><strong>Secteurs</strong> : tech + énergie + financières + santé</li>
+    <li><strong>Stratégies</strong> : mélanger iron condors (neutre) + debit spreads (directionnel) + calendars (temps)</li>
+    <li><strong>Expirations</strong> : étaler les expirations sur 2-3 cycles (pas tout le même mois)</li>
+    <li><strong>Direction</strong> : si 80% de vos trades sont haussiers et le marché corrige, tout souffre</li>
+  </ul>
+
+  <div id="chart-portfolio-greeks" style="width:100%;height:350px;margin:1.5rem 0"></div>
+</div>
+
+<!-- SECTION 5: Psychologie -->
+<div id="psychologie" class="content-card">
+  <div class="section-divider">Section 5</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-brain" style="color:#d97706"></i> La Psychologie du Trader d'Options</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Les options amplifient tout — y compris les biais psychologiques. Un trade qui perd 80% en 3 jours provoque une réaction émotionnelle bien plus forte qu'une action qui baisse de 5%. Voici les pièges les plus courants et comment les éviter.</p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Les 5 pièges psychologiques</h3>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number" style="background:#ef4444">1</div>
+      <h4>Le « revenge trading »</h4>
+      <p>Après une perte, doubler la taille pour « récupérer ». Le compte fond 2× plus vite</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:#f59e0b">2</div>
+      <h4>L'aversion à la perte</h4>
+      <p>Garder un perdant « en espérant que ça remonte ». L'option expire à $0 au lieu de couper à −50%</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:#2563eb">3</div>
+      <h4>Le FOMO</h4>
+      <p>Entrer dans un trade parce que « ça a déjà monté de 20% ». L'IV est gonflée, le R:R est mauvais</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:#9333ea">4</div>
+      <h4>L'overtrading</h4>
+      <p>10 trades/jour au lieu de 2-3/semaine. Les commissions + le spread bid/ask mangent le P&L</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La règle des « 3 pertes consécutives »</h4>
+    <p>Si vous perdez <strong>3 trades consécutifs</strong>, arrêtez de trader pour 48 heures. Ce n'est pas de la superstition — c'est de la gestion du risque émotionnel. Trois pertes de suite indiquent soit que le marché a changé de régime (votre stratégie n'est plus adaptée), soit que votre jugement est altéré. Dans les deux cas, une pause est la meilleure décision. Revenez après avoir analysé les 3 trades perdants et identifié ce qui n'a pas fonctionné.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">La pyramide de la discipline</h3>
+  <div id="chart-discipline" style="width:100%;height:350px;margin:1.5rem 0"></div>
+</div>
+
+<!-- SECTION 6: Plan de Trading -->
+<div id="plan" class="content-card">
+  <div class="section-divider">Section 6</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-clipboard-list" style="color:#16a34a"></i> Le Plan de Trading</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Chaque trade doit être documenté <strong>avant l'entrée</strong>. Un plan de trading écrit élimine les décisions émotionnelles dans le feu de l'action. Voici un template complet :</p>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0">
+    <h3 style="color:#0f172a;margin-top:0"><i class="fa-solid fa-file-lines" style="color:#16a34a;margin-right:.5rem"></i> Template : Plan de Trade</h3>
+    <ul class="checklist">
+      <li><strong>Ticker</strong> : _________________ | <strong>Date</strong> : _________</li>
+      <li><strong>Thèse</strong> : Pourquoi ce trade ? (2-3 phrases max)</li>
+      <li><strong>Stratégie</strong> : Bull call spread / Iron condor / etc.</li>
+      <li><strong>Détails</strong> : Strikes, expiration, debit/credit</li>
+      <li><strong>Capital risqué</strong> : $___ (___% du portefeuille)</li>
+      <li><strong>Profit target</strong> : $___  (___% du max profit)</li>
+      <li><strong>Stop-loss</strong> : $___  (___× le credit/debit)</li>
+      <li><strong>Sortie temps</strong> : Fermer à ___ DTE si ni profit ni stop</li>
+      <li><strong>Catalyseur</strong> : Earnings le ___? FOMC le ___? Autre ?</li>
+      <li><strong>IV Rank</strong> : ___% | <strong>Decision</strong> : acheter vol / vendre vol</li>
+      <li><strong>Greeks</strong> : Δ ___ | Γ ___ | Θ ___ | V ___</li>
+      <li><strong>Post-mortem</strong> : (à remplir après fermeture) Résultat, leçon apprise</li>
+    </ul>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le journal de trading</h4>
+    <p>Tenez un <strong>journal de trading</strong> où vous enregistrez chaque trade avec son plan, son exécution et son résultat. Après 50-100 trades, analysez les statistiques : win rate, profit moyen, perte moyenne, profit factor, meilleure stratégie, pire erreur récurrente. Les traders professionnels passent autant de temps à analyser leurs trades passés qu'à en chercher de nouveaux. Le journal transforme l'expérience en données et les données en amélioration.</p>
+  </div>
+</div>
+
+<!-- SECTION 7: Conclusion -->
+<div id="conclusion" class="content-card">
+  <div class="section-divider">Section 7</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-flag-checkered" style="color:#16a34a"></i> Conclusion de la Série</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">En six parties, on a couvert le parcours complet :</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Partie</th><th>Contenu</th><th>Niveau</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1. Fondamentaux</strong></td><td>Calls, puts, strike, premium, ITM/OTM, payoff diagrams</td><td>Débutant</td></tr>
+      <tr><td><strong>2. Les Greeks</strong></td><td>Delta, gamma, theta, vega — les capteurs d'une option</td><td>Débutant-Intermédiaire</td></tr>
+      <tr><td><strong>3. Stratégies de Base</strong></td><td>Covered call, protective put, cash-secured put, collar</td><td>Intermédiaire</td></tr>
+      <tr><td><strong>4. Les Spreads</strong></td><td>Bull/bear spreads, credit vs debit, calendar, diagonal</td><td>Intermédiaire</td></tr>
+      <tr><td><strong>5. Stratégies Avancées</strong></td><td>Iron condor, butterfly, straddle, strangle, earnings plays</td><td>Intermédiaire-Avancé</td></tr>
+      <tr><td><strong>6. Gestion du Risque</strong></td><td>Sizing, stops, rolling, portefeuille, discipline</td><td>Tous niveaux</td></tr>
+    </tbody>
+  </table>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Paper trade d'abord</h4>
+      <p>Passez 3 mois en paper trading avant de risquer de l'argent réel. La plupart des brokers offrent des simulateurs</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Commencez simple</h4>
+      <p>Covered calls et cash-secured puts d'abord. Les spreads après 50+ trades. Les iron condors après 100+</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Respectez le sizing</h4>
+      <p>1-3% max par trade, 6-10% max total. Le sizing est la seule variable que vous contrôlez à 100%</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Journalisez tout</h4>
+      <p>Plan avant, exécution pendant, post-mortem après. 50 trades journalisés valent plus que 500 livres</p>
+    </div>
+  </div>
+
+  <details>
+    <summary>Quiz final : Vous avez un compte de $30K. Vous voulez vendre un iron condor sur SPY (credit $2.50, largeur $10). Combien de contrats ?</summary>
+    <div class="quiz-answer">
+      <p>Risque max par contrat = ($10 − $2.50) × 100 = <strong>$750</strong>. Risque max = 3% de $30 000 = <strong>$900</strong>. Nombre de contrats = $900 / $750 = <strong>1 contrat</strong> (arrondi vers le bas). Avec 1 contrat, votre risque réel est de $750, soit 2.5% du portefeuille — dans les limites. 2 contrats coûteraient $1 500 de risque (5%) — acceptable mais agressif pour un débutant.</p>
+    </div>
+  </details>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#16a34a"></i> Les 10 Règles d'Or du Trading d'Options</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 1</strong> : Ne risquez jamais plus de 1-5% par trade. Le sizing est non-négociable</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 2</strong> : Définissez profit target et stop-loss AVANT d'entrer</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 3</strong> : Prenez profit à 50% du max — la probabilité baisse exponentiellement après</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 4</strong> : Fermez à 21 DTE — le gamma explosion rend la position imprévisible</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 5</strong> : Vérifiez l'IV Rank avant chaque trade. Haute IV = vendre. Basse IV = acheter</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 6</strong> : Diversifiez par secteur, stratégie et expiration</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 7</strong> : Ne vendez jamais de straddles/strangles nus. Utilisez des iron condors</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 8</strong> : 3 pertes consécutives = pause de 48h. Analysez avant de reprendre</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 9</strong> : Tenez un journal de trading. Les données battent l'intuition</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Règle 10</strong> : Le marché sera là demain. La patience est le meilleur edge</li>
+    </ul>
+  </div>
+
+  <a href="/?tab=series" class="final-cta"><div><div class="next-label">Fin de la série</div><div class="next-title"><i class="fa-solid fa-graduation-cap" style="margin-right:.5rem"></i> Découvrir toutes nos séries éducatives <i class="fa-solid fa-arrow-right"></i></div></div></a>
+</div>
+
+</div>
+
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Chart 1: Exit timing (P&L vs DTE for iron condor)
+var etChart=echarts.init(document.getElementById('chart-exit-timing'));
+var dte=[],profit50=[],fullHold=[],risk=[];
+for(var d=45;d>=0;d--){dte.push(d);var p50=d>22?null:(d<=22&&d>15?150:null);profit50.push(p50);var fh=300*(1-Math.sqrt(d/45));fullHold.push(Math.round(fh));risk.push(d<15?-Math.round(200*(1-d/15)):0)}
+etChart.setOption({title:{text:'Iron Condor : P&L selon le moment de sortie',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis'},legend:{data:['Profit réalisé (hold)','Zone de risque gamma'],bottom:0},grid:{left:'8%',right:'4%',bottom:'14%',top:'16%',containLabel:true},xAxis:{type:'category',data:dte,name:'Jours restants (DTE)',nameLocation:'middle',nameGap:30,axisLabel:{fontSize:10,interval:4},inverse:true},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{name:'Profit réalisé (hold)',type:'line',data:fullHold,lineStyle:{color:'#16a34a',width:3},symbol:'none'},{name:'Zone de risque gamma',type:'line',data:risk,lineStyle:{color:'#ef4444',width:2,type:'dashed'},symbol:'none',areaStyle:{color:'rgba(239,68,68,0.08)'}}],markArea:{silent:true,data:[[{xAxis:'21',itemStyle:{color:'rgba(239,68,68,0.05)'},label:{show:true,formatter:'Zone\ndanger',position:'inside',color:'#ef4444',fontSize:10}},{xAxis:'0'}]]}});
+
+// Chart 2: Portfolio Greeks radar
+var pgChart=echarts.init(document.getElementById('chart-portfolio-greeks'));
+pgChart.setOption({title:{text:'Greeks du Portefeuille — Tableau de Bord',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{},radar:{indicator:[{name:'Delta\n(direction)',max:500},{name:'Gamma\n(accélération)',max:100},{name:'Theta\n(temps)',max:50},{name:'Vega\n(volatilité)',max:200},{name:'Diversification',max:5},{name:'Utilisation\ncapital',max:100}],radius:'60%'},series:[{type:'radar',data:[{value:[150,35,25,80,4,45],name:'Portefeuille actuel',areaStyle:{color:'rgba(22,163,74,0.15)'},lineStyle:{color:'#16a34a',width:2},itemStyle:{color:'#16a34a'}},{value:[300,80,10,150,2,85],name:'Portefeuille risqué',areaStyle:{color:'rgba(239,68,68,0.1)'},lineStyle:{color:'#ef4444',width:2,type:'dashed'},itemStyle:{color:'#ef4444'}}],emphasis:{lineStyle:{width:3}}},legend:{data:['Portefeuille actuel','Portefeuille risqué'],bottom:0}});
+
+// Chart 3: Discipline pyramid
+var dpChart=echarts.init(document.getElementById('chart-discipline'));
+dpChart.setOption({title:{text:'Pyramide de la Discipline',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'item',formatter:'{b}: {c}%'},series:[{type:'funnel',left:'15%',right:'15%',top:'15%',bottom:'5%',min:0,max:100,sort:'descending',gap:4,label:{show:true,position:'inside',fontSize:12,fontWeight:700,color:'white'},data:[{value:100,name:'Position Sizing',itemStyle:{color:'#16a34a'}},{value:85,name:'Plan de Trading écrit',itemStyle:{color:'#059669'}},{value:70,name:'Règles de sortie',itemStyle:{color:'#2563eb'}},{value:55,name:'Journal de Trading',itemStyle:{color:'#7c3aed'}},{value:40,name:'Review hebdomadaire',itemStyle:{color:'#d97706'}},{value:25,name:'Maîtrise émotionnelle',itemStyle:{color:'#ef4444'}}]}]});
+
+window.addEventListener('resize',function(){etChart.resize();pgChart.resize();dpChart.resize()});
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

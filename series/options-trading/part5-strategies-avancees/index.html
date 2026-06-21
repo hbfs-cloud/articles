@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Stratégies Avancées : Iron Condor, Butterfly, Straddle | Les Options de A à Z — Partie 5/6 | DailyTickers</title>
+ <meta name="description" content="Série Les Options de A à Z — Partie 5/6 : iron condor, iron butterfly, straddle, strangle. Stratégies multi-jambes pour tous les régimes de marché.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdf4 0%,#f8fafc 100%);text-align:center}.hero-date{font-size:.85rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}.hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}.hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}.hero-badge-green{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)}.hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}.hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}.hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}.hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}.section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}.compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}.compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}.compare-table tr:nth-child(even) td{background:#f8fafc}.compare-table tr:last-child td{border-bottom:none}
+ .pedagogy-box{background:#f0fdf4;border:1px solid #86efac;border-left:4px solid #16a34a;border-radius:12px;padding:1.5rem;margin:1.75rem 0}.pedagogy-box h4{color:#15803d;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}.pedagogy-box p,.pedagogy-box li{font-size:.95rem;color:#166534;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}.alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}.alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .formula-box{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700}.formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}.formula-box .formula-highlight{color:#4ade80}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:1px solid #16a34a;border-radius:16px;padding:2rem;margin:2rem 0}.takeaway-box h3{color:#15803d;margin-top:0}.takeaway-list{list-style:none;padding:0;margin:0}.takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(22,163,74,.15)}.takeaway-list li:last-child{border-bottom:none}.takeaway-list li i{color:#16a34a;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}.next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(22,163,74,.3)}.next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}.next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .strategy-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0;border-top:4px solid #16a34a}.strategy-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin:1rem 0}.strategy-spec{background:#f8fafc;border-radius:8px;padding:.75rem;text-align:center}.strategy-spec .spec-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;font-weight:600}.strategy-spec .spec-value{font-size:1rem;font-weight:800;color:#0f172a;margin-top:.25rem}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#16a34a;margin-right:.75rem}details[open] summary{border-color:#16a34a;background:#f0fdf4;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.strategy-specs{grid-template-columns:1fr 1fr}.formula-box{font-size:1rem}}@media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:.4rem"></i> Série Les Options de A à Z — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Stratégies Avancées</h1>
+  <p class="hero-subtitle">Iron condors, butterflies, straddles, strangles : les stratégies multi-jambes qui permettent de profiter de la stagnation, de l'explosion de volatilité, ou de positionner un pari asymétrique sur les earnings.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-grip-lines"></i> Iron Condor</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-butterfly"></i> Butterfly</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-arrows-up-down"></i> Straddle</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-maximize"></i> Strangle</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/options-trading/part4-spreads/" class="series-arrow" title="Les Spreads"><i class="fas fa-chevron-left"></i></a><span class="series-title">Les Options de A à Z</span><div class="series-steps"><a href="/series/options-trading/part1-fondamentaux/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/options-trading/part2-les-greeks/" class="series-step"><span class="series-num">2</span><span class="series-label">Greeks</span></a><a href="/series/options-trading/part3-strategies-base/" class="series-step"><span class="series-num">3</span><span class="series-label">Strat. Base</span></a><a href="/series/options-trading/part4-spreads/" class="series-step"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/options-trading/part5-strategies-avancees/" class="series-step current"><span class="series-num">5</span><span class="series-label">Avancées</span></a><a href="/series/options-trading/part6-gestion-risque/" class="series-step"><span class="series-num">6</span><span class="series-label">Risque</span></a></div><span class="series-counter">5/6</span><a href="/series/options-trading/part6-gestion-risque/" class="series-arrow" title="Gestion du Risque"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#multi-jambes" class="fnav-item" data-section="multi-jambes"><i class="fas fa-bookmark"></i><span>Multi-jambes</span></a><a href="#iron-condor" class="fnav-item" data-section="iron-condor"><i class="fas fa-bookmark"></i><span>Iron Condor</span></a><a href="#butterfly" class="fnav-item" data-section="butterfly"><i class="fas fa-bookmark"></i><span>Butterfly</span></a><a href="#straddle" class="fnav-item" data-section="straddle"><i class="fas fa-bookmark"></i><span>Straddle</span></a><a href="#strangle" class="fnav-item" data-section="strangle"><i class="fas fa-bookmark"></i><span>Strangle</span></a><a href="#earnings" class="fnav-item" data-section="earnings"><i class="fas fa-bookmark"></i><span>Plays earnings</span></a><a href="#matrice" class="fnav-item" data-section="matrice"><i class="fas fa-bookmark"></i><span>Matrice de choix</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var t=document.getElementById(this.getAttribute('data-section'));if(t)window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'});if(isOpen)toggle()})});window.addEventListener('scroll',function(){var sp=window.scrollY+120,c=null;sections.forEach(function(s){if(s.el.offsetTop<=sp)c=s});items.forEach(function(i){i.classList.remove('active')});if(c){c.item.classList.add('active');label.textContent=c.item.querySelector('span').textContent}})})();</script>
+
+<div style="max-width:900px;margin:0 auto;padding:0 1rem">
+
+<!-- SECTION 1: Multi-jambes -->
+<div id="multi-jambes" class="content-card" style="margin-top:-4rem;padding-top:5rem">
+  <div class="section-divider">Section 1</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-diagram-project" style="color:#16a34a"></i> Les Stratégies Multi-Jambes</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Jusqu'ici, nos stratégies combinaient au maximum 2 « jambes » (legs). Les stratégies avancées en utilisent <strong>3 ou 4</strong>, ce qui permet de sculpter des profils de risque/rendement impossibles avec une seule option ou un spread simple.</p>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Deux grandes familles :</p>
+  <table class="compare-table">
+    <thead><tr><th>Famille</th><th>Stratégies</th><th>Pari</th><th>Greeks clés</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Non-directionnelles</strong></td><td>Iron condor, iron butterfly</td><td>Le prix <em>reste dans une zone</em></td><td>Short gamma, long theta</td></tr>
+      <tr><td><strong>Volatilité</strong></td><td>Straddle, strangle</td><td>Le prix <em>bouge fortement</em> (direction inconnue)</td><td>Long gamma, short theta</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 2: Iron Condor -->
+<div id="iron-condor" class="content-card">
+  <div class="section-divider">Section 2</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-grip-lines" style="color:#16a34a"></i> L'Iron Condor</h2>
+
+  <div class="strategy-card">
+    <h3><i class="fa-solid fa-grip-lines" style="color:#16a34a;margin-right:.5rem"></i> Iron Condor — Parier sur la stagnation</h3>
+    <p style="font-size:.9rem;color:#64748b;margin-bottom:1rem">Bull put spread + Bear call spread = 4 jambes, credit net</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Jambes</div><div class="spec-value">4</div></div>
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Neutre</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Credit encaissé</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Largeur − Credit</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Construction</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">SPY à $550. Vous pensez que l'indice va rester entre $530 et $570 pendant les 30 prochains jours.</p>
+  <ul style="font-size:1.05rem;line-height:1.8;color:#334155">
+    <li><strong>Vente</strong> Put $535 pour $3.00 → <strong>Achat</strong> Put $525 pour $1.50 → <em>credit put side</em> $1.50</li>
+    <li><strong>Vente</strong> Call $565 pour $2.50 → <strong>Achat</strong> Call $575 pour $1.00 → <em>credit call side</em> $1.50</li>
+    <li><strong>Credit total</strong> : $3.00 ($300 par contrat)</li>
+    <li><strong>Profit max</strong> : $300 (si SPY entre $535 et $565 à l'expiration)</li>
+    <li><strong>Perte max</strong> : ($10 − $3) × 100 = $700 (un seul côté peut perdre)</li>
+  </ul>
+
+  <div id="chart-iron-condor" style="width:100%;height:380px;margin:1.5rem 0"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi l'iron condor est populaire</h4>
+    <p>L'iron condor a une <strong>probabilité de profit de 60-75%</strong> selon la largeur. Le theta joue pour vous chaque jour. C'est la stratégie préférée des vendeurs de volatilité retail car elle nécessite peu de capital (margin = largeur d'un spread) et fonctionne bien en marché range-bound. Le SPY passe ~70% du temps dans un range de ±5% sur 30 jours, ce qui rend l'iron condor gagnant la majorité du temps.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Gestion de position</h3>
+  <table class="compare-table">
+    <thead><tr><th>Situation</th><th>Action</th></tr></thead>
+    <tbody>
+      <tr><td>Profit atteint 50% du credit ($150)</td><td>Fermer la position. Ne pas attendre l'expiration</td></tr>
+      <tr><td>SPY approche un des strikes vendus</td><td>Rouler le côté menacé ou fermer le trade</td></tr>
+      <tr><td>IV augmente brutalement (VIX spike)</td><td>La position perd temporairement. Attendre si les strikes sont larges</td></tr>
+      <tr><td>Perte atteint 2× le credit reçu ($600)</td><td>Stop-loss. Fermer et passer au trade suivant</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 3: Butterfly -->
+<div id="butterfly" class="content-card">
+  <div class="section-divider">Section 3</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-feather" style="color:#9333ea"></i> Le Butterfly Spread</h2>
+
+  <div class="strategy-card" style="border-top-color:#9333ea">
+    <h3><i class="fa-solid fa-feather" style="color:#9333ea;margin-right:.5rem"></i> Long Butterfly — Le pari sur un prix précis</h3>
+    <p style="font-size:.9rem;color:#64748b;margin-bottom:1rem">Achat 1 call bas + Vente 2 calls milieu + Achat 1 call haut (strikes équidistants)</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Jambes</div><div class="spec-value">3 strikes, 4 contrats</div></div>
+      <div class="strategy-spec"><div class="spec-label">Coût</div><div class="spec-value">Debit faible</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Largeur − Debit (au strike central)</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Debit payé</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Exemple</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">AAPL à $210. Vous pensez qu'AAPL sera exactement autour de $215 dans 30 jours.</p>
+  <ul style="font-size:1.05rem;line-height:1.8;color:#334155">
+    <li><strong>Achat</strong> 1 Call $205 pour $9.00</li>
+    <li><strong>Vente</strong> 2 Calls $215 pour $4.50 chacun (total +$9.00)</li>
+    <li><strong>Achat</strong> 1 Call $225 pour $1.50</li>
+    <li><strong>Debit net</strong> : $9.00 − $9.00 + $1.50 = <strong>$1.50</strong> ($150 par contrat)</li>
+    <li><strong>Profit max</strong> : ($10 − $1.50) × 100 = <strong>$850</strong> (si AAPL = $215 exactement)</li>
+    <li><strong>R:R</strong> : risquer $150 pour gagner $850 → <strong>5.7:1</strong></li>
+  </ul>
+
+  <div id="chart-butterfly" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Le butterfly a un R:R spectaculaire mais une <strong>probabilité de max profit très faible</strong> (le prix doit être exactement au strike central à l'expiration). En pratique, on ne vise jamais le max profit — on ferme quand le trade atteint 50-75% du max. Le coût très faible ($150) rend le trade attractif pour les paris sur un range étroit.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Iron Butterfly vs Butterfly</h4>
+    <p>L'<strong>iron butterfly</strong> est le cousin credit du butterfly : au lieu de payer un debit, vous encaissez un credit plus élevé avec un strike central vendu. Construction : vendre 1 call ATM + vendre 1 put ATM + acheter 1 call OTM + acheter 1 put OTM. Credit plus élevé que l'iron condor, mais zone de profit plus étroite. C'est un « iron condor agressif ».</p>
+  </div>
+</div>
+
+<!-- SECTION 4: Straddle -->
+<div id="straddle" class="content-card">
+  <div class="section-divider">Section 4</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-arrows-up-down" style="color:#2563eb"></i> Le Straddle</h2>
+
+  <div class="strategy-card" style="border-top-color:#2563eb">
+    <h3><i class="fa-solid fa-arrows-up-down" style="color:#2563eb;margin-right:.5rem"></i> Long Straddle — Parier sur un gros mouvement</h3>
+    <p style="font-size:.9rem;color:#64748b;margin-bottom:1rem">Achat 1 call ATM + Achat 1 put ATM (même strike, même expiration)</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Non-directionnelle</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Illimité (hausse) / Strike − premium (baisse)</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Premium call + premium put</div></div>
+      <div class="strategy-spec"><div class="spec-label">Breakeven</div><div class="spec-value">Strike ± total premium</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Exemple pré-earnings</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">NVDA à $140, earnings demain. Vous ne savez pas si ça va monter ou baisser, mais vous savez que ça va <em>bouger</em>.</p>
+  <ul style="font-size:1.05rem;line-height:1.8;color:#334155">
+    <li><strong>Achat</strong> Call $140 pour $6.00</li>
+    <li><strong>Achat</strong> Put $140 pour $5.50</li>
+    <li><strong>Coût total</strong> : $11.50 ($1 150 par contrat)</li>
+    <li><strong>Breakeven haut</strong> : $140 + $11.50 = <strong>$151.50</strong> (+8.2%)</li>
+    <li><strong>Breakeven bas</strong> : $140 − $11.50 = <strong>$128.50</strong> (−8.2%)</li>
+  </ul>
+
+  <div id="chart-straddle" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">NVDA doit bouger de <strong>plus de 8.2%</strong> dans n'importe quelle direction pour que le straddle soit profitable. C'est le « move implicite » — le mouvement que le marché a déjà intégré dans le prix des options. Si NVDA ne bouge que de 5% après les earnings, le straddle <strong>perd de l'argent</strong> malgré un mouvement qui semble « gros ».</p>
+
+  <div class="formula-box">
+    <div class="formula-label">Le move implicite</div>
+    Move implicite ≈ <span class="formula-highlight">Prix du straddle ATM</span> / Prix de l'action = $11.50 / $140 ≈ <span class="formula-highlight">8.2%</span>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le straddle et les earnings</h4>
+    <p>Les straddles pré-earnings sont le jeu le plus populaire — et le plus mal compris — du trading d'options. Le marché est <em>efficace</em> : le prix du straddle reflète déjà le mouvement attendu. Pour gagner, il faut que le mouvement réel <strong>dépasse</strong> ce que le marché a anticipé. Statistiquement, le straddle pré-earnings est <em>perdant</em> en moyenne — l'IV crush post-earnings détruit la valeur des deux options. L'exception : les titres à surprises récurrentes (biotech FDA, tech growth guidance).</p>
+  </div>
+</div>
+
+<!-- SECTION 5: Strangle -->
+<div id="strangle" class="content-card">
+  <div class="section-divider">Section 5</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-maximize" style="color:#d97706"></i> Le Strangle</h2>
+
+  <div class="strategy-card" style="border-top-color:#d97706">
+    <h3><i class="fa-solid fa-maximize" style="color:#d97706;margin-right:.5rem"></i> Long Strangle — Le straddle économique</h3>
+    <p style="font-size:.9rem;color:#64748b;margin-bottom:1rem">Achat 1 call OTM + Achat 1 put OTM (strikes différents, même expiration)</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Non-directionnelle</div></div>
+      <div class="strategy-spec"><div class="spec-label">Coût</div><div class="spec-value">Moins cher que le straddle</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Premium total</div></div>
+      <div class="strategy-spec"><div class="spec-label">Breakeven</div><div class="spec-value">Plus large que le straddle</div></div>
+    </div>
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Le strangle est comme un straddle mais avec des strikes <strong>OTM</strong> des deux côtés. Il coûte moins cher mais demande un mouvement plus important pour être profitable.</p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Straddle vs Strangle</h3>
+  <table class="compare-table">
+    <thead><tr><th></th><th>Long Straddle</th><th>Long Strangle</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Strikes</strong></td><td>Call ATM + Put ATM (même strike)</td><td>Call OTM + Put OTM (strikes différents)</td></tr>
+      <tr><td><strong>Coût (NVDA $140)</strong></td><td>~$11.50 ($1 150)</td><td>~$6.50 ($650)</td></tr>
+      <tr><td><strong>Breakeven</strong></td><td>$128.50 / $151.50 (±8.2%)</td><td>$123.50 / $156.50 (±11.8%)</td></tr>
+      <tr><td><strong>Move requis</strong></td><td>±8.2%</td><td>±11.8%</td></tr>
+      <tr><td><strong>Perte max</strong></td><td>$1 150</td><td>$650</td></tr>
+      <tr><td><strong>Idéal pour</strong></td><td>Mouvement « probable » (biotech FDA)</td><td>Mouvement « possible mais rare » (cygne noir)</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Le Short Strangle — L'envers du décor</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Le <strong>short strangle</strong> (vendre un call OTM + vendre un put OTM) est la stratégie de génération de revenus des market makers professionnels. Vous encaissez le premium des deux côtés et gagnez tant que le sous-jacent reste dans la zone entre les strikes. Le risque est <strong>théoriquement illimité</strong> — c'est une stratégie Level 4 réservée aux comptes margin approuvés.</p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Short straddle/strangle = risque majeur</h4>
+    <p>La vente de straddles et strangles nus a causé des pertes spectaculaires. James Cordier (OptionSellers.com) a perdu $150M+ en 2018 en vendant des strangles sur le gaz naturel. Le Nat Gas a monté de 18% en un jour, pulvérisant ses positions. Règle : ne jamais vendre de straddles/strangles nus. Utilisez des <strong>iron condors</strong> (risque défini) à la place.</p>
+  </div>
+</div>
+
+<!-- SECTION 6: Plays earnings -->
+<div id="earnings" class="content-card">
+  <div class="section-divider">Section 6</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-calendar-check" style="color:#16a34a"></i> Stratégies autour des Earnings</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">Les earnings sont le moment le plus actif pour le trading d'options. L'IV monte avant, s'effondre après (IV crush). Voici les stratégies adaptées à chaque phase :</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Timing</th><th>Stratégie</th><th>Logique</th><th>Greeks</th></tr></thead>
+    <tbody>
+      <tr><td><strong>5-10 jours avant</strong></td><td>Calendar spread ATM</td><td>Vendre l'expiration pré-earnings (IV crush), garder l'expiration post</td><td>Long vega net, theta positif</td></tr>
+      <tr><td><strong>1-3 jours avant</strong></td><td>Iron condor ou iron butterfly</td><td>Vendre l'IV gonflée. Profiter si le move réel &lt; move implicite</td><td>Short vega, short gamma, long theta</td></tr>
+      <tr><td><strong>La veille (conviction directionnelle)</strong></td><td>Vertical spread (debit)</td><td>Moins cher qu'un call/put nu. L'IV crush affecte les deux jambes</td><td>Delta net, vega réduit vs option nue</td></tr>
+      <tr><td><strong>Immédiatement après</strong></td><td>Straddle/strangle sur le gap</td><td>Si le mouvement initial est exagéré, jouer le retour à la moyenne</td><td>Long gamma sur le rebond</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La règle du move implicite</h4>
+    <p>Avant chaque earnings, calculez le <strong>move implicite</strong> (prix du straddle ATM de l'expiration la plus proche / prix de l'action). Comparez-le au <strong>move historique moyen</strong> des 8 derniers earnings. Si le move implicite est <em>supérieur</em> au move historique, les options sont « chères » → vendez la volatilité (iron condor). Si le move implicite est <em>inférieur</em>, les options sont « pas chères » → achetez la volatilité (straddle/vertical).</p>
+  </div>
+
+  <details>
+    <summary>Quiz : AAPL, move implicite = 5%, move historique moyen des 8 derniers earnings = 3.2%. Que faites-vous ?</summary>
+    <div class="quiz-answer">
+      <p>Le move implicite (5%) est <strong>56% plus élevé</strong> que le move historique (3.2%). Les options sont « chères » — le marché surévalue le mouvement attendu. La stratégie optimale est de <strong>vendre la volatilité</strong> : un <strong>iron condor</strong> centré sur le prix actuel avec des strikes à ±5% profiterait du theta et de l'IV crush post-earnings. Si AAPL bouge de ≤5% (ce qui est arrivé 6 fois sur 8 historiquement), le trade est gagnant.</p>
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 7: Matrice de choix -->
+<div id="matrice" class="content-card">
+  <div class="section-divider">Section 7</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-table-cells" style="color:#16a34a"></i> Matrice de Choix</h2>
+
+  <table class="compare-table">
+    <thead><tr><th>Conviction</th><th>IV basse (&lt;30 IV Rank)</th><th>IV haute (&gt;50 IV Rank)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Haussier fort</strong></td><td>Bull call spread (debit)</td><td>Bull put spread (credit)</td></tr>
+      <tr><td><strong>Baissier fort</strong></td><td>Bear put spread (debit)</td><td>Bear call spread (credit)</td></tr>
+      <tr><td><strong>Neutre (range)</strong></td><td>Long butterfly (debit, pas cher)</td><td>Iron condor / short iron butterfly</td></tr>
+      <tr><td><strong>Gros mouvement attendu</strong></td><td>Long straddle / long strangle</td><td>Calendar spread (acheter vega long)</td></tr>
+      <tr><td><strong>Revenu mensuel</strong></td><td>Covered call / PMCC</td><td>Iron condor / short strangle (si approuvé)</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-strategy-map" style="width:100%;height:400px;margin:1.5rem 0"></div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#16a34a"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> L'<strong>iron condor</strong> est le roi du trading neutre — 4 jambes, credit, 60-75% de prob. profit</li>
+      <li><i class="fa-solid fa-check"></i> Le <strong>butterfly</strong> offre un R:R spectaculaire (~5:1) pour un pari sur un prix précis</li>
+      <li><i class="fa-solid fa-check"></i> Le <strong>straddle</strong> parie sur un gros mouvement — mais l'IV crush post-earnings le rend souvent perdant</li>
+      <li><i class="fa-solid fa-check"></i> Calculez toujours le <strong>move implicite</strong> vs le move historique avant les earnings</li>
+      <li><i class="fa-solid fa-check"></i> Ne <strong>jamais</strong> vendre de straddles/strangles nus — utilisez des iron condors à la place</li>
+      <li><i class="fa-solid fa-check"></i> La matrice IV × Direction guide le choix de la stratégie optimale</li>
+    </ul>
+  </div>
+
+  <a href="/series/options-trading/part6-gestion-risque/" class="next-cta"><div><div class="next-label">Partie 6 sur 6</div><div class="next-title">Gestion du Risque : Sizing, Stops, Rolling, Discipline <i class="fa-solid fa-arrow-right"></i></div></div></a>
+</div>
+
+</div>
+
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+
+<script>
+// Iron Condor
+var icChart=echarts.init(document.getElementById('chart-iron-condor'));
+var icP=[],icD=[];for(var p=510;p<=590;p+=.5){icP.push(p.toFixed(1));var bp=Math.min(1.5,1.5-Math.max(535-p,0)+Math.max(525-p,0));var bc=Math.min(1.5,1.5-Math.max(p-565,0)+Math.max(p-575,0));icD.push((bp+bc)*100)}
+icChart.setOption({title:{text:'Iron Condor (SPY $525/$535 — $565/$575)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis',formatter:function(p){return'SPY $'+p[0].name+'<br>P&L: '+(p[0].value>=0?'+':'')+p[0].value}},grid:{left:'8%',right:'4%',bottom:'12%',top:'16%',containLabel:true},xAxis:{type:'category',data:icP,axisLabel:{interval:19,fontSize:10},name:'Prix SPY',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{type:'line',data:icD,lineStyle:{color:'#16a34a',width:3},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(22,163,74,0.08)'},{offset:1,color:'rgba(22,163,74,0)'}]}},markLine:{silent:true,lineStyle:{color:'#94a3b8',type:'dashed'},data:[{yAxis:0}]}}]});
+
+// Butterfly
+var bfChart=echarts.init(document.getElementById('chart-butterfly'));
+var bfP=[],bfD=[];for(var p=195;p<=235;p+=.5){bfP.push(p.toFixed(1));var lc1=Math.max(p-205,0)-9;var sc2=-2*(Math.max(p-215,0)-4.5);var lc3=Math.max(p-225,0)-1.5;bfD.push((lc1+sc2+lc3)*100)}
+bfChart.setOption({title:{text:'Long Butterfly (AAPL $205/$215/$225)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis',formatter:function(p){return'AAPL $'+p[0].name+'<br>P&L: '+(p[0].value>=0?'+':'')+p[0].value}},grid:{left:'8%',right:'4%',bottom:'12%',top:'16%',containLabel:true},xAxis:{type:'category',data:bfP,axisLabel:{interval:19,fontSize:10},name:'Prix AAPL',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{type:'line',data:bfD,lineStyle:{color:'#9333ea',width:3},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(147,51,234,0.1)'},{offset:1,color:'rgba(147,51,234,0)'}]}}}]});
+
+// Straddle
+var stChart=echarts.init(document.getElementById('chart-straddle'));
+var stP=[],stD=[];var stStrike=140,stPrem=11.5;for(var p=115;p<=165;p+=.5){stP.push(p.toFixed(1));var cv=Math.max(p-stStrike,0);var pv=Math.max(stStrike-p,0);stD.push((cv+pv-stPrem)*100)}
+stChart.setOption({title:{text:'Long Straddle (NVDA $140, Premium total $11.50)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis',formatter:function(p){return'NVDA $'+p[0].name+'<br>P&L: '+(p[0].value>=0?'+':'')+p[0].value}},grid:{left:'8%',right:'4%',bottom:'12%',top:'16%',containLabel:true},xAxis:{type:'category',data:stP,axisLabel:{interval:19,fontSize:10},name:'Prix NVDA',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{type:'line',data:stD,lineStyle:{color:'#2563eb',width:3},symbol:'none',markPoint:{data:[{coord:['128.5',0],name:'BE bas',symbol:'diamond',symbolSize:12,itemStyle:{color:'#f59e0b'},label:{show:true,formatter:'BE\n$128.50',position:'top',fontSize:10,color:'#f59e0b'}},{coord:['151.5',0],name:'BE haut',symbol:'diamond',symbolSize:12,itemStyle:{color:'#f59e0b'},label:{show:true,formatter:'BE\n$151.50',position:'top',fontSize:10,color:'#f59e0b'}}]}}]});
+
+// Strategy map (scatter)
+var smChart=echarts.init(document.getElementById('chart-strategy-map'));
+smChart.setOption({title:{text:'Cartographie des stratégies : Direction × Volatilité',left:'center',textStyle:{fontSize:13,fontWeight:700}},grid:{left:'12%',right:'8%',bottom:'12%',top:'16%',containLabel:true},xAxis:{type:'value',name:'← Baissier | Neutre | Haussier →',nameLocation:'middle',nameGap:35,min:-3,max:3,axisLabel:{fontSize:10,formatter:function(v){return''}}},yAxis:{type:'value',name:'← Basse IV | Haute IV →',nameLocation:'middle',nameGap:45,min:-3,max:3,axisLabel:{fontSize:10,formatter:function(v){return''}}},series:[{type:'scatter',data:[[2,1],[2,-1],[-2,1],[-2,-1],[0,2],[0,-2],[0,0],[1.5,0],[0,1.5]],symbolSize:20,label:{show:true,formatter:function(p){var labels=[['Bull Put','Bull Call','Bear Call','Bear Put','Iron Condor','Long Straddle','Butterfly','PMCC','Calendar']];return labels[0][p.dataIndex]},fontSize:10,fontWeight:700,position:'right',color:'#0f172a'},itemStyle:{color:function(p){var colors=['#059669','#16a34a','#ef4444','#2563eb','#16a34a','#2563eb','#9333ea','#d97706','#9333ea'];return colors[p.dataIndex]}}}]});
+
+window.addEventListener('resize',function(){icChart.resize();bfChart.resize();stChart.resize();smChart.resize()});
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

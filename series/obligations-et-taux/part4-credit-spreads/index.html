@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique,us,eu" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Credit Spreads | Obligations &amp; Taux — Partie 4/6 | DailyTickers</title>
+ <meta name="description" content="Série Obligations &amp; Taux — Partie 4/6 : credit spreads IG &amp; HY, OAS, Z-spread, CDS, corrélation avec les actions. Comment lire le risque de crédit.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdfa 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#0d9488;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-teal{background:rgba(13,148,136,.1);color:#0d9488;border:1px solid rgba(13,148,136,.2)}
+ .hero-badge-cyan{background:rgba(6,182,212,.1);color:#0891b2;border:1px solid rgba(6,182,212,.2)}
+ .hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#134e4a;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f0fdfa}
+ .compare-table tr:last-child td{border-bottom:none}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#5eead4}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border:1px solid #0d9488;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#115e59;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(13,148,136,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#0d9488;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#115e59,#0d9488);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(13,148,136,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #0d9488}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#115e59,#0d9488);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .pedagogy-box{background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#115e59;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p{font-size:.95rem;color:#134e4a;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ details{margin:.75rem 0}
+ details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}
+ details summary::-webkit-details-marker{display:none}
+ details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#0d9488;margin-right:.75rem}
+ details[open] summary{border-color:#0d9488;background:#f0fdfa;border-radius:12px 12px 0 0}
+ details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.formula-box{font-size:1rem;padding:1rem 1.25rem}.next-cta{flex-direction:column;text-align:center}.step-grid{grid-template-columns:1fr 1fr}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.formula-box{font-size:.9rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-bar" style="margin-right:.4rem;"></i> Série Obligations &amp; Taux — Partie 4 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem;">Credit Spreads</h1>
+  <p class="hero-subtitle" style="font-size:1.15rem;color:#475569;max-width:750px;margin:0 auto;line-height:1.6;">Le credit spread mesure la peur du marché. Quand il s'élargit, les investisseurs exigent plus pour prendre le risque de défaut. Quand il se comprime, la confiance règne. C'est le meilleur indicateur de stress financier — souvent plus réactif que le VIX lui-même.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-chart-bar"></i> IG vs HY Spreads</span>
+    <span class="hero-badge hero-badge-cyan"><i class="fa-solid fa-shield-halved"></i> OAS &amp; Z-Spread</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-skull-crossbones"></i> CDS</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-link"></i> Corrélation actions</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/obligations-et-taux/part3-yield-curve/" class="series-arrow" title="Yield Curve"><i class="fas fa-chevron-left"></i></a><span class="series-title">Obligations &amp; Taux</span><div class="series-steps"><a href="/series/obligations-et-taux/part1-fondamentaux/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/obligations-et-taux/part2-prix-et-rendement/" class="series-step"><span class="series-num">2</span><span class="series-label">Prix &amp; Yield</span></a><a href="/series/obligations-et-taux/part3-yield-curve/" class="series-step"><span class="series-num">3</span><span class="series-label">Yield Curve</span></a><a href="/series/obligations-et-taux/part4-credit-spreads/" class="series-step current"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/obligations-et-taux/part5-trader-les-obligations/" class="series-step"><span class="series-num">5</span><span class="series-label">Trader</span></a><a href="/series/obligations-et-taux/part6-construire-un-portefeuille/" class="series-step"><span class="series-num">6</span><span class="series-label">Portefeuille</span></a></div><span class="series-counter">4/6</span><a href="/series/obligations-et-taux/part5-trader-les-obligations/" class="series-arrow" title="Trader les Obligations"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#definition" class="fnav-item" data-section="definition"><i class="fas fa-bookmark"></i><span>Qu'est-ce qu'un spread</span></a><a href="#mesures" class="fnav-item" data-section="mesures"><i class="fas fa-bookmark"></i><span>Types de mesures</span></a><a href="#cycles" class="fnav-item" data-section="cycles"><i class="fas fa-bookmark"></i><span>Cycles de crédit</span></a><a href="#cds" class="fnav-item" data-section="cds"><i class="fas fa-bookmark"></i><span>CDS</span></a><a href="#signaux" class="fnav-item" data-section="signaux"><i class="fas fa-bookmark"></i><span>Signaux de marché</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'})}if(isOpen)toggle()})});function updateActive(){var scrollY=window.scrollY||window.pageYOffset,best=null;sections.forEach(function(s){if(s.el.getBoundingClientRect().top+window.pageYOffset-150<=scrollY)best=s});sections.forEach(function(s){s.item.classList.toggle('active',s===best)});if(best)label.textContent=best.item.querySelector('span').textContent}window.addEventListener('scroll',updateActive,{passive:true});updateActive()})();</script>
+
+<div style="max-width:900px;margin:-3rem auto 0;padding:0 1rem;position:relative;z-index:1;">
+
+<!-- SECTION 1 -->
+<div id="definition" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-chart-bar" style="color:#0d9488;"></i> Le credit spread : le prix du risque de défaut</h2>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Le <strong>credit spread</strong> est la différence de rendement entre une obligation corporate et le Treasury de même maturité. C'est le prix que l'investisseur exige pour accepter le risque que l'émetteur fasse défaut.</p>
+  <div class="formula-box"><div class="formula-label">Credit Spread</div>Spread = <span class="formula-highlight">Yield corporate</span> − <span class="formula-highlight">Yield Treasury même maturité</span></div>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Si le Treasury 10 ans est à 4,3% et l'obligation Apple 10 ans est à 4,8%, le credit spread d'Apple est de <strong>50 bps</strong> (0,50%). C'est très serré — Apple est noté AA+. En comparaison, une obligation CCC peut avoir un spread de 800-1000 bps.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Rating</th><th>Spread typique (bps)</th><th>Yield (si Treasury 10Y = 4,3%)</th><th>Exemples</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AAA</strong></td><td>30-50</td><td>4,6-4,8%</td><td>Microsoft, J&amp;J</td></tr>
+      <tr><td><strong>AA</strong></td><td>50-80</td><td>4,8-5,1%</td><td>Apple, Alphabet</td></tr>
+      <tr><td><strong>A</strong></td><td>80-130</td><td>5,1-5,6%</td><td>Amazon, JPMorgan</td></tr>
+      <tr><td><strong>BBB</strong></td><td>130-200</td><td>5,6-6,3%</td><td>Ford Motor, AT&amp;T</td></tr>
+      <tr><td><strong>BB</strong></td><td>250-400</td><td>6,8-8,3%</td><td>Airlines, retail cyclique</td></tr>
+      <tr><td><strong>B</strong></td><td>400-600</td><td>8,3-10,3%</td><td>Entreprises endettées</td></tr>
+      <tr><td><strong>CCC</strong></td><td>800-1500+</td><td>12,3%+</td><td>Distressed, pré-défaut</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-spread-by-rating" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Spreads serrés vs spreads larges</h4>
+    <p>Des spreads <strong>serrés</strong> signifient que le marché est confiant — il exige peu de compensation pour le risque de crédit. C'est typique des périodes de croissance et de liquidité abondante. Des spreads <strong>larges</strong> signifient que le marché a peur — il exige beaucoup plus pour prendre le risque. En mars 2020, les spreads HY sont passés de 350 à 1100 bps en 3 semaines. C'est l'équivalent obligataire du VIX qui passe de 15 à 80.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : pourquoi les spreads de Ford (BBB-) sont-ils plus larges que ceux d'Apple (AA+) ?</summary>
+    <div class="quiz-answer"><strong>Parce que Ford a un risque de défaut significativement plus élevé.</strong> Ford est un constructeur automobile cyclique, très endetté ($140B+ de dette), noté un cran au-dessus du high yield. Apple a $160B+ de cash, quasiment pas de dette nette, et des cash-flows prévisibles. Le marché exige ~150 bps de compensation pour Ford vs ~50 bps pour Apple, soit 100 bps de plus — la prime de risque supplémentaire pour le risque de faillite de Ford.</div>
+  </details>
+</div>
+
+<!-- SECTION 2 -->
+<div id="mesures" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-ruler-combined" style="color:#0d9488;"></i> Mesurer les spreads : G-spread, Z-spread, OAS</h2>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Il existe plusieurs façons de mesurer le credit spread, chacune avec un niveau de sophistication croissant.</p>
+  <table class="compare-table">
+    <thead><tr><th>Mesure</th><th>Calcul</th><th>Ce que ça capture</th><th>Limites</th></tr></thead>
+    <tbody>
+      <tr><td><strong>G-Spread</strong></td><td>Yield corporate − Yield Treasury interpolé</td><td>Spread nominal simple</td><td>Ignore la structure des flux (coupons différents)</td></tr>
+      <tr><td><strong>I-Spread</strong></td><td>Yield corporate − Swap rate</td><td>Spread vs marché interbancaire</td><td>Inclut le risque de contrepartie bancaire</td></tr>
+      <tr><td><strong>Z-Spread</strong></td><td>Spread constant ajouté à toute la courbe zéro-coupon pour égaler le prix</td><td>Risque de crédit pur + illiquidité</td><td>Ignore les options intégrées (call/put)</td></tr>
+      <tr><td><strong>OAS</strong></td><td>Z-Spread ajusté pour les options intégrées</td><td>Le « vrai » spread de crédit</td><td>Dépend du modèle de taux utilisé</td></tr>
+    </tbody>
+  </table>
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> OAS : la mesure de référence professionnelle</h4>
+    <p>L'<strong>OAS</strong> (Option-Adjusted Spread) est la mesure la plus utilisée par les professionnels. Beaucoup d'obligations corporate sont <em>callable</em> — l'émetteur peut les rembourser avant la maturité si les taux baissent. Le Z-Spread surestime la compensation de crédit pour ces obligations (il inclut la « valeur » de l'option donnée à l'émetteur). L'OAS soustrait cette valeur et donne le spread de crédit <em>pur</em>. Pour les obligations sans options intégrées, OAS ≈ Z-Spread.</p>
+  </div>
+</div>
+
+<!-- SECTION 3 -->
+<div id="cycles" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-arrows-spin" style="color:#0d9488;"></i> Le cycle de crédit : expansion, excès, crise, reprise</h2>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Les spreads de crédit suivent un cycle prévisible, lié au cycle économique mais avec ses propres dynamiques.</p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg,#16a34a,#22c55e);">1</div>
+      <h4>Expansion</h4>
+      <p>Spreads se compriment. Croissance saine, défauts bas. Le crédit est facile. Durée : 3-5 ans.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg,#eab308,#facc15);">2</div>
+      <h4>Excès</h4>
+      <p>Spreads au plus serré. Les entreprises s'endettent trop, les covenants sont relâchés. Euphorie.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg,#dc2626,#ef4444);">3</div>
+      <h4>Stress / Crise</h4>
+      <p>Spreads explosent. Défauts en hausse, liquidité disparaît. Ventes forcées. Le cycle se retourne.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:linear-gradient(135deg,#3b82f6,#60a5fa);">4</div>
+      <h4>Reprise</h4>
+      <p>Spreads se re-compriment. Les survivants rebondissent. C'est le meilleur moment pour acheter du HY.</p>
+    </div>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Crise</th><th>Spread HY pic</th><th>Spread HY plancher avant</th><th>Expansion</th><th>Rebond 12M depuis le pic</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Dot-com (2001-02)</strong></td><td>~1100 bps</td><td>~350 bps</td><td>×3</td><td>+15%</td></tr>
+      <tr><td><strong>GFC (2008-09)</strong></td><td>~2000 bps</td><td>~250 bps</td><td>×8</td><td>+50%</td></tr>
+      <tr><td><strong>Oil crash (2015-16)</strong></td><td>~800 bps</td><td>~350 bps</td><td>×2,3</td><td>+20%</td></tr>
+      <tr><td><strong>COVID (Mar 2020)</strong></td><td>~1100 bps</td><td>~360 bps</td><td>×3</td><td>+25%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège de la « compression terminale »</h4>
+    <p>Quand les spreads IG touchent 80-100 bps et les spreads HY 300 bps, c'est le signe que le marché est dans une phase d'excès. Le rendement supplémentaire ne compense plus le risque réel de défaut. Historiquement, les investisseurs qui achètent du HY quand les spreads sont sous 350 bps sous-performent sur les 3 années suivantes. Le moment d'acheter du HY, c'est quand les spreads dépassent 600 bps — dans la panique, quand personne n'en veut.</p>
+  </div>
+</div>
+
+<!-- SECTION 4 -->
+<div id="cds" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-shield-halved" style="color:#0d9488;"></i> CDS : l'assurance contre le défaut</h2>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Un <strong>Credit Default Swap</strong> (CDS) est un contrat d'assurance : vous payez une prime annuelle (en bps) et, en échange, le vendeur du CDS vous indemnise si l'émetteur fait défaut. Le prix du CDS est un proxy temps réel du risque de crédit perçu.</p>
+
+  <div class="formula-box"><div class="formula-label">CDS — le concept</div>Vous payez <span class="formula-highlight">50 bps/an</span> → si défaut, le vendeur vous rembourse <span class="formula-highlight">100% de la perte</span></div>
+
+  <table class="compare-table">
+    <thead><tr><th>CDS Spread</th><th>Risque perçu</th><th>Probabilité implicite de défaut (5 ans)</th><th>Exemples</th></tr></thead>
+    <tbody>
+      <tr><td><strong>&lt; 50 bps</strong></td><td style="color:#16a34a;">Très faible</td><td>&lt; 2%</td><td>Apple, Microsoft, US gov</td></tr>
+      <tr><td><strong>50-150 bps</strong></td><td style="color:#eab308;">Modéré</td><td>2-6%</td><td>Banques IG, industriels</td></tr>
+      <tr><td><strong>150-500 bps</strong></td><td style="color:#f97316;">Élevé</td><td>6-20%</td><td>HY corporate, EM souverains</td></tr>
+      <tr><td><strong>500-1000 bps</strong></td><td style="color:#ef4444;">Très élevé</td><td>20-40%</td><td>Distressed, souverains en crise</td></tr>
+      <tr><td><strong>&gt; 1000 bps</strong></td><td style="color:#991b1b;">Défaut imminent</td><td>&gt; 40%</td><td>Lehman (sept 2008), Argentine</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> CDS vs Bond Spread : la base</h4>
+    <p>En théorie, le CDS spread et le bond spread devraient être identiques (les deux mesurent le risque de défaut). En pratique, il y a un écart appelé la <strong>basis</strong>. Quand la basis est négative (CDS &lt; bond spread), il est « moins cher » de s'assurer via CDS que via la décote de l'obligation — signe que le marché obligataire est plus pessimiste que le marché des dérivés. Les hedge funds exploitent cette anomalie avec le <strong>basis trade</strong> (acheter l'obligation + acheter le CDS), l'un des arbitrages les plus courants du fixed income.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : le CDS 5 ans d'une banque passe de 60 bps à 250 bps en une semaine. Que faire ?</summary>
+    <div class="quiz-answer"><strong>C'est un signal d'alarme majeur.</strong> Un quadruplement du CDS en une semaine signifie que le marché des dérivés anticipe un risque de défaut significatif. C'est ce qui s'est passé avec Credit Suisse en mars 2023 avant son rachat forcé par UBS. Le CDS est souvent un <em>leading indicator</em> par rapport au cours de l'action — les desk de crédit réagissent avant les analystes equity. Si vous êtes actionnaire, c'est le moment de réévaluer votre thèse. Si vous êtes déposant, vos dépôts sont assurés jusqu'à un plafond (€100K en Europe, $250K aux US).</div>
+  </details>
+</div>
+
+<!-- SECTION 5 -->
+<div id="signaux" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-signal" style="color:#0d9488;"></i> Les spreads comme signaux de marché</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Les credit spreads sont l'un des meilleurs indicateurs de la santé du marché — souvent plus fiables que le VIX, qui ne regarde que la volatilité implicite des options S&amp;P 500.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Signal</th><th>Ce qu'il indique</th><th>Action typique</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Spreads HY &lt; 350 bps</strong></td><td>Excès d'optimisme, complacence</td><td>Réduire l'exposition HY, augmenter IG ou cash</td></tr>
+      <tr><td><strong>Spreads HY &gt; 600 bps</strong></td><td>Stress significatif, opportunité d'achat</td><td>Accumuler du HY investment-grade border (BB)</td></tr>
+      <tr><td><strong>Spreads HY &gt; 1000 bps</strong></td><td>Crise systémique, panique</td><td>Achat agressif pour les contrariants (très risqué)</td></tr>
+      <tr><td><strong>IG-HY gap s'élargit</strong></td><td>Flight to quality au sein du crédit</td><td>Surpondérer IG, sous-pondérer HY</td></tr>
+      <tr><td><strong>Spreads IG &lt; 80 bps</strong></td><td>Le crédit est « cher » — risque/rendement défavorable</td><td>Passer aux Treasuries (même rendement, moins de risque)</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-spread-vs-spy" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Quand les spreads et les actions divergent</h4>
+    <p>Quand les actions montent mais que les spreads s'élargissent, c'est un <strong>red flag</strong>. Cela signifie que le marché du crédit (dominé par les institutionnels) voit un risque que le marché actions (plus influencé par le retail et le momentum) ignore. Historiquement, quand ces deux marchés divergent, c'est le crédit qui a raison. Les spreads ont commencé à s'élargir 2-3 mois avant le pic du S&amp;P 500 en 2007.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Les indices de référence à suivre</h3>
+
+  <table class="compare-table">
+    <thead><tr><th>Indice</th><th>Segment</th><th>ETF associé</th><th>Ce qu'il mesure</th></tr></thead>
+    <tbody>
+      <tr><td><strong>ICE BofA US HY OAS</strong></td><td>US High Yield</td><td>HYG, JNK</td><td>Le spread HY de référence — suivre sur FRED (BAMLH0A0HYM2)</td></tr>
+      <tr><td><strong>ICE BofA US Corp OAS</strong></td><td>US IG Corporate</td><td>LQD</td><td>Le spread IG de référence — suivre sur FRED (BAMLC0A0CM)</td></tr>
+      <tr><td><strong>CDX NA IG</strong></td><td>CDS index, 125 noms IG</td><td>—</td><td>Le « VIX du crédit IG » — le plus réactif en intraday</td></tr>
+      <tr><td><strong>CDX NA HY</strong></td><td>CDS index, 100 noms HY</td><td>—</td><td>Le « VIX du crédit HY » — le plus réactif en stress</td></tr>
+      <tr><td><strong>iTraxx Europe</strong></td><td>CDS européen, 125 noms</td><td>—</td><td>L'équivalent européen du CDX</td></tr>
+    </tbody>
+  </table>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#0d9488;margin-right:.5rem;"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrow-right"></i> Le <strong>credit spread</strong> mesure le risque de défaut — c'est la compensation exigée au-delà du Treasury.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> L'<strong>OAS</strong> est la mesure professionnelle de référence (ajustée pour les options intégrées).</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Le <strong>cycle de crédit</strong> (expansion → excès → crise → reprise) est prévisible. Acheter quand les spreads sont au-dessus de 600 bps HY.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Les <strong>CDS</strong> sont le signal le plus rapide de stress de crédit — ils bougent avant les obligations et les actions.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Quand <strong>spreads et actions divergent</strong>, le crédit a historiquement raison.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Suivre le <strong>ICE BofA HY OAS</strong> sur FRED et le <strong>CDX NA HY</strong> pour les signaux de marché.</li>
+    </ul>
+  </div>
+
+  <a href="/series/obligations-et-taux/part5-trader-les-obligations/" class="next-cta">
+    <div><div class="next-label">Partie 5 sur 6</div><div class="next-title">Trader les Obligations →</div></div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+</div>
+
+<script>
+(function(){
+  var c1=echarts.init(document.getElementById('chart-spread-by-rating'));
+  c1.setOption({
+    title:{text:'Spreads typiques par rating (bps)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:'3%',right:'4%',bottom:'3%',top:'15%',containLabel:true},
+    xAxis:{type:'category',data:['AAA','AA','A','BBB','BB','B','CCC']},
+    yAxis:{type:'value',name:'Spread (bps)',axisLabel:{formatter:'{value}'}},
+    series:[{type:'bar',data:[
+      {value:40,itemStyle:{color:'#0d9488'}},
+      {value:65,itemStyle:{color:'#14b8a6'}},
+      {value:105,itemStyle:{color:'#2dd4bf'}},
+      {value:165,itemStyle:{color:'#eab308'}},
+      {value:325,itemStyle:{color:'#f97316'}},
+      {value:500,itemStyle:{color:'#ef4444'}},
+      {value:1100,itemStyle:{color:'#991b1b'}}
+    ],barWidth:'55%',label:{show:true,position:'top',formatter:'{c}',fontSize:11,fontWeight:700}}]
+  });
+
+  var c2=echarts.init(document.getElementById('chart-spread-vs-spy'));
+  c2.setOption({
+    title:{text:'Spreads HY vs S&P 500 — relation inverse',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis'},
+    legend:{data:['Spread HY (bps)','S&P 500 (normalisé)'],bottom:0},
+    xAxis:{type:'category',data:['2018','2019','2020-Q1','2020-Q2','2021','2022','2023','2024','2025']},
+    yAxis:[
+      {type:'value',name:'Spread HY (bps)',position:'left',axisLabel:{formatter:'{value}'}},
+      {type:'value',name:'S&P 500',position:'right',axisLabel:{formatter:'{value}'}}
+    ],
+    series:[
+      {name:'Spread HY (bps)',type:'line',data:[400,350,1100,650,300,500,420,330,350],lineStyle:{width:3,color:'#ef4444'},itemStyle:{color:'#ef4444'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(239,68,68,0.15)'},{offset:1,color:'rgba(239,68,68,0)'}]}}},
+      {name:'S&P 500 (normalisé)',type:'line',yAxisIndex:1,data:[2700,3200,2300,3100,4700,3800,4800,5800,5900],lineStyle:{width:3,color:'#0d9488'},itemStyle:{color:'#0d9488'}}
+    ]
+  });
+
+  window.addEventListener('resize',function(){c1.resize();c2.resize()});
+})();
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+</body>
+</html>

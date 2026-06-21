@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Les Greeks : Delta, Gamma, Theta, Vega | Les Options de A à Z — Partie 2/6 | DailyTickers</title>
+ <meta name="description" content="Série Les Options de A à Z — Partie 2/6 : comprendre Delta, Gamma, Theta, Vega et Rho. Sensibilités d'une option au prix, au temps, à la volatilité. Avec visualisations interactives.">
+ <meta property="og:title" content="Les Greeks : Delta, Gamma, Theta, Vega | Les Options de A à Z 2/6">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/options-trading/part2-les-greeks/">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdf4 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-green{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)}
+ .hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+ .hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f8fafc}
+ .compare-table tr:last-child td{border-bottom:none}
+ .pedagogy-box{background:#f0fdf4;border:1px solid #86efac;border-left:4px solid #16a34a;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#15803d;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p,.pedagogy-box li{font-size:.95rem;color:#166534;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .formula-box{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700;letter-spacing:.02em}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#4ade80}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:1px solid #16a34a;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#15803d;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(22,163,74,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#16a34a;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(22,163,74,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #16a34a}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .greek-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0;position:relative;overflow:hidden}
+ .greek-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px}
+ .greek-card.delta::before{background:#16a34a}
+ .greek-card.gamma::before{background:#2563eb}
+ .greek-card.theta::before{background:#ef4444}
+ .greek-card.vega::before{background:#9333ea}
+ .greek-card.rho::before{background:#f59e0b}
+ .greek-symbol{font-size:3rem;font-weight:900;margin-bottom:.5rem;line-height:1}
+ .greek-card.delta .greek-symbol{color:#16a34a}
+ .greek-card.gamma .greek-symbol{color:#2563eb}
+ .greek-card.theta .greek-symbol{color:#ef4444}
+ .greek-card.vega .greek-symbol{color:#9333ea}
+ .greek-card.rho .greek-symbol{color:#f59e0b}
+ details{margin:.75rem 0}
+ details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;transition:all .2s;list-style:none}
+ details summary::-webkit-details-marker{display:none}
+ details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#16a34a;margin-right:.75rem}
+ details[open] summary{border-color:#16a34a;background:#f0fdf4;border-radius:12px 12px 0 0}
+ details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.step-grid{grid-template-columns:1fr 1fr}.formula-box{font-size:1rem;padding:1rem 1.25rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.formula-box{font-size:.9rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:.4rem"></i> Série Les Options de A à Z — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Les Greeks : Delta, Gamma, Theta, Vega</h1>
+  <p class="hero-subtitle">Les Greeks sont les « capteurs » d'une option — ils mesurent sa sensibilité au prix, au temps, à la volatilité. Comprendre les Greeks, c'est comprendre pourquoi votre option bouge (ou ne bouge pas) comme vous l'attendiez.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-delta"></i> Δ Delta</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-wave-square"></i> Γ Gamma</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-clock"></i> Θ Theta</span>
+    <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-tornado"></i> V Vega</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/options-trading/part1-fondamentaux/" class="series-arrow" title="Fondamentaux"><i class="fas fa-chevron-left"></i></a><span class="series-title">Les Options de A à Z</span><div class="series-steps"><a href="/series/options-trading/part1-fondamentaux/" class="series-step" title="Fondamentaux"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/options-trading/part2-les-greeks/" class="series-step current" title="Les Greeks"><span class="series-num">2</span><span class="series-label">Greeks</span></a><a href="/series/options-trading/part3-strategies-base/" class="series-step" title="Stratégies de Base"><span class="series-num">3</span><span class="series-label">Strat. Base</span></a><a href="/series/options-trading/part4-spreads/" class="series-step" title="Les Spreads"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/options-trading/part5-strategies-avancees/" class="series-step" title="Stratégies Avancées"><span class="series-num">5</span><span class="series-label">Avancées</span></a><a href="/series/options-trading/part6-gestion-risque/" class="series-step" title="Gestion du Risque"><span class="series-num">6</span><span class="series-label">Risque</span></a></div><span class="series-counter">2/6</span><a href="/series/options-trading/part3-strategies-base/" class="series-arrow" title="Stratégies de Base"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-bookmark"></i><span>Vue d'ensemble</span></a><a href="#delta" class="fnav-item" data-section="delta"><i class="fas fa-bookmark"></i><span>Delta</span></a><a href="#gamma" class="fnav-item" data-section="gamma"><i class="fas fa-bookmark"></i><span>Gamma</span></a><a href="#theta" class="fnav-item" data-section="theta"><i class="fas fa-bookmark"></i><span>Theta</span></a><a href="#vega" class="fnav-item" data-section="vega"><i class="fas fa-bookmark"></i><span>Vega</span></a><a href="#rho" class="fnav-item" data-section="rho"><i class="fas fa-bookmark"></i><span>Rho</span></a><a href="#interactions" class="fnav-item" data-section="interactions"><i class="fas fa-bookmark"></i><span>Interactions</span></a><a href="#pratique" class="fnav-item" data-section="pratique"><i class="fas fa-bookmark"></i><span>En pratique</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var offset=target.getBoundingClientRect().top+window.scrollY-80;window.scrollTo({top:offset,behavior:'smooth'})}if(isOpen)toggle()})});window.addEventListener('scroll',function(){var scrollPos=window.scrollY+120,current=null;sections.forEach(function(s){if(s.el.offsetTop<=scrollPos)current=s});items.forEach(function(item){item.classList.remove('active')});if(current){current.item.classList.add('active');label.textContent=current.item.querySelector('span').textContent}})})();
+</script>
+
+<div style="max-width:900px;margin:0 auto;padding:0 1rem">
+
+<!-- SECTION 1: Vue d'ensemble -->
+<div id="overview" class="content-card" style="margin-top:-4rem;padding-top:5rem">
+  <div class="section-divider">Section 1</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-gauge-high" style="color:#16a34a"></i> Les Greeks : Vue d'Ensemble
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le prix d'une option dépend de plusieurs variables : le prix du sous-jacent, le temps restant, la volatilité implicite, les taux d'intérêt. Les <strong>Greeks</strong> mesurent la sensibilité du prix de l'option à chacune de ces variables. Ce sont les dérivées partielles du modèle de pricing (Black-Scholes ou autre).
+  </p>
+
+  <table class="compare-table">
+    <thead><tr><th>Greek</th><th>Symbole</th><th>Mesure</th><th>Impact principal</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Delta</strong></td><td style="font-size:1.3rem;font-weight:900;color:#16a34a">Δ</td><td>Sensibilité au prix du sous-jacent</td><td>Combien l'option bouge quand l'action bouge de $1</td></tr>
+      <tr><td><strong>Gamma</strong></td><td style="font-size:1.3rem;font-weight:900;color:#2563eb">Γ</td><td>Accélération du delta</td><td>Combien le delta change quand l'action bouge de $1</td></tr>
+      <tr><td><strong>Theta</strong></td><td style="font-size:1.3rem;font-weight:900;color:#ef4444">Θ</td><td>Sensibilité au temps</td><td>Combien l'option perd chaque jour (« time decay »)</td></tr>
+      <tr><td><strong>Vega</strong></td><td style="font-size:1.3rem;font-weight:900;color:#9333ea">V</td><td>Sensibilité à la volatilité implicite</td><td>Combien l'option bouge quand la IV change de 1%</td></tr>
+      <tr><td><strong>Rho</strong></td><td style="font-size:1.3rem;font-weight:900;color:#f59e0b">ρ</td><td>Sensibilité aux taux d'intérêt</td><td>Impact mineur sauf pour les LEAPS (options longues)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi « Greeks » ?</h4>
+    <p>Quatre des cinq sensibilités portent des noms de lettres grecques (Δ, Γ, Θ, ρ). Vega est l'exception — ce n'est pas une lettre grecque, mais le nom est resté par convention. Le terme « Greeks » s'est imposé dans les salles de marché dans les années 1970 avec la diffusion du modèle Black-Scholes.</p>
+  </div>
+</div>
+
+<!-- SECTION 2: Delta -->
+<div id="delta" class="content-card">
+  <div class="section-divider">Section 2</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <span style="color:#16a34a;font-size:2rem;font-weight:900">Δ</span> Delta — La Sensibilité au Prix
+  </h2>
+
+  <div class="greek-card delta">
+    <div class="greek-symbol">Δ</div>
+    <h3 style="margin:0 0 .5rem;font-size:1.2rem;font-weight:800;color:#0f172a">Delta = Variation du prix de l'option / Variation de $1 du sous-jacent</h3>
+    <p style="font-size:1rem;line-height:1.7;color:#334155">Un delta de <strong>0.60</strong> signifie que si l'action monte de $1, l'option gagne <strong>$0.60</strong> (soit $60 par contrat). Le delta est le Greek le plus intuitif et le plus utilisé.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Plages de valeurs</h3>
+  <table class="compare-table">
+    <thead><tr><th>Type</th><th>Plage Delta</th><th>Deep ITM</th><th>ATM</th><th>Deep OTM</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Long Call</strong></td><td>0 à +1.00</td><td>≈ +0.95 à +1.00</td><td>≈ +0.50</td><td>≈ +0.05 à +0.15</td></tr>
+      <tr><td><strong>Long Put</strong></td><td>0 à −1.00</td><td>≈ −0.95 à −1.00</td><td>≈ −0.50</td><td>≈ −0.05 à −0.15</td></tr>
+      <tr><td><strong>Short Call</strong></td><td>0 à −1.00</td><td>≈ −0.95 à −1.00</td><td>≈ −0.50</td><td>≈ −0.05 à −0.15</td></tr>
+      <tr><td><strong>Short Put</strong></td><td>0 à +1.00</td><td>≈ +0.95 à +1.00</td><td>≈ +0.50</td><td>≈ +0.05 à +0.15</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Delta comme probabilité (approximation)</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le delta peut être interprété comme une <strong>approximation de la probabilité</strong> que l'option expire ITM. Un call avec delta 0.30 a environ 30% de chances d'expirer dans la monnaie. C'est une approximation utile, pas une formule exacte — le vrai calcul est plus subtil (il utilise la probabilité risque-neutre, pas la probabilité réelle).
+  </p>
+
+  <div id="chart-delta-curve" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Delta et taille de position</h4>
+    <p>Le delta sert aussi à exprimer l'<strong>exposition équivalente en actions</strong>. Si vous avez 5 contrats call avec un delta de 0.60, votre exposition est de 5 × 100 × 0.60 = <strong>300 deltas</strong>, soit l'équivalent de 300 actions. C'est fondamental pour le hedging : un market maker qui vend 10 calls (delta 0.50) doit acheter 500 actions pour être delta-neutral.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : Vous avez 3 contrats put avec delta −0.40. Quelle est votre exposition en actions équivalentes ?</summary>
+    <div class="quiz-answer">
+      <p>3 contrats × 100 actions × (−0.40) = <strong>−120 deltas</strong>. Vous avez l'équivalent d'une position short de 120 actions. Si le sous-jacent baisse de $1, vos puts gagnent $120 en valeur.</p>
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 3: Gamma -->
+<div id="gamma" class="content-card">
+  <div class="section-divider">Section 3</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <span style="color:#2563eb;font-size:2rem;font-weight:900">Γ</span> Gamma — L'Accélérateur du Delta
+  </h2>
+
+  <div class="greek-card gamma">
+    <div class="greek-symbol">Γ</div>
+    <h3 style="margin:0 0 .5rem;font-size:1.2rem;font-weight:800;color:#0f172a">Gamma = Variation du delta / Variation de $1 du sous-jacent</h3>
+    <p style="font-size:1rem;line-height:1.7;color:#334155">Gamma mesure la <strong>courbure</strong> du payoff. C'est le delta du delta. Un gamma de 0.05 signifie que si l'action monte de $1, le delta augmente de 0.05.</p>
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le gamma est maximum pour les options <strong>ATM</strong> et s'approche de zéro pour les deep ITM et deep OTM. C'est logique : un call deep ITM a déjà un delta proche de 1.00 — il n'a plus beaucoup de marge pour accélérer. Un call deep OTM a un delta proche de 0 — il lui faudrait un mouvement énorme pour s'activer.
+  </p>
+
+  <div id="chart-gamma-curve" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Gamma et expiration</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le gamma <strong>explose</strong> pour les options ATM à courte expiration. C'est le phénomène du <strong>« gamma squeeze »</strong> : une option ATM à 1 jour de l'expiration peut passer de delta 0.50 à delta 0.95 sur un mouvement de quelques dollars. Le market maker qui a vendu cette option doit acheter des actions frénétiquement pour rester hedgé, ce qui amplifie le mouvement.
+  </p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le risque gamma</h4>
+    <p>Les <strong>vendeurs</strong> d'options sont « short gamma » : un mouvement rapide du sous-jacent leur fait perdre de l'argent de façon accélérée. C'est pourquoi les market makers et les desks de volatilité surveillent leur gamma de très près. Les journées « 0DTE » (0 Days To Expiration) concentrent un gamma extrême sur les options SPX/SPY qui expirent le jour même.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Position</th><th>Gamma</th><th>Signification</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Long options (call ou put)</strong></td><td style="color:#16a34a;font-weight:700">+ Gamma</td><td>Les gros mouvements vous profitent — votre delta s'ajuste en votre faveur</td></tr>
+      <tr><td><strong>Short options (call ou put)</strong></td><td style="color:#ef4444;font-weight:700">− Gamma</td><td>Les gros mouvements vous nuisent — votre delta se retourne contre vous</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 4: Theta -->
+<div id="theta" class="content-card">
+  <div class="section-divider">Section 4</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <span style="color:#ef4444;font-size:2rem;font-weight:900">Θ</span> Theta — L'Érosion du Temps
+  </h2>
+
+  <div class="greek-card theta">
+    <div class="greek-symbol">Θ</div>
+    <h3 style="margin:0 0 .5rem;font-size:1.2rem;font-weight:800;color:#0f172a">Theta = Perte de valeur de l'option par jour calendaire</h3>
+    <p style="font-size:1rem;line-height:1.7;color:#334155">Un theta de <strong>−0.08</strong> signifie que l'option perd <strong>$0.08 par action</strong> (soit $8 par contrat) chaque jour, toutes choses égales par ailleurs. Le theta est toujours négatif pour les acheteurs d'options.</p>
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le temps est l'<strong>ennemi de l'acheteur</strong> et l'<strong>allié du vendeur</strong>. Chaque jour qui passe sans mouvement du sous-jacent, l'option perd de la valeur temps. C'est inévitable, prévisible, et non-linéaire.
+  </p>
+
+  <div id="chart-theta-decay" style="width:100%;height:380px;margin:1.5rem 0"></div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">La courbe en racine carrée</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    L'érosion du theta suit approximativement une <strong>courbe en racine carrée</strong> : la valeur temps diminue lentement au début, puis s'accélère de façon dramatique dans les 30 derniers jours. Règle empirique : une option ATM perd environ <strong>un tiers</strong> de sa valeur temps dans les 30 derniers jours, et un autre tiers dans les 7 derniers jours.
+  </p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number" style="background:#ef4444"><i class="fa-solid fa-calendar-days" style="font-size:.9rem"></i></div>
+      <h4>90 → 60 jours</h4>
+      <p>Érosion lente. L'option perd ~$0.03/jour. Le temps joue peu</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:#f59e0b"><i class="fa-solid fa-calendar-days" style="font-size:.9rem"></i></div>
+      <h4>60 → 30 jours</h4>
+      <p>Accélération. ~$0.06/jour. Les acheteurs commencent à sentir la pression</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:#ef4444"><i class="fa-solid fa-fire" style="font-size:.9rem"></i></div>
+      <h4>30 → 7 jours</h4>
+      <p>Zone critique. ~$0.12/jour. Perdre $12/jour par contrat sans mouvement</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number" style="background:#991b1b"><i class="fa-solid fa-skull" style="font-size:.9rem"></i></div>
+      <h4>7 → 0 jours</h4>
+      <p>Effondrement. ~$0.25+/jour. La valeur temps fond comme neige au soleil</p>
+    </div>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Theta vs Gamma : le compromis fondamental</h4>
+    <p>Theta et gamma sont intimement liés et toujours de signe opposé. <strong>Long gamma = short theta</strong> : pour avoir le potentiel d'accélération (gamma), vous payez un loyer quotidien (theta). <strong>Short gamma = long theta</strong> : vous encaissez le loyer quotidien mais supportez le risque d'un mouvement brutal. C'est le compromis fondamental de tout trading d'options.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : Vous vendez un put ATM TSLA à 45 jours. Theta = −$0.85/jour. Combien gagnez-vous si TSLA ne bouge pas pendant 10 jours ?</summary>
+    <div class="quiz-answer">
+      <p>En tant que <strong>vendeur</strong>, vous gagnez quand theta s'érode. Gain approximatif = $0.85 × 10 × 100 = <strong>$850</strong>. En réalité, le gain sera légèrement supérieur car le theta s'accélère — les jours 36 à 45 ont un theta plus élevé que les jours 45 à 55. Attention : cet intervalle suppose que la volatilité implicite et le prix restent stables.</p>
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 5: Vega -->
+<div id="vega" class="content-card">
+  <div class="section-divider">Section 5</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <span style="color:#9333ea;font-size:2rem;font-weight:900">V</span> Vega — La Sensibilité à la Volatilité
+  </h2>
+
+  <div class="greek-card vega">
+    <div class="greek-symbol">V</div>
+    <h3 style="margin:0 0 .5rem;font-size:1.2rem;font-weight:800;color:#0f172a">Vega = Variation du prix de l'option / Variation de 1 point de IV</h3>
+    <p style="font-size:1rem;line-height:1.7;color:#334155">Un vega de <strong>0.15</strong> signifie que si la volatilité implicite augmente de 1 point (ex: 25% → 26%), l'option gagne <strong>$0.15 par action</strong> ($15 par contrat).</p>
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    La <strong>volatilité implicite</strong> (IV) est la volatilité « attendue » par le marché, intégrée dans le prix de l'option. Quand l'incertitude augmente (earnings, FOMC, conflits géopolitiques), l'IV monte et toutes les options deviennent plus chères — même sans mouvement du sous-jacent.
+  </p>
+
+  <div id="chart-vega-iv" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Le « IV Crush » — le piège des earnings</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Avant les résultats trimestriels, l'IV grimpe (le marché anticipe un gros mouvement). Le lendemain, l'incertitude disparaît : l'IV s'effondre brutalement. C'est l'<strong>IV crush</strong>. Résultat : même si l'action bouge dans la bonne direction, votre option peut <em>perdre de l'argent</em> parce que la chute de vega compense le gain de delta.
+  </p>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0">
+    <h3 style="color:#0f172a;margin-top:0">Exemple : AAPL avant/après earnings</h3>
+    <table class="compare-table" style="margin-top:1rem">
+      <thead><tr><th></th><th>Avant earnings</th><th>Après earnings</th><th>Impact</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Prix AAPL</strong></td><td>$210</td><td>$215 (+2.4%)</td><td style="color:#16a34a;font-weight:700">Delta : +$2.50</td></tr>
+        <tr><td><strong>IV</strong></td><td>38%</td><td>22% (−16 pts)</td><td style="color:#ef4444;font-weight:700">Vega : −$2.40</td></tr>
+        <tr><td><strong>Premium call ATM</strong></td><td>$8.00</td><td>$6.10</td><td style="color:#ef4444;font-weight:700">Perte nette : −$1.90</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:.9rem;color:#64748b;margin-top:1rem">L'action a monté de 2.4% dans la bonne direction, mais l'option a perdu $190 par contrat. Le vega a mangé le delta.</p>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Position</th><th>Vega</th><th>Profite quand</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Long options</strong></td><td style="color:#16a34a;font-weight:700">+ Vega</td><td>L'IV augmente (incertitude, peur, pré-earnings)</td></tr>
+      <tr><td><strong>Short options</strong></td><td style="color:#ef4444;font-weight:700">− Vega</td><td>L'IV diminue (résolution, calme, post-earnings)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> IV Rank et IV Percentile</h4>
+    <p>Avant de trader des options, vérifiez le <strong>IV Rank</strong> (où se situe l'IV actuelle par rapport aux 12 derniers mois) et l'<strong>IV Percentile</strong> (% de jours où l'IV était inférieure). Un IV Rank élevé (>50%) favorise la vente d'options. Un IV Rank bas (<30%) favorise l'achat. Trader des options sans regarder l'IV, c'est conduire sans regarder le compteur de vitesse.</p>
+  </div>
+</div>
+
+<!-- SECTION 6: Rho -->
+<div id="rho" class="content-card">
+  <div class="section-divider">Section 6</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <span style="color:#f59e0b;font-size:2rem;font-weight:900">ρ</span> Rho — La Sensibilité aux Taux
+  </h2>
+
+  <div class="greek-card rho">
+    <div class="greek-symbol">ρ</div>
+    <h3 style="margin:0 0 .5rem;font-size:1.2rem;font-weight:800;color:#0f172a">Rho = Variation du prix de l'option / Variation de 1% des taux</h3>
+    <p style="font-size:1rem;line-height:1.7;color:#334155">Rho est le Greek le moins influent pour la plupart des traders retail. Un rho de 0.05 signifie que si les taux montent de 1% (100 bps), l'option gagne $0.05 par action.</p>
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    En environnement de taux bas, rho est négligeable. Mais avec des taux Fed Funds à 4-5%, il devient pertinent pour les <strong>LEAPS</strong> (options à 1-2 ans) : un call LEAPS avec rho 0.30 gagne $30 par contrat si les taux baissent de 1%. Pour les options courtes (< 60 jours), rho est ignoré dans la pratique.
+  </p>
+
+  <table class="compare-table">
+    <thead><tr><th>Type</th><th>Rho</th><th>Impact des hausses de taux</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Long Call</strong></td><td style="color:#16a34a;font-weight:700">+ Rho</td><td>Bénéficie des hausses de taux</td></tr>
+      <tr><td><strong>Long Put</strong></td><td style="color:#ef4444;font-weight:700">− Rho</td><td>Souffre des hausses de taux</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 7: Interactions entre Greeks -->
+<div id="interactions" class="content-card">
+  <div class="section-divider">Section 7</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-arrows-spin" style="color:#16a34a"></i> Interactions entre Greeks
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Les Greeks ne fonctionnent pas en isolation. Ils interagissent constamment, et comprendre ces interactions est essentiel pour ne pas être surpris par le comportement de vos options.
+  </p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Le triangle Delta-Gamma-Theta</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    C'est le trinôme central. Gamma et theta sont toujours en tension : plus vous avez de gamma (potentiel d'accélération), plus vous payez de theta (loyer quotidien). À l'équilibre, une position delta-neutral a toujours un <strong>P&L quotidien = ½ × Gamma × (mouvement)² − Theta</strong>.
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">P&L quotidien d'une position delta-neutral</div>
+    P&L ≈ ½ × <span class="formula-highlight">Γ</span> × (ΔS)² − <span class="formula-highlight">Θ</span>
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Si le mouvement du sous-jacent est suffisamment grand, le gamma gagne. Si le marché ne bouge pas, le theta gagne. C'est pourquoi les vendeurs d'options adorent les marchés calmes et les acheteurs espèrent de la volatilité réalisée.
+  </p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Vega vs Theta : le piège pré-earnings</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Avant les earnings, l'IV monte (vega positif pour les acheteurs). Mais le temps passe aussi (theta négatif). Un acheteur qui entre trop tôt dans une position « pré-earnings » peut perdre en theta plus qu'il ne gagne en vega. La fenêtre optimale est généralement <strong>5-10 jours</strong> avant les earnings, quand l'IV commence à accélérer mais le theta n'a pas encore explosé.
+  </p>
+
+  <div id="chart-greek-pnl" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <table class="compare-table">
+    <thead><tr><th>Relation</th><th>Règle</th><th>Application pratique</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Gamma ↔ Theta</strong></td><td>Toujours opposés</td><td>Long gamma = payer le loyer temps. Short gamma = encaisser mais risquer le mouvement</td></tr>
+      <tr><td><strong>Delta ↔ Gamma</strong></td><td>Gamma accélère delta</td><td>Options ATM ont le plus de gamma → delta change vite. Deep ITM/OTM sont « stables »</td></tr>
+      <tr><td><strong>Vega ↔ Temps</strong></td><td>Vega diminue avec le temps</td><td>Options longues sont plus sensibles à l'IV. Options courtes sont pilotées par theta</td></tr>
+      <tr><td><strong>Gamma ↔ Temps</strong></td><td>Gamma augmente près de l'expiration (ATM)</td><td>Options 0DTE ATM = gamma extrême, volatilité de P&L maximum</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 8: En pratique -->
+<div id="pratique" class="content-card">
+  <div class="section-divider">Section 8</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-screwdriver-wrench" style="color:#16a34a"></i> Les Greeks en Pratique
+  </h2>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Lire une chaîne d'options</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Quand vous ouvrez une chaîne d'options sur votre broker, vous voyez typiquement : Bid, Ask, Volume, OI, IV, et les Greeks (Delta, Gamma, Theta, Vega). Voici comment utiliser ces colonnes pour prendre de meilleures décisions :
+  </p>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Choisir le strike</h4>
+      <p>Regardez le <strong>delta</strong>. ATM (~0.50) pour les directionnels. 0.30-0.40 pour du levier. 0.70+ pour un quasi-stock replacement</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Choisir l'expiration</h4>
+      <p>Regardez le <strong>theta</strong>. Plus de 45 jours = theta lent. Moins de 21 jours = theta rapide. Pour les acheteurs : 30-60 jours est le « sweet spot »</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Vérifier l'IV</h4>
+      <p>Regardez le <strong>vega</strong> et l'<strong>IV Rank</strong>. IV élevée = options chères. Acheter quand IV Rank < 30%, vendre quand > 50%</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Évaluer le risque</h4>
+      <p>Regardez le <strong>gamma</strong>. Fort gamma = grande sensibilité aux mouvements. Les options courtes ATM bougent le plus en $ pour un mouvement donné</p>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Tableau de synthèse des Greeks par position</h3>
+
+  <table class="compare-table">
+    <thead><tr><th>Position</th><th>Δ Delta</th><th>Γ Gamma</th><th>Θ Theta</th><th>V Vega</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Long Call</strong></td><td style="color:#16a34a">+ (haussier)</td><td style="color:#16a34a">+ (accélère)</td><td style="color:#ef4444">− (paie)</td><td style="color:#16a34a">+ (veut plus d'IV)</td></tr>
+      <tr><td><strong>Long Put</strong></td><td style="color:#ef4444">− (baissier)</td><td style="color:#16a34a">+ (accélère)</td><td style="color:#ef4444">− (paie)</td><td style="color:#16a34a">+ (veut plus d'IV)</td></tr>
+      <tr><td><strong>Short Call</strong></td><td style="color:#ef4444">− (baissier)</td><td style="color:#ef4444">− (risque)</td><td style="color:#16a34a">+ (encaisse)</td><td style="color:#ef4444">− (veut moins d'IV)</td></tr>
+      <tr><td><strong>Short Put</strong></td><td style="color:#16a34a">+ (haussier)</td><td style="color:#ef4444">− (risque)</td><td style="color:#16a34a">+ (encaisse)</td><td style="color:#ef4444">− (veut moins d'IV)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#16a34a"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> <strong>Delta</strong> = combien l'option bouge par $1. Aussi une proxy de la probabilité d'expirer ITM</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Gamma</strong> = l'accélérateur du delta. Maximum pour les ATM, explosif près de l'expiration</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Theta</strong> = le loyer quotidien. Non-linéaire : accélère dans les 30 derniers jours</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Vega</strong> = sensibilité à l'IV. L'<em>IV crush</em> post-earnings peut tuer un trade directionnel gagnant</li>
+      <li><i class="fa-solid fa-check"></i> <strong>Gamma et Theta</strong> sont toujours en tension — c'est le compromis fondamental du trading d'options</li>
+      <li><i class="fa-solid fa-check"></i> Avant de trader : vérifier le <strong>delta</strong> (strike), le <strong>theta</strong> (expiration) et le <strong>vega</strong> (IV Rank)</li>
+    </ul>
+  </div>
+
+  <a href="/series/options-trading/part3-strategies-base/" class="next-cta"><div><div class="next-label">Partie 3 sur 6</div><div class="next-title">Stratégies de Base : Covered Call, Protective Put, Cash-Secured Put <i class="fa-solid fa-arrow-right"></i></div></div></a>
+</div>
+
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Chart 1: Delta curve by moneyness
+var chartDelta = echarts.init(document.getElementById('chart-delta-curve'));
+var strikes = [];
+var deltaCall = [];
+var deltaPut = [];
+var S = 210, sigma = 0.25, T = 30/365, r = 0.05;
+for (var K = 190; K <= 230; K += 1) {
+  strikes.push(K);
+  var d1 = (Math.log(S/K) + (r + sigma*sigma/2)*T) / (sigma*Math.sqrt(T));
+  var nd1 = 0.5 * (1 + erf(d1/Math.sqrt(2)));
+  deltaCall.push(parseFloat(nd1.toFixed(3)));
+  deltaPut.push(parseFloat((nd1 - 1).toFixed(3)));
+}
+function erf(x) {
+  var a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  var sign = x < 0 ? -1 : 1; x = Math.abs(x);
+  var t = 1/(1+p*x);
+  var y = 1-(((((a5*t+a4)*t)+a3)*t+a2)*t+a1)*t*Math.exp(-x*x);
+  return sign*y;
+}
+chartDelta.setOption({
+  title:{text:'Delta vs Strike (AAPL $210, 30 jours, IV 25%)',left:'center',textStyle:{fontSize:13,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'axis',formatter:function(p){return 'Strike $'+p[0].name+'<br>Call Δ: '+p[0].value+'<br>Put Δ: '+p[1].value}},
+  legend:{data:['Call Delta','Put Delta'],bottom:0,textStyle:{fontSize:11}},
+  grid:{left:'8%',right:'4%',bottom:'14%',top:'18%',containLabel:true},
+  xAxis:{type:'category',data:strikes,name:'Strike ($)',nameLocation:'middle',nameGap:30,axisLabel:{fontSize:10,interval:4}},
+  yAxis:{type:'value',name:'Delta',min:-1,max:1,axisLabel:{fontSize:11}},
+  series:[
+    {name:'Call Delta',type:'line',data:deltaCall,lineStyle:{color:'#16a34a',width:3},itemStyle:{color:'#16a34a'},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(22,163,74,0.1)'},{offset:1,color:'rgba(22,163,74,0)'}]}}},
+    {name:'Put Delta',type:'line',data:deltaPut,lineStyle:{color:'#ef4444',width:3},itemStyle:{color:'#ef4444'},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:1,x2:0,y2:0,colorStops:[{offset:0,color:'rgba(239,68,68,0.1)'},{offset:1,color:'rgba(239,68,68,0)'}]}}},
+  ],
+  markLine:{silent:true,lineStyle:{color:'#94a3b8',type:'dashed'},data:[{yAxis:0}]}
+});
+
+// Chart 2: Gamma curve
+var chartGamma = echarts.init(document.getElementById('chart-gamma-curve'));
+var gammaData30 = [], gammaData7 = [], gammaData90 = [];
+for (var K = 190; K <= 230; K += 1) {
+  var d1_30 = (Math.log(S/K) + (r + sigma*sigma/2)*(30/365)) / (sigma*Math.sqrt(30/365));
+  var nd1_prime_30 = Math.exp(-d1_30*d1_30/2) / Math.sqrt(2*Math.PI);
+  gammaData30.push(parseFloat((nd1_prime_30 / (S * sigma * Math.sqrt(30/365))).toFixed(4)));
+  var d1_7 = (Math.log(S/K) + (r + sigma*sigma/2)*(7/365)) / (sigma*Math.sqrt(7/365));
+  var nd1_prime_7 = Math.exp(-d1_7*d1_7/2) / Math.sqrt(2*Math.PI);
+  gammaData7.push(parseFloat((nd1_prime_7 / (S * sigma * Math.sqrt(7/365))).toFixed(4)));
+  var d1_90 = (Math.log(S/K) + (r + sigma*sigma/2)*(90/365)) / (sigma*Math.sqrt(90/365));
+  var nd1_prime_90 = Math.exp(-d1_90*d1_90/2) / Math.sqrt(2*Math.PI);
+  gammaData90.push(parseFloat((nd1_prime_90 / (S * sigma * Math.sqrt(90/365))).toFixed(4)));
+}
+chartGamma.setOption({
+  title:{text:'Gamma par Strike et Expiration',left:'center',textStyle:{fontSize:13,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'axis'},
+  legend:{data:['7 jours','30 jours','90 jours'],bottom:0,textStyle:{fontSize:11}},
+  grid:{left:'8%',right:'4%',bottom:'14%',top:'18%',containLabel:true},
+  xAxis:{type:'category',data:strikes,name:'Strike ($)',nameLocation:'middle',nameGap:30,axisLabel:{fontSize:10,interval:4}},
+  yAxis:{type:'value',name:'Gamma',axisLabel:{fontSize:11}},
+  series:[
+    {name:'7 jours',type:'line',data:gammaData7,lineStyle:{color:'#ef4444',width:2.5},itemStyle:{color:'#ef4444'},symbol:'none'},
+    {name:'30 jours',type:'line',data:gammaData30,lineStyle:{color:'#2563eb',width:2.5},itemStyle:{color:'#2563eb'},symbol:'none'},
+    {name:'90 jours',type:'line',data:gammaData90,lineStyle:{color:'#16a34a',width:2.5},itemStyle:{color:'#16a34a'},symbol:'none'}
+  ]
+});
+
+// Chart 3: Theta decay curve
+var chartTheta = echarts.init(document.getElementById('chart-theta-decay'));
+var days = [], thetaATM = [], valueCurve = [];
+var totalPremium = 6.50;
+for (var d = 90; d >= 0; d--) {
+  days.push(90-d);
+  var timeVal = totalPremium * Math.sqrt(d/90);
+  valueCurve.push(parseFloat(timeVal.toFixed(2)));
+  var dailyTheta = d > 0 ? -(totalPremium * 0.5 / (Math.sqrt(90) * Math.sqrt(d))) * (1/365*365) : 0;
+  thetaATM.push(parseFloat(Math.abs(dailyTheta).toFixed(3)));
+}
+chartTheta.setOption({
+  title:{text:'Érosion de la Valeur Temps (ATM, 90 jours)',left:'center',textStyle:{fontSize:13,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'axis',formatter:function(p){return 'Jour '+p[0].name+'<br>Valeur temps: $'+p[0].value}},
+  grid:{left:'8%',right:'4%',bottom:'12%',top:'18%',containLabel:true},
+  xAxis:{type:'category',data:days,name:'Jours écoulés',nameLocation:'middle',nameGap:30,axisLabel:{fontSize:10,interval:14}},
+  yAxis:{type:'value',name:'Valeur temps ($)',axisLabel:{fontSize:11}},
+  series:[{
+    type:'line',data:valueCurve,lineStyle:{color:'#ef4444',width:3},itemStyle:{color:'#ef4444'},symbol:'none',
+    areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(239,68,68,0.15)'},{offset:1,color:'rgba(239,68,68,0)'}]}},
+    markArea:{silent:true,data:[[{xAxis:'60',itemStyle:{color:'rgba(239,68,68,0.05)'},label:{show:true,formatter:'Zone\ncritique',position:'inside',color:'#ef4444',fontSize:10,fontWeight:700}},{xAxis:'90'}]]}
+  }]
+});
+
+// Chart 4: Greek P&L breakdown
+var chartPnl = echarts.init(document.getElementById('chart-greek-pnl'));
+var daysRange = ['J-10','J-9','J-8','J-7','J-6','J-5','J-4','J-3','J-2','J-1','Earnings','J+1'];
+var deltaPnl = [0,30,50,40,80,120,90,140,170,200,350,380];
+var thetaPnl = [0,-5,-12,-20,-30,-42,-56,-72,-90,-112,-130,-135];
+var vegaPnl = [0,10,25,45,70,100,140,190,250,320,350,-80];
+var totalPnl = deltaPnl.map(function(v,i){return v+thetaPnl[i]+vegaPnl[i]});
+chartPnl.setOption({
+  title:{text:'Décomposition P&L par Greek (pré/post earnings)',left:'center',textStyle:{fontSize:13,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'axis'},
+  legend:{data:['Delta','Theta','Vega','Total'],bottom:0,textStyle:{fontSize:11}},
+  grid:{left:'8%',right:'4%',bottom:'14%',top:'18%',containLabel:true},
+  xAxis:{type:'category',data:daysRange,axisLabel:{fontSize:10}},
+  yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11,formatter:function(v){return(v>=0?'+':'')+v}}},
+  series:[
+    {name:'Delta',type:'bar',stack:'breakdown',data:deltaPnl,itemStyle:{color:'#16a34a'}},
+    {name:'Theta',type:'bar',stack:'breakdown',data:thetaPnl,itemStyle:{color:'#ef4444'}},
+    {name:'Vega',type:'bar',stack:'breakdown',data:vegaPnl,itemStyle:{color:'#9333ea'}},
+    {name:'Total',type:'line',data:totalPnl,lineStyle:{color:'#0f172a',width:3},itemStyle:{color:'#0f172a'},symbol:'circle',symbolSize:6}
+  ],
+  markLine:{silent:true,lineStyle:{color:'#94a3b8',type:'dashed'},data:[{yAxis:0}]}
+});
+
+// Chart 5: Vega vs IV
+var chartVega = echarts.init(document.getElementById('chart-vega-iv'));
+var ivLevels = [];
+var premiumByIV = [];
+for (var iv = 15; iv <= 50; iv += 1) {
+  ivLevels.push(iv+'%');
+  var sig = iv/100;
+  var d1v = (Math.log(210/215) + (0.05 + sig*sig/2)*(30/365)) / (sig*Math.sqrt(30/365));
+  var d2v = d1v - sig*Math.sqrt(30/365);
+  var nd1v = 0.5*(1+erf(d1v/Math.sqrt(2)));
+  var nd2v = 0.5*(1+erf(d2v/Math.sqrt(2)));
+  var callPrice = 210*nd1v - 215*Math.exp(-0.05*30/365)*nd2v;
+  premiumByIV.push(parseFloat(callPrice.toFixed(2)));
+}
+chartVega.setOption({
+  title:{text:'Premium Call ATM ($215) en fonction de l\'IV',left:'center',textStyle:{fontSize:13,fontWeight:700,color:'#0f172a'}},
+  tooltip:{trigger:'axis',formatter:function(p){return 'IV: '+p[0].name+'<br>Premium: $'+p[0].value}},
+  grid:{left:'8%',right:'4%',bottom:'12%',top:'18%',containLabel:true},
+  xAxis:{type:'category',data:ivLevels,name:'Volatilité Implicite',nameLocation:'middle',nameGap:30,axisLabel:{fontSize:10,interval:4}},
+  yAxis:{type:'value',name:'Premium ($)',axisLabel:{fontSize:11}},
+  series:[{
+    type:'line',data:premiumByIV,lineStyle:{color:'#9333ea',width:3},itemStyle:{color:'#9333ea'},symbol:'none',
+    areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(147,51,234,0.15)'},{offset:1,color:'rgba(147,51,234,0)'}]}}
+  }]
+});
+
+window.addEventListener('resize',function(){chartDelta.resize();chartGamma.resize();chartTheta.resize();chartPnl.resize();chartVega.resize()});
+</script>
+
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

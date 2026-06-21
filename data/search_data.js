@@ -5937,7 +5937,7 @@ window.searchDataPrebuilt = [
     "desc": "Infrastructure, data pipeline, alpha factors, portfolio construction, exécution, 8 stratégies (momentum, mean reversion, cross-asset), régimes adaptatifs, production ops. Docker/Nomad/Vault, CI/CD GitHub Actions, monitoring complet.",
     "tags": "technique,formation,us,eu,asia,etf",
     "grade": "",
-    "href": "series/algo-million/part1-infrastructure/",
+    "href": "/series/algo-million/part1-infrastructure/",
     "date": ""
   },
   {
@@ -5950,7 +5950,7 @@ window.searchDataPrebuilt = [
     "desc": "Anatomie des manipulations, pump & dump, spoofing, wash trading, dark pools, short selling abusif, insider trading, manipulation algorithmique, régulateurs, et protection du retail. Cas réels : RZLV, CLOV, RXT, MVST.",
     "tags": "technique,formation,speculative",
     "grade": "",
-    "href": "series/market-manipulation/part1-anatomie/",
+    "href": "/series/market-manipulation/part1-anatomie/",
     "date": ""
   },
   {
@@ -5963,7 +5963,7 @@ window.searchDataPrebuilt = [
     "desc": "Every proven model to find bottoms (VIX, AAII, breadth), detect\n    tops (concentration, divergences), catch trends (Weinstein,\n    Minervini, sector rotation) & macro timing (yield curve, Fed,\n    CAPE). Backtested data.",
     "tags": "technique,macro,formation,trade-idea",
     "grade": "",
-    "href": "series/timing-the-market/expert/en/",
+    "href": "/series/timing-the-market/",
     "date": ""
   },
   {
@@ -5976,7 +5976,7 @@ window.searchDataPrebuilt = [
     "desc": "From Tulip Mania to AI Agents: how 400 years of trading patterns\n    are being rewritten. Algo dominance, alpha decay, technical\n    analysis under threat, 1-10 year projections & a retail\n    survival guide.",
     "tags": "ai,formation,macro,technique",
     "grade": "",
-    "href": "series/when-machines-trade/beginner/en/",
+    "href": "/series/when-machines-trade/",
     "date": ""
   },
   {
@@ -5989,7 +5989,7 @@ window.searchDataPrebuilt = [
     "desc": "How the world changes before 2030. Compute arms race, autonomous\n    agents, healthcare, robotics, autonomous driving, cybersecurity,\n    labor shock, geopolitics. Winners, losers & trade setups.",
     "tags": "ai,tech,trade-idea,macro,geopolitique",
     "grade": "",
-    "href": "series/ai-singularity/expert/en/introduction/",
+    "href": "/series/ai-singularity/",
     "date": ""
   },
   {
@@ -6002,7 +6002,7 @@ window.searchDataPrebuilt = [
     "desc": "Semiconductors, uranium, copper, grid equipment, natural gas,\n    water, cocoa, rare earths, data centers. Stock/ETF setups with\n    entry, stop, targets & R:R for each shortage.",
     "tags": "trade-idea,macro,technique,commodity,energy,semis",
     "grade": "",
-    "href": "series/scarcity-alpha/expert/en/introduction/",
+    "href": "/series/scarcity-alpha/",
     "date": ""
   },
   {
@@ -6015,7 +6015,7 @@ window.searchDataPrebuilt = [
     "desc": "Du marché au stock picking, construction de portefeuille, all-in,\n    stratégies avancées et gestion des pertes.",
     "tags": "formation",
     "grade": "",
-    "href": "series/comprendre-le-marche/",
+    "href": "/series/comprendre-le-marche/",
     "date": ""
   },
   {
@@ -6028,7 +6028,7 @@ window.searchDataPrebuilt = [
     "desc": "EPS, marges, valorisation, float, short interest, insiders et\n    comment l'IA peut vous aider.",
     "tags": "earnings,formation",
     "grade": "",
-    "href": "series/maitriser-les-earnings/",
+    "href": "/series/maitriser-les-earnings/",
     "date": ""
   },
   {
@@ -6041,7 +6041,7 @@ window.searchDataPrebuilt = [
     "desc": "Meme stocks, short squeeze, ETFs levier, earnings, max pain,\n    biotech FDA, Polymarket, insiders. Objectif x10.",
     "tags": "speculative,options,formation",
     "grade": "",
-    "href": "series/guide-speculateur/part1-philosophie/",
+    "href": "/series/guide-speculateur/part1-philosophie/",
     "date": ""
   },
   {
@@ -6054,7 +6054,7 @@ window.searchDataPrebuilt = [
     "desc": "Finance islamique, actions halal, ETFs Shariah-compliant, crypto\n    et Islam, Zakat, portefeuilles modèles.",
     "tags": "formation",
     "grade": "",
-    "href": "series/bourse-musulman/part1-fondements/",
+    "href": "/series/bourse-musulman/part1-fondements/",
     "date": ""
   },
   {
@@ -6067,7 +6067,7 @@ window.searchDataPrebuilt = [
     "desc": "Intérêts composés, PEA, ETFs, stratégie dividendes, plan d'action\n    sur 30 ans vers l'indépendance financière.",
     "tags": "dividende,etf,formation",
     "grade": "",
-    "href": "series/bon-pere-de-famille/part1-philosophie/",
+    "href": "/series/bon-pere-de-famille/part1-philosophie/",
     "date": ""
   },
   {
@@ -6080,7 +6080,7 @@ window.searchDataPrebuilt = [
     "desc": "Claude Code, MCP Gateway, screeners automatisés, réseaux sociaux,\n    bots Discord/Telegram, NLP, multi-agent.",
     "tags": "ai,tech,formation",
     "grade": "",
-    "href": "series/automatiser-trading-claude/part1-introduction/",
+    "href": "/series/automatiser-trading-claude/part1-introduction/",
     "date": ""
   },
   {
@@ -6093,7 +6093,7 @@ window.searchDataPrebuilt = [
     "desc": "Or/Dollar/Taux, performances mensuelles, vendredis piégeurs,\n    corrélations inter-marchés, saisonnalités exploitables.",
     "tags": "macro,technique,formation",
     "grade": "",
-    "href": "series/correlations-saisonnalites/part1-les-correlations/",
+    "href": "/series/correlations-saisonnalites/part1-les-correlations/",
     "date": ""
   },
   {
@@ -6106,7 +6106,7 @@ window.searchDataPrebuilt = [
     "desc": "Chandeliers, supports/résistances, indicateurs, évaluer le bottom,\n    espérance de gain, patterns chartistes.",
     "tags": "technique,formation",
     "grade": "",
-    "href": "series/lire-un-chart/part1-les-bases/",
+    "href": "/series/lire-un-chart/part1-les-bases/",
     "date": ""
   },
   {
@@ -6119,7 +6119,7 @@ window.searchDataPrebuilt = [
     "desc": "Gaps sur ETF, actions, crypto. Overnight risk, earnings gaps,\n    week-end gaps, protections et stratégies.",
     "tags": "technique,formation",
     "grade": "",
-    "href": "series/risque-de-gap/part1-anatomie-gap/",
+    "href": "/series/risque-de-gap/part1-anatomie-gap/",
     "date": ""
   },
   {
@@ -6132,7 +6132,7 @@ window.searchDataPrebuilt = [
     "desc": "Réseaux sociaux, groupes Telegram, recommandations d'analystes,\n    copy trading, pump & dump, intelligence collective.",
     "tags": "speculative,formation",
     "grade": "",
-    "href": "series/chasser-en-meute/part1-pouvoir-foule/",
+    "href": "/series/chasser-en-meute/part1-pouvoir-foule/",
     "date": ""
   },
   {
@@ -6145,7 +6145,7 @@ window.searchDataPrebuilt = [
     "desc": "Casablanca, Tunis, Alger, Tadawul, ADX, DFM, Qatar. Panorama,\n    opportunités, guide pratique et fintech MENA.",
     "tags": "asia,formation",
     "grade": "",
-    "href": "series/bourses-mena/part1-panorama/",
+    "href": "/series/bourses-mena/part1-panorama/",
     "date": ""
   },
   {
@@ -6158,7 +6158,7 @@ window.searchDataPrebuilt = [
     "desc": "Trader l'open/close, sessions Asie-Europe-US depuis Paris,\n    détecter les tendances intraday, outils, discipline.",
     "tags": "technique,formation",
     "grade": "",
-    "href": "series/scalping-intraday/part1-ouvrir-la-journee/",
+    "href": "/series/scalping-intraday/part1-ouvrir-la-journee/",
     "date": ""
   },
   {
@@ -6171,7 +6171,7 @@ window.searchDataPrebuilt = [
     "desc": "Écosystème, analyse technique crypto, on-chain analysis,\n    DeFi/yield, altcoins/narratives, sécurité et fiscalité.",
     "tags": "crypto,formation",
     "grade": "",
-    "href": "series/trader-crypto/part1-ecosysteme/",
+    "href": "/series/trader-crypto/part1-ecosysteme/",
     "date": ""
   },
   {
@@ -6184,7 +6184,7 @@ window.searchDataPrebuilt = [
     "desc": "Comprendre les ETF, classes d'actifs, thématiques/sectoriels,\n    stratégies DCA/rotation, leveraged, portefeuille.",
     "tags": "etf,formation",
     "grade": "",
-    "href": "series/trader-etf/part1-comprendre-etf/",
+    "href": "/series/trader-etf/part1-comprendre-etf/",
     "date": ""
   },
   {
@@ -6197,7 +6197,7 @@ window.searchDataPrebuilt = [
     "desc": "SEC filings, options flow, dark pool, short interest, FTD,\n    sentiment, earnings, analystes. Construire son dashboard.",
     "tags": "technique,formation",
     "grade": "",
-    "href": "series/lire-le-marche/part1-sec-filings/",
+    "href": "/series/lire-le-marche/part1-sec-filings/",
     "date": ""
   },
   {
@@ -6210,7 +6210,7 @@ window.searchDataPrebuilt = [
     "desc": "Beta comme levier naturel, identifier les proxys, secteurs leaders\n    (tech, semis, biotech, miners), gestion du risque.",
     "tags": "technique,speculative,formation",
     "grade": "",
-    "href": "series/proxys-haut-beta/part1-comprendre-beta/",
+    "href": "/series/proxys-haut-beta/part1-comprendre-beta/",
     "date": ""
   },
   {
@@ -6223,7 +6223,7 @@ window.searchDataPrebuilt = [
     "desc": "Setup, scanner, 3 stratégies concrètes (pullback EMA, breakout,\n    recovery), alertes, gestion de position et routine. Max 4\n    positions décorrélées sur actions 20+ ans.",
     "tags": "technique,formation,trade-idea",
     "grade": "",
-    "href": "series/swing-mode/part1-setup/",
+    "href": "/series/swing-mode/part1-setup/",
     "date": ""
   },
   {
@@ -6236,7 +6236,7 @@ window.searchDataPrebuilt = [
     "desc": "Épargne, enveloppes fiscales (PEA, ISA, Säule 3a), immobilier,\n    fiscalité, retraite, transmission et plan d'action de 0 à 500K€.\n    France, Belgique, Suisse, Allemagne, UK.",
     "tags": "eu,formation,macro",
     "grade": "",
-    "href": "series/patrimoine-europe/part1-socle-epargne/",
+    "href": "/series/patrimoine-europe/part1-socle-epargne/",
     "date": ""
   },
   {
@@ -6263,6 +6263,58 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,formation,technique,trade-idea",
     "grade": "",
     "href": "/series/scanner-strategy/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Qu'est-ce qu'une Obligation ?",
+    "desc": "Série Obligations & Taux — Partie 1/6 : principal, coupon, maturité, yield. Pourquoi les obligations sont le plus gros marché du monde ($130T+). Types, ratings, marché primaire vs secondaire.",
+    "tags": "formation,macro,technique,us,eu",
+    "grade": "",
+    "href": "/series/obligations-et-taux/part1-fondamentaux/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Calls, Puts et les Bases",
+    "desc": "Série Les Options de A à Z — Partie 1/6 : qu'est-ce qu'une option, calls vs puts, strike, premium, expiration, ITM/ATM/OTM, valeur intrinsèque vs valeur temps. Exemples concrets et payoff diagrams.",
+    "tags": "formation,us,technique,options",
+    "grade": "",
+    "href": "/series/options-trading/part1-fondamentaux/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "MCP : Le Protocole qui Connecte l'IA aux Données",
+    "desc": "Série Construire un MCP Server Finance — Partie 1/6 : qu'est-ce que le Model Context Protocol, son architecture Host-Client-Server, les 3 primitives (Tools, Resources, Prompts), et pourquoi c'est la bonne approche pour connecter un LLM à des données financières temps réel.",
+    "tags": "formation,ai,tech,architecture",
+    "grade": "",
+    "href": "/series/construire-mcp-server/part1-concept/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Le Rôle des Banques Centrales",
+    "desc": "Série Banques Centrales — Partie 1/6 : qu'est-ce qu'une banque centrale, ses mandats (stabilité des prix, plein emploi, stabilité financière), la Fed, la BCE, la BOJ, et pourquoi l'indépendance politique est cruciale.",
+    "tags": "formation,macro,us,eu,asia",
+    "grade": "",
+    "href": "/series/banques-centrales/part1-role-et-mandat/",
     "date": ""
   }
 ];

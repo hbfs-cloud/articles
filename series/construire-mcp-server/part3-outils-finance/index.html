@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech,architecture" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Ajouter des Outils : Screening, Technicals, Fundamentals | Construire un MCP Server Finance — Partie 3/6 | DailyTickers</title>
+ <meta name="description" content="Série Construire un MCP Server Finance — Partie 3/6 : implémenter les outils financiers concrets (QueryData, RunScreener, GetMarketOverview) en branchant Yahoo Finance, SEC EDGAR, et des indicateurs techniques.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f5f3ff 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-violet{background:rgba(124,58,237,.1);color:#7c3aed;border:1px solid rgba(124,58,237,.2)}
+ .hero-badge-indigo{background:rgba(99,102,241,.1);color:#6366f1;border:1px solid rgba(99,102,241,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f8fafc}
+ .compare-table tr:last-child td{border-bottom:none}
+ .checklist{list-style:none;padding:0;margin:1.5rem 0}
+ .checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:.95rem;color:#334155;line-height:1.5}
+ .checklist li i{margin-top:.15rem;flex-shrink:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}
+ details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#7c3aed;margin-right:.75rem}
+ details[open] summary{border-color:#7c3aed;background:#f5f3ff;border-radius:12px 12px 0 0}
+ details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ pre.code-block{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:1.5rem 1.75rem;font-family:'SFMono-Regular','Consolas','Menlo',monospace;font-size:.82rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0}
+ pre.code-block .k{color:#c4b5fd}pre.code-block .s{color:#86efac}pre.code-block .c{color:#64748b;font-style:italic}pre.code-block .n{color:#fcd34d}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#a78bfa}
+ .takeaway-box{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #7c3aed;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#6d28d9;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(124,58,237,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#7c3aed;margin-top:.2rem;flex-shrink:0}
+ .pedagogy-box{background:#f5f3ff;border:1px solid #c4b5fd;border-left:4px solid #7c3aed;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#6d28d9;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p{font-size:.95rem;color:#4c1d95;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#6d28d9,#7c3aed);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(124,58,237,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .next-cta i{font-size:1.5rem}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #7c3aed}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .capability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:2rem 0}
+ .capability-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;transition:all .3s}
+ .capability-card:hover{border-color:#7c3aed;transform:translateY(-2px);box-shadow:0 8px 25px -5px rgba(0,0,0,.08)}
+ .capability-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.75rem}
+ .capability-card h4{font-size:.9rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}
+ .capability-card p{font-size:.8rem;color:#64748b;margin:0;line-height:1.4}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.formula-box{font-size:1rem}.next-cta{flex-direction:column;text-align:center}.step-grid,.capability-grid{grid-template-columns:1fr 1fr}pre.code-block{font-size:.74rem;padding:1.1rem 1.25rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-server" style="margin-right:.4rem"></i> Série Construire un MCP Server Finance — Partie 3 sur 6</div>
+ <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Ajouter des Outils : Screening, Technicals, Fundamentals</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem;color:#475569;max-width:700px;margin:0 auto;line-height:1.6">Du squelette vide à un serveur utile : on implémente les 5 outils financiers essentiels en branchant Yahoo Finance et SEC EDGAR. Providers, calculs techniques, et screener DSL.</p>
+ <div class="hero-badges">
+  <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-magnifying-glass-chart"></i> 5 outils finance</span>
+  <span class="hero-badge hero-badge-indigo"><i class="fa-brands fa-yahoo"></i> Yahoo Finance</span>
+  <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-calculator"></i> RSI, EMA, MACD</span>
+  <span class="hero-badge hero-badge-green"><i class="fa-solid fa-filter"></i> Screener DSL</span>
+ </div>
+ <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/construire-mcp-server/part2-fastapi-skeleton/" class="series-arrow" title="Squelette FastAPI"><i class="fas fa-chevron-left"></i></a><span class="series-title">Construire un MCP Server Finance</span><div class="series-steps"><a href="/series/construire-mcp-server/part1-concept/" class="series-step" title="Le Protocole MCP"><span class="series-num">1</span><span class="series-label">Concept</span></a><a href="/series/construire-mcp-server/part2-fastapi-skeleton/" class="series-step" title="Squelette FastAPI"><span class="series-num">2</span><span class="series-label">FastAPI</span></a><a href="/series/construire-mcp-server/part3-outils-finance/" class="series-step current" title="Outils Finance"><span class="series-num">3</span><span class="series-label">Outils</span></a><a href="/series/construire-mcp-server/part4-auth-et-cache/" class="series-step" title="Auth & Cache"><span class="series-num">4</span><span class="series-label">Auth</span></a><a href="/series/construire-mcp-server/part5-deploiement/" class="series-step" title="Déploiement"><span class="series-num">5</span><span class="series-label">Deploy</span></a><a href="/series/construire-mcp-server/part6-integration-avancee/" class="series-step" title="Intégrations Avancées"><span class="series-num">6</span><span class="series-label">Avancé</span></a></div><span class="series-counter">3/6</span><a href="/series/construire-mcp-server/part4-auth-et-cache/" class="series-arrow" title="Auth & Cache"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#providers" class="fnav-item" data-section="providers"><i class="fas fa-bookmark"></i><span>Providers</span></a><a href="#query-data" class="fnav-item" data-section="query-data"><i class="fas fa-bookmark"></i><span>QueryData</span></a><a href="#technicals" class="fnav-item" data-section="technicals"><i class="fas fa-bookmark"></i><span>Indicateurs techniques</span></a><a href="#fundamentals" class="fnav-item" data-section="fundamentals"><i class="fas fa-bookmark"></i><span>Fondamentaux</span></a><a href="#screener" class="fnav-item" data-section="screener"><i class="fas fa-bookmark"></i><span>RunScreener</span></a><a href="#market-overview" class="fnav-item" data-section="market-overview"><i class="fas fa-bookmark"></i><span>MarketOverview</span></a><a href="#erreurs" class="fnav-item" data-section="erreurs"><i class="fas fa-bookmark"></i><span>Gestion d'erreurs</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var b=document.getElementById('fnavBtn'),m=document.getElementById('fnavMenu'),ic=document.getElementById('fnavIcon'),lb=document.getElementById('fnavLabel');if(!b||!m)return;var items=m.querySelectorAll('.fnav-item'),secs=[],open=false;items.forEach(function(i){var id=i.getAttribute('data-section'),el=document.getElementById(id);if(el)secs.push({id:id,el:el,item:i})});function toggle(){open=!open;m.classList.toggle('open',open);b.classList.toggle('open',open);ic.className=open?'fas fa-times':'fas fa-bars';lb.textContent=open?'Fermer':'Menu'}b.addEventListener('click',toggle);items.forEach(function(i){i.addEventListener('click',function(){if(open)toggle()})});function upd(){var sp=window.scrollY+120,cur=secs[0];secs.forEach(function(s){if(s.el.offsetTop<=sp)cur=s});items.forEach(function(i){i.classList.remove('active')});if(cur)cur.item.classList.add('active');lb.textContent=open?'Fermer':(cur?cur.item.querySelector('span').textContent:'Menu')}window.addEventListener('scroll',upd);upd()})()</script>
+
+<div style="max-width:900px;margin:-4rem auto 0;padding:0 1rem;position:relative;z-index:10">
+
+<!-- S1 — Providers -->
+<div id="providers" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-database" style="color:#7c3aed"></i> Architecture providers : sources de données interchangeables</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Un serveur MCP finance sérieux ne dépend jamais d'une seule source de données. Yahoo Finance peut être limité en rate, SEC EDGAR peut être lent, et un provider premium (Polygon, IEX) peut changer ses tarifs. La solution : une <strong>couche d'abstraction provider</strong> qui rend les sources interchangeables.</p>
+
+<pre class="code-block"><span class="c"># providers/base.py — Interface commune</span>
+<span class="k">from</span> abc <span class="k">import</span> ABC, abstractmethod
+<span class="k">from</span> typing <span class="k">import</span> Optional
+
+<span class="k">class</span> <span class="n">MarketDataProvider</span>(ABC):
+    <span class="s">"""Interface commune pour toutes les sources de données marché."""</span>
+
+    <span class="k">@abstractmethod</span>
+    <span class="k">async def</span> <span class="n">get_quote</span>(self, ticker: str) -> dict:
+        <span class="s">"""Prix actuel, change%, volume, market cap."""</span>
+
+    <span class="k">@abstractmethod</span>
+    <span class="k">async def</span> <span class="n">get_bars</span>(self, ticker: str, period: str = <span class="s">"1y"</span>) -> list[dict]:
+        <span class="s">"""OHLCV historique."""</span>
+
+    <span class="k">@abstractmethod</span>
+    <span class="k">async def</span> <span class="n">get_fundamentals</span>(self, ticker: str) -> dict:
+        <span class="s">"""P/E, EV/EBITDA, margins, etc."""</span>
+
+    <span class="k">@abstractmethod</span>
+    <span class="k">async def</span> <span class="n">get_earnings</span>(self, ticker: str) -> list[dict]:
+        <span class="s">"""Résultats trimestriels (EPS actual vs estimate)."""</span></pre>
+
+<div class="step-grid">
+ <div class="step-card">
+  <div class="step-number" style="background:linear-gradient(135deg,#7c3aed,#6d28d9)"><i class="fa-brands fa-yahoo" style="font-size:.9rem"></i></div>
+  <h4>Yahoo Finance</h4>
+  <p>Gratuit, large couverture. Prix, fondamentaux, options, earnings. Rate limited (~2000/h).</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number" style="background:linear-gradient(135deg,#2563eb,#1d4ed8)"><i class="fa-solid fa-landmark" style="font-size:.9rem"></i></div>
+  <h4>SEC EDGAR</h4>
+  <p>Filings officiels (10-K, 10-Q, S-3). Gratuit, pas de rate limit agressif. Données brutes à parser.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number" style="background:linear-gradient(135deg,#10b981,#059669)"><i class="fa-solid fa-server" style="font-size:.9rem"></i></div>
+  <h4>FRED</h4>
+  <p>Données macro (taux, inflation, GDP). API clé gratuite. Parfait pour les indicateurs macro.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="fa-solid fa-bolt" style="font-size:.9rem"></i></div>
+  <h4>Binance</h4>
+  <p>Crypto en temps réel. API publique sans clé. WebSocket pour le streaming.</p>
+ </div>
+</div>
+
+<pre class="code-block"><span class="c"># providers/yahoo.py — Implémentation Yahoo Finance</span>
+<span class="k">import</span> httpx
+
+<span class="k">class</span> <span class="n">YahooProvider</span>(MarketDataProvider):
+    BASE = <span class="s">"https://query1.finance.yahoo.com/v8/finance"</span>
+
+    <span class="k">def</span> <span class="n">__init__</span>(self):
+        self.client = httpx.AsyncClient(
+            timeout=<span class="n">10.0</span>,
+            headers={<span class="s">"User-Agent"</span>: <span class="s">"MCP-Finance/1.0"</span>}
+        )
+
+    <span class="k">async def</span> <span class="n">get_quote</span>(self, ticker: str) -> dict:
+        url = <span class="s">f"</span>{self.BASE}<span class="s">/chart/</span>{ticker}<span class="s">?interval=1d&range=1d"</span>
+        resp = <span class="k">await</span> self.client.get(url)
+        data = resp.json()
+        result = data[<span class="s">"chart"</span>][<span class="s">"result"</span>][<span class="n">0</span>]
+        meta = result[<span class="s">"meta"</span>]
+
+        <span class="k">return</span> {
+            <span class="s">"ticker"</span>: ticker.upper(),
+            <span class="s">"price"</span>: meta[<span class="s">"regularMarketPrice"</span>],
+            <span class="s">"previous_close"</span>: meta[<span class="s">"previousClose"</span>],
+            <span class="s">"change_pct"</span>: round(
+                (meta[<span class="s">"regularMarketPrice"</span>] / meta[<span class="s">"previousClose"</span>] - <span class="n">1</span>) * <span class="n">100</span>, <span class="n">2</span>
+            ),
+            <span class="s">"volume"</span>: meta.get(<span class="s">"regularMarketVolume"</span>, <span class="n">0</span>),
+            <span class="s">"market_cap"</span>: meta.get(<span class="s">"marketCap"</span>),
+            <span class="s">"currency"</span>: meta.get(<span class="s">"currency"</span>, <span class="s">"USD"</span>),
+            <span class="s">"exchange"</span>: meta.get(<span class="s">"exchangeName"</span>),
+            <span class="s">"source"</span>: <span class="s">"yahoo_finance"</span>,
+            <span class="s">"as_of"</span>: meta.get(<span class="s">"regularMarketTime"</span>)
+        }</pre>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-lightbulb"></i> Un provider = une responsabilité</h4>
+ <p>Chaque provider gère sa propre connexion HTTP, son parsing, et ses particularités. Le code qui appelle le provider ne sait pas (et n'a pas besoin de savoir) si les données viennent de Yahoo, Polygon, ou d'un fichier CSV local. Cette abstraction est ce qui vous permet de changer de source sans toucher à un seul outil MCP.</p>
+</div>
+</div>
+
+<!-- S2 — QueryData -->
+<div id="query-data" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-search" style="color:#7c3aed"></i> Section 2</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-search" style="color:#7c3aed"></i> QueryData : le couteau suisse</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem"><code>QueryData</code> est l'outil le plus appelé du serveur. Plutôt que d'avoir un outil par type de donnée (GetQuote, GetTechnicals, GetFundamentals...), on expose un <strong>point d'entrée unique</strong> avec un paramètre <code>types</code> qui spécifie ce qu'on veut :</p>
+
+<pre class="code-block"><span class="c"># tools/query_data.py</span>
+<span class="k">from</span> mcp.types <span class="k">import</span> Tool
+
+QUERY_DATA_TOOL = Tool(
+    name=<span class="s">"QueryData"</span>,
+    description=<span class="s">"""Retrieve financial data for a ticker symbol.
+Supports multiple data types in a single call:
+- quote: current price, change%, volume, market cap, 52-week range
+- bars_daily: OHLCV history (default 1 year)
+- technicals: RSI(14), EMA(20/50/200), MACD, Bollinger Bands, ATR(14)
+- fundamentals: P/E, EV/EBITDA, P/S, margins, debt ratios, dividend yield
+- earnings: last 8 quarterly EPS (actual vs estimate, beat/miss)
+
+Use this tool whenever the user asks about a specific stock, ETF, or index.
+Multiple types can be requested at once for efficiency."""</span>,
+    inputSchema={
+        <span class="s">"type"</span>: <span class="s">"object"</span>,
+        <span class="s">"properties"</span>: {
+            <span class="s">"ticker"</span>: {
+                <span class="s">"type"</span>: <span class="s">"string"</span>,
+                <span class="s">"description"</span>: <span class="s">"Ticker symbol (AAPL, MSFT, BTC-USD, ^GSPC)"</span>
+            },
+            <span class="s">"types"</span>: {
+                <span class="s">"type"</span>: <span class="s">"array"</span>,
+                <span class="s">"items"</span>: {
+                    <span class="s">"type"</span>: <span class="s">"string"</span>,
+                    <span class="s">"enum"</span>: [<span class="s">"quote"</span>, <span class="s">"bars_daily"</span>, <span class="s">"technicals"</span>,
+                             <span class="s">"fundamentals"</span>, <span class="s">"earnings"</span>]
+                },
+                <span class="s">"description"</span>: <span class="s">"Data types to retrieve"</span>
+            },
+            <span class="s">"period"</span>: {
+                <span class="s">"type"</span>: <span class="s">"string"</span>,
+                <span class="s">"enum"</span>: [<span class="s">"1m"</span>, <span class="s">"3m"</span>, <span class="s">"6m"</span>, <span class="s">"1y"</span>, <span class="s">"2y"</span>, <span class="s">"5y"</span>],
+                <span class="s">"description"</span>: <span class="s">"History period for bars (default: 1y)"</span>
+            }
+        },
+        <span class="s">"required"</span>: [<span class="s">"ticker"</span>, <span class="s">"types"</span>]
+    }
+)
+
+<span class="k">async def</span> <span class="n">handle_query_data</span>(provider, arguments: dict) -> dict:
+    ticker = arguments[<span class="s">"ticker"</span>]
+    types = arguments[<span class="s">"types"</span>]
+    period = arguments.get(<span class="s">"period"</span>, <span class="s">"1y"</span>)
+    result = {<span class="s">"ticker"</span>: ticker.upper()}
+
+    <span class="k">if</span> <span class="s">"quote"</span> <span class="k">in</span> types:
+        result[<span class="s">"quote"</span>] = <span class="k">await</span> provider.get_quote(ticker)
+
+    <span class="k">if</span> <span class="s">"bars_daily"</span> <span class="k">in</span> types:
+        bars = <span class="k">await</span> provider.get_bars(ticker, period)
+        result[<span class="s">"bars_daily"</span>] = bars[-<span class="n">30</span>:]  <span class="c"># Limiter à 30 jours pour le contexte</span>
+        result[<span class="s">"bars_count"</span>] = len(bars)
+
+    <span class="k">if</span> <span class="s">"technicals"</span> <span class="k">in</span> types:
+        bars = <span class="k">await</span> provider.get_bars(ticker, period)
+        result[<span class="s">"technicals"</span>] = calculate_technicals(bars)
+
+    <span class="k">if</span> <span class="s">"fundamentals"</span> <span class="k">in</span> types:
+        result[<span class="s">"fundamentals"</span>] = <span class="k">await</span> provider.get_fundamentals(ticker)
+
+    <span class="k">if</span> <span class="s">"earnings"</span> <span class="k">in</span> types:
+        result[<span class="s">"earnings"</span>] = <span class="k">await</span> provider.get_earnings(ticker)
+
+    <span class="k">return</span> result</pre>
+
+<div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Limiter les bars retournées</h4>
+ <p>Un an de données OHLCV = ~252 lignes × 6 colonnes = ~1500 valeurs. C'est beaucoup de tokens pour le contexte du LLM. Retournez les <strong>30 derniers jours</strong> par défaut et le <strong>nombre total</strong> de barres disponibles. Le LLM saura qu'il y a plus de données disponibles sans les injecter toutes dans son contexte.</p>
+</div>
+</div>
+
+<!-- S3 — Technicals -->
+<div id="technicals" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-calculator" style="color:#7c3aed"></i> Section 3</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-calculator" style="color:#7c3aed"></i> Calculer les indicateurs techniques</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Plutôt que de dépendre d'une API externe pour les indicateurs, on les calcule côté serveur à partir des barres OHLCV. Ça nous donne le contrôle total et réduit les dépendances.</p>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">RSI — Relative Strength Index</h3>
+
+<div class="formula-box">
+ <div class="formula-label">Formule RSI</div>
+ RSI = 100 − (100 / (1 + <span class="formula-highlight">RS</span>)) &nbsp;&nbsp;où RS = <span class="formula-highlight">avg_gain</span> / <span class="formula-highlight">avg_loss</span>
+</div>
+
+<pre class="code-block"><span class="k">def</span> <span class="n">calculate_rsi</span>(closes: list[float], period: int = <span class="n">14</span>) -> float:
+    <span class="s">"""RSI de Wilder — moyenne exponentielle des gains/pertes."""</span>
+    <span class="k">if</span> len(closes) < period + <span class="n">1</span>:
+        <span class="k">return</span> <span class="n">50.0</span>  <span class="c"># Pas assez de données</span>
+
+    deltas = [closes[i] - closes[i-<span class="n">1</span>] <span class="k">for</span> i <span class="k">in</span> range(<span class="n">1</span>, len(closes))]
+    gains = [d <span class="k">if</span> d > <span class="n">0</span> <span class="k">else</span> <span class="n">0</span> <span class="k">for</span> d <span class="k">in</span> deltas]
+    losses = [-d <span class="k">if</span> d < <span class="n">0</span> <span class="k">else</span> <span class="n">0</span> <span class="k">for</span> d <span class="k">in</span> deltas]
+
+    <span class="c"># Première moyenne = simple</span>
+    avg_gain = sum(gains[:period]) / period
+    avg_loss = sum(losses[:period]) / period
+
+    <span class="c"># Ensuite = exponentielle (Wilder)</span>
+    <span class="k">for</span> i <span class="k">in</span> range(period, len(gains)):
+        avg_gain = (avg_gain * (period - <span class="n">1</span>) + gains[i]) / period
+        avg_loss = (avg_loss * (period - <span class="n">1</span>) + losses[i]) / period
+
+    <span class="k">if</span> avg_loss == <span class="n">0</span>:
+        <span class="k">return</span> <span class="n">100.0</span>
+    rs = avg_gain / avg_loss
+    <span class="k">return</span> round(<span class="n">100</span> - (<span class="n">100</span> / (<span class="n">1</span> + rs)), <span class="n">2</span>)</pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">EMA — Exponential Moving Average</h3>
+
+<pre class="code-block"><span class="k">def</span> <span class="n">calculate_ema</span>(values: list[float], period: int) -> list[float]:
+    <span class="s">"""EMA avec multiplier = 2/(period+1)."""</span>
+    <span class="k">if</span> len(values) < period:
+        <span class="k">return</span> []
+    multiplier = <span class="n">2</span> / (period + <span class="n">1</span>)
+    ema = [sum(values[:period]) / period]  <span class="c"># SMA comme seed</span>
+    <span class="k">for</span> v <span class="k">in</span> values[period:]:
+        ema.append(v * multiplier + ema[-<span class="n">1</span>] * (<span class="n">1</span> - multiplier))
+    <span class="k">return</span> ema</pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Le résultat structuré</h3>
+
+<pre class="code-block"><span class="k">def</span> <span class="n">calculate_technicals</span>(bars: list[dict]) -> dict:
+    closes = [b[<span class="s">"close"</span>] <span class="k">for</span> b <span class="k">in</span> bars]
+    highs = [b[<span class="s">"high"</span>] <span class="k">for</span> b <span class="k">in</span> bars]
+    lows = [b[<span class="s">"low"</span>] <span class="k">for</span> b <span class="k">in</span> bars]
+
+    ema_20 = calculate_ema(closes, <span class="n">20</span>)
+    ema_50 = calculate_ema(closes, <span class="n">50</span>)
+    ema_200 = calculate_ema(closes, <span class="n">200</span>)
+
+    <span class="k">return</span> {
+        <span class="s">"rsi_14"</span>: calculate_rsi(closes),
+        <span class="s">"ema_20"</span>: round(ema_20[-<span class="n">1</span>], <span class="n">2</span>) <span class="k">if</span> ema_20 <span class="k">else None</span>,
+        <span class="s">"ema_50"</span>: round(ema_50[-<span class="n">1</span>], <span class="n">2</span>) <span class="k">if</span> ema_50 <span class="k">else None</span>,
+        <span class="s">"ema_200"</span>: round(ema_200[-<span class="n">1</span>], <span class="n">2</span>) <span class="k">if</span> ema_200 <span class="k">else None</span>,
+        <span class="s">"ema_20_slope"</span>: slope(ema_20, <span class="n">5</span>),  <span class="c"># pente sur 5 jours</span>
+        <span class="s">"atr_14"</span>: calculate_atr(highs, lows, closes, <span class="n">14</span>),
+        <span class="s">"macd"</span>: calculate_macd(closes),
+        <span class="s">"bollinger"</span>: calculate_bollinger(closes, <span class="n">20</span>),
+        <span class="s">"week_52_high"</span>: max(highs[-<span class="n">252</span>:]),
+        <span class="s">"week_52_low"</span>: min(lows[-<span class="n">252</span>:]),
+        <span class="s">"distance_from_52w_high_pct"</span>: round(
+            (closes[-<span class="n">1</span>] / max(highs[-<span class="n">252</span>:]) - <span class="n">1</span>) * <span class="n">100</span>, <span class="n">2</span>
+        )
+    }</pre>
+
+<div id="chart-technicals" style="width:100%;height:350px;margin:2rem 0"></div>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi calculer côté serveur ?</h4>
+ <p>Trois raisons : <strong>1)</strong> Pas de dépendance à un service de calcul externe (un point de défaillance en moins). <strong>2)</strong> Contrôle sur les paramètres — notre RSI utilise la méthode Wilder exacte, pas une approximation. <strong>3)</strong> Cohérence — les mêmes paramètres RSI(14), EMA(20/50/200) partout dans le système.</p>
+</div>
+</div>
+
+<!-- S4 — Fondamentaux -->
+<div id="fundamentals" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-building-columns" style="color:#7c3aed"></i> Section 4</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-building-columns" style="color:#7c3aed"></i> Fondamentaux et earnings</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Les données fondamentales sont les plus complexes à structurer. Chaque LLM interprète mieux quand le JSON est <strong>plat et explicite</strong> (pas de nesting profond) :</p>
+
+<pre class="code-block"><span class="c"># Résultat idéal pour les fondamentaux</span>
+{
+    <span class="s">"pe_trailing"</span>: <span class="n">28.4</span>,
+    <span class="s">"pe_forward"</span>: <span class="n">24.1</span>,
+    <span class="s">"ev_ebitda"</span>: <span class="n">21.3</span>,
+    <span class="s">"ps_ratio"</span>: <span class="n">7.2</span>,
+    <span class="s">"pb_ratio"</span>: <span class="n">42.1</span>,
+    <span class="s">"gross_margin_pct"</span>: <span class="n">46.2</span>,
+    <span class="s">"operating_margin_pct"</span>: <span class="n">31.5</span>,
+    <span class="s">"net_margin_pct"</span>: <span class="n">25.3</span>,
+    <span class="s">"roe_pct"</span>: <span class="n">157.0</span>,
+    <span class="s">"debt_to_equity"</span>: <span class="n">1.87</span>,
+    <span class="s">"current_ratio"</span>: <span class="n">0.99</span>,
+    <span class="s">"free_cash_flow_b"</span>: <span class="n">110.5</span>,
+    <span class="s">"dividend_yield_pct"</span>: <span class="n">0.44</span>,
+    <span class="s">"payout_ratio_pct"</span>: <span class="n">15.7</span>,
+    <span class="s">"revenue_growth_yoy_pct"</span>: <span class="n">4.9</span>,
+    <span class="s">"sector"</span>: <span class="s">"Technology"</span>,
+    <span class="s">"industry"</span>: <span class="s">"Consumer Electronics"</span>,
+    <span class="s">"employees"</span>: <span class="n">161000</span>,
+    <span class="s">"source"</span>: <span class="s">"yahoo_finance"</span>
+}</pre>
+
+<table class="compare-table">
+<thead><tr><th>Convention</th><th>Exemple</th><th>Pourquoi</th></tr></thead>
+<tbody>
+<tr><td>Suffixe <code>_pct</code></td><td><code>gross_margin_pct: 46.2</code></td><td>Le LLM sait qu'il doit écrire « 46.2% », pas « 46.2 »</td></tr>
+<tr><td>Suffixe <code>_b</code></td><td><code>free_cash_flow_b: 110.5</code></td><td>Milliards USD — évite la confusion avec les millions</td></tr>
+<tr><td>JSON plat</td><td>Pas de <code>{"margins": {"gross": 46.2}}</code></td><td>Plus facile à lire pour le LLM, moins de tokens</td></tr>
+<tr><td>Noms descriptifs</td><td><code>revenue_growth_yoy_pct</code></td><td>Pas besoin de deviner : c'est la croissance annuelle en %</td></tr>
+</tbody>
+</table>
+
+<details>
+ <summary>Quiz : Pourquoi un JSON plat est-il meilleur qu'un JSON nested pour le LLM ?</summary>
+ <div class="quiz-answer">Un JSON plat est <strong>plus efficace en tokens</strong> (pas de niveaux d'accolades répétés) et <strong>plus facile à interpréter</strong> pour le LLM. Un JSON avec <code>{"valuation": {"pe": {"trailing": 28.4, "forward": 24.1}}}</code> consomme plus de tokens pour la structure que pour les données. Avec <code>"pe_trailing": 28.4, "pe_forward": 24.1</code>, chaque token porte de l'information utile.</div>
+</details>
+</div>
+
+<!-- S5 — RunScreener -->
+<div id="screener" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-filter" style="color:#7c3aed"></i> Section 5</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-filter" style="color:#7c3aed"></i> RunScreener : le DSL de filtrage</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le screening est la fonctionnalité qui rend un MCP finance vraiment puissant. Le LLM peut formuler des critères complexes en langage naturel, et votre outil les traduit en filtres :</p>
+
+<pre class="code-block">SCREENER_TOOL = Tool(
+    name=<span class="s">"RunScreener"</span>,
+    description=<span class="s">"""Screen the US stock universe with custom filters.
+Filters use a simple DSL: 'field operator value [AND field operator value]...'
+
+Available fields:
+- price, volume, market_cap, sector, industry
+- rsi_14, ema_20_slope, distance_from_52w_high_pct
+- pe_trailing, pe_forward, ev_ebitda, ps_ratio
+- gross_margin_pct, net_margin_pct, roe_pct
+- revenue_growth_yoy_pct, debt_to_equity
+
+Operators: >, <, >=, <=, =, !=, BETWEEN, IN
+
+Examples:
+- 'rsi_14 < 30 AND volume > 1000000 AND market_cap > 2000000000'
+- 'sector IN (Technology, Healthcare) AND pe_forward < 20'
+- 'distance_from_52w_high_pct BETWEEN -15 AND -5'
+
+Returns top 50 matches sorted by match score."""</span>,
+    inputSchema={
+        <span class="s">"type"</span>: <span class="s">"object"</span>,
+        <span class="s">"properties"</span>: {
+            <span class="s">"filters"</span>: {
+                <span class="s">"type"</span>: <span class="s">"string"</span>,
+                <span class="s">"description"</span>: <span class="s">"Filter expression in DSL format"</span>
+            },
+            <span class="s">"sort_by"</span>: {
+                <span class="s">"type"</span>: <span class="s">"string"</span>,
+                <span class="s">"description"</span>: <span class="s">"Field to sort results by (default: market_cap)"</span>
+            },
+            <span class="s">"limit"</span>: {
+                <span class="s">"type"</span>: <span class="s">"integer"</span>,
+                <span class="s">"description"</span>: <span class="s">"Max results (default 50, max 200)"</span>
+            }
+        },
+        <span class="s">"required"</span>: [<span class="s">"filters"</span>]
+    }
+)</pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Parser le DSL</h3>
+
+<pre class="code-block"><span class="k">import</span> re
+
+<span class="k">def</span> <span class="n">parse_filter</span>(expression: str) -> list[dict]:
+    <span class="s">"""Parse 'rsi_14 < 30 AND volume > 1M' → liste de conditions."""</span>
+    conditions = []
+    parts = re.split(r<span class="s">'\s+AND\s+'</span>, expression, flags=re.IGNORECASE)
+
+    <span class="k">for</span> part <span class="k">in</span> parts:
+        <span class="c"># Handle BETWEEN</span>
+        m = re.match(r<span class="s">'(\w+)\s+BETWEEN\s+(.+?)\s+AND\s+(.+)'</span>, part, re.I)
+        <span class="k">if</span> m:
+            conditions.append({
+                <span class="s">"field"</span>: m.group(<span class="n">1</span>),
+                <span class="s">"op"</span>: <span class="s">"between"</span>,
+                <span class="s">"low"</span>: parse_value(m.group(<span class="n">2</span>)),
+                <span class="s">"high"</span>: parse_value(m.group(<span class="n">3</span>))
+            })
+            <span class="k">continue</span>
+
+        <span class="c"># Handle IN</span>
+        m = re.match(r<span class="s">'(\w+)\s+IN\s+\((.+?)\)'</span>, part, re.I)
+        <span class="k">if</span> m:
+            values = [v.strip().strip(<span class="s">"'"</span>) <span class="k">for</span> v <span class="k">in</span> m.group(<span class="n">2</span>).split(<span class="s">","</span>)]
+            conditions.append({<span class="s">"field"</span>: m.group(<span class="n">1</span>), <span class="s">"op"</span>: <span class="s">"in"</span>, <span class="s">"values"</span>: values})
+            <span class="k">continue</span>
+
+        <span class="c"># Handle comparison operators</span>
+        m = re.match(r<span class="s">'(\w+)\s*(>=|<=|!=|>|<|=)\s*(.+)'</span>, part)
+        <span class="k">if</span> m:
+            conditions.append({
+                <span class="s">"field"</span>: m.group(<span class="n">1</span>),
+                <span class="s">"op"</span>: m.group(<span class="n">2</span>),
+                <span class="s">"value"</span>: parse_value(m.group(<span class="n">3</span>).strip())
+            })
+
+    <span class="k">return</span> conditions</pre>
+
+<div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Gotcha : abs() non supporté</h4>
+ <p>Si le LLM envoie <code>abs(distance_from_52w_high_pct) < 10</code>, le parser échouera. Les fonctions comme <code>abs()</code> ne font pas partie du DSL. Documentez cette limitation dans la description de l'outil et proposez l'alternative : <code>distance_from_52w_high_pct BETWEEN -10 AND 10</code>.</p>
+</div>
+</div>
+
+<!-- S6 — MarketOverview -->
+<div id="market-overview" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-earth-americas" style="color:#7c3aed"></i> Section 6</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-earth-americas" style="color:#7c3aed"></i> GetMarketOverview : le snapshot global</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem"><code>GetMarketOverview</code> est l'outil « sans paramètre » qui retourne un snapshot complet du marché. Le LLM l'appelle au début de chaque briefing pour calibrer le ton et le contexte :</p>
+
+<pre class="code-block"><span class="c"># Résultat GetMarketOverview</span>
+{
+    <span class="s">"market_us"</span>: {
+        <span class="s">"sp500"</span>: {<span class="s">"price"</span>: <span class="n">5480.21</span>, <span class="s">"change_pct"</span>: <span class="n">0.87</span>},
+        <span class="s">"nasdaq"</span>: {<span class="s">"price"</span>: <span class="n">17892.45</span>, <span class="s">"change_pct"</span>: <span class="n">1.23</span>},
+        <span class="s">"dow"</span>: {<span class="s">"price"</span>: <span class="n">42150.30</span>, <span class="s">"change_pct"</span>: <span class="n">0.45</span>},
+        <span class="s">"russell2000"</span>: {<span class="s">"price"</span>: <span class="n">2180.55</span>, <span class="s">"change_pct"</span>: <span class="n">-0.32</span>}
+    },
+    <span class="s">"volatility"</span>: {
+        <span class="s">"vix"</span>: <span class="n">14.2</span>,
+        <span class="s">"vix_change_pct"</span>: <span class="n">-3.5</span>,
+        <span class="s">"regime"</span>: <span class="s">"risk_on"</span>
+    },
+    <span class="s">"sectors"</span>: {
+        <span class="s">"technology"</span>: <span class="n">1.45</span>, <span class="s">"healthcare"</span>: <span class="n">0.82</span>,
+        <span class="s">"energy"</span>: <span class="n">-0.95</span>, <span class="s">"financials"</span>: <span class="n">0.67</span>
+    },
+    <span class="s">"commodities"</span>: {
+        <span class="s">"gold"</span>: {<span class="s">"price"</span>: <span class="n">2345.80</span>, <span class="s">"change_pct"</span>: <span class="n">-0.12</span>},
+        <span class="s">"oil_wti"</span>: {<span class="s">"price"</span>: <span class="n">78.45</span>, <span class="s">"change_pct"</span>: <span class="n">-1.30</span>}
+    },
+    <span class="s">"crypto"</span>: {
+        <span class="s">"btc"</span>: {<span class="s">"price"</span>: <span class="n">67850</span>, <span class="s">"change_pct_24h"</span>: <span class="n">2.1</span>},
+        <span class="s">"eth"</span>: {<span class="s">"price"</span>: <span class="n">3650</span>, <span class="s">"change_pct_24h"</span>: <span class="n">1.8</span>}
+    },
+    <span class="s">"forex"</span>: {
+        <span class="s">"eur_usd"</span>: <span class="n">1.0845</span>, <span class="s">"usd_jpy"</span>: <span class="n">157.25</span>
+    },
+    <span class="s">"bonds"</span>: {
+        <span class="s">"us_10y"</span>: <span class="n">4.28</span>, <span class="s">"us_2y"</span>: <span class="n">4.72</span>,
+        <span class="s">"spread_2_10"</span>: <span class="n">-0.44</span>
+    },
+    <span class="s">"as_of"</span>: <span class="s">"2026-06-20T20:00:00Z"</span>,
+    <span class="s">"source"</span>: <span class="s">"yahoo_finance+binance"</span>
+}</pre>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> La puissance du « zéro paramètre »</h4>
+ <p>Un outil sans paramètre est un pattern puissant. Le LLM peut l'appeler sans hésiter (pas de choix de paramètres à faire). Il sert de <strong>point de départ contextuel</strong> : le LLM obtient une vue d'ensemble, puis affine avec des appels ciblés (QueryData pour un ticker spécifique). C'est comme arriver au bureau et regarder d'abord l'écran Bloomberg — vue macro → drill-down.</p>
+</div>
+</div>
+
+<!-- S7 — Gestion d'erreurs -->
+<div id="erreurs" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-shield-halved" style="color:#7c3aed"></i> Section 7</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-shield-halved" style="color:#7c3aed"></i> Gestion d'erreurs : ne jamais mentir</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">La règle #1 d'un serveur MCP finance : <strong>ne jamais retourner de données fausses</strong>. Si Yahoo est down, on dit « Yahoo est down ». On n'invente pas un prix.</p>
+
+<pre class="code-block"><span class="k">async def</span> <span class="n">call_tool</span>(name: str, arguments: dict) -> CallToolResult:
+    <span class="k">try</span>:
+        <span class="k">if</span> name == <span class="s">"QueryData"</span>:
+            result = <span class="k">await</span> handle_query_data(provider, arguments)
+            <span class="k">return</span> CallToolResult(
+                content=[TextContent(type=<span class="s">"text"</span>, text=json.dumps(result))]
+            )
+    <span class="k">except</span> httpx.TimeoutException:
+        <span class="c"># Source de données timeout — le dire clairement</span>
+        <span class="k">return</span> CallToolResult(
+            content=[TextContent(
+                type=<span class="s">"text"</span>,
+                text=json.dumps({
+                    <span class="s">"error"</span>: <span class="s">"data_source_timeout"</span>,
+                    <span class="s">"message"</span>: <span class="s">"Yahoo Finance did not respond within 10s"</span>,
+                    <span class="s">"suggestion"</span>: <span class="s">"Try again in a few seconds or use a different ticker"</span>
+                })
+            )],
+            isError=<span class="k">True</span>
+        )
+    <span class="k">except</span> KeyError <span class="k">as</span> e:
+        <span class="c"># Ticker non trouvé</span>
+        <span class="k">return</span> CallToolResult(
+            content=[TextContent(
+                type=<span class="s">"text"</span>,
+                text=json.dumps({
+                    <span class="s">"error"</span>: <span class="s">"ticker_not_found"</span>,
+                    <span class="s">"message"</span>: <span class="s">f"No data found for ticker '{arguments.get('ticker')}'"</span>,
+                    <span class="s">"suggestion"</span>: <span class="s">"Check the ticker symbol — use AAPL, not Apple"</span>
+                })
+            )],
+            isError=<span class="k">True</span>
+        )</pre>
+
+<table class="compare-table">
+<thead><tr><th>Erreur</th><th>Ce qu'on retourne</th><th>Ce que le LLM fait</th></tr></thead>
+<tbody>
+<tr><td>Timeout API</td><td><code>data_source_timeout</code> + suggestion retry</td><td>Explique à l'utilisateur et propose de réessayer</td></tr>
+<tr><td>Ticker invalide</td><td><code>ticker_not_found</code> + suggestion format</td><td>Demande à l'utilisateur de vérifier le symbole</td></tr>
+<tr><td>Rate limited</td><td><code>rate_limited</code> + retry_after</td><td>Attend et réessaie (ou informe l'utilisateur)</td></tr>
+<tr><td>Filtre DSL invalide</td><td><code>invalid_filter</code> + hint syntaxe</td><td>Reformule le filtre et réessaie</td></tr>
+</tbody>
+</table>
+
+<div class="takeaway-box">
+ <h3><i class="fa-solid fa-check-double" style="margin-right:.5rem"></i> Ce qu'on retient</h3>
+ <ul class="takeaway-list">
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Provider pattern</strong> — une interface commune, des implémentations interchangeables (Yahoo, Polygon, Binance)</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>QueryData</strong> — point d'entrée unique avec <code>types[]</code> plutôt que N outils séparés</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Techniques côté serveur</strong> — RSI, EMA, MACD calculés localement pour contrôle et indépendance</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>JSON plat</strong> — suffixes <code>_pct</code>, <code>_b</code>, noms descriptifs, pas de nesting</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Screener DSL</strong> — mini-langage parsable que le LLM peut formuler naturellement</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>MarketOverview</strong> — zéro paramètre, point de départ contextuel pour tout briefing</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Pas de mensonge</strong> — erreur = dire l'erreur, jamais inventer de données</li>
+ </ul>
+</div>
+
+<a href="/series/construire-mcp-server/part4-auth-et-cache/" class="next-cta">
+ <div>
+  <div class="next-label">Partie suivante</div>
+  <div class="next-title">Auth, Rate Limiting et Cache Intelligent</div>
+ </div>
+ <i class="fa-solid fa-arrow-right"></i>
+</a>
+</div>
+</div>
+
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+
+<script>
+var ct=echarts.init(document.getElementById('chart-technicals'));
+ct.setOption({
+ title:{text:'Indicateurs techniques calculés côté serveur',left:'center',textStyle:{fontSize:13,fontWeight:700}},
+ tooltip:{trigger:'axis'},
+ legend:{data:['EMA 20','EMA 50','EMA 200','RSI'],top:30},
+ xAxis:{type:'category',data:['J-20','J-18','J-16','J-14','J-12','J-10','J-8','J-6','J-4','J-2','Today'],axisLabel:{fontSize:10}},
+ yAxis:[{type:'value',name:'Prix ($)',min:175,max:200},{type:'value',name:'RSI',min:0,max:100,splitLine:{show:false}}],
+ series:[
+  {name:'EMA 20',type:'line',data:[182,183,184,185,186,187,188,188.5,189,189.5,190],smooth:true,lineStyle:{color:'#7c3aed',width:2},itemStyle:{color:'#7c3aed'}},
+  {name:'EMA 50',type:'line',data:[180,180.5,181,181.5,182,182.5,183,183.5,184,184.5,185],smooth:true,lineStyle:{color:'#6366f1',width:2},itemStyle:{color:'#6366f1'}},
+  {name:'EMA 200',type:'line',data:[178,178.2,178.4,178.6,178.8,179,179.2,179.4,179.6,179.8,180],smooth:true,lineStyle:{color:'#94a3b8',width:2,type:'dashed'},itemStyle:{color:'#94a3b8'}},
+  {name:'RSI',type:'line',yAxisIndex:1,data:[35,38,42,45,48,52,55,50,48,45,42],smooth:true,lineStyle:{color:'#10b981',width:2},itemStyle:{color:'#10b981'},areaStyle:{color:'rgba(16,185,129,0.08)'}}
+ ],
+ grid:{top:60,bottom:30,left:55,right:55}
+});
+window.addEventListener('resize',function(){ct.resize()});
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech,architecture" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Squelette FastAPI : Le Server en 200 Lignes | Construire un MCP Server Finance — Partie 2/6 | DailyTickers</title>
+ <meta name="description" content="Série Construire un MCP Server Finance — Partie 2/6 : créer un serveur MCP complet avec FastAPI + mcp-python-sdk. Routing, tool registration, SSE transport, JSON-RPC, et premier outil fonctionnel.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f5f3ff 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-violet{background:rgba(124,58,237,.1);color:#7c3aed;border:1px solid rgba(124,58,237,.2)}
+ .hero-badge-indigo{background:rgba(99,102,241,.1);color:#6366f1;border:1px solid rgba(99,102,241,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f8fafc}
+ .compare-table tr:last-child td{border-bottom:none}
+ .checklist{list-style:none;padding:0;margin:1.5rem 0}
+ .checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:.95rem;color:#334155;line-height:1.5}
+ .checklist li i{margin-top:.15rem;flex-shrink:0}
+ details{margin:.75rem 0}
+ details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;transition:all .2s;list-style:none}
+ details summary::-webkit-details-marker{display:none}
+ details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#7c3aed;margin-right:.75rem}
+ details[open] summary{border-color:#7c3aed;background:#f5f3ff;border-radius:12px 12px 0 0}
+ details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ pre.code-block{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:1.5rem 1.75rem;font-family:'SFMono-Regular','Consolas','Menlo',monospace;font-size:.82rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0}
+ pre.code-block .k{color:#c4b5fd} pre.code-block .s{color:#86efac} pre.code-block .c{color:#64748b;font-style:italic} pre.code-block .n{color:#fcd34d}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700;letter-spacing:.02em}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#a78bfa}
+ .takeaway-box{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #7c3aed;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#6d28d9;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(124,58,237,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#7c3aed;margin-top:.2rem;flex-shrink:0}
+ .pedagogy-box{background:#f5f3ff;border:1px solid #c4b5fd;border-left:4px solid #7c3aed;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#6d28d9;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p{font-size:.95rem;color:#4c1d95;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#6d28d9,#7c3aed);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(124,58,237,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .next-cta i{font-size:1.5rem}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #7c3aed}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.formula-box{font-size:1rem;padding:1rem 1.25rem}.next-cta{flex-direction:column;text-align:center}.step-grid{grid-template-columns:1fr 1fr}pre.code-block{font-size:.74rem;padding:1.1rem 1.25rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.formula-box{font-size:.9rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-server" style="margin-right:.4rem"></i> Série Construire un MCP Server Finance — Partie 2 sur 6</div>
+ <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Squelette FastAPI : Le Server en 200 Lignes</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem;color:#475569;max-width:700px;margin:0 auto;line-height:1.6">Du venv au premier outil fonctionnel : on construit un serveur MCP complet avec FastAPI et le SDK Python officiel. Routing JSON-RPC, transport SSE, tool registration, et test en direct avec Claude Code.</p>
+ <div class="hero-badges">
+  <span class="hero-badge hero-badge-violet"><i class="fa-brands fa-python"></i> Python + FastAPI</span>
+  <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-plug"></i> mcp-python-sdk</span>
+  <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-terminal"></i> 200 lignes</span>
+  <span class="hero-badge hero-badge-green"><i class="fa-solid fa-play"></i> Premier outil live</span>
+ </div>
+ <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/construire-mcp-server/part1-concept/" class="series-arrow" title="Le Protocole MCP"><i class="fas fa-chevron-left"></i></a><span class="series-title">Construire un MCP Server Finance</span><div class="series-steps"><a href="/series/construire-mcp-server/part1-concept/" class="series-step" title="Le Protocole MCP"><span class="series-num">1</span><span class="series-label">Concept</span></a><a href="/series/construire-mcp-server/part2-fastapi-skeleton/" class="series-step current" title="Squelette FastAPI"><span class="series-num">2</span><span class="series-label">FastAPI</span></a><a href="/series/construire-mcp-server/part3-outils-finance/" class="series-step" title="Outils Finance"><span class="series-num">3</span><span class="series-label">Outils</span></a><a href="/series/construire-mcp-server/part4-auth-et-cache/" class="series-step" title="Auth & Cache"><span class="series-num">4</span><span class="series-label">Auth</span></a><a href="/series/construire-mcp-server/part5-deploiement/" class="series-step" title="Déploiement"><span class="series-num">5</span><span class="series-label">Deploy</span></a><a href="/series/construire-mcp-server/part6-integration-avancee/" class="series-step" title="Intégrations Avancées"><span class="series-num">6</span><span class="series-label">Avancé</span></a></div><span class="series-counter">2/6</span><a href="/series/construire-mcp-server/part3-outils-finance/" class="series-arrow" title="Outils Finance"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#prerequis" class="fnav-item" data-section="prerequis"><i class="fas fa-bookmark"></i><span>Prérequis</span></a><a href="#structure" class="fnav-item" data-section="structure"><i class="fas fa-bookmark"></i><span>Structure projet</span></a><a href="#sdk" class="fnav-item" data-section="sdk"><i class="fas fa-bookmark"></i><span>Le SDK MCP</span></a><a href="#server-core" class="fnav-item" data-section="server-core"><i class="fas fa-bookmark"></i><span>Le serveur</span></a><a href="#premier-outil" class="fnav-item" data-section="premier-outil"><i class="fas fa-bookmark"></i><span>Premier outil</span></a><a href="#transport-sse" class="fnav-item" data-section="transport-sse"><i class="fas fa-bookmark"></i><span>Transport SSE</span></a><a href="#test-live" class="fnav-item" data-section="test-live"><i class="fas fa-bookmark"></i><span>Test live</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var b=document.getElementById('fnavBtn'),m=document.getElementById('fnavMenu'),ic=document.getElementById('fnavIcon'),lb=document.getElementById('fnavLabel');if(!b||!m)return;var items=m.querySelectorAll('.fnav-item'),secs=[],open=false;items.forEach(function(i){var id=i.getAttribute('data-section'),el=document.getElementById(id);if(el)secs.push({id:id,el:el,item:i})});function toggle(){open=!open;m.classList.toggle('open',open);b.classList.toggle('open',open);ic.className=open?'fas fa-times':'fas fa-bars';lb.textContent=open?'Fermer':'Menu'}b.addEventListener('click',toggle);items.forEach(function(i){i.addEventListener('click',function(){if(open)toggle()})});function upd(){var sp=window.scrollY+120,cur=secs[0];secs.forEach(function(s){if(s.el.offsetTop<=sp)cur=s});items.forEach(function(i){i.classList.remove('active')});if(cur)cur.item.classList.add('active');lb.textContent=open?'Fermer':(cur?cur.item.querySelector('span').textContent:'Menu')}window.addEventListener('scroll',upd);upd()})()</script>
+
+<div style="max-width:900px;margin:-4rem auto 0;padding:0 1rem;position:relative;z-index:10">
+
+<!-- S1 — Prérequis -->
+<div id="prerequis" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-clipboard-check" style="color:#7c3aed"></i> Prérequis : ce dont vous avez besoin</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Avant d'écrire une seule ligne, assurons-nous que l'environnement est prêt. On reste volontairement minimaliste : Python, quelques packages, et un éditeur.</p>
+
+<table class="compare-table">
+<thead><tr><th>Composant</th><th>Version min.</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><strong>Python</strong></td><td>3.10+</td><td>Le runtime — asyncio natif, type hints complets</td></tr>
+<tr><td><strong>FastAPI</strong></td><td>0.100+</td><td>Framework web async — routing, validation, docs auto</td></tr>
+<tr><td><strong>uvicorn</strong></td><td>0.23+</td><td>Serveur ASGI — sert l'app FastAPI</td></tr>
+<tr><td><strong>mcp</strong></td><td>1.0+</td><td>Le SDK Python officiel du Model Context Protocol</td></tr>
+<tr><td><strong>httpx</strong></td><td>0.25+</td><td>Client HTTP async — pour appeler les APIs financières</td></tr>
+</tbody>
+</table>
+
+<pre class="code-block"><span class="c"># Installation en une commande</span>
+python -m venv .venv
+source .venv/bin/activate
+pip install fastapi uvicorn mcp httpx pydantic</pre>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> Pourquoi FastAPI ?</h4>
+ <p>FastAPI est le choix naturel pour un serveur MCP Python. Il est <strong>async-first</strong> (essentiel pour gérer des appels d'API financières en parallèle), génère automatiquement la doc OpenAPI, et la validation Pydantic s'aligne avec les JSON Schemas de MCP. Les alternatives (Flask, Django) sont possibles mais moins ergonomiques pour ce cas d'usage.</p>
+</div>
+</div>
+
+<!-- S2 — Structure projet -->
+<div id="structure" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-folder-tree" style="color:#7c3aed"></i> Section 2</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-folder-tree" style="color:#7c3aed"></i> Structure du projet</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Un serveur MCP finance bien organisé suit une structure en modules. On commence avec le strict minimum, et chaque partie de la série ajoutera des couches.</p>
+
+<pre class="code-block">mcp-finance-server/
+├── <span class="n">server.py</span>           <span class="c"># Point d'entrée : FastAPI app + MCP setup</span>
+├── <span class="n">tools/</span>              <span class="c"># Chaque outil = un module</span>
+│   ├── __init__.py
+│   ├── <span class="n">query_data.py</span>   <span class="c"># QueryData — prix, technicals, fondamentaux</span>
+│   ├── <span class="n">screener.py</span>     <span class="c"># RunScreener — scanning par filtres</span>
+│   └── <span class="n">market.py</span>       <span class="c"># GetMarketOverview — indices, VIX, sectors</span>
+├── <span class="n">providers/</span>          <span class="c"># Sources de données (Yahoo, SEC, FRED...)</span>
+│   ├── __init__.py
+│   ├── <span class="n">yahoo.py</span>
+│   └── <span class="n">sec.py</span>
+├── <span class="n">cache.py</span>            <span class="c"># Cache intelligent (TTL par type de donnée)</span>
+├── <span class="n">config.py</span>           <span class="c"># Configuration (API keys, TTLs, limits)</span>
+├── <span class="n">requirements.txt</span>
+└── <span class="n">Dockerfile</span></pre>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Pour cette partie, on travaille uniquement avec <code>server.py</code> et un outil basique. Les modules <code>tools/</code>, <code>providers/</code> et <code>cache.py</code> viendront dans les parties 3 et 4.</p>
+
+<div class="step-grid">
+ <div class="step-card">
+  <div class="step-number">1</div>
+  <h4>server.py</h4>
+  <p>FastAPI + MCP. Le seul fichier obligatoire. ~200 lignes pour un serveur complet.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">2</div>
+  <h4>tools/</h4>
+  <p>Un fichier par outil. Séparation propre : logique métier isolée du transport MCP.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">3</div>
+  <h4>providers/</h4>
+  <p>Sources de données interchangeables. Yahoo today, Bloomberg demain — même interface.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">4</div>
+  <h4>cache.py</h4>
+  <p>Cache TTL par type. Quotes = 15s, fondamentaux = 24h. On ne surcharge pas les APIs.</p>
+ </div>
+</div>
+</div>
+
+<!-- S3 — Le SDK MCP -->
+<div id="sdk" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-brands fa-python" style="color:#7c3aed"></i> Section 3</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-brands fa-python" style="color:#7c3aed"></i> Le SDK Python MCP</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le package <code>mcp</code> (Python SDK officiel) fournit les briques de base pour construire un serveur. Il gère le protocole JSON-RPC, la sérialisation, la découverte des outils, et les transports (stdio, SSE).</p>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Les 4 composants clés</h3>
+
+<table class="compare-table">
+<thead><tr><th>Composant</th><th>Import</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><strong>Server</strong></td><td><code>mcp.server.Server</code></td><td>Le cœur — enregistre les outils, dispatch les appels</td></tr>
+<tr><td><strong>Tool</strong></td><td><code>mcp.types.Tool</code></td><td>Définition d'un outil (nom, description, schéma)</td></tr>
+<tr><td><strong>SseServerTransport</strong></td><td><code>mcp.server.sse</code></td><td>Transport HTTP/SSE pour les connexions distantes</td></tr>
+<tr><td><strong>Types</strong></td><td><code>mcp.types</code></td><td>TextContent, ImageContent, CallToolResult, etc.</td></tr>
+</tbody>
+</table>
+
+<pre class="code-block"><span class="c"># Import minimal pour un serveur MCP</span>
+<span class="k">from</span> mcp.server <span class="k">import</span> Server
+<span class="k">from</span> mcp.server.sse <span class="k">import</span> SseServerTransport
+<span class="k">from</span> mcp.types <span class="k">import</span> (
+    Tool,
+    TextContent,
+    CallToolResult,
+    ListToolsResult,
+)
+
+<span class="c"># Créer le serveur</span>
+server = Server(<span class="s">"finance-mcp"</span>)
+
+<span class="c"># Le serveur expose 2 handlers obligatoires :</span>
+<span class="c"># 1. list_tools → retourne la liste des outils disponibles</span>
+<span class="c"># 2. call_tool  → exécute un outil et retourne le résultat</span></pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Le cycle de vie d'un appel</h3>
+
+<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1.5rem;margin:1.5rem 0;font-family:'SFMono-Regular','Consolas','Menlo',monospace;font-size:.85rem;line-height:2">
+<span style="color:#7c3aed;font-weight:700">1.</span> Le Client se connecte au Server → appelle <code>initialize</code><br>
+<span style="color:#7c3aed;font-weight:700">2.</span> Le Client demande <code>tools/list</code> → le Server retourne tous les outils avec leurs schémas<br>
+<span style="color:#7c3aed;font-weight:700">3.</span> Le LLM voit les outils et décide d'en appeler un<br>
+<span style="color:#7c3aed;font-weight:700">4.</span> Le Client envoie <code>tools/call</code> avec les arguments<br>
+<span style="color:#7c3aed;font-weight:700">5.</span> Le Server exécute la fonction et retourne un <code>CallToolResult</code><br>
+<span style="color:#7c3aed;font-weight:700">6.</span> Le Client transmet le résultat au LLM → le LLM formule sa réponse
+</div>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-lightbulb"></i> JSON-RPC 2.0 sous le capot</h4>
+ <p>Tout le protocole MCP utilise JSON-RPC 2.0. Chaque message a un <code>id</code>, une <code>method</code>, et des <code>params</code>. Le SDK gère tout ça — vous n'aurez jamais à parser du JSON-RPC manuellement. Mais comprendre que c'est JSON-RPC aide à debugger : les erreurs sont des objets <code>{"code": -32000, "message": "..."}</code> standard.</p>
+</div>
+</div>
+
+<!-- S4 — Le serveur complet -->
+<div id="server-core" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-code" style="color:#7c3aed"></i> Section 4</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-code" style="color:#7c3aed"></i> Le serveur complet : server.py</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Voici le squelette complet d'un serveur MCP finance. Chaque section est expliquée après le code :</p>
+
+<pre class="code-block"><span class="c">#!/usr/bin/env python3</span>
+<span class="c">"""MCP Finance Server — Squelette minimal."""</span>
+
+<span class="k">import</span> json
+<span class="k">import</span> logging
+<span class="k">from</span> contextlib <span class="k">import</span> asynccontextmanager
+
+<span class="k">from</span> fastapi <span class="k">import</span> FastAPI, Request
+<span class="k">from</span> fastapi.responses <span class="k">import</span> StreamingResponse
+<span class="k">import</span> uvicorn
+
+<span class="k">from</span> mcp.server <span class="k">import</span> Server
+<span class="k">from</span> mcp.server.sse <span class="k">import</span> SseServerTransport
+<span class="k">from</span> mcp.types <span class="k">import</span> (
+    Tool, TextContent, CallToolResult, ListToolsResult
+)
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(<span class="s">"mcp-finance"</span>)
+
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="c"># 1. Créer le serveur MCP</span>
+<span class="c"># ──────────────────────────────────────────────</span>
+mcp_server = Server(<span class="s">"finance-mcp"</span>)
+
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="c"># 2. Définir les outils disponibles</span>
+<span class="c"># ──────────────────────────────────────────────</span>
+TOOLS = [
+    Tool(
+        name=<span class="s">"GetQuote"</span>,
+        description=<span class="s">"""Get current price data for a stock ticker.
+Returns: last price, change (%), volume, market cap, 52-week range.
+Use this when the user asks about current stock prices."""</span>,
+        inputSchema={
+            <span class="s">"type"</span>: <span class="s">"object"</span>,
+            <span class="s">"properties"</span>: {
+                <span class="s">"ticker"</span>: {
+                    <span class="s">"type"</span>: <span class="s">"string"</span>,
+                    <span class="s">"description"</span>: <span class="s">"Stock ticker (e.g. AAPL, MSFT, TSLA)"</span>
+                }
+            },
+            <span class="s">"required"</span>: [<span class="s">"ticker"</span>]
+        }
+    ),
+]
+
+<span class="k">@mcp_server.list_tools</span>()
+<span class="k">async def</span> <span class="n">list_tools</span>() -> list[Tool]:
+    <span class="k">return</span> TOOLS
+
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="c"># 3. Implémenter le dispatch</span>
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="k">@mcp_server.call_tool</span>()
+<span class="k">async def</span> <span class="n">call_tool</span>(name: str, arguments: dict) -> CallToolResult:
+    <span class="k">if</span> name == <span class="s">"GetQuote"</span>:
+        result = <span class="k">await</span> get_quote(arguments[<span class="s">"ticker"</span>])
+        <span class="k">return</span> CallToolResult(
+            content=[TextContent(
+                type=<span class="s">"text"</span>,
+                text=json.dumps(result, indent=<span class="n">2</span>)
+            )]
+        )
+
+    <span class="k">raise</span> ValueError(<span class="s">f"Unknown tool: </span>{name}<span class="s">"</span>)
+
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="c"># 4. Logique métier de l'outil</span>
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="k">async def</span> <span class="n">get_quote</span>(ticker: str) -> dict:
+    <span class="c"># Pour l'instant, données simulées</span>
+    <span class="c"># Partie 3 → Yahoo Finance API réelle</span>
+    <span class="k">return</span> {
+        <span class="s">"ticker"</span>: ticker.upper(),
+        <span class="s">"price"</span>: <span class="n">189.84</span>,
+        <span class="s">"change_pct"</span>: <span class="n">1.23</span>,
+        <span class="s">"volume"</span>: <span class="n">54_230_100</span>,
+        <span class="s">"market_cap"</span>: <span class="s">"2.95T"</span>,
+        <span class="s">"week_52_range"</span>: <span class="s">"164.08 - 199.62"</span>,
+        <span class="s">"source"</span>: <span class="s">"simulated"</span>
+    }
+
+<span class="c"># ──────────────────────────────────────────────</span>
+<span class="c"># 5. Transport SSE + FastAPI</span>
+<span class="c"># ──────────────────────────────────────────────</span>
+sse_transport = SseServerTransport(<span class="s">"/mcp"</span>)
+
+app = FastAPI(title=<span class="s">"MCP Finance Server"</span>)
+
+<span class="k">@app.get</span>(<span class="s">"/sse"</span>)
+<span class="k">async def</span> <span class="n">sse_endpoint</span>(request: Request):
+    <span class="k">async with</span> sse_transport.connect_sse(
+        request.scope, request.receive, request._send
+    ) <span class="k">as</span> streams:
+        <span class="k">await</span> mcp_server.run(
+            streams[<span class="n">0</span>], streams[<span class="n">1</span>],
+            mcp_server.create_initialization_options()
+        )
+
+<span class="k">@app.post</span>(<span class="s">"/mcp"</span>)
+<span class="k">async def</span> <span class="n">mcp_endpoint</span>(request: Request):
+    <span class="k">await</span> sse_transport.handle_post_message(
+        request.scope, request.receive, request._send
+    )
+
+<span class="c"># Health check</span>
+<span class="k">@app.get</span>(<span class="s">"/health"</span>)
+<span class="k">async def</span> <span class="n">health</span>():
+    <span class="k">return</span> {<span class="s">"status"</span>: <span class="s">"ok"</span>, <span class="s">"tools"</span>: len(TOOLS)}
+
+<span class="k">if</span> __name__ == <span class="s">"__main__"</span>:
+    uvicorn.run(app, host=<span class="s">"0.0.0.0"</span>, port=<span class="n">8080</span>)</pre>
+
+<div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Ne pas exposer en production tel quel</h4>
+ <p>Ce squelette n'a ni authentification, ni rate limiting, ni cache. C'est volontaire : on les ajoute en Partie 4. En l'état, c'est un serveur de développement — ne l'exposez pas sur Internet.</p>
+</div>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Anatomie des 5 blocs</h3>
+
+<table class="compare-table">
+<thead><tr><th>Bloc</th><th>Lignes</th><th>Ce qu'il fait</th></tr></thead>
+<tbody>
+<tr><td><strong>1. Création</strong></td><td>1</td><td><code>Server("finance-mcp")</code> — instancie le serveur avec un nom d'identification</td></tr>
+<tr><td><strong>2. Tools</strong></td><td>~20</td><td>Déclare chaque outil avec son nom, sa description, et son schéma JSON</td></tr>
+<tr><td><strong>3. Dispatch</strong></td><td>~15</td><td>Route les appels <code>tools/call</code> vers la bonne fonction</td></tr>
+<tr><td><strong>4. Logique</strong></td><td>~10</td><td>La fonction métier — c'est ici qu'on appelle les APIs financières</td></tr>
+<tr><td><strong>5. Transport</strong></td><td>~20</td><td>Monte SSE sur FastAPI — 2 routes (<code>/sse</code> pour la connexion, <code>/mcp</code> pour les appels)</td></tr>
+</tbody>
+</table>
+
+</div>
+
+<!-- S5 — Premier outil -->
+<div id="premier-outil" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-wrench" style="color:#7c3aed"></i> Section 5</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-wrench" style="color:#7c3aed"></i> Écrire un bon outil MCP</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">L'outil <code>GetQuote</code> ci-dessus fonctionne, mais il est simpliste. Voici les principes pour écrire un outil qui sera <em>bien utilisé</em> par le LLM :</p>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">1. La description est CRITIQUE</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">C'est la description que le LLM lit pour décider d'appeler votre outil. Elle doit être :</p>
+
+<ul class="checklist">
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Spécifique</strong> — « Get current price data for a stock ticker » pas « Get data »</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Descriptive sur le output</strong> — « Returns: last price, change (%), volume, market cap » pour que le LLM sache ce qu'il va obtenir</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Contextuelle</strong> — « Use this when the user asks about current stock prices » guide la décision</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Non-ambiguë</strong> — si 2 outils pourraient être appelés, la description doit lever l'ambiguïté</li>
+</ul>
+
+<div class="formula-box">
+ <div class="formula-label">Règle d'or</div>
+ Meilleure description = <span class="formula-highlight">meilleure décision du LLM</span> = <span class="formula-highlight">meilleur résultat</span>
+</div>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">2. Le schéma guide la validation</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le <code>inputSchema</code> est un JSON Schema standard. Le LLM le lit pour savoir quels paramètres passer. Soyez précis :</p>
+
+<pre class="code-block"><span class="c"># ❌ Mauvais schéma — trop vague</span>
+{
+    <span class="s">"type"</span>: <span class="s">"object"</span>,
+    <span class="s">"properties"</span>: {
+        <span class="s">"query"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>}
+    }
+}
+
+<span class="c"># ✅ Bon schéma — précis et documenté</span>
+{
+    <span class="s">"type"</span>: <span class="s">"object"</span>,
+    <span class="s">"properties"</span>: {
+        <span class="s">"ticker"</span>: {
+            <span class="s">"type"</span>: <span class="s">"string"</span>,
+            <span class="s">"description"</span>: <span class="s">"Stock ticker symbol (e.g. AAPL, MSFT)"</span>,
+            <span class="s">"pattern"</span>: <span class="s">"^[A-Z]{1,5}$"</span>
+        },
+        <span class="s">"types"</span>: {
+            <span class="s">"type"</span>: <span class="s">"array"</span>,
+            <span class="s">"items"</span>: {
+                <span class="s">"type"</span>: <span class="s">"string"</span>,
+                <span class="s">"enum"</span>: [<span class="s">"quote"</span>, <span class="s">"technicals"</span>, <span class="s">"fundamentals"</span>]
+            },
+            <span class="s">"description"</span>: <span class="s">"Data types to retrieve"</span>
+        }
+    },
+    <span class="s">"required"</span>: [<span class="s">"ticker"</span>, <span class="s">"types"</span>]
+}</pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">3. Le résultat doit être parsable</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Retournez du JSON structuré avec des clés claires. Le LLM parse le résultat pour construire sa réponse :</p>
+
+<pre class="code-block"><span class="c"># ❌ Mauvais résultat — texte libre</span>
+<span class="s">"AAPL is at $189.84, up 1.23%"</span>
+
+<span class="c"># ✅ Bon résultat — JSON structuré</span>
+{
+    <span class="s">"ticker"</span>: <span class="s">"AAPL"</span>,
+    <span class="s">"price"</span>: <span class="n">189.84</span>,
+    <span class="s">"change_pct"</span>: <span class="n">1.23</span>,
+    <span class="s">"volume"</span>: <span class="n">54230100</span>,
+    <span class="s">"market_cap_b"</span>: <span class="n">2950</span>,
+    <span class="s">"as_of"</span>: <span class="s">"2026-06-20T16:00:00Z"</span>,
+    <span class="s">"source"</span>: <span class="s">"yahoo_finance"</span>
+}</pre>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> Incluez toujours la source et le timestamp</h4>
+ <p>Deux champs que tout outil finance doit retourner : <code>source</code> (d'où viennent les données) et <code>as_of</code> (quand). Le LLM peut alors dire « D'après Yahoo Finance à 16h00... » au lieu de présenter les données comme des vérités absolues. C'est aussi ce qui alimente la vérification anti-hallucination.</p>
+</div>
+
+<details>
+ <summary>Quiz : Pourquoi le LLM a-t-il besoin du champ "source" ?</summary>
+ <div class="quiz-answer">Pour la <strong>traçabilité</strong>. Si le LLM cite un prix, l'utilisateur peut vérifier la source. Sans ce champ, le LLM ne peut pas distinguer entre des données réelles et des données simulées. C'est aussi ce qui permet la règle MCP HARD STOP : si source = "simulated" ou "stub", on sait que les données ne sont pas fiables et on peut refuser de publier.</div>
+</details>
+</div>
+
+<!-- S6 — Transport SSE -->
+<div id="transport-sse" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-satellite-dish" style="color:#7c3aed"></i> Section 6</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-satellite-dish" style="color:#7c3aed"></i> Transport SSE en détail</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le transport SSE (Server-Sent Events) est le mode recommandé pour un serveur MCP distant. Il utilise deux endpoints HTTP :</p>
+
+<table class="compare-table">
+<thead><tr><th>Endpoint</th><th>Méthode</th><th>Rôle</th></tr></thead>
+<tbody>
+<tr><td><code>/sse</code></td><td>GET</td><td>Connexion SSE longue durée. Le serveur pousse les réponses via ce canal.</td></tr>
+<tr><td><code>/mcp</code></td><td>POST</td><td>Le client envoie les requêtes JSON-RPC (initialize, tools/list, tools/call) ici.</td></tr>
+</tbody>
+</table>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le flux est asymétrique : le client POST les requêtes, et le serveur répond via SSE. C'est différent d'un WebSocket où les deux côtés envoient sur le même canal.</p>
+
+<pre class="code-block"><span class="c"># Séquence HTTP réelle :</span>
+
+<span class="c"># 1. Client ouvre une connexion SSE</span>
+<span class="n">GET /sse HTTP/1.1</span>
+<span class="n">Accept: text/event-stream</span>
+
+<span class="c"># 2. Serveur répond avec un stream SSE + un endpoint POST</span>
+<span class="n">HTTP/1.1 200 OK</span>
+<span class="n">Content-Type: text/event-stream</span>
+<span class="n">event: endpoint</span>
+<span class="n">data: /mcp?session_id=abc123</span>
+
+<span class="c"># 3. Client envoie les requêtes MCP via POST</span>
+<span class="n">POST /mcp?session_id=abc123 HTTP/1.1</span>
+<span class="n">Content-Type: application/json</span>
+{<span class="s">"jsonrpc"</span>:<span class="s">"2.0"</span>,<span class="s">"method"</span>:<span class="s">"tools/list"</span>,<span class="s">"id"</span>:<span class="n">1</span>}
+
+<span class="c"># 4. Serveur pousse la réponse via SSE</span>
+<span class="n">event: message</span>
+<span class="n">data: {"jsonrpc":"2.0","result":{"tools":[...]},"id":1}</span></pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">SSE vs Streamable HTTP</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">MCP introduit progressivement le transport « Streamable HTTP » qui simplifie le modèle : un seul endpoint POST qui peut optionnellement upgrader vers SSE. Pour cette série, on reste sur SSE car :</p>
+
+<ul class="checklist">
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Support universel</strong> — tous les clients MCP actuels supportent SSE</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Plus simple à debugger</strong> — on voit les événements SSE dans les DevTools</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Production-tested</strong> — c'est ce que DailyTickers utilise en production</li>
+</ul>
+
+<div id="chart-sse" style="width:100%;height:300px;margin:2rem 0"></div>
+
+</div>
+
+<!-- S7 — Test live -->
+<div id="test-live" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-play" style="color:#7c3aed"></i> Section 7</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-play" style="color:#7c3aed"></i> Tester avec Claude Code</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le test le plus rapide : connecter votre serveur à Claude Code en 2 commandes.</p>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Étape 1 : Lancer le serveur</h3>
+
+<pre class="code-block"><span class="c"># Terminal 1 : lancer le serveur</span>
+cd mcp-finance-server
+source .venv/bin/activate
+python server.py
+
+<span class="c"># → INFO:     Started server process</span>
+<span class="c"># → INFO:     Uvicorn running on http://0.0.0.0:8080</span></pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Étape 2 : Connecter à Claude Code</h3>
+
+<pre class="code-block"><span class="c"># Terminal 2 : ajouter le serveur MCP à Claude Code</span>
+claude mcp add finance-local --transport sse --url http://localhost:8080/sse
+
+<span class="c"># Vérifier la connexion</span>
+claude mcp list
+<span class="c"># → finance-local  sse  http://localhost:8080/sse  connected</span></pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Étape 3 : Tester en conversation</h3>
+
+<pre class="code-block"><span class="c"># Dans Claude Code, posez la question :</span>
+&gt; Quel est le cours d'Apple ?
+
+<span class="c"># Claude va automatiquement :</span>
+<span class="c"># 1. Voir que l'outil GetQuote est disponible</span>
+<span class="c"># 2. Appeler GetQuote(ticker="AAPL")</span>
+<span class="c"># 3. Recevoir le JSON et formuler une réponse</span>
+
+<span class="c"># Réponse attendue :</span>
+<span class="c"># "Le cours d'Apple (AAPL) est actuellement à $189.84,</span>
+<span class="c">#  en hausse de +1.23%. Le volume est de 54.2M actions.</span>
+<span class="c">#  Note : ces données sont simulées (source: simulated)."</span></pre>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> Le LLM signale les données simulées</h4>
+ <p>Parce que le résultat inclut <code>"source": "simulated"</code>, Claude signalera automatiquement que les données ne sont pas réelles. C'est exactement le comportement qu'on veut : transparence sur la fraîcheur et la fiabilité des données. En Partie 3, quand on branchera Yahoo Finance, la source deviendra <code>"yahoo_finance"</code> et Claude présentera les données comme fiables.</p>
+</div>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Debugging avec curl</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Pour tester sans Claude Code, utilisez curl :</p>
+
+<pre class="code-block"><span class="c"># Test du health check</span>
+curl http://localhost:8080/health
+<span class="c"># → {"status":"ok","tools":1}</span>
+
+<span class="c"># Test SSE (Ctrl+C pour arrêter)</span>
+curl -N http://localhost:8080/sse
+<span class="c"># → event: endpoint</span>
+<span class="c"># → data: /mcp?session_id=...</span>
+
+<span class="c"># Test d'appel direct (avec le session_id du SSE)</span>
+curl -X POST http://localhost:8080/mcp?session_id=XXX \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "tools/call",
+    "params": {
+      "name": "GetQuote",
+      "arguments": {"ticker": "AAPL"}
+    },
+    "id": 1
+  }'</pre>
+
+<details>
+ <summary>Quiz : Combien de routes HTTP minimum pour un serveur MCP SSE ?</summary>
+ <div class="quiz-answer"><strong>Deux</strong> : une route GET pour le stream SSE (connexion longue durée) et une route POST pour recevoir les requêtes JSON-RPC. La route <code>/health</code> est un bonus utile mais pas requise par le protocole.</div>
+</details>
+
+<div class="takeaway-box">
+ <h3><i class="fa-solid fa-check-double" style="margin-right:.5rem"></i> Ce qu'on retient</h3>
+ <ul class="takeaway-list">
+  <li><i class="fa-solid fa-circle-check"></i> <strong>~200 lignes</strong> suffisent pour un serveur MCP fonctionnel avec FastAPI</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>5 blocs</strong> : création → tools → dispatch → logique → transport</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>La description de l'outil</strong> est le facteur #1 de qualité — c'est ce que le LLM lit pour décider</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>JSON structuré</strong> en sortie avec <code>source</code> et <code>as_of</code> pour la traçabilité</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>SSE = 2 routes</strong> : GET pour le stream, POST pour les requêtes</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Test immédiat</strong> avec <code>claude mcp add</code> — pas besoin de client custom</li>
+ </ul>
+</div>
+
+<a href="/series/construire-mcp-server/part3-outils-finance/" class="next-cta">
+ <div>
+  <div class="next-label">Partie suivante</div>
+  <div class="next-title">Ajouter des Outils : Screening, Technicals, Fundamentals</div>
+ </div>
+ <i class="fa-solid fa-arrow-right"></i>
+</a>
+</div>
+</div>
+
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+
+<script>
+var chartSse=echarts.init(document.getElementById('chart-sse'));
+chartSse.setOption({
+ title:{text:'Latence par étape d\'un appel MCP (ms)',left:'center',textStyle:{fontSize:13,fontWeight:700,color:'#0f172a'}},
+ tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+ xAxis:{type:'category',data:['SSE Connect','Initialize','tools/list','tools/call','Data fetch','Response'],axisLabel:{fontSize:10,rotate:20}},
+ yAxis:{type:'value',name:'ms',axisLabel:{fontSize:10}},
+ series:[{
+  type:'bar',
+  data:[
+   {value:50,itemStyle:{color:'#7c3aed'}},
+   {value:30,itemStyle:{color:'#8b5cf6'}},
+   {value:15,itemStyle:{color:'#a78bfa'}},
+   {value:10,itemStyle:{color:'#c4b5fd'}},
+   {value:200,itemStyle:{color:'#10b981'}},
+   {value:20,itemStyle:{color:'#6366f1'}}
+  ],
+  barWidth:'50%',
+  label:{show:true,position:'top',fontSize:10,fontWeight:700}
+ }],
+ grid:{top:50,bottom:50,left:50,right:20}
+});
+window.addEventListener('resize',function(){chartSse.resize()});
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

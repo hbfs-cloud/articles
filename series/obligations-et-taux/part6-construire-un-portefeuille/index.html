@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique,us,eu" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Intégrer dans un Portefeuille | Obligations &amp; Taux — Partie 6/6 | DailyTickers</title>
+ <meta name="description" content="Série Obligations &amp; Taux — Partie 6/6 : allocation obligataire, 60/40, barbell, laddering, risk parity, et comment les obligations protègent (ou ne protègent pas) votre portefeuille.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdfa 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#0d9488;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-teal{background:rgba(13,148,136,.1);color:#0d9488;border:1px solid rgba(13,148,136,.2)}
+ .hero-badge-cyan{background:rgba(6,182,212,.1);color:#0891b2;border:1px solid rgba(6,182,212,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#134e4a;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f0fdfa}
+ .compare-table tr:last-child td{border-bottom:none}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.2rem;font-weight:700}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#5eead4}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border:1px solid #0d9488;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#115e59;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(13,148,136,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#0d9488;margin-top:.2rem;flex-shrink:0}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #0d9488}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#115e59,#0d9488);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .pedagogy-box{background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#115e59;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p{font-size:.95rem;color:#134e4a;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#0d9488;margin-right:.75rem}details[open] summary{border-color:#0d9488;background:#f0fdfa;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ .series-end-box{background:linear-gradient(135deg,#115e59,#0d9488);color:white;border-radius:16px;padding:2.5rem;margin:2rem 0;text-align:center}
+ .series-end-box h3{color:white;margin:0 0 1rem;font-size:1.5rem}
+ .series-end-box p{color:rgba(255,255,255,.85);font-size:1.05rem;line-height:1.6;margin:0 0 1.5rem;max-width:650px;margin-left:auto;margin-right:auto}
+ .series-end-box a{display:inline-block;padding:.75rem 2rem;background:white;color:#115e59;border-radius:12px;font-weight:800;text-decoration:none;transition:transform .2s}
+ .series-end-box a:hover{transform:translateY(-2px)}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.formula-box{font-size:1rem;padding:1rem 1.25rem}.step-grid{grid-template-columns:1fr 1fr}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.formula-box{font-size:.9rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-briefcase" style="margin-right:.4rem;"></i> Série Obligations &amp; Taux — Partie 6 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem;">Intégrer dans un Portefeuille</h1>
+  <p class="hero-subtitle" style="font-size:1.15rem;color:#475569;max-width:750px;margin:0 auto;line-height:1.6;">Le 60/40 est-il mort ? Le barbell est-il mieux ? Comment construire un ladder ? Et que faire quand les obligations et les actions chutent en même temps ? La dernière pièce du puzzle : les obligations dans le contexte de votre portefeuille global.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-scale-balanced"></i> 60/40 &amp; alternatives</span>
+    <span class="hero-badge hero-badge-cyan"><i class="fa-solid fa-stairs"></i> Laddering</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-dumbbell"></i> Barbell</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Corrélation &amp; hedging</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/obligations-et-taux/part5-trader-les-obligations/" class="series-arrow" title="Trader les Obligations"><i class="fas fa-chevron-left"></i></a><span class="series-title">Obligations &amp; Taux</span><div class="series-steps"><a href="/series/obligations-et-taux/part1-fondamentaux/" class="series-step"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/obligations-et-taux/part2-prix-et-rendement/" class="series-step"><span class="series-num">2</span><span class="series-label">Prix &amp; Yield</span></a><a href="/series/obligations-et-taux/part3-yield-curve/" class="series-step"><span class="series-num">3</span><span class="series-label">Yield Curve</span></a><a href="/series/obligations-et-taux/part4-credit-spreads/" class="series-step"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/obligations-et-taux/part5-trader-les-obligations/" class="series-step"><span class="series-num">5</span><span class="series-label">Trader</span></a><a href="/series/obligations-et-taux/part6-construire-un-portefeuille/" class="series-step current"><span class="series-num">6</span><span class="series-label">Portefeuille</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#sixtyforty" class="fnav-item" data-section="sixtyforty"><i class="fas fa-bookmark"></i><span>Le 60/40</span></a><a href="#strategies" class="fnav-item" data-section="strategies"><i class="fas fa-bookmark"></i><span>Stratégies d'allocation</span></a><a href="#correlation" class="fnav-item" data-section="correlation"><i class="fas fa-bookmark"></i><span>Corrélation</span></a><a href="#construction" class="fnav-item" data-section="construction"><i class="fas fa-bookmark"></i><span>Construire son allocation</span></a><a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-bookmark"></i><span>Conclusion de la série</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'})}if(isOpen)toggle()})});function updateActive(){var scrollY=window.scrollY||window.pageYOffset,best=null;sections.forEach(function(s){if(s.el.getBoundingClientRect().top+window.pageYOffset-150<=scrollY)best=s});sections.forEach(function(s){s.item.classList.toggle('active',s===best)});if(best)label.textContent=best.item.querySelector('span').textContent}window.addEventListener('scroll',updateActive,{passive:true});updateActive()})();</script>
+
+<div style="max-width:900px;margin:-3rem auto 0;padding:0 1rem;position:relative;z-index:1;">
+
+<!-- SECTION 1: LE 60/40 -->
+<div id="sixtyforty" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-scale-balanced" style="color:#0d9488;"></i> Le 60/40 : mort ou juste blessé ?</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Le portefeuille <strong>60% actions / 40% obligations</strong> est le standard institutionnel depuis les années 1950. L'idée : les actions fournissent la croissance, les obligations amortissent les chocs. Quand les actions chutent (récession), les obligations montent (la Fed baisse les taux). La <strong>corrélation négative</strong> entre les deux réduit la volatilité totale sans trop sacrifier le rendement.</p>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">Puis 2022 est arrivé. Le S&amp;P 500 a perdu 18%. Le BND (US Aggregate) a perdu 13%. Le 60/40 a subi son pire drawdown depuis 1937 : <strong>-17%</strong>. La cause : l'inflation. Quand la cause de la crise est l'inflation (pas la récession), la Fed <em>monte</em> les taux — et les actions ET les obligations chutent simultanément.</p>
+
+  <div id="chart-6040" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <table class="compare-table">
+    <thead><tr><th>Année</th><th>S&amp;P 500</th><th>US Agg (BND)</th><th>60/40</th><th>Corrélation</th></tr></thead>
+    <tbody>
+      <tr><td><strong>2008 (GFC)</strong></td><td style="color:#ef4444;">-37%</td><td style="color:#16a34a;">+5,2%</td><td style="color:#ef4444;">-20%</td><td style="color:#16a34a;">Négative — les bonds ont protégé</td></tr>
+      <tr><td><strong>2020 (COVID)</strong></td><td style="color:#ef4444;">-34% (pic)</td><td style="color:#16a34a;">+7,5%</td><td style="color:#ef4444;">-17% (pic)</td><td style="color:#16a34a;">Très négative — protection maximale</td></tr>
+      <tr><td><strong>2022 (Inflation)</strong></td><td style="color:#ef4444;">-18%</td><td style="color:#ef4444;">-13%</td><td style="color:#ef4444;">-17%</td><td style="color:#ef4444;">Positive — aucune protection</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le 60/40 n'est pas mort — il a des conditions de fonctionnement</h4>
+    <p>Le 60/40 fonctionne quand la source de risque est la <strong>croissance</strong> (récession, choc de demande). La Fed baisse les taux → les bonds montent → protection du portefeuille. Il ne fonctionne PAS quand la source de risque est l'<strong>inflation</strong> (supply shock, politique budgétaire expansionniste). La Fed monte les taux → les bonds baissent aussi. La question n'est pas « le 60/40 est-il mort ? » mais « quel est le risque dominant aujourd'hui — croissance ou inflation ? »</p>
+  </div>
+
+  <details>
+    <summary>Quiz : dans quel environnement le 60/40 est-il le PLUS efficace ?</summary>
+    <div class="quiz-answer"><strong>Quand les taux sont élevés et la croissance ralentit.</strong> Des taux élevés signifient que les obligations ont du « room to rally » (la Fed peut baisser beaucoup). Un ralentissement signifie que la corrélation actions-obligations est négative. C'est exactement l'environnement post-2023 : les taux sont au-dessus de 4%, et le risque de récession revient. Paradoxalement, les meilleures conditions pour le 60/40 sont celles où il vient de sous-performer (post-hausse de taux).</div>
+  </details>
+</div>
+
+<!-- SECTION 2: STRATÉGIES D'ALLOCATION -->
+<div id="strategies" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-layer-group" style="color:#0d9488;"></i> Les stratégies d'allocation obligataire</h2>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-stairs" style="font-size:.8rem;"></i></div>
+      <h4>Ladder</h4>
+      <p>Obligations à maturités échelonnées (1, 2, 3, 5, 7, 10 ans). Réduit le risque de taux et fournit des liquidités régulières.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-dumbbell" style="font-size:.8rem;"></i></div>
+      <h4>Barbell</h4>
+      <p>Maturités courtes + longues, rien au milieu. Maximise la convexité et le carry simultanément.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-bullseye" style="font-size:.8rem;"></i></div>
+      <h4>Bullet</h4>
+      <p>Tout concentré sur une maturité cible (ex: 5 ans). Maximise le rendement à un horizon précis.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number"><i class="fa-solid fa-gears" style="font-size:.8rem;"></i></div>
+      <h4>Risk Parity</h4>
+      <p>Allouer par risque (volatilité), pas par capital. Les bonds reçoivent plus de capital (×2-3 avec levier) pour égaler le risque actions.</p>
+    </div>
+  </div>
+
+  <table class="compare-table">
+    <thead><tr><th>Stratégie</th><th>Duration moyenne</th><th>Avantage principal</th><th>Inconvénient</th><th>Idéal pour</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Ladder 1-10Y</strong></td><td>~5</td><td>Prévisibilité des flux, diversification temporelle</td><td>Pas de conviction directionnelle</td><td>Retraités, planification à horizon fixe</td></tr>
+      <tr><td><strong>Barbell (2Y + 30Y)</strong></td><td>~12</td><td>Convexité maximale, carry + optionalité</td><td>Sensible aux mouvements parallèles</td><td>Traders macro, couverture de portefeuille</td></tr>
+      <tr><td><strong>Bullet 5Y</strong></td><td>~4,5</td><td>Rendement ciblé, simple</td><td>Concentration du risque de réinvestissement</td><td>Objectif financier à terme fixe</td></tr>
+      <tr><td><strong>Risk Parity</strong></td><td>~8 (levieré)</td><td>Rendement/risque optimal en théorie</td><td>Nécessite du levier, perte en 2022</td><td>Institutionnels, fonds souverains</td></tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Le ladder : la stratégie la plus sous-estimée</h4>
+    <p>Un <strong>bond ladder</strong> de $100K réparti sur 10 maturités (1 à 10 ans) vous donne $10K qui arrive à maturité chaque année. Si les taux montent, vous réinvestissez la tranche arrivée à maturité à un taux plus élevé. Si les taux baissent, vos tranches longues ont déjà capturé les taux hauts. Résultat : un lissage naturel du risque de taux, sans timing ni conviction nécessaire. C'est la stratégie obligataire la plus fiable pour les investisseurs individuels.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Risk Parity : le piège de 2022</h4>
+    <p>Bridgewater (All Weather Fund) a popularisé le <strong>risk parity</strong> : égaliser la contribution en risque de chaque classe d'actif. Pour que les obligations (volatilité ~5%) aient le même poids en risque que les actions (volatilité ~15%), il faut les lever ×3. En 2022, quand les obligations ont chuté de 13% avec un levier ×3, la perte sur la poche obligataire a été de ~39%. C'est le talon d'Achille du risk parity : il suppose une corrélation négative actions-obligations qui disparaît en régime inflationniste.</p>
+  </div>
+</div>
+
+<!-- SECTION 3: CORRÉLATION -->
+<div id="correlation" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-link" style="color:#0d9488;"></i> Corrélation actions-obligations : le régime compte</h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">La corrélation entre actions et obligations n'est pas constante — elle dépend du <strong>régime macroéconomique</strong>. Comprendre dans quel régime on se trouve est essentiel pour savoir si vos obligations vont vous protéger ou vous trahir.</p>
+
+  <table class="compare-table">
+    <thead><tr><th>Régime</th><th>Inflation</th><th>Croissance</th><th>Corrélation SPX-TLT</th><th>60/40 fonctionne ?</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Goldilocks</strong></td><td>Basse</td><td>Solide</td><td style="color:#16a34a;">~0 à -0,3</td><td style="color:#16a34a;">Bien — bonds protègent en drawdown</td></tr>
+      <tr><td><strong>Récession</strong></td><td>En baisse</td><td>Négative</td><td style="color:#16a34a;">-0,3 à -0,6</td><td style="color:#16a34a;">Parfait — bonds montent quand actions chutent</td></tr>
+      <tr><td><strong>Reflation</strong></td><td>En hausse</td><td>Solide</td><td style="color:#eab308;">+0,1 à +0,3</td><td style="color:#eab308;">Médiocre — les deux montent puis corrigent ensemble</td></tr>
+      <tr><td><strong>Stagflation</strong></td><td>Haute</td><td>Faible</td><td style="color:#ef4444;">+0,3 à +0,6</td><td style="color:#ef4444;">Désastreux — les deux chutent (2022)</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-correlation" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La corrélation a changé de régime en 2000</h4>
+    <p>De 1970 à 2000, la corrélation SPX-bonds était <strong>positive</strong> (actions et obligations montaient et descendaient ensemble). Depuis 2000, elle est majoritairement <strong>négative</strong> (les bonds montent quand les actions chutent). Pourquoi ? Avant 2000, le risque dominant était l'<em>inflation</em> (chocs pétroliers, Fed Volcker). Après 2000, le risque dominant est devenu la <em>croissance</em> (dot-com, GFC, COVID). La question pour les années 2020 : sommes-nous revenus au régime pré-2000 (inflation dominante) ou est-ce un épisode temporaire ?</p>
+  </div>
+</div>
+
+<!-- SECTION 4: CONSTRUIRE SON ALLOCATION -->
+<div id="construction" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-compass" style="color:#0d9488;"></i> Construire son allocation obligataire</h2>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Les modèles par profil d'investisseur</h3>
+
+  <table class="compare-table">
+    <thead><tr><th>Profil</th><th>Actions</th><th>Obligations</th><th>Alternatives</th><th>Allocation obligataire recommandée</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Jeune agressif (25-35 ans)</strong></td><td>85-90%</td><td>5-10%</td><td>5%</td><td>SHY ou T-Bills uniquement (« dry powder » pour acheter les dips)</td></tr>
+      <tr><td><strong>Croissance (35-50 ans)</strong></td><td>70-80%</td><td>15-25%</td><td>5-10%</td><td>BND core + 5% TIP + 5% LQD</td></tr>
+      <tr><td><strong>Équilibré (50-60 ans)</strong></td><td>50-60%</td><td>30-40%</td><td>5-10%</td><td>Ladder 1-10Y + 10% LQD + 5% TIP</td></tr>
+      <tr><td><strong>Conservateur (60+ ans)</strong></td><td>30-40%</td><td>50-60%</td><td>5-10%</td><td>Ladder 1-10Y (core) + 15% TIPS + 10% maturités cibles</td></tr>
+      <tr><td><strong>Revenu pur (retraite)</strong></td><td>20-30%</td><td>60-70%</td><td>5-10%</td><td>Ladder + I-Bonds + munis (si TMI &gt; 32%)</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Les briques de construction</h3>
+
+  <table class="compare-table">
+    <thead><tr><th>Rôle</th><th>ETF recommandé</th><th>Pourquoi</th><th>Allocation typique</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Core (fondation)</strong></td><td>BND ou AGG</td><td>Diversifié, faible coût, duration modérée</td><td>40-60% de la poche obligataire</td></tr>
+      <tr><td><strong>Protection inflation</strong></td><td>TIP ou SCHP</td><td>Indexé sur le CPI, protection réelle</td><td>10-20%</td></tr>
+      <tr><td><strong>Rendement additionnel</strong></td><td>LQD</td><td>Corporate IG, spread ~100 bps au-dessus des Treasuries</td><td>10-20%</td></tr>
+      <tr><td><strong>Hedge de récession</strong></td><td>TLT</td><td>Duration longue — monte fortement si récession</td><td>5-15% (tactique)</td></tr>
+      <tr><td><strong>Cash management</strong></td><td>SHY ou BIL</td><td>Quasi-cash, yield attractif, volatilité minimale</td><td>0-20% (selon le cycle)</td></tr>
+      <tr><td><strong>Rendement maximal</strong></td><td>HYG ou JNK</td><td>High yield, corrélé aux actions (pas de protection)</td><td>0-10% (tactique, quand spreads &gt; 500)</td></tr>
+    </tbody>
+  </table>
+
+  <div class="formula-box"><div class="formula-label">La règle du « yield - 1% »</div>Si le yield d'un ETF obligataire &lt; <span class="formula-highlight">inflation + 1%</span>, c'est du papier qui perd de l'argent en termes réels — sauf comme hedge</div>
+
+  <div id="chart-allocation" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <details>
+    <summary>Quiz : pourquoi ne pas mettre 100% en TLT pour maximiser la protection ?</summary>
+    <div class="quiz-answer"><strong>Parce que TLT a une duration de ~17 — c'est un instrument de spéculation, pas de protection permanente.</strong> Si les taux montent de 1%, TLT perd 17%. Votre « protection » vous coûte plus que le crash action qu'elle est censée couvrir. La protection obligataire fonctionne avec une duration modérée (BND ~6,2) qui amortit les chocs sans créer de volatilité excessive. TLT est un outil tactique : on le surpondère quand on anticipe un choc de croissance, pas en permanence.</div>
+  </details>
+</div>
+
+<!-- SECTION 5: CONCLUSION DE LA SÉRIE -->
+<div id="conclusion" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;"><i class="fa-solid fa-flag-checkered" style="color:#0d9488;"></i> Conclusion : les obligations en 6 leçons</h2>
+
+  <div class="step-grid" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr));">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Fondamentaux</h4>
+      <p>Principal, coupon, maturité, yield. Un contrat de prêt. Le plus gros marché du monde ($130T+).</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Prix &amp; Rendement</h4>
+      <p>La relation inverse : taux ↑ = prix ↓. Duration = sensibilité. Convexité = asymétrie favorable.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Yield Curve</h4>
+      <p>La forme prédit les récessions. Inversion = alerte. Dés-inversion = exécution. Bear steepener = danger.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">4</div>
+      <h4>Credit Spreads</h4>
+      <p>Le prix du risque de défaut. Le cycle de crédit. Les CDS comme leading indicator. Le crédit a toujours raison.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">5</div>
+      <h4>Trader les Obligations</h4>
+      <p>Futures, ETF, curve trades, macro trades. Duration-hedger les trades de crédit. Le FOMC comme catalyseur.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">6</div>
+      <h4>Portefeuille</h4>
+      <p>Le 60/40 a des conditions. Le ladder est sous-estimé. Le barbell pour les macro traders. Le régime dicte la corrélation.</p>
+    </div>
+  </div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#0d9488;margin-right:.5rem;"></i> Les 10 règles du marché obligataire</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrow-right"></i> <strong>Taux ↑ = Prix ↓</strong>. La relation inverse est mécanique, pas mystérieuse.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> La <strong>duration</strong> est votre mesure #1 de risque. Choisissez vos ETF par la duration, pas par le yield.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> La <strong>courbe des taux</strong> prédit mieux les récessions que n'importe quel économiste.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Les <strong>credit spreads</strong> mesurent la peur — quand ils divergent des actions, croyez le crédit.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Le <strong>60/40 fonctionne</strong> quand le risque dominant est la croissance, pas l'inflation.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Un <strong>bond ladder</strong> est la meilleure stratégie pour les investisseurs individuels.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Les <strong>TIPS</strong> sont le seul vrai hedge contre l'inflation — pas l'or, pas les actions.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Le <strong>FOMC</strong> dicte le front de la courbe ; le marché dicte le back.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Achetez du <strong>HY quand les spreads > 600 bps</strong>, vendez quand ils sont &lt; 350 bps.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> La corrélation actions-obligations <strong>dépend du régime</strong>. Identifiez le régime avant de construire votre portefeuille.</li>
+    </ul>
+  </div>
+
+  <div class="series-end-box">
+    <h3>Série Obligations &amp; Taux — Terminée</h3>
+    <p>Vous avez maintenant les fondamentaux pour comprendre le plus grand marché financier du monde. Appliquez ces concepts dans vos analyses, vos trades, et votre construction de portefeuille.</p>
+    <a href="/?tab=series">Découvrir les autres séries →</a>
+  </div>
+</div>
+</div>
+
+<!-- ECharts -->
+<script>
+(function(){
+  var c1=echarts.init(document.getElementById('chart-6040'));
+  c1.setOption({
+    title:{text:'Performance du 60/40 par décennie (annualisé)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    legend:{data:['Actions (S&P 500)','Obligations (US Agg)','60/40'],bottom:0},
+    grid:{left:'3%',right:'4%',bottom:'12%',top:'15%',containLabel:true},
+    xAxis:{type:'category',data:['1980s','1990s','2000s','2010s','2020-25']},
+    yAxis:{type:'value',name:'Rendement annualisé (%)',axisLabel:{formatter:'{value}%'}},
+    series:[
+      {name:'Actions (S&P 500)',type:'bar',data:[17.5,18.2,1.2,13.6,10.5],itemStyle:{color:'#3b82f6'}},
+      {name:'Obligations (US Agg)',type:'bar',data:[12.6,7.7,6.3,3.5,-0.5],itemStyle:{color:'#0d9488'}},
+      {name:'60/40',type:'bar',data:[15.5,14.0,3.2,9.5,6.1],itemStyle:{color:'#8b5cf6'}}
+    ]
+  });
+
+  var c2=echarts.init(document.getElementById('chart-correlation'));
+  c2.setOption({
+    title:{text:'Corrélation SPX-TLT roulante 12 mois (indicatif)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis',formatter:function(p){return p[0].axisValue+' : '+p[0].value}},
+    xAxis:{type:'category',data:['2004','2006','2008','2010','2012','2014','2016','2018','2020','2022','2024','2026']},
+    yAxis:{type:'value',name:'Corrélation',min:-0.8,max:0.8,axisLabel:{formatter:'{value}'},splitLine:{lineStyle:{type:'dashed'}}},
+    series:[{type:'line',data:[-0.3,-0.4,-0.5,-0.3,-0.4,-0.5,-0.3,-0.2,-0.6,0.5,0.2,-0.1],smooth:true,lineStyle:{width:3,color:'#0d9488'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(239,68,68,0.15)'},{offset:0.5,color:'rgba(13,148,136,0)'},{offset:1,color:'rgba(13,148,136,0.15)'}]}},markLine:{data:[{yAxis:0,lineStyle:{color:'#94a3b8',type:'dashed'},label:{formatter:'Zéro'}}]}}]
+  });
+
+  var c3=echarts.init(document.getElementById('chart-allocation'));
+  c3.setOption({
+    title:{text:'Allocation obligataire type — Profil Équilibré (50-60 ans)',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'item',formatter:'{b}: {c}% ({d}%)'},
+    series:[{type:'pie',radius:['40%','70%'],center:['50%','55%'],avoidLabelOverlap:true,itemStyle:{borderRadius:8,borderColor:'#fff',borderWidth:2},label:{show:true,formatter:'{b}\n{d}%',fontSize:11},data:[
+      {value:45,name:'BND (Core)',itemStyle:{color:'#0d9488'}},
+      {value:15,name:'TIP (Inflation)',itemStyle:{color:'#f59e0b'}},
+      {value:15,name:'LQD (Corporate IG)',itemStyle:{color:'#3b82f6'}},
+      {value:10,name:'TLT (Duration longue)',itemStyle:{color:'#8b5cf6'}},
+      {value:10,name:'SHY (Cash mgmt)',itemStyle:{color:'#94a3b8'}},
+      {value:5,name:'HYG (Tactique)',itemStyle:{color:'#ef4444'}}
+    ]}]
+  });
+
+  window.addEventListener('resize',function(){c1.resize();c2.resize();c3.resize()});
+})();
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+</body>
+</html>

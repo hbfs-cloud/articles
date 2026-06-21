@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,ai,tech,architecture" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Intégrations Avancées : Multi-Source, Backtest, Portfolio | Construire un MCP Server Finance — Partie 6/6 | DailyTickers</title>
+ <meta name="description" content="Série Construire un MCP Server Finance — Partie 6/6 : agrégation multi-source avec fallback, outil de backtesting, gestion de portfolio, intégration de forecasting ML, et architecture d'un MCP server finance de production.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f5f3ff 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-violet{background:rgba(124,58,237,.1);color:#7c3aed;border:1px solid rgba(124,58,237,.2)}
+ .hero-badge-indigo{background:rgba(99,102,241,.1);color:#6366f1;border:1px solid rgba(99,102,241,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-green{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+ .hero-badge-purple{background:rgba(147,51,234,.1);color:#9333ea;border:1px solid rgba(147,51,234,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f8fafc}
+ .compare-table tr:last-child td{border-bottom:none}
+ .checklist{list-style:none;padding:0;margin:1.5rem 0}
+ .checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:.95rem;color:#334155;line-height:1.5}
+ .checklist li i{margin-top:.15rem;flex-shrink:0}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}
+ details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#7c3aed;margin-right:.75rem}
+ details[open] summary{border-color:#7c3aed;background:#f5f3ff;border-radius:12px 12px 0 0}
+ details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ pre.code-block{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:1.5rem 1.75rem;font-family:'SFMono-Regular','Consolas','Menlo',monospace;font-size:.82rem;line-height:1.6;overflow-x:auto;margin:1.5rem 0}
+ pre.code-block .k{color:#c4b5fd}pre.code-block .s{color:#86efac}pre.code-block .c{color:#64748b;font-style:italic}pre.code-block .n{color:#fcd34d}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#a78bfa}
+ .takeaway-box{background:linear-gradient(135deg,#f5f3ff,#ede9fe);border:1px solid #7c3aed;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#6d28d9;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(124,58,237,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#7c3aed;margin-top:.2rem;flex-shrink:0}
+ .pedagogy-box{background:#f5f3ff;border:1px solid #c4b5fd;border-left:4px solid #7c3aed;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#6d28d9;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p{font-size:.95rem;color:#4c1d95;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #7c3aed}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#6d28d9,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .capability-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin:2rem 0}
+ .capability-card{background:white;border:1px solid #e2e8f0;border-radius:12px;padding:1.25rem;transition:all .3s}
+ .capability-card:hover{border-color:#7c3aed;transform:translateY(-2px);box-shadow:0 8px 25px -5px rgba(0,0,0,.08)}
+ .capability-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1rem;margin-bottom:.75rem}
+ .capability-card h4{font-size:.9rem;font-weight:700;color:#0f172a;margin:0 0 .3rem}
+ .capability-card p{font-size:.8rem;color:#64748b;margin:0;line-height:1.4}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.formula-box{font-size:1rem}.step-grid,.capability-grid{grid-template-columns:1fr 1fr}pre.code-block{font-size:.74rem;padding:1.1rem 1.25rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+ <div class="hero-date"><i class="fa-solid fa-server" style="margin-right:.4rem"></i> Série Construire un MCP Server Finance — Partie 6 sur 6</div>
+ <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Intégrations Avancées : Multi-Source, Backtest, Portfolio</h1>
+ <p class="hero-subtitle" style="font-size:1.15rem;color:#475569;max-width:700px;margin:0 auto;line-height:1.6">La dernière étape : agrégation multi-source avec fallback automatique, backtesting de stratégies, gestion de portefeuille, forecasting ML, et l'architecture complète d'un MCP server finance de production.</p>
+ <div class="hero-badges">
+  <span class="hero-badge hero-badge-violet"><i class="fa-solid fa-layer-group"></i> Multi-source</span>
+  <span class="hero-badge hero-badge-indigo"><i class="fa-solid fa-flask"></i> Backtest engine</span>
+  <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-briefcase"></i> Portfolio manager</span>
+  <span class="hero-badge hero-badge-purple"><i class="fa-solid fa-brain"></i> ML forecasting</span>
+ </div>
+ <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/construire-mcp-server/part5-deploiement/" class="series-arrow" title="Déploiement"><i class="fas fa-chevron-left"></i></a><span class="series-title">Construire un MCP Server Finance</span><div class="series-steps"><a href="/series/construire-mcp-server/part1-concept/" class="series-step"><span class="series-num">1</span><span class="series-label">Concept</span></a><a href="/series/construire-mcp-server/part2-fastapi-skeleton/" class="series-step"><span class="series-num">2</span><span class="series-label">FastAPI</span></a><a href="/series/construire-mcp-server/part3-outils-finance/" class="series-step"><span class="series-num">3</span><span class="series-label">Outils</span></a><a href="/series/construire-mcp-server/part4-auth-et-cache/" class="series-step"><span class="series-num">4</span><span class="series-label">Auth</span></a><a href="/series/construire-mcp-server/part5-deploiement/" class="series-step"><span class="series-num">5</span><span class="series-label">Deploy</span></a><a href="/series/construire-mcp-server/part6-integration-avancee/" class="series-step current"><span class="series-num">6</span><span class="series-label">Avancé</span></a></div><span class="series-counter">6/6</span><span class="series-arrow disabled"><i class="fas fa-chevron-right"></i></span></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#multi-source" class="fnav-item" data-section="multi-source"><i class="fas fa-bookmark"></i><span>Multi-source</span></a><a href="#backtest" class="fnav-item" data-section="backtest"><i class="fas fa-bookmark"></i><span>Backtest</span></a><a href="#portfolio" class="fnav-item" data-section="portfolio"><i class="fas fa-bookmark"></i><span>Portfolio</span></a><a href="#forecasting" class="fnav-item" data-section="forecasting"><i class="fas fa-bookmark"></i><span>Forecasting ML</span></a><a href="#architecture-finale" class="fnav-item" data-section="architecture-finale"><i class="fas fa-bookmark"></i><span>Architecture finale</span></a><a href="#conclusion" class="fnav-item" data-section="conclusion"><i class="fas fa-bookmark"></i><span>Conclusion</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>(function(){var b=document.getElementById('fnavBtn'),m=document.getElementById('fnavMenu'),ic=document.getElementById('fnavIcon'),lb=document.getElementById('fnavLabel');if(!b||!m)return;var items=m.querySelectorAll('.fnav-item'),secs=[],open=false;items.forEach(function(i){var id=i.getAttribute('data-section'),el=document.getElementById(id);if(el)secs.push({id:id,el:el,item:i})});function toggle(){open=!open;m.classList.toggle('open',open);b.classList.toggle('open',open);ic.className=open?'fas fa-times':'fas fa-bars';lb.textContent=open?'Fermer':'Menu'}b.addEventListener('click',toggle);items.forEach(function(i){i.addEventListener('click',function(){if(open)toggle()})});function upd(){var sp=window.scrollY+120,cur=secs[0];secs.forEach(function(s){if(s.el.offsetTop<=sp)cur=s});items.forEach(function(i){i.classList.remove('active')});if(cur)cur.item.classList.add('active');lb.textContent=open?'Fermer':(cur?cur.item.querySelector('span').textContent:'Menu')}window.addEventListener('scroll',upd);upd()})()</script>
+
+<div style="max-width:900px;margin:-4rem auto 0;padding:0 1rem;position:relative;z-index:10">
+
+<!-- S1 — Multi-source -->
+<div id="multi-source" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-layer-group" style="color:#7c3aed"></i> Agrégation multi-source avec fallback</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Un serveur de production ne peut pas dépendre d'un seul provider. Yahoo Finance peut être rate-limité, Binance peut être down, et SEC EDGAR peut être lent un jour de filing massif. La solution : une <strong>chaîne de providers avec fallback automatique</strong>.</p>
+
+<pre class="code-block"><span class="c"># providers/aggregator.py — Fallback chain</span>
+<span class="k">class</span> <span class="n">AggregatedProvider</span>:
+    <span class="k">def</span> <span class="n">__init__</span>(self, providers: list[MarketDataProvider]):
+        self.providers = providers  <span class="c"># Ordonnés par priorité</span>
+
+    <span class="k">async def</span> <span class="n">get_quote</span>(self, ticker: str) -> dict:
+        errors = []
+        <span class="k">for</span> provider <span class="k">in</span> self.providers:
+            <span class="k">try</span>:
+                result = <span class="k">await</span> provider.get_quote(ticker)
+                result[<span class="s">"source"</span>] = provider.name
+                <span class="k">return</span> result
+            <span class="k">except</span> Exception <span class="k">as</span> e:
+                errors.append(f<span class="s">"{provider.name}: {e}"</span>)
+                logger.warning(f<span class="s">"Provider {provider.name} failed for {ticker}: {e}"</span>)
+                <span class="k">continue</span>
+
+        <span class="c"># Tous les providers ont échoué</span>
+        <span class="k">raise</span> AllProvidersFailedError(ticker, errors)
+
+<span class="c"># Initialisation</span>
+aggregator = AggregatedProvider([
+    YahooProvider(),        <span class="c"># Priorité 1 : gratuit, large couverture</span>
+    PolygonProvider(),      <span class="c"># Priorité 2 : payant, plus fiable</span>
+    AlphaVantageProvider(), <span class="c"># Priorité 3 : fallback</span>
+])</pre>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Smart routing par asset class</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Mieux que le fallback linéaire : router vers le bon provider selon l'asset class :</p>
+
+<table class="compare-table">
+<thead><tr><th>Asset class</th><th>Provider primaire</th><th>Fallback</th><th>Détection</th></tr></thead>
+<tbody>
+<tr><td><strong>Actions US</strong></td><td>Yahoo Finance</td><td>Polygon</td><td>Ticker 1-5 lettres majuscules</td></tr>
+<tr><td><strong>ETFs</strong></td><td>Yahoo Finance</td><td>IEX</td><td>Liste ETF connue (SPY, QQQ...)</td></tr>
+<tr><td><strong>Crypto</strong></td><td>Binance</td><td>CoinGecko</td><td>Suffixe <code>-USD</code> ou paire connue</td></tr>
+<tr><td><strong>Forex</strong></td><td>Yahoo (<code>EURUSD=X</code>)</td><td>OANDA</td><td>Pattern <code>XXX/YYY</code> ou <code>=X</code></td></tr>
+<tr><td><strong>Indices</strong></td><td>Yahoo (<code>^GSPC</code>)</td><td>—</td><td>Préfixe <code>^</code></td></tr>
+<tr><td><strong>Commodities</strong></td><td>Yahoo (<code>GC=F</code>)</td><td>FRED</td><td>Suffixe <code>=F</code></td></tr>
+</tbody>
+</table>
+
+<pre class="code-block"><span class="c"># Smart routing</span>
+<span class="k">def</span> <span class="n">get_provider_chain</span>(ticker: str) -> list[MarketDataProvider]:
+    <span class="k">if</span> ticker.endswith(<span class="s">"-USD"</span>) <span class="k">or</span> ticker <span class="k">in</span> KNOWN_CRYPTO:
+        <span class="k">return</span> [binance_provider, coingecko_provider]
+    <span class="k">if</span> ticker.startswith(<span class="s">"^"</span>):
+        <span class="k">return</span> [yahoo_provider]
+    <span class="k">if</span> ticker.endswith(<span class="s">"=X"</span>):
+        <span class="k">return</span> [yahoo_provider, oanda_provider]
+    <span class="c"># Default: actions US</span>
+    <span class="k">return</span> [yahoo_provider, polygon_provider, alphavantage_provider]</pre>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-graduation-cap"></i> Binance directement, pas via Yahoo</h4>
+ <p>Pour la crypto, utilisez l'API Binance directement. Yahoo Finance ajoute un délai de 15-60 minutes sur les prix crypto, ce qui est inacceptable pour un marché 24/7. L'API publique Binance est gratuite, rapide (~50ms), et ne nécessite pas de clé API pour les données de marché.</p>
+</div>
+</div>
+
+<!-- S2 — Backtest -->
+<div id="backtest" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-flask" style="color:#7c3aed"></i> Section 2</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-flask" style="color:#7c3aed"></i> Outil de backtesting</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Un outil de backtest via MCP permet au LLM de valider une hypothèse de trading en la testant sur données historiques. L'outil prend une stratégie en entrée et retourne des métriques de performance :</p>
+
+<pre class="code-block">BACKTEST_TOOL = Tool(
+    name=<span class="s">"RunBacktest"</span>,
+    description=<span class="s">"""Backtest a trading strategy on historical data.
+Takes entry/exit conditions and returns performance metrics.
+
+Metrics returned: total_return_pct, max_drawdown_pct, sharpe_ratio,
+win_rate_pct, profit_factor, avg_trade_pct, total_trades, best/worst_trade.
+
+Example strategy:
+  entry: 'rsi_14 < 30 AND ema_20_slope > 0'
+  exit: 'rsi_14 > 70 OR trailing_stop_pct(-3)'
+  period: '2y'
+  universe: ['AAPL', 'MSFT', 'GOOGL']"""</span>,
+    inputSchema={
+        <span class="s">"type"</span>: <span class="s">"object"</span>,
+        <span class="s">"properties"</span>: {
+            <span class="s">"entry_condition"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>},
+            <span class="s">"exit_condition"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>},
+            <span class="s">"period"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"enum"</span>: [<span class="s">"6m"</span>,<span class="s">"1y"</span>,<span class="s">"2y"</span>,<span class="s">"5y"</span>]},
+            <span class="s">"universe"</span>: {<span class="s">"type"</span>: <span class="s">"array"</span>, <span class="s">"items"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>}},
+            <span class="s">"position_size_pct"</span>: {<span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"default"</span>: <span class="n">10</span>}
+        },
+        <span class="s">"required"</span>: [<span class="s">"entry_condition"</span>, <span class="s">"exit_condition"</span>, <span class="s">"period"</span>]
+    }
+)</pre>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Le résultat donne au LLM tout ce qu'il faut pour évaluer la stratégie :</p>
+
+<pre class="code-block"><span class="c"># Résultat du backtest</span>
+{
+    <span class="s">"period"</span>: <span class="s">"2024-01-01 to 2025-12-31"</span>,
+    <span class="s">"total_return_pct"</span>: <span class="n">34.2</span>,
+    <span class="s">"annualized_return_pct"</span>: <span class="n">16.1</span>,
+    <span class="s">"max_drawdown_pct"</span>: <span class="n">-8.7</span>,
+    <span class="s">"sharpe_ratio"</span>: <span class="n">1.42</span>,
+    <span class="s">"sortino_ratio"</span>: <span class="n">1.89</span>,
+    <span class="s">"win_rate_pct"</span>: <span class="n">62.5</span>,
+    <span class="s">"profit_factor"</span>: <span class="n">2.1</span>,
+    <span class="s">"total_trades"</span>: <span class="n">48</span>,
+    <span class="s">"avg_trade_pct"</span>: <span class="n">2.8</span>,
+    <span class="s">"avg_hold_days"</span>: <span class="n">12</span>,
+    <span class="s">"best_trade"</span>: {<span class="s">"ticker"</span>: <span class="s">"NVDA"</span>, <span class="s">"return_pct"</span>: <span class="n">18.4</span>},
+    <span class="s">"worst_trade"</span>: {<span class="s">"ticker"</span>: <span class="s">"INTC"</span>, <span class="s">"return_pct"</span>: <span class="n">-6.2</span>},
+    <span class="s">"benchmark_return_pct"</span>: <span class="n">28.1</span>,  <span class="c"># SPY sur la même période</span>
+    <span class="s">"alpha_pct"</span>: <span class="n">6.1</span>
+}</pre>
+
+<div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Backtesting honnête</h4>
+ <p>Le backtest doit toujours inclure le <strong>benchmark</strong> (SPY) sur la même période. Un rendement de +34% semble excellent, mais si SPY a fait +28%, l'alpha réel n'est que de 6 points. Sans benchmark, le LLM (et l'utilisateur) peuvent surestimer la stratégie. Voir notre article <a href="/tech/backtesting-honest/" style="color:#7c3aed;">Backtesting Honnête</a> pour les pièges classiques.</p>
+</div>
+
+<div id="chart-backtest" style="width:100%;height:300px;margin:2rem 0"></div>
+</div>
+
+<!-- S3 — Portfolio -->
+<div id="portfolio" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-briefcase" style="color:#7c3aed"></i> Section 3</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-briefcase" style="color:#7c3aed"></i> Gestion de portefeuille</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Un MCP finance avancé peut exposer des outils de gestion de portefeuille : optimisation de sizing, calcul de VaR, et suivi des positions :</p>
+
+<div class="capability-grid">
+ <div class="capability-card">
+  <div class="capability-icon" style="background:#f5f3ff;color:#7c3aed"><i class="fa-solid fa-chart-pie"></i></div>
+  <h4>OptimizeSizing</h4>
+  <p>Taille optimale de chaque position selon corrélation, volatilité, et contraintes de risque.</p>
+ </div>
+ <div class="capability-card">
+  <div class="capability-icon" style="background:#fef3c7;color:#d97706"><i class="fa-solid fa-shield-halved"></i></div>
+  <h4>CalculateVaR</h4>
+  <p>Value at Risk : perte maximale à 95% de confiance sur 1j/5j/1m. Monte Carlo ou historique.</p>
+ </div>
+ <div class="capability-card">
+  <div class="capability-icon" style="background:#ecfdf5;color:#10b981"><i class="fa-solid fa-code-branch"></i></div>
+  <h4>GetCorrelationMatrix</h4>
+  <p>Corrélation entre N tickers pour détecter les clusters de risque dans le portefeuille.</p>
+ </div>
+ <div class="capability-card">
+  <div class="capability-icon" style="background:#eef2ff;color:#6366f1"><i class="fa-solid fa-bolt"></i></div>
+  <h4>StressTest</h4>
+  <p>Simuler l'impact de scénarios (VIX à 40, -10% S&P, taux +100bps) sur le portefeuille.</p>
+ </div>
+</div>
+
+<pre class="code-block"><span class="c"># Outil OptimizeSizing</span>
+OPTIMIZE_SIZING_TOOL = Tool(
+    name=<span class="s">"OptimizeSizing"</span>,
+    description=<span class="s">"""Optimize position sizes for a portfolio of tickers.
+Uses correlation matrix, ATR-based volatility, and regime to suggest
+optimal allocation percentages that maximize diversification while
+respecting risk constraints.
+
+Constraints: max_per_position (default 15%), max_correlation (default 0.7),
+max_sector_exposure (default 30%)."""</span>,
+    inputSchema={
+        <span class="s">"type"</span>: <span class="s">"object"</span>,
+        <span class="s">"properties"</span>: {
+            <span class="s">"tickers"</span>: {<span class="s">"type"</span>: <span class="s">"array"</span>, <span class="s">"items"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>}},
+            <span class="s">"portfolio_size"</span>: {<span class="s">"type"</span>: <span class="s">"number"</span>},
+            <span class="s">"constraints"</span>: {
+                <span class="s">"type"</span>: <span class="s">"object"</span>,
+                <span class="s">"properties"</span>: {
+                    <span class="s">"max_per_position_pct"</span>: {<span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"default"</span>: <span class="n">15</span>},
+                    <span class="s">"max_correlation"</span>: {<span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"default"</span>: <span class="n">0.7</span>},
+                    <span class="s">"max_sector_exposure_pct"</span>: {<span class="s">"type"</span>: <span class="s">"number"</span>, <span class="s">"default"</span>: <span class="n">30</span>}
+                }
+            }
+        },
+        <span class="s">"required"</span>: [<span class="s">"tickers"</span>, <span class="s">"portfolio_size"</span>]
+    }
+)</pre>
+</div>
+
+<!-- S4 — Forecasting ML -->
+<div id="forecasting" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-brain" style="color:#7c3aed"></i> Section 4</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-brain" style="color:#7c3aed"></i> Intégration forecasting ML</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Un MCP server peut intégrer des modèles de machine learning comme <strong>TimesFM</strong> (Google) pour le forecasting de séries temporelles. Le LLM n'exécute pas le ML — il appelle un outil qui exécute le modèle et retourne les prédictions :</p>
+
+<pre class="code-block">FORECAST_TOOL = Tool(
+    name=<span class="s">"ForecastPrice"</span>,
+    description=<span class="s">"""Forecast future price using TimesFM 2.0 (time-series foundation model).
+Returns probabilistic forecast with confidence intervals.
+
+IMPORTANT: Direction accuracy is ~44% (worse than random) for individual stocks.
+Use confidence intervals as 'probabilistic support/resistance zones', not as
+directional signals. ATR/volatility forecasts are more reliable (~70% accuracy).
+
+Output includes: point forecast, q10/q50/q90, predicted_direction, historical_accuracy."""</span>,
+    inputSchema={
+        <span class="s">"type"</span>: <span class="s">"object"</span>,
+        <span class="s">"properties"</span>: {
+            <span class="s">"ticker"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>},
+            <span class="s">"horizon"</span>: {<span class="s">"type"</span>: <span class="s">"integer"</span>, <span class="s">"description"</span>: <span class="s">"Days ahead (1-30)"</span>, <span class="s">"default"</span>: <span class="n">5</span>},
+            <span class="s">"metric"</span>: {<span class="s">"type"</span>: <span class="s">"string"</span>, <span class="s">"enum"</span>: [<span class="s">"close"</span>, <span class="s">"atr"</span>, <span class="s">"volume"</span>], <span class="s">"default"</span>: <span class="s">"close"</span>}
+        },
+        <span class="s">"required"</span>: [<span class="s">"ticker"</span>]
+    }
+)</pre>
+
+<div class="alert-box">
+ <h4><i class="fa-solid fa-triangle-exclamation"></i> Honnêteté dans la description</h4>
+ <p>La description de l'outil dit explicitement que la direction est à 44%. C'est <strong>volontaire</strong>. Si le LLM croit que le forecast est fiable, il va recommander des trades basés sur les prédictions. En étant honnête dans la description, le LLM utilisera les forecasts comme <em>zones probabilistes</em>, pas comme des signaux directionnels. C'est la différence entre un outil utile et un outil dangereux.</p>
+</div>
+
+<div class="pedagogy-box">
+ <h4><i class="fa-solid fa-lightbulb"></i> MCP comme passerelle vers le ML</h4>
+ <p>Le serveur MCP n'exécute pas le modèle ML directement — il appelle un service de forecast via HTTP (dans notre cas, un serveur TimesFM sur un GPU séparé). MCP sert de <strong>passerelle</strong> : le LLM appelle l'outil, le serveur MCP appelle le service ML, et retourne le résultat formaté. Le LLM n'a pas besoin de savoir qu'il y a un modèle Google derrière — il voit juste un outil <code>ForecastPrice</code>.</p>
+</div>
+</div>
+
+<!-- S5 — Architecture finale -->
+<div id="architecture-finale" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-sitemap" style="color:#7c3aed"></i> Section 5</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-sitemap" style="color:#7c3aed"></i> Architecture finale complète</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">En assemblant tout ce qu'on a construit dans les 6 parties, voici l'architecture d'un MCP server finance de production :</p>
+
+<div id="chart-architecture" style="width:100%;height:400px;margin:2rem 0"></div>
+
+<table class="compare-table">
+<thead><tr><th>Couche</th><th>Composants</th><th>Partie</th></tr></thead>
+<tbody>
+<tr><td><strong>Transport</strong></td><td>Caddy (TLS) → FastAPI (SSE + POST)</td><td>2, 5</td></tr>
+<tr><td><strong>Sécurité</strong></td><td>Bearer auth → Rate limiter (client + upstream)</td><td>4</td></tr>
+<tr><td><strong>Cache</strong></td><td>TTL cache en mémoire (15s → 24h par type)</td><td>4</td></tr>
+<tr><td><strong>MCP Core</strong></td><td>Server + tool registry + dispatch + error handling</td><td>2</td></tr>
+<tr><td><strong>Outils</strong></td><td>QueryData, RunScreener, GetMarketOverview, RunBacktest, OptimizeSizing, ForecastPrice</td><td>3, 6</td></tr>
+<tr><td><strong>Providers</strong></td><td>Yahoo, Binance, SEC, FRED — avec fallback chain</td><td>3, 6</td></tr>
+<tr><td><strong>Services</strong></td><td>TimesFM (forecast), portfolio engine</td><td>6</td></tr>
+<tr><td><strong>Infra</strong></td><td>Docker, Nomad, healthcheck, JSON logs</td><td>5</td></tr>
+</tbody>
+</table>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Ce que le serveur peut faire maintenant</h3>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">Avec l'architecture complète, un LLM connecté au serveur peut :</p>
+
+<ul class="checklist">
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Répondre en temps réel</strong> — « Quel est le cours d'Apple ? » → prix live en &lt; 1s</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Analyser un ticker</strong> — fondamentaux, technique, earnings dans un seul appel</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Scanner le marché</strong> — « Trouve les actions survendues dans le secteur tech » → screener DSL</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Valider une stratégie</strong> — backtest sur données historiques avec métriques complètes</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Optimiser un portefeuille</strong> — sizing, corrélation, VaR, stress test</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Forecaster</strong> — zones probabilistes via TimesFM pour calibrer le biais</li>
+ <li><i class="fa-solid fa-circle-check" style="color:#10b981"></i> <strong>Générer des briefings</strong> — market overview + données par ticker + analyses</li>
+</ul>
+
+<details>
+ <summary>Quiz : Combien d'outils MCP minimum pour un serveur finance utile ?</summary>
+ <div class="quiz-answer"><strong>Trois</strong> : <code>GetQuote</code> (prix), <code>QueryData</code> (analyse détaillée), et <code>GetMarketOverview</code> (contexte). Avec ces trois outils, le LLM peut répondre à 80% des questions finance courantes. Les outils avancés (screener, backtest, portfolio) ajoutent de la profondeur mais ne sont pas nécessaires pour commencer.</div>
+</details>
+</div>
+
+<!-- S6 — Conclusion -->
+<div id="conclusion" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0">
+<div class="section-divider"><i class="fa-solid fa-flag-checkered" style="color:#7c3aed"></i> Conclusion</div>
+<h2 style="font-size:1.6rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem"><i class="fa-solid fa-flag-checkered" style="color:#7c3aed"></i> Ce qu'on a construit</h2>
+
+<p style="font-size:1.05rem;line-height:1.7;color:#334155;margin-bottom:1.25rem">En 6 parties, on a construit un serveur MCP finance complet — du concept à la production. Récapitulatif :</p>
+
+<div class="step-grid">
+ <div class="step-card">
+  <div class="step-number">1</div>
+  <h4>Concept</h4>
+  <p>MCP, architecture Host-Client-Server, les 3 primitives, pourquoi pour la finance.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">2</div>
+  <h4>Squelette</h4>
+  <p>FastAPI + mcp-python-sdk, premier outil en 200 lignes, transport SSE.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">3</div>
+  <h4>Outils</h4>
+  <p>QueryData, RunScreener, GetMarketOverview. Providers interchangeables, calculs techniques.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">4</div>
+  <h4>Sécurité</h4>
+  <p>Bearer tokens, rate limiting token bucket, cache TTL par type de donnée.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">5</div>
+  <h4>Déploiement</h4>
+  <p>Docker multi-stage, Nomad, Caddy TLS, logs JSON, checklist production.</p>
+ </div>
+ <div class="step-card">
+  <div class="step-number">6</div>
+  <h4>Avancé</h4>
+  <p>Multi-source fallback, backtest, portfolio, forecasting ML.</p>
+ </div>
+</div>
+
+<div class="formula-box">
+ <div class="formula-label">Le résultat</div>
+ Un <span class="formula-highlight">LLM qui voit</span> les marchés en temps réel, <span class="formula-highlight">analyse</span> sur commande, et <span class="formula-highlight">ne ment jamais</span>
+</div>
+
+<h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Pour aller plus loin</h3>
+
+<ul class="checklist">
+ <li><i class="fa-solid fa-arrow-right" style="color:#7c3aed"></i> <strong>WebSocket streaming</strong> — prix temps réel pushés au LLM (pas de polling)</li>
+ <li><i class="fa-solid fa-arrow-right" style="color:#7c3aed"></i> <strong>Resources MCP</strong> — exposer des datasets (univers S&P 500, calendrier earnings) en lecture seule</li>
+ <li><i class="fa-solid fa-arrow-right" style="color:#7c3aed"></i> <strong>Prompts MCP</strong> — templates d'analyse standardisés (due diligence, trade review)</li>
+ <li><i class="fa-solid fa-arrow-right" style="color:#7c3aed"></i> <strong>Multi-LLM</strong> — le même serveur MCP connecté à Claude, GPT-4, Gemini simultanément</li>
+ <li><i class="fa-solid fa-arrow-right" style="color:#7c3aed"></i> <strong>Execution</strong> — passer des ordres via broker API (Alpaca, IBKR) — avec double confirmation</li>
+</ul>
+
+<div class="takeaway-box">
+ <h3><i class="fa-solid fa-trophy" style="margin-right:.5rem"></i> Les principes à retenir</h3>
+ <ul class="takeaway-list">
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Déclaratif, pas impératif</strong> — décrivez vos outils, le LLM décide quand les utiliser</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Transparence absolue</strong> — source, timestamp, cache status dans chaque réponse</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Fail loud, never lie</strong> — erreur = dire l'erreur, jamais inventer de données</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Cache intelligent</strong> — TTL adapté par type, pas un TTL unique pour tout</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Honnêteté dans les descriptions</strong> — si le forecast est à 44%, le dire (pas le cacher)</li>
+  <li><i class="fa-solid fa-circle-check"></i> <strong>Provider agnostic</strong> — abstraire les sources, fallback automatique</li>
+ </ul>
+</div>
+
+<div style="text-align:center;padding:2rem 0;">
+  <a href="/series/construire-mcp-server/part1-concept/" style="display:inline-flex;align-items:center;gap:.5rem;padding:1rem 2rem;background:#f5f3ff;border:2px solid #7c3aed;border-radius:12px;color:#7c3aed;text-decoration:none;font-weight:700;font-size:1rem;transition:all .2s;">
+    <i class="fa-solid fa-rotate-left"></i> Relire depuis le début
+  </a>
+</div>
+
+</div>
+</div>
+
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+
+<script>
+var cbt=echarts.init(document.getElementById('chart-backtest'));
+cbt.setOption({
+ title:{text:'Backtest : equity curve stratégie vs SPY',left:'center',textStyle:{fontSize:13,fontWeight:700}},
+ tooltip:{trigger:'axis'},
+ legend:{data:['Stratégie','SPY (benchmark)'],top:30},
+ xAxis:{type:'category',data:['Jan 24','Mar','May','Jul','Sep','Nov','Jan 25','Mar','May','Jul','Sep','Nov'],axisLabel:{fontSize:10}},
+ yAxis:{type:'value',name:'%',axisLabel:{fontSize:10}},
+ series:[
+  {name:'Stratégie',type:'line',data:[0,4,8,5,12,15,18,22,20,26,30,34],smooth:true,lineStyle:{color:'#7c3aed',width:2.5},itemStyle:{color:'#7c3aed'},areaStyle:{color:'rgba(124,58,237,0.06)'}},
+  {name:'SPY (benchmark)',type:'line',data:[0,3,6,4,10,12,14,18,16,22,25,28],smooth:true,lineStyle:{color:'#94a3b8',width:2,type:'dashed'},itemStyle:{color:'#94a3b8'}}
+ ],
+ grid:{top:55,bottom:30,left:50,right:20}
+});
+
+var ca=echarts.init(document.getElementById('chart-architecture'));
+ca.setOption({
+ title:{text:'Architecture complète MCP Finance Server',left:'center',textStyle:{fontSize:13,fontWeight:700}},
+ tooltip:{},
+ series:[{
+  type:'graph',layout:'none',symbolSize:50,roam:false,
+  label:{show:true,fontSize:10,fontWeight:700},
+  edgeSymbol:['none','arrow'],edgeSymbolSize:[0,8],
+  lineStyle:{width:2,curveness:0.1,color:'#c4b5fd'},
+  data:[
+   {name:'Claude\nCode',x:50,y:200,itemStyle:{color:'#64748b'},symbolSize:45},
+   {name:'Caddy\n(TLS)',x:180,y:200,itemStyle:{color:'#10b981'},symbolSize:45},
+   {name:'Auth',x:300,y:130,itemStyle:{color:'#ef4444'},symbolSize:40},
+   {name:'Rate\nLimit',x:300,y:270,itemStyle:{color:'#f59e0b'},symbolSize:40},
+   {name:'MCP\nServer',x:430,y:200,itemStyle:{color:'#7c3aed'},symbolSize:55},
+   {name:'Cache',x:430,y:60,itemStyle:{color:'#6366f1'},symbolSize:40},
+   {name:'Yahoo',x:580,y:100,itemStyle:{color:'#8b5cf6'},symbolSize:38},
+   {name:'Binance',x:580,y:200,itemStyle:{color:'#a78bfa'},symbolSize:38},
+   {name:'SEC',x:580,y:300,itemStyle:{color:'#c4b5fd'},symbolSize:38},
+   {name:'TimesFM',x:700,y:200,itemStyle:{color:'#9333ea'},symbolSize:38}
+  ],
+  edges:[
+   {source:'Claude\nCode',target:'Caddy\n(TLS)'},
+   {source:'Caddy\n(TLS)',target:'Auth'},
+   {source:'Caddy\n(TLS)',target:'Rate\nLimit'},
+   {source:'Auth',target:'MCP\nServer'},
+   {source:'Rate\nLimit',target:'MCP\nServer'},
+   {source:'MCP\nServer',target:'Cache'},
+   {source:'MCP\nServer',target:'Yahoo'},
+   {source:'MCP\nServer',target:'Binance'},
+   {source:'MCP\nServer',target:'SEC'},
+   {source:'MCP\nServer',target:'TimesFM'}
+  ]
+ }]
+});
+window.addEventListener('resize',function(){cbt.resize();ca.resize()});
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>

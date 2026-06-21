@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,macro,technique,us,eu" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Prix, Rendement et la Relation Inverse | Obligations &amp; Taux — Partie 2/6 | DailyTickers</title>
+ <meta name="description" content="Série Obligations &amp; Taux — Partie 2/6 : pourquoi quand les taux montent les obligations baissent, YTM, duration, convexité. Les mécaniques qui font bouger les prix.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdfa 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#0d9488;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-teal{background:rgba(13,148,136,.1);color:#0d9488;border:1px solid rgba(13,148,136,.2)}
+ .hero-badge-cyan{background:rgba(6,182,212,.1);color:#0891b2;border:1px solid rgba(6,182,212,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-red{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#134e4a;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f0fdfa}
+ .compare-table tr:last-child td{border-bottom:none}
+ .formula-box{background:linear-gradient(135deg,#0f172a,#1e293b);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700;letter-spacing:.02em}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#5eead4}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdfa,#ccfbf1);border:1px solid #0d9488;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#115e59;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(13,148,136,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#0d9488;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#115e59,#0d9488);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(13,148,136,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .step-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+ .step-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:1.5rem;text-align:center;transition:all .3s;border-top:4px solid #0d9488}
+ .step-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px -8px rgba(0,0,0,.12)}
+ .step-number{width:42px;height:38px;border-radius:12px;background:linear-gradient(135deg,#115e59,#0d9488);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:900;color:white;margin:0 auto .75rem}
+ .step-card h4{font-size:1rem;font-weight:800;color:#0f172a;margin:0 0 .5rem}
+ .step-card p{font-size:.85rem;color:#64748b;line-height:1.5;margin:0}
+ .pedagogy-box{background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#115e59;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p{font-size:.95rem;color:#134e4a;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ details{margin:.75rem 0}
+ details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;transition:all .2s;list-style:none}
+ details summary::-webkit-details-marker{display:none}
+ details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#0d9488;margin-right:.75rem}
+ details[open] summary{border-color:#0d9488;background:#f0fdfa;border-radius:12px 12px 0 0}
+ details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.formula-box{font-size:1rem;padding:1rem 1.25rem}.next-cta{flex-direction:column;text-align:center}.step-grid{grid-template-columns:1fr 1fr}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.formula-box{font-size:.9rem;padding:.75rem 1rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:.4rem;"></i> Série Obligations &amp; Taux — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem;">Prix, Rendement et la Relation Inverse</h1>
+  <p class="hero-subtitle" style="font-size:1.15rem;color:#475569;max-width:750px;margin:0 auto;line-height:1.6;">Quand les taux montent, les prix des obligations baissent. Cette relation inverse est le mécanisme le plus important du marché obligataire — et la source de la plupart des pertes des investisseurs qui ne la comprennent pas.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-arrows-up-down"></i> Relation inverse</span>
+    <span class="hero-badge hero-badge-cyan"><i class="fa-solid fa-calculator"></i> Yield to Maturity</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-ruler"></i> Duration</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-wave-square"></i> Convexité</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/obligations-et-taux/part1-fondamentaux/" class="series-arrow" title="Fondamentaux"><i class="fas fa-chevron-left"></i></a><span class="series-title">Obligations &amp; Taux</span><div class="series-steps"><a href="/series/obligations-et-taux/part1-fondamentaux/" class="series-step" title="Fondamentaux"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/obligations-et-taux/part2-prix-et-rendement/" class="series-step current" title="Prix &amp; Rendement"><span class="series-num">2</span><span class="series-label">Prix &amp; Yield</span></a><a href="/series/obligations-et-taux/part3-yield-curve/" class="series-step" title="La Courbe des Taux"><span class="series-num">3</span><span class="series-label">Yield Curve</span></a><a href="/series/obligations-et-taux/part4-credit-spreads/" class="series-step" title="Credit Spreads"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/obligations-et-taux/part5-trader-les-obligations/" class="series-step" title="Trader les Obligations"><span class="series-num">5</span><span class="series-label">Trader</span></a><a href="/series/obligations-et-taux/part6-construire-un-portefeuille/" class="series-step" title="Intégrer dans un Portefeuille"><span class="series-num">6</span><span class="series-label">Portefeuille</span></a></div><span class="series-counter">2/6</span><a href="/series/obligations-et-taux/part3-yield-curve/" class="series-arrow" title="Yield Curve"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#inverse" class="fnav-item" data-section="inverse"><i class="fas fa-bookmark"></i><span>La relation inverse</span></a><a href="#ytm" class="fnav-item" data-section="ytm"><i class="fas fa-bookmark"></i><span>Yield to Maturity</span></a><a href="#duration" class="fnav-item" data-section="duration"><i class="fas fa-bookmark"></i><span>Duration</span></a><a href="#convexite" class="fnav-item" data-section="convexite"><i class="fas fa-bookmark"></i><span>Convexité</span></a><a href="#pratique" class="fnav-item" data-section="pratique"><i class="fas fa-bookmark"></i><span>Exemples pratiques</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){var bb=document.querySelector('.brand-bar'),offset=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:target.getBoundingClientRect().top+window.pageYOffset-offset,behavior:'smooth'})}if(isOpen)toggle()})});function updateActive(){var scrollY=window.scrollY||window.pageYOffset,best=null;sections.forEach(function(s){if(s.el.getBoundingClientRect().top+window.pageYOffset-150<=scrollY)best=s});sections.forEach(function(s){s.item.classList.toggle('active',s===best)});if(best)label.textContent=best.item.querySelector('span').textContent}window.addEventListener('scroll',updateActive,{passive:true});updateActive()})();
+</script>
+
+<div style="max-width:900px;margin:-3rem auto 0;padding:0 1rem;position:relative;z-index:1;">
+
+<!-- SECTION 1: LA RELATION INVERSE -->
+<div id="inverse" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;">
+    <i class="fa-solid fa-arrows-up-down" style="color:#0d9488;"></i> Quand les taux montent, les prix baissent
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    C'est la règle d'or du marché obligataire. Elle déroute souvent les débutants, mais elle est purement mécanique — pas besoin de théorie économique, juste d'arithmétique.
+  </p>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    <strong>Le raisonnement :</strong> imaginons que vous possédez une obligation qui paie un coupon de 4%. Les taux du marché montent à 5%. Un nouvel investisseur peut acheter une obligation neuve qui rapporte 5%. Pourquoi achèterait-il la vôtre qui ne rapporte que 4% ? Uniquement si vous baissez votre prix de vente, pour que le rendement effectif remonte à 5%. C'est tout. La relation inverse est un simple ajustement pour que toutes les obligations offrent le rendement du marché.
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">Le mécanisme en une phrase</div>
+    Taux marché <span class="formula-highlight">↑</span> → votre obligation rapporte <span class="formula-highlight">moins</span> que les nouvelles → son prix <span class="formula-highlight">↓</span> pour compenser
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Exemple chiffré</h3>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    Vous avez une obligation à 10 ans, coupon 4%, valeur nominale $1 000. Si les taux passent de 4% à 5% :
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Scénario</th><th>Coupon</th><th>Taux marché</th><th>Prix de l'obligation</th><th>Gain/Perte</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Émission</strong></td><td>4%</td><td>4%</td><td>$1 000 (au pair)</td><td>—</td></tr>
+      <tr><td><strong>Taux → 5%</strong></td><td>4%</td><td>5%</td><td>~$922</td><td style="color:#ef4444;font-weight:700;">-7,8%</td></tr>
+      <tr><td><strong>Taux → 3%</strong></td><td>4%</td><td>3%</td><td>~$1 085</td><td style="color:#16a34a;font-weight:700;">+8,5%</td></tr>
+      <tr><td><strong>Taux → 6%</strong></td><td>4%</td><td>6%</td><td>~$852</td><td style="color:#ef4444;font-weight:700;">-14,8%</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-price-yield" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> L'asymétrie : la bonne nouvelle</h4>
+    <p>Regardez le tableau : quand les taux montent de 1%, vous perdez 7,8%. Quand ils baissent de 1%, vous gagnez 8,5%. La réaction n'est pas symétrique — les gains sur les baisses de taux sont <em>supérieurs</em> aux pertes sur les hausses équivalentes. C'est la <strong>convexité</strong>, un concept crucial que nous développerons plus loin dans cet article.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : si les taux passent de 5% à 4%, est-ce bon ou mauvais pour vos obligations existantes ?</summary>
+    <div class="quiz-answer">
+      <strong>Bon !</strong> Les taux baissent → les obligations existantes deviennent plus attractives (leur coupon est supérieur au nouveau taux du marché) → leur prix monte. C'est pourquoi les traders obligataires parient souvent sur la direction des taux de la Fed : une baisse de taux attendue = hausse des prix obligataires.
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 2: YIELD TO MATURITY -->
+<div id="ytm" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;">
+    <i class="fa-solid fa-calculator" style="color:#0d9488;"></i> Yield to Maturity (YTM) : le vrai rendement
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    Le <strong>coupon</strong> vous dit combien l'obligation paie en intérêts, rapporté à sa valeur nominale. Mais si vous achetez l'obligation au-dessus ou en dessous du pair, le coupon ne reflète pas votre rendement réel. C'est là qu'intervient le <strong>Yield to Maturity</strong> (YTM) — le rendement annualisé total si vous gardez l'obligation jusqu'à maturité.
+  </p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Les trois composantes du rendement</h3>
+
+  <div class="step-grid">
+    <div class="step-card">
+      <div class="step-number">1</div>
+      <h4>Les coupons</h4>
+      <p>Les intérêts versés régulièrement. Un flux de trésorerie prévisible et contractuel.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">2</div>
+      <h4>Le gain/perte en capital</h4>
+      <p>Si vous achetez à $950 et recevez $1 000 à maturité, vous gagnez $50. Acheté à $1 050, vous perdez $50.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">3</div>
+      <h4>Le réinvestissement</h4>
+      <p>Les coupons reçus peuvent être réinvestis. Le YTM suppose qu'ils sont réinvestis au même taux — une hypothèse forte.</p>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-label">YTM — l'idée intuitive</div>
+    YTM = <span class="formula-highlight">Coupons annuels</span> + <span class="formula-highlight">(Nominal - Prix d'achat) / Années</span>, le tout divisé par le prix moyen
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    La formule exacte est plus complexe (elle utilise la valeur actuelle de tous les flux futurs), mais l'approximation ci-dessus donne l'intuition : le YTM combine le coupon avec le gain ou la perte en capital, annualisé sur la durée restante.
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Concept</th><th>Formule</th><th>Ce que ça mesure</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Coupon Rate</strong></td>
+        <td>Coupon annuel / Valeur nominale</td>
+        <td>Le taux facial — fixé à l'émission, ne change jamais</td>
+      </tr>
+      <tr>
+        <td><strong>Current Yield</strong></td>
+        <td>Coupon annuel / Prix actuel</td>
+        <td>Le rendement en dividendes, sans le gain/perte en capital</td>
+      </tr>
+      <tr>
+        <td><strong>Yield to Maturity</strong></td>
+        <td>IRR de tous les flux (coupons + remboursement)</td>
+        <td>Le rendement total annualisé si gardé jusqu'au bout</td>
+      </tr>
+      <tr>
+        <td><strong>Yield to Call</strong></td>
+        <td>IRR jusqu'à la date de call</td>
+        <td>Pertinent pour les obligations remboursables par anticipation</td>
+      </tr>
+      <tr>
+        <td><strong>Yield to Worst</strong></td>
+        <td>min(YTM, YTC pour chaque date de call)</td>
+        <td>Le scénario le plus défavorable — le rendement « garanti »</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Premium, par, et discount</h4>
+    <p>Si le prix est <strong>au-dessus du pair</strong> ($1 000), on dit que l'obligation est à <em>premium</em> — le YTM est inférieur au coupon. Si le prix est <strong>en dessous du pair</strong>, c'est un <em>discount</em> — le YTM est supérieur au coupon. À <strong>$1 000 exactement</strong>, le YTM = coupon. C'est une conséquence directe de la relation inverse.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : une obligation coupon 6%, prix $1 050, maturité 5 ans. Le YTM est-il plus ou moins que 6% ?</summary>
+    <div class="quiz-answer">
+      <strong>Moins que 6%.</strong> Vous avez payé une prime de $50 qui sera « perdue » à maturité (remboursement à $1 000). Cette perte en capital réduit le rendement total. YTM ≈ (60 + (1000-1050)/5) / ((1000+1050)/2) ≈ (60-10)/1025 ≈ 4,88%. Le YTM exact (résolu par itération) est ~4,82%.
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 3: DURATION -->
+<div id="duration" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;">
+    <i class="fa-solid fa-ruler" style="color:#0d9488;"></i> Duration : mesurer la sensibilité aux taux
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    Toutes les obligations ne réagissent pas de la même manière aux mouvements de taux. Une obligation à 2 ans bougera beaucoup moins qu'une obligation à 30 ans pour le même mouvement de taux. La <strong>duration</strong> quantifie cette sensibilité.
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">Duration modifiée — la règle pratique</div>
+    Δ Prix ≈ <span class="formula-highlight">-Duration</span> × Δ Yield × Prix
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    Si une obligation a une duration modifiée de <strong>7</strong> et que les taux montent de <strong>1%</strong> (100 bps), son prix baissera d'environ <strong>7%</strong>. C'est l'outil le plus important pour estimer le risque de taux d'un portefeuille obligataire.
+  </p>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Les deux types de duration</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Type</th><th>Définition</th><th>Unité</th><th>Utilité</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Macaulay Duration</strong></td>
+        <td>Moyenne pondérée des échéances des flux, pondérée par la valeur actuelle de chaque flux</td>
+        <td>Années</td>
+        <td>Mesure le « temps moyen de récupération » de votre investissement</td>
+      </tr>
+      <tr>
+        <td><strong>Modified Duration</strong></td>
+        <td>Macaulay Duration / (1 + yield/n)</td>
+        <td>% de variation du prix par 1% de variation du yield</td>
+        <td>L'outil opérationnel — combien perd/gagne le prix pour 1% de hausse/baisse de yield</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem;">Ce qui influence la duration</h3>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Facteur</th><th>Impact sur la duration</th><th>Explication</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Maturité plus longue</strong></td>
+        <td style="color:#ef4444;font-weight:700;">↑ Duration</td>
+        <td>Plus l'échéance est lointaine, plus le prix est sensible aux taux</td>
+      </tr>
+      <tr>
+        <td><strong>Coupon plus élevé</strong></td>
+        <td style="color:#16a34a;font-weight:700;">↓ Duration</td>
+        <td>Les coupons élevés raccourcissent le temps moyen de récupération</td>
+      </tr>
+      <tr>
+        <td><strong>Yield plus élevé</strong></td>
+        <td style="color:#16a34a;font-weight:700;">↓ Duration</td>
+        <td>Les flux lointains sont actualisés plus fortement → pèsent moins</td>
+      </tr>
+      <tr>
+        <td><strong>Zéro coupon</strong></td>
+        <td style="color:#ef4444;font-weight:700;">Duration = Maturité</td>
+        <td>Un seul flux → la duration est exactement la maturité</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div id="chart-duration" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> DV01 : la mesure en dollars</h4>
+    <p>Le <strong>DV01</strong> (Dollar Value of 01, aussi appelé PVBP — Price Value of a Basis Point) mesure le changement de prix en dollars pour 1 basis point (0,01%) de mouvement de yield. Pour un portefeuille de $10M avec une duration de 7, le DV01 = $10M × 7 × 0,0001 = <strong>$7 000</strong>. Chaque basis point de hausse de taux vous coûte $7 000. C'est la mesure que les traders utilisent au quotidien pour dimensionner leurs positions.</p>
+  </div>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du TLT en 2022</h4>
+    <p>Le TLT (ETF de Treasuries 20+ ans) a une duration d'environ 17. Quand la Fed a monté les taux de ~0% à ~5% en 18 mois, le TLT a perdu ~50%. La duration de 17 × 4,5% de hausse de taux = ~76% de perte théorique (atténuée par la convexité et l'effet roll). Beaucoup d'investisseurs qui pensaient avoir une position « défensive » ont subi des pertes supérieures au drawdown du S&amp;P 500.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : entre une obligation 2 ans coupon 4% et une obligation 10 ans zéro coupon, laquelle est la plus sensible aux taux ?</summary>
+    <div class="quiz-answer">
+      <strong>La 10 ans zéro coupon, de très loin.</strong> Sa duration est de 10 ans (= sa maturité, car pas de coupons intermédiaires). L'obligation 2 ans coupon 4% a une duration d'environ 1,9 ans. Pour une hausse de taux de 1%, la 10Y ZC perdra ~10% tandis que la 2Y ne perdra que ~1,9%.
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 4: CONVEXITÉ -->
+<div id="convexite" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;">
+    <i class="fa-solid fa-wave-square" style="color:#0d9488;"></i> Convexité : pourquoi la duration ne suffit pas
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    La duration suppose que la relation prix/yield est <strong>linéaire</strong>. En réalité, elle est <strong>courbe</strong>. Pour de petits mouvements de taux (< 50 bps), la duration suffit. Pour des mouvements plus larges, il faut ajouter un terme de correction : la <strong>convexité</strong>.
+  </p>
+
+  <div class="formula-box">
+    <div class="formula-label">Estimation complète du changement de prix</div>
+    Δ Prix ≈ <span class="formula-highlight">-Duration</span> × Δy + <span class="formula-highlight">½ × Convexité</span> × (Δy)²
+  </div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    La convexité est toujours positive pour les obligations standard (sans options). Cela signifie que le terme de convexité est toujours positif, quelle que soit la direction du mouvement de taux. Résultat : <strong>les gains sur les baisses de taux sont supérieurs aux pertes sur les hausses équivalentes</strong>. Plus la convexité est élevée, plus cet avantage est prononcé.
+  </p>
+
+  <div id="chart-convexity" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Instrument</th><th>Duration</th><th>Convexité</th><th>Comportement</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>T-Bill 3 mois</strong></td>
+        <td>~0,25</td>
+        <td>Négligeable</td>
+        <td>Quasi insensible aux taux</td>
+      </tr>
+      <tr>
+        <td><strong>T-Note 5 ans</strong></td>
+        <td>~4,5</td>
+        <td>Modérée</td>
+        <td>Sensibilité modérée, convexité visible sur ±200 bps</td>
+      </tr>
+      <tr>
+        <td><strong>T-Bond 30 ans</strong></td>
+        <td>~18</td>
+        <td>Très élevée</td>
+        <td>Forte asymétrie gains/pertes. L'instrument roi du trading directionnel</td>
+      </tr>
+      <tr>
+        <td><strong>Zéro coupon 30 ans</strong></td>
+        <td>30</td>
+        <td>Maximale</td>
+        <td>La convexité la plus forte possible. Pur bet sur les taux</td>
+      </tr>
+      <tr>
+        <td><strong>MBS (callable)</strong></td>
+        <td>~4-6</td>
+        <td>Négative !</td>
+        <td>Le prépaiement crée une convexité négative — le pire des deux mondes</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Convexité négative : le piège des MBS</h4>
+    <p>Les <strong>MBS</strong> (mortgage-backed securities) ont une caractéristique unique : quand les taux baissent, les emprunteurs <em>refinancent</em> leurs prêts et remboursent par anticipation. Votre obligation est remboursée au pire moment (quand vous voudriez profiter des gains). Quand les taux montent, personne ne refinance et vous subissez les pertes pleinement. C'est la <strong>convexité négative</strong> — vous perdez plus en hausse que vous ne gagnez en baisse. C'est pour cela que les MBS offrent un yield supérieur aux Treasuries de même duration.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : pourquoi un gestionnaire de portefeuille peut-il vouloir maximiser la convexité ?</summary>
+    <div class="quiz-answer">
+      <strong>Parce que la convexité est « gratuite » en termes de rendement asymétrique.</strong> À duration égale (même sensibilité linéaire aux taux), une obligation à haute convexité surperformera dans les deux sens : elle gagnera plus en baisse de taux et perdra moins en hausse. C'est un avantage structurel. Les obligations zéro coupon longues ont la convexité la plus élevée — c'est pourquoi les traders macro les utilisent comme « barbell » dans leurs portefeuilles.
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 5: EXEMPLES PRATIQUES -->
+<div id="pratique" class="content-card" style="background:white;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.08);padding:3rem;margin-bottom:2rem;border:1px solid #e2e8f0;">
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;margin:0 0 1.5rem;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem;">
+    <i class="fa-solid fa-chart-bar" style="color:#0d9488;"></i> En pratique : les ETF qui vous exposent
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155;margin-bottom:1.25rem;">
+    La plupart des investisseurs particuliers accèdent au marché obligataire via des ETF. Comprendre la duration de chaque ETF est essentiel pour savoir à quoi vous êtes exposé.
+  </p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>ETF</th><th>Segment</th><th>Duration effective</th><th>Perte estimée si taux +1%</th><th>Gain estimé si taux -1%</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>SHY</strong></td>
+        <td>Treasuries 1-3 ans</td>
+        <td>~1,9</td>
+        <td style="color:#ef4444;">-1,9%</td>
+        <td style="color:#16a34a;">+1,9%</td>
+      </tr>
+      <tr>
+        <td><strong>IEF</strong></td>
+        <td>Treasuries 7-10 ans</td>
+        <td>~7,5</td>
+        <td style="color:#ef4444;">-7,5%</td>
+        <td style="color:#16a34a;">+7,9%</td>
+      </tr>
+      <tr>
+        <td><strong>TLT</strong></td>
+        <td>Treasuries 20+ ans</td>
+        <td>~17</td>
+        <td style="color:#ef4444;">-17%</td>
+        <td style="color:#16a34a;">+19%</td>
+      </tr>
+      <tr>
+        <td><strong>BND</strong></td>
+        <td>US Aggregate (mix)</td>
+        <td>~6,2</td>
+        <td style="color:#ef4444;">-6,2%</td>
+        <td style="color:#16a34a;">+6,5%</td>
+      </tr>
+      <tr>
+        <td><strong>LQD</strong></td>
+        <td>Corporate IG</td>
+        <td>~8,5</td>
+        <td style="color:#ef4444;">-8,5%</td>
+        <td style="color:#16a34a;">+9,2%</td>
+      </tr>
+      <tr>
+        <td><strong>HYG</strong></td>
+        <td>Corporate High Yield</td>
+        <td>~3,8</td>
+        <td style="color:#ef4444;">-3,8%</td>
+        <td style="color:#16a34a;">+3,9%</td>
+      </tr>
+      <tr>
+        <td><strong>TMF</strong></td>
+        <td>Treasuries 20+ ans ×3</td>
+        <td>~51</td>
+        <td style="color:#ef4444;">-51%</td>
+        <td style="color:#16a34a;">+57%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> TMF : le trade macro ultime (et le plus dangereux)</h4>
+    <p>Le <strong>TMF</strong> est un ETF à levier ×3 sur les Treasuries 20+ ans. Sa duration effective est de ~51. Un mouvement de 1% des taux lui fait perdre ou gagner ~50% de sa valeur. En 2020, quand la Fed a coupé les taux à zéro, le TMF a fait +40% en 3 semaines. En 2022, il a perdu 73% sur l'année. C'est un instrument de spéculation pure sur la direction des taux — pas un investissement.</p>
+  </div>
+
+  <div id="chart-etf-sensitivity" style="width:100%;height:400px;margin:1.5rem 0;"></div>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#0d9488;margin-right:.5rem;"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-arrow-right"></i> <strong>Relation inverse</strong> : taux ↑ = prix ↓. C'est mécanique, pas mystérieux.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Le <strong>YTM</strong> est le rendement total annualisé (coupons + gain/perte en capital). C'est la mesure de référence.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> La <strong>duration</strong> quantifie la sensibilité aux taux. Duration 7 = ~7% de perte pour +1% de taux.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> La <strong>convexité</strong> crée une asymétrie favorable : les gains en baisse de taux > les pertes en hausse équivalente.</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Attention aux <strong>MBS</strong> (convexité négative) et aux <strong>ETF leviers</strong> (TMF = duration ~51).</li>
+      <li><i class="fa-solid fa-arrow-right"></i> Choisissez votre ETF obligataire en fonction de la <strong>duration</strong>, pas du rendement affiché.</li>
+    </ul>
+  </div>
+
+  <a href="/series/obligations-et-taux/part3-yield-curve/" class="next-cta">
+    <div>
+      <div class="next-label">Partie 3 sur 6</div>
+      <div class="next-title">La Courbe des Taux →</div>
+    </div>
+    <i class="fa-solid fa-arrow-right"></i>
+  </a>
+</div>
+
+</div>
+
+<!-- ECharts -->
+<script>
+(function(){
+  // Chart 1: Price vs Yield curve
+  var c1=echarts.init(document.getElementById('chart-price-yield'));
+  var yields=[];var prices=[];
+  for(var y=1;y<=8;y+=0.25){
+    yields.push(y+'%');
+    var p=0;for(var t=1;t<=10;t++){p+=40/Math.pow(1+y/100,t)}
+    p+=1000/Math.pow(1+y/100,10);
+    prices.push(Math.round(p*100)/100);
+  }
+  c1.setOption({
+    title:{text:'Prix d\'une obligation coupon 4%, 10 ans',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis',formatter:function(p){return'Yield: '+p[0].axisValue+'<br>Prix: $'+p[0].value}},
+    xAxis:{type:'category',data:yields,name:'Yield du marché',nameLocation:'middle',nameGap:30,axisLabel:{interval:3}},
+    yAxis:{type:'value',name:'Prix ($)',min:700,max:1300,axisLabel:{formatter:'${value}'}},
+    series:[{type:'line',data:prices,smooth:true,lineStyle:{width:3,color:'#0d9488'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(13,148,136,0.2)'},{offset:1,color:'rgba(13,148,136,0)'}]}},markLine:{data:[{yAxis:1000,lineStyle:{color:'#94a3b8',type:'dashed'},label:{formatter:'Par ($1000)'}}]}}]
+  });
+
+  // Chart 2: Duration impact visualization
+  var c2=echarts.init(document.getElementById('chart-duration'));
+  c2.setOption({
+    title:{text:'Impact d\'une hausse de taux de 1% selon la duration',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:'3%',right:'4%',bottom:'3%',top:'15%',containLabel:true},
+    xAxis:{type:'category',data:['T-Bill 3m\nD≈0.25','T-Note 2Y\nD≈1.9','T-Note 5Y\nD≈4.5','T-Note 10Y\nD≈7.5','T-Bond 20Y\nD≈14','T-Bond 30Y\nD≈18','ZC 30Y\nD=30']},
+    yAxis:{type:'value',name:'Variation du prix (%)',axisLabel:{formatter:'{value}%'}},
+    series:[{type:'bar',data:[
+      {value:-0.25,itemStyle:{color:'#99f6e4'}},
+      {value:-1.9,itemStyle:{color:'#5eead4'}},
+      {value:-4.5,itemStyle:{color:'#2dd4bf'}},
+      {value:-7.5,itemStyle:{color:'#14b8a6'}},
+      {value:-14,itemStyle:{color:'#0d9488'}},
+      {value:-18,itemStyle:{color:'#0f766e'}},
+      {value:-30,itemStyle:{color:'#134e4a'}}
+    ],barWidth:'50%',label:{show:true,position:'bottom',formatter:'{c}%',fontSize:11,fontWeight:700,color:'#334155'}}]
+  });
+
+  // Chart 3: Convexity illustration
+  var c3=echarts.init(document.getElementById('chart-convexity'));
+  var cYields=[];var linearPrices=[];var actualPrices=[];
+  var basePrice=1000;var baseDuration=10;var baseYield=4;var conv=120;
+  for(var dy=-3;dy<=3;dy+=0.2){
+    cYields.push((baseYield+dy).toFixed(1)+'%');
+    var linear=basePrice*(1-baseDuration*dy/100);
+    linearPrices.push(Math.round(linear*10)/10);
+    var actual=basePrice*(1-baseDuration*dy/100+0.5*conv*Math.pow(dy/100,2));
+    actualPrices.push(Math.round(actual*10)/10);
+  }
+  c3.setOption({
+    title:{text:'Duration seule vs Duration + Convexité',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis'},
+    legend:{data:['Duration seule (linéaire)','Avec convexité (réel)'],bottom:0},
+    xAxis:{type:'category',data:cYields,name:'Yield',nameLocation:'middle',nameGap:30,axisLabel:{interval:4}},
+    yAxis:{type:'value',name:'Prix ($)',axisLabel:{formatter:'${value}'}},
+    series:[
+      {name:'Duration seule (linéaire)',type:'line',data:linearPrices,lineStyle:{width:2,type:'dashed',color:'#94a3b8'},itemStyle:{color:'#94a3b8'}},
+      {name:'Avec convexité (réel)',type:'line',data:actualPrices,smooth:true,lineStyle:{width:3,color:'#0d9488'},itemStyle:{color:'#0d9488'},areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(13,148,136,0.15)'},{offset:1,color:'rgba(13,148,136,0)'}]}}}
+    ]
+  });
+
+  // Chart 4: ETF Sensitivity
+  var c4=echarts.init(document.getElementById('chart-etf-sensitivity'));
+  c4.setOption({
+    title:{text:'Sensibilité des ETF obligataires à une hausse de taux de 1%',left:'center',textStyle:{fontSize:14,fontWeight:700}},
+    tooltip:{trigger:'axis',axisPointer:{type:'shadow'}},
+    grid:{left:'3%',right:'4%',bottom:'3%',top:'15%',containLabel:true},
+    xAxis:{type:'value',name:'Perte estimée (%)',axisLabel:{formatter:'{value}%'},inverse:true},
+    yAxis:{type:'category',data:['SHY (1-3Y)','HYG (HY)','BND (Agg)','IEF (7-10Y)','LQD (Corp IG)','TLT (20+Y)','TMF (20+Y ×3)'],axisLabel:{fontSize:11}},
+    series:[{type:'bar',data:[
+      {value:-1.9,itemStyle:{color:'#99f6e4'}},
+      {value:-3.8,itemStyle:{color:'#5eead4'}},
+      {value:-6.2,itemStyle:{color:'#2dd4bf'}},
+      {value:-7.5,itemStyle:{color:'#14b8a6'}},
+      {value:-8.5,itemStyle:{color:'#0d9488'}},
+      {value:-17,itemStyle:{color:'#0f766e'}},
+      {value:-51,itemStyle:{color:'#ef4444'}}
+    ],barWidth:'60%',label:{show:true,position:'left',formatter:'{c}%',fontSize:11,fontWeight:700}}]
+  });
+
+  window.addEventListener('resize',function(){c1.resize();c2.resize();c3.resize();c4.resize()});
+})();
+</script>
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<footer class="article-footer">&copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.<br><a href="/" title="Accueil"><i class="fas fa-house"></i></a></footer>
+</body>
+</html>

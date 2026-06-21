@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,us,technique,options" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Stratégies de Base : Covered Call, Protective Put | Les Options de A à Z — Partie 3/6 | DailyTickers</title>
+ <meta name="description" content="Série Les Options de A à Z — Partie 3/6 : covered call, protective put, cash-secured put, married put. Les stratégies fondamentales pour débuter en options.">
+ <link rel="icon" href="/favicon.ico">
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+ <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+ <link rel="stylesheet" href="/assets/report.css">
+ <style>
+ .hero-section{padding:4rem 2rem 8rem;background:linear-gradient(180deg,#f0fdf4 0%,#f8fafc 100%);text-align:center}
+ .hero-date{font-size:.85rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem}
+ .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem}
+ .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700}
+ .hero-badge-green{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)}
+ .hero-badge-emerald{background:rgba(5,150,105,.1);color:#059669;border:1px solid rgba(5,150,105,.2)}
+ .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2)}
+ .hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2)}
+ .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+ .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+ .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0}
+ .compare-table th{background:#1e293b;color:white;padding:1rem;font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+ .compare-table td{padding:.85rem 1rem;border-bottom:1px solid #f1f5f9;font-size:.9rem;color:#334155}
+ .compare-table tr:nth-child(even) td{background:#f8fafc}
+ .compare-table tr:last-child td{border-bottom:none}
+ .pedagogy-box{background:#f0fdf4;border:1px solid #86efac;border-left:4px solid #16a34a;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .pedagogy-box h4{color:#15803d;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .pedagogy-box p,.pedagogy-box li{font-size:.95rem;color:#166534;margin:0;line-height:1.65}
+ .alert-box{background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:12px;padding:1.5rem;margin:1.75rem 0}
+ .alert-box h4{color:#b45309;margin:0 0 .6rem;font-size:1rem;font-weight:800;display:flex;align-items:center;gap:.5rem}
+ .alert-box p{font-size:.95rem;color:#92400e;margin:0;line-height:1.65}
+ .formula-box{background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:white;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.3rem;font-weight:700;letter-spacing:.02em}
+ .formula-box .formula-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.5rem;font-weight:600}
+ .formula-box .formula-highlight{color:#4ade80}
+ .takeaway-box{background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:1px solid #16a34a;border-radius:16px;padding:2rem;margin:2rem 0}
+ .takeaway-box h3{color:#15803d;margin-top:0}
+ .takeaway-list{list-style:none;padding:0;margin:0}
+ .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.6;border-bottom:1px solid rgba(22,163,74,.15)}
+ .takeaway-list li:last-child{border-bottom:none}
+ .takeaway-list li i{color:#16a34a;margin-top:.2rem;flex-shrink:0}
+ .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#15803d 0%,#16a34a 100%);color:white;border-radius:16px;margin:2rem 0;text-decoration:none;transition:transform .2s,box-shadow .2s}
+ .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(22,163,74,.3)}
+ .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+ .next-cta .next-title{font-size:1.25rem;font-weight:800}
+ .strategy-card{background:white;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0;position:relative;overflow:hidden;border-top:4px solid #16a34a}
+ .strategy-card h3{margin:0 0 .75rem;font-size:1.3rem;font-weight:800;color:#0f172a}
+ .strategy-card .strategy-subtitle{font-size:.9rem;color:#64748b;margin-bottom:1rem}
+ .strategy-specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin:1rem 0}
+ .strategy-spec{background:#f8fafc;border-radius:8px;padding:.75rem;text-align:center}
+ .strategy-spec .spec-label{font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+ .strategy-spec .spec-value{font-size:1rem;font-weight:800;color:#0f172a;margin-top:.25rem}
+ details{margin:.75rem 0}details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none}
+ details summary::-webkit-details-marker{display:none}details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#16a34a;margin-right:.75rem}
+ details[open] summary{border-color:#16a34a;background:#f0fdf4;border-radius:12px 12px 0 0}details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7}
+ @media(max-width:768px){.hero-section{padding:2.5rem 1rem 5rem}.hero-section h1{font-size:1.8rem!important}.strategy-specs{grid-template-columns:1fr 1fr}.formula-box{font-size:1rem;padding:1rem 1.25rem}}
+ @media(max-width:480px){.hero-section h1{font-size:1.4rem!important}.hero-section{padding:2rem 1rem 4rem}.formula-box{font-size:.9rem}}
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar"><div class="brand-bar-inner"><a href="/" class="brand-logo"><img src="/logo.svg" alt="" width="36" height="36"><span class="brand-title">DailyTickers</span></a><div class="brand-nav"><a href="/?tab=weekly">Hebdo</a><a href="/?tab=daily">Daily</a><a href="/?tab=analyses">Analyses</a><a href="/?tab=scanner">Scanner</a><a href="/?tab=radar">Radar</a><a href="/?tab=series">Séries</a></div><div class="brand-actions"><a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a></div></div></nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-chart-line" style="margin-right:.4rem"></i> Série Les Options de A à Z — Partie 3 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem">Stratégies de Base</h1>
+  <p class="hero-subtitle">Les quatre stratégies que tout trader d'options doit maîtriser avant d'aller plus loin : covered call, protective put, cash-secured put et collar. Simples, éprouvées, et adaptées à tous les niveaux de compte.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-shield-halved"></i> Covered Call</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-umbrella"></i> Protective Put</span>
+    <span class="hero-badge hero-badge-emerald"><i class="fa-solid fa-coins"></i> Cash-Secured Put</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-ring"></i> Collar</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/options-trading/part2-les-greeks/" class="series-arrow" title="Les Greeks"><i class="fas fa-chevron-left"></i></a><span class="series-title">Les Options de A à Z</span><div class="series-steps"><a href="/series/options-trading/part1-fondamentaux/" class="series-step" title="Fondamentaux"><span class="series-num">1</span><span class="series-label">Fondamentaux</span></a><a href="/series/options-trading/part2-les-greeks/" class="series-step" title="Les Greeks"><span class="series-num">2</span><span class="series-label">Greeks</span></a><a href="/series/options-trading/part3-strategies-base/" class="series-step current" title="Stratégies de Base"><span class="series-num">3</span><span class="series-label">Strat. Base</span></a><a href="/series/options-trading/part4-spreads/" class="series-step" title="Les Spreads"><span class="series-num">4</span><span class="series-label">Spreads</span></a><a href="/series/options-trading/part5-strategies-avancees/" class="series-step" title="Stratégies Avancées"><span class="series-num">5</span><span class="series-label">Avancées</span></a><a href="/series/options-trading/part6-gestion-risque/" class="series-step" title="Gestion du Risque"><span class="series-num">6</span><span class="series-label">Risque</span></a></div><span class="series-counter">3/6</span><a href="/series/options-trading/part4-spreads/" class="series-arrow" title="Les Spreads"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#intro" class="fnav-item" data-section="intro"><i class="fas fa-bookmark"></i><span>Introduction</span></a><a href="#covered-call" class="fnav-item" data-section="covered-call"><i class="fas fa-bookmark"></i><span>Covered Call</span></a><a href="#protective-put" class="fnav-item" data-section="protective-put"><i class="fas fa-bookmark"></i><span>Protective Put</span></a><a href="#cash-secured" class="fnav-item" data-section="cash-secured"><i class="fas fa-bookmark"></i><span>Cash-Secured Put</span></a><a href="#collar" class="fnav-item" data-section="collar"><i class="fas fa-bookmark"></i><span>Collar</span></a><a href="#comparaison" class="fnav-item" data-section="comparaison"><i class="fas fa-bookmark"></i><span>Comparaison</span></a><a href="#quand" class="fnav-item" data-section="quand"><i class="fas fa-bookmark"></i><span>Quand utiliser</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function(){var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');if(!fab||!menu)return;var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;items.forEach(function(item){var id=item.getAttribute('data-section'),el=document.getElementById(id);if(el)sections.push({id:id,el:el,item:item})});function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars'}fab.addEventListener('click',function(e){e.stopPropagation();toggle()});document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle()});document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle()});items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var id=this.getAttribute('data-section'),target=document.getElementById(id);if(target){window.scrollTo({top:target.getBoundingClientRect().top+window.scrollY-80,behavior:'smooth'})}if(isOpen)toggle()})});window.addEventListener('scroll',function(){var scrollPos=window.scrollY+120,current=null;sections.forEach(function(s){if(s.el.offsetTop<=scrollPos)current=s});items.forEach(function(item){item.classList.remove('active')});if(current){current.item.classList.add('active');label.textContent=current.item.querySelector('span').textContent}})})();
+</script>
+
+<div style="max-width:900px;margin:0 auto;padding:0 1rem">
+
+<!-- SECTION 1: Introduction -->
+<div id="intro" class="content-card" style="margin-top:-4rem;padding-top:5rem">
+  <div class="section-divider">Section 1</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-map" style="color:#16a34a"></i> Des Briques aux Fondations
+  </h2>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Dans les Parties 1 et 2, on a couvert les briques élémentaires : calls, puts, strikes, Greeks. Maintenant, on les assemble en <strong>stratégies</strong>. Les quatre stratégies de cette partie ont un point commun : elles combinent une position en actions avec une position en options, ce qui réduit la complexité et rend le profil risque/rendement plus intuitif.
+  </p>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Ces stratégies sont <strong>approuvées Level 1</strong> chez la majorité des brokers — même un compte standard sans marge spéciale peut les exécuter. C'est la porte d'entrée naturelle du trading d'options.
+  </p>
+
+  <table class="compare-table">
+    <thead><tr><th>Stratégie</th><th>Composition</th><th>Objectif</th><th>Niveau</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Covered Call</strong></td><td>Long 100 actions + Short 1 Call</td><td>Générer un revenu sur une position existante</td><td>Level 1</td></tr>
+      <tr><td><strong>Protective Put</strong></td><td>Long 100 actions + Long 1 Put</td><td>Protéger une position contre une baisse</td><td>Level 1</td></tr>
+      <tr><td><strong>Cash-Secured Put</strong></td><td>Cash + Short 1 Put</td><td>Acheter une action « en discount »</td><td>Level 1</td></tr>
+      <tr><td><strong>Collar</strong></td><td>Long 100 actions + Long Put + Short Call</td><td>Limiter le risque des deux côtés</td><td>Level 1</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 2: Covered Call -->
+<div id="covered-call" class="content-card">
+  <div class="section-divider">Section 2</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-shield-halved" style="color:#16a34a"></i> Le Covered Call
+  </h2>
+
+  <div class="strategy-card">
+    <h3><i class="fa-solid fa-shield-halved" style="color:#16a34a;margin-right:.5rem"></i> Covered Call — « Le Loyer sur vos Actions »</h3>
+    <p class="strategy-subtitle">Vous possédez 100 actions et vendez un call OTM pour encaisser le premium</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Neutre à haussier</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Strike − prix + premium</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Prix − premium (l'action tombe à 0)</div></div>
+      <div class="strategy-spec"><div class="spec-label">Breakeven</div><div class="spec-value">Prix d'achat − premium</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Comment ça marche</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Vous possédez 100 actions AAPL achetées à $210. Vous vendez 1 call AAPL strike $225, expiration 30 jours, pour un premium de $3.00 ($300). Trois scénarios à l'expiration :
+  </p>
+
+  <table class="compare-table">
+    <thead><tr><th>Scénario</th><th>Prix AAPL</th><th>Actions</th><th>Call vendu</th><th>P&L total</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Le cours stagne</strong></td><td>$210</td><td>$0</td><td>+$300 (expire OTM)</td><td style="color:#16a34a;font-weight:700">+$300 (+1.4%)</td></tr>
+      <tr><td><strong>Le cours monte modérément</strong></td><td>$220</td><td>+$1 000</td><td>+$300 (expire OTM)</td><td style="color:#16a34a;font-weight:700">+$1 300 (+6.2%)</td></tr>
+      <tr><td><strong>Le cours flambe</strong></td><td>$240</td><td>+$3 000</td><td>−$1 200 (assigné à $225)</td><td style="color:#16a34a;font-weight:700">+$1 800 (plafonné)</td></tr>
+      <tr><td><strong>Le cours baisse</strong></td><td>$200</td><td>−$1 000</td><td>+$300 (expire OTM)</td><td style="color:#ef4444;font-weight:700">−$700 (atténué)</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-covered-call" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Quand utiliser le covered call</h4>
+    <p>Le covered call est idéal quand vous détenez une action en portefeuille long-terme et que vous pensez qu'elle ne va pas monter significativement dans le mois qui vient. Vous « louez » vos actions en échange du premium. Le compromis : si l'action flambe au-dessus du strike, vous ratez la hausse au-delà. C'est la stratégie la plus populaire aux US — elle génère environ <strong>2-5% par mois</strong> en premium sur des actions à volatilité moyenne.</p>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Choisir le bon strike</h3>
+  <table class="compare-table">
+    <thead><tr><th>Strike vs Prix</th><th>Delta</th><th>Premium</th><th>Prob. assignment</th><th>Profil</th></tr></thead>
+    <tbody>
+      <tr><td>+2-3% OTM</td><td>~0.35-0.40</td><td>Élevé</td><td>~35-40%</td><td>Agressif — plus de revenu, plus de risque d'être assigné</td></tr>
+      <tr><td>+5-7% OTM</td><td>~0.20-0.25</td><td>Modéré</td><td>~20-25%</td><td>Équilibré — le sweet spot pour la plupart des traders</td></tr>
+      <tr><td>+10%+ OTM</td><td>~0.10-0.15</td><td>Faible</td><td>~10-15%</td><td>Conservateur — peu de revenu, mais garde l'upside</td></tr>
+    </tbody>
+  </table>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège des earnings</h4>
+    <p>Ne vendez <strong>jamais</strong> un covered call juste avant les earnings si vous ne voulez pas être assigné. L'IV monte avant les résultats (premium attractif), mais un gap haussier de 15% peut déclencher l'assignment et vous faire vendre au strike — bien en dessous du cours. Si l'action gap-up de $210 à $250 et votre call est à $225, vous vendez à $225 et ratez $25/action ($2 500 par contrat).</p>
+  </div>
+</div>
+
+<!-- SECTION 3: Protective Put -->
+<div id="protective-put" class="content-card">
+  <div class="section-divider">Section 3</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-umbrella" style="color:#2563eb"></i> Le Protective Put
+  </h2>
+
+  <div class="strategy-card" style="border-top-color:#2563eb">
+    <h3><i class="fa-solid fa-umbrella" style="color:#2563eb;margin-right:.5rem"></i> Protective Put — « L'Assurance Portefeuille »</h3>
+    <p class="strategy-subtitle">Vous possédez 100 actions et achetez un put pour limiter votre perte en cas de baisse</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Haussier (avec protection)</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Illimité (moins le coût du put)</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Prix − Strike + Premium</div></div>
+      <div class="strategy-spec"><div class="spec-label">Breakeven</div><div class="spec-value">Prix d'achat + premium</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Comment ça marche</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Vous possédez 100 actions MSFT à $420. Vous êtes haussier long-terme mais les earnings approchent et vous voulez dormir tranquille. Vous achetez 1 put MSFT strike $400, expiration 30 jours, pour $5.00 ($500).
+  </p>
+
+  <table class="compare-table">
+    <thead><tr><th>Scénario</th><th>Prix MSFT</th><th>P&L actions</th><th>P&L put</th><th>P&L total</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Hausse</strong></td><td>$450</td><td>+$3 000</td><td>−$500</td><td style="color:#16a34a;font-weight:700">+$2 500</td></tr>
+      <tr><td><strong>Stagnation</strong></td><td>$420</td><td>$0</td><td>−$500</td><td style="color:#ef4444;font-weight:700">−$500</td></tr>
+      <tr><td><strong>Baisse modérée</strong></td><td>$405</td><td>−$1 500</td><td>−$500</td><td style="color:#ef4444;font-weight:700">−$2 000</td></tr>
+      <tr><td><strong>Crash</strong></td><td>$370</td><td>−$5 000</td><td>+$2 500</td><td style="color:#ef4444;font-weight:700">−$2 500 (plafonné)</td></tr>
+      <tr><td><strong>Cygne noir</strong></td><td>$320</td><td>−$10 000</td><td>+$7 500</td><td style="color:#ef4444;font-weight:700">−$2 500 (plafonné)</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-protective-put" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le protective put <strong>plafonne votre perte</strong> à (prix d'achat − strike + premium) = ($420 − $400 + $5) × 100 = <strong>$2 500</strong>, peu importe à quel point l'action baisse. Sans le put, un crash à $320 coûterait $10 000. Le prix de cette protection : $500 de premium, soit 1.2% du capital exposé.
+  </p>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> Put de protection vs Stop-loss</h4>
+    <p>Un stop-loss semble gratuit (pas de premium) mais présente deux failles : <strong>1)</strong> le gap overnight — si MSFT ouvre à $380 après un mauvais guidance, votre stop à $400 s'exécute à $380, pas $400 ; <strong>2)</strong> le whipsaw — un flash crash intraday déclenche votre stop, puis l'action remonte. Le put ne souffre d'aucun de ces problèmes : il garantit un prix de sortie minimum quoi qu'il arrive.</p>
+  </div>
+
+  <details>
+    <summary>Quiz : Votre put MSFT $400 coûte $5. L'action baisse de $420 à $385. Combien gagnez-vous sur le put seul ?</summary>
+    <div class="quiz-answer">
+      <p>Le put ITM à l'expiration vaut $400 − $385 = $15 par action. Vous l'avez payé $5. Profit sur le put = ($15 − $5) × 100 = <strong>$1 000</strong>. Ce gain compense partiellement la perte de $3 500 sur les actions, ramenant la perte nette à $2 500.</p>
+    </div>
+  </details>
+</div>
+
+<!-- SECTION 4: Cash-Secured Put -->
+<div id="cash-secured" class="content-card">
+  <div class="section-divider">Section 4</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-coins" style="color:#059669"></i> Le Cash-Secured Put
+  </h2>
+
+  <div class="strategy-card" style="border-top-color:#059669">
+    <h3><i class="fa-solid fa-coins" style="color:#059669;margin-right:.5rem"></i> Cash-Secured Put — « Être Payé pour Attendre »</h3>
+    <p class="strategy-subtitle">Vous mettez du cash en garantie et vendez un put OTM sur une action que vous voulez acheter</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Haussier / neutre</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Premium encaissé</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">(Strike − premium) × 100</div></div>
+      <div class="strategy-spec"><div class="spec-label">Breakeven</div><div class="spec-value">Strike − premium</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Comment ça marche</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Vous voulez acheter GOOGL, actuellement à $175, mais vous la trouvez un peu chère. Vous vendez 1 put GOOGL strike $165 (5.7% en dessous du cours), expiration 30 jours, pour un premium de $2.50 ($250). Vous mettez $16 500 de cash en garantie (strike × 100).
+  </p>
+
+  <table class="compare-table">
+    <thead><tr><th>Scénario</th><th>Prix GOOGL</th><th>Résultat</th><th>P&L</th></tr></thead>
+    <tbody>
+      <tr><td><strong>L'action reste au-dessus du strike</strong></td><td>$172+</td><td>Le put expire OTM. Vous gardez le premium sans acheter</td><td style="color:#16a34a;font-weight:700">+$250 (1.5% sur le cash)</td></tr>
+      <tr><td><strong>L'action baisse au strike</strong></td><td>$165</td><td>Vous êtes assigné : achat à $165 − $2.50 = $162.50 effectif</td><td>Achat à 7.1% de discount vs $175</td></tr>
+      <tr><td><strong>L'action s'effondre</strong></td><td>$140</td><td>Assigné à $165, action vaut $140</td><td style="color:#ef4444;font-weight:700">−$2 250 (position à −$22.50/action)</td></tr>
+    </tbody>
+  </table>
+
+  <div id="chart-cash-secured" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    C'est la stratégie de Warren Buffett par excellence. En 1993, il a vendu des puts sur Coca-Cola pour se faire payer en attendant un prix d'entrée acceptable. Si le cours ne baisse pas assez, vous encaissez le premium (rendement sur cash). S'il baisse, vous achetez l'action en discount — ce que vous vouliez faire de toute façon.
+  </p>
+
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le piège du cash-secured put</h4>
+    <p>Ne vendez des puts que sur des actions que vous <strong>voulez réellement posséder</strong> au prix du strike. Si vous vendez des puts sur un titre fragile juste pour le premium, une baisse de 30% vous force à acheter une action en chute libre — et vous devenez un investisseur long-terme malgré vous sur un mauvais cheval.</p>
+  </div>
+
+  <div class="pedagogy-box">
+    <h4><i class="fa-solid fa-graduation-cap"></i> La « Wheel Strategy »</h4>
+    <p>La combinaison <strong>cash-secured put → assignment → covered call → assignment → recommencer</strong> s'appelle la « Wheel Strategy ». Étape 1 : vendre un put → si assigné, vous avez les actions. Étape 2 : vendre un covered call sur ces actions → si assigné, vos actions sont vendues. Étape 3 : recommencer. À chaque cycle, vous encaissez un premium. C'est une stratégie de revenu populaire sur les actions blue-chip avec une IV modérée.</p>
+  </div>
+</div>
+
+<!-- SECTION 5: Collar -->
+<div id="collar" class="content-card">
+  <div class="section-divider">Section 5</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-ring" style="color:#d97706"></i> Le Collar
+  </h2>
+
+  <div class="strategy-card" style="border-top-color:#d97706">
+    <h3><i class="fa-solid fa-ring" style="color:#d97706;margin-right:.5rem"></i> Collar — « Le Sandwich Protecteur »</h3>
+    <p class="strategy-subtitle">Covered call + protective put = protection des deux côtés, souvent pour un coût net nul</p>
+    <div class="strategy-specs">
+      <div class="strategy-spec"><div class="spec-label">Direction</div><div class="spec-value">Neutre (protège le capital)</div></div>
+      <div class="strategy-spec"><div class="spec-label">Profit max</div><div class="spec-value">Strike call − prix + premium net</div></div>
+      <div class="strategy-spec"><div class="spec-label">Perte max</div><div class="spec-value">Prix − strike put + premium net</div></div>
+      <div class="strategy-spec"><div class="spec-label">Coût</div><div class="spec-value">Souvent ≈ $0 (« zero-cost collar »)</div></div>
+    </div>
+  </div>
+
+  <h3 style="font-size:1.3rem;font-weight:800;color:#1e293b;margin:2rem 0 1rem">Comment ça marche</h3>
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Vous possédez 100 NVDA à $140. Vous voulez protéger votre position pendant les 30 prochains jours sans payer de premium :
+  </p>
+  <ul style="font-size:1.1rem;line-height:1.8;color:#334155">
+    <li><strong>Achat put</strong> strike $130 pour $3.00 → coût $300 (protection à la baisse)</li>
+    <li><strong>Vente call</strong> strike $155 pour $3.00 → revenu $300 (plafonne l'upside)</li>
+    <li><strong>Coût net</strong> : $0 — le premium du call finance exactement le put</li>
+  </ul>
+
+  <div id="chart-collar" style="width:100%;height:350px;margin:1.5rem 0"></div>
+
+  <table class="compare-table">
+    <thead><tr><th>Prix NVDA à l'expiration</th><th>P&L actions</th><th>P&L put</th><th>P&L call</th><th>P&L total</th></tr></thead>
+    <tbody>
+      <tr><td>$170</td><td>+$3 000</td><td>−$300</td><td>−$1 200</td><td style="color:#16a34a;font-weight:700">+$1 500 (plafonné)</td></tr>
+      <tr><td>$155</td><td>+$1 500</td><td>−$300</td><td>+$300</td><td style="color:#16a34a;font-weight:700">+$1 500 (max)</td></tr>
+      <tr><td>$140</td><td>$0</td><td>−$300</td><td>+$300</td><td>$0</td></tr>
+      <tr><td>$130</td><td>−$1 000</td><td>−$300</td><td>+$300</td><td style="color:#ef4444;font-weight:700">−$1 000 (max)</td></tr>
+      <tr><td>$110</td><td>−$3 000</td><td>+$1 700</td><td>+$300</td><td style="color:#ef4444;font-weight:700">−$1 000 (plafonné)</td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+    Le collar crée un « tunnel » : vous ne pouvez pas perdre plus de $1 000 ($10/action) ni gagner plus de $1 500 ($15/action). En échange de la certitude, vous renoncez aux mouvements extrêmes dans les deux sens. Les institutionnels utilisent massivement cette stratégie pour protéger des positions concentrées (actions du fondateur, stock options salariés).
+  </p>
+</div>
+
+<!-- SECTION 6: Comparaison -->
+<div id="comparaison" class="content-card">
+  <div class="section-divider">Section 6</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-scale-balanced" style="color:#16a34a"></i> Comparaison des 4 Stratégies
+  </h2>
+
+  <div id="chart-all-strategies" style="width:100%;height:400px;margin:1.5rem 0"></div>
+
+  <table class="compare-table">
+    <thead><tr><th>Critère</th><th>Covered Call</th><th>Protective Put</th><th>Cash-Secured Put</th><th>Collar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Objectif</strong></td><td>Revenu</td><td>Protection</td><td>Entrée en discount</td><td>Protection gratuite</td></tr>
+      <tr><td><strong>Coût</strong></td><td>Gratuit (encaisse)</td><td>Payant (premium)</td><td>Gratuit (encaisse)</td><td>~Gratuit (zero-cost)</td></tr>
+      <tr><td><strong>Upside</strong></td><td>Plafonné</td><td>Illimité</td><td>Premium uniquement</td><td>Plafonné</td></tr>
+      <tr><td><strong>Downside</strong></td><td>Atténué</td><td>Plafonné</td><td>Substantiel</td><td>Plafonné</td></tr>
+      <tr><td><strong>Idéal pour</strong></td><td>Marché latéral/hausse lente</td><td>Incertitude (earnings, FOMC)</td><td>Actions quality à prix juste</td><td>Protéger un gros gain latent</td></tr>
+      <tr><td><strong>Fréquence d'usage</strong></td><td>Mensuel (rolling)</td><td>Ponctuel (événement)</td><td>Mensuel (accumulation)</td><td>Trimestriel (événement)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- SECTION 7: Quand utiliser quelle stratégie -->
+<div id="quand" class="content-card">
+  <div class="section-divider">Section 7</div>
+  <h2 style="font-size:1.8rem;font-weight:900;color:#0f172a;display:flex;align-items:center;gap:.75rem;border-bottom:2px solid #f1f5f9;padding-bottom:.75rem">
+    <i class="fa-solid fa-compass" style="color:#16a34a"></i> Quand Utiliser Quelle Stratégie
+  </h2>
+
+  <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:2rem;margin:1.5rem 0">
+    <h3 style="color:#0f172a;margin-top:0">Arbre de décision</h3>
+    <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+      <strong>1. Possédez-vous déjà les actions ?</strong><br>
+      → <strong>Oui</strong> : Voulez-vous protéger le downside ? → <em>Protective put</em> (payant) ou <em>collar</em> (gratuit). Voulez-vous du revenu ? → <em>Covered call</em>.<br>
+      → <strong>Non</strong> : Voulez-vous acheter mais trouvez le prix trop haut ? → <em>Cash-secured put</em>.
+    </p>
+    <p style="font-size:1.1rem;line-height:1.7;color:#334155">
+      <strong>2. Quel est le contexte marché ?</strong><br>
+      → <strong>Earnings imminent</strong> : protective put ou collar (pas de covered call — risque d'assignment sur gap).<br>
+      → <strong>Marché calme, range</strong> : covered call (encaisser le theta).<br>
+      → <strong>Marché incertain</strong> : collar (borne les pertes et les gains).<br>
+      → <strong>Correction récente</strong> : cash-secured put (profiter de la baisse pour acheter en discount).
+    </p>
+  </div>
+
+  <details>
+    <summary>Quiz : Vous possédez 100 actions d'une biotech avant la décision FDA. Quelle stratégie ?</summary>
+    <div class="quiz-answer">
+      <p>Un <strong>protective put</strong> est la meilleure option ici. La décision FDA peut provoquer un mouvement de ±30%. Un stop-loss ne protège pas contre un gap. Le collar limiterait aussi l'upside en cas d'approbation (et l'upside est justement la raison pour laquelle vous détenez l'action). Le put vous protège en cas de rejet tout en préservant le potentiel haussier en cas d'approbation.</p>
+    </div>
+  </details>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-check-circle" style="color:#16a34a"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Le <strong>covered call</strong> génère un revenu mensuel sur vos actions — compromis : upside plafonné</li>
+      <li><i class="fa-solid fa-check"></i> Le <strong>protective put</strong> est une assurance contre les crashes — coût : le premium</li>
+      <li><i class="fa-solid fa-check"></i> Le <strong>cash-secured put</strong> vous paie pour attendre un prix d'entrée — risque : achat forcé si l'action s'effondre</li>
+      <li><i class="fa-solid fa-check"></i> Le <strong>collar</strong> protège gratuitement en sacrifiant l'upside extrême</li>
+      <li><i class="fa-solid fa-check"></i> Toutes ces stratégies sont <strong>Level 1</strong> — accessibles à tous les comptes</li>
+      <li><i class="fa-solid fa-check"></i> Ne vendez des puts que sur des actions que vous <strong>voulez réellement posséder</strong></li>
+    </ul>
+  </div>
+
+  <a href="/series/options-trading/part4-spreads/" class="next-cta"><div><div class="next-label">Partie 4 sur 6</div><div class="next-title">Les Spreads : Vertical, Calendar, Diagonal <i class="fa-solid fa-arrow-right"></i></div></div></a>
+</div>
+
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Données via DailyTickers Gateway. Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+</footer>
+
+<script>
+// Covered Call Payoff
+var ccChart = echarts.init(document.getElementById('chart-covered-call'));
+var prices=[], stockOnly=[], coveredCall=[];
+var buyPrice=210, ccStrike=225, ccPremium=3;
+for(var p=185;p<=245;p+=0.5){prices.push(p.toFixed(1));stockOnly.push((p-buyPrice)*100);var callPL=Math.min(ccPremium,ccPremium-Math.max(p-ccStrike,0));coveredCall.push(((p-buyPrice)+callPL)*100)}
+ccChart.setOption({title:{text:'Covered Call vs Actions seules (AAPL $210, Call $225)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis'},legend:{data:['Actions seules','Covered Call'],bottom:0},grid:{left:'8%',right:'4%',bottom:'14%',top:'16%',containLabel:true},xAxis:{type:'category',data:prices,axisLabel:{interval:19,fontSize:10},name:'Prix AAPL',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{name:'Actions seules',type:'line',data:stockOnly,lineStyle:{color:'#94a3b8',width:2,type:'dashed'},symbol:'none'},{name:'Covered Call',type:'line',data:coveredCall,lineStyle:{color:'#16a34a',width:3},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(22,163,74,0.1)'},{offset:1,color:'rgba(22,163,74,0)'}]}}}]});
+
+// Protective Put Payoff
+var ppChart = echarts.init(document.getElementById('chart-protective-put'));
+var prices2=[], stockOnly2=[], protPut=[];
+var buyPrice2=420, ppStrike=400, ppPremium=5;
+for(var p=360;p<=470;p+=1){prices2.push(p);stockOnly2.push((p-buyPrice2)*100);var putVal=Math.max(ppStrike-p,0);protPut.push(((p-buyPrice2)+putVal-ppPremium)*100)}
+ppChart.setOption({title:{text:'Protective Put vs Actions seules (MSFT $420, Put $400)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis'},legend:{data:['Actions seules','Avec Protective Put'],bottom:0},grid:{left:'8%',right:'4%',bottom:'14%',top:'16%',containLabel:true},xAxis:{type:'category',data:prices2,axisLabel:{interval:19,fontSize:10},name:'Prix MSFT',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{name:'Actions seules',type:'line',data:stockOnly2,lineStyle:{color:'#94a3b8',width:2,type:'dashed'},symbol:'none'},{name:'Avec Protective Put',type:'line',data:protPut,lineStyle:{color:'#2563eb',width:3},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(37,99,235,0.1)'},{offset:1,color:'rgba(37,99,235,0)'}]}}}]});
+
+// Cash-Secured Put Payoff
+var cspChart = echarts.init(document.getElementById('chart-cash-secured'));
+var prices3=[], cspData=[];
+var cspStrike=165, cspPrem=2.5;
+for(var p=140;p<=185;p+=0.5){prices3.push(p.toFixed(1));if(p>=cspStrike){cspData.push(cspPrem*100)}else{cspData.push((p-cspStrike+cspPrem)*100)}}
+cspChart.setOption({title:{text:'Cash-Secured Put (GOOGL Strike $165, Premium $2.50)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis',formatter:function(p){return'GOOGL $'+p[0].name+'<br>P&L: '+(p[0].value>=0?'+':'')+p[0].value}},grid:{left:'8%',right:'4%',bottom:'12%',top:'16%',containLabel:true},xAxis:{type:'category',data:prices3,axisLabel:{interval:19,fontSize:10},name:'Prix GOOGL',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{type:'line',data:cspData,lineStyle:{color:'#059669',width:3},symbol:'none',areaStyle:{color:{type:'linear',x:0,y:0,x2:0,y2:1,colorStops:[{offset:0,color:'rgba(5,150,105,0.1)'},{offset:1,color:'rgba(5,150,105,0)'}]}}}]});
+
+// Collar Payoff
+var colChart = echarts.init(document.getElementById('chart-collar'));
+var prices4=[], collarData=[], stockOnly4=[];
+var colBuy=140, colPut=130, colCall=155, colPutPrem=3, colCallPrem=3;
+for(var p=110;p<=175;p+=0.5){prices4.push(p.toFixed(1));stockOnly4.push((p-colBuy)*100);var pPL=Math.max(colPut-p,0)-colPutPrem;var cPL=colCallPrem-Math.max(p-colCall,0);collarData.push(((p-colBuy)+pPL+cPL)*100)}
+colChart.setOption({title:{text:'Collar vs Actions seules (NVDA $140, Put $130, Call $155)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis'},legend:{data:['Actions seules','Collar'],bottom:0},grid:{left:'8%',right:'4%',bottom:'14%',top:'16%',containLabel:true},xAxis:{type:'category',data:prices4,axisLabel:{interval:19,fontSize:10},name:'Prix NVDA',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{name:'Actions seules',type:'line',data:stockOnly4,lineStyle:{color:'#94a3b8',width:2,type:'dashed'},symbol:'none'},{name:'Collar',type:'line',data:collarData,lineStyle:{color:'#d97706',width:3},symbol:'none'}]});
+
+// All strategies comparison
+var allChart = echarts.init(document.getElementById('chart-all-strategies'));
+var pricesAll=[], ccAll=[], ppAll=[], cspAll=[], colAll=[];
+for(var p=180;p<=250;p+=1){pricesAll.push(p);ccAll.push(((p-210)+Math.min(3,3-Math.max(p-225,0)))*100);ppAll.push(((p-210)+Math.max(200-p,0)-5)*100);if(p>=210){cspAll.push(3*100)}else{cspAll.push((p-210+3)*100)};var ppL=Math.max(195-p,0)-3;var cpL=3-Math.max(p-230,0);colAll.push(((p-210)+ppL+cpL)*100)}
+allChart.setOption({title:{text:'Comparaison des 4 stratégies (base $210)',left:'center',textStyle:{fontSize:13,fontWeight:700}},tooltip:{trigger:'axis'},legend:{data:['Covered Call','Protective Put','Cash-Secured Put','Collar'],bottom:0,textStyle:{fontSize:10}},grid:{left:'8%',right:'4%',bottom:'16%',top:'16%',containLabel:true},xAxis:{type:'category',data:pricesAll,axisLabel:{interval:9,fontSize:10},name:'Prix à expiration ($)',nameLocation:'middle',nameGap:30},yAxis:{type:'value',name:'P&L ($)',axisLabel:{fontSize:11}},series:[{name:'Covered Call',type:'line',data:ccAll,lineStyle:{color:'#16a34a',width:2.5},symbol:'none'},{name:'Protective Put',type:'line',data:ppAll,lineStyle:{color:'#2563eb',width:2.5},symbol:'none'},{name:'Cash-Secured Put',type:'line',data:cspAll,lineStyle:{color:'#059669',width:2.5,type:'dashed'},symbol:'none'},{name:'Collar',type:'line',data:colAll,lineStyle:{color:'#d97706',width:2.5},symbol:'none'}]});
+
+window.addEventListener('resize',function(){ccChart.resize();ppChart.resize();cspChart.resize();colChart.resize();allChart.resize()});
+</script>
+
+<script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
