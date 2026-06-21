@@ -103,6 +103,67 @@ function sourceRefsHtml(refs) {
     `\n      </div>`;
 }
 
+function formatHeaderPrice(price, meta) {
+  const at = (meta && meta.assetType) || 'stock';
+  if (at === 'forex') return price.toFixed(4);
+  if (at === 'crypto' && price > 1000) return '$' + price.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  if (at === 'crypto') return '$' + price.toFixed(2);
+  return '$' + price.toFixed(2);
+}
+
+function renderChartEmbed(header, meta) {
+  const t = header.ticker;
+  const assetType = (meta && meta.assetType) || 'stock';
+
+  if (assetType === 'crypto') {
+    const symbol = t.replace('-USD', '').replace('-', '');
+    return `
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+      <div style="border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;height:400px;">
+        <iframe src="https://www.tradingview.com/widgetembed/?symbol=COINBASE:${symbol}USD&interval=D&theme=light&style=1&locale=en&toolbar_bg=f8fafc" style="width:100%;height:100%;border:none;" loading="lazy"></iframe>
+      </div>
+    </div>`;
+  }
+
+  if (assetType === 'forex') {
+    const pair = t.replace('/', '');
+    return `
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+      <div style="border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;height:400px;">
+        <iframe src="https://www.tradingview.com/widgetembed/?symbol=FX:${pair}&interval=D&theme=light&style=1&locale=en" style="width:100%;height:100%;border:none;" loading="lazy"></iframe>
+      </div>
+    </div>`;
+  }
+
+  if (assetType === 'commodity') {
+    return `
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+      <div style="border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;height:400px;">
+        <iframe src="https://www.tradingview.com/widgetembed/?symbol=${t}&interval=D&theme=light&style=1&locale=en" style="width:100%;height:100%;border:none;" loading="lazy"></iframe>
+      </div>
+    </div>`;
+  }
+
+  if (assetType === 'index') {
+    return `
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t}" style="width:100%;display:block;" loading="lazy">
+        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span></div>
+      </div>
+    </div>`;
+  }
+
+  // stock + etf: Finviz
+  return `
+    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
+      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
+        <img src="https://charts2.finviz.com/chart.ashx?t=${t}&ty=c&ta=1&p=d&s=l" alt="${t} Chart" style="width:100%;display:block;" loading="lazy">
+        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;"><span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span></div>
+      </div>
+    </div>`;
+}
+
 // ─── Section renderers ──────────────────────────────────────────────────────
 
 function renderHead(d) {
@@ -205,7 +266,7 @@ function renderHeader(d) {
         </div>
       </div>
       <div style="display:flex;align-items:baseline;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;">
-        <span style="font-size:2.2rem;font-weight:800;">$${header.price.toFixed(2)}</span>
+        <span style="font-size:2.2rem;font-weight:800;">${formatHeaderPrice(header.price, d.meta)}</span>
         <span style="font-size:1.1rem;font-weight:600;color:${changePctColor(header.changePct)};">${changePctSign(header.changePct)}${(header.changePct || 0).toFixed(2)}%</span>
         ${badges}
         <span class="badge badge-blue">Score ${verdict.score}</span>
@@ -218,14 +279,7 @@ ${metrics.map(([label, val]) => `        <div class="ticker-metric"><div class="
       <div id="article-clickable-tags" class="card-tags"></div>
     </header>
 
-    <div style="max-width:900px;margin:1rem auto;padding:0 1rem;">
-      <div onclick="openChartModal()" style="cursor:pointer;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;">
-        <img src="https://charts2.finviz.com/chart.ashx?t=${header.ticker}&ty=c&ta=1&p=d&s=l" alt="${header.ticker} Chart" style="width:100%;display:block;" loading="lazy">
-        <div style="background:#f8fafc;padding:6px 12px;font-size:0.7rem;color:#64748b;">
-          <span><i class="fa-solid fa-chart-line"></i> Click to enlarge</span>
-        </div>
-      </div>
-    </div>`;
+    ${renderChartEmbed(header, d.meta)}`;
 }
 
 function renderVerdict(d) {
