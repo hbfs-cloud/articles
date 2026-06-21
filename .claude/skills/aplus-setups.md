@@ -49,15 +49,22 @@ Check correlation/concentration (e.g. aero + airline can be one oil/rate-cyclica
 ### 5. War-room verify BEFORE publishing (mandatory)
 Run an adversarial panel per ticker (Workflow): **quant / PM-alpha / risk / short-seller** lenses, each re-fetching fresh MCP data, scoring the 5 axes 0–100 and voting "A+ deserved" (default to NO if any axis <75 or R/R-at-spot <1.5). Keep A+ only if ≥3/4 vote yes AND no critical error. Add a "missed-candidates" re-screen + a basket/correlation review. This is the gate that catches over-grading.
 
-## Article production
-- Template = `analyses/MATX/index.html` (433-line batch A+ template; the 100KB `analyses/SHEL/` is the deluxe ref). One agent per ticker (parallel).
-- **Avoid the MATX template's data bugs:** never ship `N/A` in the Fundamentals table; format Div Yield correctly (not "74.00%"); risk gauge "X/10" with X=1–10 (not "22/10"); unique ECharts ids per file.
-- Conventions: `<html lang data-tags data-tab="analyses" data-grade="A+">`, GTM-T5Z595CW, `/assets/report.css`, brand-bar+brand-nav, ticker-header `.tm-value`+`.tm-label`, Finviz chart+modal, FAB, `footer.article-footer`, ECharts gauge+radar, `core.js`+`tag-renderer.js`, inline `.source-ref` per section. Banks: use bank metrics (NII/NIM/ROTCE/CET1/book value), NOT gross margin/EBITDA; omit the Halal badge.
+## Article production — Structured JSON pipeline
+Each agent produces a **JSON file** conforming to `tools/lib/analysis-schema.json`, NOT raw HTML.
+The deterministic render engine (`tools/render-analysis.js`) converts JSON → HTML with all conventions baked in (GTM, brand-bar, FAB, footer, ECharts gauge+radar, source-refs, chart embeds).
+
+- Output JSON to `data/analyses-data/{TICKER}.json`
+- Reference JSON: `data/analyses-data/MATX.json`
+- `meta.assetType`: "stock" for equities. The renderer auto-handles chart sources (Finviz for stock/ETF, TradingView for crypto/forex/commodity), price formatting (forex 4-decimal, crypto no-cent), and section variants.
+- Banks: use bank metrics (NII/NIM/ROTCE/CET1/book value) in fundamentals.rows, NOT gross margin/EBITDA; set `header.halal = false`.
+- Never ship `N/A` values; risk gauge score 1–10 (not 22/10); unique ticker in header.
 
 ## Publish
-- `node tools/add_card.js analyses/<T>/index.html` per ticker (rebuilds the search index; dedupes by URL/ticker; auto-skips series sub-parts). NEVER hand-edit `data/analyses.json`.
+- `node tools/publish-analysis.js data/analyses-data/{TICKER}.json --commit` per ticker (validates → renders → indexes → commits). For batch: `--batch FILE1.json FILE2.json`.
+- Quick grade update: `node tools/publish-analysis.js --update {TICKER} --grade A --reason "..." --commit`
+- Re-render all after render engine change: `node tools/publish-analysis.js --re-render --commit`
 - Update `data/radar.json` by hand (Claude-authored): add an A+ opportunity item.
-- A **pre-commit hook** auto-regenerates `assets/search-index.json` + `data/search_data.js` + `sitemap.xml` + `feed.xml` and stages them — no manual feed/sitemap step needed. Stage specific files only, then commit + push.
+- A **pre-commit hook** auto-regenerates search/sitemap/feed. Stage specific files only, then commit + push.
 
 ## Hard rejection rules (memorize)
 - R/R only valid on an un-triggered pullback → **not A+ at spot**.
