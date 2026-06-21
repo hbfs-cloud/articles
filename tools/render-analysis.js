@@ -604,7 +604,16 @@ ${soc.platforms.map(p => `          <div style="padding:1rem;border:1px solid #e
             <div style="font-size:0.72rem;color:#94a3b8;margin-top:0.25rem;">${esc(p.detail||'')}</div>
           </div>`).join('\n')}
         </div>
-${soc.pumpDumpScore != null ? `        <div style="margin-top:1rem;"><h4>Pump &amp; Dump Score: ${soc.pumpDumpScore}/6</h4><span class="badge badge-${soc.pumpDumpScore <= 1 ? 'green' : soc.pumpDumpScore <= 3 ? 'purple' : 'red'}">${soc.pumpDumpScore <= 1 ? 'Clean' : soc.pumpDumpScore <= 3 ? 'Suspect' : 'Alert P&D'}</span></div>` : ''}${sourceRefsHtml(soc.sourceRefs)}
+${soc.pumpDumpScore != null ? `        <div style="margin-top:1.5rem;border-top:1px solid #e2e8f0;padding-top:1rem;">
+          <h4><i class="fa-solid fa-magnifying-glass-dollar"></i> Pump & Dump Score: ${soc.pumpDumpScore}/6</h4>
+          <span class="badge badge-${soc.pumpDumpScore <= 1 ? 'green' : soc.pumpDumpScore <= 3 ? 'purple' : 'red'}" style="font-size:0.85rem;padding:4px 12px;">${soc.pumpDumpScore <= 1 ? 'Clean' : soc.pumpDumpScore <= 3 ? 'Suspect' : 'Alert P&D'}</span>
+${soc.pumpDumpChecklist && soc.pumpDumpChecklist.length ? `          <div style="margin-top:0.75rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:0.5rem;">
+${soc.pumpDumpChecklist.map(c => `            <div style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:8px;background:${c.pass ? '#fef2f2' : '#f0fdf4'};font-size:0.82rem;">
+              <i class="fa-solid fa-${c.pass ? 'triangle-exclamation' : 'circle-check'}" style="color:${c.pass ? '#ef4444' : '#22c55e'};"></i>
+              <span>${esc(c.criterion)}</span>
+            </div>`).join('\n')}
+          </div>` : ''}
+        </div>` : ''}${sourceRefsHtml(soc.sourceRefs)}
       </div>`;
 }
 
@@ -622,6 +631,116 @@ function renderCapitalFlow(d) {
         </div>
         ${cf.signal ? `<div class="pedagogy-box"><p>${esc(cf.signal)}</p></div>` : ''}${sourceRefsHtml(cf.sourceRefs)}
       </div>`;
+}
+
+function renderBottomEstimation(d) {
+  if (!d.bottomEstimation) return '';
+  const be = d.bottomEstimation;
+  const probColor = be.probability < 30 ? '#ef4444' : be.probability < 60 ? '#f59e0b' : '#22c55e';
+  let html = `
+      <div id="bottom-estimation" class="content-card">
+        <h2><i class="fa-solid fa-bullseye"></i> Bottom Estimation & Setups</h2>`;
+  if (be.probability != null) {
+    html += `
+        <div style="display:flex;align-items:center;gap:1.5rem;margin-bottom:1.5rem;">
+          <div class="risk-gauge" style="border-color:${probColor};width:80px;height:80px;">
+            <div class="risk-gauge-score" style="color:${probColor};font-size:1.3rem;">${be.probability}%</div>
+            <div class="risk-gauge-label" style="font-size:0.65rem;">Bottom Prob.</div>
+          </div>
+          <div style="font-size:0.85rem;color:#64748b;">Confidence based on ${be.confluences ? be.confluences.length : 0} confluence(s)</div>
+        </div>`;
+  }
+  if (be.scenarios && be.scenarios.length) {
+    const scenarioColors = { optimistic: '#22c55e', base: '#3b82f6', pessimistic: '#ef4444' };
+    html += `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+${be.scenarios.map(s => `          <div style="border-left:4px solid ${scenarioColors[s.label]||'#64748b'};padding:1rem;background:#f8fafc;border-radius:0 8px 8px 0;">
+            <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;font-weight:600;">${esc(s.label)}</div>
+            <div style="font-size:1.5rem;font-weight:800;color:#0f172a;margin:0.25rem 0;">$${typeof s.price === 'number' ? s.price.toLocaleString() : esc(String(s.price))}</div>
+            <div style="font-size:0.78rem;color:#64748b;">${esc(s.basis)}</div>
+          </div>`).join('\n')}
+        </div>`;
+  }
+  if (be.confluences && be.confluences.length) {
+    html += `
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="margin-bottom:0.5rem;">Confluences</h4>
+${be.confluences.map(c => `          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+            <div style="width:8px;height:8px;border-radius:50%;background:#6366f1;flex-shrink:0;"></div>
+            <span style="font-size:0.85rem;">${esc(c)}</span>
+          </div>`).join('\n')}
+        </div>`;
+  }
+  if (be.setups && be.setups.length) {
+    html += `
+        <h4 style="margin-bottom:0.75rem;">Setups in Formation</h4>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;">
+${be.setups.map(s => `          <div class="setup-card" style="border:1px solid #e2e8f0;border-radius:12px;padding:1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+              <span style="font-weight:700;font-size:0.9rem;">${esc(s.pattern)}</span>
+              <span class="badge badge-blue">${esc(s.timeframe||'')}</span>
+            </div>
+            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>Trigger:</strong> ${esc(s.trigger||'')}</p>
+            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>Target:</strong> ${esc(s.target||'')}</p>
+            <p style="font-size:0.82rem;margin:0.25rem 0;"><strong>Invalidation:</strong> ${esc(s.invalidation||'')}</p>
+${s.progress != null ? `            <div style="margin-top:0.5rem;background:#e2e8f0;border-radius:4px;height:6px;overflow:hidden;">
+              <div style="width:${s.progress}%;height:100%;background:linear-gradient(90deg,#6366f1,#8b5cf6);border-radius:4px;"></div>
+            </div>
+            <div style="font-size:0.72rem;color:#64748b;margin-top:0.25rem;">Formation: ${s.progress}%</div>` : ''}
+          </div>`).join('\n')}
+        </div>`;
+  }
+  html += `\n      </div>`;
+  return html;
+}
+
+function renderManipulations(d) {
+  if (!d.manipulations) return '';
+  const m = d.manipulations;
+  let html = `
+      <div id="manipulations" class="content-card">
+        <h2><i class="fa-solid fa-magnifying-glass-dollar"></i> Market Integrity Analysis</h2>`;
+  if (m.anomalies && m.anomalies.length) {
+    html += `
+        <h3 style="margin-bottom:0.75rem;"><i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i> Detected Anomalies</h3>
+${m.anomalies.map(a => {
+    const sevColor = a.severity === 'high' ? '#ef4444' : a.severity === 'medium' ? '#f59e0b' : '#3b82f6';
+    return `        <div style="border-left:4px solid ${sevColor};padding:1rem;background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:0.75rem;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+            <strong>${esc(a.type)}</strong>
+            <span class="badge badge-${a.severity === 'high' ? 'red' : a.severity === 'medium' ? 'amber' : 'blue'}">${esc(a.severity)}</span>
+          </div>
+          <p style="font-size:0.85rem;margin:0.25rem 0;"><strong>Data:</strong> ${esc(a.data||'')}</p>
+          <p style="font-size:0.85rem;margin:0.25rem 0;"><strong>Interpretation:</strong> ${esc(a.interpretation||'')}</p>
+${a.history ? `          <p style="font-size:0.82rem;color:#64748b;margin:0.25rem 0;"><strong>History:</strong> ${esc(a.history)}</p>` : ''}
+        </div>`;
+  }).join('\n')}`;
+  }
+  if (m.secFilings && m.secFilings.length) {
+    html += `
+        <h3 style="margin:1.5rem 0 0.75rem;"><i class="fa-solid fa-file-shield"></i> SEC Filings & Hostile Funds</h3>
+        <div style="overflow-x:auto;">
+        <table class="data-table"><thead><tr><th>Date</th><th>Filing</th><th>Issuer</th><th>Detail</th><th>Signal</th></tr></thead><tbody>
+${m.secFilings.map(f => `          <tr><td>${esc(f.date||'')}</td><td><span class="badge badge-blue">${esc(f.type||'')}</span></td><td>${esc(f.issuer||'')}</td><td>${esc(f.detail||'')}</td><td>${esc(f.signal||'')}</td></tr>`).join('\n')}
+        </tbody></table>
+        </div>`;
+  }
+  if (m.hostileFundsVerdict) {
+    html += `
+        <div class="pedagogy-box" style="margin-top:1rem;">
+          <h4><i class="fa-solid fa-shield-halved"></i> Hostile Funds Verdict</h4>
+          <p>${esc(m.hostileFundsVerdict)}</p>
+        </div>`;
+  }
+  if (m.integrityVerdict) {
+    html += `
+        <div class="alert-box" style="margin-top:1rem;">
+          <h4><i class="fa-solid fa-gavel"></i> Market Integrity</h4>
+          <p>${esc(m.integrityVerdict)}</p>
+        </div>`;
+  }
+  html += `\n      </div>`;
+  return html;
 }
 
 function renderPredictionMarkets(d) {
@@ -721,6 +840,8 @@ function renderFab(d) {
     d.sectorComparison  && d.sectorComparison.peers && { id: 'peers', icon: 'fa-building', label: 'Sector' },
     d.risks             && { id: 'risques',       icon: 'fa-shield-halved',            label: 'Risks' },
     d.social && d.social.platforms && { id: 'social', icon: 'fa-satellite-dish',       label: 'Social' },
+    d.bottomEstimation  && { id: 'bottom-estimation', icon: 'fa-bullseye',            label: 'Bottom' },
+    d.manipulations     && { id: 'manipulations', icon: 'fa-magnifying-glass-dollar',  label: 'Integrity' },
     d.capitalFlow       && { id: 'capitalflow',   icon: 'fa-water',                    label: 'Flow' },
     d.predictionMarkets && d.predictionMarkets.markets && { id: 'predictions', icon: 'fa-chart-pie', label: 'Predict' },
     d.tradeIdea         && { id: 'trade',         icon: 'fa-crosshairs',               label: 'Trade' },
@@ -813,6 +934,8 @@ function render(data) {
     renderMacro(data),
     renderRisks(data),
     renderSocial(data),
+    renderBottomEstimation(data),
+    renderManipulations(data),
     renderCapitalFlow(data),
     renderPredictionMarkets(data),
     renderTradeIdea(data),
