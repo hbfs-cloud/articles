@@ -14,13 +14,11 @@ cp tools/trading-executor/config.example.json tools/trading-executor/config.json
 # Edit config.json: set modes per broker, capital. Credentials via env vars only.
 ```
 
-## Env vars (set in shell, .env, or secrets manager — never in config.json)
-- Alpaca: `ALPACA_API_KEY`, `ALPACA_API_SECRET`
-- IBKR: `IBKR_GATEWAY_HOST`, `IBKR_GATEWAY_PORT`, `IBKR_ACCOUNT_ID`
-- Saxo: `SAXO_ACCESS_TOKEN`, `SAXO_ACCOUNT_KEY`
-- Trading212: `T212_API_KEY`
-- Binance: `BINANCE_API_KEY`, `BINANCE_API_SECRET`
-- Notifications: `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`, `TELEGRAM_TOPIC_*`, `DISCORD_WEBHOOK_URL`
+## Auth — MCPs OAuth2 (ZÉRO TOKEN EN .env)
+Tous les MCPs (DailyTickers, Telegram, Memory, brokers) sont enregistrés via OAuth2 dans Claude Code.
+**Aucun token en .env, aucun secret hardcodé.** Les scripts accèdent aux services via les MCPs enregistrés.
+- Brokers (Alpaca, IBKR, Saxo, Trading212, Binance) : credentials via MCP broker-simulator OAuth2
+- Notifications (Telegram, Discord) : via MCP enregistré
 
 ## Usage
 ```bash

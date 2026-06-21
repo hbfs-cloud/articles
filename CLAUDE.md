@@ -31,17 +31,20 @@ articles/
 - **Publication** : `node tools/publish.js --type <type> --path <path>` enchaîne tout automatiquement
 
 ## Parallel-run broker-simulator (LIRE `PARALLEL_RUN.md`)
-Le `/scanner` nocturne fait tourner en parallèle le **broker-simulator** (juge indépendant qui exécute nos
-trades en miroir fidèle) pour valider puis basculer la source de vérité des positions. **Déjà câblé, non-bloquant
-et auto-géré** (bootstrap-once → mirror-run → reconcile → cutover-decision → read-switch avec fallback dur sur
-`pit-state.json`, + publish). Token via `BROKERSIM_SERVICE_TOKEN` dans `articles/.env` (non-quoté). N'y touche
-pas sans lire **`PARALLEL_RUN.md`** (la boucle, le contrat, les limites, le troubleshooting).
+Le `/scanner` nocturne fait tourner en parallèle le **broker-simulator** (`https://simulator.dailytickers.com/`)
+qui exécute nos trades en miroir fidèle pour valider puis basculer la source de vérité des positions.
+**Déjà câblé, non-bloquant et auto-géré** (bootstrap-once → mirror-run → reconcile → cutover-decision →
+read-switch avec fallback dur sur `pit-state.json`, + publish). N'y touche pas sans lire **`PARALLEL_RUN.md`**.
 
-## MCP_GATEWAY_URL (CRITIQUE)
-```bash
-MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp
-```
-**TOUJOURS exporter, JAMAIS accepter le stub silencieusement.** Sans cette URL, `refresh-risk-metrics.js --stub` écrit un schéma vide.
+## MCPs Enregistrés (OAuth2 — ZÉRO TOKEN EN .env)
+Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun token dans .env, aucun secret hardcodé.**
+- **DailyTickers** : `https://mcp.dailytickers.com/mcp` — données marché, screening, backtesting, portfolio
+- **Memory** : `https://memory.hbfs-cloud.com/mcp` — mémoire long-terme partagée entre agents
+- **Telegram** : notifications via MCP enregistré (plus de TELEGRAM_BOT_TOKEN)
+- **Broker Simulator** : `https://simulator.dailytickers.com/` — via MCP OAuth2
+
+Les scripts Node.js (refresh-risk-metrics.js, telegram-publish-notify.js, etc.) sont lancés par Claude Code
+qui a accès aux MCPs. **Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
 
 ## ⛔ MCP HARD STOP (IMMUABLE)
 Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **renvoie des données incohérentes** (prix aberrants, NaN, valeurs stale > 48h) :

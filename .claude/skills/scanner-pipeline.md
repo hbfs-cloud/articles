@@ -146,14 +146,13 @@ Après chaque scanner publié, lancer pipeline complet **sans demander confirmat
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
 node tools/candlestick-scanner.js --output signals  # AB candlestick signals → signals.json (bull mode)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
-MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
-  node tools/refresh-risk-metrics.js    # VaR + stress + correlation + regimeProb
+node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 ./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push
 node tools/trading-executor/run-session.js  # Generate plans + execute
 ```
-Sans `MCP_GATEWAY_URL` → stub écrit schéma vide. **TOUJOURS exporter, jamais accepter stub silencieusement.**
+Les MCPs (DailyTickers, Telegram, Memory) sont enregistrés via OAuth2 — aucun token en .env nécessaire.
 
 **Post-pipeline checklist OBLIGATOIRE** :
 - QA check (`tools/qa-check.js`) doit afficher 0 ❌
