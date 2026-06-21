@@ -439,7 +439,7 @@
 
             <p>Vous avez un compte Alpaca pour le paper trading US, un IBKR pour le live, un Trading212
                 pour les ETF européens, un Binance pour le crypto, et un Saxo pour le forex. Chaque broker
-                a sa propre API, ses propres formats, ses propres limites. <strong>Comment savoir votre P&L
+                a sa propre API, ses propres formats, ses propres limites. <strong>Comment connaître votre P&L
                 global à l'instant T ?</strong></p>
 
             <p>La question semble triviale. Elle ne l'est pas. Chaque broker rapporte les positions dans
@@ -475,8 +475,8 @@
                 </div>
                 <div class="metric-card">
                     <div class="metric-value">T+0 à T+2</div>
-                    <div class="metric-label">Settlement times différents : crypto instantané, US T+1,
-                        Europe T+2 — impact direct sur le buying power</div>
+                    <div class="metric-label">Délais de règlement différents : crypto instantané, US T+1,
+                        Europe T+2 — impact direct sur le pouvoir d'achat</div>
                 </div>
                 <div class="metric-card">
                     <div class="metric-value">1</div>
@@ -870,7 +870,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Le même signal fire deux fois</td>
+                            <td>Le même signal se déclenche deux fois</td>
                             <td>Double exécution → position 2× trop grande</td>
                             <td>Order ID idempotent : <code>mode-ticker-date-signal_id</code>. Le broker rejette le doublon.</td>
                         </tr>
@@ -1029,7 +1029,7 @@
                     détectées pendant plus de 5 jours deviennent exponentiellement plus coûteuses à résoudre.</p>
             </div>
 
-            <p class="source-ref">Source : <a href="https://martinfowler.com/articles/patterns-of-distributed-systems/two-phase-commit.html" target="_blank" rel="noopener">Martin Fowler — Patterns of Distributed Systems</a></p>
+            <p class="source-ref">Source : <a href="https://martinfowler.com/bliki/ParallelChange.html" target="_blank" rel="noopener">Martin Fowler — Parallel Change</a></p>
         </div>
 
         <!-- ═══════════════════════════════════════════════════════════════════
@@ -1146,10 +1146,10 @@
   <span class="s">"modes"</span>: {
     <span class="s">"dynamic"</span>:  { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">8</span>,  <span class="s">"dd"</span>: <span class="s">"-2.1%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+1.4%"</span> },
     <span class="s">"balanced"</span>: { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">12</span>, <span class="s">"dd"</span>: <span class="s">"-3.2%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.8%"</span> },
-    <span class="s">"tkl"</span>:      { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">6</span>,  <span class="s">"dd"</span>: <span class="s">"-1.5%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+2.3%"</span> },
+    <span class="s">"tkl"</span>:      { <span class="s">"status"</span>: <span class="s">"stopped"</span>,   <span class="s">"positions"</span>: <span class="n">0</span>,  <span class="s">"dd"</span>: <span class="s">"0.0%"</span>,  <span class="s">"weekReturn"</span>: <span class="s">"0.0%"</span>  },
     <span class="s">"orbit"</span>:    { <span class="s">"status"</span>: <span class="s">"deploying"</span>, <span class="s">"positions"</span>: <span class="n">4</span>,  <span class="s">"dd"</span>: <span class="s">"-0.8%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.5%"</span> },
-    <span class="s">"alpha"</span>:    { <span class="s">"status"</span>: <span class="s">"deploying"</span>, <span class="s">"positions"</span>: <span class="n">3</span>,  <span class="s">"dd"</span>: <span class="s">"-1.1%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+1.7%"</span> },
-    <span class="s">"fortress"</span>: { <span class="s">"status"</span>: <span class="s">"live"</span>,      <span class="s">"positions"</span>: <span class="n">10</span>, <span class="s">"dd"</span>: <span class="s">"-0.5%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.3%"</span> }
+    <span class="s">"alpha"</span>:    { <span class="s">"status"</span>: <span class="s">"stopped"</span>,   <span class="s">"positions"</span>: <span class="n">0</span>,  <span class="s">"dd"</span>: <span class="s">"0.0%"</span>,  <span class="s">"weekReturn"</span>: <span class="s">"0.0%"</span>  },
+    <span class="s">"fortress"</span>: { <span class="s">"status"</span>: <span class="s">"pausing"</span>,   <span class="s">"positions"</span>: <span class="n">3</span>,  <span class="s">"dd"</span>: <span class="s">"-0.5%"</span>, <span class="s">"weekReturn"</span>: <span class="s">"+0.1%"</span> }
   }
 }</pre>
 
@@ -1219,7 +1219,7 @@
   <span class="s">"tradeCurrency"</span>: <span class="s">"EUR"</span>,
   <span class="s">"fxRate"</span>: <span class="n">1.0845</span>,           <span class="c">// EUR/USD au moment du fill</span>
   <span class="s">"priceBase"</span>: <span class="n">998.28</span>,        <span class="c">// 920.50 × 1.0845 = USD</span>
-  <span class="s">"totalBase"</span>: <span class="n">9982.82</span>,       <span class="c">// 10 × 998.28</span>
+  <span class="s">"totalBase"</span>: <span class="n">9982.80</span>,       <span class="c">// 10 × 998.28</span>
   <span class="s">"fees"</span>: <span class="n">4.00</span>,              <span class="c">// EUR</span>
   <span class="s">"feesBase"</span>: <span class="n">4.34</span>,           <span class="c">// USD</span>
   <span class="s">"broker"</span>: <span class="s">"ibkr"</span>,
@@ -1445,10 +1445,9 @@
         <div id="conclusion" class="content-card">
             <h2><i class="fa-solid fa-flag-checkered" style="color:#0891b2;"></i> Checklist Multi-Broker</h2>
 
-            <p>Gérer plusieurs brokers semble complexe. En réalité, c'est <em>plus explicite</em> qu'un
-                système mono-broker — et cette explicité est un avantage. Chaque décision est traçable,
-                chaque flux est vérifiable, chaque erreur est détectable. Voici la checklist pour
-                construire le vôtre.</p>
+            <p>Gérer plusieurs brokers semble complexe. En réalité, le système est <em>plus transparent</em>
+                qu'un mono-broker — et c'est un avantage. Chaque décision est traçable, chaque flux est
+                vérifiable, chaque erreur est détectable. Voici la checklist pour construire le vôtre.</p>
 
             <div class="takeaway-box">
                 <h4><i class="fa-solid fa-check-double"></i> Les 8 principes du multi-broker</h4>
@@ -1474,12 +1473,9 @@
                 </ul>
             </div>
 
-            <p>Un système multi-broker n'est pas plus complexe qu'un système mono-broker. Il est
-                <strong>plus explicite</strong>. Cette explicité est un avantage : chaque décision est
-                traçable, chaque flux est vérifiable, chaque erreur est détectable. Le coût de cette
-                explicité est un investissement initial en architecture — le schéma ci-dessus, les
-                adapters, le ledger, la réconciliation. Mais une fois en place, le système est plus
-                robuste, plus auditable, et plus extensible qu'un mono-broker ne le sera jamais.</p>
+            <p>Le coût de cette transparence est un investissement initial en architecture — les adapters,
+                le ledger, la réconciliation. Mais une fois en place, le système est plus robuste, plus
+                auditable, et plus extensible qu'un mono-broker ne le sera jamais.</p>
 
             <h3>Pour aller plus loin</h3>
 

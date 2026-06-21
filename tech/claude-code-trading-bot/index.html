@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Claude Code pour le Trading : De Zéro à un Système Autonome | DailyTickers</title>
     <meta name="description"
-        content="Guide technique complet : comment un bot Discord orchestre Claude Code via tmux pour publier automatiquement 4 articles financiers par jour — scanner, daily, weekly, rétrospective. Architecture, schedules, pipeline scanner, error recovery, prompt engineering.">
-    <meta property="og:title" content="Claude Code pour le Trading : De Zéro à un Système Autonome qui Publie 4× par Jour">
+        content="Guide technique complet : comment un bot Discord orchestre Claude Code via tmux pour publier automatiquement des analyses financières — scanner, daily, weekly, rétrospective. Architecture, schedules, pipeline scanner, error recovery, prompt engineering.">
+    <meta property="og:title" content="Claude Code pour le Trading : De Zéro à un Système de Publication Autonome">
     <meta property="og:description"
-        content="Comment automatiser la publication d'analyses financières avec Claude Code, un bot Discord et zéro intervention humaine.">
+        content="Comment automatiser la publication d'analyses financières avec Claude Code, un bot Discord et une supervision minimale.">
     <meta property="og:image" content="/logo.svg">
     <meta property="og:url" content="https://articles.dailytickers.com/tech/claude-code-trading-bot/">
     <meta property="og:type" content="article">
@@ -359,12 +359,12 @@
         <div class="hero-date">GUIDE TECHNIQUE — AUTOMATISATION &amp; TRADING</div>
         <h1
             style="font-size:3rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.1;">
-            Claude Code pour le Trading : De Zéro à un Système Autonome qui Publie 4× par Jour
+            Claude Code pour le Trading : De Zéro à un Système de Publication Autonome
         </h1>
         <p
             style="font-size:1.2rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
             Comment un bot Discord orchestre Claude Code via tmux pour publier automatiquement
-            scanner, daily, weekly et rétrospective — sans aucune intervention humaine.
+            scanner, daily, weekly et rétrospective — l'humain supervise, il ne déclenche plus.
             Architecture, schedules, pipeline scanner, gestion d'erreurs et prompt engineering.
         </p>
 
@@ -406,12 +406,12 @@
 
             <div class="metric-grid">
                 <div class="metric-card">
-                    <div class="metric-value">4×/jour</div>
+                    <div class="metric-value">4 pipelines</div>
                     <div class="metric-label">Publications automatiques : scanner, daily briefing,
                         weekly review, rétrospective — chacune sur son schedule</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-value">486</div>
+                    <div class="metric-value">486+</div>
                     <div class="metric-label">Pages HTML statiques servies sans framework, sans build
                         system, sans base de données — juste GitHub Pages</div>
                 </div>
@@ -518,13 +518,13 @@
                         <tr>
                             <td><strong>Claude Code CLI</strong></td>
                             <td><code>claude -p</code></td>
-                            <td>Cerveau du pipeline. Lit le contexte projet (CLAUDE.md, 60KB de
+                            <td>Cerveau du pipeline. Lit le contexte projet (CLAUDE.md, ~97KB de
                                 conventions), appelle le MCP, génère le HTML, gère le git.
                                 Chaque type d'article a son sub-CLAUDE.md (template complet)</td>
                         </tr>
                         <tr>
                             <td><strong>MCP Gateway</strong></td>
-                            <td>FastAPI, 15+ outils</td>
+                            <td>FastAPI, 30+ outils</td>
                             <td>Source de vérité pour les données marché. QueryData (quotes,
                                 bars, fundamentals), RunScreener (DSL filters), GetMarketOverview,
                                 OptimizeSizing. Authentification par token</td>
@@ -539,7 +539,7 @@
                         <tr>
                             <td><strong>Pre-commit hooks</strong></td>
                             <td>Shell + Node.js</td>
-                            <td>À chaque commit : rebuild search_data.js (485 documents),
+                            <td>À chaque commit : rebuild search_data.js (482 documents),
                                 sitemap.xml (486 URLs), feed.xml (50 items).
                                 Garantit la cohérence sans intervention</td>
                         </tr>
@@ -644,8 +644,8 @@
 
             <p><strong>Convention de date du scanner.</strong> Le dossier du scanner porte la date
                 de la <em>prochaine séance de trading</em>, pas celle de l'exécution. Un scan
-                lancé le lundi 16 à 23h crée le dossier <code>scanner/20260617/</code> (mardi).
-                Un scan lancé le vendredi 20 à 23h crée <code>scanner/20260623/</code> (lundi).
+                lancé le mardi 16 à 23h crée le dossier <code>scanner/20260617/</code> (mercredi).
+                Un scan lancé le vendredi 19 à 23h crée <code>scanner/20260622/</code> (lundi).
                 Cette convention évite toute ambiguïté sur la validité des setups.</p>
 
             <div id="scheduleChart" style="width:100%; height:320px; margin:1.75rem 0;"></div>
@@ -922,14 +922,14 @@ Publie via add_card.js. Commit et push si tout est ok.
             <p>Chaque run produit une notification dans le channel dédié :</p>
 
 <pre class="code-block"><span class="c">// Succès</span>
-<span class="s">✅ Scanner 20260621 publié</span>
+<span class="s">✅ Scanner 20260619 publié</span>
 <span class="s">   8 setups (3 Dynamic, 3 TKL, 2 Orbit)</span>
 <span class="s">   Régime : Neutral (VIX 17.2)</span>
-<span class="s">   https://articles.dailytickers.com/scanner/20260623/</span>
+<span class="s">   https://articles.dailytickers.com/scanner/20260622/</span>
 <span class="s">   Durée : 43m12s</span>
 
 <span class="c">// Échec</span>
-<span class="s">❌ Scanner 20260621 SUSPENDU</span>
+<span class="s">❌ Scanner 20260618 SUSPENDU</span>
 <span class="s">   Raison : MCP HARD STOP — token expiré</span>
 <span class="s">   Étape : 5/10 (MCP Enrichment)</span>
 <span class="s">   Action requise : re-auth MCP puis relancer</span></pre>
@@ -991,9 +991,9 @@ Publie via add_card.js. Commit et push si tout est ok.
 }
 
 <span class="c">// Exemples d'appels</span>
-launchPipeline(<span class="s">'scanner'</span>, <span class="s">'20260621'</span>, scannerPrompt);
-launchPipeline(<span class="s">'daily'</span>,   <span class="s">'20260621'</span>, dailyPrompt);
-launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</span>, weeklyPrompt);</pre>
+launchPipeline(<span class="s">'scanner'</span>, <span class="s">'20260619'</span>, scannerPrompt);
+launchPipeline(<span class="s">'daily'</span>,   <span class="s">'20260619'</span>, dailyPrompt);
+launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260621'</span>, weeklyPrompt);</pre>
 
             <h3>Conventions de nommage</h3>
 
@@ -1010,22 +1010,22 @@ launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</spa
                         <tr>
                             <td>Scanner</td>
                             <td><code>scanner-YYYYMMDD</code></td>
-                            <td><code>scanner-20260621</code></td>
+                            <td><code>scanner-20260619</code></td>
                         </tr>
                         <tr>
                             <td>Daily</td>
                             <td><code>daily-YYYYMMDD</code></td>
-                            <td><code>daily-20260621</code></td>
+                            <td><code>daily-20260619</code></td>
                         </tr>
                         <tr>
                             <td>Weekly</td>
                             <td><code>weekly-YYYYMMDD</code></td>
-                            <td><code>weekly-20260622</code></td>
+                            <td><code>weekly-20260621</code></td>
                         </tr>
                         <tr>
                             <td>Rétrospective</td>
                             <td><code>retro-YYYYMMDD</code></td>
-                            <td><code>retro-20260620</code></td>
+                            <td><code>retro-20260619</code></td>
                         </tr>
                     </tbody>
                 </table>
@@ -1128,12 +1128,12 @@ launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</spa
                         <tr>
                             <td><strong>Contexte temporel</strong></td>
                             <td>Date, jour, heure — le modèle n'a pas de notion fiable du temps</td>
-                            <td><code>Nous sommes le samedi 21 juin 2026. Les marchés US sont fermés.</code></td>
+                            <td><code>Nous sommes le jeudi 18 juin 2026. Marchés ouverts.</code></td>
                         </tr>
                         <tr>
                             <td><strong>Invocation de skill</strong></td>
                             <td>Active le playbook complet de la tâche</td>
-                            <td><code>Lance le pipeline /scanner pour la prochaine séance (lundi 23 juin).</code></td>
+                            <td><code>Lance le pipeline /scanner pour la prochaine séance (vendredi 19 juin).</code></td>
                         </tr>
                         <tr>
                             <td><strong>Contraintes critiques</strong></td>
@@ -1157,7 +1157,7 @@ launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</spa
             <div class="flow-diagram">
                 <div class="flow-row">
                     <div class="flow-node orchestrator" style="text-align:center;">
-                        <b>CLAUDE.md (13KB)</b>
+                        <b>CLAUDE.md (11KB)</b>
                         Conventions transversales : HTML, CSS, tags, dates, brand-bar, footer,
                         scripts, GTM, i18n. Règles immuables : MCP HARD STOP, no hallucination.
                         Workflows par commande.
@@ -1166,21 +1166,21 @@ launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</spa
                 <div class="flow-arrow">▼</div>
                 <div class="flow-row">
                     <div class="flow-node">
-                        <b>daily/CLAUDE.md (10KB)</b>
+                        <b>daily/CLAUDE.md (14KB)</b>
                         Template du daily briefing.
                         17 sections obligatoires,
                         format de chaque section,
                         cas spéciaux (samedi, dimanche).
                     </div>
                     <div class="flow-node">
-                        <b>weekly/CLAUDE.md (12KB)</b>
+                        <b>weekly/CLAUDE.md (14KB)</b>
                         Template de la weekly review.
                         18 sections, outlook macro,
                         rotations sectorielles,
                         allocations.
                     </div>
                     <div class="flow-node">
-                        <b>scanner/CLAUDE.md (25KB)</b>
+                        <b>scanner/CLAUDE.md (58KB)</b>
                         Pipeline scanner complet.
                         10 étapes, critères Sharia,
                         anti-dilution v2,
@@ -1198,7 +1198,7 @@ launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</spa
                 </div>
             </div>
 
-            <p>Total : ~60KB (~15 000 tokens) de contexte persistant. C'est le « cerveau » du
+            <p>Total : ~97KB (~24 000 tokens) de contexte persistant. C'est le « cerveau » du
                 système. Chaque modification du CLAUDE.md change le comportement de tous les
                 runs futurs — c'est pourquoi on le versionne dans git et on le traite comme
                 du code, pas comme de la documentation.</p>
@@ -1210,7 +1210,7 @@ launchPipeline(<span class="s">'weekly'</span>,  <span class="s">'20260622'</spa
 
 <pre class="code-block"><span class="c">// ❌ AVANT : prompt monolithique (500+ mots)</span>
 <span class="k">const</span> prompt = <span class="s">`
-Nous sommes le 21 juin 2026. Lance le scanner.
+Nous sommes le 18 juin 2026. Lance le scanner.
 Étape 1 : appelle GetRegimeProbability...
 Étape 2 : appelle RunScreener avec les filtres...
 Étape 3 : pour chaque ticker, vérifie sur SEC EDGAR...
@@ -1220,8 +1220,8 @@ Nous sommes le 21 juin 2026. Lance le scanner.
 
 <span class="c">// ✅ APRÈS : invocation de skill (4 lignes)</span>
 <span class="k">const</span> prompt = <span class="s">`
-Nous sommes le samedi 21 juin 2026.
-Lance le pipeline /scanner pour la prochaine séance (lundi 23 juin).
+Nous sommes le jeudi 18 juin 2026.
+Lance le pipeline /scanner pour la prochaine séance (vendredi 19 juin).
 MCP obligatoire. Commit et push si ok.
 `</span>;
 
@@ -1253,7 +1253,7 @@ MCP obligatoire. Commit et push si ok.
                         <tr>
                             <td>Contexte total</td>
                             <td>~500 mots (prompt seul)</td>
-                            <td>~60KB (CLAUDE.md + skills)</td>
+                            <td>~97KB (CLAUDE.md + skills)</td>
                         </tr>
                         <tr>
                             <td>Maintenance</td>
@@ -1330,61 +1330,51 @@ MCP obligatoire. Commit et push si ok.
 
             <h3>Estimation de coût</h3>
 
+            <p>DailyTickers utilise <strong>Claude Code en abonnement</strong> (Max plan à $200/mois),
+                pas l'API au token. Cela change fondamentalement l'économie : le coût est fixe,
+                pas proportionnel au volume.</p>
+
             <div class="data-table">
                 <table>
                     <thead>
                         <tr>
-                            <th>Tâche</th>
-                            <th>Tokens/run</th>
-                            <th>Coût/run</th>
-                            <th>Fréquence</th>
-                            <th>Coût/mois</th>
+                            <th>Modèle de tarification</th>
+                            <th>Coût mensuel</th>
+                            <th>Adapté pour</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Scanner</td>
-                            <td>~200K output</td>
-                            <td>~$8</td>
-                            <td>22×/mois</td>
-                            <td>~$176</td>
+                            <td>Claude Code Max ($200/mois)</td>
+                            <td><strong>$200 fixe</strong></td>
+                            <td>Usage intensif (60+ runs/mois), modèle Opus, pas de surprise</td>
                         </tr>
                         <tr>
-                            <td>Daily Briefing</td>
-                            <td>~80K output</td>
-                            <td>~$3</td>
-                            <td>30×/mois</td>
-                            <td>~$90</td>
+                            <td>API directe (Opus 4, $75/M output)</td>
+                            <td>~$500–600</td>
+                            <td>Intégration programmatique, facturation au token</td>
                         </tr>
                         <tr>
-                            <td>Weekly Review</td>
-                            <td>~120K output</td>
-                            <td>~$5</td>
-                            <td>4×/mois</td>
-                            <td>~$20</td>
-                        </tr>
-                        <tr>
-                            <td>Rétrospective</td>
-                            <td>~60K output</td>
-                            <td>~$2.50</td>
-                            <td>4×/mois</td>
-                            <td>~$10</td>
-                        </tr>
-                        <tr style="font-weight:800; background:#eef2ff;">
-                            <td>Total</td>
-                            <td></td>
-                            <td></td>
-                            <td>60×/mois</td>
-                            <td>~$296</td>
+                            <td>API directe (Sonnet 4, $15/M output)</td>
+                            <td>~$100–150</td>
+                            <td>Volume élevé, tâches moins complexes</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <p>~$10/jour pour un système qui publie 4 articles financiers vérifiés, avec
-                données temps réel, mise en page professionnelle, et zéro intervention humaine.
-                Le coût marginal d'un article supplémentaire (une analyse ticker, une série
-                thématique) est de ~$3–5.</p>
+            <div class="pedagogy-box">
+                <h4><i class="fa-solid fa-calculator"></i> Pourquoi l'abonnement</h4>
+                <p>À 60 runs/mois en Opus via l'API, le coût dépasserait $500. L'abonnement
+                    Max à $200 est 2–3× plus économique pour un usage quotidien intensif.
+                    Le compromis : on dépend des quotas de l'abonnement (qui peuvent varier)
+                    plutôt que d'un budget prévisible au token.</p>
+            </div>
+
+            <p>Avec l'abonnement, le coût marginal d'un article supplémentaire est
+                effectivement <strong>$0</strong> tant qu'on reste dans les quotas.
+                C'est ce qui rend viable la publication de ~60 articles/mois avec
+                données temps réel et mise en page professionnelle.</p>
 
             <h3>Articles liés</h3>
 
