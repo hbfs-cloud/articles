@@ -1016,6 +1016,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "XAUUSD",
+    "exchange": "COMEX · Precious Metals",
+    "name": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
+    "title": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
+    "desc": "Gold (XAU/USD) analysis: 12% pullback from all-time highs creates a contrarian opportunity backed by structural central bank demand of 60 tonnes/month.",
+    "tags": "commodity,macro,trade-idea,technique",
+    "grade": "A",
+    "href": "/analyses/XAUUSD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "MATX",
+    "exchange": "NYSE · Industrials",
+    "name": "MATX — Bullish setup, score 95/100.",
+    "title": "MATX — Bullish setup, score 95/100.",
+    "desc": "MATX analysis: Matson combines a defensive near-monopoly franchise (Hawaii/Alaska shipping) with cyclical upside from trans-Pacific trade recovery.",
+    "tags": "us,industrials,earnings,dividende",
+    "grade": "A+",
+    "href": "/analyses/MATX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EURUSD",
     "exchange": "Forex · Major Pair",
     "name": "EURUSD — EUR/USD: Range play, score 65/100. Entry 1.1430, target 1.1670.",
@@ -1029,14 +1055,14 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
-    "ticker": "XAUUSD",
-    "exchange": "COMEX · Precious Metals",
-    "name": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
-    "title": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
-    "desc": "Gold (XAU/USD) analysis: 12% pullback from all-time highs creates a contrarian opportunity backed by structural central bank demand of 60 tonnes/month.",
-    "tags": "commodity,macro,trade-idea,technique",
-    "grade": "A",
-    "href": "/analyses/XAUUSD/",
+    "ticker": "ALT",
+    "exchange": "NASDAQ · Healthcare",
+    "name": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $535M cash,...",
+    "title": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $535M cash,...",
+    "desc": "Analyse Altimmune : pemvidutide Phase 3 MASH imminente, FDA Breakthrough Therapy, cash $535M post-offering, market cap ~$525M. Grade B+.",
+    "tags": "us,healthcare,speculative,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/ALT/",
     "date": ""
   },
   {
@@ -1063,19 +1089,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,trade-idea",
     "grade": "B+",
     "href": "/analyses/IOVA/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "ALT",
-    "exchange": "NASDAQ • Healthcare • Biotechnologie",
-    "name": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $225M levés...",
-    "title": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $225M levés...",
-    "desc": "Analyse Altimmune : pemvidutide Phase 3 MASH imminente, FDA Breakthrough Therapy, cash $225M post-offering, market cap $544M. Grade B+.",
-    "tags": "us,healthcare,speculative,trade-idea",
-    "grade": "B+",
-    "href": "/analyses/ALT/",
     "date": ""
   },
   {
@@ -1557,19 +1570,6 @@ window.searchDataPrebuilt = [
     "tags": "eu,semis,tech,ai",
     "grade": "A+",
     "href": "/analyses/ASML/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "MATX",
-    "exchange": "NYSE · Industrials",
-    "name": "MATX — Momentum setup, score 95/100. Entry $193.00, target $215.00.",
-    "title": "MATX — Momentum setup, score 95/100. Entry $193.00, target $215.00.",
-    "desc": "MATX analysis: Matson combines a defensive near-monopoly franchise (Hawaii/Alaska shipping) with cyclical upside from trans-Pacific trade recovery. Four consecutive earnings b",
-    "tags": "us,industrials,earnings,dividende",
-    "grade": "A+",
-    "href": "/analyses/MATX/",
     "date": ""
   },
   {
