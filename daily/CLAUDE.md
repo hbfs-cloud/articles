@@ -242,16 +242,14 @@ Après génération du fichier HTML, ces 4 étapes sont **BLOQUANTES**. Si l'une
 
 **Si `add_card.js` échoue** : vérifier que le HTML est valide, que le `<html>` a `data-tab="daily"` et `data-tags`, et que le hero contient un `<h1>`.
 
-5. **Notification Telegram** (OBLIGATOIRE, APRÈS le push) :
-   ```bash
-   bash tools/publish-with-media.sh --type daily --path daily/YYYYMMDD/index.html
+5. **Notification** (OBLIGATOIRE, APRÈS le push) — via MCP Notification :
    ```
-   - Ce script génère l'audio + vidéo puis envoie la notification Telegram unifiée
-   - Si timeout vidéo → fallback text automatique
-   - **JAMAIS** appeler `telegram-publish-notify.js` sans `--path`
-   - **JAMAIS** appeler `telegram-publish-notify.js --help` en production
-   - Vérifier dans le log que `✅ Telegram → Daily Briefing` apparaît
-   - Si échec : réessayer manuellement avec `node tools/telegram-publish-notify.js --type daily --path daily/YYYYMMDD/index.html`
+   send_message(to: "daily", body: "📊 Daily Briefing — DD mois YYYY\n\n{titre}\n\nhttps://articles.dailytickers.com/daily/YYYYMMDD/")
+   ```
+   - Utiliser `send_media` si une image de couverture est générée
+   - L'alias `daily` résout automatiquement vers le bon topic Telegram + tout autre canal configuré
+   - Vérifier la livraison avec `get_delivery_status` si besoin
+   - **Fallback** : si le MCP Notification est down, utiliser `bash tools/publish-with-media.sh --type daily --path daily/YYYYMMDD/index.html`
 
 ---
 

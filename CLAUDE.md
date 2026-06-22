@@ -40,11 +40,23 @@ read-switch avec fallback dur sur `pit-state.json`, + publish). N'y touche pas s
 Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun token dans .env, aucun secret hardcodé.**
 - **DailyTickers** : `https://mcp.dailytickers.com/mcp` — données marché, screening, backtesting, portfolio
 - **Memory** : `https://memory.hbfs-cloud.com/mcp` — mémoire long-terme partagée entre agents
-- **Telegram** : notifications via MCP enregistré (plus de TELEGRAM_BOT_TOKEN)
+- **Notification** : `https://notification.hbfs-cloud.com/mcp` — notifications multi-canal (Telegram, Discord, Slack, Email)
 - **Broker Simulator** : `https://simulator.dailytickers.com/` — via MCP OAuth2
 
-Les scripts Node.js (refresh-risk-metrics.js, telegram-publish-notify.js, etc.) sont lancés par Claude Code
-qui a accès aux MCPs. **Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
+**Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
+
+### Notification MCP — Outils & Aliases
+| Outil | Usage |
+|-------|-------|
+| `send_message(to, body, thread_id?, priority?)` | Texte markdown vers un alias ou channel |
+| `send_media(to, media_url, media_type, caption?)` | Image/doc/vidéo vers un alias |
+| `send_batch(messages[])` | Multi-canal en un appel |
+| `list_channels(service)` | Découvrir les destinations |
+| `get_delivery_status(message_id)` | Vérifier livraison |
+
+**Aliases pré-configurés** (résolus côté serveur, aucun ID exposé aux agents) :
+`daily`, `weekly`, `analysis`, `learning`, `scanner-turbo`, `scanner-dynamic`, `scanner-balanced`,
+`scanner-orbit`, `scanner-fortress`, `scanner-tkl`, `alerts`
 
 ## ⛔ MCP HARD STOP (IMMUABLE)
 Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **renvoie des données incohérentes** (prix aberrants, NaN, valeurs stale > 48h) :

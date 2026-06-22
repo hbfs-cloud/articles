@@ -149,10 +149,16 @@ node tools/sweep.js                     # Append-only: nouveaux trades fermés
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
-./tools/publish-daily-card.sh           # Image, sweep, media, Telegram + git push
 node tools/trading-executor/run-session.js  # Generate plans + execute
 ```
-Les MCPs (DailyTickers, Telegram, Memory) sont enregistrés via OAuth2 — aucun token en .env nécessaire.
+Après le push, envoyer les notifications via **MCP Notification** :
+```
+send_batch([
+  { to: "scanner-{mode}", body: "🔍 Scanner {DATE} — {N} picks\n\n{résumé par mode}\n\nhttps://articles.dailytickers.com/scanner/{YYYYMMDD}/" }
+  // un message par mode actif (turbo, dynamic, balanced, orbit, fortress, tkl)
+])
+```
+Les MCPs (DailyTickers, Notification, Memory) sont enregistrés via OAuth2 — aucun token en .env nécessaire.
 
 **Post-pipeline checklist OBLIGATOIRE** :
 - QA check (`tools/qa-check.js`) doit afficher 0 ❌
