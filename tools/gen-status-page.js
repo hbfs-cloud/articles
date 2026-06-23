@@ -607,7 +607,9 @@ async function main() {
 
   const _updSrc = liveMetrics.updated_at || results.generated_at;
   const updatedAt = (() => {
-    const d = _updSrc ? new Date(_updSrc) : new Date();
+    const src = _updSrc ? new Date(_updSrc) : null;
+    const now = new Date();
+    const d = (src && (now - src) < 24 * 3600 * 1000) ? src : now;
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const hh = String(d.getUTCHours()).padStart(2, '0');
     const mm = String(d.getUTCMinutes()).padStart(2, '0');
