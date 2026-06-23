@@ -1068,6 +1068,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CHRD",
+    "exchange": "NASDAQ · Energy",
+    "name": "CHRD — Chord Energy: deep-value Bakken E&P below book value, 4.2% yield + $1B buyback, raised ...",
+    "title": "CHRD — Chord Energy: deep-value Bakken E&P below book value, 4.2% yield + $1B buyback, raised ...",
+    "desc": "CHRD analysis: Chord Energy is a deep-value Bakken pure-play trading below book at 3.85x EV/EBITDA, returning capital aggressively (4.2% dividend + $1B buyback) after a ~18% pullback to its 200-EMA.",
+    "tags": "us,energy,dividende,macro",
+    "grade": "B+",
+    "href": "/analyses/CHRD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQX",
     "exchange": "NYSE · Gold / Basic Materials",
     "name": "EQX — Deep value gold producer at 6.4x PE, Orla merger creates 1.1M oz senior producer. Score...",
