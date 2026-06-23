@@ -64,6 +64,16 @@ RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('
 
 **Sélection : 10 setups A+** (score ≥ **90**, confluence ≥ 3 signaux, géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 
+**⚠️ Grille A+ empirique (cohorte 29 setups, juin 2026) — 4 ÉLIMINATOIRES obligatoires :**
+Tout candidat A+ doit passer ces 4 gates. Échec sur 1 = plafond A (max 88/100).
+1. **Guidance relevée** par le management au dernier trimestre (discriminant #1 : 100% des A+ l'ont)
+2. **≥ 5 EPS beats consécutifs**
+3. **PE forward < 35x** (exception documentée si monopole tech mondial + EPS growth >25% + PEG <2)
+4. **Extension EMA20 ≤ 3%** (DECK lesson : 3.8% ext = seul A+ sous-performeur)
+
+**Critères pondérés (score /100) :** PEG <1.5 (15pts), buyback actif (8pts), dividende (7pts), structure technique consolidation >3sem (20pts), R/R ≥2.5 (15pts), SEC 8-K/10-Q propre (15pts). A+ ≥ 92, A ≥ 88.
+**Exclusion :** earnings dans 10 jours → "earnings play", pas swing A+.
+
 ### ⚠️ Phase 2b — VALIDATION GATE (OBLIGATOIRE AVANT Phase 3)
 
 Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.

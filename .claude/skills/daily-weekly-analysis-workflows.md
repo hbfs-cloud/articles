@@ -34,6 +34,7 @@ Supporte tous les asset types : stock, etf, crypto, forex, commodity, index.
    - `meta.assetType` : "stock" | "etf" | "crypto" | "forex" | "commodity" | "index" — pilote le rendu (chart source, format prix)
    - Toutes les données doivent venir de MCP/WebSearch — JAMAIS inventées
    - Référence JSON : `data/analyses-data/MATX.json`
+   - **Grading A+ (grille empirique juin 2026)** — 4 éliminatoires obligatoires : (1) guidance relevée, (2) ≥5 EPS beats consécutifs, (3) PE fwd <35x, (4) extension EMA20 ≤3%. Scoring pondéré /100 : PEG (15pts), buyback (8pts), dividende (7pts), structure (20pts), R/R≥2.5 (15pts), SEC clean (15pts). A+ ≥92, A ≥88. Détails dans `.claude/skills/aplus-setups.md`.
 5. **Publier** :
    ```bash
    node tools/publish-analysis.js data/analyses-data/{TICKER}.json --commit
