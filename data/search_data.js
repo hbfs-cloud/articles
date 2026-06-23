@@ -1068,6 +1068,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "BNP.PA",
+    "exchange": "Euronext Paris · Financial Services — Diversified Banking",
+    "name": "BNP.PA — BNP Paribas: Grade A, score 85/100. Below book value, 7.85x fwd PE, 9.8% yield. Q1 reco...",
+    "title": "BNP.PA — BNP Paribas: Grade A, score 85/100. Below book value, 7.85x fwd PE, 9.8% yield. Q1 reco...",
+    "desc": "BNP Paribas analysis: Europe's largest bank by assets, trading below book value at 7.85x forward P/E with a 9.8% dividend yield. Q1 2026 net income +9% YoY to €3.2B — record quarter. Grade A, score 85/100. Wait for pullback to EMA20 (~€96) for optimal entry.",
+    "tags": "eu,financials,earnings,dividende,trade-idea",
+    "grade": "A",
+    "href": "/analyses/BNP.PA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "XAUUSD",
     "exchange": "COMEX · Precious Metals",
     "name": "XAUUSD — Gold: Contrarian setup, score 74/100. Entry $4,160, target $4,545.",
