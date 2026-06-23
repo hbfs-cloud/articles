@@ -48,11 +48,19 @@ Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun
 ### Notification MCP — Outils & Aliases
 | Outil | Usage |
 |-------|-------|
-| `send_message(to, body, thread_id?, priority?)` | Texte markdown vers un alias ou channel |
+| `send_message(to, body, format?, thread_id?, priority?)` | Message vers un alias ou channel |
 | `send_media(to, media_url, media_type, caption?)` | Image/doc/vidéo vers un alias |
 | `send_batch(messages[])` | Multi-canal en un appel |
 | `list_channels(service)` | Découvrir les destinations |
 | `get_delivery_status(message_id)` | Vérifier livraison |
+
+**⚠️ Format Telegram (OBLIGATOIRE)** : Toujours utiliser `format: "html"` avec des balises HTML.
+Telegram ne supporte PAS le Markdown GitHub (`**bold**` reste en texte brut). Utiliser :
+- `<b>bold</b>` au lieu de `**bold**`
+- `<i>italic</i>` au lieu de `*italic*`
+- `<code>code</code>` au lieu de `` `code` ``
+- `<a href="url">text</a>` pour les liens
+- `\n` pour les sauts de ligne (pas de `<br>`)
 
 **Aliases pré-configurés** (résolus côté serveur, aucun ID exposé aux agents) :
 `daily`, `weekly`, `analysis`, `learning`, `scanner-turbo`, `scanner-dynamic`, `scanner-balanced`,
