@@ -1068,6 +1068,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "HYLN",
+    "exchange": "NYSE American · Industrials",
+    "name": "HYLN — Hyliion (HYLN) vs Bloom Energy (BE): a $1.1B pre-revenue KARNO generator bet against th...",
+    "title": "HYLN — Hyliion (HYLN) vs Bloom Energy (BE): a $1.1B pre-revenue KARNO generator bet against th...",
+    "desc": "HYLN analysis: Hyliion is a speculative pre-revenue play on the KARNO fuel-agnostic linear generator for AI data-center power — high optionality, a $500M dilution shelf, and a 214x EV/Revenue valuation. Benchmarked against fuel-cell leader Bloom Energy (BE).",
+    "tags": "us,industrials,speculative,ai",
+    "grade": "C+",
+    "href": "/analyses/HYLN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CHRD",
     "exchange": "NASDAQ · Energy",
     "name": "CHRD — Chord Energy: deep-value Bakken E&P below book value, 4.2% yield + $1B buyback, raised ...",
