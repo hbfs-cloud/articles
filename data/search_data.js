@@ -1081,6 +1081,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CENX",
+    "exchange": "NASDAQ · Matériaux de base",
+    "name": "CENX — Century Aluminum : cyclique massacrée à 3,5x le PER futur, test de l'EMA200, vent porte...",
+    "title": "CENX — Century Aluminum : cyclique massacrée à 3,5x le PER futur, test de l'EMA200, vent porte...",
+    "desc": "Analyse CENX : Century Aluminum, producteur américain d'aluminium primaire profondément survendu, à 3,5x les bénéfices futurs, en repli de 33% depuis ses sommets de juin sur le support EMA200, porté par un puissant tarif douanier Section 232 à 50% et ~66% de potentiel selon les analystes.",
+    "tags": "us,materials,macro,technique",
+    "grade": "B+",
+    "href": "/analyses/CENX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MRK",
     "exchange": "NYSE · Healthcare",
     "name": "MRK — Bullish setup, score 86/100.",
