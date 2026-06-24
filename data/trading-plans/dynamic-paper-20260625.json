@@ -1,0 +1,760 @@
+{
+  "version": "1.0",
+  "dsl": "dailytickers-trading-plan",
+  "generated_at": "2026-06-24T21:23:40.865Z",
+  "valid_for": "2026-06-25",
+  "mode_status": {
+    "state": "live",
+    "since": "2026-02-26T00:00:00Z",
+    "reason": null,
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
+    "forceLiquidate": false,
+    "publiclyVisible": true,
+    "tradingMode": "real",
+    "nextReviewAt": null
+  },
+  "broker": {
+    "name": "paper",
+    "type": "simulation",
+    "credentials": {
+      "api_key": "${BROKER_API_KEY}",
+      "api_secret": "${BROKER_API_SECRET}",
+      "base_url": "http://localhost:9999",
+      "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
+    }
+  },
+  "account": {
+    "nominal_usd": 10000,
+    "currency": "USD",
+    "position_size_pct": 100,
+    "max_positions": 1
+  },
+  "mode": {
+    "name": "dynamic",
+    "horizon_days": 10,
+    "filter": "mom_bo",
+    "min_score": 88,
+    "rotation": "none",
+    "breakeven_pct": 0,
+    "be_grace_days": 0,
+    "vix_kill": 30,
+    "trailing_stop": true,
+    "daily_trail_pct": 0,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 2.5,
+    "stale_days": 0,
+    "entry_gate_pct": 0,
+    "partial_tp": true,
+    "partial_tp_pct": 0.3,
+    "sector_cap_max": 1,
+    "sizing_method": "inverse_atr",
+    "target_risk_pct": 1,
+    "correlation_cap": 0,
+    "cross_mode_dedup": false,
+    "regime_filters": {
+      "risk_on": "mom_bo",
+      "early_risk_off": "breakout_only",
+      "risk_off": "breakout_only",
+      "neutral": "mom_bo",
+      "recovery": "mom_bo"
+    },
+    "dd_breaker_pct": 8
+  },
+  "session": {
+    "market": "US_EQUITY",
+    "timezone": "America/New_York",
+    "pre_market": "04:00",
+    "market_open": "09:30",
+    "market_close": "16:00",
+    "post_market": "20:00",
+    "extended_hours": false
+  },
+  "risk": {
+    "max_portfolio_heat_pct": "1.0",
+    "max_single_loss_pct": 3,
+    "max_slippage_pct": 1,
+    "max_spread_pct": 0.5,
+    "circuit_breaker": {
+      "daily_loss_pct": 8,
+      "action": "HALT_ALL_ORDERS",
+      "description": "If portfolio drops 8% intraday, cancel all pending orders and alert."
+    },
+    "correlation_limit": 0.85,
+    "max_sector_concentration": 1
+  },
+  "close_now": [
+    {
+      "action": "CLOSE",
+      "ticker": "FMX",
+      "broker_symbol": "FMX",
+      "broker": {
+        "symbol": "FMX"
+      },
+      "reason": "HORIZON_EXPIRED",
+      "held_days": 12,
+      "horizon": 10,
+      "current_pnl_pct": 3.24,
+      "execution": {
+        "type": "MARKET",
+        "timing": "AT_OPEN",
+        "description": "Close at market open — horizon expired, exit regardless of P&L"
+      }
+    },
+    {
+      "action": "CLOSE",
+      "ticker": "NUVL",
+      "broker_symbol": "NUVL",
+      "broker": {
+        "symbol": "NUVL"
+      },
+      "reason": "HORIZON_EXPIRED",
+      "held_days": 11,
+      "horizon": 10,
+      "current_pnl_pct": 0.15,
+      "execution": {
+        "type": "MARKET",
+        "timing": "AT_OPEN",
+        "description": "Close at market open — horizon expired, exit regardless of P&L"
+      }
+    },
+    {
+      "action": "CLOSE",
+      "ticker": "XLP",
+      "broker_symbol": "XLP",
+      "broker": {
+        "symbol": "XLP"
+      },
+      "reason": "HORIZON_EXPIRED",
+      "held_days": 10,
+      "horizon": 10,
+      "current_pnl_pct": -2.57,
+      "execution": {
+        "type": "MARKET",
+        "timing": "AT_OPEN",
+        "description": "Close at market open — horizon expired, exit regardless of P&L"
+      }
+    }
+  ],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "KO",
+      "broker_symbol": "KO",
+      "broker": {
+        "symbol": "KO"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 80.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 124,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-25T09:30:00-04:00",
+        "valid_until": "2026-06-25T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 78,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 85.5,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 88.5,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 87,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Best extension in scan (0.42% from EMA20). Near-EMA20 pullback entry. 4/4 EPS beats. PE fwd 23.1, beta 0.354, div 2.6%. Above all EMAs, RSI 52.6. Anti-dilution clean."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "MRK",
+      "broker_symbol": "MRK",
+      "broker": {
+        "symbol": "MRK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 120,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 83,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-25T09:30:00-04:00",
+        "valid_until": "2026-06-25T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 115,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 130,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 135,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 86,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Best value PE fwd 12.6x. 4/4 EPS beats. RSI 58, EMA20 ext 2.79%. Keytruda franchise + Winrevair growth. Div 2.8%. Beta 0.218. Anti-dilution clean."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "LLY",
+      "broker_symbol": "LLY",
+      "broker": {
+        "symbol": "LLY"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1117,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 8,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-25T09:30:00-04:00",
+        "valid_until": "2026-06-25T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1065,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1221,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1275,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 85,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Best PEG 1.48. 4/4 massive EPS beats (1Q +25.9% surprise). GLP-1 leader (Mounjaro/Zepbound). RSI 58, ext 1.50%. PE fwd 25.1, beta 0.517. Anti-dilution clean."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "CL",
+      "broker_symbol": "CL",
+      "broker": {
+        "symbol": "CL"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 92,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 108,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-25T09:30:00-04:00",
+        "valid_until": "2026-06-25T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 88.5,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 99,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 103,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 84,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "Perfect EMA stack (EMA20>EMA50>EMA200 rising). 4/4 EPS beats. Beta 0.322 (lowest in scan). PE fwd 22.7, PEG 1.58. TP1 near 52W high $99.33. Anti-dilution clean."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "DUK",
+      "broker_symbol": "DUK",
+      "broker": {
+        "symbol": "DUK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 126.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 10000,
+          "shares": 79,
+          "pct_of_portfolio": 100
+        },
+        "valid_from": "2026-06-25T09:30:00-04:00",
+        "valid_until": "2026-06-25T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 122.5,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 134.5,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 139,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 10,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 10 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 83,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": false,
+        "thesis": "Utility diversifier for sector balance. 4/4 EPS beats (1Q +7.2% surprise). PE fwd 17.7, beta 0.379, div 3.4%. RSI 56.8, ext 1.72%. TP1 at 52W high $134.49. Anti-dilution clean."
+      },
+      "priority": 5
+    }
+  ],
+  "error_handlers": {
+    "INSUFFICIENT_MARGIN": {
+      "action": "REDUCE_SIZE",
+      "reduce_pct": 50,
+      "retry": true,
+      "max_retries": 1
+    },
+    "SYMBOL_NOT_FOUND": {
+      "action": "SKIP",
+      "log_level": "ERROR"
+    },
+    "CONNECTION_LOST": {
+      "action": "RECONNECT",
+      "max_retries": 10,
+      "backoff_ms": [
+        1000,
+        2000,
+        5000,
+        10000,
+        30000
+      ],
+      "on_failure": "CANCEL_PENDING_AND_ALERT"
+    },
+    "PARTIAL_FILL": {
+      "action": "KEEP_PARTIAL",
+      "adjust_exits": true,
+      "description": "Keep partial fill. Adjust TP/SL quantities proportionally."
+    },
+    "ORDER_REJECTED": {
+      "action": "LOG_AND_SKIP",
+      "log_level": "WARN"
+    },
+    "MARKET_HALTED": {
+      "action": "WAIT_RESUME",
+      "timeout_min": 60,
+      "on_timeout": "CANCEL_ORDER"
+    },
+    "RATE_LIMITED": {
+      "action": "BACKOFF",
+      "delay_ms": 5000,
+      "max_retries": 3
+    },
+    "DUPLICATE_ORDER": {
+      "action": "SKIP",
+      "description": "Order for this symbol already exists. Idempotent — skip."
+    }
+  },
+  "lifecycle": {
+    "on_start": [
+      {
+        "step": "CHECK_MARKET_STATUS",
+        "description": "Verify market is open or will open today"
+      },
+      {
+        "step": "SYNC_ACCOUNT",
+        "description": "Fetch current account balance, buying power, positions"
+      },
+      {
+        "step": "RECONCILE_POSITIONS",
+        "description": "Compare broker positions with expected positions. Alert on discrepancy."
+      },
+      {
+        "step": "CHECK_VIX",
+        "threshold": 30,
+        "action": "HALT_IF_ABOVE",
+        "description": "If VIX > 30, halt all new orders"
+      },
+      {
+        "step": "LOG_STATE",
+        "description": "Log initial account state for audit trail"
+      }
+    ],
+    "on_fill": [
+      {
+        "step": "PLACE_EXITS",
+        "description": "Immediately place SL and TP1/TP2 bracket orders"
+      },
+      {
+        "step": "LOG_FILL",
+        "description": "Record fill price, time, slippage, fees"
+      },
+      {
+        "step": "CHECK_BREAKEVEN",
+        "description": "Start monitoring for breakeven trigger"
+      },
+      {
+        "step": "NOTIFY",
+        "channel": "telegram",
+        "description": "Send fill notification to Telegram"
+      }
+    ],
+    "on_exit": [
+      {
+        "step": "CANCEL_REMAINING_EXITS",
+        "description": "Cancel the other side (SL if TP hit, TP if SL hit)"
+      },
+      {
+        "step": "LOG_EXIT",
+        "description": "Record exit price, P&L, hold time"
+      },
+      {
+        "step": "CHECK_ROTATION",
+        "description": "If slot freed, check for pending rotation candidates"
+      },
+      {
+        "step": "UPDATE_PORTFOLIO",
+        "description": "Update local portfolio state file"
+      }
+    ],
+    "on_breakeven": [
+      {
+        "step": "MODIFY_STOP",
+        "description": "Move stop loss to entry price (+ spread buffer)"
+      },
+      {
+        "step": "LOG_BREAKEVEN",
+        "description": "Record breakeven activation"
+      }
+    ],
+    "on_horizon_expiry": [
+      {
+        "step": "CLOSE_AT_MARKET",
+        "description": "Submit market close order at next open"
+      },
+      {
+        "step": "CANCEL_EXITS",
+        "description": "Cancel any pending TP/SL orders for this position"
+      }
+    ],
+    "on_error": [
+      {
+        "step": "LOG_ERROR",
+        "description": "Record error with full context"
+      },
+      {
+        "step": "LOOKUP_HANDLER",
+        "description": "Find matching error_handler and execute action"
+      },
+      {
+        "step": "NOTIFY_IF_CRITICAL",
+        "description": "Alert on CONNECTION_LOST, CIRCUIT_BREAKER, or unknown errors"
+      }
+    ],
+    "on_end": [
+      {
+        "step": "CANCEL_UNFILLED",
+        "description": "Cancel any GTC orders that were not filled today"
+      },
+      {
+        "step": "EXPORT_TRADES",
+        "description": "Write execution log to trades-YYYYMMDD.json"
+      },
+      {
+        "step": "SUMMARY",
+        "description": "Print session summary: fills, skips, errors, P&L"
+      }
+    ]
+  },
+  "broker_notes": {}
+}
