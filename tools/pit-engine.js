@@ -255,7 +255,7 @@ function openPosition(setup, scanDate, entryDate, cfg) {
   if (prevBar && prevBar.high && prevBar.low && prevBar.close) {
     vwapRef = (prevBar.high + prevBar.low + prevBar.close) / 3;
   }
-  if (cfg.vwapGate && vwapRef !== null) {
+  if (cfg.vwapGate && vwapRef !== null && setup.strategy !== 'candlestick') {
     if (actualEntry > vwapRef * 1.01) return null;
     entryPrice = Math.max(Math.min(actualEntry, vwapRef), entryBar.low);
   }
@@ -391,7 +391,7 @@ function buildCandidates(scan, mode, day, cfgOverride = null) {
   // Filter by score + strategy
   const minScore = cfg.minScore || 0;
   let candidates = pool
-    .filter(s => (s.score || 0) >= minScore)
+    .filter(s => (s.score || 0) >= minScore || s.strategy === 'candlestick')
     .filter(s => !filterSet.has(s.strategy));
 
   // ETF 52w high penalty
@@ -409,12 +409,13 @@ function buildCandidates(scan, mode, day, cfgOverride = null) {
       }
     }
   }
-  candidates = candidates.filter(c => (c._effScore ?? c.score) >= minScore);
+  candidates = candidates.filter(c => (c._effScore ?? c.score) >= minScore || c.strategy === 'candlestick');
 
   // Sort by effective score desc, take topN
   candidates.sort((a, b) => (b._effScore ?? b.score) - (a._effScore ?? a.score));
   const topN = cfg.topN || cfg.portfolioSize || 1;
-  return candidates.slice(0, topN);
+  const candlestickExtras = candidates.filter(c => c.strategy === 'candlestick').length;
+  return candidates.slice(0, topN + candlestickExtras);
 }
 
 // ─── Main engine loop ────────────────────────────────────────────────────────
