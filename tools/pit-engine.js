@@ -180,9 +180,10 @@ function stepPosition(pos, day, bar, cfg) {
     }
   }
 
-  // Trailing stop (post-partial)
-  if (cfg.trailingStop && pos.partialRealized > 0) {
-    const trailLevel = bar.high - pos.riskPerUnit * 1.5;
+  // Trailing stop (post-partial) — gate on partialRealized only when partialTP is configured
+  const trailGated = (cfg.partialTPGain > 0 || cfg.partialTP) ? pos.partialRealized > 0 : true;
+  if (cfg.trailingStop && trailGated && pos.daysHeld > (cfg.trailGraceDays || 0)) {
+    const trailLevel = bar.high - pos.riskPerUnit * (cfg.trailMultR || 1.5);
     if (trailLevel > pos.currentStop) pos.currentStop = trailLevel;
   }
 
@@ -350,6 +351,8 @@ function initState(modesConfig, modeFilter) {
       closedTrades: [],
       equityCurve: [],
       cooldown: {}, // ticker → { exitDate, days }
+      cbStopDates: [], // circuit breaker: dates of SL events
+      cbPauseUntil: null, // circuit breaker: pause new entries until this date
     };
   }
   return state;
@@ -486,6 +489,18 @@ async function run() {
           mode.closedTrades.push(pos);
           const cdDays = cooldownDaysForStatus(pos.status);
           if (cdDays > 0) mode.cooldown[pos.ticker] = { exitDate: day, days: cdDays };
+          // Circuit breaker: track SL events
+          const cbBase = (pos.status || '').replace(/_amb$/, '');
+          const cbMax = cfg.circuitBreakerStops || 0;
+          if (cbBase === 'sl' && cbMax > 0) {
+            mode.cbStopDates.push(day);
+            const cbWin = cfg.circuitBreakerWindow || 5;
+            const windowStart = addBizDays(day, -cbWin);
+            const recentStops = mode.cbStopDates.filter(d => d >= windowStart).length;
+            if (recentStops >= cbMax) {
+              mode.cbPauseUntil = addBizDays(day, cfg.circuitBreakerPause || 3);
+            }
+          }
         } else {
           stillOpen.push(pos);
         }
@@ -590,8 +605,9 @@ async function run() {
         const statusActiveOnDay = !statusSinceDay || day >= statusSinceDay;
         const statusHalt = statusActiveOnDay && !ms.acceptsNewEntries(cfgStatus);
 
-        // Rotation — skipped when status forbids new entries.
-        if (!statusHalt && cfg.rotation && cfg.rotation !== 'none' && slots <= 0 && candidates.length > 0) {
+        // Rotation — skipped when status or circuit breaker forbids new entries.
+        const cbHaltRotation = !!(mode.cbPauseUntil && day <= mode.cbPauseUntil);
+        if (!statusHalt && !cbHaltRotation && cfg.rotation && cfg.rotation !== 'none' && slots <= 0 && candidates.length > 0) {
           const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : (cfg.portfolioSize || 1);
           const margin = cfg.rotation === 'aggressive' ? 0 : 5;
           const sorted = [...mode.positions].sort((a, b) => (a.score || 0) - (b.score || 0));
@@ -625,16 +641,19 @@ async function run() {
             if (mode.equityCurve[i].value > peak) peak = mode.equityCurve[i].value;
           }
           const priorClose = mode.equityCurve[mode.equityCurve.length - 1].value;
-          ddBreaker = (peak - priorClose) > cfg.ddBreakerPct;
+          const currentDD = peak > 0 ? ((peak - priorClose) / peak) * 100 : 0;
+          ddBreaker = currentDD > cfg.ddBreakerPct;
         }
+        // Circuit breaker: pause new entries after consecutive SL streak
+        const cbHalt = !!(mode.cbPauseUntil && day <= mode.cbPauseUntil);
         // Status gate already computed above (statusHalt). For paused / stopped /
         // pausing / liquidated / draft, statusActiveOnDay gates from the transition
         // date so historical backtest results stay reproducible. Existing positions
         // still run their full exit logic (SL/TP/horizon/trailing) — only the
         // new-entry path is suppressed. Liquidated additionally force-closes
         // every remaining position via the 1b pass above.
-        if (vixKill || ddBreaker || statusHalt) {
-          log(`  ${day} ${mode.id} HALT new entries (vixKill=${vixKill}, ddBreaker=${ddBreaker}, status=${statusHalt ? cfgStatus : 'ok'})`);
+        if (vixKill || ddBreaker || statusHalt || cbHalt) {
+          log(`  ${day} ${mode.id} HALT new entries (vixKill=${vixKill}, ddBreaker=${ddBreaker}, status=${statusHalt ? cfgStatus : 'ok'}, cb=${cbHalt})`);
           continue;
         }
 
