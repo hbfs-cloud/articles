@@ -1081,6 +1081,45 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "GE",
+    "exchange": "NYSE · Industrials",
+    "name": "GE — Bullish setup, score 78/100.",
+    "title": "GE — Bullish setup, score 78/100.",
+    "desc": "GE Aerospace analysis: World's largest jet engine manufacturer with 4 consecutive EPS beats, but entry is overextended — RSI overbought at 73, 8.5% above EMA20, and forward PE at 42x.",
+    "tags": "us,industrials,defense,earnings,dividende",
+    "grade": "B+",
+    "href": "/analyses/GE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "TSM",
+    "exchange": "NYSE · Semiconductors",
+    "name": "TSM — Bullish setup, score 90/100.",
+    "title": "TSM — Bullish setup, score 90/100.",
+    "desc": "TSM analysis: Taiwan Semiconductor is the world's dominant foundry, controlling ~60% of global foundry revenue and ~90% of advanced nodes. The AI boom is driving massive demand for 3nm/5nm processes.",
+    "tags": "us,semis,ai,tech,dividende",
+    "grade": "A",
+    "href": "/analyses/TSM/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "AAOI",
+    "exchange": "NASDAQ · Technology",
+    "name": "AAOI — Fiber optics AI infrastructure pure-play. +884% YTD. Revenue +34% YoY. New FAB2 cleanro...",
+    "title": "AAOI — Fiber optics AI infrastructure pure-play. +884% YTD. Revenue +34% YoY. New FAB2 cleanro...",
+    "desc": "Applied Optoelectronics analysis: fiber-optic AI data center play. Pulled back 37% from $234 high. RSI 43, below EMA20/50. Q1 2026 EPS miss. Trade TP2 hit. Grade B+.",
+    "tags": "us,tech,semis,ai",
+    "grade": "B+",
+    "href": "/analyses/AAOI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CENX",
     "exchange": "NASDAQ · Matériaux de base",
     "name": "CENX — Century Aluminum : cyclique massacrée à 3,5x le PER futur, test de l'EMA200, vent porte...",
@@ -2025,19 +2064,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,crypto,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/CRWV/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AAOI",
-    "exchange": "NASDAQ • Technology • Communication Equipment — Fiber Optics / AI Data Centers",
-    "name": "AAOI — Fiber optics AI infrastructure pure-play. +884% YTD. Revenue +34% YoY. New FAB2 cleanro...",
-    "title": "AAOI — Fiber optics AI infrastructure pure-play. +884% YTD. Revenue +34% YoY. New FAB2 cleanro...",
-    "desc": "Applied Optoelectronics analysis: fiber-optic AI data center play, +884% YTD, parabolic breakout to $114, RSI 73 overbought. $250M ATM dilution risk. Grade B+.",
-    "tags": "us,tech,semis,ai",
-    "grade": "B+",
-    "href": "/analyses/AAOI/",
     "date": ""
   },
   {
