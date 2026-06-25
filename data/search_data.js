@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CPAY",
+    "exchange": "NYSE · Software / Fintech",
+    "name": "CPAY — A+ setup. Cheap payments compounder, 5 straight beats, buyback-driven EPS. Entry $351, ...",
+    "title": "CPAY — A+ setup. Cheap payments compounder, 5 straight beats, buyback-driven EPS. Entry $351, ...",
+    "desc": "CPAY analysis: Corpay is a cheap (12.8x forward P/E) corporate-payments and cross-border FX compounder with five straight earnings beats, an actively shrinking share count, and back-half Alpha/Avid synergies. Actionable on a shallow pullback to a rising EMA20.",
+    "tags": "us,tech,financials,earnings,trade-idea",
+    "grade": "A+",
+    "href": "/analyses/CPAY/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "BMNR",
     "exchange": "NYSE • Crypto-Treasury • Bitcoin Proxies",
     "name": "BMNR — MSTR -81% du high, BMNR -92%. Dilution sérielle, BTC sous $60K, dividendes préférentiel...",
@@ -1570,19 +1583,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,earnings,trade-idea",
     "grade": "A",
     "href": "/analyses/NTCT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "CPAY",
-    "exchange": "NYSE · Software / Fintech",
-    "name": "CPAY — A+ setup. Cheap payments compounder, 5 straight beats, buyback-driven EPS. Entry $351, ...",
-    "title": "CPAY — A+ setup. Cheap payments compounder, 5 straight beats, buyback-driven EPS. Entry $351, ...",
-    "desc": "CPAY analysis: Corpay is a cheap (12.8x forward P/E) corporate-payments and cross-border FX compounder with five straight earnings beats, an actively shrinking share count, and back-half Alpha/Avid synergies. Actionable on a shallow pullback to a rising EMA20.",
-    "tags": "us,tech,financials,earnings,trade-idea",
-    "grade": "A+",
-    "href": "/analyses/CPAY/",
     "date": ""
   },
   {
