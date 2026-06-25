@@ -10,18 +10,49 @@ user_invocable: false
 
 JAMAIS skipper une étape du pipeline (anti-dilution, MCP enrichment per ticker, risk gating, earnings/economic event proximity, validation) sans accord explicite du user. Token/temps ≠ raison valable. Si une étape semble trop coûteuse, demander explicitement avant. Default = exécution complète.
 
-## ✅ MCP DSL Syntax — Bons appels (verified)
+## ✅ MCP DSL Syntax — Référence (source: `GetDSLDescription`, vérifié 2026-06-25)
 
-- Variables : `rsi14`, `ema20/50/200`, `sma50`, `sma200`, `vwap`, `bbw`, `hhv20/50`, `llv20/50`, `atrpct`, `obvz`, `vol`
-- Fonctions (série quotée) : `sma('close',50)`, `ema('close',20)`, `rsi('close',14)`, `atr(14)`, `hhv('close',50)`, `pct_change('vwap',3)`
-- Patterns : `cross_up('ema20','ema50')`, `rising('ema50',10)`, `vol_spike45(1.5)`, `near_breakout(0.02)`, `is_cup_handle()`
-- Context : `market_cap`, `avg_volume`, `asset_type`, `sector`, `industry`, `country`, `in_index`, `themes`
-- Calendar : `days_until_earnings('AAPL') <= 3`, `is_near_economic_event('USD', 3, 2)`
-- Relative strength : `perf_rank('sector', '', 20) <= 5` (max 3 args après kind), `perf_rel('sector', '', 20)` (no bench sauf kind='etf')
-- Macro : `vix()`, `regime_score()`
-- Multi-asset : `security('SPY','1d','close',1)`, `benchmark('SPY')`
+### Séries numériques (utilisables dans pass_expr ET score_expr)
+`close`, `open`, `high`, `low`, `vol` (alias `volume`), `hlc3`, `ema20`, `ema50`, `ema200`, `atr14`, `atrpct`, `rsi14`, `obvz`, `bbw`, `hhv20`, `llv20`, `hhv50`, `llv50`, `vwap`, `vwapstd`, `px` (alias `ref`)
 
-⚠️ INVALID : `sma(close,50)` (manque quotes), `ma(close,50)` (fonction inexistante), `asset_type=='etf'` dans pass_expr — utiliser param `asset='etf'` séparé.
+### Context (pass_expr uniquement pour comparaisons)
+`market_cap` (alias `marketcap`), `avg_volume`, `asset_type`, `sector`, `industry`, `country`, `exchange`, `market_cap_category`, `consensus_price`, `in_index`, `themes`, `tags`
+
+### Fonctions numériques (pass_expr ET score_expr)
+- `sma('close',50)`, `ema('close',20)`, `rsi('close',14)`, `atr(14)`, `hhv('close',50)`, `llv('close',20)`
+- `pct_change('vwap',3)`, `change_pct(5)`, `gap_pct()`
+- `avg_vol(20)`, `slope('close',20)`, `trend_strength(20)`, `tf('close',20)`
+- `entropy('close',20)`, `skewness('close',20)`, `kurtosis('close',20)`, `autocorr_sign('close',5)`
+- `security('SPY','1d','close',1)`, `pxof('SPY','1d','close')`, `benchmark('SPY')`
+- `vix()`, `regime_score()`
+- `min(a,b)`, `max(a,b)`, `abs(x)`
+- `near_sr_score()`, `vwap_band()`
+- `days_until_earnings()`, `days_until_economic_event('USD',3)`
+
+### Fonctions booléennes (pass_expr UNIQUEMENT — crashent dans score_expr)
+- `cross_up('ema20','ema50')`, `cross_down(...)`, `cross_up_lookback('ema20','ema50',5)`
+- `rising('ema50',10)`, `falling('vwap',5)`
+- `near_breakout(0.02)`, `near_sr(1.5)`, `near_poc(0.05)`
+- `vol_spike45(1.5)`, `vol_spike45_lookback(2.0,10)`
+- `is_cup_handle()`, `is_hammer()`, `is_doji()`, `is_bullish_engulfing()`, `is_bearish_engulfing()`
+- `inrange('rsi14',45,70,10)`, `between(x,min,max)`
+- `price_le(50)`, `price_ge(200)`
+- `theme_match('ai')`
+- `rank('sector',5)`, `is_near_earnings()`, `is_near_economic_event('USD',3,2)`
+
+### Relative strength (⚠️ pass_expr uniquement — `perf_rel` plante dans score_expr malgré retour float)
+- `perf_rank('sector','',20) <= 5` — rang dans le groupe (1=meilleur)
+- `perf_rel('sector','',40) > 0` — delta perf vs groupe (%)
+- `perf_rel('etf','ai','QQQ',20)` — avec benchmark explicite
+- `rank('sector',5)` — booléen top N
+- `roc_sector(20)` — return moyen du secteur
+
+### Gotchas vérifiés
+- ⚠️ `perf_rel(...)` dans score_expr → "too many arguments" même avec args valides. Utiliser uniquement dans pass_expr.
+- ⚠️ `sma(close,50)` → INVALIDE, quotes obligatoires : `sma('close',50)`
+- ⚠️ `ma(close,50)` → fonction inexistante
+- ⚠️ `asset_type=='etf'` dans pass_expr → utiliser param `asset='etf'` séparé
+- ⚠️ Booléens dans score_expr → convertir : `(vol_spike45(1.5) ? 20 : 0)`
 
 RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('stock' default ou 'etf'), `top_k`, `force_async=true` recommandé.
 
@@ -43,7 +74,52 @@ RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('
 
 ### Phase 1 — MCP Data Collection
 
-**Collecte MCP** : `RunAutoScreener` + `RunScreener` (3 DSL + EU + APAC + ETFs) + `GetMarketOverview` (trending, sectors, calendar) + `GetRegimeProbability` (model=ensemble, horizon=5) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats
+**Collecte MCP** : `RunAutoScreener` + **5 RunScreener DSL** (ci-dessous) + `GetMarketOverview` (trending, sectors, calendar) + `GetRegimeProbability` (model=ensemble, horizon=5) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats
+
+**⚠️ RunScreener — 5 queries obligatoires (TOUJOURS inclure market_cap filter) :**
+
+⚠️ **Contrainte performance screener** : le screener scanne tout l'univers. Avec `mcap > $2-5B` + 2-3 conditions, les jobs tournent >5 min sans aboutir. Il faut **mcap > $10B + 4-5 conditions** pour que les jobs US complètent en <30s. EU est plus petit donc $5B suffit.
+
+1. **Momentum** (US, 7+ résultats typiques) — vérifié 2026-06-25 ✅ :
+   ```
+   pass_expr: "market_cap > 10000000000 and rsi14 > 55 and rsi14 < 80 and ema20 > ema50 and ema50 > ema200 and vol > avg_volume * 1.2"
+   score_expr: "(80 - rsi14) * 2 + obvz * 10"
+   region: "us", top_k: 25
+   ```
+
+2. **Pullback / Defensive** (US, 15+ résultats typiques) — vérifié 2026-06-25 ✅ :
+   ```
+   pass_expr: "market_cap > 20000000000 and rsi14 > 40 and rsi14 < 65 and ema20 > ema50 and atrpct < 2.5"
+   score_expr: "(65 - rsi14) * 1.5 + (2.5 - atrpct) * 20"
+   region: "us", top_k: 20
+   ```
+
+3. **Breakout** (US, 0 résultats si pas de squeeze — normal) — vérifié 2026-06-25 ✅ :
+   ```
+   pass_expr: "market_cap > 10000000000 and bbw < 0.08 and near_breakout(0.02) and rising('ema50',10) and vol > avg_volume"
+   score_expr: "(0.08 - bbw) * 200 + obvz * 15"
+   region: "us", top_k: 20
+   ```
+
+4. **Oversold bounce** (US, 0 résultats si marché pas survendu — normal) — vérifié 2026-06-25 ✅ :
+   ```
+   pass_expr: "market_cap > 10000000000 and rsi14 < 40 and ema50 > ema200 and vol > avg_volume"
+   score_expr: "(40 - rsi14) * 3 + obvz * 10"
+   region: "us", top_k: 15
+   ```
+
+5. **EU diversification** (10 résultats typiques) — vérifié 2026-06-25 ✅ :
+   ```
+   pass_expr: "market_cap > 5000000000 and rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > avg_volume"
+   score_expr: "(75 - rsi14) * 2 + obvz * 10"
+   region: "eu", top_k: 15
+   ```
+
+Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de marché. Les queries 3+4 complètent l'univers quand les conditions le permettent (squeeze/survente). La query 5 apporte la diversification géographique. **Pool total attendu : 25-50 candidats uniques** avant dedup + filtering Phase 2.
+
+**⚠️ Safety check** : si TOUS les résultats RunScreener ont `market_cap < 500000000` → le screener est cassé → STOP + alerter le user. Ne JAMAIS ignorer des résultats full-penny-stock.
+
+**Assemblage pool** : merge les 5 résultats + RunAutoScreener → dedup par ticker → rejeter tout candidat avec market_cap < $2B → enrichir top 30 via QueryData
 
 ### Phase 2 — Ticker Selection & Validation
 
