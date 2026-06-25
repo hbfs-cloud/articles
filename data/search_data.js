@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "MRK",
+    "exchange": "NYSE · Healthcare",
+    "name": "MRK — Bullish setup, score 86/100.",
+    "title": "MRK — Bullish setup, score 86/100.",
+    "desc": "MRK analysis: Merck is a global pharma leader anchored by Keytruda (~$25B revenue), with a $50B+ acquisition strategy to build post-patent-cliff revenue streams.",
+    "tags": "us,healthcare,dividende,earnings",
+    "grade": "A-",
+    "href": "/analyses/MRK/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "GE",
     "exchange": "NYSE · Industrials",
     "name": "GE — Bullish setup, score 78/100.",
@@ -1167,19 +1180,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,macro,technique",
     "grade": "B+",
     "href": "/analyses/CENX/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "MRK",
-    "exchange": "NYSE · Healthcare",
-    "name": "MRK — Bullish setup, score 86/100.",
-    "title": "MRK — Bullish setup, score 86/100.",
-    "desc": "MRK analysis: Merck is a global pharma leader anchored by Keytruda (~$25B revenue), with a $50B+ acquisition strategy to build post-patent-cliff revenue streams.",
-    "tags": "us,healthcare,dividende,earnings",
-    "grade": "A-",
-    "href": "/analyses/MRK/",
     "date": ""
   },
   {
