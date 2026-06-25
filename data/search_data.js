@@ -1107,6 +1107,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ING",
+    "exchange": "NYSE · Financials",
+    "name": "ING — Value setup, score 85/100. Entry $30.50, target $33.00, R/R 1.56 at spot $31.02 — grade...",
+    "title": "ING — Value setup, score 85/100. Entry $30.50, target $33.00, R/R 1.56 at spot $31.02 — grade...",
+    "desc": "ING analysis: Dutch banking giant with 4 consecutive EPS beats, 9.9x forward PE, 4.1% dividend yield, and active buyback. Price above all EMAs near 52-week high — bullish structure with actionable pullback entry.",
+    "tags": "eu,financials,dividende,trade-idea",
+    "grade": "A-",
+    "href": "/analyses/ING/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "NVS",
+    "exchange": "NYSE · Healthcare",
+    "name": "NVS — Diversified pharma, grade A-. Entry $153, target $165 / $175. 3.1% dividend, $296B mark...",
+    "title": "NVS — Diversified pharma, grade A-. Entry $153, target $165 / $175. 3.1% dividend, $296B mark...",
+    "desc": "NVS analysis: Novartis is a Swiss pharma giant with a diversified pipeline spanning cardiovascular, oncology, immunology and neuroscience. Entresto, Cosentyx, Kisqali and Pluvicto drive growth. 3.1% dividend yield, price above all EMAs, but PEG 4.15 and a Q1 miss temper the grade.",
+    "tags": "eu,healthcare,dividende,trade-idea",
+    "grade": "A-",
+    "href": "/analyses/NVS/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ALLY",
     "exchange": "NYSE · Financials",
     "name": "ALLY — Value setup, score 88/100. Entry $44.40, target $49.00, R/R 1.01 at spot $45.49 — downg...",
