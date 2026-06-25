@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "BMNR",
+    "exchange": "NYSE • Crypto-Treasury • Bitcoin Proxies",
+    "name": "BMNR — MSTR -81% du high, BMNR -92%. Dilution sérielle, BTC sous $60K, dividendes préférentiel...",
+    "title": "BMNR — MSTR -81% du high, BMNR -92%. Dilution sérielle, BTC sous $60K, dividendes préférentiel...",
+    "desc": "Analyse combinée BMNR (BitMine) et MSTR (Strategy) : le modèle Bitcoin Treasury s'effondre. BTC sous $60K, MSTR au 52W low, dilution massive. Grade D — PAS DE TRADE.",
+    "tags": "us,crypto,speculative,technique",
+    "grade": "D",
+    "href": "/analyses/BMNR-MSTR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EXEL",
     "exchange": "NASDAQ • Healthcare • Oncology (Profitable, Commercial-Stage)",
     "name": "EXEL — EXEL grade A. $52.24 spot, fwd PE 12.9x, 96% gross margins, $750M buyback. Patent cliff...",
@@ -3611,19 +3624,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "C",
     "href": "analyses/BIOA",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "BMNR",
-    "exchange": "NYSE American • Financial Services",
-    "name": "Bitmine Immersion Technologies",
-    "title": "Bitmine Immersion Technologies",
-    "desc": "The MicroStrategy of Ethereum: Tom Lee, Fundstrat scandal, 4.37M\n    ETH treasury, DeFi & crypto deep dive. Price: $20.13, MCap:\n    $9.16B.",
-    "tags": "us,materials,speculative,trade-idea",
-    "grade": "C",
-    "href": "analyses/BMNR/beginner/en",
     "date": ""
   },
   {
