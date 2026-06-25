@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "GE",
+    "exchange": "NYSE · Industrials",
+    "name": "GE — Bullish setup, score 78/100.",
+    "title": "GE — Bullish setup, score 78/100.",
+    "desc": "GE Aerospace analysis: World's largest jet engine manufacturer with 4 consecutive EPS beats, but entry is overextended — RSI overbought at 73, 8.5% above EMA20, and forward PE at 42x.",
+    "tags": "us,industrials,defense,earnings,dividende",
+    "grade": "B+",
+    "href": "/analyses/GE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CPAY",
     "exchange": "NYSE · Software / Fintech",
     "name": "CPAY — A+ setup. Cheap payments compounder, 5 straight beats, buyback-driven EPS. Entry $351, ...",
