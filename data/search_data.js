@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "RVTY",
+    "exchange": "NYSE · Healthcare",
+    "name": "RVTY — A setup, score 89/100. Buy-limit $98.45, TP1 $112.19, R/R 2.0 from entry.",
+    "title": "RVTY — A setup, score 89/100. Buy-limit $98.45, TP1 $112.19, R/R 2.0 from entry.",
+    "desc": "RVTY analysis: Revvity is a high-quality life-science tools & diagnostics compounder — immunodiagnostics, reagents and signals software. Four straight earnings beats, a clean balance sheet, buyback-funded EPS and the least-extended chart of the cohort.",
+    "tags": "us,healthcare,earnings,dividende",
+    "grade": "A",
+    "href": "/analyses/RVTY/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MRK",
     "exchange": "NYSE · Healthcare",
     "name": "MRK — Bullish setup, score 86/100.",
@@ -1466,19 +1479,6 @@ window.searchDataPrebuilt = [
     "tags": "us,healthcare,earnings,dividende",
     "grade": "A",
     "href": "/analyses/WST/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "RVTY",
-    "exchange": "NYSE · Healthcare",
-    "name": "RVTY — A+ setup, score 91/100. Buy-limit $98.45, TP1 $112.19, R/R 2.0.",
-    "title": "RVTY — A+ setup, score 91/100. Buy-limit $98.45, TP1 $112.19, R/R 2.0.",
-    "desc": "RVTY analysis: Revvity is a high-quality life-science tools & diagnostics compounder — immunodiagnostics, reagents and signals software. Four straight earnings beats, a clean balance sheet, buyback-funded EPS and the least-extended chart of the cohort.",
-    "tags": "us,healthcare,earnings,dividende",
-    "grade": "A+",
-    "href": "/analyses/RVTY/",
     "date": ""
   },
   {
