@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TER",
+    "exchange": "NASDAQ · Semiconductors",
+    "name": "TER — Downgraded to B (score 55). Overextended at $437.92 — R/R 0.15 at spot, entry stale. Ne...",
+    "title": "TER — Downgraded to B (score 55). Overextended at $437.92 — R/R 0.15 at spot, entry stale. Ne...",
+    "desc": "TER analysis: Teradyne is the semiconductor-test leader levered to the AI/HBM/compute test-intensity cycle. EPS accelerated from $0.57 to $2.56 across four straight beats, PEG 1.73 — catalyst-rich, joining the Nasdaq-100 on Jun 22.",
+    "tags": "us,semis,ai,earnings",
+    "grade": "B",
+    "href": "/analyses/TER/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "RVTY",
     "exchange": "NYSE · Healthcare",
     "name": "RVTY — A setup, score 89/100. Buy-limit $98.45, TP1 $112.19, R/R 2.0 from entry.",
@@ -1635,19 +1648,6 @@ window.searchDataPrebuilt = [
     "tags": "us,ai,dividende,earnings",
     "grade": "B+",
     "href": "/analyses/D/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "TER",
-    "exchange": "NASDAQ · Semiconductors",
-    "name": "TER — Momentum setup, score 55/100 (downgraded from A+). Entry $398–$402, target $448.00.",
-    "title": "TER — Momentum setup, score 55/100 (downgraded from A+). Entry $398–$402, target $448.00.",
-    "desc": "TER analysis: Teradyne is the semiconductor-test leader levered to the AI/HBM/compute test-intensity cycle. EPS accelerated from $0.57 to $2.56 across four straight beats, PEG ~1.9 — catalyst-rich, joining the Nasdaq-100 on Jun 22.",
-    "tags": "us,semis,ai,earnings",
-    "grade": "B",
-    "href": "/analyses/TER/",
     "date": ""
   },
   {
