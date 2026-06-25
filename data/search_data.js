@@ -291,6 +291,32 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Trader le Marché US en Pleine Tempête : Comment Ne Pas Se Faire Lessiver par la Volatilité et la Concentration IA/Semis",
+    "desc": "Playbook pratique (niveau intermédiaire) pour trader le marché US le 25 juin 2026 : régime défensif, rotation hors des semi-conducteurs, VIX 18,6. 7 règles concrètes pour survivre à la volatilité et à la concentration IA, dimensionnement par l'ATR, 3 idées illustrées.",
+    "tags": "us,semis,ai,technique,macro,formation,trade-idea",
+    "grade": "",
+    "href": "/daily/20260625-volatilite-semis/",
+    "date": "25 juin 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Triple Data Thursday — Commodity Crash Deepens as Gold Hits RSI 30, Oil Below $70, Nikkei Rebounds +4%",
+    "desc": "Triple Data Thursday: GDP Q1 Final, Durable Goods, Jobless Claims all hit today. Commodity crash deepens — Gold $4,009 (RSI 30), Oil $69.46 (RSI 26). Nikkei surges +4.07% overnight. Crisis probability crosses 36%. TLT +1.37% confirms flight to quality. Core PCE + Russell Reconstitution tomorrow.",
+    "tags": "us,eu,asia,crypto,macro,technique,trade-idea,formation,geopolitique,energy,financials",
+    "grade": "",
+    "href": "/daily/20260625/",
+    "date": "25 juin 2026"
+  },
+  {
+    "type": "daily",
+    "icon": "fa-sun",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Semiconductor Carnage — MU Crashes −13% From ATH, SOXX −8%, VIX Spikes to 19.5 as Defensive Rotation Intensifies",
     "desc": "Semiconductor carnage: MU crashes -13.2% from ATH ahead of today's earnings. SOXX -7.9%, NVDA -4.1%, TSLA -5.8%. Defensive rotation accelerates — Healthcare +1.4%, Staples +1.9%. VIX surges +12.8% to 19.49. Regime score 30.3, crisis probability 29.9%. Core PCE Friday.",
     "tags": "us,eu,asia,crypto,macro,technique,trade-idea,formation,geopolitique,semis,financials",
@@ -4067,6 +4093,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 5 A+ RISK-OFF — KO, MRK, LLY, CL, DUK",
+    "desc": "Regime score 27.5 — classifié EARLY RISK-OFF (per rule regime-score-label-lag : score < 40 = ERO). Ensemble model : early_risk_off 0.388, crisis 0.359, neutral 0.193, risk_on 0.061. La probabilité crise (0.359) dépasse le seuil 0.30 → crisis mode activé. Malgré la récupération des indices en fin de ...",
+    "tags": "us,healthcare,consumer,etf,macro,technique,trade-idea",
+    "grade": "",
+    "href": "/scanner/20260625/",
+    "date": "25 juin 2026"
   },
   {
     "type": "scanner",
