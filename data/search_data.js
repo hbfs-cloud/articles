@@ -1120,6 +1120,32 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "OBE",
+    "exchange": "NYSE American / TSX • Energy • Oil & Gas\n            E&P • Calgary",
+    "name": "OBE — rebond de survente TACTIQUE, pas un value sûr. RSI 26.6, days-to-cover 6.98 (squeeze po...",
+    "title": "OBE — rebond de survente TACTIQUE, pas un value sûr. RSI 26.6, days-to-cover 6.98 (squeeze po...",
+    "desc": "Analyse OBE (Obsidian Energy) : rebond tactique de survente (RSI 26.6) contre une tendance baissière intacte (-45% depuis mai). E&P pétrole Ouest canadien. Earnings en dégradation, target consensus $5.99 sous le cours. Trade swing court terme.",
+    "tags": "ca,energy,commodity,trade-idea,speculative",
+    "grade": "B",
+    "href": "/analyses/OBE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "REI",
+    "exchange": "NYSE American • Energy • Oil & Gas E&P\n            — Bassin Permien",
+    "name": "REI — deep-value contrarian sur micro-cap pétrolière Permien. P/B 0.35, forward P/E 3.6, 4 be...",
+    "title": "REI — deep-value contrarian sur micro-cap pétrolière Permien. P/B 0.35, forward P/E 3.6, 4 be...",
+    "desc": "Analyse Ring Energy (REI) : producteur pétrolier Permien décoté (P/B 0.35, forward P/E 3.6), rebond de survente spéculatif. Bilan sous tension : $1M cash vs $428M dette. Target $2.50.",
+    "tags": "us,energy,commodity,trade-idea,speculative",
+    "grade": "B",
+    "href": "/analyses/REI/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "OR",
     "exchange": "Thématique • Commodity / Materials — Jouer la reprise après une correction de 25%",
     "name": "OR — GLD −25% depuis mars, RSI 32. Couteau ou creux (60/40) ? Le panier en 3 paliers : FNV, ...",
