@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-25T21:38:36.465Z",
+  "generated_at": "2026-06-26T08:14:16.908Z",
   "valid_for": "2026-06-26",
   "mode_status": {
     "state": "deploying",
@@ -87,6 +87,102 @@
   "orders": [
     {
       "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "TECH",
+      "broker_symbol": "TECH_US_EQ",
+      "broker": {
+        "symbol": "TECH_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US09073M1045",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 70.53,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 5000,
+          "shares": 70,
+          "pct_of_portfolio": 50
+        },
+        "valid_from": "2026-06-26T09:30:00-04:00",
+        "valid_until": "2026-06-26T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 56.85,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 3.5
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 97.89,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 111.57000000000001,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 20,
+          "expiry_date": "2026-07-24",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 20 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 152,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 13.8x volume spike. ATR% 4.32%, RSI 78.4, BB%B 1.406."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
       "action": "BUY",
       "ticker": "NVS",
       "broker_symbol": "NVS_US_EQ",
@@ -179,10 +275,10 @@
         "sharia": true,
         "thesis": "EU healthcare leader. PE fwd 15.6x deep value vs US peers. Above all EMAs, RSI 60.5, ext 2.99%. Div 3.1%, beta ~0.5. $1.9B Antares deal + Kisqali/Entresto franchise. ATR% 1.86%. Anti-dilution clean."
       },
-      "priority": 1
+      "priority": 2
     },
     {
-      "id": "ORD-002",
+      "id": "ORD-003",
       "action": "BUY",
       "ticker": "ING",
       "broker_symbol": "ING_US_EQ",
@@ -275,10 +371,10 @@
         "sharia": false,
         "thesis": "Deepest value PE fwd 9.9x. Div 4.08% highest in scan. Ext 1.14% lowest in scan. Above all EMAs, MACD above signal. EU banks benefit from ECB normalization. DAX +1.03%. Anti-dilution clean."
       },
-      "priority": 2
+      "priority": 3
     },
     {
-      "id": "ORD-003",
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "BUD",
       "broker_symbol": "BUD_US_EQ",
@@ -371,7 +467,7 @@
         "sharia": false,
         "thesis": "Near 52W high ($84.86). Above all EMAs, RSI 61.2. PE fwd 17.1x, premiumization strategy. ATR% 1.86%, low vol. Extension 3.11% slightly over A+ gate. Anti-dilution clean."
       },
-      "priority": 3
+      "priority": 4
     }
   ],
   "error_handlers": {
