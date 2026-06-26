@@ -212,6 +212,37 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
   if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;
 });
 
+// 4c. Garde anti-régression Bull : un mode candlestick_only actif (live/deploying)
+// NE PEUT PAS avoir 0 signal candlestick dans le dernier scan. C'est le symptôme
+// exact d'un candlestick-scanner.js sauté ou en échec (ex. source Yahoo bloquée).
+// On scanne 3000+ titres et on les qualifie via candlestick → il doit toujours y
+// avoir des candidats. Si 0, le pas du pipeline a échoué silencieusement.
+check('scanner: mode candlestick (bull) — candlestick-scanner a bien tourné (≥1 signal)', () => {
+  let config;
+  try { config = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')); }
+  catch (e) { return `modes-config.json illisible: ${e.message}`; }
+  const candlestickModes = Object.entries(config.modes || {})
+    .filter(([, m]) => m.filterName === 'candlestick_only' && ['live', 'deploying', 'pausing'].includes(m.status));
+  if (!candlestickModes.length) return; // aucun mode candlestick actif → rien à garantir
+
+  const scannerDir = path.join(ROOT, 'scanner');
+  const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse();
+  if (!dirs.length) return 'aucun dossier de scan trouvé';
+  const sigPath = path.join(scannerDir, dirs[0], 'signals.json');
+  if (!fs.existsSync(sigPath)) return `signals.json absent pour le dernier scan ${dirs[0]}`;
+  let signals;
+  try { signals = (JSON.parse(fs.readFileSync(sigPath, 'utf8')).signals) || []; }
+  catch (e) { return `signals.json illisible (${dirs[0]}): ${e.message}`; }
+
+  const candlestickCount = signals.filter(s => /candlestick/i.test(s.strategy || '')).length;
+  if (candlestickCount === 0) {
+    const modeLabels = candlestickModes.map(([id]) => id).join(', ');
+    return `0 signal candlestick dans ${dirs[0]} alors que [${modeLabels}] sont actifs — `
+      + `relancer 'node tools/candlestick-scanner.js --output signals' (vérifier MCP_GATEWAY_URL). `
+      + `Le mode Bull affichera 0 signal tant que ce pas n'a pas tourné.`;
+  }
+});
+
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
 check('bench-spy.json: fichier existe', () => {
   if (!fs.existsSync(path.join(ROOT, 'data', 'bench-spy.json'))) return 'data/bench-spy.json absent — relancer node tools/fetch-bench-spy.js';

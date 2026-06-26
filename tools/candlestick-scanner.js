@@ -8,6 +8,11 @@
  * patterns with volume spike confirmation (8×). Multi-factor scoring:
  * pattern base + ATR% + momentum + MA20 distance + RSI + BB%B + regime.
  *
+ * Data source: DailyTickers MCP gateway (bars_daily via QueryData), same transport
+ * as refresh-risk-metrics.js. Set MCP_GATEWAY_URL (default https://mcp.dailytickers.com/mcp).
+ * Yahoo direct is kept only as a fallback (--source yahoo / auto) — it is fragile and
+ * blocked in several environments, which previously zeroed out the Bull mode signals.
+ *
  * Usage:
  *   node tools/candlestick-scanner.js                                      # full scan, stdout
  *   node tools/candlestick-scanner.js --output json                        # write data/candlestick-scan-YYYY-MM-DD.json
@@ -22,6 +27,7 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+const crypto = require('crypto');
 const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/candlestick-patterns');
 
 const ROOT = path.join(__dirname, '..');
@@ -46,6 +52,18 @@ const BACKTEST = hasFlag('backtest');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
+
+// Price source. The whole scanner pipeline reads market data from the DailyTickers
+// MCP gateway (same transport as refresh-risk-metrics.js) — Yahoo direct is fragile
+// and is blocked in several execution environments, which silently zeroed out the
+// candlestick (Bull) signals. Gateway is now the primary source.
+//   --source gateway  → MCP gateway only (hard-fail if unreachable)
+//   --source yahoo    → legacy Yahoo direct only
+//   --source auto     → gateway first, Yahoo fallback for any missing ticker (default)
+const SOURCE = getArg('source', 'auto').toLowerCase();
+const GATEWAY = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
+const GATEWAY_BATCH = parseInt(getArg('gateway-batch', '60'));   // symbols per QueryData call
+const GATEWAY_DAYS = parseInt(getArg('gateway-days', '200'));    // lookback requested from gateway
 
 // systematic-tss config: min mcap $300M, min volume 5M, blacklist DAWN/GLDD
 const MIN_MARKET_CAP = 300_000_000;
@@ -123,6 +141,132 @@ function fetchOHLCV(ticker) {
   });
 }
 
+// ─── DailyTickers MCP gateway (JSON-RPC 2.0 over HTTPS) ─────────────────────
+// Same transport contract as tools/refresh-risk-metrics.js. The gateway wraps the
+// tool payload in result.content[0].text (a JSON string); we unwrap it here.
+
+function gatewayCall(toolName, params) {
+  const url = new URL(GATEWAY);
+  if (url.protocol !== 'https:') return Promise.reject(new Error(`HTTPS required for MCP_GATEWAY_URL (got ${url.protocol})`));
+  const body = JSON.stringify({
+    jsonrpc: '2.0',
+    id: crypto.randomUUID(),
+    method: 'tools/call',
+    params: { name: toolName, arguments: params },
+  });
+  const opts = {
+    hostname: url.hostname,
+    port: url.port || 443,
+    path: url.pathname + (url.search || ''),
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/event-stream',
+      'Content-Length': Buffer.byteLength(body),
+    },
+    timeout: 45000,
+  };
+  return new Promise((resolve, reject) => {
+    const req = https.request(opts, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (j.error) return reject(new Error(j.error.message || 'rpc error'));
+          const r = j.result;
+          if (r && r.isError) return reject(new Error(r.content?.[0]?.text || 'MCP tool returned isError'));
+          if (r && Array.isArray(r.content) && r.content[0]?.type === 'text') {
+            try { return resolve(JSON.parse(r.content[0].text)); } catch { return resolve(r.content[0].text); }
+          }
+          resolve(r);
+        } catch (e) { reject(e); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('gateway timeout')); });
+    req.write(body);
+    req.end();
+  });
+}
+
+// Convert a gateway bars_daily row [date,open,high,low,close,volume] → bar object.
+function rowsToBars(rows) {
+  const bars = [];
+  for (const row of (rows || [])) {
+    if (!Array.isArray(row) || row.length < 5) continue;
+    const [d, o, h, l, c, v] = row;
+    if (o == null || h == null || l == null || c == null) continue;
+    bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v || 0 });
+  }
+  return bars;
+}
+
+// Fetch OHLCV for the whole universe from the gateway in batches. Cache-first per
+// ticker; only uncached symbols are requested. Returns Map(ticker → bars[]).
+async function fetchOHLCVGateway(tickers) {
+  const results = new Map();
+  const need = [];
+  for (const t of tickers) {
+    const cached = loadCachedPrice(t);
+    if (cached && cached.length >= 60) results.set(t, cached);
+    else need.push(t);
+  }
+  if (!need.length) { process.stderr.write(`  gateway: ${results.size}/${tickers.length} from cache\n`); return results; }
+
+  const batches = [];
+  for (let i = 0; i < need.length; i += GATEWAY_BATCH) batches.push(need.slice(i, i + GATEWAY_BATCH));
+  let done = 0, valid = results.size;
+  const queue = [...batches];
+  async function worker() {
+    while (queue.length) {
+      const batch = queue.shift();
+      try {
+        const res = await gatewayCall('QueryData', { symbols: batch.join(','), types: 'bars_daily', days: GATEWAY_DAYS, timeframe: '1d' });
+        for (const r of (res.results || [])) {
+          if (r.data_type !== 'bars_daily' || !r.data) continue;
+          const syms = r.symbols || [];
+          for (let i = 0; i < syms.length; i++) {
+            const bars = rowsToBars(r.data[i]);
+            if (bars.length >= 60) { results.set(syms[i], bars); saveCachedOHLCV(syms[i], bars); valid++; }
+          }
+        }
+      } catch (e) {
+        process.stderr.write(`\n  ⚠️  gateway batch failed (${batch.length} syms): ${e.message}\n`);
+      }
+      done++;
+      process.stderr.write(`  gateway batch ${done}/${batches.length} (${valid} valid)\r`);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(4, batches.length) }, () => worker()));
+  process.stderr.write(`  gateway: ${valid}/${tickers.length} valid\n`);
+  return results;
+}
+
+// ─── Source orchestration: gateway primary, Yahoo fallback ──────────────────
+
+async function fetchAll(universe, concurrency) {
+  if (SOURCE === 'yahoo') return batchFetch(universe, concurrency);
+
+  let priceData = new Map();
+  try {
+    priceData = await fetchOHLCVGateway(universe);
+  } catch (e) {
+    if (SOURCE === 'gateway') { console.error(`❌ Gateway fetch failed and --source gateway forbids fallback: ${e.message}`); process.exit(1); }
+    process.stderr.write(`  ⚠️  gateway unavailable (${e.message}), falling back to Yahoo\n`);
+  }
+  if (SOURCE === 'gateway') return priceData;
+
+  // auto: fill any gaps from Yahoo (best-effort; skipped silently where blocked)
+  const missing = universe.filter(t => !priceData.has(t));
+  if (missing.length) {
+    process.stderr.write(`  ${missing.length} tickers missing from gateway — trying Yahoo fallback\n`);
+    const yh = await batchFetch(missing, concurrency);
+    for (const [t, bars] of yh) priceData.set(t, bars);
+  }
+  return priceData;
+}
+
 // ─── Batch fetch with concurrency ───────────────────────────────────────────
 
 async function batchFetch(tickers, concurrency) {
@@ -161,8 +305,9 @@ async function main() {
   console.log(`   Universe: ${universe.length} tickers | minScore: ${MIN_SCORE} | minVolRatio: ${MIN_VOL_RATIO} | top: ${TOP_N}`);
   console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
 
-  console.log('📡 Fetching OHLCV data (120d)...');
-  const priceData = await batchFetch(universe, CONCURRENCY);
+  console.log(`📡 Fetching OHLCV data via ${SOURCE === 'yahoo' ? 'Yahoo' : 'MCP gateway' + (SOURCE === 'auto' ? ' (Yahoo fallback)' : '')}...`);
+  const priceData = await fetchAll(universe, CONCURRENCY);
+  if (!priceData.size) { console.error('❌ No OHLCV data retrieved from any source — aborting (no signals written).'); process.exit(1); }
 
   console.log('🔍 Scanning for candlestick patterns (25 bullish)...');
   const candidates = [];
