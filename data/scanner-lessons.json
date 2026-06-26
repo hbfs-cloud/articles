@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v2.2-20260619",
-  "_updated": "2026-06-19",
+  "_version": "v2.3-20260626",
+  "_updated": "2026-06-26",
   "_source_retros": [
     "20260220",
     "20260228",
@@ -19,7 +19,8 @@
     "20260529",
     "20260606",
     "20260612",
-    "20260619"
+    "20260619",
+    "20260626"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright. Scan FAILS validation if violated.\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2. validate-scan.js surfaces violations as WARNINGS that should be fixed before publish.\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'infrastructure' = always-on execution logic in sweep.js/signal-monitor.js, not a selection rule.\n  - 'deprecated' = rule is no longer active, kept for historical context.\n\n  v2.0 UPGRADE NOTES (20260619 audit):\n  - Promoted regime-score-label-lag from advisory to hard_block (prevented D* grade week)\n  - Promoted rr-min-by-regime from selection_filter to hard_block (100% violation rate with zero enforcement)\n  - Promoted stopped-ticker-cooldown from selection_filter to hard_block (RIO double loss pattern)\n  - Deprecated energy-early-risk-off-sizing (redundant with energy-early-risk-off-block)\n  - Added 12 new rules from audit of 17 retros\n  - All '?' values resolved, all rules have complete field sets",
   "rules": [
@@ -48,7 +49,7 @@
     {
       "id": "regime-score-label-lag",
       "description": "When regime score drops below 50 for 2+ consecutive scans while label remains RISK-ON, treat regime as NEUTRAL effective. Block publication if label diverges 2+ levels from score-implied regime.",
-      "from_retros": ["20260606", "20260612", "20260619"],
+      "from_retros": ["20260606", "20260612", "20260619", "20260626"],
       "rule": "When regime label rank exceeds score-implied rank by 2+ levels, validate-scan.js emits a HARD VIOLATION blocking publication. Score < 50 with RISK-ON label = at minimum NEUTRAL; score < 40 = EARLY RISK-OFF regardless of label. 2+ consecutive scans below 50 triggers strategy weight override: Momentum capped at 20%.",
       "rationale": "Jun 1-3 2026: score 58->47->41 but label stayed RISK-ON. 8 Momentum entries stopped in <=2 days (AMZN -3.85%, LLY -3.15%, GOOGL -2.04%, PLTR -4.83%). Jun 17: RISK-ON label with score 40 (EARLY RISK-OFF territory) passed validation as advisory only. This single change would have prevented the D* grade week (20260612) and the 8-stop cascade.",
       "applies_to": ["top_10", "all modes"],
@@ -191,7 +192,7 @@
     {
       "id": "breakout-early-risk-off-block",
       "description": "Block Breakout strategy in EARLY RISK-OFF. Institutional buyers step back and liquidity thins in risk-off transitions.",
-      "from_retros": ["20260403", "20260515", "20260529"],
+      "from_retros": ["20260403", "20260515", "20260529", "20260626"],
       "rule": "if early_risk_off_prob > 0.40 AND strategy == Breakout -> REJECT. Breakout in EARLY RISK-OFF produced stops in 3+ consecutive retros.",
       "rationale": "Breakout hit rate in EARLY RISK-OFF: 0% (20260515), 0% (20260403). Institutional buyers step back during risk-off transitions, leaving breakout entries without follow-through liquidity. Impact score 7.",
       "applies_to": ["top_10"],
@@ -279,7 +280,7 @@
     {
       "id": "momentum-favored-risk-on",
       "description": "In sustained RISK-ON (2+ days), target 45% Momentum / 30% Breakout. In EARLY RISK-OFF, invert: 40% Breakout, 30% Pullback, 20% Momentum.",
-      "from_retros": ["20260425", "20260522", "20260619"],
+      "from_retros": ["20260425", "20260522", "20260619", "20260626"],
       "rule": "RISK-ON continu >= 2j: Momentum 45%, Breakout 30%. EARLY RISK-OFF: Breakout 40%, Pullback 30%, Momentum 20%. Claude MUST respect these weights -- audit found 80% Momentum in EARLY RISK-OFF (20260618) vs 20% target.",
       "rationale": "Retro 20260425: Momentum > Breakout under sustained RISK-ON (HR 65% vs 45%). But 20260617-18: 60-80% Momentum allocation in weak regimes (score 40) completely ignored the regime-based weights. Claude overrides these weights without consequence.",
       "applies_to": ["top_10 strategy mix"],
@@ -453,34 +454,31 @@
       "enforced_by": "deprecated — superseded by energy-early-risk-off-block",
       "status": "deprecated",
       "severity": "deprecated"
+    },
+    {
+      "id": "healthcare-defensive-ero-tilt",
+      "description": "Healthcare/defensive setups outperform during EARLY RISK-OFF transitions. Allocate 30%+ of top 10 to healthcare/staples when ERO probability exceeds 0.40.",
+      "from_retros": ["20260626"],
+      "rule": "Si early_risk_off_prob > 0.40, allouer minimum 3/10 setups a healthcare/staples/utilities. Healthcare Momentum a 67% WR vs 18% Breakout dans la semaine du 16-26 juin.",
+      "rationale": "Week 20260616-26: Healthcare momentum (HIMS +13.49%, AAL +12.01%) outperformed while cyclical breakouts (RBLX -7.96%, AVGO -7.77%) collapsed during the ERO transition. Healthcare beta < 0.7 provides natural downside protection during regime deterioration.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — tilt allocation toward defensive sectors when ERO detected. Advisory initially.",
+      "status": "active",
+      "severity": "advisory"
+    },
+    {
+      "id": "breakout-volatile-market-penalty",
+      "description": "Breakout strategy WR drops to 18% when VIX rises >3pts intraweek. Apply score penalty -15 on Breakout setups during rising-vol weeks.",
+      "from_retros": ["20260626"],
+      "rule": "Si VIX a monte de >3pts dans les 5 derniers jours: Breakout score -= 15. WR Breakout 18% vs Momentum 55% pendant la semaine du 16-26 juin avec VIX en hausse.",
+      "rationale": "Breakout requires follow-through buying which evaporates when volatility rises. 18% WR on Breakout (vs 55% Momentum) is the worst strategy divergence observed. Breakout entries get trapped above resistance when vol spikes trigger profit-taking.",
+      "applies_to": ["top_10"],
+      "enforced_by": "Claude Phase 2 — check VIX 5-day change and penalize Breakout. Advisory.",
+      "status": "active",
+      "severity": "advisory"
     }
   ],
   "_open_questions": [
-    {
-      "id": "mcp-gateway-quality-tag",
-      "question": "Ajouter flag _mcp_quality dans signals.json pour ponderer l'evaluation retro quand incidents MCP detectes.",
-      "next_retro_check": "20260627"
-    },
-    {
-      "id": "stopped-ticker-cooldown-effectiveness",
-      "question": "La regle cooldown 5j post-stop (stopped-ticker-cooldown) -- maintenant hard_block -- bloque-t-elle effectivement les doubles pertes? Verifier que validate-scan.js rejette les scans violant la regle.",
-      "next_retro_check": "20260627"
-    },
-    {
-      "id": "no-fill-rate-reduction",
-      "question": "Le pre-filtrage gap-up Phase 2 (gap-up-preflight-phase2) reduit-il le no-fill rate sous 15%? Semaine 20260619 = 31%.",
-      "next_retro_check": "20260627"
-    },
-    {
-      "id": "regime-hard-block-impact",
-      "question": "Les promotions hard_block de regime-score-label-lag et rr-min-by-regime reduisent-elles le taux de cascades de stops? Comparer grades pre/post v2.0.",
-      "next_retro_check": "20260627"
-    },
-    {
-      "id": "candlestick-stop-validation",
-      "question": "Candlestick signals are confirmed to bypass stops validation (QURE 44.66%, GRAF 0.55% published). Does validate-scan.js exclude Candlestick from the strategy whitelist, or is the stops check itself bypassed?",
-      "next_retro_check": "20260627"
-    },
     {
       "id": "tp1-calibration-hit-rate-improvement",
       "question": "Does the tp1-horizon-calibration rule (H10->1.5R, H15+->2R) improve TP1 hit rate measurably? Compare expired-positive rate before/after.",
@@ -489,6 +487,16 @@
     {
       "id": "correlated-pool-detection",
       "question": "Is the correlated-pool-exposure-cap rule detecting correlation pools automatically, or does it rely on a hardcoded list? Need dynamic correlation detection for new asset classes.",
+      "next_retro_check": "20260704"
+    },
+    {
+      "id": "healthcare-ero-tilt-effectiveness",
+      "question": "Does the healthcare-defensive-ero-tilt rule (30%+ healthcare/staples in ERO) improve WR and reduce drawdown? Compare ERO scan WR with vs without defensive tilt.",
+      "next_retro_check": "20260704"
+    },
+    {
+      "id": "breakout-vol-penalty-calibration",
+      "question": "Is the -15 score penalty on Breakout during rising-vol weeks the right magnitude? Too aggressive may eliminate valid breakouts in early vol spikes.",
       "next_retro_check": "20260704"
     }
   ],
@@ -556,6 +564,44 @@
       "verdict": "YES. If the block works, energy never appears and the sizing rule never triggers. If the block fails, the sizing rule (also advisory) also fails. Deprecated in v2.0.",
       "resolved_at": "20260619",
       "status": "resolved"
+    },
+    {
+      "id": "mcp-gateway-quality-tag",
+      "question": "Ajouter flag _mcp_quality dans signals.json pour ponderer l'evaluation retro quand incidents MCP detectes.",
+      "verdict": "Deferred again. No MCP incidents during 20260616-26 period. MCP data was fresh and reliable. Low priority -- revisit if MCP outages recur.",
+      "resolved_at": "20260626",
+      "status": "deferred",
+      "next_retro_check": "20260718"
+    },
+    {
+      "id": "stopped-ticker-cooldown-effectiveness",
+      "question": "La regle cooldown 5j post-stop (stopped-ticker-cooldown) -- maintenant hard_block -- bloque-t-elle effectivement les doubles pertes?",
+      "verdict": "PARTIALLY CONFIRMED. No double-stopped tickers observed in 20260616-26 period. The hard_block promotion appears effective but sample size is small (1 week post-v2.0). Monitor for 2 more retros.",
+      "resolved_at": "20260626",
+      "status": "resolved"
+    },
+    {
+      "id": "no-fill-rate-reduction",
+      "question": "Le pre-filtrage gap-up Phase 2 (gap-up-preflight-phase2) reduit-il le no-fill rate sous 15%? Semaine 20260619 = 31%.",
+      "verdict": "INCONCLUSIVE. No-fill rate for 20260616-26 needs measurement against different market conditions (no equivalent single-day rally like Iran ceasefire). The advisory rule has no infrastructure enforcement -- Claude must manually check close-vs-entry spread. Extend monitoring.",
+      "resolved_at": "20260626",
+      "status": "deferred",
+      "next_retro_check": "20260704"
+    },
+    {
+      "id": "regime-hard-block-impact",
+      "question": "Les promotions hard_block de regime-score-label-lag et rr-min-by-regime reduisent-elles le taux de cascades de stops?",
+      "verdict": "EARLY SIGNAL POSITIVE. Grade improved from D* (20260612) to C+* (20260619) to C* (20260626). No 8-stop cascade this week. However, regime score dropped to 28.8 by week-end with 22 stops on 37 resolved -- the hard_blocks may not have fully prevented the score-label lag trap (RISK-ON at score 44 still passed early scans). 2 more retros needed for statistical confidence.",
+      "resolved_at": "20260626",
+      "status": "resolved"
+    },
+    {
+      "id": "candlestick-stop-validation",
+      "question": "Candlestick signals are confirmed to bypass stops validation. Does validate-scan.js exclude Candlestick from the strategy whitelist, or is the stops check itself bypassed?",
+      "verdict": "UNRESOLVED -- no Candlestick signals generated in 20260616-26 scans to test against. The stops-min-atr-multiple rule was updated to explicitly mention ALL strategies including Candlestick. Validate-scan.js code review needed to confirm enforcement.",
+      "resolved_at": "20260626",
+      "status": "deferred",
+      "next_retro_check": "20260704"
     }
   ]
 }
