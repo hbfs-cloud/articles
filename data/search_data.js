@@ -1107,6 +1107,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "OR",
+    "exchange": "Thématique • Commodity / Materials — Jouer la reprise après une correction de 25%",
+    "name": "OR — GLD −25% depuis mars, RSI 32. Couteau ou creux (60/40) ? Le panier en 3 paliers : FNV, ...",
+    "title": "OR — GLD −25% depuis mars, RSI 32. Couteau ou creux (60/40) ? Le panier en 3 paliers : FNV, ...",
+    "desc": "L'or a corrigé de 25% ($490→$370). Couteau qui tombe ou creux ? War room : macro, niveaux clés et le panier des meilleurs proxys miniers (royalties, seniors, mid-caps, juniors) pour jouer la reprise, par paliers de risque.",
+    "tags": "commodity,materials,macro,technique,trade-idea",
+    "grade": "B",
+    "href": "/analyses/OR-REPRISE/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ING",
     "exchange": "NYSE · Financials",
     "name": "ING — Value setup, score 85/100. Entry $30.50, target $33.00, R/R 1.56 at spot $31.02 — grade...",
