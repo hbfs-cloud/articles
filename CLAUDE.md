@@ -64,7 +64,7 @@ Telegram ne supporte PAS le Markdown GitHub (`**bold**` reste en texte brut). Ut
 
 **Aliases pré-configurés** (résolus côté serveur, aucun ID exposé aux agents) :
 `daily`, `weekly`, `analysis`, `learning`, `scanner-turbo`, `scanner-dynamic`, `scanner-balanced`,
-`scanner-orbit`, `scanner-fortress`, `scanner-tkl`, `alerts`
+`scanner-orbit`, `scanner-fortress`, `alerts`
 
 ## ⛔ MCP HARD STOP (IMMUABLE)
 Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **renvoie des données incohérentes** (prix aberrants, NaN, valeurs stale > 48h) :

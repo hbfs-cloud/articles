@@ -33,6 +33,11 @@ if (fs.existsSync(envPath)) {
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+if (!BOT_TOKEN) {
+  console.log('⚠️  No TELEGRAM_BOT_TOKEN — skipping notification (handled by cloud routine MCP)');
+  process.exit(0);
+}
+
 // Prevents BOT_TOKEN from leaking in stack traces / error output
 function redactToken(s) {
   if (!BOT_TOKEN || !s) return s;
@@ -285,7 +290,7 @@ function buildTelegramMessage(d) {
     `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const modeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha' };
+  const modeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha', bull: '🐂 Bull', aplus: '💎 A+' };
   const modeLabel = modeLabels[d.cfg.id] || '⚖️ Balanced';
 
   return `${modeLabel}  —  ${d.scanDate}
@@ -354,7 +359,7 @@ function buildDiscordMessage(d) {
     `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const dcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha' };
+  const dcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha', bull: 'Bull', aplus: 'A+' };
   const dcLabel = dcLabels[d.cfg.id] || 'Balanced';
   return `## 📊 Portfolio ${dcLabel} — ${d.scanDate}
 > 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
@@ -375,7 +380,7 @@ ${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
 // ─── Build compact caption for sendAudio (max 1024 chars) ─────────────────────
 function buildAudioCaption(d, ytUrl) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabels2 = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha' };
+  const modeLabels2 = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha', bull: '🐂 Bull', aplus: '💎 A+' };
   const modeLabel = modeLabels2[d.cfg.id] || '⚖️ Balanced';
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
@@ -436,7 +441,7 @@ function buildAudioCaption(d, ytUrl) {
 // ─── Build audio narration script (60-80 words, analytical) ─────────────────
 function buildAudioScript(d) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabels3 = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha' };
+  const modeLabels3 = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha', bull: 'Bull', aplus: 'A+' };
   const modeLabel = modeLabels3[d.cfg.id] || 'Balanced';
 
   const closeNow = d.activePos.filter(p => p.left <= 1);
@@ -772,7 +777,7 @@ async function main() {
 
   // Send to all 3 mode topics
   const modeTopics = (process.env.ONLY_MODE
-    ? [{ turbo: 'TELEGRAM_TOPIC_TURBO', dynamic: 'TELEGRAM_TOPIC_DYNAMIC', balanced: 'TELEGRAM_TOPIC_BALANCED', secured: 'TELEGRAM_TOPIC_SECURED', fortress: 'TELEGRAM_TOPIC_FORTRESS', tkl: 'TELEGRAM_TOPIC_TKL', alpha: 'TELEGRAM_TOPIC_ALPHA' }]
+    ? [{ turbo: 'TELEGRAM_TOPIC_TURBO', dynamic: 'TELEGRAM_TOPIC_DYNAMIC', balanced: 'TELEGRAM_TOPIC_BALANCED', secured: 'TELEGRAM_TOPIC_SECURED', fortress: 'TELEGRAM_TOPIC_FORTRESS', tkl: 'TELEGRAM_TOPIC_TKL', alpha: 'TELEGRAM_TOPIC_ALPHA', bull: 'TELEGRAM_TOPIC_BULL', aplus: 'TELEGRAM_TOPIC_APLUS' }]
         .flatMap(map => process.env.ONLY_MODE.split(',').map(k => ({ key: k.trim(), topicEnv: map[k.trim()] })))
     : [
     { key: 'turbo',    topicEnv: 'TELEGRAM_TOPIC_TURBO' },
@@ -782,6 +787,8 @@ async function main() {
     { key: 'fortress', topicEnv: 'TELEGRAM_TOPIC_FORTRESS' },
     { key: 'tkl',      topicEnv: 'TELEGRAM_TOPIC_TKL' },
     { key: 'alpha',    topicEnv: 'TELEGRAM_TOPIC_ALPHA' },
+    { key: 'bull',     topicEnv: 'TELEGRAM_TOPIC_BULL' },
+    { key: 'aplus',    topicEnv: 'TELEGRAM_TOPIC_APLUS' },
   ]);
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
@@ -837,7 +844,7 @@ async function main() {
       }
       // Upload to YouTube
       if (modeVideoPath) {
-        const ytModeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha' };
+        const ytModeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha', bull: '🐂 Bull', aplus: '💎 A+' };
         const modeLabel = ytModeLabels[key] || '⚖️ Balanced';
         const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | DailyTickers`;
         const ytDesc = `${modeLabel} Portfolio Update\n\n` +
@@ -864,7 +871,7 @@ async function main() {
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
       // Send video if no YouTube (fallback: embed directly)
       if (!modeYtUrl && modeVideoPath) {
-        const vcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha' };
+        const vcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha', bull: 'Bull', aplus: 'A+' };
         const videoCaption = `📊 <b>${vcLabels[key] || 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
         sendTelegramVideo(modeVideoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
         console.log(`✅ Telegram video embedded [${key}] → topic ${topicId}`);

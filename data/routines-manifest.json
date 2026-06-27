@@ -1,0 +1,132 @@
+{
+  "_comment": "Cloud routine manifest — version-controlled mirror of claude.ai RemoteTrigger configs. Updated 2026-06-27 (war room audit).",
+  "_updated": "2026-06-27",
+  "monitoring": [
+    {
+      "id": "trig_01D93bitp7HU3a26L4xC6ZD3",
+      "name": "Crash Detector",
+      "schedule": "0 7,11,15,19 * * *",
+      "schedule_paris": "9h,13h,17h,21h daily",
+      "model": "claude-opus-4-6",
+      "role": "Intraday >3% drop detection → urgent alert with MCP news. dedup_key per day.",
+      "target": "alerts",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_01E6dZ7jq7g4Fiz9Dk25Rv8C",
+      "name": "Market Pulse",
+      "schedule": "0 7,11,16,20 * * 1-5",
+      "schedule_paris": "9h,13h,18h,22h lun-ven",
+      "model": "claude-opus-4-6",
+      "role": "Compact Telegram pulse: indices+crypto+regime+portfolio.",
+      "target": "daily",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_01UJz9m6BQYZbWi4XzpZkuVF",
+      "name": "Weekend Pulse",
+      "schedule": "0 8,16 * * 0,6",
+      "schedule_paris": "10h,18h sam-dim",
+      "model": "claude-opus-4-6",
+      "role": "Crypto + safe havens + next week earnings.",
+      "target": "daily",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_01UTXmc1Z8PHjp5SfNHJ65xR",
+      "name": "Rotation Detector",
+      "schedule": "0 8,14,19 * * 1-5",
+      "schedule_paris": "10h,16h,21h lun-ven",
+      "model": "claude-opus-4-6",
+      "role": "Sector rotation analysis, ~2-3 alerts/week. dedup_key per day.",
+      "target": "daily",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    }
+  ],
+  "article_pipelines": [
+    {
+      "id": "trig_01JHPdHZcMzJUEmo8eg4sAA4",
+      "name": "Daily Briefing",
+      "schedule": "0 5 * * *",
+      "schedule_paris": "7h daily",
+      "model": "claude-opus-4-6",
+      "role": "17-section daily briefing + radar update. Saturday=recap+preview, Sunday=crypto-only.",
+      "target": "daily",
+      "output": "daily/YYYYMMDD/index.html",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_016idAivWzRTwcoeGnUgJB2S",
+      "name": "Scanner Nocturne",
+      "schedule": "0 21 * * 1-5",
+      "schedule_paris": "23h lun-ven",
+      "model": "claude-opus-4-6",
+      "role": "Full scanner pipeline: 5 RunScreener queries + enrichment + anti-dilution + risk gating + scoring.",
+      "target": "scanner-*",
+      "output": "scanner/YYYYMMDD/index.html",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_01MJRrjQ4C3HPJXiucWXbC57",
+      "name": "Nightly Analysis Refresh",
+      "schedule": "30 22 * * 1-5",
+      "schedule_paris": "00h30 mar-sam",
+      "model": "claude-opus-4-6",
+      "role": "Refresh top 5 analyses + auto-gen 2 new + trade idea status check + radar cleanup.",
+      "target": "alerts",
+      "output": "analyses/*/index.html",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_015zVDa29WvDuKGjtXbp21ft",
+      "name": "Weekly Review",
+      "schedule": "0 16 * * 0",
+      "schedule_paris": "18h dimanche",
+      "model": "claude-opus-4-6",
+      "role": "18-section weekly review.",
+      "target": "weekly",
+      "output": "weekly/YYYYMMDD/index.html",
+      "mcps": ["marketdata", "notification", "memory", "simulator"],
+      "status": "NEVER_FIRED"
+    },
+    {
+      "id": "trig_015aaWxMDUj43skqRJBzMhUJ",
+      "name": "Retrospective Scanner",
+      "schedule": "0 23 * * 5",
+      "schedule_paris": "1h samedi (ven soir UTC)",
+      "model": "claude-opus-4-6",
+      "role": "Week's closed trades with real outcomes from MCP data.",
+      "target": "weekly",
+      "output": "scanner/retrospective/YYYYMMDD/index.html",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_0145xrZhSgPLTQMzg4JkCd9i",
+      "name": "A+ Conviction Monitor",
+      "schedule": "15 20 * * 1-5",
+      "schedule_paris": "22h15 lun-ven",
+      "model": "claude-opus-4-6",
+      "role": "Post-close A+ portfolio monitoring: positions, trailing stops, regime check, new signals.",
+      "target": "daily",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    }
+  ],
+  "infrastructure": [
+    {
+      "id": "trig_01PNBVTsubT5Ch6w21pxq6Aw",
+      "name": "Watchdog",
+      "schedule": "0 8 * * *",
+      "schedule_paris": "10h daily",
+      "model": "claude-opus-4-6",
+      "role": "Check all routines for silent failures via git log + memory. Send red/green status to alerts.",
+      "target": "alerts",
+      "mcps": ["marketdata", "notification", "memory", "simulator"]
+    }
+  ],
+  "disabled": [
+    { "name": "Conductor AM", "reason": "Replaced by Market Pulse + Crash Detector (2026-06-24)" },
+    { "name": "Conductor PM", "reason": "Replaced by Rotation Detector (2026-06-24)" },
+    { "name": "Conductor WE", "reason": "Replaced by Weekend Pulse (2026-06-24)" },
+    { "name": "Delta Pre-Open", "reason": "Disabled 2026-06-24, no replacement yet" }
+  ]
+}

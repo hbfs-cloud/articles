@@ -58,7 +58,8 @@ jobs:
 
       - name: Generate plans for all modes × brokers
         run: |
-          for mode in turbo dynamic balanced secured fortress tkl; do
+          MODES=$(node -e "const c=require('./data/modes-config.json');console.log(Object.entries(c.modes).filter(([,v])=>!['draft','stopped'].includes(v.status)).map(([k])=>k).join(' '))")
+          for mode in $MODES; do
             for broker in paper alpaca t212; do
               node tools/gen-trading-plan.js --mode "$mode" --broker "$broker" --date "${{ steps.date.outputs.date }}" || true
             done

@@ -52,6 +52,11 @@ const BOT_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID      = process.env.TELEGRAM_CHAT_ID;
 const ANTHROPIC_KEY= process.env.ANTHROPIC_API_KEY;
 
+if (!BOT_TOKEN) {
+  console.log('⚠️  No TELEGRAM_BOT_TOKEN — skipping notification (handled by cloud routine MCP)');
+  process.exit(0);
+}
+
 // ─── Token redaction helper (prevents BOT_TOKEN leak via stack traces) ─────
 function redactToken(s) {
   if (!BOT_TOKEN || !s) return s;

@@ -113,8 +113,10 @@ function buildProposal(activeCfg, advisor, newRegime) {
       proposal.deltas[mode] = { status: 'no_advisor', cur };
       continue;
     }
+    const BACKTEST_FIELDS = new Set(['equityCurve', 'closedTrades', 'losses', 'wins', 'composite', 'trades', 'totalReturn', 'maxDD', 'profitFactor', 'winRate', 'sharpe', 'calmar']);
     const diff = {};
     for (const k of Object.keys(sug)) {
+      if (BACKTEST_FIELDS.has(k)) continue;
       if (cur[k] !== sug[k]) diff[k] = { from: cur[k], to: sug[k] };
     }
     proposal.deltas[mode] = { status: Object.keys(diff).length ? 'change' : 'no_change', diff };
@@ -123,7 +125,7 @@ function buildProposal(activeCfg, advisor, newRegime) {
 }
 
 function bumpVersion(v) {
-  const m = String(v || 'v0').match(/^v?(\d+)(?:\.(\d+))?$/);
+  const m = String(v || 'v0').match(/^v?(\d+)(?:\.(\d+))?(?:-.*)?$/);
   if (!m) return 'v1';
   const major = parseInt(m[1], 10);
   const minor = m[2] ? parseInt(m[2], 10) : 0;

@@ -154,6 +154,20 @@ const ROOT_PUB = path.resolve(__dirname, '..');
 const uniquePaths = [...new Set(gitAddPaths)].filter(p => fs.existsSync(path.join(ROOT_PUB, p)));
 runSafe('git', ['add', ...uniquePaths], 'git add');
 
+// ─── Step 4b: Content validation gate ────────────────────────────────────────
+
+console.log('\nStep 4b/7 — Validating article content...');
+const valRes = spawnSync('node', ['tools/validate-article.js', artPath, '--type', type], { cwd: ROOT, stdio: 'inherit' });
+if (valRes.status !== 0) {
+  console.error('\nERROR: Content validation failed — aborting publish.');
+  console.error('Fix the issues above, or use --skip-validate to override (NOT RECOMMENDED).\n');
+  if (!process.argv.includes('--skip-validate')) {
+    spawnSync('git', ['reset', 'HEAD'], { cwd: ROOT, stdio: 'inherit' });
+    process.exit(valRes.status || 1);
+  }
+  console.warn('⚠️  --skip-validate set — publishing despite validation failure.');
+}
+
 // ─── Step 5: Git commit ───────────────────────────────────────────────────────
 
 console.log('\nStep 5/7 — Committing...');
@@ -165,7 +179,16 @@ runSafe('git', ['commit', '-m', commitMsg], 'git commit');
 
 if (!noPush) {
   console.log('\nStep 6/7 — Pushing to origin main...');
-  runSafe('git', ['push', 'origin', 'main'], 'git push');
+  const pushRes = spawnSync('git', ['push', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
+  if (pushRes.status !== 0) {
+    console.log('  Push rejected — retrying with pull --rebase...');
+    const pullRes = spawnSync('git', ['pull', '--rebase', 'origin', 'main'], { cwd: ROOT, stdio: 'inherit' });
+    if (pullRes.status !== 0) {
+      console.error('ERROR: git pull --rebase failed');
+      process.exit(1);
+    }
+    runSafe('git', ['push', 'origin', 'main'], 'git push (retry)');
+  }
 } else {
   console.log('\nStep 6/7 — Skipped (--no-push)');
 }
