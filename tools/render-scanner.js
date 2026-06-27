@@ -38,8 +38,10 @@ const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
-/** Escape HTML entities to prevent XSS */
-const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+/** Escape for HTML attribute values (id, data-*, src, href) */
+const escAttr = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+/** Coerce to string — text content from data.json may contain HTML entities, do NOT double-encode */
+const esc = s => String(s ?? '');
 
 /** badge(text, color) → <span class="badge badge-{color}">{text}</span> */
 function badge(text, color) {
@@ -334,7 +336,7 @@ function setupCard(s, idx) {
   return `
 <!-- SETUP ${idx + 1}: ${esc(s.ticker)} -->
 <div class="section-header"><h2>#${idx + 1} ${esc(s.ticker)} &mdash; ${esc(s.name)}</h2></div>
-<div class="setup-card" id="setup-${esc(s.ticker)}" data-ticker="${esc(s.ticker)}" data-sharia="${s.sharia ? 'true' : 'false'}" data-entry="${s.entry_low || s.entry_high || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">
+<div class="setup-card" id="setup-${escAttr(s.ticker)}" data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia ? 'true' : 'false'}" data-entry="${s.entry_low || s.entry_high || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">
   <div class="setup-header">
     <div class="scanner-ticker-logo" style="${gradStyle}">${esc(s.ticker)}</div>
     <div class="setup-header-info">
@@ -354,7 +356,7 @@ function setupCard(s, idx) {
     ${shariaBadge}
   </div>
 
-  <img class="finviz-chart" src="https://finviz.com/chart.ashx?t=${esc(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l" alt="${esc(s.ticker)} FinViz Chart" loading="lazy">
+  <img class="finviz-chart" src="https://finviz.com/chart.ashx?t=${escAttr(s.ticker)}&amp;ty=c&amp;ta=1&amp;p=d&amp;s=l" alt="${escAttr(s.ticker)} FinViz Chart" loading="lazy">
 
   <div class="chart-grid-2col">
     <div>${echartDiv(gaugeId, 250)}</div>
@@ -391,7 +393,7 @@ function navGrid(setups) {
       ? `background:${s.logo_gradient[0]};`
       : 'background:#64748b;';
     const flag = s.region_flag ? ` ${s.region_flag}` : '';
-    return `    <a href="#setup-${esc(s.ticker)}"><span style="${gradStyle}color:white;padding:2px 8px;border-radius:6px;font-size:0.8rem;">${esc(s.ticker)}</span> ${esc(s.name.split(' ').slice(0,2).join(' '))}${flag}</a>`;
+    return `    <a href="#setup-${escAttr(s.ticker)}"><span style="${gradStyle}color:white;padding:2px 8px;border-radius:6px;font-size:0.8rem;">${esc(s.ticker)}</span> ${esc(s.name.split(' ').slice(0,2).join(' '))}${flag}</a>`;
   });
   return `<div class="nav-grid">\n${links.join('\n')}\n</div>`;
 }
@@ -402,7 +404,7 @@ function syntheseTable(setups) {
   const rows = setups.map((s, i) => {
     const shariaAttr = `data-sharia="${s.sharia ? 'true' : 'false'}"`;
     const entryVal = s.entry_low || s.entry_high || 0;
-    return `        <tr ${shariaAttr}><td>${i + 1}</td><td><strong>${esc(s.ticker)}</strong></td><td>${esc(s.name)}</td><td>${esc(s.region_label || s.region || 'US')}</td><td>${esc(s.pattern || 'Momentum')}</td><td class="up"><strong>${s.score}</strong></td><td>$${entryVal}</td><td>$${s.stop || ''}</td><td>$${s.tp1 || ''}</td><td>${s.rr || ''}</td></tr>`;
+    return `        <tr ${shariaAttr}><td>${i + 1}</td><td><strong>${esc(s.ticker)}</strong></td><td>${s.name}</td><td>${esc(s.region_label || s.region || 'US')}</td><td>${esc(s.pattern || 'Momentum')}</td><td class="up"><strong>${s.score}</strong></td><td>$${entryVal}</td><td>$${s.stop || ''}</td><td>$${s.tp1 || ''}</td><td>${s.rr || ''}</td></tr>`;
   });
   return `    <div style="overflow-x:auto"><table class="data-table">
       <thead>
