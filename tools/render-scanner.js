@@ -322,9 +322,9 @@ function setupCard(s, idx) {
   const extraBadges = (s.extra_badges || []).map(b => badge(b, 'amber')).join('');
 
   // Confirmations
-  const confirmItems = (s.confirmations || []).map(c => `<li>${esc(c)}</li>`).join('');
+  const confirmItems = (s.confirmations || []).map(c => `<li>${c}</li>`).join('');
   // Invalidations
-  const invalidItems = (s.invalidations || []).map(c => `<li>${esc(c)}</li>`).join('');
+  const invalidItems = (s.invalidations || []).map(c => `<li>${c}</li>`).join('');
 
   // Entry display
   const entryDisplay = s.entry_display
@@ -361,7 +361,7 @@ function setupCard(s, idx) {
     <div>${echartDiv(radarId, 250)}</div>
   </div>
 
-  <p>${esc(s.thesis || '')}</p>
+  <p>${s.thesis || ''}</p>
 
   <div class="confirm-box">
     <h3>&#x2705; Confirmations</h3>
