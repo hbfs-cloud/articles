@@ -87,7 +87,8 @@
       "target": "weekly",
       "output": "weekly/YYYYMMDD/index.html",
       "mcps": ["marketdata", "notification", "memory", "simulator"],
-      "status": "NEVER_FIRED"
+      "status": "PENDING_FIRST_FIRE",
+      "first_fire_expected": "2026-06-28T16:00:00Z"
     },
     {
       "id": "trig_015aaWxMDUj43skqRJBzMhUJ",
@@ -121,6 +122,16 @@
       "role": "Check all routines for silent failures via git log + memory. Send red/green status to alerts.",
       "target": "alerts",
       "mcps": ["marketdata", "notification", "memory", "simulator"]
+    },
+    {
+      "id": "trig_01PwDA8hS2oXx3d2bCFjd33R",
+      "name": "Risk Metrics Refresh",
+      "schedule": "30 20 * * 1-5",
+      "schedule_paris": "22h30 lun-ven",
+      "model": "claude-opus-4-6",
+      "role": "Compute VaR, correlation, regime probability per mode. Writes data/risk-snapshots.json.",
+      "target": "data/risk-snapshots.json",
+      "mcps": ["marketdata", "memory", "notification"]
     }
   ],
   "disabled": [
