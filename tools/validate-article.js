@@ -39,6 +39,13 @@ const html = fs.readFileSync(absPath, 'utf8');
 const sizeKB = Buffer.byteLength(html, 'utf8') / 1024;
 const errors = [];
 
+// Redirect pages (e.g. scanner/index.html, analyses/TRNR) are exempt from content checks
+const isRedirect = html.includes('http-equiv="refresh"') || (sizeKB < 1 && html.includes('<meta'));
+if (isRedirect) {
+  console.log(`  ✅ Redirect page — skipping content validation (${sizeKB.toFixed(1)} KB)`);
+  process.exit(0);
+}
+
 // 1. File size
 if (sizeKB < 10) {
   errors.push(`File too small: ${sizeKB.toFixed(1)} KB (min 10 KB)`);
@@ -53,6 +60,18 @@ if (!html.includes('article-footer')) {
 }
 if (!html.includes('GTM-T5Z595CW')) {
   errors.push('Missing GTM tag (GTM-T5Z595CW)');
+}
+if (!html.includes('report.css')) {
+  errors.push('Missing report.css stylesheet');
+}
+if (!html.includes('core.js')) {
+  errors.push('Missing core.js script');
+}
+if (!html.includes('tag-renderer.js')) {
+  errors.push('Missing tag-renderer.js script');
+}
+if (!html.includes('data-tags=')) {
+  errors.push('Missing data-tags attribute on <html>');
 }
 
 // 3. Placeholder / template text

@@ -79,11 +79,15 @@ try {
   if (modeState?.positions?.length) {
     positions = modeState.positions.map(p => ({
       ticker: p.ticker,
-      entry: p.entry,
+      entry: p.actualEntry || p.entryPrice,
+      entry_date: p.entryDate,
       entryDate: p.entryDate,
-      current_price: p.currentPrice || p.entry,
-      stopLoss: p.stopLoss,
-      takeProfit: p.takeProfit,
+      scan_date: p.scanDate,
+      current_price: p.actualEntry || p.entryPrice,
+      stop: p.currentStop || p.actualStop,
+      tp1: p.actualTp1,
+      tp2: p.actualTp2,
+      return_pct: null,
       mode: MODE,
     }));
   }

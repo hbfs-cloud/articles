@@ -372,8 +372,8 @@ function send(text, topicId) {
   }
 
   if (!BOT_TOKEN || !CHAT_ID) {
-    console.error('❌ TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID manquants');
-    process.exit(1);
+    console.log('⚠️  No TELEGRAM_BOT_TOKEN/CHAT_ID — skipping (handled by cloud routine MCP)');
+    process.exit(0);
   }
 
   try {

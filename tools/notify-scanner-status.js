@@ -820,7 +820,7 @@ async function main() {
   else console.log('📺 No scanner media found');
 
   // Fallback topic IDs (last-resort defaults if env vars unset)
-  const TOPIC_FALLBACKS = { turbo: '89', dynamic: '89', balanced: '90', secured: '91', fortress: '91', tkl: '1064', alpha: '1064' };
+  const TOPIC_FALLBACKS = { turbo: '89', dynamic: '89', balanced: '90', secured: '91', fortress: '91', tkl: '1064', alpha: '1064', bull: '89', aplus: '89' };
   for (const { key, topicEnv } of modeTopics) {
     const modePayload = buildStatusPayload(scanDir, key);
     const topicId     = process.env[topicEnv] || TOPIC_FALLBACKS[key];

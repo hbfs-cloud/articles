@@ -113,7 +113,7 @@ function buildProposal(activeCfg, advisor, newRegime) {
       proposal.deltas[mode] = { status: 'no_advisor', cur };
       continue;
     }
-    const BACKTEST_FIELDS = new Set(['equityCurve', 'closedTrades', 'losses', 'wins', 'composite', 'trades', 'totalReturn', 'maxDD', 'profitFactor', 'winRate', 'sharpe', 'calmar']);
+    const BACKTEST_FIELDS = new Set(['equityCurve', 'closedTrades', 'losses', 'wins', 'composite', 'trades', 'totalReturn', 'maxDD', 'profitFactor', 'winRate', 'sharpe', 'calmar', 'returnTotal', 'returnRealized', 'returnUnrealized', 'r2', 'avgWin', 'avgLoss', 'returnDDRatio', 'sortino', 'avgHold']);
     const diff = {};
     for (const k of Object.keys(sug)) {
       if (BACKTEST_FIELDS.has(k)) continue;
