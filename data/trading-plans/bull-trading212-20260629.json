@@ -1,26 +1,26 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-27T13:20:55.318Z",
+  "generated_at": "2026-06-27T13:20:55.823Z",
   "valid_for": "2026-06-29",
   "mode_status": {
     "state": "deploying",
-    "since": "2026-06-02T15:00:00.000Z",
-    "reason": "Orbit v8.3: added trail(2.0R/5d), gain-based partial TP, R:R gate. Still deploying paper-ramp.",
+    "since": "2026-06-05T00:00:00Z",
+    "reason": "Deploying after 5-year backtest parity (0 sell price diffs, 1061 matched trades Go vs JS). Paper-ramp from June 5.",
     "acceptsNewEntries": true,
     "exitsOnly": false,
     "forceLiquidate": false,
     "publiclyVisible": true,
     "tradingMode": "paper-ramp",
-    "nextReviewAt": "2026-07-03"
+    "nextReviewAt": "2026-07-12"
   },
   "broker": {
-    "name": "alpaca",
+    "name": "trading212",
     "type": "live",
     "credentials": {
       "api_key": "${BROKER_API_KEY}",
       "api_secret": "${BROKER_API_SECRET}",
-      "base_url": "https://paper-api.alpaca.markets",
+      "base_url": "https://live.trading212.com/api/v0",
       "note": "Replace ${BROKER_API_KEY} and ${BROKER_API_SECRET} with actual credentials. For paper trading, use sandbox URLs."
     }
   },
@@ -31,33 +31,33 @@
     "max_positions": 3
   },
   "mode": {
-    "name": "secured",
-    "horizon_days": 5,
-    "filter": "mom_bo",
-    "min_score": 85,
+    "name": "bull",
+    "horizon_days": 8,
+    "filter": "candlestick_only",
+    "min_score": 88,
     "rotation": "none",
     "breakeven_pct": 0,
     "be_grace_days": 0,
     "vix_kill": 28,
-    "trailing_stop": false,
+    "trailing_stop": true,
     "daily_trail_pct": 0,
-    "max_stop_pct": 7,
-    "atr_stop_mult": 1,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 2,
     "stale_days": 0,
-    "entry_gate_pct": 3,
+    "entry_gate_pct": 0,
     "partial_tp": true,
-    "partial_tp_pct": 0.5,
+    "partial_tp_pct": 0.3,
     "sector_cap_max": 2,
     "sizing_method": "inverse_atr",
     "target_risk_pct": 1,
     "correlation_cap": 0.7,
     "cross_mode_dedup": false,
     "regime_filters": {
-      "risk_on": "mom_bo",
-      "early_risk_off": "mom_bo",
-      "risk_off": "breakout_only",
-      "neutral": "mom_bo",
-      "recovery": "mom_bo"
+      "risk_on": "candlestick_only",
+      "early_risk_off": "candlestick_only",
+      "risk_off": "candlestick_only",
+      "neutral": "candlestick_only",
+      "recovery": "candlestick_only"
     },
     "dd_breaker_pct": 5
   },
@@ -87,16 +87,17 @@
     {
       "action": "CLOSE",
       "ticker": "TSM",
-      "broker_symbol": "TSM",
+      "broker_symbol": "TSM_US_EQ",
       "broker": {
-        "symbol": "TSM",
+        "symbol": "TSM_US_EQ",
         "exchange": "NYSE",
+        "isin": "US8740391003",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 8,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": 5.63,
       "execution": {
         "type": "MARKET",
@@ -107,16 +108,17 @@
     {
       "action": "CLOSE",
       "ticker": "FMX",
-      "broker_symbol": "FMX",
+      "broker_symbol": "FMX_US_EQ",
       "broker": {
-        "symbol": "FMX",
+        "symbol": "FMX_US_EQ",
         "exchange": "NYSE",
+        "isin": "US3444191064",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 13,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": 3.24,
       "execution": {
         "type": "MARKET",
@@ -126,37 +128,18 @@
     },
     {
       "action": "CLOSE",
-      "ticker": "GE",
-      "broker_symbol": "GE",
-      "broker": {
-        "symbol": "GE",
-        "exchange": "NYSE",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "reason": "HORIZON_EXPIRED",
-      "held_days": 7,
-      "horizon": 5,
-      "current_pnl_pct": 2.18,
-      "execution": {
-        "type": "MARKET",
-        "timing": "AT_OPEN",
-        "description": "Close at market open — horizon expired, exit regardless of P&L"
-      }
-    },
-    {
-      "action": "CLOSE",
       "ticker": "NUVL",
-      "broker_symbol": "NUVL",
+      "broker_symbol": "NUVL_US_EQ",
       "broker": {
-        "symbol": "NUVL",
+        "symbol": "NUVL_US_EQ",
         "exchange": "NASDAQ",
+        "isin": "US6707031075",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 12,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": 0.15,
       "execution": {
         "type": "MARKET",
@@ -167,16 +150,17 @@
     {
       "action": "CLOSE",
       "ticker": "PAYO",
-      "broker_symbol": "PAYO",
+      "broker_symbol": "FTOC_US_EQ",
       "broker": {
-        "symbol": "PAYO",
+        "symbol": "FTOC_US_EQ",
         "exchange": "NASDAQ",
+        "isin": "US70451X1046",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 8,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": -0.14,
       "execution": {
         "type": "MARKET",
@@ -188,15 +172,10 @@
       "action": "CLOSE",
       "ticker": "XLP",
       "broker_symbol": "XLP",
-      "broker": {
-        "symbol": "XLP",
-        "exchange": "NYSEARCA",
-        "currency": "USD",
-        "asset_type": "ETF"
-      },
+      "broker": null,
       "reason": "HORIZON_EXPIRED",
       "held_days": 11,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": -2.57,
       "execution": {
         "type": "MARKET",
@@ -210,10 +189,11 @@
       "id": "ORD-001",
       "action": "BUY",
       "ticker": "EXC",
-      "broker_symbol": "EXC",
+      "broker_symbol": "EXC_US_EQ",
       "broker": {
-        "symbol": "EXC",
+        "symbol": "EXC_US_EQ",
         "exchange": "NASDAQ",
+        "isin": "US30161N1019",
         "currency": "USD",
         "asset_type": "STOCK"
       },
@@ -239,16 +219,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 46,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 50.2,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -257,10 +237,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -305,10 +285,11 @@
       "id": "ORD-002",
       "action": "BUY",
       "ticker": "VTRS",
-      "broker_symbol": "VTRS",
+      "broker_symbol": "MYL_US_EQ",
       "broker": {
-        "symbol": "VTRS",
+        "symbol": "MYL_US_EQ",
         "exchange": "NASDAQ",
+        "isin": "US92556V1061",
         "currency": "USD",
         "asset_type": "STOCK"
       },
@@ -334,16 +315,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 15.6,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 17.8,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -352,10 +333,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -397,108 +378,14 @@
       "priority": 2
     },
     {
-      "id": "ORD-003",
-      "action": "BUY",
-      "ticker": "XLU",
-      "broker_symbol": "XLU",
-      "broker": {
-        "symbol": "XLU",
-        "exchange": "NYSEARCA",
-        "currency": "USD",
-        "asset_type": "ETF"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 46.2,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 72,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-29T09:30:00-04:00",
-        "valid_until": "2026-06-29T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 44.800000000000004,
-          "trailing": false,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 49,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 50.4,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 88,
-        "strategy": "Momentum",
-        "rr": "1:2.0",
-        "sharia": false,
-        "thesis": "Utilities sector ETF, 30+ holdings. ATR% 1.5% lowest vol in scan. RSI 63.8 strongest ETF momentum. Above all EMAs. Flight-to-quality with gold +1.06%. Anti-dilution clean."
-      },
-      "priority": 3
-    },
-    {
       "id": "ORD-004",
       "action": "BUY",
       "ticker": "NVS",
-      "broker_symbol": "NVS",
+      "broker_symbol": "NVS_US_EQ",
       "broker": {
-        "symbol": "NVS",
+        "symbol": "NVS_US_EQ",
         "exchange": "NYSE",
+        "isin": "US66987V1098",
         "currency": "USD",
         "asset_type": "STOCK"
       },
@@ -524,16 +411,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 150.5,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 164,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -542,10 +429,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -584,22 +471,23 @@
         "sharia": true,
         "thesis": "EU healthcare leader, 3rd consecutive pick. PE fwd 15.6x deep value vs US peers. Above all EMAs, RSI 60.2, ext 2.91%. Div 3.1%, beta ~0.5. $1.9B Antares deal + Kisqali/Entresto. ATR% 1.9%. Anti-dilution clean."
       },
-      "priority": 4
+      "priority": 3
     },
     {
-      "id": "ORD-005",
+      "id": "ORD-006",
       "action": "BUY",
-      "ticker": "TIGO",
-      "broker_symbol": "TIGO",
+      "ticker": "SBUX",
+      "broker_symbol": "SBUX_US_EQ",
       "broker": {
-        "symbol": "TIGO",
+        "symbol": "SBUX_US_EQ",
         "exchange": "NASDAQ",
+        "isin": "US8552441094",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 89,
+        "price": 104,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -608,7 +496,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 37,
+          "shares": 32,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-29T09:30:00-04:00",
@@ -618,29 +506,29 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 83.5,
-          "trailing": false,
+          "price": 100,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 100,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "price": 112,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 105.5,
+          "price": 116,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -673,11 +561,107 @@
         }
       ],
       "metadata": {
-        "score": 87,
+        "score": 85,
         "strategy": "Momentum",
         "rr": "1:2.0",
         "sharia": false,
-        "thesis": "EU geographic diversifier. PE fwd 12.5x, div 3.4%. Above EMA20, RSI 55.6. LatAm digitization tailwinds. Low correlation with US picks. ATR% 4.2%. Anti-dilution clean."
+        "thesis": "Consumer turnaround under CEO Brian Niccol. Above all EMAs, RSI 61.0. Adjusted entry $104 to cap ext within 3% A+ gate. Div 2.4%. Consumer confidence Tue catalyst. ATR% 2.4%. Anti-dilution clean."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-007",
+      "action": "BUY",
+      "ticker": "ALGN",
+      "broker_symbol": "ALGN_US_EQ",
+      "broker": {
+        "symbol": "ALGN_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US0162551016",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 178,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 18,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 167.5,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 199,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 209.5,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 84,
+        "strategy": "Momentum",
+        "rr": "1:2.0",
+        "sharia": true,
+        "thesis": "MedTech growth at value PE fwd 14.4x. ~80% clear aligner market share (Invisalign). Above EMA20, RSI 55.0. Sharia compliant. Russell reconstitution catalyst. ATR% 4.0%. Anti-dilution clean."
       },
       "priority": 5
     }
@@ -841,11 +825,9 @@
     ]
   },
   "broker_notes": {
-    "pdt_rule": "Pattern Day Trader: max 3 day trades in 5 business days if account < $25K",
-    "fractional": "Alpaca supports fractional shares — use exact nominal instead of rounding to whole shares",
-    "paper_url": "https://paper-api.alpaca.markets",
-    "live_url": "https://api.alpaca.markets",
-    "websocket": "wss://stream.data.alpaca.markets/v2/iex",
-    "auth": "Headers: APCA-API-KEY-ID + APCA-API-SECRET-KEY"
+    "api_limits": "Very limited API — equity orders only, no bracket orders",
+    "fractional": "Supports fractional shares down to 0.001",
+    "symbol_format": "Append _US_EQ for US equities (e.g., GOOGL_US_EQ)",
+    "workaround": "No native bracket orders — must monitor and place SL/TP separately"
   }
 }

@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-27T13:20:55.318Z",
+  "generated_at": "2026-06-27T13:20:55.729Z",
   "valid_for": "2026-06-29",
   "mode_status": {
     "state": "deploying",
-    "since": "2026-06-02T15:00:00.000Z",
-    "reason": "Orbit v8.3: added trail(2.0R/5d), gain-based partial TP, R:R gate. Still deploying paper-ramp.",
+    "since": "2026-06-05T00:00:00Z",
+    "reason": "Deploying after 5-year backtest parity (0 sell price diffs, 1061 matched trades Go vs JS). Paper-ramp from June 5.",
     "acceptsNewEntries": true,
     "exitsOnly": false,
     "forceLiquidate": false,
     "publiclyVisible": true,
     "tradingMode": "paper-ramp",
-    "nextReviewAt": "2026-07-03"
+    "nextReviewAt": "2026-07-12"
   },
   "broker": {
     "name": "alpaca",
@@ -31,33 +31,33 @@
     "max_positions": 3
   },
   "mode": {
-    "name": "secured",
-    "horizon_days": 5,
-    "filter": "mom_bo",
-    "min_score": 85,
+    "name": "bull",
+    "horizon_days": 8,
+    "filter": "candlestick_only",
+    "min_score": 88,
     "rotation": "none",
     "breakeven_pct": 0,
     "be_grace_days": 0,
     "vix_kill": 28,
-    "trailing_stop": false,
+    "trailing_stop": true,
     "daily_trail_pct": 0,
-    "max_stop_pct": 7,
-    "atr_stop_mult": 1,
+    "max_stop_pct": 0,
+    "atr_stop_mult": 2,
     "stale_days": 0,
-    "entry_gate_pct": 3,
+    "entry_gate_pct": 0,
     "partial_tp": true,
-    "partial_tp_pct": 0.5,
+    "partial_tp_pct": 0.3,
     "sector_cap_max": 2,
     "sizing_method": "inverse_atr",
     "target_risk_pct": 1,
     "correlation_cap": 0.7,
     "cross_mode_dedup": false,
     "regime_filters": {
-      "risk_on": "mom_bo",
-      "early_risk_off": "mom_bo",
-      "risk_off": "breakout_only",
-      "neutral": "mom_bo",
-      "recovery": "mom_bo"
+      "risk_on": "candlestick_only",
+      "early_risk_off": "candlestick_only",
+      "risk_off": "candlestick_only",
+      "neutral": "candlestick_only",
+      "recovery": "candlestick_only"
     },
     "dd_breaker_pct": 5
   },
@@ -96,7 +96,7 @@
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 8,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": 5.63,
       "execution": {
         "type": "MARKET",
@@ -116,28 +116,8 @@
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 13,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": 3.24,
-      "execution": {
-        "type": "MARKET",
-        "timing": "AT_OPEN",
-        "description": "Close at market open — horizon expired, exit regardless of P&L"
-      }
-    },
-    {
-      "action": "CLOSE",
-      "ticker": "GE",
-      "broker_symbol": "GE",
-      "broker": {
-        "symbol": "GE",
-        "exchange": "NYSE",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "reason": "HORIZON_EXPIRED",
-      "held_days": 7,
-      "horizon": 5,
-      "current_pnl_pct": 2.18,
       "execution": {
         "type": "MARKET",
         "timing": "AT_OPEN",
@@ -156,7 +136,7 @@
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 12,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": 0.15,
       "execution": {
         "type": "MARKET",
@@ -176,7 +156,7 @@
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 8,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": -0.14,
       "execution": {
         "type": "MARKET",
@@ -196,7 +176,7 @@
       },
       "reason": "HORIZON_EXPIRED",
       "held_days": 11,
-      "horizon": 5,
+      "horizon": 8,
       "current_pnl_pct": -2.57,
       "execution": {
         "type": "MARKET",
@@ -239,16 +219,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 46,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 50.2,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -257,10 +237,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -334,16 +314,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 15.6,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 17.8,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -352,10 +332,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -429,16 +409,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 44.800000000000004,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 49,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -447,10 +427,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -524,16 +504,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 150.5,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 164,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -542,10 +522,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
@@ -619,16 +599,16 @@
         "stop_loss": {
           "type": "STOP",
           "price": 83.5,
-          "trailing": false,
+          "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 7,
-          "atr_stop_mult": 1
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
           "price": 100,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
@@ -637,10 +617,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 5,
-          "expiry_date": "2026-07-06",
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 5 business days, close at next market open"
+          "description": "If still open after 8 business days, close at next market open"
         }
       },
       "conditions": [
