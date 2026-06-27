@@ -166,6 +166,8 @@ if (valRes.status !== 0) {
     process.exit(valRes.status || 1);
   }
   console.warn('⚠️  --skip-validate set — publishing despite validation failure.');
+  const auditLine = `${new Date().toISOString()} | SKIP-VALIDATE | type=${type} path=${artPath} user=${process.env.USER || 'unknown'}\n`;
+  fs.appendFileSync(path.join(ROOT, 'data', 'validation-overrides.log'), auditLine);
 }
 
 // ─── Step 5: Git commit ───────────────────────────────────────────────────────
