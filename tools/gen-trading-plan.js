@@ -73,7 +73,23 @@ const signalsPath = path.join(ROOT, 'portfolio/v1', MODE, 'signals.json');
 const signals = JSON.parse(fs.readFileSync(signalsPath, 'utf8'));
 
 let positions = [];
-try { positions = JSON.parse(fs.readFileSync(path.join(DATA, 'scanner-positions.json'), 'utf8')).open_positions || []; } catch (_) {}
+try {
+  const pitState = JSON.parse(fs.readFileSync(path.join(DATA, 'pit-state.json'), 'utf8'));
+  const modeState = pitState.modes?.[MODE];
+  if (modeState?.positions?.length) {
+    positions = modeState.positions.map(p => ({
+      ticker: p.ticker,
+      entry: p.entry,
+      entryDate: p.entryDate,
+      current_price: p.currentPrice || p.entry,
+      stopLoss: p.stopLoss,
+      takeProfit: p.takeProfit,
+      mode: MODE,
+    }));
+  }
+} catch (_) {
+  try { positions = JSON.parse(fs.readFileSync(path.join(DATA, 'scanner-positions.json'), 'utf8')).open_positions || []; } catch (__) {}
+}
 
 const ordersPath = path.join(ROOT, 'portfolio/v1', MODE, 'orders.json');
 let currentOrders = [];
@@ -148,11 +164,7 @@ const nominalUsd = modeCfg.portfolioSize > 0 ? 10000 : 10000; // default capital
 const positionPct = modeCfg.positionSizePct || +(100 / modeCfg.portfolioSize).toFixed(2);
 const positionNominal = +(nominalUsd * positionPct / 100).toFixed(2);
 
-// Current positions for this mode
-const modePositions = positions.filter(p => {
-  // Match positions from mode's trades
-  return true; // positions are mode-agnostic in scanner-positions.json
-});
+const modePositions = positions;
 
 // Identify close-now (horizon expired)
 function bizDaysSince(dateStr) {

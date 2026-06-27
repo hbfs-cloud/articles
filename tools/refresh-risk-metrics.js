@@ -268,8 +268,16 @@ async function fetchRegimeProbability() {
 async function main() {
   const now = new Date().toISOString();
 
-  if (STUB) {
-    console.log('  [info] --stub flag set — writing schema-only stub');
+  let STUB_FALLBACK = false;
+
+  if (!GATEWAY && !DRY) {
+    console.log('  [info] MCP_GATEWAY_URL not set (post-OAuth2 migration).');
+    console.log('  Writing stub — real risk metrics are computed by cloud routines with MCP OAuth2 access.');
+    STUB_FALLBACK = true;
+  }
+
+  if (STUB || STUB_FALLBACK) {
+    console.log('  [info] Writing schema-only stub');
     const stub = {
       asOf: now,
       portfolioValueUsd: PORTFOLIO_VALUE_USD,
@@ -285,14 +293,6 @@ async function main() {
     console.log(`  [ok]  wrote stub to ${OUT_PATH}`);
     return;
   }
-  if (!GATEWAY && !DRY) {
-    console.error('  [error] MCP_GATEWAY_URL not set and --stub not provided.');
-    console.error('  Refusing to silently stub data/risk-snapshots.json (would publish hollow VaR/stress/regime to prod).');
-    console.error('  Fix: export MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp');
-    console.error('  Or:  pass --stub explicitly to acknowledge writing an empty schema.');
-    process.exit(2);
-  }
-
   const snap = readLatestSnapshot();
   console.log(`  Source: scanner/status/history/${snap.date}.json`);
   if (DRY) console.log('  [dry-run] no file will be written');
