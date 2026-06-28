@@ -286,6 +286,19 @@ window.searchDataPrebuilt = [
     "date": "8 juin 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Contexte Macro & Marchés",
+    "desc": "Le Nasdaq chute de -4.6% tandis que le Dow monte de +0.5% : la rotation sectorielle la plus violente de 2026. Healthcare au sommet historique, semi-conducteurs en déroute (-23.7% pour ON Semi), BTC à 3% de son plancher annuel, et NFP vendredi sur un marché en demi-séance avant le 4 juillet. Semaine écourtée, risques maximaux.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
+    "grade": "",
+    "href": "/weekly/20260629/",
+    "date": "29 juin 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
