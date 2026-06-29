@@ -231,6 +231,8 @@ Après chaque scanner publié, lancer pipeline complet **sans demander confirmat
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
 node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder YYYYMMDD  # AB candlestick signals → signals.json (bull mode). --date = last trading day, --folder = scanner session folder
+node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30  # Adaptive Fractal (AF) signals → signals.json. Port de systematic-tss/scanner_af.go
+node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (mode field + MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard

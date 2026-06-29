@@ -109,7 +109,7 @@ function fetchOHLCV(ticker) {
   const cached = loadCachedPrice(ticker);
   if (cached) return Promise.resolve(cached);
 
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=120d`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=2y`;
   return new Promise(resolve => {
     const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }, res => {
       let data = '';

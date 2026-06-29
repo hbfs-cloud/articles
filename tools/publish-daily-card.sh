@@ -61,6 +61,54 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/candlestick-scanner.js --output signals --source yahoo --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Candlestick scan failed (non-blocking)"
 
   echo ""
+  echo "🔮 Step 2d: Adaptive Fractal scan (AF mode signals)..."
+  node tools/fractal-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 35 --top 30 || echo "⚠️  Fractal scan failed (non-blocking)"
+
+  echo ""
+  echo "⚡ Step 2e: HighVol Breakout scan..."
+  node tools/highvol-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 20 || echo "⚠️  HighVol scan failed (non-blocking)"
+
+  echo ""
+  echo "⛏️  Step 2f: Metals scan..."
+  node tools/fractal-scanner.js --universe metals --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 25 --top 15 || echo "⚠️  Metals scan failed (non-blocking)"
+
+  echo ""
+  echo "💱 Step 2g: Forex scan..."
+  node tools/fractal-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 20 --top 10 || echo "⚠️  Forex scan failed (non-blocking)"
+
+  echo ""
+  echo "🏛️  Step 2h: Casablanca Bourse scan..."
+  node tools/casablanca-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 25 --top 15 || echo "⚠️  Casablanca scan failed (non-blocking)"
+
+  echo ""
+  echo "🔄 Step 2i: Casablanca Momentum Rotation scan..."
+  node tools/momentum-scanner.js --universe casablanca --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 5 --top 15 || echo "⚠️  Casablanca MomRot scan failed (non-blocking)"
+
+  echo ""
+  echo "🔄 Step 2j: Momentum Rotation scan (US)..."
+  node tools/momentum-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 5 --top 20 || echo "⚠️  Momentum scan failed (non-blocking)"
+
+  echo ""
+  echo "📈 Step 2k: ETF Momentum scan..."
+  node tools/etf-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF scan failed (non-blocking)"
+
+  echo ""
+  echo "📐 Step 2l: Trendline Breakout scan (forex)..."
+  node tools/trendline-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline forex scan failed (non-blocking)"
+
+  echo ""
+  echo "📐 Step 2m: Trendline Breakout scan (indices)..."
+  node tools/trendline-scanner.js --universe indices --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline indices scan failed (non-blocking)"
+
+  echo ""
+  echo "📐 Step 2n: Trendline Breakout scan (stocks)..."
+  node tools/trendline-scanner.js --universe americanbull --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 15 || echo "⚠️  Trendline stocks scan failed (non-blocking)"
+
+  echo ""
+  echo "🔄 Step 2o: Hybrid breadth analysis..."
+  node tools/hybrid-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Hybrid scan failed (non-blocking)"
+
+  echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)
   node tools/sweep.js 2>&1 | tail -20

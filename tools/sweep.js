@@ -461,6 +461,12 @@ const STRATEGY_FILTERS_MAP = {
   'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback', 'candlestick']),
   'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
   'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback']),
+  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'HighVolBreakout']),
+  'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'Candlestick']),
+  'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal']),
+  'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout']),
+  'etf_momentum': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout', 'MomentumRotation']),
+  'trendline_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout', 'MomentumRotation', 'ETFMomentum']),
 };
 
 // Normalize regime string to lookup key

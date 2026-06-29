@@ -1,0 +1,403 @@
+#!/usr/bin/env node
+'use strict';
+
+/**
+ * highvol-scanner.js — HighVol Breakout Scanner (exact port of systematic-tss)
+ *
+ * Cluster-based high-volatility breakout scanner.
+ * Key filters: ATR 7-10% sweet spot, DistMA20 ≥ 5%, VolRatio ≥ 1.5,
+ * VIX regime gating (cluster V11-V13), Bollinger Band %B.
+ *
+ * Usage:
+ *   node tools/highvol-scanner.js --dry-run
+ *   node tools/highvol-scanner.js --output signals --folder 20260629
+ *   node tools/highvol-scanner.js --min-score 50 --top 20
+ */
+
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const {
+  calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
+  calcAvgVolume, calcMedianVolume, calcDollarVolumePercentile, calcStochastic,
+} = require('./lib/fractal-indicators');
+
+const ROOT = path.join(__dirname, '..');
+const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+
+const args = process.argv.slice(2);
+function getArg(name, def) {
+  const idx = args.indexOf(`--${name}`);
+  return idx >= 0 && args[idx + 1] ? args[idx + 1] : def;
+}
+const hasFlag = name => args.includes(`--${name}`);
+
+const MIN_SCORE = parseFloat(getArg('min-score', '50'));
+const TOP_N = parseInt(getArg('top', '20'));
+const OUTPUT_MODE = getArg('output', 'stdout');
+const DRY_RUN = hasFlag('dry-run');
+const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
+const SCAN_FOLDER = getArg('folder', null);
+const REGIME = getArg('regime', null);
+const CONCURRENCY = parseInt(getArg('concurrency', '10'));
+
+// ─── Universe loader ────────────────────────────────────────────────────────
+
+function loadUniverse() {
+  const fp = path.join(ROOT, 'data', 'americanbull-universe.json');
+  const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
+  return data.tickers || [];
+}
+
+// ─── Yahoo OHLCV fetcher (shared cache with fractal/candlestick) ────────────
+
+const MIN_BARS = 200;
+
+function readCache(ticker) {
+  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
+  if (!fs.existsSync(fp)) return null;
+  const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
+  if (age > 12) return null;
+  try {
+    const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
+    if (bars.length >= MIN_BARS) return bars;
+  } catch {}
+  return null;
+}
+
+function fetchOHLCV(ticker) {
+  return new Promise((resolve) => {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=2y&interval=1d`;
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 15000 }, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (!j.chart?.result?.[0]) return resolve(null);
+          const q = j.chart.result[0];
+          const ts = q.timestamp || [];
+          const ind = q.indicators?.quote?.[0];
+          const adj = q.indicators?.adjclose?.[0]?.adjclose;
+          if (!ind || !ts.length) return resolve(null);
+          const bars = [];
+          for (let i = 0; i < ts.length; i++) {
+            const o = ind.open?.[i], h = ind.high?.[i], l = ind.low?.[i], c2 = ind.close?.[i], v = ind.volume?.[i];
+            if (o == null || c2 == null) continue;
+            bars.push({
+              date: new Date(ts[i] * 1000).toISOString().slice(0, 10),
+              open: o, high: h || o, low: l || o, close: c2,
+              adjClose: adj?.[i] || c2, volume: v || 0,
+            });
+          }
+          if (bars.length >= MIN_BARS) {
+            fs.mkdirSync(CACHE_DIR, { recursive: true });
+            fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+          }
+          resolve(bars.length >= MIN_BARS ? bars : null);
+        } catch { resolve(null); }
+      });
+    }).on('error', () => resolve(null)).on('timeout', function () { this.destroy(); resolve(null); });
+  });
+}
+
+async function batchFetch(tickers, concurrency) {
+  const result = new Map();
+  const queue = [...tickers];
+  let done = 0, cached = 0;
+  async function worker() {
+    while (queue.length) {
+      const t = queue.shift();
+      let bars = readCache(t);
+      if (bars) { cached++; } else { bars = await fetchOHLCV(t); }
+      if (bars) result.set(t, bars);
+      done++;
+      if (done % 100 === 0) process.stderr.write(`  fetched ${done}/${tickers.length} (${result.size} valid, ${cached} cached)\r`);
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
+  process.stderr.write(`  fetched ${done}/${tickers.length} (${result.size} valid, ${cached} cached)\n`);
+  return result;
+}
+
+// ─── StdDev for Bollinger Bands ──────────────────────────────────────────────
+
+function calcStdDev(bars, period) {
+  const n = bars.length;
+  if (n < period) return 0;
+  let sum = 0;
+  for (let i = n - period; i < n; i++) sum += bars[i].close;
+  const mean = sum / period;
+  let sumSq = 0;
+  for (let i = n - period; i < n; i++) sumSq += (bars[i].close - mean) ** 2;
+  return Math.sqrt(sumSq / period);
+}
+
+// ─── VIX data ────────────────────────────────────────────────────────────────
+
+async function fetchVIX() {
+  const vixBars = readCache('^VIX');
+  if (vixBars) return vixBars;
+  return await fetchOHLCV('^VIX');
+}
+
+// ─── HighVol Breakout Scoring (exact port of scanner_highvol.go) ────────────
+
+function scoreSymbol(bars, regime, vixLevel, vixTrend) {
+  const n = bars.length;
+  if (n < 200) return null;
+  const price = bars[n - 1].close;
+  if (price < 1.0) return null;
+
+  const atr = calcATR(bars, 14);
+  const atrPct = atr / price;
+  const ma200 = calcSMA(bars, 200);
+  const ma20 = calcSMA(bars, 20);
+  const ma50 = calcSMA(bars, 50);
+  const rsi = calcRSI(bars, 14);
+  const volatility = calcVolatility(bars, 20);
+  const mom120 = calcMomentum(bars, 120);
+  const avgVol20 = calcAvgVolume(bars, 20);
+
+  let volRatio = 1.0;
+  if (avgVol20 > 0) volRatio = (bars[n - 1].volume || 0) / avgVol20;
+
+  const distMA20 = ma20 > 0 ? (price - ma20) / ma20 : 0;
+  const distMA200 = ma200 > 0 ? (price - ma200) / ma200 : 0;
+
+  // BBPctB
+  let bbPctB = 0.5;
+  if (n >= 20) {
+    const stdDev = calcStdDev(bars, 20);
+    const upper = ma20 + 2.0 * stdDev;
+    const lower = ma20 - 2.0 * stdDev;
+    if (upper > lower) bbPctB = (price - lower) / (upper - lower);
+  }
+
+  // FILTER 1: Base filters
+  if (price <= ma200) return null;
+  if (rsi >= 90) return null;
+
+  // Blowoff top filter
+  if (rsi > 85 && distMA20 > 0.20) return null;
+
+  // Volume minimum
+  if ((bars[n - 1].volume || 0) < 1000) return null;
+
+  // FILTER 2: ATR sweet spot (7-10%)
+  if (atrPct < 0.07) return null;
+  let maxATRPct = 0.10;
+  if (vixLevel >= 22) maxATRPct = 0.15;
+  if (atrPct > maxATRPct) return null;
+
+  // RECOVERY + ATR >= 10% = TOXIC
+  if (regime && regime.toUpperCase().includes('RECOVERY') && atrPct >= 0.10) return null;
+
+  // FILTER 3: Breakout confirmed (DistMA20 ≥ 5%)
+  if (distMA20 < 0.05) return null;
+  if (distMA20 > 1.0) return null;
+
+  // FILTER 4: Volume confirmation (VolRatio ≥ 1.5)
+  let minVolRatio = 1.5;
+  if (regime && regime.toUpperCase().includes('RECOVERY') && vixLevel >= 22) minVolRatio = 1.0;
+  if (volRatio < minVolRatio) return null;
+
+  // SCORING V9
+  let score = 50.0;
+
+  // VIX context bonus
+  if (vixLevel >= 30) {
+    score += vixTrend === 'rising' ? 40 : 25;
+  } else if (vixLevel >= 22) {
+    score += 20;
+  }
+
+  // ATR scoring
+  if (atrPct < 0.05) score += 15;
+  else if (atrPct < 0.07) score += 10;
+  else if (atrPct < 0.08) score += 5;
+
+  // Breakout strength (VIX-context aware)
+  if (vixLevel >= 30) {
+    if (distMA20 >= 0.05 && distMA20 < 0.10) score += 25;
+    else if (distMA20 >= 0.10 && distMA20 < 0.15) score += 20;
+    else if (distMA20 >= 0.15) score += 5;
+  } else {
+    if (distMA20 >= 0.15) score += 20;
+    else if (distMA20 >= 0.10) score += 15;
+    else if (distMA20 >= 0.05) score += 10;
+  }
+
+  // BBPctB
+  if (bbPctB >= 1.1) score += 10;
+
+  // Strong uptrend (DistMA200)
+  if (distMA200 >= 0.50) score += 15;
+  else if (distMA200 >= 0.30) score += 10;
+  else if (distMA200 >= 0.20) score += 5;
+
+  // Trend structure
+  if (price > ma20 && ma20 > ma50 && ma50 > ma200) score += 10;
+
+  // Volume confirmation
+  if (volRatio >= 3.0) score += 15;
+  else if (volRatio >= 2.0) score += 10;
+  else if (volRatio >= 1.5) score += 5;
+
+  // Momentum bonus
+  if (mom120 > 0.30) score += 10;
+  else if (mom120 > 0.15) score += 5;
+
+  if (score < MIN_SCORE) return null;
+
+  // Regime adjustment
+  if (regime) {
+    const r = regime.toUpperCase().replace(/[- ]/g, '_');
+    if (r.includes('RISK_ON')) score *= 1.10;
+    else if (r.includes('RECOVERY')) score *= 0.95;
+    else if (r.includes('EARLY_RISK_OFF')) score *= 0.90;
+  }
+
+  const distMA50 = ma50 > 0 ? (price - ma50) / ma50 : 0;
+
+  return {
+    score: +score.toFixed(2), price, entry: price,
+    stop: +(price - atr * 2.5).toFixed(4),
+    atr, atrPct, rsi, volatility, mom120, volRatio: +volRatio.toFixed(2),
+    distMA20: +distMA20.toFixed(4), distMA50: +distMA50.toFixed(4), distMA200: +distMA200.toFixed(4),
+    bbPctB: +bbPctB.toFixed(3),
+    sma20: ma20, sma50: ma50, sma200: ma200,
+    strategy: 'highvol-breakout',
+  };
+}
+
+// ─── Main ───────────────────────────────────────────────────────────────────
+
+async function main() {
+  const universe = loadUniverse();
+  console.log(`⚡ HighVol Breakout Scanner (systematic-tss port)`);
+  console.log(`   Universe: ${universe.length} tickers | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
+  console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
+
+  // Fetch VIX first
+  console.log(`📡 Fetching VIX data...`);
+  const vixBars = await fetchVIX();
+  let vixLevel = 0, vixTrend = 'stable';
+  if (vixBars && vixBars.length >= 14) {
+    const vn = vixBars.length;
+    vixLevel = vixBars[vn - 1].close;
+    const vixSma14 = calcSMA(vixBars, 14);
+    if (vixSma14 > 0) {
+      const ratio = vixLevel / vixSma14;
+      if (ratio < 0.90) vixTrend = 'falling';
+      else if (ratio > 1.10) vixTrend = 'rising';
+    }
+    console.log(`   VIX: ${vixLevel.toFixed(1)} (${vixTrend}, SMA14: ${vixSma14?.toFixed(1)})`);
+  } else {
+    console.log(`   ⚠️ No VIX data — cluster filters disabled`);
+  }
+
+  // VIX cluster gate (V11-V13)
+  const regimeStr = REGIME || '';
+  const regimeUp = regimeStr.toUpperCase().replace(/[- ]/g, '_');
+
+  // RISK_OFF = no new positions
+  if (regimeUp === 'RISK_OFF') {
+    console.log(`\n❌ Regime RISK_OFF — no new positions.`); return [];
+  }
+
+  // VIX 18-22 + not stable = toxic
+  if (vixLevel >= 18 && vixLevel < 22 && vixTrend !== 'stable') {
+    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (18-22) + ${vixTrend} = TOXIC cluster, no signals.`); return [];
+  }
+  // VIX 15-18 + falling = toxic
+  if (vixLevel >= 15 && vixLevel < 18 && vixTrend === 'falling') {
+    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (15-18) + falling = TOXIC cluster, no signals.`); return [];
+  }
+  // VIX < 15 + rising = toxic
+  if (vixLevel > 0 && vixLevel < 15 && vixTrend === 'rising') {
+    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (<15) + rising = TOXIC cluster, no signals.`); return [];
+  }
+  // VIX 22-30 + falling = toxic
+  if (vixLevel >= 22 && vixLevel < 30 && vixTrend === 'falling') {
+    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (22-30) + falling = TOXIC cluster, no signals.`); return [];
+  }
+  // RECOVERY + VIX 18-22 = toxic
+  if (regimeUp.includes('RECOVERY') && vixLevel >= 18 && vixLevel < 22) {
+    console.log(`\n❌ RECOVERY + VIX ${vixLevel.toFixed(1)} (18-22) = TOXIC cluster, no signals.`); return [];
+  }
+
+  console.log(`📡 Fetching OHLCV data via Yahoo...`);
+  const priceData = await batchFetch(universe, CONCURRENCY);
+  if (!priceData.size) { console.error('❌ No OHLCV data — aborting.'); process.exit(1); }
+
+  console.log('🔍 Scoring candidates (highvol breakout filters)...');
+  const candidates = [];
+  const scanDateNorm = SCAN_DATE.replace(/-/g, '');
+
+  for (const [ticker, rawBars] of priceData) {
+    const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
+    const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
+
+    const dvP80 = calcDollarVolumePercentile(bars, 20, 0.80);
+    if (dvP80 < 100_000) continue;
+
+    const result = scoreSymbol(bars, REGIME, vixLevel, vixTrend);
+    if (!result) continue;
+
+    const risk = result.entry - result.stop;
+    if (risk <= 0) continue;
+
+    const tp1 = +(result.entry + risk * 2).toFixed(2);
+    const tp2 = +(result.entry + risk * 3).toFixed(2);
+
+    candidates.push({
+      ticker, score: result.score,
+      entry: +result.entry.toFixed(2), stop: +result.stop.toFixed(2), tp1, tp2,
+      rr: '1:2.0', metrics: result,
+    });
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+  const topCandidates = candidates.slice(0, TOP_N);
+
+  console.log(`\n✅ Found ${candidates.length} signals (passed all filters), top ${topCandidates.length}:`);
+  for (const c of topCandidates) {
+    const icon = c.score >= 100 ? '🔥' : c.score >= 70 ? '⚡' : '  ';
+    console.log(`  ${icon} ${c.ticker.padEnd(8)} score:${String(c.score).padStart(6)} ATR%:${(c.metrics.atrPct * 100).toFixed(1)}% DistMA20:${(c.metrics.distMA20 * 100).toFixed(1)}% VolR:${c.metrics.volRatio.toFixed(1)} RSI:${c.metrics.rsi.toFixed(0)}`);
+  }
+
+  if (DRY_RUN) { console.log('\n🏷️  Dry run — no files written.'); return topCandidates; }
+
+  if (OUTPUT_MODE === 'json') {
+    const outPath = path.join(ROOT, 'data', `highvol-scan-${SCAN_DATE}.json`);
+    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, regime: REGIME, vix: { level: vixLevel, trend: vixTrend }, candidates: topCandidates }, null, 2));
+    console.log(`\n📁 Written to ${outPath}`);
+  } else if (OUTPUT_MODE === 'signals') {
+    const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+    const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+    if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
+    const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+    const existing = new Set((signals.signals || []).map(s => s.ticker));
+    let added = 0;
+    for (const c of topCandidates) {
+      if (existing.has(c.ticker)) continue;
+      signals.signals.push({
+        ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'HighVolBreakout',
+        entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
+        horizon: 21, region: 'US',
+        sharia: null,
+        thesis: `HV score ${c.score}: ATR%=${(c.metrics.atrPct * 100).toFixed(1)}%, DistMA20=${(c.metrics.distMA20 * 100).toFixed(1)}%, VolR=${c.metrics.volRatio}, RSI=${c.metrics.rsi.toFixed(0)}`,
+        extension: { atrPct: +c.metrics.atrPct.toFixed(4), bbPctB: c.metrics.bbPctB },
+      });
+      existing.add(c.ticker);
+      added++;
+    }
+    fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+    console.log(`\n📁 Appended ${added} highvol signals to ${sigPath}`);
+  }
+
+  return topCandidates;
+}
+
+main().catch(e => { console.error('❌', e.message); process.exit(1); });
