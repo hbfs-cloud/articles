@@ -28,6 +28,7 @@ const QUICK = process.argv.includes('--quick');
 const VERBOSE = process.argv.includes('--verbose');
 const FULL_SWEEP = process.argv.includes('--full-sweep');
 const FROZEN_ONLY = !FULL_SWEEP;
+const { verify: verifyTradeChain, seal: sealTradeChain } = require('./lib/trade-integrity');
 const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
 const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
 const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
@@ -168,6 +169,11 @@ const { detectBearishExit } = require('./lib/candlestick-patterns');
 const STRAT_PATTERNS = {
   short_squeeze: /short.?squeeze/i,
   pre_squeeze: /pre.?squeeze/i,
+  adaptive_fractal: /adaptive.?fractal/i,
+  highvol_breakout: /high.?vol.?breakout/i,
+  trendline_breakout: /trendline.?breakout/i,
+  momentum_rotation: /momentum.?rotation/i,
+  etf_momentum: /etf.?momentum/i,
   breakout: /breakout/i,
   momentum: /momentum/i,
   pullback: /pullback/i,
@@ -209,8 +215,13 @@ function parseScan(dir) {
         // pre_squeeze actionable when volume contracts, pullback decent, short_squeeze last.
         const stratBonus =
           strat === 'breakout' ? 4 :
+          strat === 'highvol_breakout' ? 4 :
+          strat === 'adaptive_fractal' ? 4 :
           strat === 'momentum' ? 4 :
+          strat === 'momentum_rotation' ? 3.5 :
           strat === 'candlestick' ? 3.5 :
+          strat === 'trendline_breakout' ? 3.5 :
+          strat === 'etf_momentum' ? 3 :
           strat === 'pre_squeeze' ? 3 :
           strat === 'pullback' ? 3 :
           2; // short_squeeze / unknown
@@ -457,16 +468,16 @@ const STRATEGY_FILTERS_MAP = {
   'all': new Set(['candlestick']),
   'no_sq': new Set(['short_squeeze']),
   'no_sq_pb': new Set(['short_squeeze', 'pullback']),
-  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback', 'candlestick']),
-  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'pullback', 'candlestick']),
+  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'pullback', 'candlestick']),
+  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'etf_momentum', 'pullback', 'candlestick']),
   'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
-  'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback']),
-  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'HighVolBreakout']),
-  'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'Candlestick']),
-  'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal']),
-  'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout']),
-  'etf_momentum': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout', 'MomentumRotation']),
-  'trendline_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'pullback', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout', 'MomentumRotation', 'ETFMomentum']),
+  'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'pullback']),
+  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'pullback', 'candlestick']),
+  'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
+  'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'adaptive_fractal', 'pullback', 'candlestick']),
+  'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'pullback', 'candlestick']),
+  'etf_momentum': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'pullback', 'candlestick']),
+  'trendline_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'etf_momentum', 'pullback', 'candlestick']),
 };
 
 // Normalize regime string to lookup key
@@ -928,7 +939,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 // open positions at each business day's close (via priceCache).
 // Trades must have: pnlPct, exitDate, scanDate, status, holdDays, actualEntry.
 // Uses configVersion on each trade to look up the correct weight from config history.
-function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId, calendar) {
+function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId, calendar, opts = {}) {
   const DF = dayFnsFor(calendar);
   const allTrades = (closedTrades || []).filter(t => t.actualEntry > 0);
   if (allTrades.length === 0) return null;
@@ -1004,6 +1015,26 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   const equityCurve = [];
   const lastKnownClose = {};
 
+  // Append-only: if prior equity curve provided, copy frozen points and fast-forward
+  const priorEC = opts.priorEC || [];
+  let appendAfter = '';
+  if (priorEC.length > 0) {
+    for (const pt of priorEC) {
+      equityCurve.push(pt);
+      if (pt.value > peak) peak = pt.value;
+      const dd = ((peak - pt.value) / peak) * 100;
+      if (dd > maxDD) maxDD = dd;
+    }
+    appendAfter = priorEC[priorEC.length - 1].date;
+    // Fast-forward realized PnL and resolvedIdx to match the frozen point
+    for (let i = 0; i < sortedResolved.length; i++) {
+      if (sortedResolved[i].exitDate <= appendAfter) {
+        realizedPnl += (sortedResolved[i].pnlPct || 0) * getWeight(sortedResolved[i], modeId || '');
+        resolvedIdx = i + 1;
+      }
+    }
+  }
+
   function getClose(ticker, day) {
     const hist = priceCache[ticker];
     if (hist && hist[day]) {
@@ -1014,6 +1045,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
   }
 
   for (const day of allDays) {
+    if (appendAfter && day <= appendAfter) continue;
     // Accumulate realized from trades closing on or before this day
     while (resolvedIdx < sortedResolved.length && sortedResolved[resolvedIdx].exitDate <= day) {
       realizedPnl += (sortedResolved[resolvedIdx].pnlPct || 0) * getWeight(sortedResolved[resolvedIdx], modeId || '');
@@ -2267,6 +2299,15 @@ async function main() {
   }
 
   if (fs.existsSync(MODES_CFG_PATH)) {
+    // TRADE CHAIN INTEGRITY CHECK — abort if historical trades were tampered with
+    const chainCheck = verifyTradeChain();
+    if (!chainCheck.ok) {
+      console.error('🛑 TRADE CHAIN INTEGRITY VIOLATION — aborting sweep. Historical trades were modified.');
+      console.error('   Run `node tools/lib/trade-integrity.js verify` for details.');
+      console.error('   If this is intentional, run `node tools/lib/trade-integrity.js seal` first.');
+      process.exit(1);
+    }
+
     const modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH));
     // Shared scoreboard — modes with crossModeDedup=true skip tickers already picked.
     // Priority order (most conservative first): fortress → secured → balanced → dynamic → turbo.
@@ -2528,10 +2569,37 @@ async function main() {
 
         frozenTrades[id] = merged;
 
-        // Always recompute frozen stats from merged trades — old caches may carry
-        // legacy "sharpe" formula (Return/MaxDD) that is now exposed as returnDDRatio.
-        // Recomputing guarantees true sharpe + IS/OOS partitioning fields are fresh.
-        const stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
+        // ═══════════════════════════════════════════════════════════════════
+        // IMMUTABLE HISTORY — ABSOLUTE RULE: never rewrite closed trades.
+        // The sweep is APPEND-ONLY: new trades extend the equity curve,
+        // existing trades and their stats are NEVER recalculated.
+        // ═══════════════════════════════════════════════════════════════════
+        const existingFrozen = existingResults[`frozen_${id}`];
+        const existingTradeCount = (existingTrades[id] || []).filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact').length;
+        const mergedClosedCount = merged.filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact').length;
+
+        // HARD GUARD: closed trade count must never decrease
+        if (existingFrozen && mergedClosedCount < existingTradeCount) {
+          console.error(`  ❌ ${id}: BLOCKED — would lose ${existingTradeCount - mergedClosedCount} closed trades (${existingTradeCount} → ${mergedClosedCount}). History is immutable.`);
+          output[`frozen_${id}`] = existingFrozen;
+          frozenTrades[id] = existingTrades[id] || merged;
+          continue;
+        }
+
+        let stats;
+        if (existingFrozen) {
+          // IMMUTABLE: existing frozen stats are preserved byte-for-byte.
+          // New trades are appended to backtest-trades.json but stats are
+          // ONLY updated by gen-status-page snapshots, never by sweep recalculation.
+          stats = existingFrozen;
+          const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'unchanged';
+          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}% [IMMUTABLE]`);
+          output[`frozen_${id}`] = existingFrozen;
+          frozenTrades[id] = merged;
+          continue;
+        }
+        // First-time computation only (no existing frozen stats)
+        stats = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id);
         const isOosSets = (typeof inSampleDates !== 'undefined') ? { inSample: inSampleDates, outSample: outSampleDates } : null;
         const isStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.inSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
         const oosStats = isOosSets ? computeStatsFromTrades(merged.filter(t => isOosSets.outSample.has(t.scanDate)), cfg.portfolioSize, cfg.positionSizePct || 1, id) : null;
@@ -2633,6 +2701,9 @@ async function main() {
 
   fs.writeFileSync(path.join(ROOT, 'data', 'backtest-results.json'), JSON.stringify(output, null, 2));
   console.log('\n✅ Results saved to data/backtest-results.json');
+
+  // Re-seal the trade chain after writing
+  sealTradeChain();
 
 
   // ─── Compare with frozen modes ─────────────────────────────────────────────
