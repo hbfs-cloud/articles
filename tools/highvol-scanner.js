@@ -385,7 +385,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'HighVolBreakout',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: 21, region: 'US',
+        horizon: 21, region: 'US', universe: 'americanbull',
         sharia: null,
         thesis: `HV score ${c.score}: ATR%=${(c.metrics.atrPct * 100).toFixed(1)}%, DistMA20=${(c.metrics.distMA20 * 100).toFixed(1)}%, VolR=${c.metrics.volRatio}, RSI=${c.metrics.rsi.toFixed(0)}`,
         extension: { atrPct: +c.metrics.atrPct.toFixed(4), bbPctB: c.metrics.bbPctB },

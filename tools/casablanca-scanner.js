@@ -218,7 +218,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'AdaptiveFractal',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: 21, region: 'CASABLANCA',
+        horizon: 21, region: 'CASABLANCA', universe: 'casablanca',
         sharia: null,
         thesis: `AF score ${c.score}: Mom120=${(c.metrics.mom120 * 100).toFixed(0)}%, RSI=${c.metrics.rsi.toFixed(0)}, Vol=${c.metrics.volatility.toFixed(3)}, Quality=${c.metrics.qualityScore.toFixed(0)}`,
         extension: { rsi: +c.metrics.rsi.toFixed(1), mom120: +c.metrics.mom120.toFixed(3) },

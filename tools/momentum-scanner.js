@@ -277,7 +277,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'MomentumRotation',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: 21, region: UNIVERSE_NAME === 'americanbull' ? 'US' : UNIVERSE_NAME.toUpperCase(),
+        horizon: 21, region: UNIVERSE_NAME === 'americanbull' ? 'US' : UNIVERSE_NAME.toUpperCase(), universe: UNIVERSE_NAME,
         sharia: null,
         thesis: `MomRot score ${c.score.toFixed(1)}: Mom20=${(c.metrics.mom20 * 100).toFixed(1)}%, Mom50=${(c.metrics.mom50 * 100).toFixed(1)}%, Mom100=${(c.metrics.mom100 * 100).toFixed(1)}%, RSI=${c.metrics.rsi.toFixed(0)}`,
         extension: { mom20: +c.metrics.mom20.toFixed(4), mom50: +c.metrics.mom50.toFixed(4), mom100: +c.metrics.mom100.toFixed(4) },

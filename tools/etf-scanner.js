@@ -406,7 +406,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'ETFMomentum',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: 21, region: 'US',
+        horizon: 21, region: 'US', universe: 'etf',
         sharia: null,
         thesis: `ETF ${c.metrics.cluster}: Mom20=${(c.metrics.mom20 * 100).toFixed(1)}%, RSI=${c.metrics.rsi.toFixed(0)}, ATR%=${(c.metrics.atrPct * 100).toFixed(1)}%`,
         extension: { cluster: c.metrics.cluster, atrPct: +c.metrics.atrPct.toFixed(4) },

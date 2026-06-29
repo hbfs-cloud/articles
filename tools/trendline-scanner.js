@@ -579,7 +579,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'TrendlineBreakout',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: c.horizon, region: detectRegion(c.ticker),
+        horizon: c.horizon, region: detectRegion(c.ticker), universe: UNIVERSE_NAME,
         sharia: null,
         thesis: `Trendline breakout: ${c.metrics.trendlineTouches} touches, span ${c.metrics.trendlineSpan} bars, breakout +${c.metrics.breakoutPct}%` +
           (c.metrics.rsiDivergence ? `, RSI div +${c.metrics.rsiDivStrength}%` : ''),

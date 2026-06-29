@@ -619,12 +619,17 @@ async function main() {
   // Filters
   const SF = {
     all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
-    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
+    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
-    mom_bo: s => /momentum|breakout/i.test(s),
+    mom_bo: s => /momentum|breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
+    adaptive_fractal: s => s === 'AdaptiveFractal',
+    highvol_breakout: s => s === 'HighVolBreakout',
+    momentum_rotation: s => s === 'MomentumRotation',
+    etf_momentum: s => s === 'ETFMomentum',
+    trendline_breakout: s => s === 'TrendlineBreakout',
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout' }[f] || f; }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
@@ -660,7 +665,8 @@ async function main() {
   }
   function signalsFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
-    return signals.filter(s => f(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN).map(s => {
+    const uf = cfg.universeFilter || null;
+    return signals.filter(s => f(s.strategy || '')).filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
       const vwapRef = signalVwap[s.ticker] || null;
@@ -745,9 +751,10 @@ async function main() {
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const sig = signalsFor(cfg);
-    // Fallback candidates: signals beyond topN that still pass filter + minScore
+    // Fallback candidates: signals beyond topN that still pass filter + minScore + universe
     const _sf = SF[cfg.filterName] || (() => true);
-    const fallback = signals.filter(s => _sf(s.strategy || '')).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+    const _uf = cfg.universeFilter || null;
+    const fallback = signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
       .slice(cfg.topN, cfg.topN + 4).map(s => {
         const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
         return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: $fmt(s.entry), stop: $fmt(st), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
@@ -879,7 +886,8 @@ ${renderStatusBanner(cfg)}
       // Summarise which strategies the scanner actually produced today
       const todayStrategies = [...new Set(signals.map(s => s.strategy || 'unknown'))];
       const f = SF[cfg.filterName] || (() => true);
-      const afterFilter = signals.filter(s => f(s.strategy || ''));
+      const _uf2 = cfg.universeFilter || null;
+      const afterFilter = signals.filter(s => f(s.strategy || '')).filter(s => !_uf2 || (s.universe || '') === _uf2);
       const afterScore = afterFilter.filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore);
       let reason;
       if (afterFilter.length === 0) {
@@ -3182,10 +3190,15 @@ function backfillHistory() {
   // Parse signals for a given dateKey (YYYYMMDD) — JSON-first, HTML fallback
   const SF_BF = {
     all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
-    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout/i.test(s),
+    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
-    mom_bo: s => /momentum|breakout/i.test(s),
+    mom_bo: s => /momentum|breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
+    adaptive_fractal: s => s === 'AdaptiveFractal',
+    highvol_breakout: s => s === 'HighVolBreakout',
+    momentum_rotation: s => s === 'MomentumRotation',
+    etf_momentum: s => s === 'ETFMomentum',
+    trendline_breakout: s => s === 'TrendlineBreakout',
   };
   function parseScannerSignalsBF(dateKey) {
     const loaded = parser.loadSignals(dateKey);
@@ -3272,8 +3285,10 @@ function backfillHistory() {
 
       // ── Signals for this mode (filtered + topN) ──
       const filterFn = SF_BF[cfg.filterName] || (() => true);
+      const _ufBF = cfg.universeFilter || null;
       const filteredSignals = rawSignals
         .filter(s => filterFn(s.strategy || ''))
+        .filter(s => !_ufBF || (s.universe || '') === _ufBF)
         .filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
         .slice(0, cfg.topN)
         .map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' }));
