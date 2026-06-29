@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-29T08:40:37.648Z",
+  "generated_at": "2026-06-29T20:55:24.969Z",
   "valid_for": "2026-06-29",
   "mode_status": {
     "state": "deploying",
@@ -87,115 +87,26 @@
   "orders": [
     {
       "id": "ORD-001",
-      "action": "BUY",
-      "ticker": "EXC",
-      "broker_symbol": "EXC_US_EQ",
-      "broker": {
-        "symbol": "EXC_US_EQ",
-        "exchange": "NASDAQ",
-        "isin": "US30161N1019",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 47.4,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 3333,
-          "shares": 70,
-          "pct_of_portfolio": 33.33
-        },
-        "valid_from": "2026-06-29T09:30:00-04:00",
-        "valid_until": "2026-06-29T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 46,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 50.2,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 52,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-07-09",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 91,
-        "strategy": "Momentum",
-        "rr": "1:2.0",
-        "sharia": false,
-        "thesis": "Top score 91. PE fwd 15.6x deep value regulated utility. Div 3.6% highest in scan. Above all EMAs, RSI 61.9, ext 1.34%. ATR% 1.9%. Zero tech correlation. Flight-to-quality beneficiary. Anti-dilution clean."
-      },
+      "action": "SKIP",
+      "ticker": "VOR",
+      "reason": "Not available on t212",
       "priority": 1
     },
     {
       "id": "ORD-002",
       "action": "BUY",
-      "ticker": "VTRS",
-      "broker_symbol": "MYL_US_EQ",
+      "ticker": "ZURA",
+      "broker_symbol": "JATT_US_EQ",
       "broker": {
-        "symbol": "MYL_US_EQ",
+        "symbol": "JATT_US_EQ",
         "exchange": "NASDAQ",
-        "isin": "US92556V1061",
+        "isin": "KYG9TY5A1016",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 16.330000000000002,
+        "price": 5.3500000000000005,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -204,7 +115,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 204,
+          "shares": 622,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-29T09:30:00-04:00",
@@ -214,7 +125,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 15.6,
+          "price": 4.26,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -222,13 +133,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 17.8,
+          "price": 7.53,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 18.5,
+          "price": 8.620000000000001,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -269,29 +180,125 @@
         }
       ],
       "metadata": {
-        "score": 88,
-        "strategy": "Momentum",
+        "score": 165,
+        "strategy": "Candlestick",
         "rr": "1:2.0",
-        "sharia": false,
-        "thesis": "Deepest value PE fwd 6.1x. Div 3.0%. Above all EMAs, RSI 56.2, ext 1.78%. Generic pharma inelastic demand. Russell reconstitution catalyst. ATR% 2.9%. Anti-dilution clean."
+        "sharia": null,
+        "thesis": "THREE_OUTSIDE_UP pattern (base 70) with 9x volume spike. ATR% 6.01%, RSI 86.2, BB%B 1.264."
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "OCGN",
+      "broker_symbol": "OCGN_US_EQ",
+      "broker": {
+        "symbol": "OCGN_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US67577C1053",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 3333,
+          "shares": 2222,
+          "pct_of_portfolio": 33.33
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1.36,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1.78,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1.92,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 8,
+          "expiry_date": "2026-07-09",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 8 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 163,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "BULLISH_ENGULFING pattern (base 68) with 8.4x volume spike. ATR% 5.99%, RSI 70.4, BB%B 1.106."
       },
       "priority": 2
     },
     {
       "id": "ORD-004",
       "action": "BUY",
-      "ticker": "NVS",
-      "broker_symbol": "NVS_US_EQ",
+      "ticker": "ANRO",
+      "broker_symbol": "ANRO_US_EQ",
       "broker": {
-        "symbol": "NVS_US_EQ",
+        "symbol": "ANRO_US_EQ",
         "exchange": "NYSE",
-        "isin": "US66987V1098",
+        "isin": "US02157Q1094",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 155,
+        "price": 27.04,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -300,7 +307,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 21,
+          "shares": 123,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-29T09:30:00-04:00",
@@ -310,7 +317,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 150.5,
+          "price": 24.82,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -318,13 +325,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 164,
+          "price": 31.490000000000002,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 168.5,
+          "price": 33.72,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -365,29 +372,29 @@
         }
       ],
       "metadata": {
-        "score": 88,
-        "strategy": "Momentum",
+        "score": 162,
+        "strategy": "Candlestick",
         "rr": "1:2.0",
-        "sharia": true,
-        "thesis": "EU healthcare leader, 3rd consecutive pick. PE fwd 15.6x deep value vs US peers. Above all EMAs, RSI 60.2, ext 2.91%. Div 3.1%, beta ~0.5. $1.9B Antares deal + Kisqali/Entresto. ATR% 1.9%. Anti-dilution clean."
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 12.4x volume spike. ATR% 7.03%, RSI 84.6, BB%B 1.081."
       },
       "priority": 3
     },
     {
-      "id": "ORD-006",
+      "id": "ORD-005",
       "action": "BUY",
-      "ticker": "SBUX",
-      "broker_symbol": "SBUX_US_EQ",
+      "ticker": "CTNM",
+      "broker_symbol": "CTNM_US_EQ",
       "broker": {
-        "symbol": "SBUX_US_EQ",
+        "symbol": "CTNM_US_EQ",
         "exchange": "NASDAQ",
-        "isin": "US8552441094",
+        "isin": "US21217B1008",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 104,
+        "price": 14.19,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -396,7 +403,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 32,
+          "shares": 234,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-29T09:30:00-04:00",
@@ -406,7 +413,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 100,
+          "price": 12.780000000000001,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -414,13 +421,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 112,
+          "price": 17.01,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 116,
+          "price": 18.42,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -461,29 +468,29 @@
         }
       ],
       "metadata": {
-        "score": 85,
-        "strategy": "Momentum",
+        "score": 162,
+        "strategy": "Candlestick",
         "rr": "1:2.0",
-        "sharia": false,
-        "thesis": "Consumer turnaround under CEO Brian Niccol. Above all EMAs, RSI 61.0. Adjusted entry $104 to cap ext within 3% A+ gate. Div 2.4%. Consumer confidence Tue catalyst. ATR% 2.4%. Anti-dilution clean."
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 15.8x volume spike. ATR% 7.34%, RSI 75.2, BB%B 1.12."
       },
       "priority": 4
     },
     {
-      "id": "ORD-007",
+      "id": "ORD-006",
       "action": "BUY",
-      "ticker": "ALGN",
-      "broker_symbol": "ALGN_US_EQ",
+      "ticker": "EIKN",
+      "broker_symbol": "EIKN_US_EQ",
       "broker": {
-        "symbol": "ALGN_US_EQ",
+        "symbol": "EIKN_US_EQ",
         "exchange": "NASDAQ",
-        "isin": "US0162551016",
+        "isin": "US2825641036",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 178,
+        "price": 11.450000000000001,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -492,7 +499,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 3333,
-          "shares": 18,
+          "shares": 291,
           "pct_of_portfolio": 33.33
         },
         "valid_from": "2026-06-29T09:30:00-04:00",
@@ -502,7 +509,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 167.5,
+          "price": 9.78,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -510,13 +517,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 199,
+          "price": 14.790000000000001,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 209.5,
+          "price": 16.46,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -557,11 +564,11 @@
         }
       ],
       "metadata": {
-        "score": 84,
-        "strategy": "Momentum",
+        "score": 162,
+        "strategy": "Candlestick",
         "rr": "1:2.0",
-        "sharia": true,
-        "thesis": "MedTech growth at value PE fwd 14.4x. ~80% clear aligner market share (Invisalign). Above EMA20, RSI 55.0. Sharia compliant. Russell reconstitution catalyst. ATR% 4.0%. Anti-dilution clean."
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 11.7x volume spike. ATR% 7.74%, RSI 76.4, BB%B 1.128."
       },
       "priority": 5
     }
