@@ -1,18 +1,18 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-06-29T20:55:24.775Z",
+  "generated_at": "2026-06-29T21:39:58.747Z",
   "valid_for": "2026-06-29",
   "mode_status": {
-    "state": "pausing",
-    "since": "2026-02-26T00:00:00Z",
-    "reason": "12 consecutive SL losses (Jun 1-17), -46% impact. CB bug + regime detection failure.",
-    "acceptsNewEntries": false,
-    "exitsOnly": true,
+    "state": "live",
+    "since": "2026-06-29T21:15:33.284Z",
+    "reason": "Resume trading — pausing blocked all entries since 2026-06-17",
+    "acceptsNewEntries": true,
+    "exitsOnly": false,
     "forceLiquidate": false,
     "publiclyVisible": true,
-    "tradingMode": "exit-only",
-    "nextReviewAt": "2026-07-02"
+    "tradingMode": "real",
+    "nextReviewAt": "2026-07-15"
   },
   "broker": {
     "name": "trading212",
@@ -84,7 +84,488 @@
     "max_sector_concentration": 1
   },
   "close_now": [],
-  "orders": [],
+  "orders": [
+    {
+      "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "IRDM",
+      "broker_symbol": "IRDM_US_EQ",
+      "broker": {
+        "symbol": "IRDM_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US46269C1027",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 54.01,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 60,
+          "shares": 1,
+          "pct_of_portfolio": 0.6
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 44.08,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 1
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 73.88,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 83.81,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-07-06",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 108,
+        "strategy": "HighVolBreakout",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "HV score 108: ATR%=7.4%, DistMA20=16.3%, VolR=2.85, RSI=60"
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "ZURA",
+      "broker_symbol": "JATT_US_EQ",
+      "broker": {
+        "symbol": "JATT_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "KYG9TY5A1016",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 5.3500000000000005,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 60,
+          "shares": 11,
+          "pct_of_portfolio": 0.6
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 4.26,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 1
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 7.53,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 8.620000000000001,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-07-06",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 165,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "THREE_OUTSIDE_UP pattern (base 70) with 9x volume spike. ATR% 6.01%, RSI 86.2, BB%B 1.264."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "OCGN",
+      "broker_symbol": "OCGN_US_EQ",
+      "broker": {
+        "symbol": "OCGN_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US67577C1053",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 1.5,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 60,
+          "shares": 40,
+          "pct_of_portfolio": 0.6
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 1.36,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 1
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 1.78,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 1.92,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-07-06",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 163,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "BULLISH_ENGULFING pattern (base 68) with 8.4x volume spike. ATR% 5.99%, RSI 70.4, BB%B 1.106."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-005",
+      "action": "BUY",
+      "ticker": "ANRO",
+      "broker_symbol": "ANRO_US_EQ",
+      "broker": {
+        "symbol": "ANRO_US_EQ",
+        "exchange": "NYSE",
+        "isin": "US02157Q1094",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 27.04,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 60,
+          "shares": 2,
+          "pct_of_portfolio": 0.6
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 24.82,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 1
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 31.490000000000002,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 33.72,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-07-06",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 162,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 12.4x volume spike. ATR% 7.03%, RSI 84.6, BB%B 1.081."
+      },
+      "priority": 4
+    },
+    {
+      "id": "ORD-006",
+      "action": "BUY",
+      "ticker": "CTNM",
+      "broker_symbol": "CTNM_US_EQ",
+      "broker": {
+        "symbol": "CTNM_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US21217B1008",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 14.19,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 60,
+          "shares": 4,
+          "pct_of_portfolio": 0.6
+        },
+        "valid_from": "2026-06-29T09:30:00-04:00",
+        "valid_until": "2026-06-29T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 12.780000000000001,
+          "trailing": false,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 1
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 17.01,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 18.42,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 5,
+          "expiry_date": "2026-07-06",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 5 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 162,
+        "strategy": "Candlestick",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "THREE_BULLISH_CONTINUATION pattern (base 62) with 15.8x volume spike. ATR% 7.34%, RSI 75.2, BB%B 1.12."
+      },
+      "priority": 5
+    }
+  ],
   "error_handlers": {
     "INSUFFICIENT_MARGIN": {
       "action": "REDUCE_SIZE",
