@@ -1379,11 +1379,14 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
     const c = m.cfg.color;
     return `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Switch to ${m.cfg.label} mode" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${c}"><span class="mode-dot" style="background:${c}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="tab-rec hide-m">★ Rec.</span>' : ''}</button>`;
   }
-  const tabRail = populatedClasses.map(ac => {
-    const tabs = assetBuckets[ac].map(([id, m]) => tabButton(id, m)).join('');
-    const label = showClassLabels ? `<span class="mode-class-label"><i class="fas fa-${ASSET_CLASS_ICON[ac] || 'folder'}"></i> ${ASSET_CLASS_LABEL[ac]}</span>` : '';
-    return `<div class="mode-class" data-class="${ac}">${label}${tabs}</div>`;
-  }).join('');
+  // All tabs rendered hidden — JS shows only favorites from localStorage
+  const allTabs = populatedClasses.flatMap(ac => assetBuckets[ac]).map(([id, m]) => tabButton(id, m)).join('');
+  const tabRail = allTabs + `<button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Select modes"><i class="fas fa-sliders"></i></button>`;
+  // Mode picker catalog (JSON for JS)
+  const modeCatalog = JSON.stringify(populatedClasses.map(ac => ({
+    ac, label: ASSET_CLASS_LABEL[ac], icon: ASSET_CLASS_ICON[ac] || 'folder',
+    modes: assetBuckets[ac].map(([id, m]) => ({ id, label: m.cfg.label, color: m.cfg.color, status: m.cfg.status || 'live' }))
+  })));
 
   const html = `<!DOCTYPE html>
 <html lang="en" data-tags="technique,formation,trade-idea,us,eu,asia,etf" data-tab="scanner">
@@ -1440,27 +1443,44 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .mode-panel{min-width:0;max-width:100%;overflow-x:hidden}
 .mode-panel>*{min-width:0;max-width:100%}
 
-/* ── Mode tab rail — wrapping grid with asset-class separators, scrollable on mobile ── */
-.mode-tabs{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:1.5rem;padding:.35rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-l)}
-.mode-class{display:flex;align-items:center;gap:.25rem;flex-wrap:nowrap}
-.mode-class+.mode-class{padding-left:.4rem;border-left:2px solid var(--border)}
-.mode-class-label{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;flex-shrink:0;padding:0 .2rem;display:inline-flex;align-items:center;gap:.3rem}
-.mode-class-label i{font-size:.6rem;opacity:.6}
-.mode-tab{padding:.45rem .65rem;border:none;background:transparent;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:.35rem;min-height:34px;white-space:nowrap;transition:background .18s,color .18s,box-shadow .18s}
+/* ── Mode tab rail — compact favorites bar + picker button ── */
+.mode-tabs{display:flex;gap:.25rem;margin-bottom:1.5rem;padding:.3rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-l);overflow-x:auto;scrollbar-width:none}
+.mode-tabs::-webkit-scrollbar{display:none}
+.mode-tab{padding:.5rem .75rem;border:none;background:transparent;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);display:none;align-items:center;gap:.4rem;min-height:36px;white-space:nowrap;transition:background .18s,color .18s,box-shadow .18s;flex-shrink:0}
+.mode-tab.fav{display:inline-flex}
 .mode-tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .mode-tab:hover{color:var(--ink-2);background:var(--surface)}
 .mode-tab.active{background:var(--surface);color:var(--mc,var(--accent));box-shadow:0 1px 3px oklch(22% 0.02 250/.12),0 0 0 1px var(--border-2);font-weight:700}
 .mode-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;opacity:.85}
 .mode-tab.active .mode-dot{opacity:1}
 .tab-rec{font-size:.58rem;background:var(--accent-wk);color:var(--accent);padding:.1rem .35rem;border-radius:var(--r-s);font-weight:700;margin-left:.2rem;letter-spacing:.02em}
-@media(max-width:700px){
-  .mode-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity}
-  .mode-tabs::-webkit-scrollbar{display:none}
-  .mode-class{flex-shrink:0}
-  .mode-tab{scroll-snap-align:start;font-size:.74rem;padding:.4rem .55rem}
-  .mode-class-label{font-size:.5rem}
+.mode-picker-btn{display:inline-flex!important;margin-left:auto;color:var(--muted);font-size:.82rem;padding:.5rem .65rem;flex-shrink:0}
+.mode-picker-btn:hover{color:var(--accent)}
+/* ── Mode picker modal ── */
+.mp-overlay{position:fixed;inset:0;background:oklch(15% 0.01 250/.6);z-index:900;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.mp-overlay.open{display:flex}
+.mp-dialog{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);width:min(420px,90vw);max-height:80vh;overflow-y:auto;padding:1.25rem;box-shadow:0 8px 32px oklch(15% 0.02 250/.3)}
+.mp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.mp-title{font-size:.95rem;font-weight:700;color:var(--ink)}
+.mp-count{font-size:.72rem;color:var(--muted);font-weight:600}
+.mp-close{background:none;border:none;font-size:1.1rem;color:var(--muted);cursor:pointer;padding:.25rem}
+.mp-close:hover{color:var(--ink)}
+.mp-group{margin-bottom:.75rem}
+.mp-group-label{font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;display:flex;align-items:center;gap:.35rem}
+.mp-group-label i{font-size:.55rem;opacity:.5}
+.mp-item{display:flex;align-items:center;gap:.5rem;padding:.4rem .5rem;border-radius:var(--r);cursor:pointer;transition:background .15s}
+.mp-item:hover{background:var(--surface-2)}
+.mp-item input{accent-color:var(--accent)}
+.mp-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.mp-item-label{font-size:.82rem;font-weight:600;color:var(--ink-2);flex:1}
+.mp-item-badge{font-size:.52rem;font-weight:800;letter-spacing:.04em;padding:.1rem .3rem;border-radius:var(--r-s);text-transform:uppercase;color:#fff}
+.mp-save{display:block;width:100%;margin-top:.75rem;padding:.6rem;border:none;border-radius:var(--r);background:var(--accent);color:#fff;font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;transition:opacity .15s}
+.mp-save:hover{opacity:.9}
+.mp-save:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:600px){
+  .mode-tab{font-size:.78rem;padding:.45rem .6rem}
 }
-@media(prefers-reduced-motion:reduce){.mode-tab{transition:none}}
+@media(prefers-reduced-motion:reduce){.mode-tab,.mp-overlay{transition:none}}
 /* Time Machine FAB pulse for first-time discoverability */
 @keyframes tmFabPulse{0%,100%{box-shadow:0 0 0 0 oklch(70% 0.14 75/.5)}50%{box-shadow:0 0 0 6px oklch(70% 0.14 75/0)}}
 .tm-hero-btn:not(.viewing):not(.dismissed){animation:tmFabPulse 2.4s ease-in-out infinite}
@@ -1770,6 +1790,18 @@ details[open] summary::after{transform:rotate(90deg)}
   <div class="mode-tabs" role="tablist" aria-label="Portfolio modes">
     ${tabRail}
   </div>
+  <!-- Mode picker modal -->
+  <div class="mp-overlay" id="mpOverlay" onclick="if(event.target===this)closeModePicker()">
+    <div class="mp-dialog">
+      <div class="mp-header">
+        <span class="mp-title"><i class="fas fa-sliders"></i> Select modes</span>
+        <span class="mp-count" id="mpCount">0/6</span>
+        <button class="mp-close" onclick="closeModePicker()"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div id="mpBody"></div>
+      <button class="mp-save" id="mpSave" onclick="saveModePicker()">Apply</button>
+    </div>
+  </div>
 
   ${populatedClasses.flatMap(ac => assetBuckets[ac]).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-' + id, id === 'balanced')).join('\n')}
 
@@ -2015,6 +2047,49 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   var VALID_MODES=${JSON.stringify(Object.keys(modes))};
   var activeMode='balanced';
+  var MODE_CATALOG=${modeCatalog};
+  var DEFAULT_FAVS=['turbo','dynamic','balanced','fortress'];
+  var MAX_FAVS=6;
+  function getFavs(){try{var s=localStorage.getItem('dt-fav-modes');if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a.filter(function(m){return VALID_MODES.includes(m)}).slice(0,MAX_FAVS)}}catch(_){}return DEFAULT_FAVS.filter(function(m){return VALID_MODES.includes(m)})}
+  function setFavs(a){try{localStorage.setItem('dt-fav-modes',JSON.stringify(a))}catch(_){}}
+  function applyFavs(favs){
+    document.querySelectorAll('.mode-tab[data-mode]').forEach(function(t){t.classList.toggle('fav',favs.includes(t.dataset.mode))});
+    if(!favs.includes(activeMode)&&favs.length){window.switchMode(favs[0],{silent:true})}
+  }
+  (function(){applyFavs(getFavs())})();
+  window.openModePicker=function(){
+    var favs=getFavs();var body=document.getElementById('mpBody');body.innerHTML='';
+    var STATUS_BG={live:'#059669',test:'#3b82f6',deploying:'#f59e0b',pausing:'#f59e0b',stopped:'#6b7280',draft:'#9ca3af',paused:'#6b7280',liquidated:'#dc2626'};
+    MODE_CATALOG.forEach(function(g){
+      var grp=document.createElement('div');grp.className='mp-group';
+      grp.innerHTML='<div class="mp-group-label"><i class="fas fa-'+g.icon+'"></i> '+g.label+'</div>';
+      g.modes.forEach(function(m){
+        var checked=favs.includes(m.id);
+        var badge=m.status!=='live'?'<span class="mp-item-badge" style="background:'+(STATUS_BG[m.status]||'#6b7280')+'">'+m.status.toUpperCase()+'</span>':'';
+        var item=document.createElement('label');item.className='mp-item';
+        item.innerHTML='<input type="checkbox" data-mid="'+m.id+'"'+(checked?' checked':'')+' onchange="updatePickerCount()"><span class="mp-item-dot" style="background:'+m.color+'"></span><span class="mp-item-label">'+m.label+'</span>'+badge;
+        grp.appendChild(item);
+      });
+      body.appendChild(grp);
+    });
+    updatePickerCount();
+    document.getElementById('mpOverlay').classList.add('open');
+  };
+  window.closeModePicker=function(){document.getElementById('mpOverlay').classList.remove('open')};
+  window.updatePickerCount=function(){
+    var checks=document.querySelectorAll('#mpBody input[type=checkbox]');
+    var n=0;checks.forEach(function(c){if(c.checked)n++});
+    document.getElementById('mpCount').textContent=n+'/'+MAX_FAVS;
+    var save=document.getElementById('mpSave');
+    save.disabled=n<1||n>MAX_FAVS;
+    save.textContent=n>MAX_FAVS?'Max '+MAX_FAVS+' modes':'Apply ('+n+' selected)';
+    checks.forEach(function(c){if(!c.checked)c.disabled=n>=MAX_FAVS});
+  };
+  window.saveModePicker=function(){
+    var sel=[];document.querySelectorAll('#mpBody input[type=checkbox]:checked').forEach(function(c){sel.push(c.dataset.mid)});
+    if(sel.length<1||sel.length>MAX_FAVS)return;
+    setFavs(sel);applyFavs(sel);closeModePicker();
+  };
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
   var _regimeMap=${JSON.stringify(regimeMap)};
   var _spyData=${JSON.stringify(spyIndexed)};
@@ -2022,6 +2097,9 @@ document.addEventListener('DOMContentLoaded',function(){
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
     activeMode=id;
+    // If mode isn't in favorites, temporarily show its tab (deep link)
+    var tabEl=document.querySelector('.mode-tab[data-mode="'+id+'"]');
+    if(tabEl&&!tabEl.classList.contains('fav'))tabEl.classList.add('fav');
     document.querySelectorAll('.mode-tab').forEach(function(t){
       var on=t.dataset.mode===id;
       t.classList.toggle('active',on);
