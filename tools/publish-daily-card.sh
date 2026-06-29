@@ -97,8 +97,8 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/trendline-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline forex scan failed (non-blocking)"
 
   echo ""
-  echo "📐 Step 2m: Trendline Breakout scan (indices)..."
-  node tools/trendline-scanner.js --universe indices --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline indices scan failed (non-blocking)"
+  echo "📐 Step 2m: Trendline Breakout scan (indices 4h)..."
+  node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline indices 4h scan failed (non-blocking)"
 
   echo ""
   echo "📐 Step 2n: Trendline Breakout scan (ETF)..."

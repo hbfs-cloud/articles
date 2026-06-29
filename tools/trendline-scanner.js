@@ -9,7 +9,8 @@
 // Usage:
 //   node tools/trendline-scanner.js --dry-run
 //   node tools/trendline-scanner.js --universe forex --dry-run
-//   node tools/trendline-scanner.js --universe indices --dry-run
+//   node tools/trendline-scanner.js --universe indices --interval 1h --dry-run
+//   node tools/trendline-scanner.js --universe indices --interval 4h --dry-run
 //   node tools/trendline-scanner.js --output signals --folder 20260629
 
 const fs = require('fs');
@@ -20,7 +21,6 @@ const {
 } = require('./lib/fractal-indicators');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -38,6 +38,7 @@ const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
+const INTERVAL = getArg('interval', '1d'); // 1h, 4h, 1d
 
 // ─── Indices universe (hardcoded — Yahoo Finance tickers) ───────────────────
 
@@ -78,13 +79,22 @@ function loadUniverse() {
 
 // ─── Yahoo OHLCV fetcher (shared cache) ─────────────────────────────────────
 
-const MIN_BARS = 120;
+// ─── Interval-aware config ───────────────────────────────────────────────────
+
+const INTERVAL_CONFIG = {
+  '1h': { yahooInterval: '1h', range: '6mo', cacheDir: '.price-cache-1h', cacheTTL: 1, minBars: 120 },
+  '4h': { yahooInterval: '1h', range: '6mo', cacheDir: '.price-cache-1h', cacheTTL: 1, minBars: 120, aggregate: 4 },
+  '1d': { yahooInterval: '1d', range: '2y',  cacheDir: '.price-cache',    cacheTTL: 12, minBars: 120 },
+};
+const IC = INTERVAL_CONFIG[INTERVAL] || INTERVAL_CONFIG['1d'];
+const CACHE_DIR = path.join(ROOT, 'data', IC.cacheDir);
+const MIN_BARS = IC.minBars;
 
 function readCache(ticker) {
   const fp = path.join(CACHE_DIR, `${ticker.replace(/[^a-zA-Z0-9]/g, '_')}_ohlcv.json`);
   if (!fs.existsSync(fp)) return null;
   const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
-  if (age > 12) return null;
+  if (age > IC.cacheTTL) return null;
   try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
 }
 
@@ -94,9 +104,29 @@ function writeCache(ticker, bars) {
   fs.writeFileSync(fp, JSON.stringify(bars));
 }
 
+function aggregateTo4h(bars1h) {
+  const grouped = {};
+  for (const bar of bars1h) {
+    const dt = new Date(bar.date);
+    const h = dt.getUTCHours();
+    const bucket = Math.floor(h / 4) * 4;
+    const key = `${dt.toISOString().slice(0, 10)}T${String(bucket).padStart(2, '0')}`;
+    if (!grouped[key]) {
+      grouped[key] = { date: key, open: bar.open, high: bar.high, low: bar.low, close: bar.close, volume: bar.volume };
+    } else {
+      const g = grouped[key];
+      g.high = Math.max(g.high, bar.high);
+      g.low = Math.min(g.low, bar.low);
+      g.close = bar.close;
+      g.volume += bar.volume;
+    }
+  }
+  return Object.values(grouped);
+}
+
 function fetchYahoo(ticker) {
   return new Promise((resolve) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=2y&interval=1d`;
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${IC.range}&interval=${IC.yahooInterval}`;
     https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, res => {
       let d = '';
       res.on('data', c => d += c);
@@ -110,7 +140,7 @@ function fetchYahoo(ticker) {
           for (let i = 0; i < ts.length; i++) {
             if (q.close[i] != null && q.high[i] != null && q.low[i] != null) {
               bars.push({
-                date: new Date(ts[i] * 1000).toISOString().slice(0, 10),
+                date: new Date(ts[i] * 1000).toISOString().slice(0, 19),
                 open: q.open[i] || q.close[i], high: q.high[i], low: q.low[i],
                 close: q.close[i], volume: q.volume?.[i] || 0,
               });
@@ -123,16 +153,38 @@ function fetchYahoo(ticker) {
   });
 }
 
+async function fetchWithInterval(ticker) {
+  // for 1h: use 1h cache directly (shared with 4h)
+  // for 4h: fetch 1h, aggregate, but cache 1h raw data
+  if (INTERVAL === '4h') {
+    let bars1h = readCache(ticker);
+    if (!bars1h) {
+      bars1h = await fetchYahoo(ticker);
+      if (bars1h) writeCache(ticker, bars1h);
+    }
+    if (!bars1h) return null;
+    const bars4h = aggregateTo4h(bars1h);
+    return bars4h.length >= MIN_BARS ? bars4h : null;
+  }
+  // 1h or 1d: fetch directly
+  let bars = readCache(ticker);
+  if (!bars) {
+    bars = await fetchYahoo(ticker);
+    if (bars) writeCache(ticker, bars);
+  }
+  return bars;
+}
+
 async function fetchBatch(tickers) {
   const results = {};
   let done = 0, valid = 0, cached = 0;
   for (let i = 0; i < tickers.length; i += CONCURRENCY) {
     const batch = tickers.slice(i, i + CONCURRENCY);
     const promises = batch.map(async t => {
-      let bars = readCache(t);
-      if (bars) { cached++; valid++; results[t] = bars; return; }
-      bars = await fetchYahoo(t);
-      if (bars) { writeCache(t, bars); valid++; results[t] = bars; }
+      const cachedBars = readCache(t);
+      if (cachedBars && INTERVAL !== '4h') { cached++; valid++; results[t] = cachedBars; return; }
+      const bars = await fetchWithInterval(t);
+      if (bars) { valid++; results[t] = bars; if (cachedBars) cached++; }
     });
     await Promise.all(promises);
     done += batch.length;
@@ -144,7 +196,9 @@ async function fetchBatch(tickers) {
 
 // ─── Swing High/Low Detection (fractal pivot method) ────────────────────────
 
-function findSwingHighs(bars, lookback = 5) {
+const SWING_LOOKBACK = INTERVAL === '1d' ? 5 : 3;
+
+function findSwingHighs(bars, lookback = SWING_LOOKBACK) {
   const swings = [];
   for (let i = lookback; i < bars.length - lookback; i++) {
     let isSwingHigh = true;
@@ -161,7 +215,7 @@ function findSwingHighs(bars, lookback = 5) {
   return swings;
 }
 
-function findSwingLows(bars, lookback = 5) {
+function findSwingLows(bars, lookback = SWING_LOOKBACK) {
   const swings = [];
   for (let i = lookback; i < bars.length - lookback; i++) {
     let isSwingLow = true;
@@ -183,7 +237,7 @@ function findSwingLows(bars, lookback = 5) {
 function findDescendingTrendlines(swingHighs, bars) {
   const trendlines = [];
   const n = bars.length;
-  const minSpan = 10; // at least 10 bars between pivots
+  const minSpan = INTERVAL === '1d' ? 10 : 6;
 
   for (let i = 0; i < swingHighs.length - 1; i++) {
     for (let j = i + 1; j < swingHighs.length; j++) {
@@ -223,7 +277,8 @@ function findDescendingTrendlines(swingHighs, bars) {
       const broke = currentPrice > linePriceAtEnd;
 
       // only consider if trendline extends close to current time
-      if (lastIdx - p2.index > 30) continue; // trendline too old
+      const maxAge = INTERVAL === '1d' ? 30 : 50;
+      if (lastIdx - p2.index > maxAge) continue;
 
       trendlines.push({
         p1, p2, slope, touches, broke,
@@ -467,7 +522,7 @@ async function main() {
   const tickers = loadUniverse();
   console.error(`📐 Trendline Breakout Scanner`);
   console.error(`   Universe: ${tickers.length} tickers (${UNIVERSE_NAME}) | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
-  console.error(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
+  console.error(`   Date: ${SCAN_DATE} | Interval: ${INTERVAL} | Regime: ${REGIME || 'auto'}`);
   console.error('📡 Fetching OHLCV data via Yahoo...');
 
   const allBars = await fetchBatch(tickers);
