@@ -806,6 +806,7 @@ async function main() {
 
     return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard</h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -1359,12 +1360,15 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   // Reads cfg.assetClass (default 'equity'). Tabs are wrapped in labeled
   // .mode-class segments; PANELS stay flat (#p-<id>.mode-panel) so switchMode
   // and the binder — which target by id, not container — are untouched.
-  const ASSET_CLASS_ORDER = ['equity', 'crypto', 'metals', 'forex'];
-  const ASSET_CLASS_LABEL = { equity: 'Actions', crypto: 'Crypto', metals: 'Métaux', forex: 'Forex' };
+  const ASSET_CLASS_ORDER = ['equity', 'etf', 'forex', 'metals', 'casablanca', 'crypto'];
+  const ASSET_CLASS_LABEL = { equity: 'Stocks', etf: 'ETF', crypto: 'Crypto', metals: 'Metals', forex: 'Forex', casablanca: 'Casablanca' };
+  const ASSET_CLASS_ICON = { equity: 'chart-line', etf: 'layer-group', crypto: 'coins', metals: 'gem', forex: 'exchange-alt', casablanca: 'mosque' };
   const assetBuckets = {};
   for (const ac of ASSET_CLASS_ORDER) assetBuckets[ac] = [];
+  const AC_ALIAS = { us_equity: 'equity', us_etf: 'etf', multi: 'equity' };
   for (const [id, m] of Object.entries(modes)) {
-    const ac = (m.cfg.assetClass && assetBuckets[m.cfg.assetClass]) ? m.cfg.assetClass : 'equity';
+    const raw = m.cfg.assetClass || 'equity';
+    const ac = AC_ALIAS[raw] || (assetBuckets[raw] ? raw : 'equity');
     assetBuckets[ac].push([id, m]);
   }
   // Only show class labels/dividers when >1 class is populated, so the
@@ -1377,7 +1381,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   }
   const tabRail = populatedClasses.map(ac => {
     const tabs = assetBuckets[ac].map(([id, m]) => tabButton(id, m)).join('');
-    const label = showClassLabels ? `<span class="mode-class-label">${ASSET_CLASS_LABEL[ac]}</span>` : '';
+    const label = showClassLabels ? `<span class="mode-class-label"><i class="fas fa-${ASSET_CLASS_ICON[ac] || 'folder'}"></i> ${ASSET_CLASS_LABEL[ac]}</span>` : '';
     return `<div class="mode-class" data-class="${ac}">${label}${tabs}</div>`;
   }).join('');
 
@@ -1427,30 +1431,34 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   --z-sticky:50;--z-fab:200;--z-panel:900;--z-modal:9999;
 }
 *{box-sizing:border-box}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.panel-section-title{font-size:1rem;font-weight:700;color:var(--ink);margin:0 0 1rem;display:flex;align-items:center;gap:.5rem}
+.panel-section-title i{font-size:.85rem;opacity:.6}
 html,body{overflow-x:hidden;max-width:100vw}
 body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin:0;-webkit-font-smoothing:antialiased}
 .w{max-width:1080px;margin:0 auto;padding:0 1.5rem 4rem;width:100%}
 .mode-panel{min-width:0;max-width:100%;overflow-x:hidden}
 .mode-panel>*{min-width:0;max-width:100%}
 
-/* ── Mode tab rail — segmented control: tabs fill the bar (no dead space), grouped by asset class ── */
-.mode-tabs{display:flex;gap:.25rem;margin-bottom:1.5rem;padding:.25rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-l)}
-.mode-class{flex:1;display:flex;align-items:center;gap:.25rem;min-width:0}
-.mode-class+.mode-class{margin-left:.35rem;padding-left:.5rem;border-left:1px solid var(--border)}
-.mode-class-label{font-family:var(--mono);font-size:.56rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap;flex-shrink:0;padding:0 .1rem}
-.mode-tab{flex:1;min-width:0;padding:.55rem .65rem;border:none;background:transparent;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:38px;transition:background .18s,color .18s,box-shadow .18s}
+/* ── Mode tab rail — wrapping grid with asset-class separators, scrollable on mobile ── */
+.mode-tabs{display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:1.5rem;padding:.35rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-l)}
+.mode-class{display:flex;align-items:center;gap:.25rem;flex-wrap:nowrap}
+.mode-class+.mode-class{padding-left:.4rem;border-left:2px solid var(--border)}
+.mode-class-label{font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);white-space:nowrap;flex-shrink:0;padding:0 .2rem;display:inline-flex;align-items:center;gap:.3rem}
+.mode-class-label i{font-size:.6rem;opacity:.6}
+.mode-tab{padding:.45rem .65rem;border:none;background:transparent;border-radius:var(--r);cursor:pointer;font-family:inherit;font-size:.78rem;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:.35rem;min-height:34px;white-space:nowrap;transition:background .18s,color .18s,box-shadow .18s}
 .mode-tab:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .mode-tab:hover{color:var(--ink-2);background:var(--surface)}
 .mode-tab.active{background:var(--surface);color:var(--mc,var(--accent));box-shadow:0 1px 3px oklch(22% 0.02 250/.12),0 0 0 1px var(--border-2);font-weight:700}
 .mode-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;opacity:.85}
 .mode-tab.active .mode-dot{opacity:1}
 .tab-rec{font-size:.58rem;background:var(--accent-wk);color:var(--accent);padding:.1rem .35rem;border-radius:var(--r-s);font-weight:700;margin-left:.2rem;letter-spacing:.02em}
-@media(max-width:600px){
-  .mode-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity;scroll-padding-left:.5rem;flex-wrap:nowrap}
+@media(max-width:700px){
+  .mode-tabs{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;scroll-snap-type:x proximity}
   .mode-tabs::-webkit-scrollbar{display:none}
-  .mode-class{flex:0 0 auto}
+  .mode-class{flex-shrink:0}
+  .mode-tab{scroll-snap-align:start;font-size:.74rem;padding:.4rem .55rem}
   .mode-class-label{font-size:.5rem}
-  .mode-tab{flex:0 0 auto;padding:.55rem .8rem;font-size:.78rem;white-space:nowrap;scroll-snap-align:start}
 }
 @media(prefers-reduced-motion:reduce){.mode-tab{transition:none}}
 /* Time Machine FAB pulse for first-time discoverability */
@@ -1758,13 +1766,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
   <div class="tm-banner" id="tmBanner"></div>
 
-  <!-- Mode Tabs (grouped by asset class) -->
+  <h2 class="sr-only">Portfolio Modes</h2>
   <div class="mode-tabs" role="tablist" aria-label="Portfolio modes">
     ${tabRail}
   </div>
 
   ${populatedClasses.flatMap(ac => assetBuckets[ac]).map(([id, m]) => panel(id, m.cfg, m.m, m.trades, m.ec, 'chart-' + id, id === 'balanced')).join('\n')}
 
+  <h2 class="sr-only">Disclaimer</h2>
   <div class="disc">
     <i class="fas fa-circle-info"></i>
     Past performance &ne; future results &nbsp;&middot;&nbsp; Educational only &nbsp;&middot;&nbsp; Not financial advice
@@ -1774,7 +1783,7 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="community-cta">
   <div class="community-inner">
     <div class="community-text">
-      <h3>Stay in the loop</h3>
+      <h2 style="font-size:1.2rem;color:#fff;margin:0 0 .5rem">Stay in the loop</h2>
       <p>New scan every weekday evening. Follow the signals, track positions, and learn systematic trading — all free.</p>
     </div>
     <div class="community-links">
@@ -2020,7 +2029,7 @@ document.addEventListener('DOMContentLoaded',function(){
       // Scroll active tab horizontally inside .mode-tabs only (avoid window-level scroll
       // that would shift the whole panel on mobile when picking fortress/tkl).
       if(on){try{
-        var tabs=t.parentElement;
+        var tabs=t.closest('.mode-tabs');
         if(tabs && tabs.scrollWidth > tabs.clientWidth){
           var target=t.offsetLeft - (tabs.clientWidth - t.offsetWidth)/2;
           tabs.scrollTo ? tabs.scrollTo({left:Math.max(0,target),behavior:'smooth'}) : (tabs.scrollLeft=Math.max(0,target));

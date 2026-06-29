@@ -100,16 +100,11 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "📐 Step 2m: Trendline Breakout scan (indices 4h)..."
   node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline indices 4h scan failed (non-blocking)"
 
-  echo ""
-  echo "📐 Step 2n: Trendline Breakout scan (ETF)..."
-  node tools/trendline-scanner.js --universe etf --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline ETF scan failed (non-blocking)"
+  # Steps 2n (trendline ETF) and 2p (trendline stocks daily) REMOVED
+  # Backtest showed negative CAGR: stocks -11.6%, ETF -3.6%. Keep only forex 4h + indices 1h/4h.
 
   echo ""
-  echo "📐 Step 2p: Trendline Breakout scan (stocks)..."
-  node tools/trendline-scanner.js --universe americanbull --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 15 || echo "⚠️  Trendline stocks scan failed (non-blocking)"
-
-  echo ""
-  echo "🔄 Step 2o: Hybrid breadth analysis..."
+  echo "🔄 Step 2n: Hybrid breadth analysis..."
   node tools/hybrid-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Hybrid scan failed (non-blocking)"
 
   echo ""
