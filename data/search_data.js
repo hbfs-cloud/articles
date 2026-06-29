@@ -1172,6 +1172,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "JD",
+    "exchange": "NASDAQ · Consumer Discretionary",
+    "name": "JD — Michael Burry trims his PLTR short and rotates into beaten-down China tech — adding to ...",
+    "title": "JD — Michael Burry trims his PLTR short and rotates into beaten-down China tech — adding to ...",
+    "desc": "JD.com deep-value contrarian play: 5.9x forward PE, 3.94% yield, near book value and 52-week lows — and Michael Burry is accumulating it while trimming his Palantir short.",
+    "tags": "asia,consumer,tech,trade-idea,macro",
+    "grade": "B+",
+    "href": "/analyses/JD/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "VTRS",
     "exchange": "NASDAQ · Healthcare",
     "name": "VTRS — Deep value generic pharma, score 88/100. Entry $16.00–$16.65, target $17.80, stop $15.6...",
