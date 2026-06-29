@@ -230,8 +230,7 @@ node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-not
 Après chaque scanner publié, lancer pipeline complet **sans demander confirmation** :
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
-MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
-  node tools/candlestick-scanner.js --output signals  # AB candlestick signals → signals.json (bull mode) — source MCP gateway
+node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder YYYYMMDD  # AB candlestick signals → signals.json (bull mode). --date = last trading day, --folder = scanner session folder
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard
@@ -249,7 +248,7 @@ Les MCPs (DailyTickers, Notification, Memory) sont enregistrés via OAuth2 — a
 
 **Post-pipeline checklist OBLIGATOIRE** :
 - QA check (`tools/qa-check.js`) doit afficher 0 ❌
-- ⚠️ **Mode Bull jamais à 0 signal** : `candlestick-scanner.js` qualifie 3000+ titres via candlesticks → il doit toujours produire des candidats. Le QA check « mode candlestick (bull) — candlestick-scanner a bien tourné » échoue si `signals.json` n'a aucun signal `Candlestick` alors que le mode bull est `live`/`deploying`. **Source des prix = MCP gateway** (`MCP_GATEWAY_URL`), pas Yahoo direct (bloqué dans plusieurs environnements → 0 signal silencieux).
+- ⚠️ **Mode Bull jamais à 0 signal** : `candlestick-scanner.js` qualifie 3000+ titres via candlesticks → il doit toujours produire des candidats. Le QA check « mode candlestick (bull) — candlestick-scanner a bien tourné » échoue si `signals.json` n'a aucun signal `Candlestick` alors que le mode bull est `live`/`deploying`. **Source des prix = `--source yahoo`**. **CRITIQUE** : `--date` = dernier jour de trading (pas la date du dossier si weekend). `--folder` = nom du dossier scanner (= prochaine séance).
 - `scanner/status/index.html` : pas de "Pending (Nd/Md)" sur trades dont `exitDate` est passé
 - `data/risk-snapshots.json` non-stub si MCP_GATEWAY_URL set
 - QA strategy-label lit `signals.json` (pas HTML)

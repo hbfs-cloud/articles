@@ -50,20 +50,21 @@ const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
 const BACKTEST = hasFlag('backtest');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
+const SCAN_FOLDER = getArg('folder', null); // output folder override (e.g. 20260629 when scan date is 20260626)
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 
-// Price source. The whole scanner pipeline reads market data from the DailyTickers
-// MCP gateway (same transport as refresh-risk-metrics.js) — Yahoo direct is fragile
-// and is blocked in several execution environments, which silently zeroed out the
-// candlestick (Bull) signals. Gateway is now the primary source.
-//   --source gateway  → MCP gateway only (hard-fail if unreachable)
-//   --source yahoo    → legacy Yahoo direct only
-//   --source auto     → gateway first, Yahoo fallback for any missing ticker (default)
-const SOURCE = getArg('source', 'auto').toLowerCase();
+//   --source yahoo     → Yahoo Finance (default — works locally and in cloud routines)
+//   --source api       → REST API https://mcp.dailytickers.com/api (needs DT_API_KEY env var)
+//   --source gateway   → legacy MCP JSON-RPC (deprecated post-OAuth2)
+//   --source cache     → local cache only, no network
+//   --source auto      → api/gateway first if DT_API_KEY set, Yahoo fallback
+const SOURCE = getArg('source', 'yahoo').toLowerCase();
+const API_BASE = process.env.DT_API_URL || 'https://mcp.dailytickers.com/api';
+const API_KEY = process.env.DT_API_KEY || '';
 const GATEWAY = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
-const GATEWAY_BATCH = parseInt(getArg('gateway-batch', '60'));   // symbols per QueryData call
-const GATEWAY_DAYS = parseInt(getArg('gateway-days', '200'));    // lookback requested from gateway
+const GATEWAY_BATCH = parseInt(getArg('gateway-batch', '60'));
+const GATEWAY_DAYS = parseInt(getArg('gateway-days', '200'));
 
 // systematic-tss config: min mcap $300M, min volume 5M, blacklist DAWN/GLDD
 const MIN_MARKET_CAP = 300_000_000;
@@ -141,30 +142,65 @@ function fetchOHLCV(ticker) {
   });
 }
 
-// ─── DailyTickers MCP gateway (JSON-RPC 2.0 over HTTPS) ─────────────────────
-// Same transport contract as tools/refresh-risk-metrics.js. The gateway wraps the
-// tool payload in result.content[0].text (a JSON string); we unwrap it here.
+// ─── DailyTickers REST API (Bearer auth) ────────────────────────────────────
+// POST https://mcp.dailytickers.com/api/{ToolName} with JSON body.
+// Auth via DT_API_KEY env var (Bearer token). Falls back to legacy MCP JSON-RPC
+// if DT_API_KEY is absent (deprecated path, will fail post-OAuth2 migration).
 
-function gatewayCall(toolName, params) {
-  const url = new URL(GATEWAY);
-  if (url.protocol !== 'https:') return Promise.reject(new Error(`HTTPS required for MCP_GATEWAY_URL (got ${url.protocol})`));
-  const body = JSON.stringify({
-    jsonrpc: '2.0',
-    id: crypto.randomUUID(),
-    method: 'tools/call',
-    params: { name: toolName, arguments: params },
-  });
+function apiCall(toolName, params) {
+  const url = new URL(`${API_BASE}/${toolName}`);
+  const body = JSON.stringify(params);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Content-Length': Buffer.byteLength(body),
+  };
+  if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
   const opts = {
     hostname: url.hostname,
     port: url.port || 443,
     path: url.pathname + (url.search || ''),
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json, text/event-stream',
-      'Content-Length': Buffer.byteLength(body),
-    },
+    headers,
     timeout: 45000,
+  };
+  return new Promise((resolve, reject) => {
+    const req = https.request(opts, res => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => {
+        try {
+          const j = JSON.parse(data);
+          if (j.error) return reject(new Error(j.error.message || 'api error'));
+          resolve(j);
+        } catch (e) { reject(new Error(`API response not JSON: ${data.slice(0, 120)}`)); }
+      });
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('api timeout')); });
+    req.write(body);
+    req.end();
+  });
+}
+
+// Legacy MCP JSON-RPC gateway (deprecated — kept for backward compat)
+function gatewayCall(toolName, params) {
+  const url = new URL(GATEWAY);
+  const body = JSON.stringify({
+    jsonrpc: '2.0', id: crypto.randomUUID(),
+    method: 'tools/call',
+    params: { name: toolName, arguments: params },
+  });
+  const headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json, text/event-stream',
+    'Content-Length': Buffer.byteLength(body),
+  };
+  if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
+  const opts = {
+    hostname: url.hostname, port: url.port || 443,
+    path: url.pathname + (url.search || ''),
+    method: 'POST', headers, timeout: 45000,
   };
   return new Promise((resolve, reject) => {
     const req = https.request(opts, res => {
@@ -202,7 +238,24 @@ function rowsToBars(rows) {
   return bars;
 }
 
-// Fetch OHLCV for the whole universe from the gateway in batches. Cache-first per
+// Fetch OHLCV from cache only — no network calls. For cloud routines that
+// pre-populate the cache via MCP QueryData before running the scanner.
+function fetchOHLCVCacheOnly(tickers) {
+  const results = new Map();
+  let stale = 0;
+  for (const t of tickers) {
+    const fp = path.join(CACHE_DIR, `${t}_ohlcv.json`);
+    if (!fs.existsSync(fp)) continue;
+    try {
+      const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
+      if (bars && bars.length >= 60) results.set(t, bars);
+    } catch { /* skip corrupt */ }
+  }
+  process.stderr.write(`  cache-only: ${results.size}/${tickers.length} loaded\n`);
+  return results;
+}
+
+// Fetch OHLCV for the whole universe from the API/gateway in batches. Cache-first per
 // ticker; only uncached symbols are requested. Returns Map(ticker → bars[]).
 async function fetchOHLCVGateway(tickers) {
   const results = new Map();
@@ -214,6 +267,10 @@ async function fetchOHLCVGateway(tickers) {
   }
   if (!need.length) { process.stderr.write(`  gateway: ${results.size}/${tickers.length} from cache\n`); return results; }
 
+  const useApi = API_KEY && API_BASE;
+  const caller = useApi ? apiCall : gatewayCall;
+  const label = useApi ? 'api' : 'gateway';
+
   const batches = [];
   for (let i = 0; i < need.length; i += GATEWAY_BATCH) batches.push(need.slice(i, i + GATEWAY_BATCH));
   let done = 0, valid = results.size;
@@ -222,7 +279,7 @@ async function fetchOHLCVGateway(tickers) {
     while (queue.length) {
       const batch = queue.shift();
       try {
-        const res = await gatewayCall('QueryData', { symbols: batch.join(','), types: 'bars_daily', days: GATEWAY_DAYS, timeframe: '1d' });
+        const res = await caller('QueryData', { symbols: batch.join(','), types: 'bars_daily', days: GATEWAY_DAYS, timeframe: '1d' });
         for (const r of (res.results || [])) {
           if (r.data_type !== 'bars_daily' || !r.data) continue;
           const syms = r.symbols || [];
@@ -232,35 +289,36 @@ async function fetchOHLCVGateway(tickers) {
           }
         }
       } catch (e) {
-        process.stderr.write(`\n  ⚠️  gateway batch failed (${batch.length} syms): ${e.message}\n`);
+        process.stderr.write(`\n  ⚠️  ${label} batch failed (${batch.length} syms): ${e.message}\n`);
       }
       done++;
-      process.stderr.write(`  gateway batch ${done}/${batches.length} (${valid} valid)\r`);
+      process.stderr.write(`  ${label} batch ${done}/${batches.length} (${valid} valid)\r`);
     }
   }
   await Promise.all(Array.from({ length: Math.min(4, batches.length) }, () => worker()));
-  process.stderr.write(`  gateway: ${valid}/${tickers.length} valid\n`);
+  process.stderr.write(`  ${label}: ${valid}/${tickers.length} valid\n`);
   return results;
 }
 
-// ─── Source orchestration: gateway primary, Yahoo fallback ──────────────────
+// ─── Source orchestration ────────────────────────────────────────────────────
 
 async function fetchAll(universe, concurrency) {
+  if (SOURCE === 'cache') return fetchOHLCVCacheOnly(universe);
   if (SOURCE === 'yahoo') return batchFetch(universe, concurrency);
 
   let priceData = new Map();
   try {
     priceData = await fetchOHLCVGateway(universe);
   } catch (e) {
-    if (SOURCE === 'gateway') { console.error(`❌ Gateway fetch failed and --source gateway forbids fallback: ${e.message}`); process.exit(1); }
-    process.stderr.write(`  ⚠️  gateway unavailable (${e.message}), falling back to Yahoo\n`);
+    if (SOURCE === 'gateway' || SOURCE === 'api') { console.error(`❌ Fetch failed and --source ${SOURCE} forbids fallback: ${e.message}`); process.exit(1); }
+    process.stderr.write(`  ⚠️  api/gateway unavailable (${e.message}), falling back to Yahoo\n`);
   }
-  if (SOURCE === 'gateway') return priceData;
+  if (SOURCE === 'gateway' || SOURCE === 'api') return priceData;
 
   // auto: fill any gaps from Yahoo (best-effort; skipped silently where blocked)
   const missing = universe.filter(t => !priceData.has(t));
   if (missing.length) {
-    process.stderr.write(`  ${missing.length} tickers missing from gateway — trying Yahoo fallback\n`);
+    process.stderr.write(`  ${missing.length} tickers missing — trying Yahoo fallback\n`);
     const yh = await batchFetch(missing, concurrency);
     for (const [t, bars] of yh) priceData.set(t, bars);
   }
@@ -312,8 +370,13 @@ async function main() {
   console.log('🔍 Scanning for candlestick patterns (25 bullish)...');
   const candidates = [];
 
-  for (const [ticker, bars] of priceData) {
+  const scanDateNorm = SCAN_DATE.replace(/-/g, '');
+  for (const [ticker, rawBars] of priceData) {
     if (BLACKLIST.has(ticker)) continue;
+
+    // Slice bars up to SCAN_DATE so detectPattern works on the target date, not the latest bar
+    const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
+    const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
 
     // P80 dollar volume filter ($1M minimum, same as Go)
     const dvP80 = calcDollarVolumeP80(bars);
@@ -385,7 +448,7 @@ async function main() {
     fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, regime: REGIME, candidates: topCandidates }, null, 2));
     console.log(`\n📁 Written to ${outPath}`);
   } else if (OUTPUT_MODE === 'signals') {
-    const scanDir = SCAN_DATE.replace(/-/g, '');
+    const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
     const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
     if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
     const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));

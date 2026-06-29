@@ -55,9 +55,10 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo ""
   echo "🕯️  Step 2c: Candlestick scan (Bull mode signals)..."
   CS_SCAN_DIR=$(ls -d scanner/2*/ 2>/dev/null | sort | tail -1)
-  CS_SCAN=$(basename "$CS_SCAN_DIR")
+  CS_FOLDER=$(basename "$CS_SCAN_DIR")
   CS_REGIME=$(node -e "try{process.stdout.write(require('./${CS_SCAN_DIR}signals.json').regime||'')}catch(e){}" 2>/dev/null)
-  node tools/candlestick-scanner.js --output signals --date "$CS_SCAN" --regime "$CS_REGIME" || echo "⚠️  Candlestick scan failed (non-blocking)"
+  CS_LAST_TRADING=$(node -e "const s=require('./${CS_SCAN_DIR}signals.json');const d=s.signals[0]?.date||'';process.stdout.write(d.replace(/-/g,''))" 2>/dev/null || echo "$CS_FOLDER")
+  node tools/candlestick-scanner.js --output signals --source yahoo --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Candlestick scan failed (non-blocking)"
 
   echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
