@@ -287,11 +287,35 @@ node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 4h
 node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 20 --top 15  # Casablanca mode → casablanca_pool[] in signals.json
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
+# ── Fortress PM A+ Halal (discrétionnaire, intégré au pipeline) ──
+# Exécuter le skill fortress-pm.md : charger §1 → QueryData sur tenus → jauge régime →
+# gérer lignes (trail/resserrer/sortir) → scan A+ si slots cash (§3 avec §3.0 Sharia) →
+# redéployer cash → réécrire §1 → produire digest §8bis.
+# C'est une étape AI-driven (MCP QueryData/RunScreener/GetInstruments), pas un script node.
+# Le skill fortress-pm.md contient le prompt opérationnel complet.
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 node tools/trading-executor/run-session.js  # Generate plans + execute
 ```
+
+### Fortress PM — étape intégrée (entre sweep et refresh-risk)
+
+Après `sweep.js` (qui gère les modes mécaniques), exécuter le **Fortress PM A+ Halal** comme
+étape du pipeline. Le skill `fortress-pm.md` se charge automatiquement (trigger: "fortress").
+
+**Séquence Fortress dans le pipeline :**
+1. Charger le BLOC §1 (état du book) depuis le skill
+2. `QueryData quote+technicals` sur tous les tenus → prix/EMA/ATR/RSI live
+3. Jauge régime §4 (regime + A+ fuel + rotation) → mode du jour
+4. Par ligne : tenir / resserrer / partiel / sortir selon mode + rotation du groupe
+5. Si slots cash > 1 en risk_on : scan A+ §3 (avec §3.0 Sharia en premier gate) → redéployer
+6. Réécrire le BLOC §1 dans le skill avec le nouvel état
+7. Produire le digest §8bis pour notification Telegram (alias `scanner-fortress`)
+
+**Important** : Fortress ne passe PAS par sweep.js — ses trades sont gérés par le PM via broker
+MCP (paper/live). Le sweep ignore le mode fortress (pas de filterName mécanique applicable).
+
 Après le push, envoyer les notifications via **MCP Notification** :
 ```
 send_batch([
