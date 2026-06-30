@@ -112,16 +112,17 @@ Propriétés établies par backtest relatif (2 ans, univers neutres, 600+ trades
 Book ouvert le 10/06/2026 (entrée = close 10/06). Lignes legacy équipondérées ; **nouvelles
 entrées au sizing par conviction (§1bis)**.
 
-**TENUS** (✅ Halal) | entrée | dernier mark | note groupe/trail
-- KLAC | 213,56 | 302,44 | Semicap LEADER — runner, trail EMA20
-- TEX  | 59,51  | 73,21  | Machinery — bascule laggard → resserrer
-- ACA  | 122,85 | 145,14 | Building materials LAGGARD → resserrer
-- BTSG | 60,59  | 68,97  | Healthcare — trail EMA20
-- AMGN | 347,84 | 361,14 | Biotech (ex-MATX) — trail EMA20
+**TENUS** (✅ Halal) | entrée | dernier mark | P&L | note groupe/trail
+- KLAC | 213,56 | 302,70 | +41,7% | Semicap LEADER — extreme runner, trail EMA20 ($243)
+- TEX  | 59,51  | 71,00  | +19,3% | Industrials LEADER — trail EMA20 ($67)
+- ACA  | 122,85 | 145,00 | +18,0% | Building materials — RSI 72,9 → partiel 33% + trail EMA20 ($136)
+- BTSG | 60,59  | 70,90  | +17,0% | Healthcare — RSI 73,4 → partiel 33% + trail EMA20 ($65)
+- AMGN | 347,84 | 362,12 | +4,1%  | Biotech LEADER — trail EMA20 ($348)
 
 **SORTIES** : CECO (technique, sous EMA20) · ENVA (riba, prêt à intérêt) · ING (riba, banque) → CASH.
 **CASH** : SNEX (+5,7% réalisé) · ASML (+2,5% réalisé) · CECO · ENVA · ING.
-**NET ≈ +12,5%** · MaxDD ≈ −2,5% · slots cash : 5 — redéploiement contraint au univers HALAL (§3.0).
+**Held avg ≈ +20,0%** · MaxDD ≈ −2,5% · slots cash : 5 — REDÉPLOYER en A+ Halal ou ETF Sharia (SPUS/HLAL).
+Régime RISK-ON DEPLOY. Rotation : Tech, Industrials, Biotech, Semicap mènent. ACA/BTSG RSI >72 → partiels.
 
 ---
 
