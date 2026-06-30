@@ -155,6 +155,7 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | `live-tracker-widgets` | live-tracker.js, widget/, allorigins, Yahoo proxy, setup card prices |
 | `telegram-notifications-qa` | telegram-publish-notify, topic Telegram, notif article |
 | `scheduled-tasks-veille` | veille tech, tâche planifiée, Discord bot, claude-discord-bot |
+| `fortress-pm` | fortress, fortress pm, fortress halal, pm halal, portfolio manager fortress |
 
 ## Mode Status State Machine
 Doc complète : [`tools/lib/MODE_STATUS.md`](tools/lib/MODE_STATUS.md). Résumé :
