@@ -263,6 +263,7 @@ function writeMode(mode, prefix) {
     regime: modesConfigMeta.regime,
     trades: (mode.closedTrades || []).map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
+      exitDate: t.exitDate || null,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
       holdDays: t.holdDays, status: t.status, strategy: t.strategy,
       entryTime: t.entryTime || null, exitTime: t.exitTime || null,
@@ -399,6 +400,7 @@ function writeMode(mode, prefix) {
     })),
     closedTrades: (mode.closedTrades || []).map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
+      exitDate: t.exitDate || null,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
       holdDays: t.holdDays, status: t.status, strategy: t.strategy,
       entryTime: t.entryTime || null, exitTime: t.exitTime || null,
