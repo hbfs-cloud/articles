@@ -1312,6 +1312,11 @@ function simulatePortfolio(allTrades, scans, config) {
       const _preChange = config._effectiveFrom && day < config._effectiveFrom;
       const _baseFilter = (_preChange && config._priorStrategyFilter) ? config._priorStrategyFilter : strategyFilter;
       const _rf = (_preChange && config._priorRegimeFilters) ? config._priorRegimeFilters : config.regimeFilters;
+      // Forward-only capacity change: a portfolioSize/topN increase (e.g. Fortress 4→10) must NOT
+      // retroactively backfill phantom positions on pre-change scans. Before _effectiveFrom, cap
+      // slots + entries at the PRIOR capacity so history reflects what was actually tradeable then.
+      const _pfSize = (_preChange && config._priorPortfolioSize) ? config._priorPortfolioSize : portfolioSize;
+      const _topN = (_preChange && config._priorTopN) ? config._priorTopN : topN;
       // Regime-aware strategy filter: override filter based on scan date's regime
       let activeFilter = _baseFilter;
       // Effective regime = label, optionally downgraded by the regime-score override
@@ -1339,13 +1344,18 @@ function simulatePortfolio(allTrades, scans, config) {
       const filtered = (byDate[day] || [])
         .filter(t => !activeFilter.has(t.strategy))
         .filter(t => t.strategy !== 'candlestick' || (t.pattern && t.pattern.volRatio >= candleVolMin))
+        // Per-mode Sharia mandate (e.g. Fortress = PM Halal): exclude non-compliant tickers.
+        // Drops setups tagged sharia:false AND known-haram tickers from the fallback list (banks/
+        // insurance/defense/alcohol/etc.) when the scan didn't tag them (sharia:undefined). Catches
+        // ING (conventional bank/riba) even on older untagged scans.
+        .filter(t => !config.shariaOnly || (t.sharia !== false && !SHARIA_EXCLUDED.has((t.ticker || '').toUpperCase())))
         .sort((a, b) => b.score - a.score);
       // Defer topN slicing until after cooldown/dedup checks — ensures the best
       // ELIGIBLE candidates are picked, not just the top N before filtering.
-      let slotsAvailable = portfolioSize - openPositions.length;
+      let slotsAvailable = _pfSize - openPositions.length;
 
       // Build eligible candidates: apply cooldown, dedup, and topN AFTER filtering
-      const candidates = filtered.slice(0, topN * 3); // generous pool for cooldown filtering
+      const candidates = filtered.slice(0, _topN * 3); // generous pool for cooldown filtering
 
       // Rotation logic
       if (rotation !== 'none' && slotsAvailable <= 0 && candidates.length > 0) {
@@ -2335,7 +2345,7 @@ async function main() {
       // forward-only change), scans BEFORE it were traded under the prior config — re-sim them
       // with the prior entry-filter so a forward change never rewrites realized history. Only
       // engages when the mode's entry filter actually changed; no-op otherwise.
-      let _effFrom = null, _priorRF = null, _priorSF = null;
+      let _effFrom = null, _priorRF = null, _priorSF = null, _priorPF = null, _priorTN = null;
       if (configHistory.length >= 2) {
         const curVer = configHistory[configHistory.length - 1];
         const priorVer = configHistory[configHistory.length - 2];
@@ -2344,15 +2354,28 @@ async function main() {
           const priorRF = priorModeCfg.regimeFilters || null;
           const filterChanged = priorModeCfg.filterName !== cfg.filterName;
           const rfChanged = JSON.stringify(priorRF) !== JSON.stringify(cfg.regimeFilters || null);
-          if (filterChanged || rfChanged) {
+          const capacityChanged = (priorModeCfg.portfolioSize !== cfg.portfolioSize) || (priorModeCfg.topN !== cfg.topN);
+          if (filterChanged || rfChanged || capacityChanged) {
             _effFrom = curVer.effectiveFrom;
             _priorRF = priorRF;
             _priorSF = STRATEGY_FILTERS[priorModeCfg.filterName] || null;
+            if (capacityChanged) { _priorPF = priorModeCfg.portfolioSize; _priorTN = priorModeCfg.topN; }
           }
         }
       }
+      // Explicit forward-only change declared directly on the mode config (self-documenting, no
+      // history dependency). Takes precedence — used when a capacity/filter pivot must NOT backfill
+      // phantom positions (e.g. Fortress 4→10 PM Halal transition). See data/modes-config.json.
+      if (cfg._effectiveFrom) {
+        _effFrom = cfg._effectiveFrom;
+        if (cfg._priorFilterName) _priorSF = STRATEGY_FILTERS[cfg._priorFilterName] || _priorSF;
+        if (cfg._priorRegimeFilters) _priorRF = cfg._priorRegimeFilters;
+        if (cfg._priorPortfolioSize != null) _priorPF = cfg._priorPortfolioSize;
+        if (cfg._priorTopN != null) _priorTN = cfg._priorTopN;
+      }
       const cfg2 = {
         _effectiveFrom: _effFrom, _priorRegimeFilters: _priorRF, _priorStrategyFilter: _priorSF,
+        _priorPortfolioSize: _priorPF, _priorTopN: _priorTN,
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
@@ -2520,6 +2543,9 @@ async function main() {
               .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))
               .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
+              // Per-mode Sharia mandate also gates live-position injection (Fortress = PM Halal):
+              // a non-compliant live position (e.g. ING, riba bank) must NOT be injected/displayed.
+              .filter(s => !cfg.shariaOnly || (s.sharia !== false && !SHARIA_EXCLUDED.has((s.ticker || '').toUpperCase())))
               .sort((a, b) => (b.score || 0) - (a.score || 0))
               .slice(0, cfg.topN);
             for (const s of filtered) {

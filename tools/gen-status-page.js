@@ -379,6 +379,13 @@ async function main() {
   // Latest scan signals — JSON-first via loadSignals, HTML fallback for legacy scans
   const parser = require('./lib/scanner-parser');
   const sharedCfg = require('./config');
+  // Candlestick/Bull trading filter: detection happens at close (1×), but entries are
+  // only PLACED intraday J+1 if volume confirms a >= Nx spike. Single source of truth.
+  let candleVolGate = 8.0;
+  try {
+    const sf = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'scanner-filters.json'), 'utf8'));
+    if (sf.candlestick && sf.candlestick.min_vol_ratio_trading) candleVolGate = sf.candlestick.min_vol_ratio_trading;
+  } catch (_) { /* default 8.0 */ }
   let signals = [];
   let scanDir = '';
   const thesisMap = {};
@@ -763,8 +770,12 @@ async function main() {
     const _sigScanDate = scanDir ? `${scanDir.slice(0, 4)}-${scanDir.slice(4, 6)}-${scanDir.slice(6, 8)}` : null;
     const _sigAge = _sigScanDate ? Math.round((Date.now() - new Date(_sigScanDate)) / 86400000) : 0;
     const _sigExpired = _sigAge > 2;
-    const _sigStatusLabel = _sigAge <= 1 ? 'LIVE' : _sigAge <= 2 ? 'VALID' : 'EXPIRED';
-    const _sigStatusCls = _sigAge <= 1 ? 'pos' : _sigAge <= 2 ? 'am' : 'neg';
+    // High-conviction candlestick modes (Bull): only patterns with a >= candleVolGate× volume spike
+    // on the SIGNAL DAY's close (absCandleVolRatio, known at scan time — NOT intraday J+1) become
+    // tradeable. Quiet days legitimately yield 0 signals (parity with systematic-tss trading config).
+    const _isHighConviction = cfg.preSignal === true;
+    const _sigStatusLabel = _isHighConviction ? 'CONFIRMÉ 8×' : (_sigAge <= 1 ? 'LIVE' : _sigAge <= 2 ? 'VALID' : 'EXPIRED');
+    const _sigStatusCls = _isHighConviction ? 'pos' : (_sigAge <= 1 ? 'pos' : _sigAge <= 2 ? 'am' : 'neg');
     // Sim read-switch: render sim-sourced positions when this mode is "sim" (hard fallback to
     // articles' posFor result otherwise). Empty/missing cache ⇒ unchanged articles positions.
     const pos = applySimPositions(id, posFor(cfg, trades));
@@ -863,6 +874,7 @@ ${renderStatusBanner(cfg)}
       <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}${fallback.length ? ' + ' + fallback.length + ' fallback' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:var(--muted)">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
       ${scanDir ? `<a href="/scanner/${scanDir}/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>` : ''}
     </summary>
+    ${_isHighConviction ? `<div style="margin-top:.75rem;padding:.7rem .85rem;background:${cfg.color}0a;border:1px solid ${cfg.color}33;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-1);line-height:1.5"><b><i class="fas fa-bolt" style="margin-right:.3rem;color:${cfg.color}"></i>Système haute-conviction (parité systematic-tss).</b> Bull ne trade qu'un pattern chandelier confirmé par un <b>spike de volume ≥ ${candleVolGate}× la moyenne 20j le jour du signal</b> (volume de clôture, connu au scan) <b>ET</b> score ≥ ${cfg.minScore} <b>ET</b> liquidité ≥ $1M/j. Sur 5 ans : ~1 trade/semaine (1061 trades, parité Go/JS). <b>Les jours calmes sans spike 8× → 0 signal, c'est normal et attendu</b> — ce n'est pas un bug.</div>` : ''}
     ${sig.length ? `<table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
       <tbody>${sig.map((s, i) => {

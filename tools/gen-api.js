@@ -199,15 +199,28 @@ function writeMode(mode, prefix) {
   const effPositions = effectivePositions(modeId, mode.positions || []);
   const effEquity = effectiveEquity(modeId, mode.equity || {});
 
+  // High-conviction candlestick gate (Bull): signals require a >= Nx volume spike on the signal
+  // day's close (parity systematic-tss). Surface the condition in the API so consumers understand
+  // why a quiet day yields 0 signals — and never auto-place an unconfirmed candlestick order.
+  const _modeCfgFull = (modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {};
+  const _highConviction = _modeCfgFull.preSignal === true;
+  let _candleVolGate = 8.0;
+  try { const _sf = require(path.join(ROOT, 'data', 'scanner-filters.json')); if (_sf.candlestick?.min_vol_ratio_trading) _candleVolGate = _sf.candlestick.min_vol_ratio_trading; } catch (_) {}
+  const _entryCondition = _highConviction
+    ? { type: 'volume_spike_confirmation', min_vol_ratio: _candleVolGate, measured_on: 'signal_day_close_vs_20d_avg', note: `High-conviction: only candlestick patterns with a >= ${_candleVolGate}x close-volume spike on the signal day become tradeable. Quiet days legitimately yield 0 signals (parity with systematic-tss americanbull trading config).` }
+    : null;
+
   // 1. signals.json
   write(`${p}signals.json`, {
     updatedAt: now, date: snap.date, scanDate: scanDir, mode: prefix || 'balanced',
     status,
+    ...(_entryCondition ? { entry_condition: _entryCondition } : {}),
     signals: (mode.signals || []).map(s => ({
       ticker: s.ticker, score: s.score, strategy: s.strategy,
       entry: parsePrice(s.entry), stop: parsePrice(s.stop),
       tp1: parsePrice(s.tp1), tp2: parsePrice(s.tp2), rr: s.rr,
       sharia: s.sharia != null ? s.sharia : null,
+      ...(_highConviction ? { signal_state: (s.pattern && s.pattern.volRatio >= _candleVolGate) ? 'confirmed_volume_spike' : 'pending_volume_confirmation' } : {}),
       thesis: s.thesis || '',
       brokers: getBrokersFor(s.ticker),
       broker_symbols: getBrokerSymbols(s.ticker),

@@ -212,12 +212,14 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
   if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;
 });
 
-// 4c. Garde anti-régression Bull : un mode candlestick_only actif (live/deploying)
-// NE PEUT PAS avoir 0 signal candlestick dans le dernier scan. C'est le symptôme
-// exact d'un candlestick-scanner.js sauté ou en échec (ex. source Yahoo bloquée).
-// On scanne 3000+ titres et on les qualifie via candlestick → il doit toujours y
-// avoir des candidats. Si 0, le pas du pipeline a échoué silencieusement.
-check('scanner: mode candlestick (bull) — candlestick-scanner a bien tourné (≥1 signal)', () => {
+// 4c. Garde anti-régression Bull : un mode candlestick_only actif (live/deploying) doit avoir
+// FAIT TOURNER candlestick-scanner.js sur le dernier scan. On vérifie le MARQUEUR de scan
+// (_candlestickScan), PAS la présence de signaux. Bull est un système haute-conviction : il ne
+// trade qu'un pattern avec spike volume >= 8× le jour du signal (parité systematic-tss). Les jours
+// calmes sans spike => 0 signal qualifié, ce qui est LÉGITIME (vérifié 2026-06-30: sur 3512 tickers,
+// 1 seul candidat MESH passe score+vol mais échoue la liquidité => 0 ordre, identique au backtest Go).
+// L'ÉCHEC réel = le scanner n'a jamais tourné (marqueur absent) ou n'a fetché aucune donnée.
+check('scanner: mode candlestick (bull) — candlestick-scanner a bien tourné (marqueur présent)', () => {
   let config;
   try { config = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')); }
   catch (e) { return `modes-config.json illisible: ${e.message}`; }
@@ -230,17 +232,21 @@ check('scanner: mode candlestick (bull) — candlestick-scanner a bien tourné (
   if (!dirs.length) return 'aucun dossier de scan trouvé';
   const sigPath = path.join(scannerDir, dirs[0], 'signals.json');
   if (!fs.existsSync(sigPath)) return `signals.json absent pour le dernier scan ${dirs[0]}`;
-  let signals;
-  try { signals = (JSON.parse(fs.readFileSync(sigPath, 'utf8')).signals) || []; }
+  let parsed;
+  try { parsed = JSON.parse(fs.readFileSync(sigPath, 'utf8')); }
   catch (e) { return `signals.json illisible (${dirs[0]}): ${e.message}`; }
 
-  const candlestickCount = signals.filter(s => /candlestick/i.test(s.strategy || '')).length;
-  if (candlestickCount === 0) {
-    const modeLabels = candlestickModes.map(([id]) => id).join(', ');
-    return `0 signal candlestick dans ${dirs[0]} alors que [${modeLabels}] sont actifs — `
-      + `relancer 'node tools/candlestick-scanner.js --output signals' (vérifier MCP_GATEWAY_URL). `
-      + `Le mode Bull affichera 0 signal tant que ce pas n'a pas tourné.`;
+  const marker = parsed._candlestickScan;
+  if (!marker) {
+    return `marqueur _candlestickScan absent dans ${dirs[0]} — candlestick-scanner.js n'a jamais tourné. `
+      + `Relancer 'node tools/candlestick-scanner.js --output signals --folder ${dirs[0]}' (source Yahoo). `
+      + `NB: 0 signal qualifié est LÉGITIME (jours calmes sans spike 8×), mais le scanner DOIT avoir tourné.`;
   }
+  if (!marker.universeFetched || marker.universeFetched < 100) {
+    return `candlestick-scanner a fetché ${marker.universeFetched || 0} titres (< 100) dans ${dirs[0]} — `
+      + `échec de la source de données (Yahoo bloqué ?). Vérifier la connectivité et relancer.`;
+  }
+  // 0 qualifié = OK (parité Go). On le signale juste en info via warn ailleurs si besoin.
 });
 
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques

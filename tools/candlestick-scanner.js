@@ -5,7 +5,7 @@
  * candlestick-scanner.js — Faithful port of systematic-tss americanbulls scanner.
  *
  * Scans the full US equity universe (mcap ≥$300M, volume ≥5M) for 25 candlestick
- * patterns with volume confirmation (1× default — detection, not trading filter). Multi-factor scoring:
+ * patterns with volume spike confirmation (8× signal-day close volume — trading parity with Go). Multi-factor scoring:
  * pattern base + ATR% + momentum + MA20 distance + RSI + BB%B + regime.
  *
  * Data source: DailyTickers MCP gateway (bars_daily via QueryData), same transport
@@ -44,7 +44,11 @@ const hasFlag = name => args.includes(`--${name}`);
 
 const CUSTOM_TICKERS = getArg('tickers', '').split(',').filter(Boolean);
 const MIN_SCORE = parseFloat(getArg('min-score', '70'));
-const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '1.0'));
+// Default 8.0 = trading parity with systematic-tss portfolio_us_americanbulls.yaml (min_vol_ratio: 8.0).
+// The 8× is measured on the SIGNAL DAY's close volume vs 20d avg (absCandleVolRatio in the Go port),
+// known at scan time — NOT an intraday J+1 confirmation. Quiet days legitimately yield 0 signals.
+// Override with --min-vol-ratio 1 ONLY for research/detection (equivalent to Go ab-scan-history, no filter).
+const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '8.0'));
 const TOP_N = parseInt(getArg('top', '30'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
@@ -369,6 +373,10 @@ async function main() {
 
   console.log('🔍 Scanning for candlestick patterns (25 bullish)...');
   const candidates = [];
+  // Scan telemetry: distinguishes "scanner ran but 0 qualified the 8× spike" (legitimate on quiet
+  // days, parity with systematic-tss) from "scanner failed/skipped" (pipeline bug). QA reads this.
+  let detectedPatterns = 0;   // patterns passing score+liquidity, BEFORE the vol-spike trading gate
+  let liquidScanned = 0;      // tickers passing the $1M dollar-volume filter
 
   const scanDateNorm = SCAN_DATE.replace(/-/g, '');
   for (const [ticker, rawBars] of priceData) {
@@ -381,12 +389,14 @@ async function main() {
     // P80 dollar volume filter ($1M minimum, same as Go)
     const dvP80 = calcDollarVolumeP80(bars);
     if (dvP80 < 1_000_000) continue;
+    liquidScanned++;
 
     const result = detectPattern(bars, REGIME);
     if (!result) continue;
 
     // Min score filter
     if (result.totalScore < MIN_SCORE) continue;
+    detectedPatterns++; // qualified pattern + score, before the vol-spike trading gate
 
     // Min vol ratio filter (8× per config)
     if (result.volRatio < MIN_VOL_RATIO) continue;
@@ -468,8 +478,19 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the candlestick scanner actually ran (even with 0 qualified signals).
+    // QA distinguishes "ran, 0 qualified the 8× spike" (OK, quiet day) from "never ran" (pipeline bug).
+    signals._candlestickScan = {
+      ranFor: SCAN_DATE,
+      universeFetched: priceData.size,
+      liquidScanned,
+      detectedPatterns,            // passed score+liquidity, before vol-spike gate
+      qualified: topCandidates.length, // passed the full 8× trading gate
+      volThreshold: MIN_VOL_RATIO,
+      minScore: MIN_SCORE,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
-    console.log(`\n📁 Appended ${added} candlestick signals to ${sigPath}`);
+    console.log(`\n📁 Appended ${added} candlestick signals to ${sigPath} (scanned ${liquidScanned} liquid, ${detectedPatterns} patterns, ${topCandidates.length} qualified 8× spike)`);
   }
 
   return topCandidates;
