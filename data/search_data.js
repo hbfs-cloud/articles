@@ -1185,6 +1185,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "RTX",
+    "exchange": "NYSE • Industrials • Aerospace & Defense",
+    "name": "RTX — $253B cap, margins en expansion, F119 milestone, Zacks upgrade. Entry $188, TP1 $206 (R...",
+    "title": "RTX — $253B cap, margins en expansion, F119 milestone, Zacks upgrade. Entry $188, TP1 $206 (R...",
+    "desc": "Analyse experte RTX Corporation : leader Aerospace & Defense, 4 EPS beats consécutifs, stack EMA haussier, R:R 2.1x vers $206. Grade A.",
+    "tags": "us,defense,industrials,ai,trade-idea",
+    "grade": "A",
+    "href": "/analyses/RTX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MATX",
     "exchange": "NYSE · Industrials",
     "name": "MATX — Bullish setup, score 95/100.",
