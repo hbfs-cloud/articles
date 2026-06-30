@@ -101,7 +101,24 @@ function loadSignals(dir) {
           pattern: s.pattern || null,
         };
       };
-      const signals = (data.signals || []).map(mapSignal);
+      const baseSignals = (data.signals || []).map(mapSignal);
+      // Strategy-specific pools (multi-list format: momentum[], breakout[], etc.)
+      const STRATEGY_POOLS = ['momentum', 'breakout', 'pullback', 'pre_squeeze'];
+      const strategyPools = {};
+      const seenTickers = new Set(baseSignals.map(s => s.ticker));
+      for (const pool of STRATEGY_POOLS) {
+        strategyPools[pool] = (data[pool] || []).map(mapSignal);
+      }
+      // Merge strategy pools into signals for backward compat (dedup by ticker)
+      const signals = [...baseSignals];
+      for (const pool of STRATEGY_POOLS) {
+        for (const s of strategyPools[pool]) {
+          if (!seenTickers.has(s.ticker)) {
+            signals.push(s);
+            seenTickers.add(s.ticker);
+          }
+        }
+      }
       const tklPool = (data.tkl_pool || []).map(s => {
         const m = mapSignal(s);
         m.source = 'tkl_pool';
@@ -115,7 +132,7 @@ function loadSignals(dir) {
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, tklPool, cryptoPool, metalsPool, forexPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // retail fail-closed: null regime = max caution
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // retail fail-closed: null regime = max caution
     } catch (_) { /* fall through to HTML */ }
   }
 
