@@ -166,6 +166,9 @@ const scannerParser = require('./lib/scanner-parser');
 const { isPatternInvalidated, checkBearishExit } = require('./lib/americanbull-pm');
 const { detectBearishExit } = require('./lib/candlestick-patterns');
 
+const scannerFiltersPath = path.join(ROOT, 'data', 'scanner-filters.json');
+const scannerFilters = fs.existsSync(scannerFiltersPath) ? JSON.parse(fs.readFileSync(scannerFiltersPath, 'utf8')) : {};
+
 const STRAT_PATTERNS = {
   short_squeeze: /short.?squeeze/i,
   pre_squeeze: /pre.?squeeze/i,
@@ -1330,8 +1333,12 @@ function simulatePortfolio(allTrades, scans, config) {
         }
       }
       // Apply strategy filter per date (deferred from global loop for regime awareness)
+      // Candlestick vol ratio trading filter: scanner detects at 1.0×,
+      // but only 8× volume spikes enter the portfolio (matches Go AB portfolio config)
+      const candleVolMin = scannerFilters?.candlestick?.min_vol_ratio_trading ?? 8.0;
       const filtered = (byDate[day] || [])
         .filter(t => !activeFilter.has(t.strategy))
+        .filter(t => t.strategy !== 'candlestick' || (t.pattern && t.pattern.volRatio >= candleVolMin))
         .sort((a, b) => b.score - a.score);
       // Defer topN slicing until after cooldown/dedup checks — ensures the best
       // ELIGIBLE candidates are picked, not just the top N before filtering.

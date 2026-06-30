@@ -410,6 +410,7 @@ async function main() {
         strength: +(result.totalScore / 150).toFixed(2),
         confirmed: true,
         volumeSpike: result.volRatio >= 2.0,
+        volRatio: +result.volRatio.toFixed(1),
         invalidation: result.stop,
         patternTarget: tp1,
       },
