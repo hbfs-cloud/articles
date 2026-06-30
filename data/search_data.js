@@ -4295,12 +4295,12 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-OFF — AEE, BHP, BUD, KOF, MDLZ, NVS, GM, IX, EME, MAR",
-    "desc": "Regime score 44.6 — classified EARLY RISK-OFF (ERO probability 44.6%, dominant in ensemble). This is the 6th consecutive ERO session. The ensemble model shows: ERO 44.6%, risk_on 35.2%, neutral 5.8%, crisis 15.4%. Despite Monday’s rally (S&P +1.18%), the regime has not flipped because breadth remain...",
-    "tags": "us,eu,asia,healthcare,industrials,consumer,commodity,macro,technique,trade-idea",
+    "title": "Top 10 A+ RISK-OFF — HON, QCOM, GM, ABNB, CLS, PLD, FAST, TKO, LRCX, FWONK",
+    "desc": "Le regime score est à 8.5 (ensemble model, confiance 70.4%), classé RISK-ON. Probabilités : risk_on 70.4%, neutral 29.6%, early_risk_off 0%, crisis 0%. Transition 5j : risk_on 53.5%, neutral 24.9%, early_risk_off 14.9%, crisis 6.8%. Composantes : SPX au-dessus des DMA 50 & 200, VIX sub-18, crédit (H...",
+    "tags": "us,tech,semis,industrials,consumer,materials,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260630/",
-    "date": "30 juin 2026"
+    "date": "Mardi 30 juin 2026"
   },
   {
     "type": "scanner",
