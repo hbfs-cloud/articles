@@ -623,11 +623,11 @@ async function main() {
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /momentum|breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
-    adaptive_fractal: s => s === 'AdaptiveFractal',
-    highvol_breakout: s => s === 'HighVolBreakout',
-    momentum_rotation: s => s === 'MomentumRotation',
-    etf_momentum: s => s === 'ETFMomentum',
-    trendline_breakout: s => s === 'TrendlineBreakout',
+    adaptive_fractal: s => /^AdaptiveFractal$/i.test(s),
+    highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
+    momentum_rotation: s => /^(MomentumRotation|momentum_rotation)$/i.test(s),
+    etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
+    trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
   function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout' }[f] || f; }
 
@@ -3194,11 +3194,11 @@ function backfillHistory() {
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /momentum|breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
-    adaptive_fractal: s => s === 'AdaptiveFractal',
-    highvol_breakout: s => s === 'HighVolBreakout',
-    momentum_rotation: s => s === 'MomentumRotation',
-    etf_momentum: s => s === 'ETFMomentum',
-    trendline_breakout: s => s === 'TrendlineBreakout',
+    adaptive_fractal: s => /^AdaptiveFractal$/i.test(s),
+    highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
+    momentum_rotation: s => /^(MomentumRotation|momentum_rotation)$/i.test(s),
+    etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
+    trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
   function parseScannerSignalsBF(dateKey) {
     const loaded = parser.loadSignals(dateKey);
