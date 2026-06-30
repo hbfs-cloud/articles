@@ -262,10 +262,137 @@ async function main() {
   }
 
   // ── HARD BLOCKS from scanner-lessons.json v2.0 ─────────────────────────────
-  // These rules BLOCK publication. They encode confirmed failure patterns from
-  // 17 retrospectives (285 lessons mined). No override without --force.
 
-  // 8. entry-price-spot-validation (hard_block) — catches stale cache/pre-split prices
+  // 8. R/R minimum by regime (HARD BLOCK — promoted from advisory 2026-06-30)
+  const RR_MIN_BY_REGIME = {
+    'RISK-ON': 1.5, 'RECOVERY': 1.5, 'NEUTRAL': 1.5,
+    'EARLY RISK-OFF': 2.0, 'RISK-OFF': 2.0
+  };
+  if (regime) {
+    const rrMin = RR_MIN_BY_REGIME[String(regime).toUpperCase().trim()] || 1.5;
+    for (const s of signals) {
+      if (!s.rr) continue;
+      const m = String(s.rr).match(/1:(\d+\.?\d*)/);
+      if (!m) continue;
+      const ratio = parseFloat(m[1]);
+      if (ratio < rrMin) {
+        violations.push({
+          rule: 'rr_min_by_regime',
+          message: `${s.ticker}: R/R 1:${ratio} < regime min 1:${rrMin} (${regime}) — hard block per scanner-lessons v2.0.`
+        });
+      }
+    }
+  }
+
+  // 9. R/R uniformity check — if >60% signals have identical R:R string, scoring pipeline is broken
+  {
+    const rrCounts = {};
+    for (const s of signals) {
+      const rr = String(s.rr || '');
+      rrCounts[rr] = (rrCounts[rr] || 0) + 1;
+    }
+    for (const [rr, count] of Object.entries(rrCounts)) {
+      if (count > signals.length * 0.6 && signals.length >= 5) {
+        violations.push({
+          rule: 'rr_uniformity',
+          message: `${count}/${signals.length} signals have identical R/R "${rr}" — scoring pipeline is reverse-engineering TP from fixed R:R instead of computing from technical levels.`
+        });
+      }
+    }
+  }
+
+  // 10. Score ceiling check — no signal score should exceed 98 (perfect scores are unrealistic)
+  for (const s of signals) {
+    if (typeof s.score !== 'number') continue;
+    if (s.score > 98) {
+      violations.push({
+        rule: 'score_ceiling',
+        message: `${s.ticker}: score ${s.score} > 98 — perfect scores indicate a scoring ceiling bug. Max realistic score is 98.`
+      });
+    }
+  }
+
+  // 11. Score distribution check — if >50% signals have score >= 95, scoring is inflated
+  {
+    const highScoreCount = signals.filter(s => typeof s.score === 'number' && s.score >= 95).length;
+    if (highScoreCount > signals.length * 0.5 && signals.length >= 5) {
+      violations.push({
+        rule: 'score_inflation',
+        message: `${highScoreCount}/${signals.length} signals have score >= 95 — score inflation. In EARLY RISK-OFF, most signals should score 75-90.`
+      });
+    }
+  }
+
+  // 12. Market cap minimum for top 10 — reject penny stocks
+  if (filters.tickers?.min_market_cap_usd) {
+    const minMcap = filters.tickers.min_market_cap_usd;
+    for (const s of signals) {
+      if (typeof s.entry === 'number' && s.entry < 5) {
+        violations.push({
+          rule: 'penny_stock',
+          message: `${s.ticker}: entry price $${s.entry} < $5 — penny stock territory. Minimum market cap $${(minMcap/1e6).toFixed(0)}M required.`
+        });
+      }
+    }
+  }
+
+  // 13. Pullback regime gate — max 1 Pullback in ERO, blocked below 60% confidence
+  if (regime && String(regime).toUpperCase().includes('EARLY RISK-OFF')) {
+    const pullbacks = signals.filter(s => s.strategy === 'Pullback');
+    if (pullbacks.length > 1) {
+      violations.push({
+        rule: 'pullback_regime_gate',
+        message: `${pullbacks.length} Pullback signals in EARLY RISK-OFF (max 1). Pullback is blocked when regime confidence < 60%. Tickers: ${pullbacks.map(s => s.ticker).join(', ')}.`
+      });
+    }
+  }
+
+  // 14. Strategy cap per regime — Breakout blocked in ERO, Momentum capped
+  if (regime && String(regime).toUpperCase().includes('EARLY RISK-OFF')) {
+    const breakouts = signals.filter(s => s.strategy === 'Breakout');
+    for (const s of breakouts) {
+      violations.push({
+        rule: 'breakout_ero_block',
+        message: `${s.ticker}: Breakout in EARLY RISK-OFF — hard block per 3+ consecutive retro failures.`
+      });
+    }
+    const momentums = signals.filter(s => s.strategy === 'Momentum');
+    if (momentums.length > 4) {
+      violations.push({
+        rule: 'momentum_ero_cap',
+        message: `${momentums.length} Momentum signals in ERO (max 4). Score < 50 for 2+ sessions triggers Momentum cap at 20%.`
+      });
+    }
+  }
+
+  // 15. Candlestick strategy must pass same stop/score gates as fundamental strategies
+  for (const s of signals) {
+    if (s.strategy === 'Candlestick') {
+      if (typeof s.entry === 'number' && typeof s.stop === 'number') {
+        const stopPct = Math.abs((s.entry - s.stop) / s.entry) * 100;
+        if (stopPct > 8) {
+          violations.push({
+            rule: 'candlestick_stop_max',
+            message: `${s.ticker}: Candlestick stop ${stopPct.toFixed(1)}% from entry (max 8%) — hard block per stops-min-atr-multiple rule.`
+          });
+        }
+      }
+      if (!s.sector) {
+        violations.push({
+          rule: 'candlestick_missing_sector',
+          message: `${s.ticker}: Candlestick signal missing sector — incomplete MCP enrichment.`
+        });
+      }
+      if (s.sharia == null) {
+        violations.push({
+          rule: 'candlestick_missing_sharia',
+          message: `${s.ticker}: Candlestick signal missing Sharia tag — must be true or false, never null.`
+        });
+      }
+    }
+  }
+
+  // 16. entry-price-spot-validation — catches stale cache/pre-split prices
   for (const s of signals) {
     if (typeof s.entry !== 'number' || typeof s.extension?.atr !== 'number') continue;
     // Use last close from extension or fallback to entry (can't check without spot)
@@ -335,14 +462,7 @@ async function main() {
     }
   }
 
-  // 13. breakout-early-risk-off-block — Breakout in EARLY RISK-OFF
-  if (regime && String(regime).toUpperCase().includes('EARLY RISK-OFF')) {
-    for (const s of signals) {
-      if (s.strategy === 'Breakout') {
-        advisories.push(`${s.ticker}: Breakout in EARLY RISK-OFF — stopped in 3+ consecutive retros [breakout_early_risk_off]`);
-      }
-    }
-  }
+  // Breakout in ERO — now a hard block (check 14 above), removed from advisory
 
   // 14. overextension — distance 50-DMA > 20% for Momentum/Breakout
   for (const s of signals) {
@@ -352,21 +472,7 @@ async function main() {
     }
   }
 
-  // R/R minimum by regime (advisory) — harmonized with tp1-horizon-calibration
-  const RR_MIN_BY_REGIME = {
-    'RISK-ON': 1.5, 'RECOVERY': 1.5, 'NEUTRAL': 1.5,
-    'EARLY RISK-OFF': 2.0, 'RISK-OFF': 2.0
-  };
-  if (regime) {
-    const rrMin = RR_MIN_BY_REGIME[String(regime).toUpperCase().trim()] || 1.5;
-    for (const s of signals) {
-      if (!s.rr) continue;
-      const m = String(s.rr).match(/1:(\d+\.?\d*)/);
-      if (!m) continue;
-      const ratio = parseFloat(m[1]);
-      if (ratio < rrMin) advisories.push(`${s.ticker}: R/R 1:${ratio} < regime min 1:${rrMin} (${regime}) [rr_min_by_regime]`);
-    }
-  }
+  // R/R minimum by regime — now a hard block (check 8 above), removed from advisory
 
   // Stop ATR multiple (advisory)
   if (filters.stops?.min_atr_multiple) {

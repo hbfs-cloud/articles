@@ -7,7 +7,8 @@
       "Momentum",
       "Pre-Squeeze",
       "Breakout",
-      "Pullback"
+      "Pullback",
+      "Candlestick"
     ],
     "forbidden": [
       "Short Squeeze",
@@ -361,11 +362,41 @@
       "JBL": "Tech",
       "AXP": "Financials",
       "SMR": "Clean Energy",
-      "JHG": "Financials"
+      "JHG": "Financials",
+      "AEE": "Utilities",
+      "BUD": "Staples",
+      "KOF": "Staples",
+      "MDLZ": "Staples",
+      "GM": "Consumer",
+      "IX": "Financials",
+      "EME": "Industrials",
+      "MAR": "Consumer"
     }
   },
   "scan_size": {
     "exact": 10
+  },
+  "score_limits": {
+    "_comment": "Score validation gates — added 2026-06-30 after war room found scoring ceiling bug (6/11 signals at 100, R:R uniformity 11/11 at 1:2.1).",
+    "max_score": 98,
+    "inflation_threshold_pct": 50,
+    "inflation_min_score": 95,
+    "rr_uniformity_threshold_pct": 60,
+    "_reason": "Perfect 100 scores indicate pass/fail composite ceiling bug. >50% signals at 95+ in ERO is statistically impossible. Identical R:R on >60% signals means TP is reverse-engineered from fixed R:R, not computed from technicals."
+  },
+  "regime_strategy_gates": {
+    "_comment": "Strategy caps per regime — added 2026-06-30 after 4 Pullback signals in ERO violated lesson pullback-regime-confidence-gate.",
+    "EARLY RISK-OFF": {
+      "Pullback": { "max_count": 1, "min_regime_confidence": 60 },
+      "Breakout": { "max_count": 0 },
+      "Momentum": { "max_count": 4 }
+    },
+    "RISK-OFF": {
+      "Pullback": { "max_count": 0 },
+      "Breakout": { "max_count": 0 },
+      "Momentum": { "max_count": 2 }
+    },
+    "_reason": "ERO lesson: Pullback blocked below 60% regime confidence + max 1 in ERO. Breakout 0% WR in ERO across 3+ retros. Momentum capped per regime-score-label-lag rule."
   },
   "vix_kill_switch": {
     "_comment": "Regime-based position sizing. Applied in tools/sweep.js via regimeSizeMultiplier(). Halves drawdown during stress episodes.",

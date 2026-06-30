@@ -140,6 +140,14 @@ Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de mar
 
 **Sélection : 10 setups A+** (score ≥ **90**, confluence ≥ 3 signaux, géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 
+**⚠️ SCORING RULES (hard enforced by validate-scan.js since 2026-06-30) :**
+- **Score max 98** — no perfect scores. Score reflects REALISTIC probability of TP1 hit.
+- **R:R computed from TECHNICALS** — TP1 = nearest resistance/supply zone. NEVER reverse-engineer TP from a fixed R:R ratio. Each signal MUST have a unique R:R reflecting its individual technical setup.
+- **Score inflation gate** — if >50% signals score ≥ 95, validation FAILS. In ERO, most signals should score 75-90.
+- **Strategy caps by regime** — ERO: max 1 Pullback (need confidence ≥60%), 0 Breakout, max 4 Momentum. RISK-OFF: 0 Pullback, 0 Breakout, max 2 Momentum.
+- **Penny stock block** — entry < $5 = auto-reject.
+- **Candlestick signals** — allowed but MUST pass same stop (3-8%), sector, and Sharia gates as fundamental strategies.
+
 **⚠️ Grille A+ empirique (cohorte 29 setups, juin 2026) — 4 ÉLIMINATOIRES obligatoires :**
 Tout candidat A+ doit passer ces 4 gates. Échec sur 1 = plafond A (max 88/100).
 1. **Guidance relevée** par le management au dernier trimestre (discriminant #1 : 100% des A+ l'ont)
