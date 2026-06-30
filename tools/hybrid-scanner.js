@@ -43,6 +43,7 @@ const DRY_RUN = hasFlag('dry-run');
 const OUTPUT_MODE = getArg('output', 'stdout');
 const TOP_N = parseInt(getArg('top', '30'));
 const CONCURRENCY = parseInt(getArg('concurrency', '15'));
+const STRATEGY_TAG = getArg('strategy', null);
 
 const MEGA_CAP_TICKERS = [
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK-B',
@@ -320,7 +321,7 @@ async function main() {
         for (const c of top) {
           if (existing.has(c.ticker)) continue;
           signals.signals.push({
-            ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'HybridMegaCap',
+            ticker: c.ticker, name: c.ticker, score: c.score, strategy: STRATEGY_TAG || 'HybridMegaCap',
             entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
             horizon: 21, region: 'US', sharia: null,
             thesis: `MegaCap score ${c.score}: Mom60=${(c.metrics.mom60 * 100).toFixed(0)}%, RSI=${c.metrics.rsi.toFixed(0)}`,

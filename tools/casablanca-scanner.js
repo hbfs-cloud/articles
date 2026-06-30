@@ -211,11 +211,12 @@ async function main() {
     const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
     if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
     const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
-    const existing = new Set((signals.signals || []).map(s => s.ticker));
+    if (!signals.casablanca_pool) signals.casablanca_pool = [];
+    const existing = new Set(signals.casablanca_pool.map(s => s.ticker));
     let added = 0;
     for (const c of topCandidates) {
       if (existing.has(c.ticker)) continue;
-      signals.signals.push({
+      signals.casablanca_pool.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'AdaptiveFractal',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
         horizon: 21, region: 'CASABLANCA', universe: 'casablanca',

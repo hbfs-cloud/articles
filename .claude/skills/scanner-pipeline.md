@@ -278,9 +278,13 @@ node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-not
 Après chaque scanner publié, lancer pipeline complet **sans demander confirmation** :
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
-node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder YYYYMMDD  # AB candlestick signals → signals.json (bull mode). --date = last trading day, --folder = scanner session folder
-node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30  # Adaptive Fractal (AF) signals → signals.json. Port de systematic-tss/scanner_af.go
-node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (mode field + MegaCap signals if narrow rally)
+node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder YYYYMMDD  # AB candlestick signals → bull[] in signals.json. --date = last trading day, --folder = scanner session folder
+node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
+node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30 --strategy highvol_breakout --universe americanbull  # HighVol mode signals
+node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 20 --strategy etf_momentum --universe etf  # ETF mode signals
+node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 20 --strategy trendline_breakout --universe multi  # Trendline mode signals
+node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 20 --top 15  # Casablanca mode → casablanca_pool[] in signals.json
+node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard

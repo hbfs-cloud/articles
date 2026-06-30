@@ -103,7 +103,7 @@ function loadSignals(dir) {
       };
       const baseSignals = (data.signals || []).map(mapSignal);
       // Strategy-specific pools (multi-list format: momentum[], breakout[], etc.)
-      const STRATEGY_POOLS = ['momentum', 'breakout', 'pullback', 'pre_squeeze'];
+      const STRATEGY_POOLS = ['momentum', 'breakout', 'pullback', 'pre_squeeze', 'bull'];
       const strategyPools = {};
       const seenTickers = new Set(baseSignals.map(s => s.ticker));
       for (const pool of STRATEGY_POOLS) {
@@ -129,10 +129,11 @@ function loadSignals(dir) {
       const cryptoPool = poolFrom('crypto_pool');
       const metalsPool = poolFrom('metals_pool');
       const forexPool = poolFrom('forex_pool');
+      const casablancaPool = poolFrom('casablanca_pool');
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 

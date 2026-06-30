@@ -43,6 +43,7 @@ const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const SCAN_FOLDER = getArg('folder', null);
+const STRATEGY_TAG = getArg('strategy', 'AdaptiveFractal');
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 const SOURCE = getArg('source', 'yahoo').toLowerCase();
@@ -53,6 +54,8 @@ const UNIVERSE_FILES = {
   metals: 'metals-universe.json',
   forex: 'forex-universe.json',
   casablanca: 'casablanca-universe.json',
+  etf: 'etf-universe.json',
+  tkl: 'tkl-universe.json',
 };
 
 // ─── Universe loader ────────────────────────────────────────────────────────
@@ -337,12 +340,12 @@ async function main() {
     const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
     if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
     const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
-    const existing = new Set((signals.signals || []).map(s => s.ticker));
+    const existing = new Set((signals.signals || []).map(s => `${s.ticker}::${s.strategy}`));
     let added = 0;
     for (const c of topCandidates) {
-      if (existing.has(c.ticker)) continue;
+      if (existing.has(`${c.ticker}::${STRATEGY_TAG}`)) continue;
       signals.signals.push({
-        ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'AdaptiveFractal',
+        ticker: c.ticker, name: c.ticker, score: c.score, strategy: STRATEGY_TAG,
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
         horizon: 21, region: assetClass === 'americanbull' ? 'US' : assetClass.toUpperCase(), universe: assetClass,
         sharia: null,
