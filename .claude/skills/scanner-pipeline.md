@@ -282,7 +282,8 @@ node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMD
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30 --strategy highvol_breakout --universe americanbull  # HighVol mode signals
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 20 --strategy etf_momentum --universe etf  # ETF mode signals
-node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 20 --strategy trendline_breakout --universe multi  # Trendline mode signals
+node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 1h --universe americanbull --min-score 40 --top 15  # Trendline mode (H1 bars, dedicated scanner)
+node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 4h --universe americanbull --min-score 40 --top 15  # Trendline mode (H4 bars)
 node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 20 --top 15  # Casablanca mode → casablanca_pool[] in signals.json
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
