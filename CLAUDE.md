@@ -176,6 +176,14 @@ leçons d'incidents passés (INDO dilution, IOVA hallucination, sweep rewrite, e
 
 Index : `.claude/memory/MEMORY.md`. Fichiers nommés `feedback_*.md`, `project_*.md`, `reference_*.md`.
 
+**⚠️ DOUBLE-WRITE OBLIGATOIRE** : Toute nouvelle règle, feedback, décision projet ou référence DOIT être
+persistée dans les DEUX systèmes :
+1. **Git** : fichier `.claude/memory/<type>_<slug>.md` avec frontmatter (name, description, type) + mise à jour de `MEMORY.md`
+2. **MCP Memory** : `remember(workspace='dailystocks', type=..., name=..., ...)` avec tags et priority
+
+Ne JAMAIS écrire dans un seul des deux. Git = accessible aux routines cloud (clone le repo).
+MCP Memory = accessible à tous les agents (get_context/search). Les deux sont nécessaires.
+
 ## Operational Rules (OBLIGATOIRE — toutes routines)
 Règles critiques issues de feedbacks et incidents passés. S'appliquent à toutes les sessions (locales ET cloud).
 
