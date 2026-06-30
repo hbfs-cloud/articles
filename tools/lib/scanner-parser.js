@@ -99,6 +99,9 @@ function loadSignals(dir) {
           horizon: s.horizon,
           name: s.name,
           pattern: s.pattern || null,
+          // universe tag used by gen-status-page signalsFor universeFilter (highvol=americanbull,
+          // etf=etf). Stripping it dropped ALL signals for universe-filtered modes (0 signals bug).
+          universe: s.universe || null,
         };
       };
       const baseSignals = (data.signals || []).map(mapSignal);

@@ -55,6 +55,9 @@ const SHARIA_EXCLUDED = new Set([
   // Banks & financial services (interest-based revenue / riba)
   'JPM','BAC','GS','MS','C','WFC','USB','PNC','TFC','SCHW','BK','STT','AIG','MET','PRU',
   'BBVA','BNP','HSBC','DB','UBS','CS','ING','SAN','BNPQY','RY','TD','BMO','XLF',
+  // Consumer/student-loan & specialty finance (net interest income / riba) — NNI=Nelnet (Nelnet Bank)
+  'NNI','SLM','NAVI','SOFI','ALLY','SYF','DFS','COF','OMF','LC','UPST','RF','KEY','HBAN','FITB','CFG','MTB','CMA','ZION',
+  'RKT','UWMC','NMIH','ESNT','MTG','RDN','PFSI','COOP','TREE','ENVA','WRLD','CURO','FCFS',
   // Insurance (conventional, non-takaful)
   'UNH','CI','HUM','ELV','ALL','PGR','TRV','AFL','MCK','XLV',
   // Defense & weapons
@@ -372,6 +375,21 @@ const SECTOR_MAP = {
 function getSector(ticker) {
   if (!ticker) return 'Other';
   return SECTOR_MAP[ticker] || SECTOR_MAP[String(ticker).toUpperCase()] || 'Other';
+}
+
+// Sectors excluded by the AAOIFI Sharia screen. Used by per-mode shariaOnly modes (Fortress = PM
+// Halal). Defense names live under 'Industrials' in SECTOR_MAP so they're caught by SHARIA_EXCLUDED,
+// not this set; this catches mapped Finance/Insurance names even when a signal arrives sharia:null.
+const HARAM_SECTORS = new Set(['Finance']);
+// Conservative haram check for Halal-mandated modes: reject if explicitly non-compliant, OR a known
+// haram ticker (banks/insurance/defense/etc.), OR a mapped haram sector. Untagged 'Other' tickers
+// pass (can't determine) — the scanner's own sector tagging is the upstream defense.
+function isHaramForHalalMode(s) {
+  const tk = (s.ticker || '').toUpperCase();
+  if (s.sharia === false) return true;
+  if (SHARIA_EXCLUDED.has(tk)) return true;
+  if (HARAM_SECTORS.has(getSector(tk))) return true;
+  return false;
 }
 
 // VIX kill switch — backtest doesn't carry VIX numerics, so map regime label
@@ -1344,11 +1362,10 @@ function simulatePortfolio(allTrades, scans, config) {
       const filtered = (byDate[day] || [])
         .filter(t => !activeFilter.has(t.strategy))
         .filter(t => t.strategy !== 'candlestick' || (t.pattern && t.pattern.volRatio >= candleVolMin))
-        // Per-mode Sharia mandate (e.g. Fortress = PM Halal): exclude non-compliant tickers.
-        // Drops setups tagged sharia:false AND known-haram tickers from the fallback list (banks/
-        // insurance/defense/alcohol/etc.) when the scan didn't tag them (sharia:undefined). Catches
-        // ING (conventional bank/riba) even on older untagged scans.
-        .filter(t => !config.shariaOnly || (t.sharia !== false && !SHARIA_EXCLUDED.has((t.ticker || '').toUpperCase())))
+        // Per-mode Sharia mandate (e.g. Fortress = PM Halal): exclude non-compliant tickers via
+        // explicit flag + known-haram ticker list + mapped haram sector (catches NNI/Nelnet finance
+        // and ING even when the scan tagged them sharia:null).
+        .filter(t => !config.shariaOnly || !isHaramForHalalMode(t))
         .sort((a, b) => b.score - a.score);
       // Defer topN slicing until after cooldown/dedup checks — ensures the best
       // ELIGIBLE candidates are picked, not just the top N before filtering.
@@ -2378,6 +2395,7 @@ async function main() {
         _priorPortfolioSize: _priorPF, _priorTopN: _priorTN,
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
+        shariaOnly: cfg.shariaOnly === true, // PM Halal mandate (Fortress) — gates candidate selection
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
@@ -2544,8 +2562,8 @@ async function main() {
               .filter(s => !activeFilter.has(s.strategy))
               .filter(s => cfg.minScore <= 0 || (s.score || 0) >= cfg.minScore)
               // Per-mode Sharia mandate also gates live-position injection (Fortress = PM Halal):
-              // a non-compliant live position (e.g. ING, riba bank) must NOT be injected/displayed.
-              .filter(s => !cfg.shariaOnly || (s.sharia !== false && !SHARIA_EXCLUDED.has((s.ticker || '').toUpperCase())))
+              // a non-compliant live position (e.g. ING bank, NNI/Nelnet finance) must NOT be injected.
+              .filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
               .sort((a, b) => (b.score || 0) - (a.score || 0))
               .slice(0, cfg.topN);
             for (const s of filtered) {
@@ -2595,10 +2613,15 @@ async function main() {
           }
 
           injected.sort((a,b) => b.score - a.score);
-          const capped = injected.slice(0, cfg.portfolioSize);
+          // Cap at REMAINING slots, not portfolioSize: merged already holds the sweep-simulated
+          // pending positions. Injecting up to portfolioSize MORE would push total pending past the
+          // cap (the balanced 5>3 / momentum 9>5 phantom-position bug). Total open <= portfolioSize.
+          const alreadyPending = merged.filter(t => t.status === 'pending').length;
+          const remainingSlots = Math.max(0, cfg.portfolioSize - alreadyPending);
+          const capped = injected.slice(0, remainingSlots);
           if (capped.length > 0) {
             merged.push(...capped);
-            console.log(`  ${id}: injected ${capped.length} live positions as pending for MtM`);
+            console.log(`  ${id}: injected ${capped.length} live positions as pending for MtM (${alreadyPending} already pending, ${remainingSlots} slots free)`);
           }
 
         }
