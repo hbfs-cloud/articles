@@ -90,6 +90,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - [Screener Mcap Filter](feedback_screener_mcap_filter.md) — RunScreener DSL MUST include market_cap>$2B filter or returns only penny stocks. Cloud routine v4 fix applied 2026-06-25.
 - [Immutable Trades](feedback_immutable_trades.md) — ABSOLUTE RULE: never modify historical trades or stats. SHA-256 chain in trade-chain.json. sweep.js aborts on violation.
 - [Config Change Backtest](feedback_config_change_backtest.md) — MANDATORY 30-day backtest before any config change to turbo/balanced/dynamic/fortress. Must beat current config to be applied.
+- [Bull 8× Parity](feedback_bull_8x_parity.md) — Bull 0 signaux les jours calmes = LÉGITIME (gate volume 8× haute-conviction, parité systematic-tss vérifiée vs backtest Go: 0 ordre le 2026-06-30, seul MESH passe mais échoue liquidité). Ne JAMAIS baisser le seuil pour forcer des signaux. QA vérifie le marqueur `_candlestickScan`, pas la présence de signaux. Cause racine de 6 mois d'erreurs = règle QA fausse.
 
 ## Video Pipeline
 - [Video Pipeline](project_video_pipeline.md) — Pipeline Remotion + Qwen3-TTS local + YouTube upload pour 7 séries éducatives. Processing séquentiel pour gérer l'espace disque.
