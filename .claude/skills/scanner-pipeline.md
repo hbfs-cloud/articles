@@ -287,34 +287,79 @@ node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 4h
 node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 20 --top 15  # Casablanca mode → casablanca_pool[] in signals.json
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
-# ── Fortress PM A+ Halal (discrétionnaire, intégré au pipeline) ──
-# Exécuter le skill fortress-pm.md : charger §1 → QueryData sur tenus → jauge régime →
-# gérer lignes (trail/resserrer/sortir) → scan A+ si slots cash (§3 avec §3.0 Sharia) →
-# redéployer cash → réécrire §1 → produire digest §8bis.
-# C'est une étape AI-driven (MCP QueryData/RunScreener/GetInstruments), pas un script node.
-# Le skill fortress-pm.md contient le prompt opérationnel complet.
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 node tools/trading-executor/run-session.js  # Generate plans + execute
 ```
 
-### Fortress PM — étape intégrée (entre sweep et refresh-risk)
+### ⛔ Fortress PM A+ Halal — ÉTAPE OBLIGATOIRE (entre sweep et refresh-risk)
 
-Après `sweep.js` (qui gère les modes mécaniques), exécuter le **Fortress PM A+ Halal** comme
-étape du pipeline. Le skill `fortress-pm.md` se charge automatiquement (trigger: "fortress").
+**NE PAS SKIPPER.** Fortress est géré par le PM (toi), pas par sweep.js. Cette étape est
+AI-driven (appels MCP), exécutée DANS le pipeline au même titre que les scripts node.
+Le prompt opérationnel complet est dans `.claude/skills/fortress-pm.md` — le LIRE et l'APPLIQUER.
 
-**Séquence Fortress dans le pipeline :**
-1. Charger le BLOC §1 (état du book) depuis le skill
-2. `QueryData quote+technicals` sur tous les tenus → prix/EMA/ATR/RSI live
-3. Jauge régime §4 (regime + A+ fuel + rotation) → mode du jour
-4. Par ligne : tenir / resserrer / partiel / sortir selon mode + rotation du groupe
-5. Si slots cash > 1 en risk_on : scan A+ §3 (avec §3.0 Sharia en premier gate) → redéployer
-6. Réécrire le BLOC §1 dans le skill avec le nouvel état
-7. Produire le digest §8bis pour notification Telegram (alias `scanner-fortress`)
+**Séquence DÉTERMINISTE — 7 étapes, dans cet ordre, TOUTES obligatoires :**
 
-**Important** : Fortress ne passe PAS par sweep.js — ses trades sont gérés par le PM via broker
-MCP (paper/live). Le sweep ignore le mode fortress (pas de filterName mécanique applicable).
+**F1. CHARGER LE BOOK** : Lire le BLOC §1 dans `.claude/skills/fortress-pm.md`. Ce bloc contient
+les positions tenues, sorties, cash, et NET courant. C'est l'état mutable — le reste du prompt
+(§0 à §9) sont les règles fixes.
+
+**F2. RECALCULER LES PRIX LIVE** : Pour CHAQUE ticker du §1 (tenus + watchlist redéploiement) :
+```
+QueryData(symbol="{TICKER}", data_type="quote")        → prix live
+QueryData(symbol="{TICKER}", data_type="technicals")   → EMA20, EMA10, EMA50, ATR14, RSI14
+```
+Recalculer l'extension EMA20 : `ext% = (price / ema20 - 1) × 100`.
+Recalculer le trailing stop : EMA20 si en gain, sinon stop initial.
+**ZÉRO FABRICATION** : si QueryData échoue pour un ticker → le signaler, ne JAMAIS inventer.
+
+**F3. JAUGE RÉGIME** :
+```
+QueryData(data_type="regime")                           → label + composantes + VIX
+QueryData(data_type="performance_rotations")            → leaders vs laggards par secteur/industrie
+```
+Déterminer le MODE DU JOUR : DEPLOY / PYRAMIDE / DEFEND / RISK-OFF / RECOVERY (cf. §4).
+Déterminer l'état moteur : CŒUR ON (toujours) / SATELLITE ON ou OFF (risk_on/recovery seulement).
+
+**F4. GÉRER CHAQUE LIGNE** : Pour chaque position tenue, selon le mode du jour + rotation de
+son groupe :
+- Groupe MÈNE → trail EMA20, tenir / pyramider si pullback
+- Groupe BASCULE LAGGARD → resserrer stop, préparer sortie
+- Sous EMA20 close → SORTIR
+- RSI extrême (>75) → partiel 33% + serrage
+- Stall ≥4 jours → serrage 50%
+Appliquer les ordres via broker MCP (paper) : `rb_paper_close_position` pour les sorties,
+`rb_paper_modify_orders` pour les trailing stops.
+
+**F5. REDÉPLOYER LE CASH** (si slots cash > 1 ET mode = DEPLOY ou RECOVERY) :
+Exécuter le Step 0 scan A+ (§3.0 → §3.7) dans cet ordre STRICT :
+1. §3.0 SHARIA : exclure riba / haram / ratios non conformes → `GetInstruments(symbol="{TICKER}")`
+2. §3.1 ROTATION : identifier les groupes leaders via F3
+3. §3.2 POOL : `RunScreener(pass_expr="rsi14>48 && rsi14<60 && macd>0 && vol>2500000", top_k=90)`
+   → poll `CheckJobStatus` → post-filtre market_cap 2-20G$, leaders only, pas déjà au book
+4. §3.3 LES 4 ÉLIMINATOIRES par ticker survivant :
+   - ① Guidance relevée : `QueryData(symbol="{T}", data_type="earnings")`
+   - ② ≥5 EPS beats : `QueryData(symbol="{T}", data_type="earnings_quarterly", limit=8)`
+   - ③ PE fwd <35 : `QueryData(symbol="{T}", data_type="stats")` → forwardPE
+   - ④ Extension EMA20 ≤3% : calculé depuis F2
+5. §3.4 FLAGS : `QueryData(symbol="{T}", data_type="news")` + dilution check
+6. §3.5 SCORING /100 → A+ ≥ 92
+7. §3.7 WAR-ROOM : panel adverse (quant/PM/risk/short), vote ≥3/4 pour passer
+Entrées via broker MCP : `rb_paper_place_orders` avec sizing §1bis (tier conviction/standard/starter).
+Si aucun A+ ne qualifie en risk_on → cash excédentaire en ETF Sharia (SPUS/HLAL/UMMA) via §6.
+
+**F6. RÉÉCRIRE LE BLOC §1** : Mettre à jour la section `## 1. ÉTAT DU BOOK` dans
+`.claude/skills/fortress-pm.md` avec le nouvel état : positions tenues (ticker/entrée/mark/note),
+sorties, cash, NET, MaxDD, slots libres. **Écrire via l'outil Edit**, pas manuellement.
+
+**F7. DIGEST + NOTIFICATION** : Produire le digest §8bis (format compact) et l'envoyer :
+```
+send_message(to="scanner-fortress", body="<digest HTML>", format="html")
+```
+Format Telegram obligatoire : `<b>` pas `**`, `\n` pas `<br>`.
+
+**Fortress ne passe PAS par sweep.js** — ses trades sont gérés ici par le PM via broker MCP.
 
 Après le push, envoyer les notifications via **MCP Notification** :
 ```
