@@ -182,7 +182,7 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
   // (le HTML contient légitimement le mot "defensive" en prose descriptive).
   // 'Candlestick' = AmericanBulls reversal patterns appended by candlestick-scanner.js
   // for the "bull" mode (filterName=candlestick_only). Legitimate, not the 4 core A+ labels.
-  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze', 'Candlestick']);
+  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout']);
   const scannerDir = path.join(ROOT, 'scanner');
   const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse().slice(0, 2);
   const found = [];
@@ -615,10 +615,16 @@ check('scanner/status: latest snapshot positions consistent with backtest-trades
     const cfg = modes[modeId];
     if (!cfg) continue;
     const trades = bt[modeId] || [];
+    const horizon = cfg.horizon || 999;
     const expectedOpen = trades.filter(t => {
       if (!t.entryDate || t.status === 'skipped') return false;
       if (t.entryDate > dateISO) return false;
-      if (!t.exitDate) return true;
+      if (!t.exitDate) {
+        // Mirror gen-status-page: trades past their horizon are filtered out
+        const age = Math.round((Date.now() - new Date(t.entryDate)) / 86400000);
+        const held = Math.round(age * 5 / 7);
+        return held < horizon;
+      }
       return t.exitDate > dateISO;
     }).map(t => t.ticker).sort();
     const snapActive = (modeSnap.positions || []).filter(p => !p._terminal).map(p => p.ticker).sort();

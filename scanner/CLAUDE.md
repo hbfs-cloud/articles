@@ -204,22 +204,29 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
 **Champs optionnels** : `tp2`, `name`, `horizon`, `region`, `thesis`
 **Types** : `entry`/`stop`/`tp1`/`tp2` = **nombres** (pas de "$"). `sharia` = **boolean**.
 
-**Section `tkl_pool`** (optionnelle, alimentée par les screeners TKL) :
+**Multi-List Format (OBLIGATOIRE depuis 2026-06-30)** :
 ```json
 {
-  "scanDate": "2026-04-30",
+  "scanDate": "2026-06-30",
   "regime": "RISK-ON",
-  "signals": [ ... les 10 A+ habituels ... ],
-  "tkl_pool": [
-    {
-      "ticker": "BTE", "name": "Baytex Energy", "score": 82,
-      "strategy": "Momentum", "entry": 5.11, "stop": 4.85,
-      "tp1": 5.64, "rr": "1:2.0", "sharia": true,
-      "source": "tkl_momentum"
-    }
-  ]
+  "regimeScore": 86,
+  "signals": [ ... ],           // composite top 10 (fully enriched)
+  "momentum": [ ... ],          // top 10 momentum pool
+  "breakout": [ ... ],          // top 10 breakout pool
+  "pullback": [ ... ],          // top 10 pullback pool
+  "pre_squeeze": [ ... ],       // top 10 pre-squeeze pool
+  "tkl_pool": [ ... ],          // TKL momentum (separate pipeline)
+  "crypto_pool": [ ... ],       // crypto signals
+  "metals_pool": [ ... ],       // metals signals
+  "forex_pool": [ ... ]         // forex signals
 }
 ```
+- Chaque pool contient des signaux avec la **même shape** que les `signals[]` classiques
+- `signals[]` = composite top 10 (meilleur de chaque pool, diversifié secteur/géo)
+- Un ticker peut apparaître dans 1 pool + le composite, mais jamais dans 2 pools différents
+- `scanner-parser.js:loadSignals()` fusionne automatiquement les pools dans `signals` pour backward compat (dedup par ticker)
+
+**Section `tkl_pool`** (alimentée par les screeners TKL) :
 - `tkl_pool` contient jusqu'à 20 signaux supplémentaires (small/mid-cap momentum)
 - sweep.js et gen-status-page.js lisent `signals` + `tkl_pool` pour le mode TKL
 - Le HTML du scanner n'affiche que les 10 `signals` (top A+)
@@ -229,9 +236,9 @@ Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, ge
 - Champ `source` : `tkl_momentum`, `tkl_breakout`, ou `tkl_volume_surge`
 
 **Workflow** :
-1. Claude génère `signals.json` avec les 10 A+ + le `tkl_pool` (20 extra)
-2. Claude génère `index.html` en utilisant uniquement les 10 `signals` pour le rendu visuel
-3. Les outils lisent `signals.json` directement — plus de parsing HTML fragile
+1. Claude génère `signals.json` avec les pools stratégiques + composite top 10 + `tkl_pool`
+2. Claude génère `data.json` pour le renderer HTML (ou `index.html` directement)
+3. Les outils downstream lisent `signals.json` directement via `scanner-parser.js`
 4. sweep.js consomme `signals` + `tkl_pool` pour alimenter le mode TKL
 
 ### Collecte des Données

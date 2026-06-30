@@ -121,6 +121,29 @@ Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de mar
 
 **Assemblage pool** : merge les 5 résultats + RunAutoScreener → dedup par ticker → rejeter tout candidat avec market_cap < $2B → enrichir top 30 via QueryData
 
+### ⚠️ Multi-List Output Format (OBLIGATOIRE depuis 2026-06-30)
+
+Le scanner produit **5 listes** dans `signals.json` :
+- `momentum[]` — top 10 momentum (EMA stack, RSI 55-80, vol surge)
+- `breakout[]` — top 10 breakout (near_breakout, BBW squeeze, vol spike)
+- `pullback[]` — top 10 pullback (RSI < 45, above EMA200, near support)
+- `pre_squeeze[]` — top 10 pre-squeeze (low ATR%, tight BBW, above EMA50)
+- `signals[]` — **composite top 10** (meilleur de chaque pool, diversifié secteur/géo)
+
+Chaque signal dans les pools a la même shape que les signaux classiques (ticker, score, strategy, entry, stop, tp1, tp2, rr, thesis, sharia, region, etc.).
+
+**Règles d'assemblage multi-list :**
+1. Chaque screener alimente directement son pool (Momentum screener → `momentum[]`)
+2. Les candidats passent la validation complète Phase 2 (dilution, earnings, Sharia, scoring)
+3. Le `signals[]` composite est construit APRÈS les pools : pick les meilleurs de chaque pool en respectant la diversification (max 3/secteur, min 5 US + 2 EU)
+4. Un ticker peut apparaître dans 1 pool + le composite, mais jamais dans 2 pools différents
+5. `scanner-parser.js:loadSignals()` fusionne les pools dans `signals` pour backward compat (sweep.js, gen-api.js, etc.)
+
+**HTML multi-list :** La page scanner affiche 5 sections :
+- Section "Top 10 Composite" avec la table synthèse classique + setup cards
+- 4 sections "Strategy Focus" (Momentum / Breakout / Pullback / Pre-Squeeze) avec mini-tables + thesis résumée
+- Les setup cards détaillés ne sont générés que pour le Top 10 composite
+
 ### Phase 2 — Ticker Selection & Validation
 
 **⚠️ Dilution Filter v2 MCP-driven (OBLIGATOIRE)** : `QueryData types=sec_filings,flags days=180` par candidat. Disqualification :
@@ -138,7 +161,7 @@ Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de mar
 
 **⚠️ Sharia Compliance Tagging (OBLIGATOIRE)** : conformité Sharia (secteur haram, dette/market cap > 33%, intérêts > 5% CA, ETFs levier/bonds). `data-sharia="true|false"` sur chaque `<tr>` + setup-card. Voir `scanner/CLAUDE.md`.
 
-**Sélection : 10 setups A+** (score ≥ **90**, confluence ≥ 3 signaux, géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
+**Sélection multi-list :** 10 par pool stratégique (momentum, breakout, pullback, pre_squeeze) + 10 composite. Composite = meilleur de chaque pool diversifié (score ≥ **90**, confluence ≥ 3 signaux, géo : min 5 US + 2 EU + 1 APAC + 2 ETFs)
 
 **⚠️ SCORING RULES (hard enforced by validate-scan.js since 2026-06-30) :**
 - **Score max 98** — no perfect scores. Score reflects REALISTIC probability of TP1 hit.
@@ -217,7 +240,24 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
 
 ### Phase 3 — Data Generation
 
-**Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}`
+**Titre carte OBLIGATOIRE** : `Top 10 A+ {REGIME} — {TICKER1}, ..., {TICKER10}` (composite)
+
+**signals.json output format :**
+```json
+{
+  "regime": "RISK-ON",
+  "regimeScore": 86,
+  "signals": [...],       // composite top 10 (fully enriched)
+  "momentum": [...],      // top 10 momentum pool
+  "breakout": [...],      // top 10 breakout pool
+  "pullback": [...],      // top 10 pullback pool
+  "pre_squeeze": [...],   // top 10 pre-squeeze pool
+  "tkl_pool": [...],      // TKL momentum (separate pipeline)
+  "crypto_pool": [...],   // crypto signals (separate pipeline)
+  "metals_pool": [...],   // metals signals (separate pipeline)
+  "forex_pool": [...]     // forex signals (separate pipeline)
+}
+```
 
 **R/R et Horizon par régime (table harmonisée v2.0) :**
 | Régime | Horizon | R/R min | TP1 max |

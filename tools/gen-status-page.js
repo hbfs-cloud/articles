@@ -3045,7 +3045,7 @@ document.addEventListener('DOMContentLoaded',function(){
   fs.writeFileSync(OUT, html);
   console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB)`);
   for (const [id, m] of Object.entries(modes)) {
-    console.log(`   ${m.cfg.label}: +${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf}x, ${m.m.trades} trades`);
+    console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf}x, ${m.m.trades} trades`);
   }
 
   // ── Save daily snapshot for time machine ──

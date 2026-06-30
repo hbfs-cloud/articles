@@ -168,6 +168,57 @@ Doc complète : [`tools/lib/MODE_STATUS.md`](tools/lib/MODE_STATUS.md). Résumé
 - CLI : `node tools/set-mode-status.js --mode X --to STATE --reason "..." --review YYYY-MM-DD`. Rejette transitions illégales (override : `--force`).
 - Pipeline : `gen-api`, `gen-status-page`, `gen-trading-plan`, `pit-engine` respectent le status. `pit-engine` gate via `statusSince` pour backtest reproductible et inclut une passe de liquidation forcée.
 
+## Memory (`.claude/memory/`)
+Toutes les mémoires projet (feedbacks, décisions, références) sont dans `.claude/memory/`. Ce dossier est
+versionné dans git et accessible aux routines cloud. Il contient 29 feedbacks, 16 décisions projet, et
+4 références externes. **Lire les fichiers pertinents AVANT toute opération** — ils codifient les
+leçons d'incidents passés (INDO dilution, IOVA hallucination, sweep rewrite, etc.).
+
+Index : `.claude/memory/MEMORY.md`. Fichiers nommés `feedback_*.md`, `project_*.md`, `reference_*.md`.
+
+## Operational Rules (OBLIGATOIRE — toutes routines)
+Règles critiques issues de feedbacks et incidents passés. S'appliquent à toutes les sessions (locales ET cloud).
+
+### Data Integrity
+- **Immutable Trades** : JAMAIS modifier des trades clôturés ou leurs stats. SHA-256 chain dans `trade-chain.json`. `sweep.js` avorte en cas de violation.
+- **Config Change Backtest** : Backtest 30 jours OBLIGATOIRE avant tout changement de config turbo/balanced/dynamic/fortress. Doit battre la config actuelle.
+- **No Hallucination** : JAMAIS inventer de données financières (52W, cash, mcap, événements). Toujours MCP/WebSearch. Leçon ALT/IOVA/ALLR juin 2026.
+- **Analyses Factcheck** : Toujours fact-checker les analyses avec MCP avant publication. Les fork agents hallucinent 52W range, cash, market cap.
+- **Sweep pSize History** : `portfolioSize` varie dans le temps (`modes-config-history.json`). Jamais batch-reset sans consentement explicite.
+
+### Scanner Pipeline
+- **No Skip** : Jamais skipper une étape du pipeline (anti-dilution, MCP enrichment, risk gating, validation) sans accord explicite.
+- **Dilution Check** : Toujours vérifier SEC filings (S-3, warrants, ATM, fonds toxiques) avant de recommander. Leçon INDO.
+- **Screener Mcap Filter** : RunScreener DSL DOIT inclure `market_cap>$2B` sinon ne retourne que des penny stocks.
+- **Candlestick Bull Pipeline** : `/scanner` doit exécuter `candlestick-scanner.js` avant sweep/gen-status-page, sinon bull = 0 signaux.
+- **Candlestick No MCP** : `candlestick-scanner.js` utilise le fichier univers local, JAMAIS MCP RunScreener.
+- **Scanner Date Convention** : Dossier scanner = prochaine séance (D+1 après 22h30, D+3 vendredi soir).
+- **Pipeline Gotchas** : 13 bugs récurrents documentés. Vérifier QA après chaque pipeline run.
+
+### Mode Strategy
+- **Modes Independent** : Les 5+ modes sont des stratégies alternatives indépendantes. Pas de cross-mode gating. Même ticker dans plusieurs modes = confirmation.
+- **Regime-Aware Eval** : JAMAIS évaluer un changement de config par replay uniforme sur toute la période. Configs = regime-aware + weekly-adaptive.
+- **Segment Replay Absolute DD** : DD/return absolu d'un replay segment = NON FIABLE. Utiliser uniquement deltas relatifs A/B.
+- **Optimize-Param Static Artifact** : `optimize-param.js` surestime (filtres statiques). Toujours revalider via `validate-config-change.js`.
+- **Tiered Mcap Oscillation** : En oscillation régime : <$2B reject, $2-10B ×0.5, $10-50B ×0.7.
+- **TKL Identity** : TKL = spécialiste momentum avec DD maîtrisé, PAS "small-cap". Inclut quality momentum tous caps.
+- **Fortress Mandate** : Fortress = participer au upside AVEC parachute, PAS un mode low-return. Trailing + décorrélation + de-risk.
+- **Mode Success Criteria** : Modes doivent battre SPY ≥3× chaque semaine, max DD ≤8%.
+- **A+ Grading** : 4 éliminatoires (guidance relevée, ≥5 EPS beats, PE fwd <35x, ext EMA20 ≤3%) + scoring /100.
+
+### Publication
+- **add_card Ordering** : `add_card.js` APPEND pour weekly/series/tech → remonter en tête après ajout. Landing trie par ordre du JSON, pas par date.
+- **No Portfolio Section** : JAMAIS de section Portfolio/positions dans les dailys. Pas dans le template.
+- **No False Caveats** : Ne pas inventer de faux caveats (liquidité, slippage) pour tempérer — vérifier les chiffres.
+- **Pipeline Updates Format** : Inclure l'heure (HH:MM) dans chaque update de progression.
+
+### Vidéo
+- **No Auto Video** : Jamais lancer de vidéo sauf demande explicite dans la session courante.
+- **Video Style** : Français, style dynamique/abordable/didactique, quizzes toutes les 15-20 min.
+
+### Général
+- **No Delete SSD** : JAMAIS supprimer/déplacer des fichiers sans validation explicite par item.
+
 ## Post-tâche : Commit & Push (OBLIGATOIRE)
 Après chaque tâche réussie : `add_card.js` → vérifier `git status` → `git add` (fichiers spécifiques) → `git commit` → `git push origin main`.
 **Ne PAS push si** : HTML < 10KB, `add_card.js` échoué, génération incomplète.

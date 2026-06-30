@@ -132,7 +132,7 @@ function loadSignals(dir) {
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // retail fail-closed: null regime = max caution
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 
