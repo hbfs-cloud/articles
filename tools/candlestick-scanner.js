@@ -5,7 +5,7 @@
  * candlestick-scanner.js — Faithful port of systematic-tss americanbulls scanner.
  *
  * Scans the full US equity universe (mcap ≥$300M, volume ≥5M) for 25 candlestick
- * patterns with volume spike confirmation (8×). Multi-factor scoring:
+ * patterns with volume confirmation (1× default — detection, not trading filter). Multi-factor scoring:
  * pattern base + ATR% + momentum + MA20 distance + RSI + BB%B + regime.
  *
  * Data source: DailyTickers MCP gateway (bars_daily via QueryData), same transport
@@ -44,7 +44,7 @@ const hasFlag = name => args.includes(`--${name}`);
 
 const CUSTOM_TICKERS = getArg('tickers', '').split(',').filter(Boolean);
 const MIN_SCORE = parseFloat(getArg('min-score', '70'));
-const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '8.0'));
+const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '1.0'));
 const TOP_N = parseInt(getArg('top', '30'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
