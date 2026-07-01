@@ -133,10 +133,13 @@ function loadSignals(dir) {
       const metalsPool = poolFrom('metals_pool');
       const forexPool = poolFrom('forex_pool');
       const casablancaPool = poolFrom('casablanca_pool');
+      // Fortress-pm: source dédiée du mode Fortress + A+ (scan A+ Halal produit par le skill
+      // fortress-pm, PAS le composite mom_bo). Tag strategy='FortressA+', exclu du mom_bo/all.
+      const fortressPool = poolFrom('fortress_pool');
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, fortressPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 

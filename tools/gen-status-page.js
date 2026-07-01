@@ -421,7 +421,9 @@ async function main() {
         // asset signals carry universe tags (casablanca/crypto/…) + specialist strategy tags
         // (AdaptiveFractal) that mom_bo/all now exclude, and the asset modes gate on universeFilter.
         const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || [])];
-        signals = [...loaded.signals, ...assetPools].map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || '' }));
+        // Fortress-pm pool (tag FortressA+): source dédiée de fortress + aplus, exclue du mom_bo/all.
+        const fortressPool = loaded.fortressPool || [];
+        signals = [...loaded.signals, ...assetPools, ...fortressPool].map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || s.thesis || '' }));
       }
     }
   } catch (_) { }
@@ -647,7 +649,8 @@ async function main() {
 
   // Filters
   const SF = {
-    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick|FortressA\+)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    fortress_pm: s => /^FortressA\+$/i.test(s),
     momentum_only: s => /^Momentum$/i.test(s), breakout_only: s => /^Breakout$/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /^(Momentum|Breakout)$/i.test(s),
@@ -3249,7 +3252,8 @@ function backfillHistory() {
 
   // Parse signals for a given dateKey (YYYYMMDD) — JSON-first, HTML fallback
   const SF_BF = {
-    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick|FortressA\+)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    fortress_pm: s => /^FortressA\+$/i.test(s),
     momentum_only: s => /^Momentum$/i.test(s), breakout_only: s => /^Breakout$/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /^(Momentum|Breakout)$/i.test(s),

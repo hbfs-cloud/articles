@@ -420,6 +420,8 @@ const STRATEGY_FILTERS_MAP = {
   'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
+  // fortress_pm: source dédiée du scan A+ Halal (fortress-pm). Exclut TOUT sauf fortressa+.
+  'fortress_pm': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback']),
   'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
