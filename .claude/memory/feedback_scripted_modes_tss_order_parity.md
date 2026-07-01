@@ -10,7 +10,7 @@ metadata:
 - **Modes scriptés** (Bull/Momentum/HighVol/Trendline/ETF/Casablanca) : signaux = **les ordres BUY/SELL concrets à placer pour l'open du lendemain**, qui doivent **répliquer fidèlement systematic-tss** (le système est la source de vérité). Pas de notion "BUY-IF" — ce sont des ordres fermes (LIMIT/MARKET/STOP), entrées BUY + sorties SELL/stops des positions tenues.
 
 **Découverte (parité vérifiée 2026-07-01) : 0% d'overlap d'ordres sur les 6 modes scriptés.** Nos scanners JS ont DIVERGÉ de leur PM systematic-tss :
-- Bull : `candlestick-scanner.js` gate **8× dur** rejette ce que le PM score-based accepte (ex ADSE vol 7.8× → TSS place un BUY LIMIT, nous 0). **La mémoire `bull-8x-parity` est FAUSSE au niveau ORDRE.**
+- **Bull** : gate 8× CORRECT (le scanner Go americanbulls impose min_vol_ratio:8.0 en gate DUR — la mémoire `bull-8x-parity` est JUSTE). Vrai bug = notre candlestick-scanner appliquait un filtre liquidité P80≥\$1M INCONDITIONNEL que la config Go n impose pas → on droppait ADSE (\$104K). Fix: filtre P80 conditionnel (default OFF). ADSE reproduit rang #1, parité FULL. (ADSE 7.8× = décalage de date: 12.48× le 29/06 accepté par les deux.)
 - Momentum : scoring off-scale (135-160) → gate minScore inerte.
 - ETF : on entre en surachat (RSI 83-89) que le PM ne prend pas (il avait tout liquidé au 29/06).
 - Book-state : nos modes en `test`/cold-start (book vide) → TSS place surtout des stops/sorties sur des positions qu'on ne tient pas.
@@ -20,6 +20,6 @@ metadata:
 
 **⚠️ RÈGLE ARCHI (user 2026-07-01) : articles reste INDÉPENDANT de systematic-tss.** systematic-tss sert UNIQUEMENT à COMPARER/valider — JAMAIS une dépendance runtime. Donc le fix = **corriger nos scanners JS pour qu'ils produisent NATIVEMENT les mêmes ordres** (approche "ports fidèles"), pas consommer la sortie du moteur Go en prod. `tools/tss-orders.js` = harness de comparaison dev-time (run le backtest TSS offline → ordres de référence), pas un pont de production.
 
-**Fix cible :** aligner l'entrée (candidats du scanner JS) sur les BUY du PM systematic-tss (ex Bull: gate 8× dur → score-based comme americanbulls) ; les sorties/stops sont gérés par notre position-management sur NOTRE book. Le book converge : si on place les mêmes entrées, on tient les mêmes positions → les sorties matchent. Valider chaque scanner contre `tss-orders.js`.
+**Fix cible :** aligner l'entrée (candidats du scanner JS) sur les BUY du PM systematic-tss (ex Bull: filtre liquidité inconditionnel à retirer, gate 8× conservé) ; les sorties/stops sont gérés par notre position-management sur NOTRE book. Le book converge : si on place les mêmes entrées, on tient les mêmes positions → les sorties matchent. Valider chaque scanner contre `tss-orders.js`.
 
-**How to apply :** Ne PAS juger la parité d'un mode scripté au compte de signaux ni au niveau pattern (ab-scan) — comparer les ORDRES pré-open du PM. Configs US qui tournent offline : `portfolio_us_americanbulls`(bull), `portfolio_us_highvol`(highvol), `pre-live/portfolio_etf_us`(etf). Lié à [[bull-8x-parity]] (à corriger) et [[runscreener-dsl-calibration]].
+**How to apply :** Ne PAS juger la parité d'un mode scripté au compte de signaux ni au niveau pattern (ab-scan) — comparer les ORDRES pré-open du PM. Configs US qui tournent offline : `portfolio_us_americanbulls`(bull), `portfolio_us_highvol`(highvol), `pre-live/portfolio_etf_us`(etf). Lié à [[bull-8x-parity]] (confirmée JUSTE) et [[runscreener-dsl-calibration]].

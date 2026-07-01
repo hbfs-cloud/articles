@@ -26,6 +26,17 @@ const {
 const ROOT = path.join(__dirname, '..');
 const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 
+// ─── Entry gates — kept in sync (MANUALLY) with systematic-tss config ────────
+// Source of truth: systematic-tss/config/pre-live/portfolio_etf_us.yaml
+//   scanner_filters.min_price      = 10
+//   scanner_filters.max_atr_ratio  = 0.06  (6% ATR — sweet spot 2-4%)
+//   scanner_filters.params.blacklist
+//   allocation pure: true  → non-leveraged ETFs only (SOXL/TQQQ excluded)
+// articles stays INDEPENDENT of the Go engine — these are copied values, not a call.
+const MIN_PRICE = 10;          // was hardcoded 5.0 (Go default) → config overrides to 10
+const MAX_ATR_RATIO = 0.06;    // was hardcoded 0.10 (Go default) → config overrides to 0.06
+const BLACKLIST = new Set(['BITI', 'VXX', 'VXZ', 'COPJ', 'CTEX']);
+
 const args = process.argv.slice(2);
 function getArg(name, def) {
   const idx = args.indexOf(`--${name}`);
@@ -65,25 +76,30 @@ const ETF_UNIVERSE = [
   'GDX', 'GDXJ', 'SLV', 'GLD', 'USO',
   'TLT', 'HYG', 'LQD',
   'ARKK', 'ARKG', 'GBTC', 'BITO',
-  'SOXL', 'TQQQ',
+  // NOTE: SOXL/TQQQ (3x leveraged) removed — config allocation is `pure: true` (non-leveraged only).
+  // These were the RSI 83-89 overbought momentum entries the Go PM never takes.
   'FXI', 'EWJ', 'EWZ', 'EWN', 'INDA', 'VGK', 'VPL', 'IEMG',
   'XBI', 'IBB', 'SMH', 'SOXX', 'KWEB', 'TAN',
 ];
 
-// ETF categories for diversification (max 2 per category)
+// ETF categories for diversification (max 2 per category).
+// Aligned VERBATIM to systematic-tss `etfCategory` (staticdata frozen cache) so
+// diversifyByCategory gates identically to the Go scanner. Previously our coarse
+// buckets (e.g. XLV+XBI+IBB+ARKG were 3 categories; Go = all "Health") diverged.
 const ETF_CATEGORIES = {
-  SPY: 'US Large', QQQ: 'US Tech', IWM: 'US Small', DIA: 'US Large',
-  XLK: 'Sector Tech', XLE: 'Sector Energy', XLF: 'Sector Financial', XLV: 'Sector Health',
-  XLI: 'Sector Industrial', XLB: 'Sector Materials', XLC: 'Sector Comm', XLY: 'Sector Discretionary',
-  XLP: 'Sector Staples', XLU: 'Sector Utilities', XLRE: 'Sector Real Estate',
-  VTI: 'US Broad', VOO: 'US Large', VEA: 'Intl Dev', VWO: 'Intl EM', EEM: 'Intl EM', EFA: 'Intl Dev',
-  GDX: 'Commodities', GDXJ: 'Commodities', SLV: 'Commodities', GLD: 'Commodities', USO: 'Commodities',
-  TLT: 'Bonds', HYG: 'Bonds', LQD: 'Bonds',
-  ARKK: 'Thematic', ARKG: 'Thematic', GBTC: 'Crypto', BITO: 'Crypto',
-  SOXL: 'Leveraged', TQQQ: 'Leveraged',
-  FXI: 'Intl Asia', EWJ: 'Intl Asia', INDA: 'Intl Asia', VPL: 'Intl Asia', KWEB: 'Intl Asia',
-  EWZ: 'Intl LatAm', EWN: 'Intl Europe', VGK: 'Intl Europe', IEMG: 'Intl EM',
-  XBI: 'Sector Biotech', IBB: 'Sector Biotech', SMH: 'Sector Semis', SOXX: 'Sector Semis', TAN: 'Thematic',
+  SPY: 'Large Blend', QQQ: 'Large Growth', IWM: 'Small Blend', DIA: 'Large Value',
+  XLK: 'Technology', XLE: 'Equity Energy', XLF: 'Financial', XLV: 'Health',
+  XLI: 'Industrials', XLB: 'Natural Resources', XLC: 'Communications', XLY: 'Consumer Cyclical',
+  XLP: 'Consumer Defensive', XLU: 'Utilities', XLRE: 'Real Estate',
+  VTI: 'Large Blend', VOO: 'Large Blend', VEA: 'Foreign Large Blend', VWO: 'Diversified Emerging Mkts',
+  EEM: 'Diversified Emerging Mkts', EFA: 'Foreign Large Blend',
+  GDX: 'Equity Precious Metals', GDXJ: 'Equity Precious Metals',
+  SLV: 'Commodities Focused', GLD: 'Commodities Focused', USO: 'Commodities Focused',
+  TLT: 'Long Government', HYG: 'High Yield Bond', LQD: 'Corporate Bond',
+  ARKK: 'Mid-Cap Growth', ARKG: 'Health', GBTC: 'Digital Assets', BITO: 'Digital Assets',
+  FXI: 'China Region', EWJ: 'Japan Stock', INDA: 'India Equity', VPL: 'Diversified Pacific/Asia', KWEB: 'China Region',
+  EWZ: 'Latin America Stock', EWN: 'Miscellaneous Region', VGK: 'Europe Stock', IEMG: 'Diversified Emerging Mkts',
+  XBI: 'Health', IBB: 'Health', SMH: 'Technology', SOXX: 'Technology', TAN: 'Miscellaneous Sector',
 };
 
 // Top ETF bonus multipliers (from Go analysis)
@@ -186,11 +202,14 @@ function calcMarketBreadth(priceData) {
 // ─── ETF Momentum Scoring (exact port of scanner_etf_momentum.go) ──────────
 
 function scoreSymbol(ticker, bars, regime, vixRatio) {
+  // Blacklist (config scanner_filters.params.blacklist) — skip before any scoring
+  if (BLACKLIST.has(ticker)) return null;
+
   const n = bars.length;
   if (n < 200) return null;
   const price = bars[n - 1].close;
   if (price <= 0 || !isFinite(price)) return null;
-  if (price < 5.0) return null;
+  if (price < MIN_PRICE) return null;
 
   const mom20 = calcMomentum(bars, 20);
   const ma20 = calcSMA(bars, 20);
@@ -210,8 +229,8 @@ function scoreSymbol(ticker, bars, regime, vixRatio) {
   let volRatio = 1.0;
   if (avgVol20 > 0) volRatio = (bars[n - 1].volume || 0) / avgVol20;
 
-  // ATR filter
-  if (atrPct > 0.10) return null;
+  // ATR filter (config max_atr_ratio = 0.06)
+  if (atrPct > MAX_ATR_RATIO) return null;
 
   // Blowoff top filter
   if (rsi > 85 && distMA20 > 0.20) return null;

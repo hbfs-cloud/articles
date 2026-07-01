@@ -291,7 +291,7 @@ node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 20 --strategy etf_momentum --universe etf  # ETF mode signals
 node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 1h --universe americanbull --min-score 40 --top 15  # Trendline mode (H1 bars, dedicated scanner)
 node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 4h --universe americanbull --min-score 40 --top 15  # Trendline mode (H4 bars)
-node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 20 --top 15  # Casablanca mode → casablanca_pool[] in signals.json
+node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 0 --top 15  # Casablanca mode (momentum-rotation, port of systematic-tss MA book) → casablanca_pool[]. min-score 0 = Go default (momentum-weighted scores are small).
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)

@@ -1,23 +1,33 @@
 #!/usr/bin/env node
 'use strict';
 
-// trendline-scanner.js — Descending Trendline Breakout Scanner
+// trendline-scanner.js — Trend Momentum Scanner (faithful port of systematic-tss eu-trend)
 //
-// Inspired by "Trading Family" style: detect descending trendlines from swing highs,
-// wait for breakout above the line, confirm with RSI divergence, target previous resistance.
+// Aligned NATIVELY on systematic-tss/internal/engine/scanner_eu_trend.go (Cluster C4 "TREND
+// MOMENTUM", the daily-bread trend cluster) + its position manager pm_eu_trend.go. This scanner
+// produces the same BUY entry candidates as the Go backtest by replicating its gates and scoring:
+//   - >= 200 bars, not a macro symbol, P80 daily $-volume >= threshold (liquidity)
+//   - last-bar volume >= 1000
+//   - DistMA200 >= 20% (strong uptrend, KEY discriminant)
+//   - RSI in [50, 70] (healthy momentum, not overbought)
+//   - ATR% in [4%, 12%] (enough vol, not excessive)
+//   - additive score (base 50 + DistMA200/RSI/MA-alignment/pullback/ATR%/volume/momentum) >= 50
+//   - global VIX gate: skip all entries when VIX > 35 (panic clusters handle it)
+// Entry price = last close; stop = price - 2.5xATR; horizon = 25d (Go PM uses trailing, no fixed TP).
+//
+// articles STAYS INDEPENDENT of systematic-tss: this is a faithful JS re-implementation, it does NOT
+// call the Go binary. tools/tss-orders.js is only a dev-time parity comparator.
 //
 // Usage:
-//   node tools/trendline-scanner.js --dry-run
-//   node tools/trendline-scanner.js --universe forex --dry-run
-//   node tools/trendline-scanner.js --universe indices --interval 1h --dry-run
-//   node tools/trendline-scanner.js --universe indices --interval 4h --dry-run
-//   node tools/trendline-scanner.js --output signals --folder 20260629
+//   node tools/trendline-scanner.js --universe americanbull --dry-run
+//   node tools/trendline-scanner.js --universe americanbull --output signals --folder 20260701
 
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const {
   calcSMA, calcRSI, calcATR, calcMomentum, calcAvgVolume,
+  calcVolatility, calcDollarVolumePercentile,
 } = require('./lib/fractal-indicators');
 
 const ROOT = path.join(__dirname, '..');
@@ -29,8 +39,8 @@ function getArg(name, def) {
 }
 const hasFlag = name => args.includes(`--${name}`);
 
-const UNIVERSE_NAME = getArg('universe', 'forex');
-const MIN_SCORE = parseFloat(getArg('min-score', '40'));
+const UNIVERSE_NAME = getArg('universe', 'americanbull');
+const MIN_SCORE = parseFloat(getArg('min-score', '50'));   // eu-trend MinScore default = 50
 const TOP_N = parseInt(getArg('top', '15'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
@@ -39,6 +49,25 @@ const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 const INTERVAL = getArg('interval', '1d'); // 1h, 4h, 1d
+
+// ── eu-trend (scanner_eu_trend.go) faithful-port thresholds (CLI-overridable) ──
+const MIN_DIST_MA200 = parseFloat(getArg('min-dist-ma200', '0.20')); // strong uptrend
+const MIN_RSI = parseFloat(getArg('min-rsi', '50'));                 // momentum zone lo
+const MAX_RSI = parseFloat(getArg('max-rsi', '70'));                 // momentum zone hi
+const MIN_ATR_PCT = parseFloat(getArg('min-atr-pct', '0.04'));       // enough volatility
+const MAX_ATR_PCT = parseFloat(getArg('max-atr-pct', '0.12'));       // not excessive
+const MIN_P80_DVOL = parseFloat(getArg('min-p80-dvol', '100000'));   // P80 daily $-vol liquidity (US cfg = $100K)
+const MAX_VIX = parseFloat(getArg('max-vix', '35'));                 // skip all entries above (panic clusters)
+
+// Macro symbols excluded from scanning (mirror of staticdata.IsMacroSymbols in systematic-tss).
+const MACRO_SYMBOLS = new Set([
+  '^GSPC', '^VIX', '^STOXX50E', '^FCHI', 'V2TX.DE', '^N225', '^HSI', '^TNX',
+  'DX-Y.NYB', 'USDJPY=X', 'EURUSD=X', 'EURGBP=X', 'EURCHF=X', 'EURJPY=X',
+  'EURCNY=X', 'EURCAD=X', 'EURHKD=X', 'EURPLN=X', 'EURBRL=X', 'EURINR=X',
+  'TLT', 'HYG', 'LQD', 'SPY', 'IWM', 'QQQ', 'GC=F', 'CL=F', 'SI=F', 'BTC-USD',
+]);
+const isMacroSymbol = sym => MACRO_SYMBOLS.has(sym);
+const VOL_TICKER = '^VIX';
 
 // ─── Indices universe (hardcoded — Yahoo Finance tickers) ───────────────────
 
@@ -194,317 +223,101 @@ async function fetchBatch(tickers) {
   return results;
 }
 
-// ─── Swing High/Low Detection (fractal pivot method) ────────────────────────
+// ─── Trend-momentum scoring (faithful port of scanner_eu_trend.go::scoreSymbol) ──
+//
+// Same gates, same additive scoring, same tie-order semantics as the Go eu-trend scanner.
+// vixLevel is passed only for the RewardScore/TimingScore fields (not used in gating here —
+// the VIX skip is a global gate applied once in main(), matching Go's Scan()).
 
-const SWING_LOOKBACK = INTERVAL === '1d' ? 5 : 3;
-
-function findSwingHighs(bars, lookback = SWING_LOOKBACK) {
-  const swings = [];
-  for (let i = lookback; i < bars.length - lookback; i++) {
-    let isSwingHigh = true;
-    for (let j = 1; j <= lookback; j++) {
-      if (bars[i].high <= bars[i - j].high || bars[i].high <= bars[i + j].high) {
-        isSwingHigh = false;
-        break;
-      }
-    }
-    if (isSwingHigh) {
-      swings.push({ index: i, price: bars[i].high, date: bars[i].date });
-    }
-  }
-  return swings;
-}
-
-function findSwingLows(bars, lookback = SWING_LOOKBACK) {
-  const swings = [];
-  for (let i = lookback; i < bars.length - lookback; i++) {
-    let isSwingLow = true;
-    for (let j = 1; j <= lookback; j++) {
-      if (bars[i].low >= bars[i - j].low || bars[i].low >= bars[i + j].low) {
-        isSwingLow = false;
-        break;
-      }
-    }
-    if (isSwingLow) {
-      swings.push({ index: i, price: bars[i].low, date: bars[i].date });
-    }
-  }
-  return swings;
-}
-
-// ─── Descending Trendline Detection ─────────────────────────────────────────
-
-function findDescendingTrendlines(swingHighs, bars) {
-  const trendlines = [];
+function scoreTicker(ticker, bars, vixLevel) {
   const n = bars.length;
-  const minSpan = INTERVAL === '1d' ? 10 : 6;
+  if (n < 200) return null; // Go Scan(): len(bars) < 200 → skip
 
-  for (let i = 0; i < swingHighs.length - 1; i++) {
-    for (let j = i + 1; j < swingHighs.length; j++) {
-      const p1 = swingHighs[i];
-      const p2 = swingHighs[j];
-
-      // must be descending
-      if (p2.price >= p1.price) continue;
-      // must span enough bars
-      if (p2.index - p1.index < minSpan) continue;
-
-      const slope = (p2.price - p1.price) / (p2.index - p1.index);
-      // minimum slope: at least 2% drop over the trendline span
-      const dropPct = (p1.price - p2.price) / p1.price;
-      if (dropPct < 0.02) continue;
-
-      // check no bars close above the line between p1 and p2 (valid trendline)
-      let valid = true;
-      let touches = 2;
-      for (let k = p1.index + 1; k < p2.index; k++) {
-        const linePrice = p1.price + slope * (k - p1.index);
-        if (bars[k].close > linePrice * 1.002) { // 0.2% tolerance (strict)
-          valid = false;
-          break;
-        }
-        // count additional touches (high within 0.3% of line — tight)
-        if (Math.abs(bars[k].high - linePrice) / linePrice < 0.003) {
-          touches++;
-        }
-      }
-      if (!valid) continue;
-
-      // check if recent price (last 3 bars) broke above
-      const lastIdx = n - 1;
-      const linePriceAtEnd = p1.price + slope * (lastIdx - p1.index);
-      const currentPrice = bars[lastIdx].close;
-      const broke = currentPrice > linePriceAtEnd;
-
-      // only consider if trendline extends close to current time
-      const maxAge = INTERVAL === '1d' ? 30 : 50;
-      if (lastIdx - p2.index > maxAge) continue;
-
-      trendlines.push({
-        p1, p2, slope, touches, broke,
-        lineAtCurrent: linePriceAtEnd,
-        breakoutPct: broke ? (currentPrice - linePriceAtEnd) / linePriceAtEnd : 0,
-        span: p2.index - p1.index,
-        age: lastIdx - p2.index,
-      });
-    }
-  }
-
-  // sort by: broke first, then touches, then recency
-  trendlines.sort((a, b) => {
-    if (a.broke !== b.broke) return b.broke ? 1 : -1;
-    if (b.touches !== a.touches) return b.touches - a.touches;
-    return a.age - b.age;
-  });
-
-  return trendlines;
-}
-
-// ─── RSI Divergence Detection ───────────────────────────────────────────────
-
-function detectBullishRSIDivergence(bars, period = 14, lookback = 30) {
-  const n = bars.length;
-  if (n < lookback + period) return { found: false };
-
-  const swingLows = findSwingLows(bars.slice(0, -1), 3);
-  const recentLows = swingLows.filter(s => s.index > n - lookback - 5);
-  if (recentLows.length < 2) return { found: false };
-
-  // check last 2 swing lows
-  const low1 = recentLows[recentLows.length - 2];
-  const low2 = recentLows[recentLows.length - 1];
-
-  // price making lower lows
-  if (low2.price >= low1.price) return { found: false };
-
-  // RSI at those points
-  const rsi1 = calcRSI(bars.slice(0, low1.index + 1), period);
-  const rsi2 = calcRSI(bars.slice(0, low2.index + 1), period);
-
-  // RSI making higher lows (divergence)
-  if (rsi2 <= rsi1) return { found: false };
-
-  return {
-    found: true,
-    priceLow1: low1.price, priceLow2: low2.price,
-    rsiLow1: rsi1, rsiLow2: rsi2,
-    strength: (rsi2 - rsi1) / rsi1,
-  };
-}
-
-// ─── Support/Resistance Zone Detection ──────────────────────────────────────
-
-function findResistanceZones(bars, lookback = 100) {
-  const n = bars.length;
-  const start = Math.max(0, n - lookback);
-  const highs = [];
-  for (let i = start; i < n; i++) highs.push(bars[i].high);
-  highs.sort((a, b) => b - a);
-
-  const zones = [];
-  const used = new Set();
-  const tolerance = 0.015; // 1.5% clustering
-
-  for (const h of highs) {
-    if (used.has(h)) continue;
-    const cluster = highs.filter(p => Math.abs(p - h) / h < tolerance && !used.has(p));
-    if (cluster.length >= 2) {
-      const avg = cluster.reduce((s, p) => s + p, 0) / cluster.length;
-      zones.push({ price: avg, touches: cluster.length });
-      cluster.forEach(p => used.add(p));
-    }
-  }
-
-  return zones.sort((a, b) => a.price - b.price);
-}
-
-function findSupportZones(bars, lookback = 100) {
-  const n = bars.length;
-  const start = Math.max(0, n - lookback);
-  const lows = [];
-  for (let i = start; i < n; i++) lows.push(bars[i].low);
-  lows.sort((a, b) => a - b);
-
-  const zones = [];
-  const used = new Set();
-  const tolerance = 0.015;
-
-  for (const l of lows) {
-    if (used.has(l)) continue;
-    const cluster = lows.filter(p => Math.abs(p - l) / l < tolerance && !used.has(p));
-    if (cluster.length >= 2) {
-      const avg = cluster.reduce((s, p) => s + p, 0) / cluster.length;
-      zones.push({ price: avg, touches: cluster.length });
-      cluster.forEach(p => used.add(p));
-    }
-  }
-
-  return zones.sort((a, b) => a.price - b.price);
-}
-
-// ─── Scoring ────────────────────────────────────────────────────────────────
-
-function scoreTicker(ticker, bars) {
-  const n = bars.length;
   const price = bars[n - 1].close;
-  const rsi = calcRSI(bars, 14);
+  if (price <= 0) return null;
+
   const atr = calcATR(bars, 14);
   const atrPct = atr / price;
-  const sma50 = calcSMA(bars, 50);
-  const sma200 = calcSMA(bars, 200);
-  const mom20 = calcMomentum(bars, 20);
+  const ma20 = calcSMA(bars, 20);
+  const ma50 = calcSMA(bars, 50);
+  const ma200 = calcSMA(bars, 200);
+  const rsi = calcRSI(bars, 14);
+  const volatility = calcVolatility(bars, 20);
+  const mom120 = calcMomentum(bars, 120);
+  const avgVol20 = calcAvgVolume(bars, 20);
 
-  // find swing highs and descending trendlines
-  const swingHighs = findSwingHighs(bars, 5);
-  if (swingHighs.length < 2) return null;
+  let volRatio = 1.0;
+  if (avgVol20 > 0) volRatio = (bars[n - 1].volume || 0) / avgVol20;
 
-  const trendlines = findDescendingTrendlines(swingHighs, bars);
-  if (trendlines.length === 0) return null;
+  const distMA20 = ma20 > 0 ? (price - ma20) / ma20 : 0;
+  const distMA50 = ma50 > 0 ? (price - ma50) / ma50 : 0;
+  const distMA200 = ma200 > 0 ? (price - ma200) / ma200 : 0;
 
-  const best = trendlines[0];
-  if (!best.broke) return null; // no breakout yet
+  // Volume floor
+  if ((bars[n - 1].volume || 0) < 1000) return null;
 
-  // breakout must be recent (within last 5 bars)
-  const lastBarDate = bars[n - 1].date;
-  let breakoutBar = -1;
-  for (let i = n - 1; i >= Math.max(0, n - 5); i--) {
-    const lineP = best.p1.price + best.slope * (i - best.p1.index);
-    if (bars[i].close > lineP && (i === 0 || bars[i - 1].close <= best.p1.price + best.slope * (i - 1 - best.p1.index))) {
-      breakoutBar = i;
-      break;
-    }
-  }
-  // if breakout happened more than 5 bars ago, still valid but lower score
-  const breakoutRecency = n - 1 - (breakoutBar >= 0 ? breakoutBar : best.p2.index);
+  // ── C4 gates: DistMA200 > 20% AND RSI 50-70 AND ATR% in [4%, 12%] ──
+  if (distMA200 < MIN_DIST_MA200) return null;
+  if (rsi < MIN_RSI || rsi > MAX_RSI) return null;
+  if (atrPct < MIN_ATR_PCT) return null;
+  if (atrPct > MAX_ATR_PCT) return null;
 
-  // RSI divergence
-  const rsiDiv = detectBullishRSIDivergence(bars);
+  // ── Scoring: trend strength focus ──
+  let score = 50.0;
 
-  // resistance zones for TP
-  const resistanceZones = findResistanceZones(bars, 200);
-  const supportZones = findSupportZones(bars, 50);
+  // DistMA200 bonus (stronger trend = better)
+  if (distMA200 >= 0.50) score += 35;
+  else if (distMA200 >= 0.40) score += 30;
+  else if (distMA200 >= 0.30) score += 25;
+  else score += 15;
 
-  // TP = next resistance above current price
-  let tp1 = null, tp2 = null;
-  const aboveResistances = resistanceZones.filter(z => z.price > price * 1.01);
-  if (aboveResistances.length >= 1) tp1 = +aboveResistances[0].price.toFixed(6);
-  if (aboveResistances.length >= 2) tp2 = +aboveResistances[1].price.toFixed(6);
+  // RSI sweet spot (55-65 ideal)
+  if (rsi >= 55 && rsi <= 65) score += 20;
+  else if (rsi >= 52 && rsi <= 68) score += 15;
+  else score += 10;
 
-  // fallback TP: previous swing high before the trendline
-  if (!tp1 && swingHighs.length > 0) {
-    const prevHigh = swingHighs.reduce((max, s) => s.price > max ? s.price : max, 0);
-    if (prevHigh > price * 1.01) tp1 = +prevHigh.toFixed(6);
-  }
-  // ultimate fallback: ATR-based
-  if (!tp1) tp1 = +(price + 3 * atr).toFixed(6);
-  if (!tp2) tp2 = +(price + 5 * atr).toFixed(6);
+  // MA alignment bonus (MA20 > MA50 > MA200)
+  if (ma20 > ma50 && ma50 > ma200) score += 15;
+  else if (price > ma20 && ma20 > ma200) score += 10;
 
-  // stop = below recent swing low or 2*ATR
-  const recentLows = findSwingLows(bars.slice(Math.max(0, n - 20)), 3);
-  let stop;
-  if (recentLows.length > 0) {
-    stop = Math.min(...recentLows.map(s => s.price));
-    stop = Math.min(stop, price - 1.5 * atr);
-  } else {
-    stop = price - 2 * atr;
-  }
-  stop = +stop.toFixed(6);
+  // Pullback bonus (slightly below MA20 but above MA50)
+  if (distMA20 < 0.02 && distMA50 > 0) score += 15;
 
-  const rr = stop < price && tp1 > price ? (tp1 - price) / (price - stop) : 0;
-  if (rr < 1.5) return null; // minimum R:R
+  // ATR% bonus
+  if (atrPct >= 0.08) score += 15;
+  else if (atrPct >= 0.06) score += 10;
+  else score += 5;
 
-  // ─── Scoring ─────────────────────────────────────────────────────────
-  let score = 0;
+  // Volume confirmation
+  if (volRatio >= 2.0) score += 10;
+  else if (volRatio >= 1.5) score += 5;
 
-  // trendline quality (0-30) — cap touches scoring at 5
-  score += Math.min(best.touches, 5) * 6;
+  // Momentum bonus
+  if (mom120 > 0.30) score += 15;
+  else if (mom120 > 0.20) score += 10;
+  else if (mom120 > 0.10) score += 5;
 
-  // breakout strength (0-20)
-  score += Math.min(best.breakoutPct * 500, 20);
+  // Min score filter (Go MinScore default = 50)
+  if (score < MIN_SCORE) return null;
 
-  // RSI divergence (0-20)
-  if (rsiDiv.found) {
-    score += 10 + Math.min(rsiDiv.strength * 50, 10);
-  }
-
-  // RSI not overbought (0-10) — prefer entries when RSI < 60
-  if (rsi < 40) score += 10;
-  else if (rsi < 50) score += 7;
-  else if (rsi < 60) score += 4;
-
-  // R:R quality (0-15)
-  score += Math.min(rr * 5, 15);
-
-  // recency bonus (0-10) — breakout in last 3 bars gets max
-  if (breakoutRecency <= 1) score += 10;
-  else if (breakoutRecency <= 3) score += 7;
-  else if (breakoutRecency <= 5) score += 4;
-
-  // trendline span (0-10) — longer trendlines = stronger breakout
-  if (best.span >= 40) score += 10;
-  else if (best.span >= 25) score += 7;
-  else if (best.span >= 15) score += 5;
-
-  // EMA trend context (0-5)
-  if (sma50 > 0 && sma200 > 0 && sma50 > sma200) score += 5;
-  else if (sma50 > 0 && price > sma50) score += 3;
-
-  score = +score.toFixed(1);
+  // ── Position-management values (Go PM eu-trend): 2.5xATR stop, 25d timeout, trailing ──
+  // Go eu-trend has no fixed take-profit (trailing only); tp1/tp2 are informational ATR targets
+  // for our own book display and are NOT part of entry-parity comparison.
+  const stop = +(price - atr * 2.5).toFixed(6);
+  const tp1 = +(price + atr * 3).toFixed(6);
+  const tp2 = +(price + atr * 5).toFixed(6);
+  const rr = price > stop ? +((tp1 - price) / (price - stop)).toFixed(2) : 0;
 
   return {
-    ticker, score, price: +price.toFixed(6), entry: +price.toFixed(6), stop, tp1, tp2,
-    rr: +rr.toFixed(2), horizon: 21,
+    ticker, score: +score.toFixed(1), price: +price.toFixed(6), entry: +price.toFixed(6),
+    stop, tp1, tp2, rr, horizon: 25,
     metrics: {
-      rsi: +rsi.toFixed(1), atrPct: +atrPct.toFixed(4), mom20: +mom20.toFixed(4),
-      trendlineTouches: best.touches, trendlineSpan: best.span,
-      breakoutPct: +(best.breakoutPct * 100).toFixed(2),
-      rsiDivergence: rsiDiv.found,
-      rsiDivStrength: rsiDiv.found ? +(rsiDiv.strength * 100).toFixed(1) : 0,
+      rsi: +rsi.toFixed(1), atrPct: +atrPct.toFixed(4), mom120: +mom120.toFixed(4),
+      distMA200: +distMA200.toFixed(4), distMA20: +distMA20.toFixed(4), distMA50: +distMA50.toFixed(4),
+      volRatio: +volRatio.toFixed(2), volatility: +volatility.toFixed(4),
+      maAligned: (ma20 > ma50 && ma50 > ma200),
     },
-    trendline: {
-      startDate: best.p1.date, endDate: best.p2.date,
-      startPrice: +best.p1.price.toFixed(6), endPrice: +best.p2.price.toFixed(6),
-    },
+    strategy: 'TrendlineBreakout',
   };
 }
 
@@ -520,21 +333,36 @@ function detectRegion(ticker) {
 
 async function main() {
   const tickers = loadUniverse();
-  console.error(`📐 Trendline Breakout Scanner`);
+  console.error(`📈 Trend-Momentum Scanner (eu-trend port)`);
   console.error(`   Universe: ${tickers.length} tickers (${UNIVERSE_NAME}) | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
+  console.error(`   Gates: DistMA200≥${(MIN_DIST_MA200 * 100).toFixed(0)}% RSI[${MIN_RSI},${MAX_RSI}] ATR%[${(MIN_ATR_PCT * 100).toFixed(0)},${(MAX_ATR_PCT * 100).toFixed(0)}] P80$vol≥${MIN_P80_DVOL} VIX≤${MAX_VIX}`);
   console.error(`   Date: ${SCAN_DATE} | Interval: ${INTERVAL} | Regime: ${REGIME || 'auto'}`);
   console.error('📡 Fetching OHLCV data via Yahoo...');
 
-  const allBars = await fetchBatch(tickers);
+  // Fetch universe + volatility index (for the global VIX gate).
+  const fetchList = tickers.includes(VOL_TICKER) ? tickers : [...tickers, VOL_TICKER];
+  const allBars = await fetchBatch(fetchList);
 
-  console.error('🔍 Scoring candidates (trendline breakout detection)...');
+  // Global VIX gate (Go Scan(): vixLevel > maxVIX → return nil for all).
+  let vixLevel = 0;
+  const vixBars = allBars[VOL_TICKER];
+  if (vixBars && vixBars.length) vixLevel = vixBars[vixBars.length - 1].close;
+  const vixStandDown = vixLevel > MAX_VIX;
+  if (vixStandDown) {
+    console.error(`   ⚠️  VIX ${vixLevel.toFixed(1)} > ${MAX_VIX} — trend cluster stands down (no entries, panic clusters handle it)`);
+  }
+
+  console.error('🔍 Scoring candidates (trend-momentum: DistMA200 / RSI zone / ATR%)...');
 
   const candidates = [];
-  for (const ticker of tickers) {
+  if (!vixStandDown) for (const ticker of tickers) {
+    if (isMacroSymbol(ticker)) continue;             // Go: staticdata.IsMacroSymbols skip
     const bars = allBars[ticker];
-    if (!bars) continue;
+    if (!bars || bars.length < 200) continue;        // Go: len(bars) < 200 skip
+    // P80 daily $-volume liquidity filter (Go: MinP80DollarVolume)
+    if (MIN_P80_DVOL > 0 && calcDollarVolumePercentile(bars, 20, 0.80) < MIN_P80_DVOL) continue;
     try {
-      const result = scoreTicker(ticker, bars);
+      const result = scoreTicker(ticker, bars, vixLevel);
       if (result && result.score >= MIN_SCORE) {
         candidates.push(result);
       }
@@ -543,20 +371,21 @@ async function main() {
     }
   }
 
-  candidates.sort((a, b) => b.score - a.score);
+  // Go sort: score desc, tie-break symbol asc.
+  candidates.sort((a, b) => (b.score - a.score) || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
   const topCandidates = candidates.slice(0, TOP_N);
 
   // ─── Output ─────────────────────────────────────────────────────────
   if (topCandidates.length === 0) {
-    console.error('\n⚠️  No trendline breakout signals found.');
+    console.error('\n⚠️  No trend-momentum signals found.');
   } else {
     console.error(`\n✅ Found ${candidates.length} signals (passed all filters), top ${Math.min(TOP_N, topCandidates.length)}:`);
     for (const c of topCandidates) {
-      const divIcon = c.metrics.rsiDivergence ? '🔀' : '  ';
+      const alignIcon = c.metrics.maAligned ? '📶' : '  ';
       console.error(
-        `  📐 ${c.ticker.padEnd(10)} score: ${String(c.score).padStart(5)} ${divIcon}` +
-        ` Touches:${c.metrics.trendlineTouches} Span:${c.metrics.trendlineSpan}bars` +
-        ` Brkout:${c.metrics.breakoutPct}% RSI:${c.metrics.rsi} R:R=${c.rr}`
+        `  📈 ${c.ticker.padEnd(10)} score: ${String(c.score).padStart(5)} ${alignIcon}` +
+        ` DistMA200:${(c.metrics.distMA200 * 100).toFixed(0)}% RSI:${c.metrics.rsi}` +
+        ` ATR%:${(c.metrics.atrPct * 100).toFixed(1)} Vol×:${c.metrics.volRatio} Mom120:${(c.metrics.mom120 * 100).toFixed(0)}%`
       );
     }
   }
@@ -581,12 +410,14 @@ async function main() {
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
         horizon: c.horizon, region: detectRegion(c.ticker), universe: UNIVERSE_NAME,
         sharia: null,
-        thesis: `Trendline breakout: ${c.metrics.trendlineTouches} touches, span ${c.metrics.trendlineSpan} bars, breakout +${c.metrics.breakoutPct}%` +
-          (c.metrics.rsiDivergence ? `, RSI div +${c.metrics.rsiDivStrength}%` : ''),
+        thesis: `Trend momentum: DistMA200 +${(c.metrics.distMA200 * 100).toFixed(0)}%, RSI ${c.metrics.rsi}, ATR% ${(c.metrics.atrPct * 100).toFixed(1)}%` +
+          (c.metrics.maAligned ? `, MA20>MA50>MA200 aligned` : ''),
         extension: {
-          trendlineTouches: c.metrics.trendlineTouches,
-          trendlineSpan: c.metrics.trendlineSpan,
-          rsiDivergence: c.metrics.rsiDivergence,
+          distMA200: c.metrics.distMA200,
+          rsi: c.metrics.rsi,
+          atrPct: c.metrics.atrPct,
+          volRatio: c.metrics.volRatio,
+          maAligned: c.metrics.maAligned,
         },
       });
       existing.add(c.ticker);

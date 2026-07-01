@@ -2,15 +2,22 @@
 'use strict';
 
 /**
- * casablanca-scanner.js — Adaptive Fractal scanner for Casablanca Bourse
+ * casablanca-scanner.js — Momentum-Rotation scanner for Casablanca Bourse (BVC)
  *
  * Uses BVC API directly (api.casablanca-bourse.com) — NOT Yahoo Finance.
- * Same AF scoring as fractal-scanner.js but with BVC-specific data pipeline.
+ *
+ * ENTRY-LOGIC PARITY: the Casablanca / MA book runs `strategy: momentum-rotation`
+ * in systematic-tss (config/later|pre-live/portfolio_ma.yaml → NewScanner("momentum-rotation")
+ * paired with the adaptive-fractal *PM* for exits/sizing). Entry candidate selection & scoring
+ * is therefore MOMENTUM-ROTATION, not adaptive-fractal. This scanner ports
+ * internal/engine/scanner_momentum_rotation.go (scoreSymbol) so it natively emits the same
+ * ranked BUY candidates as the Go backtest. The "AdaptiveFractal" mode label is a downstream
+ * routing tag only (see signals.json write-out).
  *
  * Usage:
  *   node tools/casablanca-scanner.js --dry-run
  *   node tools/casablanca-scanner.js --output signals --folder 20260629
- *   node tools/casablanca-scanner.js --min-score 20 --top 15
+ *   node tools/casablanca-scanner.js --min-score 0 --top 15
  */
 
 const fs = require('fs');
@@ -30,7 +37,11 @@ function getArg(name, def) {
 }
 const hasFlag = name => args.includes(`--${name}`);
 
-const MIN_SCORE = parseFloat(getArg('min-score', '25'));
+// Go momentum-rotation default minScore = 0.0 (config/later/portfolio_ma.yaml sets no min_score).
+// Scores are momentum-weighted (mom20*50+mom50*30+mom100*20, ×1.2 if all positive) → small range,
+// so a high pre-filter would silently drop valid candidates. Default 0 to match Go; ranking + --top
+// select the same candidate set the Go scanner returns (limit = MaxCandidates).
+const MIN_SCORE = parseFloat(getArg('min-score', '0'));
 const TOP_N = parseInt(getArg('top', '15'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
@@ -39,118 +50,92 @@ const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '5'));
 
-// ─── AF Scoring (same as fractal-scanner.js) ────────────────────────────────
+// ─── Momentum-Rotation Scoring ──────────────────────────────────────────────
+// Faithful port of systematic-tss internal/engine/scanner_momentum_rotation.go (scoreSymbol),
+// with the MA book's *effective* config (config/later|pre-live/portfolio_ma.yaml).
+//
+// MA scanner_filters and how Go actually consumes them:
+//   min_price: 20         → maps to MinPrice, but momentum-rotation.scoreSymbol NEVER reads
+//                           MinPrice → INERT in Go (documented divergence: no price floor applied).
+//   min_momentum_20d: 0.0 → NOT a recognized yaml key (struct tag is `min_mom10`) → ignored →
+//                           default minMom20 = 0.0.
+//   min_volume_ratio: 1.0 → NOT a recognized yaml key (struct tag is `min_vol_ratio`) → ignored →
+//                           NO volume-ratio filter applied.
+//   skip_months: [9]      → seasonality gate applied at the strategy layer, not in the scanner.
+// => Effective scanner gates are the Go defaults below.
+//
+// SECTOR META: Go's scoreSymbol early-returns when a symbol has no metadata, but MA config sets
+// no sector white/blacklist, so meta only ever gates on presence. Go's MA universe carries meta
+// from secmaster for every symbol → all pass. We have no BVC sector meta locally, so we do NOT
+// replicate the hasMeta gate (replicating it would zero every candidate). Net effect identical
+// for MA since no sector filter is active.
+const MR = {
+  minMom20: 0.0,   // FILTER 2 threshold (MinMom10 default, repurposed for 20d momentum)
+  minATRPct: 0.01, // FILTER 3 lower band (MinATRPct default)
+  maxATRPct: 0.10, // FILTER 3 upper band (MaxATRRatio default)
+  minRSI: 30.0,    // FILTER 4 (MinRSI default)
+  maxRSI: 80.0,    // FILTER 4 (MaxRSI default)
+  minScore: 0.0,   // MinScore default
+};
 
-function calcQualityScore(bars, rsi, mom60, mom120, avgVol20) {
+function scoreSymbolMomentumRotation(bars) {
   const n = bars.length;
-  if (n < 20) return 0;
-  let score = 0;
-
-  if (rsi >= 45 && rsi <= 60) score += 25;
-  else if (rsi < 45) score += 20;
-  else if (rsi <= 70) score += 15;
-  else score += 5;
-
-  const [stochK] = calcStochastic(bars, 14);
-  if (stochK < 70) score += 20;
-  else if (stochK < 80) score += 15;
-  else score += 5;
-
-  if (mom120 > 0.50) score += 25;
-  else if (mom120 > 0.30) score += 20;
-  else if (mom120 > 0.15) score += 15;
-  else score += 5;
-
-  if (mom120 > 0 && mom60 > 0 && mom120 > mom60) score += 15;
-  else if (mom120 > 0 && mom60 > 0) score += 10;
-
-  if (avgVol20 > 0) {
-    const volRatio = (bars[n - 1].volume || 0) / avgVol20;
-    if (volRatio > 1.3) score += 15;
-    else if (volRatio > 1.0) score += 10;
-    else score += 5;
-  }
-  return score;
-}
-
-const FILTERS = { minPrice: 0, maxVol: 0.20, maxATRPct: 0.15, rsiMin: 28, rsiMax: 82, minMom10: 0.00, requireAboveSMA200: true };
-
-function scoreSymbolAF(bars, regime) {
-  const n = bars.length;
-  if (n < 120) return null;
-  const f = FILTERS;
+  if (n < 200) return null; // momentum-rotation requires >= 200 bars
 
   const price = bars[n - 1].close;
-  if (price <= 0) return null;
+  if (!(price > 0) || !isFinite(price)) return null;
 
-  const sma20 = calcSMA(bars, 20);
-  const sma50 = calcSMA(bars, 50);
-  const sma200 = calcSMA(bars, 200);
-  const rsi = calcRSI(bars, 14);
+  const mom20 = calcMomentum(bars, 20);
+  const mom50 = calcMomentum(bars, 50);
+  const mom100 = calcMomentum(bars, 100);
+
+  const ma50 = calcSMA(bars, 50);
+  const ma200 = calcSMA(bars, 200);
   const atr = calcATR(bars, 14);
-  const volatility = calcVolatility(bars, 20);
-  const mom10 = calcMomentum(bars, 10);
-  const mom60 = calcMomentum(bars, 60);
-  const mom120 = calcMomentum(bars, 120);
+  const rsi = calcRSI(bars, 14);
 
-  if (price < f.minPrice) return null;
-  if (f.requireAboveSMA200 && sma200 > 0 && price < sma200) return null;
-  if (rsi < f.rsiMin || rsi > f.rsiMax) return null;
-  if (mom10 < f.minMom10) return null;
-  if (volatility > f.maxVol) return null;
-  if (atr / price > f.maxATRPct) return null;
+  if (ma50 <= 0 || ma200 <= 0 || atr <= 0) return null;
 
-  const avgVol20 = calcAvgVolume(bars, 20);
-  let volRatio = 0;
-  if (avgVol20 > 0) {
-    volRatio = (bars[n - 1].volume || 0) / avgVol20;
-    if (volRatio < 0.5) return null;
-  }
+  const atrPct = atr / price;
 
-  const qualityScore = calcQualityScore(bars, rsi, mom60, mom120, avgVol20);
-  let riskScore = volatility * 100;
-  if (price < sma50) riskScore *= 1.5;
+  // FILTER 1: confirmed uptrend (MA50 > MA200)
+  if (ma50 <= ma200) return null;
+  // FILTER 2: 20d momentum positive (already moving)
+  if (mom20 < MR.minMom20) return null;
+  // FILTER 3: ATR within reasonable band
+  if (atrPct < MR.minATRPct || atrPct > MR.maxATRPct) return null;
+  // FILTER 4: RSI in optimal zone
+  if (rsi < MR.minRSI || rsi > MR.maxRSI) return null;
 
-  let rewardScore = (mom60 * 0.3 + mom120 * 0.7) * 100;
-  if (rewardScore < 0) rewardScore = 0;
-  if (price > sma20 && sma20 > sma50 && sma50 > sma200) rewardScore *= 1.5;
-  else if (price > sma50 && sma50 > sma200) rewardScore *= 1.2;
-  if (rewardScore > 100) rewardScore = 100;
+  // SCORING: momentum-weighted — recent (20d) counts more than older (100d)
+  let score = mom20 * 50 + mom50 * 30 + mom100 * 20;
+  // Consistency bonus: all momentum periods positive
+  if (mom20 > 0 && mom50 > 0 && mom100 > 0) score *= 1.2;
+  // Match Go's math.Round(score*100)/100
+  score = Math.round(score * 100) / 100;
 
-  let timingScore = 0;
-  if (rsi < 30) timingScore += 50;
-  else if (rsi < 45) timingScore += 40;
-  else if (rsi < 55) timingScore += 25;
-  else if (rsi < 65) timingScore += 10;
-  if (rsi > 75) timingScore -= 30;
-  else if (rsi > 70) timingScore -= 20;
-  if (sma50 > sma200 && price > sma50) timingScore += 20;
+  if (score < MR.minScore) return null;
 
-  const distFromMA20 = sma20 > 0 ? (price - sma20) / sma20 : 0;
-  if (distFromMA20 > 0.30) timingScore -= 25;
-  else if (distFromMA20 > 0.20) timingScore -= 10;
+  // Stop loss at 2x ATR (Go: price - 2*atr)
+  const stop = price - 2 * atr;
 
-  const riskAdjusted = 100 / (riskScore + 1);
-  let finalScore = (rewardScore * 0.30) + (timingScore * 0.20) + (riskAdjusted * 0.25) + (qualityScore * 0.25);
+  const ma20 = calcSMA(bars, 20);
+  const distMA20 = ma20 > 0 ? (price - ma20) / ma20 : 0;
+  const distMA50 = ma50 > 0 ? (price - ma50) / ma50 : 0;
+  const distMA200 = ma200 > 0 ? (price - ma200) / ma200 : 0;
+  const avgVol = calcAvgVolume(bars, 20);
+  const volRatio = avgVol > 0 ? (bars[n - 1].volume || 0) / avgVol : 0;
 
-  if (regime) {
-    const r = regime.toUpperCase().replace(/[- ]/g, '_');
-    if (r.includes('RISK_ON')) finalScore *= 1.1;
-    else if (r.includes('RISK_OFF') && !r.includes('EARLY')) finalScore *= 0.8;
-  }
-
-  const distMA20 = sma20 > 0 ? (price - sma20) / sma20 : 0;
-  const distMA50 = sma50 > 0 ? (price - sma50) / sma50 : 0;
-  const distMA200 = sma200 > 0 ? (price - sma200) / sma200 : 0;
+  // No MinVolRatio / MinDistMA20 / liquidity filters active for MA config → none applied.
 
   return {
-    score: +finalScore.toFixed(2), price, entry: price,
-    stop: +(price - atr * 2.5).toFixed(4),
-    atr, rsi, volatility, mom10, mom60, mom120,
-    volRatio: +volRatio.toFixed(2), qualityScore,
-    rewardScore: +rewardScore.toFixed(1), timingScore,
+    score, price, entry: price,
+    stop: +stop.toFixed(4),
+    atr, rsi, volatility: atrPct,
+    mom20, mom50, mom100,
+    volRatio: +volRatio.toFixed(2),
     distMA20: +distMA20.toFixed(4), distMA50: +distMA50.toFixed(4), distMA200: +distMA200.toFixed(4),
-    sma20, sma50, sma200, strategy: 'adaptive-fractal',
+    ma50, ma200, strategy: 'momentum-rotation',
   };
 }
 
@@ -164,7 +149,7 @@ async function main() {
   const priceData = await batchFetchBVC(CONCURRENCY);
   if (!priceData.size) { console.error('❌ No BVC OHLCV data — aborting.'); process.exit(1); }
 
-  console.log('🔍 Scoring candidates (multi-factor)...');
+  console.log('🔍 Scoring candidates (momentum-rotation)...');
   const candidates = [];
   const scanDateNorm = SCAN_DATE.replace(/-/g, '');
 
@@ -172,7 +157,7 @@ async function main() {
     const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
     const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
 
-    const result = scoreSymbolAF(bars, REGIME);
+    const result = scoreSymbolMomentumRotation(bars);
     if (!result) continue;
     if (result.score < MIN_SCORE) continue;
 
@@ -189,15 +174,16 @@ async function main() {
     });
   }
 
-  candidates.sort((a, b) => b.score - a.score);
+  // Match Go ranking: score DESC, tie-break Symbol ASC (deterministic top-N = scanner limit).
+  candidates.sort((a, b) => (b.score - a.score) || a.ticker.localeCompare(b.ticker));
   const topCandidates = candidates.slice(0, TOP_N);
 
   console.log(`\n✅ Found ${candidates.length} signals (passed all filters), top ${topCandidates.length}:`);
   for (const c of topCandidates) {
-    const icon = c.score >= 70 ? '📈' : c.score >= 50 ? '📊' : '  ';
+    const icon = c.score >= 20 ? '📈' : c.score >= 10 ? '📊' : '  ';
     const trend = c.metrics.distMA20 > 0 && c.metrics.distMA50 > 0 && c.metrics.distMA200 > 0 ? '↑↑↑' :
                   c.metrics.distMA50 > 0 && c.metrics.distMA200 > 0 ? '↑↑' : '↑';
-    console.log(`  ${icon} ${c.ticker.padEnd(8)} score:${String(c.score).padStart(5)} ${trend} E:${c.entry} S:${c.stop} RSI:${c.metrics.rsi.toFixed(0)} Mom120:${(c.metrics.mom120 * 100).toFixed(0)}%`);
+    console.log(`  ${icon} ${c.ticker.padEnd(8)} score:${String(c.score).padStart(6)} ${trend} E:${c.entry} S:${c.stop} RSI:${c.metrics.rsi.toFixed(0)} Mom20:${(c.metrics.mom20 * 100).toFixed(0)}%`);
   }
 
   if (DRY_RUN) { console.log('\n🏷️  Dry run — no files written.'); return topCandidates; }
@@ -217,12 +203,14 @@ async function main() {
     for (const c of topCandidates) {
       if (existing.has(c.ticker)) continue;
       signals.casablanca_pool.push({
+        // strategy label stays 'AdaptiveFractal' = downstream routing tag for the casablanca mode
+        // (modes-config filterName/regimeFilters = adaptive_fractal). The scoring is momentum-rotation.
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'AdaptiveFractal',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
         horizon: 21, region: 'CASABLANCA', universe: 'casablanca',
         sharia: null,
-        thesis: `AF score ${c.score}: Mom120=${(c.metrics.mom120 * 100).toFixed(0)}%, RSI=${c.metrics.rsi.toFixed(0)}, Vol=${c.metrics.volatility.toFixed(3)}, Quality=${c.metrics.qualityScore.toFixed(0)}`,
-        extension: { rsi: +c.metrics.rsi.toFixed(1), mom120: +c.metrics.mom120.toFixed(3) },
+        thesis: `MomRotation score ${c.score}: Mom20=${(c.metrics.mom20 * 100).toFixed(0)}%, Mom50=${(c.metrics.mom50 * 100).toFixed(0)}%, Mom100=${(c.metrics.mom100 * 100).toFixed(0)}%, RSI=${c.metrics.rsi.toFixed(0)}, ATR%=${(c.metrics.volatility * 100).toFixed(1)}`,
+        extension: { rsi: +c.metrics.rsi.toFixed(1), mom20: +c.metrics.mom20.toFixed(3), mom50: +c.metrics.mom50.toFixed(3), mom100: +c.metrics.mom100.toFixed(3) },
       });
       existing.add(c.ticker);
       added++;
@@ -234,4 +222,8 @@ async function main() {
   return topCandidates;
 }
 
-main().catch(e => { console.error('❌', e.message); process.exit(1); });
+if (require.main === module) {
+  main().catch(e => { console.error('❌', e.message); process.exit(1); });
+}
+
+module.exports = { scoreSymbolMomentumRotation, MR };

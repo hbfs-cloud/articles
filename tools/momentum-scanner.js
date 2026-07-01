@@ -152,12 +152,13 @@ function scoreSymbol(bars, regime) {
   const atr = calcATR(bars, 14);
   const rsi = calcRSI(bars, 14);
 
-  if (ma50 <= 0 || atr <= 0) return null;
+  // Match Go scanner_momentum_rotation.go:245 — require ma200 > 0 (>=200 bars).
+  if (ma50 <= 0 || ma200 <= 0 || atr <= 0) return null;
 
   const atrPct = atr / price;
 
-  // FILTER 1: Uptrend (MA50 > MA200). SMA200 returns 0 if < 200 bars → filter passes.
-  if (ma200 > 0 && ma50 <= ma200) return null;
+  // FILTER 1: Uptrend (MA50 > MA200). Unconditional, mirrors Go line 254.
+  if (ma50 <= ma200) return null;
 
   // FILTER 2: Positive momentum 20d
   if (mom20 < 0) return null;

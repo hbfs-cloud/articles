@@ -41,6 +41,23 @@ const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 
+// ─── Parity constants (mirror config/portfolio_us_highvol.yaml scanner_filters) ──
+// systematic-tss us_highvol allocation: strategy=highvol-breakout-corr.
+// These MUST match the Go ScannerFilterConfig so JS produces the same BUY entries.
+const MIN_P80_DOLLAR_VOLUME = 5_000_000;   // scanner_filters.min_p80_dollar_volume ($5M, not $100K)
+const MAX_RSI = 85;                        // scanner_filters.max_rsi (Go rejects rsi > 85)
+const MAX_VOLATILITY_INDEX = 28;           // scanner_filters.max_volatility_index (VIX > 28 => no scan)
+// Allocation-level blacklist (toxic serial losers). In Go these symbols are excluded
+// from the universe (cmd/backtest/main.go). Applied here as a pre-scan skip.
+const BLACKLIST = new Set([
+  'SKYT', 'ALAB', 'RERE', 'QBTS', 'ATAI', 'DQ', 'NTLA', 'LCID', 'TE',
+  'IBRX', 'KOD', 'AUR', 'RXRX', 'TERN', 'NVAX', 'ASTS', 'DAWN', 'GLDD',
+]);
+// NOTE: scanner_filters.excluded_sectors ([Real Estate, Utilities, Materials,
+// Communication Services]) and allocation min_market_cap=$1B / min_volume=10M are
+// applied in Go at the universe/secmaster level, which requires sector + market-cap
+// metadata not available offline in this repo. Documented divergence (see remaining_gap).
+
 // ─── Universe loader ────────────────────────────────────────────────────────
 
 function loadUniverse() {
@@ -202,6 +219,9 @@ function scoreSymbol(bars, regime, vixLevel, vixTrend) {
   if (regime && regime.toUpperCase().includes('RECOVERY') && vixLevel >= 22) minVolRatio = 1.0;
   if (volRatio < minVolRatio) return null;
 
+  // Max RSI filter (scanner_filters.max_rsi = 85) — Go rejects rsi > 85
+  if (rsi > MAX_RSI) return null;
+
   // SCORING V9
   let score = 50.0;
 
@@ -306,6 +326,11 @@ async function main() {
     console.log(`\n❌ Regime RISK_OFF — no new positions.`); return [];
   }
 
+  // Max volatility index (scanner_filters.max_volatility_index = 28): VIX above cap => no scan
+  if (vixLevel > MAX_VOLATILITY_INDEX) {
+    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} > ${MAX_VOLATILITY_INDEX} (max_volatility_index) — no signals.`); return [];
+  }
+
   // VIX 18-22 + not stable = toxic
   if (vixLevel >= 18 && vixLevel < 22 && vixTrend !== 'stable') {
     console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (18-22) + ${vixTrend} = TOXIC cluster, no signals.`); return [];
@@ -336,11 +361,12 @@ async function main() {
   const scanDateNorm = SCAN_DATE.replace(/-/g, '');
 
   for (const [ticker, rawBars] of priceData) {
+    if (BLACKLIST.has(ticker)) continue; // allocation blacklist (toxic serial losers)
     const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
     const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
 
     const dvP80 = calcDollarVolumePercentile(bars, 20, 0.80);
-    if (dvP80 < 100_000) continue;
+    if (dvP80 < MIN_P80_DOLLAR_VOLUME) continue;
 
     const result = scoreSymbol(bars, REGIME, vixLevel, vixTrend);
     if (!result) continue;

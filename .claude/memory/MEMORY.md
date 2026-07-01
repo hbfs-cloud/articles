@@ -1,6 +1,6 @@
 # Market Watch Articles - Memory
 
-- [Scripted Modes TSS Order Parity](feedback_scripted_modes_tss_order_parity.md) — Les modes scriptés (Bull/Momentum/HighVol/Trendline/ETF/Casablanca) = ordres BUY/SELL du lendemain qui doivent RÉPLIQUER systematic-tss (pas nos scanners JS). Parité 0% actuelle. Corrige la fausse mémoire bull-8x-parity (le PM place des ordres que le gate 8× rejette). Technique backtest offline (.env vide, skip Infisical cert expiré). momentum/trendline EU+US.
+- [Scripted Modes TSS Order Parity](feedback_scripted_modes_tss_order_parity.md) — Les modes scriptés (Bull/Momentum/HighVol/Trendline/ETF/Casablanca) = ordres BUY/SELL du lendemain qui doivent RÉPLIQUER systematic-tss NATIVEMENT (articles reste INDÉPENDANT ; tss = comparaison seule via tss-orders.js). Scanners alignés 2026-07-01: bull/highvol FULL, etf/casablanca partial, momentum/trendline EU=infra data. Bull: le vrai bug était un filtre liquidité inconditionnel (PAS le 8×, qui est correct — bull-8x-parity JUSTE). Technique backtest offline (.env vide, skip Infisical cert expiré).
 
 ## Résumé
 Site de publication d'analyses financières (dailytickers.com) hébergé sur GitHub Pages. Publie des rapports hebdomadaires, briefings quotidiens, analyses par ticker, et scans algorithmiques. Automatisé via Discord bot + Claude Code.

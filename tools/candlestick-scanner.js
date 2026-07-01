@@ -49,6 +49,14 @@ const MIN_SCORE = parseFloat(getArg('min-score', '70'));
 // known at scan time — NOT an intraday J+1 confirmation. Quiet days legitimately yield 0 signals.
 // Override with --min-vol-ratio 1 ONLY for research/detection (equivalent to Go ab-scan-history, no filter).
 const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '8.0'));
+// P80 daily dollar-volume liquidity floor. Faithful port of the Go americanbulls scanner, which
+// applies MinP80DollarVolume ONLY when the config sets `min_p80_dollar_volume`.
+// portfolio_us_americanbulls.yaml does NOT set it (it sets `min_avg_dollar_volume`, a field the
+// americanbulls scanner never reads → dead config), so the Go applies NO dollar-volume filter and
+// natively enters thinly-traded names (e.g. ADSE, P80 ≈ $104K, entered by the Go backtest). Default
+// 0 = OFF to match that behavior; liquidity is gated upstream by the universe (min_volume /
+// min_market_cap). Set a positive value to re-enable the P80 floor for research.
+const MIN_P80_DOLLAR_VOLUME = parseFloat(getArg('min-p80-dollar-volume', '0'));
 const TOP_N = parseInt(getArg('top', '30'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
@@ -386,9 +394,12 @@ async function main() {
     const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
     const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
 
-    // P80 dollar volume filter ($1M minimum, same as Go)
-    const dvP80 = calcDollarVolumeP80(bars);
-    if (dvP80 < 1_000_000) continue;
+    // P80 dollar volume filter — conditional, matching the Go americanbulls scanner (only applied
+    // when a threshold is configured). Off by default for this config (see MIN_P80_DOLLAR_VOLUME).
+    if (MIN_P80_DOLLAR_VOLUME > 0) {
+      const dvP80 = calcDollarVolumeP80(bars);
+      if (dvP80 < MIN_P80_DOLLAR_VOLUME) continue;
+    }
     liquidScanned++;
 
     const result = detectPattern(bars, REGIME);
