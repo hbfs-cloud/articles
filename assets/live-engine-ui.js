@@ -96,6 +96,11 @@
     '  .lp-grid>[data-grid="orders"]{grid-column:2;grid-row:5;margin-bottom:0!important;overflow:hidden;min-width:0}',
     '  .lp-grid>[data-grid="watch"]{grid-column:2;grid-row:6;margin-bottom:0!important;overflow:hidden;min-width:0}',
     '  .lp-grid>[data-grid="equity"]{grid-row:2/span 5!important}',
+    // FIX: data-grid="positions"/"history" (Open Positions + Trade History) n'ont AUCUNE règle de
+    // placement -> auto-flow côte à côte, et align-items:stretch étirait la Trade History collapsée
+    // à la hauteur d'Open Positions (803px = 730px de vide). Force pleine largeur + hauteur naturelle
+    // (align-self:start = pas de stretch). On garde align-items:stretch global (l'equity en a besoin).
+    '  .lp-grid>[data-grid="positions"],.lp-grid>[data-grid="history"],.lp-grid>[id^="sec-pos-"],.lp-grid>[id^="sec-hist-"]{grid-column:1/-1!important;align-self:start!important;margin-bottom:1rem}',
     /* Apply hide-m + thumb hide to right-column action cards (compact view) */
     '  .lp-grid>[data-grid="expiring"] .hide-m,.lp-grid>[data-grid="closenow"] .fv-thumb,.lp-grid>[data-grid="watch"] .fv-thumb,.lp-grid>[data-grid="orders"] .fv-thumb{display:none!important}',
     '  .lp-grid>[data-grid="closenow"] .hide-m,.lp-grid>[data-grid="watch"] .hide-m,.lp-grid>[data-grid="orders"] .hide-m{display:none!important}',
