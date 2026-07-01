@@ -19,6 +19,10 @@ try { simSrc = require('./lib/sim-source'); } catch (_) { simSrc = null; }
 
 const ROOT = path.resolve(__dirname, '..');
 const OUT = path.join(ROOT, 'portfolio', 'v1');
+// Resolved trade statuses (same set the frozen stats use) — defined early because
+// reconcileStoppedMode() runs in the main loop and calls computeStreaks() before the
+// original definition site would execute (const TDZ). Excludes pending + liquidated.
+const STREAK_RESOLVED = new Set(['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail']);
 const HISTORY = path.join(ROOT, 'scanner', 'status', 'history');
 const STATUS_HISTORY_PATH = path.join(ROOT, 'data', 'modes-status-history.json');
 
@@ -542,6 +546,16 @@ function reconcileStoppedMode(id) {
     j.orders = [];
     return true;
   });
+  // winning-streaks was frozen at the mode's last live day (alpha 06-11, tkl 06-10) → stale, and it
+  // contradicted the reconciled log (e.g. alpha 0% vs recompute). Recompute from the healed trades
+  // (computeStreaks excludes pending + liquidated, so it reflects real resolved outcomes).
+  rewrite('winning-streaks.json', j => {
+    let tj; try { tj = JSON.parse(fs.readFileSync(path.join(dir, 'trades.json'), 'utf8')); } catch { return false; }
+    const fresh = computeStreaks(tj.trades || []);
+    const changed = j.totalTrades !== fresh.totalTrades || j.winRate !== fresh.winRate || j.totalWins !== fresh.totalWins;
+    Object.assign(j, fresh);
+    return changed;
+  });
   // Remaining endpoints carry no pending/positions but may still advertise a pre-stop status block.
   // Refresh it only (mutate is a no-op) so the whole mode API consistently reports the stopped state.
   rewrite('signals.json', () => false);
@@ -591,9 +605,12 @@ if (balanced) {
 // ─── Winning streaks endpoint (computed from trades.json per mode) ──────────
 // A "streak" = longest consecutive run of winning trades (TP1 or TP2), sorted chronologically.
 // Provides social-proof stats for the API consumers without needing an extra scan pass.
+// computeStreaks counts only STREAK_RESOLVED trades (defined near the top): excludes 'pending'/'open'
+// (was inflating counts — momentum reported "5 trades, 0% WR" over 5 pending rows) AND 'liquidated'
+// (force-close artifact, kept out so stopped-mode streaks match their frozen WR denominator).
 function computeStreaks(trades) {
   const sorted = [...(trades || [])]
-    .filter(t => t && (t.entryDate || t.scanDate))
+    .filter(t => t && (t.entryDate || t.scanDate) && STREAK_RESOLVED.has(t.status))
     .sort((a, b) => ((a.entryDate || a.scanDate || '').localeCompare(b.entryDate || b.scanDate || '')));
   let curr = 0, currStart = null, best = 0, bestStart = null, bestEnd = null;
   let totalWins = 0, totalLosses = 0;
