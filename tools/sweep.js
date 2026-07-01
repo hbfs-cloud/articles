@@ -444,11 +444,31 @@ const priceCache = {};
 
 function loadCachedPrice(ticker) {
   const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
-  if (!fs.existsSync(fp)) return null;
-  const stat = fs.statSync(fp);
-  // Cache valid for 12 hours (today's bar may update during session)
-  if (Date.now() - stat.mtimeMs > 12 * 3600 * 1000) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
+  if (fs.existsSync(fp)) {
+    const stat = fs.statSync(fp);
+    // Cache valid for 12 hours (today's bar may update during session)
+    if (Date.now() - stat.mtimeMs <= 12 * 3600 * 1000) {
+      try {
+        const h = JSON.parse(fs.readFileSync(fp, 'utf8'));
+        if (h && Object.keys(h).length) return h;
+      } catch { /* fall through to BVC */ }
+    }
+  }
+  // BVC (Casablanca) fallback: Moroccan tickers are NOT on Yahoo, so ${ticker}.json is empty.
+  // bvc-fetcher writes ${ticker}_ohlcv.json as an ARRAY of bars — convert it to the date-keyed
+  // priceHistory the simulator expects so casablanca-universe setups can actually be traded.
+  const bvcFp = path.join(PRICE_CACHE_DIR, `${ticker}_ohlcv.json`);
+  if (fs.existsSync(bvcFp)) {
+    try {
+      const bars = JSON.parse(fs.readFileSync(bvcFp, 'utf8'));
+      if (Array.isArray(bars) && bars.length) {
+        const h = {};
+        for (const b of bars) if (b && b.date) h[b.date] = { open: b.open, high: b.high, low: b.low, close: b.close, volume: b.volume };
+        if (Object.keys(h).length) return h;
+      }
+    } catch { /* no usable BVC bars */ }
+  }
+  return null;
 }
 
 function saveCachedPrice(ticker, history) {

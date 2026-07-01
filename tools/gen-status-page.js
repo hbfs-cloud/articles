@@ -416,7 +416,12 @@ async function main() {
     if (scanDir) {
       const loaded = parser.loadSignals(scanDir);
       if (loaded) {
-        signals = loaded.signals.map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || '' }));
+        // Include asset-class pools (casablanca/crypto/metals/forex) in the signal universe so
+        // their dedicated modes can DISPLAY their signals. Equity modes never match them: the
+        // asset signals carry universe tags (casablanca/crypto/…) + specialist strategy tags
+        // (AdaptiveFractal) that mom_bo/all now exclude, and the asset modes gate on universeFilter.
+        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || [])];
+        signals = [...loaded.signals, ...assetPools].map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || '' }));
       }
     }
   } catch (_) { }
