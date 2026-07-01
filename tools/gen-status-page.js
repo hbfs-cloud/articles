@@ -791,6 +791,7 @@ async function main() {
     // leurs signaux SONT les ordres à placer (répliquent systematic-tss), pas des candidats de
     // remplacement comme les modes quality (turbo/balanced...). Donc aucun "Fallback candidates".
     const SCRIPTED_FILTERS = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'fortress_pm']);
+    const isScripted = SCRIPTED_FILTERS.has(cfg.filterName);
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
     const fallback = SCRIPTED_FILTERS.has(cfg.filterName) ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
@@ -900,7 +901,8 @@ ${renderStatusBanner(cfg)}
 </div>
 
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
-<div class="section-card">
+<!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
+<div class="section-card${isScripted ? ' hide-section' : ''}">
   <details${sig.length ? ' open' : ''}>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">${sig.length} setup${sig.length === 1 ? '' : 's'}${fallback.length ? ' + ' + fallback.length + ' fallback' : ''}</span>${sig.length ? `<span class="sc-preview">${sig.slice(0,3).map(s => `<b>${s.ticker}</b> <span style="color:var(--muted)">${s.score}</span>`).join(' · ')}</span>` : ''}</span>
@@ -1615,6 +1617,7 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .th-scroll{max-height:540px;overflow-y:auto;overflow-x:auto;margin-top:.4rem;border:1px solid var(--border);border-radius:var(--r-s)}
 .th-scroll table{margin-top:0!important}
 .th-scroll thead th{position:sticky;top:0;background:var(--surface-2);z-index:1}
+.hide-section{display:none!important}
 .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
 .sc-head h3{font-size:1rem;font-weight:700;color:var(--ink);margin:0;display:flex;align-items:center;gap:.45rem;letter-spacing:-.01em}
 .sc-head h3 i{font-size:.78rem;color:var(--muted)}
