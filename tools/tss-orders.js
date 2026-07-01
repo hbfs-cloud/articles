@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * tss-orders.js — Pont de PARITÉ pour les modes SCRIPTÉS (Bull/HighVol/ETF/Casablanca/…).
+ * tss-orders.js — Harness de COMPARAISON de parité (DEV-TIME UNIQUEMENT, PAS runtime).
  *
- * Les modes scriptés doivent placer EXACTEMENT les mêmes ordres BUY/SELL du lendemain que
- * systematic-tss (le système est la source de vérité). Au lieu de re-dériver avec nos scanners
- * JS (qui ont divergé : gate 8× Bull, scores off-scale momentum, ETF surachat…), on run le PM
- * systematic-tss via `cmd/backtest` et on lit ses `pending_orders` du dernier snapshot.
+ * ⚠️ ARTICLES RESTE INDÉPENDANT DE SYSTEMATIC-TSS. Ce script ne fait PAS partie du pipeline de
+ * production — c'est un outil de VALIDATION : il run le backtest systematic-tss offline et sort
+ * ses ordres pré-open, pour qu'on COMPARE la sortie native de nos scanners JS (candlestick-scanner,
+ * etc.) contre le système de référence. Le fix se fait dans les scanners JS (approche "ports
+ * fidèles"), PAS en consommant cette sortie en prod.
+ *
+ * But: détecter les divergences (gate 8× Bull, scores off-scale momentum, ETF surachat…) pour
+ * corriger nos scanners jusqu'à parité — puis re-vérifier avec ce harness.
  *
  * Infisical (cert btw.cloud.hbfs-cloud.net expiré) est SKIPPÉ via un .env vide + unset des vars.
  * Données US cachées OK ; les configs EU (secmaster FR/DE) nécessitent l'infra data.
