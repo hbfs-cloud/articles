@@ -805,10 +805,12 @@ async function main() {
     // leurs signaux SONT les ordres à placer (répliquent systematic-tss), pas des candidats de
     // remplacement comme les modes quality (turbo/balanced...). Donc aucun "Fallback candidates".
     const SCRIPTED_FILTERS = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'fortress_pm']);
-    const isScripted = SCRIPTED_FILTERS.has(cfg.filterName);
+    // fortress + aplus = modes LLM (pilotés par le skill fortress-pm, signaux = CANDIDATS A+),
+    // PAS scriptés — ils gardent Today's Signals + Orders + fallback comme les autres modes LLM.
+    const isScripted = SCRIPTED_FILTERS.has(cfg.filterName) && id !== 'fortress' && id !== 'aplus';
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
-    const fallback = SCRIPTED_FILTERS.has(cfg.filterName) ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
+    const fallback = isScripted ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
       .slice(cfg.topN, cfg.topN + 4).map(s => {
         const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
         return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: price(s.entry), stop: price(st), tp1: price(s.tp1), tp2: price(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
