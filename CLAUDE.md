@@ -216,6 +216,7 @@ Règles critiques issues de feedbacks et incidents passés. S'appliquent à tout
 - **A+ Grading** : 4 éliminatoires (guidance relevée, ≥5 EPS beats, PE fwd <35x, ext EMA20 ≤3%) + scoring /100.
 
 ### Publication
+- **Content QA Gate** : AVANT tout `add_card.js`/commit d'un article éditorial (analyse, daily, weekly), passer le gate structurel : `node tools/qa-content.js <path> --strict` (exit 1 = bloquant). Complète `tools/qa-check.js` (scanner). Fact-check MCP = étape runtime séparée (voir en-tête du script).
 - **add_card Ordering** : `add_card.js` APPEND pour weekly/series/tech → remonter en tête après ajout. Landing trie par ordre du JSON, pas par date.
 - **No Portfolio Section** : JAMAIS de section Portfolio/positions dans les dailys. Pas dans le template.
 - **No False Caveats** : Ne pas inventer de faux caveats (liquidité, slippage) pour tempérer — vérifier les chiffres.
