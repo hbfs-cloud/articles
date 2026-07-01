@@ -553,6 +553,20 @@ async function main() {
         _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
       }
       ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
+      // Extend the frozen (closed-only) curve to TODAY with the LIVE mark-to-market of open
+      // positions, so the equity block re-evaluates with current closes while the mode is holding.
+      // Without this the curve froze at the last closed trade and ignored open-position P&L.
+      const _openLive = trades.filter(t => t._premature && t.status === 'pending');
+      if (_openLive.length && ec.v.length) {
+        const _liveUnreal = _openLive.reduce((s, t) => s + (t.pnlPct || 0) / cfg.portfolioSize * (cfg.positionSizePct || 1), 0);
+        if (Math.abs(_liveUnreal) > 0.001) {
+          const _d = new Date();
+          const _todayLbl = ('0' + (_d.getMonth() + 1)).slice(-2) + '/' + ('0' + _d.getDate()).slice(-2);
+          const _mtmVal = +(ec.v[ec.v.length - 1] + _liveUnreal).toFixed(2);
+          if (ec.d[ec.d.length - 1] === _todayLbl) { ec.v[ec.v.length - 1] = _mtmVal; }
+          else { ec.d.push(_todayLbl); ec.v.push(_mtmVal); }
+        }
+      }
     } else {
       const _todayLabel = (function(){
         const d = new Date();
@@ -1039,7 +1053,7 @@ ${(() => {
           const vwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr>
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
-      <td class="hide-m"><img src="https://charts2-node.finviz.com/chart?t=${s.ticker}&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${vwapCell}</td>
@@ -1058,7 +1072,7 @@ ${(() => {
           const rotVwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr style="background:var(--warn-wk)">
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b></td>
-      <td class="hide-m"><img src="https://charts2-node.finviz.com/chart?t=${s.ticker}&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${rotVwapCell}</td>
@@ -1256,7 +1270,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           const rowStyle = isTerminal ? ' style="opacity:.45;background:var(--surface-2);filter:grayscale(1)"' : isExpired ? ' style="opacity:.6;background:var(--neg-wk)"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
-          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://charts2-node.finviz.com/chart?t=${p.ticker}&tf=d&s=linear&ct=candle_stick" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
     <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore || 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore || 85) + ') today or stale exits closed prior holds.'}</span></span>
@@ -1266,7 +1280,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card" id="sec-hist-${id}">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed${pos && pos.length ? ' · ' + pos.length + ' open' : ''}</span></span></summary>
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
@@ -1296,7 +1310,10 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
         // Trade History = closed trades only (status !== 'pending'). Open positions live in their own section.
         // Premature trades from rotation (status='expired' + _premature) ARE kept if they match keptPremature.
         const filtered = trades
-          .filter(t => t.status !== 'pending')
+          // Keep genuinely-open positions (status 'pending' AND currently held = in keptPremature)
+          // so Trade History shows open trades at the top with live MtM P&L, as it did before —
+          // NOT the backtest-overflow pendings dropped by the portfolio cap.
+          .filter(t => t.status !== 'pending' || keptPremature.has(t.ticker + '|' + t.scanDate))
           .filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate))
           .map(t => {
           if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) {
@@ -1355,6 +1372,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
               break;
             }
             case 'rotated': { const rep = replacedBy[t.ticker + t.scanDate]; statusLabel = rep ? 'Replaced by ' + rep : 'Rotated out'; statusShort = rep ? '↔ ' + rep : 'Rotated'; statusCls = 'm'; break; }
+            case 'pending': statusLabel = 'Open (' + (t.holdDays || 0) + 'd/' + cfg.horizon + 'd)'; statusShort = 'Open ' + (t.holdDays || 0) + 'd'; statusCls = 'pending'; break;
             default: statusLabel = t.status || '—'; statusShort = statusLabel; statusCls = 'm';
           }
           return `<tr>
@@ -1881,7 +1899,7 @@ details[open] summary::after{transform:rotate(90deg)}
 function fvOpen(ticker){
   var d=document.getElementById('fvDialog');
   document.getElementById('fvTicker').textContent=ticker;
-  document.getElementById('fvImg').src='https://charts2-node.finviz.com/chart?t='+ticker+'&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D';
+  document.getElementById('fvImg').src='https://finviz.com/chart.ashx?t='+ticker+'&ty=c&ta=1&p=d&s=l';
   document.getElementById('fvLink').href='https://finviz.com/quote.ashx?t='+ticker;
   d.classList.add('open');
   document.body.style.overflow='hidden';
@@ -1984,6 +2002,12 @@ document.addEventListener('DOMContentLoaded',function(){
       series:series
     });
     window.addEventListener('resize',function(){c.resize()});
+    // Mobile fix: at init the container width can be 0/unstable (layout not settled, or the
+    // panel was display:none a tick earlier). ECharts then renders a 0×0 canvas and the equity
+    // curve never appears. Force a resize after the next paint + a short delay so the real
+    // mobile width is picked up and the curve draws.
+    try{requestAnimationFrame(function(){try{if(!c.isDisposed())c.resize();}catch(_){}});}catch(_){}
+    setTimeout(function(){try{if(!c.isDisposed())c.resize();}catch(_){}},250);
     return c;
   }
   var tmDates=[], tmCurrentIdx=0, tmModesCfg={};
@@ -2643,6 +2667,9 @@ document.addEventListener('DOMContentLoaded',function(){
   // Init chart for the default visible mode
   var dflt=modeCharts[activeMode];
   if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c);
+  // Mobile: rotating the device or the address-bar collapsing changes the viewport — resize the
+  // active equity chart so it doesn't stay stuck at its pre-rotation (possibly 0) width.
+  window.addEventListener('orientationchange',function(){setTimeout(function(){try{var el=document.getElementById('chart-'+activeMode);var inst=el&&window.echarts&&window.echarts.getInstanceByDom(el);if(inst)inst.resize();}catch(_){}},300);});
   tmInit();
 });
 </script>
@@ -3036,7 +3063,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!ticker)return;
     var t=ticker.toUpperCase();
     document.getElementById('fvTitle').textContent=t+' — Daily Chart';
-    document.getElementById('fvImg2').src='https://charts2-node.finviz.com/chart?t='+t+'&tf=d&s=linear&ct=candle_stick&o[0][ot]=sma&o[0][op]=20&o[0][oc]=DC32B363&o[1][ot]=sma&o[1][op]=50&o[1][oc]=FF8F33C6&o[2][ot]=sma&o[2][op]=200&o[2][oc]=DCB3326D';
+    document.getElementById('fvImg2').src='https://finviz.com/chart.ashx?t='+t+'&ty=c&ta=1&p=d&s=l';
     document.getElementById('fvLinks').innerHTML=
       '<a href="https://finviz.com/quote.ashx?t='+t+'" target="_blank" rel="noopener">FinViz</a>'+
       '<a href="https://finance.yahoo.com/quote/'+t+'/" target="_blank" rel="noopener">Yahoo Finance</a>'+

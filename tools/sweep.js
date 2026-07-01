@@ -684,6 +684,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     if (!bar) continue;
     daysHeld++;
 
+    // Gap-through fills apply ONLY on bars held overnight (date > entryDate). On the ENTRY bar the
+    // position is opened at the open (or intraday for VWAP-gated modes — the order is NOT placed
+    // before the open), so a same-day exit fills at the level, never at a pre-entry open. This is
+    // the user's VWAP-gate caveat. entryPrice > stop is guaranteed at entry, so on later bars a
+    // gap DOWN through the stop (open < stop) fills at the open (worse) and a gap UP through TP
+    // fills at the open (price improvement) — both prices actually traded that session.
+    const heldOvernight = date > entryDate;
+
     // Check SL first — distinguish initial stop vs breakeven vs trailing
     if (bar.low <= currentStop) {
       // Ambiguous-bar: same bar hit SL AND TP → first-touch policy picks SL (conservative for loss, but tag it)
@@ -693,7 +701,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       else if (currentStop >= entryPrice) status = 'breakeven';  // stop moved to entry → 0 exit
       else status = 'sl';                                         // original stop hit → loss
       exitDate = date;
-      exitPrice = currentStop;
+      exitPrice = heldOvernight ? Math.min(currentStop, bar.open) : currentStop;
       if (ambiguous) status = status + '_amb';                    // _amb suffix for audit
       break;
     }
@@ -731,7 +739,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     if (!disableTP2 && actualTp2 !== null && bar.high >= actualTp2) {
       status = 'tp2';
       exitDate = date;
-      exitPrice = actualTp2;
+      exitPrice = heldOvernight ? Math.max(actualTp2, bar.open) : actualTp2;
       break;
     }
 
@@ -761,7 +769,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       } else {
         status = 'tp1';
         exitDate = date;
-        exitPrice = actualTp1;
+        exitPrice = heldOvernight ? Math.max(actualTp1, bar.open) : actualTp1;
         break;
       }
     }
@@ -847,7 +855,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   }
 
   let pnlPct;
-  if (partialTP && partialRealized > 0) {
+  if (partialRealized > 0) {
     const tpFrac = partialTPPct * 100;
     const remainingPnl = ((exitPrice - entryPrice) / entryPrice) * (100 - tpFrac);
     pnlPct = (partialRealized + remainingPnl) / 100;
