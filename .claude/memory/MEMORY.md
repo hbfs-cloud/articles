@@ -166,3 +166,4 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - 100% pass rate on validation (0 errors, 0 warnings)
 - [Candlestick→Bull Pipeline](feedback_candlestick_bull_pipeline.md) — /scanner must run candlestick-scanner before sweep/gen-status-page, else bull = 0 signals
 - [Optimize-Param Static Artifact](feedback_optimize_param_static_artifact.md) — optimize-param overstates (static filters); always re-validate via validate-config-change.js (regime-aware+OOS) before applying
+- [Substack Publishing](reference_substack_publishing.md) — Pas d'API officielle. Voie propre = MCP Substack Gateway OSS (respecte OAuth2/zéro-token). MVP: convertisseur HTML→draft + Notes auto via MCP; posts longs semi-manuels.
