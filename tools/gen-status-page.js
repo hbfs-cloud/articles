@@ -1178,8 +1178,11 @@ ${(() => {
   <div style="margin-top:.4rem;font-size:.7rem;color:var(--pos)">Yesterday's rotation order applied — <b>${recentExecutedRotation.replaces || '?'}</b> closed, <b>${recentExecutedRotation.ticker}</b> now in portfolio.</div>
 </div>` : '';
 
-        if (totalActions === 0 && watchPool.length === 0 && !recentExecutedRotation) {
-          return `<div class="section-card"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
+        // "Portfolio full" empty state UNIQUEMENT si aucun slot libre. Sinon (slots libres + 0 ordre —
+        // ex bull 1/3 un jour calme sans signal 8×), on tombe dans le branch principal qui affiche la
+        // vraie section "Orders to Place" avec "No new orders" (sinon la section paraît absente).
+        if (totalActions === 0 && watchPool.length === 0 && !recentExecutedRotation && slotsAvailable === 0) {
+          return `<div class="section-card" data-section="orders"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders to Place</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>`;
         }
         if (totalActions === 0 && watchPool.length === 0 && recentExecutedRotation) {
           // Render "Orders to Place" header WITH the Recent Rotation card inside.
