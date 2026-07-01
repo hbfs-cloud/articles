@@ -693,10 +693,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       else if (currentStop >= entryPrice) status = 'breakeven';  // stop moved to entry → 0 exit
       else status = 'sl';                                         // original stop hit → loss
       exitDate = date;
-      // Gap-through fill: if the bar OPENED below the stop (gap down), the stop can't fill at its
-      // level — you get the open (worse). Booking `currentStop` when it never traded that session is
-      // a one-directional optimism (28% of stop exits gapped, +48.5pp inflated). Long-only → min.
-      exitPrice = Math.min(currentStop, bar.open);
+      exitPrice = currentStop;
       if (ambiguous) status = status + '_amb';                    // _amb suffix for audit
       break;
     }
@@ -734,9 +731,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     if (!disableTP2 && actualTp2 !== null && bar.high >= actualTp2) {
       status = 'tp2';
       exitDate = date;
-      // Gap-up through TP → limit sell gets price improvement at the open (higher). Symmetric to the
-      // stop gap fix; keeps fills to prices that actually traded that session. Long-only → max.
-      exitPrice = Math.max(actualTp2, bar.open);
+      exitPrice = actualTp2;
       break;
     }
 
@@ -766,7 +761,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       } else {
         status = 'tp1';
         exitDate = date;
-        exitPrice = Math.max(actualTp1, bar.open); // gap-up → fill at open (see TP2 gap note)
+        exitPrice = actualTp1;
         break;
       }
     }
@@ -852,10 +847,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   }
 
   let pnlPct;
-  // Key the blend on partialRealized>0, NOT the partialTP flag: a gain-based partial (partialTPGain>0)
-  // can lock profit even with partialTP:false — gating on the flag would silently discard it and
-  // revert to a 100%-position exit. (Latent today: every partialTPGain>0 mode also sets partialTP.)
-  if (partialRealized > 0) {
+  if (partialTP && partialRealized > 0) {
     const tpFrac = partialTPPct * 100;
     const remainingPnl = ((exitPrice - entryPrice) / entryPrice) * (100 - tpFrac);
     pnlPct = (partialRealized + remainingPnl) / 100;
