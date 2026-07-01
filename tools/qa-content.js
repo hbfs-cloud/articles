@@ -104,6 +104,52 @@ function tmValues(scope) {
   }
   return out;
 }
+// Détecte le mot "Placeholder" résiduel (aligné sur validate-article.js CQG-007
+// `\bPLACEHOLDER\b`). On SCRUBE d'abord les usages LÉGITIMES pour éviter les faux
+// positifs : classes CSS (`variant-switcher-placeholder`), attributs de formulaire
+// (`placeholder="Rechercher"`) et pseudo-élément (`::placeholder`). Ce qui reste =
+// texte/commentaire de template laissé en place (ex: `// Placeholder for ECharts…`).
+function residualPlaceholders(html) {
+  const scrubbed = html
+    .replace(/class="[^"]*"/gi, '')            // classes CSS (ex: *-placeholder)
+    .replace(/placeholder\s*=\s*"[^"]*"/gi, '') // attribut input placeholder="…"
+    .replace(/placeholder\s*=\s*'[^']*'/gi, '')
+    .replace(/::placeholder/gi, '');            // pseudo-élément CSS
+  return scrubbed.match(/\bplaceholder\b/gi) || [];
+}
+// Compte les appels echarts.init() RÉELS (hors commentaires HTML/JS). Un bloc d'init
+// entièrement commenté (ex: MSFT `// Placeholder for ECharts…` + `// var c = echarts.init(…)`)
+// donne realInit=0 alors que la lib est chargée → charts vides.
+function realEchartsInit(html) {
+  const s = html
+    .replace(/<!--[\s\S]*?-->/g, '')            // commentaires HTML
+    .replace(/\/\*[\s\S]*?\*\//g, '')           // commentaires JS bloc
+    .replace(/([^:]|^)\/\/[^\n]*/g, '$1');       // commentaires JS ligne (préserve les URLs ://)
+  return (s.match(/echarts\.init\s*\(/g) || []).length;
+}
+// Conteneurs-cibles ECharts ORPHELINS = divs `<div id="…chart…">` déclarés dans le
+// markup mais dont l'id n'est JAMAIS référencé ailleurs (aucun getElementById('x'),
+// aucun `initEC('x', …)`, aucune règle CSS) → le graphe n'est jamais rendu = boîte vide.
+//
+// On NE compte PAS bêtement (cibles vs echarts.init) : le pattern helper sain
+//   `function initEC(id){ echarts.init(getElementById(id)); }` puis 8× `initEC('xChart', …)`
+// n'a qu'UN seul `echarts.init` textuel pour 8 graphes valides (weekly = faux positif).
+// La référence de l'id est le signal fiable : id présent 1 seule fois = orphelin.
+// On exclut les ids non-tracés (modal/title/body/links/header/footer/legend/label).
+function orphanChartIds(html) {
+  const declared = [];
+  const re = /\bid="([a-z0-9_-]*chart[a-z0-9_-]*)"/gi;
+  let m;
+  while ((m = re.exec(html))) {
+    if (!/modal|title|body|links|header|footer|legend|label/i.test(m[1])) declared.push(m[1]);
+  }
+  const orphans = [];
+  for (const id of new Set(declared)) {
+    const refs = (html.match(new RegExp('\\b' + id.replace(/[-]/g, '\\-') + '\\b', 'g')) || []).length;
+    if (refs <= 1) orphans.push(id); // seule la déclaration du div, aucune référence JS/CSS
+  }
+  return orphans;
+}
 
 // ─── Suite de checks ─────────────────────────────────────────────────────────
 function validate(file) {
@@ -196,6 +242,15 @@ function validate(file) {
     if (hits.length) return hits.join(', ');
   });
 
+  // ── COMMUN : texte "Placeholder" résiduel (parité validate-article CQG-007) ──
+  // Le validateur historique bloque `\bPLACEHOLDER\b` — qa-content le manquait
+  // (ex: MSFT `// Placeholder for ECharts initialization scripts`). Scopé pour ignorer
+  // les classes CSS / attributs de formulaire → zéro faux positif sur le contenu sain.
+  check('pas de texte "Placeholder" résiduel (commentaire/template)', () => {
+    const hits = residualPlaceholders(html);
+    if (hits.length) return `${hits.length} occurrence(s) du mot "Placeholder" hors classe/attribut — bloc de template laissé en place`;
+  });
+
   // ── COMMUN : valeurs cassées visibles ──
   check('pas de valeur cassée visible (undefined/NaN/null/[object Object])', () => {
     const bad = html.match(/>\s*(undefined|NaN|\[object Object\])\s*</g) || [];
@@ -222,6 +277,29 @@ function validate(file) {
     const apex = /apexcharts/i.test(html);
     const ech = /echarts/i.test(html);
     if (apex && ech) return 'ApexCharts ET ECharts présents dans le même article (règle 11)';
+  });
+
+  // ── COMMUN : conteneurs ECharts orphelins (charts vides) ──
+  // Deux modes de défaillance, tous deux = boîtes de graphes vides à l'écran :
+  //   1. Plus de conteneurs-cibles (#xChart) que d'appels echarts.init() réels.
+  //   2. La lib ECharts est chargée mais le bloc d'init est un placeholder commenté
+  //      (realInit=0 alors que echarts.init apparaît, uniquement en commentaire — MSFT).
+  // Calibré à zéro faux positif : AAPL (lib chargée, 0 chart), TARA/WST/daily/weekly
+  // (cibles ≤ inits) restent verts.
+  check('pas de conteneurs ECharts orphelins (charts vides)', () => {
+    const echartsLoaded = /echarts@\d|echarts(\.min)?\.js|echarts\.init/i.test(html);
+    if (!echartsLoaded) return; // pas d'ECharts → rien à valider
+    const orphans = orphanChartIds(html);
+    if (orphans.length) {
+      return `conteneurs ECharts orphelins (${orphans.length} boxes, id non référencé) — ${JSON.stringify(orphans)} jamais initialisé(s)`;
+    }
+    // Bloc d'init entièrement commenté : lib chargée mais aucun echarts.init actif
+    // alors que echarts.init apparaît (uniquement en commentaire) — cas MSFT.
+    const real = realEchartsInit(html);
+    const total = (html.match(/echarts\.init\s*\(/g) || []).length;
+    if (real === 0 && total > 0) {
+      return `bloc d'init ECharts en placeholder commenté (${total} echarts.init hors code actif) — lib chargée mais aucun graphe rendu`;
+    }
   });
 
   // ─────────────────────────── ANALYSE ───────────────────────────
