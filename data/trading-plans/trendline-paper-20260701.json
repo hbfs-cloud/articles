@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-07-01T03:23:31.706Z",
+  "generated_at": "2026-07-01T07:51:48.423Z",
   "valid_for": "2026-07-01",
   "mode_status": {
     "state": "test",
@@ -88,14 +88,14 @@
     {
       "id": "ORD-001",
       "action": "BUY",
-      "ticker": "SHC",
-      "broker_symbol": "SHC",
+      "ticker": "KLAC",
+      "broker_symbol": "KLAC",
       "broker": {
-        "symbol": "SHC"
+        "symbol": "KLAC"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 17.75,
+        "price": 295.65000000000003,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -104,7 +104,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 2000,
-          "shares": 112,
+          "shares": 6,
           "pct_of_portfolio": 20
         },
         "valid_from": "2026-07-01T09:30:00-04:00",
@@ -114,7 +114,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 17.11,
+          "price": 270.22,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -122,13 +122,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 19.84,
+          "price": 333.79,
           "partial_exit_pct": 50,
           "description": "Sell 50% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 19.35,
+          "price": 346.51,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -169,200 +169,16 @@
         }
       ],
       "metadata": {
-        "score": 80,
-        "strategy": "TrendlineBreakout",
-        "rr": 3.26,
+        "score": 92,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
         "sharia": null,
-        "thesis": "Trendline breakout: 5 touches, span 211 bars, breakout +15.65%"
+        "thesis": "KLA Corporation (Technology) — RSI 69.8, EMA stack bullish confirme (EMA20>EMA50>EMA200). leader semi-cap (process control), au plus-haut 52s. Etendu a +45.3% au-dessus de la 50DMA (momentum fort, surveiller pullback). Variation seance +8.38%. Donnees techniques verifiees MCP (RSI/EMA/50DMA temps reel); dilution/earnings non re-verifies pour ce pool."
       },
       "priority": 1
     },
     {
       "id": "ORD-002",
-      "action": "BUY",
-      "ticker": "TBBK",
-      "broker_symbol": "TBBK",
-      "broker": {
-        "symbol": "TBBK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 62.64,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 31,
-          "pct_of_portfolio": 20
-        },
-        "valid_from": "2026-07-01T09:30:00-04:00",
-        "valid_until": "2026-07-01T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 60.64,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 72.81,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 67.65,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 21,
-          "expiry_date": "2026-07-30",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 21 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 80,
-        "strategy": "TrendlineBreakout",
-        "rr": 5.08,
-        "sharia": null,
-        "thesis": "Trendline breakout: 7 touches, span 70 bars, breakout +7.39%"
-      },
-      "priority": 2
-    },
-    {
-      "id": "ORD-003",
-      "action": "BUY",
-      "ticker": "UBS",
-      "broker_symbol": "UBS",
-      "broker": {
-        "symbol": "UBS"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 49.56,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 40,
-          "pct_of_portfolio": 20
-        },
-        "valid_from": "2026-07-01T09:30:00-04:00",
-        "valid_until": "2026-07-01T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 48.81,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 50.86,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 52.07,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 21,
-          "expiry_date": "2026-07-30",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 21 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 77.6,
-        "strategy": "TrendlineBreakout",
-        "rr": 1.73,
-        "sharia": null,
-        "thesis": "Trendline breakout: 4 touches, span 189 bars, breakout +4.28%"
-      },
-      "priority": 3
-    },
-    {
-      "id": "ORD-004",
       "action": "BUY",
       "ticker": "GS",
       "broker_symbol": "GS",
@@ -445,11 +261,195 @@
         }
       ],
       "metadata": {
-        "score": 89,
+        "score": 91,
         "strategy": "Pullback",
         "rr": "1:2.4",
         "sharia": false,
         "thesis": "Goldman Sachs en pullback technique (RSI 45.0) avec EMA stack bullish complet et MACD positif. Recul de 3.2% sous la 50DMA dans un uptrend intact. Correlation moderee avec BHP (0.60) et FDX (0.47), decorrelee de TRP (-0.02) et CPAY (0.25). Mcap ~$185B."
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "ABVX",
+      "broker_symbol": "ABVX",
+      "broker": {
+        "symbol": "ABVX"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 131.71,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 2000,
+          "shares": 15,
+          "pct_of_portfolio": 20
+        },
+        "valid_from": "2026-07-01T09:30:00-04:00",
+        "valid_until": "2026-07-01T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 115.64,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 155.82,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 163.84,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 21,
+          "expiry_date": "2026-07-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 21 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 90,
+        "strategy": "HighVolBreakout",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "Abivax SA (Healthcare) — RSI 65.6, EMA stack NON complet. biotech clinique FR (obefazimod Ph3 UC) — breakout +38.6% sur catalyseur binaire, EMA20<EMA50 (stack partiel), risque biotech eleve. Etendu a +18.6% au-dessus de la 50DMA (momentum fort, surveiller pullback). Variation seance +38.6%. Donnees techniques verifiees MCP (RSI/EMA/50DMA temps reel); dilution/earnings non re-verifies pour ce pool."
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
+      "action": "BUY",
+      "ticker": "LRCX",
+      "broker_symbol": "LRCX",
+      "broker": {
+        "symbol": "LRCX"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 428.38,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 2000,
+          "shares": 4,
+          "pct_of_portfolio": 20
+        },
+        "valid_from": "2026-07-01T09:30:00-04:00",
+        "valid_until": "2026-07-01T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 390.68,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 484.93,
+          "partial_exit_pct": 50,
+          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 503.78000000000003,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 21,
+          "expiry_date": "2026-07-30",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 21 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 89,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "Lam Research Corp (Technology) — RSI 66.4, EMA stack bullish confirme (EMA20>EMA50>EMA200). semi-cap equipment, au plus-haut 52s. Etendu a +36.7% au-dessus de la 50DMA (momentum fort, surveiller pullback). Variation seance +5.46%. Donnees techniques verifiees MCP (RSI/EMA/50DMA temps reel); dilution/earnings non re-verifies pour ce pool."
       },
       "priority": 4
     },
