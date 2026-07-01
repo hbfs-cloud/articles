@@ -488,6 +488,55 @@ function sectorRotationTable(rows) {
         </table></div>`;
 }
 
+// ─── COMPACT STRATEGY TABLE (Ticker | Setup | Entrée | Stop | TP | R/R) ───────
+
+/** Strip leading "1:" from an R/R string for compact display ("1:1.9" → "1.9") */
+function rrDisplay(rr) {
+  return String(rr ?? '').replace(/^\s*1:\s*/, '').trim() || '—';
+}
+
+/** One number → compact price string (no trailing zeros beyond 2 decimals) */
+function num(v) {
+  if (v == null || v === '') return '—';
+  const n = Number(v);
+  if (!isFinite(n)) return '—';
+  return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+
+/** Short setup phrase for the Setup column */
+function setupPhrase(s) {
+  return esc(s.setup_phrase || s.description || s.thesis || '');
+}
+
+/** Render one compact strategy table. Returns '' when no rows. */
+function strategyTable(title, subtitle, rows) {
+  if (!rows || !rows.length) return '';
+  const trs = rows.map(s => {
+    const entry = s.entry_low ?? s.entry_high ?? s.entry ?? '';
+    const tp = s.tp1 ?? s.tp2 ?? '';
+    const shariaBadge = s.sharia === true
+      ? ' <span class="badge badge-green" style="font-size:.6rem">&#x262A;</span>'
+      : s.sharia === false
+        ? ' <span class="badge" style="background:#94a3b8;color:#fff;font-size:.6rem">CONV</span>'
+        : '';
+    return `        <tr data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia === true ? 'true' : s.sharia === false ? 'false' : ''}" data-entry="${entry || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">`
+      + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}</td>`
+      + `<td class="setup-phrase">${setupPhrase(s)}</td>`
+      + `<td>${num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td></tr>`;
+  }).join('\n');
+  return `  <h3 class="strategy-table-title">${title}${subtitle ? ` <span style="font-weight:500;color:#64748b;font-size:.85rem">— ${subtitle}</span>` : ''}</h3>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Setup</th><th>Entrée</th><th>Stop</th><th>TP</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+${trs}
+      </tbody>
+    </table>
+  </div>`;
+}
+
 // ─── MAIN PAGE ASSEMBLER ─────────────────────────────────────────────────────
 
 function buildPage(d) {
@@ -496,27 +545,33 @@ function buildPage(d) {
   const tickers  = setups.map(s => s.ticker).join(', ');
   const { adjustRegimeLabel } = require('./lib/scanner-parser');
   const rawRegime = d.regime || 'RISK-ON';
-  const regime = adjustRegimeLabel(rawRegime, d.regime_score);
+  // adjustRegimeLabel(label, score) attend un score sur l'échelle 0-100 de scoreToRegime
+  // (>=65 = RISK-ON). Mais le scan produit regime_score sur une AUTRE échelle (6.2, parfois
+  // stocké 0.062) → scoreToRegime le lit comme "très bas" et inverse RISK-ON → RISK-OFF (hero,
+  // title, meta, section se contredisent). Le champ `regime` du scan est la source de vérité
+  // (dérivé VIX/S&P). On ne ré-ajuste QUE si le score est clairement sur l'échelle 0-100.
+  const scoreOn100 = (typeof d.regime_score === 'number' && d.regime_score >= 38 && d.regime_score <= 100);
+  const regime = scoreOn100 ? adjustRegimeLabel(rawRegime, d.regime_score) : rawRegime;
   const REGIME_COLORS = { 'RISK-ON': '#16a34a', 'RECOVERY': '#3b82f6', 'NEUTRAL': '#94a3b8', 'EARLY RISK-OFF': '#f59e0b', 'RISK-OFF': '#ef4444' };
   const regColor = REGIME_COLORS[regime] || d.regime_color || '#16a34a';
 
-  // Register top-level charts early (before flush)
-  addChart('regimeGauge',  regimeGaugeConfig(d.regime_score || 0));
-  addChart('strategyPie',  strategyPieConfig(d.regime_strategy_weights || {}));
-  addChart('radarOverview',radarOverviewConfig(setups));
-  addChart('treemapSector',treemapConfig(setups));
-  addChart('scoreBar',     scoreBarConfig(setups));
-  addChart('sankey',       sankeyConfig(setups));
-
-  // Correlation heatmap — only if full pair data is provided
-  const corrExtra = (d.synthese_extra || {}).correlation_matrix || d.correlation_matrix || {};
-  const hasCorrPairs = corrExtra.pairs && typeof corrExtra.pairs === 'object' && Object.keys(corrExtra.pairs).length > 0;
-  if (hasCorrPairs) {
-    addChart('corrHeatmap', correlationHeatmapConfig(corrExtra.pairs, setups.map(s => s.ticker)));
+  // ── Group setups by strategy (compact tables — no per-card charts) ──────────
+  const PATTERN_ORDER = ['Momentum', 'Breakout', 'Pullback', 'Combiné'];
+  const PATTERN_SUB = {
+    Momentum: 'tendance établie, cassure de plus-hauts',
+    Breakout: 'sortie de base / gap sur volume',
+    Pullback: 'repli technique dans un uptrend intact',
+    'Combiné': 'panier diversifié multi-secteurs',
+  };
+  const groups = {};
+  for (const s of setups) {
+    const p = PATTERN_ORDER.includes(s.pattern) ? s.pattern : 'Combiné';
+    (groups[p] = groups[p] || []).push(s);
   }
-
-  // Build per-setup HTML (also registers per-setup charts)
-  const setupCardsHtml = setups.map((s, i) => setupCard(s, i)).join('\n');
+  const strategyTablesHtml = PATTERN_ORDER
+    .map(p => strategyTable(p, PATTERN_SUB[p], groups[p]))
+    .filter(Boolean)
+    .join('\n\n');
 
   // ── KPI boxes ──────────────────────────────────────────────────────────────
   const dominantStr = (d.kpis && d.kpis.dominant_patterns || []).join(' + ');
@@ -557,14 +612,14 @@ function buildPage(d) {
   const thematicHtml = thematicTable(extra.thematic || []);
 
   return `<!DOCTYPE html>
-<html lang="en" data-tags="${tagStr}" data-tab="scanner">
+<html lang="fr" data-tags="${tagStr}" data-tab="scanner">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top ${setups.length} A+ ${regime} &mdash; ${tickers} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &mdash; ${regime} (score ${d.regime_score || 0}). ${setups.length} A+ setups.">
-  <meta property="og:title" content="Scanner DailyTickers &mdash; ${d.session_label || d.date} &mdash; ${tickers}">
-  <meta property="og:description" content="${regime} regime. ${d.session_label || d.date}. ${setups.length} A+ setups.">
+  <title>Top ${setups.length} A+ ${regime} &mdash; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
+  <meta name="description" content="Scanner ${d.session_label || d.date} &mdash; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups A+ en tableaux compacts, niveaux vettés.">
+  <meta property="og:title" content="Scanner DailyTickers &mdash; ${d.session_label || d.date} &mdash; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
+  <meta property="og:description" content="${regime} regime. ${d.session_label || d.date}. ${setups.length} setups A+.">
   <meta property="og:image" content="https://articles.dailytickers.com/scanner-daily-card.png">
   <meta property="og:url" content="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">
   <meta property="og:type" content="article">
@@ -573,8 +628,13 @@ function buildPage(d) {
   <link rel="stylesheet" href="/assets/report.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-  <!-- Scanner styles live in /assets/report.css (scanner-specific section) -->
+  <style>
+    .setups-table td, .setups-table th { vertical-align: middle; }
+    .setups-table td.setup-phrase { font-size: 0.86rem; color: #334155; line-height: 1.35; }
+    .strategy-table-title { margin: 1.75rem 0 0.6rem; font-weight: 700; font-size: 1.05rem; }
+    .setups-table td:nth-child(3), .setups-table td:nth-child(4),
+    .setups-table td:nth-child(5), .setups-table td:nth-child(6) { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  </style>
 </head>
 <body>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -595,12 +655,12 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} — ${tickers}</p>
+  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} — niveaux vettés MCP, tableaux compacts par stratégie</p>
   <div class="ticker-metrics">
-    <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Regime</div></div>
-    <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Avg Score</div></div>
+    <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
+    <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Score moyen</div></div>
     <div class="ticker-metric"><div class="tm-value">${setups.length}</div><div class="tm-label">Setups</div></div>
-    <div class="ticker-metric"><div class="tm-value">${dominantStr || 'Momentum'}</div><div class="tm-label">Dominant</div></div>
+    <div class="ticker-metric"><div class="tm-value">${dominantStr || 'Momentum'}</div><div class="tm-label">Dominante</div></div>
     ${vixVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${vixColor};">${vixVal}</div><div class="tm-label">VIX</div></div>` : ''}
     ${spxVal ? `<div class="ticker-metric"><div class="tm-value" style="color:${spxColor};">${spxVal}</div><div class="tm-label">SPX</div></div>` : ''}
   </div>
@@ -613,29 +673,23 @@ function buildPage(d) {
 ${alertsHtml(d.alerts)}
   <p>${d.regime_prose || ''}</p>
   <p style="background:#f0fdf4;border:1px solid #86efac;padding:0.75rem;border-radius:8px;font-size:0.9rem;">
-    <strong>Session strategy:</strong> ${d.strategy || ''}
+    <strong>Stratégie de séance :</strong> ${d.strategy || ''}
   </p>
   <div class="report-card-meta">${d.session_label || d.date}</div>
 </div>
 
-<!-- REGIME SECTION -->
+<!-- REGIME -->
 <section id="regime" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-gauge"></i> Market Regime: ${regime} (Score ${d.regime_score || 0})</h2></div>
+  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (Score ${d.regime_score || 0})</h2></div>
   <div class="content-card">
     <p>${d.regime_prose || ''}</p>
-    <div class="chart-grid-2col">
-      <div>${echartDiv('regimeGauge', 280)}</div>
-      <div>${echartDiv('strategyPie', 280)}</div>
-    </div>
-
-    <h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
+    <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
     <div style="overflow-x:auto"><table class="data-table">
-      <thead><tr><th>Index / Asset</th><th>Price</th><th>Change</th><th>Signal</th></tr></thead>
+      <thead><tr><th>Indice / Actif</th><th>Prix</th><th>Variation</th><th>Signal</th></tr></thead>
       <tbody>
 ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name)}</strong></td><td>${esc(r.price)}</td><td class="${r.dir === 'up' ? 'up' : 'down'}">${esc(r.change)}</td><td>${esc(r.signal)}</td></tr>`).join('\n')}
       </tbody>
     </table></div>
-
     ${d.pedagogy ? `<div class="pedagogy-box">
       <h4><i class="fas fa-graduation-cap"></i> ${d.pedagogy.title}</h4>
       <p>${d.pedagogy.content}</p>
@@ -643,112 +697,71 @@ ${(d.market_snapshot || []).map(r => `        <tr><td><strong>${esc(r.name)}</st
   </div>
 </section>
 
-<!-- OVERVIEW -->
-<section id="overview" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-list"></i> Visual Overview &mdash; ${setups.length} Setups</h2></div>
-  <div class="content-card">
-    <div class="chart-grid-2col">
-      <div>${echartDiv('radarOverview', 350)}</div>
-      <div>${echartDiv('treemapSector', 350)}</div>
-    </div>
-    ${hasCorrPairs ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Matrix</h3>\n    ${echartDiv('corrHeatmap', 400)}` : (corrExtra.note ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Correlation Summary</h3>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.75rem;margin-bottom:1rem;">
-      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Avg ρ:</strong> ${corrExtra.avg_off_diagonal || '—'}</div>
-      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Max pair:</strong> ${corrExtra.max_pair ? corrExtra.max_pair.pair + ' (' + corrExtra.max_pair.rho + ')' : '—'}</div>
-      <div class="pedagogy-box" style="margin:0;padding:0.75rem;"><strong>Min pair:</strong> ${corrExtra.min_pair ? corrExtra.min_pair.pair + ' (' + corrExtra.min_pair.rho + ')' : '—'}</div>
-    </div>
-    <p style="font-size:0.85rem;color:#64748b;">${corrExtra.note || ''}</p>` : '')}
-  </div>
-${navGrid(setups)}
-</section>
-
-<!-- MACRO CONTEXT -->
-<section class="section-block">
-  <div class="section-header"><h2><i class="fas fa-globe"></i> Macro Context &mdash; Week of ${d.session_label || d.date}</h2></div>
+<!-- MACRO -->
+<section id="macro" class="section-block">
+  <div class="section-header"><h2><i class="fas fa-globe"></i> Contexte macro — semaine du ${d.session_label || d.date}</h2></div>
   <div class="content-card">
     <div class="chart-grid-2col">
       <div>
-        <h3 style="font-weight:700;margin-bottom:0.75rem;">Global Events Calendar</h3>
+        <h3 style="font-weight:700;margin-bottom:0.6rem;">Calendrier des événements</h3>
 ${macroCalendarTable(d.macro_calendar)}
       </div>
       <div>
-        <h3 style="font-weight:700;margin-bottom:0.75rem;">Sector Rotation Scorecard</h3>
+        <h3 style="font-weight:700;margin-bottom:0.6rem;">Rotation sectorielle</h3>
 ${sectorRotationTable(d.sector_rotation)}
       </div>
     </div>
-
     ${d.macro_thesis ? `<div class="pedagogy-box">
-      <h4><i class="fas fa-info-circle"></i> Week-Ahead Thesis</h4>
+      <h4><i class="fas fa-info-circle"></i> Thèse de la semaine</h4>
       <p>${d.macro_thesis}</p>
     </div>` : ''}
   </div>
 </section>
 
-<!-- ===================== SETUP CARDS ===================== -->
-${setupCardsHtml}
-
-<!-- ===================== SYNTHESIS ===================== -->
+<!-- ===================== SIGNAUX (TABLEAUX COMPACTS) ===================== -->
 <section id="synthese" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-chart-pie"></i> Synthesis &mdash; ${setups.length} Setup Summary</h2></div>
+  <div class="section-header"><h2><i class="fas fa-table-list"></i> Signaux du jour — ${setups.length} setups par stratégie</h2></div>
   <div class="content-card">
-${syntheseTable(setups)}
-    ${echartDiv('scoreBar', 280)}
-
-    <h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Sector &rarr; Strategy &rarr; Setup Flow</h3>
-    ${echartDiv('sankey', 320)}
-
-    ${divMatHtml ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Diversification Matrix</h3>\n${divMatHtml}` : ''}
-    ${thematicHtml ? `<h3 style="margin:1.5rem 0 0.75rem;font-weight:700;">Thematic Allocation</h3>\n${thematicHtml}` : ''}
-  </div>
-</section>
-
-<!-- PERFORMANCE -->
-<section id="performance" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-chart-bar"></i> Portfolio Parameters &amp; Historical Performance</h2></div>
-  <div class="content-card">
-    ${perfRows ? `<div style="overflow-x:auto"><table class="data-table">
-      <thead><tr><th>Metric</th><th>Value</th></tr></thead>
-      <tbody>${perfRows}</tbody>
-    </table></div>` : '<p>Performance data will be available after the sweep cycle completes.</p>'}
+    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés et vérifiés via MCP sur les données de séance. Les setups momentum/breakout jugés faibles (R/R non actionnable, entrée trop étendue) ont été retirés. Prendre 50% à TP1 puis stop au point mort.</p>
+${strategyTablesHtml}
     <div class="pedagogy-box">
-      <h4><i class="fas fa-info-circle"></i> How to use these levels</h4>
-      <p>Entry zones are ranges &mdash; enter at the open (9:30&ndash;9:45 ET) if price falls within range. For EU setups, enter at the London open or early US session ADR price. Stop losses are hard exits, not mental stops. TP1 is the primary profit target: take 50% off at TP1, move stop to breakeven, trail the remainder to TP2. R/R ratios assume entry at the midpoint of the range. Horizon is the expected time to TP1 &mdash; if TP1 is not hit within 2&times; the horizon, reassess.</p>
+      <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
+      <p>Entrée = zone d'exécution à l'ouverture (9h30–9h45 ET) si le prix s'y trouve. Le stop est un ordre dur, pas mental. TP = objectif principal : prendre 50% à l'objectif, remonter le stop au point mort, laisser courir le reste. Le R/R suppose une entrée au niveau indiqué. R/R minimum retenu : 1:1.3.</p>
     </div>
   </div>
 </section>
 
 <!-- METHODOLOGY -->
 <section id="methodo" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-flask"></i> Methodology</h2></div>
+  <div class="section-header"><h2><i class="fas fa-flask"></i> Méthodologie</h2></div>
   <div class="content-card">
     <div class="pedagogy-box">
-      <h4>1. Market Regime Detection</h4>
-      <p>We compute a composite regime score from 6 components: VIX (sub-20 = 0 = bullish), SPX breadth (above 50/200 DMA), Credit (HYG spread normalization), DXY (weak dollar = bullish for multinationals), Liquidity (Fed balance sheet trend), and TLT (bond market signal). Score range 0&ndash;1: 0&ndash;0.30 = RISK-ON, 0.30&ndash;0.50 = NEUTRAL/Early Risk-Off, 0.50&ndash;0.70 = RISK-OFF, &gt;0.70 = DEEP RISK-OFF. The VIX close behavior is the primary confirmation signal.</p>
+      <h4>1. Détection du régime</h4>
+      <p>Score composite sur 6 composantes (VIX, largeur SPX, crédit HYG, DXY, liquidité Fed, TLT). 0–0,30 = RISK-ON, 0,30–0,50 = NEUTRAL/Early Risk-Off, 0,50–0,70 = RISK-OFF, &gt;0,70 = DEEP RISK-OFF.</p>
     </div>
     <div class="pedagogy-box">
-      <h4>2. Multi-Strategy Screening</h4>
-      <p>We run 3 complementary DSL screens: (a) Momentum Expansion: <code>close&gt;sma(close,20) &amp;&amp; vol&gt;sma(vol,20)*1.5 &amp;&amp; rsi14&gt;50 &amp;&amp; rsi14&lt;75</code>, (b) Breakout Squeeze: <code>close&gt;sma(close,50) &amp;&amp; atr(14)&gt;atr(28)*1.2</code>, (c) Pullback-to-Support: <code>rsi14&lt;45 &amp;&amp; close&gt;sma(close,200) &amp;&amp; close&lt;sma(close,50)*1.05</code>. Screened universe: US mega-caps, EU/ADR large-caps, Asian ADRs, and sector ETFs. Short Squeeze is excluded from all screens per protocol established March 20, 2026.</p>
+      <h4>2. Screening multi-stratégie</h4>
+      <p>Trois filtres DSL complémentaires : Momentum (tendance + volume), Breakout (sortie de base / gap volume), Pullback (repli vers support dans un uptrend intact). Short Squeeze exclu depuis le 20 mars 2026.</p>
     </div>
     <div class="pedagogy-box">
-      <h4>3. Composite Scoring (4 Factors)</h4>
-      <p>Each setup receives a score 0&ndash;100 based on: <strong>Technical (40%)</strong> &mdash; RSI position, MACD signal, SMA alignment, volume vs average; <strong>Momentum (30%)</strong> &mdash; 1-week, 1-month, 3-month price performance; <strong>Confluence (20%)</strong> &mdash; number of independent signals aligned (min 3 required for A+); <strong>Catalyst (10%)</strong> &mdash; identifiable near-term catalyst (earnings, sector rotation, macro event). Only setups scoring &ge;85 qualify as A+.</p>
+      <h4>3. Scoring composite (4 facteurs)</h4>
+      <p>Technique (40%), Momentum (30%), Confluence (20% — min. 3 signaux alignés pour A+), Catalyseur (10%). Seuls les setups ≥85 qualifient A+.</p>
     </div>
     <div class="pedagogy-box">
-      <h4>4. Anti-Dilution &amp; Quality Filter</h4>
-      <p>All selected tickers are vetted for dilution risk: no S-3 shelf registrations, ATM programs, PIPE structures, or aggressive underwriter relationships. Short Squeeze permanently excluded. Open-position exclusions applied per current portfolio state.</p>
+      <h4>4. Niveaux réels vettés MCP</h4>
+      <p>Entrée / stop / TP / R/R calculés sur les données de séance réelles (plus-bas de cassure, résistances 52 sem., extensions mesurées). Les setups à R/R non actionnable ou entrée trop étendue au-dessus de l'EMA20 sont retirés du pool.</p>
     </div>
     <div class="pedagogy-box">
-      <h4>5. Validation &amp; Ranking</h4>
-      <p>Final ranking prioritizes: (1) earnings catalyst recency/quality, (2) geopolitical/macro thematic alignment, (3) momentum quality, (4) diversification requirements (min 5 US, 2 EU, 1 Asia, 2 ETF). R/R minimum of 1:1.5 enforced for all setups. Sharia compliance tagged on every setup.</p>
+      <h4>5. Anti-dilution &amp; ranking</h4>
+      <p>Vérification SEC (pas de S-3 récent, ATM, PIPE, underwriter agressif). Diversification secteur/géographie. R/R minimum 1:1.3. Conformité Sharia taggée sur chaque ligne.</p>
     </div>
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
-      <h4 style="margin:0 0 0.5rem;">Data Sources</h4>
+      <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
       <ul style="margin:0;font-size:0.85rem;color:#64748b;">
-        <li>Price data: Yahoo Finance (via DailyTickers Gateway)</li>
-        <li>Market regime: DailyTickers RunAutoScreener (6-component model)</li>
-        <li>Screening: RunScreener DSL (3 strategies: momentum, breakout, pullback)</li>
-        <li>Fundamental data: MCP QueryData (quote, social_sentiment, capital_flow, insider_transactions)</li>
-        <li>Generated: ${d.session_label || d.date}</li>
+        <li>Prix &amp; niveaux : DailyTickers Gateway (MCP QueryData)</li>
+        <li>Régime : RunAutoScreener (modèle 6 composantes)</li>
+        <li>Screening : RunScreener DSL (momentum, breakout, pullback)</li>
+        <li>Généré : ${d.session_label || d.date}</li>
       </ul>
     </div>
   </div>
@@ -758,10 +771,10 @@ ${syntheseTable(setups)}
 <section id="disclaimer" class="section-block">
   <div class="section-header"><h2><i class="fas fa-triangle-exclamation"></i> Disclaimer</h2></div>
   <div class="content-card">
-    <p><strong>This scanner is for informational and educational purposes only. It does not constitute financial advice, investment advice, or a recommendation to buy or sell any security.</strong></p>
-    <p>All setups carry risk. Past performance of the DailyTickers scanner does not guarantee future results. Entry zones, stops, and targets are estimates based on technical analysis and are not guarantees of execution. Market conditions can change rapidly.</p>
+    <p><strong>Ce scanner est fourni à titre informatif et éducatif uniquement. Il ne constitue pas un conseil financier ni une recommandation d'achat ou de vente.</strong></p>
+    <p>Tous les setups comportent un risque. Les performances passées du scanner ne préjugent pas des résultats futurs. Les zones d'entrée, stops et objectifs sont des estimations basées sur l'analyse technique.</p>
     ${disclaimerExtra}
-    <p>DailyTickers is not a registered investment advisor. All content is provided &ldquo;as is&rdquo; without warranty of any kind. Always consult a qualified financial advisor before making investment decisions.</p>
+    <p>DailyTickers n'est pas un conseiller en investissement enregistré. Consultez toujours un professionnel qualifié avant toute décision.</p>
     <p style="font-size:0.8rem;color:#94a3b8;">&copy; 2026 DailyTickers &mdash; <a href="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">${d.url || `articles.dailytickers.com/scanner/${d.date}/`}</a></p>
   </div>
 </section>
@@ -770,11 +783,11 @@ ${syntheseTable(setups)}
 <div class="fnav" id="floatingNav">
   <div class="fnav-menu" id="fnavMenu">
     <a href="#regime" class="fnav-item" data-section="regime"><i class="fas fa-gauge"></i><span>Régime</span></a>
-    <a href="#overview" class="fnav-item" data-section="overview"><i class="fas fa-list"></i><span>Vue d'Ensemble</span></a>
-    <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-chart-pie"></i><span>Synthèse</span></a>
-    <a href="#performance" class="fnav-item" data-section="performance"><i class="fas fa-chart-bar"></i><span>Performance</span></a>
+    <a href="#macro" class="fnav-item" data-section="macro"><i class="fas fa-globe"></i><span>Macro</span></a>
+    <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-table-list"></i><span>Signaux</span></a>
     <a href="#methodo" class="fnav-item" data-section="methodo"><i class="fas fa-flask"></i><span>Méthodologie</span></a>
     <a href="#disclaimer" class="fnav-item" data-section="disclaimer"><i class="fas fa-triangle-exclamation"></i><span>Disclaimer</span></a>
+    <a href="#regime" class="fnav-item" data-section="top"><i class="fas fa-arrow-up"></i><span>Haut</span></a>
   </div>
   <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
     <i class="fas fa-bars" id="fnavIcon"></i>
@@ -791,8 +804,6 @@ ${syntheseTable(setups)}
 <script src="/assets/core.js"></script>
 <script src="/assets/tag-renderer.js"></script>
 <script src="/assets/live-tracker.js"></script>
-
-${flushChartsScript()}
 </body>
 </html>`;
 }
