@@ -970,6 +970,9 @@
   }
 
   function updateScenarioBar(modeId) {
+    // TM-aware: en Time Machine, la scenario-bar est reconstruite depuis le snapshot par tmUpdateLive.
+    // Ne pas la réécrire avec les positions LIVE (sinon barre live ≠ lignes snapshot).
+    if (window._leTM != null) return;
     var panel = document.getElementById('p-' + modeId);
     if (!panel) return;
     var bar = panel.querySelector('.scenario-bar-wrap');

@@ -2641,17 +2641,57 @@ document.addEventListener('DOMContentLoaded',function(){
     if(posSec){
       var posBody=posSec.querySelector('tbody');
       var pos=(d.positions||[]);
+      // _inTM = we are actually viewing a historical snapshot (Time Machine). tmActiveDateLabel
+      // is set by tmLoadIdx before this runs and cleared by tmShowLive. On the LIVE view it is
+      // null → we must NEVER wipe the baked SSR positions just because a live source came back
+      // empty (fetch fail / snapshot lag). Live = enrich, never erase.
+      var _inTM=(tmActiveDateLabel!=null);
       if(posBody){
-        posBody.innerHTML = pos.length ? pos.map(function(p){
-          var pnl=p.return_pct!=null?p.return_pct:(p.pnlPct||0);
-          var rc=pnl>=0?'pos':'neg';
-          var termStyle=p._terminal?'style="opacity:.45;filter:grayscale(1);background:var(--surface-2)"':'';
-          var stBadge='';
-          if(p._terminal){var st=(p._terminalStatus||'closed').toUpperCase();var sc=/TP/.test(st)?'pos':/SL/.test(st)?'neg':'m';stBadge=' <span class="pill '+sc+'" style="font-size:.55rem;padding:.1rem .3rem">'+st+'</span>';}
-          return '<tr '+termStyle+'><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b>'+stBadge+'</td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_tmPx(p.entry)+'</td><td class="hide-m">'+_tmPx(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_tmPx(p.stop)+'</td><td class="pos hide-m">'+_tmPx(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
-        }).join('') : '<tr><td colspan="8" class="empty">No active positions</td></tr>';
+        if(pos.length){
+          posBody.innerHTML = pos.map(function(p){
+            var pnl=p.return_pct!=null?p.return_pct:(p.pnlPct||0);
+            var rc=pnl>=0?'pos':'neg';
+            var termStyle=p._terminal?'style="opacity:.45;filter:grayscale(1);background:var(--surface-2)"':'';
+            var stBadge='';
+            if(p._terminal){var st=(p._terminalStatus||'closed').toUpperCase();var sc=/TP/.test(st)?'pos':/SL/.test(st)?'neg':'m';stBadge=' <span class="pill '+sc+'" style="font-size:.55rem;padding:.1rem .3rem">'+st+'</span>';}
+            return '<tr '+termStyle+'><td>'+_tkLogo(p.ticker)+'<b>'+p.ticker+'</b>'+stBadge+'</td><td class="m hide-m">'+(p.scan_date?p.scan_date.slice(5):'—')+'</td><td class="hide-m">'+_tmPx(p.entry)+'</td><td class="hide-m">'+_tmPx(p.current_price)+'</td><td class="'+rc+'"><b>'+_fmtPct2(pnl)+'</b></td><td class="neg hide-m">'+_tmPx(p.stop)+'</td><td class="pos hide-m">'+_tmPx(p.tp2)+'</td><td class="m">'+(p.days_remaining||0)+'d</td></tr>';
+          }).join('');
+        } else if(_inTM){
+          // Genuine empty historical snapshot → show empty state (correct for that date).
+          posBody.innerHTML = '<tr><td colspan="8" class="empty">No active positions</td></tr>';
+        }
+        // else: live view + empty snapshot → keep the baked SSR rows untouched.
       }
-      var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=pos.length+'/'+(mCfg.portfolioSize||'?');
+      if(pos.length||_inTM){var posCount=posSec.querySelector('.count'); if(posCount) posCount.textContent=pos.length+'/'+(mCfg.portfolioSize||'?');}
+      // Keep the scenario bar consistent with the rendered positions so it can never be left
+      // orphaned (a stale gradient bar hovering over an empty "No active positions" table).
+      var _scen=posSec.querySelector('.scenario-bar-wrap');
+      if(_scen){
+        if(pos.length){
+          var _a=(mCfg.portfolioSize?100/mCfg.portfolioSize:100)/100,_w=0,_b=0,_n=0;
+          pos.forEach(function(p){
+            var _e=p.entry||0,_s=p.stop||0,_r=(p.return_pct!=null?p.return_pct:(p.pnlPct||0));
+            if(_s>0&&_e>0)_w+=Math.max((_s-_e)/_e*100,-20)*_a;
+            var _tp=p.tp2||p.tp1||p.current_price||_e;
+            if(_e>0&&_tp>0)_b+=(_tp-_e)/_e*100*_a;
+            _n+=_r*_a;
+          });
+          var _rng=_b-_w,_cur=_rng>0?Math.max(0,Math.min(100,(_n-_w)/_rng*100)):50;
+          var _lbls=_scen.querySelectorAll('.scenario-labels span');
+          if(_lbls.length>=3){
+            _lbls[0].innerHTML='<i class="fas fa-shield-halved"></i> Worst: '+(_w>0?'+':'')+_w.toFixed(1)+'%';_lbls[0].className=_w<0?'neg':'pos';
+            _lbls[1].innerHTML='<i class="fas fa-circle-dot"></i> Now: '+(_n>0?'+':'')+_n.toFixed(1)+'%';_lbls[1].className=_n>=0?'pos':'neg';
+            _lbls[2].innerHTML='<i class="fas fa-bullseye"></i> Best: +'+_b.toFixed(1)+'%';_lbls[2].className='pos';
+          }
+          var _bar=_scen.querySelector('.scenario-bar');
+          if(_bar)_bar.innerHTML='<div class="scenario-fill-bad" style="width:'+_cur.toFixed(1)+'%"></div><div class="scenario-fill-good" style="width:'+(100-_cur).toFixed(1)+'%"></div><div class="scenario-cursor" style="left:'+_cur.toFixed(1)+'%"></div>';
+          _scen.style.display='';
+        } else if(_inTM){
+          // Empty historical snapshot → hide the bar (nothing to visualize) instead of orphaning it.
+          _scen.style.display='none';
+        }
+        // else: live view + empty snapshot → leave the SSR scenario bar as baked.
+      }
     }
     var hSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3, .sc-sum-title');return h && /trade history/i.test(h.textContent);});
     if(hSec){
@@ -2672,7 +2712,7 @@ document.addEventListener('DOMContentLoaded',function(){
   window.tmUpdateLive = tmUpdateLive;
 
   function tmShowLive(){
-    tmActiveDateLabel=null;
+    tmActiveDateLabel=null; window._leTM=null; // expose l'état TM au live-engine-ui (updateScenarioBar TM-aware)
     var panel=document.getElementById('p-'+activeMode);
     var grid=panel?panel.querySelector('.lp-grid'):null;
     if(grid && _tmLiveCache[activeMode]){
@@ -2696,7 +2736,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(idx===tmDates.length-1){tmShowLive();return;}
     _tmCaptureLive(activeMode);
     var dateStr=tmDates[idx];
-    tmActiveDateLabel=dateStr.slice(4,6)+'/'+dateStr.slice(6,8);
+    tmActiveDateLabel=dateStr.slice(4,6)+'/'+dateStr.slice(6,8); window._leTM=tmActiveDateLabel;
     fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
       var d=snap.modes[activeMode];
       if(!d){
