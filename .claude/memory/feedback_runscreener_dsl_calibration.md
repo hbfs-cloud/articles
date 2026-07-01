@@ -7,8 +7,9 @@ metadata:
 
 **Root cause du "scan stub" (20260701, war-room 2026-07-01) :** la routine Scanner Nocturne a produit un scan Pullback-only (commit 6019d071 : *"momentum/breakout screeners returned 0 in extended market"*). Cause = **DSL RunScreener mal calibrés**, PAS un MCP défaillant ni une étape sautée. RunScreener est fiable et c'est le bon outil ; les scanners locaux (`momentum-scanner.js`, `fractal-scanner.js`) servent à autre chose (Yahoo parity backtest), pas à remplacer RunScreener.
 
-**Les 2 erreurs de calibration DSL qui donnent 0 :**
-1. **EMA-stack gating** — `ema(close,20)>ema(close,50)&&...` en `pass_expr` **retourne 0 candidats** (le stack de séries prix ne s'évalue pas comme attendu). Screener LOOSE puis vérifier l'EMA-stack per-ticker via QueryData.
+**Les 3 erreurs de calibration DSL qui donnent 0 :**
+0. **★ LE KILLER PROUVÉ 2026-07-01 : `market_cap` dans `pass_expr`.** Le screener évalue `market_cap` à **0** dans le contexte DSL → `market_cap > 10000000000` est false pour TOUS → 0 candidat silencieux. C'est EXACTEMENT ce qui a produit le stub 20260701 : le DSL momentum du skill (`market_cap>10e9 and rsi14>55 ... and ema20>ema50 and ema50>ema200 and vol>avg_volume*1.2`) renvoie **0** ; en retirant SEULEMENT `market_cap` → **40 candidats**. La mcap DOIT être post-filtrée en code, JAMAIS dans pass_expr. (⚠️ ces DSL étaient marqués "vérifié 06-25" — régression MCP ou vérif optimiste.)
+1. **EMA-stack gating (form fonction)** — `ema(close,20)>ema(close,50)&&...` retourne 0 ; MAIS la form série nommée `ema20>ema50>ema200` marche (vérifié : 40 sans market_cap). LOOSE + vérif per-ticker QueryData reste plus sûr.
 2. **Mauvais nb d'arguments d'un helper** — `near_breakout(20, 0.03)` échoue (`too many arguments`) ; la signature est `near_breakout(0.03)` (1 arg = proximité). Un helper mal appelé fait échouer TOUT le job → 0.
 
 **DSL validés 2026-07-01 (renvoient 40 candidats chacun) :**

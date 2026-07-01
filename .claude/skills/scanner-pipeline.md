@@ -76,43 +76,50 @@ RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('
 
 **Collecte MCP** : `RunAutoScreener` + **5 RunScreener DSL** (ci-dessous) + `GetMarketOverview` (trending, sectors, calendar) + `GetRegimeProbability` (model=ensemble, horizon=5) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats
 
-**⚠️ RunScreener — 5 queries obligatoires (TOUJOURS inclure market_cap filter) :**
+**⚠️ RunScreener — 5 queries obligatoires :**
 
-⚠️ **Contrainte performance screener** : le screener scanne tout l'univers. Avec `mcap > $2-5B` + 2-3 conditions, les jobs tournent >5 min sans aboutir. Il faut **mcap > $10B + 4-5 conditions** pour que les jobs US complètent en <30s. EU est plus petit donc $5B suffit.
+🔴 **CRITIQUE (root cause du scan stub 20260701) — NE JAMAIS mettre `market_cap` dans `pass_expr`.**
+Le screener évalue `market_cap` à **0** dans le contexte DSL → `market_cap > 10000000000` est **false pour TOUS** → **0 candidat silencieux** → scan mono-stratégie (Pullback-only) → 12 modes cassés. Vérifié 2026-07-01 : le DSL momentum "vérifié 06-25" renvoie **0** aujourd'hui ; en retirant `market_cap` il renvoie **40**. La mcap DOIT être **post-filtrée en code** sur les candidats retournés (chaque candidat porte `market_cap`), PAS gatée dans pass_expr.
 
-1. **Momentum** (US, 7+ résultats typiques) — vérifié 2026-06-25 ✅ :
+**Réduction d'univers (perf)** : ne pas compter sur market_cap. Utiliser `vol > 1500000 and close > 10` dans pass_expr — filtre les penny/illiquides et garde les jobs US <30s en `force_async: true`.
+
+**Post-filtrage OBLIGATOIRE en code sur les résultats** : `market_cap >= 2e9` + exclure ETF (`market_cap == 0` OU tickers IWX/FAI/IJR/BIL/VTEB/XHB/XLV/MUB/KRE/SHV/SGOV/MOAT/IUSV…) + exclure penny. Puis vérifier l'EMA-stack per-ticker via `QueryData types=technicals` si besoin.
+
+🔴 **SMOKE-TEST OBLIGATOIRE** : après chaque query, si **< 10 candidats** (post-filtre) → le DSL est mal calibré, **ALERTER et ne PAS committer un scan mono-stratégie** sans le signaler explicitement. Voir mémoire `runscreener-dsl-calibration`.
+
+1. **Momentum** (US, ~40 candidats) — corrigé + vérifié 2026-07-01 ✅ :
    ```
-   pass_expr: "market_cap > 10000000000 and rsi14 > 55 and rsi14 < 80 and ema20 > ema50 and ema50 > ema200 and vol > avg_volume * 1.2"
-   score_expr: "(80 - rsi14) * 2 + obvz * 10"
-   region: "us", top_k: 25
+   pass_expr: "rsi14 > 53 and rsi14 < 70 and macd > 0 and vol > 1500000 and close > 10"
+   score_expr: "rsi14 + (macd > 0 ? 15 : 0)"
+   region: "us", top_k: 40, force_async: true   → puis post-filtre market_cap>=2e9 + no-ETF
    ```
 
-2. **Pullback / Defensive** (US, 15+ résultats typiques) — vérifié 2026-06-25 ✅ :
+2. **Pullback / Defensive** (US) — retirer market_cap du pass_expr :
    ```
-   pass_expr: "market_cap > 20000000000 and rsi14 > 40 and rsi14 < 65 and ema20 > ema50 and atrpct < 2.5"
+   pass_expr: "rsi14 > 40 and rsi14 < 65 and ema20 > ema50 and atrpct < 2.5 and vol > 1500000 and close > 10"
    score_expr: "(65 - rsi14) * 1.5 + (2.5 - atrpct) * 20"
-   region: "us", top_k: 20
+   region: "us", top_k: 25   → post-filtre market_cap>=2e9 + no-ETF
    ```
 
-3. **Breakout** (US, 0 résultats si pas de squeeze — normal) — vérifié 2026-06-25 ✅ :
+3. **Breakout** (US, ~40 candidats) — corrigé + vérifié 2026-07-01 ✅ (⚠️ `near_breakout(0.03)` = 1 seul argument, pas 2) :
    ```
-   pass_expr: "market_cap > 10000000000 and bbw < 0.08 and near_breakout(0.02) and rising('ema50',10) and vol > avg_volume"
-   score_expr: "(0.08 - bbw) * 200 + obvz * 15"
-   region: "us", top_k: 20
+   pass_expr: "near_breakout(0.03) and vol > 1500000 and rsi14 > 52 and rsi14 < 72 and close > 10"
+   score_expr: "rsi14 + (vol_spike45(1.5) ? 20 : 0)"
+   region: "us", top_k: 40, force_async: true   → post-filtre market_cap>=2e9 + no-ETF
    ```
 
-4. **Oversold bounce** (US, 0 résultats si marché pas survendu — normal) — vérifié 2026-06-25 ✅ :
+4. **Oversold bounce** (US, 0 résultats si marché pas survendu — normal) — retirer market_cap :
    ```
-   pass_expr: "market_cap > 10000000000 and rsi14 < 40 and ema50 > ema200 and vol > avg_volume"
+   pass_expr: "rsi14 < 40 and ema50 > ema200 and vol > 1500000 and close > 10"
    score_expr: "(40 - rsi14) * 3 + obvz * 10"
-   region: "us", top_k: 15
+   region: "us", top_k: 15   → post-filtre market_cap>=2e9 + no-ETF
    ```
 
-5. **EU diversification** (10 résultats typiques) — vérifié 2026-06-25 ✅ :
+5. **EU diversification** — retirer market_cap du pass_expr :
    ```
-   pass_expr: "market_cap > 5000000000 and rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > avg_volume"
+   pass_expr: "rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > 500000 and close > 5"
    score_expr: "(75 - rsi14) * 2 + obvz * 10"
-   region: "eu", top_k: 15
+   region: "eu", top_k: 15   → post-filtre market_cap>=1e9 + no-ETF
    ```
 
 Les queries 1+2 produisent **20-30 candidats** dans toutes les conditions de marché. Les queries 3+4 complètent l'univers quand les conditions le permettent (squeeze/survente). La query 5 apporte la diversification géographique. **Pool total attendu : 25-50 candidats uniques** avant dedup + filtering Phase 2.
