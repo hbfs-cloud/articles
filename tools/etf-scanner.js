@@ -102,12 +102,63 @@ const ETF_CATEGORIES = {
   XBI: 'Health', IBB: 'Health', SMH: 'Technology', SOXX: 'Technology', TAN: 'Miscellaneous Sector',
 };
 
-// Top ETF bonus multipliers (from Go analysis)
+// Top ETF bonus multipliers (from Go analysis) — US universe only
 const TOP_ETF_BONUS = {
   XLE: 1.15, XLK: 1.15, EWN: 1.20,
   GBTC: 1.10, SLV: 1.10, GDX: 1.10,
   VOO: 1.05, VTI: 1.05, QQQ: 1.05,
 };
+
+// ─── Active universe resolution (US default | EU | custom file) ─────────────
+// --universe etf-us (default) | etf-eu | <path-to-json>
+// EU signals are tagged universe='etf_eu' / region='EU' so gen-status-page routes
+// them to the dedicated "ETF Europe" mode (universeFilter='etf_eu'), keeping the
+// US ETF pool (universe='etf') fully separate. Same momentum strategy on both.
+const UNIVERSE_ARG = getArg('universe', 'etf-us');
+const UNIVERSE_TAG_ARG = getArg('universe-tag', null);
+const REGION_ARG = getArg('region', null);
+
+function loadEUUniverse() {
+  const fp = path.join(ROOT, 'data', 'etf-eu-universe.json');
+  const raw = JSON.parse(fs.readFileSync(fp, 'utf8'));
+  const list = Array.isArray(raw) ? raw : (raw.etfs || raw.stocks || []);
+  const tickers = [];
+  const categories = {};
+  for (const e of list) {
+    const sym = typeof e === 'string' ? e : e.symbol;
+    if (!sym) continue;
+    tickers.push(sym);
+    if (e && e.category) categories[sym] = e.category;
+  }
+  return { tickers, categories };
+}
+
+function resolveUniverse(arg) {
+  const a = (arg || 'etf-us').toLowerCase();
+  if (a === 'etf-us' || a === 'us' || a === 'etf' || a === 'us_etf') {
+    return { tickers: ETF_UNIVERSE, categories: ETF_CATEGORIES, bonus: TOP_ETF_BONUS, tag: 'etf', region: 'US', label: 'US' };
+  }
+  if (a === 'etf-eu' || a === 'eu' || a === 'eu_etf' || a === 'europe') {
+    const eu = loadEUUniverse();
+    return { tickers: eu.tickers, categories: eu.categories, bonus: {}, tag: 'etf_eu', region: 'EU', label: 'EU' };
+  }
+  // Treat anything else as a path to a JSON universe file
+  const raw = JSON.parse(fs.readFileSync(path.isAbsolute(arg) ? arg : path.join(ROOT, arg), 'utf8'));
+  const list = Array.isArray(raw) ? raw : (raw.etfs || raw.stocks || []);
+  const tickers = [], categories = {};
+  for (const e of list) {
+    const sym = typeof e === 'string' ? e : e.symbol;
+    if (!sym) continue;
+    tickers.push(sym);
+    if (e && e.category) categories[sym] = e.category;
+  }
+  return { tickers, categories, bonus: {}, tag: UNIVERSE_TAG_ARG || 'etf', region: REGION_ARG || 'US', label: 'CUSTOM' };
+}
+
+const ACTIVE = resolveUniverse(UNIVERSE_ARG);
+// CLI overrides (allow re-tagging a custom run)
+if (UNIVERSE_TAG_ARG) ACTIVE.tag = UNIVERSE_TAG_ARG;
+if (REGION_ARG) ACTIVE.region = REGION_ARG;
 
 // ─── Yahoo OHLCV fetcher (shared cache) ─────────────────────────────────────
 
@@ -301,8 +352,8 @@ function scoreSymbol(ticker, bars, regime, vixRatio) {
 
   if (!validEntry) return null;
 
-  // Top ETF bonus
-  const mult = TOP_ETF_BONUS[ticker];
+  // Top ETF bonus (US universe only; EU/custom pass an empty map)
+  const mult = ACTIVE.bonus[ticker];
   if (mult) score *= mult;
 
   score = Math.round(score * 100) / 100;
@@ -329,7 +380,7 @@ function diversifyByCategory(candidates, limit) {
 
   for (const c of candidates) {
     if (result.length >= limit) break;
-    const category = ETF_CATEGORIES[c.ticker] || 'OTHER';
+    const category = ACTIVE.categories[c.ticker] || 'OTHER';
     if ((categoryCount[category] || 0) >= maxPerCategory) continue;
     result.push(c);
     categoryCount[category] = (categoryCount[category] || 0) + 1;
@@ -340,13 +391,14 @@ function diversifyByCategory(candidates, limit) {
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
-  console.log(`📊 ETF Momentum Scanner (systematic-tss port)`);
-  console.log(`   Universe: ${ETF_UNIVERSE.length} ETFs | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
+  console.log(`📊 ETF Momentum Scanner (systematic-tss port) — ${ACTIVE.label} universe`);
+  console.log(`   Universe: ${ACTIVE.tickers.length} ETFs (${ACTIVE.tag}) | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
   console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME}`);
 
   console.log(`📡 Fetching OHLCV data via Yahoo...`);
-  // Fetch VIX alongside ETFs
-  const allTickers = [...ETF_UNIVERSE, '^VIX'];
+  // Fetch VIX + US breadth proxies alongside the active ETF universe (deduped).
+  // Breadth (SPY/QQQ/IWM) stays a global-regime proxy even for the EU universe.
+  const allTickers = [...new Set([...ACTIVE.tickers, 'SPY', 'QQQ', 'IWM', '^VIX'])];
   const priceData = await batchFetch(allTickers, CONCURRENCY);
   if (!priceData.size) { console.error('❌ No OHLCV data — aborting.'); process.exit(1); }
 
@@ -370,7 +422,7 @@ async function main() {
   const candidates = [];
   const scanDateNorm = SCAN_DATE.replace(/-/g, '');
 
-  for (const ticker of ETF_UNIVERSE) {
+  for (const ticker of ACTIVE.tickers) {
     const rawBars = priceData.get(ticker);
     if (!rawBars) continue;
 
@@ -400,14 +452,15 @@ async function main() {
 
   console.log(`\n✅ Found ${candidates.length} signals (passed all filters), top ${topCandidates.length} (diversified):`);
   for (const c of topCandidates) {
-    const cat = ETF_CATEGORIES[c.ticker] || 'OTHER';
+    const cat = ACTIVE.categories[c.ticker] || 'OTHER';
     console.log(`  📊 ${c.ticker.padEnd(6)} score:${String(c.score).padStart(7)} [${c.metrics.cluster}] Mom20:${(c.metrics.mom20 * 100).toFixed(1)}% RSI:${c.metrics.rsi.toFixed(0)} ATR%:${(c.metrics.atrPct * 100).toFixed(1)}% (${cat})`);
   }
 
   if (DRY_RUN) { console.log('\n🏷️  Dry run — no files written.'); return topCandidates; }
 
   if (OUTPUT_MODE === 'json') {
-    const outPath = path.join(ROOT, 'data', `etf-scan-${SCAN_DATE}.json`);
+    const suffix = ACTIVE.tag === 'etf' ? '' : `-${ACTIVE.tag}`;
+    const outPath = path.join(ROOT, 'data', `etf-scan-${SCAN_DATE}${suffix}.json`);
     fs.writeFileSync(outPath, JSON.stringify({
       scanDate: SCAN_DATE, regime: REGIME, vix: { level: vixLevel, ratio: vixRatio },
       breadth, candidates: topCandidates,
@@ -425,7 +478,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'ETFMomentum',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: 21, region: 'US', universe: 'etf',
+        horizon: 21, region: ACTIVE.region, universe: ACTIVE.tag,
         sharia: null,
         thesis: `ETF ${c.metrics.cluster}: Mom20=${(c.metrics.mom20 * 100).toFixed(1)}%, RSI=${c.metrics.rsi.toFixed(0)}, ATR%=${(c.metrics.atrPct * 100).toFixed(1)}%`,
         extension: { cluster: c.metrics.cluster, atrPct: +c.metrics.atrPct.toFixed(4) },

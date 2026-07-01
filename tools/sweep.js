@@ -640,7 +640,18 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   }
   if (vwapGate && vwapRef !== null) {
     if (actualEntry > vwapRef * 1.01) return null; // gap-up trap — skip
-    entryPrice = Math.max(Math.min(actualEntry, vwapRef), entryBar.low);
+    // VWAP limit entry: the order rests at the VWAP reference, capped at the open
+    // (we never pay UP for a momentum name — min(open, vwapRef)). The order only
+    // EXECUTES if price actually trades down to that limit intraday. If the entry
+    // bar's low never reaches the limit (limit < low), the resting order is NEVER
+    // touched → it stays unfilled. Previously the code clamped the fill up to
+    // entryBar.low (Math.max(..., low)), which force-filled a phantom position on
+    // gap-up names whose low never revisited VWAP (bug: KLAC shown as bought +
+    // trade in history without the VWAP gate ever confirming). A legit fill (e.g.
+    // HON) still has low <= limit, so it is unaffected.
+    const vwapLimit = Math.min(actualEntry, vwapRef);
+    if (vwapLimit < entryBar.low) return null; // limit never touched — order unfilled, skip
+    entryPrice = vwapLimit;
   }
 
   // Gap-down reject: TKL-only. Large-cap gap-downs mean-revert (SM +14.76%, EOG +7.73%),

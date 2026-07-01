@@ -687,8 +687,17 @@ async function main() {
     return parts.join(', ').replace(/,\s*\./g, '.'); // fix "Label., " edge case
   }
 
-  // Format number as "$X.XX" for display — data stays numeric until render
-  function $fmt(n) { return n != null && !isNaN(n) ? '$' + Number(n).toFixed(2) : '—'; }
+  // Currency is derived from ONE source: cfg.assetClass. Casablanca (Bourse de
+  // Casablanca / BVC) trades in MAD (dirhams); everything else in USD.
+  function curOf(cfg) { return (cfg && cfg.assetClass === 'casablanca') ? 'MAD' : 'USD'; }
+  // Format number for display in the given currency — data stays numeric until render.
+  function fmtCur(n, cur) {
+    if (n == null || isNaN(n)) return '—';
+    const v = Number(n).toFixed(2);
+    return cur === 'MAD' ? v + ' MAD' : '$' + v;
+  }
+  // Legacy USD helper (kept for non-panel callers). Panel code uses the local price().
+  function $fmt(n) { return fmtCur(n, 'USD'); }
 
   function clampStop(entry, stop, maxStopPct) {
     if (!maxStopPct || maxStopPct <= 0 || !entry || entry <= 0 || !stop) return stop;
@@ -698,6 +707,7 @@ async function main() {
   function signalsFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
     const uf = cfg.universeFilter || null;
+    const cur = curOf(cfg); // MAD for casablanca, USD otherwise
     return signals.filter(s => f(s.strategy || '')).filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s)).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
@@ -710,7 +720,7 @@ async function main() {
         stop,
         vwapRef,
         // Display fields (used in HTML templates)
-        entry: $fmt(s.entry), stop: $fmt(stop), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2),
+        entry: fmtCur(s.entry, cur), stop: fmtCur(stop, cur), tp1: fmtCur(s.tp1, cur), tp2: fmtCur(s.tp2, cur),
         // Keep raw numbers for downstream logic (rotation score comparison, etc.)
         _entry: s.entry, _stop: stop, _tp1: s.tp1, _tp2: s.tp2,
       };
@@ -786,6 +796,10 @@ async function main() {
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const sig = signalsFor(cfg);
+    // Single currency source for the whole panel: cfg.assetClass.
+    const CUR = curOf(cfg); // 'MAD' for casablanca, 'USD' otherwise
+    const price = (n) => fmtCur(n, CUR);
+    const isCasablanca = cfg.assetClass === 'casablanca';
     // Fallback candidates: signals beyond topN that still pass filter + minScore + universe.
     // PAS pour les modes SCRIPTÉS (Bull/Momentum/HighVol/Trendline/ETF/Casablanca/Fortress/A+) :
     // leurs signaux SONT les ordres à placer (répliquent systematic-tss), pas des candidats de
@@ -797,7 +811,7 @@ async function main() {
     const fallback = SCRIPTED_FILTERS.has(cfg.filterName) ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
       .slice(cfg.topN, cfg.topN + 4).map(s => {
         const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
-        return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: $fmt(s.entry), stop: $fmt(st), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
+        return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: price(s.entry), stop: price(st), tp1: price(s.tp1), tp2: price(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
       });
     // Signal validity (scan-level): 2 biz-day timeout
     const _sigScanDate = scanDir ? `${scanDir.slice(0, 4)}-${scanDir.slice(4, 6)}-${scanDir.slice(6, 8)}` : null;
@@ -855,7 +869,7 @@ async function main() {
       return left === 1;
     });
 
-    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" style="${active ? '' : 'display:none'}">
+    return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
 <h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard</h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
@@ -916,12 +930,12 @@ ${renderStatusBanner(cfg)}
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
         : s.sharia === false ? '<span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
       const _ohlc = signalOhlc[s.ticker] || {};
-      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)"' : ''}>${_sigStatusLabel}</span></td></tr>`;
+      return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)"' : ''}>${_sigStatusLabel}</span></td></tr>`;
     }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr>${fallback.map((s, i) => {
       const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? '<span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span>' : '';
       const _ohlc = signalOhlc[s.ticker] || {};
-      return `<tr data-sig-ticker="${s.ticker}" data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
+      return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
     }).join('')}` : ''}</tbody>
     </table>` : (() => {
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
@@ -997,11 +1011,11 @@ ${timedOut.length ? `<div class="cta-card cta-close" data-section="closenow">
     </div>
   </div>
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry $</th><th class="hide-m">Current $</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
+    <thead><tr><th>Ticker</th><th>Bought</th><th class="hide-m">Entry ${CUR === 'MAD' ? 'MAD' : '$'}</th><th class="hide-m">Current ${CUR === 'MAD' ? 'MAD' : '$'}</th><th>P&amp;L</th><th>Held</th><th>Action</th></tr></thead>
     <tbody>${timedOut.map(p => {
       const rc = p.return_pct >= 0 ? 'pos' : 'neg';
       const held = bizDaysHeld(p.scan_date);
-      return `<tr><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
+      return `<tr><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">${price(p.entry || 0)}</td><td class="hide-m">${price(p.current_price || 0)}</td><td class="${rc}"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="am">${held}d / ${cfg.horizon}d</td><td><span class="pill neg" style="font-size:.7rem;padding:.15rem .5rem">CLOSE</span></td></tr>`;
     }).join('')}</tbody>
   </table>
 </div>` : ''}
@@ -1067,7 +1081,7 @@ ${(() => {
           const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
           const sht = s.sharia === true ? ' <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? ' <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span>' : '';
           const thesisCols = 11; // number of columns in Orders table
-          const vwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
+          const vwapCell = s.vwapRef ? price(s.vwapRef) : '—';
           actionRows.push(`<tr>
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
       <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
@@ -1086,7 +1100,7 @@ ${(() => {
           const repBg = (replaces.score || 0) >= 90 ? 'var(--pos)' : (replaces.score || 0) >= 85 ? 'var(--accent)' : 'var(--muted)';
           const deltaSign = (scoreDelta || 0) >= 0 ? '+' : '';
           const deltaColor = (scoreDelta || 0) >= 5 ? 'var(--pos)' : (scoreDelta || 0) >= 0 ? 'var(--warn)' : 'var(--neg)';
-          const rotVwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
+          const rotVwapCell = s.vwapRef ? price(s.vwapRef) : '—';
           actionRows.push(`<tr style="background:var(--warn-wk)">
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b></td>
       <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
@@ -1191,7 +1205,7 @@ ${expiringSoon.length ? `<div class="cta-card" data-section="expiring" style="ba
     <tbody>${expiringSoon.map(p => {
           const rc = p.return_pct >= 0 ? 'pos' : 'neg';
           const held = bizDaysHeld(p.scan_date);
-          return `<tr><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td>$${(p.entry || 0).toFixed(2)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">$${(p.stop || 0).toFixed(2)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
+          return `<tr><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td>${price(p.entry || 0)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg">${price(p.stop || 0)}</td><td class="am">${held}d/${cfg.horizon}d</td></tr>`;
         }).join('')}</tbody>
   </table>
 </div>` : ''}
@@ -1286,8 +1300,8 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           const leftLabel = isTerminal ? `<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">${termBadge}</span>` : isExpired ? '<span class="pill neg" style="font-size:.65rem;padding:.1rem .4rem">EXPIRED</span>' : left + 'd';
           const rowStyle = isTerminal ? ' style="opacity:.45;background:var(--surface-2);filter:grayscale(1)"' : isExpired ? ' style="opacity:.6;background:var(--neg-wk)"' : '';
           const posCols = 10; // columns in Open Positions table
-          const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
-          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}','${p.universe||''}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          const posVwap = p.vwap ? price(p.vwap) : '—';
+          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}','${p.universe||''}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">${price(p.entry || 0)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">${price(p.current_price || 0)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">${price(p.stop || 0)}</td><td class="pos hide-m">${p.tp2 ? price(p.tp2) : (p.tp1 ? price(p.tp1) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
     <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore || 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore || 85) + ') today or stale exits closed prior holds.'}</span></span>
@@ -1397,8 +1411,8 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           <td>${t.ticker ? tkLogo(t.ticker) : ''}<b>${t.ticker || '—'}</b></td>
           <td class="m hide-m">${t.entryDate ? t.entryDate.slice(5) : '—'}${entryTimeFmt}</td>
           <td class="m hide-m">${exitDate}${exitTimeFmt}</td>
-          <td class="hide-m">$${(t.actualEntry || 0).toFixed(2)}</td>
-          <td class="hide-m">${t.exitPrice ? '$' + t.exitPrice.toFixed(2) : '—'}</td>
+          <td class="hide-m">${price(t.actualEntry || 0)}</td>
+          <td class="hide-m">${t.exitPrice ? price(t.exitPrice) : '—'}</td>
           <td class="${cls}" data-format="pct"><b>${pnl > 0 ? '+' : ''}${pnl}%</b></td>
           <td class="m hide-m">${t.holdDays || 0}d</td>
           <td><span class="pill ${statusCls}" title="${statusLabel}">${statusShort}</span></td>
@@ -1420,16 +1434,16 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
   // Reads cfg.assetClass (default 'equity'). Tabs are wrapped in labeled
   // .mode-class segments; PANELS stay flat (#p-<id>.mode-panel) so switchMode
   // and the binder — which target by id, not container — are untouched.
-  const ASSET_CLASS_ORDER = ['equity', 'etf', 'forex', 'metals', 'casablanca', 'crypto'];
-  const ASSET_CLASS_LABEL = { equity: 'Stocks', etf: 'ETF', crypto: 'Crypto', metals: 'Metals', forex: 'Forex', casablanca: 'Casablanca' };
-  const ASSET_CLASS_ICON = { equity: 'chart-line', etf: 'layer-group', crypto: 'coins', metals: 'gem', forex: 'exchange-alt', casablanca: 'mosque' };
-  const assetBuckets = {};
-  for (const ac of ASSET_CLASS_ORDER) assetBuckets[ac] = [];
-  const AC_ALIAS = { us_equity: 'equity', us_etf: 'etf', multi: 'equity' };
+  // Regroupement par TYPE de mode (demande user): modes LLM/quality (pilotés RunScreener+quality/
+  // fortress-pm) vs modes scriptés (pilotés par des scanners JS locaux). PAS par classe d'actif.
+  const ASSET_CLASS_ORDER = ['llm', 'scripted'];
+  const ASSET_CLASS_LABEL = { llm: 'LLM', scripted: 'Scripted' };
+  const ASSET_CLASS_ICON = { llm: 'brain', scripted: 'code' };
+  const LLM_MODES = new Set(['turbo', 'dynamic', 'balanced', 'secured', 'fortress', 'aplus']);
+  const assetBuckets = { llm: [], scripted: [] };
   for (const [id, m] of Object.entries(modes)) {
-    const raw = m.cfg.assetClass || 'equity';
-    const ac = AC_ALIAS[raw] || (assetBuckets[raw] ? raw : 'equity');
-    assetBuckets[ac].push([id, m]);
+    const t = LLM_MODES.has(id) ? 'llm' : 'scripted';
+    assetBuckets[t].push([id, m]);
   }
   // Only show class labels/dividers when >1 class is populated, so the
   // equity-only present-day view stays a clean single rail.
@@ -2790,18 +2804,23 @@ document.addEventListener('DOMContentLoaded',function(){
   function update(){
     var rows=document.querySelectorAll('tr[data-sig-ticker]');
     if(!rows.length)return;
-    var tickers=[],seen={},baked={};
+    var tickers=[],seen={},baked={},noLive={};
     rows.forEach(function(r){
       var t=r.dataset.sigTicker;
       if(!seen[t]){
-        seen[t]=1;tickers.push(t);
+        seen[t]=1;
         var bp=+r.dataset.sigPrice,bo=+r.dataset.sigOpen,bh=+r.dataset.sigHigh,bl=+r.dataset.sigLow;
         if(bp)baked[t]={price:bp,open:bo||null,high:bh||null,low:bl||null,chg:null};
+        // Casablanca (Bourse de Casablanca / BVC) tickers collide with US symbols on Yahoo
+        // (SNA=Snap-on, SLF=Sun Life) → wrong price → absurd P&L. Never fetch Yahoo for them;
+        // use the baked BVC close (MAD) shipped in the signal row instead.
+        if(r.dataset.market==='casablanca'){noLive[t]=1;}else{tickers.push(t);}
       }
     });
     if(window.LE&&typeof LE.addTickers==='function')LE.addTickers(tickers);
     fetchQuotes(tickers,function(live){
       var quotes={};tickers.forEach(function(t){quotes[t]=live[t]||baked[t]||null});
+      Object.keys(noLive).forEach(function(t){quotes[t]=baked[t]||null});
       var panels={};
       rows.forEach(function(row){
         var tk=row.dataset.sigTicker,entry=+row.dataset.sigEntry,stop=+row.dataset.sigStop,tp1=+row.dataset.sigTp1,tp2=+row.dataset.sigTp2||0,vwap=+row.dataset.sigVwap||0,rank=row.dataset.sigRank;
@@ -2885,6 +2904,10 @@ document.addEventListener('DOMContentLoaded',function(){
         }
         // ── Sync filled signals → Open Positions + lp-card + Trade History ──
         var modeId=pid.replace('p-','');
+        // Single currency source for this panel's client-rendered rows: data-asset-class.
+        var _panelEl=document.getElementById(pid);
+        var _cur=(_panelEl&&_panelEl.dataset.market==='casablanca')?'MAD':'USD';
+        function _px(n){return _cur==='MAD'?n.toFixed(2)+' MAD':'$'+n.toFixed(2);}
         var livePos=[],termTrades=[];
         d.p.forEach(function(x){
           if(!x.st.filled)return;
@@ -2909,7 +2932,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var sLbl=x.st.tp1Hit?'TP1 ✓':'LIVE',sCls=x.st.tp1Hit?'pos':pc;
             var tr=document.createElement('tr');tr.setAttribute('data-sig-live','1');
             tr.style.cssText='background:'+(x.st.pnl>=0?'var(--pos-wk)':'var(--warn-wk)');
-            tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:var(--accent)">⚡ Signal fill</div></td><td class="hide-m">$'+fp.toFixed(2)+'</td><td class="hide-m">$'+pr.toFixed(2)+'</td><td class="'+pc+'" data-format="pct"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="neg hide-m">$'+x.stop.toFixed(2)+'</td><td class="pos hide-m">$'+x.tp1.toFixed(2)+(x.tp2?' / $'+x.tp2.toFixed(2):'')+'</td><td><span class="pill '+sCls+'">'+sLbl+'</span></td>';
+            tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:var(--accent)">⚡ Signal fill</div></td><td class="hide-m">'+_px(fp)+'</td><td class="hide-m">'+_px(pr)+'</td><td class="'+pc+'" data-format="pct"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="neg hide-m">'+_px(x.stop)+'</td><td class="pos hide-m">'+_px(x.tp1)+(x.tp2?' / '+_px(x.tp2):'')+'</td><td><span class="pill '+sCls+'">'+sLbl+'</span></td>';
             tbody.insertBefore(tr,tbody.firstChild);
           });
           termTrades.forEach(function(x){
@@ -2917,7 +2940,7 @@ document.addEventListener('DOMContentLoaded',function(){
             var rLbl=x.st.label.indexOf('STOPPED')>=0?'SL':x.st.label.indexOf('TP2')>=0?'TP2':'TP1';
             var tr=document.createElement('tr');tr.setAttribute('data-sig-live','1');
             tr.style.cssText='opacity:.5;background:var(--surface-2);filter:grayscale(.8)';
-            tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:var(--muted)">Closed today</div></td><td class="hide-m">$'+fp.toFixed(2)+'</td><td class="hide-m">—</td><td class="'+pc+'" data-format="pct"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="neg hide-m">$'+x.stop.toFixed(2)+'</td><td class="pos hide-m">$'+x.tp1.toFixed(2)+'</td><td><span class="pill '+pc+'">'+rLbl+'</span></td>';
+            tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:var(--muted)">Closed today</div></td><td class="hide-m">'+_px(fp)+'</td><td class="hide-m">—</td><td class="'+pc+'" data-format="pct"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="neg hide-m">'+_px(x.stop)+'</td><td class="pos hide-m">'+_px(x.tp1)+'</td><td><span class="pill '+pc+'">'+rLbl+'</span></td>';
             tbody.appendChild(tr);
           });
         }
@@ -2928,7 +2951,15 @@ document.addEventListener('DOMContentLoaded',function(){
         var initEl=document.getElementById('lp-init-'+modeId);
         if(initEl)initEl.style.display='none';
         window._sigLiveAgg=window._sigLiveAgg||{};
-        var tPnl=0;livePos.forEach(function(x){tPnl+=(x.st.pnl||0)});
+        // Portfolio-level P&L = allocation-WEIGHTED, not the raw sum of position returns.
+        // Each slot carries weight 1/portfolioSize of the book; unfilled slots sit in cash (0%).
+        // So a −5% and a −1% position on a 5-slot book cost (−5−1)/5 = −1.2% of the portfolio,
+        // NOT −6%. Falls back to equal-weight over open positions if portfolioSize is unknown.
+        var panelEl=document.getElementById(pid);
+        var pSize=panelEl?(+panelEl.dataset.psize||0):0;
+        var wDen=pSize>0?pSize:livePos.length; // divisor = book slots (preferred) or #positions
+        var sumPnl=0;livePos.forEach(function(x){sumPnl+=(x.st.pnl||0)});
+        var tPnl=wDen>0?sumPnl/wDen:0;
         window._sigLiveAgg[modeId]={count:livePos.length,totalPnl:tPnl,alerts:[]};
         if(pnlEl){
           pnlEl.textContent=(tPnl>=0?'+':'')+tPnl.toFixed(2)+'%';
@@ -2961,7 +2992,7 @@ document.addEventListener('DOMContentLoaded',function(){
               var rLbl=x.st.label.indexOf('STOPPED')>=0?'SL':x.st.label.indexOf('TP2')>=0?'TP2':'TP1';
               var tr=document.createElement('tr');tr.setAttribute('data-sig-live','1');
               tr.style.cssText='background:var(--warn-wk)';
-              tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:var(--warn-ink)">Today (sim)</div></td><td class="hide-m">'+today+'</td><td class="hide-m">'+today+'</td><td class="hide-m">$'+fp.toFixed(2)+'</td><td class="hide-m">$'+exitP.toFixed(2)+'</td><td class="'+pc+'" data-format="pct"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="hide-m">0d</td><td><span class="pill '+pc+'">'+rLbl+'</span></td>';
+              tr.innerHTML='<td><b>'+x.tk+'</b><div style="font-size:.55rem;color:var(--warn-ink)">Today (sim)</div></td><td class="hide-m">'+today+'</td><td class="hide-m">'+today+'</td><td class="hide-m">'+_px(fp)+'</td><td class="hide-m">'+_px(exitP)+'</td><td class="'+pc+'" data-format="pct"><b>'+(x.st.pnl>=0?'+':'')+x.st.pnl.toFixed(2)+'%</b></td><td class="hide-m">0d</td><td><span class="pill '+pc+'">'+rLbl+'</span></td>';
               htb.insertBefore(tr,htb.firstChild);
             });
             var hCount=histEl.querySelector('.count');
@@ -2993,6 +3024,9 @@ document.addEventListener('DOMContentLoaded',function(){
     var modeId=activeTab.dataset.mode;
     var panel=document.getElementById('p-'+modeId);
     if(!panel)return;
+    // Casablanca (BVC) panel: Yahoo returns the wrong instrument for MAD tickers (SNA=Snap-on,
+    // SLF=Sun Life). Skip the live MtM fetch entirely — the static BVC (MAD) prices stand.
+    if(panel.dataset.market==='casablanca'||panel.dataset.nolive==='1')return;
     // Find position rows
     var posRows=panel.querySelectorAll('[data-section="positions"] tr[data-pos-ticker], [data-section="positions"] tbody tr');
     if(!posRows||!posRows.length)return;

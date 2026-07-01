@@ -90,6 +90,25 @@
     return parseFloat(cleaned.replace(/[^0-9.]/g, ''));
   }
 
+  // Casablanca (Bourse de Casablanca / BVC) tickers (SNA, SLF, HPS, RDS…) collide with
+  // US symbols on Yahoo Finance (SNA=Snap-on ~$402, SLF=Sun Life ~$78). Fetching Yahoo for
+  // them returns the WRONG instrument → mismatch with the MAD fill → absurd P&L (+434%…).
+  // Detect casablanca cards and skip the live fetch: keep the static BVC (MAD) price instead.
+  function isCasablancaCard(card, priceEl) {
+    // 1) Explicit data-attributes on the card or any ancestor / the document root.
+    var scope = card.closest('[data-market],[data-universe],[data-asset-class],[data-nolive]') ||
+                document.documentElement;
+    var ds = scope.dataset || {};
+    if (ds.nolive === '1' || ds.nolive === 'true') return true;
+    if ((ds.market || ds.universe || ds.assetClass || '').toLowerCase() === 'casablanca') return true;
+    var rootDs = document.documentElement.dataset || {};
+    if ((rootDs.market || rootDs.universe || rootDs.assetClass || '').toLowerCase() === 'casablanca') return true;
+    // 2) Fallback heuristic: the displayed price is quoted in MAD (dirhams).
+    var txt = (priceEl && priceEl.textContent) || '';
+    if (/\bMAD\b|\bDH\b|\bDHS\b/i.test(txt)) return true;
+    return false;
+  }
+
   function extractSetups() {
     var setups = [];
     var cards = document.querySelectorAll('.setup-card');
@@ -166,7 +185,8 @@
         tp1: levels.tp1 || NaN,
         tp2: levels.tp2 || NaN,
         card: card,
-        priceEl: priceEl
+        priceEl: priceEl,
+        noLive: isCasablancaCard(card, priceEl) // skip Yahoo for BVC/MAD tickers
       });
     });
 
@@ -556,10 +576,12 @@
     var setups = extractSetups();
     if (setups.length === 0) return;
 
-    // Deduplicate tickers
+    // Deduplicate tickers — but NEVER fetch Yahoo for casablanca (BVC/MAD) tickers:
+    // their symbols collide with US stocks and produce a bogus price → absurd P&L.
     var tickerMap = {};
-    setups.forEach(function (s) { tickerMap[s.ticker] = true; });
+    setups.forEach(function (s) { if (!s.noLive) tickerMap[s.ticker] = true; });
     var tickers = Object.keys(tickerMap);
+    if (tickers.length === 0) return; // e.g. a pure-casablanca page — keep static BVC prices
 
     // Show loading state
     injectStatusBar(0, tickers.length, 0);
