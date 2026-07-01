@@ -9,6 +9,9 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const ms = require('./lib/mode-status');
+// Halal (shariaOnly) compliance filter — shared with sweep.js so signals/orders on the Fortress
+// "Halal" page never surface a haram ticker that the backtest itself would refuse to hold.
+const { isHaramForHalalMode } = require('./lib/sharia-filter');
 
 function fmtDateFR(iso) {
   if (!iso) return '';
@@ -673,7 +676,7 @@ async function main() {
   function signalsFor(cfg) {
     const f = SF[cfg.filterName] || (() => true);
     const uf = cfg.universeFilter || null;
-    return signals.filter(s => f(s.strategy || '')).filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).slice(0, cfg.topN).map(s => {
+    return signals.filter(s => f(s.strategy || '')).filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s)).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
       const vwapRef = signalVwap[s.ticker] || null;
@@ -761,7 +764,7 @@ async function main() {
     // Fallback candidates: signals beyond topN that still pass filter + minScore + universe
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
-    const fallback = signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+    const fallback = signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
       .slice(cfg.topN, cfg.topN + 4).map(s => {
         const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
         return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: $fmt(s.entry), stop: $fmt(st), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
@@ -3302,6 +3305,7 @@ function backfillHistory() {
         .filter(s => filterFn(s.strategy || ''))
         .filter(s => !_ufBF || (s.universe || '') === _ufBF)
         .filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
+        .filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
         .slice(0, cfg.topN)
         .map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' }));
 
