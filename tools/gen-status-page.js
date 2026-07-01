@@ -1296,6 +1296,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <div class="section-card" id="sec-hist-${id}">
   <details>
     <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed${pos && pos.length ? ' · ' + pos.length + ' open' : ''}</span></span></summary>
+  <div class="th-scroll">
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
     <tbody>${(() => {
@@ -1403,6 +1404,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
         }).join('');
       })()}</tbody>
   </table>
+  </div>
   </details>
 </div>
 
@@ -1609,6 +1611,10 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 
 /* ── Section cards ── */
 .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);padding:1.4rem 1.6rem;margin-bottom:1.35rem}
+/* Trade History: borne la hauteur + scroll interne (sinon des centaines de trades → page géante) */
+.th-scroll{max-height:540px;overflow-y:auto;overflow-x:auto;margin-top:.4rem;border:1px solid var(--border);border-radius:var(--r-s)}
+.th-scroll table{margin-top:0!important}
+.th-scroll thead th{position:sticky;top:0;background:var(--surface-2);z-index:1}
 .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
 .sc-head h3{font-size:1rem;font-weight:700;color:var(--ink);margin:0;display:flex;align-items:center;gap:.45rem;letter-spacing:-.01em}
 .sc-head h3 i{font-size:.78rem;color:var(--muted)}
