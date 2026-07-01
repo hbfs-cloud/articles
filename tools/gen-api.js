@@ -121,6 +121,25 @@ function write(filename, content) {
   console.log(`  [ok]   ${path.relative(ROOT, outPath)}`);
 }
 
+// A stopped/liquidated mode holds nothing: positions.json is already 0 (posFor returns []),
+// so any still-open (pending) trade surfaced as "open" in trades.json is a self-contradiction.
+// Transition such a trade to a terminal 'liquidated' close at its LAST MARK — exitDate = the
+// stop date (statusSince), exitPrice/pnlPct preserved (the mark-to-market IS the realistic
+// exit when the mode was pulled). This is a legitimate pending→closed state change, NOT a
+// rewrite of sealed history: backtest-trades.json and the immutable trade-chain (SHA) are
+// never touched (they carry no pending rows for stopped modes). Non-pending trades pass through
+// unchanged, so realized P&L / win-rate / DD of the track record are preserved byte-for-byte.
+function liquidatePending(t, sinceISO) {
+  if (!t || (t.status !== 'pending' && t.status !== 'open')) return t;
+  return {
+    ...t,
+    status: 'liquidated',
+    exitDate: t.exitDate || sinceISO || t.entryDate || t.scanDate || null,
+    exitPrice: t.exitPrice != null ? t.exitPrice : (t.actualEntry != null ? t.actualEntry : t.entry ?? null),
+    exitTime: t.exitTime || '16:00',
+  };
+}
+
 // Find latest snapshot
 const snapshots = fs.readdirSync(HISTORY).filter(f => /^\d{8}\.json$/.test(f)).sort();
 if (!snapshots.length) {
@@ -194,6 +213,15 @@ function writeMode(mode, prefix) {
   const status = getStatusFor(prefix || 'balanced');
   const modeId = prefix || 'balanced';
 
+  // Stopped/liquidated modes hold nothing: terminalize any pending trade so trades.json's open
+  // count matches positions.json (0). posFor() already empties positions upstream; this keeps the
+  // two endpoints consistent when a mode is stopped while still present in the current snapshot.
+  const isTerminalMode = status.state === 'stopped' || status.state === 'liquidated';
+  const _sinceISO = (((modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {}).statusSince || '').slice(0, 10) || null;
+  const closedTradesSrc = isTerminalMode
+    ? (mode.closedTrades || []).map(t => liquidatePending(t, _sinceISO))
+    : (mode.closedTrades || []);
+
   // Sim read-switch: resolve the effective positions + equity ONCE per mode. Falls back to the
   // articles snapshot transparently when the mode isn't "sim" or the sim cache is unavailable.
   const effPositions = effectivePositions(modeId, mode.positions || []);
@@ -261,7 +289,7 @@ function writeMode(mode, prefix) {
     status,
     configVersion: modesConfigMeta.configVersion,
     regime: modesConfigMeta.regime,
-    trades: (mode.closedTrades || []).map(t => ({
+    trades: closedTradesSrc.map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
       exitDate: t.exitDate || null,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
@@ -398,7 +426,7 @@ function writeMode(mode, prefix) {
       stop: p.stop, daysHeld: p.days_held, horizon: p.horizon,
       broker_symbols: getBrokerSymbols(p.ticker),
     })),
-    closedTrades: (mode.closedTrades || []).map(t => ({
+    closedTrades: closedTradesSrc.map(t => ({
       ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate,
       exitDate: t.exitDate || null,
       entry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct,
@@ -454,6 +482,76 @@ function writeMode(mode, prefix) {
   });
 }
 
+// Reconcile the ALREADY-PUBLISHED endpoints of a stopped/liquidated mode that has dropped out
+// of the daily snapshot. gen-status-page stops emitting these modes into new snapshots (and
+// posFor returns [] anyway), and the main loop below skips modes missing from the snapshot — so
+// their published files freeze in whatever state they had on their last live day. That is how
+// trades.json keeps stale "pending" rows (tkl 14 / alpha 4 / crypto 1) while positions.json is
+// already 0: a permanent self-contradiction that no later run corrects. Here we heal it in place:
+// pending → terminal 'liquidated' close at last mark, positions/orders/closeNow emptied. Only the
+// published JSON is rewritten (presentation) — backtest-trades.json and the immutable SHA chain
+// are never touched. Files already consistent (no pending, empty positions) are left untouched so
+// stopped modes that never held anything (forex/metals) produce no diff.
+function reconcileStoppedMode(id) {
+  const status = getStatusFor(id);
+  const sinceISO = (((modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]) || {}).statusSince || '').slice(0, 10) || null;
+  const dir = path.join(OUT, id);
+  let touched = 0;
+  const statusStale = j => !j.status || j.status.state !== status.state;
+  const rewrite = (fname, mutate) => {
+    const fp = path.join(dir, fname);
+    if (!fs.existsSync(fp)) return;
+    let j;
+    try { j = JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return; }
+    // Rewrite when there is stale content to clear OR the published status block still reflects a
+    // prior (pre-stop) state — otherwise leave the file (and its git blob) untouched.
+    const cleared = mutate(j);
+    if (!cleared && !statusStale(j)) return;
+    j.updatedAt = now;
+    j.status = status;
+    write(`${id}/${fname}`, j);
+    touched++;
+  };
+  const hasOpen = arr => (arr || []).some(t => t.status === 'pending' || t.status === 'open');
+
+  rewrite('trades.json', j => {
+    if (!hasOpen(j.trades)) return false;
+    j.trades = (j.trades || []).map(t => liquidatePending(t, sinceISO));
+    return true;
+  });
+  rewrite('positions.json', j => {
+    if (!(j.positions || []).length) return false;
+    j.positions = [];
+    return true;
+  });
+  rewrite('orders.json', j => {
+    if (!(j.orders || []).length) return false;
+    j.orders = [];
+    return true;
+  });
+  rewrite('actions.json', j => {
+    if (!(j.closeNow || []).length && !(j.expiresTomorrow || []).length) return false;
+    j.closeNow = [];
+    j.expiresTomorrow = [];
+    return true;
+  });
+  rewrite('all.json', j => {
+    if (!hasOpen(j.closedTrades) && !(j.positions || []).length && !(j.orders || []).length) return false;
+    j.closedTrades = (j.closedTrades || []).map(t => liquidatePending(t, sinceISO));
+    j.positions = [];
+    j.orders = [];
+    return true;
+  });
+  // Remaining endpoints carry no pending/positions but may still advertise a pre-stop status block.
+  // Refresh it only (mutate is a no-op) so the whole mode API consistently reports the stopped state.
+  rewrite('signals.json', () => false);
+  rewrite('equity.json', () => false);
+  rewrite('risk.json', () => false);
+
+  if (touched) console.log(`  [reconcile] stopped mode "${id}": ${touched} endpoint(s) healed (pending→liquidated, positions/orders cleared)`);
+  else console.log(`  [ok]   stopped mode "${id}" already consistent`);
+}
+
 // ─── Write all modes ────────────────────────────────────────────────────────
 // Public API excludes draft modes (config created, never run — e.g. crypto/metals/forex
 // not yet operational). stopped modes (tkl/alpha) stay published for their track record.
@@ -466,7 +564,15 @@ let count = 0;
 for (const id of MODE_IDS) {
   const mode = snap.modes[id];
   if (!mode) {
-    console.log(`  [skip] Mode "${id}" not found in snapshot`);
+    // Stopped/liquidated modes drop out of the snapshot but keep published files for their track
+    // record. Heal any stale pending/positions so the frozen API stays self-consistent (0 open).
+    const st = ((modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[id]) || {}).status;
+    if (st === 'stopped' || st === 'liquidated') {
+      console.log(`\n─── Mode: ${id} (stopped — reconcile published) ───`);
+      reconcileStoppedMode(id);
+    } else {
+      console.log(`  [skip] Mode "${id}" not found in snapshot`);
+    }
     continue;
   }
   console.log(`\n─── Mode: ${id} ───`);
