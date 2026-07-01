@@ -701,6 +701,9 @@ async function main() {
       const vwapRef = signalVwap[s.ticker] || null;
       return {
         ...s,
+        // Badge Halal/CONV: dérive la conformité Sharia quand le signal ne la porte pas (null),
+        // pour que TOUS les signaux affichent un badge (le scanner tague souvent sharia=null).
+        sharia: (s.sharia === true || s.sharia === false) ? s.sharia : !isHaramForHalalMode(s),
         stop,
         vwapRef,
         // Display fields (used in HTML templates)
@@ -780,10 +783,14 @@ async function main() {
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const sig = signalsFor(cfg);
-    // Fallback candidates: signals beyond topN that still pass filter + minScore + universe
+    // Fallback candidates: signals beyond topN that still pass filter + minScore + universe.
+    // PAS pour les modes SCRIPTÉS (Bull/Momentum/HighVol/Trendline/ETF/Casablanca/Fortress/A+) :
+    // leurs signaux SONT les ordres à placer (répliquent systematic-tss), pas des candidats de
+    // remplacement comme les modes quality (turbo/balanced...). Donc aucun "Fallback candidates".
+    const SCRIPTED_FILTERS = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'fortress_pm']);
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
-    const fallback = signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
+    const fallback = SCRIPTED_FILTERS.has(cfg.filterName) ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
       .slice(cfg.topN, cfg.topN + 4).map(s => {
         const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
         return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: $fmt(s.entry), stop: $fmt(st), tp1: $fmt(s.tp1), tp2: $fmt(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
