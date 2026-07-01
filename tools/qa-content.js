@@ -72,6 +72,10 @@ function detectType(html, file) {
   if (tab === 'analyses' || /\/analyses\//.test(file)) return 'analyse';
   if (tab === 'daily' || /\/daily\//.test(file)) return 'daily';
   if (tab === 'weekly' || /\/weekly\//.test(file)) return 'weekly';
+  // Scanner: validé en profondeur par qa-check.js (setups/gauges/signals). qa-content ne fait
+  // que les checks structurels UNIVERSELS (brand-bar, footer, GTM, placeholders) — surtout PAS
+  // les checks analyse (ticker-header requis) qui produisaient un faux positif.
+  if (tab === 'scanner' || /\/scanner\//.test(file)) return 'scanner';
   return 'analyse';
 }
 function newestDir(base, filter) {
@@ -184,7 +188,7 @@ function validate(file) {
     if (miss.length) return `attribut(s) manquant(s): ${miss.join(', ')}`;
   });
   check('data-tab cohérent avec le type de dossier', () => {
-    const expected = { analyse: 'analyses', daily: 'daily', weekly: 'weekly' }[type];
+    const expected = { analyse: 'analyses', daily: 'daily', weekly: 'weekly', scanner: 'scanner' }[type];
     const m = htmlTag.match(/\bdata-tab="([^"]+)"/);
     if (m && m[1] !== expected) return `data-tab="${m[1]}" mais dossier = ${type} (attendu "${expected}")`;
   });
