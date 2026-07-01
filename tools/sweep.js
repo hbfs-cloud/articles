@@ -244,6 +244,7 @@ function parseScan(dir) {
         sharia: s.sharia,
         source: source || s.source || 'signals',
         pattern: s.pattern || null,
+        universe: s.universe || null, // for universeFilter modes (casablanca/highvol/etf)
       });
     }
     return out;
@@ -1366,6 +1367,10 @@ function simulatePortfolio(allTrades, scans, config) {
         // explicit flag + known-haram ticker list + mapped haram sector (catches NNI/Nelnet finance
         // and ING even when the scan tagged them sharia:null).
         .filter(t => !config.shariaOnly || !isHaramForHalalMode(t))
+        // Per-mode universe restriction (casablanca=BVC, highvol=americanbull, etf=etf): only trade
+        // signals tagged with the mode's universe. Without this, casablanca (empty BVC pool) leaked
+        // US adaptive_fractal stocks (SAH/SNA) into a Bourse-de-Casablanca mode.
+        .filter(t => !config.universeFilter || (t.universe || '') === config.universeFilter)
         .sort((a, b) => b.score - a.score);
       // Defer topN slicing until after cooldown/dedup checks — ensures the best
       // ELIGIBLE candidates are picked, not just the top N before filtering.
@@ -2396,6 +2401,7 @@ async function main() {
         portfolioSize: cfg.portfolioSize, topN: cfg.topN, minScore: cfg.minScore || 0,
         rotation: cfg.rotation, strategyFilter: STRATEGY_FILTERS[cfg.filterName],
         shariaOnly: cfg.shariaOnly === true, // PM Halal mandate (Fortress) — gates candidate selection
+        universeFilter: cfg.universeFilter || null, // restrict to a signal universe (casablanca/americanbull/etf)
         horizonDays: cfg.horizon, partialTP: cfg.partialTP || false, partialTPPct: cfg.partialTPPct || 0.5,
         trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1,
         regimeFilters: cfg.regimeFilters || null,
@@ -2564,6 +2570,8 @@ async function main() {
               // Per-mode Sharia mandate also gates live-position injection (Fortress = PM Halal):
               // a non-compliant live position (e.g. ING bank, NNI/Nelnet finance) must NOT be injected.
               .filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
+              // Universe restriction also gates injection (casablanca must not hold US stocks).
+              .filter(s => !cfg.universeFilter || (s.universe || '') === cfg.universeFilter)
               .sort((a, b) => (b.score || 0) - (a.score || 0))
               .slice(0, cfg.topN);
             for (const s of filtered) {
