@@ -1672,10 +1672,11 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .pill.m{background:var(--surface-2);color:var(--ink-2)}
 .pill.pending{background:var(--info-wk);color:var(--info);border:1px dashed var(--info)}
 /* Long Orders to Place tables — bound card height + sticky head, vertical scroll */
-.section-card.cta-orders{max-height:560px;overflow-y:auto;overflow-x:hidden}
-.section-card.cta-orders .sc-head{position:sticky;top:0;background:var(--surface);z-index:var(--z-sticky);padding-top:.6rem}
-.section-card.cta-orders table.t thead th{position:sticky;top:3.2rem;background:var(--surface-2);z-index:calc(var(--z-sticky) - 1)}
-@media(max-width:600px){.section-card.cta-orders{max-height:420px}}
+/* Orders to Place: PAS de scroll interne + dual-sticky (le thead sticky top:3.2rem hardcodé
+   recouvrait la 1ère ligne quand le sc-head dépasse 3.2rem). Liste d'ordres courte → flux naturel.
+   Si un jour bcp d'ordres, bornage via un wrapper interne, pas via un offset sticky fragile. */
+.section-card.cta-orders{overflow-x:auto}
+.section-card.cta-orders .sc-head{padding-top:.6rem}
 .empty{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.85rem;display:flex;flex-direction:column;align-items:center;gap:.4rem}
 .empty i{font-size:1.4rem;opacity:.4}
 @media(max-width:600px){
