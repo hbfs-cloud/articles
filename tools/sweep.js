@@ -407,18 +407,24 @@ function betaToBTC(ticker, lookbackDays) {
 }
 
 // Module-scope strategy filter map (used by regime-aware filtering and grid search)
+// Exclusion Sets (lowercase canonical strategy keys — see detectStrategy()).
+// Kept COHERENT with the SF/SF_BF regex objects in tools/gen-status-page.js:
+// each mode's selected set here == the tags its gen-status regex admits.
+// Quality tags = momentum, breakout. Specialist equity tags =
+// momentum_rotation, highvol_breakout, trendline_breakout, etf_momentum,
+// adaptive_fractal, candlestick — these must NOT leak into quality/all filters.
 const STRATEGY_FILTERS_MAP = {
-  'all': new Set(['candlestick']),
+  'all': new Set(['momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'candlestick']),
   'no_sq': new Set(['short_squeeze']),
   'no_sq_pb': new Set(['short_squeeze', 'pullback']),
-  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'hybrid_megacap', 'pullback', 'candlestick']),
-  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
-  'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
+  'momentum_only': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
+  'breakout_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
+  'mom_bo': new Set(['short_squeeze', 'pre_squeeze', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback']),
-  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'hybrid_megacap', 'pullback', 'candlestick']),
+  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
-  'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'adaptive_fractal', 'hybrid_megacap', 'pullback', 'candlestick']),
-  'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'hybrid_megacap', 'pullback', 'candlestick']),
+  'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
+  'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'etf_momentum': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'hybrid_megacap', 'pullback', 'candlestick']),
   'trendline_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
 };

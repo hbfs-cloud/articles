@@ -642,10 +642,10 @@ async function main() {
 
   // Filters
   const SF = {
-    all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
-    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
+    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    momentum_only: s => /^Momentum$/i.test(s), breakout_only: s => /^Breakout$/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
-    mom_bo: s => /momentum|breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
+    mom_bo: s => /^(Momentum|Breakout)$/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
     adaptive_fractal: s => /^AdaptiveFractal$/i.test(s),
     highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
@@ -2096,7 +2096,7 @@ document.addEventListener('DOMContentLoaded',function(){
   var activeMode='balanced';
   var MODE_CATALOG=${modeCatalog};
   var DEFAULT_FAVS=['turbo','dynamic','balanced','fortress'];
-  var MAX_FAVS=6;
+  var MAX_FAVS=VALID_MODES.length; // pas de limite artificielle — l'utilisateur peut sélectionner tous les modes
   function getFavs(){try{var s=localStorage.getItem('dt-fav-modes');if(s){var a=JSON.parse(s);if(Array.isArray(a)&&a.length)return a.filter(function(m){return VALID_MODES.includes(m)}).slice(0,MAX_FAVS)}}catch(_){}return DEFAULT_FAVS.filter(function(m){return VALID_MODES.includes(m)})}
   function setFavs(a){try{localStorage.setItem('dt-fav-modes',JSON.stringify(a))}catch(_){}}
   function applyFavs(favs){
@@ -3235,10 +3235,10 @@ function backfillHistory() {
 
   // Parse signals for a given dateKey (YYYYMMDD) — JSON-first, HTML fallback
   const SF_BF = {
-    all: () => true, no_sq: s => !/short.?squeeze/i.test(s),
-    momentum_only: s => /momentum/i.test(s), breakout_only: s => /breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
+    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    momentum_only: s => /^Momentum$/i.test(s), breakout_only: s => /^Breakout$/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
-    mom_bo: s => /momentum|breakout|AdaptiveFractal|HighVolBreakout/i.test(s),
+    mom_bo: s => /^(Momentum|Breakout)$/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
     adaptive_fractal: s => /^AdaptiveFractal$/i.test(s),
     highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
