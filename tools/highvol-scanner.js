@@ -53,10 +53,21 @@ const BLACKLIST = new Set([
   'SKYT', 'ALAB', 'RERE', 'QBTS', 'ATAI', 'DQ', 'NTLA', 'LCID', 'TE',
   'IBRX', 'KOD', 'AUR', 'RXRX', 'TERN', 'NVAX', 'ASTS', 'DAWN', 'GLDD',
 ]);
-// NOTE: scanner_filters.excluded_sectors ([Real Estate, Utilities, Materials,
-// Communication Services]) and allocation min_market_cap=$1B / min_volume=10M are
-// applied in Go at the universe/secmaster level, which requires sector + market-cap
-// metadata not available offline in this repo. Documented divergence (see remaining_gap).
+// scanner_filters.excluded_sectors + allocation min_market_cap=$1B, appliqués en Go au niveau
+// universe/secmaster. Le metadata secteur/mcap est maintenant dispo via data/ticker-metadata.json
+// (port stockanalysis, tools/lib/stockanalysis-fetcher.js) → on applique les filtres nativement.
+const EXCLUDED_SECTORS = new Set(['Real Estate', 'Utilities', 'Materials', 'Communication Services']);
+const MIN_MARKET_CAP = 1_000_000_000; // allocation min_market_cap = $1B
+let TICKER_META = {};
+try { TICKER_META = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ticker-metadata.json'), 'utf8')); } catch (_) { /* metadata absent → filtre secteur/mcap OFF (fail-open) */ }
+// Rejette un ticker si son secteur est exclu OU mcap < $1B. Fail-open si pas de metadata (inconnu = gardé).
+function passesSectorMcap(ticker) {
+  const m = TICKER_META[ticker];
+  if (!m) return true; // metadata inconnue → ne pas rejeter (fail-open, comportement offline antérieur)
+  if (m.sector && EXCLUDED_SECTORS.has(m.sector)) return false;
+  if (m.marketCap && m.marketCap > 0 && m.marketCap < MIN_MARKET_CAP) return false;
+  return true;
+}
 
 // ─── Universe loader ────────────────────────────────────────────────────────
 
@@ -362,6 +373,7 @@ async function main() {
 
   for (const [ticker, rawBars] of priceData) {
     if (BLACKLIST.has(ticker)) continue; // allocation blacklist (toxic serial losers)
+    if (!passesSectorMcap(ticker)) continue; // excluded_sectors + min_market_cap $1B (metadata stockanalysis)
     const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
     const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
 
