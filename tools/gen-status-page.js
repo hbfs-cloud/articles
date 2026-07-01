@@ -2101,7 +2101,10 @@ document.addEventListener('DOMContentLoaded',function(){
   function setFavs(a){try{localStorage.setItem('dt-fav-modes',JSON.stringify(a))}catch(_){}}
   function applyFavs(favs){
     document.querySelectorAll('.mode-tab[data-mode]').forEach(function(t){t.classList.toggle('fav',favs.includes(t.dataset.mode))});
-    if(!favs.includes(activeMode)&&favs.length){window.switchMode(favs[0],{silent:true})}
+    // Guard: switchMode is defined further down this script block. applyFavs runs once early (fav
+    // CSS highlight) and once in the boot IIFE (after switchMode exists) for the auto-switch — the
+    // guard prevents a TypeError that would abort the whole block and leave switchMode undefined.
+    if(!favs.includes(activeMode)&&favs.length&&typeof window.switchMode==='function'){window.switchMode(favs[0],{silent:true})}
   }
   (function(){applyFavs(getFavs())})();
   window.openModePicker=function(){
@@ -2187,6 +2190,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(!m){var q=new URLSearchParams(location.search).get('m');if(q)m=q.toLowerCase();}
     m=resolveMode(m);
     if(m&&VALID_MODES.includes(m)&&m!=='balanced'){window.switchMode(m,{silent:true});}
+    else{applyFavs(getFavs());} // no explicit URL mode → honor favorite auto-switch (switchMode now defined)
   })();
   window.addEventListener('hashchange',function(){
     var m=resolveMode((location.hash||'').replace(/^#/,'').toLowerCase());
