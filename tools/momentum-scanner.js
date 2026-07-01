@@ -50,6 +50,7 @@ const UNIVERSE_FILES = {
   metals: 'metals-universe.json',
   forex: 'forex-universe.json',
   casablanca: 'casablanca-universe.json',
+  eu: 'eu-universe.json', // univers EU (stockanalysis, DE/FR/NL/IT/ES/PL/CH/UK/GR) — momentum EU
 };
 
 // ─── Universe loader ────────────────────────────────────────────────────────
@@ -61,7 +62,9 @@ function loadUniverse() {
   const fp = path.join(ROOT, 'data', file);
   if (!fs.existsSync(fp)) { console.error(`❌ Universe file not found: ${fp}`); process.exit(1); }
   const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
-  return data.tickers || [];
+  // Supporte 3 formats: {tickers:[strings]} (americanbull), {stocks:[{symbol}]} (eu-universe), array brut.
+  const raw = data.tickers || data.stocks || (Array.isArray(data) ? data : []);
+  return raw.map(x => (typeof x === 'string' ? x : (x && (x.symbol || x.ticker)))).filter(Boolean);
 }
 
 // ─── Yahoo OHLCV fetcher (shared cache) ─────────────────────────────────────

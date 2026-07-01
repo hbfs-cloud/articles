@@ -91,6 +91,7 @@ function loadUniverse() {
     americanbull: 'americanbull-universe.json',
     metals: 'metals-universe.json',
     etf: 'etf-universe.json',
+    eu: 'eu-universe.json', // univers EU (stockanalysis) — trendline EU
   };
   const file = aliases[UNIVERSE_NAME];
   if (!file) {
@@ -103,7 +104,9 @@ function loadUniverse() {
     process.exit(1);
   }
   const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
-  return data.tickers || [];
+  // Supporte {tickers:[strings]}, {stocks:[{symbol}]} (eu-universe), array brut.
+  const raw = data.tickers || data.stocks || (Array.isArray(data) ? data : []);
+  return raw.map(x => (typeof x === 'string' ? x : (x && (x.symbol || x.ticker)))).filter(Boolean);
 }
 
 // ─── Yahoo OHLCV fetcher (shared cache) ─────────────────────────────────────
