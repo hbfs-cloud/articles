@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-07-01T09:30:54.740Z",
+  "generated_at": "2026-07-01T10:13:44.598Z",
   "valid_for": "2026-07-01",
   "mode_status": {
     "state": "test",
@@ -87,115 +87,26 @@
   "orders": [
     {
       "id": "ORD-001",
-      "action": "BUY",
-      "ticker": "KLAC",
-      "broker_symbol": "KLAC_US_EQ",
-      "broker": {
-        "symbol": "KLAC_US_EQ",
-        "exchange": "NASDAQ",
-        "isin": "US4824801009",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 301.71,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 6,
-          "pct_of_portfolio": 20
-        },
-        "valid_from": "2026-07-01T09:30:00-04:00",
-        "valid_until": "2026-07-01T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 278,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 335,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 335,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 15,
-          "expiry_date": "2026-07-22",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 15 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 92,
-        "strategy": "MomentumRotation",
-        "rr": "1:1.4",
-        "sharia": null,
-        "thesis": "Équipement semis metrology, momentum IA, cassure vers nouvel ATH"
-      },
+      "action": "SKIP",
+      "ticker": "RDS",
+      "reason": "Not available on t212",
       "priority": 1
     },
     {
       "id": "ORD-002",
       "action": "BUY",
-      "ticker": "GS",
-      "broker_symbol": "GS_US_EQ",
+      "ticker": "SNA",
+      "broker_symbol": "SNA_US_EQ",
       "broker": {
-        "symbol": "GS_US_EQ",
+        "symbol": "SNA_US_EQ",
         "exchange": "NYSE",
-        "isin": "US38141G1040",
+        "isin": "US8330341012",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 1011,
+        "price": 402.40000000000003,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -204,7 +115,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 2000,
-          "shares": 1,
+          "shares": 4,
           "pct_of_portfolio": 20
         },
         "valid_from": "2026-07-01T09:30:00-04:00",
@@ -214,7 +125,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 962,
+          "price": 380.99,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -222,13 +133,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 1085,
+          "price": 445.22,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 1129,
+          "price": 466.62,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -269,29 +180,29 @@
         }
       ],
       "metadata": {
-        "score": 91,
-        "strategy": "Pullback",
-        "rr": "1:2.4",
-        "sharia": false,
-        "thesis": "Goldman Sachs en pullback technique (RSI 45.0) avec EMA stack bullish complet et MACD positif. Recul de 3.2% sous la 50DMA dans un uptrend intact. Correlation moderee avec BHP (0.60) et FDX (0.47), decorrelee de TRP (-0.02) et CPAY (0.25). Mcap ~$185B."
+        "score": 33.67,
+        "strategy": "AdaptiveFractal",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "AF score 33.67: Mom120=12%, RSI=61, Vol=0.012, Quality=45"
       },
-      "priority": 2
+      "priority": 1
     },
     {
       "id": "ORD-003",
       "action": "BUY",
-      "ticker": "ABVX",
-      "broker_symbol": "ABVX_US_EQ",
+      "ticker": "SLF",
+      "broker_symbol": "SLF_US_EQ",
       "broker": {
-        "symbol": "ABVX_US_EQ",
-        "exchange": "NASDAQ",
-        "isin": "US00370M1036",
+        "symbol": "SLF_US_EQ",
+        "exchange": "NYSE",
+        "isin": "CA8667961053",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 131.71,
+        "price": 78.42,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -300,7 +211,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 2000,
-          "shares": 15,
+          "shares": 25,
           "pct_of_portfolio": 20
         },
         "valid_from": "2026-07-01T09:30:00-04:00",
@@ -310,7 +221,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 126,
+          "price": 75.71000000000001,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -318,13 +229,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 148.83,
+          "price": 83.85000000000001,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 148.83,
+          "price": 86.56,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -365,29 +276,132 @@
         }
       ],
       "metadata": {
-        "score": 90,
-        "strategy": "HighVolBreakout",
-        "rr": "1:3.0",
+        "score": 31.52,
+        "strategy": "AdaptiveFractal",
+        "rr": "1:2.0",
         "sharia": null,
-        "thesis": "Biotech, gap-up +37% en volume massif vers 52W high 149"
+        "thesis": "AF score 31.52: Mom120=23%, RSI=77, Vol=0.009, Quality=40"
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-004",
+      "action": "SKIP",
+      "ticker": "HPS",
+      "reason": "Not available on t212",
+      "priority": 3
+    },
+    {
+      "id": "ORD-008",
+      "action": "BUY",
+      "ticker": "PENG",
+      "broker_symbol": "SGH_US_EQ",
+      "broker": {
+        "symbol": "SGH_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US7069151055",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 76.01,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 2000,
+          "shares": 26,
+          "pct_of_portfolio": 20
+        },
+        "valid_from": "2026-07-01T09:30:00-04:00",
+        "valid_until": "2026-07-01T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 61.57,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 0,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 104.88,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 119.32000000000001,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 15,
+          "expiry_date": "2026-07-22",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 15 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 159.83,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "MomRot score 159.8: Mom20=27.3%, Mom50=184.3%, Mom100=321.3%, RSI=66"
       },
       "priority": 3
     },
     {
-      "id": "ORD-004",
+      "id": "ORD-009",
       "action": "BUY",
-      "ticker": "BHP",
-      "broker_symbol": "BHP_US_EQ",
+      "ticker": "APPS",
+      "broker_symbol": "APPS_US_EQ",
       "broker": {
-        "symbol": "BHP_US_EQ",
-        "exchange": "NYSE",
-        "isin": "US0886061086",
+        "symbol": "APPS_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US25400W1027",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 83,
+        "price": 12.9,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -396,7 +410,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 2000,
-          "shares": 24,
+          "shares": 155,
           "pct_of_portfolio": 20
         },
         "valid_from": "2026-07-01T09:30:00-04:00",
@@ -406,7 +420,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 79.35000000000001,
+          "price": 10.92,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -414,13 +428,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 88.5,
+          "price": 16.85,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 91,
+          "price": 18.830000000000002,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -461,29 +475,29 @@
         }
       ],
       "metadata": {
-        "score": 88,
-        "strategy": "Pullback",
-        "rr": "1:2.2",
-        "sharia": true,
-        "thesis": "Minier diversifie australien en pullback controle (RSI 44.8, ext -2.2% sous 50DMA). EMA stack bullish confirme. Seul nom APAC du panier — diversification geographique critique. Correlation nulle avec TRP (-0.02), faible avec CPAY (0.31). Mcap ~$150B."
+        "score": 153.08,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "MomRot score 153.1: Mom20=38.7%, Mom50=244.0%, Mom100=175.1%, RSI=74"
       },
       "priority": 4
     },
     {
-      "id": "ORD-005",
+      "id": "ORD-010",
       "action": "BUY",
-      "ticker": "APH",
-      "broker_symbol": "APH_US_EQ",
+      "ticker": "ALAB",
+      "broker_symbol": "ALAB_US_EQ",
       "broker": {
-        "symbol": "APH_US_EQ",
-        "exchange": "NYSE",
-        "isin": "US0320951017",
+        "symbol": "ALAB_US_EQ",
+        "exchange": "NASDAQ",
+        "isin": "US04626A1034",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 175.17000000000002,
+        "price": 483.02,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -492,7 +506,7 @@
         "size": {
           "method": "FIXED_NOMINAL",
           "nominal_usd": 2000,
-          "shares": 11,
+          "shares": 4,
           "pct_of_portfolio": 20
         },
         "valid_from": "2026-07-01T09:30:00-04:00",
@@ -502,7 +516,7 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 165,
+          "price": 404.73,
           "trailing": true,
           "daily_trail_pct": 0,
           "max_stop_pct": 0,
@@ -510,13 +524,13 @@
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 190,
+          "price": 639.61,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 190,
+          "price": 717.9,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
@@ -557,11 +571,11 @@
         }
       ],
       "metadata": {
-        "score": 87,
-        "strategy": "HighVolBreakout",
-        "rr": "1:1.5",
+        "score": 150.58,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
         "sharia": null,
-        "thesis": "Connecteurs/électronique, nouveau plus haut historique 178, RSI 71"
+        "thesis": "MomRot score 150.6: Mom20=50.9%, Mom50=177.5%, Mom100=233.9%, RSI=72"
       },
       "priority": 5
     }

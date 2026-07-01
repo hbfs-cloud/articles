@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-07-01T09:30:55.393Z",
+  "generated_at": "2026-07-01T10:13:45.515Z",
   "valid_for": "2026-07-01",
   "mode_status": {
     "state": "live",
@@ -175,7 +175,7 @@
       ],
       "metadata": {
         "score": 92,
-        "strategy": "MomentumRotation",
+        "strategy": "Momentum",
         "rr": "1:1.4",
         "sharia": null,
         "thesis": "Équipement semis metrology, momentum IA, cassure vers nouvel ATH"
@@ -272,7 +272,7 @@
       ],
       "metadata": {
         "score": 90,
-        "strategy": "HighVolBreakout",
+        "strategy": "Breakout",
         "rr": "1:3.0",
         "sharia": null,
         "thesis": "Biotech, gap-up +37% en volume massif vers 52W high 149"
@@ -369,7 +369,7 @@
       ],
       "metadata": {
         "score": 87,
-        "strategy": "HighVolBreakout",
+        "strategy": "Breakout",
         "rr": "1:1.5",
         "sharia": null,
         "thesis": "Connecteurs/électronique, nouveau plus haut historique 178, RSI 71"
@@ -466,7 +466,7 @@
       ],
       "metadata": {
         "score": 87,
-        "strategy": "MomentumRotation",
+        "strategy": "Momentum",
         "rr": "1:1.8",
         "sharia": null,
         "thesis": "Semi analogique small-cap, spike parabolique connectivité IA, ATH"
@@ -563,7 +563,7 @@
       ],
       "metadata": {
         "score": 87,
-        "strategy": "HighVolBreakout",
+        "strategy": "Breakout",
         "rr": "1:2.3",
         "sharia": null,
         "thesis": "Biotech oncologie, poussée vers ATH 193, tendance forte EMA20"
@@ -660,109 +660,12 @@
       ],
       "metadata": {
         "score": 86,
-        "strategy": "MomentumRotation",
+        "strategy": "Momentum",
         "rr": "1:2.7",
         "sharia": null,
         "thesis": "Verre optique/fibre datacenter IA, rejet mèche à l'ATH 271, rebond sur support"
       },
       "priority": 6
-    },
-    {
-      "id": "ORD-007",
-      "action": "BUY",
-      "ticker": "AMBA",
-      "broker_symbol": "AMBA",
-      "broker": {
-        "symbol": "AMBA"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 82.13,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 50,
-          "shares": 1,
-          "pct_of_portfolio": 0.5
-        },
-        "valid_from": "2026-07-01T09:30:00-04:00",
-        "valid_until": "2026-07-01T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 71,
-          "trailing": false,
-          "daily_trail_pct": 2,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 0
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 96.69,
-          "partial_exit_pct": 50,
-          "description": "Sell 50% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 96.69,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "breakeven": {
-          "trigger_pct": 1,
-          "action": "MOVE_STOP_TO_ENTRY",
-          "description": "When unrealized P&L ≥ 1%, move stop to entry price"
-        },
-        "time_exit": {
-          "horizon_days": 8,
-          "expiry_date": "2026-07-13",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 8 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 86,
-        "strategy": "HighVolBreakout",
-        "rr": "1:1.3",
-        "sharia": null,
-        "thesis": "Semi edge-AI, cassure explosive +28% sur volume, vers 96"
-      },
-      "priority": 7
     }
   ],
   "error_handlers": {
