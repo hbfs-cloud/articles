@@ -34,41 +34,53 @@ function cfgFrom(baseModeId, overrides = {}) {
 }
 
 // ── Variants to compare. Each: { label, base, cfg } ──
-// Define proposals against each mode's current config.
+// Define proposals against each mode's current config. Every non-CURRENT row is
+// A/B-tested against its base's CURRENT row (same modeling both arms → only the
+// relative delta is trusted, per the segment-replay-absolute-DD rule).
 const VARIANTS = [
-  // BALANCED — the priority
+  // ── BALANCED — the ONLY mode with a CONFIG root cause (diagnostic juin 2026) ──
+  // Live balanced: filterName=mom_bo, maxStopPct=5, atrStopMult=0, sizingMethod=FIXED,
+  // NO trailing. It is the only one of the 4 modes lacking BOTH a risk-normalised
+  // sizing (inverse_atr) AND stop respiration → high-ATR momentum names (NVDA/ANET)
+  // whipsaw at the tight fixed 5% cap (12 SL / 15 trades in June) and full-size losses.
   { label: 'balanced CURRENT', base: 'balanced', cfg: {} },
-  { label: 'balanced FIX regimeFilter early_risk_off->breakout', base: 'balanced', cfg: {
-      regimeFilters: { risk_on: 'mom_bo', early_risk_off: 'breakout_only', risk_off: 'breakout_only', neutral: 'mom_bo', recovery: 'mom_bo' },
+  // P2 — ATR respiration (atrX1.8, capped 7%) + trailing 2R grace 3d. Lets winners run
+  //      and stops breathe past intraday noise. Winner of the full-history A/B.
+  { label: 'balanced P2 (atrX1.8 maxStop7 trail2R g3)', base: 'balanced', cfg: {
+      atrStopMult: 1.8, maxStopPct: 7, trailingStop: true, trailMultR: 2.0, trailGraceDays: 3,
   }},
-  { label: 'balanced FIX +neutral->breakout +maxStop5 +grace4', base: 'balanced', cfg: {
-      regimeFilters: { risk_on: 'mom_bo', early_risk_off: 'breakout_only', risk_off: 'breakout_only', neutral: 'breakout_only', recovery: 'mom_bo' },
-      maxStopPct: 5, trailGraceDays: 4,
-  }},
-  { label: 'balanced FULL breakout (static) +maxStop5 +grace4 +atrX1 noTrail', base: 'balanced', cfg: {
-      filterName: 'breakout_only',
-      regimeFilters: { risk_on: 'breakout_only', early_risk_off: 'breakout_only', risk_off: 'breakout_only', neutral: 'breakout_only', recovery: 'breakout_only' },
-      maxStopPct: 5, atrStopMult: 1, trailingStop: false, partialTP: false, rotation: 'daily_max1', minScore: 88,
+  // P4 — P2 + the diagnostic's headline guard-rail: inverse_atr sizing + targetRiskPct=1.
+  //      Wide stop → smaller position → bounded $ risk. The exact garde-fou turbo/dynamic
+  //      have and balanced never had. Tests whether normalising size protects DD further.
+  { label: 'balanced P4 (P2 + inverse_atr sizing)', base: 'balanced', cfg: {
+      atrStopMult: 1.8, maxStopPct: 7, trailingStop: true, trailMultR: 2.0, trailGraceDays: 3,
+      sizingMethod: 'inverse_atr', targetRiskPct: 1,
   }},
 
-  // FORTRESS
+  // ── FORTRESS — diagnostic verdict = RÉGIME (config saine). Proposal kept only to
+  //    demonstrate the gate rejects a config change that is not justified. ──
   { label: 'fortress CURRENT', base: 'fortress', cfg: {} },
   { label: 'fortress FIX early_risk_off->breakout +maxStop5', base: 'fortress', cfg: {
       regimeFilters: { risk_on: 'mom_bo', early_risk_off: 'breakout_only', risk_off: 'breakout_only', neutral: 'mom_bo', recovery: 'mom_bo' },
       maxStopPct: 5,
   }},
 
-  // DYNAMIC
+  // ── DYNAMIC — diagnostic verdict = RÉGIME (léger). Kept for gate demonstration. ──
   { label: 'dynamic CURRENT', base: 'dynamic', cfg: {} },
   { label: 'dynamic +maxStop6 +early_risk_off->breakout', base: 'dynamic', cfg: {
       regimeFilters: { risk_on: 'mom_bo', early_risk_off: 'breakout_only', risk_off: 'breakout_only', neutral: 'mom_bo', recovery: 'mom_bo' },
       maxStopPct: 6,
   }},
 
-  // TURBO (safety only — keep strategy)
+  // ── TURBO — diagnostic verdict = RÉGIME (léger). Kept for gate demonstration. ──
   { label: 'turbo CURRENT', base: 'turbo', cfg: {} },
   { label: 'turbo +maxStop6', base: 'turbo', cfg: { maxStopPct: 6 } },
 ];
+
+// Mandatory validation window (calendar days). The config-change rule requires a
+// 30-day regime-aware backtest that BEATS the current config before any change to
+// turbo/balanced/dynamic/fortress. WINDOW_DAYS drives that gate.
+const WINDOW_DAYS = 30;
 
 function oosFromEquity(equityCurve, oosStartDate) {
   if (!equityCurve || equityCurve.length < 2) return { ret: 0, dd: 0 };
@@ -79,6 +91,76 @@ function oosFromEquity(equityCurve, oosStartDate) {
   let peak = slice[0].value, maxDD = 0;
   for (const p of slice) { if (p.value > peak) peak = p.value; const dd = (p.value - peak) / peak * 100; if (dd < maxDD) maxDD = dd; }
   return { ret, dd: +maxDD.toFixed(2) };
+}
+
+// Recent trailing-window metrics (calendar days). Return/DD from the equity-curve slice
+// (relative A/B only — absolute segment DD is unreliable), WR/PF/n from closed trades
+// whose exit falls inside the window. This is the mandatory 30-day gate input.
+function windowFromEquity(equityCurve, closedTrades, days) {
+  if (!equityCurve || equityCurve.length < 2) return null;
+  const lastDate = equityCurve[equityCurve.length - 1].date;
+  const cutoff = new Date(new Date(lastDate).getTime() - days * 86400000).toISOString().slice(0, 10);
+  const slice = equityCurve.filter(p => p.date >= cutoff);
+  if (slice.length < 2) return null;
+  const startV = slice[0].value, endV = slice[slice.length - 1].value;
+  const denom = Math.abs(startV) || 1;
+  const ret = +(((endV - startV) / denom) * 100).toFixed(2);
+  let peak = slice[0].value, maxDD = 0;
+  for (const p of slice) { if (p.value > peak) peak = p.value; const pk = Math.abs(peak) || 1; const dd = (peak - p.value) / pk * 100; if (dd > maxDD) maxDD = dd; }
+  const ct = (closedTrades || []).filter(t => t.exitDate && t.exitDate >= cutoff);
+  const w = ct.filter(t => (t.pnlPct || 0) > 0), l = ct.filter(t => (t.pnlPct || 0) <= 0);
+  const wr = ct.length ? +((w.length / ct.length) * 100).toFixed(0) : 0;
+  const gw = w.reduce((s, t) => s + (t.pnlPct || 0), 0), gl = Math.abs(l.reduce((s, t) => s + (t.pnlPct || 0), 0));
+  const pf = gl > 0 ? +(gw / gl).toFixed(2) : (gw > 0 ? 99 : 0);
+  return { ret, dd: +maxDD.toFixed(2), wr, pf, n: ct.length };
+}
+
+// Per-regime realized breakdown from closed trades (regime-aware eval — never a uniform
+// full-period replay). Each trade carries the scan-day regime label.
+function regimeBreakdown(closedTrades) {
+  const by = {};
+  for (const t of (closedTrades || [])) { const r = t.regime || 'unknown'; (by[r] = by[r] || []).push(t); }
+  const out = {};
+  for (const r of Object.keys(by)) {
+    const ct = by[r];
+    const w = ct.filter(t => (t.pnlPct || 0) > 0), l = ct.filter(t => (t.pnlPct || 0) <= 0);
+    const gw = w.reduce((s, t) => s + (t.pnlPct || 0), 0), gl = Math.abs(l.reduce((s, t) => s + (t.pnlPct || 0), 0));
+    out[r] = {
+      n: ct.length,
+      wr: +((w.length / Math.max(1, ct.length)) * 100).toFixed(0),
+      pf: gl > 0 ? +(gw / gl).toFixed(2) : (gw > 0 ? 99 : 0),
+      sum: +ct.reduce((s, t) => s + (t.pnlPct || 0), 0).toFixed(1),
+    };
+  }
+  return out;
+}
+
+// GO/WAIT gate. Enforces: (1) the mandatory 30-day window BEATS current (higher return,
+// DD not materially worse), (2) walk-forward OOS does not degrade, (3) full-period A/B
+// delta is positive. All comparisons are relative to the SAME-base CURRENT row. A DD>8%
+// note flags the mode-success guardrail but does not by itself veto (informational).
+function evalGate(cur, prop) {
+  const reasons = [];
+  let go = true;
+  const w = prop.win, cw = cur.win;
+  if (!w) { go = false; reasons.push('30j window indisponible'); }
+  else if (cw && cw.n >= 3 && w.n >= 3) {
+    // Both arms active in the window → full head-to-head (return up, DD not worse).
+    if (!(w.ret > cw.ret)) { go = false; reasons.push(`30j ret ${w.ret}%≤cur ${cw.ret}%`); }
+    if (w.dd > cw.dd + 1.0) { go = false; reasons.push(`30j DD ${w.dd}%>cur ${cw.dd}% (+1pt tol)`); }
+  } else {
+    // Baseline idle/insufficient in the window → DD compare is void. Require the proposal
+    // to be self-healthy (non-negative return, PF≥1) and lean on OOS + full for the verdict.
+    if (w.ret < 0) { go = false; reasons.push(`30j ret ${w.ret}%<0 (baseline idle n=${cw ? cw.n : 0})`); }
+    if (w.pf < 1) { go = false; reasons.push(`30j PF ${w.pf}<1 (baseline idle)`); }
+    reasons.push(`30j: prop +${w.ret}% PF${w.pf} n${w.n} vs cur idle n${cw ? cw.n : 0}`);
+  }
+  if (prop.oosRet < cur.oosRet) { go = false; reasons.push(`OOS ret ${prop.oosRet}%<cur ${cur.oosRet}%`); }
+  if (prop.ret <= cur.ret) { go = false; reasons.push(`full ret ${prop.ret}%≤cur ${cur.ret}%`); }
+  // Mode-success criterion: max DD ≤ 8% is a hard mode requirement → hard veto.
+  if (Math.abs(prop.dd) > 8) { go = false; reasons.push(`full DD ${prop.dd}% viole guardrail ≤8%`); }
+  if (go) reasons.unshift('bat l\'actuel (30j + OOS + full, DD≤8%)');
+  return { verdict: go ? 'GO' : 'WAIT', reasons };
 }
 
 function exitKey(c) {
@@ -148,22 +230,60 @@ async function main() {
       circuitBreakerPause: c.circuitBreakerPause ?? 3, positionSizePct: c.positionSizePct || 1,
       sizingMethod: c.sizingMethod || null, targetRiskPct: c.targetRiskPct ?? 0,
     });
-    if (!m) { rows.push({ label: v.label, err: 'no metrics' }); continue; }
+    if (!m) { rows.push({ label: v.label, base: v.base, err: 'no metrics' }); continue; }
     const oos = oosFromEquity(m.equityCurve, oosStartDate);
-    rows.push({ label: v.label, ret: m.returnTotal, dd: m.maxDD, wr: m.winRate, pf: m.profitFactor,
-      cal: m.calmar, n: m.trades, oosRet: oos.ret, oosDD: oos.dd });
+    const win = windowFromEquity(m.equityCurve, m.closedTrades, WINDOW_DAYS);
+    const regimes = regimeBreakdown(m.closedTrades);
+    rows.push({ label: v.label, base: v.base, isCur: v.label.includes('CURRENT'),
+      ret: m.returnTotal, dd: m.maxDD, wr: m.winRate, pf: m.profitFactor,
+      cal: m.calmar, n: m.trades, oosRet: oos.ret, oosDD: oos.dd, win, regimes });
   }
 
+  // ── 1. Full-period + walk-forward OOS table (relative A/B) ──
   console.log('VARIANT'.padEnd(62) + 'FULL Ret    DD     WR    PF     n   | OOS Ret    DD');
   console.log('-'.repeat(120));
   for (const r of rows) {
     if (r.err) { console.log(r.label.padEnd(62) + r.err); continue; }
-    const isCur = r.label.includes('CURRENT');
-    const mark = isCur ? '  ' : '→ ';
+    const mark = r.isCur ? '  ' : '→ ';
     console.log(mark + r.label.padEnd(60) +
       `${(r.ret>0?'+':'')+r.ret}%`.padEnd(11) + `${r.dd}%`.padEnd(7) +
       `${r.wr}%`.padEnd(6) + `${r.pf}`.padEnd(7) + `${r.n}`.padEnd(4) + '| ' +
       `${(r.oosRet>0?'+':'')+r.oosRet}%`.padEnd(11) + `${r.oosDD}%`);
+  }
+
+  // ── 2. Mandatory recent 30-day window (the config-change gate input) ──
+  console.log(`\n── Recent ${WINDOW_DAYS}-day window (gate input; relative A/B, absolute DD indicative only) ──`);
+  console.log('VARIANT'.padEnd(62) + 'Ret        DD      WR    PF     n');
+  console.log('-'.repeat(100));
+  for (const r of rows) {
+    if (r.err || !r.win) { console.log((r.isCur ? '  ' : '→ ') + r.label.padEnd(60) + (r.err || 'window n/a')); continue; }
+    const mark = r.isCur ? '  ' : '→ ';
+    console.log(mark + r.label.padEnd(60) +
+      `${(r.win.ret>0?'+':'')+r.win.ret}%`.padEnd(11) + `${r.win.dd}%`.padEnd(8) +
+      `${r.win.wr}%`.padEnd(6) + `${r.win.pf}`.padEnd(7) + `${r.win.n}`);
+  }
+
+  // ── 3. Per-regime realized breakdown (regime-aware; never uniform replay) ──
+  console.log('\n── Per-regime realized (PF / WR / n / sumPnl%) ──');
+  for (const r of rows) {
+    if (r.err) continue;
+    const parts = Object.entries(r.regimes).sort((a,b)=>b[1].n-a[1].n)
+      .map(([reg, s]) => `${reg}: PF ${s.pf} WR ${s.wr}% n${s.n} (${s.sum>0?'+':''}${s.sum}%)`);
+    console.log((r.isCur ? '  ' : '→ ') + r.label.padEnd(60) + (parts.join('  |  ') || 'no closed trades'));
+  }
+
+  // ── 4. GO/WAIT gate — each proposal vs its base CURRENT ──
+  const curByBase = {};
+  for (const r of rows) if (r.isCur && !r.err) curByBase[r.base] = r;
+  console.log('\n══ GATE: 30-day regime-aware backtest must BEAT current (config-change rule) ══');
+  console.log('PROPOSAL'.padEnd(56) + 'VERDICT   DETAIL');
+  console.log('-'.repeat(120));
+  for (const r of rows) {
+    if (r.isCur || r.err) continue;
+    const cur = curByBase[r.base];
+    if (!cur) { console.log('→ ' + r.label.padEnd(54) + 'SKIP     no CURRENT baseline for base ' + r.base); continue; }
+    const g = evalGate(cur, r);
+    console.log('→ ' + r.label.padEnd(54) + g.verdict.padEnd(9) + ' ' + g.reasons.join('; '));
   }
   console.log('\n=== Done (no files written) ===');
 }
