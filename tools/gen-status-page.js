@@ -1453,8 +1453,13 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
     const c = m.cfg.color;
     return `<button type="button" role="tab" aria-pressed="${id === 'balanced' ? 'true' : 'false'}" aria-label="Switch to ${m.cfg.label} mode" class="mode-tab${id === 'balanced' ? ' active' : ''}" data-mode="${id}" data-mode-status="${m.cfg.status || 'live'}" onclick="switchMode('${id}')" style="--mc:${c}"><span class="mode-dot" style="background:${c}"></span>${m.cfg.label}${renderStatusBadge(m.cfg.status)}${id === 'balanced' ? ' <span class="tab-rec hide-m">★ Rec.</span>' : ''}</button>`;
   }
-  // All tabs rendered hidden — JS shows only favorites from localStorage
-  const allTabs = populatedClasses.flatMap(ac => assetBuckets[ac]).map(([id, m]) => tabButton(id, m)).join('');
+  // All tabs rendered hidden — JS shows only favorites from localStorage.
+  // Groupes VISIBLES par type (LLM | Scripted): un label de groupe précède les tabs de chaque groupe.
+  const allTabs = populatedClasses.map(ac => {
+    const tabs = assetBuckets[ac].map(([id, m]) => tabButton(id, m)).join('');
+    const label = showClassLabels ? `<span class="mode-class-label" data-class="${ac}"><i class="fas fa-${ASSET_CLASS_ICON[ac] || 'folder'}" style="font-size:.62rem;margin-right:.28rem"></i>${ASSET_CLASS_LABEL[ac]}</span>` : '';
+    return label + tabs;
+  }).join('');
   const tabRail = allTabs + `<button type="button" class="mode-tab mode-picker-btn" onclick="openModePicker()" aria-label="Select modes"><i class="fas fa-sliders"></i></button>`;
   // Mode picker catalog (JSON for JS)
   const modeCatalog = JSON.stringify(populatedClasses.map(ac => ({
@@ -1632,6 +1637,10 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .th-scroll table{margin-top:0!important}
 .th-scroll thead th{position:sticky;top:0;background:var(--surface-2);z-index:1}
 .hide-section{display:none!important}
+/* Labels de groupe du tab rail (LLM | Scripted) */
+.mode-class-label{display:inline-flex;align-items:center;padding:.3rem .6rem;margin:0 .15rem;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--surface-2);border-radius:999px;white-space:nowrap;flex-shrink:0;align-self:center}
+.mode-class-label[data-class="llm"]{color:oklch(45% 0.13 275)}
+.mode-class-label[data-class="scripted"]{color:oklch(45% 0.11 155)}
 .sc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
 .sc-head h3{font-size:1rem;font-weight:700;color:var(--ink);margin:0;display:flex;align-items:center;gap:.45rem;letter-spacing:-.01em}
 .sc-head h3 i{font-size:.78rem;color:var(--muted)}
