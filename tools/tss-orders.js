@@ -31,9 +31,32 @@ function arg(name, def) {
 }
 
 const MODE = arg('mode', 'bull');
-const CONFIG = arg('config', 'config/portfolio_us_americanbulls.yaml');
+
+// Mode → config systematic-tss (le PM de référence). US = backtestable offline (données cachées);
+// EU (momentum/trendline) nécessite le secmaster EU (infra data).
+const MODE_CONFIG = {
+  bull:       'config/portfolio_us_americanbulls.yaml',
+  highvol:    'config/portfolio_us_highvol.yaml',
+  etf:        'config/pre-live/portfolio_etf_us.yaml',
+  casablanca: 'config/later/portfolio_ma.yaml',
+  momentum:   'config/pre-live/portfolio_eu_momentum_rotation.yaml', // EU — needs data infra
+  trendline:  'config/backup/portfolio_eu_momentum_rotation.yaml',   // eu-trend — needs data infra
+};
+const CONFIG = arg('config', MODE_CONFIG[MODE] || 'config/portfolio_us_americanbulls.yaml');
+
+// ⚠️ DATE DE DÉPART = INCEPTION du mode (statusSince dans modes-config.json). Le book s'accumule
+// depuis l'inception : chaque jour D on re-run le backtest de <inception> → D pour obtenir les
+// ordres de D+1. Sans start fixe, le book (positions/stops) diverge. Override via --start.
+function inceptionOf(mode) {
+  try {
+    const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'modes-config.json'), 'utf8'));
+    const ss = cfg.modes && cfg.modes[mode] && cfg.modes[mode].statusSince;
+    if (ss) return String(ss).slice(0, 10);
+  } catch (_) { }
+  return '';
+}
 const END = arg('end', new Date().toISOString().slice(0, 10)); // caller passes a concrete date; no Date.now in scanner ctx
-const START = arg('start', '');
+const START = arg('start', inceptionOf(MODE)); // défaut = inception (statusSince)
 const TSS = arg('tss', path.join(process.env.HOME || '', 'GolandProjects', 'systematic-tss'));
 const JSON_OUT = arg('json', '');
 

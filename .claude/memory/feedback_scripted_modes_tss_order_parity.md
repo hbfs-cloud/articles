@@ -22,4 +22,6 @@ metadata:
 
 **Fix cible :** aligner l'entrée (candidats du scanner JS) sur les BUY du PM systematic-tss (ex Bull: filtre liquidité inconditionnel à retirer, gate 8× conservé) ; les sorties/stops sont gérés par notre position-management sur NOTRE book. Le book converge : si on place les mêmes entrées, on tient les mêmes positions → les sorties matchent. Valider chaque scanner contre `tss-orders.js`.
 
+**⚠️ DATE DE DÉPART (opération quotidienne) :** le book s'accumule depuis l'**inception** (= `statusSince` du mode dans modes-config.json ; bull=2026-06-05, autres=2026-06-29). Chaque jour D, pour les ordres de **D+1**, on relance le backtest de `<inception>` → D. Sans start fixe, le book (positions/stops) diverge → ordres de sortie faux. `tools/tss-orders.js` lit `statusSince` en défaut de `--start` + mappe mode→config (MODE_CONFIG). Opération quotidienne : `node tools/tss-orders.js --mode <mode> --end <jour D>`.
+
 **How to apply :** Ne PAS juger la parité d'un mode scripté au compte de signaux ni au niveau pattern (ab-scan) — comparer les ORDRES pré-open du PM. Configs US qui tournent offline : `portfolio_us_americanbulls`(bull), `portfolio_us_highvol`(highvol), `pre-live/portfolio_etf_us`(etf). Lié à [[bull-8x-parity]] (confirmée JUSTE) et [[runscreener-dsl-calibration]].
