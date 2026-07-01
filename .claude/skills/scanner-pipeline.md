@@ -361,14 +361,20 @@ Format Telegram obligatoire : `<b>` pas `**`, `\n` pas `<br>`.
 
 **Fortress ne passe PAS par sweep.js** — ses trades sont gérés ici par le PM via broker MCP.
 
-Après le push, envoyer les notifications via **MCP Notification** :
+Après le push, envoyer les notifications per-mode via le **générateur dédié** puis **MCP Notification** :
+```bash
+# 1. Génère les messages per-mode (lit modes-config + portfolio/v1/<mode>/all.json + signals.json)
+node tools/gen-scanner-notifications.js --out    # écrit data/scanner-notifications.json
 ```
-send_batch([
-  { to: "scanner-{mode}", body: "🔍 Scanner {DATE} — {N} picks\n\n{résumé par mode}\n\nhttps://articles.dailytickers.com/scanner/{YYYYMMDD}/" }
-  // un message par mode actif (turbo, dynamic, balanced, orbit, fortress, tkl)
-])
 ```
-Les MCPs (DailyTickers, Notification, Memory) sont enregistrés via OAuth2 — aucun token en .env nécessaire.
+# 2. Passe le tableau data/scanner-notifications.json#messages TEL QUEL à send_batch :
+send_batch(messages = <contenu de data/scanner-notifications.json#messages>)
+```
+- Chaque message = `{ to, format:"html", body }` déjà prêt (alias pré-configuré, HTML, \n). **Ne rien reformater.**
+- Le générateur gère honnêtement : **Bull 0-signal** explique le gate 8× haute-conviction (pas cassé), **Fortress** montre l'univers Halal (☪, sharia===true), modes pleins expliquent pourquoi 0 nouveau candidat.
+- **NE PAS** rédiger les messages à la main — le générateur garantit cohérence avec la status page (mêmes stats/positions/régime).
+- Alias : `scanner-turbo/dynamic/balanced/orbit/fortress` sont pré-configurés. `scanner-bull`/`scanner-aplus` : créer via `set_alias` OU router vers `alerts` OU filtrer avec `--modes`.
+- Les MCPs (DailyTickers, Notification, Memory) sont enregistrés via OAuth2 — aucun token en .env nécessaire.
 
 **Post-pipeline checklist OBLIGATOIRE** :
 - QA check (`tools/qa-check.js`) doit afficher 0 ❌
