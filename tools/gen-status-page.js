@@ -1065,7 +1065,7 @@ ${(() => {
           const vwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr>
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${vwapCell}</td>
@@ -1084,7 +1084,7 @@ ${(() => {
           const rotVwapCell = s.vwapRef ? `$${s.vwapRef.toFixed(2)}` : '—';
           actionRows.push(`<tr style="background:var(--warn-wk)">
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}')"></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
       <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${rotVwapCell}</td>
@@ -1282,7 +1282,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           const rowStyle = isTerminal ? ' style="opacity:.45;background:var(--surface-2);filter:grayscale(1)"' : isExpired ? ' style="opacity:.6;background:var(--neg-wk)"' : '';
           const posCols = 10; // columns in Open Positions table
           const posVwap = p.vwap ? '$' + p.vwap.toFixed(2) : '—';
-          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
+          return `<tr${rowStyle}><td>${tkLogo(p.ticker)}<b>${p.ticker}</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${p.ticker}&ty=c&ta=1&p=d&s=l" alt="${p.ticker}" class="fv-thumb" onclick="fvOpen('${p.ticker}','${p.universe||''}')"></td><td class="m hide-m">${p.scan_date ? p.scan_date.slice(5) : '—'}</td><td class="hide-m">$${(p.entry || 0).toFixed(2)}</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">${posVwap}</td><td class="hide-m">$${(p.current_price || 0).toFixed(2)}</td><td class="${rc}" data-format="pct"><b>${p.return_pct > 0 ? '+' : ''}${p.return_pct}%</b></td><td class="neg hide-m">$${(p.stop || 0).toFixed(2)}</td><td class="pos hide-m">${p.tp2 ? '$' + p.tp2.toFixed(2) : (p.tp1 ? '$' + p.tp1.toFixed(2) : '—')}</td><td class="${leftCls}">${leftLabel}</td></tr>${p.thesis ? `<tr class="thesis-row"${rowStyle}><td colspan="${posCols}"><div class="thesis-text">${p.thesis}</div></td></tr>` : ''}`;
         }).join('')}</tbody>
   </table>` : `<p class="empty"><i class="fas fa-inbox"></i>
     <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">${cfg.portfolioSize === 1 ? 'Single-slot mode — entries open only when a signal passes minScore (' + (cfg.minScore || 85) + ') and entry-gate (VWAP/ATR).' : 'All ' + cfg.portfolioSize + ' slots empty — either no signal cleared minScore (' + (cfg.minScore || 85) + ') today or stale exits closed prior holds.'}</span></span>
@@ -1908,7 +1908,9 @@ details[open] summary::after{transform:rotate(90deg)}
   </div>
 </div>
 <script>
-function fvOpen(ticker){
+function fvOpen(ticker,market){
+  // Casablanca (BVC) = actions marocaines, pas sur FinViz (US). → page instrument BVC (ticker-based).
+  if(market==='casablanca'){ window.open('https://casablanca-bourse.com/fr/live-market/instruments/'+encodeURIComponent(ticker),'_blank','noopener'); return; }
   var d=document.getElementById('fvDialog');
   document.getElementById('fvTicker').textContent=ticker;
   document.getElementById('fvImg').src='https://finviz.com/chart.ashx?t='+ticker+'&ty=c&ta=1&p=d&s=l';

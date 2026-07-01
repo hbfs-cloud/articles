@@ -457,7 +457,7 @@ function loadCachedPrice(ticker) {
   // BVC (Casablanca) fallback: Moroccan tickers are NOT on Yahoo, so ${ticker}.json is empty.
   // bvc-fetcher writes ${ticker}_ohlcv.json as an ARRAY of bars — convert it to the date-keyed
   // priceHistory the simulator expects so casablanca-universe setups can actually be traded.
-  const bvcFp = path.join(PRICE_CACHE_DIR, `${ticker}_ohlcv.json`);
+  const bvcFp = path.join(PRICE_CACHE_DIR, 'CVA', `${ticker}_ohlcv.json`);
   if (fs.existsSync(bvcFp)) {
     try {
       const bars = JSON.parse(fs.readFileSync(bvcFp, 'utf8'));

@@ -7,7 +7,9 @@ const fs = require('fs');
 const path = require('path');
 
 const BVC_API = 'https://api.casablanca-bourse.com/fr/api/bourse_data';
-const CACHE_DIR = path.join(__dirname, '..', '..', 'data', '.price-cache');
+// Cache marché-namespacé: BVC (Casablanca) = CVA/, pour éviter la collision de ticker avec le
+// cache US flat (ex "SNA" = Snap-on US $402 vs Stokvis Nord BVC ~74 MAD). Voir data/.price-cache/US/.
+const CACHE_DIR = path.join(__dirname, '..', '..', 'data', '.price-cache', 'CVA');
 
 // BVC uses self-signed/incomplete cert chain
 const agent = new https.Agent({ rejectUnauthorized: false });
