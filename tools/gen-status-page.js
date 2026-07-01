@@ -2922,6 +2922,9 @@ document.addEventListener('DOMContentLoaded',function(){
         var panel=row.closest('.mode-panel');
         if(panel){
           var pid=panel.id;
+          // Casablanca (BVC): aucun prix live fiable (pas sur Yahoo) → l'exec-sim produirait un P&L
+          // délirant (fill MAD vs prix US) + des lignes "Closed today" fantômes. On skip l'exec-sim.
+          if(panel.dataset.market==='casablanca'||panel.dataset.nolive==='1')return;
           if(!panels[pid])panels[pid]={p:[],f:[],filled:0,wins:0,losses:0,pnlSum:0,stopped:0,tp1:0,tp2:0,n:0};
           if(rank==='primary'){
             panels[pid].p.push({row:row,st:st,tk:tk,entry:entry,stop:stop,tp1:tp1,tp2:tp2,q:q});panels[pid].n++;
