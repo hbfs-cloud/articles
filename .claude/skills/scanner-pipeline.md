@@ -455,6 +455,13 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
    node tools/lessons-engine.js --promote <rule-id>    # REFUSE et liste les gates manquants si sample_size<12, <3 tickers distincts, <2 clusters distincts, scope.regimes invalide, ou expectancy null — ne JAMAIS forcer
    ```
    **⚠️ Aucune promotion narrative** : `--promote` applique des gates anti-overfitting stricts (sample_size ≥ 12, ≥ 3 tickers distincts, ≥ 2 clusters distincts, scope.regimes cohérent, expectancy non-null). C'est le moteur qui décide, pas la rétro — si les gates ne sont pas atteints, la règle reste `candidate` même si la conviction qualitative est forte.
+
+   **Miroir MCP memory (outcome linkage)** : pour chaque règle validée ci-dessus qui existe
+   AUSSI côté memory.hbfs-cloud.com (workspace `dailystocks`, même sujet), appeler
+   `report_usage(memory_id, outcome=confirmed|weakened|invalidated)` avec les mêmes chiffres
+   R/MAE/MFE en evidence — `confirmed` réarme le decay serveur, `invalidated` déprécie.
+   (Tools `report_usage`/`get_inbox`/`get_delta`/`ack_memory` exposés depuis le 2026-07-02 ;
+   si absents de la session → skip avec note, ne pas bloquer la rétro.)
 7. **Indexer + Push** :
    ```bash
    node tools/publish.js --type retro --path scanner/retrospective/YYYYMMDD/index.html
