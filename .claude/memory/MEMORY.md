@@ -119,6 +119,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - [Routine Redesign v2](project_routine_redesign_v2.md) — Conductors replaced by simple Sonnet routines (crash detector, market pulse, rotation detector). Old conductors disabled 2026-06-24.
 
 ## Références Externes
+- [Screener Reliability 2026-07-02](reference_screener_reliability_20260702.md) — RunScreener DSL fiable (rising OK, mcap OK, as_of OK) ; gaps gateway : enable_backtest sans backtest_result, region=eu vide, AutoScreener sans floor mcap.
 - [Exa.ai API](reference_exa_api.md) — API de recherche sémantique, alternative à WebSearch pour deep research
 - [Hetzner Cloud](reference_hetzner.md) — SSH access hetzner-cloud (user=ci, key=*_ci), hosts openclaw
 - [OAuth2 Migration](project_oauth2_migration.md) — Tous MCPs via OAuth2 (DailyTickers, Memory, Telegram, Broker Sim). Zéro token en .env depuis 2026-06-20
