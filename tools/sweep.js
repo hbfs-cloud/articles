@@ -1064,6 +1064,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     pnlPct: +(pnlPct * 100).toFixed(2),
     holdDays: daysHeld,
     source: setup.source || 'signals',
+    // universe MUST survive into the pre-simulated trade list (tradesByKey): the
+    // per-mode universe restriction in simulatePortfolio (`(t.universe||'')===config.universeFilter`)
+    // runs on THESE trade objects, not the raw setups. Dropping it here made that
+    // filter reject 100% of trades for every universeFilter mode (etf/etf_eu/highvol/
+    // casablanca) → silent 0-conversion. See forensics 2026-07-02.
+    universe: setup.universe || null,
   };
 }
 
@@ -1782,6 +1788,11 @@ function simulatePortfolio(allTrades, scans, config) {
       actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,
       regime: t.regime || null,
       source: t.source || 'signals',
+      // Carry universe onto the stored/appended trade so it stays consistent with the
+      // setup that produced it (universeFilter modes: etf/etf_eu/highvol/casablanca).
+      // The entry-gate filter already ran on the pre-sim objects (which now keep universe);
+      // this only makes the persisted record self-describing for re-runs / audits.
+      universe: t.universe ?? null,
       // Trade-outcome enrichment (MAE/MFE, forward horizons, R-multiple) — computed by
       // simulateTrade for freshly simulated trades. Must be carried through this
       // projection or the FROZEN_ONLY append path (sim2.closedTrades) silently drops
