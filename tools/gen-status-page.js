@@ -142,57 +142,6 @@ const TODAY_ISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York
 const TODAY_KEY = TODAY_ISO.replace(/-/g, '');            // YYYYMMDD
 const TODAY_LABEL = TODAY_ISO.slice(5).replace('-', '/'); // MM/DD (chart label)
 
-// Sim read-switch (Stage 5). When source-of-truth.json marks a mode "sim", render that mode's
-// positions + equity from the broker-simulator cache instead of articles' live tracking — with a
-// HARD FALLBACK to the existing articles source on any error / missing token / missing cache /
-// "articles" flag. The public page must NEVER break or show empty because of the sim, so every
-// overlay below returns the original input unchanged when the sim isn't usable.
-let simSrc = null;
-try { simSrc = require('./lib/sim-source'); } catch (_) { simSrc = null; }
-let SIM_INITIAL_EQUITY = 100000;
-try {
-  const _scfg = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/simulator-config.json'), 'utf8'));
-  if (_scfg && _scfg.initialEquity > 0) SIM_INITIAL_EQUITY = _scfg.initialEquity;
-} catch (_) { /* keep default */ }
-
-// applySimPositions(id, pos): when mode "id" is "sim" and the sim cache has positions, replace the
-// articles positions with sim-sourced ones — preserving each ticker's articles metadata (stop/tp/
-// score/scan_date/days_remaining), overriding only entry (avg fill), current_price and return_pct.
-// Returns the unmodified `pos` on any error / no flag / no cache.
-function applySimPositions(id, pos) {
-  if (!simSrc || !id) return pos;
-  let simPos = null;
-  try { simPos = simSrc.simPositions(id); } catch (_) { simPos = null; }
-  if (!simPos || simPos.length === 0) return pos;
-  const byTicker = {};
-  for (const ap of pos || []) if (ap && ap.ticker) byTicker[ap.ticker.toUpperCase()] = ap;
-  return simPos.map(sp => {
-    const meta = byTicker[(sp.ticker || '').toUpperCase()] || {};
-    return {
-      ...meta,
-      ticker: sp.ticker,
-      entry: sp.entry,
-      current_price: sp.current_price,
-      return_pct: sp.return_pct,
-      _source: 'sim',
-    };
-  });
-}
-
-// applySimEquity(id, ec): when mode "id" is "sim" and the sim cache has an equity curve, replace
-// the {d,v} equity payload with the sim NAV curve (base-100). Returns `ec` unchanged otherwise.
-function applySimEquity(id, ec) {
-  if (!simSrc || !id) return ec;
-  let curve = null;
-  try { curve = simSrc.simEquityCurve(id, SIM_INITIAL_EQUITY); } catch (_) { curve = null; }
-  if (!curve || curve.length === 0) return ec;
-  return {
-    d: curve.map(pt => pt.date.slice(5).replace('-', '/')),
-    v: curve.map(pt => pt.value),
-    _source: 'sim',
-  };
-}
-
 // Lazy risk-snapshot loader — graceful no-op when file is missing.
 let _riskSnap = null;
 function loadRiskSnapshot() {
@@ -643,9 +592,6 @@ async function main() {
     // Override sharpe with frozen if available (sweep's is authoritative)
     if (frozen && frozen.sharpe != null) m.sharpe = frozen.sharpe;
 
-    // Sim read-switch: when this mode is "sim", render its equity from the sim NAV curve
-    // (hard fallback to the articles-frozen ec on any error / no cache).
-    ec = applySimEquity(id, ec);
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
@@ -851,9 +797,7 @@ async function main() {
     const _isHighConviction = cfg.preSignal === true;
     const _sigStatusLabel = _isHighConviction ? 'CONFIRMÉ 8×' : (_sigAge <= 1 ? 'LIVE' : _sigAge <= 2 ? 'VALID' : 'EXPIRED');
     const _sigStatusCls = _isHighConviction ? 'pos' : (_sigAge <= 1 ? 'pos' : _sigAge <= 2 ? 'am' : 'neg');
-    // Sim read-switch: render sim-sourced positions when this mode is "sim" (hard fallback to
-    // articles' posFor result otherwise). Empty/missing cache ⇒ unchanged articles positions.
-    const pos = applySimPositions(id, posFor(cfg, trades));
+    const pos = posFor(cfg, trades);
     const alloc = Math.round(100 / cfg.portfolioSize * (cfg.positionSizePct || 1));
     const liveCount = pos.filter(p => !p._expired && !p._terminal).length;
     const terminalCount = pos.filter(p => p._terminal).length;
@@ -3295,9 +3239,7 @@ document.addEventListener('DOMContentLoaded',function(){
   // hidden concentration risk. No cross-mode gating here by design.
   for (const [id, { cfg, trades: mTrades, m: mM }] of Object.entries(modes)) {
     const sig = signalsFor(cfg);
-    // Sim read-switch: the persisted snapshot is what gen-api.js reads, so overlay sim positions
-    // here too (hard fallback to articles' posFor). Keeps the public API + page consistent.
-    const pos = applySimPositions(id, posFor(cfg, mTrades));
+    const pos = posFor(cfg, mTrades);
 
     // MtM equity for today: anchor to frozen returnTotal (sweep-authoritative).
     // Adding live unrealized created day-to-day discontinuities (chart jumps when open
@@ -3323,8 +3265,6 @@ document.addEventListener('DOMContentLoaded',function(){
         v: [...hist.map(p => p.v), todayMtm]
       };
     }
-    // Sim read-switch: persist the sim NAV curve for "sim" modes (hard fallback otherwise).
-    ec = applySimEquity(id, ec);
     // Compute closeNow (timed out positions) first — they free slots for orders
     function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }
     const timedOutSnap = pos.filter(p => !p._terminal && Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)) <= 0);

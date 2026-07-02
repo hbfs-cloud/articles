@@ -24,6 +24,11 @@ metadata:
 3. `RunAutoScreener` n'a pas de filtre mcap → renvoie des micro-caps RSI 88-90
    (value-traps per lessons) ; toujours filtrer en aval (règle [[screener-mcap-filter]]).
 
-**Usages actés** : candidate feed systématique Phase 1 du /scanner (déjà câblé au skill) ;
-expérience momentum US v2 par sélection DSL (tâche ouverte — le ranking momentum-rotation
-Go est à edge négatif sur US, cf [[momentum-us-backtest]]) ; rétrospectives honnêtes via as_of.
+**Décision user 2026-07-02** : fixer les 3 gaps À LA SOURCE dans marketwatch-gateway AVANT
+toute expérience screener (momentum v2 etc.). Usages ensuite : candidate feed Phase 1 du
+/scanner, momentum US v2 par sélection DSL (cf [[momentum-us-backtest]]), rétrospectives as_of.
+
+**Décommissionnements même jour** : gen-plans.yml CI supprimé (le cron Convex évoqué dans
+son commentaire n'existe plus depuis ~mai 2026 — plans générés localement par le pipeline) ;
+externalisation portfolio → simulator.dailytickers.com abandonnée (pit-state.json = source
+de vérité unique).

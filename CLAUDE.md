@@ -30,12 +30,6 @@ articles/
 - **Pas de framework de build** (Astro supprimé) — les articles sont des fichiers HTML directs
 - **Publication** : `node tools/publish.js --type <type> --path <path>` enchaîne tout automatiquement
 
-## Parallel-run broker-simulator (LIRE `PARALLEL_RUN.md`)
-Le `/scanner` nocturne fait tourner en parallèle le **broker-simulator** (`https://simulator.dailytickers.com/`)
-qui exécute nos trades en miroir fidèle pour valider puis basculer la source de vérité des positions.
-**Déjà câblé, non-bloquant et auto-géré** (bootstrap-once → mirror-run → reconcile → cutover-decision →
-read-switch avec fallback dur sur `pit-state.json`, + publish). N'y touche pas sans lire **`PARALLEL_RUN.md`**.
-
 ## MCPs Enregistrés (OAuth2 — ZÉRO TOKEN EN .env)
 Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun token dans .env, aucun secret hardcodé.**
 - **DailyTickers** : `https://mcp.dailytickers.com/mcp` — données marché, screening, backtesting, portfolio

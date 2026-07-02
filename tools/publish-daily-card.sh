@@ -118,14 +118,6 @@ if [ "$SKIP_SWEEP" = false ]; then
   SWEEP_END=$(date +%s)
   echo "   Sweep done in $((SWEEP_END - SWEEP_START))s"
 
-  # ─── Step 3b: Publish new mirror intents to broker-simulator (non-blocking) ──
-  # publish-to-simulator.js is the step that rewrites data/pit-state.json (sweep.js does
-  # NOT touch it); it pushes each pilot mode's NEW entries as mirror-order intents.
-  # The SIM executes them next morning. Never break the pipeline.
-  echo ""
-  echo "🛰️  Step 3b: Publishing mirror intents to broker-simulator..."
-  node tools/publish-to-simulator.js || echo "⚠️  publish-to-simulator failed (non-blocking)"
-
   # ─── Step 4: Refresh risk metrics (VaR + stress + correlation + regime) ────
   echo ""
   echo "🛡️  Step 4: Refreshing risk metrics from MCP gateway..."
@@ -137,15 +129,6 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "🔁 Step 4b: Replaying trades with 1-min data..."
   node tools/replay-trades.js 2>&1 | tail -15
   echo "   Replay done."
-
-  # ─── Step 4c: Refresh the sim read-switch cache (non-blocking) ──────────────
-  # For each mode flagged "sim" in data/source-of-truth.json, pull its broker-simulator
-  # portfolio + equity into data/sim-source-cache.json so the render scripts below can
-  # read it SYNCHRONOUSLY. gen-status-page / gen-api fall back to pit-state on any miss,
-  # so a sim outage here just means the public page keeps showing articles' shadow state.
-  echo ""
-  echo "🛰️  Step 4c: Refreshing sim source-of-truth cache..."
-  node tools/lib/sim-source.js --refresh || echo "⚠️  sim-source refresh failed (non-blocking)"
 
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
