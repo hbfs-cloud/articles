@@ -42,3 +42,15 @@ toute expérience screener (momentum v2 etc.). Usages ensuite : candidate feed P
 son commentaire n'existe plus depuis ~mai 2026 — plans générés localement par le pipeline) ;
 externalisation portfolio → simulator.dailytickers.com abandonnée (pit-state.json = source
 de vérité unique).
+
+**Pièges DSL découverts (expérience momentum v2, 2026-07-02)** :
+- `avg_volume` (champ snapshot) casse SILENCIEUSEMENT enable_backtest (0 trade, simple
+  warning) — utiliser `avg_vol(20)` (fonction sur barres, rejouable) dans toute recette
+  destinée au backtest.
+- Signature réelle : `perf_rank(lookback)` / `perf_rel(kind, lookback)` — la doc
+  GetDSLDescription annonce plus d'arguments mais le moteur les rejette.
+- Règle d'or validée : JAMAIS lire un backtest_result sans walk-forward `as_of` sur
+  ≥4 dates réparties (R3 : PF 2,79 au jour J vs 0,67-0,79 historique = overfit).
+
+**Verdict momentum v2 (2026-07-02) : NO-GO** — aucune recette screener ne remplace le
+ranking Go. Décision 16/07 : backtest des params live exacts, sinon momentum → stopped.
