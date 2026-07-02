@@ -87,3 +87,18 @@ Pipeline `node tools/update-tracking.js → sweep.js → refresh-risk-metrics.js
 - **Don't trust a single status flag** (`_premature`, `status==='expired'`, etc.) — combine with time-based gates (`_horizonExpired`, `exitDate < today`).
 - **Don't accept `--stub` outputs as success** unless explicitly running offline.
 - **Always test cross-platform shell** (`date`, `sed`, `grep -E`) — at minimum BSD on macOS + GNU on Linux runners.
+
+
+## Gotchas ajoutés 2026-07-02 (session overhaul)
+- **Whitelist de champs = tueur silencieux** : simulateTrade/projections whitelistent les
+  champs ; tout nouveau champ consommé en aval (universe, mae_pct...) doit être ajouté aux
+  DEUX whitelists (retour simulateTrade ~l.1067 + projection closedTrades ~l.1800) sinon
+  filtre no-op destructeur (incident : 100% des trades des modes universe-filtered rejetés).
+- **Jour férié NYSE** : la résolution de date DOIT passer par tools/lib/market-calendar.js
+  (incident 20260703 : 4 juillet samedi → férié observé vendredi, scan sur séance inexistante).
+- **pit-engine resume** : reconcileModes() réconcilie config↔état — un mode ajouté à
+  modes-config après la création du pit-state n'était jamais seedé.
+- **Renderer --strict obligatoire** (Phase 4) : bloque les data.json désaccentués/tronqués
+  générés par la session LLM.
+- **Carte Performance index.html** : regex bilingue (l'anglicisation de la carte avait
+  no-opé le refresh pendant 3 semaines).
