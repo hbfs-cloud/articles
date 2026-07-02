@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "dsl": "dailytickers-trading-plan",
-  "generated_at": "2026-07-01T21:37:30.996Z",
+  "generated_at": "2026-07-02T06:43:06.843Z",
   "valid_for": "2026-07-02",
   "mode_status": {
     "state": "live",
@@ -27,21 +27,21 @@
   "account": {
     "nominal_usd": 10000,
     "currency": "USD",
-    "position_size_pct": 20,
-    "max_positions": 5
+    "position_size_pct": 12.5,
+    "max_positions": 8
   },
   "mode": {
     "name": "casablanca",
-    "horizon_days": 15,
+    "horizon_days": 90,
     "filter": "adaptive_fractal",
     "min_score": 25,
-    "rotation": "none",
+    "rotation": "daily_max1",
     "breakeven_pct": 0,
     "be_grace_days": 0,
     "vix_kill": 0,
     "trailing_stop": true,
     "daily_trail_pct": 0,
-    "max_stop_pct": 0,
+    "max_stop_pct": 15,
     "atr_stop_mult": 2,
     "stale_days": 0,
     "entry_gate_pct": 0,
@@ -71,7 +71,7 @@
     "extended_hours": false
   },
   "risk": {
-    "max_portfolio_heat_pct": "5.0",
+    "max_portfolio_heat_pct": "8.0",
     "max_single_loss_pct": 3,
     "max_slippage_pct": 1,
     "max_spread_pct": 0.5,
@@ -87,6 +87,291 @@
   "orders": [
     {
       "id": "ORD-001",
+      "action": "BUY",
+      "ticker": "ARKG",
+      "broker_symbol": "ARKG",
+      "broker": {
+        "symbol": "ARKG",
+        "exchange": "BATS",
+        "currency": "USD",
+        "asset_type": "ETF"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 42.62,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1250,
+          "shares": 29,
+          "pct_of_portfolio": 12.5
+        },
+        "valid_from": "2026-07-02T09:30:00-04:00",
+        "valid_until": "2026-07-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 38.410000000000004,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 15,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 51.04,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 55.25,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 90,
+          "expiry_date": "2026-11-05",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 90 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 262.68,
+        "strategy": "ETFMomentum",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "ETF RISKON_MOMENTUM: Mom20=25.4%, RSI=88, ATR%=4.0%"
+      },
+      "priority": 1
+    },
+    {
+      "id": "ORD-002",
+      "action": "BUY",
+      "ticker": "XBI",
+      "broker_symbol": "XBI",
+      "broker": {
+        "symbol": "XBI",
+        "exchange": "NYSEARCA",
+        "currency": "USD",
+        "asset_type": "ETF"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 156.55,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1250,
+          "shares": 7,
+          "pct_of_portfolio": 12.5
+        },
+        "valid_from": "2026-07-02T09:30:00-04:00",
+        "valid_until": "2026-07-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 145.91,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 15,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 177.84,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 188.48,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 90,
+          "expiry_date": "2026-11-05",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 90 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 255.76,
+        "strategy": "ETFMomentum",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "ETF RISKON_MOMENTUM: Mom20=22.5%, RSI=92, ATR%=2.7%"
+      },
+      "priority": 2
+    },
+    {
+      "id": "ORD-003",
+      "action": "BUY",
+      "ticker": "MXL",
+      "broker_symbol": "MXL",
+      "broker": {
+        "symbol": "MXL",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "asset_type": "STOCK"
+      },
+      "entry": {
+        "type": "LIMIT",
+        "price": 112.39,
+        "vwap_gate": {
+          "enabled": true,
+          "max_open_ratio": 1.01,
+          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
+        },
+        "size": {
+          "method": "FIXED_NOMINAL",
+          "nominal_usd": 1250,
+          "shares": 11,
+          "pct_of_portfolio": 12.5
+        },
+        "valid_from": "2026-07-02T09:30:00-04:00",
+        "valid_until": "2026-07-02T16:00:00-04:00",
+        "time_in_force": "DAY"
+      },
+      "exit": {
+        "stop_loss": {
+          "type": "STOP",
+          "price": 90.26,
+          "trailing": true,
+          "daily_trail_pct": 0,
+          "max_stop_pct": 15,
+          "atr_stop_mult": 2
+        },
+        "take_profit_1": {
+          "type": "LIMIT",
+          "price": 156.66,
+          "partial_exit_pct": 30,
+          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
+        },
+        "take_profit_2": {
+          "type": "LIMIT",
+          "price": 178.79,
+          "partial_exit_pct": 100,
+          "description": "Sell remaining position at TP2"
+        },
+        "time_exit": {
+          "horizon_days": 90,
+          "expiry_date": "2026-11-05",
+          "action": "CLOSE_AT_MARKET_OPEN",
+          "description": "If still open after 90 business days, close at next market open"
+        }
+      },
+      "conditions": [
+        {
+          "phase": "PRE_ENTRY",
+          "check": "GAP_UP",
+          "threshold_ratio": 1.02,
+          "if_true": "WAIT_VWAP_PULLBACK",
+          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "HALTED",
+          "if_true": "SKIP_ORDER",
+          "description": "If symbol is halted at market open, skip entirely."
+        },
+        {
+          "phase": "PRE_ENTRY",
+          "check": "SPREAD",
+          "max_spread_pct": 0.5,
+          "if_true": "DELAY_30S",
+          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
+        },
+        {
+          "phase": "POST_FILL",
+          "check": "SLIPPAGE",
+          "max_slippage_pct": 1,
+          "if_exceeded": "LOG_WARNING",
+          "description": "Log warning if fill price > 1% worse than limit."
+        }
+      ],
+      "metadata": {
+        "score": 241.14,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
+        "sharia": null,
+        "thesis": "MomRot score 241.1: Mom20=26.6%, Mom50=254.2%, Mom100=556.9%, RSI=69"
+      },
+      "priority": 3
+    },
+    {
+      "id": "ORD-004",
       "action": "BUY",
       "ticker": "SOC",
       "broker_symbol": "SOC",
@@ -106,9 +391,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 454,
-          "pct_of_portfolio": 20
+          "nominal_usd": 1250,
+          "shares": 284,
+          "pct_of_portfolio": 12.5
         },
         "valid_from": "2026-07-02T09:30:00-04:00",
         "valid_until": "2026-07-02T16:00:00-04:00",
@@ -120,7 +405,7 @@
           "price": 2.88,
           "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 0,
+          "max_stop_pct": 15,
           "atr_stop_mult": 2
         },
         "take_profit_1": {
@@ -136,10 +421,10 @@
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 15,
-          "expiry_date": "2026-07-23",
+          "horizon_days": 90,
+          "expiry_date": "2026-11-05",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 15 business days, close at next market open"
+          "description": "If still open after 90 business days, close at next market open"
         }
       },
       "conditions": [
@@ -178,307 +463,22 @@
         "sharia": null,
         "thesis": "BULLISH_STRONG_REVERSAL pattern (base 68) with 9.8x volume spike. ATR% 25.49%, RSI 14.8, BB%B 0.019."
       },
-      "priority": 1
-    },
-    {
-      "id": "ORD-002",
-      "action": "BUY",
-      "ticker": "AMKR",
-      "broker_symbol": "AMKR",
-      "broker": {
-        "symbol": "AMKR",
-        "exchange": "NASDAQ",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 79.99,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 25,
-          "pct_of_portfolio": 20
-        },
-        "valid_from": "2026-07-02T09:30:00-04:00",
-        "valid_until": "2026-07-02T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 60.97,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 109.47,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 127.54,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 15,
-          "expiry_date": "2026-07-23",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 15 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 165,
-        "strategy": "TrendlineBreakout",
-        "rr": 1.5,
-        "sharia": null,
-        "thesis": "Trend momentum: DistMA200 +59%, RSI 58.9, ATR% 9.5%, MA20>MA50>MA200 aligned"
-      },
-      "priority": 2
-    },
-    {
-      "id": "ORD-003",
-      "action": "BUY",
-      "ticker": "AOSL",
-      "broker_symbol": "AOSL",
-      "broker": {
-        "symbol": "AOSL",
-        "exchange": "NASDAQ",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 43.52,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 45,
-          "pct_of_portfolio": 20
-        },
-        "valid_from": "2026-07-02T09:30:00-04:00",
-        "valid_until": "2026-07-02T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 32.55,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 60.52,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 70.94,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 15,
-          "expiry_date": "2026-07-23",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 15 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 165,
-        "strategy": "TrendlineBreakout",
-        "rr": 1.6,
-        "sharia": null,
-        "thesis": "Trend momentum: DistMA200 +52%, RSI 56.3, ATR% 10.1%, MA20>MA50>MA200 aligned"
-      },
-      "priority": 3
-    },
-    {
-      "id": "ORD-004",
-      "action": "BUY",
-      "ticker": "CEVA",
-      "broker_symbol": "CEVA",
-      "broker": {
-        "symbol": "CEVA",
-        "exchange": "NASDAQ",
-        "currency": "USD",
-        "asset_type": "STOCK"
-      },
-      "entry": {
-        "type": "LIMIT",
-        "price": 45.51,
-        "vwap_gate": {
-          "enabled": true,
-          "max_open_ratio": 1.01,
-          "description": "Fill only if next open ≤ entry × 1.01. If gap-up above threshold, wait for VWAP pullback."
-        },
-        "size": {
-          "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 43,
-          "pct_of_portfolio": 20
-        },
-        "valid_from": "2026-07-02T09:30:00-04:00",
-        "valid_until": "2026-07-02T16:00:00-04:00",
-        "time_in_force": "DAY"
-      },
-      "exit": {
-        "stop_loss": {
-          "type": "STOP",
-          "price": 35.980000000000004,
-          "trailing": true,
-          "daily_trail_pct": 0,
-          "max_stop_pct": 0,
-          "atr_stop_mult": 2
-        },
-        "take_profit_1": {
-          "type": "LIMIT",
-          "price": 60.28,
-          "partial_exit_pct": 30,
-          "description": "Sell 30% at TP1, move stop to breakeven on remainder"
-        },
-        "take_profit_2": {
-          "type": "LIMIT",
-          "price": 69.33,
-          "partial_exit_pct": 100,
-          "description": "Sell remaining position at TP2"
-        },
-        "time_exit": {
-          "horizon_days": 15,
-          "expiry_date": "2026-07-23",
-          "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 15 business days, close at next market open"
-        }
-      },
-      "conditions": [
-        {
-          "phase": "PRE_ENTRY",
-          "check": "GAP_UP",
-          "threshold_ratio": 1.02,
-          "if_true": "WAIT_VWAP_PULLBACK",
-          "description": "If open > entry × 1.02, do not market buy. Wait for price to pull back to VWAP."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "HALTED",
-          "if_true": "SKIP_ORDER",
-          "description": "If symbol is halted at market open, skip entirely."
-        },
-        {
-          "phase": "PRE_ENTRY",
-          "check": "SPREAD",
-          "max_spread_pct": 0.5,
-          "if_true": "DELAY_30S",
-          "description": "If bid-ask spread > 0.5%, wait 30s for spread to tighten."
-        },
-        {
-          "phase": "POST_FILL",
-          "check": "SLIPPAGE",
-          "max_slippage_pct": 1,
-          "if_exceeded": "LOG_WARNING",
-          "description": "Log warning if fill price > 1% worse than limit."
-        }
-      ],
-      "metadata": {
-        "score": 165,
-        "strategy": "TrendlineBreakout",
-        "rr": 1.6,
-        "sharia": null,
-        "thesis": "Trend momentum: DistMA200 +69%, RSI 57.5, ATR% 8.4%, MA20>MA50>MA200 aligned"
-      },
       "priority": 4
     },
     {
       "id": "ORD-005",
       "action": "BUY",
-      "ticker": "STX",
-      "broker_symbol": "STX",
+      "ticker": "APPS",
+      "broker_symbol": "APPS",
       "broker": {
-        "symbol": "STX",
+        "symbol": "APPS",
         "exchange": "NASDAQ",
         "currency": "USD",
         "asset_type": "STOCK"
       },
       "entry": {
         "type": "LIMIT",
-        "price": 915.19,
+        "price": 13.31,
         "vwap_gate": {
           "enabled": true,
           "max_open_ratio": 1.01,
@@ -486,9 +486,9 @@
         },
         "size": {
           "method": "FIXED_NOMINAL",
-          "nominal_usd": 2000,
-          "shares": 2,
-          "pct_of_portfolio": 20
+          "nominal_usd": 1250,
+          "shares": 93,
+          "pct_of_portfolio": 12.5
         },
         "valid_from": "2026-07-02T09:30:00-04:00",
         "valid_until": "2026-07-02T16:00:00-04:00",
@@ -497,29 +497,29 @@
       "exit": {
         "stop_loss": {
           "type": "STOP",
-          "price": 694.4,
+          "price": 11.39,
           "trailing": true,
           "daily_trail_pct": 0,
-          "max_stop_pct": 0,
+          "max_stop_pct": 15,
           "atr_stop_mult": 2
         },
         "take_profit_1": {
           "type": "LIMIT",
-          "price": 1257.42,
+          "price": 17.16,
           "partial_exit_pct": 30,
           "description": "Sell 30% at TP1, move stop to breakeven on remainder"
         },
         "take_profit_2": {
           "type": "LIMIT",
-          "price": 1467.18,
+          "price": 19.080000000000002,
           "partial_exit_pct": 100,
           "description": "Sell remaining position at TP2"
         },
         "time_exit": {
-          "horizon_days": 15,
-          "expiry_date": "2026-07-23",
+          "horizon_days": 90,
+          "expiry_date": "2026-11-05",
           "action": "CLOSE_AT_MARKET_OPEN",
-          "description": "If still open after 15 business days, close at next market open"
+          "description": "If still open after 90 business days, close at next market open"
         }
       },
       "conditions": [
@@ -552,11 +552,11 @@
         }
       ],
       "metadata": {
-        "score": 165,
-        "strategy": "TrendlineBreakout",
-        "rr": 1.5,
+        "score": 174.51,
+        "strategy": "MomentumRotation",
+        "rr": "1:2.0",
         "sharia": null,
-        "thesis": "Trend momentum: DistMA200 +102%, RSI 57.5, ATR% 9.7%, MA20>MA50>MA200 aligned"
+        "thesis": "MomRot score 174.5: Mom20=55.7%, Mom50=249.3%, Mom100=213.9%, RSI=74"
       },
       "priority": 5
     }
