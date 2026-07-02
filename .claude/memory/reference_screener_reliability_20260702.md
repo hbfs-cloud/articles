@@ -20,8 +20,12 @@ metadata:
    → C'est LA feature pour valider les recettes ; à réparer en priorité.
 2. `region='eu'` : FIXÉ à la source — univers EU chargé par défaut depuis la décision
    user 2026-07-02 (ENABLE_EU_UNIVERSE=false pour désactiver, sinon toujours actif).
-   Après un deploy frais : backfill bars EU one-time requis avant les premiers candidats.
-   Le fallback GetMarketOverview du skill reste un filet, plus une obligation.
+   Après un deploy frais : backfill bars one-time (~2h pour 22,7k symbols, suivre GetHealth).
+   VÉRIFIÉ 2026-07-02 15h : candidats EU réels multi-places (BR/L/HE/DE/WA). GAP RÉSIDUEL :
+   market_cap=0 sur tous les tickers EU (enrichissement contextuel non peuplé) → toute clause
+   market_cap>X rend 0 en EU (le diagnostic zero-result le signale). En attendant le fix :
+   filtrer qualité EU par avg_vol(20)/prix, jamais par mcap. L'univers EU contient du junk
+   (pennies, volume<100) — floor indispensable une fois mcap peuplé.
 3. `RunAutoScreener` n'a pas de filtre mcap → renvoie des micro-caps RSI 88-90
    (value-traps per lessons) ; toujours filtrer en aval (règle [[screener-mcap-filter]]).
 
