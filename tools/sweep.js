@@ -429,7 +429,12 @@ const STRATEGY_FILTERS_MAP = {
   // fortress_pm: source dédiée du scan A+ Halal (fortress-pm). Exclut TOUT sauf fortressa+.
   'fortress_pm': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'momentum_rotation', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'candlestick_only': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback']),
-  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
+  // adaptive_fractal (Casablanca mode): admits BOTH adaptive_fractal (casablanca-scanner, tag
+  // AdaptiveFractal) AND momentum_rotation (momentum-scanner --universe casablanca, tag
+  // MomentumRotation) — the mode's real signal source is momentum-rotation (parity
+  // portfolio_ma.yaml), so momentum_rotation must NOT be excluded here. The universeFilter='casablanca'
+  // gate (buildLiveOrders) already prevents US MomentumRotation signals from leaking in.
+  'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
   'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
@@ -2861,17 +2866,20 @@ async function main() {
 
         let stats;
         if (existingFrozen) {
-          // APPEND-ONLY ADVANCE: per-trade history is immutable (hard guard above +
-          // trade-chain SHA), but the AGGREGATE view must advance with newly appended
-          // trades and MtM days — otherwise the dashboard freezes at the last frozen
-          // date (bug: headline stats stuck at 2026-06-26 while trades kept closing).
-          // The frozen equity-curve prefix is preserved byte-for-byte via opts.priorEC
-          // (computeStatsFromTrades copies prior points verbatim, then only appends).
-          const priorEC = existingFrozen.equityCurve || [];
-          const advanced = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar, { priorEC });
-          const prefixOk = advanced && advanced.equityCurve && advanced.equityCurve.length >= priorEC.length
-            && priorEC.every((pt, i) => advanced.equityCurve[i] === pt || (advanced.equityCurve[i].date === pt.date && advanced.equityCurve[i].value === pt.value));
+          // COURBE = FONCTION DÉTERMINISTE DES TRADES SCELLÉS (forensics 2026-07-02).
+          // L'immutabilité vit dans les TRADES (hard guard ci-dessus + chaîne SHA
+          // trade-chain.json), PAS dans la courbe MtM dérivée. Geler le préfixe EC
+          // pendant que le moteur d'exits évolue a créé un phantom (+15.7 pts sur
+          // dynamic) : préfixe optimiste jamais réconcilié + queue honnête = cliff
+          // artificiel déversé sur une date sans trade (26→29/06). On recalcule donc
+          // la courbe INTÉGRALEMENT depuis la liste de trades immuable à chaque run —
+          // pas de priorEC. Toute divergence vs l'ancien frozen est loguée [RECONCILE].
+          const advanced = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar, { priorEC: [] });
+          const prefixOk = !!(advanced && advanced.equityCurve && advanced.equityCurve.length);
           const tradesOk = advanced && (advanced.trades ?? 0) >= (existingFrozen.trades ?? 0);
+          if (advanced && Math.abs((advanced.returnTotal ?? 0) - (existingFrozen.returnTotal ?? 0)) > 0.5) {
+            console.log(`  🔎 [RECONCILE] ${id}: frozen ${existingFrozen.returnTotal}% → recomputed ${advanced.returnTotal}% (courbe réalignée sur les trades scellés)`);
+          }
           if (prefixOk && tradesOk) {
             stats = {
               ...existingFrozen,
