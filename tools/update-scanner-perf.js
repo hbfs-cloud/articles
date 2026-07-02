@@ -125,9 +125,11 @@ console.log(`Updated: ${updatedStr}`);
 let indexHtml = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 
 // Updated + Period
+// La carte a été anglicisée ('cumulative retros') — la regex accepte les DEUX
+// libellés (l'ancien no-op silencieux a figé la carte à Jun 14 pendant 3 semaines).
 indexHtml = indexHtml.replace(
-    /Updated: [^—]+— Period: [^<]+ \(\d+ rétros cumulées\)/,
-    `Updated: ${updatedStr} — Period: ${periodStr} (${nRetros} rétros cumulées)`
+    /Updated: [^—]+— Period: [^<]+ \(\d+ (?:rétros cumulées|cumulative retros)\)/,
+    `Updated: ${updatedStr} — Period: ${periodStr} (${nRetros} cumulative retros)`
 );
 
 // Grade badge (C* / B+ / etc.)
