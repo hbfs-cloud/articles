@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Contexte Macro & Marchés",
+    "desc": "Le Nasdaq chute de -4.6% tandis que le Dow monte de +0.5% : la rotation sectorielle la plus violente de 2026. Healthcare au sommet historique, semi-conducteurs en déroute (-23.7% pour ON Semi), BTC à 3% de son plancher annuel, et NFP vendredi sur un marché en demi-séance avant le 4 juillet. Semaine écourtée, risques maximaux.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
+    "grade": "",
+    "href": "/weekly/20260629/",
+    "date": "29 juin 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Macro & Markets Context",
     "desc": "Warsh's first FOMC rewrites the playbook: median dot jumps to 3.8%, hinting at a rate hike. Markets digest the hawkish surprise while PCE data (Thursday) and Russell Reconstitution (Friday) loom. Gold slides to $4,150, BTC drops below $63K, and US-Iran sign MOU. Week ahead: FedEx earnings, GDP revision, Michigan Sentiment.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
@@ -24,6 +37,45 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20260615/",
     "date": "15 juin 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Iran fires missiles at Israel for the first time since April. SpaceX's $1.77 trillion IPO prices Thursday. CPI Wednesday with inflation running hot. Nasdaq crashed -4.18% Friday. Regime at Crisis 43%. The week that could break markets.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260608/",
+    "date": "8 juin 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "Weekly Market Report — AVGO joins $2T club, NFP Friday (95K forecast), ISM Prices at 85, CRWD/PANW cybersecurity earnings, Fed speakers before blackout. Risk-On at 58.5% but inflation won't quit.",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260601/",
+    "date": "1 juin 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Macro & Markets Context",
+    "desc": "University of Michigan consumer sentiment hit 44.8 in May — a new all-time low dating back to the 1970s. Current conditions (45.8) and expectations (44.1) both set record lows. One-year inflation expectations surged to 4.8%, the highest since the early 1980s. Meanwhile, the S&P 500 sits 0.3% below i...",
+    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
+    "grade": "",
+    "href": "/weekly/20260526/",
+    "date": "26 mai 2026"
   },
   {
     "type": "hebdo",
@@ -114,7 +166,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260309/",
-    "date": "9 - 13 March 2026"
+    "date": "9 - 13 mars 2026"
   },
   {
     "type": "hebdo",
@@ -127,7 +179,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
     "grade": "",
     "href": "/weekly/20260302/",
-    "date": "2 - 6 Mars 2026"
+    "date": "2 - 6 mars 2026"
   },
   {
     "type": "hebdo",
@@ -140,7 +192,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,crypto,commodity,macro,geopolitique,technique,trade-idea,earnings",
     "grade": "",
     "href": "/weekly/20260223/",
-    "date": "23 - 27 Février 2026"
+    "date": "23 - 27 février 2026"
   },
   {
     "type": "hebdo",
@@ -153,7 +205,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,crypto,commodity,macro,geopolitique,technique",
     "grade": "",
     "href": "/weekly/20260216/",
-    "date": "16 - 21 Février 2026"
+    "date": "16 - 21 février 2026"
   },
   {
     "type": "hebdo",
@@ -166,7 +218,7 @@ window.searchDataPrebuilt = [
     "tags": "us,macro,earnings,technique",
     "grade": "",
     "href": "/weekly/20260209/",
-    "date": "9 - 14 Février 2026"
+    "date": "9 - 14 février 2026"
   },
   {
     "type": "hebdo",
@@ -179,7 +231,7 @@ window.searchDataPrebuilt = [
     "tags": "us,commodity,crypto,earnings,macro",
     "grade": "",
     "href": "/weekly/20260202/",
-    "date": "2 - 8 Février 2026"
+    "date": "2 - 8 février 2026"
   },
   {
     "type": "hebdo",
@@ -192,7 +244,7 @@ window.searchDataPrebuilt = [
     "tags": "us,macro,geopolitique",
     "grade": "",
     "href": "/weekly/20260126/",
-    "date": "26 Janvier - 1er Février 2026"
+    "date": "26 janvier - 1er février 2026"
   },
   {
     "type": "hebdo",
@@ -205,7 +257,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,macro,geopolitique",
     "grade": "",
     "href": "/weekly/20260119/",
-    "date": "19 - 24 Janvier 2026"
+    "date": "19 - 24 janvier 2026"
   },
   {
     "type": "hebdo",
@@ -218,7 +270,7 @@ window.searchDataPrebuilt = [
     "tags": "us,financials,earnings,macro",
     "grade": "",
     "href": "/weekly/20260112/",
-    "date": "12 - 17 Janvier 2026"
+    "date": "12 - 17 janvier 2026"
   },
   {
     "type": "hebdo",
@@ -231,7 +283,7 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,commodity,geopolitique",
     "grade": "",
     "href": "/weekly/20260103/",
-    "date": "3 - 10 Janvier 2026"
+    "date": "3 - 10 janvier 2026"
   },
   {
     "type": "hebdo",
@@ -244,59 +296,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,commodity,macro",
     "grade": "",
     "href": "/weekly/20251229/",
-    "date": "29 Décembre 2025 - 3 Janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Macro & Markets Context",
-    "desc": "University of Michigan consumer sentiment hit 44.8 in May — a new all-time low dating back to the 1970s. Current conditions (45.8) and expectations (44.1) both set record lows. One-year inflation expectations surged to 4.8%, the highest since the early 1980s. Meanwhile, the S&P 500 sits 0.3% below i...",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
-    "grade": "",
-    "href": "/weekly/20260526/",
-    "date": "26 mai 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Macro & Markets Context",
-    "desc": "Weekly Market Report — AVGO joins $2T club, NFP Friday (95K forecast), ISM Prices at 85, CRWD/PANW cybersecurity earnings, Fed speakers before blackout. Risk-On at 58.5% but inflation won't quit.",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
-    "grade": "",
-    "href": "/weekly/20260601/",
-    "date": "1 juin 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Macro & Markets Context",
-    "desc": "Iran fires missiles at Israel for the first time since April. SpaceX's $1.77 trillion IPO prices Thursday. CPI Wednesday with inflation running hot. Nasdaq crashed -4.18% Friday. Regime at Crisis 43%. The week that could break markets.",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,trade-idea",
-    "grade": "",
-    "href": "/weekly/20260608/",
-    "date": "8 juin 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Contexte Macro & Marchés",
-    "desc": "Le Nasdaq chute de -4.6% tandis que le Dow monte de +0.5% : la rotation sectorielle la plus violente de 2026. Healthcare au sommet historique, semi-conducteurs en déroute (-23.7% pour ON Semi), BTC à 3% de son plancher annuel, et NFP vendredi sur un marché en demi-séance avant le 4 juillet. Semaine écourtée, risques maximaux.",
-    "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
-    "grade": "",
-    "href": "/weekly/20260629/",
-    "date": "29 juin 2026"
+    "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
     "type": "daily",
@@ -863,19 +863,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Analyse ORBS (Eightco Holdings) : Le Proxy OpenAI du NASDAQ",
-    "desc": "",
-    "tags": "",
-    "grade": "",
-    "href": "/daily/20260318/",
-    "date": "18 mars 2026"
-  },
-  {
-    "type": "daily",
-    "icon": "fa-sun",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "FOMC Day 1 · Oil Surges to $97 · Gold Holds $5,024 · BTC $74K",
     "desc": "Tuesday briefing March 17, 2026. FOMC meeting kicks off, dot plot tomorrow. Oil surges to $97 on Iran escalation. Gold holds $5,024. S&P gained +1% Monday. BTC at $74K. Early Risk-Off regime.",
     "tags": "us,eu,asia,crypto,geopolitique,macro,energy,commodity,trade-idea,formation",
@@ -904,7 +891,7 @@ window.searchDataPrebuilt = [
     "name": "",
     "title": "Stagflation Week in Review —FOMC Showdown Ahead",
     "desc": "Saturday Briefing — Stagflation Régime confirmed: CPI +3.1%, Brent $103.86, SPX -0.61% Friday (3rd weekly loss). Weekly recap + FOMC March 18-19 preview. BTC holds $70K.",
-    "tags": "macro,geopolitique,trade-idea,formation,energy,crypto,inflation,weekly",
+    "tags": "macro,geopolitique,trade-idea,formation,energy,crypto,inflation",
     "grade": "",
     "href": "/daily/20260314/",
     "date": "14 mars 2026"
@@ -1088,7 +1075,7 @@ window.searchDataPrebuilt = [
     "desc": "Bitcoin repasse les $68K (+2.67%), Solana explose (+7.0%) et Ethereum vise les $2,100. Décryptage d'un short squeeze massif qui a liquidé $323M en 24h. Inclus : Analyse sentiment social et Trade Idea SOL.",
     "tags": "crypto,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260225/",
+    "href": "/daily/20260225/",
     "date": "25 février 2026"
   },
   {
@@ -1101,7 +1088,7 @@ window.searchDataPrebuilt = [
     "desc": "Trump 15% global tariff slams markets: S&P -1.04%, Dow -1.66%.\n    BTC crashes to $63K — lowest since Dec 2024. Gold $5,196 ATH.\n    Silver +5.2%. VIX 21 elevated. Home Depot Q4 today. NVIDIA\n    mega-earnings tomorrow. Zelensky peace plan. Healthcare leads\n    rotation. Fear & Greed 10.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260224/",
+    "href": "/daily/20260224/",
     "date": "24 février 2026"
   },
   {
@@ -1114,7 +1101,7 @@ window.searchDataPrebuilt = [
     "desc": "Zelensky announces peace plan & wartime elections Feb 24. BTC\n    $68.2K consolidation (-2.88 sigma below 200D MA). XRP +28% from\n    Feb low — CNBC's hottest crypto. SOL ETFs buck outflow trend. Fear\n    & Greed 10. NVIDIA Tuesday. New global tariff in effect.\n    Funding Rates deep dive.",
     "tags": "crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260223/",
+    "href": "/daily/20260223/",
     "date": "23 février 2026"
   },
   {
@@ -1127,7 +1114,7 @@ window.searchDataPrebuilt = [
     "desc": "Crypto Fear & Greed at 9 (Extreme Fear) — historic low. BTC\n    $67.8K consolidation. ETH RSI 27 deeply oversold. 30K BTC whale\n    accumulation. 5 weeks ETF outflows ($4B). New 15% tariff Monday.\n    NVIDIA Wednesday. Iran strike window. Volume Profile deep dive.",
     "tags": "crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260222/",
+    "href": "/daily/20260222/",
     "date": "22 février 2026"
   },
   {
@@ -1140,7 +1127,7 @@ window.searchDataPrebuilt = [
     "desc": "SCOTUS rules IEEPA tariffs unconstitutional 6-3. S&P +0.72%,\n    Nasdaq +0.88%, DAX +0.87%. Silver +7.9%, Gold ATH $5,080. Iran\n    strike risk. Trump signs 10% replacement tariff. Full US, EU, Asia\n    coverage + NVIDIA preview.",
     "tags": "us,eu,asia,commodity,geopolitique,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260221/",
+    "href": "/daily/20260221/",
     "date": "21 février 2026"
   },
   {
@@ -1153,7 +1140,7 @@ window.searchDataPrebuilt = [
     "desc": "Décision historique 6-3 : l'IEEPA ne peut pas servir de\n    base légale aux tarifs. $134Mds de revenus en jeu. Impact\n    sur le dollar (-0.2%), l'euro (1.18+), BTC ($68,200), l'or\n    ($5,000+ ATH). Gagnants : retail, tech, luxe Europe. Perdants :\n    producteurs domestiques US.",
     "tags": "us,eu,crypto,commodity,forex,geopolitique,macro",
     "grade": "",
-    "href": "daily/scotus-tariffs/",
+    "href": "/daily/scotus-tariffs/",
     "date": "20 février 2026"
   },
   {
@@ -1166,7 +1153,7 @@ window.searchDataPrebuilt = [
     "desc": "Triple catalyseur : SCOTUS ruling tarifs possible, Trump décide\n    sur l'Iran sous 10 jours, Core PCE + Flash PMI aujourd'hui.\n    Pétrole +7% en 2 jours. Or $5,000+ ATH. S&P -0.28%, Dow -0.54%.\n    BTC $67,743. NVDA earnings mercredi prochain.",
     "tags": "us,commodity,crypto,geopolitique,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260220/",
+    "href": "/daily/20260220/",
     "date": "20 février 2026"
   },
   {
@@ -1179,7 +1166,7 @@ window.searchDataPrebuilt = [
     "desc": "Top 3 Dow Jones (GS, NVDA, CAT) + Top 4 Europe (BNP, BBVA, UCG,\n    Siemens) + Top 3 Asie (Samsung, SoftBank, TSMC). WMT earnings.\n    FOMC Minutes. PCE vendredi. S&P +0.56%, Nasdaq +0.78%. Or $5,008.\n    BTC $66,750.",
     "tags": "us,eu,asia,financials,earnings,macro,trade-idea,formation",
     "grade": "",
-    "href": "daily/20260219/",
+    "href": "/daily/20260219/",
     "date": "19 février 2026"
   },
   {
@@ -1192,7 +1179,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de l'évolution des volumes sur les marchés US\n    ($42.6T), Europe (€2.7T Euronext), Asie-Pacifique ($90.4B IPOs\n    +73%), et Crypto ($86.2T perp +47%). 10 charts ECharts\n    interactifs. Tendances, perspectives et déductions stratégiques.",
     "tags": "us,eu,asia,crypto,technique,macro",
     "grade": "",
-    "href": "daily/volume-evolution/",
+    "href": "/daily/volume-evolution/",
     "date": "17 février 2026"
   },
   {
@@ -1205,7 +1192,7 @@ window.searchDataPrebuilt = [
     "desc": "Marchés US fermés (Presidents' Day). Talks Ukraine-Russie Round 3\n    à Genève. FOMC Minutes mercredi. Core PCE vendredi. BTC $67,987\n    sous pression. Or recule à $4,955. Semaine macro chargée.",
     "tags": "us,crypto,geopolitique,macro,formation",
     "grade": "",
-    "href": "daily/20260217/",
+    "href": "/daily/20260217/",
     "date": "17 février 2026"
   },
   {
@@ -1242,7 +1229,7 @@ window.searchDataPrebuilt = [
     "name": "RDDT — Analyse complete de Reddit (RDDT) : Revenue +70%, marge nette 24%, RSI 26 oversold. Opp...",
     "title": "RDDT — Analyse complete de Reddit (RDDT) : Revenue +70%, marge nette 24%, RSI 26 oversold. Opp...",
     "desc": "RDDT analysis: Reddit, Inc. opéré la plus grande plateforme de communautes en ligne au monde, avec plus de 121 millions d'utilisateurs actifs quotidiens et 471 millions hebdom",
-    "tags": "us,tech,finance",
+    "tags": "us,tech,financials",
     "grade": "B",
     "href": "/analyses/RDDT/",
     "date": ""
@@ -1281,7 +1268,7 @@ window.searchDataPrebuilt = [
     "name": "CCJ — Analyse complète de Cameco Corporation (CCJ) : leader mondial de l'uranium, Westinghous...",
     "title": "CCJ — Analyse complète de Cameco Corporation (CCJ) : leader mondial de l'uranium, Westinghous...",
     "desc": "CCJ analysis: Cameco Corporation est le plus grand producteur d'uranium coté en bourse au monde, basé à Saskatoon, Canada. L'entreprise opère sur 3 segments : Uranium (explor",
-    "tags": "us,tech,finance",
+    "tags": "us,tech,financials",
     "grade": "B",
     "href": "/analyses/CCJ/",
     "date": ""
@@ -1294,7 +1281,7 @@ window.searchDataPrebuilt = [
     "name": "CAN — Verdict Express — 2 Minutes",
     "title": "CAN — Verdict Express — 2 Minutes",
     "desc": "CAN analysis: Canaan Inc. est un fabricant chinois de circuits integres ASIC pour le minage de Bitcoin, base a Singapour. Fondee en 2013, la société concoit, fabrique et vend",
-    "tags": "us,tech,finance",
+    "tags": "us,tech,financials",
     "grade": "B",
     "href": "/analyses/CAN/",
     "date": ""
@@ -1307,7 +1294,7 @@ window.searchDataPrebuilt = [
     "name": "BULL — Analyse complète de Webull Corporation (BULL) : plateforme de trading digital, revenue ...",
     "title": "BULL — Analyse complète de Webull Corporation (BULL) : plateforme de trading digital, revenue ...",
     "desc": "BULL analysis: Webull Corporation est une plateforme d'investissement digitale fondée en 2016 et basée à Saint Petersburg, Floride. La société permet aux investisseurs particu",
-    "tags": "us,tech,finance",
+    "tags": "us,tech,financials",
     "grade": "B",
     "href": "/analyses/BULL/",
     "date": ""
@@ -1567,7 +1554,7 @@ window.searchDataPrebuilt = [
     "name": "UUUU — Analyse complete d'Energy Fuels (UUUU) : uranium, terres rares, fondamentaux, technique...",
     "title": "UUUU — Analyse complete d'Energy Fuels (UUUU) : uranium, terres rares, fondamentaux, technique...",
     "desc": "UUUU analysis: Energy Fuels Inc. est le premier producteur d'uranium aux États-Unis, base a Lakewood, Colorado. La société exploite la seule mine d'uranium en activité et la s",
-    "tags": "us,tech,finance",
+    "tags": "us,tech,financials",
     "grade": "B",
     "href": "/analyses/UUUU/",
     "date": ""
@@ -1645,7 +1632,7 @@ window.searchDataPrebuilt = [
     "name": "OBE — rebond de survente TACTIQUE, pas un value sûr. RSI 26.6, days-to-cover 6.98 (squeeze po...",
     "title": "OBE — rebond de survente TACTIQUE, pas un value sûr. RSI 26.6, days-to-cover 6.98 (squeeze po...",
     "desc": "Analyse OBE (Obsidian Energy) : rebond tactique de survente (RSI 26.6) contre une tendance baissière intacte (-45% depuis mai). E&P pétrole Ouest canadien. Earnings en dégradation, target consensus $5.99 sous le cours. Trade swing court terme.",
-    "tags": "ca,energy,commodity,trade-idea,speculative",
+    "tags": "energy,commodity,trade-idea,speculative",
     "grade": "B",
     "href": "/analyses/OBE/",
     "date": ""
@@ -1801,7 +1788,7 @@ window.searchDataPrebuilt = [
     "name": "NVDA — NVIDIA : $4.6T de market cap, earnings Q4 le 25 février, Blackwell sold-out, tarifs 15%...",
     "title": "NVDA — NVIDIA : $4.6T de market cap, earnings Q4 le 25 février, Blackwell sold-out, tarifs 15%...",
     "desc": "Analyse experte complète NVIDIA : fondamentaux, technique, options, timing earnings Q4 FY2026, impact sur la tech, trade idea et tribunal contradictoire.",
-    "tags": "us,tech,finance",
+    "tags": "us,tech,financials",
     "grade": "B",
     "href": "/analyses/NVDA/",
     "date": ""
@@ -2713,7 +2700,7 @@ window.searchDataPrebuilt = [
     "desc": "Tout comprendre sur Cardio Diagnostics. Une micro-cap biotech utilisant l'épigénétique et l'IA pour prévenir les crises cardiaques. Analyse du contrat en Inde et du short squeeze.",
     "tags": "us,tech,healthcare,ai,trade-idea",
     "grade": "C",
-    "href": "analyses/CDIO/",
+    "href": "/analyses/CDIO/",
     "date": ""
   },
   {
@@ -2726,7 +2713,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie d'Atlassian (TEAM). Positionnement Cloud/IA,\n    risques de décélération de croissance, valorisation, dynamique de\n    l'actionnariat et signaux techniques. Inclus une Trade Idea.",
     "tags": "us,tech,ai,trade-idea,software",
     "grade": "B",
-    "href": "analyses/TEAM/",
+    "href": "/analyses/TEAM/",
     "date": ""
   },
   {
@@ -2739,7 +2726,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse de la réussite exceptionnelle de la Phase 2\n    (TARA-002, cancer NMIBC), solide cash runway de 132M$, anomalie de\n    marché \"Sell-the-News\". Décortication du niveau\n    technique institutionnel.",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "A",
-    "href": "analyses/TARA",
+    "href": "/analyses/TARA/",
     "date": ""
   },
   {
@@ -2752,7 +2739,7 @@ window.searchDataPrebuilt = [
     "desc": "+360% surge in 2 days on Palantir AI partnership. $2.69B revenue\n    but $3.28B debt, declining margins, analyst target $1.48.\n    Extremely speculative — beginner's guide to hype stocks.",
     "tags": "us,tech,ai,speculative,trade-idea",
     "grade": "D",
-    "href": "analyses/RXT",
+    "href": "/analyses/RXT/",
     "date": ""
   },
   {
@@ -2765,7 +2752,7 @@ window.searchDataPrebuilt = [
     "desc": "4 reverse splits in 20 months (400,000:1), $46.8M debt on $845K\n    cash, negative gross margins, going concern warning, -99.997%\n    decline, Sportstech lawsuit. A textbook penny stock scam.",
     "tags": "us,consumer,speculative",
     "grade": "F",
-    "href": "analyses/TRNR",
+    "href": "/analyses/TRNR/",
     "date": ""
   },
   {
@@ -2778,7 +2765,7 @@ window.searchDataPrebuilt = [
     "desc": "FY2025 : CA €73.4B, EBIT €7.1B (+31%), 793 livraisons,\n    carnet record 8,754 avions (€619B). Guidance 2026 : ~870\n    livraisons (sous consensus). P&W engine shortage. Dividende\n    €3.20. 6 ECharts.",
     "tags": "eu,industrials,defense,earnings,trade-idea",
     "grade": "B",
-    "href": "analyses/AIR",
+    "href": "/analyses/AIR/",
     "date": ""
   },
   {
@@ -2791,7 +2778,7 @@ window.searchDataPrebuilt = [
     "desc": "FY2025 : CA €33B (+4.9%), premier résultat op.\n    >€2B (record), bénéfice net €1.75B\n    (x3). +14% en séance. Premium & transatlantique forts.\n    KLM sous pression. 100M+ passagers. 5 ECharts.",
     "tags": "eu,industrials,earnings,trade-idea",
     "grade": "B",
-    "href": "analyses/AF",
+    "href": "/analyses/AF/",
     "date": ""
   },
   {
@@ -2804,7 +2791,7 @@ window.searchDataPrebuilt = [
     "desc": "FY2025 : CA €1.82B (+12.1%), EBITDA €1.14B (marge\n    62.7%), EPS €7.27 (+10.3%). Acquisition Athex, retail\n    >€1B/jour. Plan Innovate for Growth 2027. Power futures,\n    Repo, CSD. 7 ECharts.",
     "tags": "eu,financials,earnings,trade-idea",
     "grade": "A",
-    "href": "analyses/ENX",
+    "href": "/analyses/ENX/",
     "date": ""
   },
   {
@@ -2817,7 +2804,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse thématique complète : marché $312B (+50%), volume $33T,\n    USDT $184B vs USDC $74B, réserves T-Bills, GENIUS Act & MiCA,\n    yield-bearing stablecoins, risques systémiques. 6 charts ECharts\n    interactifs.",
     "tags": "crypto",
     "grade": "B",
-    "href": "analyses/STABLECOINS",
+    "href": "/analyses/STABLECOINS/",
     "date": ""
   },
   {
@@ -2830,7 +2817,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète Zeta Global (ZETA) : plateforme IA marketing,\n    partenariat OpenAI (Athena), acquisition Marigold $325M. $15.35 |\n    MCap $3.4B | Revenue $1.2B (+26%). Earnings 24 février —\n    catalyseur majeur.",
     "tags": "us,tech,ai,earnings,trade-idea",
     "grade": "B",
-    "href": "analyses/ZETA",
+    "href": "/analyses/ZETA/",
     "date": ""
   },
   {
@@ -2843,7 +2830,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète STOXX 600 : VGK $88.70 ATH, ECB 2% stable, 4 pays\n    majeurs (EWQ, EWG, EWP, EWI). 5 setups A+ : BBVA, SAP, Siemens\n    Energy, UniCredit, TotalEnergies. Rotation sectorielle et\n    catalyseurs 4 semaines.",
     "tags": "eu,macro,technique",
     "grade": "A",
-    "href": "analyses/STOXX600",
+    "href": "/analyses/STOXX600/",
     "date": ""
   },
   {
@@ -2856,7 +2843,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète KOSPI : EWY $133.97 ATH, rally +76% en 2025.\n    Samsung ₩181,200, SK Hynix ₩880,000, supercycle HBM4/IA. Trade\n    ideas : EWY, SSNLF, KORU. Won stable, risque géopolitique Chine.",
     "tags": "asia,semis,technique",
     "grade": "B+",
-    "href": "analyses/KOSPI",
+    "href": "/analyses/KOSPI/",
     "date": ""
   },
   {
@@ -2869,7 +2856,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète ArcelorMittal (MT) : N°2 mondial de l'acier.\n    $61.59, MCap $46.9B, EBITDA $5.9B, P/B 0.86x. Bénéfices x2.5 en\n    2025, CBAM en catalyseur.",
     "tags": "eu,materials,trade-idea",
     "grade": "B+",
-    "href": "analyses/MT",
+    "href": "/analyses/MT/",
     "date": ""
   },
   {
@@ -2882,7 +2869,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de GE Vernova (GEV).\n    Prix: $802.90, Market Cap: .",
     "tags": "us,industrials,energy,trade-idea",
     "grade": "A",
-    "href": "analyses/GEV",
+    "href": "/analyses/GEV/",
     "date": ""
   },
   {
@@ -2895,7 +2882,7 @@ window.searchDataPrebuilt = [
     "desc": "ATH $5,602 le 28 Jan puis crash -11%. Recovery $5,000+. Central\n    banks record buying. DXY < 97. ETF inflows $9.4B. Target\n    $6,000.",
     "tags": "commodity,trade-idea",
     "grade": "A",
-    "href": "analyses/XAU",
+    "href": "/analyses/XAU/",
     "date": ""
   },
   {
@@ -2908,7 +2895,7 @@ window.searchDataPrebuilt = [
     "desc": "Crash -30% depuis $100+ en janvier. Gold/Silver ratio 74:1 =\n    argent sous-évalué. Demande industrielle (solar, EVs) en hausse.\n    52W High $109.83.",
     "tags": "commodity,trade-idea",
     "grade": "B+",
-    "href": "analyses/XAG",
+    "href": "/analyses/XAG/",
     "date": ""
   },
   {
@@ -2921,7 +2908,7 @@ window.searchDataPrebuilt = [
     "desc": "ATH $126,198 puis chute à $70,310. Sous les MA50 et MA200. Death\n    cross territory. MCap $1.4T. ETFs BTC en outflows. Macro\n    headwinds.",
     "tags": "crypto,technique,trade-idea",
     "grade": "C+",
-    "href": "analyses/BTC",
+    "href": "/analyses/BTC/",
     "date": ""
   },
   {
@@ -2934,7 +2921,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Argan, Inc. (AGX).\n    Prix: $412.87, Market Cap: .",
     "tags": "us,industrials,trade-idea",
     "grade": "A-",
-    "href": "analyses/AGX",
+    "href": "/analyses/AGX/",
     "date": ""
   },
   {
@@ -2947,7 +2934,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète d'Amazon (AMZN) : AWS, e-commerce, valorisation,\n    technique et risques. RSI à 23 — zone de survente extrême. Target\n    $282 (+42%).",
     "tags": "us,tech,consumer,ai,trade-idea",
     "grade": "A-",
-    "href": "analyses/AMZN",
+    "href": "/analyses/AMZN/",
     "date": ""
   },
   {
@@ -2960,7 +2947,7 @@ window.searchDataPrebuilt = [
     "desc": "Avino Silver & Gold Mines est un producteur d'argent, d'or et\n    de cuivre basé au Canada avec des opérations minières au Mexique.\n    La société exploite...",
     "tags": "us,materials,commodity,trade-idea",
     "grade": "A-",
-    "href": "analyses/ASM",
+    "href": "/analyses/ASM/",
     "date": ""
   },
   {
@@ -2973,7 +2960,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète d'Alphabet Inc. (GOOGL) : fondamentaux,\n    technique, risques et trade idea. $305.60 — Strong Buy — Target\n    $373.",
     "tags": "us,tech,ai,trade-idea",
     "grade": "A-",
-    "href": "analyses/GOOGL",
+    "href": "/analyses/GOOGL/",
     "date": ""
   },
   {
@@ -2986,7 +2973,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Meta Platforms (META) : fondamentaux,\n    technique, insiders, risques et trade idea. Revenue $201B, marge\n    opérationnelle 41%, target $860.",
     "tags": "us,tech,ai,trade-idea",
     "grade": "A-",
-    "href": "analyses/META",
+    "href": "/analyses/META/",
     "date": ""
   },
   {
@@ -2999,7 +2986,7 @@ window.searchDataPrebuilt = [
     "desc": "Rambus Inc est un concepteur de puces d'interface mémoire DDR5 et\n    de propriété intellectuelle (IP) pour semiconducteurs. Fondée en\n    1990 à San Jose (CA), Rambus...",
     "tags": "us,semis,tech,trade-idea",
     "grade": "A-",
-    "href": "analyses/RMBS",
+    "href": "/analyses/RMBS/",
     "date": ""
   },
   {
@@ -3012,7 +2999,7 @@ window.searchDataPrebuilt = [
     "desc": "Silver miner #1. Revenue +95% YoY. Cash $575M. 3 mines au Mexique.\n    Near 52W high $27.90. Argent > $100. Rotation métaux précieux.",
     "tags": "us,materials,commodity,trade-idea",
     "grade": "B+",
-    "href": "analyses/AG",
+    "href": "/analyses/AG/",
     "date": ""
   },
   {
@@ -3025,7 +3012,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete d'AMD : leader GPU/CPU pour l'IA et les data\n    centers. Revenue $34.6B (+34%), EPS en forte hausse, target $287.\n    Profil Growth/AI.",
     "tags": "us,semis,tech,ai,trade-idea",
     "grade": "B+",
-    "href": "analyses/AMD",
+    "href": "/analyses/AMD/",
     "date": ""
   },
   {
@@ -3038,7 +3025,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Bloom Energy Corporation (BE) : piles a\n    combustible, hydrogene, data centers AI. Score B+ | Haussier\n    structurel.",
     "tags": "us,industrials,energy,trade-idea",
     "grade": "B+",
-    "href": "analyses/BE",
+    "href": "/analyses/BE/",
     "date": ""
   },
   {
@@ -3051,7 +3038,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Bullish (BLSH) - Exchange crypto, CoinDesk,\n    indices digitaux. Score B+ Haussier. Target $45.20.",
     "tags": "us,crypto,financials,trade-idea",
     "grade": "B+",
-    "href": "analyses/BLSH",
+    "href": "/analyses/BLSH/",
     "date": ""
   },
   {
@@ -3064,7 +3051,7 @@ window.searchDataPrebuilt = [
     "desc": "Major pétrolière near 52W high. Beta 0.67 = défensif. Div 3.9%\n    safe. P/B 1.94x. Rotation value/energy. Géopolitique = tailwind.",
     "tags": "us,energy,dividende,trade-idea",
     "grade": "B+",
-    "href": "analyses/CVX",
+    "href": "/analyses/CVX/",
     "date": ""
   },
   {
@@ -3077,7 +3064,7 @@ window.searchDataPrebuilt = [
     "desc": "Dynavax Technologies est une société biopharmaceutique spécialisée\n    dans les vaccins. Fondée en 1996 à Emeryville, Californie, elle\n    commercialise HEPLISAV-B, un...",
     "tags": "us,healthcare,trade-idea",
     "grade": "B+",
-    "href": "analyses/DVAX",
+    "href": "/analyses/DVAX/",
     "date": ""
   },
   {
@@ -3090,7 +3077,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete d'Endeavour Silver Corp (EXK) : fondamentaux,\n    technique, risques, options et trade idea. Silver miner mid-cap\n    avec croissance revenue +167% et beta 2.1.",
     "tags": "us,materials,commodity,trade-idea",
     "grade": "B+",
-    "href": "analyses/EXK",
+    "href": "/analyses/EXK/",
     "date": ""
   },
   {
@@ -3103,7 +3090,7 @@ window.searchDataPrebuilt = [
     "desc": "Near 52W high. Revenue +13.9%. DRIVE transformation. Freight\n    spin-off catalyst. PE 20.7x. Indicateur économique positif.",
     "tags": "us,industrials,trade-idea",
     "grade": "B+",
-    "href": "analyses/FDX",
+    "href": "/analyses/FDX/",
     "date": ""
   },
   {
@@ -3116,7 +3103,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Robinhood Markets\n    (HOOD). Prix: $75.93, Market Cap: .",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/HOOD",
+    "href": "/analyses/HOOD/",
     "date": ""
   },
   {
@@ -3129,7 +3116,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Centrus Energy Corp. (LEU) - Leader americain\n    de l'enrichissement d'uranium. Fondamentaux, technique, risques et\n    trade idea.",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/LEU",
+    "href": "/analyses/LEU/",
     "date": ""
   },
   {
@@ -3142,7 +3129,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de MongoDB (MDB) : leader NoSQL\n    database-as-a-service, revenue +18.7%, target analyste $448.74.\n    Analyse technique, fondamentaux, risques et trade idea.",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/MDB",
+    "href": "/analyses/MDB/",
     "date": ""
   },
   {
@@ -3155,7 +3142,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète Netflix : Warner Bros acquisition $82.7B, RSI\n    oversold 27.6, revenue $45.2B (+17.6%), marge nette 24.3%. Verdict\n    institutionnel.",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/NFLX",
+    "href": "/analyses/NFLX/",
     "date": ""
   },
   {
@@ -3168,7 +3155,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Palantir Technologies (PLTR) : IA enterprise,\n    revenue +70%, marge nette 36%, valorisation premium. Score B+.",
     "tags": "us,tech,ai,defense,trade-idea",
     "grade": "B+",
-    "href": "analyses/PLTR",
+    "href": "/analyses/PLTR/",
     "date": ""
   },
   {
@@ -3181,7 +3168,7 @@ window.searchDataPrebuilt = [
     "desc": "Avidity Biosciences est une biotech de thérapies ARN de nouvelle\n    génération fondée en 2012 à San Diego. Sa plateforme propriétaire\n    AOC (Antibody...",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/RNA",
+    "href": "/analyses/RNA/",
     "date": ""
   },
   {
@@ -3194,7 +3181,7 @@ window.searchDataPrebuilt = [
     "desc": "Takeda Pharmaceutical est le plus grand groupe pharmaceutique\n    japonais et l'un des top 10 mondiaux. Fondée en 1781 à Tokyo (245\n    ans d'histoire !), Takeda est...",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/TAK",
+    "href": "/analyses/TAK/",
     "date": ""
   },
   {
@@ -3207,7 +3194,7 @@ window.searchDataPrebuilt = [
     "desc": "Tango Therapeutics est une société de biotechnologie spécialisée\n    en oncologie de précision basée à Boston. Fondée en 2017, elle\n    développe des thérapies ciblées...",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/TNGX",
+    "href": "/analyses/TNGX/",
     "date": ""
   },
   {
@@ -3220,7 +3207,7 @@ window.searchDataPrebuilt = [
     "desc": "TETRA Technologies est un spécialiste des services énergétiques et\n    des fluides industriels. Fondée en 1981 au Texas, la société opère\n    dans deux domaines : les...",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/TTI",
+    "href": "/analyses/TTI/",
     "date": ""
   },
   {
@@ -3233,7 +3220,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Twilio Inc. (TWLO) : CPaaS leader, croissance\n    revenue +14.3%, 4 beats EPS consécutifs, target $142.91.\n    Plateforme de communication cloud & AI.",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/TWLO",
+    "href": "/analyses/TWLO/",
     "date": ""
   },
   {
@@ -3246,7 +3233,7 @@ window.searchDataPrebuilt = [
     "desc": "+876% depuis 52W low. ROE 41%. Net margin 35.6%. AI data center\n    boom. Short 10.5%. Fresh BUY signal. Target $321.",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/WDC",
+    "href": "/analyses/WDC/",
     "date": ""
   },
   {
@@ -3259,7 +3246,7 @@ window.searchDataPrebuilt = [
     "desc": "XLE (Energy Select Sector SPDR ETF) réplique la performance du\n    secteur énergie du S&P 500. Il offre une exposition diversifiée\n    aux plus grandes sociétés...",
     "tags": "",
     "grade": "B+",
-    "href": "analyses/XLE",
+    "href": "/analyses/XLE/",
     "date": ""
   },
   {
@@ -3272,7 +3259,7 @@ window.searchDataPrebuilt = [
     "desc": "Aris Mining Corporation est un producteur d'or basé à Vancouver,\n    Canada, avec des opérations en Colombie et au Guyana. La société\n    exploite des mines d'or dans...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/ARMN",
+    "href": "/analyses/ARMN/",
     "date": ""
   },
   {
@@ -3285,7 +3272,7 @@ window.searchDataPrebuilt = [
     "desc": "BDRY (Breakwave Dry Bulk Shipping ETF) est le seul ETF pur play\n    sur les taux de fret maritime (dry bulk). Il investit dans des\n    contrats à terme sur le fret...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/BDRY",
+    "href": "/analyses/BDRY/",
     "date": ""
   },
   {
@@ -3298,7 +3285,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Clover Health (CLOV) : Medicare Advantage,\n    Clover Assistant AI, croissance +50%, chemin vers la profitabilite\n    GAAP en 2026. Verdict, fondamentaux, technique et",
     "tags": "",
     "grade": "B",
-    "href": "analyses/CLOV",
+    "href": "/analyses/CLOV/",
     "date": ""
   },
   {
@@ -3311,7 +3298,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Circle Internet\n    Group (CRCL). Prix: $60.10, Market Cap: .",
     "tags": "",
     "grade": "B",
-    "href": "analyses/CRCL",
+    "href": "/analyses/CRCL/",
     "date": ""
   },
   {
@@ -3324,7 +3311,7 @@ window.searchDataPrebuilt = [
     "desc": "CytomX Therapeutics est une société de biotechnologie oncologique\n    basée à South San Francisco. Sa technologie propriétaire PROBODY\n    permet l'activation...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/CTMX",
+    "href": "/analyses/CTMX/",
     "date": ""
   },
   {
@@ -3337,7 +3324,7 @@ window.searchDataPrebuilt = [
     "desc": "Elemental Royalty Corp est une société de royalties sur les métaux\n    précieux basée à Vancouver. Son modèle est simple et puissant :\n    elle achète des royalties et...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/ELE",
+    "href": "/analyses/ELE/",
     "date": ""
   },
   {
@@ -3350,7 +3337,7 @@ window.searchDataPrebuilt = [
     "desc": "Amicus Therapeutics est une société biopharmaceutique spécialisée\n    dans les maladies rares. Fondée en 2002 à Princeton (NJ), elle\n    développe et commercialise des...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/FOLD",
+    "href": "/analyses/FOLD/",
     "date": ""
   },
   {
@@ -3363,7 +3350,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de Gossamer Bio (GOSS) - Biotech late-stage\n    focalisee sur seralutinib pour l'hypertension arterielle\n    pulmonaire. Target $9.43, Strong Buy.",
     "tags": "",
     "grade": "B",
-    "href": "analyses/GOSS",
+    "href": "/analyses/GOSS/",
     "date": ""
   },
   {
@@ -3376,7 +3363,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Strategy Inc (MSTR).\n    Prix: $134.05, Market Cap: .",
     "tags": "",
     "grade": "B",
-    "href": "analyses/MSTR",
+    "href": "/analyses/MSTR/",
     "date": ""
   },
   {
@@ -3389,7 +3376,7 @@ window.searchDataPrebuilt = [
     "desc": "National Energy Services Reunited (NESR) est un fournisseur de\n    services pétroliers spécialisé dans la région MENA (Moyen-Orient\n    et Afrique du Nord). Fondée en...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/NESR",
+    "href": "/analyses/NESR/",
     "date": ""
   },
   {
@@ -3402,7 +3389,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de NIO Inc. - Leader chinois des véhicules\n    electriques premium. Prix $4.95, Market Cap $11.7B, Revenue Growth\n    +16.7%, premier profit trimestriel attendu.",
     "tags": "",
     "grade": "B",
-    "href": "analyses/NIO",
+    "href": "/analyses/NIO/",
     "date": ""
   },
   {
@@ -3415,7 +3402,7 @@ window.searchDataPrebuilt = [
     "desc": "PACS Group est un opérateur majeur d'établissements de soins\n    post-aigus aux États-Unis. Fondée en 2013 à Farmington, Utah, la\n    société gère des centres de soins...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/PACS",
+    "href": "/analyses/PACS/",
     "date": ""
   },
   {
@@ -3428,7 +3415,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Paramount Gold Nevada Corp. (PZG) -\n    Exploration aurifère, projet Grassy Mountain, approbation fédérale\n    obtenue. Target $3.25 (Strong Buy).",
     "tags": "",
     "grade": "B",
-    "href": "analyses/PZG",
+    "href": "/analyses/PZG/",
     "date": ""
   },
   {
@@ -3441,7 +3428,7 @@ window.searchDataPrebuilt = [
     "desc": "TRX Gold Corporation est un producteur d'or basé au Canada\n    (Oakville, Ontario), fondé en 1990. La société opère le projet\n    phare Buckreef Gold en Tanzanie. Avec...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/TRX",
+    "href": "/analyses/TRX/",
     "date": ""
   },
   {
@@ -3454,7 +3441,7 @@ window.searchDataPrebuilt = [
     "desc": "The Toro Company est un leader mondial des équipements d'extérieur\n    et d'entretien paysager. Fondée en 1914 à Bloomington, Minnesota,\n    elle fabrique des...",
     "tags": "",
     "grade": "B",
-    "href": "analyses/TTC",
+    "href": "/analyses/TTC/",
     "date": ""
   },
   {
@@ -3467,7 +3454,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse institutionnelle complète de Uranium Energy Corp. (UEC) :\n    fondamentaux, technique, insiders, risques et trade idea. Prix\n    actuel $15.52.",
     "tags": "us,energy,speculative,trade-idea",
     "grade": "B",
-    "href": "analyses/UEC",
+    "href": "/analyses/UEC/",
     "date": ""
   },
   {
@@ -3480,7 +3467,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de American Battery\n    Technology (ABTC). Prix: $3.84, Market Cap: .",
     "tags": "us,industrials,materials,speculative",
     "grade": "B-",
-    "href": "analyses/ABTC",
+    "href": "/analyses/ABTC/",
     "date": ""
   },
   {
@@ -3493,7 +3480,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète d'Amprius Technologies (AMPX) : batteries\n    silicium-anode next-gen pour drones, défense et aérospatiale.\n    Revenue +173%, target $17.57 Strong Buy.",
     "tags": "us,industrials,speculative,trade-idea",
     "grade": "B-",
-    "href": "analyses/AMPX",
+    "href": "/analyses/AMPX/",
     "date": ""
   },
   {
@@ -3506,7 +3493,7 @@ window.searchDataPrebuilt = [
     "desc": "Capricor Therapeutics est une biotech spécialisée en thérapie\n    cellulaire, fondée en 2005 à San Diego. La société développe\n    Deramiocel, un traitement à base de...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
-    "href": "analyses/CAPR",
+    "href": "/analyses/CAPR/",
     "date": ""
   },
   {
@@ -3519,7 +3506,7 @@ window.searchDataPrebuilt = [
     "desc": "FormFactor Inc est un leader mondial des équipements de test pour\n    semi-conducteurs. Fondée en 1993 à Livermore, Californie, la\n    société conçoit et fabrique des...",
     "tags": "us,semis,tech,speculative",
     "grade": "B-",
-    "href": "analyses/FORM",
+    "href": "/analyses/FORM/",
     "date": ""
   },
   {
@@ -3532,7 +3519,7 @@ window.searchDataPrebuilt = [
     "desc": "Ichor Holdings est un fournisseur de sous-systèmes de livraison de\n    gaz et de produits chimiques pour l'industrie des équipements\n    semi-conducteurs. Fondée en...",
     "tags": "us,semis,tech,speculative",
     "grade": "B-",
-    "href": "analyses/ICHR",
+    "href": "/analyses/ICHR/",
     "date": ""
   },
   {
@@ -3545,7 +3532,7 @@ window.searchDataPrebuilt = [
     "desc": "Maze Therapeutics est une biotech de médecine rénale de précision\n    fondée en 2017 à South San Francisco. Avec seulement 125 employés,\n    MAZE utilise la génomique...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
-    "href": "analyses/MAZE",
+    "href": "/analyses/MAZE/",
     "date": ""
   },
   {
@@ -3558,7 +3545,7 @@ window.searchDataPrebuilt = [
     "desc": "MBX Biosciences est une biotech clinique spécialisée dans les\n    maladies endocriniennes et métaboliques. Fondée en 2018 à Carmel\n    (Indiana), la société développe...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
-    "href": "analyses/MBX",
+    "href": "/analyses/MBX/",
     "date": ""
   },
   {
@@ -3571,7 +3558,7 @@ window.searchDataPrebuilt = [
     "desc": "Praxis Precision Medicines est une société de biotechnologie\n    spécialisée dans les neurosciences de précision, ciblant les\n    troubles du système nerveux central...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
-    "href": "analyses/PRAX",
+    "href": "/analyses/PRAX/",
     "date": ""
   },
   {
@@ -3584,7 +3571,7 @@ window.searchDataPrebuilt = [
     "desc": "SanDisk Corporation est le leader mondial du stockage NAND flash,\n    issu du spin-off de Western Digital (WDC) en 2024. Basée à\n    Milpitas, Californie, la société...",
     "tags": "us,semis,tech",
     "grade": "B-",
-    "href": "analyses/SNDK",
+    "href": "/analyses/SNDK/",
     "date": ""
   },
   {
@@ -3597,7 +3584,7 @@ window.searchDataPrebuilt = [
     "desc": "Terns Pharmaceuticals est une biotech multi-pipeline fondée en\n    2016 à Foster City, Californie. Avec seulement 59 employés, la\n    société développe trois...",
     "tags": "us,healthcare,speculative",
     "grade": "B-",
-    "href": "analyses/TERN",
+    "href": "/analyses/TERN/",
     "date": ""
   },
   {
@@ -3610,7 +3597,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de USA Rare Earth (USAR) : mine-to-magnet,\n    financement gouvernemental $3.1B, Round Top Texas, risques et\n    opportunites.",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "B-",
-    "href": "analyses/USAR",
+    "href": "/analyses/USAR/",
     "date": ""
   },
   {
@@ -3623,7 +3610,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Aeva Technologies\n    (AEVA). Prix: $13.50, Market Cap: .",
     "tags": "us,tech,speculative",
     "grade": "C+",
-    "href": "analyses/AEVA",
+    "href": "/analyses/AEVA/",
     "date": ""
   },
   {
@@ -3636,7 +3623,7 @@ window.searchDataPrebuilt = [
     "desc": "Alumis Inc est une biotech spécialisée dans les maladies\n    auto-immunes, fondée en 2021 à South San Francisco. La société\n    développe des inhibiteurs de TYK2, une...",
     "tags": "us,healthcare,speculative",
     "grade": "C+",
-    "href": "analyses/ALMS",
+    "href": "/analyses/ALMS/",
     "date": ""
   },
   {
@@ -3649,7 +3636,7 @@ window.searchDataPrebuilt = [
     "desc": "13,132 BTC en trésorerie. P/B 0.36x. RSI 30.9. Discount 57% sur\n    NAV. Bear market crypto. Short interest 18.2%.",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "C+",
-    "href": "analyses/ASST",
+    "href": "/analyses/ASST/",
     "date": ""
   },
   {
@@ -3662,7 +3649,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète AST SpaceMobile (ASTS) : connectivité satellite\n    direct-to-smartphone, constellation BlueBird, dilution récente\n    -20%, short interest 19%. Score C+ Spéculatif.",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "C+",
-    "href": "analyses/ASTS",
+    "href": "/analyses/ASTS/",
     "date": ""
   },
   {
@@ -3675,7 +3662,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Coinbase Global,\n    Inc. (COIN). Prix: $165.11, Market Cap: .",
     "tags": "us,financials,crypto,trade-idea",
     "grade": "C+",
-    "href": "analyses/COIN",
+    "href": "/analyses/COIN/",
     "date": ""
   },
   {
@@ -3688,7 +3675,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de DeFi Development\n    Corp. (DFDV). Prix: $3.89, Market Cap: .",
     "tags": "us,crypto,speculative",
     "grade": "C+",
-    "href": "analyses/DFDV",
+    "href": "/analyses/DFDV/",
     "date": ""
   },
   {
@@ -3701,7 +3688,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète d'Eos Energy Enterprises (EOSE) : stockage\n    d'énergie zinc-air, prêt DOE $303M, short interest 25.6%, earnings\n    le 26 février. Score C+ Spéculatif.",
     "tags": "us,industrials,energy,speculative,trade-idea",
     "grade": "C+",
-    "href": "analyses/EOSE",
+    "href": "/analyses/EOSE/",
     "date": ""
   },
   {
@@ -3714,7 +3701,7 @@ window.searchDataPrebuilt = [
     "desc": "Erasca Inc est une société de biotechnologie spécialisée en\n    oncologie de précision, ciblant la voie de signalisation RAS/MAPK.\n    Fondée en 2018 à San Diego, elle...",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/ERAS",
+    "href": "/analyses/ERAS/",
     "date": ""
   },
   {
@@ -3727,7 +3714,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Gold Resource Corporation (GORO) : mine Don\n    David au Mexique, projet Back Forty, fondamentaux, technique et\n    trade idea.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/GORO",
+    "href": "/analyses/GORO/",
     "date": ""
   },
   {
@@ -3740,7 +3727,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Gorilla Technology Group (GRRR) : AI Data\n    Centers, IoT, sécurité intelligente. Pipeline $10B+, backlog\n    $100M+. Cours $12.59, target $36.67.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/GRRR",
+    "href": "/analyses/GRRR/",
     "date": ""
   },
   {
@@ -3753,7 +3740,7 @@ window.searchDataPrebuilt = [
     "desc": "Hillenbrand Inc est un fabricant d'équipements industriels\n    spécialisés fondé en 1906 à Batesville, Indiana. La société\n    produit des équipements de compounding...",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/HI",
+    "href": "/analyses/HI/",
     "date": ""
   },
   {
@@ -3766,7 +3753,7 @@ window.searchDataPrebuilt = [
     "desc": "i-80 Gold Corp est un producteur et développeur d'or basé à Reno,\n    Nevada. Fondée en 2020, la société possède un portfolio de 4\n    projets aurifères au Nevada :...",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/IAUX",
+    "href": "/analyses/IAUX/",
     "date": ""
   },
   {
@@ -3779,7 +3766,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète KULR Technology Group : gestion thermique\n    batteries, BBU AI data centers, trésorerie Bitcoin 1,021 BTC.\n    Target $10 Strong Buy.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/KULR",
+    "href": "/analyses/KULR/",
     "date": ""
   },
   {
@@ -3792,7 +3779,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de LENZ Therapeutics (NASDAQ: LENZ) - Biotech\n    presbyopie, VIZZ FDA-approved, Phase commerciale. Score C+\n    Speculatif.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/LENZ",
+    "href": "/analyses/LENZ/",
     "date": ""
   },
   {
@@ -3805,7 +3792,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Pony AI Inc. (NASDAQ: PONY) - Leader mondial\n    du robotaxi autonome. Revenue +72%, partenariat Toyota, inclusion\n    MSCI China Index.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/PONY",
+    "href": "/analyses/PONY/",
     "date": ""
   },
   {
@@ -3818,7 +3805,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse fondamentale et technique de Reliv International (RELV) -\n    Supplements nutritionnels, marges brutes 73%, micro-cap value\n    play. Consumer Defensive / Packaged Foods.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/RELV",
+    "href": "/analyses/RELV/",
     "date": ""
   },
   {
@@ -3831,7 +3818,7 @@ window.searchDataPrebuilt = [
     "desc": "Batteries lithium-métal IA. Revenue +102% QoQ. Cash $214M. Pivot\n    drones/défense NDAA. Target $3.00 (+52%). Spéculatif pre-profit.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/SES",
+    "href": "/analyses/SES/",
     "date": ""
   },
   {
@@ -3844,7 +3831,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Soluna Holdings\n    (SLNH). Prix: $0.89, Market Cap: .",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/SLNH",
+    "href": "/analyses/SLNH/",
     "date": ""
   },
   {
@@ -3857,7 +3844,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Tempus AI (TEM) : IA en médecine de précision,\n    revenue +84.7%, RSI oversold à 28. Earnings le 24 février.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/TEM",
+    "href": "/analyses/TEM/",
     "date": ""
   },
   {
@@ -3870,7 +3857,7 @@ window.searchDataPrebuilt = [
     "desc": "Taseko Mines est un producteur de cuivre basé à Vancouver, Canada.\n    Son actif principal est la mine de Gibraltar en\n    Colombie-Britannique, l'une des plus grandes...",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/TGB",
+    "href": "/analyses/TGB/",
     "date": ""
   },
   {
@@ -3883,7 +3870,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse institutionnelle complete de Tesla Inc. (TSLA) :\n    fondamentaux, technique, risques, options et trade idea. Prix\n    $417.44, Market Cap $1.57T.",
     "tags": "us,tech,consumer,ai,trade-idea",
     "grade": "C+",
-    "href": "analyses/TSLA",
+    "href": "/analyses/TSLA/",
     "date": ""
   },
   {
@@ -3896,7 +3883,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Ur-Energy Inc. (URG) - Producteur d'uranium\n    ISR au Wyoming. Prix $1.59, Target $2.26 (Strong Buy). Secteur\n    nucleaire en plein essor.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/URG",
+    "href": "/analyses/URG/",
     "date": ""
   },
   {
@@ -3909,7 +3896,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de WeRide Inc. (WRD) - Leader mondial du robotaxi\n    autonome. Revenue +144% YoY, expansion mondiale avec Uber, target\n    $15.98 Strong Buy.",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/WRD",
+    "href": "/analyses/WRD/",
     "date": ""
   },
   {
@@ -3922,7 +3909,7 @@ window.searchDataPrebuilt = [
     "desc": "Western Copper and Gold est une société d'exploration minière\n    basée à Vancouver, Canada. Avec seulement 15 employés, elle\n    détient la propriété minérale Casino...",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/WRN",
+    "href": "/analyses/WRN/",
     "date": ""
   },
   {
@@ -3935,7 +3922,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de XPeng Inc. (NYSE: XPEV) - Constructeur\n    chinois de véhicules electriques intelligents. Revenue +101.8%,\n    target $27.34 (Buy).",
     "tags": "",
     "grade": "C+",
-    "href": "analyses/XPEV",
+    "href": "/analyses/XPEV/",
     "date": ""
   },
   {
@@ -3948,7 +3935,7 @@ window.searchDataPrebuilt = [
     "desc": "BioAge Labs est une biotech focalisée sur l'obésité et le\n    métabolisme, fondée en 2015 à Richmond, Californie. La société\n    développe Azelaprag, un traitement...",
     "tags": "",
     "grade": "C",
-    "href": "analyses/BIOA",
+    "href": "/analyses/BIOA/",
     "date": ""
   },
   {
@@ -3961,7 +3948,7 @@ window.searchDataPrebuilt = [
     "desc": "Pulse Biosciences est une société de dispositifs médicaux\n    innovants basée à Miami, Floride, fondée en 2014. Elle développe\n    la technologie CellFX, basée sur...",
     "tags": "",
     "grade": "C",
-    "href": "analyses/PLSE",
+    "href": "/analyses/PLSE/",
     "date": ""
   },
   {
@@ -3974,7 +3961,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de D-Wave Quantum\n    (QBTS). Prix: $19.64, Market Cap: .",
     "tags": "",
     "grade": "C",
-    "href": "analyses/QBTS",
+    "href": "/analyses/QBTS/",
     "date": ""
   },
   {
@@ -3987,7 +3974,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Eledon\n    Pharmaceuticals (ELDN). Prix: $2.02, Market Cap: .",
     "tags": "",
     "grade": "C-",
-    "href": "analyses/ELDN",
+    "href": "/analyses/ELDN/",
     "date": ""
   },
   {
@@ -4000,7 +3987,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse fondamentale et technique approfondie de UnitedHealth\n    Group (UNH). Leader mondial de l'assurance sante et des services\n    de sante integres. Score C- Baissier.",
     "tags": "",
     "grade": "C-",
-    "href": "analyses/UNH",
+    "href": "/analyses/UNH/",
     "date": ""
   },
   {
@@ -4013,7 +4000,7 @@ window.searchDataPrebuilt = [
     "desc": "Allogene Therapeutics développe des thérapies CAR-T allogéniques\n    (\"off-the-shelf\"). Contrairement aux CAR-T autologues (Kymriah,\n    Yescarta) qui utilisent les...",
     "tags": "us,healthcare,speculative",
     "grade": "D+",
-    "href": "analyses/ALLO",
+    "href": "/analyses/ALLO/",
     "date": ""
   },
   {
@@ -4026,7 +4013,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète d'Aqua Metals (AQMS) : recyclage de batteries par\n    AquaRefining, acquisition Lion Energy, valorisation micro-cap et\n    risques de dilution.",
     "tags": "us,industrials,materials,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/AQMS",
+    "href": "/analyses/AQMS/",
     "date": ""
   },
   {
@@ -4039,7 +4026,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie d'American Resources Corporation (AREC) : rare\n    earths, charbon métallurgique, recyclage de métaux. Target\n    analyste $6.75 (Strong Buy). Micro-cap speculative a f",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/AREC",
+    "href": "/analyses/AREC/",
     "date": ""
   },
   {
@@ -4052,7 +4039,7 @@ window.searchDataPrebuilt = [
     "desc": "BTCC est un ETF géré par Roundhill Investments qui applique une\n    stratégie de covered call sur des ETF Bitcoin. L'objectif est de\n    générer un revenu régulier via...",
     "tags": "crypto,etf,options",
     "grade": "D+",
-    "href": "analyses/BTCC",
+    "href": "/analyses/BTCC/",
     "date": ""
   },
   {
@@ -4065,7 +4052,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Bitcoin Depot Inc. (BTM) : leader\n    nord-américain des ATM Bitcoin. Revenue $636M, micro cap $35M,\n    réseau de 8,000+ kiosques crypto.",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/BTM",
+    "href": "/analyses/BTM/",
     "date": ""
   },
   {
@@ -4078,7 +4065,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete d'Electra Battery Materials (ELBM) : raffinerie\n    de cobalt en Ontario, mineraux critiques pour véhicules\n    electriques, structure du capital et risques.",
     "tags": "us,materials,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/ELBM",
+    "href": "/analyses/ELBM/",
     "date": ""
   },
   {
@@ -4091,7 +4078,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète d'enCore Energy Corp. (EU) — Producteur d'uranium\n    ISR aux États-Unis. Target $4.27, consensus Strong Buy. Profil\n    spéculatif uranium/nucléaire.",
     "tags": "us,energy,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/EU",
+    "href": "/analyses/EU/",
     "date": ""
   },
   {
@@ -4104,7 +4091,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Hims & Hers Health (HIMS) : telemedecine,\n    GLP-1, FDA, short interest 41.7%, RSI 17. Verdict, fondamentaux,\n    risques et idee de trade.",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/HIMS",
+    "href": "/analyses/HIMS/",
     "date": ""
   },
   {
@@ -4117,7 +4104,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Hoth Therapeutics (NASDAQ: HOTH) - Biotech\n    clinical-stage, pipeline obesity/oncologie, GDNF vs semaglutide.\n    Micro-cap $15.5M.",
     "tags": "us,healthcare,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/HOTH",
+    "href": "/analyses/HOTH/",
     "date": ""
   },
   {
@@ -4130,7 +4117,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Hyperion DeFi (HYPD) : ophthalmic tech\n    pivotant vers une stratégie tresor HYPE token. Target $5.88\n    (Strong Buy). Short interest 26%. Risque élevé.",
     "tags": "us,crypto,healthcare,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/HYPD",
+    "href": "/analyses/HYPD/",
     "date": ""
   },
   {
@@ -4143,7 +4130,7 @@ window.searchDataPrebuilt = [
     "desc": "Inhibrx Biosciences est une société de biotechnologie spécialisée\n    en immuno-oncologie, basée à La Jolla, Californie. Restructurée en\n    2024, l'entreprise...",
     "tags": "us,healthcare,speculative",
     "grade": "D+",
-    "href": "analyses/INBX",
+    "href": "/analyses/INBX/",
     "date": ""
   },
   {
@@ -4156,7 +4143,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de Snow Lake Energy (LITM) : exploration\n    lithium et uranium, acquisition GUE, projets nucléaires. Verdict,\n    fondamentaux, risques et trade idea.",
     "tags": "us,materials,energy,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/LITM",
+    "href": "/analyses/LITM/",
     "date": ""
   },
   {
@@ -4169,7 +4156,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Lyft, Inc. (LYFT) : fondamentaux, technique,\n    risques et trade idea. RSI en zone de survente à 25, short\n    interest élevé à 16.5% du float.",
     "tags": "us,tech,trade-idea",
     "grade": "D+",
-    "href": "analyses/LYFT",
+    "href": "/analyses/LYFT/",
     "date": ""
   },
   {
@@ -4182,7 +4169,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de MARA Holdings (ex-Marathon Digital) :\n    Bitcoin mining, expansion AI data centers, short interest 38.9%,\n    target analyste $19.60 (+147%). Profil a très haute vo",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/MARA",
+    "href": "/analyses/MARA/",
     "date": ""
   },
   {
@@ -4195,7 +4182,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Microvast Holdings (MVST) : batteries\n    lithium-ion pour véhicules electriques et stockage d'énergie.\n    Revenue $444M, Short Interest 13.7%, Beta 3.37.",
     "tags": "us,industrials,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/MVST",
+    "href": "/analyses/MVST/",
     "date": ""
   },
   {
@@ -4208,7 +4195,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de Rigetti Computing (RGTI) : quantum\n    computing, fondamentaux, technique, risques et idee de trade.\n    Pure-play quantique a $16.09, MCap $5.3B.",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/RGTI",
+    "href": "/analyses/RGTI/",
     "date": ""
   },
   {
@@ -4221,7 +4208,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse institutionnelle complete de SharpLink Gaming (SBET) -\n    Ethereum Treasury Platform. Score D+ Speculatif. Prix $6.87, MCap\n    $1.35B, 864K ETH en tresorerie.",
     "tags": "us,crypto,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/SBET",
+    "href": "/analyses/SBET/",
     "date": ""
   },
   {
@@ -4234,7 +4221,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de NuScale Power (SMR) : pionnier des réacteurs\n    nucléaires modulaires (SMR). Fondamentaux, technique, risques et\n    trade idea.",
     "tags": "us,industrials,energy,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/SMR",
+    "href": "/analyses/SMR/",
     "date": ""
   },
   {
@@ -4247,7 +4234,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complète de Sportsman's Warehouse (SPWH) : fondamentaux,\n    technique, insiders, short interest, options et trade idea.\n    Retailer outdoor en difficulté, $1.25, P/B 0.23x.",
     "tags": "us,consumer,speculative,trade-idea",
     "grade": "D+",
-    "href": "analyses/SPWH",
+    "href": "/analyses/SPWH/",
     "date": ""
   },
   {
@@ -4260,7 +4247,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse technique et fondamentale complète de Tron Inc. (TRON).\n    Prix: $1.30, Market Cap: .",
     "tags": "us,consumer,speculative",
     "grade": "D+",
-    "href": "analyses/TRON",
+    "href": "/analyses/TRON/",
     "date": ""
   },
   {
@@ -4273,7 +4260,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de Vivos Therapeutics (VVOS) - MedTech\n    specialisee dans le traitement non-invasif de l'apnee du sommeil.\n    Cours $1.52, micro-cap Healthcare.",
     "tags": "us,healthcare,speculative",
     "grade": "D+",
-    "href": "analyses/VVOS",
+    "href": "/analyses/VVOS/",
     "date": ""
   },
   {
@@ -4286,7 +4273,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse approfondie de Westwater Resources (WWR) - Graphite\n    naturel battery-grade, usine Kellyton, minerais critiques. Cours\n    $0.88, MCap $104M.",
     "tags": "",
     "grade": "D+",
-    "href": "analyses/WWR",
+    "href": "/analyses/WWR/",
     "date": ""
   },
   {
@@ -4299,7 +4286,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de CISO Global Inc. : cybersecurite AI,\n    CHECKLIGHT, risque de delisting NASDAQ. Score D - Speculatif a\n    haut risque.",
     "tags": "us,tech,speculative,trade-idea",
     "grade": "D",
-    "href": "analyses/CISO",
+    "href": "/analyses/CISO/",
     "date": ""
   },
   {
@@ -4312,7 +4299,7 @@ window.searchDataPrebuilt = [
     "desc": "PYPY (YieldMax PYPL Option Income Strategy ETF) est un ETF qui\n    génère des revenus via une stratégie de covered call sur PayPal\n    (PYPL). Il achète des options...",
     "tags": "etf,options",
     "grade": "D",
-    "href": "analyses/PYPY",
+    "href": "/analyses/PYPY/",
     "date": ""
   },
   {
@@ -4325,7 +4312,7 @@ window.searchDataPrebuilt = [
     "desc": "YBIT est un ETF géré par YieldMax (Tidal Financial Group) qui\n    utilise une stratégie d'options synthétiques sur des ETP Bitcoin\n    pour générer un revenu élevé. Le...",
     "tags": "crypto,etf,options",
     "grade": "D",
-    "href": "analyses/YBIT",
+    "href": "/analyses/YBIT/",
     "date": ""
   },
   {
@@ -4338,7 +4325,7 @@ window.searchDataPrebuilt = [
     "desc": "REKT est un ETF géré par Roundhill Investments qui fournit une\n    exposition inverse 2x quotidienne aux actions de sociétés\n    blockchain et crypto cotées aux...",
     "tags": "crypto,etf,options,speculative",
     "grade": "D-",
-    "href": "analyses/REKT",
+    "href": "/analyses/REKT/",
     "date": ""
   },
   {
@@ -4351,7 +4338,7 @@ window.searchDataPrebuilt = [
     "desc": "CBTA est un ETF géré par YieldMax (Tidal Financial Group) qui\n    combine une stratégie \"buffer\" (amortisseur) avec des options sur\n    le Bitcoin. Le \"Buffer30\"...",
     "tags": "crypto,etf,options",
     "grade": "F",
-    "href": "analyses/CBTA",
+    "href": "/analyses/CBTA/",
     "date": ""
   },
   {
@@ -4364,7 +4351,7 @@ window.searchDataPrebuilt = [
     "desc": "FIAT (YieldMax Short COIN Option Income ETF) est un ETF qui prend\n    une exposition inverse (short) à Coinbase (COIN) via une stratégie\n    d'options, tout en...",
     "tags": "crypto,etf,options",
     "grade": "F",
-    "href": "analyses/FIAT",
+    "href": "/analyses/FIAT/",
     "date": ""
   },
   {
@@ -4377,7 +4364,7 @@ window.searchDataPrebuilt = [
     "desc": "Analyse complete de PHX Minerals (PHE) - Royalties minerales\n    gaz/petrole, acquisition WhiteHawk Energy a $4.35/action.\n    Fondamentaux, risques et contexte.",
     "tags": "us,energy,speculative",
     "grade": "N/A",
-    "href": "analyses/PHE",
+    "href": "/analyses/PHE/",
     "date": ""
   },
   {
@@ -4404,7 +4391,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,financials,consumer,healthcare,materials,tech,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260702/",
-    "date": "Jeudi 2 juillet 2026"
+    "date": "2 juillet 2026"
   },
   {
     "type": "scanner",
@@ -4417,7 +4404,7 @@ window.searchDataPrebuilt = [
     "tags": "us,financials,materials,industrials,consumer,energy,healthcare,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260701/",
-    "date": "Mercredi 1 juillet 2026"
+    "date": "1 juillet 2026"
   },
   {
     "type": "scanner",
@@ -4430,7 +4417,7 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,industrials,consumer,materials,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260630/",
-    "date": "Mardi 30 juin 2026"
+    "date": "30 juin 2026"
   },
   {
     "type": "scanner",
@@ -4547,7 +4534,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,etf,financials,consumer,healthcare,energy,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260618/",
-    "date": "Jeudi 18 juin 2026"
+    "date": "18 juin 2026"
   },
   {
     "type": "scanner",
@@ -4560,7 +4547,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,etf,materials,financials,industrials,consumer,tech,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260617/",
-    "date": "Mercredi 17 juin 2026"
+    "date": "17 juin 2026"
   },
   {
     "type": "scanner",
@@ -4573,7 +4560,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,semis,materials,industrials,financials,healthcare,consumer,macro,technique,trade-idea",
     "grade": "",
     "href": "/scanner/20260616/",
-    "date": "Mardi 16 juin 2026"
+    "date": "16 juin 2026"
   },
   {
     "type": "scanner",
@@ -4664,7 +4651,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,tech,semis,industrials,consumer,financials,energy,healthcare",
     "grade": "C",
     "href": "/scanner/retrospective/20260606/",
-    "date": "May 29 – June 5, 2026"
+    "date": "29 mai – 5 juin 2026"
   },
   {
     "type": "scanner",
@@ -5028,7 +5015,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,tech,semis,industrials,consumer,financials",
     "grade": "B+",
     "href": "/scanner/retrospective/20260502/",
-    "date": "Apr 27 – May 1, 2026"
+    "date": "27 avril – 1 mai 2026"
   },
   {
     "type": "scanner",
@@ -5106,7 +5093,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,tech,semis,healthcare,industrials,materials,consumer,energy,financials",
     "grade": "B*",
     "href": "/scanner/retrospective/20260425/",
-    "date": "Apr 18 – Apr 24, 2026"
+    "date": "18 – 24 avril 2026"
   },
   {
     "type": "scanner",
@@ -5197,7 +5184,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,semis,tech,financials,consumer",
     "grade": "A*",
     "href": "/scanner/retrospective/20260417/",
-    "date": "Apr 13 – Apr 17, 2026"
+    "date": "13 – 17 avril 2026"
   },
   {
     "type": "scanner",
@@ -5275,7 +5262,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,semis,defense,healthcare,tech,financials,consumer",
     "grade": "C*",
     "href": "/scanner/retrospective/20260410/",
-    "date": "Apr 1 – Apr 10, 2026"
+    "date": "1 – 10 avril 2026"
   },
   {
     "type": "scanner",
@@ -5353,7 +5340,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,healthcare,semis,defense,tech",
     "grade": "C",
     "href": "/scanner/retrospective/20260403/",
-    "date": "Mar 24 – Apr 3, 2026"
+    "date": "24 mars – 3 avril 2026"
   },
   {
     "type": "scanner",
@@ -5431,7 +5418,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,healthcare,industrials",
     "grade": "B+",
     "href": "/scanner/retrospective/20260327/",
-    "date": "Mar 20 – Mar 27, 2026"
+    "date": "20 – 27 mars 2026"
   },
   {
     "type": "scanner",
@@ -5509,7 +5496,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,commodity,technique,trade-idea,macro,retrospective,energy,speculative",
     "grade": "C",
     "href": "/scanner/retrospective/20260320/",
-    "date": "Mar 10 – Mar 20, 2026"
+    "date": "10 – 20 mars 2026"
   },
   {
     "type": "scanner",
@@ -5561,7 +5548,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,etf,energy,defense,healthcare,industrials,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260313/",
-    "date": "Thursday, March 13, 2026"
+    "date": "13 mars 2026"
   },
   {
     "type": "scanner",
@@ -5574,7 +5561,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,retrospective,energy,defense,commodity,short-squeeze",
     "grade": "B",
     "href": "/scanner/retrospective/20260313/",
-    "date": "Mar 3 – Mar 13, 2026"
+    "date": "3 – 13 mars 2026"
   },
   {
     "type": "scanner",
@@ -5587,7 +5574,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,energy,materials,consumer,industrials,tech,etf,commodity,macro,technique,trade-idea,defense",
     "grade": "",
     "href": "/scanner/20260312/",
-    "date": "Wednesday, March 12, 2026"
+    "date": "12 mars 2026"
   },
   {
     "type": "scanner",
@@ -5597,7 +5584,7 @@ window.searchDataPrebuilt = [
     "name": "",
     "title": "Special VIX Deflation Scan — Top 15 A+ Swing Setups (US Small/Mid/Large, EU, ETFs)",
     "desc": "VIX peaked at 29.49 last week and is now deflating to 24.75 (-17%). Credit spreads are calm (HYG +0.6%), which means this was a technical spike, not a systemic one. Per our Mastering the VIX framework, this triggers a Mean Reversion Swing setup with a historical 78% win rate on 1-month SPY longs whe...",
-    "tags": "us,eu,etf,tech,semis,defense,macro,technique,trade-idea,special",
+    "tags": "us,eu,etf,tech,semis,defense,macro,technique,trade-idea,special-edition",
     "grade": "",
     "href": "/scanner/20260310/",
     "date": "10 mars 2026"
@@ -5613,7 +5600,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,etf,tech,semis,healthcare,energy,materials,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260309/",
-    "date": "Sunday, March 9, 2026"
+    "date": "9 mars 2026"
   },
   {
     "type": "scanner",
@@ -5626,7 +5613,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,energy,defense,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260306/",
-    "date": "Friday, March 6, 2026"
+    "date": "6 mars 2026"
   },
   {
     "type": "scanner",
@@ -5639,7 +5626,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,retrospective",
     "grade": "B-",
     "href": "/scanner/retrospective/20260306/",
-    "date": "Feb 24 – Mar 5, 2026"
+    "date": "24 février – 5 mars 2026"
   },
   {
     "type": "scanner",
@@ -5652,7 +5639,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,energy,defense,healthcare,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260305/",
-    "date": "Jeudi 5 Mars 2026"
+    "date": "5 mars 2026"
   },
   {
     "type": "scanner",
@@ -5665,7 +5652,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,energy,tech,commodity,geopolitique,trade-idea,macro,materials,industrials",
     "grade": "",
     "href": "/scanner/20260304/",
-    "date": "Mercredi 4 Mars 2026"
+    "date": "4 mars 2026"
   },
   {
     "type": "scanner",
@@ -5678,7 +5665,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,energy,tech,semis,healthcare,commodity,geopolitique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260303/",
-    "date": "Mardi 3 Mars 2026"
+    "date": "3 mars 2026"
   },
   {
     "type": "scanner",
@@ -5691,7 +5678,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,energy,tech,semis,materials,defense,commodity,geopolitique,trade-idea",
     "grade": "",
     "href": "/scanner/20260302/",
-    "date": "Lundi 2 Mars 2026"
+    "date": "2 mars 2026"
   },
   {
     "type": "scanner",
@@ -5717,7 +5704,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,energy,healthcare,semis,defense",
     "grade": "",
     "href": "/scanner/20260227/",
-    "date": "27 Février 2026"
+    "date": "27 février 2026"
   },
   {
     "type": "scanner",
@@ -5730,7 +5717,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,technique,trade-idea,macro,financials,healthcare,tech",
     "grade": "",
     "href": "/scanner/20260226/",
-    "date": "26 Février 2026"
+    "date": "26 février 2026"
   },
   {
     "type": "scanner",
@@ -5743,7 +5730,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,commodity,energy,healthcare,materials,trade-idea,tech",
     "grade": "",
     "href": "/scanner/20260224/",
-    "date": "24 Février 2026"
+    "date": "24 février 2026"
   },
   {
     "type": "scanner",
@@ -5756,7 +5743,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,commodity,energy,healthcare,materials,trade-idea",
     "grade": "",
     "href": "/scanner/20260223/",
-    "date": "23 Février 2026"
+    "date": "23 février 2026"
   },
   {
     "type": "scanner",
@@ -5769,7 +5756,7 @@ window.searchDataPrebuilt = [
     "tags": "us,commodity,materials,industrials,trade-idea",
     "grade": "",
     "href": "/scanner/20260220/",
-    "date": "20 Février 2026"
+    "date": "20 février 2026"
   },
   {
     "type": "scanner",
@@ -5795,7 +5782,7 @@ window.searchDataPrebuilt = [
     "tags": "us,energy,earnings,geopolitique,trade-idea",
     "grade": "",
     "href": "/scanner/20260219/",
-    "date": "19 Février 2026"
+    "date": "19 février 2026"
   },
   {
     "type": "scanner",
@@ -5808,7 +5795,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,commodity,etf,trade-idea",
     "grade": "",
     "href": "/scanner/20260217/",
-    "date": "17 Février 2026"
+    "date": "17 février 2026"
   },
   {
     "type": "scanner",
@@ -5821,7 +5808,7 @@ window.searchDataPrebuilt = [
     "tags": "us,trade-idea,technique",
     "grade": "",
     "href": "/scanner/20260215/",
-    "date": "15 Février 2026"
+    "date": "15 février 2026"
   },
   {
     "type": "scanner",
@@ -5834,7 +5821,7 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,crypto,biotech,materials,energy,short-squeeze,momentum,technique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260313-2300/",
-    "date": "Friday Evening, March 13, 2026"
+    "date": "13 mars 2026"
   },
   {
     "type": "scanner",
@@ -5847,7 +5834,7 @@ window.searchDataPrebuilt = [
     "tags": "us,eu,asia,etf,materials,healthcare,consumer,energy,commodity,technique,trade-idea,macro",
     "grade": "",
     "href": "/scanner/20260310-2300/",
-    "date": "Monday, March 10, 2026"
+    "date": "10 mars 2026"
   },
   {
     "type": "scanner",
@@ -6028,7 +6015,7 @@ window.searchDataPrebuilt = [
     "desc": "Quand tout le monde peut vibe coder, comment distinguer le signal du bruit ?\n    Concepts immuables, compétences irremplaçables, touche humaine, éducation,\n    et qui seront les riches de demain.",
     "tags": "tech,ai,formation,education,societe",
     "grade": "",
-    "href": "tech/signal-vs-noise/",
+    "href": "/tech/signal-vs-noise/",
     "date": ""
   },
   {
@@ -6041,7 +6028,7 @@ window.searchDataPrebuilt = [
     "desc": "Le guide complet du développement assisté par IA : framework Product Owner,\n    sécurité AI-First, architecture bulletproof (marts, semantic layer, agents),\n    Claude Code, Cursor, MCP, patterns et best practices.",
     "tags": "tech,ai,formation,securite,architecture",
     "grade": "",
-    "href": "tech/ai-driven-dev/",
+    "href": "/tech/ai-driven-dev/",
     "date": ""
   },
   {
@@ -6054,7 +6041,7 @@ window.searchDataPrebuilt = [
     "desc": "Le « T » du ELT expliqué : modèles SQL, matérialisations, tests, Jinja,\n    architecture 3 couches (staging → intermediate → marts), patterns\n    (star schema, surrogate keys), packages et écosystème.",
     "tags": "tech,formation,sql,snowflake",
     "grade": "",
-    "href": "tech/dbt-guide/",
+    "href": "/tech/dbt-guide/",
     "date": ""
   },
   {
@@ -6067,7 +6054,7 @@ window.searchDataPrebuilt = [
     "desc": "Le « EL » du ELT expliqué : taps, targets, protocole Singer, SDK pour\n    connecteurs custom, orchestration Airflow, mappers, 600+ connecteurs.\n    Le complément parfait de dbt.",
     "tags": "tech,formation,singer,opensource",
     "grade": "",
-    "href": "tech/meltano-guide/",
+    "href": "/tech/meltano-guide/",
     "date": ""
   },
   {
@@ -6080,7 +6067,7 @@ window.searchDataPrebuilt = [
     "desc": "Découvrez comment créer votre propre agent de trading intelligent\n    assisté par IA grâce à openClow, le Gateway MCP, et son\n    automatisation.",
     "tags": "tech,ai,formation",
     "grade": "",
-    "href": "tech/openclow-trading-guide/",
+    "href": "/tech/openclow-trading-guide/",
     "date": ""
   },
   {
@@ -6093,7 +6080,7 @@ window.searchDataPrebuilt = [
     "desc": "Découvrez comment Open Interpreter et les modèles locaux\n    transforment votre ordinateur en agent autonome capable d'exécuter\n    du vrai code, loin du cloud.",
     "tags": "tech,ai,formation",
     "grade": "",
-    "href": "tech/opencode/",
+    "href": "/tech/opencode/",
     "date": ""
   },
   {
@@ -6106,7 +6093,7 @@ window.searchDataPrebuilt = [
     "desc": "Point-in-Time data model, SCD Type 2, PostgreSQL partitioning,\n    Meltano pipelines, dbt transforms, Evidence.dev dashboards.\n    Orchestrated by Nomad.",
     "tags": "tech,formation",
     "grade": "",
-    "href": "tech/securities-master/part1-foundations/",
+    "href": "/tech/securities-master/part1-foundations/",
     "date": ""
   },
   {
@@ -6119,7 +6106,7 @@ window.searchDataPrebuilt = [
     "desc": "Une introduction simple et immersive pour comprendre les outils\n    révolutionnaires d'Anthropic : Claude, Artifacts, l'utilisation de\n    l'ordinateur et le protocole MCP.",
     "tags": "tech,ai",
     "grade": "",
-    "href": "tech/anthropic-ecosystem/part1-foundation/",
+    "href": "/tech/anthropic-ecosystem/part1-foundation/",
     "date": ""
   },
   {
@@ -6338,7 +6325,7 @@ window.searchDataPrebuilt = [
     "name": "",
     "title": "La Checklist DailyTickers",
     "desc": "Du régime de marché à la rétrospective : scanner, contrôle technique, portefeuille, risque, timing. La méthode complète issue de 90+ setups réels.",
-    "tags": "formation,us,eu,asia,finance,macro,technique,trade-idea",
+    "tags": "formation,us,eu,asia,financials,macro,technique,trade-idea",
     "grade": "",
     "href": "/series/marketwatch-checklist/part1-regime/",
     "date": ""
@@ -6520,7 +6507,7 @@ window.searchDataPrebuilt = [
     "name": "",
     "title": "Choisir son Broker — Le Guide Complet 2026",
     "desc": "Comparatif complet 2026 : Saxo, IBKR, Trading212, DEGIRO, Alpaca, Binance, Revolut. Types de brokers, frais, instruments, exécution, plateformes, fiscalité et verdict par profil.",
-    "tags": "us,eu,finance,formation",
+    "tags": "us,eu,financials,formation",
     "grade": "",
     "href": "/series/choisir-son-broker/part1-panorama/",
     "date": ""
@@ -6845,7 +6832,7 @@ window.searchDataPrebuilt = [
     "name": "",
     "title": "C'est quoi un Penny Stock ?",
     "desc": "Série Penny Stocks FR — Partie 1/6 : définition, fourchettes de prix, différences small/micro/nano cap, réalité des stats, pourquoi 90% des débutants perdent.",
-    "tags": "fr,small-cap,penny-stocks,formation,debutant",
+    "tags": "small-cap,penny-stocks,formation,debutant",
     "grade": "",
     "href": "/series/penny-stocks-fr/part1-cquoi/",
     "date": ""
