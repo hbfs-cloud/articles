@@ -46,6 +46,20 @@ function loadScanSignals(arg) {
   return { dir, dirName, signals: loaded.signals, tklPool: loaded.tklPool || [], regime: loaded.regime || null, regimeScore: loaded.regimeScore ?? null };
 }
 
+// Raw signals.json (pre-merge, pre-dedup) — used by the pool-overlap / duplicate-ticker
+// check below. scanner-parser.js:loadSignals() silently dedupes tickers when merging
+// momentum/breakout/pullback/pre_squeeze/bull into `signals[]`, which is exactly the kind
+// of orphan record we need to catch (see rule 17).
+function loadRawSignalsJson(dir) {
+  const jsonPath = path.join(dir, 'signals.json');
+  if (!fs.existsSync(jsonPath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
+  } catch {
+    return null;
+  }
+}
+
 function loadOpenPositions() {
   try {
     const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'scanner-positions.json'), 'utf8'));
@@ -422,6 +436,77 @@ async function main() {
       violations.push({
         rule: 'degenerate_band',
         message: `${s.ticker}: entry-stop band ${band.toFixed(2)} = ${atrMult.toFixed(2)}× ATR (min 0.5×) — degenerate setup guaranteed to stop out.`
+      });
+    }
+  }
+
+  // 17. ticker-multi-pool / duplicate-in-signals (hard_block) — scanner/CLAUDE.md:
+  // "Un ticker peut apparaître dans 1 pool + le composite, mais jamais dans 2 pools
+  // différents". Checked on the RAW signals.json (before scanner-parser.js merges +
+  // silently dedupes momentum/breakout/pullback/pre_squeeze/bull into `signals[]`) —
+  // the silent dedup is exactly what hid the orphan-record bug this rule catches.
+  {
+    const raw = loadRawSignalsJson(dir);
+    if (raw) {
+      const STRATEGY_POOL_KEYS = ['momentum', 'breakout', 'pullback', 'pre_squeeze', 'bull'];
+      const poolsByTicker = {};
+      for (const key of STRATEGY_POOL_KEYS) {
+        for (const s of raw[key] || []) {
+          const t = String(s.ticker || '').toUpperCase();
+          if (!t) continue;
+          (poolsByTicker[t] = poolsByTicker[t] || []).push(key);
+        }
+      }
+      for (const [ticker, pools] of Object.entries(poolsByTicker)) {
+        const uniquePools = [...new Set(pools)];
+        if (uniquePools.length > 1) {
+          violations.push({
+            rule: 'ticker_multi_pool',
+            message: `${ticker}: present in ${uniquePools.length} strategy pools [${uniquePools.join(', ')}] — a ticker may live in at most 1 pool (+ the composite), never 2+ different pools.`
+          });
+        }
+      }
+
+      const signalsTickerCounts = {};
+      for (const s of raw.signals || []) {
+        const t = String(s.ticker || '').toUpperCase();
+        if (!t) continue;
+        signalsTickerCounts[t] = (signalsTickerCounts[t] || 0) + 1;
+      }
+      const dupedInSignals = Object.entries(signalsTickerCounts).filter(([, n]) => n > 1).map(([t]) => t);
+      if (dupedInSignals.length) {
+        violations.push({
+          rule: 'ticker_duplicate_in_signals',
+          message: `Ticker(s) duplicated within signals[]: ${dupedInSignals.join(', ')} — each ticker must appear at most once in the composite top 10.`
+        });
+      }
+    }
+  }
+
+  // 18. strategy-enum-whitelist (hard_block) — a signal's strategy label must be one of
+  // the real, code-emitted strategy names. Catches typos / invented labels that slip
+  // past rule 3 when strategies.allowed is left empty, and catches missing/empty
+  // strategy fields (leçon TECH orphan score 152 — an unlabeled orphan record with an
+  // impossible score went unnoticed because rule 3 skips falsy strategy values).
+  const KNOWN_STRATEGY_ENUM = new Set([
+    'Momentum', 'Breakout', 'Pullback',
+    'Pre-Squeeze', 'PreSqueeze', 'pre_squeeze',
+    'Candlestick', 'candlestick',
+    'AdaptiveFractal', 'adaptive-fractal', 'adaptive_fractal',
+    'MomentumRotation', 'momentum-rotation', 'momentum_rotation',
+    'HighVolBreakout', 'highvol-breakout', 'highvol_breakout',
+    'TrendlineBreakout', 'trendline-breakout', 'trendline_breakout',
+    'ETFMomentum', 'etf-momentum', 'etf_momentum',
+    'HybridMegaCap', 'HybridMegacap', 'Hybrid-MegaCap', 'Hybrid-AF', 'Hybrid-DSL', 'megacap', 'hybrid_megacap',
+    'FortressA+',
+    'CryptoMomentum', 'MetalsMomentum', 'ForexMultiStrategy',
+  ]);
+  for (const s of signals) {
+    const strat = (s.strategy || '').trim();
+    if (!KNOWN_STRATEGY_ENUM.has(strat)) {
+      violations.push({
+        rule: 'strategy_enum_whitelist',
+        message: `${s.ticker}: strategy "${strat || '(empty)'}" is outside the known strategy enum — invented/typo'd label or missing strategy field.`
       });
     }
   }

@@ -141,10 +141,50 @@ function scoreSymbolMomentumRotation(bars) {
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 
+// skip_months: [9] — September seasonality gate. Parity with systematic-tss's
+// config/later|pre-live/portfolio_ma.yaml (Go applies this at the strategy layer, not the
+// scanner — see comment at MR block above). articles-side scripted scanner had no month-skip
+// mechanism (documented gap, project_parity_v10_2.md "Gaps restants" + parity-check.js line ~26).
+const SKIP_MONTHS = [9];
+
 async function main() {
   console.log(`🏛️  Casablanca Bourse Scanner (AF scoring, BVC API)`);
   console.log(`   minScore: ${MIN_SCORE} | top: ${TOP_N}`);
   console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
+
+  const scanMonth = parseInt(SCAN_DATE.slice(5, 7), 10);
+  if (SKIP_MONTHS.includes(scanMonth)) {
+    console.log(`⏭️  skip_months [9] — parité portfolio_ma.yaml`);
+
+    if (DRY_RUN) { console.log('\n🏷️  Dry run — no files written.'); return []; }
+
+    if (OUTPUT_MODE === 'json') {
+      const outPath = path.join(ROOT, 'data', `fractal-scan-casablanca-${SCAN_DATE}.json`);
+      fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, regime: REGIME, assetClass: 'casablanca', candidates: [], skipped: 'skip_months [9]' }, null, 2));
+      console.log(`\n📁 Written to ${outPath}`);
+    } else if (OUTPUT_MODE === 'signals') {
+      const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+      const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+      if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
+      const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+      if (!signals.casablanca_pool) signals.casablanca_pool = [];
+      // Scan marker — proof the Casablanca scanner actually ran (even with 0 signals, per
+      // skip_months). Merged into the shared _scanRuns object without clobbering other scanners.
+      if (!signals._scanRuns) signals._scanRuns = {};
+      signals._scanRuns.casablanca = {
+        at: new Date().toISOString(),
+        universe: 'casablanca',
+        candidates: 0,
+        signals: 0,
+        added: 0,
+        skipped: 'skip_months [9] — parité portfolio_ma.yaml',
+      };
+      fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+      console.log(`\n📁 Casablanca scan skipped (skip_months) — marker written to ${sigPath}`);
+    }
+
+    return [];
+  }
 
   const priceData = await batchFetchBVC(CONCURRENCY);
   if (!priceData.size) { console.error('❌ No BVC OHLCV data — aborting.'); process.exit(1); }

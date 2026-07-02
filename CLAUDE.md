@@ -111,10 +111,15 @@ Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fic
 ## Tags — Taxonomie
 | Catégorie | Tags | Couleur |
 |-----------|------|---------|
-| Région | `us`, `eu`, `asia`, `crypto`, `commodity`, `forex`, `etf` | Bleu |
-| Secteur | `tech`, `semis`, `healthcare`, `energy`, `financials`, `industrials`, `materials`, `consumer`, `defense` | Vert |
-| Thème | `ai`, `earnings`, `geopolitique`, `macro`, `technique`, `options`, `dividende`, `small-cap`, `speculative` | Violet |
+| Région | `us`, `eu`, `asia`, `em`, `crypto`, `commodity`, `forex`, `etf` | Bleu |
+| Secteur | `tech`, `semis`, `healthcare`, `energy`, `financials`, `industrials`, `materials`, `consumer`, `defense`, `software`, `gold`, `mining`, `agriculture`, `biotech`, `utilities`, `staples`, `comms`, `airlines`, `quantum` | Vert |
+| Thème | `ai`, `earnings`, `geopolitique`, `macro`, `technique`, `options`, `dividende`, `small-cap`, `speculative`, `momentum`, `short-squeeze`, `value`, `defensive`, `education`, `penny-stocks`, `debutant` | Violet |
 | Contenu | `trade-idea`, `formation`, `retrospective` | Ambre |
+| Spécial | `special-edition` | Rouge |
+
+Tags méta tech-vertical (cat `theme`, réservés à `/tech`, usage rare) : `architecture`, `sql`, `snowflake`, `singer`, `opensource`, `societe`, `securite` — déjà reconnus par `assets/core.js` (`tagMeta`) mais absents de la liste courte ci-dessus.
+
+⚠️ **Double registre non synchronisé** : `assets/core.js` (`tagMeta`, rendu tag-chips sur la page article) et `index.html` (`tagMeta` local, rendu tag-chips sur les cartes listing) sont deux copies indépendantes de la même taxonomie. `index.html` n'a PAS `software`, `societe`, `securite`, `architecture`, `sql`, `snowflake`, `singer`, `opensource` → ces tags ne s'affichent jamais en chip sur les cartes de la landing page (seulement sur la page article elle-même). Un tag absent des DEUX registres (ex: `trading`, `automation`, `data` utilisés dans `data/tech.json`) est silencieusement omis PARTOUT (pas de chip, pas d'erreur, pas de fallback couleur) — à corriger en synchronisant les deux `tagMeta` si ces tags doivent rester.
 
 ## Format date `report-card-meta`
 TOUJOURS `DD mois YYYY` en français minuscule (ex: `14 mars 2026`). JAMAIS anglais ("March 14"), JAMAIS majuscule mois, JAMAIS suffixe textuel ("— Vendredi"), JAMAIS espaces superflus.
