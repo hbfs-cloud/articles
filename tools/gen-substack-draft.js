@@ -723,4 +723,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { convert, renderDraftMarkdown };
+module.exports = { convert, renderDraftMarkdown, slugFromPath };

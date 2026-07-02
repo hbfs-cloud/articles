@@ -39,3 +39,24 @@ La publication de **posts longs** (nos articles) n'est pas bien supportée par l
   OAuth claude.ai + câblage pipeline (Note auto à la publication).
 - ⚠️ endpoints reverse-engineered UNVERIFIED : après cookie, tester whoami + list_drafts
   (read-only) AVANT create_draft/publish.
+
+## MAJ 2026-07-02 — Câblage pipeline (OPTIONNEL, non-bloquant)
+- **tools/substack-publish.js** : CLI. Prend un chemin d'article HTML, génère le draft
+  via `gen-substack-draft.js` (require en module, spawn en fallback), écrit toujours
+  `data/substack-drafts/<slug>.json` en local (jamais réseau-dépendant). Si
+  `SUBSTACK_MCP_URL` (défaut `https://substack.dailytickers.com/mcp`) est joignable
+  ET `MCP_AUTH_TOKEN` est présent en env → POST JSON-RPC 2.0 `tools/call` `create_note`
+  (teaser), + `create_draft` avec `--draft`. Sans bearer → mode draft-only local
+  (aucun appel réseau, message clair). Timeouts courts (8s par défaut,
+  `SUBSTACK_TIMEOUT_MS`), aucune exception non catchée. Exit codes : 0=OK
+  (draft écrit, POST ok ou non tenté), 1=génération draft échouée, 2=POST tenté
+  et échoué (draft quand même sauvegardé).
+- **Câblé dans `tools/publish-daily-card.sh`** en Step 10, après la notification
+  scanner, non-bloquant (`|| echo ... non-blocking`), désactivable via `SUBSTACK_DISABLE=1`.
+- **Testé 2026-07-02** avec un bearer factice contre le vrai serveur : la requête
+  atteint bien `substack.dailytickers.com` et `create_note` échoue proprement
+  (401 — "session cookie expired or invalid", le serveur tourne encore en
+  mode `cookie=false`). Confirme que le serveur est up mais pas encore
+  configuré côté cookie Substack — reste à faire : injecter `substack_cookie`
+  + `mcp_auth_token` via `nomad var put` (cf. section précédente) avant que
+  ce step passe en mode "live" en prod.

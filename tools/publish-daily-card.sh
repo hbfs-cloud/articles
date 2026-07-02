@@ -266,5 +266,25 @@ else
   node tools/notify-scanner-status.js 2>&1 || echo "⚠️  notify-scanner-status failed (non-blocking)"
 fi
 
+# ─── Step 10: Substack draft (OPTIONAL, non-blocking) ────────────────────────
+# Converts today's scanner article to a Substack draft (data/substack-drafts/)
+# and, only when SUBSTACK_MCP_URL is reachable + MCP_AUTH_TOKEN is set, posts a
+# Notes teaser. Without those, stays draft-only local — never fails the pipeline.
+# Disable entirely with SUBSTACK_DISABLE=1.
+echo ""
+echo "📰 Step 10: Substack draft (optional)..."
+if [ "${SUBSTACK_DISABLE:-0}" = "1" ]; then
+  echo "   (SUBSTACK_DISABLE=1: skipped)"
+elif [ "$DRY_RUN" = true ]; then
+  echo "   (dry-run: skip)"
+else
+  SCAN_PATH="scanner/${SCAN_DATE}/index.html"
+  if [ -f "$SCAN_PATH" ]; then
+    node tools/substack-publish.js "$SCAN_PATH" 2>&1 || echo "⚠️  substack-publish failed (non-blocking)"
+  else
+    echo "   (no scanner article at $SCAN_PATH: skip)"
+  fi
+fi
+
 echo ""
 echo "✅ Done: $(date '+%H:%M:%S')"

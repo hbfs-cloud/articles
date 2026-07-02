@@ -306,6 +306,7 @@ node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimePro
 node tools/gen-status-page.js           # Snapshot J + Dashboard
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 node tools/trading-executor/run-session.js  # Generate plans + execute
+node tools/substack-publish.js scanner/YYYYMMDD/index.html  # OPTIONAL/non-blocking: Substack draft + Notes teaser (needs MCP_AUTH_TOKEN, else draft-only local); disable via SUBSTACK_DISABLE=1
 ```
 
 ### ⛔ Fortress PM A+ Halal — ÉTAPE OBLIGATOIRE (entre sweep et refresh-risk)
