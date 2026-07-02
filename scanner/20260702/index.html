@@ -175,6 +175,126 @@
   </div>
 </section>
 
+<!-- ===================== SIGNAUX DES MODES SPÉCIALISTES ===================== -->
+<section id="specialistes" class="section-block">
+  <div class="section-header"><h2><i class="fas fa-robot"></i> Signaux des modes spécialistes</h2></div>
+  <div class="content-card">
+    <p style="font-size:0.9rem;color:#475569;">Au-delà du top 10 A+ composite ci-dessus, le pipeline nocturne fait tourner en parallèle plusieurs scanners spécialisés (HighVol, ETF US/Europe, Momentum Rotation, Candlestick) sur des univers et horizons distincts, chacun alimentant son propre mode dans <a href="/scanner/status/">/scanner/status</a>. Niveaux ci-dessous vérifiés via MCP, tirés directement de <code>signals.json</code> — non re-filtrés pour la conformité Sharia (à vérifier avant exécution).</p>
+    <h3 class="strategy-table-title">HighVol Breakout <span style="font-weight:500;color:#64748b;font-size:.85rem">— cassures à forte volatilité, univers AmericanBull</span></h3>
+    <p style="font-size:0.88rem;color:#475569;">Le mode HighVol repère les cassures à forte volatilité (ATR% et extension vs EMA20 élevés, volume &gt;1.5&times; la moyenne 20j) sur l'univers AmericanBull, avec un horizon 14 jours et un stop ATR 2.5&times;. Le filtre se coupe automatiquement si le VIX dépasse 35 (vixKillThreshold) pour éviter les faux breakouts en régime de panique. 4 signaux ce jour, tous score &ge;99 — DAVE et ICHR en tête (126.5).</p>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Score</th><th>Entrée</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+        <tr data-ticker="DAVE" data-score="126.5" data-entry="383.13" data-stop="313.76" data-tp1="521.87"><td><strong>DAVE</strong></td><td>126.5</td><td>$383.13</td><td>$313.76</td><td>$521.87</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="ICHR" data-score="126.5" data-entry="111.77" data-stop="89.71" data-tp1="155.9"><td><strong>ICHR</strong></td><td>126.5</td><td>$111.77</td><td>$89.71</td><td>$155.9</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="VSAT" data-score="115.5" data-entry="83.02" data-stop="65.07" data-tp1="118.92"><td><strong>VSAT</strong></td><td>115.5</td><td>$83.02</td><td>$65.07</td><td>$118.92</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="ABVX" data-score="99" data-entry="132.56" data-stop="108" data-tp1="181.68"><td><strong>ABVX</strong></td><td>99</td><td>$132.56</td><td>$108</td><td>$181.68</td><td><strong>2.0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+    <h3 class="strategy-table-title">ETF Momentum US <span style="font-weight:500;color:#64748b;font-size:.85rem">— clusters sectoriels/thématiques adaptés au régime</span></h3>
+    <p style="font-size:0.88rem;color:#475569;">Le mode ETF US sélectionne les ETF sectoriels et thématiques au momentum le plus fort par cluster adapté au régime courant (ici RISKON_MOMENTUM), sur un horizon 21 jours avec stop ATR 2.5&times; et trailing à 2R. Portefeuille cible 7 positions avec un plafond de corrélation à 0.6 pour éviter la concentration. ARKG et XBI (biotech) dominent le classement avec des scores &gt;255.</p>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Score</th><th>Entrée</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+        <tr data-ticker="ARKG" data-score="262.68" data-entry="42.62" data-stop="38.41" data-tp1="51.04"><td><strong>ARKG</strong></td><td>262.68</td><td>$42.62</td><td>$38.41</td><td>$51.04</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="XBI" data-score="255.76" data-entry="156.55" data-stop="145.91" data-tp1="177.84"><td><strong>XBI</strong></td><td>255.76</td><td>$156.55</td><td>$145.91</td><td>$177.84</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="XLF" data-score="141.39" data-entry="54.78" data-stop="52.77" data-tp1="58.8"><td><strong>XLF</strong></td><td>141.39</td><td>$54.78</td><td>$52.77</td><td>$58.8</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="XLI" data-score="130.4" data-entry="183.36" data-stop="174.83" data-tp1="200.42"><td><strong>XLI</strong></td><td>130.4</td><td>$183.36</td><td>$174.83</td><td>$200.42</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="IWM" data-score="120.46" data-entry="299.32" data-stop="286.13" data-tp1="325.7"><td><strong>IWM</strong></td><td>120.46</td><td>$299.32</td><td>$286.13</td><td>$325.7</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="ARKK" data-score="119.92" data-entry="81.85" data-stop="75.63" data-tp1="94.3"><td><strong>ARKK</strong></td><td>119.92</td><td>$81.85</td><td>$75.63</td><td>$94.3</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="INDA" data-score="105.05" data-entry="49.21" data-stop="47.74" data-tp1="52.15"><td><strong>INDA</strong></td><td>105.05</td><td>$49.21</td><td>$47.74</td><td>$52.15</td><td><strong>2.0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+    <h3 class="strategy-table-title">ETF Momentum Europe <span style="font-weight:500;color:#64748b;font-size:.85rem">— univers UCITS (21 ETF)</span></h3>
+    <p style="font-size:0.88rem;color:#475569;">Le mode ETF Europe applique la même logique momentum sur l'univers UCITS européen (21 ETF, data/etf-eu-universe.json), avec un seuil minimum plus strict (score &ge;80) et un stop plus serré (ATR 1.5&times;) pour compenser une liquidité plus faible. Portefeuille cible 3 positions ; parité backtest CAGR 70.74% sur 5 ans. 2 signaux ce jour, tickers Euronext Paris (.PA), prix en euros.</p>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Score</th><th>Entrée</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+        <tr data-ticker="MEUD.PA" data-score="121.03" data-entry="315.25" data-stop="310.62" data-tp1="324.51"><td><strong>MEUD.PA</strong></td><td>121.03</td><td>€315.25</td><td>€310.62</td><td>€324.51</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="CAC.PA" data-score="110.09" data-entry="84.78" data-stop="83.46" data-tp1="87.42"><td><strong>CAC.PA</strong></td><td>110.09</td><td>€84.78</td><td>€83.46</td><td>€87.42</td><td><strong>2.0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+    <h3 class="strategy-table-title">Momentum Rotation <span style="font-weight:500;color:#64748b;font-size:.85rem">— momentum pondéré 20/50/100 jours, univers AmericanBull</span></h3>
+    <p style="font-size:0.88rem;color:#475569;">Le mode Momentum Rotation classe les titres par momentum pondéré sur 3 fenêtres (20/50/100 jours), favorisant les tendances qui s'accélèrent simultanément sur toutes les échelles. Univers AmericanBull, horizon 21 jours, stop ATR 2&times;, trailing 2R dès que le seuil est franchi. 19 signaux US ce jour (hors pool Casablanca ci-dessous), MXL en tête (score 241.1, momentum 100j +556.9%).</p>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Score</th><th>Entrée</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+        <tr data-ticker="MXL" data-score="241.14" data-entry="112.39" data-stop="90.26" data-tp1="156.66"><td><strong>MXL</strong></td><td>241.14</td><td>$112.39</td><td>$90.26</td><td>$156.66</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="APPS" data-score="174.51" data-entry="13.31" data-stop="11.39" data-tp1="17.16"><td><strong>APPS</strong></td><td>174.51</td><td>$13.31</td><td>$11.39</td><td>$17.16</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="SLS" data-score="161.54" data-entry="13.27" data-stop="10.72" data-tp1="18.37"><td><strong>SLS</strong></td><td>161.54</td><td>$13.27</td><td>$10.72</td><td>$18.37</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="CLOV" data-score="117.13" data-entry="5.39" data-stop="4.79" data-tp1="6.6"><td><strong>CLOV</strong></td><td>117.13</td><td>$5.39</td><td>$4.79</td><td>$6.6</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="QURE" data-score="115.63" data-entry="45.17" data-stop="36.87" data-tp1="61.77"><td><strong>QURE</strong></td><td>115.63</td><td>$45.17</td><td>$36.87</td><td>$61.77</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="ALAB" data-score="113.3" data-entry="430.86" data-stop="349.31" data-tp1="593.97"><td><strong>ALAB</strong></td><td>113.3</td><td>$430.86</td><td>$349.31</td><td>$593.97</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="VPG" data-score="108.94" data-entry="144.01" data-stop="119.68" data-tp1="192.67"><td><strong>VPG</strong></td><td>108.94</td><td>$144.01</td><td>$119.68</td><td>$192.67</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="AMBQ" data-score="108.54" data-entry="88.4" data-stop="74.5" data-tp1="116.21"><td><strong>AMBQ</strong></td><td>108.54</td><td>$88.4</td><td>$74.5</td><td>$116.21</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="FBYD" data-score="103.16" data-entry="19.7" data-stop="16.19" data-tp1="26.72"><td><strong>FBYD</strong></td><td>103.16</td><td>$19.7</td><td>$16.19</td><td>$26.72</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="OSCR" data-score="101.59" data-entry="31.9" data-stop="28.33" data-tp1="39.03"><td><strong>OSCR</strong></td><td>101.59</td><td>$31.9</td><td>$28.33</td><td>$39.03</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="UCTT" data-score="95.82" data-entry="129.59" data-stop="107.97" data-tp1="172.82"><td><strong>UCTT</strong></td><td>95.82</td><td>$129.59</td><td>$107.97</td><td>$172.82</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="AIP" data-score="95.67" data-entry="43.81" data-stop="36.98" data-tp1="57.47"><td><strong>AIP</strong></td><td>95.67</td><td>$43.81</td><td>$36.98</td><td>$57.47</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="ACMR" data-score="93.05" data-entry="117.16" data-stop="96.01" data-tp1="159.46"><td><strong>ACMR</strong></td><td>93.05</td><td>$117.16</td><td>$96.01</td><td>$159.46</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="LQDA" data-score="87.99" data-entry="79.32" data-stop="70.04" data-tp1="97.89"><td><strong>LQDA</strong></td><td>87.99</td><td>$79.32</td><td>$70.04</td><td>$97.89</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="SIMO" data-score="85.69" data-entry="316.98" data-stop="262.93" data-tp1="425.08"><td><strong>SIMO</strong></td><td>85.69</td><td>$316.98</td><td>$262.93</td><td>$425.08</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="UMC" data-score="83.8" data-entry="25.71" data-stop="21.84" data-tp1="33.46"><td><strong>UMC</strong></td><td>83.8</td><td>$25.71</td><td>$21.84</td><td>$33.46</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="INTC" data-score="83.41" data-entry="127.02" data-stop="104.71" data-tp1="171.64"><td><strong>INTC</strong></td><td>83.41</td><td>$127.02</td><td>$104.71</td><td>$171.64</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="AMD" data-score="80.48" data-entry="540.88" data-stop="467.47" data-tp1="687.71"><td><strong>AMD</strong></td><td>80.48</td><td>$540.88</td><td>$467.47</td><td>$687.71</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="CBRL" data-score="80.23" data-entry="55.1" data-stop="49.42" data-tp1="66.45"><td><strong>CBRL</strong></td><td>80.23</td><td>$55.1</td><td>$49.42</td><td>$66.45</td><td><strong>2.0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+    <h3 class="strategy-table-title">Momentum Rotation — Casablanca <span style="font-weight:500;color:#64748b;font-size:.85rem">— même screener appliqué à la Bourse de Casablanca (BVC), prix en MAD</span></h3>
+    <p style="font-size:0.88rem;color:#475569;">Le screener Momentum Rotation est aussi appliqué à l'univers de la Bourse de Casablanca, donnant 5 signaux marocains ce jour (prix en dirhams, MAD). Le mode Casablanca dédié (stratégie Adaptive Fractal, horizon 90 jours, rotation daily_max1) n'a produit aucun signal qualifié aujourd'hui — <code>casablanca_pool</code> vide dans signals.json. Scores plus bas que le pool US (échelle du screener différente sur cet univers), à ne pas comparer directement.</p>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Score</th><th>Entrée</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+        <tr data-ticker="RDS" data-score="9.05" data-entry="174" data-stop="161.35" data-tp1="199.3"><td><strong>RDS</strong></td><td>9.05</td><td>174 MAD</td><td>161.35 MAD</td><td>199.3 MAD</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="HPS" data-score="7.94" data-entry="621" data-stop="578.73" data-tp1="705.54"><td><strong>HPS</strong></td><td>7.94</td><td>621 MAD</td><td>578.73 MAD</td><td>705.54 MAD</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="UMR" data-score="7.77" data-entry="177" data-stop="172.79" data-tp1="185.43"><td><strong>UMR</strong></td><td>7.77</td><td>177 MAD</td><td>172.79 MAD</td><td>185.43 MAD</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="SAH" data-score="7.1" data-entry="2990" data-stop="2806.14" data-tp1="3357.71"><td><strong>SAH</strong></td><td>7.1</td><td>2,990 MAD</td><td>2,806.14 MAD</td><td>3,357.71 MAD</td><td><strong>2.0</strong></td></tr>
+        <tr data-ticker="ALM" data-score="5.57" data-entry="1909" data-stop="1833.14" data-tp1="2060.71"><td><strong>ALM</strong></td><td>5.57</td><td>1,909 MAD</td><td>1,833.14 MAD</td><td>2,060.71 MAD</td><td><strong>2.0</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+    <h3 class="strategy-table-title">Candlestick (mode Bull) <span style="font-weight:500;color:#64748b;font-size:.85rem">— reversal haute-conviction, parité systematic-tss</span></h3>
+    <p style="font-size:0.88rem;color:#475569;">Le mode Bull (Candlestick Reversal Alpha) détecte les patterns chandelier (marteau, engulfing, pin bar) confirmés par un pic de volume de clôture &ge;8&times; la moyenne 20 jours — signal haute-conviction, historiquement ~1 trade/semaine sur 5 ans en parité avec le backtest systematic-tss. Horizon court (H8), stop ATR 2.0&times;, trailing 1.5R, 3 positions maximum, score minimum 88. 3 signaux qualifiés ce jour sur 3 450 tickers scannés (1 279 patterns détectés).</p>
+  <div style="overflow-x:auto">
+    <table class="compare-table setups-table">
+      <thead>
+        <tr><th>Ticker</th><th>Score</th><th>Entrée</th><th>Stop</th><th>TP1</th><th>R/R</th></tr>
+      </thead>
+      <tbody>
+        <tr data-ticker="SOC" data-score="178" data-entry="4.4" data-stop="2.88" data-tp1="7.44"><td><strong>SOC</strong></td><td>178</td><td>$4.4</td><td>$2.88</td><td>$7.44</td><td><strong>2</strong></td></tr>
+        <tr data-ticker="RGC" data-score="123" data-entry="8.03" data-stop="6" data-tp1="12.09"><td><strong>RGC</strong></td><td>123</td><td>$8.03</td><td>$6</td><td>$12.09</td><td><strong>2</strong></td></tr>
+        <tr data-ticker="UXIN" data-score="120" data-entry="1.94" data-stop="1.5" data-tp1="2.82"><td><strong>UXIN</strong></td><td>120</td><td>$1.94</td><td>$1.5</td><td>$2.82</td><td><strong>2</strong></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+</section>
+
 <!-- METHODOLOGY -->
 <section id="methodo" class="section-block">
   <div class="section-header"><h2><i class="fas fa-flask"></i> Méthodologie</h2></div>
@@ -229,6 +349,7 @@
     <a href="#regime" class="fnav-item" data-section="regime"><i class="fas fa-gauge"></i><span>Régime</span></a>
     <a href="#macro" class="fnav-item" data-section="macro"><i class="fas fa-globe"></i><span>Macro</span></a>
     <a href="#synthese" class="fnav-item" data-section="synthese"><i class="fas fa-table-list"></i><span>Signaux</span></a>
+    <a href="#specialistes" class="fnav-item" data-section="specialistes"><i class="fas fa-robot"></i><span>Spécialistes</span></a>
     <a href="#methodo" class="fnav-item" data-section="methodo"><i class="fas fa-flask"></i><span>Méthodologie</span></a>
     <a href="#disclaimer" class="fnav-item" data-section="disclaimer"><i class="fas fa-triangle-exclamation"></i><span>Disclaimer</span></a>
     <a href="#regime" class="fnav-item" data-section="top"><i class="fas fa-arrow-up"></i><span>Haut</span></a>
