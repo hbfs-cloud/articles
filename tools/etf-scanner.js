@@ -35,6 +35,16 @@ const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 // articles stays INDEPENDENT of the Go engine — these are copied values, not a call.
 const MIN_PRICE = 10;          // was hardcoded 5.0 (Go default) → config overrides to 10
 const MAX_ATR_RATIO = 0.06;    // was hardcoded 0.10 (Go default) → config overrides to 0.06
+
+// ─── tp1/tp2/rr exit model (mirrors data/modes-config.json modes.etf / modes.etf_eu) ───
+// Both modes share partialTPGain=10, disableTP2=true — identical values, so one constant
+// covers etf-us and etf-eu. tp1 = entry × (1 + partialTPGain/100) is the REAL partial-TP
+// trigger (not a fixed R multiple); rr is computed per-ticker from the actual stop distance
+// instead of the previous hardcoded '1:2.0' (audit finding: uniform R/R across all signals).
+// tp2 = 2x the TP1 gain (informational — disableTP2=true means sweep.js's own simulation
+// never checks TP2 for this mode, gated on cfg.disableTP2 independently of this field; kept
+// for display/gen-trading-plan.js consistency and to avoid a TP2<TP1 inversion at low ATR%).
+const PARTIAL_TP_GAIN_PCT = 10; // modes-config.json modes.etf.partialTPGain / modes.etf_eu.partialTPGain
 const BLACKLIST = new Set(['BITI', 'VXX', 'VXZ', 'COPJ', 'CTEX']);
 // EU blacklist — parity portfolio_etf_eu.yaml scanner_filters.params.blacklist
 // (ETP toxiques identifiés par le backtest 5y : crypto, leveraged, repeat losers)
@@ -448,13 +458,14 @@ async function main() {
     const risk = result.entry - result.stop;
     if (risk <= 0) continue;
 
-    const tp1 = +(result.entry + risk * 2).toFixed(2);
-    const tp2 = +(result.entry + risk * 3).toFixed(2);
+    const tp1 = +(result.entry * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(2);
+    const tp2 = +(result.entry * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(2);
+    const rr = +((tp1 - result.entry) / risk).toFixed(2);
 
     candidates.push({
       ticker, score: result.score,
       entry: +result.entry.toFixed(2), stop: +result.stop.toFixed(2), tp1, tp2,
-      rr: '1:2.0', metrics: result,
+      rr: `1:${rr.toFixed(2)}`, metrics: result,
     });
   }
 

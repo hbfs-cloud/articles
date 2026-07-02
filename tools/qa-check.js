@@ -571,12 +571,17 @@ check('signals.json (dernier scan): R:R ≥ 1.5 pour tous les signaux', () => {
   const sig = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
   const signals = sig.signals || [];
   const bad = [];
+  // Gate R:R = stratégies éditoriales uniquement. Spécialistes : tp1 = prise partielle
+  // (partialTPGain), payoff réel = runner + trailing — pas de gate R/R en Go (parité).
+  const RR_GATE_STRATEGIES = new Set(['momentum', 'breakout', 'pullback', 'pre-squeeze', 'presqueeze', 'pre_squeeze', 'hybridmegacap', 'hybrid_megacap']);
   for (const s of signals) {
     const { ticker, entry, stop, tp1 } = s;
     if (entry == null || stop == null || tp1 == null) continue;
+    const stratKey = String(s.strategy || '').toLowerCase().replace(/[\s-]/g, '');
     const reward = tp1 - entry;
     const risk = entry - stop;
     if (risk <= 0) { bad.push(`${ticker}: risk≤0 (entry=${entry} stop=${stop})`); continue; }
+    if (stratKey && !RR_GATE_STRATEGIES.has(stratKey)) continue; // structurel seulement pour les spécialistes
     const rr = reward / risk;
     if (rr < 1.5) bad.push(`${ticker}: R:R=${rr.toFixed(2)} < 1.5`);
   }

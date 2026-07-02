@@ -50,6 +50,16 @@ const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 const INTERVAL = getArg('interval', '1d'); // 1h, 4h, 1d
 
+// ─── tp1/tp2/rr exit model (mirrors data/modes-config.json modes.trendline) ───
+// Despite the "no fixed take-profit, trailing only" Go eu-trend comment below, the LIVE
+// mode config (modes-config.json v10.3+) sets partialTPGain=10 and disableTP2=false — sweep.js's
+// gain-based partial-TP path (`if (partialTPGain > 0 ...)`) fires regardless of the separate
+// partialTP=false boolean, so trendline DOES realize 50% at +10% gain and keeps TP2 live.
+// The previous tp1=price+atr*3 / stop=price-atr*2.5 formula produced a CONSTANT rr=1.20 for
+// every signal (atr cancels out) — the same "uniform R/R" bug as the other 5 scanners, just
+// disguised as an ATR formula. Now aligned to the real trigger: tp1 = entry × (1+gain/100).
+const PARTIAL_TP_GAIN_PCT = 10; // modes-config.json modes.trendline.partialTPGain
+
 // ── eu-trend (scanner_eu_trend.go) faithful-port thresholds (CLI-overridable) ──
 const MIN_DIST_MA200 = parseFloat(getArg('min-dist-ma200', '0.20')); // strong uptrend
 const MIN_RSI = parseFloat(getArg('min-rsi', '50'));                 // momentum zone lo
@@ -304,16 +314,19 @@ function scoreTicker(ticker, bars, vixLevel) {
   if (score < MIN_SCORE) return null;
 
   // ── Position-management values (Go PM eu-trend): 2.5xATR stop, 25d timeout, trailing ──
-  // Go eu-trend has no fixed take-profit (trailing only); tp1/tp2 are informational ATR targets
-  // for our own book display and are NOT part of entry-parity comparison.
+  // tp1 = the mode's real partial-TP trigger (entry × (1 + partialTPGain/100)), matching
+  // modes-config.json modes.trendline.partialTPGain=10. tp2 = 2x that gain (disableTP2=false
+  // → trendline keeps a live second target). rr computed per-ticker from the ATR-based stop
+  // distance below — no longer a constant (previously atr canceled out to a flat 1.20 always).
   const stop = +(price - atr * 2.5).toFixed(6);
-  const tp1 = +(price + atr * 3).toFixed(6);
-  const tp2 = +(price + atr * 5).toFixed(6);
-  const rr = price > stop ? +((tp1 - price) / (price - stop)).toFixed(2) : 0;
+  const risk = price - stop;
+  const tp1 = +(price * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(6);
+  const tp2 = +(price * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(6);
+  const rr = risk > 0 ? +((tp1 - price) / risk).toFixed(2) : 0;
 
   return {
     ticker, score: +score.toFixed(1), price: +price.toFixed(6), entry: +price.toFixed(6),
-    stop, tp1, tp2, rr, horizon: 25,
+    stop, tp1, tp2, rr: `1:${rr.toFixed(2)}`, horizon: 25,
     metrics: {
       rsi: +rsi.toFixed(1), atrPct: +atrPct.toFixed(4), mom120: +mom120.toFixed(4),
       distMA200: +distMA200.toFixed(4), distMA20: +distMA20.toFixed(4), distMA50: +distMA50.toFixed(4),

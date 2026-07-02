@@ -41,6 +41,15 @@ const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 
+// ─── tp1/tp2/rr exit model (mirrors data/modes-config.json modes.highvol) ───
+// partialTPGain=30 → the mode's REAL partial-TP trigger is +30% price gain (not a fixed
+// R multiple). tp1 emitted here must match that trigger, else rr is disconnected from the
+// actual exit model (audit finding: all specialist rows showed a uniform hardcoded "R/R 2.0").
+// disableTP2=false → highvol keeps a live second target; tp2 = 2x the TP1 gain (convention
+// also used by trendline; keeps tp2 > tp1 monotonically, unlike a flat entry+risk*3 which can
+// invert below a small-ATR tp1 gain). rr is computed per-ticker from the REAL stop distance.
+const PARTIAL_TP_GAIN_PCT = 30; // modes-config.json modes.highvol.partialTPGain
+
 // ─── Parity constants (mirror config/portfolio_us_highvol.yaml scanner_filters) ──
 // systematic-tss us_highvol allocation: strategy=highvol-breakout-corr.
 // These MUST match the Go ScannerFilterConfig so JS produces the same BUY entries.
@@ -386,13 +395,17 @@ async function main() {
     const risk = result.entry - result.stop;
     if (risk <= 0) continue;
 
-    const tp1 = +(result.entry + risk * 2).toFixed(2);
-    const tp2 = +(result.entry + risk * 3).toFixed(2);
+    // tp1 = the real partial-TP trigger level (entry × (1 + partialTPGain/100)), not entry+2R.
+    // tp2 = 2x that gain (disableTP2=false → highvol has a live second target).
+    // rr computed from tp1 vs THIS ticker's actual stop distance — varies per signal.
+    const tp1 = +(result.entry * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(2);
+    const tp2 = +(result.entry * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(2);
+    const rr = +((tp1 - result.entry) / risk).toFixed(2);
 
     candidates.push({
       ticker, score: result.score,
       entry: +result.entry.toFixed(2), stop: +result.stop.toFixed(2), tp1, tp2,
-      rr: '1:2.0', metrics: result,
+      rr: `1:${rr.toFixed(2)}`, metrics: result,
     });
   }
 

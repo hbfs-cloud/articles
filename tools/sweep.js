@@ -594,7 +594,28 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     postWideningRRMin = 0, // 0 = disabled; e.g. 1.5 = require actual R:R >= 1.5 after widening
     // v8.3 blacklist — serial losers excluded from candidate pool
     blacklist = null,      // array of ticker strings to skip
+    // v10.4 — ported from systematic-tss Go PositionManagers (OPT-IN, default off).
+    // trailTriggerPct: the trailing stop above (trailingStop/trailMultR) only ARMS once
+    // unrealized gain has reached >= X% at some close. Source: portfolio_us_highvol.yaml
+    // trail_trigger_pct (Go also uses trail_atr_mult as an ATR-based trail distance once
+    // armed — we keep our existing R-multiple trailMultR form and only port the trigger).
+    trailTriggerPct = 0, // % (e.g. 12 = 12%). 0 = off (trail arms immediately, prior behavior)
+    // earlyExitLossPct / earlyExitDays: cut fast losers — if unrealized loss (close-based)
+    // >= X% within the first N days of the position, exit at that close. Source:
+    // portfolio_etf_us.yaml / portfolio_etf_eu.yaml early_exit block (Go also gates on
+    // min_days=2 before checking — we hardcode that lower bound via EARLY_EXIT_MIN_DAYS
+    // below since it's not exposed as a config field here).
+    earlyExitLossPct = 0, // % (e.g. 5 = 5% loss). 0 = off
+    earlyExitDays = 0,    // check window: daysHeld <= this. 0 = off
+    // tightenAfterDays / tightenToPct: after N days in position, floor the stop at
+    // entry*(1-X/100) if the current stop is lower. Source: portfolio_ma.yaml
+    // tighten_after_days / tightened_max_loss (Go additionally gates this on the position
+    // still losing beyond tighten_loss_threshold=5% — our generic field doesn't expose that
+    // threshold, so this is an unconditional floor; approximation, not an exact port).
+    tightenAfterDays = 0, // days held before tightening. 0 = off
+    tightenToPct = 0,     // tightened stop distance from entry, in % (e.g. 8 = 8%)
   } = config;
+  const EARLY_EXIT_MIN_DAYS = 2; // Go EarlyExitConfig default (portfolio_etf_us.yaml min_days: 2)
   const _staleGrace = staleGraceDays > 0 ? staleGraceDays : staleDays;
   const _staleRate = staleGraceDays > 0 ? staleRaiseRate : 0.002;
   const _staleAccel = staleGraceDays > 0 ? staleAccel : 'linear';
@@ -692,9 +713,18 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const actualTp1 = entryPrice + (setup.tp1 - setup.entry);
   const actualTp2 = setup.tp2 ? entryPrice + (setup.tp2 - setup.entry) : null;
 
-  // R:R gate uses ORIGINAL signal risk (not ATR-widened) to avoid silent rejection
+  // R:R gate uses ORIGINAL signal risk (not ATR-widened) to avoid silent rejection.
+  // Scope: stratégies ÉDITORIALES uniquement. Pour les spécialistes (candlestick,
+  // highvol_breakout, etf_momentum, momentum_rotation, trendline_breakout,
+  // adaptive_fractal), tp1 = déclencheur de prise PARTIELLE (partialTPGain) — le
+  // payoff réel inclut le runner + trailing, et les backtests Go 5y de ces stratégies
+  // n'ont aucun gate R/R. Depuis que les scanners émettent des tp1 honnêtes (fin du
+  // 2R synthétique), appliquer ce gate aux spécialistes exclurait ~68% de leurs
+  // trades du sim et casserait la parité Go.
+  const RR_GATE_STRATEGIES = new Set(['momentum', 'breakout', 'pullback', 'pre_squeeze', 'hybrid_megacap']);
+  const rrStratKey = (setup.strategy || '').toLowerCase().replace(/[^a-z_]/g, '');
   const rrRatio = (setup.tp1 - setup.entry) / originalRisk;
-  if (rrRatio < 1.5) return null;
+  if ((!rrStratKey || RR_GATE_STRATEGIES.has(rrStratKey)) && rrRatio < 1.5) return null;
 
   // v8.3 post-widening R:R gate — reject trades where ATR widening collapses actual R:R
   // This prevents the Orbit R:R inversion problem (signal R:R=2.0 but actual R:R=0.8)
@@ -711,12 +741,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   let status = 'open';
   let exitDate = null;
   let exitPrice = null;
+  let exitTrigger = null; // opt-in exit annotation (e.g. 'early_exit') — status stays a known value
   let partialRealized = 0; // P&L from partial close at TP1
   let partialTriggerDay = null;
   let highWaterMark = entryPrice;
   let daysSinceNewHigh = 0;
   let breakevenActivated = false;
   let daysHeld = 0;
+  let trailArmed = trailTriggerPct <= 0; // trailTriggerPct=0 → armed immediately (prior behavior)
 
   for (const date of sortedDates) {
     const bar = priceHistory[date];
@@ -743,6 +775,21 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       exitPrice = heldOvernight ? Math.min(currentStop, bar.open) : currentStop;
       if (ambiguous) status = status + '_amb';                    // _amb suffix for audit
       break;
+    }
+
+    // Early exit: cut fast losers within first N days (Go: portfolio_etf_us.yaml /
+    // portfolio_etf_eu.yaml early_exit block). Close-based check (not intraday like SL).
+    // Reuses the 'sl' status (no new status introduced downstream) tagged via exitTrigger.
+    if (earlyExitLossPct > 0 && earlyExitDays > 0 &&
+        daysHeld >= EARLY_EXIT_MIN_DAYS && daysHeld <= earlyExitDays) {
+      const closeLossPct = (entryPrice - bar.close) / entryPrice * 100;
+      if (closeLossPct >= earlyExitLossPct) {
+        status = 'sl';
+        exitDate = date;
+        exitPrice = bar.close;
+        exitTrigger = 'early_exit';
+        break;
+      }
     }
 
     // Americanbull PM: pattern invalidation + bearish exit signals (candlestick only)
@@ -813,11 +860,19 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
       }
     }
 
+    // trailTriggerPct: trailing stop only arms once unrealized gain (close-based) has
+    // reached >= X% at some point. Once armed it stays armed (monotonic, like the stop
+    // itself never lowers). No-op when trailTriggerPct=0 (trailArmed starts true).
+    if (!trailArmed) {
+      const gainPct = (bar.close - entryPrice) / entryPrice * 100;
+      if (gainPct >= trailTriggerPct) trailArmed = true;
+    }
+
     // Trailing stop: trail from high at trailMultR × riskPerUnit
     // When partialTP is disabled (partialTPGain=0 && !partialTP), trail activates unconditionally
     // after grace period. When partialTP is enabled, trail gates on partialRealized > 0.
     const trailGated = (partialTPGain > 0 || partialTP) ? partialRealized > 0 : true;
-    if (trailingStop && trailGated && daysHeld > trailGraceDays) {
+    if (trailingStop && trailArmed && trailGated && daysHeld > trailGraceDays) {
       const trailLevel = bar.high - riskPerUnit * trailMultR;
       if (trailLevel > currentStop) currentStop = trailLevel;
     }
@@ -837,6 +892,14 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
         breakevenActivated = true;
         if (entryPrice > currentStop) currentStop = entryPrice;
       }
+    }
+
+    // Tighten after days: after N days in position, floor the stop at entry*(1-X/100)
+    // if the current stop is lower. Source: portfolio_ma.yaml (casablanca) tighten_after_days
+    // / tightened_max_loss.
+    if (tightenAfterDays > 0 && tightenToPct > 0 && daysHeld >= tightenAfterDays) {
+      const tightenedStop = entryPrice * (1 - tightenToPct / 100);
+      if (tightenedStop > currentStop) currentStop = tightenedStop;
     }
 
     // Stale tightening: after grace days without new high, progressively raise stop
@@ -916,6 +979,7 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     status,
     exitDate,
     exitPrice,
+    ...(exitTrigger ? { exitTrigger } : {}),
     pnlPct: +(pnlPct * 100).toFixed(2),
     holdDays: daysHeld,
     source: setup.source || 'signals',
@@ -1842,6 +1906,10 @@ async function main() {
             trailMultR: cfg.trailMultR ?? 1.5, trailGraceDays: cfg.trailGraceDays ?? 0,
             postWideningRRMin: cfg.postWideningRRMin || 0,
             blacklist: cfg.blacklist || null,
+            // v10.4 — opt-in Go PositionManager ports (see simulateTrade doc comment)
+            trailTriggerPct: cfg.trailTriggerPct || 0,
+            earlyExitLossPct: cfg.earlyExitLossPct || 0, earlyExitDays: cfg.earlyExitDays || 0,
+            tightenAfterDays: cfg.tightenAfterDays || 0, tightenToPct: cfg.tightenToPct || 0,
           });
           if (result) trades.push({ ...result, regime: setup.regime || null, regimeScore: setup.regimeScore ?? null });
         }

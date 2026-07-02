@@ -231,6 +231,12 @@ const PARITY_MAP = [
           getScalar(text, 'max_correlation'), art.correlationCap),
         row('highvol', 'max_loss (min dynamic_max_loss, ×100) ↔ maxStopPct',
           maxLossPctFromGo(text), art.maxStopPct),
+        // v10.4: trailTriggerPct port (PositionManager exit-logic parity, see
+        // data/modes-config-history.json v10.4 entry). Go stores this as a fraction (0.12);
+        // articles' trailTriggerPct is a plain percent number (12) — ×100 to compare.
+        row('highvol', 'trail_trigger_pct (×100) ↔ trailTriggerPct',
+          (() => { const v = getScalar(text, 'trail_trigger_pct'); return v !== null ? parseFloat(v) * 100 : null; })(),
+          art.trailTriggerPct),
       ];
     },
   },
@@ -253,6 +259,19 @@ const PARITY_MAP = [
           getScalar(text, 'min_price'), scannerText ? jsConstNumber(scannerText, 'MIN_PRICE') : null),
         row('etf', 'scanner_filters.max_atr_ratio ↔ etf-scanner.js MAX_ATR_RATIO',
           getScalar(text, 'max_atr_ratio'), scannerText ? jsConstNumber(scannerText, 'MAX_ATR_RATIO') : null),
+        // v10.4: earlyExit + circuitBreaker port (PositionManager exit-logic parity, see
+        // data/modes-config-history.json v10.4 entry).
+        row('etf', 'early_exit.max_days ↔ earlyExitDays',
+          getNestedScalar(text, 'early_exit', 'max_days'), art.earlyExitDays),
+        row('etf', 'early_exit.max_loss_pct (×100) ↔ earlyExitLossPct',
+          (() => { const v = getNestedScalar(text, 'early_exit', 'max_loss_pct'); return v !== null ? parseFloat(v) * 100 : null; })(),
+          art.earlyExitLossPct),
+        row('etf', 'circuit_breaker.max_stops_before_pause ↔ circuitBreakerStops',
+          getNestedScalar(text, 'circuit_breaker', 'max_stops_before_pause'), art.circuitBreakerStops),
+        row('etf', 'circuit_breaker.stop_period_days ↔ circuitBreakerWindow',
+          getNestedScalar(text, 'circuit_breaker', 'stop_period_days'), art.circuitBreakerWindow),
+        row('etf', 'circuit_breaker.base_pause_days ↔ circuitBreakerPause',
+          getNestedScalar(text, 'circuit_breaker', 'base_pause_days'), art.circuitBreakerPause),
       ];
     },
   },
@@ -274,6 +293,19 @@ const PARITY_MAP = [
         row('etf_eu', 'blacklist size ↔ BLACKLIST_EU.size (etf-scanner.js)',
           (() => { const items = getListItems(text, 'blacklist'); return items ? items.length : null; })(),
           scannerText ? jsSetSize(scannerText, 'BLACKLIST_EU') : null),
+        // v10.4: earlyExit + circuitBreaker port (PositionManager exit-logic parity, see
+        // data/modes-config-history.json v10.4 entry).
+        row('etf_eu', 'early_exit.max_days ↔ earlyExitDays',
+          getNestedScalar(text, 'early_exit', 'max_days'), art.earlyExitDays),
+        row('etf_eu', 'early_exit.max_loss_pct (×100) ↔ earlyExitLossPct',
+          (() => { const v = getNestedScalar(text, 'early_exit', 'max_loss_pct'); return v !== null ? parseFloat(v) * 100 : null; })(),
+          art.earlyExitLossPct),
+        row('etf_eu', 'circuit_breaker.max_stops_before_pause ↔ circuitBreakerStops',
+          getNestedScalar(text, 'circuit_breaker', 'max_stops_before_pause'), art.circuitBreakerStops),
+        row('etf_eu', 'circuit_breaker.stop_period_days ↔ circuitBreakerWindow',
+          getNestedScalar(text, 'circuit_breaker', 'stop_period_days'), art.circuitBreakerWindow),
+        row('etf_eu', 'circuit_breaker.base_pause_days ↔ circuitBreakerPause',
+          getNestedScalar(text, 'circuit_breaker', 'base_pause_days'), art.circuitBreakerPause),
       ];
     },
   },
@@ -300,6 +332,17 @@ const PARITY_MAP = [
       rows.push(row('casablanca', 'skip_months presence (Go-only, no articles equivalent)',
         skipMonths, 'not implemented — documented gap',
         { gap: true, note: `Go has skip_months: ${skipMonths} — pit-engine.js has no month-skip mechanism (see project_parity_v10_2.md "Gaps restants")` }));
+      // v10.4: tighten port (PositionManager exit-logic parity, see
+      // data/modes-config-history.json v10.4 entry).
+      rows.push(row('casablanca', 'tighten_after_days ↔ tightenAfterDays',
+        getScalar(text, 'tighten_after_days'), art.tightenAfterDays));
+      rows.push(row('casablanca', 'tightened_max_loss (×100) ↔ tightenToPct',
+        (() => { const v = getScalar(text, 'tightened_max_loss'); return v !== null ? parseFloat(v) * 100 : null; })(),
+        art.tightenToPct));
+      const tightenThresh = getScalar(text, 'tighten_loss_threshold');
+      rows.push(row('casablanca', 'tighten_loss_threshold (Go-only conditional gate, no articles equivalent)',
+        tightenThresh, 'not implemented — unconditional tighten',
+        { gap: true, note: `Go only tightens when losing beyond ${tightenThresh} (×100=${tightenThresh !== null ? parseFloat(tightenThresh) * 100 : '?'}%) after tighten_after_days; articles' tightenAfterDays/tightenToPct floors the stop unconditionally (superset approximation, see simulateTrade doc comment in sweep.js)` }));
       return rows;
     },
   },

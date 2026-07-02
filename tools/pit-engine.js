@@ -143,6 +143,11 @@ async function fetchAllPrices(tickers) {
 }
 
 // ─── Per-position update (one bar) ───────────────────────────────────────────
+// EARLY_EXIT_MIN_DAYS: Go EarlyExitConfig default (portfolio_etf_us.yaml min_days: 2).
+// Not exposed as a config field (see cfg.earlyExitDays doc below) — hardcoded to match
+// the Go PM's lower bound before an early-exit check is even considered.
+const EARLY_EXIT_MIN_DAYS = 2;
+
 function stepPosition(pos, day, bar, cfg) {
   if (!bar) return null;
   pos.daysHeld = (pos.daysHeld || 0) + 1;
@@ -160,6 +165,22 @@ function stepPosition(pos, day, bar, cfg) {
     pos.exitDate = day;
     pos.exitPrice = pos.currentStop;
     return 'closed';
+  }
+
+  // Early exit: cut fast losers within first N days (Go: portfolio_etf_us.yaml /
+  // portfolio_etf_eu.yaml early_exit block). Close-based (not intraday like SL). Opt-in
+  // (cfg.earlyExitLossPct/earlyExitDays default 0 = off). Reuses 'sl' status tagged via
+  // exitTrigger so no downstream consumer needs a new status value.
+  if (cfg.earlyExitLossPct > 0 && cfg.earlyExitDays > 0 &&
+      pos.daysHeld >= EARLY_EXIT_MIN_DAYS && pos.daysHeld <= cfg.earlyExitDays) {
+    const closeLossPct = (pos.entryPrice - bar.close) / pos.entryPrice * 100;
+    if (closeLossPct >= cfg.earlyExitLossPct) {
+      pos.status = 'sl';
+      pos.exitDate = day;
+      pos.exitPrice = bar.close;
+      pos.exitTrigger = 'early_exit';
+      return 'closed';
+    }
   }
 
   // TP2 (only real)
@@ -180,9 +201,19 @@ function stepPosition(pos, day, bar, cfg) {
     }
   }
 
+  // trailTriggerPct: trailing stop only arms once unrealized gain (close-based) has
+  // reached >= X% at some point (Go: portfolio_us_highvol.yaml trail_trigger_pct). Once
+  // armed it stays armed. Opt-in — cfg.trailTriggerPct default 0 = armed immediately
+  // (prior behavior, tracked via pos.trailArmed initialized true when disabled).
+  if (pos.trailArmed === undefined) pos.trailArmed = !(cfg.trailTriggerPct > 0); // resumed-state safety net
+  if (!pos.trailArmed) {
+    const gainPct = (bar.close - pos.entryPrice) / pos.entryPrice * 100;
+    if (gainPct >= cfg.trailTriggerPct) pos.trailArmed = true;
+  }
+
   // Trailing stop (post-partial) — gate on partialRealized only when partialTP is configured
   const trailGated = (cfg.partialTPGain > 0 || cfg.partialTP) ? pos.partialRealized > 0 : true;
-  if (cfg.trailingStop && trailGated && pos.daysHeld > (cfg.trailGraceDays || 0)) {
+  if (cfg.trailingStop && pos.trailArmed && trailGated && pos.daysHeld > (cfg.trailGraceDays || 0)) {
     const trailLevel = bar.high - pos.riskPerUnit * (cfg.trailMultR || 1.5);
     if (trailLevel > pos.currentStop) pos.currentStop = trailLevel;
   }
@@ -200,6 +231,14 @@ function stepPosition(pos, day, bar, cfg) {
       pos.breakevenActivated = true;
       if (pos.entryPrice > pos.currentStop) pos.currentStop = pos.entryPrice;
     }
+  }
+
+  // Tighten after days: after N days in position, floor the stop at entry*(1-X/100)
+  // if the current stop is lower (Go: portfolio_ma.yaml casablanca tighten_after_days /
+  // tightened_max_loss). Opt-in — cfg.tightenAfterDays/tightenToPct default 0 = off.
+  if (cfg.tightenAfterDays > 0 && cfg.tightenToPct > 0 && pos.daysHeld >= cfg.tightenAfterDays) {
+    const tightenedStop = pos.entryPrice * (1 - cfg.tightenToPct / 100);
+    if (tightenedStop > pos.currentStop) pos.currentStop = tightenedStop;
   }
 
   // Stale exit
@@ -306,6 +345,7 @@ function openPosition(setup, scanDate, entryDate, cfg) {
     actualStop, actualTp1, actualTp2, riskPerUnit,
     currentStop: actualStop, daysHeld: 0, partialRealized: 0,
     breakevenActivated: false, highWaterMark: entryPrice, daysSinceNewHigh: 0,
+    trailArmed: !(cfg.trailTriggerPct > 0), // opt-in trailTriggerPct: armed immediately when off
     status: 'open',
   };
 }

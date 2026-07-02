@@ -48,6 +48,26 @@ const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 const SOURCE = getArg('source', 'yahoo').toLowerCase();
 
+// ─── tp1/tp2/rr exit model (mirrors data/modes-config.json per assetClass) ───
+// Each pool has its own partialTPGain — the mode's REAL partial-TP trigger (% price gain),
+// not a fixed R multiple. tp1 = entry × (1 + gain/100); tp2 = 2x that gain (informational for
+// disableTP2=true pools — sweep.js gates the real TP2 check on cfg.disableTP2 independently).
+// rr computed per-ticker from the actual stop distance, replacing the previous hardcoded
+// '1:2.0' (audit finding: uniform R/R disconnected from each signal's real risk).
+// crypto/metals/forex are "stopped" modes (data/modes-config.json) but keep parity values for
+// when/if reactivated. americanbull/etf/tkl have no dedicated top-level mode entry for the
+// fractal (AdaptiveFractal) strategy — fall back to the majority convention (10% gain,
+// TP2 disabled) shared by momentum/etf/casablanca/metals/forex.
+const ASSET_TP_GAIN_PCT = {
+  crypto: 12,       // modes-config.json modes.crypto.partialTPGain (status: stopped)
+  metals: 10,       // modes-config.json modes.metals.partialTPGain (status: stopped)
+  forex: 10,        // modes-config.json modes.forex.partialTPGain (status: stopped)
+  americanbull: 10, // no dedicated mode entry — fallback to majority convention
+  etf: 10,          // no dedicated mode entry — fallback to majority convention
+  tkl: 10,          // no dedicated mode entry — fallback to majority convention
+};
+const DEFAULT_TP_GAIN_PCT = 10;
+
 const UNIVERSE_FILES = {
   americanbull: 'americanbull-universe.json',
   crypto: 'crypto-universe.json',
@@ -306,13 +326,15 @@ async function main() {
     const risk = result.entry - result.stop;
     if (risk <= 0) continue;
 
-    const tp1 = +(result.entry + risk * 2).toFixed(2);
-    const tp2 = +(result.entry + risk * 3).toFixed(2);
+    const gainPct = ASSET_TP_GAIN_PCT[assetClass] ?? DEFAULT_TP_GAIN_PCT;
+    const tp1 = +(result.entry * (1 + gainPct / 100)).toFixed(2);
+    const tp2 = +(result.entry * (1 + (gainPct * 2) / 100)).toFixed(2);
+    const rr = +((tp1 - result.entry) / risk).toFixed(2);
 
     candidates.push({
       ticker, score: result.score,
       entry: +result.entry.toFixed(2), stop: +result.stop.toFixed(2), tp1, tp2,
-      rr: '1:2.0',
+      rr: `1:${rr.toFixed(2)}`,
       metrics: result,
     });
   }

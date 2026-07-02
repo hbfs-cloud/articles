@@ -282,9 +282,16 @@ async function main() {
     'RISK-ON': 1.5, 'RECOVERY': 1.5, 'NEUTRAL': 1.5,
     'EARLY RISK-OFF': 2.0, 'RISK-OFF': 2.0
   };
+  // Scope: stratégies ÉDITORIALES uniquement. Pour les spécialistes (HighVolBreakout,
+  // ETFMomentum, MomentumRotation, TrendlineBreakout, AdaptiveFractal, Candlestick),
+  // tp1 = déclencheur de prise PARTIELLE (partialTPGain) — le payoff réel inclut le
+  // runner + trailing ; Go n'applique aucun gate R/R à ces stratégies (parité 5y).
+  const RR_GATE_STRATEGIES = new Set(['momentum', 'breakout', 'pullback', 'pre-squeeze', 'presqueeze', 'pre_squeeze', 'hybridmegacap', 'hybrid_megacap']);
   if (regime) {
     const rrMin = RR_MIN_BY_REGIME[String(regime).toUpperCase().trim()] || 1.5;
     for (const s of signals) {
+      const stratKey = String(s.strategy || '').toLowerCase().replace(/[\s-]/g, '');
+      if (stratKey && !RR_GATE_STRATEGIES.has(stratKey)) continue;
       if (!s.rr) continue;
       const m = String(s.rr).match(/1:(\d+\.?\d*)/);
       if (!m) continue;

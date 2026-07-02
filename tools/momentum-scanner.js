@@ -43,6 +43,15 @@ const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 
+// ─── tp1/tp2/rr exit model (mirrors data/modes-config.json modes.momentum) ───
+// partialTPGain=10 → the mode's REAL partial-TP trigger is +10% price gain (not entry+2R).
+// disableTP2=true → no live second target; tp2 kept as 2x TP1 gain for display/order-form
+// consistency only (sweep.js gates the actual TP2 check on cfg.disableTP2 independently of
+// this field, so this is informational, not a behavior change to the simulation).
+// rr computed per-ticker from the actual stop distance, replacing the previous hardcoded
+// '1:2.0' (audit finding: uniform R/R disconnected from each signal's real risk).
+const PARTIAL_TP_GAIN_PCT = 10; // modes-config.json modes.momentum.partialTPGain
+
 const IS_BVC = UNIVERSE_NAME === 'casablanca';
 
 const UNIVERSE_FILES = {
@@ -243,13 +252,14 @@ async function main() {
     const risk = result.entry - result.stop;
     if (risk <= 0) continue;
 
-    const tp1 = +(result.entry + risk * 2).toFixed(2);
-    const tp2 = +(result.entry + risk * 3).toFixed(2);
+    const tp1 = +(result.entry * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(2);
+    const tp2 = +(result.entry * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(2);
+    const rr = +((tp1 - result.entry) / risk).toFixed(2);
 
     candidates.push({
       ticker, score: result.score,
       entry: +result.entry.toFixed(2), stop: +result.stop.toFixed(2), tp1, tp2,
-      rr: '1:2.0', metrics: result,
+      rr: `1:${rr.toFixed(2)}`, metrics: result,
     });
   }
 
