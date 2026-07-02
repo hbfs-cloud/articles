@@ -215,6 +215,16 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the Casablanca scanner actually ran (even with 0 signals).
+    // Merged into the shared _scanRuns object (keyed scanner[:universe]) without clobbering other scanners.
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns.casablanca = {
+      at: new Date().toISOString(),
+      universe: 'casablanca',
+      candidates: candidates.length,
+      signals: topCandidates.length,
+      added,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.log(`\n📁 Appended ${added} Casablanca signals to ${sigPath}`);
   }

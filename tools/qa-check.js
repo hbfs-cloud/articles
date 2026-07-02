@@ -212,41 +212,102 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
   if (found.length) return `labels hors-taxonomie détectés — ${found.join(', ')} — relancer correction`;
 });
 
-// 4c. Garde anti-régression Bull : un mode candlestick_only actif (live/deploying) doit avoir
-// FAIT TOURNER candlestick-scanner.js sur le dernier scan. On vérifie le MARQUEUR de scan
-// (_candlestickScan), PAS la présence de signaux. Bull est un système haute-conviction : il ne
-// trade qu'un pattern avec spike volume >= 8× le jour du signal (parité systematic-tss). Les jours
-// calmes sans spike => 0 signal qualifié, ce qui est LÉGITIME (vérifié 2026-06-30: sur 3512 tickers,
-// 1 seul candidat MESH passe score+vol mais échoue la liquidité => 0 ordre, identique au backtest Go).
-// L'ÉCHEC réel = le scanner n'a jamais tourné (marqueur absent) ou n'a fetché aucune donnée.
-check('scanner: mode candlestick (bull) — candlestick-scanner a bien tourné (marqueur présent)', () => {
-  let config;
-  try { config = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8')); }
-  catch (e) { return `modes-config.json illisible: ${e.message}`; }
-  const candlestickModes = Object.entries(config.modes || {})
-    .filter(([, m]) => m.filterName === 'candlestick_only' && ['live', 'deploying', 'pausing'].includes(m.status));
-  if (!candlestickModes.length) return; // aucun mode candlestick actif → rien à garantir
+// 4c. Garde anti-régression scanners scriptés : chaque mode LIVE alimenté par un scanner scripté
+// doit avoir FAIT TOURNER son scanner sur le dernier scan. On vérifie le MARQUEUR de scan
+// (_candlestickScan pour bull, _scanRuns[clé] pour les autres), PAS la présence de signaux.
+// 0 signal qualifié est LÉGITIME — ex. Bull = haute-conviction, spike volume >= 8× requis le jour
+// du signal (parité systematic-tss vérifiée 2026-06-30: sur 3512 tickers, 1 seul candidat MESH
+// passe score+vol mais échoue la liquidité => 0 ordre, identique au backtest Go).
+// L'ÉCHEC réel = marqueur absent : le scanner n'a jamais tourné (crash silencieux avalé par le
+// `|| echo non-blocking` de publish-daily-card.sh) — c'est arrivé le 20260702 sur 4 modes.
+// Clés _scanRuns : '<scanner>' pour l'univers par défaut du scanner, '<scanner>:<universe>' sinon.
+const SCRIPT_SCANNER_MARKERS = {
+  bull:       { special: 'candlestick' },  // _candlestickScan (candlestick-scanner.js)
+  highvol:    { keys: ['highvol'] },       // highvol-scanner.js
+  etf:        { keys: ['etf'] },           // etf-scanner.js (US, défaut)
+  etf_eu:     { keys: ['etf:etf_eu'] },    // etf-scanner.js --universe etf-eu (tag interne etf_eu)
+  momentum:   { keys: ['momentum'] },      // momentum-scanner.js (americanbull, défaut)
+  casablanca: { keys: ['casablanca'] },    // casablanca-scanner.js
+  trendline:  { prefix: 'trendline' },     // trendline-scanner.js — n'importe quel univers compte
+};
 
+function latestScanSignals() {
   const scannerDir = path.join(ROOT, 'scanner');
   const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse();
-  if (!dirs.length) return 'aucun dossier de scan trouvé';
+  if (!dirs.length) throw new Error('aucun dossier de scan trouvé');
   const sigPath = path.join(scannerDir, dirs[0], 'signals.json');
-  if (!fs.existsSync(sigPath)) return `signals.json absent pour le dernier scan ${dirs[0]}`;
+  if (!fs.existsSync(sigPath)) throw new Error(`signals.json absent pour le dernier scan ${dirs[0]}`);
   let parsed;
   try { parsed = JSON.parse(fs.readFileSync(sigPath, 'utf8')); }
-  catch (e) { return `signals.json illisible (${dirs[0]}): ${e.message}`; }
+  catch (e) { throw new Error(`signals.json illisible (${dirs[0]}): ${e.message}`); }
+  return { scanDir: dirs[0], parsed };
+}
 
-  const marker = parsed._candlestickScan;
-  if (!marker) {
-    return `marqueur _candlestickScan absent dans ${dirs[0]} — candlestick-scanner.js n'a jamais tourné. `
-      + `Relancer 'node tools/candlestick-scanner.js --output signals --folder ${dirs[0]}' (source Yahoo). `
-      + `NB: 0 signal qualifié est LÉGITIME (jours calmes sans spike 8×), mais le scanner DOIT avoir tourné.`;
+function activeScriptScannerModes() {
+  const config = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8'));
+  return Object.entries(config.modes || {})
+    .filter(([id, m]) => SCRIPT_SCANNER_MARKERS[id] && m && ['live', 'deploying', 'pausing'].includes(m.status))
+    .map(([id]) => id);
+}
+
+// Résout le marqueur d'un mode dans le signals.json parsé. Retourne { found, key, signals }.
+function resolveScanMarker(mode, parsed) {
+  const spec = SCRIPT_SCANNER_MARKERS[mode];
+  if (spec.special === 'candlestick') {
+    const m = parsed._candlestickScan;
+    return { found: !!m, key: '_candlestickScan', signals: m ? m.qualified : null, marker: m };
   }
-  if (!marker.universeFetched || marker.universeFetched < 100) {
-    return `candlestick-scanner a fetché ${marker.universeFetched || 0} titres (< 100) dans ${dirs[0]} — `
-      + `échec de la source de données (Yahoo bloqué ?). Vérifier la connectivité et relancer.`;
+  const scanRuns = parsed._scanRuns || {};
+  let key = (spec.keys || []).find(k => scanRuns[k]);
+  if (!key && spec.prefix) {
+    key = Object.keys(scanRuns).find(k => k === spec.prefix || k.startsWith(spec.prefix + ':'));
   }
-  // 0 qualifié = OK (parité Go). On le signale juste en info via warn ailleurs si besoin.
+  if (!key) {
+    const expected = spec.keys ? spec.keys.join('|') : `${spec.prefix}[:*]`;
+    return { found: false, key: `_scanRuns["${expected}"]`, signals: null, marker: null };
+  }
+  return { found: true, key: `_scanRuns["${key}"]`, signals: scanRuns[key].signals, marker: scanRuns[key] };
+}
+
+check('scanner: modes live scriptés — marqueur de scan présent (chaque scanner a bien tourné)', () => {
+  let activeModes;
+  try { activeModes = activeScriptScannerModes(); }
+  catch (e) { return `modes-config.json illisible: ${e.message}`; }
+  if (!activeModes.length) return; // aucun mode scripté actif → rien à garantir
+
+  const { scanDir, parsed } = latestScanSignals();
+  const missing = [];
+  for (const mode of activeModes) {
+    const res = resolveScanMarker(mode, parsed);
+    if (!res.found) { missing.push(`${mode} (${res.key})`); continue; }
+    // Garde spécifique bull : le scanner doit avoir réellement fetché son univers
+    if (mode === 'bull' && (!res.marker.universeFetched || res.marker.universeFetched < 100)) {
+      missing.push(`${mode} (_candlestickScan: ${res.marker.universeFetched || 0} titres fetchés < 100 — source de données KO)`);
+    }
+  }
+  if (missing.length) {
+    return `marqueur(s) de scan absent(s) dans ${scanDir} — scanner(s) jamais lancé(s) (crash silencieux ?): `
+      + `${missing.join(', ')}. NB: 0 signal est LÉGITIME (jour calme), mais le scanner DOIT avoir tourné `
+      + `(marqueur écrit). Relancer les scanners manquants avec --output signals --folder ${scanDir}.`;
+  }
+});
+
+warn('scanner: modes live scriptés — marqueur présent mais 0 signal (jour calme ?)', () => {
+  let activeModes;
+  try { activeModes = activeScriptScannerModes(); }
+  catch { return; } // le check bloquant ci-dessus rapporte déjà l'erreur
+  if (!activeModes.length) return;
+  let scan;
+  try { scan = latestScanSignals(); }
+  catch { return; }
+  const zeroed = [];
+  for (const mode of activeModes) {
+    const res = resolveScanMarker(mode, scan.parsed);
+    if (res.found && res.signals === 0) zeroed.push(`${mode} (${res.key})`);
+  }
+  if (zeroed.length) {
+    return `${scan.scanDir} — scanner(s) OK mais 0 signal: ${zeroed.join(', ')} — légitime les jours calmes, à surveiller si récurrent`;
+  }
 });
 
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
@@ -408,13 +469,36 @@ check('index.html: Performance du Scanner — Updated date en phase avec derniè
   }
 });
 
-// 14. scanner/status — section Pending Orders présente pour chaque mode (après mise à jour scanner)
-check('scanner/status: section Pending Orders présente pour les 6 modes (incl. tkl)', () => {
+// 14. scanner/status — panneau + section Orders présents pour chaque mode LIVE
+// Source de vérité : data/modes-config.json (status=="live"). Chaque mode live doit avoir
+// son panneau (id="p-<mode>") et, dedans, une section "Orders to Place" / "On Watch" /
+// "no action needed" (le bug du 20260701 : section Orders absente sur bull).
+check('scanner/status: panneau + section Orders présents pour chaque mode live', () => {
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
-  // Section orders: "Orders to Place" ou "Order to Place" ou "On Watch" ou "no action needed"
-  const count = (html.match(/Order[s]? to Place|On Watch|no action needed/g) || []).length;
-  if (count < 3) return `seulement ${count}/3 sections "Orders" trouvées (growth, calmar, zero)`;
+  let config;
+  try { config = readJSON('data/modes-config.json'); }
+  catch (e) { return `modes-config.json illisible: ${e.message}`; }
+  const liveModes = Object.entries(config.modes || {})
+    .filter(([, m]) => m && m.status === 'live')
+    .map(([id]) => id);
+  if (!liveModes.length) return 'aucun mode live dans modes-config.json';
+
+  const missingPanel = [];
+  const missingOrders = [];
+  for (const mode of liveModes) {
+    const anchor = `id="p-${mode}"`;
+    const start = html.indexOf(anchor);
+    if (start === -1) { missingPanel.push(mode); continue; }
+    // Le panneau s'étend jusqu'au prochain panneau de mode (ou la fin du fichier)
+    const next = html.indexOf('id="p-', start + anchor.length);
+    const panel = html.slice(start, next === -1 ? html.length : next);
+    if (!/Order[s]? to Place|On Watch|no action needed/.test(panel)) missingOrders.push(mode);
+  }
+  const issues = [];
+  if (missingPanel.length) issues.push(`panneau id="p-<mode>" absent pour: ${missingPanel.join(', ')}`);
+  if (missingOrders.length) issues.push(`section Orders/On Watch/no action absente pour: ${missingOrders.join(', ')}`);
+  if (issues.length) return issues.join(' | ') + ' — regénérer via gen-status-page.js';
 });
 
 // 14. scanner/status — Pending Orders ne doit pas contenir de tickers déjà en Open Positions
@@ -722,7 +806,76 @@ check('signals.json (last 5 scans): regime field present in ≥50%', () => {
   return total === 0 || missing / total <= 0.5 || `Null-regime: ${missing}/${total} signals lack regime`;
 });
 
+// ─── Check 30: Status page headless smoke — zéro erreur JS au boot ───────────
+// Charge scanner/status/index.html dans un navigateur headless (puppeteer si présent dans
+// node_modules, sinon jsdom, sinon skip avec note console) et vérifie qu'aucune
+// ReferenceError/SyntaxError/TypeError n'est levée au chargement.
+// Non-fatal si l'environnement headless est indisponible (Chromium manquant, launch KO...) ;
+// FATAL si la page lève de vraies erreurs JS au boot (régression gen-status-page.js).
+async function statusPageSmokeCheck() {
+  const label = 'scanner/status: smoke headless — zéro ReferenceError/SyntaxError/TypeError au boot';
+  const statusPath = path.join(ROOT, 'scanner', 'status', 'index.html');
+  if (!fs.existsSync(statusPath)) {
+    errors.push(`❌ ${label}: scanner/status/index.html absent`);
+    return;
+  }
+
+  let engine = null;
+  try { require.resolve('puppeteer'); engine = 'puppeteer'; } catch { /* absent */ }
+  if (!engine) { try { require.resolve('jsdom'); engine = 'jsdom'; } catch { /* absent */ } }
+  if (!engine) {
+    console.log('  ℹ️  smoke headless status page: ni puppeteer ni jsdom dans node_modules — check sauté');
+    return;
+  }
+
+  const FATAL_RE = /ReferenceError|SyntaxError|TypeError/;
+  const pageErrors = [];
+
+  try {
+    if (engine === 'puppeteer') {
+      const puppeteer = require('puppeteer');
+      const browser = await puppeteer.launch({ headless: 'new', args: ['--no-sandbox', '--disable-gpu'] });
+      try {
+        const page = await browser.newPage();
+        page.on('pageerror', e => pageErrors.push(String((e && e.message) || e)));
+        page.on('console', msg => { if (msg.type() === 'error') pageErrors.push(msg.text()); });
+        await page.goto('file://' + statusPath, { waitUntil: 'load', timeout: 30000 });
+        await new Promise(r => setTimeout(r, 1500)); // laisser le boot JS (tmLoadIdx, panels...) s'exécuter
+      } finally {
+        await browser.close();
+      }
+    } else {
+      const { JSDOM, VirtualConsole } = require('jsdom');
+      const virtualConsole = new VirtualConsole();
+      virtualConsole.on('jsdomError', e => pageErrors.push(String((e && e.message) || e)));
+      const html = fs.readFileSync(statusPath, 'utf8');
+      const dom = new JSDOM(html, {
+        runScripts: 'dangerously',
+        resources: 'usable',
+        url: 'file://' + statusPath,
+        virtualConsole,
+      });
+      await new Promise(r => setTimeout(r, 2000)); // laisser les scripts asynchrones s'exécuter
+      dom.window.close();
+    }
+  } catch (e) {
+    // Échec environnemental (Chromium absent, launch timeout...) → warning, pas erreur bloquante
+    warnings.push(`⚠️  ${label}: environnement headless KO (${engine}: ${e.message}) — check non concluant`);
+    return;
+  }
+
+  // Ne bloquer que sur les vraies erreurs JS ; les échecs réseau (CDN, fetch live) sont ignorés.
+  const fatal = pageErrors.filter(m => FATAL_RE.test(m));
+  if (fatal.length) {
+    errors.push(`❌ ${label}: ${fatal.length} erreur(s) JS (${engine}) — ${[...new Set(fatal)].slice(0, 5).join(' | ')}`);
+  } else {
+    ok.push(`✅ ${label} (${engine})`);
+  }
+}
+
 // ─── Résumé ──────────────────────────────────────────────────────────────────
+
+function summarize() {
 
 const total = ok.length + warnings.length + errors.length;
 const hasErrors = errors.length > 0;
@@ -792,3 +945,16 @@ if (STRICT && hasErrors) {
 }
 
 process.exit(0);
+
+} // fin summarize()
+
+// Les checks synchrones ci-dessus ont déjà rempli ok/warnings/errors ; on enchaîne
+// le smoke headless (asynchrone) puis le résumé + exit code.
+(async () => {
+  try {
+    await statusPageSmokeCheck();
+  } catch (e) {
+    warnings.push(`⚠️  smoke headless status page: échec inattendu — ${e.message}`);
+  }
+  summarize();
+})();

@@ -431,6 +431,16 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the highvol scanner actually ran (even with 0 signals, which is legitimate).
+    // Merged into the shared _scanRuns object (keyed scanner[:universe]) without clobbering other scanners.
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns.highvol = {
+      at: new Date().toISOString(),
+      universe: 'americanbull',
+      candidates: candidates.length,
+      signals: topCandidates.length,
+      added,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.log(`\n📁 Appended ${added} highvol signals to ${sigPath}`);
   }

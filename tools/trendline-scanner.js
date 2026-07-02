@@ -426,6 +426,17 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the trendline scanner actually ran for this universe (even with 0 signals).
+    // Key: 'trendline' (americanbull default) | 'trendline:<universe>' (forex, indices, ...) — merged
+    // into the shared _scanRuns object without clobbering other scanners' entries.
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns[UNIVERSE_NAME === 'americanbull' ? 'trendline' : `trendline:${UNIVERSE_NAME}`] = {
+      at: new Date().toISOString(),
+      universe: UNIVERSE_NAME,
+      candidates: candidates.length,
+      signals: topCandidates.length,
+      added,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.error(`\n📁 Appended ${added} trendline signals to ${sigPath}`);
   }

@@ -355,6 +355,17 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the fractal scanner actually ran for this universe (even with 0 signals).
+    // Key: 'fractal' (americanbull default) | 'fractal:<universe>' (metals, forex, ...) — merged
+    // into the shared _scanRuns object without clobbering other scanners' entries.
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns[assetClass === 'americanbull' ? 'fractal' : `fractal:${assetClass}`] = {
+      at: new Date().toISOString(),
+      universe: assetClass,
+      candidates: candidates.length,
+      signals: topCandidates.length,
+      added,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.log(`\n📁 Appended ${added} fractal signals to ${sigPath}`);
   }
