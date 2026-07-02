@@ -299,6 +299,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Rotation on Trial: Where the Money Goes Next — Week of July 6–10, 2026",
+    "desc": "A flat S&P hid the sharpest factor rotation of the summer: tech and semis dumped into gold, materials, healthcare and international. Credit and crypto say risk is still on. Here is how to trade the week ahead — with real levels.",
+    "tags": "us,eu,commodity,gold,mining,healthcare,semis,macro,technique,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260706/",
+    "date": "6 juillet 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
@@ -4379,19 +4392,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
-  },
-  {
-    "type": "scanner",
-    "icon": "fa-satellite-dish",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Top 10 A+ RISK-ON — BBVA, LYG, IBKR, CB, YUM, TIGO, DLTR, CHRW, EWG, EWU",
-    "desc": "Le regime score est a 96/100 sur l'echelle risk-on (equivalent a une defensivite MCP de 3.7/100, 0 = plein risk-on), modele context_conditional, confiance 58.9%, classe RISK-ON. Probabilites : risk_on 58.9%, neutral 41.1%, early_risk_off 0%, crisis 0%. SPY attendu +0.30% sur 5j, drawdown attendu 1.9...",
-    "tags": "us,eu,etf,financials,consumer,industrials,macro,technique,trade-idea",
-    "grade": "",
-    "href": "/scanner/20260703/",
-    "date": "Vendredi 3 juillet 2026"
   },
   {
     "type": "scanner",
