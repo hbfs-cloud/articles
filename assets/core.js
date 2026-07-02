@@ -66,7 +66,9 @@ function renderClickableTags(tagsString, targetElementId, defaultTab = "analyses
 
     const tags = tagsString.split(",").map(t => t.trim()).filter(Boolean);
     tags.forEach(function(t) {
-        const meta = tagMeta[t];
+        // Fallback : un tag hors registre rend une chip neutre (cat theme) au lieu
+        // de disparaître silencieusement — la taxonomie évolue plus vite que tagMeta.
+        const meta = tagMeta[t] || { cat: "theme", labels: { en: t } };
         if (meta) {
             const chip = document.createElement("span");
             chip.className = "card-tag";

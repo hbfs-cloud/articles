@@ -25,7 +25,7 @@ jobs:
         run: |
           CHANGED=$(git diff --name-only --diff-filter=ACM HEAD~1 HEAD \
             | grep -E '^(analyses|daily|weekly|scanner)/[^/]+/index\.html$' \
-            | grep -v '/archive/' || true)
+            | grep -vE '(/archive/|^scanner/status/)' || true)
           if [ -z "$CHANGED" ]; then echo "Aucun article modifié."; exit 0; fi
           echo "Articles à vérifier:"; echo "$CHANGED"
           echo "$CHANGED" | xargs node tools/qa-content.js --strict

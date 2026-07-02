@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202607020757"></script>
+  <script src="/data/search_data.js?v=202607020759"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -2676,6 +2676,16 @@
     // TAG METADATA
     // ===================================================================
     var tagMeta = {
+      // NB: registre miroir de assets/core.js#tagMeta (labels EN seulement ici).
+      // Tag absent → fallback chip neutre (voir boucle de rendu), jamais invisible.
+      software: { label: "Software", cat: "sector" },
+      societe: { label: "Society", cat: "theme" },
+      securite: { label: "Security", cat: "theme" },
+      architecture: { label: "Architecture", cat: "theme" },
+      sql: { label: "SQL", cat: "theme" },
+      snowflake: { label: "Snowflake", cat: "theme" },
+      singer: { label: "Singer", cat: "theme" },
+      opensource: { label: "Open-Source", cat: "theme" },
       // Region (blue)
       us: { label: "US", cat: "region" },
       eu: { label: "EU", cat: "region" },
@@ -2729,8 +2739,8 @@
         var container = document.createElement("div");
         container.className = "card-tags";
         tags.forEach(function (t) {
-          var meta = tagMeta[t];
-          if (!meta) return;
+          // Fallback : tag hors registre → chip neutre plutôt qu'invisible
+          var meta = tagMeta[t] || { label: t, cat: "theme" };
           var chip = document.createElement("span");
           chip.className = "card-tag";
           chip.setAttribute("data-cat", meta.cat);
