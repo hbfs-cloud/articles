@@ -102,6 +102,11 @@ function loadSignals(dir) {
           // universe tag used by gen-status-page signalsFor universeFilter (highvol=americanbull,
           // etf=etf). Stripping it dropped ALL signals for universe-filtered modes (0 signals bug).
           universe: s.universe || null,
+          // sector — used by validate-scan.js candlestick_missing_sector rule and the
+          // diversification.max_per_sector overlay. Was silently dropped here (not in this
+          // whitelist), so candlestick-scanner.js's emitted sector never reached validate-scan
+          // no matter what it wrote to signals.json.
+          sector: s.sector || null,
         };
       };
       const baseSignals = (data.signals || []).map(mapSignal);

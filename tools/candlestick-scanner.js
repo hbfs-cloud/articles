@@ -29,6 +29,12 @@ const path = require('path');
 const https = require('https');
 const crypto = require('crypto');
 const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/candlestick-patterns');
+// Sector + Sharia classification — shared single source of truth (also used by sweep.js /
+// gen-status-page.js) so Bull signals carry the same metadata as every other scanner instead
+// of emitting sector:missing / sharia:null (validate-scan candlestick_missing_sector /
+// candlestick_missing_sharia). Detection logic (pattern/score/vol-gate) is untouched — this is
+// metadata attached to already-qualified candidates.
+const { getSector, isHaramForHalalMode } = require('./lib/sharia-filter');
 
 const ROOT = path.join(__dirname, '..');
 const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
@@ -82,6 +88,18 @@ const GATEWAY_DAYS = parseInt(getArg('gateway-days', '200'));
 const MIN_MARKET_CAP = 300_000_000;
 const MIN_VOLUME = 5_000_000;
 const BLACKLIST = new Set(['DAWN', 'GLDD']);
+
+// ─── tp1/tp2/rr exit model (mirrors data/modes-config.json modes.bull) ──────
+// partialTPGain=8 → the mode's REAL partial-TP trigger is +8% price gain (not a fixed
+// R multiple). tp1 emitted here must match that trigger, else rr is disconnected from the
+// actual exit model — same fix already applied to highvol/momentum/trendline/etf/casablanca/
+// fractal scanners (commit 491de93eb, "TP1/rr honnêtes des scanners"). Bull was the one
+// specialist scanner left on the synthetic entry+2R/entry+3R convention.
+// disableTP2=false → bull keeps a live second target; tp2 = 2x the TP1 gain (same convention
+// used by highvol/trendline: keeps tp2 > tp1 monotonically, unlike a flat entry+risk*3 which
+// can invert below a small-ATR tp1 gain). rr is computed per-ticker from the REAL stop
+// distance (pattern+ATR stop — untouched by this fix).
+const PARTIAL_TP_GAIN_PCT = 8; // modes-config.json modes.bull.partialTPGain
 
 // ─── Universe: local pre-built file (americanbull-universe.json) ────────────
 
@@ -417,13 +435,37 @@ async function main() {
     const risk = result.entry - result.stop;
     if (risk <= 0) continue;
 
-    const tp1 = +(result.entry + risk * 2).toFixed(2);
-    const tp2 = +(result.entry + risk * 3).toFixed(2);
-    const rr = ((tp1 - result.entry) / risk).toFixed(1);
+    // tp1 = the real partial-TP trigger level (entry × (1 + partialTPGain/100)), not entry+2R.
+    // tp2 = 2x that gain (disableTP2=false → bull has a live second target).
+    // rr computed from tp1 vs THIS ticker's actual (pattern+ATR) stop distance — varies per signal.
+    const tp1 = +(result.entry * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(2);
+    const tp2 = +(result.entry * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(2);
+    const rr = ((tp1 - result.entry) / risk).toFixed(2);
+
+    // Sector: shared SECTOR_MAP (tools/lib/sharia-filter.js), same source gen-status-page.js
+    // uses for the Fortress Halal gate. getSector() falls back to 'Other' for unmapped tickers —
+    // that fallback is not a real classification, so we surface it as 'Unknown' here and log it
+    // (no new network call; a real per-ticker sector fetch would require a Yahoo/StockAnalysis
+    // quote call, which is out of scope for this metadata-only fix).
+    const rawSector = getSector(ticker);
+    const sectorMapped = rawSector !== 'Other';
+    const sector = sectorMapped ? rawSector : 'Unknown';
+    if (!sectorMapped) process.stderr.write(`  ⚠️  ${ticker}: sector unmapped in SECTOR_MAP — emitting sector:"Unknown"\n`);
+
+    // Sharia: reuse the shared haram-exclusion logic (SHARIA_EXCLUDED tickers + HARAM_SECTORS).
+    // Conservative default — a ticker with NO sector mapping (can't be classified either way)
+    // is emitted sharia:false rather than true, so an unclassified name is never presented as
+    // halal. isHaramForHalalMode() already returns true for explicit haram tickers/sectors
+    // regardless of mapping, so this only affects the "genuinely unmapped" case.
+    const haram = isHaramForHalalMode({ ticker });
+    const sharia = !haram && sectorMapped;
+    if (!sectorMapped) process.stderr.write(`  ⚠️  ${ticker}: no Sharia classification data — emitting sharia:false (conservative default)\n`);
 
     candidates.push({
       ticker,
       score: result.totalScore,
+      sector,
+      sharia,
       strategy: 'Candlestick',
       pattern: {
         name: result.pattern,
@@ -481,7 +523,7 @@ async function main() {
       signals.signals.push({
         ticker: c.ticker, name: c.ticker, score: c.score, strategy: 'Candlestick',
         entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-        horizon: 10, region: 'US', sharia: null,
+        horizon: 10, region: 'US', sector: c.sector, sharia: c.sharia,
         thesis: `${c.pattern.name} pattern (base ${c.pattern.baseScore}) with ${c.metrics.volRatio}x volume spike. ATR% ${c.metrics.atrPct}%, RSI ${c.extension.rsi}, BB%B ${c.metrics.bbPctB}.`,
         extension: c.extension, pattern: c.pattern,
         earnings_clear: true, dilution_clear: true,
