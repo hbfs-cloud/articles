@@ -18,9 +18,10 @@ metadata:
 1. `enable_backtest=true` documenté (WR/DD/Sharpe/R² sur 6 fenêtres) mais l'item
    `backtest_result` n'est JAMAIS rendu (2 essais consistants, jobs completed).
    → C'est LA feature pour valider les recettes ; à réparer en priorité.
-2. `region='eu'` → 0 candidat même sur une recette large (univers EU pas chargé dans
-   le moteur DSL ?). Le fallback du skill /scanner (GetMarketOverview EU movers) reste
-   obligatoire pour le quota diversification.
+2. `region='eu'` : FIXÉ à la source — univers EU chargé par défaut depuis la décision
+   user 2026-07-02 (ENABLE_EU_UNIVERSE=false pour désactiver, sinon toujours actif).
+   Après un deploy frais : backfill bars EU one-time requis avant les premiers candidats.
+   Le fallback GetMarketOverview du skill reste un filet, plus une obligation.
 3. `RunAutoScreener` n'a pas de filtre mcap → renvoie des micro-caps RSI 88-90
    (value-traps per lessons) ; toujours filtrer en aval (règle [[screener-mcap-filter]]).
 
