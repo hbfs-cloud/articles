@@ -2407,15 +2407,14 @@ async function main() {
       if (FROZEN_ONLY) {
         // Append-only: preserve existing trades, only simulate scans AFTER the latest existing one
         const allExisting = existingTrades[id] || [];
-        // statusSince gate: drop trades before mode inception date (e.g. Orbit replacing Secured)
+        // statusSince: gates which SCANS get simulated (no pre-inception entries), but
+        // NEVER drops trades already recorded — statusSince moves on every routine status
+        // transition (e.g. deploying→live promotion) and history is immutable. A deliberate
+        // strategy reset (Orbit-replacing-Secured case) must explicitly purge the mode's
+        // entries from backtest-trades.json + frozen_* — not rely on this filter, which the
+        // closed-count hard guard below would block anyway.
         const sinceISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : null;
-        const sinceCutoff = sinceISO ? sinceISO.replace(/-/g, '') : null;
-        const afterSince = sinceISO
-          ? allExisting.filter(t => (t.scanDate || '') >= sinceISO)
-          : allExisting;
-        if (sinceISO && afterSince.length < allExisting.length) {
-          console.log(`  ${id}: filtered ${allExisting.length - afterSince.length} trades before statusSince ${sinceISO}`);
-        }
+        const afterSince = allExisting;
         // Purge: pending trades only (always re-simulate with latest data).
         // Never purge closed/expired trades — they were simulated with their original config
         // and changing the current horizon must not retroactively invalidate them.
@@ -2648,7 +2647,12 @@ async function main() {
           } else {
             // Fallback: keep frozen untouched. Never rewrite history on a failed guard.
             stats = existingFrozen;
-            console.error(`  ⚠️  ${id}: append-only advance REJECTED (prefixOk=${!!prefixOk} tradesOk=${!!tradesOk}) — keeping frozen stats as-is`);
+            if (advanced === null) {
+              // No resolved/pending trades to compute from (empty book) — nothing to advance.
+              console.log(`  ${id} (${cfg.label}): 0 trades, frozen stats kept`);
+            } else {
+              console.error(`  ⚠️  ${id}: append-only advance REJECTED (prefixOk=${!!prefixOk} tradesOk=${!!tradesOk}) — keeping frozen stats as-is`);
+            }
           }
           output[`frozen_${id}`] = stats;
           frozenTrades[id] = merged;
