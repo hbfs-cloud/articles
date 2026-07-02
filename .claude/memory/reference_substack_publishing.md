@@ -28,3 +28,14 @@ La publication de **posts longs** (nos articles) n'est pas bien supportée par l
 - https://github.com/NHagar/substack_api (wrapper Python non-officiel)
 - https://github.com/jakub-k-slys/substack-api (client TS, mentionne Substack Gateway OSS + MCP)
 - https://iam.slys.dev/p/substack-automation-with-n8n-how (automatisation Notes via n8n)
+
+
+## MAJ 2026-07-02 — DÉPLOYÉ
+- **LIVE** : https://substack.dailytickers.com/mcp (tools: create_draft, list_drafts,
+  publish, create_note, whoami) sur vm-arm-1, port statique 8096, mode cookie=false.
+- Secrets via `nomad var put nomad/jobs/substack-mcp substack_cookie='...' [mcp_auth_token='...']`
+  (PAS Vault — opérateur ci sans accès ; re-render + restart auto à l'injection).
+- Convertisseur : tools/gen-substack-draft.js (articles). Reste : cookie user + enregistrement
+  OAuth claude.ai + câblage pipeline (Note auto à la publication).
+- ⚠️ endpoints reverse-engineered UNVERIFIED : après cookie, tester whoami + list_drafts
+  (read-only) AVANT create_draft/publish.
