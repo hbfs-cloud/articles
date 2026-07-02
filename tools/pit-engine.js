@@ -398,6 +398,37 @@ function initState(modesConfig, modeFilter) {
   return state;
 }
 
+// Reconcile a resumed state against the current modes-config: seed any mode that
+// exists in the config but was never initialized in the saved state (e.g. the 6
+// asset-class specialists — etf/etf_eu/momentum/trendline/highvol/casablanca —
+// added to modes-config.json on 2026-07-01, long after this state was first built).
+// EXISTING modes are left byte-for-byte untouched (diff = additions only): we never
+// touch their cfg, curves or trades. New modes start their live book at 100 on the
+// state's asOf day (a single equity anchor) so the dashboard can show "live book
+// starts DD/MM" and they begin trading on the next scan the engine processes.
+function reconcileModes(state, modesConfig, modeFilter) {
+  const added = [];
+  const anchorDate = state.asOf || null;
+  for (const [id, cfg] of Object.entries(modesConfig)) {
+    if (modeFilter && !modeFilter.includes(id)) continue;
+    if (state.modes[id]) continue; // existing mode — never mutate
+    state.modes[id] = {
+      id, cfg,
+      positions: [],
+      pendingEntries: [],
+      closedTrades: [],
+      // Anchor the live book at 100 today so the mode has >=1 equity point
+      // ("starts at 100 on asOf"). Empty when asOf is null (pathological fresh state).
+      equityCurve: anchorDate ? [{ date: anchorDate, value: 100, realized: 0, unrealized: 0 }] : [],
+      cooldown: {},
+      cbStopDates: [],
+      cbPauseUntil: null,
+    };
+    added.push(id);
+  }
+  return added;
+}
+
 function loadState(file) {
   if (!fs.existsSync(file)) throw new Error(`State file missing: ${file}`);
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -474,6 +505,13 @@ async function run() {
     state = initState(modesConfig, ARGS.modes);
   }
 
+  // Seed any config mode missing from the (resumed) state. Additions only —
+  // existing modes are never mutated. Persist immediately even if the day-loop
+  // below is a no-op (e.g. asOf === TO) or bails on "no scans in range", so a
+  // resume-to-today run still commits the newly seeded specialists.
+  const seeded = reconcileModes(state, modesConfig, ARGS.modes);
+  if (seeded.length) console.log(`Seeded ${seeded.length} new mode(s): ${seeded.join(', ')} (anchored at 100 on ${state.asOf || 'n/a'})`);
+
   // History resolver — when --use-history is set, lookup active config per day
   // from modes-config-history.json. Otherwise always return current cfg.
   const resolveCfg = USE_HISTORY
@@ -488,7 +526,12 @@ async function run() {
 
   const scanEvents = indexScans(FROM, TO);
   console.log(`Indexed ${scanEvents.length} scan events.`);
-  if (scanEvents.length === 0) { console.log('No scans in range.'); return; }
+  if (scanEvents.length === 0) {
+    console.log('No scans in range.');
+    // Still commit newly-seeded modes so a resume-to-today run persists them.
+    if (seeded.length) { saveState(state, STATE_OUT); console.log(`State saved to ${STATE_OUT} (seed-only).`); }
+    return;
+  }
 
   // Tickers: scans (setups + tklPool) + open positions + pending entries
   const tickers = new Set();

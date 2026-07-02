@@ -644,6 +644,75 @@ check('backtest-results.json: frozen_* ont tous les champs obligatoires', () => 
   if (issues.length) return issues.join(' | ');
 });
 
+// ─── Check 27b: hero stats consistency — Live book (pit) vs Sim backtest (frozen) ──
+// The dashboard hero is now PRIMARY = live book (pit-state) for modes with meaningful live
+// data, PRIMARY = sim (frozen_*) otherwise. This check enforces the new invariant:
+//   • pit-primary mode  → hero Total Return ≈ pit-state ret  AND the "Sim backtest" sub-block ≈ frozen returnTotal
+//   • sim-primary mode  → hero Total Return ≈ frozen returnTotal (unchanged legacy behavior)
+// Adapted from the old frozen↔hero coherence idea (which would now FALSE-FAIL since the hero
+// moved to pit for live-book modes).
+check('scanner/status: hero ↔ pit (live book) & sim sub-bloc ↔ frozen', () => {
+  const html = readFile('scanner/status/index.html');
+  if (!html) return 'scanner/status/index.html absent';
+  const br = readJSON('data/backtest-results.json');
+  const mc = readJSON('data/modes-config.json');
+  const modes = mc.modes ? mc.modes : mc;
+  let pit = { modes: {} };
+  try { pit = readJSON('data/pit-state.json'); } catch (_) { }
+  const pitModes = pit.modes || {};
+  const TOL = 0.15; // rounding across pit summary math vs frozen — allow small drift
+  const NON_PUBLIC = new Set(['draft', 'stopped']);
+  const issues = [];
+
+  // Live-book "primary" iff the curve actually moved OR there is >=1 closed trade
+  // (mirror gen-status-page pitViewFor: a flat-at-100 curve with 0 trades is NOT primary).
+  function pitPrimary(pm) {
+    if (!pm) return null;
+    const ec = (pm.equityCurve || []).filter(p => p && p.date);
+    const closed = pm.closedTrades || [];
+    const moved = ec.some(p => Math.abs((p.value ?? 100) - 100) > 0.001);
+    if (!(closed.length >= 1 || moved)) return null;
+    const last = ec.length ? ec[ec.length - 1] : null;
+    return last ? +(last.value - 100).toFixed(2) : 0;
+  }
+
+  for (const [id, cfg] of Object.entries(modes)) {
+    if (NON_PUBLIC.has(cfg.status)) continue;
+    const anchor = `id="p-${id}"`;
+    const start = html.indexOf(anchor);
+    if (start === -1) continue; // panel presence covered by another check
+    const next = html.indexOf('id="p-', start + anchor.length);
+    const panel = html.slice(start, next === -1 ? html.length : next);
+    // Hero Total Return = the ps-v value immediately preceding the "Total Return" label
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">Total Return/);
+    if (!heroM) { issues.push(`${id}: hero Total Return introuvable`); continue; }
+    const heroRet = parseFloat(heroM[1]);
+    const frozen = br[`frozen_${id}`];
+    const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
+    const pitRet = pitPrimary(pitModes[id]);
+    const isLiveBook = /LIVE BOOK/.test(panel.slice(0, panel.indexOf('Total Return')));
+
+    if (pitRet !== null) {
+      // Expect pit-primary hero
+      if (!isLiveBook) issues.push(`${id}: pit primary mais badge LIVE BOOK absent`);
+      if (Math.abs(heroRet - pitRet) > TOL) issues.push(`${id}: hero ${heroRet}% ≠ pit ${pitRet}% (Δ${(heroRet - pitRet).toFixed(2)})`);
+      // Sim sub-block must echo frozen returnTotal
+      if (frozenRet !== null) {
+        const simM = panel.match(/Sim backtest<\/span>\s*<span[^>]*>([+\-]?[0-9.]+)%/);
+        if (!simM) issues.push(`${id}: sous-bloc "Sim backtest" absent`);
+        else if (Math.abs(parseFloat(simM[1]) - frozenRet) > TOL) issues.push(`${id}: sim sub-bloc ${simM[1]}% ≠ frozen ${frozenRet}%`);
+      }
+    } else {
+      // Sim-primary hero → must match frozen returnTotal (when frozen exists)
+      if (isLiveBook) issues.push(`${id}: badge LIVE BOOK mais pas de données pit primaires`);
+      if (frozenRet !== null && Math.abs(heroRet - frozenRet) > TOL) {
+        issues.push(`${id}: hero ${heroRet}% ≠ frozen ${frozenRet}% (Δ${(heroRet - frozenRet).toFixed(2)})`);
+      }
+    }
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
 // ─── Check 28: TZ ET coherence — dernier snapshot history < 24h ──────────────
 warn('scanner/status/history: snapshot le plus récent < 24h (ET)', () => {
   const histDir = path.join(ROOT, 'scanner', 'status', 'history');

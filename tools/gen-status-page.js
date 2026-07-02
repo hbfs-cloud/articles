@@ -235,6 +235,81 @@ function promotionMarker(cfg, ec) {
   return hasPrior ? { iso: sinceISO, lbl } : null;
 }
 
+// ── Live-book view from a pit-state mode (pit-engine.js output) ──────────────
+// Returns the PRIMARY dashboard stats (Live book) derived from the live tracker, or
+// null when the mode has no meaningful live data yet. "Meaningful" = >=2 dated equity
+// points OR >=1 closed trade — a lone seed anchor (fresh mode, flat 100, 0 trades) is
+// NOT enough to displace the sim backtest as the primary curve (it would collapse to a
+// single dot); those modes render sim-primary + a "live book starts DD/MM" note instead.
+// Mirrors pit-engine.js run() summary math so hero numbers match the engine's own report.
+function pitViewFor(pm) {
+  if (!pm) return null;
+  const ecRaw = (pm.equityCurve || []).filter(p => p && p.date);
+  const closed = pm.closedTrades || [];
+  // A curve that never left 100 with zero closed trades is NOT real live activity — e.g.
+  // fortress (LLM-driven, its trades are not in the generic engine's scan pool → 91 flat
+  // points) or a fresh seed anchor. Such modes stay sim-primary; only a truly fresh anchor
+  // (<=1 point) surfaces the "live book starts" note.
+  const moved = ecRaw.some(p => Math.abs((p.value ?? 100) - 100) > 0.001);
+  const anchorOnly = ecRaw.length <= 1 && closed.length === 0;
+  const meaningful = closed.length >= 1 || moved;
+  // "since" = first live-book date (DD/MM display + ISO) — used for the primary marker
+  // and for the "live book starts" note on not-yet-primary modes.
+  const firstISO = ecRaw.length ? ecRaw[0].date : null;
+  const since = firstISO ? { iso: firstISO, lbl: firstISO.slice(8, 10) + '/' + firstISO.slice(5, 7) } : null;
+  if (!meaningful) return { hasData: false, anchorOnly, since };
+
+  const lastPt = ecRaw.length ? ecRaw[ecRaw.length - 1] : null;
+  const ret = lastPt ? +(lastPt.value - 100).toFixed(2) : 0;
+  const realized = (lastPt && lastPt.realized != null) ? +Number(lastPt.realized).toFixed(2) : ret;
+  const unrealized = (lastPt && lastPt.unrealized != null) ? +Number(lastPt.unrealized).toFixed(2) : 0;
+  // Max drawdown over the live equity path
+  let peak = 100, maxDD = 0;
+  for (const p of ecRaw) { if (p.value > peak) peak = p.value; const dd = peak > 0 ? (peak - p.value) / peak * 100 : 0; if (dd > maxDD) maxDD = dd; }
+  // Chart series {d,v} — dedup by MM/DD, keep end-of-day value
+  const _dv = new Map();
+  for (const p of ecRaw) _dv.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+  const ecChart = { d: [..._dv.keys()], v: [..._dv.values()] };
+  // Resolved-trade stats — mirror pit-engine RESOLVED set (+ liquidated for wind-downs)
+  const RESOLVED = new Set(['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'breakeven', 'trail', 'rotated', 'liquidated']);
+  const resolved = closed.filter(t => RESOLVED.has((t.status || '').replace(/_amb$/, '')));
+  const wins = resolved.filter(t => (t.pnlPct || 0) > 0);
+  const losses = resolved.filter(t => (t.pnlPct || 0) <= 0);
+  const wr = resolved.length ? +((wins.length / resolved.length) * 100).toFixed(1) : 0;
+  const gw = wins.reduce((s, t) => s + (t.pnlPct || 0), 0);
+  const gl = Math.abs(losses.reduce((s, t) => s + (t.pnlPct || 0), 0));
+  const pf = gl > 0 ? +(gw / gl).toFixed(2) : (gw > 0 ? 99 : 0);
+  const holds = resolved.map(t => t.daysHeld || 0).filter(x => x > 0);
+  const avgHold = holds.length ? +(holds.reduce((a, b) => a + b, 0) / holds.length).toFixed(1) : 0;
+  // R² / CAGR / Sharpe from the live equity values (same math as the frozen path below)
+  let r2 = 0, cagr = null, sharpe = null;
+  const v = ecChart.v;
+  if (v.length >= 3) {
+    const n = v.length, xMean = (n - 1) / 2, yMean = v.reduce((a, b) => a + b, 0) / n;
+    let ssXY = 0, ssXX = 0, ssTot = 0, ssRes = 0;
+    for (let i = 0; i < n; i++) { ssXY += (i - xMean) * (v[i] - yMean); ssXX += (i - xMean) ** 2; ssTot += (v[i] - yMean) ** 2; }
+    const slope = ssXX ? ssXY / ssXX : 0, intercept = yMean - slope * xMean;
+    for (let i = 0; i < n; i++) ssRes += (v[i] - (intercept + slope * i)) ** 2;
+    r2 = ssTot > 0 ? +(1 - ssRes / ssTot).toFixed(3) : 0;
+    if (firstISO && lastPt) {
+      const years = (new Date(lastPt.date) - new Date(firstISO)) / (365.25 * 86400000);
+      cagr = (years > 0.01 && v[0] > 0) ? +((Math.pow(v[v.length - 1] / v[0], 1 / years) - 1) * 100).toFixed(1) : null;
+    }
+    const dr = [];
+    for (let i = 1; i < v.length; i++) if (v[i - 1] > 0) dr.push((v[i] - v[i - 1]) / v[i - 1]);
+    if (dr.length >= 5) {
+      const mu = dr.reduce((a, b) => a + b, 0) / dr.length;
+      const sd = Math.sqrt(dr.reduce((s, r) => s + (r - mu) ** 2, 0) / dr.length);
+      sharpe = sd > 0 ? +(mu / sd * Math.sqrt(252)).toFixed(2) : null;
+    }
+  }
+  return {
+    hasData: true, anchorOnly: false, since, ret, dd: +(-maxDD).toFixed(2), realized, unrealized,
+    wr, pf, trades: resolved.length, avgHold, r2, cagr, sharpe, ec: ecChart,
+    openPositions: (pm.positions || []).length,
+  };
+}
+
 async function main() {
   let config;
   try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
@@ -246,6 +321,14 @@ async function main() {
   try { liveMetrics = JSON.parse(fs.readFileSync(METRICS_FILE)); } catch (_) { }
   let livePositions = [];
   try { livePositions = JSON.parse(fs.readFileSync(POSITIONS_FILE)).open_positions || []; } catch (_) { }
+  // ── Live book (pit-state.json) — the fidelity daily tracker written by pit-engine.js.
+  // This becomes the PRIMARY source for a mode's equity/stats on the dashboard whenever
+  // the mode has meaningful live data (>=2 equity points OR >=1 closed trade). The sweep
+  // "frozen_*" simulation stays as a SECONDARY (dotted "Sim backtest") reference. Modes with
+  // only a seed anchor (or no pit entry) keep the sim as primary + a "live book starts" note.
+  let pitState = { modes: {} };
+  try { pitState = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'pit-state.json'), 'utf8')) || { modes: {} }; } catch (_) { }
+  const pitModes = pitState.modes || {};
 
   // Load previous snapshot once — used by panel() to surface "rotation just executed"
   // (yesterday had a ROTATE order whose ticker is now today's position).
@@ -603,6 +686,14 @@ async function main() {
     // Override sharpe with frozen if available (sweep's is authoritative)
     if (frozen && frozen.sharpe != null) m.sharpe = frozen.sharpe;
 
+    // ── Live book (pit-state) as the PRIMARY view when it has meaningful data ──
+    // m.* stays the SIM/frozen values (snapshots, Time Machine and backfill keep reading
+    // them unchanged — no schema break). m.pit carries the live-book primary stats+curve;
+    // panel() and modeCharts prefer m.pit when m.pit.hasData, and render m.* as the dotted
+    // "Sim backtest" secondary. m.pit.anchorOnly / m.pit.since drive the "live book starts"
+    // note for freshly-seeded specialists that have no live trades yet.
+    m.pit = pitViewFor(pitModes[id]);
+
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
@@ -782,6 +873,15 @@ async function main() {
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
     const sig = signalsFor(cfg);
+    // ── Live book vs Sim backtest ──
+    // P (when non-null) = the live-book primary stats (from pit-state). H = the stats source
+    // for the hero (P when live data exists, else the frozen sim m). When P is set the hero is
+    // labelled "Live book" and a compact "Sim backtest" sub-block echoes the frozen m values.
+    const P = (m.pit && m.pit.hasData) ? m.pit : null;
+    const H = P || m;
+    // "live book starts" note: only for a freshly-seeded mode (anchor-only pit entry).
+    // Modes with a long flat pit curve (e.g. fortress) stay sim-primary with no note.
+    const _pitStartLbl = (m.pit && m.pit.anchorOnly && m.pit.since) ? m.pit.since.lbl : null;
     // Single currency source for the whole panel: cfg.assetClass.
     const CUR = curOf(cfg); // 'MAD' for casablanca, 'USD' otherwise
     const price = (n) => fmtCur(n, CUR);
@@ -978,37 +1078,42 @@ ${renderStatusBanner(cfg)}
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
       <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
+      ${P ? `<span class="pill" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos);font-size:.58rem;font-weight:700;padding:.05rem .4rem;letter-spacing:.03em" title="Courbe et stats primaires = livre live pit-state (tracker fidèle quotidien). La sim sweep est en pointillé « Sim backtest »."><i class="fas fa-circle" style="font-size:.4rem;margin-right:.25rem"></i>LIVE BOOK</span>` : (_pitStartLbl ? `<span class="pill am" style="font-size:.58rem;padding:.05rem .4rem" title="Le livre live démarre le ${_pitStartLbl} (100.00) — premiers trades au prochain scan. Courbe affichée = sim backtest.">live book démarre le ${_pitStartLbl}</span>` : '')}
     </div>
     <div class="perf-chart" id="${chartId}"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps" title="Cumulative percent gain since strategy inception (2026-02-26). Includes mark-to-market on open positions.">
-      <span class="ps-v ${m.ret > 0 ? 'pos' : m.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span class="ps-l">Total Return${m.unrealized ? ' <small style="opacity:.6">(incl. ' + (m.unrealized > 0 ? '+' : '') + m.unrealized + '% MtM)</small>' : ''}</span>
+    <div class="ps" title="${P ? 'Live book: cumulative percent gain since the live tracker started, mark-to-market included.' : 'Cumulative percent gain since strategy inception (2026-02-26). Includes mark-to-market on open positions.'}">
+      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">Total Return${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
-      <span class="ps-v neg">${m.dd}%</span><span class="ps-l">Max Drawdown</span>
+      <span class="ps-v neg">${H.dd}%</span><span class="ps-l">Max Drawdown</span>
     </div>
     <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
-      <span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span>
+      <span class="ps-v">${H.wr}%</span><span class="ps-l">Win Rate</span>
     </div>
-    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated.${m.pfLow != null && m.pfHigh != null ? ` 90% bootstrap CI: [${m.pfLow}x — ${m.pfHigh}x] over ${m.trades} trades.` : (m.pfReliable === false ? ` Sample ${m.trades}<50 trades — point estimate only, treat as fragile.` : '')}">
-      <span class="ps-v"><span class="ps-num">${m.pf}x</span>${m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
+    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated.${!P && m.pfLow != null && m.pfHigh != null ? ` 90% bootstrap CI: [${m.pfLow}x — ${m.pfHigh}x] over ${m.trades} trades.` : (!P && m.pfReliable === false ? ` Sample ${m.trades}<50 trades — point estimate only, treat as fragile.` : '')}">
+      <span class="ps-v"><span class="ps-num">${H.pf}x</span>${!P && m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${!P && m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
-      <span class="ps-v">${m.trades}</span><span class="ps-l">Closed Trades</span>
+      <span class="ps-v">${H.trades}</span><span class="ps-l">Closed Trades</span>
     </div>
     <div class="ps" title="Average number of trading days each closed trade was held.">
-      <span class="ps-v">${m.avgHold}d</span><span class="ps-l">Avg Hold</span>
+      <span class="ps-v">${H.avgHold}d</span><span class="ps-l">Avg Hold</span>
     </div>
     <div class="ps" title="R-squared: how closely the equity curve follows a straight line. 1.0 = perfect linear growth, 0 = random.">
-      <span class="ps-v">${m.r2 != null ? m.r2.toFixed(3) : '—'}</span><span class="ps-l">R²</span>
+      <span class="ps-v">${H.r2 != null ? H.r2.toFixed(3) : '—'}</span><span class="ps-l">R²</span>
     </div>
     <div class="ps" title="Compound Annual Growth Rate: annualized return extrapolated from the equity curve.">
-      <span class="ps-v">${m.cagr != null ? (m.cagr > 0 ? '+' : '') + m.cagr + '%' : '—'}</span><span class="ps-l">CAGR</span>
+      <span class="ps-v">${H.cagr != null ? (H.cagr > 0 ? '+' : '') + H.cagr + '%' : '—'}</span><span class="ps-l">CAGR</span>
     </div>
     <div class="ps" title="Annualized Sharpe Ratio: risk-adjusted return (daily returns × √252). >1 = good, >2 = excellent, >3 = elite.">
-      <span class="ps-v">${m.sharpe != null ? m.sharpe : '—'}</span><span class="ps-l">Sharpe</span>
+      <span class="ps-v">${H.sharpe != null ? H.sharpe : '—'}</span><span class="ps-l">Sharpe</span>
     </div>
+    ${P ? `<div class="sim-substats" style="grid-column:1/-1;margin-top:.45rem;padding-top:.5rem;border-top:1px dashed var(--border);font-size:.63rem;color:var(--muted);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center" title="Sim backtest (sweep frozen_${id}) — référence secondaire, affichée en pointillé sur la courbe.">
+      <span style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)"><i class="fas fa-flask" style="margin-right:.25rem;opacity:.7"></i>Sim backtest</span>
+      <span class="${m.ret >= 0 ? 'pos' : 'neg'}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span style="opacity:.4">·</span><span>DD ${m.dd}%</span><span style="opacity:.4">·</span><span>WR ${m.wr}%</span><span style="opacity:.4">·</span><span>PF ${m.pf}x</span><span style="opacity:.4">·</span><span>${m.trades} trades</span>
+    </div>` : ''}
   </div>
 </div>
 
@@ -1988,7 +2093,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 <script>
 var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
-  function mk(el,dates,vals,color,sinceLbl){
+  function mk(el,dates,vals,color,sinceLbl,simDates,simVals){
     if(!document.getElementById(el))return null;
     var dom=document.getElementById(el);
     var existing=echarts.getInstanceByDom(dom);
@@ -2048,6 +2153,15 @@ document.addEventListener('DOMContentLoaded',function(){
       series.splice(1,0,{name:'SPY',data:spyVals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:4,
         lineStyle:{color:'#94a3b8',width:1.6,type:[6,4]},connectNulls:true});
       legendItems.splice(1,0,'SPY');
+    }
+    // Sim backtest — dotted secondary overlay (frozen sweep). Aligned onto the primary
+    // (live-book) date axis; sim points outside the live date range are dropped.
+    if(simVals && simVals.length && simDates && simDates.length){
+      var _sm={};for(var _k=0;_k<simDates.length;_k++){_sm[simDates[_k]]=simVals[_k];}
+      var simAligned=dates.map(function(dd){return _sm[dd]!=null?_sm[dd]:null;});
+      series.push({name:'Sim backtest',data:simAligned,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:3,connectNulls:true,
+        lineStyle:{color:color,width:1.5,type:[3,3],opacity:.5}});
+      legendItems.push('Sim backtest');
     }
     c.setOption({
       tooltip:{trigger:'axis',axisPointer:{type:'line',lineStyle:{color:'#cbd5e1',type:'dashed',width:1}},
@@ -2218,7 +2332,15 @@ document.addEventListener('DOMContentLoaded',function(){
     if(sel.length<1||sel.length>MAX_FAVS)return;
     setFavs(sel);applyFavs(sel);closeModePicker();
   };
-  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => { const _pm = promotionMarker(m.cfg, m.ec); return [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color, s: _pm ? _pm.lbl : null }]; })))};
+  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => {
+    // Live book primary when it has meaningful pit data; sim (frozen) then becomes the
+    // dotted secondary series. Otherwise sim stays primary (sD/sV omitted).
+    const usePit = !!(m.m.pit && m.m.pit.hasData);
+    const primEc = usePit ? m.m.pit.ec : m.ec;
+    const simEc = usePit ? m.ec : null;
+    const _pm = promotionMarker(m.cfg, primEc);
+    return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _pm ? _pm.lbl : null, sD: simEc ? simEc.d : null, sV: simEc ? simEc.v : null, pit: usePit }];
+  })))};
   var _regimeMap=${JSON.stringify(regimeMap)};
   var _spyData=${JSON.stringify(spyIndexed)};
   var _RCOL={'RISK-ON':'rgba(16,185,129,.07)','RECOVERY':'rgba(59,130,246,.07)','NEUTRAL':'rgba(148,163,184,.04)','EARLY RISK-OFF':'rgba(245,158,11,.07)','RISK-OFF':'rgba(239,68,68,.07)'};
@@ -2246,7 +2368,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
       var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s);}
+      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s,cfg.sD,cfg.sV);}
       else{inst.resize();}
     }
     updateLiveActions(id);
@@ -2575,6 +2697,15 @@ document.addEventListener('DOMContentLoaded',function(){
     var grid=panel?panel.querySelector('.lp-grid'):null;
     if(grid) _tmLiveCache[modeId] = grid.innerHTML;
   }
+  // Stash the SSR perf-stats (Live-book hero for pit-primary modes) once, so "Back to live"
+  // restores it exactly after Time Machine overwrote it with a historical (sim) snapshot.
+  var _tmStatsCache = {};
+  function _tmCaptureStats(modeId){
+    if(_tmStatsCache[modeId]!=null) return;
+    var panel=document.getElementById('p-'+modeId);
+    var ps=panel?panel.querySelector('.perf-hero .perf-stats'):null;
+    if(ps) _tmStatsCache[modeId]=ps.innerHTML;
+  }
   function _fmtPct2(v){var n=Number(v||0);return (n>0?'+':'')+n.toFixed(2)+'%';}
   function _scoreBg(s){return s>=90?'var(--pos)':s>=85?'var(--accent)':'var(--warn)';}
   function _tkLogo(t){return t?'<img src="https://assets.parqet.com/logos/symbol/'+t+'?format=jpg" alt="" class="tk-logo" onerror="this.style.display=\\'none\\'">':'';}
@@ -2749,14 +2880,21 @@ document.addEventListener('DOMContentLoaded',function(){
     var grid=panel?panel.querySelector('.lp-grid'):null;
     if(grid && _tmLiveCache[activeMode]){
       grid.innerHTML=_tmLiveCache[activeMode];
-      var chartEl=document.getElementById('chart-'+activeMode);
-      if(chartEl){
-        var existing=window.echarts && window.echarts.getInstanceByDom(chartEl);
-        if(existing) existing.dispose();
-        var dflt=modeCharts[activeMode];
-        if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s);
-      }
       delete _tmLiveCache[activeMode];
+    }
+    // Restore the SSR perf-stats (Live-book hero) overwritten during Time Machine navigation.
+    if(panel && _tmStatsCache[activeMode]!=null){
+      var _ps=panel.querySelector('.perf-hero .perf-stats');
+      if(_ps){ _ps.innerHTML=_tmStatsCache[activeMode]; delete _tmStatsCache[activeMode]; }
+    }
+    // Always redraw the live chart from modeCharts (primary = Live book when available,
+    // with the dotted Sim-backtest overlay) — independent of the legacy lp-grid path.
+    var chartEl=document.getElementById('chart-'+activeMode);
+    if(chartEl && window.echarts){
+      var existing=window.echarts.getInstanceByDom(chartEl);
+      if(existing) existing.dispose();
+      var dflt=modeCharts[activeMode];
+      if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s, dflt.sD, dflt.sV);
     }
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
@@ -2767,6 +2905,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var banner=document.getElementById('tmBanner');
     if(idx===tmDates.length-1){tmShowLive();return;}
     _tmCaptureLive(activeMode);
+    _tmCaptureStats(activeMode);
     var dateStr=tmDates[idx];
     tmActiveDateLabel=dateStr.slice(4,6)+'/'+dateStr.slice(6,8); window._leTM=tmActiveDateLabel;
     fetch('/scanner/status/history/'+dateStr+'.json?v='+_v).then(function(r){return r.json()}).then(function(snap){
@@ -2795,7 +2934,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   // Init chart for the default visible mode
   var dflt=modeCharts[activeMode];
-  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s);
+  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s,dflt.sD,dflt.sV);
   // Mobile: rotating the device or the address-bar collapsing changes the viewport — resize the
   // active equity chart so it doesn't stay stuck at its pre-rotation (possibly 0) width.
   window.addEventListener('orientationchange',function(){setTimeout(function(){try{var el=document.getElementById('chart-'+activeMode);var inst=el&&window.echarts&&window.echarts.getInstanceByDom(el);if(inst)inst.resize();}catch(_){}},300);});
@@ -3350,6 +3489,11 @@ document.addEventListener('DOMContentLoaded',function(){
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
       config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
       risk: getRiskFor(id),
+      // Live-book (pit-state) beside the sim-derived fields above — ADDITIVE, prefixed pit_
+      // so the existing snapshot schema (stats/equity = sim) is never broken. null when the
+      // mode has no meaningful live data yet.
+      pit_stats: (mM.pit && mM.pit.hasData) ? { ret: mM.pit.ret, dd: mM.pit.dd, wr: mM.pit.wr, pf: mM.pit.pf, trades: mM.pit.trades, avgHold: mM.pit.avgHold, realized: mM.pit.realized, unrealized: mM.pit.unrealized, r2: mM.pit.r2 ?? null, cagr: mM.pit.cagr ?? null, sharpe: mM.pit.sharpe ?? null } : null,
+      pit_equity: (mM.pit && mM.pit.hasData) ? mM.pit.ec : null,
     };
   }
   // Attach the global (market-wide) regime probability once per snapshot.
