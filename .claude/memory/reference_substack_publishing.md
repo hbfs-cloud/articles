@@ -60,3 +60,31 @@ La publication de **posts longs** (nos articles) n'est pas bien supportée par l
   configuré côté cookie Substack — reste à faire : injecter `substack_cookie`
   + `mcp_auth_token` via `nomad var put` (cf. section précédente) avant que
   ce step passe en mode "live" en prod.
+
+
+## MAJ 2026-07-02 soir — OAuth 2.1 + /settings DÉPLOYÉS
+- /mcp **fail-closed** (401 + WWW-Authenticate sans token valide ; JWT forgé rejeté).
+  Cause de l'ouverture initiale : gate `token==""` passait tout quand mcp_auth_token
+  absent malgré OAuth actif — corrigé (authConfigured = token OU clés RSA).
+- **Page /settings** : login Google (session HMAC distincte du JWT machine, callback
+  DÉDIÉ /settings/auth/callback), formulaire cookie write-only, test whoami, hot-swap
+  sans redeploy, stockage AES-256-GCM dans /local (limite : un redeploy perd le cookie
+  → re-coller ; host_volume à ajouter pour la persistance). Alerte Discord sur 401
+  Substack (debounce 30min, env DISCORD_WEBHOOK, absente = log).
+- **SÉQUENCE USER pour activer la publication** :
+  1. GCP console (client OAuth partagé ou dédié) : ajouter LES DEUX redirect URIs —
+     https://substack.dailytickers.com/auth/google/callback ET
+     https://substack.dailytickers.com/settings/auth/callback
+  2. Injecter google_client_id/google_client_secret dans la nomad var
+     nomad/jobs/substack-mcp (ou me donner le GO pour les copier host-side depuis Vault
+     si tu m'ouvres l'accès)
+  3. claude.ai → Settings → Connectors → Add custom connector →
+     https://substack.dailytickers.com/mcp (login Google)
+  4. Ouvrir https://substack.dailytickers.com/settings → coller le cookie substack.com
+     → bouton Tester (whoami)
+  5. Premier usage : whoami + list_drafts (read-only) AVANT create_draft/publish
+     (endpoints reverse-engineered non vérifiés en écriture)
+- Payant : create_draft audience='only_paid'|'founding' ; publish send_email bool.
+- Pipeline articles : tools/substack-publish.js câblé non-bloquant (SUBSTACK_DISABLE=1).
+- Code substack-mcp NON COMMITÉ dans dailystocks-platform (revue user) : mcpauth,
+  websession, settingsstore, settings, alert + main.go durci + tests verts.
