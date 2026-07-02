@@ -1,18 +1,18 @@
 ---
 name: mcp-gateway-tools
-description: MCP Gateway tools and data source strategy. Auto-load when user calls QueryData, GetMarketOverview, GetInstruments, RunAutoScreener, RunScreener, GetRegimeProbability, GetCorrelationMatrix, GetEarningsCalendarFiltered, OptimizeSizing, or any mcp__claude_ai_DailyTickers__* tool. Includes Yahoo Finance fallback rules and Polymarket integration.
+description: MCP market-data tools and data source strategy. Auto-load when user calls QueryData, GetMarketOverview, GetInstruments, RunAutoScreener, RunScreener, GetRegimeProbability, GetCorrelationMatrix, GetEarningsCalendarFiltered, OptimizeSizing, or any mcp__claude_ai_marketdata__* tool. Includes Yahoo Finance fallback rules and Polymarket integration.
 user_invocable: false
 ---
 
-# MCP Gateway
+# MCP Market Data
 
-Outils `mcp__claude_ai_DailyTickers__*` :
+Outils `mcp__claude_ai_marketdata__*` (ex-Gateway/DailyTickers — namespaces morts) :
 - **GetMarketOverview**: Snapshot global (indices, commodities, crypto, rates, sentiment, news). Contient aussi : **trending topics**, **sector variations**, **economic calendar**, **earnings calendar** — exploiter ces champs pour enrichir les articles.
 - **QueryData**: 58 types de données (quotes, bars, technicals, sentiment, news, earnings, etc.)
 - **GetInstruments**: Analyse complète d'un symbole (`symbols` requis)
 - **RunAutoScreener**: Screener auto-adaptatif + détection de régime
 - **RunScreener**: Screener DSL personnalisé
-- **CalculateOptionsGreeks** / **AnalyzeOptionsStrategy** / **LLMAnalysis**
+- **CalculateOptionsGreeks** / **AnalyzeOptionsStrategy**
 - **GetRegimeProbability**: model=ensemble, horizon=5 → probabilités RISK-ON, NEUTRAL, EARLY-RISK-OFF, RISK-OFF, RECOVERY
 - **GetCorrelationMatrix**: window=60, pearson — max_pair.rho > 0.85 = drop ; avg_off_diagonal > 0.65 = forcer min 2 secteurs
 - **GetEarningsCalendarFiltered**: days_ahead=7, min_expected_move=4 → exclusion_window

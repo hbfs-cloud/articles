@@ -9,7 +9,7 @@ export const meta = {
   ],
 }
 
-const focusModes = args?.focus || 'all modes'
+const focusModes = args?.focus || 'all LIVE modes (read the roster from data/modes-config.json — audit every mode whose status == "live"; skip stopped modes)'
 const round = args?.round || 1
 
 phase('Data Collection')
@@ -17,7 +17,7 @@ phase('Data Collection')
 const dataCollector = await agent(`You are a data engineer. Collect and summarize ALL relevant data for a trading system audit.
 
 Read these files and produce a structured JSON summary:
-1. data/modes-config.json — full config for all 6 modes
+1. data/modes-config.json — SOURCE OF TRUTH for the mode roster: list every mode and its status, then collect full config for each LIVE mode (status == "live"; stopped modes only need a one-line mention)
 2. data/backtest-trades.json — per mode: count, last 10 trades with details, win/loss/BE stats
 3. scanner/signals.json from the last 4 scan directories (ls scanner/ | grep digits | sort | tail -4)
 4. data/backtest-results.json — frozen stats per mode

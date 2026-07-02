@@ -12,8 +12,8 @@ if echo "$STAGED" | grep -qE '(^|/)\.env($|\.)'; then
   exit 1
 fi
 if git diff --cached -U0 -- . ':(exclude)assets/search-index.json' ':(exclude)data/search_data.js' \
-   | grep -nE 'sk-ant-(api|oauth)[0-9A-Za-z_-]{8,}|AIza[0-9A-Za-z_-]{30,}|[0-9]{8,10}:AA[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{10,}' >/dev/null; then
-  echo "🛑 [pre-commit] Refus : motif de secret détecté dans le diff (clé Anthropic/Google, token Telegram/Slack). Retire-le avant de committer."
+   | grep -nE 'sk-ant-(api|oauth)[0-9A-Za-z_-]{8,}|AIza[0-9A-Za-z_-]{30,}|[0-9]{8,10}:AA[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{10,}|Bearer [0-9a-fA-F]{32,}|mcp_[A-Za-z0-9][A-Za-z0-9_-]{19,}' >/dev/null; then
+  echo "🛑 [pre-commit] Refus : motif de secret détecté dans le diff (clé Anthropic/Google, token Telegram/Slack, bearer/mcp token). Retire-le avant de committer."
   exit 1
 fi
 

@@ -65,10 +65,10 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 Run in parallel:
 
 ```
-mcp__dailytickers__GetMarketOverview()
-mcp__dailytickers__RunAutoScreener()
-mcp__dailytickers__RunScreener(expression="...", region="us")   # 3 DSL strategies
-mcp__dailytickers__RunScreener(expression="...", region="eu")
+mcp__claude_ai_marketdata__GetMarketOverview()
+mcp__claude_ai_marketdata__RunAutoScreener()
+mcp__claude_ai_marketdata__RunScreener(expression="...", region="us")   # 3 DSL strategies
+mcp__claude_ai_marketdata__RunScreener(expression="...", region="eu")
 ```
 
 Wait for async jobs via `CheckJobStatus`. Extract:
@@ -90,17 +90,17 @@ Wait for async jobs via `CheckJobStatus`. Extract:
 ### Anti-Dilution v2 (OBLIGATOIRE)
 For each candidate, check:
 ```
-mcp__dailytickers__QueryData(symbols="TICKER", types="sec_filings,flags", days=180)
+mcp__claude_ai_marketdata__QueryData(symbols="TICKER", types="sec_filings,flags", days=180)
 ```
 Disqualify on: dilution_risk_score >= 70, shelf_active, atm_program_active, aggressive_underwriter, ITM warrants, recent PIPE/reverse split.
 
 ### Risk Gating (OBLIGATOIRE)
 Before finalizing top 10, run 4 MCP checks:
 ```
-mcp__dailytickers__GetRegimeProbability(model="ensemble", horizon=5)
-mcp__dailytickers__GetCorrelationMatrix(symbols=[top10], window=60, method="pearson")
-mcp__dailytickers__GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)
-mcp__dailytickers__OptimizeSizing(mode="balanced", method="vol_target", max_position_risk_pct=1.0, max_pairwise_correlation=0.7)
+mcp__claude_ai_marketdata__GetRegimeProbability(model="ensemble", horizon=5)
+mcp__claude_ai_marketdata__GetCorrelationMatrix(symbols=[top10], window=60, method="pearson")
+mcp__claude_ai_marketdata__GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)
+mcp__claude_ai_marketdata__OptimizeSizing(mode="balanced", method="vol_target", max_position_risk_pct=1.0, max_pairwise_correlation=0.7)
 ```
 - Regime: `crisis > 0.30` or `early_risk_off > 0.50` → reduce to 5, breakout_only, size × 0.5
 - Correlation: `max_pair.rho > 0.85` → drop lowest score; `avg_off_diagonal > 0.65` → force min 2 sectors
@@ -114,7 +114,7 @@ DOM contract: `data-sharia="true|false"` on BOTH `<tr>` synthesis row AND `<div 
 ### Per-Ticker MCP Enrichment
 For each of the 10 selected tickers:
 ```
-mcp__dailytickers__QueryData(
+mcp__claude_ai_marketdata__QueryData(
   symbols="TICKER",
   types="quote,social_sentiment,capital_flow,insider_transactions,dark_pool,unusual_options,trading_signals"
 )
@@ -126,8 +126,8 @@ TKL pool tickers MUST pass the **identical** validation as the top 10. The only 
 
 For ALL TKL candidates (batched in groups of 4-6):
 ```
-mcp__dailytickers__QueryData(symbols="TKL_TICKERS", types="sec_filings,flags,quote,insider_transactions,unusual_options,dark_pool,financials", days=180)
-mcp__dailytickers__QueryData(types="earnings_calendar", days=14)
+mcp__claude_ai_marketdata__QueryData(symbols="TKL_TICKERS", types="sec_filings,flags,quote,insider_transactions,unusual_options,dark_pool,financials", days=180)
+mcp__claude_ai_marketdata__QueryData(types="earnings_calendar", days=14)
 ```
 
 **Disqualification rules (same as top 10):**

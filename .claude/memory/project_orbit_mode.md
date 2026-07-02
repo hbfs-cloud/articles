@@ -9,7 +9,9 @@ metadata:
 
 ## Orbit Mode
 
-Replaces Secured mode. Internal ID remains `secured` in code/config/API. Label "Orbit" everywhere user-facing.
+**OBSOLÈTE (partiellement, 2026-07-02)** : le paper-ramp est terminé — `secured` est aujourd'hui `live` avec le label "Orbit" (source de vérité : `data/modes-config.json`). Orbit n'est PAS un mode séparé qui "remplace" Secured : c'est le label user-facing de l'ID interne `secured`. Le reste du document décrit le déploiement historique de juin 2026.
+
+Internal ID remains `secured` in code/config/API. Label "Orbit" everywhere user-facing.
 
 **Key params**: horizon 20d, ATR stop 3.5×, no BE lock, no stale tightening, partial TP 30% at TP1, 2 slots (50% each), minScore 88, mom_bo filter.
 

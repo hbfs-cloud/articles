@@ -9,16 +9,14 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - **Hosting** : GitHub Pages, CNAME = `articles.dailytickers.com` (PAS `dailytickers.com` qui est la landing marketing)
 - **URL articles** : `https://articles.dailytickers.com/` — toutes les URLs d'articles utilisent ce sous-domaine
 - **URL marketing** : `https://dailytickers.com/` — landing page séparée, NE SERT PAS les articles
-- **Framework** : Astro 5 (hybride — MDX pour nouveaux articles, legacy HTML copié dans dist/)
-- **Build** : `npm run build` = `astro build` + `copy-legacy.mjs`
+- **Framework** : AUCUN framework de build (Astro supprimé) — articles = HTML statique direct, publication via `node tools/publish.js`
 - **Automatisation** : Discord bot (`claude-discord-bot`) exécute `claude -p` via tmux
-- **MCP Gateway** : `mcp__claude_ai_Gateway__*` pour données marché temps réel
-- **Stack front** : Astro + HTML, Inter font, Font Awesome 6.4.0, ApexCharts + ECharts, Shiki syntax highlighting
+- **MCP market-data** : `mcp__claude_ai_marketdata__*` pour données marché temps réel (ex `mcp__claude_ai_Gateway__*` / `mcp__claude_ai_DailyTickers__*` / `mcp__dailytickers__*` — namespaces morts)
+- **Stack front** : HTML statique, Inter font, Font Awesome 6.4.0, ApexCharts + ECharts
 - **GTM** : GTM-T5Z595CW sur toutes les pages
 - **Landing** : 6 tabs (Hebdo, Daily, Analyses, Scanner, **Radar**, Séries) + Tech dans le footer. Filtres tags/grade/search + language switcher (FR/EN select dropdown)
 - **Radar** : Canvas animé (style logo radar militaire), données `data/radar.json` (rédigé par Claude, pas mécanique). Mis à jour à chaque daily/weekly/scanner. 4 catégories : risk (rouge), event (ambre), opportunity (vert), regime (bleu). Blips cliquables → lien direct vers section article.
-- **Components** : 36 composants Astro réutilisables dans `src/components/`
-- **Layouts** : 8 layouts Astro (Base, Daily, Weekly, Analyses, Analysis, Scanner, Series, Tech)
+- **Components/Layouts** : OBSOLÈTE — les composants/layouts Astro (`src/`) n'existent plus ; conventions HTML dans CLAUDE.md + sub-CLAUDE.md par dossier
 
 ## Structure des Publications
 | Type | Dossier | Fréquence | Schedule |
@@ -41,8 +39,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - **Mode Status State Machine** : 8 états (`draft→test→deploying→live→pausing→paused→stopped` + `liquidated` urgence) pour ramp-up, wind-down ou liquidation forcée sans perte historique. CLI `tools/set-mode-status.js`. Voir [Mode Status](project_mode_status_machine.md).
 
 ## Patterns Validés
-- **Migration tool** : `node tools/migrate_astro.js --apply` fixe 433 articles en masse (brand-bar, CSS, GTM, footer, links, inline CSS cleanup)
-- Nouveaux articles en MDX dans `src/content/`, anciens en HTML legacy copié par `copy-legacy.mjs`
+- **Migration tool (historique)** : `migrate_astro.js` avait fixé 433 articles en masse — l'ère Astro/MDX est terminée, tous les articles sont du HTML statique direct
 - Toujours mettre à jour les compteurs de tabs via `node tools/add_card.js`
 - `analysesCount` calculé dynamiquement par JS (pas de mise à jour manuelle)
 - Archiver avant de remplacer (`archive/YYYYMMDD/`)
@@ -108,7 +105,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - [Sweep Bugs Round 3](project_sweep_bugs_round3.md) — Dead optimizer (key mismatch), score mutation, correlation sign, BE-as-loss. Found by 3-round war room.
 - [v7.1 Config Overhaul](project_v7_config_overhaul.md) — DD breaker %, correlation gate, ATR widen, stale off everywhere, 12 how-to template fixes. War room audit.
 - [v6.0 Mode Overhaul](project_v6_mode_overhaul.md) — Disabled stale tightening, widened ATR stops, filtered TKL junk, new Orbit mode. All backed by OOS trade autopsy.
-- [Orbit Mode](project_orbit_mode.md) — H20/3.5×ATR swing mode replacing Secured. Internal ID=secured, label=Orbit. Deploying paper-ramp from Jun 3, review Jul 3.
+- [Orbit Mode](project_orbit_mode.md) — Orbit = LABEL du mode `secured` (live), pas un mode séparé. Stratégie H20/3.5×ATR déployée en juin 2026 sur l'ID interne `secured` ; le paper-ramp historique est terminé, secured est `live` avec label "Orbit".
 - [Breakeven Analysis](project_breakeven_analysis.md) — Stale tightening caused 38-46% breakevens. +19-64% profit left on table per mode. Fix: disable stale, widen ATR.
 - [AI Supply Chain Gap](project_ai_supply_chain_gap.md) — Scanner misses HPE/DELL/SMCI/FLEX/COHR/AAOI. Thematic watchlist needed for mid-cap AI infra.
 - [Modes Expansion + Redesign](project_modes_expansion_and_redesign.md) — Volet A: nouveaux modes crypto/metals(+mines)/forex (data). Volet B: refonte A→Z via skill impeccable (PRODUCT.md écrit, registre=product unifié, FT/Economist+terminal, mobile-first dense + RTL arabe + P&L colorblind-safe). Dashboard scanner/status à repenser pour N modes groupés par classe d'actif.

@@ -78,7 +78,7 @@ Pipeline `node tools/update-tracking.js → sweep.js → refresh-risk-metrics.js
     - Fix: `html,body{overflow-x:hidden;max-width:100vw}` + `.mode-panel{min-width:0;max-width:100%;overflow-x:hidden}` + replace scrollIntoView with `tabs.scrollTo({left, behavior:'smooth'})` contained inside `.mode-tabs`.
 
 13. **TKL pool backfill via MCP screener `as_of`** (2026-05-05)
-    - When historical scanner produced empty `tkl_pool: []` (e.g. 5/01, 5/04), backfill via `mcp__dailytickers__RunScreener` with `as_of=YYYY-MM-DDT22:00:00Z` and the TKL-Momentum DSL. Validate sharia + dedup vs main top10 before writing.
+    - When historical scanner produced empty `tkl_pool: []` (e.g. 5/01, 5/04), backfill via `mcp__claude_ai_marketdata__RunScreener` with `as_of=YYYY-MM-DDT22:00:00Z` and the TKL-Momentum DSL. Validate sharia + dedup vs main top10 before writing.
 
 ## Patterns to watch when editing
 

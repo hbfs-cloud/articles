@@ -283,16 +283,24 @@ node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-not
 ## Pipeline Quotidien (Append-only) — ⚠️ AUTOMATIQUE, NE JAMAIS DEMANDER
 
 Après chaque scanner publié, lancer pipeline complet **sans demander confirmation** :
+
+Source de vérité: tools/publish-daily-card.sh — si divergence, c'est le runner qui gagne.
+
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
-node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder YYYYMMDD  # AB candlestick signals → bull[] in signals.json. --date = last trading day, --folder = scanner session folder
-node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
-node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 30 --strategy highvol_breakout --universe americanbull  # HighVol mode signals
-node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD --min-score 35 --top 20 --strategy etf_momentum --universe etf  # ETF mode signals
-node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 1h --universe americanbull --min-score 40 --top 15  # Trendline mode (H1 bars, dedicated scanner)
-node tools/trendline-scanner.js --output signals --folder YYYYMMDD --interval 4h --universe americanbull --min-score 40 --top 15  # Trendline mode (H4 bars)
-node tools/casablanca-scanner.js --output signals --folder YYYYMMDD --min-score 0 --top 15  # Casablanca mode (momentum-rotation, port of systematic-tss MA book) → casablanca_pool[]. min-score 0 = Go default (momentum-weighted scores are small).
-node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder YYYYMMDD  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
+node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder FOLDER --regime REGIME  # AB candlestick signals → bull[] in signals.json. --date = last trading day, --folder = scanner session folder
+node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
+node tools/highvol-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 20  # HighVol mode (dedicated scanner)
+node tools/fractal-scanner.js --universe metals --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Metals scan
+node tools/fractal-scanner.js --universe forex --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 20 --top 10  # Forex scan
+node tools/casablanca-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Casablanca Bourse scan
+node tools/momentum-scanner.js --universe casablanca --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 15  # Casablanca Momentum Rotation
+node tools/momentum-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 20  # Momentum Rotation (US)
+node tools/etf-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (US)
+node tools/etf-scanner.js --universe etf-eu --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (Europe)
+node tools/trendline-scanner.js --universe forex --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (forex)
+node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (indices 4h)
+node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
 node tools/gen-status-page.js           # Snapshot J + Dashboard

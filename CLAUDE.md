@@ -43,6 +43,8 @@ Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun
 - **Notification** : `https://notification.hbfs-cloud.com/mcp` — notifications multi-canal (Telegram, Discord, Slack, Email)
 - **Broker Simulator** : `https://simulator.dailytickers.com/` — via MCP OAuth2
 
+Namespace outils marché courant : `mcp__claude_ai_marketdata__*` (ex-Gateway/DailyTickers — morts).
+
 **Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
 
 ### Notification MCP — Outils & Aliases
@@ -151,7 +153,7 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | `trading-executor` | run-session, gen-trading-plan, broker, alpaca, ibkr, saxo, trading212, binance, paper mode |
 | `status-page-architecture` | scanner/status, Time Machine, tmUpdateLive, tmLoadIdx, lp-grid, panel(), rotation tracking |
 | `daily-weekly-analysis-workflows` | analyse daily, briefing du jour, nouvelle analyse weekly, analyse [TICKER] |
-| `portfolio-api-modes` | portfolio/v1, modes-config, regime-recalibrate, turbo/dynamic/balanced/secured/fortress/tkl |
+| `portfolio-api-modes` | portfolio/v1, modes-config, regime-recalibrate, turbo/dynamic/balanced/secured/orbit/bull/aplus/highvol/casablanca/momentum/etf/etf_eu/trendline/fortress |
 | `live-tracker-widgets` | live-tracker.js, widget/, allorigins, Yahoo proxy, setup card prices |
 | `telegram-notifications-qa` | telegram-publish-notify, topic Telegram, notif article |
 | `scheduled-tasks-veille` | veille tech, tâche planifiée, Discord bot, claude-discord-bot |
