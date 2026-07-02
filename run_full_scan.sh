@@ -3,7 +3,10 @@ set -e
 cd /home/ci/projects/articles
 
 # Calculate scan date (next trading session)
-export SCAN_DATE=$(python3 -c "import datetime; today=datetime.date.today(); dow=today.weekday(); delta=3 if dow==4 else 2 if dow==5 else 1 if dow==6 else 1; print((today+datetime.timedelta(days=delta)).strftime('%Y%m%d'))")
+# Prochaine séance RÉELLE (week-ends ET jours fériés NYSE — incident 20260703 :
+# le 4 juillet 2026 = samedi -> férié observé vendredi 3, la logique weekday-only
+# visait une séance inexistante)
+export SCAN_DATE=$(node tools/lib/market-calendar.js)
 echo "Scan date (next session): $SCAN_DATE"
 
 # Export Anthopic API key
