@@ -132,6 +132,16 @@ const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
 const RISK_SNAP_FILE = path.join(ROOT, 'data/risk-snapshots.json');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
 
+// ── Canonical trading-day key (America/New_York) — ONE source of truth for "today" ──
+// Snapshot filename, chart "today" labels, closed-today detection and Time-Machine keys
+// all derive from these three constants. Before this, the page mixed THREE clocks
+// (UTC toISOString, server-local getMonth/getDate, NY Intl key): a run at 23:26 UTC
+// could show scan 20260702 data while writing history/20260701.json. NY is the only
+// clock that matches the trading session the data belongs to.
+const TODAY_ISO = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date()); // YYYY-MM-DD
+const TODAY_KEY = TODAY_ISO.replace(/-/g, '');            // YYYYMMDD
+const TODAY_LABEL = TODAY_ISO.slice(5).replace('-', '/'); // MM/DD (chart label)
+
 // Sim read-switch (Stage 5). When source-of-truth.json marks a mode "sim", render that mode's
 // positions + equity from the broker-simulator cache instead of articles' live tracking — with a
 // HARD FALLBACK to the existing articles source on any error / missing token / missing cache /
@@ -283,8 +293,7 @@ async function main() {
   // equity curve — historical points NEVER change retroactively because each
   // snapshot's stats.ret is captured at close on that date.
   const modeEquityHistory = {};
-  const _todayKeyNY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' })
-    .format(new Date()).replace(/-/g, '');
+  const _todayKeyNY = TODAY_KEY; // canonical NY trading-day key
   try {
     const _historyDir = path.join(ROOT, 'scanner/status/history');
     const _files = fs.readdirSync(_historyDir).filter(f => /^\d{8}\.json$/.test(f)).sort();
@@ -482,7 +491,7 @@ async function main() {
     for (const lp of (livePositions || [])) {
       livePosByTicker[lp.ticker + '|' + (lp.scan_date || '')] = lp;
     }
-    const _todayISOEarly = new Date().toISOString().slice(0, 10);
+    const _todayISOEarly = TODAY_ISO; // canonical NY trading day
     const trades = raw.map(t => {
       if (t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon)) {
         const scanDate = t.scanDate || t.entryDate;
@@ -528,7 +537,7 @@ async function main() {
         while (ec.length > 1 && ec[ec.length - 1].value === ec[ec.length - 2].value) ec.pop();
 
         // Clamp: drop any points dated after today (future dates from stale price cache)
-        const todayISO = new Date().toISOString().slice(0, 10);
+        const todayISO = TODAY_ISO; // canonical NY trading day
         while (ec.length > 1 && ec[ec.length - 1].date > todayISO) ec.pop();
 
         // Frozen EC is authoritative — no MtM extension (append-only: sweep stats are final)
@@ -560,6 +569,18 @@ async function main() {
         _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
       }
       ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
+      // Bridge the frozen-EC → today gap with snapshot-derived equity points.
+      // The frozen curve lags the last sweep (e.g. ends 06/26 while snapshots
+      // already have 06/29, 06/30, 07/01): splice in the modeEquityHistory points
+      // strictly after the frozen last date and before today, so the chart shows
+      // the intermediate sessions instead of a multi-day hole.
+      // (MM/DD string compare — safe while the curve stays within one calendar year.)
+      const _frozenLastLbl = ec.d.length ? ec.d[ec.d.length - 1] : null;
+      if (_frozenLastLbl) {
+        for (const p of (modeEquityHistory[id] || [])) {
+          if (p.d > _frozenLastLbl && p.d < TODAY_LABEL) { ec.d.push(p.d); ec.v.push(p.v); }
+        }
+      }
       // Extend the frozen (closed-only) curve to TODAY with the LIVE mark-to-market of open
       // positions, so the equity block re-evaluates with current closes while the mode is holding.
       // Without this the curve froze at the last closed trade and ignored open-position P&L.
@@ -567,18 +588,14 @@ async function main() {
       if (_openLive.length && ec.v.length) {
         const _liveUnreal = _openLive.reduce((s, t) => s + (t.pnlPct || 0) / cfg.portfolioSize * (cfg.positionSizePct || 1), 0);
         if (Math.abs(_liveUnreal) > 0.001) {
-          const _d = new Date();
-          const _todayLbl = ('0' + (_d.getMonth() + 1)).slice(-2) + '/' + ('0' + _d.getDate()).slice(-2);
+          const _todayLbl = TODAY_LABEL; // canonical NY chart label
           const _mtmVal = +(ec.v[ec.v.length - 1] + _liveUnreal).toFixed(2);
           if (ec.d[ec.d.length - 1] === _todayLbl) { ec.v[ec.v.length - 1] = _mtmVal; }
           else { ec.d.push(_todayLbl); ec.v.push(_mtmVal); }
         }
       }
     } else {
-      const _todayLabel = (function(){
-        const d = new Date();
-        return ('0' + (d.getMonth()+1)).slice(-2) + '/' + ('0' + d.getDate()).slice(-2);
-      })();
+      const _todayLabel = TODAY_LABEL; // canonical NY chart label
       const _hist = modeEquityHistory[id] || [];
       const _todayMtm = +(100 + (m.ret || 0)).toFixed(2);
       ec = {
@@ -661,7 +678,7 @@ async function main() {
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
     trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+' }[f] || f; }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
@@ -735,7 +752,7 @@ async function main() {
     if (cfg.status === 'stopped' || cfg.status === 'liquidated') return [];
     const liveLookup = {};
     for (const p of livePositions) { liveLookup[p.ticker] = p; }
-    const todayISO = new Date().toISOString().slice(0, 10);
+    const todayISO = TODAY_ISO; // canonical NY trading day (gates "closed today")
 
     // Source of truth: backtest-trades.json per mode
     // 1) Active positions: genuinely unresolved (status 'pending'). NOT every `_premature`
@@ -790,7 +807,16 @@ async function main() {
     // This keeps the positions list = exactly what is held right now (e.g. drops LLY 10/10
     // which closed today, and any expired-but-still-pending row).
     const live = positions.filter(p => !p._expired && !p._terminal).sort((a, b) => b.return_pct - a.return_pct);
-    return live.slice(0, cfg.portfolioSize);
+    const capped = live.slice(0, cfg.portfolioSize);
+    // Re-append today's TERMINAL rows AFTER the live slots so the "+N closed today"
+    // header and the SL/TP1/ROT/EXP badges render again. They are rendered grayed
+    // and are NOT counted in slots (liveCount/scenario/orders all filter !_terminal).
+    // Phantom safety (KLAC c40a55fde / casablanca 438a6cc9b were signal-data and
+    // client exec-sim artifacts, never book trades): a row only qualifies if it
+    // comes from THIS mode's own trades array AND its exitDate === the canonical
+    // NY trading day — both already enforced by the closedToday filter above.
+    const terminalToday = positions.filter(p => p._terminal);
+    return terminalToday.length ? [...capped, ...terminalToday] : capped;
   }
 
   // ── Panel builder ──
@@ -850,7 +876,10 @@ async function main() {
         };
       }
     }
-    const totalRet = pos.length ? pos.reduce((s, p) => s + (p.return_pct || 0), 0) / pos.length : 0;
+    // Simple mean over OPEN rows only (terminal closed-today rows excluded — their
+    // P&L already lives in the frozen stats). Header label: "avg/pos".
+    const _openForAvg = pos.filter(p => !p._terminal);
+    const totalRet = _openForAvg.length ? _openForAvg.reduce((s, p) => s + (p.return_pct || 0), 0) / _openForAvg.length : 0;
 
     // Helper: compute biz days from scan_date
     function bizDaysHeld(scanDate) {
@@ -871,9 +900,21 @@ async function main() {
       return left === 1;
     });
 
+    // Frozen-stats staleness: if the frozen equity curve's last point is older than
+    // the PREVIOUS trading session, the sweep hasn't refreshed — flag it in the header.
+    const _frozenLastISO = (m.equityCurve || []).filter(p => p.date).map(p => p.date).sort().slice(-1)[0] || null;
+    const _prevSessionISO = (() => {
+      const d = new Date(TODAY_ISO + 'T12:00:00Z');
+      do { d.setUTCDate(d.getUTCDate() - 1); } while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
+      return d.toISOString().slice(0, 10);
+    })();
+    const staleBadge = (_frozenLastISO && _frozenLastISO < _prevSessionISO)
+      ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: ${_frozenLastISO}">stats as of ${_frozenLastISO.slice(5).replace('-', '/')}</span>`
+      : '';
+
     return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard</h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}</h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -929,15 +970,19 @@ ${renderStatusBanner(cfg)}
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
       <tbody>${sig.map((s, i) => {
       const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
+      // Candlestick scores are on their own scale (can exceed 100): render as-is,
+      // color scale stays capped at the >=90 tier, but disclose the scale on hover.
+      const _candleTitle = /candlestick/i.test(s.strategy || '') ? ' title="échelle candlestick (non /100)"' : '';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>'
         : s.sharia === false ? '<span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span>' : '';
       const _ohlc = signalOhlc[s.ticker] || {};
-      return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)"' : ''}>${_sigStatusLabel}</span></td></tr>`;
+      return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="primary" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}</td><td><span class="pill-score" style="background:${bg}"${_candleTitle}>${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}"${_sigStatusLabel === 'LIVE' ? ' style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)"' : ''}>${_sigStatusLabel}</span></td></tr>`;
     }).join('')}${fallback.length ? `<tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr>${fallback.map((s, i) => {
       const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
+      const _candleTitle = /candlestick/i.test(s.strategy || '') ? ' title="échelle candlestick (non /100)"' : '';
       const shariaTag = s.sharia === true ? '<span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? '<span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span>' : '';
       const _ohlc = signalOhlc[s.ticker] || {};
-      return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}">${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
+      return `<tr data-sig-ticker="${s.ticker}"${isCasablanca ? ' data-market="casablanca"' : ''} data-sig-entry="${s._entry}" data-sig-stop="${s._stop}" data-sig-tp1="${s._tp1}" data-sig-tp2="${s._tp2 || ''}" data-sig-vwap="${s.vwapRef || ''}" data-sig-rank="fallback" data-sig-open="${_ohlc.open || ''}" data-sig-high="${_ohlc.high || ''}" data-sig-low="${_ohlc.low || ''}" data-sig-price="${_ohlc.price || ''}" style="opacity:.55"><td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${shariaTag}<span class="pill m" style="font-size:.55rem;margin-left:.3rem">#${cfg.topN + i + 1}</span></td><td><span class="pill-score" style="background:${bg}"${_candleTitle}>${s.score}</span></td><td class="m">${s.strategy}</td><td>${s.entry}</td><td class="neg">${s.stop}</td><td class="pos">${s.tp1} / ${s.tp2}</td><td class="am">${s.rr}</td><td><span class="pill ${_sigStatusCls}">${_sigStatusLabel}</span></td></tr>`;
     }).join('')}` : ''}</tbody>
     </table>` : (() => {
       // Contextual empty state: explain WHY 0 signals (vs generic "no signals today")
@@ -983,7 +1028,7 @@ ${renderStatusBanner(cfg)}
       <span class="ps-v">${m.wr}%</span><span class="ps-l">Win Rate</span>
     </div>
     <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated.${m.pfLow != null && m.pfHigh != null ? ` 90% bootstrap CI: [${m.pfLow}x — ${m.pfHigh}x] over ${m.trades} trades.` : (m.pfReliable === false ? ` Sample ${m.trades}<50 trades — point estimate only, treat as fragile.` : '')}">
-      <span class="ps-v">${m.pf}x${m.pfLow != null && m.pfHigh != null ? `<span style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
+      <span class="ps-v"><span class="ps-num">${m.pf}x</span>${m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
       <span class="ps-v">${m.trades}</span><span class="ps-l">Closed Trades</span>
@@ -1081,13 +1126,14 @@ ${(() => {
         for (let i = 0; i < buyOrders.length; i++) {
           const s = buyOrders[i];
           const bg = s.score >= 90 ? 'var(--pos)' : s.score >= 85 ? 'var(--accent)' : 'var(--warn)';
+          const _candleTitle = /candlestick/i.test(s.strategy || '') ? ' title="échelle candlestick (non /100)"' : '';
           const sht = s.sharia === true ? ' <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span>' : s.sharia === false ? ' <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span>' : '';
           const thesisCols = 11; // number of columns in Orders table
           const vwapCell = s.vwapRef ? price(s.vwapRef) : '—';
           actionRows.push(`<tr>
       <td>${tkLogo(s.ticker)}<b>${s.ticker}</b>${sht}</td>
       <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=${s.ticker}&ty=c&ta=1&p=d&s=l" alt="${s.ticker}" class="fv-thumb" onclick="fvOpen('${s.ticker}','${s.universe||''}')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:${bg}">${s.score}</span></td>
+      <td class="hide-m"><span class="pill-score" style="background:${bg}"${_candleTitle}>${s.score}</span></td>
       <td class="m hide-m">${s.strategy}</td><td><b>${s.entry}</b></td>
       <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">${vwapCell}</td>
       <td class="neg">${s.stop}</td>
@@ -1246,15 +1292,18 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <div class="section-card" id="sec-pos-${id}">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">${liveCount}/${cfg.portfolioSize}${terminalCount ? ' + ' + terminalCount + ' closed today' : ''}${pos.length > liveCount + terminalCount ? ' + ' + (pos.length - liveCount - terminalCount) + ' expired' : ''}</span></h3>
-    ${pos.length ? `<span class="sc-meta">avg P&amp;L: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
+    ${pos.length ? `<span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="${totalRet >= 0 ? 'pos' : 'neg'}">${totalRet > 0 ? '+' : ''}${totalRet.toFixed(1)}%</b></span>` : ''}
   </div>
   ${pos.length ? `
   ${(() => {
           // Scenario bar: worst (all SL) → current → best (all TP2)
           // Each position contributes alloc% of portfolio
           // alloc = 100/portfolioSize (e.g. 5% for 20 slots)
+          // Terminal (closed-today) rows are display-only — they hold no slot and
+          // no forward risk, so they are excluded from the scenario projection.
+          const scenPos = pos.filter(p => !p._terminal);
           const a = alloc / 100; // weight per position
-          const worstPct = pos.reduce((s, p) => {
+          const worstPct = scenPos.reduce((s, p) => {
             // Skip positions with no stop (stop=0) — treat as no downside for scenario
             if (!p.stop || p.stop <= 0) return s;
             const slPct = p.entry > 0 ? (p.stop - p.entry) / p.entry * 100 : 0;
@@ -1262,12 +1311,12 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
             const capped = Math.max(slPct, -20);
             return s + capped * a;
           }, 0);
-          const bestPct = pos.reduce((s, p) => {
+          const bestPct = scenPos.reduce((s, p) => {
             const tp = p.tp2 || p.tp1 || p.current_price;
             const tp2Pct = (p.entry > 0 && tp > 0) ? (tp - p.entry) / p.entry * 100 : 0;
             return s + tp2Pct * a;
           }, 0);
-          const nowPct = pos.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
+          const nowPct = scenPos.reduce((s, p) => s + (p.return_pct || 0) * a, 0);
 
           // Progress bar: worst is left anchor, best is right anchor, now is the cursor
           const range = bestPct - worstPct;
@@ -1283,7 +1332,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
           return `<div class="scenario-bar-wrap">
   <div class="scenario-labels">
     <span class="${worstCls}"><i class="fas fa-shield-halved"></i> Worst: ${worstPct > 0 ? '+' : ''}${worstPct.toFixed(1)}%</span>
-    <span class="${nowCls}"><i class="fas fa-circle-dot"></i> Now: ${nowPct > 0 ? '+' : ''}${nowPct.toFixed(1)}%</span>
+    <span class="${nowCls}"><i class="fas fa-circle-dot"></i> Now (pondéré): ${nowPct > 0 ? '+' : ''}${nowPct.toFixed(1)}%</span>
     <span class="${bestCls}"><i class="fas fa-bullseye"></i> Best: +${bestPct.toFixed(1)}%</span>
   </div>
   <div class="scenario-bar">
@@ -1316,7 +1365,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card" id="sec-hist-${id}">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed${pos && pos.length ? ' · ' + pos.length + ' open' : ''}</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed${liveCount ? ' · ' + liveCount + ' open' : ''}</span></span></summary>
   <div class="th-scroll">
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
@@ -1337,7 +1386,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
         if (recentExecutedRotation && recentExecutedRotation.replaces && recentExecutedRotation.fromDate) {
           rotatedKeys.add(recentExecutedRotation.replaces + '|' + recentExecutedRotation.fromDate);
         }
-        const _todayISOLocal = new Date().toISOString().slice(0, 10);
+        const _todayISOLocal = TODAY_ISO; // canonical NY trading day
         // Try to use the live current price for the rotated ticker as a better
         // exit-price approximation (sweep.js's synthesized exit is at scan-day
         // which is wrong for rotation-closed trades).
@@ -2606,7 +2655,10 @@ document.addEventListener('DOMContentLoaded',function(){
       psList[0].textContent=_fmtPct2(stats.ret);
       psList[1].textContent=_fmtPct2(stats.dd);
       psList[2].textContent=Number(stats.wr||0).toFixed(1)+'%';
-      psList[3].textContent=Number(stats.pf||0).toFixed(2)+'x';
+      // PF: update only the number span so the SSR bootstrap-CI ([low–high]) survives.
+      var _pfNum=psList[3].querySelector('.ps-num');
+      if(_pfNum){_pfNum.textContent=Number(stats.pf||0).toFixed(2)+'x';}
+      else{psList[3].textContent=Number(stats.pf||0).toFixed(2)+'x';}
       psList[4].textContent=String(stats.trades||0);
       psList[5].textContent=Number(stats.avgHold||0).toFixed(1)+'d';
       if(psList.length>=9){
@@ -2640,7 +2692,7 @@ document.addEventListener('DOMContentLoaded',function(){
         sigBody.innerHTML = sig.length ? sig.map(function(s){
           var bg=_scoreBg(s.score||0);
           return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
-        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout',candlestick_only:'Candlestick only'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
+        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout',candlestick_only:'Candlestick only',adaptive_fractal:'Adaptive Fractal',highvol_breakout:'HighVol Breakout',momentum_rotation:'Momentum Rotation',etf_momentum:'ETF Momentum',trendline_breakout:'Trendline Breakout',fortress_pm:'Fortress A+'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
       }
     }
     var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h && /open positions/i.test(h.textContent);});
@@ -2686,7 +2738,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var _lbls=_scen.querySelectorAll('.scenario-labels span');
           if(_lbls.length>=3){
             _lbls[0].innerHTML='<i class="fas fa-shield-halved"></i> Worst: '+(_w>0?'+':'')+_w.toFixed(1)+'%';_lbls[0].className=_w<0?'neg':'pos';
-            _lbls[1].innerHTML='<i class="fas fa-circle-dot"></i> Now: '+(_n>0?'+':'')+_n.toFixed(1)+'%';_lbls[1].className=_n>=0?'pos':'neg';
+            _lbls[1].innerHTML='<i class="fas fa-circle-dot"></i> Now (pondéré): '+(_n>0?'+':'')+_n.toFixed(1)+'%';_lbls[1].className=_n>=0?'pos':'neg';
             _lbls[2].innerHTML='<i class="fas fa-bullseye"></i> Best: +'+_b.toFixed(1)+'%';_lbls[2].className='pos';
           }
           var _bar=_scen.querySelector('.scenario-bar');
@@ -3220,8 +3272,11 @@ document.addEventListener('DOMContentLoaded',function(){
   }
 
   // ── Save daily snapshot for time machine ──
-  const todayISO = new Date().toISOString().slice(0, 10);
-  const todayKey = todayISO.replace(/-/g, '');
+  // Snapshot filename MUST use the canonical NY trading-day key: a run after 00:00 UTC
+  // (still the previous NY session) used to write a UTC-dated snapshot one day off
+  // the scan it contains.
+  const todayISO = TODAY_ISO;
+  const todayKey = TODAY_KEY;
   const historyDir = path.join(ROOT, 'scanner/status/history');
   fs.mkdirSync(historyDir, { recursive: true });
 
@@ -3321,7 +3376,7 @@ document.addEventListener('DOMContentLoaded',function(){
       orders: [...buyOrders, ...rotCands],
       recentRotation,
       closeNow: timedOutSnap.map(p => ({ ticker: p.ticker, scan_date: p.scan_date, entry: p.entry, current_price: p.current_price, return_pct: p.return_pct, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
-      expiresTomorrow: pos.filter(p => { const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
+      expiresTomorrow: pos.filter(p => { if (p._terminal) return false; const left = Math.max(0, cfg.horizon - bizDaysHeldSnap(p.scan_date)); return left === 1; }).map(p => ({ ticker: p.ticker, entry: p.entry, return_pct: p.return_pct, stop: p.stop, days_held: bizDaysHeldSnap(p.scan_date), horizon: cfg.horizon })),
       closedTrades: mTrades.map(t => ({ ticker: t.ticker, scanDate: t.scanDate, entryDate: t.entryDate, exitDate: t.exitDate || null, actualEntry: t.actualEntry, exitPrice: t.exitPrice, pnlPct: t.pnlPct, holdDays: t.holdDays, status: t.status, strategy: t.strategy })),
       config: { portfolioSize: cfg.portfolioSize, horizon: cfg.horizon, filterName: cfg.filterName, rotation: cfg.rotation, color: cfg.color, maxStopPct: cfg.maxStopPct || 0, minScore: cfg.minScore || 85, atrStopMult: cfg.atrStopMult || 0, dailyTrailPct: cfg.dailyTrailPct || 0, breakevenPct: cfg.breakevenPct || 0, partialTP: cfg.partialTP || false, trailingStop: cfg.trailingStop || false, positionSizePct: cfg.positionSizePct || 1, ddBreakerPct: cfg.ddBreakerPct || 0, sectorCapMax: cfg.sectorCapMax || 0, sizingMethod: cfg.sizingMethod || null, targetRiskPct: cfg.targetRiskPct || 0, vixKillThreshold: cfg.vixKillThreshold || 0, correlationCap: cfg.correlationCap || 0, crossModeDedup: cfg.crossModeDedup || false, label: cfg.label || id },
       risk: getRiskFor(id),
@@ -3473,10 +3528,18 @@ function backfillHistory() {
       const slots = Math.max(0, cfg.portfolioSize - activePos.length);
       const buyOrders = filteredSignals.filter(s => !openTickers.has(s.ticker)).slice(0, slots).map(s => ({ ...s, action: 'BUY' }));
       const rotCands = [];
-      if (cfg.rotation === 'aggressive' && slots === 0 && activePos.length > 0 && filteredSignals.length > 0) {
+      // Mirror of the LIVE rotation gate (panel + daily snapshot): any rotation mode
+      // (rotation !== 'none'), same rotLimit + margin logic — the backfill used to
+      // gate on 'aggressive' only, silently dropping daily_max1/daily_max2 rotations.
+      if (cfg.rotation !== 'none' && slots === 0 && activePos.length > 0 && filteredSignals.length > 0) {
+        const rotLimit = cfg.rotation === 'daily_max1' ? 1 : cfg.rotation === 'daily_max2' ? 2 : cfg.portfolioSize;
+        const margin = cfg.rotation === 'aggressive' ? 0 : 5;
         const worst = [...activePos].sort((a, b) => a.return_pct - b.return_pct)[0];
+        const worstScore = worst.score || 0;
         for (const s of filteredSignals.filter(x => !openTickers.has(x.ticker)).slice(0, 5)) {
-          if (s.score >= 88) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker }); break; }
+          if (rotCands.length >= rotLimit) break;
+          const meetsMargin = margin > 0 ? (s.score - worstScore >= margin) : (s.score >= 88 && worst.return_pct < 2);
+          if (meetsMargin) { rotCands.push({ ...s, action: 'ROTATE', replaces: worst.ticker, scoreDelta: s.score - worstScore }); break; }
         }
       }
 
