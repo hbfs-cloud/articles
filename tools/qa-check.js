@@ -806,6 +806,32 @@ check('signals.json (last 5 scans): regime field present in ≥50%', () => {
   return total === 0 || missing / total <= 0.5 || `Null-regime: ${missing}/${total} signals lack regime`;
 });
 
+// ─── Check 31: Parity Go↔articles (systematic-tss) — soft gate, drift = warning ──
+// Shells out to tools/parity-check.js --warn-only, qui compare les modes scriptés (highvol,
+// etf, etf_eu, casablanca, trendline, bull) aux configs Go backtestées 5y de systematic-tss
+// (alignement v10.2, cf .claude/memory/project_parity_v10_2.md). N'échoue JAMAIS ce check
+// (--warn-only) — un vrai DRIFT devient un warning, jamais une erreur bloquante. Skip silencieux
+// si ../systematic-tss est absent (routines cloud/CI n'ont pas accès à ce repo).
+try {
+  const { execSync } = require('child_process');
+  const parityOut = execSync(`node ${JSON.stringify(path.join(ROOT, 'tools/parity-check.js'))} --warn-only`, {
+    cwd: ROOT,
+    encoding: 'utf8',
+  });
+  if (/systematic-tss absent/i.test(parityOut)) {
+    // Pas de systematic-tss en local (cloud/CI) — skip silencieux, aucune entrée ok/warn.
+  } else {
+    const driftLines = parityOut.split('\n').filter(l => / {2}- \[/.test(l));
+    if (driftLines.length > 0) {
+      warnings.push(`⚠️  parity Go↔articles (systematic-tss): ${driftLines.length} drift(s) — ${driftLines.map(l => l.trim()).join(' | ')}`);
+    } else {
+      ok.push('✅ parity Go↔articles (systematic-tss): aucun drift (v10.2 alignment)');
+    }
+  }
+} catch (e) {
+  warnings.push(`⚠️  parity Go↔articles (systematic-tss): erreur exécution parity-check.js — ${e.message.split('\n')[0]}`);
+}
+
 // ─── Check 30: Status page headless smoke — zéro erreur JS au boot ───────────
 // Charge scanner/status/index.html dans un navigateur headless (puppeteer si présent dans
 // node_modules, sinon jsdom, sinon skip avec note console) et vérifie qu'aucune
