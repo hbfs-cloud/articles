@@ -36,6 +36,14 @@ const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 const MIN_PRICE = 10;          // was hardcoded 5.0 (Go default) → config overrides to 10
 const MAX_ATR_RATIO = 0.06;    // was hardcoded 0.10 (Go default) → config overrides to 0.06
 const BLACKLIST = new Set(['BITI', 'VXX', 'VXZ', 'COPJ', 'CTEX']);
+// EU blacklist — parity portfolio_etf_eu.yaml scanner_filters.params.blacklist
+// (ETP toxiques identifiés par le backtest 5y : crypto, leveraged, repeat losers)
+const BLACKLIST_EU = new Set([
+  'ZETH.DE', 'GDXJ.PA', 'BRE.PA', 'IQQH.DE', 'EXV7.DE', 'EXH2.DE', 'EXV2.DE',
+  'ZPRR.DE', 'EXV4.DE', 'EXV5.DE', 'EXV6.DE', 'CC1.PA', 'BTC.PA', '3OIL.MI',
+  'NUKL.DE', 'BNXG.DE', 'SLVR.DE', 'NGAS.MI', 'VVMX.DE', 'DAXLEV.MI', 'M9SD.DE',
+  'GDXJ.MI', 'PHAU.AS', 'WDNA.MI', '3USS.MI', 'XCNA.MI', 'CURE.MI', 'REMX.MI',
+]);
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -159,6 +167,11 @@ const ACTIVE = resolveUniverse(UNIVERSE_ARG);
 // CLI overrides (allow re-tagging a custom run)
 if (UNIVERSE_TAG_ARG) ACTIVE.tag = UNIVERSE_TAG_ARG;
 if (REGION_ARG) ACTIVE.region = REGION_ARG;
+// Parité Go par univers (portfolio_etf_us.yaml / portfolio_etf_eu.yaml):
+// EU = min_score 80 (testé 50-100, 80 optimal) + stop 1.5xATR ; US = stop 2.5xATR.
+const IS_EU = ACTIVE.tag === 'etf_eu';
+const EFFECTIVE_MIN_SCORE = MIN_SCORE > 0 ? MIN_SCORE : (IS_EU ? 80 : 0);
+const STOP_ATR_MULT = IS_EU ? 1.5 : 2.5;
 
 // ─── Yahoo OHLCV fetcher (shared cache) ─────────────────────────────────────
 
@@ -254,7 +267,7 @@ function calcMarketBreadth(priceData) {
 
 function scoreSymbol(ticker, bars, regime, vixRatio) {
   // Blacklist (config scanner_filters.params.blacklist) — skip before any scoring
-  if (BLACKLIST.has(ticker)) return null;
+  if (BLACKLIST.has(ticker) || (IS_EU && BLACKLIST_EU.has(ticker))) return null;
 
   const n = bars.length;
   if (n < 200) return null;
@@ -358,11 +371,11 @@ function scoreSymbol(ticker, bars, regime, vixRatio) {
 
   score = Math.round(score * 100) / 100;
 
-  if (score < MIN_SCORE) return null;
+  if (score < EFFECTIVE_MIN_SCORE) return null;
 
   return {
     score, price, entry: price,
-    stop: +(price - atr * 2).toFixed(4),
+    stop: +(price - atr * STOP_ATR_MULT).toFixed(4),
     atr, atrPct, rsi, mom20,
     distMA20: +distMA20.toFixed(4), distMA50: +distMA50.toFixed(4), distMA200: +distMA200.toFixed(4),
     volRatio: +volRatio.toFixed(2),
@@ -392,7 +405,7 @@ function diversifyByCategory(candidates, limit) {
 
 async function main() {
   console.log(`📊 ETF Momentum Scanner (systematic-tss port) — ${ACTIVE.label} universe`);
-  console.log(`   Universe: ${ACTIVE.tickers.length} ETFs (${ACTIVE.tag}) | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
+  console.log(`   Universe: ${ACTIVE.tickers.length} ETFs (${ACTIVE.tag}) | minScore: ${EFFECTIVE_MIN_SCORE} | top: ${TOP_N}`);
   console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME}`);
 
   console.log(`📡 Fetching OHLCV data via Yahoo...`);
@@ -486,6 +499,17 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the ETF scanner actually ran for this universe (even with 0 signals).
+    // Key: 'etf' (US default) | 'etf:etf_eu' (EU) — merged into the shared _scanRuns object
+    // without clobbering other scanners' entries.
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns[ACTIVE.tag === 'etf' ? 'etf' : `etf:${ACTIVE.tag}`] = {
+      at: new Date().toISOString(),
+      universe: ACTIVE.tag,
+      candidates: candidates.length,
+      signals: topCandidates.length,
+      added,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.log(`\n📁 Appended ${added} ETF signals to ${sigPath}`);
   }

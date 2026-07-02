@@ -2621,13 +2621,36 @@ async function main() {
 
         let stats;
         if (existingFrozen) {
-          // IMMUTABLE: existing frozen stats are preserved byte-for-byte.
-          // New trades are appended to backtest-trades.json but stats are
-          // ONLY updated by gen-status-page snapshots, never by sweep recalculation.
-          stats = existingFrozen;
-          const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'unchanged';
-          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}% [IMMUTABLE]`);
-          output[`frozen_${id}`] = existingFrozen;
+          // APPEND-ONLY ADVANCE: per-trade history is immutable (hard guard above +
+          // trade-chain SHA), but the AGGREGATE view must advance with newly appended
+          // trades and MtM days — otherwise the dashboard freezes at the last frozen
+          // date (bug: headline stats stuck at 2026-06-26 while trades kept closing).
+          // The frozen equity-curve prefix is preserved byte-for-byte via opts.priorEC
+          // (computeStatsFromTrades copies prior points verbatim, then only appends).
+          const priorEC = existingFrozen.equityCurve || [];
+          const advanced = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar, { priorEC });
+          const prefixOk = advanced && advanced.equityCurve && advanced.equityCurve.length >= priorEC.length
+            && priorEC.every((pt, i) => advanced.equityCurve[i] === pt || (advanced.equityCurve[i].date === pt.date && advanced.equityCurve[i].value === pt.value));
+          const tradesOk = advanced && (advanced.trades ?? 0) >= (existingFrozen.trades ?? 0);
+          if (prefixOk && tradesOk) {
+            stats = {
+              ...existingFrozen,
+              returnTotal: advanced.returnTotal, returnRealized: advanced.returnRealized,
+              returnUnrealized: advanced.returnUnrealized,
+              maxDD: advanced.maxDD, winRate: advanced.winRate,
+              profitFactor: advanced.profitFactor, trades: advanced.trades,
+              calmar: advanced.calmar, sharpe: advanced.sharpe, returnDDRatio: advanced.returnDDRatio,
+              equityCurve: advanced.equityCurve,
+              // in_sample / out_sample are period-defined at first computation — kept as-is.
+            };
+            const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'MtM advanced';
+            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}% [APPEND-ONLY]`);
+          } else {
+            // Fallback: keep frozen untouched. Never rewrite history on a failed guard.
+            stats = existingFrozen;
+            console.error(`  ⚠️  ${id}: append-only advance REJECTED (prefixOk=${!!prefixOk} tradesOk=${!!tradesOk}) — keeping frozen stats as-is`);
+          }
+          output[`frozen_${id}`] = stats;
           frozenTrades[id] = merged;
           continue;
         }

@@ -93,12 +93,16 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/etf-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF scan failed (non-blocking)"
 
   echo ""
+  echo "📈 Step 2k2: ETF Momentum scan (Europe)..."
+  node tools/etf-scanner.js --universe etf-eu --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF EU scan failed (non-blocking)"
+
+  echo ""
   echo "📐 Step 2l: Trendline Breakout scan (forex)..."
-  node tools/trendline-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline forex scan failed (non-blocking)"
+  node tools/trendline-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 10 || echo "⚠️  Trendline forex scan failed (non-blocking)"
 
   echo ""
   echo "📐 Step 2m: Trendline Breakout scan (indices 4h)..."
-  node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 40 --top 10 || echo "⚠️  Trendline indices 4h scan failed (non-blocking)"
+  node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 10 || echo "⚠️  Trendline indices 4h scan failed (non-blocking)"
 
   # Steps 2n (trendline ETF) and 2p (trendline stocks daily) REMOVED
   # Backtest showed negative CAGR: stocks -11.6%, ETF -3.6%. Keep only forex 4h + indices 1h/4h.
@@ -115,8 +119,9 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "   Sweep done in $((SWEEP_END - SWEEP_START))s"
 
   # ─── Step 3b: Publish new mirror intents to broker-simulator (non-blocking) ──
-  # sweep.js just rewrote data/pit-state.json; push each pilot mode's NEW entries as
-  # mirror-order intents. The SIM executes them next morning. Never break the pipeline.
+  # publish-to-simulator.js is the step that rewrites data/pit-state.json (sweep.js does
+  # NOT touch it); it pushes each pilot mode's NEW entries as mirror-order intents.
+  # The SIM executes them next morning. Never break the pipeline.
   echo ""
   echo "🛰️  Step 3b: Publishing mirror intents to broker-simulator..."
   node tools/publish-to-simulator.js || echo "⚠️  publish-to-simulator failed (non-blocking)"
