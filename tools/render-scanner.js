@@ -18,9 +18,11 @@ const path = require('path');
 
 // ─── CLI ────────────────────────────────────────────────────────────────────
 
-const arg = process.argv[2];
+const argv = process.argv.slice(2);
+const STRICT = argv.includes('--strict');
+const arg = argv.find(a => !a.startsWith('--'));
 if (!arg) {
-  console.error('Usage: node tools/render-scanner.js scanner/YYYYMMDD/');
+  console.error('Usage: node tools/render-scanner.js scanner/YYYYMMDD/ [--strict]');
   process.exit(1);
 }
 
@@ -35,6 +37,80 @@ if (!fs.existsSync(dataPath)) {
 }
 
 const d = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+
+// ─── STRICT DATA-QUALITY GUARDS ─────────────────────────────────────────────
+// Le renderer ne réencode/ne transforme JAMAIS le texte issu de data.json (esc()
+// ci-dessous est un simple coerce-to-string, aucune translittération ASCII).
+// Si data.json arrive déjà désaccentué ou tronqué (bug amont — la session LLM qui
+// génère le scan a écrit de l'ASCII pur, ou un champ résumé a été coupé avant
+// écriture), le renderer ne DOIT PAS deviner/reconstruire le texte correct : deviner
+// des accents ou compléter une phrase tronquée serait une forme d'hallucination de
+// contenu (règle "No Hallucination" du projet). À la place :
+//   - il détecte et log l'anomalie (bloquant en --strict, avertissement sinon)
+//   - il applique un fallback DÉGRADÉ mais non-inventé (voir setupPhrase() plus bas :
+//     retombe sur un autre champ déjà présent dans data.json, jamais du texte généré)
+// Le vrai fix est en amont : la génération de data.json doit écrire l'UTF-8 accentué
+// et ne jamais couper une chaîne au milieu d'un mot/d'une parenthèse.
+
+const FR_UNACCENTED_WORDS = [
+  'regime', 'echelle', 'cloture', 'defensivite', 'europeen', 'europeens', 'europeenne', 'europeennes',
+  'amerique', 'amelioration', 'apres', 'beneficiaire', 'benefice', 'benefices', 'completent', 'confirmee',
+  'couts', 'credit', 'defensif', 'desendettement', 'detail', 'diversifiee', 'electronique', 'eleve',
+  'entrees', 'equivalent', 'etendu', 'etendus', 'eviter', 'execution', 'fenetre', 'generation',
+  'geographique', 'interet', 'lecon', 'liquidite', 'maitrisee', 'malgre', 'marche', 'marches', 'marquee',
+  'metaux', 'modele', 'operateur', 'operationnelle', 'opere', 'portee', 'portees', 'precieux',
+  'privilegie', 'privilegier', 'probabilites', 'reduite', 'reintegration', 'remuneres', 'resilient',
+  'resilients', 'resultat', 'resultats', 'sante', 'seance', 'selection', 'separation', 'strategie',
+  'telecom', 'themes', 'unites', 'volatilite', 'annee', 'annees', 'deja', 'egalement', 'tres',
+  'precedent', 'precedente', 'general', 'generale', 'generales', 'severite', 'reference', 'references',
+];
+const FR_UNACCENTED_RE = new RegExp('\\b(' + FR_UNACCENTED_WORDS.join('|') + ')\\b', 'gi');
+
+/** Recursively collect every string value in a JSON tree (skips keys/numbers/booleans). */
+function collectStrings(obj, out) {
+  if (obj == null) return out;
+  if (typeof obj === 'string') { out.push(obj); return out; }
+  if (Array.isArray(obj)) { obj.forEach(v => collectStrings(v, out)); return out; }
+  if (typeof obj === 'object') { for (const k of Object.keys(obj)) collectStrings(obj[k], out); return out; }
+  return out;
+}
+
+/** true if a string has an unmatched opening "(" — strong signal it was cut mid-clause */
+function looksTruncated(s) {
+  if (!s) return false;
+  const opens  = (s.match(/\(/g)  || []).length;
+  const closes = (s.match(/\)/g) || []).length;
+  return opens > closes;
+}
+
+function guardDataQuality(data, strict) {
+  const strings = collectStrings(data, []);
+  const text = strings.join('\n');
+
+  const accentHits = text.match(FR_UNACCENTED_RE) || [];
+  const accentUniq = [...new Set(accentHits.map(w => w.toLowerCase()))];
+
+  const truncated = strings.filter(looksTruncated);
+
+  const problems = [];
+  if (accentUniq.length) {
+    problems.push(`prose FR sans accents détectée (${accentUniq.length} mot(s): ${accentUniq.slice(0, 12).join(', ')}${accentUniq.length > 12 ? '…' : ''}) — le générateur amont (session LLM) doit écrire l'UTF-8 accentué directement dans data.json`);
+  }
+  if (truncated.length) {
+    const sample = truncated[0].length > 60 ? '…' + truncated[0].slice(-50) : truncated[0];
+    problems.push(`${truncated.length} champ(s) texte semblent tronqués mi-mot/mi-parenthèse (ex: "${sample}") — vérifier la génération amont de data.json`);
+  }
+  if (!problems.length) return;
+
+  const prefix = strict ? '[render-scanner] STRICT — BLOQUANT' : '[render-scanner] WARNING';
+  problems.forEach(p => console.error(`${prefix}: ${p}`));
+  if (strict) {
+    console.error('[render-scanner] Abandon (--strict). Corriger data.json à la source, ou relancer sans --strict pour un rendu avec fallback dégradé (non recommandé pour publication).');
+    process.exit(1);
+  }
+}
+
+guardDataQuality(d, STRICT);
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
@@ -503,9 +579,47 @@ function num(v) {
   return n.toLocaleString('en-US', { maximumFractionDigits: 2 });
 }
 
-/** Short setup phrase for the Setup column */
+/** Trim a truncated string back to the last safe boundary before the unmatched "(" cut */
+function safeTrimTruncated(s) {
+  const idx = s.lastIndexOf('(');
+  const base = (looksTruncated(s) && idx > 0) ? s.slice(0, idx) : s;
+  return base.replace(/[,;:\s]+$/, '').trim();
+}
+
+/**
+ * Short setup phrase for the Setup column.
+ * data.json may ship setup_phrase already cut mid-word/mid-parenthesis (upstream bug,
+ * not a renderer slice — see guardDataQuality above). Never invent the missing tail:
+ * prefer the first candidate field that is NOT truncated (description/thesis are full
+ * sentences already present in data.json). Only if every candidate is truncated do we
+ * trim the shortest one back to its last safe boundary + no fabricated text.
+ */
 function setupPhrase(s) {
-  return esc(s.setup_phrase || s.description || s.thesis || '');
+  const candidates = [s.setup_phrase, s.description, s.thesis].filter(Boolean);
+  const clean = candidates.find(c => !looksTruncated(c));
+  if (clean) return esc(clean);
+  if (!candidates.length) return '';
+  const shortest = candidates.reduce((a, b) => (a.length <= b.length ? a : b));
+  return esc(safeTrimTruncated(shortest));
+}
+
+/**
+ * Compact per-ticker <details> block listing Confirmations/Invalidations (scanner/CLAUDE.md
+ * §Confirmations/Invalidations OBLIGATOIRES). Collapsed by default to keep the compact
+ * table format — reuses the existing .confirm-box/.invalid-box CSS (colorblind-safe vars),
+ * inline layout styles allowed here per convention (CLAUDE.md rule 8 exception).
+ */
+function confirmInvalidDetails(s) {
+  const confirmItems = (s.confirmations || []).map(c => `<li>${esc(c)}</li>`).join('');
+  const invalidItems = (s.invalidations || []).map(c => `<li>${esc(c)}</li>`).join('');
+  if (!confirmItems && !invalidItems) return '';
+  return `        <details class="setup-civ-details" style="margin:.2rem 0 .6rem;">
+          <summary style="cursor:pointer;font-size:.82rem;font-weight:600;color:#334155;">${esc(s.ticker)} — Confirmations / Invalidations</summary>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.6rem;margin-top:.5rem;">
+${confirmItems ? `            <div class="confirm-box" style="margin:0;"><h4>&#x2705; Confirmations</h4><ul style="margin:0;padding-left:1.1rem;font-size:.82rem;">${confirmItems}</ul></div>` : ''}
+${invalidItems ? `            <div class="invalid-box" style="margin:0;"><h4>&#x274C; Invalidations</h4><ul style="margin:0;padding-left:1.1rem;font-size:.82rem;">${invalidItems}</ul></div>` : ''}
+          </div>
+        </details>`;
 }
 
 /** Render one compact strategy table. Returns '' when no rows. */
@@ -524,6 +638,7 @@ function strategyTable(title, subtitle, rows) {
       + `<td class="setup-phrase">${setupPhrase(s)}</td>`
       + `<td>${num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td></tr>`;
   }).join('\n');
+  const civBlocks = rows.map(confirmInvalidDetails).filter(Boolean).join('\n');
   return `  <h3 class="strategy-table-title">${title}${subtitle ? ` <span style="font-weight:500;color:#64748b;font-size:.85rem">— ${subtitle}</span>` : ''}</h3>
   <div style="overflow-x:auto">
     <table class="compare-table setups-table">
@@ -534,7 +649,8 @@ function strategyTable(title, subtitle, rows) {
 ${trs}
       </tbody>
     </table>
-  </div>`;
+  </div>
+${civBlocks ? `  <div class="setup-civ-list">\n${civBlocks}\n  </div>` : ''}`;
 }
 
 // ─── MAIN PAGE ASSEMBLER ─────────────────────────────────────────────────────

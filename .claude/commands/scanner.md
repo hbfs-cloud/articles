@@ -183,7 +183,7 @@ This validation is NOT optional — it runs as part of Phase 2, immediately afte
 ## Phase 4 — Render & Publish
 
 ```bash
-node tools/render-scanner.js scanner/YYYYMMDD/
+node tools/render-scanner.js scanner/YYYYMMDD/ --strict   # bloque si data.json désaccentué/tronqué (garde qualité amont)
 node tools/publish.js --type scanner --path scanner/YYYYMMDD/index.html --no-notify
 ```
 
