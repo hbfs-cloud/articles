@@ -1,8 +1,8 @@
 {
-  "_comment": "18 modes — v10.3 fortress CB restore 2026-07-02. Previous: v10.2.",
-  "_updated": "2026-07-01T14:16:34.674Z",
-  "_version": "v10.3",
-  "_prevVersion": "v10.0",
+  "_comment": "18 modes — v10.4 Go PositionManager exit-logic parity 2026-07-02 (trailTriggerPct/earlyExit/tighten, opt-in). Previous: v10.3.",
+  "_updated": "2026-07-02T00:00:00.000Z",
+  "_version": "v10.4",
+  "_prevVersion": "v10.3",
   "_regime": "EARLY RISK-OFF",
   "_riskLayer": "v1.3-20260604",
   "modes": {
@@ -609,6 +609,7 @@
       "trailingStop": true,
       "trailMultR": 1.5,
       "trailGraceDays": 3,
+      "trailTriggerPct": 12,
       "maxStopPct": 15,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
@@ -665,6 +666,8 @@
       "trailingStop": true,
       "trailMultR": 2,
       "trailGraceDays": 3,
+      "tightenAfterDays": 5,
+      "tightenToPct": 8,
       "maxStopPct": 15,
       "atrStopMult": 2,
       "dailyTrailPct": 0,
@@ -699,8 +702,8 @@
       "universeFilter": "casablanca"
     },
     "momentum": {
-      "status": "live",
-      "statusSince": "2026-07-01T14:27:19.430Z",
+      "status": "pausing",
+      "statusSince": "2026-07-02T06:25:02.105Z",
       "label": "Momentum",
       "color": "#27ae60",
       "goal": "Momentum Rotation (weighted 20/50/100d)",
@@ -749,8 +752,8 @@
         "recovery": "momentum_rotation"
       },
       "tklPoolEnabled": false,
-      "statusReason": "Promotion normale (user request 2026-07-01)",
-      "statusNextReviewAt": "2026-08-01"
+      "statusReason": "Backtest Go 5y US momentum-rotation NÉGATIF (config/experimental/portfolio_us_momentum_rotation.yaml): CAGR -5.31%, MaxDD 67.15%, PF 0.921, WR 34.1%, n=566 vs SPY +12.98% même fenêtre. Edge de sélection négatif (proxy worst-case — sizing/horizon live plus stricts, mais PF<1 = propriété de la sélection). Premier backtest réel de ce mode. Décision auto conservatrice (user AFK), réversible: pausing → live si re-validation des params live exacts positive.",
+      "statusNextReviewAt": "2026-07-16"
     },
     "etf": {
       "status": "live",
@@ -774,6 +777,8 @@
       "trailingStop": true,
       "trailMultR": 2,
       "trailGraceDays": 3,
+      "earlyExitLossPct": 5,
+      "earlyExitDays": 5,
       "maxStopPct": 17,
       "atrStopMult": 2.5,
       "dailyTrailPct": 0,
@@ -792,7 +797,7 @@
       "vixKillThreshold": 0,
       "correlationCap": 0.6,
       "crossModeDedup": false,
-      "circuitBreakerStops": 3,
+      "circuitBreakerStops": 4,
       "circuitBreakerWindow": 5,
       "circuitBreakerPause": 3,
       "regimeFilters": {
@@ -829,6 +834,8 @@
       "trailingStop": true,
       "trailMultR": 2,
       "trailGraceDays": 3,
+      "earlyExitLossPct": 5,
+      "earlyExitDays": 5,
       "maxStopPct": 0,
       "atrStopMult": 1.5,
       "dailyTrailPct": 0,
@@ -847,7 +854,7 @@
       "vixKillThreshold": 0,
       "correlationCap": 0.6,
       "crossModeDedup": false,
-      "circuitBreakerStops": 3,
+      "circuitBreakerStops": 4,
       "circuitBreakerWindow": 5,
       "circuitBreakerPause": 3,
       "regimeFilters": {
