@@ -23,7 +23,7 @@ Heures = Paris (CET/CEST), marché US.
 ## PRE-MARKET (argument: pre-market ou vide)
 
 ### Étape 1 — Fetch en parallèle :
-1. `GetRegimeProbability model=ensemble horizon_days=5`
+1. `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability)
 2. `QueryData symbols=^VIX types=quote`
 3. `GetEarningsCalendarFiltered days_ahead=5`
 4. `get_portfolio(account_id="91fa4372-b446-4dd8-93c4-b2bf9fb6d5cf")`
@@ -39,7 +39,7 @@ Et s'arrêter. Ne rien générer.
 
 ### Étape 3 — Sélection du mode
 
-Lire le label du régime retourné par `GetRegimeProbability` (champ `current_regime`).
+Lire le label du régime retourné par `GetMarketContext(facets='regime')` (canonique, ex-GetRegimeProbability ; champ `current_regime`).
 Pour chaque mode LIVE dans modes-config.json :
 1. Lire `regimeFilters[current_regime]` du mode
 2. Si le filtre = absent ou mode status != `live` ou `deploying` → EXCLURE le mode
@@ -97,7 +97,7 @@ Garder les `min(slots, topN)` premiers picks.
 ### Étape 8 — Correlation check
 
 Pour chaque pick retenu, si le mode a `correlationCap > 0` :
-1. Appeler `GetCorrelationMatrix symbols={pick},{positions_existantes_du_mode}`
+1. Appeler `PortfolioRisk(action='correlation', symbols='{pick},{positions_existantes_du_mode}')` (canonique, ex-GetCorrelationMatrix — symbols en CSV)
 2. Si corrélation max avec une position existante > correlationCap → ❌ corrélé
 
 ### Étape 9 — Sizing
@@ -160,7 +160,7 @@ ORDRES : {nb} | RISQUE AGRÉGÉ : {sum}$ ({pct}% capital)
 
 ### Fetch :
 1. `QueryData symbols={TICKERS_DU_PLAN},^VIX types=quote`
-2. `GetRegimeProbability model=ensemble horizon_days=5` (re-check)
+2. `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability) (re-check)
 
 ### Logique :
 - VIX > vixKillThreshold du mode → TOUT ANNULER

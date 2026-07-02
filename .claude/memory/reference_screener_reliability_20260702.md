@@ -20,7 +20,7 @@ metadata:
    → C'est LA feature pour valider les recettes ; à réparer en priorité.
 2. `region='eu'` : FIXÉ à la source — univers EU chargé par défaut depuis la décision
    user 2026-07-02 (ENABLE_EU_UNIVERSE=false pour désactiver, sinon toujours actif).
-   Après un deploy frais : backfill bars one-time (~2h pour 22,7k symbols, suivre GetHealth).
+   Après un deploy frais : backfill bars one-time (~2h pour 22,7k symbols, suivre GetHealth [alias legacy — canonique 2026-07: GetStatus]).
    VÉRIFIÉ 2026-07-02 15h : candidats EU réels multi-places (BR/L/HE/DE/WA). GAP RÉSIDUEL :
    market_cap=0 sur tous les tickers EU (enrichissement contextuel non peuplé) → toute clause
    market_cap>X rend 0 en EU (le diagnostic zero-result le signale). En attendant le fix :

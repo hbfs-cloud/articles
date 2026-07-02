@@ -57,7 +57,7 @@ En PLUS des 5 axes ci-dessus, appliquer cette grille de scoring validée empiriq
 `RunAutoScreener` → use ONLY its `regime` / `risk_tolerance`. Its candidate picks are hot-movers/overbought junk — ignore them for A+.
 
 ### 2. Screen a liquid pool (loose, then post-filter in code)
-`RunScreener` returns jobs (async → poll `CheckJobStatus`). **DSL gotchas (verified):**
+`RunScreener` returns jobs (async → poll `Jobs(job_id=...)`, canonique, ex-CheckJobStatus). **DSL gotchas (verified):**
 - `ema`/`sma` need 2 args: `ema(close,20)` (one-arg errors).
 - **`abs()` is unsupported in `score_expr`** → using it returns 0 candidates silently. Keep `score_expr` simple (`rsi14`).
 - An `ema(close,20)>ema(close,50)&&…` *pass_expr* returns 0 — don't gate the screen on the EMA stack; verify it per-ticker instead.

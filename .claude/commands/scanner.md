@@ -68,13 +68,13 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 Run in parallel:
 
 ```
-mcp__claude_ai_marketdata__GetMarketOverview()
+mcp__claude_ai_marketdata__GetMarketContext(facets="overview")   # async, seul (pas combinable) — canonique, ex-GetMarketOverview
 mcp__claude_ai_marketdata__RunAutoScreener()
 mcp__claude_ai_marketdata__RunScreener(expression="...", region="us")   # 3 DSL strategies
 mcp__claude_ai_marketdata__RunScreener(expression="...", region="eu")
 ```
 
-Wait for async jobs via `CheckJobStatus`. Extract:
+Wait for async jobs via `Jobs(job_id=...)` (canonique, ex-CheckJobStatus/ListJobs → `Jobs(job_id=...)` ou `Jobs(intent_id=...)`). Extract:
 - Regime (risk-on/risk-off/neutral), VIX, SPX level
 - Top movers, sector variations, trending themes
 - Screener candidates with scores
@@ -100,10 +100,10 @@ Disqualify on: dilution_risk_score >= 70, shelf_active, atm_program_active, aggr
 ### Risk Gating (OBLIGATOIRE)
 Before finalizing top 10, run 4 MCP checks:
 ```
-mcp__claude_ai_marketdata__GetRegimeProbability(model="ensemble", horizon=5)
-mcp__claude_ai_marketdata__GetCorrelationMatrix(symbols=[top10], window=60, method="pearson")
+mcp__claude_ai_marketdata__GetMarketContext(facets="regime", model="ensemble", horizon_days=5)   # canonique, ex-GetRegimeProbability
+mcp__claude_ai_marketdata__PortfolioRisk(action="correlation", symbols="TICK1,TICK2,...", lookback_days=60, method="pearson")   # canonique, ex-GetCorrelationMatrix — symbols=CSV string (piège: PAS un array JSON ici)
 mcp__claude_ai_marketdata__GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)
-mcp__claude_ai_marketdata__OptimizeSizing(mode="balanced", method="vol_target", max_position_risk_pct=1.0, max_pairwise_correlation=0.7)
+mcp__claude_ai_marketdata__PortfolioRisk(action="sizing", signals=[...], constraints={mode:"balanced", max_position_risk_pct:1.0, max_pairwise_correlation:0.7}, mode="balanced")   # canonique, ex-OptimizeSizing — signals=JSON array, constraints=JSON object
 ```
 - Regime: `crisis > 0.30` or `early_risk_off > 0.50` → reduce to 5, breakout_only, size × 0.5
 - Correlation: `max_pair.rho > 0.85` → drop lowest score; `avg_off_diagonal > 0.65` → force min 2 sectors
@@ -293,9 +293,9 @@ Each agent returns PASS/WARN/FAIL per check area with required fixes.
 If Phase 5 ran successfully, do NOT push twice — already pushed by `publish-daily-card.sh`.
 
 ## Error Handling
-- MCP screener returns empty → use GetMarketOverview top movers + manual candidate selection
+- MCP screener returns empty → use GetMarketContext(facets="overview") top movers + manual candidate selection
 - DSL screener scores all 0 → ignore DSL results, rely on AutoScreener only
-- EU screener empty → fill EU slots from GetMarketOverview EU movers or known EU large-caps
+- EU screener empty → fill EU slots from GetMarketContext(facets="overview") EU movers or known EU large-caps
 - Sweep timeout → continue pipeline, sweep is not blocking
 - Telegram notification fails → log warning, do not block
 - refresh-risk-metrics.js: **MCP_GATEWAY_URL is mandatory in prod**. Stub fallback only acceptable if gateway is verifiably down — flag loudly in post-pipeline check, never accept silently

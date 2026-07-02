@@ -11,7 +11,7 @@ user_invocable: false
 
 1. **Date** : weekly couvre semaine **À VENIR**. Dossier = `weekly/YYYYMMDD/` (YYYYMMDD = lundi). Anti-doublon : `ls weekly/` ET `grep "YYYYMMDD" data/weekly.json` — NE PAS ajouter si URL existe.
 2. **Référence** : Lire `weekly/20260223/index.html` pour layout exact
-3. **Collecte MCP** : `GetMarketOverview` (deep — trending, sector variations, economic calendar) + `QueryData` types=quote,**social_sentiment,capital_flow**,trading_signals (SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (géopolitique, earnings clés, Polymarket)
+3. **Collecte MCP** : `GetMarketContext(facets='overview')` (canonique, ex-GetMarketOverview — async seul, poller via `Jobs`; deep — trending, sector variations, economic calendar) + `QueryData` types=quote,**social_sentiment,capital_flow**,trading_signals (SPY, QQQ, DIA, IWM, GLD, SLV, USO, TLT, EFA, EEM, FXI, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (géopolitique, earnings clés, Polymarket)
 4. **Générer** : `weekly/YYYYMMDD/index.html` avec 18 sections (> 100KB). CSS = `/assets/report.css`. FAB obligatoire, PAS de hero-brand-link.
 5. **Indexer + Push** :
    ```bash
@@ -49,7 +49,7 @@ Supporte tous les asset types : stock, etf, crypto, forex, commodity, index.
 ## "Analyse Daily" / "Briefing du jour"
 **Langue par défaut : anglais intermediate.** Voir `daily/CLAUDE.md` pour template complet et 17 sections obligatoires.
 
-1. **Collecte MCP** : `GetMarketOverview` (deep — exploiter trending, sector variations, economic calendar, earnings calendar) + `QueryData` types=quote,**social_sentiment,capital_flow**,trading_signals (SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (géopolitique, Polymarket)
+1. **Collecte MCP** : `GetMarketContext(facets='overview')` (canonique, ex-GetMarketOverview — async seul, poller via `Jobs`; deep — exploiter trending, sector variations, economic calendar, earnings calendar) + `QueryData` types=quote,**social_sentiment,capital_flow**,trading_signals (SPY, QQQ, DIA, IWM, EFA, EEM, FXI, GLD, SLV, USO, TLT, BTC-USD, ETH-USD, SOL-USD, XRP-USD) + WebSearch (géopolitique, Polymarket)
 2. **⚠️ ANTI-DOUBLON OBLIGATOIRE** : avant `add_card.js`, vérifier que URL `/daily/YYYYMMDD/` n'existe PAS dans `data/daily.json` avec `grep "YYYYMMDD" data/daily.json`. Si existe → NE PAS ajouter, signaler doublon.
 3. **Générer** `daily/YYYYMMDD/index.html`. CSS = `/assets/report.css`.
 4. **Samedi** = briefing complet (récap vendredi + bilan semaine + preview lundi)

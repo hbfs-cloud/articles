@@ -38,6 +38,12 @@ Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun
 - **Broker Simulator** : `https://simulator.dailytickers.com/` — via MCP OAuth2
 
 Namespace outils marché courant : `mcp__claude_ai_marketdata__*` (ex-Gateway/DailyTickers — morts).
+**Surface v5 consolidée (2026-07)** : `GetMarketContext`/`Jobs`/`PortfolioRisk`/`GetStatus`/`OptionsAnalytics`
+remplacent respectivement GetMarketOverview+GetRegimeProbability+GetPredictionMarkets+GetSeasonality+GetCOTReport,
+CheckJobStatus+ListJobs, GetCorrelationMatrix+OptimizeSizing+CalculatePortfolioVaR+GetPortfolioStressTest,
+GetHealth+GetVersion, et les outils options (GetOptionsSentiment/CalculateOptionsGreeks/CalculatePortfolioGreeks/
+CalculateSABRVolatility/AnalyzeOptionsStrategy). Les anciens noms restent des alias serveur (HTTP OK) mais ne
+sont plus découvrables via ToolSearch — toujours utiliser les noms canoniques. Détails : `.claude/skills/mcp-gateway-tools.md`.
 
 **Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
 
@@ -147,7 +153,7 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | Skill | Trigger keywords |
 |-------|------------------|
 | `mcp-forecast-timesfm` | forecast, TimesFM, ForecastRaw, ForecastVix, Backtest |
-| `mcp-gateway-tools` | QueryData, GetMarketOverview, GetInstruments, RunScreener, GetRegimeProbability, GetCorrelationMatrix, GetEarningsCalendarFiltered, OptimizeSizing, Polymarket |
+| `mcp-gateway-tools` | QueryData, GetMarketContext, GetInstruments, RunScreener, Jobs, PortfolioRisk, GetEarningsCalendarFiltered, GetStatus, OptionsAnalytics, Polymarket |
 | `scanner-pipeline` | scanner, scan du jour, sweep, regime, risk gating, dilution, Sharia, optimize-param, Mountain Plateau, rétrospective |
 | `trading-executor` | run-session, gen-trading-plan, broker, alpaca, ibkr, saxo, trading212, binance, paper mode |
 | `status-page-architecture` | scanner/status, Time Machine, tmUpdateLive, tmLoadIdx, lp-grid, panel(), rotation tracking |

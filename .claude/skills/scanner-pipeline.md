@@ -74,7 +74,7 @@ RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('
 
 ### Phase 1 — MCP Data Collection
 
-**Collecte MCP** : `RunAutoScreener` + **5 RunScreener DSL** (ci-dessous) + `GetMarketOverview` (trending, sectors, calendar) + `GetRegimeProbability` (model=ensemble, horizon=5) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats
+**Collecte MCP** : `RunAutoScreener` + **5 RunScreener DSL** (ci-dessous) + `GetMarketContext(facets='overview')` (trending, sectors, calendar — canonique, ex-GetMarketOverview, async seul, poller via `Jobs`) + `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats
 
 **⚠️ RunScreener — 5 queries obligatoires :**
 
@@ -161,10 +161,10 @@ Chaque signal dans les pools a la même shape que les signaux classiques (ticker
    - Score 40-69 → **-15 pts + flag obligatoire dans Invalidations**
 
 **⚠️ Risk Gating Post-Screener (OBLIGATOIRE — Risk Layer v1)** :
-   - `GetRegimeProbability` : si `crisis > 0.30` ou `early_risk_off > 0.50` → top réduit à 5, breakout_only, taille × 0.5
-   - `GetCorrelationMatrix` (window=60) : `max_pair.rho > 0.85` → drop le score le plus bas ; `avg_off_diagonal > 0.65` → forcer min 2 secteurs
+   - `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability) : si `crisis > 0.30` ou `early_risk_off > 0.50` → top réduit à 5, breakout_only, taille × 0.5
+   - `PortfolioRisk(action='correlation', symbols='T1,T2,...', lookback_days=60, method='pearson')` (canonique, ex-GetCorrelationMatrix — `symbols` en CSV, pas array) : `max_pair.rho > 0.85` → drop le score le plus bas ; `avg_off_diagonal > 0.65` → forcer min 2 secteurs
    - `GetEarningsCalendarFiltered` (days_ahead=7, min_expected_move=4) : ticker dans `exclusion_window` → DISQUALIFIER ou tag "earnings risk"
-   - `OptimizeSizing` (mode=balanced, method=vol_target, max_position_risk_pct=1.0, max_pairwise_correlation=0.7)
+   - `PortfolioRisk(action='sizing', signals=[...], constraints={...}, mode='balanced')` (canonique, ex-OptimizeSizing — method=vol_target, max_position_risk_pct=1.0, max_pairwise_correlation=0.7 dans `constraints`)
 
 **⚠️ Sharia Compliance Tagging (OBLIGATOIRE)** : conformité Sharia (secteur haram, dette/market cap > 33%, intérêts > 5% CA, ETFs levier/bonds). `data-sharia="true|false"` sur chaque `<tr>` + setup-card. Voir `scanner/CLAUDE.md`.
 
@@ -352,7 +352,7 @@ Exécuter le Step 0 scan A+ (§3.0 → §3.7) dans cet ordre STRICT :
 1. §3.0 SHARIA : exclure riba / haram / ratios non conformes → `GetInstruments(symbol="{TICKER}")`
 2. §3.1 ROTATION : identifier les groupes leaders via F3
 3. §3.2 POOL : `RunScreener(pass_expr="rsi14>48 && rsi14<60 && macd>0 && vol>2500000", top_k=90)`
-   → poll `CheckJobStatus` → post-filtre market_cap 2-20G$, leaders only, pas déjà au book
+   → poll `Jobs(job_id=...)` (canonique, ex-CheckJobStatus) → post-filtre market_cap 2-20G$, leaders only, pas déjà au book
 4. §3.3 LES 4 ÉLIMINATOIRES par ticker survivant :
    - ① Guidance relevée : `QueryData(symbol="{T}", data_type="earnings")`
    - ② ≥5 EPS beats : `QueryData(symbol="{T}", data_type="earnings_quarterly", limit=8)`

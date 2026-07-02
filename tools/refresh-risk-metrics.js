@@ -2,11 +2,13 @@
 /**
  * refresh-risk-metrics.js — Populate data/risk-snapshots.json from MCP gateway.
  *
- * For each portfolio mode, calls (in order):
- *   1. CalculatePortfolioVaR (historical, 5-day, 95% + 99%)
- *   2. GetPortfolioStressTest (preset scenarios)
- *   3. GetCorrelationMatrix (open positions only)
- *   4. GetRegimeProbability (single market-level call, shared across modes)
+ * For each portfolio mode, calls (in order) — these are MCP gateway v5 legacy tool names
+ * (server-side aliases, still callable over HTTP JSON-RPC as-is; canonical ToolSearch-discoverable
+ * names are PortfolioRisk(action='var'|'stress'|'correlation') and GetMarketContext(facets='regime')):
+ *   1. CalculatePortfolioVaR (historical, 5-day, 95% + 99%) — alias legacy, canonique: PortfolioRisk(action='var')
+ *   2. GetPortfolioStressTest (preset scenarios) — alias legacy, canonique: PortfolioRisk(action='stress')
+ *   3. GetCorrelationMatrix (open positions only) — alias legacy, canonique: PortfolioRisk(action='correlation')
+ *   4. GetRegimeProbability (single market-level call, shared across modes) — alias legacy, canonique: GetMarketContext(facets='regime')
  *
  * Source: scanner/status/history/<latest>.json (current open positions per mode)
  *
@@ -193,6 +195,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
 
   if (portfolioReturns && portfolioReturns.length >= 20) {
     try {
+      // alias legacy — canonique: PortfolioRisk(action='var')
       const var95 = await jsonrpcCall('CalculatePortfolioVaR', {
         portfolio_value: PORTFOLIO_VALUE_USD,
         returns: JSON.stringify(portfolioReturns),
@@ -206,6 +209,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
     } catch (e) { console.log(`  [warn] VaR95 ${modeId}: ${e.message}`); }
 
     try {
+      // alias legacy — canonique: PortfolioRisk(action='var')
       const var99 = await jsonrpcCall('CalculatePortfolioVaR', {
         portfolio_value: PORTFOLIO_VALUE_USD,
         returns: JSON.stringify(portfolioReturns),
@@ -220,6 +224,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
   }
 
   // Stress test
+  // alias legacy — canonique: PortfolioRisk(action='stress')
   try {
     const stress = await jsonrpcCall('GetPortfolioStressTest', {
       positions: JSON.stringify(positions),
@@ -230,6 +235,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
   } catch (e) { console.log(`  [warn] stress ${modeId}: ${e.message}`); }
 
   // Correlation
+  // alias legacy — canonique: PortfolioRisk(action='correlation')
   try {
     if (sw.symbols.length >= 2) {
       const corr = await jsonrpcCall('GetCorrelationMatrix', {
@@ -246,6 +252,7 @@ async function fetchModeRisk(modeId, modeSnapshot) {
 }
 
 async function fetchRegimeProbability() {
+  // alias legacy — canonique: GetMarketContext(facets='regime')
   try {
     const r = await jsonrpcCall('GetRegimeProbability', {
       horizon_days: 5,

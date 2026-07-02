@@ -11,6 +11,7 @@ Recipe + gotchas for producing the monthly **"10 setups A+"** analyses batch (re
 
 ## MCP screening pipeline that worked (Jun 2026)
 1. `RunScreener` (async → poll `CheckJobStatus`) to build a liquid pool, then post-filter in code. Candidate objects from **RunScreener** only carry: `symbol, last_price, market_cap, rsi, macd, atr, avg_volume/volume, change_24h`. Filter `market_cap>=2e9 && !excludeList`.
+   > ⚠️ Note 2026-07 (surface MCP v5) : `CheckJobStatus`/`ListJobs` sont des alias serveur legacy (HTTP direct OK) mais plus découvrables via ToolSearch. Canonique : `Jobs(job_id=...)` / `Jobs(intent_id=...)`. Note ajoutée, historique non réécrit.
 2. `QueryData types=earnings_quarterly` (comma-separated symbols, limit 8) → keep only 4/4 beats (actual>estimate every quarter).
 3. `QueryData types=technicals` → **verify EMA20>EMA50>EMA200 here** (the real structure gate; several RSI-healthy names fail it — e.g. golden-cross-pending or turnaround names).
 4. `QueryData types=stats` → valuation (pegRatio, enterpriseToEbitda, priceToBook, beta, shares, shortPercentOfFloat).

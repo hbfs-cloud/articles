@@ -56,8 +56,9 @@ Prérequis : connecteurs MCP marketdata + broker branchés dans ce chat.
 
 ## 0. INVARIANTS
 
-- **ZÉRO FABRICATION** : prix/EMA/ATR/RSI/fondamentaux via QueryData / ScreenFundamentals /
-  GetInstruments / SEC EDGAR, calculés par toi. Source manquante → tu le signales et tu
+- **ZÉRO FABRICATION** : prix/EMA/ATR/RSI/fondamentaux via QueryData /
+  GetInstruments / SEC EDGAR, calculés par toi (⚠️ `ScreenFundamentals` supprimé côté MCP v5, sans
+  remplaçant direct — ne plus l'appeler). Source manquante → tu le signales et tu
   t'arrêtes sur ce point, tu ne combles **jamais**. Ne transcris jamais de barres à la main pour
   un backtest maison (la transcription EST une source de fabrication) : test programmatique en
   **relatif** via RunBacktest, ou rien.
@@ -189,7 +190,7 @@ Badge par ligne retenue : ✅ Halal / ❓ Débattu (crypto) — jamais de ⚠️
 
 **3.2 POOL LIQUIDE — loose screen** (ne PAS gater sur l'EMA stack → 0 résultat)
 `RunScreener pass_expr="rsi14>48 && rsi14<60 && macd>0 && vol>2500000" top_k=90` (async → poll
-`CheckJobStatus`). `abs()` interdit en score_expr. Candidats = symbol/last_price/market_cap/rsi/
+`Jobs(job_id=...)`, canonique, ex-CheckJobStatus). `abs()` interdit en score_expr. Candidats = symbol/last_price/market_cap/rsi/
 macd/atr/vol. Post-filtre : market_cap 2-20 G$ ; restreindre aux LEADING GROUPS ; retirer tickers
 déjà au book / couverts le mois passé.
 
@@ -324,5 +325,5 @@ seulement (jamais dans un article) ; aucun chiffre sans source MCP ; signaler �
 ema/sma à 2 args : `ema(close,20)`. `abs()` interdit en score_expr (→0 silencieux). Ne PAS gater
 le screen sur l'EMA stack (→0) — vérifier par-ticker. `RunAutoScreener` = regime only.
 `RunScreener` candidats = symbol/last_price/market_cap/rsi/macd/atr/vol uniquement. trend_strength
-réel ~0,05-0,10. RunScreener/RunBacktest async → poll `CheckJobStatus`. Backtest = comparaisons
+réel ~0,05-0,10. RunScreener/RunBacktest async → poll `Jobs(job_id=...)` (canonique, ex-CheckJobStatus). Backtest = comparaisons
 RELATIVES uniquement (cf. §0).

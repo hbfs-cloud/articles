@@ -31,7 +31,7 @@ Before generating content, gather real data:
    - Reuse real trade setups, market data, and analysis from our publications
 
 2. **MCP Gateway** — pull live market data when the topic involves specific tickers/markets:
-   - `GetMarketOverview` for macro context
+   - `GetMarketContext(facets='overview')` for macro context (canonique, ex-GetMarketOverview — async seul, poller via `Jobs`)
    - `QueryData` types=quote,social_sentiment,capital_flow for specific tickers
    - `GetInstruments` for deep ticker analysis
    - `RunAutoScreener` if the topic is about screening/stock picking

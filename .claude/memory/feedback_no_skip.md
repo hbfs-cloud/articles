@@ -19,3 +19,8 @@ Never silently skip ANY step of the /scanner pipeline (anti-dilution, GetInstrum
 - Earnings proximity: `GetEarningsCalendarFiltered(days_ahead=7)` AND `days_until_earnings(SYMBOL)` — disqualify or tag "earnings risk" if within ±3 trading days
 - Economic event proximity: `is_near_economic_event(currency, min_priority=2, within_days=3)` per relevant currency
 - Risk gating: `GetRegimeProbability`, `GetCorrelationMatrix` (top10), `OptimizeSizing`
+
+> ⚠️ Note 2026-07 (surface MCP v5) : ces trois noms sont des alias serveur legacy (HTTP direct OK) mais
+> plus découvrables via ToolSearch. Canoniques : `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)`,
+> `PortfolioRisk(action='correlation', symbols='CSV', lookback_days, method)`, `PortfolioRisk(action='sizing', signals=[...], constraints={...}, mode)`.
+> Note ajoutée, historique non réécrit.

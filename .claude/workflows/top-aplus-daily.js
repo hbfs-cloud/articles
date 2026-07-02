@@ -17,7 +17,7 @@ export const meta = {
 const PATH = 'daily/20260616/top-aplus/index.html'
 const DATE_FR = '16 juin 2026'
 
-// Régime live (GetRegimeProbability ensemble, 2026-06-16) — passé aux agents, ne pas réinventer
+// Régime live (GetRegimeProbability ensemble, 2026-06-16 — alias legacy, canonique: GetMarketContext(facets='regime', model='ensemble')) — passé aux agents, ne pas réinventer
 const REGIME = {
   state: 'neutral', confidence: 0.412,
   probs: { risk_on: 0.254, neutral: 0.412, early_risk_off: 0.268, crisis: 0.066 },

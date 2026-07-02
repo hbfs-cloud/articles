@@ -16,7 +16,7 @@ Old conductors (AM/PM/WE) disabled — they had huge prompts (~2000 words), cras
 **How to apply:** All routines on Opus. Monitoring routines = short prompts, no file writes. Article routines = full pipeline with git. All 10 routines have 4 MCP connectors (marketdata, notification, memory, simulator).
 
 ### Systemic fixes applied 2026-06-25
-1. **GetMarketOverview** — `analysis_depth="quick" maxsize=20000` everywhere (default times out at 45s/70KB)
+1. **GetMarketOverview** [alias legacy — canonique 2026-07: `GetMarketContext(facets='overview')`, async seul, poll via `Jobs`] — `analysis_depth="quick" maxsize=20000` everywhere (default times out at 45s/70KB)
 2. **Connector simulator** — added to Daily/Scanner/Nightly/Weekly (was missing → `get_portfolio()` silently failed)
 3. **Connector memory** — added to all 4 monitoring routines (was missing)
 4. **Telegram format** — `format='html'` + `<b>` tags on all routines (Telegram ignores `**bold**`)

@@ -32,4 +32,8 @@ Le user a réagi très fortement ("tu as fumé ?") — c'est un problème de cr�
 ## 2. Événements géopolitiques/économiques
 Ne JAMAIS citer un événement sans l'avoir vérifié via WebSearch ou MCP GetMarketOverview. Le modèle a un cutoff mai 2025 et confond ses connaissances d'entraînement avec la réalité 2026.
 
+> ⚠️ Note 2026-07 (surface MCP v5) : `GetMarketOverview` est un alias serveur legacy (marche encore en
+> HTTP direct) mais n'est plus découvrable via ToolSearch. Canonique : `GetMarketContext(facets='overview')`.
+> Note ajoutée, historique non réécrit.
+
 Voir aussi : [[feedback_no_skip]], [[feedback_no_false_caveats]]
