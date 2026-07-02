@@ -33,6 +33,12 @@ const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
 const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
 const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
 const SHARIA = process.argv.includes('--sharia');
+// Opt-in maintenance mode: enrich EXISTING closed trades in data/backtest-trades.json
+// with mae_pct/mfe_pct/outcomes/r_multiple computed from the price-cache. NEVER runs
+// by default — never touches the 9 chain-hashed fields (see trade-integrity.js
+// hashTrade), only ADDS new keys, and skips trades that already carry the fields
+// (idempotent). See backfillExcursions() below.
+const BACKFILL_EXCURSIONS = process.argv.includes('--backfill-excursions');
 const FROM_ARG = process.argv.find(a => a.startsWith('--from='));
 const FROM_DATE = FROM_ARG ? FROM_ARG.split('=')[1] : null;
 // TKL pool ingestion policy:
@@ -572,6 +578,58 @@ function computeATR(priceHistory, beforeDate, periods = 14) {
   return count > 0 ? sum / count : null;
 }
 
+// ─── Trade-outcome enrichment helpers (MAE/MFE + forward-return horizons) ────
+// Pure, null-safe, side-effect-free — shared by simulateTrade() (new trades)
+// AND backfillExcursions() (opt-in enrichment of pre-existing closed trades),
+// so both paths compute these fields identically. Unit-tested on synthetic
+// bars in tools/lib/__tests__ (see validation report).
+
+// MAE (Maximum Adverse Excursion) / MFE (Maximum Favorable Excursion), in % of
+// refPrice (the effective entry price), computed from every bar's low/high
+// between startDate and endDate (inclusive) in priceHistory. Returns nulls
+// when there is no bar data in range (never throws).
+function computeExcursion(priceHistory, startDate, endDate, refPrice) {
+  if (!priceHistory || !startDate || !endDate || !(refPrice > 0)) {
+    return { mae_pct: null, mfe_pct: null };
+  }
+  const dates = Object.keys(priceHistory).filter(d => d >= startDate && d <= endDate).sort();
+  if (dates.length === 0) return { mae_pct: null, mfe_pct: null };
+  let low = refPrice, high = refPrice;
+  for (const d of dates) {
+    const bar = priceHistory[d];
+    if (!bar) continue;
+    if (bar.low != null && bar.low < low) low = bar.low;
+    if (bar.high != null && bar.high > high) high = bar.high;
+  }
+  return {
+    mae_pct: +(((low - refPrice) / refPrice) * 100).toFixed(2),
+    mfe_pct: +(((high - refPrice) / refPrice) * 100).toFixed(2),
+  };
+}
+
+// Forward-return horizons (J+1/J+5/J+20 in BUSINESS/calendar days per DF): close price
+// at entryDate+N vs entryPrice — measures signal quality independent of exit management
+// (a trade already stopped out still gets its d5/d20 read). Uses "close on or after" the
+// target date (handles holidays not accounted for by addBizDays) so a missing exact-date
+// bar doesn't spuriously null out the horizon. Returns null per-horizon when price data
+// doesn't reach that far yet (recent trade) — never invents data.
+function computeOutcomeHorizons(priceHistory, entryDate, entryPrice, DF) {
+  if (!priceHistory || !entryDate || !(entryPrice > 0)) return { d1: null, d5: null, d20: null };
+  const allDates = Object.keys(priceHistory).sort();
+  const closeOnOrAfter = (targetDate) => {
+    const idx = allDates.findIndex(d => d >= targetDate);
+    if (idx === -1) return null; // horizon not reached yet — never fabricate
+    const bar = priceHistory[allDates[idx]];
+    return bar && bar.close != null ? bar.close : null;
+  };
+  const pctFrom = (close) => close != null ? +(((close - entryPrice) / entryPrice) * 100).toFixed(2) : null;
+  return {
+    d1: pctFrom(closeOnOrAfter(DF.addDays(entryDate, 1))),
+    d5: pctFrom(closeOnOrAfter(DF.addDays(entryDate, 5))),
+    d20: pctFrom(closeOnOrAfter(DF.addDays(entryDate, 20))),
+  };
+}
+
 function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   const {
     horizonDays = 20, partialTP = false, partialTPPct = 0.5, trailingStop = false,
@@ -965,6 +1023,20 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     pnlPct = (exitPrice - entryPrice) / entryPrice;
   }
 
+  // Trade-outcome enrichment (NEW trades only — this function only ever produces
+  // freshly-simulated trades; pre-existing closed trades in backtest-trades.json
+  // are read verbatim elsewhere and never pass back through here, so this is
+  // append-only by construction — see feedback/immutable-trades).
+  // excursionEnd: last bar actually touched by the position (exitDate if resolved,
+  // else the last bar processed in the day-loop for pending/expired-without-exit).
+  const excursionEnd = exitDate || sortedDates[sortedDates.length - 1] || entryDate;
+  const { mae_pct, mfe_pct } = computeExcursion(priceHistory, entryDate, excursionEnd, entryPrice);
+  const outcomes = computeOutcomeHorizons(priceHistory, entryDate, entryPrice, DF);
+  // r_multiple: signed (exit - entry) / (entry - initial stop). riskPerUnit is the
+  // INITIAL risk (post ATR-widening/maxStopPct cap, pre-trailing) — never mutated
+  // after entry, unlike currentStop — so this matches "stop initial" exactly.
+  const r_multiple = riskPerUnit > 0 ? +(((exitPrice - entryPrice) / riskPerUnit)).toFixed(2) : null;
+
   return {
     ticker: setup.ticker,
     strategy: setup.strategy,
@@ -979,6 +1051,10 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     status,
     exitDate,
     exitPrice,
+    mae_pct,
+    mfe_pct,
+    outcomes,
+    r_multiple,
     ...(exitTrigger ? { exitTrigger } : {}),
     pnlPct: +(pnlPct * 100).toFixed(2),
     holdDays: daysHeld,
@@ -1701,6 +1777,14 @@ function simulatePortfolio(allTrades, scans, config) {
       actualStop: t.actualStop || null, actualTp1: t.actualTp1 || null, actualTp2: t.actualTp2 || null,
       regime: t.regime || null,
       source: t.source || 'signals',
+      // Trade-outcome enrichment (MAE/MFE, forward horizons, R-multiple) — computed by
+      // simulateTrade for freshly simulated trades. Must be carried through this
+      // projection or the FROZEN_ONLY append path (sim2.closedTrades) silently drops
+      // them. Null-safe: absent on legacy/injected trades → null, never invented.
+      mae_pct: t.mae_pct ?? null,
+      mfe_pct: t.mfe_pct ?? null,
+      outcomes: t.outcomes ?? null,
+      r_multiple: t.r_multiple ?? null,
       entryTime: t.entryDate ? '09:30' : null,
       exitTime: t.exitDate ? (['expired','pending'].includes(t.status) ? '16:00' : t.status === 'rotated' ? '09:30' : ['sl'].includes(t.status) ? '10:00' : ['tp1','tp1_partial'].includes(t.status) ? '11:00' : ['tp2'].includes(t.status) ? '13:00' : ['breakeven','trail'].includes(t.status) ? '14:00' : '16:00') : null,
     })),
@@ -1737,6 +1821,96 @@ function computeRollingStats(metrics, windowDays) {
 }
 
 // ─── Main sweep ───────────────────────────────────────────────────────────────
+
+// ─── Opt-in backfill: enrich EXISTING closed trades with MAE/MFE/outcomes/R ──
+// Standalone maintenance pass — does NOT run the grid-search sweep. Only invoked
+// via `node tools/sweep.js --backfill-excursions`. Rules (per project mandate):
+//   1. Only ADDS new keys (mae_pct, mfe_pct, outcomes, r_multiple) — never
+//      touches an existing key on any trade.
+//   2. Idempotent: a trade that already has `mae_pct` is skipped entirely.
+//   3. Chain-safe by construction: trade-integrity.hashTrade() only reads
+//      ticker/scanDate/entryDate/exitDate/actualEntry/exitPrice/pnlPct/status/
+//      strategy — none of which this function writes — so the SHA-256 chain
+//      is unaffected and does NOT need to be re-sealed after this runs.
+//   4. Pending / sim2_artifact trades are skipped (nothing "closed" to measure).
+async function backfillExcursions() {
+  console.log('=== BACKFILL EXCURSIONS (opt-in, --backfill-excursions) ===\n');
+  console.log('Adding mae_pct / mfe_pct / outcomes / r_multiple to EXISTING closed trades.');
+  console.log('Append-only on NEW keys — chain-hashed fields (ticker/scanDate/entryDate/');
+  console.log('exitDate/actualEntry/exitPrice/pnlPct/status/strategy) are never touched.\n');
+
+  const MODES_CFG_PATH = process.env.MODES_CFG_OVERRIDE || path.join(ROOT, 'data', 'modes-config.json');
+  const BACKTEST_TRADES_PATH = path.join(ROOT, 'data', 'backtest-trades.json');
+
+  if (!fs.existsSync(BACKTEST_TRADES_PATH)) {
+    console.log('No data/backtest-trades.json found — nothing to backfill.');
+    return;
+  }
+
+  const chainCheck = verifyTradeChain();
+  if (!chainCheck.ok) {
+    console.error('🛑 TRADE CHAIN INTEGRITY VIOLATION — aborting backfill (refusing to write near tampered history).');
+    process.exit(1);
+  }
+
+  const trades = JSON.parse(fs.readFileSync(BACKTEST_TRADES_PATH, 'utf8'));
+  let modesConfig = {};
+  if (fs.existsSync(MODES_CFG_PATH)) {
+    try { modesConfig = JSON.parse(fs.readFileSync(MODES_CFG_PATH, 'utf8')).modes || {}; } catch (e) {}
+  }
+
+  // Only fetch tickers for trades actually missing the fields (idempotent + cheap re-runs).
+  const neededTickers = new Set();
+  for (const modeId of Object.keys(trades)) {
+    for (const t of (trades[modeId] || [])) {
+      if (t.status === 'pending' || t.status === 'sim2_artifact') continue;
+      if (t.mae_pct !== undefined) continue;
+      if (t.ticker) neededTickers.add(t.ticker);
+    }
+  }
+  console.log(`Fetching price history for ${neededTickers.size} tickers needed for backfill...`);
+  let fc = 0;
+  for (const ticker of neededTickers) {
+    await fetchOHLCV(ticker);
+    fc++;
+    if (fc % 5 === 0) process.stdout.write(`  ${fc}/${neededTickers.size}\r`);
+    await sleep(120);
+  }
+  console.log('');
+
+  let totalClosed = 0, backfilled = 0, skippedNoHistory = 0, alreadyDone = 0;
+  for (const modeId of Object.keys(trades)) {
+    const cfg = modesConfig[modeId] || {};
+    const DF = dayFnsFor(cfg.calendar);
+    for (const t of (trades[modeId] || [])) {
+      if (t.status === 'pending' || t.status === 'sim2_artifact') continue;
+      totalClosed++;
+      if (t.mae_pct !== undefined) { alreadyDone++; continue; }
+      const history = priceCache[t.ticker];
+      const entryPrice = t.actualEntry;
+      if (!history || !t.entryDate || !(entryPrice > 0)) { skippedNoHistory++; continue; }
+      const excursionEnd = t.exitDate || Object.keys(history).filter(d => d >= t.entryDate).sort().pop();
+      const { mae_pct, mfe_pct } = computeExcursion(history, t.entryDate, excursionEnd, entryPrice);
+      const outcomes = computeOutcomeHorizons(history, t.entryDate, entryPrice, DF);
+      let r_multiple = null;
+      if (t.actualStop != null && t.exitPrice != null) {
+        const riskPerUnit = entryPrice - t.actualStop;
+        if (riskPerUnit > 0) r_multiple = +(((t.exitPrice - entryPrice) / riskPerUnit)).toFixed(2);
+      }
+      if (mae_pct === null && mfe_pct === null) { skippedNoHistory++; continue; }
+      // APPEND-ONLY: only new keys are ever assigned below — no existing key on `t` is written.
+      t.mae_pct = mae_pct;
+      t.mfe_pct = mfe_pct;
+      t.outcomes = outcomes;
+      t.r_multiple = r_multiple;
+      backfilled++;
+    }
+  }
+
+  fs.writeFileSync(BACKTEST_TRADES_PATH, JSON.stringify(trades, null, 2) + '\n');
+  console.log(`✅ Backfill complete: ${backfilled} enriched, ${alreadyDone} already had the fields (skipped), ${skippedNoHistory} skipped (no price history) — out of ${totalClosed} closed trades.`);
+  console.log('Chain-hashed fields were never touched — no reseal needed (verify with `node tools/lib/trade-integrity.js verify`).');
+}
 
 async function main() {
   console.log('=== DailyTickers Scanner — Enhanced Sweep Optimizer v2 ===\n');
@@ -2866,8 +3040,14 @@ module.exports = {
   fetchOHLCV, priceCache, getSector, normalizeRegime,
   STRATEGY_FILTERS_MAP,
   vixKillTriggered, regimeSizeMultiplier, maxCorrToOpen, betaToBTC,
+  computeExcursion, computeOutcomeHorizons, backfillExcursions,
 };
 
 if (require.main === module) {
-  main().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+  if (BACKFILL_EXCURSIONS) {
+    // Standalone maintenance mode — does NOT run the grid-search sweep.
+    backfillExcursions().then(() => process.exit(0)).catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+  } else {
+    main().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+  }
 }
