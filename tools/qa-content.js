@@ -69,6 +69,14 @@ function resolveTarget(p) {
 function detectType(html, file) {
   const m = html.match(/<html[^>]*\bdata-tab="([^"]+)"/);
   const tab = m ? m[1] : '';
+  // Series/tech : détection par CHEMIN de dossier en priorité — la convention data-tab
+  // n'est PAS standardisée sur ces articles (mélange historique de "analyses"/"series"/
+  // "tech"/"scanner" selon la date de publication). Sans ce court-circuit, les articles
+  // series/tech tombaient dans 'analyse' (via tab==="analyses" ou fallback) et se
+  // prenaient des faux positifs bloquants sur ticker-header/Trade Idea (checks propres
+  // aux fiches ticker, pas aux articles pédagogiques en plusieurs parties).
+  if (/\/series\//.test(file)) return 'series';
+  if (/\/tech\//.test(file)) return 'tech';
   if (tab === 'analyses' || /\/analyses\//.test(file)) return 'analyse';
   if (tab === 'daily' || /\/daily\//.test(file)) return 'daily';
   if (tab === 'weekly' || /\/weekly\//.test(file)) return 'weekly';
@@ -188,6 +196,10 @@ function validate(file) {
     if (miss.length) return `attribut(s) manquant(s): ${miss.join(', ')}`;
   });
   check('data-tab cohérent avec le type de dossier', () => {
+    // series/tech : convention data-tab non standardisée historiquement (mélange
+    // "analyses"/"series"/"tech"/"scanner" selon la date de publication) — pas de
+    // check strict, la détection de type se fait par chemin de dossier (voir detectType).
+    if (type === 'series' || type === 'tech') return;
     const expected = { analyse: 'analyses', daily: 'daily', weekly: 'weekly', scanner: 'scanner' }[type];
     const m = htmlTag.match(/\bdata-tab="([^"]+)"/);
     if (m && m[1] !== expected) return `data-tab="${m[1]}" mais dossier = ${type} (attendu "${expected}")`;
