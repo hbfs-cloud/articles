@@ -34,6 +34,7 @@ function adjustRegimeLabel(label, score) {
 const fs = require('fs');
 const path = require('path');
 const cfg = require('../config');
+const { isHaramForHalalMode } = require('./sharia-filter');
 
 const SCANNER_DIR = path.join(__dirname, '..', '..', 'scanner');
 
@@ -140,11 +141,33 @@ function loadSignals(dir) {
       const casablancaPool = poolFrom('casablanca_pool');
       // Fortress-pm: source dédiée du mode Fortress + A+ (scan A+ Halal produit par le skill
       // fortress-pm, PAS le composite mom_bo). Tag strategy='FortressA+', exclu du mom_bo/all.
-      const fortressPool = poolFrom('fortress_pool');
+      // fortress_pool ABSENT (key missing — the fortress-pm skill didn't run/produce a pool for
+      // this scan) → fallback to high-conviction scan signals (score>=92 AND sharia===true),
+      // tagged FortressA+/source=fortress_fallback, so the Fortress/A+ panels aren't silently
+      // empty on days the LLM skill step was skipped. fortress_pool PRESENT but EMPTY ([]) is a
+      // legitimate "0 signals today" from the skill — NO fallback in that case (both fortress and
+      // aplus consume this exact same array, so both stay consistent).
+      const hasFortressPool = Object.prototype.hasOwnProperty.call(data, 'fortress_pool');
+      let fortressPool, fortressPoolSource;
+      if (hasFortressPool) {
+        fortressPool = poolFrom('fortress_pool');
+        fortressPoolSource = 'fortress_pool';
+      } else {
+        // Sharia compliance: scan signals almost always arrive with sharia=null (compliance is
+        // DERIVED, not scan-tagged — same convention as signalsFor() in gen-status-page.js).
+        // A literal `s.sharia === true` check would near-permanently yield 0 fallback candidates
+        // since the scanner rarely stamps an explicit true. isHaramForHalalMode() is the shared
+        // source of truth (ticker/sector exclusion list) also used by sweep.js/gen-status-page.js.
+        fortressPool = signals
+          .filter(s => (s.score || 0) >= 92 && !isHaramForHalalMode(s))
+          .map(s => ({ ...s, strategy: 'FortressA+', source: 'fortress_fallback' }));
+        fortressPoolSource = 'fortress_fallback';
+        console.log(`[scanner-parser] ${dir}: fortress_pool absent from scan (fortress-pm skill not run) — fallback to ${fortressPool.length} scan signal(s) with score>=92 & sharia-compliant (source=fortress_fallback)`);
+      }
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, fortressPool, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 

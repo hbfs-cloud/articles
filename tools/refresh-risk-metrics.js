@@ -195,12 +195,12 @@ async function fetchModeRisk(modeId, modeSnapshot) {
 
   if (portfolioReturns && portfolioReturns.length >= 20) {
     try {
-      // alias legacy — canonique: PortfolioRisk(action='var')
-      const var95 = await jsonrpcCall('CalculatePortfolioVaR', {
+      const var95 = await jsonrpcCall('PortfolioRisk', {
+        action: 'var',
         portfolio_value: PORTFOLIO_VALUE_USD,
         returns: JSON.stringify(portfolioReturns),
         confidence_level: 0.95,
-        horizon: 5,
+        horizon_days: 5,
         method: 'historical',
       });
       out.var95_5d = _validateVar(var95?.totalVaR ?? var95?.value_at_risk ?? null);
@@ -209,12 +209,12 @@ async function fetchModeRisk(modeId, modeSnapshot) {
     } catch (e) { console.log(`  [warn] VaR95 ${modeId}: ${e.message}`); }
 
     try {
-      // alias legacy — canonique: PortfolioRisk(action='var')
-      const var99 = await jsonrpcCall('CalculatePortfolioVaR', {
+      const var99 = await jsonrpcCall('PortfolioRisk', {
+        action: 'var',
         portfolio_value: PORTFOLIO_VALUE_USD,
         returns: JSON.stringify(portfolioReturns),
         confidence_level: 0.99,
-        horizon: 5,
+        horizon_days: 5,
         method: 'historical',
       });
       out.var99_5d = _validateVar(var99?.totalVaR ?? var99?.value_at_risk ?? null);
@@ -224,9 +224,9 @@ async function fetchModeRisk(modeId, modeSnapshot) {
   }
 
   // Stress test
-  // alias legacy — canonique: PortfolioRisk(action='stress')
   try {
-    const stress = await jsonrpcCall('GetPortfolioStressTest', {
+    const stress = await jsonrpcCall('PortfolioRisk', {
+      action: 'stress',
       positions: JSON.stringify(positions),
       scenarios: 'fed_plus_100bps,equity_minus_20pct,vix_spike_to_40,btc_minus_30pct,geopolitical',
       horizon_days: 5,
@@ -235,12 +235,12 @@ async function fetchModeRisk(modeId, modeSnapshot) {
   } catch (e) { console.log(`  [warn] stress ${modeId}: ${e.message}`); }
 
   // Correlation
-  // alias legacy — canonique: PortfolioRisk(action='correlation')
   try {
     if (sw.symbols.length >= 2) {
-      const corr = await jsonrpcCall('GetCorrelationMatrix', {
+      const corr = await jsonrpcCall('PortfolioRisk', {
+        action: 'correlation',
         symbols: sw.symbols.join(','),
-        window_days: 60,
+        lookback_days: 60,
         method: 'pearson',
       });
       out.maxPairwiseCorrelation = _validateCorr(corr?.max_pair?.correlation ?? corr?.max_pair?.rho ?? null);
@@ -252,22 +252,25 @@ async function fetchModeRisk(modeId, modeSnapshot) {
 }
 
 async function fetchRegimeProbability() {
-  // alias legacy — canonique: GetMarketContext(facets='regime')
   try {
-    const r = await jsonrpcCall('GetRegimeProbability', {
+    // GetMarketContext facet 'regime' — réponse single-facet identique à l'ex-GetRegimeProbability
+    const r = await jsonrpcCall('GetMarketContext', {
+      facets: 'regime',
       horizon_days: 5,
       model: 'ensemble',
       include_history: false,
     });
+    // canonique = enveloppe {facets:{regime:{...}}} ; alias legacy = payload direct
+    const rg = r?.facets?.regime || r;
     return {
       asOf: new Date().toISOString(),
-      currentState: r?.current_state || null,
-      currentStateConfidence: r?.current_state_confidence ?? null,
-      probabilities: r?.probabilities || null,
-      transition5d: r?.transition_5d || null,
-      expectedReturnSpyPct: r?.expected_return_spy_pct ?? null,
-      expectedDrawdownPct: r?.expected_drawdown_pct ?? null,
-      model: r?.model || 'ensemble',
+      currentState: rg?.current_state || null,
+      currentStateConfidence: rg?.current_state_confidence ?? null,
+      probabilities: rg?.probabilities || null,
+      transition5d: rg?.transition_5d || null,
+      expectedReturnSpyPct: rg?.expected_return_spy_pct ?? null,
+      expectedDrawdownPct: rg?.expected_drawdown_pct ?? null,
+      model: rg?.model || 'ensemble',
     };
   } catch (e) { console.log(`  [warn] regime: ${e.message}`); return null; }
 }

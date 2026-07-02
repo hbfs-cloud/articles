@@ -222,6 +222,19 @@ function equityDV(curve) {
   return { d: dates.map(d => d.slice(5).replace('-', '/')), v: dates.map(d => byDate[d]) };
 }
 
+// Promotion marker: statusSince is a DISPLAY annotation only (equity/trades/stats history is
+// shown in FULL — sweep no longer truncates history at statusSince). Returns { iso, lbl } when
+// the mode's equity curve actually has points BEFORE statusSince (i.e. this is a genuine
+// promotion/status-change event worth flagging), or null otherwise (e.g. mode created live
+// from day 1 — nothing to mark).
+function promotionMarker(cfg, ec) {
+  const sinceISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : null;
+  if (!sinceISO) return null;
+  const lbl = sinceISO.slice(5, 7) + '/' + sinceISO.slice(8, 10);
+  const hasPrior = !!(ec && ec.d && ec.d.some(d => d < lbl));
+  return hasPrior ? { iso: sinceISO, lbl } : null;
+}
+
 async function main() {
   let config;
   try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
@@ -250,16 +263,14 @@ async function main() {
     if (_prev) prevSnap = JSON.parse(fs.readFileSync(path.join(_historyDir, _prev), 'utf8'));
     // Build per-mode history from EVERY snapshot < today (excludes today, which
     // gets appended at panel-build time using fresh stats.ret).
-    const _statusSinceCutoff = {};
-    for (const [mId, mCfg] of Object.entries(config.modes || {})) {
-      if (mCfg.statusSince) _statusSinceCutoff[mId] = mCfg.statusSince.slice(0, 10).replace(/-/g, '');
-    }
+    // NOTE: statusSince is a DISPLAY annotation (promotionMarker), NOT a truncation cutoff —
+    // sweep no longer deletes history at statusSince, so the full history is shown here too
+    // (equity curve, trades, stats). See promotionMarker() for the visual "live since" marker.
     for (const f of _files.filter(ff => ff.replace('.json', '') < _todayKeyNY)) {
       const snap = JSON.parse(fs.readFileSync(path.join(_historyDir, f), 'utf8'));
       const dateKey = f.replace('.json', '');
       const dateLabel = dateKey.slice(4, 6) + '/' + dateKey.slice(6, 8);
       for (const [mId, mData] of Object.entries(snap.modes || {})) {
-        if (_statusSinceCutoff[mId] && dateKey < _statusSinceCutoff[mId]) continue;
         if (!modeEquityHistory[mId]) modeEquityHistory[mId] = [];
         const ret = mData.stats && mData.stats.ret != null ? mData.stats.ret : null;
         if (ret != null) {
@@ -618,7 +629,10 @@ async function main() {
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /^(Momentum|Breakout)$/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
-    adaptive_fractal: s => /^AdaptiveFractal$/i.test(s),
+    // Casablanca mode admits BOTH adaptive_fractal (casablanca-scanner) AND momentum_rotation
+    // (momentum-scanner --universe casablanca, real signal source, parity portfolio_ma.yaml) —
+    // kept coherent with STRATEGY_FILTERS_MAP['adaptive_fractal'] in tools/sweep.js.
+    adaptive_fractal: s => /^(AdaptiveFractal|MomentumRotation|momentum_rotation)$/i.test(s),
     highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
     momentum_rotation: s => /^(MomentumRotation|momentum_rotation)$/i.test(s),
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
@@ -855,10 +869,16 @@ async function main() {
     const staleBadge = (_frozenLastISO && _frozenLastISO < _prevSessionISO)
       ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: ${_frozenLastISO}">stats as of ${_frozenLastISO.slice(5).replace('-', '/')}</span>`
       : '';
+    // Promotion marker pill: full history is still shown (see promotionMarker()) — this just
+    // flags the status-change date so a flat-looking recent window isn't mistaken for "stuck".
+    const _promo = promotionMarker(cfg, ec);
+    const promoBadge = _promo
+      ? ` <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut ${cfg.status || 'live'} depuis ${_promo.iso}">live depuis ${_promo.lbl}</span>`
+      : '';
 
     return `<div id="p-${id}" class="mode-panel" data-mode-status="${cfg.status || 'live'}" data-psize="${cfg.portfolioSize || 1}" data-asset-class="${cfg.assetClass || 'equity'}"${isCasablanca ? ' data-market="casablanca" data-nolive="1"' : ''} style="${active ? '' : 'display:none'}">
 ${renderStatusBanner(cfg)}
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}</h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ${cfg.label} Dashboard${staleBadge}${promoBadge}</h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -1968,7 +1988,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 <script>
 var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
-  function mk(el,dates,vals,color){
+  function mk(el,dates,vals,color,sinceLbl){
     if(!document.getElementById(el))return null;
     var dom=document.getElementById(el);
     var existing=echarts.getInstanceByDom(dom);
@@ -2004,11 +2024,21 @@ document.addEventListener('DOMContentLoaded',function(){
         spyVals=rawSpy.map(function(v){return v!=null?+(v/spyFirst*100).toFixed(2):null;});
       }else{spyVals=rawSpy;}
     }
+    // Promotion marker: vertical line + short label at the status-change date (e.g. "live 07/01").
+    // Full history is still plotted on both sides — this is an annotation, not a truncation.
+    var sinceMarkLine=null;
+    if(sinceLbl && dates.indexOf(sinceLbl)>=0){
+      sinceMarkLine={symbol:'none',silent:true,
+        lineStyle:{color:'#64748b',width:1.5,type:'dashed'},
+        label:{formatter:'live '+sinceLbl,position:'insideEndTop',color:'#64748b',fontSize:10,fontWeight:600},
+        data:[{xAxis:sinceLbl}]};
+    }
     var series=[
       {name:'Strategy',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
         lineStyle:{color:color,width:2.8,shadowColor:color+'30',shadowBlur:8,shadowOffsetY:2},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])},
-        markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined},
+        markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined,
+        markLine:sinceMarkLine||undefined},
       {name:'Drawdown',data:ddS,type:'line',smooth:.3,symbol:'none',xAxisIndex:1,yAxisIndex:2,z:2,
         lineStyle:{color:'#ef4444',width:2,opacity:1},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,.18)'},{offset:1,color:'rgba(239,68,68,.02)'}])}}
@@ -2188,7 +2218,7 @@ document.addEventListener('DOMContentLoaded',function(){
     if(sel.length<1||sel.length>MAX_FAVS)return;
     setFavs(sel);applyFavs(sel);closeModePicker();
   };
-  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color }])))};
+  var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => { const _pm = promotionMarker(m.cfg, m.ec); return [id, { d: m.ec.d, v: m.ec.v, c: m.cfg.color, s: _pm ? _pm.lbl : null }]; })))};
   var _regimeMap=${JSON.stringify(regimeMap)};
   var _spyData=${JSON.stringify(spyIndexed)};
   var _RCOL={'RISK-ON':'rgba(16,185,129,.07)','RECOVERY':'rgba(59,130,246,.07)','NEUTRAL':'rgba(148,163,184,.04)','EARLY RISK-OFF':'rgba(245,158,11,.07)','RISK-OFF':'rgba(239,68,68,.07)'};
@@ -2216,7 +2246,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
       var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
+      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s);}
       else{inst.resize();}
     }
     updateLiveActions(id);
@@ -2724,7 +2754,7 @@ document.addEventListener('DOMContentLoaded',function(){
         var existing=window.echarts && window.echarts.getInstanceByDom(chartEl);
         if(existing) existing.dispose();
         var dflt=modeCharts[activeMode];
-        if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c);
+        if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s);
       }
       delete _tmLiveCache[activeMode];
     }
@@ -2765,7 +2795,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   // Init chart for the default visible mode
   var dflt=modeCharts[activeMode];
-  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c);
+  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s);
   // Mobile: rotating the device or the address-bar collapsing changes the viewport — resize the
   // active equity chart so it doesn't stay stuck at its pre-rotation (possibly 0) width.
   window.addEventListener('orientationchange',function(){setTimeout(function(){try{var el=document.getElementById('chart-'+activeMode);var inst=el&&window.echarts&&window.echarts.getInstanceByDom(el);if(inst)inst.resize();}catch(_){}},300);});
@@ -3361,7 +3391,10 @@ function backfillHistory() {
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /^(Momentum|Breakout)$/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
-    adaptive_fractal: s => /^AdaptiveFractal$/i.test(s),
+    // Casablanca mode admits BOTH adaptive_fractal (casablanca-scanner) AND momentum_rotation
+    // (momentum-scanner --universe casablanca, real signal source, parity portfolio_ma.yaml) —
+    // kept coherent with STRATEGY_FILTERS_MAP['adaptive_fractal'] in tools/sweep.js.
+    adaptive_fractal: s => /^(AdaptiveFractal|MomentumRotation|momentum_rotation)$/i.test(s),
     highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
     momentum_rotation: s => /^(MomentumRotation|momentum_rotation)$/i.test(s),
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),

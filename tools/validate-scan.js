@@ -49,8 +49,9 @@ function loadScanSignals(arg) {
   // pas de screening SEC) — les inclure produit ~200 faux positifs dès que
   // validate-scan tourne APRÈS l'append nocturne (Steps 2c-2n). Les règles 17/18
   // (multi-pool, enum stratégie) lisent le fichier RAW et couvrent tout le monde.
-  // Candlestick reste inclus : ses règles dédiées (15) le ciblent explicitement.
-  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap']);
+  // Candlestick est aussi exclu de l'éditorial (stops pattern larges + small caps by design,
+  // parité AB) : sa règle dédiée (15) lit le fichier RAW ci-dessous.
+  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap', 'candlestick']);
   const isSpecialist = s => SPECIALIST_STRATEGIES.has(String(s.strategy || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
   const editorial = loaded.signals.filter(s => !isSpecialist(s));
   const specialistCount = loaded.signals.length - editorial.length;
@@ -107,11 +108,13 @@ async function main() {
   const advisories = []; // advisories non-bloquants (déclaré tôt : utilisé par la règle 15 candlestick)
   const advisoriesFromEdgar = [];
 
-  // 1. Scan size
-  if (filters.scan_size && filters.scan_size.exact && signals.length !== filters.scan_size.exact) {
+  // 1. Scan size — éditorial uniquement : les signaux Candlestick sont appendés par
+  // candlestick-scanner (mode bull), pas des picks éditoriaux — exclus du comptage.
+  const editorialCount = signals.length; // candlestick + spécialistes déjà exclus au chargement
+  if (filters.scan_size && filters.scan_size.exact && editorialCount !== filters.scan_size.exact) {
     violations.push({
       rule: 'scan_size',
-      message: `Expected exactly ${filters.scan_size.exact} signals, got ${signals.length}.`
+      message: `Expected exactly ${filters.scan_size.exact} editorial signals, got ${editorialCount}.`
     });
   }
 
@@ -126,21 +129,33 @@ async function main() {
     }
   }
 
-  // 2b. Regime score / label coherence (parachute)
+  // 2b. Regime score / label coherence (parachute) — DEUX ÉCHELLES dans l'archive :
+  // scans <= juin 2026 = BULLISH 0-100 (65+ = RISK-ON) ; scans >= juillet 2026 =
+  // DÉFENSIVITÉ 0-100 (0 = plein risk-on, convention MCP v5 facet regime).
+  // Canon : défensivité + champ `regimeScoreScale` explicite dans signals.json.
+  // Heuristique legacy (champ absent) : label bullish + score < 35 => défensivité ;
+  // score >= 35 => bullish ; sinon ambigu => skip (pas de faux positif).
   if (regimeScore != null && regime) {
-    const scoreRegime = regimeScore >= 65 ? 'RISK-ON'
-      : regimeScore >= 55 ? 'RECOVERY'
-      : regimeScore >= 45 ? 'NEUTRAL'
-      : regimeScore >= 38 ? 'EARLY RISK-OFF'
-      : 'RISK-OFF';
     const RANK = { 'RISK-OFF': 0, 'EARLY RISK-OFF': 1, 'NEUTRAL': 2, 'RECOVERY': 3, 'RISK-ON': 4 };
     const labelRank = RANK[String(regime).toUpperCase().trim()] ?? 2;
-    const scoreRank = RANK[scoreRegime] ?? 2;
-    if (labelRank > scoreRank) {
-      violations.push({
-        rule: 'regime_score_coherence',
-        message: `Regime label "${regime}" is more bullish than score ${regimeScore} implies (→ ${scoreRegime}). Use the more defensive label or justify the override.`
-      });
+    const declaredScale = (loadRawSignalsJson(dir) || {}).regimeScoreScale || null;
+    const scale = declaredScale
+      || (labelRank >= 3 && regimeScore < 35 ? 'defensiveness'
+        : regimeScore >= 35 ? 'bullish' : null);
+    if (scale) {
+      const bullishScore = scale === 'defensiveness' ? 100 - regimeScore : regimeScore;
+      const scoreRegime = bullishScore >= 65 ? 'RISK-ON'
+        : bullishScore >= 55 ? 'RECOVERY'
+        : bullishScore >= 45 ? 'NEUTRAL'
+        : bullishScore >= 38 ? 'EARLY RISK-OFF'
+        : 'RISK-OFF';
+      const scoreRank = RANK[scoreRegime] ?? 2;
+      if (labelRank > scoreRank) {
+        violations.push({
+          rule: 'regime_score_coherence',
+          message: `Regime label "${regime}" is more bullish than score ${regimeScore} (échelle ${scale}) implies (-> ${scoreRegime}). Use the more defensive label or justify the override.`
+        });
+      }
     }
   }
 
@@ -399,8 +414,10 @@ async function main() {
     }
   }
 
-  // 15. Candlestick strategy must pass same stop/score gates as fundamental strategies
-  for (const s of signals) {
+  // 15. Candlestick — règles dédiées (lues depuis le RAW : exclu de l'éditorial)
+  const rawForCandle = loadRawSignalsJson(dir);
+  const candleSignals = ((rawForCandle && rawForCandle.signals) || []).filter(x => (x.strategy || '') === 'Candlestick');
+  for (const s of candleSignals) {
     if (s.strategy === 'Candlestick') {
       if (typeof s.entry === 'number' && typeof s.stop === 'number') {
         const stopPct = Math.abs((s.entry - s.stop) / s.entry) * 100;
