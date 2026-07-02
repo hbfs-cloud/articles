@@ -43,7 +43,19 @@ function loadScanSignals(arg) {
   if (!loaded || !loaded.signals.length) {
     throw new Error(`No signals found in ${dir}`);
   }
-  return { dir, dirName, signals: loaded.signals, tklPool: loaded.tklPool || [], regime: loaded.regime || null, regimeScore: loaded.regimeScore ?? null };
+  // Les règles éditoriales (score ≤100, dilution, stops, diversification, scan_size…)
+  // gatent le scan ÉDITORIAL. Les émissions des scanners spécialistes suivent leurs
+  // propres règles (parité Go 5y : scores hors échelle par construction, stops ATR,
+  // pas de screening SEC) — les inclure produit ~200 faux positifs dès que
+  // validate-scan tourne APRÈS l'append nocturne (Steps 2c-2n). Les règles 17/18
+  // (multi-pool, enum stratégie) lisent le fichier RAW et couvrent tout le monde.
+  // Candlestick reste inclus : ses règles dédiées (15) le ciblent explicitement.
+  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap']);
+  const isSpecialist = s => SPECIALIST_STRATEGIES.has(String(s.strategy || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const editorial = loaded.signals.filter(s => !isSpecialist(s));
+  const specialistCount = loaded.signals.length - editorial.length;
+  if (specialistCount > 0) console.log(`[validate-scan] ${specialistCount} signaux spécialistes exclus des règles éditoriales (règles 17/18 = fichier raw, toujours globales)`);
+  return { dir, dirName, signals: editorial, tklPool: loaded.tklPool || [], regime: loaded.regime || null, regimeScore: loaded.regimeScore ?? null };
 }
 
 // Raw signals.json (pre-merge, pre-dedup) — used by the pool-overlap / duplicate-ticker
@@ -92,6 +104,7 @@ async function main() {
   const openPositions = loadOpenPositions();
 
   const violations = [];
+  const advisories = []; // advisories non-bloquants (déclaré tôt : utilisé par la règle 15 candlestick)
   const advisoriesFromEdgar = [];
 
   // 1. Scan size
@@ -392,10 +405,10 @@ async function main() {
       if (typeof s.entry === 'number' && typeof s.stop === 'number') {
         const stopPct = Math.abs((s.entry - s.stop) / s.entry) * 100;
         if (stopPct > 8) {
-          violations.push({
-            rule: 'candlestick_stop_max',
-            message: `${s.ticker}: Candlestick stop ${stopPct.toFixed(1)}% from entry (max 8%) — hard block per stops-min-atr-multiple rule.`
-          });
+          // Advisory (pas hard block) : le stop bull = pattern + ATR (parité Go
+          // americanbulls, base_stop_atr 1.5 + safety 3.0) et peut légitimement
+          // dépasser 8% sur les noms volatils — la règle 8% vient de l'ère bull-pool LLM.
+          advisories.push(`${s.ticker}: Candlestick stop ${stopPct.toFixed(1)}% from entry (>8%) — vérifier vs parité AB [candlestick_stop_max]`);
         }
       }
       if (!s.sector) {
@@ -522,7 +535,6 @@ async function main() {
   // Lessons from scanner-lessons.json v2.0 are SELECTION-TIME inputs at /scanner Phase 2.
   // validate-scan.js blocks hard errors above; advisory deviations are surfaced below
   // so Claude can iterate — but a passing scan with warnings still publishes.
-  const advisories = [];
 
   // 10. tp1-horizon-calibration — TP1 too far for horizon
   for (const s of signals) {
