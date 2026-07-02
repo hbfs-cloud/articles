@@ -62,6 +62,13 @@
     var scannerCards = document.querySelectorAll('.setup-card[id^="setup-"]');
     if (scannerCards.length > 0) return 'scanner';
 
+    // Format compact (renderer JSON->HTML, scans depuis ~2026-06) : lignes de table
+    // <tr data-ticker data-entry data-stop data-tp1 data-tp2> sans .setup-card.
+    // Sans cette branche, detect() rendait null et le tracker etait INERTE sur
+    // tous les scans recents (bug trouve par le panel Phase 6 du 2026-07-02).
+    var compactRows = document.querySelectorAll('tr[data-ticker][data-entry]');
+    if (compactRows.length > 0) return 'compact';
+
     // Blood-in-the-streets (or similar): .setup-card with .setup-ticker + .setup-price
     var bitsCards = document.querySelectorAll('.setup-card');
     if (bitsCards.length > 0) {
@@ -111,6 +118,28 @@
 
   function extractSetups() {
     var setups = [];
+
+    if (PAGE_TYPE === 'compact') {
+      document.querySelectorAll('tr[data-ticker][data-entry]').forEach(function (row) {
+        var ds = row.dataset || {};
+        var entry = parseFloat(ds.entry);
+        if (!ds.ticker || isNaN(entry)) return;
+        var cell = row.querySelector('td') || row;
+        setups.push({
+          ticker: ds.ticker.toUpperCase(),
+          articlePrice: entry, // reference = niveau d'entree publie
+          entry: entry,
+          stop: parseFloat(ds.stop),
+          tp1: parseFloat(ds.tp1),
+          tp2: parseFloat(ds.tp2),
+          card: cell,      // badge injecte dans la 1re cellule (ticker)
+          priceEl: null,
+          noLive: isCasablancaCard(row, null)
+        });
+      });
+      return setups;
+    }
+
     var cards = document.querySelectorAll('.setup-card');
 
     cards.forEach(function (card) {
@@ -445,6 +474,7 @@
   }
 
   function applyCardEffects(card, status) {
+    if (card && card.tagName === 'TD') return; // format compact : pas d'effets carte
     // Reset first
     card.style.transition = 'all 0.3s ease';
 
