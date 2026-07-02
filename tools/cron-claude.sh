@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."
 
 # ─── Args ────────────────────────────────────────────────────────────────────
 PROMPT=""
-MODEL="claude-opus-4-6"
+MODEL="claude-opus-4-8"
 TIMEOUT=1800
 
 while [[ $# -gt 0 ]]; do

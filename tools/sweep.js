@@ -1827,7 +1827,6 @@ async function main() {
     let frozenExtra = 0;
     for (const [modeId, cfg] of Object.entries(frozenModes)) {
       const fKey = `${cfg.horizon}_${cfg.partialTP || false}_${cfg.partialTPPct || 0.5}_${cfg.trailingStop || false}_${cfg.maxStopPct || 0}_${cfg.atrStopMult || 0}_${cfg.dailyTrailPct || 0}_${cfg.breakevenPct || 0}_${cfg.beGraceDays || 0}_${cfg.staleGraceDays || 0}_${cfg.staleRaiseRate ?? 0.001}_${cfg.staleAccel || 'log'}_${cfg.partialTPGain || 0}_${cfg.disableTP2 || false}_${cfg.entryGatePct || 0}_${cfg.vwapGate || false}_${cfg.trailMultR ?? 1.5}_${cfg.trailGraceDays ?? 0}`;
-      console.log(`  DEBUG ${modeId}: fKey=${fKey} inGrid=${!!tradesByKey[fKey]}`);
       if (!tradesByKey[fKey]) {
         const trades = [];
         for (const setup of allSetups) {

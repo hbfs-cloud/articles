@@ -64,6 +64,11 @@ const VARIANTS = [
       regimeFilters: { risk_on: 'mom_bo', early_risk_off: 'breakout_only', risk_off: 'breakout_only', neutral: 'mom_bo', recovery: 'mom_bo' },
       maxStopPct: 5,
   }},
+  // Rollback 2026-06-29 a retiré le circuit breaker (incident 18/06 = 12 SL consécutifs).
+  // CB = purement protecteur : ne change rien hors série de stops.
+  { label: 'fortress +CB(3/5/3)', base: 'fortress', cfg: {
+      circuitBreakerStops: 3, circuitBreakerWindow: 5, circuitBreakerPause: 3,
+  }},
 
   // ── DYNAMIC — diagnostic verdict = RÉGIME (léger). Kept for gate demonstration. ──
   { label: 'dynamic CURRENT', base: 'dynamic', cfg: {} },

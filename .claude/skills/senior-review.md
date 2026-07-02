@@ -7,6 +7,8 @@ argument-hint: "[artifact-paths...] — or omit to review the current diff / pen
 license: Apache 2.0
 ---
 
+⚠️ Source de vérité exécutable : `.claude/workflows/senior-review.js` — ce fichier .md est la doc d'usage ; en cas de divergence, le .js gagne.
+
 # Senior Review Harness — the release gate for every process
 
 No DailyTickers artifact ships without passing a **senior panel**. This codifies the war-room discipline (which once caught a "0/10 deserved A+" batch) into a reusable gate. The engine is `.claude/workflows/senior-review.js`.
