@@ -17,6 +17,20 @@ if git diff --cached -U0 -- . ':(exclude)assets/search-index.json' ':(exclude)da
   exit 1
 fi
 
+# ─── Content QA Gate : tout article édité doit passer qa-content --strict ───
+# (classes de bugs du nightly refresh : prix $0.00, placeholders, R/R templatés,
+# régime title≠signals.json — voir .claude/memory/feedback_refresh_body_stale.md)
+STAGED_ARTICLES=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^(analyses|daily|weekly|scanner)/[^/]+/index\.html$' | grep -v '/archive/' || true)
+if [ -n "$STAGED_ARTICLES" ]; then
+  echo "🔎 [Pre-commit] QA content gate sur $(echo "$STAGED_ARTICLES" | wc -l | tr -d ' ') article(s)..."
+  if ! echo "$STAGED_ARTICLES" | xargs node tools/qa-content.js --strict > /tmp/qa-content-precommit.log 2>&1; then
+    grep -E "❌" /tmp/qa-content-precommit.log | head -20
+    echo "⛔ [Pre-commit] qa-content --strict a échoué — commit bloqué. Détails: /tmp/qa-content-precommit.log"
+    echo "   (bypass exceptionnel: git commit --no-verify, à justifier)"
+    exit 1
+  fi
+fi
+
 echo "📈 [Pre-commit] Updating search index and sitemap..."
 
 # Run the python scripts to rebuild the index and sitemap

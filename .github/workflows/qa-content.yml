@@ -1,0 +1,31 @@
+name: QA Content Gate
+
+# Filet post-push pour les routines cloud (qui n'ont pas le hook pre-commit local) :
+# tout article modifié doit passer qa-content --strict. Échec = run rouge + notification.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'analyses/**/index.html'
+      - 'daily/**/index.html'
+      - 'weekly/**/index.html'
+      - 'scanner/**/index.html'
+
+jobs:
+  qa-content:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: QA strict sur les articles modifiés
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACM HEAD~1 HEAD \
+            | grep -E '^(analyses|daily|weekly|scanner)/[^/]+/index\.html$' \
+            | grep -v '/archive/' || true)
+          if [ -z "$CHANGED" ]; then echo "Aucun article modifié."; exit 0; fi
+          echo "Articles à vérifier:"; echo "$CHANGED"
+          echo "$CHANGED" | xargs node tools/qa-content.js --strict

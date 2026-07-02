@@ -361,6 +361,82 @@ function validate(file) {
       const has = /id="trade"/.test(html) || /class="trade-idea"/.test(html) || /Trade Idea|Idée de Trade|Idée de Trading/i.test(html);
       if (!has) return 'aucune section Trade Idea (requise pour tickers tradables — ignorer si indice/thématique)';
     });
+    // ── Classes de bugs du nightly refresh (audit 2026-07-02 : MTB/EQX/IOVA/RDDT) ──
+    // Le refresh met à jour le header mais laisse le corps à moitié régénéré.
+    check('pas de placeholder "See article for details"', () => {
+      const n = (html.match(/See article for details/gi) || []).length;
+      if (n) return `${n} placeholder(s) "See article for details" — section non régénérée par le refresh`;
+    });
+    check('Entry Zone du Trade Idea non nulle', () => {
+      if (/Entry(?:\s+Zone)?[\s\S]{0,220}?>\s*\$0\.00\s*</i.test(html)) {
+        return 'Entry Zone: $0.00 — trade idea cassé par le refresh (récupérer l\'entrée d\'origine)';
+      }
+    });
+    check('prix du header non nul', () => {
+      const hero = tickerHeaderBlock(html) || html.slice(0, 8000);
+      if (/>\s*\$0\.00\s*<[\s\S]{0,120}?[+-]0\.00%/.test(hero)) {
+        return 'prix header $0.00 (+0.00%) — enrichissement prix raté par le refresh';
+      }
+    });
+    check('badge Score unique dans le hero', () => {
+      const hero = tickerHeaderBlock(html) || '';
+      const scores = hero.match(/Score\s+\d+/g) || [];
+      if (scores.length > 1) return `${scores.length} badges score dans le hero (${scores.join(', ')}) — doublon de refresh`;
+    });
+    warn('EMA20 différente de EMA200 (copie suspecte)', () => {
+      const ema = {};
+      for (const m of html.matchAll(/EMA\s*(20|50|200)[^$]{0,40}\$([\d,.]+)/g)) {
+        (ema[m[1]] = ema[m[1]] || new Set()).add(m[2]);
+      }
+      const v20 = [...(ema['20'] || [])], v200 = [...(ema['200'] || [])];
+      if (v20.length === 1 && v200.length === 1 && v20[0] === v200[0]) {
+        return `EMA20 = EMA200 = $${v20[0]} — valeur copiée, re-vérifier via MCP`;
+      }
+    });
+  }
+
+  // ─────────────────────────── SCANNER ───────────────────────────
+  if (type === 'scanner') {
+    // Régime du <title> vs signals.json du même dossier (leçon 20260630 : title
+    // RISK-OFF avec prose et signals.json RISK-ON). EARLY RISK-OFF ≠ RISK-OFF.
+    check('régime du title cohérent avec signals.json', () => {
+      const sigPath = path.join(path.dirname(file), 'signals.json');
+      if (!fs.existsSync(sigPath)) return; // vieux scans sans signals.json
+      let sig; try { sig = JSON.parse(fs.readFileSync(sigPath, 'utf8')); } catch { return; }
+      const truth = (sig.regime || '').toUpperCase();
+      if (!truth) return;
+      const title = (html.match(/<title>([^<]*)/) || [, ''])[1].toUpperCase();
+      const tokens = ['EARLY RISK-OFF', 'RISK-OFF', 'RISK-ON', 'NEUTRAL', 'RECOVERY'];
+      const inTitle = tokens.find(t => title.includes(t)); // ordre: EARLY avant RISK-OFF
+      if (inTitle && inTitle !== truth) return `title dit "${inTitle}" mais signals.json dit "${truth}"`;
+    });
+    // R/R affiché vs recalculé depuis les niveaux de la carte (leçon 20260629/30 :
+    // R/R templaté 1:2.0/1:2.5 uniforme, déconnecté des niveaux).
+    check('R/R des setup-cards = (TP1-entry)/(entry-stop) ±0.3', () => {
+      const bad = [];
+      for (const m of html.matchAll(/<div class="setup-card"[^>]*data-ticker="([^"]+)"[^>]*data-entry="([\d.]+)"[^>]*data-stop="([\d.]+)"[^>]*data-tp1="([\d.]+)"[^>]*>([\s\S]*?)(?=<div class="setup-card"|<\/section|<footer)/g)) {
+        const [, tk, e, s, t] = m;
+        const entry = +e, stop = +s, tp1 = +t;
+        if (!(entry > stop && tp1 > entry)) continue;
+        const rr = (tp1 - entry) / (entry - stop);
+        const disp = m[5].match(/1:(\d+(?:\.\d+)?)/);
+        if (disp && Math.abs(+disp[1] - rr) > 0.3) {
+          bad.push(`${tk}: affiché 1:${disp[1]} vs calculé 1:${rr.toFixed(1)}`);
+        }
+      }
+      if (bad.length) return `R/R incohérents — ${bad.slice(0, 5).join(' | ')}${bad.length > 5 ? ` (+${bad.length - 5})` : ''}`;
+    });
+    warn('nombre de setups annoncé = cartes présentes', () => {
+      const cards = (html.match(/class="setup-card"/g) || []).length;
+      if (!cards) return;
+      const claims = [...html.matchAll(/(\d+)\s+setups/gi)].map(m => +m[1]);
+      const wrong = claims.filter(n => n !== cards);
+      if (wrong.length && !claims.includes(cards)) return `annonce "${wrong[0]} setups" mais ${cards} setup-cards dans la page`;
+    });
+    warn('lang= cohérent avec la langue du contenu', () => {
+      const accents = (html.match(/[éèêàçùôî]/g) || []).length;
+      if (lang === 'en' && accents > 80) return `lang="en" mais ~${accents} caractères accentués français — passer lang="fr"`;
+    });
   }
 
   // ─────────────────────────── DAILY ───────────────────────────
