@@ -51,14 +51,17 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 5. Read `data/scanner-filters.json` for sector_map + diversification rules
 6. Modes downstream = 6: `turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl`. TKL pool gated per-mode via `modes-config.json#tklPoolEnabled`.
 7. Pre-flight: read `~/.claude/projects/-Users-marketwatchxyz-GolandProjects-articles/memory/feedback_pipeline_gotchas.md` for known regression traps (BSD date fallback, qa-check reads `signals.json` not HTML, Pending status, order count).
-8. **Read `data/scanner-lessons.json`** — accumulated rules synthesized from prior weekly retrospectives. **The retros fuel the candidate-selection debate at Phase 2** — they do NOT block trades at publish-time. Apply during Phase 2 selection:
-   - `severity: selection_filter` rules → use these to PICK better candidates upstream (e.g., favor names with stop ≥ 1.5× ATR, R/R ≥ regime threshold, RSI < 72, no earnings ±3d, no toxic underwriters). Each filter rule cites its rationale and source retros — incorporate the reasoning during selection.
-   - `severity: advisory` rules → bias selection (e.g., favor Momentum in RISK-ON per `momentum-favored-risk-on`; lift Pre-Squeeze weight in EARLY RISK-OFF per `pre-squeeze-early-risk-off`). Deviations OK with rationale.
-   - `severity: hard_block` rules → encoded in `scanner-filters.json` + enforced by `validate-scan.js` at publish (strategy whitelist, sector cap, scan size, absolute stop %, sharia ETF blocklist).
+8. **Retrieve lessons via `node tools/lessons-retrieve.js --regime <REGIME>`** (add `--setups <list>` / `--mode <id>` once known) instead of reading `data/scanner-lessons.json` raw. This returns a small, capped JSON payload (`active_rules`, `known_risks`, `similar_episodes`, `deprecated_rules_ignored`, `retrieval_meta`) — status=active rules only, confidence effective ≥ 0.4, scope-matched to the current regime/setups/mode, sorted by confidence, hard-capped (default 3/3/3) regardless of how many rules are eligible. **The retros fuel the candidate-selection debate at Phase 2** — they do NOT block trades at publish-time. Apply during Phase 2 selection:
+   - `active_rules` (non-advisory severities: `selection_filter`, `hard_block`, `infrastructure`) → use these to PICK better candidates upstream (e.g., favor names with stop ≥ 1.5× ATR, R/R ≥ regime threshold, RSI < 72, no earnings ±3d, no toxic underwriters). Each rule's `rule` text carries its rationale — incorporate the reasoning during selection.
+   - `known_risks` (`severity: advisory` matches) → bias selection (e.g., favor Momentum in RISK-ON, lift Pre-Squeeze weight in EARLY RISK-OFF). Deviations OK with rationale.
+   - `similar_episodes` → the last closed trades in the same regime×setup, with mae/mfe/outcomes/r_multiple where available — use as color, not as a hard filter.
+   - **`severity: hard_block` rules remain enforced by `scanner-filters.json` + `validate-scan.js` at publish time, independent of retrieval** — retrieval surfacing them here is for rationale/visibility, NOT the enforcement mechanism. A hard_block rule missing from `active_rules` (e.g. filtered by scope or confidence) is still enforced downstream.
    - `severity: infrastructure` rules → enforced downstream (sweep.js, signal-monitor.js, portfolio API).
-   - Cross-reference `_open_questions` — if a question targets the current scan (`next_retro_check ≤ today`), test the hypothesis and report in Phase 6 QA.
+   - Cross-reference `_open_questions` in `data/scanner-lessons.json` directly (not covered by retrieval) — if a question targets the current scan (`next_retro_check ≤ today`), test the hypothesis and report in Phase 6 QA.
 
    **Output of validate-scan.js may emit non-blocking advisories** (lesson-rule deviations such as stop < 1.5× ATR, RSI > 72, R/R below regime threshold). These are educational signals for the NEXT scan iteration — not gates on the current one.
+
+   **⚠️ Absolute principle — memory can never invert a quantitative signal.** Retrieved rules/risks/episodes may only adjust confidence, sizing, or raise an alert/tag on a candidate that already passed the quantitative screen (score, R/R, dilution, earnings, correlation, regime gating). They can NEVER by themselves flip a signal from reject→select or select→reject, and they can NEVER override a hard_block. Every scan MUST record what memory actually did to the decision — see the `_memoryImpact` block required in Phase 3.
 
 ## Phase 1 — MCP Data Collection
 
@@ -156,6 +159,19 @@ This validation is NOT optional — it runs as part of Phase 2, immediately afte
    - `earnings_clear: true` — set false ONLY if you decide to tag-and-keep (rare); default true means scan was filtered against `±3d` earnings window.
    - `dilution_clear: true` — set false ONLY if you accept a flagged ticker with explicit rationale (extremely rare); default true means anti-dilution v2 passed.
    - `region: "US"|"EU"|"UK"|"ASIA"|"CHINA"|"JAPAN"|"ETF"` — used for diversification floor advisory (5 US + 2 EU + 1 APAC + 2 ETFs).
+3b. **`_memoryImpact` block (MANDATORY, top-level in `signals.json`)** — records what Phase 0.8 retrieval actually did to this scan's decisions, for audit + weekly retro consumption:
+   ```json
+   "_memoryImpact": {
+     "rules_applied": ["rule-id-1", "rule-id-2"],
+     "decision_changed": false,
+     "sizing_delta": 0,
+     "reason": "1-2 sentences: which retrieved rule(s)/risk(s) nudged confidence, sizing, or added a tag, and on which ticker(s). If nothing from retrieval changed anything this scan, say so explicitly (e.g. \"no active_rules/known_risks materially changed the top 10 selection\")."
+   }
+   ```
+   - `rules_applied`: ids from `active_rules`/`known_risks` (per `lessons-retrieve.js` output) that actually influenced a selection/sizing/tag decision this scan. Empty array is valid.
+   - `decision_changed`: `true` only if a candidate's inclusion/exclusion was influenced by memory — and even then, per the absolute principle above, memory can only have acted as a tie-breaker/filter AFTER the quantitative screen, never as the sole reason a candidate was added.
+   - `sizing_delta`: numeric multiplier or percentage-point adjustment applied to position sizing because of a retrieved rule (0 if none).
+   - `reason`: free text, human-auditable.
 4. Strategy labels ONLY: Momentum, Breakout, Pullback, Pre-Squeeze
 5. R/R calculated from entry MIDPOINT (not entry_low) — must respect regime-based minimum per `scanner-lessons.json#rr-min-by-regime`: RISK-ON 1.5, RECOVERY/NEUTRAL 1.7, EARLY RISK-OFF/RISK-OFF 2.0.
 6. **VWAP entry gate (always-on, not grid-searched)** — validated +29% PnL, +16pp WR, 2.5× PF (commit 91596bd9):

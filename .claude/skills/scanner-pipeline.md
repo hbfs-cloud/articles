@@ -439,6 +439,22 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
 4. Mettre à jour redirect `scanner/retrospective/index.html`
 5. **Mettre à jour `data/retro-summary.json`** — ajouter la nouvelle rétro aux données agrégées. Ce fichier alimente les charts de tendance.
 6. **Mettre à jour `data/scanner-lessons.json`** — ajouter/mettre à jour les règles issues des conclusions de la rétro. Bumper la version. Résoudre les open_questions si la rétro fournit des données.
+6b. **Sortie obligatoire du moteur `lessons-engine.js`** (NE PAS éditer `scanner-lessons.json` à la main pour ces étapes — seul le moteur écrit confidence/status) :
+   ```bash
+   node tools/lessons-engine.js --decay                                                    # recalcule la confidence effective (idempotent, décrémente les market_truth non revalidées)
+   node tools/lessons-engine.js --contradictions                                           # scan pairwise des règles actives à effets opposés sur un scope qui overlap → pénalité 30% + _open_questions
+   # Pour CHAQUE règle testée par cette rétro (candidate en attente de validation OU active à revalider) :
+   node tools/lessons-engine.js --validate <rule-id> --outcome <win|loss|neutral> \
+     --evidence-json '{"sample_size":<n>,"wins":<w>,"losses":<l>,"expectancy":<e>,"tickers":[...],"clusters":[...]}'
+   #   n/wins/losses/expectancy viennent des champs mae_pct/mfe_pct/outcomes{d1,d5,d20}/r_multiple des trades
+   #   clôturés de la semaine (data/backtest-trades.json) — PAS d'estimation narrative.
+   node tools/lessons-engine.js --report                                                   # vérifier l'état effectif (confidence, status, expires_at) après decay/validate/contradictions
+   ```
+   Puis **re-proposer les candidates prêtes à `--promote <rule-id>`** (celles dont l'evidence a franchi les gates depuis la dernière rétro) :
+   ```bash
+   node tools/lessons-engine.js --promote <rule-id>    # REFUSE et liste les gates manquants si sample_size<12, <3 tickers distincts, <2 clusters distincts, scope.regimes invalide, ou expectancy null — ne JAMAIS forcer
+   ```
+   **⚠️ Aucune promotion narrative** : `--promote` applique des gates anti-overfitting stricts (sample_size ≥ 12, ≥ 3 tickers distincts, ≥ 2 clusters distincts, scope.regimes cohérent, expectancy non-null). C'est le moteur qui décide, pas la rétro — si les gates ne sont pas atteints, la règle reste `candidate` même si la conviction qualitative est forte.
 7. **Indexer + Push** :
    ```bash
    node tools/publish.js --type retro --path scanner/retrospective/YYYYMMDD/index.html
@@ -447,6 +463,9 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
 **⚠️ Checklist post-rétro (OBLIGATOIRE) :**
 - [ ] retro-summary.json contient la nouvelle rétro avec grade, HR, stats
 - [ ] scanner-lessons.json bumped avec nouvelles règles ou mises à jour
+- [ ] `lessons-engine.js --decay` puis `--contradictions` exécutés (pas d'édition manuelle de confidence/status)
+- [ ] Chaque règle testée par la rétro a reçu un `--validate` avec evidence chiffrée (mae/outcomes/r_multiple des trades de la semaine)
+- [ ] Candidates éligibles re-testées via `--promote` (gates du moteur, jamais de promotion à la main)
 - [ ] Redirect `scanner/retrospective/index.html` pointe vers la dernière rétro
 - [ ] Carte ajoutée via `add_card.js`
 

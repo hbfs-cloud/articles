@@ -231,6 +231,14 @@ if [ -f /tmp/qa-discord-report.txt ]; then
   rm -f /tmp/qa-discord-report.txt
 fi
 
+# ─── Step 7b: Lessons decay (daily, idempotent, non-blocking) ────────────────
+# Recomputes effective confidence for market_truth rules in scanner-lessons.json
+# from their half_life_days (process_rules never decay). Safe to run every day —
+# re-running on the same date is a no-op. Never blocks the pipeline on failure.
+echo ""
+echo "🧠 Step 7b: Lessons decay..."
+node tools/lessons-engine.js --decay 2>/dev/null || true
+
 # ─── Step 8: Generate media (audio + video + Telegram to Portfolio Live) ─────
 echo ""
 echo "🎬 Step 8: Generating media (audio + video + Telegram)..."
