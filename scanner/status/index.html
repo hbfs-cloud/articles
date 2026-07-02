@@ -6,7 +6,7 @@
   <title>Portfolio Live &mdash; DailyTickers</title>
   <meta name="description" content="Today's signals, open positions &amp; live performance — Balanced trading mode updated every weekday.">
   <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
-  <link rel="stylesheet" href="/assets/report.css?v=1782975406212">
+  <link rel="stylesheet" href="/assets/report.css?v=1783005968036">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
@@ -463,13 +463,16 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card">
-  <details>
+  <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">1 setup</span><span class="sc-preview"><b>BBVA</b> <span style="color:var(--muted)">90</span></span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <p class="empty"><i class="fas fa-inbox"></i>19 signals matched filter <b>All strategies</b> but none reached minScore <b>90</b>. Existing positions remain active.</p>
+    <table class="t" style="margin-top:.75rem">
+      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
+      <tbody><tr data-sig-ticker="BBVA" data-sig-entry="25.77" data-sig-stop="24.99" data-sig-tp1="27.16" data-sig-tp2="28.39" data-sig-vwap="25.75" data-sig-rank="primary" data-sig-open="25.729999542236328" data-sig-high="25.8572998046875" data-sig-low="25.68000030517578" data-sig-price="25.71"><td><img src="https://assets.parqet.com/logos/symbol/BBVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>BBVA</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)">90</span></td><td class="m">Breakout</td><td>$25.77</td><td class="neg">$24.99</td><td class="pos">$27.16 / $28.39</td><td class="am">1:1.8</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
+    </table>
   </details>
 </div>
 
@@ -491,8 +494,8 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
       <span class="ps-v">48.8%</span><span class="ps-l">Win Rate</span>
     </div>
-    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. 90% bootstrap CI: [2.1x — 15.27x] over 41 trades.">
-      <span class="ps-v"><span class="ps-num">5.78x</span><span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[2.1–15.27]</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
+    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. 90% bootstrap CI: [2.11x — 16.2x] over 41 trades.">
+      <span class="ps-v"><span class="ps-num">5.78x</span><span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[2.11–16.2]</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
       <span class="ps-v">41</span><span class="ps-l">Closed Trades</span>
@@ -516,20 +519,49 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 <!-- ══ 5. ORDERS CTA ══ -->
-<div class="section-card" data-section="orders"><div class="sc-head"><h3><i class="fas fa-inbox"></i> Orders to Place</h3><span class="sc-meta">Portfolio full &mdash; no action needed</span></div><p class="empty"><i class="fas fa-check-circle"></i>All slots filled, nothing to place</p></div>
+
+
+
+<div class="section-card " data-section="orders" data-scan-date="20260703">
+  <div class="sc-head">
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
+    <span class="sc-meta">1/1 open — portfolio full</span>
+    
+  </div>
+  
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Portfolio full — see <b>On Watch</b> below.</div>
+</div>
+<div class="section-card" data-section="watch">
+  <div class="sc-head">
+    <h3><i class="fas fa-eye"></i> On Watch <span class="count">1</span></h3>
+    <span class="sc-meta">portfolio full — signals expire Tue, Jul 7</span>
+  </div>
+  <table class="t">
+    <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
+    <tbody><tr style="opacity:0.75">
+      <td><b>BBVA</b></td>
+      <td><span class="pill-score" style="background:var(--muted)">90</span></td>
+      <td class="m hide-m">Breakout</td><td class="m">$25.77</td>
+      <td class="neg">$24.99</td>
+      <td class="pos">$27.16<span class="hide-m"> / $28.39</span></td>
+      <td class="am hide-m">1:1.8</td>
+      <td><span class="pill m">Valid until Tue, Jul 7</span></td>
+    </tr></tbody>
+  </table>
+</div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card" id="sec-pos-turbo">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">1/1</span></h3>
-    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="pos">+0.9%</b></span>
+    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="pos">+1.5%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
     <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -6.3%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now (pondéré): +0.9%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +1.0%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now (pondéré): +1.5%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +1.5%</span>
   </div>
   <div class="scenario-bar">
     <div class="scenario-fill-bad" style="width:100.0%"></div>
@@ -539,7 +571,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/GS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>GS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=GS&ty=c&ta=1&p=d&s=l" alt="GS" class="fv-thumb" onclick="fvOpen('GS','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$1010.00</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$1014.60</td><td class="hide-m">$1019.61</td><td class="pos" data-format="pct"><b>+0.95%</b></td><td class="neg hide-m">$945.89</td><td class="pos hide-m">—</td><td class="m">7d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Goldman Sachs en pullback technique (RSI 45.0) avec EMA stack bullish complet et MACD positif. Recul de 3.2% sous la 50DMA dans un uptrend intact. Correlation moderee avec BHP (0.60) et FDX (0.47), decorrelee de TRP (-0.02) et CPAY (0.25). Mcap ~$185B.</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/GS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>GS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=GS&ty=c&ta=1&p=d&s=l" alt="GS" class="fv-thumb" onclick="fvOpen('GS','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$1010.00</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$1014.60</td><td class="hide-m">$1024.77</td><td class="pos" data-format="pct"><b>+1.46%</b></td><td class="neg hide-m">$945.89</td><td class="pos hide-m">—</td><td class="m">7d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Goldman Sachs en pullback technique (RSI 45.0) avec EMA stack bullish complet et MACD positif. Recul de 3.2% sous la 50DMA dans un uptrend intact. Correlation moderee avec BHP (0.60) et FDX (0.47), decorrelee de TRP (-0.02) et CPAY (0.25). Mcap ~$185B.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -896,13 +928,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">1 setup + 1 fallback</span><span class="sc-preview"><b>NWG</b> <span style="color:var(--muted)">89</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">1 setup + 2 fallback</span><span class="sc-preview"><b>BBVA</b> <span style="color:var(--muted)">90</span></span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="NWG" data-sig-entry="17.99" data-sig-stop="17.38" data-sig-tp1="18.94" data-sig-tp2="19.51" data-sig-vwap="17.95" data-sig-rank="primary" data-sig-open="17.739999771118164" data-sig-high="18.1200008392334" data-sig-low="17.729999542236328" data-sig-price="17.99"><td><img src="https://assets.parqet.com/logos/symbol/NWG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NWG</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--accent)">89</span></td><td class="m">Momentum</td><td>$17.99</td><td class="neg">$17.38</td><td class="pos">$18.94 / $19.51</td><td class="am">1.6</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr><tr data-sig-ticker="AXP" data-sig-entry="348" data-sig-stop="336.25" data-sig-tp1="366.21" data-sig-tp2="377.38" data-sig-vwap="345.41" data-sig-rank="fallback" data-sig-open="341.5299987792969" data-sig-high="350.5" data-sig-low="337.7300109863281" data-sig-price="348" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/AXP?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AXP</b><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#2</span></td><td><span class="pill-score" style="background:var(--accent)">88</span></td><td class="m">Momentum</td><td>$348.00</td><td class="neg">$336.25</td><td class="pos">$366.21 / $377.38</td><td class="am">1.5</td><td><span class="pill pos">LIVE</span></td></tr></tbody>
+      <tbody><tr data-sig-ticker="BBVA" data-sig-entry="25.77" data-sig-stop="24.99" data-sig-tp1="27.16" data-sig-tp2="28.39" data-sig-vwap="25.75" data-sig-rank="primary" data-sig-open="25.729999542236328" data-sig-high="25.8572998046875" data-sig-low="25.68000030517578" data-sig-price="25.71"><td><img src="https://assets.parqet.com/logos/symbol/BBVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>BBVA</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)">90</span></td><td class="m">Breakout</td><td>$25.77</td><td class="neg">$24.99</td><td class="pos">$27.16 / $28.39</td><td class="am">1:1.8</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr><tr data-sig-ticker="LYG" data-sig-entry="6.08" data-sig-stop="5.88" data-sig-tp1="6.42" data-sig-tp2="6.75" data-sig-vwap="6.08" data-sig-rank="fallback" data-sig-open="6.059999942779541" data-sig-high="6.110000133514404" data-sig-low="6.054999828338623" data-sig-price="6.08" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/LYG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>LYG</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#2</span></td><td><span class="pill-score" style="background:var(--accent)">89</span></td><td class="m">Breakout</td><td>$6.08</td><td class="neg">$5.88</td><td class="pos">$6.42 / $6.75</td><td class="am">1:1.7</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="IBKR" data-sig-entry="93.23" data-sig-stop="86.93" data-sig-tp1="105.21" data-sig-tp2="115.29" data-sig-vwap="93.82" data-sig-rank="fallback" data-sig-open="93.25" data-sig-high="96.70999908447266" data-sig-low="92.12999725341797" data-sig-price="92.63" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/IBKR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IBKR</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#3</span></td><td><span class="pill-score" style="background:var(--accent)">88</span></td><td class="m">Momentum</td><td>$93.23</td><td class="neg">$86.93</td><td class="pos">$105.21 / $115.29</td><td class="am">1:1.9</td><td><span class="pill pos">LIVE</span></td></tr></tbody>
     </table>
   </details>
 </div>
@@ -925,8 +957,8 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
       <span class="ps-v">45.5%</span><span class="ps-l">Win Rate</span>
     </div>
-    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. 90% bootstrap CI: [1.21x — 7.87x] over 44 trades.">
-      <span class="ps-v"><span class="ps-num">3.85x</span><span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[1.21–7.87]</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
+    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. 90% bootstrap CI: [1.26x — 8.24x] over 44 trades.">
+      <span class="ps-v"><span class="ps-num">3.85x</span><span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[1.26–8.24]</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
       <span class="ps-v">44</span><span class="ps-l">Closed Trades</span>
@@ -953,7 +985,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card cta-orders" data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
     <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
     <span class="sc-meta">0/1 open — <b>1 slot free</b> — place at next open</span>
@@ -966,16 +998,16 @@ details[open] summary::after{transform:rotate(90deg)}
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
     <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/NWG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NWG</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=NWG&ty=c&ta=1&p=d&s=l" alt="NWG" class="fv-thumb" onclick="fvOpen('NWG','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--accent)">89</span></td>
-      <td class="m hide-m">Momentum</td><td><b>$17.99</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$17.95</td>
-      <td class="neg">$17.38</td>
-      <td class="pos">$18.94<span class="hide-m"> / $19.51</span></td>
-      <td class="am hide-m">1.6</td><td class="m hide-m">100%</td>
+      <td><img src="https://assets.parqet.com/logos/symbol/BBVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>BBVA</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=BBVA&ty=c&ta=1&p=d&s=l" alt="BBVA" class="fv-thumb" onclick="fvOpen('BBVA','')"></td>
+      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">90</span></td>
+      <td class="m hide-m">Breakout</td><td><b>$25.77</b></td>
+      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$25.75</td>
+      <td class="neg">$24.99</td>
+      <td class="pos">$27.16<span class="hide-m"> / $28.39</span></td>
+      <td class="am hide-m">1:1.8</td><td class="m hide-m">100%</td>
       <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">NWG at $16.76 (flat) shows resilience while US equities sell off. BUY signal Jun 11 at $16.01 (+4.7%). Price above all EMAs (EMA20 $16.11, EMA50 $15.94, EMA200 $15.56). MACD bullish (0.24 > 0.15 signal). Forward P/E 7.8x = cheapest in the scan. 5.2% dividend yield = highest in the scan. UK bank benefiting from the global financial sector re-rating. Breakout above EMA20 resistance in progress. Stop below EMA20.</div></td></tr></tbody>
+    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Banque espagnole leader, cassure vers un nouveau plus-haut 52 semaines ($25.77 pour un 52wH $26.20) portee par la rotation vers les financials europeens et un dollar faible. Marges nettes d'interet solides, rachat d'actions et dividende 4.3%.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -1385,13 +1417,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">3 setups + 1 fallback</span><span class="sc-preview"><b>NWG</b> <span style="color:var(--muted)">89</span> · <b>AXP</b> <span style="color:var(--muted)">88</span> · <b>EA</b> <span style="color:var(--muted)">86</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">3 setups + 4 fallback</span><span class="sc-preview"><b>BBVA</b> <span style="color:var(--muted)">90</span> · <b>LYG</b> <span style="color:var(--muted)">89</span> · <b>IBKR</b> <span style="color:var(--muted)">88</span></span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="NWG" data-sig-entry="17.99" data-sig-stop="17.38" data-sig-tp1="18.94" data-sig-tp2="19.51" data-sig-vwap="17.95" data-sig-rank="primary" data-sig-open="17.739999771118164" data-sig-high="18.1200008392334" data-sig-low="17.729999542236328" data-sig-price="17.99"><td><img src="https://assets.parqet.com/logos/symbol/NWG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NWG</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--accent)">89</span></td><td class="m">Momentum</td><td>$17.99</td><td class="neg">$17.38</td><td class="pos">$18.94 / $19.51</td><td class="am">1.6</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="AXP" data-sig-entry="348" data-sig-stop="336.25" data-sig-tp1="366.21" data-sig-tp2="377.38" data-sig-vwap="345.41" data-sig-rank="primary" data-sig-open="341.5299987792969" data-sig-high="350.5" data-sig-low="337.7300109863281" data-sig-price="348"><td><img src="https://assets.parqet.com/logos/symbol/AXP?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AXP</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--accent)">88</span></td><td class="m">Momentum</td><td>$348.00</td><td class="neg">$336.25</td><td class="pos">$366.21 / $377.38</td><td class="am">1.5</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="EA" data-sig-entry="205.45" data-sig-stop="199.29" data-sig-tp1="215" data-sig-tp2="220.85" data-sig-vwap="205.53" data-sig-rank="primary" data-sig-open="205.75999450683594" data-sig-high="206" data-sig-low="205.14999389648438" data-sig-price="205.45"><td><img src="https://assets.parqet.com/logos/symbol/EA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>EA</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--accent)">86</span></td><td class="m">Momentum</td><td>$205.45</td><td class="neg">$199.29</td><td class="pos">$215.00 / $220.85</td><td class="am">1.6</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr><tr data-sig-ticker="V" data-sig-entry="351.08" data-sig-stop="339.75" data-sig-tp1="368.64" data-sig-tp2="379.4" data-sig-vwap="348.47" data-sig-rank="fallback" data-sig-open="344.55999755859375" data-sig-high="353.3599853515625" data-sig-low="340.9800109863281" data-sig-price="351.08" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/V?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>V</b><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#4</span></td><td><span class="pill-score" style="background:var(--accent)">85</span></td><td class="m">Breakout</td><td>$351.08</td><td class="neg">$339.75</td><td class="pos">$368.64 / $379.40</td><td class="am">1.5</td><td><span class="pill pos">LIVE</span></td></tr></tbody>
+      <tbody><tr data-sig-ticker="BBVA" data-sig-entry="25.77" data-sig-stop="24.99" data-sig-tp1="27.16" data-sig-tp2="28.39" data-sig-vwap="25.75" data-sig-rank="primary" data-sig-open="25.729999542236328" data-sig-high="25.8572998046875" data-sig-low="25.68000030517578" data-sig-price="25.71"><td><img src="https://assets.parqet.com/logos/symbol/BBVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>BBVA</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)">90</span></td><td class="m">Breakout</td><td>$25.77</td><td class="neg">$24.99</td><td class="pos">$27.16 / $28.39</td><td class="am">1:1.8</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="LYG" data-sig-entry="6.08" data-sig-stop="5.88" data-sig-tp1="6.42" data-sig-tp2="6.75" data-sig-vwap="6.08" data-sig-rank="primary" data-sig-open="6.059999942779541" data-sig-high="6.110000133514404" data-sig-low="6.054999828338623" data-sig-price="6.08"><td><img src="https://assets.parqet.com/logos/symbol/LYG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>LYG</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--accent)">89</span></td><td class="m">Breakout</td><td>$6.08</td><td class="neg">$5.88</td><td class="pos">$6.42 / $6.75</td><td class="am">1:1.7</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="IBKR" data-sig-entry="93.23" data-sig-stop="86.93" data-sig-tp1="105.21" data-sig-tp2="115.29" data-sig-vwap="93.82" data-sig-rank="primary" data-sig-open="93.25" data-sig-high="96.70999908447266" data-sig-low="92.12999725341797" data-sig-price="92.63"><td><img src="https://assets.parqet.com/logos/symbol/IBKR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IBKR</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--accent)">88</span></td><td class="m">Momentum</td><td>$93.23</td><td class="neg">$86.93</td><td class="pos">$105.21 / $115.29</td><td class="am">1:1.9</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr><tr data-sig-ticker="CB" data-sig-entry="356.21" data-sig-stop="344.77" data-sig-tp1="374.52" data-sig-tp2="392.82" data-sig-vwap="354.67" data-sig-rank="fallback" data-sig-open="351.5400085449219" data-sig-high="357.2850036621094" data-sig-low="349.6000061035156" data-sig-price="357.115" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/CB?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CB</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#4</span></td><td><span class="pill-score" style="background:var(--accent)">87</span></td><td class="m">Breakout</td><td>$356.21</td><td class="neg">$344.77</td><td class="pos">$374.52 / $392.82</td><td class="am">1:1.6</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="YUM" data-sig-entry="163.9" data-sig-stop="158.55" data-sig-tp1="173.51" data-sig-tp2="182.06" data-sig-vwap="163.11" data-sig-rank="fallback" data-sig-open="161.2899932861328" data-sig-high="164.27999877929688" data-sig-low="160.98500061035156" data-sig-price="164.06" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/YUM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>YUM</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#5</span></td><td><span class="pill-score" style="background:var(--accent)">87</span></td><td class="m">Momentum</td><td>$163.90</td><td class="neg">$158.55</td><td class="pos">$173.51 / $182.06</td><td class="am">1:1.8</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="TIGO" data-sig-entry="94.2" data-sig-stop="88.09" data-sig-tp1="105.82" data-sig-tp2="115.6" data-sig-vwap="93.71" data-sig-rank="fallback" data-sig-open="91.99500274658203" data-sig-high="95.37989807128906" data-sig-low="91.99500274658203" data-sig-price="93.76" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/TIGO?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>TIGO</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#6</span></td><td><span class="pill-score" style="background:var(--accent)">86</span></td><td class="m">Breakout</td><td>$94.20</td><td class="neg">$88.09</td><td class="pos">$105.82 / $115.60</td><td class="am">1:1.9</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="DLTR" data-sig-entry="124.2" data-sig-stop="116.7" data-sig-tp1="136.96" data-sig-tp2="148.96" data-sig-vwap="124.13" data-sig-rank="fallback" data-sig-open="123.3499984741211" data-sig-high="125.48999786376953" data-sig-low="122.5" data-sig-price="124.41" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/DLTR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>DLTR</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#7</span></td><td><span class="pill-score" style="background:var(--accent)">85</span></td><td class="m">Momentum</td><td>$124.20</td><td class="neg">$116.70</td><td class="pos">$136.96 / $148.96</td><td class="am">1:1.7</td><td><span class="pill pos">LIVE</span></td></tr></tbody>
     </table>
   </details>
 </div>
@@ -1442,7 +1474,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card " data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
     <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">3/3 open — portfolio full</span>
@@ -1454,34 +1486,34 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card" data-section="watch">
   <div class="sc-head">
     <h3><i class="fas fa-eye"></i> On Watch <span class="count">3</span></h3>
-    <span class="sc-meta">portfolio full — signals expire Mon, Jul 6</span>
+    <span class="sc-meta">portfolio full — signals expire Tue, Jul 7</span>
   </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
     <tbody><tr style="opacity:0.75">
-      <td><b>NWG</b></td>
+      <td><b>BBVA</b></td>
+      <td><span class="pill-score" style="background:var(--muted)">90</span></td>
+      <td class="m hide-m">Breakout</td><td class="m">$25.77</td>
+      <td class="neg">$24.99</td>
+      <td class="pos">$27.16<span class="hide-m"> / $28.39</span></td>
+      <td class="am hide-m">1:1.8</td>
+      <td><span class="pill m">Valid until Tue, Jul 7</span></td>
+    </tr><tr style="opacity:0.75">
+      <td><b>LYG</b></td>
       <td><span class="pill-score" style="background:var(--muted)">89</span></td>
-      <td class="m hide-m">Momentum</td><td class="m">$17.99</td>
-      <td class="neg">$17.38</td>
-      <td class="pos">$18.94<span class="hide-m"> / $19.51</span></td>
-      <td class="am hide-m">1.6</td>
-      <td><span class="pill m">Valid until Mon, Jul 6</span></td>
+      <td class="m hide-m">Breakout</td><td class="m">$6.08</td>
+      <td class="neg">$5.88</td>
+      <td class="pos">$6.42<span class="hide-m"> / $6.75</span></td>
+      <td class="am hide-m">1:1.7</td>
+      <td><span class="pill m">Valid until Tue, Jul 7</span></td>
     </tr><tr style="opacity:0.75">
-      <td><b>AXP</b></td>
+      <td><b>IBKR</b></td>
       <td><span class="pill-score" style="background:var(--muted)">88</span></td>
-      <td class="m hide-m">Momentum</td><td class="m">$348.00</td>
-      <td class="neg">$336.25</td>
-      <td class="pos">$366.21<span class="hide-m"> / $377.38</span></td>
-      <td class="am hide-m">1.5</td>
-      <td><span class="pill m">Valid until Mon, Jul 6</span></td>
-    </tr><tr style="opacity:0.75">
-      <td><b>EA</b></td>
-      <td><span class="pill-score" style="background:var(--muted)">86</span></td>
-      <td class="m hide-m">Momentum</td><td class="m">$205.45</td>
-      <td class="neg">$199.29</td>
-      <td class="pos">$215.00<span class="hide-m"> / $220.85</span></td>
-      <td class="am hide-m">1.6</td>
-      <td><span class="pill m">Valid until Mon, Jul 6</span></td>
+      <td class="m hide-m">Momentum</td><td class="m">$93.23</td>
+      <td class="neg">$86.93</td>
+      <td class="pos">$105.21<span class="hide-m"> / $115.29</span></td>
+      <td class="am hide-m">1:1.9</td>
+      <td><span class="pill m">Valid until Tue, Jul 7</span></td>
     </tr></tbody>
   </table>
 </div>
@@ -1490,24 +1522,24 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card" id="sec-pos-balanced">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">3/3</span></h3>
-    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="pos">+0.1%</b></span>
+    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="pos">+0.7%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
     <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.2%</span>
-    <span class="pos"><i class="fas fa-circle-dot"></i> Now (pondéré): +0.1%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +3.2%</span>
+    <span class="pos"><i class="fas fa-circle-dot"></i> Now (pondéré): +0.7%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +3.8%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:57.4%"></div>
-    <div class="scenario-fill-good" style="width:42.6%"></div>
-    <div class="scenario-cursor" style="left:57.4%"></div>
+    <div class="scenario-fill-bad" style="width:60.6%"></div>
+    <div class="scenario-fill-good" style="width:39.4%"></div>
+    <div class="scenario-cursor" style="left:60.6%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/FAST?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>FAST</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=FAST&ty=c&ta=1&p=d&s=l" alt="FAST" class="fv-thumb" onclick="fvOpen('FAST','')"></td><td class="m hide-m">06-30</td><td class="hide-m">$47.38</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$47.24</td><td class="hide-m">$47.75</td><td class="pos" data-format="pct"><b>+0.78%</b></td><td class="neg hide-m">$45.48</td><td class="pos hide-m">—</td><td class="m">7d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Distributeur industriel en double confirmation : momentum (score 65.4) + breakout (score 44.2, bbw < 0.08 tight squeeze). Near breakout avec volume confirmé. RSI 61.5 haussier sans excès. Corr SPY ultra-basse (0.20) — meilleur diversificateur du lot. ⚠️ Earnings 14 juillet BMO (advisory, pas de blocage à 10j).</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ABNB?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ABNB</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=ABNB&ty=c&ta=1&p=d&s=l" alt="ABNB" class="fv-thumb" onclick="fvOpen('ABNB','')"></td><td class="m hide-m">06-30</td><td class="hide-m">$147.29</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$147.69</td><td class="hide-m">$147.31</td><td class="pos" data-format="pct"><b>+0.01%</b></td><td class="neg hide-m">$138.81</td><td class="pos hide-m">—</td><td class="m">7d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Plateforme travel en breakout momentum avec RSI 64.8 et MACD +2.6 bullish. Volume confirmé 1.25× avg. Corrélation SPY modérée (0.48) — bon profil risque. Bénéficie pleinement du shift RISK-ON et rotation vers consumer cyclical. Mcap $78.5B.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/NVS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NVS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=NVS&ty=c&ta=1&p=d&s=l" alt="NVS" class="fv-thumb" onclick="fvOpen('NVS','')"></td><td class="m hide-m">06-26</td><td class="hide-m">$155.00</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$154.79</td><td class="hide-m">$154.14</td><td class="neg" data-format="pct"><b>-0.55%</b></td><td class="neg hide-m">$150.50</td><td class="pos hide-m">$169.00</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">EU healthcare leader, 3rd consecutive pick. PE fwd 15.6x deep value vs US peers. Above all EMAs, RSI 60.2, ext 2.91%. Div 3.1%, beta ~0.5. $1.9B Antares deal + Kisqali/Entresto. ATR% 1.9%. Anti-dilution clean.</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/FAST?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>FAST</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=FAST&ty=c&ta=1&p=d&s=l" alt="FAST" class="fv-thumb" onclick="fvOpen('FAST','')"></td><td class="m hide-m">06-30</td><td class="hide-m">$47.38</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$47.24</td><td class="hide-m">$48.24</td><td class="pos" data-format="pct"><b>+1.83%</b></td><td class="neg hide-m">$45.48</td><td class="pos hide-m">—</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Distributeur industriel en double confirmation : momentum (score 65.4) + breakout (score 44.2, bbw < 0.08 tight squeeze). Near breakout avec volume confirmé. RSI 61.5 haussier sans excès. Corr SPY ultra-basse (0.20) — meilleur diversificateur du lot. ⚠️ Earnings 14 juillet BMO (advisory, pas de blocage à 10j).</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/ABNB?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ABNB</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=ABNB&ty=c&ta=1&p=d&s=l" alt="ABNB" class="fv-thumb" onclick="fvOpen('ABNB','')"></td><td class="m hide-m">06-30</td><td class="hide-m">$147.29</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$147.69</td><td class="hide-m">$148.41</td><td class="pos" data-format="pct"><b>+0.76%</b></td><td class="neg hide-m">$138.81</td><td class="pos hide-m">—</td><td class="m">6d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Plateforme travel en breakout momentum avec RSI 64.8 et MACD +2.6 bullish. Volume confirmé 1.25× avg. Corrélation SPY modérée (0.48) — bon profil risque. Bénéficie pleinement du shift RISK-ON et rotation vers consumer cyclical. Mcap $78.5B.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/NVS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NVS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=NVS&ty=c&ta=1&p=d&s=l" alt="NVS" class="fv-thumb" onclick="fvOpen('NVS','')"></td><td class="m hide-m">06-26</td><td class="hide-m">$155.00</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$154.79</td><td class="hide-m">$154.14</td><td class="neg" data-format="pct"><b>-0.55%</b></td><td class="neg hide-m">$150.50</td><td class="pos hide-m">$169.00</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">EU healthcare leader, 3rd consecutive pick. PE fwd 15.6x deep value vs US peers. Above all EMAs, RSI 60.2, ext 2.91%. Div 3.1%, beta ~0.5. $1.9B Antares deal + Kisqali/Entresto. ATR% 1.9%. Anti-dilution clean.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -2022,7 +2054,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-secured" class="mode-panel" data-mode-status="live" data-psize="3" data-asset-class="equity" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Orbit Dashboard</h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Orbit Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -2058,13 +2090,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card">
   <details open>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">2 setups + 2 fallback</span><span class="sc-preview"><b>NWG</b> <span style="color:var(--muted)">89</span> · <b>AXP</b> <span style="color:var(--muted)">88</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">2 setups + 4 fallback</span><span class="sc-preview"><b>BBVA</b> <span style="color:var(--muted)">90</span> · <b>LYG</b> <span style="color:var(--muted)">89</span></span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
     <table class="t" style="margin-top:.75rem">
       <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="NWG" data-sig-entry="17.99" data-sig-stop="17.38" data-sig-tp1="18.94" data-sig-tp2="19.51" data-sig-vwap="17.95" data-sig-rank="primary" data-sig-open="17.739999771118164" data-sig-high="18.1200008392334" data-sig-low="17.729999542236328" data-sig-price="17.99"><td><img src="https://assets.parqet.com/logos/symbol/NWG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NWG</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--accent)">89</span></td><td class="m">Momentum</td><td>$17.99</td><td class="neg">$17.38</td><td class="pos">$18.94 / $19.51</td><td class="am">1.6</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="AXP" data-sig-entry="348" data-sig-stop="336.25" data-sig-tp1="366.21" data-sig-tp2="377.38" data-sig-vwap="345.41" data-sig-rank="primary" data-sig-open="341.5299987792969" data-sig-high="350.5" data-sig-low="337.7300109863281" data-sig-price="348"><td><img src="https://assets.parqet.com/logos/symbol/AXP?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AXP</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--accent)">88</span></td><td class="m">Momentum</td><td>$348.00</td><td class="neg">$336.25</td><td class="pos">$366.21 / $377.38</td><td class="am">1.5</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr><tr data-sig-ticker="EA" data-sig-entry="205.45" data-sig-stop="199.29" data-sig-tp1="215" data-sig-tp2="220.85" data-sig-vwap="205.53" data-sig-rank="fallback" data-sig-open="205.75999450683594" data-sig-high="206" data-sig-low="205.14999389648438" data-sig-price="205.45" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/EA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>EA</b><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#3</span></td><td><span class="pill-score" style="background:var(--accent)">86</span></td><td class="m">Momentum</td><td>$205.45</td><td class="neg">$199.29</td><td class="pos">$215.00 / $220.85</td><td class="am">1.6</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="V" data-sig-entry="351.08" data-sig-stop="339.75" data-sig-tp1="368.64" data-sig-tp2="379.4" data-sig-vwap="348.47" data-sig-rank="fallback" data-sig-open="344.55999755859375" data-sig-high="353.3599853515625" data-sig-low="340.9800109863281" data-sig-price="351.08" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/V?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>V</b><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#4</span></td><td><span class="pill-score" style="background:var(--accent)">85</span></td><td class="m">Breakout</td><td>$351.08</td><td class="neg">$339.75</td><td class="pos">$368.64 / $379.40</td><td class="am">1.5</td><td><span class="pill pos">LIVE</span></td></tr></tbody>
+      <tbody><tr data-sig-ticker="BBVA" data-sig-entry="25.77" data-sig-stop="24.99" data-sig-tp1="27.16" data-sig-tp2="28.39" data-sig-vwap="25.75" data-sig-rank="primary" data-sig-open="25.729999542236328" data-sig-high="25.8572998046875" data-sig-low="25.68000030517578" data-sig-price="25.71"><td><img src="https://assets.parqet.com/logos/symbol/BBVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>BBVA</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)">90</span></td><td class="m">Breakout</td><td>$25.77</td><td class="neg">$24.99</td><td class="pos">$27.16 / $28.39</td><td class="am">1:1.8</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="LYG" data-sig-entry="6.08" data-sig-stop="5.88" data-sig-tp1="6.42" data-sig-tp2="6.75" data-sig-vwap="6.08" data-sig-rank="primary" data-sig-open="6.059999942779541" data-sig-high="6.110000133514404" data-sig-low="6.054999828338623" data-sig-price="6.08"><td><img src="https://assets.parqet.com/logos/symbol/LYG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>LYG</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--accent)">89</span></td><td class="m">Breakout</td><td>$6.08</td><td class="neg">$5.88</td><td class="pos">$6.42 / $6.75</td><td class="am">1:1.7</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr><td colspan="8" style="text-align:center;padding:.45rem;background:var(--surface-2);font-size:.68rem;color:var(--muted);font-weight:600;border-top:1px dashed var(--border)"><i class="fas fa-arrow-down" style="margin-right:.3rem"></i>Fallback candidates (if signal above skipped by VWAP gate)</td></tr><tr data-sig-ticker="IBKR" data-sig-entry="93.23" data-sig-stop="86.93" data-sig-tp1="105.21" data-sig-tp2="115.29" data-sig-vwap="93.82" data-sig-rank="fallback" data-sig-open="93.25" data-sig-high="96.70999908447266" data-sig-low="92.12999725341797" data-sig-price="92.63" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/IBKR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IBKR</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#3</span></td><td><span class="pill-score" style="background:var(--accent)">88</span></td><td class="m">Momentum</td><td>$93.23</td><td class="neg">$86.93</td><td class="pos">$105.21 / $115.29</td><td class="am">1:1.9</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="CB" data-sig-entry="356.21" data-sig-stop="344.77" data-sig-tp1="374.52" data-sig-tp2="392.82" data-sig-vwap="354.67" data-sig-rank="fallback" data-sig-open="351.5400085449219" data-sig-high="357.2850036621094" data-sig-low="349.6000061035156" data-sig-price="357.115" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/CB?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CB</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#4</span></td><td><span class="pill-score" style="background:var(--accent)">87</span></td><td class="m">Breakout</td><td>$356.21</td><td class="neg">$344.77</td><td class="pos">$374.52 / $392.82</td><td class="am">1:1.6</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="YUM" data-sig-entry="163.9" data-sig-stop="158.55" data-sig-tp1="173.51" data-sig-tp2="182.06" data-sig-vwap="163.11" data-sig-rank="fallback" data-sig-open="161.2899932861328" data-sig-high="164.27999877929688" data-sig-low="160.98500061035156" data-sig-price="164.06" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/YUM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>YUM</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#5</span></td><td><span class="pill-score" style="background:var(--accent)">87</span></td><td class="m">Momentum</td><td>$163.90</td><td class="neg">$158.55</td><td class="pos">$173.51 / $182.06</td><td class="am">1:1.8</td><td><span class="pill pos">LIVE</span></td></tr><tr data-sig-ticker="TIGO" data-sig-entry="94.2" data-sig-stop="88.09" data-sig-tp1="105.82" data-sig-tp2="115.6" data-sig-vwap="93.71" data-sig-rank="fallback" data-sig-open="91.99500274658203" data-sig-high="95.37989807128906" data-sig-low="91.99500274658203" data-sig-price="93.76" style="opacity:.55"><td><img src="https://assets.parqet.com/logos/symbol/TIGO?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>TIGO</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem">CONV</span><span class="pill m" style="font-size:.55rem;margin-left:.3rem">#6</span></td><td><span class="pill-score" style="background:var(--accent)">86</span></td><td class="m">Breakout</td><td>$94.20</td><td class="neg">$88.09</td><td class="pos">$105.82 / $115.60</td><td class="am">1:1.9</td><td><span class="pill pos">LIVE</span></td></tr></tbody>
     </table>
   </details>
 </div>
@@ -2087,8 +2119,8 @@ details[open] summary::after{transform:rotate(90deg)}
     <div class="ps" title="Share of resolved trades that ended profitable. 50% with high R:R is normal for momentum strategies.">
       <span class="ps-v">41.7%</span><span class="ps-l">Win Rate</span>
     </div>
-    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. 90% bootstrap CI: [0.19x — 3.13x] over 12 trades.">
-      <span class="ps-v"><span class="ps-num">0.98x</span><span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[0.19–3.13]</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
+    <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated. 90% bootstrap CI: [0.26x — 3.2x] over 12 trades.">
+      <span class="ps-v"><span class="ps-num">0.98x</span><span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[0.26–3.2]</span></span><span class="ps-l">Profit Factor <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span></span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
       <span class="ps-v">12</span><span class="ps-l">Closed Trades</span>
@@ -2113,85 +2145,64 @@ details[open] summary::after{transform:rotate(90deg)}
 
 <!-- ══ 5. ORDERS CTA ══ -->
 
-<div class="cta-card" data-section="expiring" style="background:var(--warn-wk);border:1px solid var(--warn)">
-  <div class="cta-header">
-    <span class="cta-icon" style="background:oklch(70% 0.14 75/.15)"><i class="fas fa-hourglass-half" style="color:var(--warn-ink)"></i></span>
-    <div>
-      <h3 style="color:var(--warn-ink)">Expires Tomorrow <span class="cta-badge" style="background:var(--warn-ink)">1 position</span></h3>
-      <p class="cta-sub" style="color:var(--warn-ink)">Horizon reached at next close — decide: keep or exit at open</p>
+
+
+<div class="section-card cta-orders" data-section="orders" data-scan-date="20260703">
+  <div class="sc-head">
+    <h3><i class="fas fa-bolt"></i> 1 Order to Place</h3>
+    <span class="sc-meta">2/3 open — <b>1 slot free</b> — place at next open</span>
+    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
+      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
+      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
     </div>
   </div>
+  
   <table class="t">
-    <thead><tr><th>Ticker</th><th>Entry</th><th>P&amp;L</th><th>Stop</th><th>Held</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/NVS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NVS</b></td><td>$155.00</td><td class="neg" data-format="pct"><b>-0.55%</b></td><td class="neg">$150.50</td><td class="am">4d/5d</td></tr></tbody>
+    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
+    <tbody><tr>
+      <td><img src="https://assets.parqet.com/logos/symbol/BBVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>BBVA</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
+      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=BBVA&ty=c&ta=1&p=d&s=l" alt="BBVA" class="fv-thumb" onclick="fvOpen('BBVA','')"></td>
+      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">90</span></td>
+      <td class="m hide-m">Breakout</td><td><b>$25.77</b></td>
+      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$25.75</td>
+      <td class="neg">$24.99</td>
+      <td class="pos">$27.16<span class="hide-m"> / $28.39</span></td>
+      <td class="am hide-m">1:1.8</td><td class="m hide-m">33%</td>
+      <td><span class="pill pos">BUY</span></td>
+    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Banque espagnole leader, cassure vers un nouveau plus-haut 52 semaines ($25.77 pour un 52wH $26.20) portee par la rotation vers les financials europeens et un dollar faible. Marges nettes d'interet solides, rachat d'actions et dividende 4.3%.</div></td></tr></tbody>
   </table>
 </div>
 
-<div class="section-card " data-section="orders" data-scan-date="20260702">
-  <div class="sc-head">
-    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
-    <span class="sc-meta">3/3 open — portfolio full</span>
-    
-  </div>
-  
-  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">Portfolio full — see <b>On Watch</b> below.</div>
-</div>
-<div class="section-card" data-section="watch">
-  <div class="sc-head">
-    <h3><i class="fas fa-eye"></i> On Watch <span class="count">2</span></h3>
-    <span class="sc-meta">portfolio full — signals expire Mon, Jul 6</span>
-  </div>
-  <table class="t">
-    <thead><tr><th>Ticker</th><th>Score</th><th class="hide-m">Strat.</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th>Status</th></tr></thead>
-    <tbody><tr style="opacity:0.75">
-      <td><b>NWG</b></td>
-      <td><span class="pill-score" style="background:var(--muted)">89</span></td>
-      <td class="m hide-m">Momentum</td><td class="m">$17.99</td>
-      <td class="neg">$17.38</td>
-      <td class="pos">$18.94<span class="hide-m"> / $19.51</span></td>
-      <td class="am hide-m">1.6</td>
-      <td><span class="pill m">Valid until Mon, Jul 6</span></td>
-    </tr><tr style="opacity:0.75">
-      <td><b>AXP</b></td>
-      <td><span class="pill-score" style="background:var(--muted)">88</span></td>
-      <td class="m hide-m">Momentum</td><td class="m">$348.00</td>
-      <td class="neg">$336.25</td>
-      <td class="pos">$366.21<span class="hide-m"> / $377.38</span></td>
-      <td class="am hide-m">1.5</td>
-      <td><span class="pill m">Valid until Mon, Jul 6</span></td>
-    </tr></tbody>
-  </table>
-</div>
 
 <!-- ══ 6. OPEN POSITIONS (all — expired flagged) ══ -->
 <div class="section-card" id="sec-pos-secured">
   <div class="sc-head">
-    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">3/3</span></h3>
-    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="neg">-1.8%</b></span>
+    <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">2/3</span></h3>
+    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="neg">-2.7%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
   <div class="scenario-labels">
-    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -4.6%</span>
-    <span class="neg"><i class="fas fa-circle-dot"></i> Now (pondéré): -1.7%</span>
-    <span class="pos"><i class="fas fa-bullseye"></i> Best: +1.4%</span>
+    <span class="neg"><i class="fas fa-shield-halved"></i> Worst: -3.7%</span>
+    <span class="neg"><i class="fas fa-circle-dot"></i> Now (pondéré): -1.8%</span>
+    <span class="pos"><i class="fas fa-bullseye"></i> Best: +-1.8%</span>
   </div>
   <div class="scenario-bar">
-    <div class="scenario-fill-bad" style="width:47.9%"></div>
-    <div class="scenario-fill-good" style="width:52.1%"></div>
-    <div class="scenario-cursor" style="left:47.9%"></div>
+    <div class="scenario-fill-bad" style="width:100.0%"></div>
+    <div class="scenario-fill-good" style="width:0.0%"></div>
+    <div class="scenario-cursor" style="left:100.0%"></div>
   </div>
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/RVMD?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>RVMD</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=RVMD&ty=c&ta=1&p=d&s=l" alt="RVMD" class="fv-thumb" onclick="fvOpen('RVMD','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$185.49</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$188.32</td><td class="hide-m">$187.51</td><td class="pos" data-format="pct"><b>+1.09%</b></td><td class="neg hide-m">$177.73</td><td class="pos hide-m">—</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Biotech oncologie, poussée vers ATH 193, tendance forte EMA20</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/NVS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>NVS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=NVS&ty=c&ta=1&p=d&s=l" alt="NVS" class="fv-thumb" onclick="fvOpen('NVS','')"></td><td class="m hide-m">06-26</td><td class="hide-m">$155.00</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$154.79</td><td class="hide-m">$154.14</td><td class="neg" data-format="pct"><b>-0.55%</b></td><td class="neg hide-m">$150.50</td><td class="pos hide-m">$169.00</td><td class="neg">1d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">EU healthcare leader, 3rd consecutive pick. PE fwd 15.6x deep value vs US peers. Above all EMAs, RSI 60.2, ext 2.91%. Div 3.1%, beta ~0.5. $1.9B Antares deal + Kisqali/Entresto. ATR% 1.9%. Anti-dilution clean.</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/MXL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MXL</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=MXL&ty=c&ta=1&p=d&s=l" alt="MXL" class="fv-thumb" onclick="fvOpen('MXL','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$119.34</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$119.94</td><td class="hide-m">$112.39</td><td class="neg" data-format="pct"><b>-5.82%</b></td><td class="neg hide-m">$110.99</td><td class="pos hide-m">—</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 241.1: Mom20=26.6%, Mom50=254.2%, Mom100=556.9%, RSI=69</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/RVMD?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>RVMD</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=RVMD&ty=c&ta=1&p=d&s=l" alt="RVMD" class="fv-thumb" onclick="fvOpen('RVMD','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$185.49</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$188.32</td><td class="hide-m">$186.20</td><td class="pos" data-format="pct"><b>+0.38%</b></td><td class="neg hide-m">$177.73</td><td class="pos hide-m">—</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Biotech oncologie, poussée vers ATH 193, tendance forte EMA20</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/MXL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MXL</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=MXL&ty=c&ta=1&p=d&s=l" alt="MXL" class="fv-thumb" onclick="fvOpen('MXL','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$119.34</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$119.94</td><td class="hide-m">$112.39</td><td class="neg" data-format="pct"><b>-5.82%</b></td><td class="neg hide-m">$110.99</td><td class="pos hide-m">—</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 241.1: Mom20=26.6%, Mom50=254.2%, Mom100=556.9%, RSI=69</div></td></tr></tbody>
   </table>
 </div>
 
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card" id="sec-hist-secured">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">12 closed · 3 open</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">12 closed · 2 open</span></span></summary>
   <div class="th-scroll">
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
@@ -2339,7 +2350,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-aplus" class="mode-panel" data-mode-status="live" data-psize="5" data-asset-class="equity" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> A+ Conviction Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-26">stats as of 06/26</span></h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> A+ Conviction Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-26">stats as of 06/26</span> <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -2376,10 +2387,10 @@ details[open] summary::after{transform:rotate(90deg)}
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Fortress A+</b> excluded all 100 signals today — available strategies: <b>ETFMomentum</b>, <b>MomentumRotation</b>, <b>Candlestick</b>, <b>TrendlineBreakout</b>, <b>HighVolBreakout</b>, <b>Momentum</b>, <b>Pullback</b>, <b>Breakout</b>, <b>AdaptiveFractal</b>. Existing positions remain active.</p>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Fortress A+</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -2411,7 +2422,7 @@ details[open] summary::after{transform:rotate(90deg)}
       <span class="ps-v">0d</span><span class="ps-l">Avg Hold</span>
     </div>
     <div class="ps" title="R-squared: how closely the equity curve follows a straight line. 1.0 = perfect linear growth, 0 = random.">
-      <span class="ps-v">0.100</span><span class="ps-l">R²</span>
+      <span class="ps-v">0.043</span><span class="ps-l">R²</span>
     </div>
     <div class="ps" title="Compound Annual Growth Rate: annualized return extrapolated from the equity curve.">
       <span class="ps-v">+65.4%</span><span class="ps-l">CAGR</span>
@@ -2429,7 +2440,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card " data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
     <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">0/5 open — <b>5 slots free</b> — place at next open</span>
@@ -2504,10 +2515,10 @@ details[open] summary::after{transform:rotate(90deg)}
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Fortress A+</b> excluded all 100 signals today — available strategies: <b>ETFMomentum</b>, <b>MomentumRotation</b>, <b>Candlestick</b>, <b>TrendlineBreakout</b>, <b>HighVolBreakout</b>, <b>Momentum</b>, <b>Pullback</b>, <b>Breakout</b>, <b>AdaptiveFractal</b>. Existing positions remain active.</p>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Fortress A+</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -2557,7 +2568,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card " data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
     <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">0/10 open — <b>10 slots free</b> — place at next open</span>
@@ -3315,7 +3326,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-bull" class="mode-panel" data-mode-status="live" data-psize="3" data-asset-class="equity" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Bull Dashboard</h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Bull Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -3349,16 +3360,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card hide-section">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">3 setups</span><span class="sc-preview"><b>SOC</b> <span style="color:var(--muted)">178</span> · <b>RGC</b> <span style="color:var(--muted)">123</span> · <b>UXIN</b> <span style="color:var(--muted)">120</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     <div style="margin-top:.75rem;padding:.7rem .85rem;background:#f973160a;border:1px solid #f9731633;border-radius:var(--r-s);font-size:.82rem;color:var(--ink-1);line-height:1.5"><b><i class="fas fa-bolt" style="margin-right:.3rem;color:#f97316"></i>Système haute-conviction (parité systematic-tss).</b> Bull ne trade qu'un pattern chandelier confirmé par un <b>spike de volume ≥ 8× la moyenne 20j le jour du signal</b> (volume de clôture, connu au scan) <b>ET</b> score ≥ 88 <b>ET</b> liquidité ≥ $1M/j. Sur 5 ans : ~1 trade/semaine (1061 trades, parité Go/JS). <b>Les jours calmes sans spike 8× → 0 signal, c'est normal et attendu</b> — ce n'est pas un bug.</div>
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="SOC" data-sig-entry="4.4" data-sig-stop="2.88" data-sig-tp1="4.752" data-sig-tp2="5.104" data-sig-vwap="4.24" data-sig-rank="primary" data-sig-open="3.880000114440918" data-sig-high="4.449999809265137" data-sig-low="3.859999895095825" data-sig-price="4.4"><td><img src="https://assets.parqet.com/logos/symbol/SOC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SOC</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)" title="échelle candlestick (non /100)">178</span></td><td class="m">Candlestick</td><td>$4.40</td><td class="neg">$2.88</td><td class="pos">$4.75 / $5.10</td><td class="am">1:0.23</td><td><span class="pill pos">CONFIRMÉ 8×</span></td></tr><tr data-sig-ticker="RGC" data-sig-entry="8.03" data-sig-stop="6" data-sig-tp1="8.6724" data-sig-tp2="9.3148" data-sig-vwap="7.6" data-sig-rank="primary" data-sig-open="6.090000152587891" data-sig-high="8.777999877929688" data-sig-low="6" data-sig-price="8.03"><td><img src="https://assets.parqet.com/logos/symbol/RGC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>RGC</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)" title="échelle candlestick (non /100)">123</span></td><td class="m">Candlestick</td><td>$8.03</td><td class="neg">$6.00</td><td class="pos">$8.67 / $9.31</td><td class="am">1:0.32</td><td><span class="pill pos">CONFIRMÉ 8×</span></td></tr><tr data-sig-ticker="UXIN" data-sig-entry="1.94" data-sig-stop="1.5" data-sig-tp1="2.0952" data-sig-tp2="2.2504" data-sig-vwap="1.88" data-sig-rank="primary" data-sig-open="1.5499999523162842" data-sig-high="2.1600000858306885" data-sig-low="1.5499999523162842" data-sig-price="1.94"><td><img src="https://assets.parqet.com/logos/symbol/UXIN?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>UXIN</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)" title="échelle candlestick (non /100)">120</span></td><td class="m">Candlestick</td><td>$1.94</td><td class="neg">$1.50</td><td class="pos">$2.10 / $2.25</td><td class="am">1:0.35</td><td><span class="pill pos">CONFIRMÉ 8×</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Candlestick only</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -3408,40 +3416,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 2 Orders to Place</h3>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">1/3 open — <b>2 slots free</b> — place at next open</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    
   </div>
   
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/SOC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SOC</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=SOC&ty=c&ta=1&p=d&s=l" alt="SOC" class="fv-thumb" onclick="fvOpen('SOC','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)" title="échelle candlestick (non /100)">178</span></td>
-      <td class="m hide-m">Candlestick</td><td><b>$4.40</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$4.24</td>
-      <td class="neg">$2.88</td>
-      <td class="pos">$4.75<span class="hide-m"> / $5.10</span></td>
-      <td class="am hide-m">1:0.23</td><td class="m hide-m">33%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">BULLISH_STRONG_REVERSAL pattern (base 68) with 9.8x volume spike. ATR% 25.49%, RSI 14.8, BB%B 0.019.</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/RGC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>RGC</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=RGC&ty=c&ta=1&p=d&s=l" alt="RGC" class="fv-thumb" onclick="fvOpen('RGC','')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)" title="échelle candlestick (non /100)">123</span></td>
-      <td class="m hide-m">Candlestick</td><td><b>$8.03</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$7.60</td>
-      <td class="neg">$6.00</td>
-      <td class="pos">$8.67<span class="hide-m"> / $9.31</span></td>
-      <td class="am hide-m">1:0.32</td><td class="m hide-m">33%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">BULLISH_BELT_HOLD pattern (base 48) with 10.7x volume spike. ATR% 28.54%, RSI 14.4, BB%B 0.226.</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">No actions today.</div>
 </div>
 
 
@@ -3466,7 +3448,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/TECH?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>TECH</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=TECH&ty=c&ta=1&p=d&s=l" alt="TECH" class="fv-thumb" onclick="fvOpen('TECH','')"></td><td class="m hide-m">06-26</td><td class="hide-m">$70.53</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$70.57</td><td class="hide-m">$71.00</td><td class="pos" data-format="pct"><b>+0.67%</b></td><td class="neg hide-m">$56.85</td><td class="pos hide-m">$111.57</td><td class="m">4d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">THREE_BULLISH_CONTINUATION pattern (base 62) with 13.8x volume spike. ATR% 4.32%, RSI 78.4, BB%B 1.406.</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/TECH?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>TECH</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=TECH&ty=c&ta=1&p=d&s=l" alt="TECH" class="fv-thumb" onclick="fvOpen('TECH','')"></td><td class="m hide-m">06-26</td><td class="hide-m">$70.53</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$70.57</td><td class="hide-m">$71.00</td><td class="pos" data-format="pct"><b>+0.67%</b></td><td class="neg hide-m">$56.85</td><td class="pos hide-m">$111.57</td><td class="m">3d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">THREE_BULLISH_CONTINUATION pattern (base 62) with 13.8x volume spike. ATR% 4.32%, RSI 78.4, BB%B 1.406.</div></td></tr></tbody>
   </table>
 </div>
 
@@ -3540,7 +3522,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-highvol" class="mode-panel" data-mode-status="live" data-psize="15" data-asset-class="us_equity" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> HighVol Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-30">stats as of 06/30</span></h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> HighVol Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-30">stats as of 06/30</span> <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -3574,16 +3556,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card hide-section">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">4 setups</span><span class="sc-preview"><b>DAVE</b> <span style="color:var(--muted)">126.5</span> · <b>ICHR</b> <span style="color:var(--muted)">126.5</span> · <b>VSAT</b> <span style="color:var(--muted)">115.5</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="DAVE" data-sig-entry="383.13" data-sig-stop="325.66" data-sig-tp1="521.87" data-sig-tp2="591.23" data-sig-vwap="386.19" data-sig-rank="primary" data-sig-open="378.8699951171875" data-sig-high="404.44000244140625" data-sig-low="371.010009765625" data-sig-price="383.13"><td><img src="https://assets.parqet.com/logos/symbol/DAVE?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>DAVE</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">126.5</span></td><td class="m">HighVolBreakout</td><td>$383.13</td><td class="neg">$325.66</td><td class="pos">$521.87 / $591.23</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="ICHR" data-sig-entry="111.77" data-sig-stop="95" data-sig-tp1="155.9" data-sig-tp2="177.96" data-sig-vwap="108.89" data-sig-rank="primary" data-sig-open="105.2300033569336" data-sig-high="113.58000183105469" data-sig-low="101.31999969482422" data-sig-price="111.77"><td><img src="https://assets.parqet.com/logos/symbol/ICHR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ICHR</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">126.5</span></td><td class="m">HighVolBreakout</td><td>$111.77</td><td class="neg">$95.00</td><td class="pos">$155.90 / $177.96</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="VSAT" data-sig-entry="83.02" data-sig-stop="70.57" data-sig-tp1="118.92" data-sig-tp2="136.87" data-sig-vwap="86.08" data-sig-rank="primary" data-sig-open="88.97000122070312" data-sig-high="93.02999877929688" data-sig-low="82.19999694824219" data-sig-price="83.02"><td><img src="https://assets.parqet.com/logos/symbol/VSAT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>VSAT</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">115.5</span></td><td class="m">HighVolBreakout</td><td>$83.02</td><td class="neg">$70.57</td><td class="pos">$118.92 / $136.87</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="ABVX" data-sig-entry="132.56" data-sig-stop="112.68" data-sig-tp1="181.68" data-sig-tp2="206.24" data-sig-vwap="134.59" data-sig-rank="primary" data-sig-open="138" data-sig-high="139.35000610351562" data-sig-low="131.86000061035156" data-sig-price="132.56"><td><img src="https://assets.parqet.com/logos/symbol/ABVX?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ABVX</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">99</span></td><td class="m">HighVolBreakout</td><td>$132.56</td><td class="neg">$112.68</td><td class="pos">$181.68 / $206.24</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>HighVol Breakout</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -3633,60 +3612,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 4 Orders to Place</h3>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">0/15 open — <b>15 slots free</b> — place at next open</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    
   </div>
   
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/DAVE?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>DAVE</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=DAVE&ty=c&ta=1&p=d&s=l" alt="DAVE" class="fv-thumb" onclick="fvOpen('DAVE','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">126.5</span></td>
-      <td class="m hide-m">HighVolBreakout</td><td><b>$383.13</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$386.19</td>
-      <td class="neg">$325.66</td>
-      <td class="pos">$521.87<span class="hide-m"> / $591.23</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">7%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">HV score 126.5: ATR%=7.2%, DistMA20=25.2%, VolR=1.62, RSI=83</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/ICHR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ICHR</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=ICHR&ty=c&ta=1&p=d&s=l" alt="ICHR" class="fv-thumb" onclick="fvOpen('ICHR','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">126.5</span></td>
-      <td class="m hide-m">HighVolBreakout</td><td><b>$111.77</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$108.89</td>
-      <td class="neg">$95.00</td>
-      <td class="pos">$155.90<span class="hide-m"> / $177.96</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">7%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">HV score 126.5: ATR%=7.9%, DistMA20=27.7%, VolR=1.95, RSI=78</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/VSAT?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>VSAT</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=VSAT&ty=c&ta=1&p=d&s=l" alt="VSAT" class="fv-thumb" onclick="fvOpen('VSAT','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">115.5</span></td>
-      <td class="m hide-m">HighVolBreakout</td><td><b>$83.02</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$86.08</td>
-      <td class="neg">$70.57</td>
-      <td class="pos">$118.92<span class="hide-m"> / $136.87</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">7%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">HV score 115.5: ATR%=8.6%, DistMA20=21.9%, VolR=2.01, RSI=67</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/ABVX?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ABVX</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=ABVX&ty=c&ta=1&p=d&s=l" alt="ABVX" class="fv-thumb" onclick="fvOpen('ABVX','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">99</span></td>
-      <td class="m hide-m">HighVolBreakout</td><td><b>$132.56</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$134.59</td>
-      <td class="neg">$112.68</td>
-      <td class="pos">$181.68<span class="hide-m"> / $206.24</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">7%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">HV score 99: ATR%=7.4%, DistMA20=30.2%, VolR=1.51, RSI=75</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">No actions today.</div>
 </div>
 
 
@@ -3726,7 +3659,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-casablanca" class="mode-panel" data-mode-status="live" data-psize="8" data-asset-class="casablanca" data-market="casablanca" data-nolive="1" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Casablanca Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-29">stats as of 06/29</span></h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Casablanca Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-29">stats as of 06/29</span> <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -3763,10 +3696,10 @@ details[open] summary::after{transform:rotate(90deg)}
   <details>
     <summary class="sc-summary">
       <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Adaptive Fractal</b> excluded all 100 signals today — available strategies: <b>ETFMomentum</b>, <b>MomentumRotation</b>, <b>Candlestick</b>, <b>TrendlineBreakout</b>, <b>HighVolBreakout</b>, <b>Momentum</b>, <b>Pullback</b>, <b>Breakout</b>, <b>AdaptiveFractal</b>. Existing positions remain active.</p>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Adaptive Fractal</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -3816,7 +3749,7 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card " data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
     <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">0/8 open — <b>8 slots free</b> — place at next open</span>
@@ -3834,7 +3767,7 @@ details[open] summary::after{transform:rotate(90deg)}
     
   </div>
   <p class="empty"><i class="fas fa-inbox"></i>
-    <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">All 8 slots empty — either no signal cleared minScore (25) today or stale exits closed prior holds.</span></span>
+    <span><b>No active positions</b><br><span style="font-size:.72rem;color:var(--muted)">All 8 slots empty — either no signal cleared minScore (5) today or stale exits closed prior holds.</span></span>
   </p>
 </div>
 
@@ -3862,7 +3795,7 @@ details[open] summary::after{transform:rotate(90deg)}
       <small>Since Jul 2, 2026 · Review Jul 16, 2026</small>
     </div>
   </div>
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Momentum Dashboard</h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Momentum Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut pausing depuis 2026-07-02">live depuis 07/02</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -3896,16 +3829,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card hide-section">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">5 setups</span><span class="sc-preview"><b>MXL</b> <span style="color:var(--muted)">241.14</span> · <b>APPS</b> <span style="color:var(--muted)">174.51</span> · <b>SLS</b> <span style="color:var(--muted)">161.54</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="MXL" data-sig-entry="112.39" data-sig-stop="90.26" data-sig-tp1="156.66" data-sig-tp2="178.79" data-sig-vwap="114.83" data-sig-rank="primary" data-sig-open="119.33999633789062" data-sig-high="120.5" data-sig-low="111.5999984741211" data-sig-price="112.39"><td><img src="https://assets.parqet.com/logos/symbol/MXL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MXL</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">241.14</span></td><td class="m">MomentumRotation</td><td>$112.39</td><td class="neg">$90.26</td><td class="pos">$156.66 / $178.79</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="APPS" data-sig-entry="13.31" data-sig-stop="11.39" data-sig-tp1="17.16" data-sig-tp2="19.08" data-sig-vwap="13.21" data-sig-rank="primary" data-sig-open="12.899999618530273" data-sig-high="13.550000190734863" data-sig-low="12.770000457763672" data-sig-price="13.31"><td><img src="https://assets.parqet.com/logos/symbol/APPS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>APPS</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">174.51</span></td><td class="m">MomentumRotation</td><td>$13.31</td><td class="neg">$11.39</td><td class="pos">$17.16 / $19.08</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="SLS" data-sig-entry="13.27" data-sig-stop="10.72" data-sig-tp1="18.37" data-sig-tp2="20.92" data-sig-vwap="13.5" data-sig-rank="primary" data-sig-open="14.029999732971191" data-sig-high="14.470000267028809" data-sig-low="12.75" data-sig-price="13.27"><td><img src="https://assets.parqet.com/logos/symbol/SLS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SLS</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">161.54</span></td><td class="m">MomentumRotation</td><td>$13.27</td><td class="neg">$10.72</td><td class="pos">$18.37 / $20.92</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="CLOV" data-sig-entry="5.39" data-sig-stop="4.79" data-sig-tp1="6.6" data-sig-tp2="7.2" data-sig-vwap="5.35" data-sig-rank="primary" data-sig-open="5.239999771118164" data-sig-high="5.545000076293945" data-sig-low="5.119999885559082" data-sig-price="5.39"><td><img src="https://assets.parqet.com/logos/symbol/CLOV?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CLOV</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">117.13</span></td><td class="m">MomentumRotation</td><td>$5.39</td><td class="neg">$4.79</td><td class="pos">$6.60 / $7.20</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="QURE" data-sig-entry="45.17" data-sig-stop="36.87" data-sig-tp1="61.77" data-sig-tp2="70.07" data-sig-vwap="45.95" data-sig-rank="primary" data-sig-open="46.20000076293945" data-sig-high="47.55500030517578" data-sig-low="45.119998931884766" data-sig-price="45.17"><td><img src="https://assets.parqet.com/logos/symbol/QURE?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>QURE</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">115.63</span></td><td class="m">MomentumRotation</td><td>$45.17</td><td class="neg">$36.87</td><td class="pos">$61.77 / $70.07</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Momentum Rotation</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -3955,40 +3885,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 2 Orders to Place</h3>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">3/5 open — <b>2 slots free</b> — place at next open</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    
   </div>
   
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/SLS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>SLS</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=SLS&ty=c&ta=1&p=d&s=l" alt="SLS" class="fv-thumb" onclick="fvOpen('SLS','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">161.54</span></td>
-      <td class="m hide-m">MomentumRotation</td><td><b>$13.27</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$13.50</td>
-      <td class="neg">$10.72</td>
-      <td class="pos">$18.37<span class="hide-m"> / $20.92</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">20%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">MomRot score 161.5: Mom20=59.3%, Mom50=165.9%, Mom100=275.9%, RSI=78</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/CLOV?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CLOV</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=CLOV&ty=c&ta=1&p=d&s=l" alt="CLOV" class="fv-thumb" onclick="fvOpen('CLOV','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">117.13</span></td>
-      <td class="m hide-m">MomentumRotation</td><td><b>$5.39</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$5.35</td>
-      <td class="neg">$4.79</td>
-      <td class="pos">$6.60<span class="hide-m"> / $7.20</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">20%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">MomRot score 117.1: Mom20=44.5%, Mom50=141.7%, Mom100=164.2%, RSI=65</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">No actions today.</div>
 </div>
 
 
@@ -4013,7 +3917,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/MXL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MXL</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=MXL&ty=c&ta=1&p=d&s=l" alt="MXL" class="fv-thumb" onclick="fvOpen('MXL','')"></td><td class="m hide-m">07-02</td><td class="hide-m">$112.39</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">—</td><td class="hide-m">$112.39</td><td class="pos" data-format="pct"><b>0%</b></td><td class="neg hide-m">$90.26</td><td class="pos hide-m">$178.79</td><td class="m">21d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 241.1: Mom20=26.6%, Mom50=254.2%, Mom100=556.9%, RSI=69</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/APPS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>APPS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=APPS&ty=c&ta=1&p=d&s=l" alt="APPS" class="fv-thumb" onclick="fvOpen('APPS','')"></td><td class="m hide-m">07-02</td><td class="hide-m">$13.31</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">—</td><td class="hide-m">$13.31</td><td class="pos" data-format="pct"><b>0%</b></td><td class="neg hide-m">$11.39</td><td class="pos hide-m">$19.08</td><td class="m">21d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 174.5: Mom20=55.7%, Mom50=249.3%, Mom100=213.9%, RSI=74</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/PENG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>PENG</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=PENG&ty=c&ta=1&p=d&s=l" alt="PENG" class="fv-thumb" onclick="fvOpen('PENG','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$76.01</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$73.45</td><td class="hide-m">$68.81</td><td class="neg" data-format="pct"><b>-9.47%</b></td><td class="neg hide-m">$61.57</td><td class="pos hide-m">$119.32</td><td class="m">20d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 159.8: Mom20=27.3%, Mom50=184.3%, Mom100=321.3%, RSI=66</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/MXL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MXL</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=MXL&ty=c&ta=1&p=d&s=l" alt="MXL" class="fv-thumb" onclick="fvOpen('MXL','')"></td><td class="m hide-m">07-02</td><td class="hide-m">$112.39</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">—</td><td class="hide-m">$112.39</td><td class="pos" data-format="pct"><b>0%</b></td><td class="neg hide-m">$90.26</td><td class="pos hide-m">$178.79</td><td class="m">20d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 241.1: Mom20=26.6%, Mom50=254.2%, Mom100=556.9%, RSI=69</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/APPS?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>APPS</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=APPS&ty=c&ta=1&p=d&s=l" alt="APPS" class="fv-thumb" onclick="fvOpen('APPS','')"></td><td class="m hide-m">07-02</td><td class="hide-m">$13.31</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">—</td><td class="hide-m">$13.31</td><td class="pos" data-format="pct"><b>0%</b></td><td class="neg hide-m">$11.39</td><td class="pos hide-m">$19.08</td><td class="m">20d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 174.5: Mom20=55.7%, Mom50=249.3%, Mom100=213.9%, RSI=74</div></td></tr><tr><td><img src="https://assets.parqet.com/logos/symbol/PENG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>PENG</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=PENG&ty=c&ta=1&p=d&s=l" alt="PENG" class="fv-thumb" onclick="fvOpen('PENG','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$76.01</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$73.45</td><td class="hide-m">$68.81</td><td class="neg" data-format="pct"><b>-9.47%</b></td><td class="neg hide-m">$61.57</td><td class="pos hide-m">$119.32</td><td class="m">20d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">MomRot score 159.8: Mom20=27.3%, Mom50=184.3%, Mom100=321.3%, RSI=66</div></td></tr></tbody>
   </table>
 </div>
 
@@ -4060,7 +3964,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-etf" class="mode-panel" data-mode-status="live" data-psize="7" data-asset-class="us_etf" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ETF US Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-29">stats as of 06/29</span></h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> ETF US Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-29">stats as of 06/29</span> <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -4094,16 +3998,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card hide-section">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">7 setups</span><span class="sc-preview"><b>ARKG</b> <span style="color:var(--muted)">262.68</span> · <b>XBI</b> <span style="color:var(--muted)">255.76</span> · <b>XLF</b> <span style="color:var(--muted)">141.39</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="ARKG" data-sig-entry="42.62" data-sig-stop="38.41" data-sig-tp1="51.04" data-sig-tp2="55.25" data-sig-vwap="42.59" data-sig-rank="primary" data-sig-open="42.04999923706055" data-sig-high="43.33000183105469" data-sig-low="41.82500076293945" data-sig-price="42.62"><td><img src="https://assets.parqet.com/logos/symbol/ARKG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ARKG</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">262.68</span></td><td class="m">ETFMomentum</td><td>$42.62</td><td class="neg">$38.41</td><td class="pos">$51.04 / $55.25</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="XBI" data-sig-entry="156.55" data-sig-stop="145.91" data-sig-tp1="177.84" data-sig-tp2="188.48" data-sig-vwap="157.25" data-sig-rank="primary" data-sig-open="157.92999267578125" data-sig-high="159" data-sig-low="156.19000244140625" data-sig-price="156.55"><td><img src="https://assets.parqet.com/logos/symbol/XBI?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>XBI</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">255.76</span></td><td class="m">ETFMomentum</td><td>$156.55</td><td class="neg">$145.91</td><td class="pos">$177.84 / $188.48</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="XLF" data-sig-entry="54.78" data-sig-stop="52.77" data-sig-tp1="58.8" data-sig-tp2="60.81" data-sig-vwap="54.54" data-sig-rank="primary" data-sig-open="53.83000183105469" data-sig-high="55.08000183105469" data-sig-low="53.75" data-sig-price="54.78"><td><img src="https://assets.parqet.com/logos/symbol/XLF?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>XLF</b><span class="pill am" style="background:var(--muted);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Not Sharia Compliant">CONV</span></td><td><span class="pill-score" style="background:var(--pos)">141.39</span></td><td class="m">ETFMomentum</td><td>$54.78</td><td class="neg">$52.77</td><td class="pos">$58.80 / $60.81</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="XLI" data-sig-entry="183.36" data-sig-stop="174.83" data-sig-tp1="200.42" data-sig-tp2="208.96" data-sig-vwap="183.91" data-sig-rank="primary" data-sig-open="184.3699951171875" data-sig-high="185.64999389648438" data-sig-low="182.72000122070312" data-sig-price="183.36"><td><img src="https://assets.parqet.com/logos/symbol/XLI?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>XLI</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">130.4</span></td><td class="m">ETFMomentum</td><td>$183.36</td><td class="neg">$174.83</td><td class="pos">$200.42 / $208.96</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="IWM" data-sig-entry="299.32" data-sig-stop="286.13" data-sig-tp1="325.7" data-sig-tp2="338.89" data-sig-vwap="300.32" data-sig-rank="primary" data-sig-open="299.92999267578125" data-sig-high="302.7200012207031" data-sig-low="298.9200134277344" data-sig-price="299.32"><td><img src="https://assets.parqet.com/logos/symbol/IWM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IWM</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">120.46</span></td><td class="m">ETFMomentum</td><td>$299.32</td><td class="neg">$286.13</td><td class="pos">$325.70 / $338.89</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="ARKK" data-sig-entry="81.85" data-sig-stop="75.63" data-sig-tp1="94.3" data-sig-tp2="100.52" data-sig-vwap="81.67" data-sig-rank="primary" data-sig-open="80.4000015258789" data-sig-high="82.75" data-sig-low="80.4000015258789" data-sig-price="81.85"><td><img src="https://assets.parqet.com/logos/symbol/ARKK?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ARKK</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">119.92</span></td><td class="m">ETFMomentum</td><td>$81.85</td><td class="neg">$75.63</td><td class="pos">$94.30 / $100.52</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="INDA" data-sig-entry="49.21" data-sig-stop="47.74" data-sig-tp1="52.15" data-sig-tp2="53.62" data-sig-vwap="49.18" data-sig-rank="primary" data-sig-open="49" data-sig-high="49.33000183105469" data-sig-low="49" data-sig-price="49.21"><td><img src="https://assets.parqet.com/logos/symbol/INDA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INDA</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">105.05</span></td><td class="m">ETFMomentum</td><td>$49.21</td><td class="neg">$47.74</td><td class="pos">$52.15 / $53.62</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>ETF Momentum</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -4153,90 +4054,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 7 Orders to Place</h3>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">0/7 open — <b>7 slots free</b> — place at next open</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    
   </div>
   
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/ARKG?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ARKG</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=ARKG&ty=c&ta=1&p=d&s=l" alt="ARKG" class="fv-thumb" onclick="fvOpen('ARKG','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">262.68</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$42.62</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$42.59</td>
-      <td class="neg">$38.41</td>
-      <td class="pos">$51.04<span class="hide-m"> / $55.25</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=25.4%, RSI=88, ATR%=4.0%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/XBI?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>XBI</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=XBI&ty=c&ta=1&p=d&s=l" alt="XBI" class="fv-thumb" onclick="fvOpen('XBI','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">255.76</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$156.55</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$157.25</td>
-      <td class="neg">$145.91</td>
-      <td class="pos">$177.84<span class="hide-m"> / $188.48</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=22.5%, RSI=92, ATR%=2.7%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/XLF?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>XLF</b> <span class="pill am" style="background:var(--muted);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Conventional">CONV</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=XLF&ty=c&ta=1&p=d&s=l" alt="XLF" class="fv-thumb" onclick="fvOpen('XLF','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">141.39</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$54.78</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$54.54</td>
-      <td class="neg">$52.77</td>
-      <td class="pos">$58.80<span class="hide-m"> / $60.81</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=6.5%, RSI=75, ATR%=1.5%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/XLI?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>XLI</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=XLI&ty=c&ta=1&p=d&s=l" alt="XLI" class="fv-thumb" onclick="fvOpen('XLI','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">130.4</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$183.36</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$183.91</td>
-      <td class="neg">$174.83</td>
-      <td class="pos">$200.42<span class="hide-m"> / $208.96</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=5.3%, RSI=72, ATR%=1.9%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/IWM?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>IWM</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=IWM&ty=c&ta=1&p=d&s=l" alt="IWM" class="fv-thumb" onclick="fvOpen('IWM','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">120.46</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$299.32</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$300.32</td>
-      <td class="neg">$286.13</td>
-      <td class="pos">$325.70<span class="hide-m"> / $338.89</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=2.6%, RSI=74, ATR%=1.8%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/ARKK?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>ARKK</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=ARKK&ty=c&ta=1&p=d&s=l" alt="ARKK" class="fv-thumb" onclick="fvOpen('ARKK','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">119.92</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$81.85</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$81.67</td>
-      <td class="neg">$75.63</td>
-      <td class="pos">$94.30<span class="hide-m"> / $100.52</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=2.4%, RSI=74, ATR%=3.0%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/INDA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>INDA</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=INDA&ty=c&ta=1&p=d&s=l" alt="INDA" class="fv-thumb" onclick="fvOpen('INDA','etf')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">105.05</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$49.21</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$49.18</td>
-      <td class="neg">$47.74</td>
-      <td class="pos">$52.15<span class="hide-m"> / $53.62</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">14%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=2.5%, RSI=66, ATR%=1.2%</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">No actions today.</div>
 </div>
 
 
@@ -4301,16 +4126,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card hide-section">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">2 setups</span><span class="sc-preview"><b>MEUD.PA</b> <span style="color:var(--muted)">121.03</span> · <b>CAC.PA</b> <span style="color:var(--muted)">110.09</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="MEUD.PA" data-sig-entry="315.25" data-sig-stop="310.62" data-sig-tp1="324.51" data-sig-tp2="329.14" data-sig-vwap="314.18" data-sig-rank="primary" data-sig-open="314.3500061035156" data-sig-high="315.1499938964844" data-sig-low="313.20001220703125" data-sig-price="314.2"><td><img src="https://assets.parqet.com/logos/symbol/MEUD.PA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MEUD.PA</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">121.03</span></td><td class="m">ETFMomentum</td><td>$315.25</td><td class="neg">$310.62</td><td class="pos">$324.51 / $329.14</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="CAC.PA" data-sig-entry="84.78" data-sig-stop="83.46" data-sig-tp1="87.42" data-sig-tp2="88.74" data-sig-vwap="84.2" data-sig-rank="primary" data-sig-open="84.4800033569336" data-sig-high="84.58000183105469" data-sig-low="83.9000015258789" data-sig-price="84.12"><td><img src="https://assets.parqet.com/logos/symbol/CAC.PA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CAC.PA</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">110.09</span></td><td class="m">ETFMomentum</td><td>$84.78</td><td class="neg">$83.46</td><td class="pos">$87.42 / $88.74</td><td class="am">1:2.0</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>ETF Momentum</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -4360,40 +4182,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 2 Orders to Place</h3>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">0/3 open — <b>3 slots free</b> — place at next open</span>
-    <div style="flex:0 0 100%;margin:.35rem 0 0;padding:.4rem .65rem;background:var(--warn-wk);border:1px solid var(--warn);border-radius:var(--r-s);font-size:.7rem;color:var(--warn-ink);display:flex;gap:.4rem;align-items:flex-start" role="note">
-      <i class="fas fa-circle-info" style="color:var(--warn-ink);margin-top:.12rem;flex-shrink:0"></i>
-      <span><b>VWAP gate active:</b> orders fill only if next open ≤ pivot × 1.01. Gap-up above pivot ⇒ skip (by design).</span>
-    </div>
+    
   </div>
   
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/MEUD.PA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>MEUD.PA</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=MEUD.PA&ty=c&ta=1&p=d&s=l" alt="MEUD.PA" class="fv-thumb" onclick="fvOpen('MEUD.PA','etf_eu')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">121.03</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$315.25</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$314.18</td>
-      <td class="neg">$310.62</td>
-      <td class="pos">$324.51<span class="hide-m"> / $329.14</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">33%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=2.6%, RSI=74, ATR%=1.0%</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/CAC.PA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CAC.PA</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=CAC.PA&ty=c&ta=1&p=d&s=l" alt="CAC.PA" class="fv-thumb" onclick="fvOpen('CAC.PA','etf_eu')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">110.09</span></td>
-      <td class="m hide-m">ETFMomentum</td><td><b>$84.78</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$84.20</td>
-      <td class="neg">$83.46</td>
-      <td class="pos">$87.42<span class="hide-m"> / $88.74</span></td>
-      <td class="am hide-m">1:2.0</td><td class="m hide-m">33%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">ETF RISKON_MOMENTUM: Mom20=2.6%, RSI=69, ATR%=1.0%</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">No actions today.</div>
 </div>
 
 
@@ -4424,7 +4220,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
 <div id="p-trendline" class="mode-panel" data-mode-status="live" data-psize="5" data-asset-class="multi" style="display:none">
 
-<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Trendline Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-30">stats as of 06/30</span></h2>
+<h2 class="panel-section-title"><i class="fas fa-chart-pie"></i> Trendline Dashboard <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Stats figées (sweep) — dernier point d'équité: 2026-06-30">stats as of 06/30</span> <span class="pill am" style="font-size:.6rem;vertical-align:middle" title="Statut live depuis 2026-07-01">live depuis 07/01</span></h2>
 <!-- ══ 1. HOW TO TRADE (method — collapsed by default) ══ -->
 <div class="section-card" data-static="1">
   <details>
@@ -4458,16 +4254,13 @@ details[open] summary::after{transform:rotate(90deg)}
 <!-- ══ 2. TODAY'S SIGNALS (open by default — dashboard context) ══ -->
 <!-- Modes scriptés: 'Today's Signals' est redondant avec 'Orders to Place' (les signaux SONT les ordres) → masqué -->
 <div class="section-card hide-section">
-  <details open>
+  <details>
     <summary class="sc-summary">
-      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">5 setups</span><span class="sc-preview"><b>AMKR</b> <span style="color:var(--muted)">165</span> · <b>AOSL</b> <span style="color:var(--muted)">165</span> · <b>CEVA</b> <span style="color:var(--muted)">165</span></span></span>
-      <a href="/scanner/20260702/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
+      <span class="sc-sum-title"><i class="fas fa-signal" style="color:var(--muted);font-size:.78rem"></i> Today's Signals <span class="count">0 setups</span></span>
+      <a href="/scanner/20260703/" class="sc-link" onclick="event.stopPropagation()">Full scan <i class="fas fa-arrow-right" style="font-size:.6rem"></i></a>
     </summary>
     
-    <table class="t" style="margin-top:.75rem">
-      <thead><tr><th>Ticker</th><th>Score</th><th>Setup</th><th>Entry</th><th>Stop</th><th>TP1/TP2</th><th>R/R</th><th>Status</th></tr></thead>
-      <tbody><tr data-sig-ticker="AMKR" data-sig-entry="79.989998" data-sig-stop="60.968569" data-sig-tp1="109.47" data-sig-tp2="127.54" data-sig-vwap="80.99" data-sig-rank="primary" data-sig-open="82.12000274658203" data-sig-high="83.47000122070312" data-sig-low="79.5" data-sig-price="79.99"><td><img src="https://assets.parqet.com/logos/symbol/AMKR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AMKR</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">165</span></td><td class="m">TrendlineBreakout</td><td>$79.99</td><td class="neg">$60.97</td><td class="pos">$109.47 / $127.54</td><td class="am">1.5</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="AOSL" data-sig-entry="43.52" data-sig-stop="32.553928" data-sig-tp1="60.52" data-sig-tp2="70.94" data-sig-vwap="43.9" data-sig-rank="primary" data-sig-open="45.31999969482422" data-sig-high="45.380001068115234" data-sig-low="42.79999923706055" data-sig-price="43.52"><td><img src="https://assets.parqet.com/logos/symbol/AOSL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AOSL</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">165</span></td><td class="m">TrendlineBreakout</td><td>$43.52</td><td class="neg">$32.55</td><td class="pos">$60.52 / $70.94</td><td class="am">1.6</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="CEVA" data-sig-entry="45.509998" data-sig-stop="35.981446" data-sig-tp1="60.28" data-sig-tp2="69.33" data-sig-vwap="45.63" data-sig-rank="primary" data-sig-open="45.43000030517578" data-sig-high="46.9900016784668" data-sig-low="44.380001068115234" data-sig-price="45.51"><td><img src="https://assets.parqet.com/logos/symbol/CEVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CEVA</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">165</span></td><td class="m">TrendlineBreakout</td><td>$45.51</td><td class="neg">$35.98</td><td class="pos">$60.28 / $69.33</td><td class="am">1.6</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="STX" data-sig-entry="915.190002" data-sig-stop="694.395347" data-sig-tp1="1257.42" data-sig-tp2="1467.18" data-sig-vwap="912.68" data-sig-rank="primary" data-sig-open="896.739990234375" data-sig-high="936.6500244140625" data-sig-low="886.2000122070312" data-sig-price="915.19"><td><img src="https://assets.parqet.com/logos/symbol/STX?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>STX</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">165</span></td><td class="m">TrendlineBreakout</td><td>$915.19</td><td class="neg">$694.40</td><td class="pos">$1257.42 / $1467.18</td><td class="am">1.5</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr><tr data-sig-ticker="WDC" data-sig-entry="598.369995" data-sig-stop="432.328953" data-sig-tp1="855.73" data-sig-tp2="1013.47" data-sig-vwap="600.52" data-sig-rank="primary" data-sig-open="604.5599975585938" data-sig-high="617.3900146484375" data-sig-low="585.7999877929688" data-sig-price="598.37"><td><img src="https://assets.parqet.com/logos/symbol/WDC?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>WDC</b><span class="pill am" style="background:var(--pos);color:#fff;font-size:.6rem;padding:.1rem .35rem;margin-left:.3rem" title="Sharia Compliant">HALAL</span></td><td><span class="pill-score" style="background:var(--pos)">165</span></td><td class="m">TrendlineBreakout</td><td>$598.37</td><td class="neg">$432.33</td><td class="pos">$855.73 / $1013.47</td><td class="am">1.5</td><td><span class="pill pos" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos)">LIVE</span></td></tr></tbody>
-    </table>
+    <p class="empty"><i class="fas fa-inbox"></i>Filter <b>Trendline Breakout</b> excluded all 10 signals today — available strategies: <b>Breakout</b>, <b>Momentum</b>. Existing positions remain active.</p>
   </details>
 </div>
 
@@ -4517,57 +4310,14 @@ details[open] summary::after{transform:rotate(90deg)}
 
 
 
-<div class="section-card cta-orders" data-section="orders" data-scan-date="20260702">
+<div class="section-card " data-section="orders" data-scan-date="20260703">
   <div class="sc-head">
-    <h3><i class="fas fa-bolt"></i> 4 Orders to Place</h3>
+    <h3><i class="fas fa-coffee" style="color:var(--muted)"></i> No new orders</h3>
     <span class="sc-meta">1/5 open — <b>4 slots free</b> — place at next open</span>
     
   </div>
   
-  <table class="t">
-    <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Score</th><th class="hide-m">Strat.</th><th>Entry</th><th class="hide-m">Pivot</th><th>Stop</th><th>TP1/TP2</th><th class="hide-m">R/R</th><th class="hide-m">Alloc</th><th>Action</th></tr></thead>
-    <tbody><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/AMKR?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AMKR</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=AMKR&ty=c&ta=1&p=d&s=l" alt="AMKR" class="fv-thumb" onclick="fvOpen('AMKR','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">165</span></td>
-      <td class="m hide-m">TrendlineBreakout</td><td><b>$79.99</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$80.99</td>
-      <td class="neg">$60.97</td>
-      <td class="pos">$109.47<span class="hide-m"> / $127.54</span></td>
-      <td class="am hide-m">1.5</td><td class="m hide-m">20%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Trend momentum: DistMA200 +59%, RSI 58.9, ATR% 9.5%, MA20>MA50>MA200 aligned</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/AOSL?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>AOSL</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=AOSL&ty=c&ta=1&p=d&s=l" alt="AOSL" class="fv-thumb" onclick="fvOpen('AOSL','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">165</span></td>
-      <td class="m hide-m">TrendlineBreakout</td><td><b>$43.52</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$43.90</td>
-      <td class="neg">$32.55</td>
-      <td class="pos">$60.52<span class="hide-m"> / $70.94</span></td>
-      <td class="am hide-m">1.6</td><td class="m hide-m">20%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Trend momentum: DistMA200 +52%, RSI 56.3, ATR% 10.1%, MA20>MA50>MA200 aligned</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/CEVA?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>CEVA</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=CEVA&ty=c&ta=1&p=d&s=l" alt="CEVA" class="fv-thumb" onclick="fvOpen('CEVA','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">165</span></td>
-      <td class="m hide-m">TrendlineBreakout</td><td><b>$45.51</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$45.63</td>
-      <td class="neg">$35.98</td>
-      <td class="pos">$60.28<span class="hide-m"> / $69.33</span></td>
-      <td class="am hide-m">1.6</td><td class="m hide-m">20%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Trend momentum: DistMA200 +69%, RSI 57.5, ATR% 8.4%, MA20>MA50>MA200 aligned</div></td></tr><tr>
-      <td><img src="https://assets.parqet.com/logos/symbol/STX?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>STX</b> <span class="pill am" style="background:var(--pos);color:#fff;font-size:.55rem;padding:.1rem .3rem" title="Sharia Compliant">HALAL</span></td>
-      <td class="hide-m"><img src="https://finviz.com/chart.ashx?t=STX&ty=c&ta=1&p=d&s=l" alt="STX" class="fv-thumb" onclick="fvOpen('STX','americanbull')"></td>
-      <td class="hide-m"><span class="pill-score" style="background:var(--pos)">165</span></td>
-      <td class="m hide-m">TrendlineBreakout</td><td><b>$915.19</b></td>
-      <td class="am hide-m" title="Pivot J-1 (H+L+C)/3 — skip si open > pivot×1.01">$912.68</td>
-      <td class="neg">$694.40</td>
-      <td class="pos">$1257.42<span class="hide-m"> / $1467.18</span></td>
-      <td class="am hide-m">1.5</td><td class="m hide-m">20%</td>
-      <td><span class="pill pos">BUY</span></td>
-    </tr><tr class="thesis-row"><td colspan="11"><div class="thesis-text">Trend momentum: DistMA200 +102%, RSI 57.5, ATR% 9.7%, MA20>MA50>MA200 aligned</div></td></tr></tbody>
-  </table>
+  <div style="padding:.6rem .85rem;background:var(--surface-2);border:1px dashed var(--border);border-radius:var(--r-s);font-size:.78rem;color:var(--ink-2);text-align:center">No actions today.</div>
 </div>
 
 
@@ -4575,7 +4325,7 @@ details[open] summary::after{transform:rotate(90deg)}
 <div class="section-card" id="sec-pos-trendline">
   <div class="sc-head">
     <h3><i class="fas fa-folder-open"></i> Open Positions <span class="count">1/5</span></h3>
-    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="neg">-0.0%</b></span>
+    <span class="sc-meta" title="Moyenne simple par position ouverte (non pondérée portefeuille)">avg/pos: <b class="neg">-0.1%</b></span>
   </div>
   
   <div class="scenario-bar-wrap">
@@ -4592,7 +4342,7 @@ details[open] summary::after{transform:rotate(90deg)}
 </div>
   <table class="t">
     <thead><tr><th>Ticker</th><th class="hide-m">Chart</th><th class="hide-m">Bought</th><th class="hide-m">Entry</th><th class="hide-m">Pivot</th><th class="hide-m">Now</th><th>P&amp;L</th><th class="hide-m">Stop</th><th class="hide-m">TP2</th><th>Left</th></tr></thead>
-    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/USDTWD=X?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>USDTWD=X</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=USDTWD=X&ty=c&ta=1&p=d&s=l" alt="USDTWD=X" class="fv-thumb" onclick="fvOpen('USDTWD=X','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$31.89</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$31.86</td><td class="hide-m">$31.88</td><td class="neg" data-format="pct"><b>-0.04%</b></td><td class="neg hide-m">$31.52</td><td class="pos hide-m">—</td><td class="m">24d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Trendline breakout: 3 touches, span 86 bars, breakout +0.75%</div></td></tr></tbody>
+    <tbody><tr><td><img src="https://assets.parqet.com/logos/symbol/USDTWD=X?format=jpg" alt="" class="tk-logo" onerror="this.style.display='none'"><b>USDTWD=X</b></td><td class="hide-m"><img src="https://finviz.com/chart.ashx?t=USDTWD=X&ty=c&ta=1&p=d&s=l" alt="USDTWD=X" class="fv-thumb" onclick="fvOpen('USDTWD=X','')"></td><td class="m hide-m">07-01</td><td class="hide-m">$31.89</td><td class="am hide-m" title="Pivot entrée (H+L+C)/3">$31.86</td><td class="hide-m">$31.87</td><td class="neg" data-format="pct"><b>-0.08%</b></td><td class="neg hide-m">$31.52</td><td class="pos hide-m">—</td><td class="m">24d</td></tr><tr class="thesis-row"><td colspan="10"><div class="thesis-text">Trendline breakout: 3 touches, span 86 bars, breakout +0.75%</div></td></tr></tbody>
   </table>
 </div>
 
@@ -4696,16 +4446,16 @@ function fvClose(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 </script>
 
-<script src="/assets/core.js?v=1782975406212"></script>
-<script src="/assets/tag-renderer.js?v=1782975406212"></script>
-<script src="/assets/mode-panel-binder.js?v=1782975406212"></script>
-<script>window.__BP={"FANG":{"p":171.96,"o":176.4600067138672,"h":179,"l":171.47999572753906,"pc":175.77999877929688},"OXY":{"p":47.94,"o":48.380001068115234,"h":48.720001220703125,"l":47.77000045776367,"pc":48.56999969482422},"LMT":{"p":521.82,"o":517,"h":524.239990234375,"l":514.3499755859375,"pc":509.4599914550781},"GDX":{"p":75.07,"o":75.43000030517578,"h":78.16000366210938,"l":74.9800033569336,"pc":75.44999694824219},"AMZN":{"p":241.7,"o":239.75,"h":244.89999389648438,"l":234.89999389648438,"pc":238.33999633789062},"NVDA":{"p":197.58,"o":196.1999969482422,"h":199.85000610351562,"l":193.4499969482422,"pc":200.08999633789062},"GOOGL":{"p":361.21,"o":358.3699951171875,"h":362.9700012207031,"l":356.42999267578125,"pc":357.3699951171875},"AAPL":{"p":294.38,"o":293.44000244140625,"h":296.5899963378906,"l":289.20001220703125,"pc":289.3599853515625},"SPOT":{"p":472.48,"o":468.3399963378906,"h":480.9200134277344,"l":462.989990234375,"pc":459.1300048828125},"GS":{"p":1019.61,"o":1010,"h":1033.530029296875,"l":1003,"pc":1011.3699951171875},"CVX":{"p":165.69,"o":164.77999877929688,"h":167.47000122070312,"l":164.77999877929688,"pc":165.75999450683594},"ANET":{"p":166.62,"o":165.55499267578125,"h":170.5,"l":159.1999969482422,"pc":169.8800048828125},"GLD":{"p":370.6,"o":371.2099914550781,"h":377.7799987792969,"l":370.2099914550781,"pc":368.3800048828125},"TTE":{"p":74.8,"o":75.4800033569336,"h":75.80999755859375,"l":74.77999877929688,"pc":77.76000213623047},"XLB":{"p":51.02,"o":50.720001220703125,"h":51.470001220703125,"l":50.47999954223633,"pc":50.83000183105469},"OLPX":{"p":2.05,"o":2.049999952316284,"h":2.059999942779541,"l":2.0399999618530273,"pc":2.049999952316284},"QQQ":{"p":725.17,"o":729.1900024414062,"h":731.9199829101562,"l":724.5999755859375,"pc":736.4000244140625},"OGN":{"p":13.53,"o":13.510000228881836,"h":13.600000381469727,"l":13.510000228881836,"pc":13.539999961853027},"XLI":{"p":183.36,"o":184.3699951171875,"h":185.64999389648438,"l":182.72000122070312,"pc":185.22999572753906},"MS":{"p":211.86,"o":208.9600067138672,"h":213.19000244140625,"l":206.72000122070312,"pc":209.0399932861328},"NSRGY":{"p":102.78,"o":101.6500015258789,"h":102.94999694824219,"l":101.43000030517578,"pc":102.69000244140625},"ABNB":{"p":147.31,"o":145,"h":148.7449951171875,"l":143.9199981689453,"pc":143.10000610351562},"FAST":{"p":47.75,"o":48.5,"h":48.529998779296875,"l":47.540000915527344,"pc":48.029998779296875},"NVS":{"p":154.14,"o":154.6699981689453,"h":155.02000427246094,"l":153.22000122070312,"pc":156.72000122070312},"MXL":{"p":112.39,"o":119.33999633789062,"h":120.5,"l":111.5999984741211,"pc":128.02999877929688},"RVMD":{"p":187.51,"o":185.49000549316406,"h":188.4600067138672,"l":182.82000732421875,"pc":187.27999877929688},"TECH":{"p":71,"o":70.77999877929688,"h":71,"l":70.55999755859375,"pc":70.6500015258789},"APPS":{"p":13.31,"o":12.899999618530273,"h":13.550000190734863,"l":12.770000457763672,"pc":12.899999618530273},"PENG":{"p":68.81,"o":72.05000305175781,"h":77.19000244140625,"l":67.20999908447266,"pc":76.01000213623047},"USDTWD=X":{"p":31.88,"o":31.89299964904785,"h":31.982999801635742,"l":31.82900047302246,"pc":31.834400177001953},"ARKG":{"p":42.62,"o":42.04999923706055,"h":43.33000183105469,"l":41.82500076293945,"pc":42.619998931884766},"XBI":{"p":156.55,"o":157.92999267578125,"h":159,"l":156.19000244140625,"pc":156.5500030517578},"SOC":{"p":4.4,"o":3.880000114440918,"h":4.449999809265137,"l":3.859999895095825,"pc":4.400000095367432},"AMKR":{"p":79.99,"o":82.12000274658203,"h":83.47000122070312,"l":79.5,"pc":79.98999786376953},"AOSL":{"p":43.52,"o":45.31999969482422,"h":45.380001068115234,"l":42.79999923706055,"pc":43.52000045776367},"CEVA":{"p":45.51,"o":45.43000030517578,"h":46.9900016784668,"l":44.380001068115234,"pc":45.5099983215332},"STX":{"p":915.19,"o":896.739990234375,"h":936.6500244140625,"l":886.2000122070312,"pc":915.1900024414062},"WDC":{"p":598.37,"o":604.5599975585938,"h":617.3900146484375,"l":585.7999877929688,"pc":598.3699951171875},"SLS":{"p":13.27,"o":14.029999732971191,"h":14.470000267028809,"l":12.75,"pc":13.270000457763672},"ADEA":{"p":32.05,"o":32.400001525878906,"h":32.772499084472656,"l":31.5,"pc":32.04999923706055},"ARM":{"p":337.47,"o":341.2449951171875,"h":346.6700134277344,"l":332,"pc":337.4700012207031},"FLEX":{"p":153.53,"o":156.82000732421875,"h":157.4199981689453,"l":149.1699981689453,"pc":153.52999877929688},"IOVA":{"p":3.97,"o":4.159999847412109,"h":4.300000190734863,"l":3.8499999046325684,"pc":3.9700000286102295},"MRVL":{"p":272.05,"o":282.4700012207031,"h":292.5,"l":271.3500061035156,"pc":272.04998779296875},"POWI":{"p":80.27,"o":81.0199966430664,"h":82.86000061035156,"l":79.88999938964844,"pc":80.2699966430664},"XLF":{"p":54.78,"o":53.83000183105469,"h":55.08000183105469,"l":53.75,"pc":54.779998779296875},"DAVE":{"p":383.13,"o":378.8699951171875,"h":404.44000244140625,"l":371.010009765625,"pc":383.1300048828125},"ICHR":{"p":111.77,"o":105.2300033569336,"h":113.58000183105469,"l":101.31999969482422,"pc":111.7699966430664},"RGC":{"p":8.03,"o":6.090000152587891,"h":8.777999877929688,"l":6,"pc":8.029999732971191},"MEUD.PA":{"p":314.2,"o":314.3500061035156,"h":315.1499938964844,"l":313.20001220703125,"pc":314.20001220703125},"IWM":{"p":299.32,"o":299.92999267578125,"h":302.7200012207031,"l":298.9200134277344,"pc":299.32000732421875},"UXIN":{"p":1.94,"o":1.5499999523162842,"h":2.1600000858306885,"l":1.5499999523162842,"pc":1.940000057220459},"ARKK":{"p":81.85,"o":80.4000015258789,"h":82.75,"l":80.4000015258789,"pc":81.8499984741211},"CLOV":{"p":5.39,"o":5.239999771118164,"h":5.545000076293945,"l":5.119999885559082,"pc":5.389999866485596},"QURE":{"p":45.17,"o":46.20000076293945,"h":47.55500030517578,"l":45.119998931884766,"pc":45.16999816894531},"VSAT":{"p":83.02,"o":88.97000122070312,"h":93.02999877929688,"l":82.19999694824219,"pc":83.0199966430664},"ALAB":{"p":430.86,"o":468,"h":468.06500244140625,"l":428.82501220703125,"pc":430.8599853515625},"CAC.PA":{"p":84.12,"o":84.4800033569336,"h":84.58000183105469,"l":83.9000015258789,"pc":84.12000274658203},"VPG":{"p":144.01,"o":144,"h":151.24000549316406,"l":136.52000427246094,"pc":144.00999450683594},"AMBQ":{"p":88.4,"o":85.45999908447266,"h":90.38999938964844,"l":84,"pc":88.4000015258789},"INDA":{"p":49.21,"o":49,"h":49.33000183105469,"l":49,"pc":49.209999084472656},"FBYD":{"p":19.7,"o":18.139999389648438,"h":20,"l":17.549999237060547,"pc":19.700000762939453},"OSCR":{"p":31.9,"o":28.700000762939453,"h":32.060001373291016,"l":28.700000762939453,"pc":31.899999618530273},"ABVX":{"p":132.56,"o":138,"h":139.35000610351562,"l":131.86000061035156,"pc":132.55999755859375},"UCTT":{"p":129.59,"o":137.07000732421875,"h":139.25,"l":128.07000732421875,"pc":129.58999633789062},"AIP":{"p":43.81,"o":47.36000061035156,"h":47.880001068115234,"l":43.61000061035156,"pc":43.810001373291016},"ACMR":{"p":117.16,"o":117.51499938964844,"h":123.61000061035156,"l":114.37000274658203,"pc":117.16000366210938},"NWG":{"p":17.99,"o":17.739999771118164,"h":18.1200008392334,"l":17.729999542236328,"pc":17.989999771118164},"AXP":{"p":348,"o":341.5299987792969,"h":350.5,"l":337.7300109863281,"pc":348},"LQDA":{"p":79.32,"o":78.80999755859375,"h":80.5,"l":77.5,"pc":79.31999969482422},"EA":{"p":205.45,"o":205.75999450683594,"h":206,"l":205.14999389648438,"pc":205.4499969482422},"SIMO":{"p":316.98,"o":320,"h":329.5899963378906,"l":316.1600036621094,"pc":316.9800109863281},"CI":{"p":277.07,"o":276.739990234375,"h":279.54998779296875,"l":273.6600036621094,"pc":277.07000732421875},"F":{"p":13.64,"o":13.850000381469727,"h":13.880000114440918,"l":13.550000190734863,"pc":13.640000343322754},"V":{"p":351.08,"o":344.55999755859375,"h":353.3599853515625,"l":340.9800109863281,"pc":351.0799865722656},"IBN":{"p":28.97,"o":28.799999237060547,"h":29.15999984741211,"l":28.790000915527344,"pc":28.969999313354492},"UMC":{"p":25.71,"o":26.389999389648438,"h":26.65999984741211,"l":25.68000030517578,"pc":25.709999084472656},"INTC":{"p":127.02,"o":135,"h":135.74000549316406,"l":126.68000030517578,"pc":127.0199966430664},"AMCR":{"p":43.64,"o":43.349998474121094,"h":44.290000915527344,"l":43.130001068115234,"pc":43.63999938964844},"MDLZ":{"p":59.35,"o":58.25,"h":59.560001373291016,"l":58.150001525878906,"pc":59.349998474121094},"TTWO":{"p":250.32,"o":252.52999877929688,"h":253.1999969482422,"l":248.13999938964844,"pc":250.32000732421875},"AMD":{"p":540.88,"o":557.530029296875,"h":564.0900268554688,"l":538.739990234375,"pc":540.8800048828125},"CBRL":{"p":55.1,"o":53.02000045776367,"h":55.150001525878906,"l":52.91999816894531,"pc":55.099998474121094},"ILMN":{"p":183.89,"o":175.8300018310547,"h":184.89999389648438,"l":175.60000610351562,"pc":183.88999938964844},"MNST":{"p":97.35,"o":97.05999755859375,"h":98.30999755859375,"l":96.62999725341797,"pc":97.3499984741211},"FCX":{"p":60.53,"o":61.70000076293945,"h":63.04999923706055,"l":60.529998779296875,"pc":60.529998779296875},"NXPI":{"p":279.18,"o":275.8299865722656,"h":283.32000732421875,"l":273.30999755859375,"pc":279.17999267578125},"FTNT":{"p":158.98,"o":154.74000549316406,"h":159.8000030517578,"l":152.5399932861328,"pc":158.97999572753906},"COGT":{"p":38.48,"o":38.58000183105469,"h":39.400001525878906,"l":38.119998931884766,"pc":38.47999954223633},"CVLG":{"p":44.83,"o":44.029998779296875,"h":45.52000045776367,"l":43.02000045776367,"pc":44.83000183105469},"ARKO":{"p":8.16,"o":8.020000457763672,"h":8.239999771118164,"l":7.880000114440918,"pc":8.15999984741211},"SLB":{"p":45.09,"o":46.36000061035156,"h":46.36000061035156,"l":45.08000183105469,"pc":45.09000015258789},"AVR":{"p":9.94,"o":9.800000190734863,"h":10.279999732971191,"l":9.399999618530273,"pc":9.9399995803833},"TIGO":{"p":90.49,"o":89.3499984741211,"h":91.75,"l":88,"pc":90.48999786376953},"MOV":{"p":37.97,"o":38.810001373291016,"h":39.130001068115234,"l":37.86000061035156,"pc":37.970001220703125},"WTTR":{"p":19.01,"o":19.75,"h":19.969999313354492,"l":18.829999923706055,"pc":19.010000228881836},"BP":{"p":36.15,"o":36.220001220703125,"h":36.4900016784668,"l":36.040000915527344,"pc":36.150001525878906},"MYRG":{"p":463.11,"o":491.3299865722656,"h":491.3299865722656,"l":451.989990234375,"pc":463.1099853515625},"ELA":{"p":26.92,"o":28.65999984741211,"h":28.770000457763672,"l":26.440000534057617,"pc":26.920000076293945},"DHC":{"p":9.24,"o":9.350000381469727,"h":9.470000267028809,"l":9.1899995803833,"pc":9.239999771118164},"CRDO":{"p":259.09,"o":261.55499267578125,"h":271,"l":253.52000427246094,"pc":259.0899963378906},"GRC":{"p":88.72,"o":90.94000244140625,"h":92.77999877929688,"l":88.08000183105469,"pc":88.72000122070312},"LSCC":{"p":146.3,"o":145.89999389648438,"h":149.39999389648438,"l":143.00999450683594,"pc":146.3000030517578},"BE":{"p":289.5,"o":290.6300048828125,"h":320,"l":286.25,"pc":289.5},"CTOS":{"p":11.04,"o":11.649999618530273,"h":11.680000305175781,"l":11.010000228881836,"pc":11.039999961853027},"LRCX":{"p":391.26,"o":404.9700012207031,"h":415.489990234375,"l":381,"pc":391.260009765625},"VIRT":{"p":61.73,"o":63.060001373291016,"h":63.060001373291016,"l":61.060001373291016,"pc":61.72999954223633},"KLAC":{"p":266.19,"o":285.5199890136719,"h":290.8399963378906,"l":259.79998779296875,"pc":266.19000244140625},"ZVRA":{"p":13.81,"o":14.3100004196167,"h":14.489999771118164,"l":13.770000457763672,"pc":13.8100004196167},"KGS":{"p":72.4,"o":74.91000366210938,"h":75.30500030517578,"l":72.2699966430664,"pc":72.4000015258789},"MU":{"p":1032.28,"o":1082.010009765625,"h":1097,"l":1032.199951171875,"pc":1032.280029296875},"SNDK":{"p":2032.22,"o":2085.169921875,"h":2129.97998046875,"l":2002.050048828125,"pc":2032.219970703125},"NSA":{"p":45.21,"o":44.25,"h":45.40999984741211,"l":44.25,"pc":45.209999084472656},"AMAT":{"p":650.91,"o":668.4099731445312,"h":693.780029296875,"l":639.0599975585938,"pc":650.9099731445312},"PLSE":{"p":28.33,"o":27.770000457763672,"h":29.200000762939453,"l":27.450000762939453,"pc":28.329999923706055},"TKR":{"p":141.75,"o":145.4600067138672,"h":145.60000610351562,"l":140.9499969482422,"pc":141.75},"MSGS":{"p":395.17,"o":399.9599914550781,"h":411.7300109863281,"l":393.3599853515625,"pc":395.1700134277344},"CODI":{"p":11.59,"o":10.5,"h":11.699999809265137,"l":10.479999542236328,"pc":11.59000015258789},"GLW":{"p":220.63,"o":239.5,"h":240.8699951171875,"l":218.11000061035156,"pc":220.6300048828125},"BELFA":{"p":281.67,"o":286.1199951171875,"h":286.3599853515625,"l":276.010009765625,"pc":281.6700134277344},"DNTH":{"p":90.21,"o":96.68000030517578,"h":97.55000305175781,"l":90.08000183105469,"pc":90.20999908447266},"HPS":{"p":14.51,"o":14.529999732971191,"h":14.550000190734863,"l":14.5,"pc":14.510000228881836},"SAH":{"p":83.05,"o":84.16999816894531,"h":85.12000274658203,"l":82.13999938964844,"pc":83.05000305175781},"ALM":{"p":15.95,"o":16.760000228881836,"h":17.010000228881836,"l":15.90999984741211,"pc":15.949999809265137}}</script>
-<script src="/assets/live-engine.js?v=1782975406212"></script>
-<script src="/assets/live-engine-ui.js?v=1782975406212"></script>
+<script src="/assets/core.js?v=1783005968036"></script>
+<script src="/assets/tag-renderer.js?v=1783005968036"></script>
+<script src="/assets/mode-panel-binder.js?v=1783005968036"></script>
+<script>window.__BP={"FANG":{"p":172.24,"o":172.18499755859375,"h":174,"l":171.13999938964844,"pc":171.9600067138672},"OXY":{"p":48.65,"o":48.439998626708984,"h":48.970001220703125,"l":48.29499816894531,"pc":47.939998626708984},"LMT":{"p":540.58,"o":529,"h":540.5800170898438,"l":529,"pc":521.8200073242188},"GDX":{"p":78.05,"o":77.70999908447266,"h":79.19999694824219,"l":77.41000366210938,"pc":75.06999969482422},"AMZN":{"p":245.31,"o":241.6024932861328,"h":245.8800048828125,"l":241.0800018310547,"pc":241.6999969482422},"NVDA":{"p":194.62,"o":197.14999389648438,"h":200.05499267578125,"l":194.4199981689453,"pc":197.5800018310547},"GOOGL":{"p":357.47,"o":359.4800109863281,"h":364.2049865722656,"l":356.8399963378906,"pc":361.2099914550781},"AAPL":{"p":306.67,"o":294.0849914550781,"h":307.82000732421875,"l":293.67999267578125,"pc":294.3800048828125},"SPOT":{"p":478.755,"o":472,"h":481.67999267578125,"l":467.5400085449219,"pc":472.4800109863281},"GS":{"p":1024.77,"o":1038.989990234375,"h":1039.2440185546875,"l":1020,"pc":1019.6099853515625},"CVX":{"p":168.85,"o":168.27999877929688,"h":169.54840087890625,"l":167.39999389648438,"pc":165.69000244140625},"ANET":{"p":160.44,"o":166.36000061035156,"h":167.73500061035156,"l":159.5,"pc":166.6199951171875},"GLD":{"p":378.83,"o":377.43499755859375,"h":380.2550048828125,"l":377.1400146484375,"pc":370.6000061035156},"TTE":{"p":76.525,"o":76.06999969482422,"h":76.77999877929688,"l":76.01000213623047,"pc":74.80000305175781},"XLB":{"p":51.64,"o":51.400001525878906,"h":51.810001373291016,"l":51.31999969482422,"pc":51.02000045776367},"OLPX":{"p":2.065,"o":2.049999952316284,"h":2.0850000381469727,"l":2.0450000762939453,"pc":2.049999952316284},"QQQ":{"p":716.306,"o":725.5800170898438,"h":730.8200073242188,"l":714.28271484375,"pc":725.1699829101562},"OGN":{"p":13.54,"o":13.569999694824219,"h":13.59000015258789,"l":13.539999961853027,"pc":13.529999732971191},"XLI":{"p":183.54,"o":184.7100067138672,"h":185.47999572753906,"l":182.8249969482422,"pc":183.36000061035156},"MS":{"p":213.705,"o":214.7100067138672,"h":215.85499572753906,"l":212.83999633789062,"pc":211.86000061035156},"NSRGY":{"p":105.44,"o":104.41999816894531,"h":105.45999908447266,"l":104.41999816894531,"pc":102.77999877929688},"ABNB":{"p":148.415,"o":146.5,"h":148.75999450683594,"l":146.5,"pc":147.30999755859375},"FAST":{"p":48.245,"o":47.95500183105469,"h":48.380001068115234,"l":47.709999084472656,"pc":47.75},"NVS":{"p":160.32,"o":157.5,"h":160.57000732421875,"l":157.00999450683594,"pc":154.13999938964844},"MXL":{"p":97.6,"o":113.38999938964844,"h":114.18000030517578,"l":97.01000213623047,"pc":112.38999938964844},"RVMD":{"p":186.2,"o":188.3699951171875,"h":189.48260498046875,"l":185.16000366210938,"pc":187.50999450683594},"TECH":{"p":70.86,"o":70.94000244140625,"h":71,"l":70.75,"pc":71},"APPS":{"p":13.27,"o":13.34000015258789,"h":13.600000381469727,"l":12.970000267028809,"pc":13.3100004196167},"PENG":{"p":61.95,"o":69.38999938964844,"h":69.69000244140625,"l":61.119998931884766,"pc":68.80999755859375},"USDTWD=X":{"p":31.866,"o":31.89299964904785,"h":31.982999801635742,"l":31.82900047302246,"pc":31.834400177001953},"BBVA":{"p":25.71,"o":25.729999542236328,"h":25.8572998046875,"l":25.68000030517578,"pc":25.709999084472656},"LYG":{"p":6.08,"o":6.059999942779541,"h":6.110000133514404,"l":6.054999828338623,"pc":6.079899787902832},"IBKR":{"p":92.63,"o":93.25,"h":96.70999908447266,"l":92.12999725341797,"pc":92.62999725341797},"CB":{"p":357.115,"o":351.5400085449219,"h":357.2850036621094,"l":349.6000061035156,"pc":357.114990234375},"YUM":{"p":164.06,"o":161.2899932861328,"h":164.27999877929688,"l":160.98500061035156,"pc":164.05999755859375},"TIGO":{"p":93.76,"o":91.99500274658203,"h":95.37989807128906,"l":91.99500274658203,"pc":93.76000213623047},"DLTR":{"p":124.41,"o":123.3499984741211,"h":125.48999786376953,"l":122.5,"pc":124.41000366210938},"CHRW":{"p":190.53,"o":193.27000427246094,"h":193.97999572753906,"l":189.15499877929688,"pc":190.52999877929688},"EWG":{"p":42.32,"o":42.150001525878906,"h":42.45500183105469,"l":42.150001525878906,"pc":42.31999969482422},"EWU":{"p":47.287,"o":46.81999969482422,"h":47.34000015258789,"l":46.879798889160156,"pc":47.28739929199219}}</script>
+<script src="/assets/live-engine.js?v=1783005968036"></script>
+<script src="/assets/live-engine-ui.js?v=1783005968036"></script>
 <script>
-var _v='1782975406212';
+var _v='1783005968036';
 document.addEventListener('DOMContentLoaded',function(){
-  function mk(el,dates,vals,color){
+  function mk(el,dates,vals,color,sinceLbl){
     if(!document.getElementById(el))return null;
     var dom=document.getElementById(el);
     var existing=echarts.getInstanceByDom(dom);
@@ -4741,11 +4491,21 @@ document.addEventListener('DOMContentLoaded',function(){
         spyVals=rawSpy.map(function(v){return v!=null?+(v/spyFirst*100).toFixed(2):null;});
       }else{spyVals=rawSpy;}
     }
+    // Promotion marker: vertical line + short label at the status-change date (e.g. "live 07/01").
+    // Full history is still plotted on both sides — this is an annotation, not a truncation.
+    var sinceMarkLine=null;
+    if(sinceLbl && dates.indexOf(sinceLbl)>=0){
+      sinceMarkLine={symbol:'none',silent:true,
+        lineStyle:{color:'#64748b',width:1.5,type:'dashed'},
+        label:{formatter:'live '+sinceLbl,position:'insideEndTop',color:'#64748b',fontSize:10,fontWeight:600},
+        data:[{xAxis:sinceLbl}]};
+    }
     var series=[
       {name:'Strategy',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
         lineStyle:{color:color,width:2.8,shadowColor:color+'30',shadowBlur:8,shadowOffsetY:2},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])},
-        markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined},
+        markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined,
+        markLine:sinceMarkLine||undefined},
       {name:'Drawdown',data:ddS,type:'line',smooth:.3,symbol:'none',xAxisIndex:1,yAxisIndex:2,z:2,
         lineStyle:{color:'#ef4444',width:2,opacity:1},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,.18)'},{offset:1,color:'rgba(239,68,68,.02)'}])}}
@@ -4925,9 +4685,9 @@ document.addEventListener('DOMContentLoaded',function(){
     if(sel.length<1||sel.length>MAX_FAVS)return;
     setFavs(sel);applyFavs(sel);closeModePicker();
   };
-  var modeCharts={"turbo":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,145.34,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21,166.46,164.32,162.72,164.8,164.32,162.5,163.74,183.73,181.62,185.33,192.75,190.61,191.76,194.26,193,194.13,194.25,193.15,194.68,194.45,195.14,194.33,194.71,194.58,192.41,197.17,197.17,204.19,200.94,201.69,198.03,199.97,198.46,199.83,204.18,204.76,208.63,208.4,207.46,206.71,207.29,206.1,206.21,205.96,206.13,206.13,205.41,205.8,208.49,212.24,212.24,212.24,209.02,211.39,212.34],"c":"#f59e0b"},"dynamic":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.45,135.45,135.45,138.53,140.63,141.13,143.23,147.43,144.44,141.31,143.19,140.66,140.66,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23,154.91,154.91,153.31,155.39,155.39,155.39,154.81,151.61,153.42,155.86,164.32,160.2,174.16,176.66,175.4,176.53,176.65,175.55,175.28,175.02,172.24,172.13,172.45,172.34,171.33,177.68,177.68,184.7,181.45,182.2,178.54,180.48,178.97,180.34,184.69,185.27,186.93,186.51,185.73,188.04,185.42,185.08,183.41,187.76,187.93,187.93,187.21,187.6,190.29,191.85,191.18,177.25,174.03,175.45],"c":"#dc2626"},"balanced":{"d":["03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[99.86,96.92,98.78,106.04,103.96,103.76,118.3,118.89,118.89,118.89,118.89,118.76,108.52,116.88,115.94,108.79,109.54,113.07,128.88,130.79,131.88,135.73,136.4,136.4,136.4,136.4,136.4,136.4,136.68,136.67,135.65,135.3,134.08,144.86,143.03,152.12,151.66,152.84,151.67,152.93,152.92,152.23,152.95,156.15,157.24,156.89,159.67,159.36,157.73,158.78,159.05,158.03,158.31,158.87,159.03,159.99,159.47,160.57,161.28,161.55,161.55,161.81,162.88,163.1,161.33,161.25,162.12,159.37,158.75,154.23,155.32,153.94,153.37,153.88,153.32,152.12,151.67,149.88,149.72,149.72,149.73,149.7,149.67,150.38,149.64,146.21,144.01,144.45,144.53],"c":"#059669"},"secured":{"d":["06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[98.67,100.39,103.91,103.91,104.18,100.8,102.65,102.76,102.13,100.29,100.1,97.97,97.97],"c":"#0891b2"},"bull":{"d":["06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[101.23,101.29,101.32,101.13,101.16,101.65,101.65,101.66,101.66,101.24,99.91,100.05,99.81,99.97,99.99,99.87,100.04,100.26],"c":"#f97316"},"aplus":{"d":["06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","07/01"],"v":[99.47,100.16,101.56,101.56,101.67,100.32,101.06,101.11,100.85,100.85],"c":"#6366f1"},"highvol":{"d":["06/29","06/30","07/01"],"v":[99.31,102.07,102.07],"c":"#ff6b35"},"casablanca":{"d":["06/29","07/01"],"v":[100.28,100.28],"c":"#c0392b"},"momentum":{"d":["06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","07/01","07/02"],"v":[99.47,100.16,101.56,101.56,101.67,100.32,101.06,101.11,100.85,101.96,98.93,96.22],"c":"#27ae60"},"etf":{"d":["06/29","07/01"],"v":[99.31,99.31],"c":"#8e44ad"},"etf_eu":{"d":["07/01","07/02"],"v":[100,100],"c":"#5dade2"},"trendline":{"d":["06/29","06/30","07/01"],"v":[100.07,102.07,102.07],"c":"#2980b9"},"fortress":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,109.31,109.71,109.68,110.18,110.49,110.54,111.13,111.62,111.14,113.87,115.97,115.33,114.92,115.58,115.31,115.35,116.12,119.75,119.03,117.66,120.96,120.52,120.58,120.79,120.41,120.86,121.1,120.91,121.36,121.12,121,121.64,121.45,121.89,122.15,122.53,122.53,123.06,122.59,123.04,123.58,122.98,122.38,120.24,119.64,119.4,119.34,119.5,119.17,119.14,118.92,118.64,118.11,118.16,119.14,119.14,119.88,118.66,118.96,119.31,119.01,122.2,121.12,121.21],"c":"#6d28d9"}};
-  var _regimeMap={"04/16":"RISK-ON","04/17":"RISK-ON","04/18":"RISK-ON","04/22":"EARLY RISK-OFF","04/23":"EARLY RISK-OFF","04/24":"EARLY RISK-OFF","04/27":"RECOVERY","04/28":"RISK-ON","04/29":"RISK-ON","04/30":"RECOVERY","05/01":"RISK-ON","05/04":"RECOVERY","05/05":"RECOVERY","05/06":"RECOVERY","05/07":"RECOVERY","05/08":"RECOVERY","05/11":"RISK-ON","05/12":"RISK-ON","05/13":"RISK-ON","05/14":"RECOVERY","05/15":"RECOVERY","05/18":"RECOVERY","05/19":"RISK-ON","05/20":"EARLY RISK-OFF","05/21":"EARLY RISK-OFF","05/22":"RISK-ON","05/26":"RISK-ON","05/27":"RISK-ON","05/28":"RISK-ON","05/29":"RISK-ON","06/01":"RISK-ON","06/02":"RISK-ON","06/03":"RISK-ON","06/04":"RISK-ON","06/05":"NEUTRAL","06/09":"EARLY RISK-OFF","06/10":"EARLY RISK-OFF","06/11":"RISK-OFF","06/12":"EARLY RISK-OFF","06/15":"NEUTRAL","06/16":"RISK-ON","06/17":"RISK-ON","06/18":"EARLY RISK-OFF","06/22":"NEUTRAL","06/23":"EARLY RISK-OFF","06/24":"EARLY RISK-OFF","06/25":"EARLY RISK-OFF","06/26":"EARLY RISK-OFF","06/29":"EARLY RISK-OFF","06/30":"RISK-ON","07/01":"RISK-ON","07/02":"RISK-ON"};
-  var _spyData={"01/02":99.11,"01/05":99.77,"01/06":100.36,"01/07":100.04,"01/08":100.03,"01/09":100.69,"01/12":100.85,"01/13":100.65,"01/14":100.15,"01/15":100.43,"01/16":100.34,"01/20":98.3,"01/21":99.43,"01/22":99.95,"01/23":99.99,"01/26":100.5,"01/27":100.9,"01/28":100.89,"01/29":100.69,"01/30":100.39,"02/02":100.89,"02/03":100.03,"02/04":99.55,"02/05":98.31,"02/06":100.19,"02/09":100.67,"02/10":100.41,"02/11":100.39,"02/12":98.84,"02/13":98.9,"02/17":99.06,"02/18":99.56,"02/19":99.3,"02/20":100.02,"02/23":99,"02/24":99.72,"02/25":100.56,"02/26":100,"02/27":99.52,"03/02":99.58,"03/03":98.7,"03/04":99.4,"03/05":98.84,"03/06":97.55,"03/09":98.4,"03/10":98.24,"03/11":98.12,"03/12":96.63,"03/13":96.08,"03/16":97.06,"03/17":97.31,"03/18":95.96,"03/19":95.72,"03/20":94.09,"03/23":95.08,"03/24":94.76,"03/25":95.29,"03/26":93.59,"03/27":91.99,"03/30":91.68,"03/31":94.35,"04/01":95.06,"04/02":95.14,"04/06":95.59,"04/07":95.64,"04/08":98.07,"04/09":98.64,"04/10":98.57,"04/13":99.54,"04/14":100.75,"04/15":101.54,"04/16":101.79,"04/17":103.02,"04/20":102.82,"04/21":102.14,"04/22":103.18,"04/23":102.78,"04/24":103.57,"04/27":103.75,"04/28":103.25,"04/29":103.23,"04/30":104.26,"05/01":104.55,"05/04":104.17,"05/05":105,"05/06":106.46,"05/07":106.13,"05/08":107.01,"05/11":107.25,"05/12":107.09,"05/13":107.69,"05/14":108.54,"05/15":107.23,"05/18":107.16,"05/19":106.45,"05/20":107.54,"05/21":107.75,"05/22":108.17,"05/26":108.89,"05/27":108.87,"05/28":109.47,"05/29":109.75,"06/01":110.04,"06/02":110.19,"06/03":109.42,"06/04":109.83,"06/05":107,"06/08":107.24,"06/09":106.93,"06/10":105.24,"06/11":107.03,"06/12":107.61,"06/15":109.51,"06/16":108.85,"06/17":107.49,"06/18":108.33,"06/22":107.99,"06/23":106.42,"06/24":106.37,"06/25":106.53,"06/26":105.76,"06/29":107.5,"06/30":108.34,"07/01":108.19};
+  var modeCharts={"turbo":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[101.38,100.99,102.13,98.57,98.87,102.05,117.53,115.48,127.88,126.36,127.36,126.78,126.36,128.64,129.99,130.33,130.95,132.05,133.66,134.69,140.76,143.74,144.63,142.61,144.21,145.34,145.34,147.79,147.5,150.92,151.1,152.77,153.24,157.08,156.86,158.21,166.46,164.32,162.72,164.8,164.32,162.5,163.74,183.73,181.62,185.33,192.75,190.61,191.76,194.26,193,194.13,194.25,193.15,194.68,194.45,195.14,194.33,194.71,194.58,192.41,197.17,197.17,204.19,200.94,201.69,198.03,199.97,198.46,199.83,204.18,204.76,208.63,208.4,207.46,206.71,207.29,206.1,206.21,205.96,206.13,206.13,205.41,205.8,208.49,212.24,212.24,212.24,209.02,211.39,212.34],"c":"#f59e0b","s":null},"dynamic":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01"],"v":[101.15,101.54,108.47,111.02,110.63,114.66,131.22,130.19,129.43,131.54,135.19,134.54,134.55,135.13,135.45,135.45,135.45,138.53,140.63,141.13,143.23,147.43,144.44,141.31,143.19,140.66,140.66,140.84,142.68,146.1,146.28,147.95,149.13,151.28,154.06,153.23,154.91,154.91,153.31,155.39,155.39,155.39,154.81,151.61,153.42,155.86,164.32,160.2,174.16,176.66,175.4,176.53,176.65,175.55,175.28,175.02,172.24,172.13,172.45,172.34,171.33,177.68,177.68,184.7,181.45,182.2,178.54,180.48,178.97,180.34,184.69,185.27,186.93,186.51,185.73,188.04,185.42,185.08,183.41,187.76,187.93,187.93,187.21,187.6,190.29,191.85,191.18,177.25,174.03,175.45],"c":"#dc2626","s":null},"balanced":{"d":["03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[99.86,96.92,98.78,106.04,103.96,103.76,118.3,118.89,118.89,118.89,118.89,118.76,108.52,116.88,115.94,108.79,109.54,113.07,128.88,130.79,131.88,135.73,136.4,136.4,136.4,136.4,136.4,136.4,136.68,136.67,135.65,135.3,134.08,144.86,143.03,152.12,151.66,152.84,151.67,152.93,152.92,152.23,152.95,156.15,157.24,156.89,159.67,159.36,157.73,158.78,159.05,158.03,158.31,158.87,159.03,159.99,159.47,160.57,161.28,161.55,161.55,161.81,162.88,163.1,161.33,161.25,162.12,159.37,158.75,154.23,155.32,153.94,153.37,153.88,153.32,152.12,151.67,149.88,149.72,149.72,149.73,149.7,149.67,150.38,149.64,146.21,144.01,144.45,144.53],"c":"#059669","s":null},"secured":{"d":["06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[98.67,100.39,103.91,103.91,104.18,100.8,102.65,102.76,102.13,100.29,100.1,97.97,97.97],"c":"#0891b2","s":"07/01"},"bull":{"d":["06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01","07/02"],"v":[101.23,101.29,101.32,101.13,101.16,101.65,101.65,101.66,101.66,101.24,99.91,100.05,99.81,99.97,99.99,99.87,100.04,100.26],"c":"#f97316","s":"07/01"},"aplus":{"d":["06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/27","06/29","06/30","07/01"],"v":[99.47,100.16,101.56,101.56,101.67,100.32,101.06,101.11,100.85,100.85,100.85,100.85,100.85],"c":"#6366f1","s":"07/01"},"highvol":{"d":["06/29","06/30","07/01"],"v":[99.31,102.07,102.07],"c":"#ff6b35","s":"07/01"},"casablanca":{"d":["06/29","06/30","07/01"],"v":[100.28,100.28,100.28],"c":"#c0392b","s":"07/01"},"momentum":{"d":["06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","07/01","07/02"],"v":[99.47,100.16,101.56,101.56,101.67,100.32,101.06,101.11,100.85,101.96,98.93,96.22],"c":"#27ae60","s":"07/02"},"etf":{"d":["06/29","06/30","07/01"],"v":[99.31,99.31,99.31],"c":"#8e44ad","s":"07/01"},"etf_eu":{"d":["07/01","07/02"],"v":[100,100],"c":"#5dade2","s":null},"trendline":{"d":["06/29","06/30","07/01"],"v":[100.07,102.07,102.07],"c":"#2980b9","s":"07/01"},"fortress":{"d":["02/26","02/27","03/02","03/03","03/04","03/05","03/06","03/09","03/10","03/11","03/12","03/13","03/16","03/17","03/18","03/19","03/20","03/23","03/24","03/25","03/26","03/27","03/30","03/31","04/01","04/02","04/03","04/06","04/07","04/08","04/09","04/10","04/13","04/14","04/15","04/16","04/17","04/20","04/21","04/22","04/23","04/24","04/27","04/28","04/29","04/30","05/01","05/04","05/05","05/06","05/07","05/08","05/11","05/12","05/13","05/14","05/15","05/18","05/19","05/20","05/21","05/22","05/25","05/26","05/27","05/28","05/29","06/01","06/02","06/03","06/04","06/05","06/08","06/09","06/10","06/11","06/12","06/15","06/16","06/17","06/18","06/19","06/22","06/23","06/24","06/25","06/26","06/29","06/30","07/01"],"v":[100.19,100.19,100.95,100.89,101.37,102.84,106.16,105.76,105,104.93,106.12,106.24,106.28,106.72,107.02,107.42,107.18,107.26,108.63,108.86,109.63,110.62,109.98,109.69,108.85,109.31,109.31,109.71,109.68,110.18,110.49,110.54,111.13,111.62,111.14,113.87,115.97,115.33,114.92,115.58,115.31,115.35,116.12,119.75,119.03,117.66,120.96,120.52,120.58,120.79,120.41,120.86,121.1,120.91,121.36,121.12,121,121.64,121.45,121.89,122.15,122.53,122.53,123.06,122.59,123.04,123.58,122.98,122.38,120.24,119.64,119.4,119.34,119.5,119.17,119.14,118.92,118.64,118.11,118.16,119.14,119.14,119.88,118.66,118.96,119.31,119.01,122.2,121.12,121.21],"c":"#6d28d9","s":null}};
+  var _regimeMap={"04/16":"RISK-ON","04/17":"RISK-ON","04/18":"RISK-ON","04/22":"EARLY RISK-OFF","04/23":"EARLY RISK-OFF","04/24":"EARLY RISK-OFF","04/27":"RECOVERY","04/28":"RISK-ON","04/29":"RISK-ON","04/30":"RECOVERY","05/01":"RISK-ON","05/04":"RECOVERY","05/05":"RECOVERY","05/06":"RECOVERY","05/07":"RECOVERY","05/08":"RECOVERY","05/11":"RISK-ON","05/12":"RISK-ON","05/13":"RISK-ON","05/14":"RECOVERY","05/15":"RECOVERY","05/18":"RECOVERY","05/19":"RISK-ON","05/20":"EARLY RISK-OFF","05/21":"EARLY RISK-OFF","05/22":"RISK-ON","05/26":"RISK-ON","05/27":"RISK-ON","05/28":"RISK-ON","05/29":"RISK-ON","06/01":"RISK-ON","06/02":"RISK-ON","06/03":"RISK-ON","06/04":"RISK-ON","06/05":"NEUTRAL","06/09":"EARLY RISK-OFF","06/10":"EARLY RISK-OFF","06/11":"RISK-OFF","06/12":"EARLY RISK-OFF","06/15":"NEUTRAL","06/16":"RISK-ON","06/17":"RISK-ON","06/18":"EARLY RISK-OFF","06/22":"NEUTRAL","06/23":"EARLY RISK-OFF","06/24":"EARLY RISK-OFF","06/25":"EARLY RISK-OFF","06/26":"EARLY RISK-OFF","06/29":"EARLY RISK-OFF","06/30":"RISK-ON","07/01":"RISK-ON","07/02":"RISK-ON","07/03":"RISK-ON"};
+  var _spyData={"01/02":99.11,"01/05":99.77,"01/06":100.36,"01/07":100.04,"01/08":100.03,"01/09":100.69,"01/12":100.85,"01/13":100.65,"01/14":100.15,"01/15":100.43,"01/16":100.34,"01/20":98.3,"01/21":99.43,"01/22":99.95,"01/23":99.99,"01/26":100.5,"01/27":100.9,"01/28":100.89,"01/29":100.69,"01/30":100.39,"02/02":100.89,"02/03":100.03,"02/04":99.55,"02/05":98.31,"02/06":100.19,"02/09":100.67,"02/10":100.41,"02/11":100.39,"02/12":98.84,"02/13":98.9,"02/17":99.06,"02/18":99.56,"02/19":99.3,"02/20":100.02,"02/23":99,"02/24":99.72,"02/25":100.56,"02/26":100,"02/27":99.52,"03/02":99.58,"03/03":98.7,"03/04":99.4,"03/05":98.84,"03/06":97.55,"03/09":98.4,"03/10":98.24,"03/11":98.12,"03/12":96.63,"03/13":96.08,"03/16":97.06,"03/17":97.31,"03/18":95.96,"03/19":95.72,"03/20":94.09,"03/23":95.08,"03/24":94.76,"03/25":95.29,"03/26":93.59,"03/27":91.99,"03/30":91.68,"03/31":94.35,"04/01":95.06,"04/02":95.14,"04/06":95.59,"04/07":95.64,"04/08":98.07,"04/09":98.64,"04/10":98.57,"04/13":99.54,"04/14":100.75,"04/15":101.54,"04/16":101.79,"04/17":103.02,"04/20":102.82,"04/21":102.14,"04/22":103.18,"04/23":102.78,"04/24":103.57,"04/27":103.75,"04/28":103.25,"04/29":103.23,"04/30":104.26,"05/01":104.55,"05/04":104.17,"05/05":105,"05/06":106.46,"05/07":106.13,"05/08":107.01,"05/11":107.25,"05/12":107.09,"05/13":107.69,"05/14":108.54,"05/15":107.23,"05/18":107.16,"05/19":106.45,"05/20":107.54,"05/21":107.75,"05/22":108.17,"05/26":108.89,"05/27":108.87,"05/28":109.47,"05/29":109.75,"06/01":110.04,"06/02":110.19,"06/03":109.42,"06/04":109.83,"06/05":107,"06/08":107.24,"06/09":106.93,"06/10":105.24,"06/11":107.03,"06/12":107.61,"06/15":109.51,"06/16":108.85,"06/17":107.49,"06/18":108.33,"06/22":107.99,"06/23":106.42,"06/24":106.37,"06/25":106.53,"06/26":105.76,"06/29":107.5,"06/30":108.34,"07/01":108.19,"07/02":108.14};
   var _RCOL={'RISK-ON':'rgba(16,185,129,.07)','RECOVERY':'rgba(59,130,246,.07)','NEUTRAL':'rgba(148,163,184,.04)','EARLY RISK-OFF':'rgba(245,158,11,.07)','RISK-OFF':'rgba(239,68,68,.07)'};
   window.switchMode=function(id,opts){
     if(!VALID_MODES.includes(id))return;
@@ -4953,7 +4713,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
       var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c);}
+      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s);}
       else{inst.resize();}
     }
     updateLiveActions(id);
@@ -5461,7 +5221,7 @@ document.addEventListener('DOMContentLoaded',function(){
         var existing=window.echarts && window.echarts.getInstanceByDom(chartEl);
         if(existing) existing.dispose();
         var dflt=modeCharts[activeMode];
-        if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c);
+        if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s);
       }
       delete _tmLiveCache[activeMode];
     }
@@ -5502,7 +5262,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   // Init chart for the default visible mode
   var dflt=modeCharts[activeMode];
-  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c);
+  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s);
   // Mobile: rotating the device or the address-bar collapsing changes the viewport — resize the
   // active equity chart so it doesn't stay stuck at its pre-rotation (possibly 0) width.
   window.addEventListener('orientationchange',function(){setTimeout(function(){try{var el=document.getElementById('chart-'+activeMode);var inst=el&&window.echarts&&window.echarts.getInstanceByDom(el);if(inst)inst.resize();}catch(_){}},300);});
