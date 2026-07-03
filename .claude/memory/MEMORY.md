@@ -61,6 +61,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - **Data** : Yahoo Finance via allorigins, Binance direct, radar.json, watchlist.json
 
 ## Feedback
+- [Fable plans, Sonnet/Opus implement](feedback_fable_plans_sonnet_implements.md) — modèle de travail permanent : Fable spécifie, Sonnet/Opus implémentent selon complexité, toujours en workflow dynamic. (miroir MCP en attente — memory MCP down 2026-07-03)
 - [Modes independent](feedback_modes_independent.md) — Dynamic/Balanced/Secured = 3 stratégies alternatives indépendantes. Pas de cross-mode gating. Même ticker dans plusieurs modes = confirmation, pas doublon.
 - [Dilution Check](feedback_dilution_check.md) — Toujours vérifier SEC filings (S-3, warrants, ATM, fonds toxiques) avant de recommander un ticker. Leçon INDO.
 - [No Portfolio Section](feedback_no_portfolio.md) — Ne jamais ajouter de section Portfolio/positions dans les dailys. Pas dans le template.
