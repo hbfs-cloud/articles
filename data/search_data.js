@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Rotation on Trial: Where the Money Goes Next — Week of July 6–10, 2026",
+    "desc": "A flat S&P hid the sharpest factor rotation of the summer: tech and semis dumped into gold, materials, healthcare and international. Credit and crypto say risk is still on. Here is how to trade the week ahead — with real levels.",
+    "tags": "us,eu,commodity,gold,mining,healthcare,semis,macro,technique,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260706/",
+    "date": "6 juillet 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Contexte Macro & Marchés",
     "desc": "Le Nasdaq chute de -4.6% tandis que le Dow monte de +0.5% : la rotation sectorielle la plus violente de 2026. Healthcare au sommet historique, semi-conducteurs en déroute (-23.7% pour ON Semi), BTC à 3% de son plancher annuel, et NFP vendredi sur un marché en demi-séance avant le 4 juillet. Semaine écourtée, risques maximaux.",
     "tags": "us,eu,asia,crypto,commodity,geopolitique,macro,earnings,technique,trade-idea,formation",
@@ -299,17 +312,17 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
+    "type": "daily",
+    "icon": "fa-sun",
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Rotation on Trial: Where the Money Goes Next — Week of July 6–10, 2026",
-    "desc": "A flat S&P hid the sharpest factor rotation of the summer: tech and semis dumped into gold, materials, healthcare and international. Credit and crypto say risk is still on. Here is how to trade the week ahead — with real levels.",
-    "tags": "us,eu,commodity,gold,mining,healthcare,semis,macro,technique,trade-idea,etf",
+    "title": "The Great Reshuffle — Dow Crowns New ATH at 52,904, AAPL +4.8%, TSLA −7.5%, Healthcare at 52W Peak",
+    "desc": "Friday briefing: Dow hits new ATH at 52,904 (+1.14%). AAPL surges +4.8%, TSLA crashes -7.5%, META reverses -4.9%. Healthcare (XLV) at 52-week high +2.63%. S&P flat. VIX 16.15. Risk-on 59.8%. Gold $4,188 +1.5%. BTC $61,434. Early close 1PM ET today for July 4.",
+    "tags": "us,eu,asia,crypto,macro,technique,trade-idea,formation,geopolitique,healthcare,financials",
     "grade": "",
-    "href": "/weekly/20260706/",
-    "date": "6 juillet 2026"
+    "href": "/daily/20260703/",
+    "date": "3 juillet 2026"
   },
   {
     "type": "daily",
