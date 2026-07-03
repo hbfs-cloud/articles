@@ -1224,6 +1224,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "NOG",
+    "exchange": "NYSE • Énergie • E&P non-opéré\n            — Working interests minoritaires (Williston, Permien, Appalaches)",
+    "name": "NOG — NOG à book value, EV/EBITDA 3x, RSI 31. Mean-reversion contrarian avec 19% de short com...",
+    "title": "NOG — NOG à book value, EV/EBITDA 3x, RSI 31. Mean-reversion contrarian avec 19% de short com...",
+    "desc": "Analyse experte Northern Oil & Gas : à ~$18 ≈ book value $16.94, EV/EBITDA 3.0x après -42% depuis mars. Short 19%, achat director @ $19.40, options ultra-call. Mais dilution réelle (424B5 + émissions mai/juin). Target $33.",
+    "tags": "us,energy,value,options,technique,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/NOG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AXP",
     "exchange": "NYSE · Financials",
     "name": "AXP — Bullish setup, score 84/100. Entry $340, target $370, R/R 1.36 at spot $348 — grade A-.",
