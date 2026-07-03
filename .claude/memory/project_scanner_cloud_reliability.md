@@ -31,6 +31,13 @@ Audit read-only (workflow, 2026-07-03) → 11 findings priorisés. État :
   existants inchangés, nouveaux points appended, return monte, DD ne baisse pas) / revue Fable + accord
   user. User a approuvé le principe (« re-seal les 3 ») mais l'exécution attend budget session + le vrai
   fix moteur. Projection: fortress +7 trades (JACK +16.53/NIQ +10.34/IRDM +3.36 réels), dynamic +1, balanced +2.
+  **RÉSOLU par preview (2026-07-03, outil tools/extend-frozen.js DRY) : les 3 modes ABORTENT sur le garde-fou
+  seam — le frozen NE PEUT PAS être recompute-étendu. dynamic recompute=177.25 vs scellé 191.18 (Δ-13.93 =
+  reproduit EXACTEMENT le bug config-aveugle 91→75), balanced Δ-4.34, fortress Δ+0.14. Cause : carnet désynchronisé
+  (73 clôturés vs 69 scellés / 43 vs 35 / 62 vs 60) + config changée (fortress P4→P10). Vérif indépendante 0
+  blocker, zéro écriture, scellé intact. CONCLUSION : ne JAMAIS étendre le frozen par recompute. Le chiffre
+  « courant » doit venir d'une couche FORWARD séparée (pit-engine) seedée à l'ancre scellée, PAS d'une réécriture.
+  Outil extend-frozen.js gardé (untracked, --apply guardé) comme diagnostic. Décision direction en attente user.**
 - #8 fortress : 73 clôturés ≤06-26 mais frozen.trades=69 → écart non expliqué (hypothèse : capacité portfolio-aware P4 historique). Investiguer AVANT re-seal.
 - #6 pit-engine.js : jamais invoqué par cron/nightly (manuel). Décider : automatiser vs documenter comme manuel assumé.
 - #7 deploy.yml GitHub Pages ~23% échec : (1) race backend GitHub (rien à corriger) ; (2) double artifact github-pages → envisager debounce (déployer sur dernier push d'une rafale). Ne JAMAIS gh run rerun (doublon) → nouveau commit.
