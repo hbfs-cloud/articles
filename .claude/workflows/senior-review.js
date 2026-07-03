@@ -1,6 +1,6 @@
 export const meta = {
   name: 'senior-review',
-  description: 'Senior multi-persona QA harness — runs a panel of senior reviewers (QA / Quant / Trader / Risk-Compliance / Editor) over each artifact, applies fixes, and gates PASS/FIX/BLOCK before publish. Reusable across all DailyTickers processes.',
+  description: 'Senior multi-persona QA harness — runs a panel of senior reviewers (QA / Quant / Trader / Risk-Compliance / Editor / AI-Forensics anti-slop) over each artifact, applies fixes, and gates PASS/FIX/BLOCK before publish. The AI-Forensics reviewer adversarially detects AI-generated feel (per EDITORIAL_STYLE.md) and BLOCKs slop. Reusable across all DailyTickers processes.',
   phases: [
     { title: 'Panel', detail: 'senior personas review each artifact (type-aware), fix in place' },
     { title: 'Gate', detail: 'release-gate synthesis per artifact: PASS / FIXED / BLOCK' },
@@ -21,18 +21,20 @@ const P = {
   trader: { label:'Trader Senior (setup / actionability)', mandate:`Judge tradeability. For analyses/scanner setups: entry/stop/TP coherent vs price + EMAs + ATR; R/R = (TP1-entry)/(entry-stop) >= 1.5 AT AN ACTIONABLE ENTRY within ~3% of the live price (NOT a far un-triggered pullback — that is the fatal "fictional R/R" defect); stop technically placed; not chasing an extended name (>~5-8% above EMA20); invalidation sensible; earnings/event proximity flagged; position-sizing sane for the beta/ATR. For daily/weekly: directional calls and "trade of the week" must be defensible and risk-framed. FIX the trade levels if R/R is fictional; downgrade the call if it is a chase.` },
   risk: { label:'Risk & Compliance Senior', mandate:`Stress risk + compliance and FIX. Dilution/flags: verify via SEC EDGAR (WebSearch) there is no active ATM / S-3 equity / M&A stock deal / mandatory convertible / heavy SBC misrepresented as "clean" — correct the disclosure honestly. Confirm the disclaimer / "not financial advice" block is present. No over-claiming, no invented geopolitical/macro events (we are June 2026 — verify), balanced bull AND bear, prudent language on manipulation/sentiment. Catalyst must not be macro-inverted (e.g. oil shock vs an airline). Flag concentration/correlation issues for any basket.` },
   editor: { label:'Editor Senior (FT/Economist desk)', mandate:`Edit for clarity, structure and credibility, FIX in place: headline/title accurate to the content; sections coherent and in the right order; at least one inline .source-ref per content section (add where missing using verified URLs — Yahoo/Finviz/SEC/IEA/Goldman patterns); tone = serious retail, FT/Economist + terminal precision (no hype, no crypto-bro, no filler); French accents correct; no contradictions; cross-links valid. Do NOT invent facts to fill gaps — flag instead.` },
+  slop: { label:'AI-Forensics Senior (anti-slop / undetectability)', mandate:`You are a HOSTILE AI-content DETECTOR, not a friendly editor. Assume the text is AI-written and hunt for proof it is. Read EDITORIAL_STYLE.md (all 3 layers) first, then run \`node tools/check-ai-tells.js <path>\` (Bash) for layer-1 tells. Judge on three axes: (L1 STYLE) signposting/clichés, forced explainer analogies ("picture musical chairs"), em-dash overload, perfect repeated tricolons, aphoristic "closer" flourishes ("X told you nothing, Y told you everything"), cute pairs ("gold and passports"), punch metaphors, uniformly smooth same-length paragraphs. (L2 FINGERPRINT) is there info only someone who actually dug would write — a PRECISE verified catalyst, real institutional flow, a non-consensus asymmetry, a falsifiable thesis — or a generic consensus read a one-line prompt ("write a plain-English newsletter on today's rotation") would reproduce? (L3 SKELETON) does it follow the default template hook→one idea→simple→mental image→a few levels→2-3 invalidations→memorable closer, and does it read like the same machine as prior posts? Score = probability a knowledgeable reader/detector rates it HUMAN (0-100; 100 = indistinguishable from a specific named analyst). severity=critical and add a BLOCK item if score < 75 or any hard tell survives. FIX in place surgically (kill flourishes, vary structure, de-signpost) WITHOUT breaking verified numbers or the required register (concise, actionable, verifiable, plain enough for a smart 10-year-old); flag anything that genuinely needs a human's own voice. Never approve your own comfort — your reputation is catching AI, not shipping it.` },
 }
 // Which personas run per artifact type
 const MATRIX = {
-  analyses: ['qa','quant','trader','risk','editor'],
-  scanner:  ['qa','quant','trader','risk','editor'],
-  retro:    ['qa','quant','trader','editor'],
-  daily:    ['qa','quant','trader','risk','editor'],
-  weekly:   ['qa','quant','trader','risk','editor'],
-  series:   ['qa','quant','risk','editor'],
-  tech:     ['qa','quant','editor'],
+  analyses: ['qa','quant','trader','risk','editor','slop'],
+  scanner:  ['qa','quant','trader','risk','editor','slop'],
+  retro:    ['qa','quant','trader','editor','slop'],
+  daily:    ['qa','quant','trader','risk','editor','slop'],
+  weekly:   ['qa','quant','trader','risk','editor','slop'],
+  series:   ['qa','quant','risk','editor','slop'],
+  tech:     ['qa','quant','editor','slop'],
+  substack: ['editor','quant','slop'],
   landing:  ['qa','editor'],
-  generic:  ['qa','quant','editor'],
+  generic:  ['qa','quant','editor','slop'],
 }
 
 const REVIEW_SCHEMA = { type:'object', required:['persona','score','severity','fixed'], properties:{

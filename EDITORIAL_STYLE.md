@@ -78,9 +78,11 @@ closer mémorable). Plusieurs posts qui se ressemblent = tell en soi.
   vérifiés + notes brutes** ; la **prose finale est écrite/possédée par l'humain**. « Analyste
   humain + IA chercheur », pas « IA rédactrice relue ».
 - **Routines cloud (sans humain dans la boucle)** : (a) structure variée à chaque fois ; (b) **passe
-  adverse** — un 2ᵉ agent/modèle avec le prompt « liste tout ce qui trahit une génération IA ici »,
-  puis réécrire ce qu'il pointe (≠ auto-évaluation) ; (c) `check-ai-tells.js --strict` en garde-fou
-  minimal. Aucune de ces étapes n'est une garantie — l'assumer.
+  adverse OBLIGATOIRE** — la persona **AI-Forensics** du harness `senior-review` (voir
+  `.claude/workflows/senior-review.js`, reviewer `slop`) : un agent séparé avec le mandat « détecte
+  l'IA », score la humanness 0-100, **BLOCK si < 75**, et corrige en place. C'est LA gate anti-slop à
+  passer avant toute publication ; ne jamais publier sur son propre « ça a l'air clean ». (c)
+  `check-ai-tells.js --strict` en garde-fou minimal. Aucune de ces étapes n'est une garantie — l'assumer.
 
 ## Recette reproductible (à exécuter AVANT d'écrire — routines incluses)
 
