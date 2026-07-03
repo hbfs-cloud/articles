@@ -1450,8 +1450,8 @@ function simulatePortfolio(allTrades, scans, config) {
       // Forward-only capacity change: a portfolioSize/topN increase (e.g. Fortress 4→10) must NOT
       // retroactively backfill phantom positions on pre-change scans. Before _effectiveFrom, cap
       // slots + entries at the PRIOR capacity so history reflects what was actually tradeable then.
-      const _pfSize = (_preChange && config._priorPortfolioSize) ? config._priorPortfolioSize : portfolioSize;
-      const _topN = (_preChange && config._priorTopN) ? config._priorTopN : topN;
+      let _pfSize = (_preChange && config._priorPortfolioSize) ? config._priorPortfolioSize : portfolioSize;
+      let _topN = (_preChange && config._priorTopN) ? config._priorTopN : topN;
       // Regime-aware strategy filter: override filter based on scan date's regime
       let activeFilter = _baseFilter;
       // Effective regime = label, optionally downgraded by the regime-score override
@@ -1471,6 +1471,15 @@ function simulatePortfolio(allTrades, scans, config) {
         if (overrideName && STRATEGY_FILTERS_MAP[overrideName]) {
           activeFilter = STRATEGY_FILTERS_MAP[overrideName];
         }
+      }
+      // Regime-dependent capacity (OPT-IN — parité Go dynamic_max_positions). When
+      // config.regimeParams.maxPositions is set, the concurrent-position count varies by the
+      // scan date's effective regime (e.g. highvol: risk_on 15 → neutral 3 → risk_off 0 = no new
+      // entries in crisis, open positions still ride to their exit). Modes WITHOUT regimeParams are
+      // untouched — _pfSize/_topN keep their static values (quality modes stay byte-identical).
+      if (config.regimeParams && config.regimeParams.maxPositions && effectiveRegimeKey) {
+        const rpMax = config.regimeParams.maxPositions[effectiveRegimeKey];
+        if (rpMax != null) { _pfSize = rpMax; _topN = rpMax; }
       }
       // Apply strategy filter per date (deferred from global loop for regime awareness)
       // Candlestick vol ratio trading filter: scanner detects at 1.0×,
