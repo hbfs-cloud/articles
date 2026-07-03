@@ -63,6 +63,15 @@ const MIN_VOL_RATIO = parseFloat(getArg('min-vol-ratio', '8.0'));
 // 0 = OFF to match that behavior; liquidity is gated upstream by the universe (min_volume /
 // min_market_cap). Set a positive value to re-enable the P80 floor for research.
 const MIN_P80_DOLLAR_VOLUME = parseFloat(getArg('min-p80-dollar-volume', '0'));
+// Point-in-time "established liquidity" gate (survivorship / look-ahead guard) — faithful port
+// of systematic-tss applyEstablishedLiquidityGate (strategy_trend.go). A candidate is tradeable
+// at date D only if its MEDIAN dollar-volume over the trailing ESTABLISHED_LOOKBACK bars (≤ D,
+// robust to the signal-day spike) exceeds this threshold — removing microcaps that were invisible
+// at signal time and only entered the (current-mcap) universe because they grew later. This is the
+// bias that produced AmericanBulls' +435% mirage. Default 0 = OFF (config-driven, defaults
+// unchanged); the honest backtest sets --min-established-dollar-volume 5000000 (~$5M US).
+const MIN_ESTABLISHED_DOLLAR_VOLUME = parseFloat(getArg('min-established-dollar-volume', '0'));
+const ESTABLISHED_LOOKBACK = parseInt(getArg('established-lookback', '60'));
 const TOP_N = parseInt(getArg('top', '30'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
@@ -385,6 +394,17 @@ function calcDollarVolumeP80(bars, lookback = 20) {
   return dvols[Math.min(idx, dvols.length - 1)];
 }
 
+// Trailing MEDIAN (P50) dollar volume over `lookback` bars — the point-in-time established-liquidity
+// metric. Median (not mean/P80) is robust to the single signal-day volume spike that lets a microcap
+// masquerade as liquid. Mirrors calcDollarVolumePercentile(bars, lookback, 0.50) in systematic-tss.
+function calcDollarVolumeMedian(bars, lookback = 60) {
+  const slice = bars.slice(-lookback);
+  const dvols = slice.map(b => b.close * (b.volume || 0)).sort((a, b) => a - b);
+  if (!dvols.length) return 0;
+  const mid = Math.floor(dvols.length / 2);
+  return dvols.length % 2 ? dvols[mid] : (dvols[mid - 1] + dvols[mid]) / 2;
+}
+
 // ─── Main scan ──────────────────────────────────────────────────────────────
 
 async function main() {
@@ -417,6 +437,13 @@ async function main() {
     if (MIN_P80_DOLLAR_VOLUME > 0) {
       const dvP80 = calcDollarVolumeP80(bars);
       if (dvP80 < MIN_P80_DOLLAR_VOLUME) continue;
+    }
+    // Point-in-time established-liquidity gate (survivorship / look-ahead guard). `bars` is already
+    // sliced to ≤ SCAN_DATE above, so the median is computed only on history known at signal time.
+    // Insufficient trailing history → ineligible (liquidity can't be established point-in-time).
+    if (MIN_ESTABLISHED_DOLLAR_VOLUME > 0) {
+      if (bars.length < ESTABLISHED_LOOKBACK) continue;
+      if (calcDollarVolumeMedian(bars, ESTABLISHED_LOOKBACK) < MIN_ESTABLISHED_DOLLAR_VOLUME) continue;
     }
     liquidScanned++;
 
