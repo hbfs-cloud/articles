@@ -109,6 +109,16 @@ closer mémorable). Plusieurs posts qui se ressemblent = tell en soi.
   Zéro finding ≠ garantie ; ça n'attrape PAS l'absence d'empreinte (couche 2 = jugement).
 - Avant toute publication : relire contre la checklist couche 2 (≥4 cochés) et le linter.
 
+## Preuve que la gate marche (62 → 77)
+
+Sur le post « Chips fell last week… » (juillet 2026), le reviewer AI-Forensics a d'abord noté
+**62/100 (BLOCK)** : flourishes supprimés mais **squelette L3 intact**. Le score n'est monté à
+**77/100 (PASS)** qu'après une **vraie restructure** — ouvrir sur le flux options (pas la peur),
+**tisser les niveaux dans la prose** (supprimer le bloc à puces), enfouir la réassurance, finir à
+plat. Leçon reproductible : dé-clichéiser (couche 1) ne suffit pas ; **seul un réagencement de l'arc
+déplace la couche 3**. Résidu honnête assumé à 77 : longueur de paragraphes encore uniforme (texture
+qu'une vraie voix humaine finit d'effacer).
+
 ## Exemplaire de référence
 
 Le post Substack « The best stock of the year just cracked… » (juillet 2026) : ouvre sur un fait
