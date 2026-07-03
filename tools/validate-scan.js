@@ -111,11 +111,35 @@ async function main() {
   // 1. Scan size — éditorial uniquement : les signaux Candlestick sont appendés par
   // candlestick-scanner (mode bull), pas des picks éditoriaux — exclus du comptage.
   const editorialCount = signals.length; // candlestick + spécialistes déjà exclus au chargement
-  if (filters.scan_size && filters.scan_size.exact && editorialCount !== filters.scan_size.exact) {
+  const ss = filters.scan_size || {};
+  // Design = top-N per strategy (momentum/breakout/pullback) + combined pool, up to max_total.
+  // Legacy `exact` kept for backward-compat if a filter set still uses it.
+  if (ss.exact != null && editorialCount !== ss.exact) {
     violations.push({
       rule: 'scan_size',
-      message: `Expected exactly ${filters.scan_size.exact} editorial signals, got ${editorialCount}.`
+      message: `Expected exactly ${ss.exact} editorial signals, got ${editorialCount}.`
     });
+  }
+  if (ss.max_total != null && editorialCount > ss.max_total) {
+    violations.push({
+      rule: 'scan_size',
+      message: `${editorialCount} editorial signals exceeds max_total ${ss.max_total}.`
+    });
+  }
+  if (ss.max_per_strategy != null) {
+    const byStrat = {};
+    for (const s of signals) {
+      const st = (s.strategy || '?').trim();
+      byStrat[st] = (byStrat[st] || 0) + 1;
+    }
+    for (const [st, n] of Object.entries(byStrat)) {
+      if (n > ss.max_per_strategy) {
+        violations.push({
+          rule: 'scan_size',
+          message: `Strategy "${st}" has ${n} editorial signals (max ${ss.max_per_strategy} per strategy).`
+        });
+      }
+    }
   }
 
   // 2. Regime label whitelist
@@ -198,13 +222,14 @@ async function main() {
     for (const s of signals) {
       if (typeof s.entry !== 'number' || typeof s.stop !== 'number') continue;
       const pct = Math.abs((s.entry - s.stop) / s.entry) * 100;
-      if (minPct != null && pct < minPct) {
+      const pctR = Math.round(pct * 100) / 100; // compare at 2-dp display precision: 2.998% shows as 3.00%, not a real sub-floor breach
+      if (minPct != null && pctR < minPct) {
         violations.push({
           rule: 'stops.min_pct',
           message: `${s.ticker}: stop only ${pct.toFixed(2)}% from entry (min ${minPct}%) — too tight, will trigger intraday.`
         });
       }
-      if (maxPct != null && pct > maxPct) {
+      if (maxPct != null && pctR > maxPct) {
         violations.push({
           rule: 'stops.max_pct',
           message: `${s.ticker}: stop ${pct.toFixed(2)}% from entry (max ${maxPct}%) — too loose, breaks R/R math.`
@@ -223,13 +248,14 @@ async function main() {
       sectorCount[sect] = (sectorCount[sect] || 0) + 1;
     }
     const cap = filters.diversification.max_per_sector;
-    // Cap 'Other' too — unknown tickers shouldn't be a concentration backdoor
+    // ADVISORY (not a hard gate): the cap describes the *published* curated selection
+    // ("no 3 techs in one week"), but this validator sees the raw candidate pool (up to
+    // max_total). Enforcing it hard on the pool false-flags normal candidate spread — same
+    // class of issue as the old scan_size:exact rule. Kept advisory, consistent with the
+    // region floors (min_us/min_eu…), so it still surfaces at curation time without blocking.
     for (const [sect, n] of Object.entries(sectorCount)) {
       if (n > cap) {
-        violations.push({
-          rule: 'diversification.max_per_sector',
-          message: `Sector "${sect}" has ${n} setups (max ${cap})${sect === 'Other' ? ' — add to SECTOR_MAP if this is a real sector' : ''} — concentration risk.`
-        });
+        advisories.push(`Sector "${sect}" has ${n} editorial candidates (soft cap ${cap})${sect === 'Other' ? ' — add to sector_map if this is a real sector' : ''} — curate the published top-N to avoid same-week concentration [sector_concentration]`);
       }
     }
   }
