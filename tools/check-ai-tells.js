@@ -32,6 +32,9 @@ const PHRASES = [
   // aphoristic "closer" flourishes (newsletter-LLM signature)
   "told you nothing", "told you everything", "tells you everything", "says it all",
   "that's the tell", "a scratch on", "and passports",
+  // reflexive inline definitions (LLM explains basic terms every time)
+  "a call option is", "a put option is", "a call is a bet", "a put is a bet",
+  "which is a bet that", "is a bet that a price",
   // FR equivalents
   "il est important de noter", "il convient de noter", "en conclusion", "cela dit",
   "force est de constater", "dans un monde", "sans plus attendre", "la clé réside",

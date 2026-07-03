@@ -84,6 +84,30 @@ closer mémorable). Plusieurs posts qui se ressemblent = tell en soi.
   passer avant toute publication ; ne jamais publier sur son propre « ça a l'air clean ». (c)
   `check-ai-tells.js --strict` en garde-fou minimal. Aucune de ces étapes n'est une garantie — l'assumer.
 
+## Couche 4 — Densité & non-récurrence (6ᵉ retour lecteur)
+
+Un texte propre, fingerprinté ET indétectable au niveau phrase peut **encore** sonner IA pour trois
+raisons systémiques :
+
+- **Récurrence** : deux posts de la même journée qui partagent la même thèse/structure (ex :
+  memory→GDX/EFA→Nvidia→10Y 4,49 %, réécrit « plus simple et plus court ») = tell majeur. Un humain
+  qui republie **approfondit un angle, ajoute des données neuves, ou développe un contre-argument**.
+  Règle : **ne pas republier une thèse déjà sortie récemment** sans apport neuf vérifiable. Si rien
+  de neuf, **ne pas publier**.
+- **Densité** : si tout l'article se résume à ≤3 phrases d'info réelle emballées dans 380 mots, le
+  reste est du remplissage — précisément là où les LLM excellent. La prose doit **porter** de
+  l'info, pas l'habiller. Ratio info/emballage élevé ou on coupe.
+- **Définitions réflexes** : « A call option is a bet that a price goes up » à chaque article = prompt
+  « explain for retail with no options knowledge ». Un analyste régulier ne redéfinit pas un call à
+  chaque fois. Bannies (cf `check-ai-tells.js`).
+
+**Conséquence produit (dit par le lecteur lui-même)** : la valeur de DailyTickers n'est **pas la
+prose**, c'est le moteur — détection de rotation, flux options, niveaux GDX/EFA, signaux
+d'invalidation. Le texte est ce qu'un bon prompt sort en 30 s à partir de ces éléments. Donc, par
+défaut, **privilégier un format data-forward** (chart + table de flux + niveaux suivis avec
+outcomes) où la valeur est la donnée propriétaire vérifiable, et **réduire la prose au minimum** —
+ou laisser un humain écrire la prose. Ne pas transformer 3 faits en essai.
+
 ## Recette reproductible (à exécuter AVANT d'écrire — routines incluses)
 
 ```
