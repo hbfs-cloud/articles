@@ -29,6 +29,9 @@ const PHRASES = [
   "one more thing", "here's what", "here's how", "here's the part", "here's the map",
   "picture this", "imagine you", "think of it like", "let me explain", "in other words",
   "simply put", "to put it simply", "the takeaway", "picture musical",
+  // aphoristic "closer" flourishes (newsletter-LLM signature)
+  "told you nothing", "told you everything", "tells you everything", "says it all",
+  "that's the tell", "a scratch on", "and passports",
   // FR equivalents
   "il est important de noter", "il convient de noter", "en conclusion", "cela dit",
   "force est de constater", "dans un monde", "sans plus attendre", "la clé réside",

@@ -61,6 +61,27 @@ obligatoire (chaque article doit cocher ≥4) :
 
 ---
 
+## Couche 3 — Méta : ne pas s'auto-évaluer, séparer recherche et voix
+
+La leçon la plus dure (5ᵉ retour lecteur) : **un LLM est juge et partie sur sa propre AI-ness.**
+Il ne détecte pas sa signature. « 0 tic au linter » ≠ « indétectable ». Et les détecteurs voient
+le **patron partagé** : même dé-IAisés, des articles du même modèle gardent le même squelette
+(hook fort → une idée → langage simple → image mentale → quelques niveaux → 2-3 invalidations →
+closer mémorable). Plusieurs posts qui se ressemblent = tell en soi.
+
+- **Ne jamais présenter son propre texte comme « clean/humain ».** L'auto-jugement ne compte pas.
+- **Bannir les flourishes de closer** : antithèses aphoristiques (« The index told you nothing.
+  The wreck told you everything. »), paires mignonnes (« gold and passports »), métaphores-punch
+  (« a scratch on a giant uptrend »). Signatures « newsletter LLM moderne ».
+- **Varier réellement la structure d'un post à l'autre** — pas le même squelette réutilisé.
+- **Modèle cible (le seul qui batte durablement les détecteurs)** : l'IA fait **recherche + faits
+  vérifiés + notes brutes** ; la **prose finale est écrite/possédée par l'humain**. « Analyste
+  humain + IA chercheur », pas « IA rédactrice relue ».
+- **Routines cloud (sans humain dans la boucle)** : (a) structure variée à chaque fois ; (b) **passe
+  adverse** — un 2ᵉ agent/modèle avec le prompt « liste tout ce qui trahit une génération IA ici »,
+  puis réécrire ce qu'il pointe (≠ auto-évaluation) ; (c) `check-ai-tells.js --strict` en garde-fou
+  minimal. Aucune de ces étapes n'est une garantie — l'assumer.
+
 ## Recette reproductible (à exécuter AVANT d'écrire — routines incluses)
 
 ```
