@@ -74,7 +74,10 @@ if [ "$SKIP_SWEEP" = false ]; then
 
   echo ""
   echo "💱 Step 2g: Forex scan..."
-  node tools/fractal-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 20 --top 10 || echo "⚠️  Forex scan failed (non-blocking)"
+  # forex-scanner.js (3-axis systematic-tss port) fills signals.forex_pool — the ONLY
+  # field sweep.js reads for the forex mode. It has NO --folder/--regime flags (unlike
+  # fractal-scanner) and strips dashes from --date internally to derive the scan folder.
+  node tools/forex-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --min-score 20 --top 10 || echo "⚠️  Forex scan failed (non-blocking)"
 
   echo ""
   echo "🏛️  Step 2h: Casablanca Bourse scan..."

@@ -47,6 +47,44 @@ function redactToken(s) {
 const DISCORD_CHANNEL = '1483382014588747778';
 const STATUS_URL = 'https://articles.dailytickers.com/scanner/status/';
 
+// ─── Mode presentation + Telegram routing (single source of truth) ─────────────
+// WHICH modes exist is derived dynamically from data/modes-config.json (see main()).
+// The three tables below layer presentation/routing that has no home in the config:
+//   • MODE_EMOJI      — display emoji (config has label/color but no emoji)
+//   • MODE_TOPIC_ENV  — name of the env var holding the Telegram thread id
+//   • MODE_TOPIC_FALLBACK — last-resort thread id if that env var is unset
+// A mode present in the config but ABSENT from the topic tables (e.g. a freshly
+// added highvol/hybrid/forex) has NO Telegram destination: we NEVER fabricate a
+// topic/thread. Such a mode is skipped for Telegram with an explicit log — the
+// 7 already-wired modes keep their exact current routing.
+const MODE_EMOJI = {
+  turbo: '🚀', dynamic: '🔥', balanced: '⚖️', secured: '🪐',
+  fortress: '🏰', tkl: '🎯', alpha: '🎯', aplus: '💎', bull: '🐂',
+};
+const DEFAULT_EMOJI = '📊';
+const MODE_TOPIC_ENV = {
+  turbo: 'TELEGRAM_TOPIC_TURBO', dynamic: 'TELEGRAM_TOPIC_DYNAMIC',
+  balanced: 'TELEGRAM_TOPIC_BALANCED', secured: 'TELEGRAM_TOPIC_SECURED',
+  fortress: 'TELEGRAM_TOPIC_FORTRESS', tkl: 'TELEGRAM_TOPIC_TKL',
+  alpha: 'TELEGRAM_TOPIC_ALPHA', bull: 'TELEGRAM_TOPIC_BULL', aplus: 'TELEGRAM_TOPIC_APLUS',
+};
+const MODE_TOPIC_FALLBACK = {
+  turbo: '89', dynamic: '89', balanced: '90', secured: '91',
+  fortress: '91', tkl: '1064', alpha: '1064', bull: '89', aplus: '89',
+};
+// Draft modes = config created, never run — not notified until they go live
+// (mirrors gen-api.js NON_PUBLIC_API_STATUSES).
+const NOTIFY_SKIP_STATUSES = new Set(['draft']);
+
+// Display label = emoji + config label. Label comes straight from modes-config.json
+// (cfg.label), so renaming a mode there flows through every message automatically.
+function modeDisplayLabel(cfg, { withEmoji = true } = {}) {
+  const id = cfg && cfg.id;
+  const label = (cfg && cfg.label) || id || 'Mode';
+  if (!withEmoji) return label;
+  const emoji = MODE_EMOJI[id] || DEFAULT_EMOJI;
+  return `${emoji} ${label}`;
+}
 
 function tradStrat(str) { return str || ''; }
 // ─── Data helpers ─────────────────────────────────────────────────────────────
@@ -142,13 +180,14 @@ function buildPositions(cfg, modeKey) {
   } catch (_) { /* fall through to legacy reconstruction */ }
 
   // ── Legacy fallback: reconstruct from backtest-trades ──
-  const modeMap = { turbo: 'turbo', dynamic: 'dynamic', balanced: 'balanced', secured: 'secured', fortress: 'fortress', tkl: 'tkl', alpha: 'alpha' };
+  // Trades are keyed by the mode id itself, so index directly (the old identity
+  // map { turbo:'turbo', ... } added nothing and silently dropped unknown modes).
   const allTrades = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/backtest-trades.json')));
   const livePositions = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/scanner-positions.json'))).open_positions || [];
   const liveLookup = {};
   for (const p of livePositions) liveLookup[p.ticker] = p;
 
-  const raw = allTrades[modeMap[modeKey] || modeKey] || [];
+  const raw = allTrades[modeKey] || [];
   // Match gen-status-page: positions = pending OR (expired & holdDays < horizon).
   let pending = raw.filter(t => t.status === 'pending' || (t.status === 'expired' && t.holdDays < cfg.horizon));
 
@@ -290,8 +329,7 @@ function buildTelegramMessage(d) {
     `  ${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const modeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha', bull: '🐂 Bull', aplus: '💎 A+' };
-  const modeLabel = modeLabels[d.cfg.id] || '⚖️ Balanced';
+  const modeLabel = modeDisplayLabel(d.cfg);
 
   return `${modeLabel}  —  ${d.scanDate}
 <code>${sep}</code>
@@ -359,8 +397,7 @@ function buildDiscordMessage(d) {
     `${String(i + 1).padEnd(3)}${s.symbol.padEnd(7)}${String(s.score).padEnd(5)}${tradStrat(s.strategy).padEnd(13)}R/R ${s.rr}`
   ).join('\n');
 
-  const dcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha', bull: 'Bull', aplus: 'A+' };
-  const dcLabel = dcLabels[d.cfg.id] || 'Balanced';
+  const dcLabel = modeDisplayLabel(d.cfg, { withEmoji: false });
   return `## 📊 Portfolio ${dcLabel} — ${d.scanDate}
 > 📈 **Perf D0** ${sign(d.metrics.ret)}${d.metrics.ret}%  ·  **DD** ${d.metrics.dd}%  ·  **WR** ${d.metrics.wr}%  ·  **PF** ${d.metrics.pf}x
 ${actions}
@@ -380,8 +417,7 @@ ${sign(d.worstPct)}${d.worstPct.toFixed(1)}%  ${bar}  +${d.bestPct.toFixed(1)}%
 // ─── Build compact caption for sendAudio (max 1024 chars) ─────────────────────
 function buildAudioCaption(d, ytUrl) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabels2 = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha', bull: '🐂 Bull', aplus: '💎 A+' };
-  const modeLabel = modeLabels2[d.cfg.id] || '⚖️ Balanced';
+  const modeLabel = modeDisplayLabel(d.cfg);
   const bar = asciiBar(d.worstPct, d.nowPct, d.bestPct);
 
   const closeNow   = d.activePos.filter(p => p.left <= 1);
@@ -441,8 +477,7 @@ function buildAudioCaption(d, ytUrl) {
 // ─── Build audio narration script (60-80 words, analytical) ─────────────────
 function buildAudioScript(d) {
   const sign = n => n >= 0 ? '+' : '';
-  const modeLabels3 = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha', bull: 'Bull', aplus: 'A+' };
-  const modeLabel = modeLabels3[d.cfg.id] || 'Balanced';
+  const modeLabel = modeDisplayLabel(d.cfg, { withEmoji: false });
 
   const closeNow = d.activePos.filter(p => p.left <= 1);
   const decideSoon = d.activePos.filter(p => p.left === 2);
@@ -775,21 +810,23 @@ async function main() {
   console.log('\n--- Discord preview ---');
   console.log(dcMsg);
 
-  // Send to all 3 mode topics
-  const modeTopics = (process.env.ONLY_MODE
-    ? [{ turbo: 'TELEGRAM_TOPIC_TURBO', dynamic: 'TELEGRAM_TOPIC_DYNAMIC', balanced: 'TELEGRAM_TOPIC_BALANCED', secured: 'TELEGRAM_TOPIC_SECURED', fortress: 'TELEGRAM_TOPIC_FORTRESS', tkl: 'TELEGRAM_TOPIC_TKL', alpha: 'TELEGRAM_TOPIC_ALPHA', bull: 'TELEGRAM_TOPIC_BULL', aplus: 'TELEGRAM_TOPIC_APLUS' }]
-        .flatMap(map => process.env.ONLY_MODE.split(',').map(k => ({ key: k.trim(), topicEnv: map[k.trim()] })))
-    : [
-    { key: 'turbo',    topicEnv: 'TELEGRAM_TOPIC_TURBO' },
-    { key: 'dynamic',  topicEnv: 'TELEGRAM_TOPIC_DYNAMIC' },
-    { key: 'balanced', topicEnv: 'TELEGRAM_TOPIC_BALANCED' },
-    { key: 'secured',  topicEnv: 'TELEGRAM_TOPIC_SECURED' },
-    { key: 'fortress', topicEnv: 'TELEGRAM_TOPIC_FORTRESS' },
-    { key: 'tkl',      topicEnv: 'TELEGRAM_TOPIC_TKL' },
-    { key: 'alpha',    topicEnv: 'TELEGRAM_TOPIC_ALPHA' },
-    { key: 'bull',     topicEnv: 'TELEGRAM_TOPIC_BULL' },
-    { key: 'aplus',    topicEnv: 'TELEGRAM_TOPIC_APLUS' },
-  ]);
+  // Modes to notify — derived DYNAMICALLY from data/modes-config.json (source of
+  // truth). Previously a hardcoded 9-entry list that silently omitted any new mode
+  // (highvol/hybrid/forex). Now every non-draft mode in the config is iterated, so a
+  // mode is picked up automatically the moment it flips out of draft. ONLY_MODE still
+  // narrows the run to an explicit subset (used for manual per-mode testing); when set
+  // it bypasses the draft filter so a specific mode can be forced.
+  const modesCfgAll = JSON.parse(fs.readFileSync(path.join(ROOT, 'data/modes-config.json'))).modes;
+  let notifyKeys;
+  if (process.env.ONLY_MODE) {
+    notifyKeys = process.env.ONLY_MODE.split(',').map(s => s.trim()).filter(Boolean);
+  } else {
+    notifyKeys = Object.entries(modesCfgAll)
+      .filter(([, c]) => !NOTIFY_SKIP_STATUSES.has(c && c.status))
+      .map(([k]) => k);
+  }
+  const modeTopics = notifyKeys.map(key => ({ key, topicEnv: MODE_TOPIC_ENV[key] }));
+  console.log(`Modes to notify (from config): ${notifyKeys.join(', ') || '(none)'}`);
 
   // ── Media paths: YouTube URL + local video from scanner-specific result.json ─
   function getScannerMediaPaths(scanDir) {
@@ -819,12 +856,18 @@ async function main() {
   else if (media.videoPath) console.log(`📺 Video found (no YouTube): ${media.videoPath}`);
   else console.log('📺 No scanner media found');
 
-  // Fallback topic IDs (last-resort defaults if env vars unset)
-  const TOPIC_FALLBACKS = { turbo: '89', dynamic: '89', balanced: '90', secured: '91', fortress: '91', tkl: '1064', alpha: '1064', bull: '89', aplus: '89' };
   for (const { key, topicEnv } of modeTopics) {
+    // Resolve the Telegram thread: env var first, then the known fallback id.
+    // A mode with NEITHER (e.g. a freshly added highvol/hybrid/forex not yet wired
+    // to a Telegram topic) is skipped — we never invent a topic and never risk a
+    // send to the wrong thread. The 7 wired modes keep their exact routing.
+    const topicId = (topicEnv && process.env[topicEnv]) || MODE_TOPIC_FALLBACK[key];
+    if (!topicId) {
+      console.warn(`[topics] mode "${key}" has no Telegram topic configured (env ${topicEnv || '<none>'} unset, no fallback) — skipping Telegram/audio/video for this mode. Wire ${MODE_TOPIC_ENV[key] || 'a MODE_TOPIC_ENV/MODE_TOPIC_FALLBACK entry'} to enable.`);
+      continue;
+    }
     const modePayload = buildStatusPayload(scanDir, key);
-    const topicId     = process.env[topicEnv] || TOPIC_FALLBACKS[key];
-    if (!process.env[topicEnv]) console.warn(`[topics] ${topicEnv} unset — using fallback ${topicId} for mode ${key}`);
+    if (topicEnv && !process.env[topicEnv]) console.warn(`[topics] ${topicEnv} unset — using fallback ${topicId} for mode ${key}`);
 
     // Generate audio
     const audioPath = `/tmp/scanner-${key}-${scanDir}.mp3`;
@@ -844,8 +887,7 @@ async function main() {
       }
       // Upload to YouTube
       if (modeVideoPath) {
-        const ytModeLabels = { turbo: '🚀 Turbo', dynamic: '🔥 Dynamic', balanced: '⚖️ Balanced', secured: '🪐 Orbit', fortress: '🏰 Fortress', tkl: '🎯 TKL', alpha: '🎯 Alpha', bull: '🐂 Bull', aplus: '💎 A+' };
-        const modeLabel = ytModeLabels[key] || '⚖️ Balanced';
+        const modeLabel = modeDisplayLabel(modePayload.cfg);
         const ytTitle = `${modeLabel} Portfolio — ${modePayload.scanDate} | DailyTickers`;
         const ytDesc = `${modeLabel} Portfolio Update\n\n` +
           `📈 Return: ${(modePayload.metrics.ret >= 0 ? '+' : '')}${modePayload.metrics.ret}%\n` +
@@ -871,8 +913,7 @@ async function main() {
       console.log(`✅ Telegram audio+caption [${key}] → topic ${topicId}`);
       // Send video if no YouTube (fallback: embed directly)
       if (!modeYtUrl && modeVideoPath) {
-        const vcLabels = { turbo: 'Turbo', dynamic: 'Dynamic', balanced: 'Balanced', secured: 'Orbit', fortress: 'Fortress', tkl: 'TKL', alpha: 'Alpha', bull: 'Bull', aplus: 'A+' };
-        const videoCaption = `📊 <b>${vcLabels[key] || 'Balanced'} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
+        const videoCaption = `📊 <b>${modeDisplayLabel(modePayload.cfg, { withEmoji: false })} Portfolio — ${modePayload.scanDate}</b>\nPositions · Rotations · Setups · Risk`;
         sendTelegramVideo(modeVideoPath, videoCaption, topicId, `Portfolio ${key} — ${modePayload.scanDate}`);
         console.log(`✅ Telegram video embedded [${key}] → topic ${topicId}`);
       }

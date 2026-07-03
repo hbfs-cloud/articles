@@ -18,6 +18,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { isUSTradingDay } = require('./lib/market-calendar');
 
 const ROOT = path.resolve(__dirname, '..');
 const STRICT = process.argv.includes('--strict');
@@ -143,14 +144,15 @@ check('scanner.json: tile LIVE en position 0', () => {
   if (!d[0].includes('#059669') && !d[0].includes('059669')) return 'tile LIVE sans couleur verte (#059669)';
 });
 
-// 4. Scan du dernier jour ouvré (lun-ven uniquement — pas de scan le week-end)
+// 4. Scan du dernier jour ouvré (lun-ven + jours fériés NYSE exclus via market-calendar.js)
 function lastWeekdayStr() {
   const d = new Date();
-  // Reculer jusqu'au dernier jour ouvré (vendredi si sam/dim)
-  while (d.getDay() === 0 || d.getDay() === 6) {
+  const isoOf = (dt) => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  // Reculer jusqu'au dernier jour de bourse réel (week-end ET jours fériés NYSE)
+  while (!isUSTradingDay(isoOf(d))) {
     d.setDate(d.getDate() - 1);
   }
-  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+  return isoOf(d).replace(/-/g, '');
 }
 
 function isWeekend() {

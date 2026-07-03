@@ -3,7 +3,12 @@
 
 /**
  * gen-mode-cards.js
- * Generates PNG card images for all portfolio modes (turbo, dynamic, balanced, secured, fortress, tkl — read dynamically from MODE_META).
+ * Generates PNG card images for all portfolio modes, read DYNAMICALLY from
+ * data/modes-config.json (single source of truth — mirrors gen-status-page.js /
+ * gen-api.js). Any non-draft mode in the config gets a card automatically; draft
+ * modes (config created, never run) are skipped until they go live. label/color
+ * come from the config; only the emoji has no home in the config and lives in a
+ * small explicit override table below (with a neutral fallback).
  * Reads metrics from scanner/status/index.html (same source of truth as notify-scanner-status.js)
  * Saves to scanner/status/mode-{mode}-{timestamp}.png
  * Updates scanner/status/manifest.json
@@ -21,17 +26,20 @@ const STATUS_DIR = path.join(ROOT, 'scanner/status');
 
 const DRY_RUN = process.argv.includes('--dry-run');
 
-// ─── Mode metadata ────────────────────────────────────────────────────────────
-const MODE_META = {
-  turbo:    { emoji: '🚀', label: 'Turbo' },
-  dynamic:  { emoji: '🔥', label: 'Dynamic' },
-  balanced: { emoji: '⚖️',  label: 'Balanced' },
-  secured:  { emoji: '🪐',  label: 'Orbit' },
-  fortress: { emoji: '🏰', label: 'Fortress' },
-  tkl:      { emoji: '🎯', label: 'TKL' },
-  alpha:    { emoji: '🎯', label: 'Alpha' },
+// ─── Mode emoji (presentation-only override; label/color come from config) ──────
+// The config has no emoji field, so this small map supplies one per known mode.
+// A mode absent here still renders with the neutral fallback emoji.
+const MODE_EMOJI = {
+  turbo: '🚀', dynamic: '🔥', balanced: '⚖️', secured: '🪐',
+  fortress: '🏰', tkl: '🎯', alpha: '🎯', aplus: '💎', bull: '🐂',
 };
-const MODES = Object.keys(MODE_META);
+const DEFAULT_EMOJI = '📊';
+// Draft modes are config-only (never run) — skip them exactly like the public API
+// surface (gen-api.js NON_PUBLIC_API_STATUSES). They appear automatically once live.
+const CARD_SKIP_STATUSES = new Set(['draft']);
+function metaFor(modeKey, cfg) {
+  return { emoji: MODE_EMOJI[modeKey] || DEFAULT_EMOJI, label: (cfg && cfg.label) || modeKey };
+}
 
 // ─── Load .env ────────────────────────────────────────────────────────────────
 const envPath = path.join(ROOT, '.env');
@@ -127,7 +135,7 @@ function buildPositions(cfg, modeKey) {
 
 // ─── Generate HTML for one mode card ─────────────────────────────────────────
 function buildCardHtml(modeKey, cfg, metrics, positions) {
-  const meta     = MODE_META[modeKey];
+  const meta     = metaFor(modeKey, cfg);
   const today    = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const modeColor = cfg.color || '#888';
 
@@ -498,6 +506,14 @@ async function main() {
     process.exit(1);
   }
   const modesObj = JSON.parse(fs.readFileSync(modesConfigPath)).modes;
+
+  // Modes to render = every non-draft mode in the config (source of truth).
+  // No more hardcoded 7-mode list: highvol/hybrid/forex etc. appear automatically
+  // once they flip out of draft, and any newly-added live mode is picked up too.
+  const MODES = Object.entries(modesObj)
+    .filter(([, cfg]) => !CARD_SKIP_STATUSES.has(cfg && cfg.status))
+    .map(([id]) => id);
+  console.log(`Modes (non-draft, from config): ${MODES.join(', ')}`);
 
   // Load manifest
   const manifestPath = path.join(STATUS_DIR, 'manifest.json');
