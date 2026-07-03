@@ -2870,6 +2870,7 @@ async function main() {
               entryTime: '09:30',
               exitTime: null,
               _injected: true,
+              configVersion: getConfigVersion(p.scan_date),
             });
           }
 
