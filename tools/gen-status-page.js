@@ -724,12 +724,13 @@ async function main() {
     // (momentum-scanner --universe casablanca, real signal source, parity portfolio_ma.yaml) —
     // kept coherent with STRATEGY_FILTERS_MAP['adaptive_fractal'] in tools/sweep.js.
     adaptive_fractal: s => /^(AdaptiveFractal|MomentumRotation|momentum_rotation)$/i.test(s),
+    hybrid_af: s => /^(AdaptiveFractal|Hybrid-?AF|Hybrid-?DSL|Hybrid-?MegaCap|HybridMegaCap|hybrid_af|hybrid_megacap|megacap)$/i.test(s),
     highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
     momentum_rotation: s => /^(MomentumRotation|momentum_rotation)$/i.test(s),
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
     trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', hybrid_af: 'Hybrid-AF', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+' }[f] || f; }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
@@ -897,7 +898,7 @@ async function main() {
     // PAS pour les modes SCRIPTÉS (Bull/Momentum/HighVol/Trendline/ETF/Casablanca/Fortress/A+) :
     // leurs signaux SONT les ordres à placer (répliquent systematic-tss), pas des candidats de
     // remplacement comme les modes quality (turbo/balanced...). Donc aucun "Fallback candidates".
-    const SCRIPTED_FILTERS = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'fortress_pm']);
+    const SCRIPTED_FILTERS = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'hybrid_af', 'fortress_pm']);
     // fortress + aplus = modes LLM (pilotés par le skill fortress-pm, signaux = CANDIDATS A+),
     // PAS scriptés — ils gardent Today's Signals + Orders + fallback comme les autres modes LLM.
     const isScripted = SCRIPTED_FILTERS.has(cfg.filterName) && id !== 'fortress' && id !== 'aplus';
@@ -2795,7 +2796,7 @@ document.addEventListener('DOMContentLoaded',function(){
         sigBody.innerHTML = sig.length ? sig.map(function(s){
           var bg=_scoreBg(s.score||0);
           return '<tr><td>'+_tkLogo(s.ticker)+'<b>'+s.ticker+'</b></td><td><span class="pill-score" style="background:'+bg+'">'+(s.score||0)+'</span></td><td class="m">'+(s.strategy||'')+'</td><td>'+(s.entry||'')+'</td><td class="neg">'+(s.stop||'')+'</td><td class="pos">'+(s.tp1||'')+' / '+(s.tp2||'')+'</td><td class="am">'+(s.rr||'')+'</td></tr>';
-        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout',candlestick_only:'Candlestick only',adaptive_fractal:'Adaptive Fractal',highvol_breakout:'HighVol Breakout',momentum_rotation:'Momentum Rotation',etf_momentum:'ETF Momentum',trendline_breakout:'Trendline Breakout',fortress_pm:'Fortress A+'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
+        }).join('') : '<tr><td colspan="7" class="empty">No matching signals' + (d.config && d.config.filterName && d.config.filterName !== 'all' ? ' — filter: ' + ({all:'All',no_sq:'No Short Squeeze',momentum_only:'Momentum only',breakout_only:'Breakout only',no_sq_pb:'No SQ/PB',mom_bo:'Momentum + Breakout',candlestick_only:'Candlestick only',adaptive_fractal:'Adaptive Fractal',hybrid_af:'Hybrid-AF',highvol_breakout:'HighVol Breakout',momentum_rotation:'Momentum Rotation',etf_momentum:'ETF Momentum',trendline_breakout:'Trendline Breakout',fortress_pm:'Fortress A+'}[d.config.filterName] || d.config.filterName) : '') + '</td></tr>';
       }
     }
     var posSec=Array.from(panel.querySelectorAll('.section-card')).find(function(s){var h=s.querySelector('h3');return h && /open positions/i.test(h.textContent);});
@@ -3537,6 +3538,7 @@ function backfillHistory() {
     // (momentum-scanner --universe casablanca, real signal source, parity portfolio_ma.yaml) —
     // kept coherent with STRATEGY_FILTERS_MAP['adaptive_fractal'] in tools/sweep.js.
     adaptive_fractal: s => /^(AdaptiveFractal|MomentumRotation|momentum_rotation)$/i.test(s),
+    hybrid_af: s => /^(AdaptiveFractal|Hybrid-?AF|Hybrid-?DSL|Hybrid-?MegaCap|HybridMegaCap|hybrid_af|hybrid_megacap|megacap)$/i.test(s),
     highvol_breakout: s => /^(HighVolBreakout|highvol_breakout)$/i.test(s),
     momentum_rotation: s => /^(MomentumRotation|momentum_rotation)$/i.test(s),
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),

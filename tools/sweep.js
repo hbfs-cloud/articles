@@ -170,6 +170,7 @@ const STRAT_PATTERNS = {
   momentum_rotation: /momentum.?rotation/i,
   etf_momentum: /etf.?momentum/i,
   hybrid_megacap: /hybrid.?mega.?cap|megacap/i,
+  hybrid_af: /hybrid.?af|hybrid.?dsl/i,
   breakout: /breakout/i,
   momentum: /momentum/i,
   pullback: /pullback/i,
@@ -435,7 +436,11 @@ const STRATEGY_FILTERS_MAP = {
   // portfolio_ma.yaml), so momentum_rotation must NOT be excluded here. The universeFilter='casablanca'
   // gate (buildLiveOrders) already prevents US MomentumRotation signals from leaking in.
   'adaptive_fractal': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
-  'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'pullback', 'candlestick']),
+  // hybrid_af (Hybrid-AF mode, re-port Go trend-hybrid-af): admits ONLY the hybrid sleeve tags —
+  // adaptive_fractal (fractal-scanner), hybrid_megacap (hybrid-scanner MegaCap) and hybrid_af/
+  // hybrid_dsl (hybrid-scanner AF/DSL). Excludes every other tag so quality/specialist signals
+  // never leak in. Kept coherent with the SF regex in tools/gen-status-page.js.
+  'hybrid_af': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'pullback', 'candlestick']),
   'highvol_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'etf_momentum': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'hybrid_megacap', 'pullback', 'candlestick']),
