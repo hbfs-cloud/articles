@@ -1,10 +1,12 @@
 {
-  "updatedAt": "2026-07-03T14:27:36.721Z",
+  "_comment": "Append-only config version history. Each entry is a snapshot of modes-config at that time.",
   "versions": [
     {
       "id": "v1-20260215",
       "timestamp": "2026-02-15T00:00:00Z",
       "regime": "MIXED",
+      "hash": "424c5788",
+      "comment": "Initial 5-mode configuration. Sweep-validated on full Feb 15 - Apr 17 dataset (39 scans). Turbo H3/mom_bo, Dynamic H3/breakout_only, Balanced H8/momentum_only, Secured H10/breakout_only, Fortress H10/breakout_only/half-size.",
       "config": {
         "turbo": {
           "label": "Turbo",
@@ -158,6 +160,15 @@
       "id": "v2-20260418",
       "timestamp": "2026-04-18T04:30:00Z",
       "regime": "RISK-ON",
+      "hash": "8db09e97",
+      "comment": "RISK-ON recalibration. Sweep on 11 scans (Apr 6-18), 110 setups. Key changes: H2 across all modes (was H3/H8/H10), aggressive rotation, all/momentum_only filters, no ATR/trailing stops. Turbo/Dynamic: +18.75%/DD-0.47%. Balanced: +10.35%/DD-0.01%. Secured: +15.31%/DD-0.94%. Fortress: +8.07%/DD-0%.",
+      "changes": {
+        "turbo": "H3→H2, mom_bo→all, none→aggressive rotation",
+        "dynamic": "H3→H2, breakout_only→all, daily_max1→aggressive, removed ATR/trail",
+        "balanced": "H8→H2, P1→P3/Top3, removed ATR stop",
+        "secured": "H10→H2, P3/Top1→P2/Top2, breakout_only→momentum_only, added BE=1%",
+        "fortress": "H10→H8, P3/Top1→P4/Top4, breakout_only→mom_bo, added PTP+trail+BE"
+      },
       "config": {
         "turbo": {
           "label": "Turbo",
@@ -311,6 +322,8 @@
       "id": "v7-20260604",
       "timestamp": "2026-06-04T00:00:00Z",
       "regime": "RISK-ON",
+      "hash": "",
+      "comment": "v7.0: Orbit ATR 3.5→2.5, stale disabled balanced/fortress, TKL trail=0/rotation=none, fortress ATR 1.5→2.0, sweep bugfixes (ATR max, topN sort, injection excludeSources/entryDate)",
       "config": {
         "turbo": {
           "status": "live",
@@ -613,6 +626,8 @@
       "id": "v8.6-20260614",
       "timestamp": "2026-06-14T00:00:00Z",
       "regime": "RISK-ON",
+      "hash": "balanced-segment-atr-fix-v86",
+      "comment": "balanced atrStopMult 2->1, partialTP off, minScore 88. Evidence: optimize-vs-spy on Apr20+ segment, 5.5x SPY / DD -4.45% / 7-8wk. atrX1 isolated as dominant lever (4.5x SPY alone).",
       "config": {
         "turbo": {
           "status": "live",
@@ -1037,6 +1052,8 @@
       "id": "v8.7-20260614",
       "timestamp": "2026-06-14T00:00:00Z",
       "regime": "RISK-ON",
+      "hash": "systemic-correlation-fix-v87",
+      "comment": "balanced +corrCap0.5; fortress trailingStop ON (2R/3d) + corrCap0.5. June root cause = correlated cluster. Validated via relative A/B across rally+June windows.",
       "config": {
         "turbo": {
           "status": "live",
@@ -1463,6 +1480,8 @@
       "id": "v8.8-20260614",
       "timestamp": "2026-06-14T00:00:00Z",
       "regime": "RISK-ON",
+      "hash": "crypto-mode-draft-v88",
+      "comment": "Added crypto mode (draft, assetClass=crypto, calendar=24/7, minScore=50). Consumes signals.json#crypto_pool from tools/crypto-scanner.js (systematic-tss port). Equity parity verified byte-identical.",
       "config": {
         "turbo": {
           "status": "live",
@@ -1943,6 +1962,8 @@
       "id": "v8.9-20260614",
       "timestamp": "2026-06-14T00:00:00Z",
       "regime": "RISK-ON",
+      "hash": "metals-forex-modes-draft-v89",
+      "comment": "Added metals + forex modes (draft). metals: assetClass=metals, universe=metals-universe.json, biz-day (no calendar), minScore=28, horizon=15, atrStopMult=2.5. forex: assetClass=forex, universe=forex-universe.json, biz-day, minScore=12, horizon=10, atrStopMult=2. Both correlationCap=0.6, riskProfile=Medium.",
       "config": {
         "turbo": {
           "status": "live",
@@ -2524,7 +2545,8 @@
     {
       "id": "v9.4-20260616",
       "timestamp": "2026-06-16T08:53:00Z",
-      "regime": null,
+      "effectiveFrom": "2026-06-17",
+      "reason": "balanced: restore defensive regimeFilters (early_risk_off+neutral->breakout_only). Forward-only, effective next session.",
       "config": {
         "turbo": {
           "status": "live",
@@ -3107,7 +3129,8 @@
     },
     {
       "id": "v10.0-20260629",
-      "regime": null,
+      "date": "2026-06-29",
+      "reason": "Rollback balanced+fortress to pre-April-20 winning configs",
       "config": {
         "turbo": {
           "portfolioSize": 1,
@@ -3852,6 +3875,8 @@
       "id": "v10.1-20260701",
       "timestamp": "2026-07-01T00:00:00Z",
       "regime": "RISK-ON",
+      "hash": "722112eb",
+      "comment": "Balanced P4 fix (GO gate, validate-config-change 30j regime-aware). Root cause = maxStopPct=0 non-capé + sizingMethod FIXED sur noms high-ATR (NVDA stop 9.4% vs fortress 4%). P4: atrStopMult 1.8, maxStopPct 7, trailing 2R/grace3, sizingMethod inverse_atr, targetRiskPct 1. Validé: full +18.35% vs -13.95%, MaxDD -4.16% (<=8%), PF 2.09 vs 0.65, WR 55.8% vs 31.7%, OOS +6.7% vs -11.25%, amélioration tous régimes. fortress/turbo/dynamic = régime (inchangés).",
       "config": {
         "turbo": {
           "status": "live",
@@ -4814,7 +4839,10 @@
     {
       "id": "v10.2-20260702",
       "timestamp": "2026-07-01T23:46:55.544Z",
+      "effectiveFrom": "2026-07-03",
       "regime": "RISK-ON",
+      "hash": "c50f1073",
+      "comment": "Parity alignment systematic-tss (audit 2026-07-02): les modes scriptés divergeaient des configs Go backtestées 5y. highvol: portfolioSize 5→15, topN 5→15, horizon 21→14, trailMultR 2→1.5, partialTPGain 15→30, correlationCap 0.6→0.8, maxStopPct 0→15 | etf: portfolioSize 5→7, topN 5→7, atrStopMult 2→2.5, maxStopPct 0→17 | etf_eu: portfolioSize 5→3, topN 5→3, minScore 0→80, atrStopMult 2→1.5 | casablanca: horizon 15→90, portfolioSize 5→8, topN 5→8, rotation \"none\"→\"daily_max1\", maxStopPct 0→15 | trendline: horizon 21→25, atrStopMult 2→2.5, minScore 40→50, partialTP true→false. Références: portfolio_us_highvol.yaml (CAGR 114.8%), portfolio_etf_us.yaml (66.5%), portfolio_etf_eu.yaml (70.7%), portfolio_ma.yaml (46.2%), pm_eu_trend.go. Bull exclu (variante haute-conviction 8x/88 documentée). Momentum US exclu (pas de backtest Go 5y — flag ouvert). Forward-only.",
       "config": {
         "turbo": {
           "status": "live",
@@ -5777,7 +5805,10 @@
     {
       "id": "v10.3-20260702",
       "timestamp": "2026-07-02T05:49:13.348Z",
+      "effectiveFrom": "2026-07-03",
       "regime": "RISK-ON",
+      "hash": "df2f3d35",
+      "comment": "Fortress: restauration circuit breaker 3/5/3 (retiré par le rollback 2026-06-29 alors que l incident 18/06 était précisément 12 SL consécutifs -46%). Gate 30j = WAIT marginal (-1.03% vs -0.81%, n=18) mais per-régime pleine période très favorable (RISK-ON PF 1.62/+72.9% avec CB vs 0.80/-40.4% sans). Validé par décision user 2026-07-02 (AskUserQuestion). Purement protecteur: aucun effet hors série de stops. Forward-only.",
       "config": {
         "turbo": {
           "status": "live",
@@ -6743,7 +6774,10 @@
     {
       "id": "v10.4-20260702",
       "timestamp": "2026-07-02T06:24:58.191Z",
+      "effectiveFrom": "2026-07-03",
       "regime": "RISK-ON",
+      "hash": "5b062a18",
+      "comment": "Port du exit-logic bespoke des PositionManagers Go (systematic-tss) dans les moteurs generiques sweep.js/pit-engine.js, en champs OPT-IN (defaut off/0, zero impact sur les modes qui ne les activent pas). highvol: trailTriggerPct 12 (portfolio_us_highvol.yaml trail_trigger_pct 0.12 — trail_atr_mult 1.5 NON porte, on garde notre trailMultR en R-multiple et ne porte que le trigger d'armement). etf + etf_eu: earlyExitLossPct 5 / earlyExitDays 5 (portfolio_etf_us.yaml + portfolio_etf_eu.yaml, identiques: early_exit.min_days 2 / max_days 5 / max_loss_pct 0.05 — min_days=2 hardcode cote moteur car non expose en config generique) + circuitBreakerStops 3→4 pour matcher circuit_breaker.max_stops_before_pause=4 des deux yaml (stop_period_days=5→circuitBreakerWindow, base_pause_days=3→circuitBreakerPause deja alignes; max_pause_multiplier=2 sans equivalent generique, non porte). casablanca: tightenAfterDays 5 / tightenToPct 8 (portfolio_ma.yaml tighten_after_days 5 / tightened_max_loss 0.08 — tighten_loss_threshold 0.05 NON porte: le champ generique tighten inconditionnellement le floor du stop apres N jours si plus haut que le stop courant, au lieu de ne le faire que si la perte depasse ce seuil; approximation documentee en commentaire code, converge en pratique car le floor ne mord que si le stop naturel est deja sous ce niveau). sweep.js: nouveaux checks dans simulateTrade (frozenKey ~L2330 NON modifie — champs opt-in, semantique append-only forward-only). pit-engine.js: memes 3 regles portees dans stepPosition/openPosition (state machine de positions ouvertes). Statut sl+exitTrigger=early_exit reutilise (aucun nouveau statut). Validation: node --check OK sur les deux moteurs, parity-check.js etendu avec les nouvelles lignes, resweep sans regression sur les frozen returnTotal des modes qui n'activent pas ces champs (voir rapport agent).",
       "config": {
         "turbo": {
           "status": "live",
@@ -7716,7 +7750,10 @@
     {
       "id": "v10.5-20260702",
       "timestamp": "2026-07-02T15:23:07.563Z",
+      "effectiveFrom": "2026-07-03",
       "regime": "RISK-ON",
+      "hash": "4e1165d8",
+      "comment": "Casablanca 0-orders fix (audit 2026-07-02): STRATEGY_FILTERS_MAP['adaptive_fractal'] (tools/sweep.js) excluait momentum_rotation alors que les signaux nocturnes reels viennent de momentum-scanner.js --universe casablanca (tag MomentumRotation, parite portfolio_ma.yaml) et non de casablanca-scanner.js (tag AdaptiveFractal, souvent 0 candidat). Fix: le set admet desormais adaptive_fractal + momentum_rotation ; SF/SF_BF regex (tools/gen-status-page.js) mises a jour a l'identique pour rester coherentes (commentaire STRATEGY_FILTERS_MAP l'exige). universeFilter='casablanca' (buildLiveOrders) empeche deja toute fuite de MomentumRotation US. casablanca.minScore 25→5 dans la meme passe: 25 etait calibre pour l'echelle AdaptiveFractal (~30-35, cf scan 2026-07-01) ; la formule momentum-rotation (mom20*50+mom50*30+mom100*20, exact port scanner_momentum_rotation.go) produit une echelle 5-9 sur BVC (marche moins volatil que US/EU), donc 25 bloquait 100% des 5 candidats MomentumRotation du 2026-07-02 (scores 5.57-9.05). 5 = MIN_SCORE natif deja applique en amont par momentum-scanner.js. Forward-only, aucun autre mode touche.",
       "config": {
         "turbo": {
           "status": "live",
@@ -8686,5 +8723,161 @@
         }
       }
     }
-  ]
+  ],
+  "v2-20260418": {
+    "_comment": "5 modes — RISK-ON recalibration (sweep 2026-04-18, 11 scans, 110 setups). H2 optimal across all modes. Aggressive rotation + momentum filters dominate. Previous config archived in modes-config-history.json (v1-20260215, hash 424c5788).",
+    "_updated": "2026-04-18",
+    "_version": "v2-20260418",
+    "_regime": "RISK-ON",
+    "_prevVersion": "v1-20260215",
+    "modes": {
+      "turbo": {
+        "label": "Turbo",
+        "color": "#f59e0b",
+        "goal": "Maximum Short-Term Alpha",
+        "riskProfile": "Extreme",
+        "tagline": "Ultra-aggressive 1–2 day plays. All strategies eligible, aggressive rotation, BE lock at +0.5%. Sweep-validated RISK-ON: +18.75% return, -0.47% DD on 10-day window.",
+        "portfolioSize": 1,
+        "topN": 1,
+        "minScore": 90,
+        "filterName": "all",
+        "rotation": "aggressive",
+        "horizon": 2,
+        "partialTP": true,
+        "partialTPPct": 0.5,
+        "trailingStop": false,
+        "maxStopPct": 0,
+        "atrStopMult": 0,
+        "dailyTrailPct": 2,
+        "breakevenPct": 0.5,
+        "staleDays": 0,
+        "entryGatePct": 0,
+        "regimeFilters": {
+          "risk_on": "all",
+          "early_risk_off": "breakout_only",
+          "risk_off": "breakout_only",
+          "neutral": "mom_bo",
+          "recovery": "mom_bo"
+        }
+      },
+      "dynamic": {
+        "label": "Dynamic",
+        "color": "#dc2626",
+        "goal": "Maximum Return",
+        "riskProfile": "High",
+        "tagline": "Active traders. All strategies, aggressive rotation, H2 horizon. Sweep RISK-ON: +18.75% return, Sharpe 39.89. No ATR/trailing — pure momentum capture.",
+        "portfolioSize": 1,
+        "topN": 1,
+        "minScore": 85,
+        "filterName": "all",
+        "rotation": "aggressive",
+        "horizon": 2,
+        "partialTP": false,
+        "partialTPPct": 0.5,
+        "trailingStop": false,
+        "maxStopPct": 0,
+        "atrStopMult": 0,
+        "dailyTrailPct": 0,
+        "breakevenPct": 0.5,
+        "staleDays": 0,
+        "entryGatePct": 0,
+        "regimeFilters": {
+          "risk_on": "all",
+          "early_risk_off": "breakout_only",
+          "risk_off": "breakout_only",
+          "neutral": "mom_bo",
+          "recovery": "mom_bo"
+        }
+      },
+      "balanced": {
+        "label": "Balanced",
+        "color": "#059669",
+        "goal": "Risk-Adjusted Growth",
+        "riskProfile": "Medium",
+        "tagline": "Best risk/reward. Momentum-only filter, aggressive rotation, H2 horizon. Sweep RISK-ON: +10.35%, DD -0.01%, WR 71.4%. Near-zero drawdown.",
+        "portfolioSize": 3,
+        "topN": 3,
+        "minScore": 85,
+        "filterName": "momentum_only",
+        "rotation": "aggressive",
+        "horizon": 2,
+        "partialTP": false,
+        "partialTPPct": 0.5,
+        "trailingStop": false,
+        "maxStopPct": 0,
+        "atrStopMult": 0,
+        "dailyTrailPct": 0,
+        "breakevenPct": 0,
+        "staleDays": 0,
+        "entryGatePct": 0,
+        "regimeFilters": {
+          "risk_on": "momentum_only",
+          "early_risk_off": "breakout_only",
+          "risk_off": "breakout_only",
+          "neutral": "mom_bo",
+          "recovery": "momentum_only"
+        }
+      },
+      "secured": {
+        "label": "Secured",
+        "color": "#2563eb",
+        "goal": "Capital Preservation",
+        "riskProfile": "Low",
+        "tagline": "Capital preservation with RISK-ON tilt. Momentum-only, 2-slot P2, H2 horizon, BE lock at +1%. Sweep: +15.31%, DD -0.94%, WR 76.9%.",
+        "portfolioSize": 2,
+        "topN": 2,
+        "minScore": 85,
+        "filterName": "momentum_only",
+        "rotation": "none",
+        "horizon": 2,
+        "partialTP": false,
+        "partialTPPct": 0.5,
+        "trailingStop": false,
+        "maxStopPct": 0,
+        "atrStopMult": 0,
+        "dailyTrailPct": 0,
+        "breakevenPct": 1,
+        "staleDays": 0,
+        "entryGatePct": 0,
+        "regimeFilters": {
+          "risk_on": "momentum_only",
+          "early_risk_off": "breakout_only",
+          "risk_off": "breakout_only",
+          "neutral": "breakout_only",
+          "recovery": "breakout_only"
+        }
+      },
+      "fortress": {
+        "label": "Fortress",
+        "color": "#6d28d9",
+        "goal": "Maximum Capital Preservation",
+        "riskProfile": "Ultra-Low",
+        "tagline": "Capital fortress. Half-sized mom_bo positions, P4 diversification, H8 horizon, BE+trail. Sweep RISK-ON: +8.07%, DD 0%, WR 76.9%.",
+        "portfolioSize": 4,
+        "topN": 4,
+        "minScore": 85,
+        "filterName": "mom_bo",
+        "rotation": "none",
+        "horizon": 8,
+        "partialTP": true,
+        "partialTPPct": 0.5,
+        "trailingStop": false,
+        "maxStopPct": 0,
+        "atrStopMult": 0,
+        "dailyTrailPct": 2,
+        "breakevenPct": 1,
+        "staleDays": 0,
+        "positionSizePct": 0.5,
+        "entryGatePct": 0,
+        "regimeFilters": {
+          "risk_on": "mom_bo",
+          "early_risk_off": "breakout_only",
+          "risk_off": "breakout_only",
+          "neutral": "breakout_only",
+          "recovery": "breakout_only"
+        }
+      }
+    },
+    "_archivedAt": "2026-04-25T17:02:32.386Z"
+  }
 }
