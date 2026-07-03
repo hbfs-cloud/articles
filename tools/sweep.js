@@ -764,8 +764,17 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
     }
   }
 
-  // maxStopPct ceiling AFTER ATR widening (was before → ATR override bypassed cap)
-  const effectiveMaxStop = maxStopPct > 0 ? maxStopPct : 100;
+  // maxStopPct ceiling AFTER ATR widening (was before → ATR override bypassed cap).
+  // Regime-dependent max-loss (OPT-IN — parité Go dynamic_max_loss): when config.regimeParams.maxLoss
+  // is set, the ceiling varies by the setup's regime (e.g. highvol risk_on 35% → neutral 30% →
+  // risk_off 15%). Values in PERCENT (Go 0.35 → 35). Modes without regimeParams keep the static
+  // maxStopPct → byte-identical.
+  let _maxStopPct = maxStopPct;
+  if (config.regimeParams && config.regimeParams.maxLoss && setup && setup.regime) {
+    const _rl = config.regimeParams.maxLoss[normalizeRegime(setup.regime)];
+    if (_rl != null) _maxStopPct = _rl;
+  }
+  const effectiveMaxStop = _maxStopPct > 0 ? _maxStopPct : 100;
   if (effectiveMaxStop < 100) {
     const maxRisk = entryPrice * (effectiveMaxStop / 100);
     if (riskPerUnit > maxRisk) riskPerUnit = maxRisk;
