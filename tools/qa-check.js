@@ -720,6 +720,10 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
   let pit = { modes: {} };
   try { pit = readJSON('data/pit-state.json'); } catch (_) { }
   const pitModes = pit.modes || {};
+  // Forward continuity layer (sealed anchor + post-anchor delta) — pit-forward.js.
+  let pitFwd = { modes: {} };
+  try { pitFwd = readJSON('data/pit-forward.json'); } catch (_) { }
+  const pitFwdModes = pitFwd.modes || {};
   const TOL = 1.0; // hero vs frozen: allow live-MtM bridge drift (<1pt); a source-flip is tens of pts
   const NON_PUBLIC = new Set(['draft', 'stopped']);
   const issues = [];
@@ -755,7 +759,24 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
     const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
     const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
 
-    if (frozenMeaningful) {
+    // Forward continuity layer: when healthy AND carrying post-anchor points, IT is the hero
+    // (sealed history + delta of trades closed since the anchor — one current continuous number).
+    const fe = pitFwdModes[id];
+    const fwdPrimary = !!(fe && fe.healthy && (fe.newPoints || 0) > 0);
+
+    if (fwdPrimary) {
+      // Hero must equal the forward return (continuous, not the sealed-only endpoint).
+      if (Math.abs(heroRet - fe.ret) > TOL) {
+        issues.push(`${id}: hero ${heroRet}% ≠ forward ${fe.ret}% (Δ${(heroRet - fe.ret).toFixed(2)}) — couche forward saine attendue au hero`);
+      }
+      // NEW blocking FORWARD-SEAM: the forward curve must still pin the sealed anchor byte-for-byte.
+      const sealedEc = (frozen && frozen.equityCurve) || [];
+      const sealedLast = sealedEc.length ? sealedEc[sealedEc.length - 1].value : null;
+      const seamVal = (fe.ec && fe.sealedLen) ? (fe.ec[fe.sealedLen - 1] || {}).value : null;
+      if (sealedLast === null || seamVal === null || seamVal !== sealedLast) {
+        issues.push(`${id}: FORWARD-SEAM rompu — forward.ec[${(fe.sealedLen || 0) - 1}]=${seamVal} ≠ scellé ${sealedLast} (tol 0) — le préfixe scellé doit rester immuable`);
+      }
+    } else if (frozenMeaningful) {
       // THE guardrail: a sealed track record IS the headline, verbatim — never displaced.
       if (Math.abs(heroRet - frozenRet) > TOL) {
         issues.push(`${id}: hero ${heroRet}% ≠ sweep scellé ${frozenRet}% (Δ${(heroRet - frozenRet).toFixed(2)}) — un track record scellé ne doit JAMAIS être remplacé`);

@@ -1087,6 +1087,23 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
   };
 }
 
+// ─── Per-trade portfolio weight from config history ──────────────────────────
+// Module-level (exported) so forward/replay tooling reuses the EXACT weighting
+// rule instead of re-deriving it (pit-forward.js). Behaviour identical to the
+// former nested helper: resolve the trade's stamped configVersion in
+// modes-config-history.json → (1/portfolioSize)*positionSizePct for that mode.
+// Falls back to `defaultWeight` when the version/mode is absent. Callers that must
+// FAIL on an unknown version (config-blind guard) pass defaultWeight=null and treat
+// a null return as "unresolved".
+function getWeight(trade, modeId, cfgVersions, defaultWeight) {
+  const ver = trade.configVersion;
+  if (ver && cfgVersions[ver] && cfgVersions[ver][modeId]) {
+    const c = cfgVersions[ver][modeId];
+    return (1 / (c.portfolioSize || 1)) * (c.positionSizePct || 1);
+  }
+  return defaultWeight;
+}
+
 // ─── Stats from a flat closed-trade list (append-only mode) ──────────────────
 // Computes returnTotal, maxDD, winRate, profitFactor, equityCurve from a
 // pre-existing list of trades (resolved + pending/open).
@@ -1110,15 +1127,6 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
         cfgVersions[v.id] = v.config;
       }
     } catch(e) {}
-  }
-
-  function getWeight(trade, modeId) {
-    const ver = trade.configVersion;
-    if (ver && cfgVersions[ver] && cfgVersions[ver][modeId]) {
-      const c = cfgVersions[ver][modeId];
-      return (1 / (c.portfolioSize || 1)) * (c.positionSizePct || 1);
-    }
-    return defaultWeight;
   }
 
   const RESOLVED_STATUSES = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
@@ -1184,7 +1192,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     // Fast-forward realized PnL and resolvedIdx to match the frozen point
     for (let i = 0; i < sortedResolved.length; i++) {
       if (sortedResolved[i].exitDate <= appendAfter) {
-        realizedPnl += (sortedResolved[i].pnlPct || 0) * getWeight(sortedResolved[i], modeId || '');
+        realizedPnl += (sortedResolved[i].pnlPct || 0) * getWeight(sortedResolved[i], modeId || '', cfgVersions, defaultWeight);
         resolvedIdx = i + 1;
       }
     }
@@ -1203,7 +1211,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     if (appendAfter && day <= appendAfter) continue;
     // Accumulate realized from trades closing on or before this day
     while (resolvedIdx < sortedResolved.length && sortedResolved[resolvedIdx].exitDate <= day) {
-      realizedPnl += (sortedResolved[resolvedIdx].pnlPct || 0) * getWeight(sortedResolved[resolvedIdx], modeId || '');
+      realizedPnl += (sortedResolved[resolvedIdx].pnlPct || 0) * getWeight(sortedResolved[resolvedIdx], modeId || '', cfgVersions, defaultWeight);
       resolvedIdx++;
     }
 
@@ -1219,7 +1227,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
       const t = sortedResolved[i];
       const entryDay = t.entryDate || t.scanDate;
       if (entryDay && entryDay <= day && t.actualEntry > 0) {
-        const w = getWeight(t, modeId || '');
+        const w = getWeight(t, modeId || '', cfgVersions, defaultWeight);
         if (resolvedExposure + w > maxExposure + 1e-9) continue;
         const close = getClose(t.ticker, day);
         if (close) {
@@ -1232,7 +1240,7 @@ function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, mo
     // Pending trades (still open) — cap total unrealized exposure at 1.0 (100% capital)
     let pendingExposure = 0;
     for (const t of pendingTrades) {
-      const w = getWeight(t, modeId || '');
+      const w = getWeight(t, modeId || '', cfgVersions, defaultWeight);
       if (pendingExposure + w > 1.0 + 1e-9) continue;
       const entryDay = t.entryDate || t.scanDate;
       if (entryDay && entryDay <= day && t.actualEntry > 0) {
@@ -3056,6 +3064,7 @@ async function main() {
 
 module.exports = {
   parseScan, simulateTrade, simulatePortfolio, computeStatsFromTrades,
+  getWeight,
   fetchOHLCV, priceCache, getSector, normalizeRegime,
   STRATEGY_FILTERS_MAP,
   vixKillTriggered, regimeSizeMultiplier, maxCorrToOpen, betaToBTC,

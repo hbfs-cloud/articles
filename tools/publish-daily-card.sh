@@ -133,6 +133,16 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/replay-trades.js 2>&1 | tail -15
   echo "   Replay done."
 
+  # ─── Step 4c: Forward continuity layer (sealed anchor + post-anchor delta) ──
+  # Runs AFTER sweep+replay so backtest-trades.json is final: pit-forward.js re-reads
+  # each frozen_<mode> anchor and appends ONLY the delta of trades closed/opened since,
+  # into data/pit-forward.json (READ-ONLY on results/trades; sealed prefix byte-identical).
+  # gen-status-page prefers this healthy forward hero+curve, else falls back to sealed.
+  # Non-blocking (like the scanners): a failure just leaves the sealed hero in place.
+  echo ""
+  echo "🧭 Step 4c: Forward continuity (pit-forward)..."
+  node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
+
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
   echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."

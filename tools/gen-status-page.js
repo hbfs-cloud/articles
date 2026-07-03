@@ -310,6 +310,50 @@ function pitViewFor(pm) {
   };
 }
 
+// ── Forward view from a pit-forward.json mode entry (pit-forward.js output) ──
+// The FORWARD-ONLY continuity layer: the immutable sealed curve + a forward delta from
+// trades closed/opened since the anchor. It is the PRIMARY hero+curve ONLY when it is
+// healthy AND actually carries post-anchor points; otherwise the two existing branches
+// (sealed / pit-live) remain the safety net. Shape mirrors pitViewFor so panel()/modeCharts
+// can consume it interchangeably (ret/dd/wr/pf/trades/avgHold/unrealized + {d,v} curve).
+function forwardViewFor(fe) {
+  if (!fe) return null;
+  const healthy = !!fe.healthy;
+  const hasPostAnchor = healthy && (fe.newPoints || 0) > 0;
+  const ecObjs = (fe.ec || []).filter(p => p && p.date);
+  // Chart series {d,v} — dedup by MM/DD, keep end-of-day value (same as sealed/pit paths)
+  const _dv = new Map();
+  for (const p of ecObjs) _dv.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+  const ecChart = { d: [..._dv.keys()], v: [..._dv.values()] };
+  const v = ecChart.v;
+  // R² / CAGR / Sharpe over the full continuous curve
+  let r2 = 0, cagr = null, sharpe = null;
+  if (v.length >= 3) {
+    const n = v.length, xMean = (n - 1) / 2, yMean = v.reduce((a, b) => a + b, 0) / n;
+    let ssXY = 0, ssXX = 0, ssTot = 0, ssRes = 0;
+    for (let i = 0; i < n; i++) { ssXY += (i - xMean) * (v[i] - yMean); ssXX += (i - xMean) ** 2; ssTot += (v[i] - yMean) ** 2; }
+    const slope = ssXX ? ssXY / ssXX : 0, intercept = yMean - slope * xMean;
+    for (let i = 0; i < n; i++) ssRes += (v[i] - (intercept + slope * i)) ** 2;
+    r2 = ssTot > 0 ? +(1 - ssRes / ssTot).toFixed(3) : 0;
+    const firstISO = ecObjs[0].date, lastISO = ecObjs[ecObjs.length - 1].date;
+    const years = (new Date(lastISO) - new Date(firstISO)) / (365.25 * 86400000);
+    cagr = (years > 0.01 && v[0] > 0) ? +((Math.pow(v[v.length - 1] / v[0], 1 / years) - 1) * 100).toFixed(1) : null;
+    const dr = [];
+    for (let i = 1; i < v.length; i++) if (v[i - 1] > 0) dr.push((v[i] - v[i - 1]) / v[i - 1]);
+    if (dr.length >= 5) {
+      const mu = dr.reduce((a, b) => a + b, 0) / dr.length;
+      const sd = Math.sqrt(dr.reduce((s, r) => s + (r - mu) ** 2, 0) / dr.length);
+      sharpe = sd > 0 ? +(mu / sd * Math.sqrt(252)).toFixed(2) : null;
+    }
+  }
+  return {
+    healthy, hasPostAnchor, anchorDate: fe.anchorDate, asOf: fe.asOf,
+    ret: fe.ret, dd: fe.dd, wr: fe.wr, pf: fe.pf, trades: fe.trades, avgHold: fe.avgHold,
+    unrealized: fe.unrealized || 0, realized: +((fe.ret || 0) - (fe.unrealized || 0)).toFixed(2),
+    r2, cagr, sharpe, ec: ecChart,
+  };
+}
+
 async function main() {
   let config;
   try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
@@ -329,6 +373,10 @@ async function main() {
   let pitState = { modes: {} };
   try { pitState = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'pit-state.json'), 'utf8')) || { modes: {} }; } catch (_) { }
   const pitModes = pitState.modes || {};
+  // Forward-only continuity layer (sealed anchor + post-anchor delta) — pit-forward.js.
+  let pitForward = { modes: {} };
+  try { pitForward = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'pit-forward.json'), 'utf8')) || { modes: {} }; } catch (_) { }
+  const pitForwardModes = pitForward.modes || {};
 
   // Load previous snapshot once — used by panel() to surface "rotation just executed"
   // (yesterday had a ROTATE order whose ticker is now today's position).
@@ -699,6 +747,9 @@ async function main() {
     // "Sim backtest" secondary. m.pit.anchorOnly / m.pit.since drive the "live book starts"
     // note for freshly-seeded specialists that have no live trades yet.
     m.pit = pitViewFor(pitModes[id]);
+    // Forward continuity view (sealed + post-anchor delta). Primary ONLY when healthy with
+    // post-anchor points — panel()/modeCharts fall back to sealed/pit-live otherwise.
+    m.forward = forwardViewFor(pitForwardModes[id]);
 
     modes[id] = { cfg, trades, m, ec };
   }
@@ -891,7 +942,15 @@ async function main() {
     // aplus/highvol/etf/etf_eu/momentum/casablanca/trendline). frozenMeaningful = real sealed
     // history exists. Enforced downstream by qa-check ("sealed-primary invariant").
     const frozenMeaningful = (m.trades || 0) >= 10 || Math.abs(m.ret || 0) >= 5;
-    const P = (!frozenMeaningful && m.pit && m.pit.hasData) ? m.pit : null;
+    // ── 3 VOIES pour le hero (ADDITIF — les 2 branches existantes = filet de sécurité) ──
+    //   1. forward SAIN avec points post-ancre → H = forward (hero=forward.ret, courbe continue
+    //      scellé-immuable + delta des trades clôturés depuis l'ancre). UN seul chiffre courant.
+    //   2. sinon si frozenMeaningful → H = m (track record scellé, INCHANGÉ — jamais déplacé).
+    //   3. sinon → H = m.pit (pit-live pour les specialists frais, INCHANGÉ).
+    // F est aliasé sur P pour que les libellés/CI conditionnés par `!P` (bootstrap CI, small-n
+    // du seul échantillon scellé) ne s'affichent pas sur le chiffre forward continu.
+    const F = (m.forward && m.forward.healthy && m.forward.hasPostAnchor) ? m.forward : null;
+    const P = F || ((!frozenMeaningful && m.pit && m.pit.hasData) ? m.pit : null);
     const H = P || m;
     // "live book starts" note: only for a freshly-seeded mode (anchor-only pit entry).
     // Modes with a long flat pit curve (e.g. fortress) stay sim-primary with no note.
@@ -2340,9 +2399,13 @@ document.addEventListener('DOMContentLoaded',function(){
     // sweep is the curve whenever the mode has a real sealed track record; pit-live is the curve
     // only for fresh modes with no meaningful sweep yet. No dotted secondary overlay (sD/sV
     // dropped 2026-07-03 — "one curve = the portfolio, as before").
+    // Same 3 VOIES as panel()'s hero: forward (sealed+delta continuity) → sealed → pit-live.
+    // The forward curve is primary ONLY when healthy with post-anchor points; else the two
+    // existing branches are untouched (safety net when pit-forward is absent/unhealthy).
     const frozenMeaningful = (m.m.trades || 0) >= 10 || Math.abs(m.m.ret || 0) >= 5;
-    const usePit = !!(!frozenMeaningful && m.m.pit && m.m.pit.hasData);
-    const primEc = usePit ? m.m.pit.ec : m.ec;
+    const useFwd = !!(m.m.forward && m.m.forward.healthy && m.m.forward.hasPostAnchor);
+    const usePit = !!(!useFwd && !frozenMeaningful && m.m.pit && m.m.pit.hasData);
+    const primEc = useFwd ? m.m.forward.ec : (usePit ? m.m.pit.ec : m.ec);
     const _pm = promotionMarker(m.cfg, primEc);
     return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _pm ? _pm.lbl : null, sD: null, sV: null, pit: usePit }];
   })))};
