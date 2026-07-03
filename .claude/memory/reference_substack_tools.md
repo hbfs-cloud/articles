@@ -14,4 +14,6 @@ Le MCP Substack permet le cycle complet **sans churn d'URL** :
 - **`create_draft` → `publish(draft_id, send_email=false)`** : draft privé puis publication web-only par défaut.
 - `delete_article` / `get_article` / `list_articles` = **registre de documents contrôlés** (via `doc_key`), PAS les posts Substack.
 
-**Workflow routine** : générer les data (board/charts) → `upload_image` (CDN) → `create_draft` + `publish`. Pour **corriger/mettre à jour** un post existant (ex : remplir les outcomes du board la semaine suivante) → **`update_draft` en place, jamais un nouveau post**. Cf [[image-hosting-raw-github]], format data-forward [[editorial-density-no-recycling]].
+**Sections** (nav top, via `create_section`/`delete_section` ; classer un post = `section_id` dans create/update_draft, puis `publish` pour synchro live) — IDs actuels : **Boards 417757** (daily boards), **Weekly 417758**, **Analyses 417759**. Pages publiques `/s/<slug>`. Filer chaque post à la publication : daily/board→417757, weekly→417758, analyses→417759.
+
+**Workflow routine** : générer les data (board/charts) → `upload_image` (CDN) → `create_draft` (+ `section_id`) + `publish`. Pour **corriger/mettre à jour** un post existant (ex : remplir les outcomes du board la semaine suivante) → **`update_draft` en place, jamais un nouveau post** (puis re-`publish` pour pousser live — sinon la modif reste dans le draft). Cf [[image-hosting-raw-github]], format data-forward [[editorial-density-no-recycling]].
