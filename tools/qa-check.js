@@ -644,14 +644,19 @@ check('backtest-results.json: frozen_* ont tous les champs obligatoires', () => 
   if (issues.length) return issues.join(' | ');
 });
 
-// ─── Check 27b: hero stats consistency — Live book (pit) vs Sim backtest (frozen) ──
-// The dashboard hero is now PRIMARY = live book (pit-state) for modes with meaningful live
-// data, PRIMARY = sim (frozen_*) otherwise. This check enforces the new invariant:
-//   • pit-primary mode  → hero Total Return ≈ pit-state ret  AND the "Sim backtest" sub-block ≈ frozen returnTotal
-//   • sim-primary mode  → hero Total Return ≈ frozen returnTotal (unchanged legacy behavior)
-// Adapted from the old frozen↔hero coherence idea (which would now FALSE-FAIL since the hero
-// moved to pit for live-book modes).
-check('scanner/status: hero ↔ pit (live book) & sim sub-bloc ↔ frozen', () => {
+// ─── Check 27b: SEALED-PRIMARY display invariant (anti-regression guardrail) ──────
+// GUARDRAIL for the 2026-07-02 incident. A routine flipped the status page so a thin live
+// book (pit-state) replaced each mode's sealed, SHA-256-chained sweep track record as the
+// headline (turbo 111.76% → displayed 5.51%). The hash chain protects the DATA and held —
+// this check protects the DISPLAY, the layer the chain doesn't cover. Enforced before every
+// publish (exit 1 = blocking):
+//   • Mode WITH a sealed track record (>=10 sealed trades OR |ret|>=5%) → the hero Total
+//     Return MUST equal the frozen (sealed sweep) returnTotal. A live book can NEVER
+//     displace a sealed track record. This is the invariant that broke.
+//   • Fresh mode (no meaningful sweep yet) → hero = its live-book ret (its only portfolio).
+//   • The page must carry NO "LIVE BOOK" / "Sim backtest" / "Strategy" dual-curve labels
+//     (one curve = the portfolio). Mirrors gen-status-page.js frozenMeaningful gate.
+check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/strategy labels)', () => {
   const html = readFile('scanner/status/index.html');
   if (!html) return 'scanner/status/index.html absent';
   const br = readJSON('data/backtest-results.json');
@@ -660,12 +665,16 @@ check('scanner/status: hero ↔ pit (live book) & sim sub-bloc ↔ frozen', () =
   let pit = { modes: {} };
   try { pit = readJSON('data/pit-state.json'); } catch (_) { }
   const pitModes = pit.modes || {};
-  const TOL = 0.15; // rounding across pit summary math vs frozen — allow small drift
+  const TOL = 1.0; // hero vs frozen: allow live-MtM bridge drift (<1pt); a source-flip is tens of pts
   const NON_PUBLIC = new Set(['draft', 'stopped']);
   const issues = [];
 
-  // Live-book "primary" iff the curve actually moved OR there is >=1 closed trade
-  // (mirror gen-status-page pitViewFor: a flat-at-100 curve with 0 trades is NOT primary).
+  // No dual-curve / sim / strategy labels anywhere user-visible — "one curve = portfolio".
+  if (/class="pill"[^>]*>\s*<i[^>]*fa-circle[^>]*><\/i>\s*LIVE BOOK/.test(html)) issues.push('label "LIVE BOOK" présent (doit être retiré)');
+  if (/fa-flask[^>]*><\/i>\s*Sim backtest/.test(html) || /name:'Sim backtest'/.test(html)) issues.push('label "Sim backtest" présent (courbe doit être unique)');
+  if (/name:'Strategy'/.test(html)) issues.push(`courbe nommée 'Strategy' (doit être 'Portfolio')`);
+
+  // Mirror gen-status-page pitViewFor: a flat-at-100 curve with 0 closed trades is NOT primary.
   function pitPrimary(pm) {
     if (!pm) return null;
     const ec = (pm.equityCurve || []).filter(p => p && p.date);
@@ -683,30 +692,25 @@ check('scanner/status: hero ↔ pit (live book) & sim sub-bloc ↔ frozen', () =
     if (start === -1) continue; // panel presence covered by another check
     const next = html.indexOf('id="p-', start + anchor.length);
     const panel = html.slice(start, next === -1 ? html.length : next);
-    // Hero Total Return = the ps-v value immediately preceding the "Total Return" label
     const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">Total Return/);
     if (!heroM) { issues.push(`${id}: hero Total Return introuvable`); continue; }
     const heroRet = parseFloat(heroM[1]);
     const frozen = br[`frozen_${id}`];
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
-    const pitRet = pitPrimary(pitModes[id]);
-    const isLiveBook = /LIVE BOOK/.test(panel.slice(0, panel.indexOf('Total Return')));
+    const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
+    const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
 
-    if (pitRet !== null) {
-      // Expect pit-primary hero
-      if (!isLiveBook) issues.push(`${id}: pit primary mais badge LIVE BOOK absent`);
-      if (Math.abs(heroRet - pitRet) > TOL) issues.push(`${id}: hero ${heroRet}% ≠ pit ${pitRet}% (Δ${(heroRet - pitRet).toFixed(2)})`);
-      // Sim sub-block must echo frozen returnTotal
-      if (frozenRet !== null) {
-        const simM = panel.match(/Sim backtest<\/span>\s*<span[^>]*>([+\-]?[0-9.]+)%/);
-        if (!simM) issues.push(`${id}: sous-bloc "Sim backtest" absent`);
-        else if (Math.abs(parseFloat(simM[1]) - frozenRet) > TOL) issues.push(`${id}: sim sub-bloc ${simM[1]}% ≠ frozen ${frozenRet}%`);
+    if (frozenMeaningful) {
+      // THE guardrail: a sealed track record IS the headline, verbatim — never displaced.
+      if (Math.abs(heroRet - frozenRet) > TOL) {
+        issues.push(`${id}: hero ${heroRet}% ≠ sweep scellé ${frozenRet}% (Δ${(heroRet - frozenRet).toFixed(2)}) — un track record scellé ne doit JAMAIS être remplacé`);
       }
     } else {
-      // Sim-primary hero → must match frozen returnTotal (when frozen exists)
-      if (isLiveBook) issues.push(`${id}: badge LIVE BOOK mais pas de données pit primaires`);
-      if (frozenRet !== null && Math.abs(heroRet - frozenRet) > TOL) {
-        issues.push(`${id}: hero ${heroRet}% ≠ frozen ${frozenRet}% (Δ${(heroRet - frozenRet).toFixed(2)})`);
+      // Fresh mode: hero = its live book (its only portfolio), else frozen when pit not primary.
+      const pitRet = pitPrimary(pitModes[id]);
+      const expected = pitRet !== null ? pitRet : frozenRet;
+      if (expected !== null && Math.abs(heroRet - expected) > TOL) {
+        issues.push(`${id}: hero ${heroRet}% ≠ portfolio attendu ${expected}% (Δ${(heroRet - expected).toFixed(2)})`);
       }
     }
   }

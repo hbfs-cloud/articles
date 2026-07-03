@@ -877,7 +877,14 @@ async function main() {
     // P (when non-null) = the live-book primary stats (from pit-state). H = the stats source
     // for the hero (P when live data exists, else the frozen sim m). When P is set the hero is
     // labelled "Live book" and a compact "Sim backtest" sub-block echoes the frozen m values.
-    const P = (m.pit && m.pit.hasData) ? m.pit : null;
+    // A sealed track record (frozen sweep, SHA-256 hash-chained) is ALWAYS the primary hero —
+    // a thin live book must NEVER displace it. This is the invariant that broke on 2026-07-02
+    // when a routine made pit-live primary uniformly (turbo 111.76% → displayed 5.51%). Pit-live
+    // is primary ONLY for modes with no meaningful sealed sweep yet (fresh specialists:
+    // aplus/highvol/etf/etf_eu/momentum/casablanca/trendline). frozenMeaningful = real sealed
+    // history exists. Enforced downstream by qa-check ("sealed-primary invariant").
+    const frozenMeaningful = (m.trades || 0) >= 10 || Math.abs(m.ret || 0) >= 5;
+    const P = (!frozenMeaningful && m.pit && m.pit.hasData) ? m.pit : null;
     const H = P || m;
     // "live book starts" note: only for a freshly-seeded mode (anchor-only pit entry).
     // Modes with a long flat pit curve (e.g. fortress) stay sim-primary with no note.
@@ -1078,12 +1085,11 @@ ${renderStatusBanner(cfg)}
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
       <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
-      ${P ? `<span class="pill" style="background:var(--pos-wk);color:var(--pos);border:1px solid var(--pos);font-size:.58rem;font-weight:700;padding:.05rem .4rem;letter-spacing:.03em" title="Courbe et stats primaires = livre live pit-state (tracker fidèle quotidien). La sim sweep est en pointillé « Sim backtest »."><i class="fas fa-circle" style="font-size:.4rem;margin-right:.25rem"></i>LIVE BOOK</span>` : (_pitStartLbl ? `<span class="pill am" style="font-size:.58rem;padding:.05rem .4rem" title="Le livre live démarre le ${_pitStartLbl} (100.00) — premiers trades au prochain scan. Courbe affichée = sim backtest.">live book démarre le ${_pitStartLbl}</span>` : '')}
     </div>
     <div class="perf-chart" id="${chartId}"></div>
   </div>
   <div class="perf-stats">
-    <div class="ps" title="${P ? 'Live book: cumulative percent gain since the live tracker started, mark-to-market included.' : 'Cumulative percent gain since strategy inception (2026-02-26). Includes mark-to-market on open positions.'}">
+    <div class="ps" title="Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.">
       <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">Total Return${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
@@ -1110,10 +1116,6 @@ ${renderStatusBanner(cfg)}
     <div class="ps" title="Annualized Sharpe Ratio: risk-adjusted return (daily returns × √252). >1 = good, >2 = excellent, >3 = elite.">
       <span class="ps-v">${H.sharpe != null ? H.sharpe : '—'}</span><span class="ps-l">Sharpe</span>
     </div>
-    ${P ? `<div class="sim-substats" style="grid-column:1/-1;margin-top:.45rem;padding-top:.5rem;border-top:1px dashed var(--border);font-size:.63rem;color:var(--muted);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center" title="Sim backtest (sweep frozen_${id}) — référence secondaire, affichée en pointillé sur la courbe.">
-      <span style="font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-2)"><i class="fas fa-flask" style="margin-right:.25rem;opacity:.7"></i>Sim backtest</span>
-      <span class="${m.ret >= 0 ? 'pos' : 'neg'}">${m.ret > 0 ? '+' : ''}${m.ret}%</span><span style="opacity:.4">·</span><span>DD ${m.dd}%</span><span style="opacity:.4">·</span><span>WR ${m.wr}%</span><span style="opacity:.4">·</span><span>PF ${m.pf}x</span><span style="opacity:.4">·</span><span>${m.trades} trades</span>
-    </div>` : ''}
   </div>
 </div>
 
@@ -2139,7 +2141,7 @@ document.addEventListener('DOMContentLoaded',function(){
         data:[{xAxis:sinceLbl}]};
     }
     var series=[
-      {name:'Strategy',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
+      {name:'Portfolio',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
         lineStyle:{color:color,width:2.8,shadowColor:color+'30',shadowBlur:8,shadowOffsetY:2},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])},
         markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined,
@@ -2148,21 +2150,15 @@ document.addEventListener('DOMContentLoaded',function(){
         lineStyle:{color:'#ef4444',width:2,opacity:1},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,.18)'},{offset:1,color:'rgba(239,68,68,.02)'}])}}
     ];
-    var legendItems=['Strategy','Drawdown'];
+    var legendItems=['Portfolio','Drawdown'];
     if(spyVals){
       series.splice(1,0,{name:'SPY',data:spyVals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:4,
         lineStyle:{color:'#94a3b8',width:1.6,type:[6,4]},connectNulls:true});
       legendItems.splice(1,0,'SPY');
     }
-    // Sim backtest — dotted secondary overlay (frozen sweep). Aligned onto the primary
-    // (live-book) date axis; sim points outside the live date range are dropped.
-    if(simVals && simVals.length && simDates && simDates.length){
-      var _sm={};for(var _k=0;_k<simDates.length;_k++){_sm[simDates[_k]]=simVals[_k];}
-      var simAligned=dates.map(function(dd){return _sm[dd]!=null?_sm[dd]:null;});
-      series.push({name:'Sim backtest',data:simAligned,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:3,connectNulls:true,
-        lineStyle:{color:color,width:1.5,type:[3,3],opacity:.5}});
-      legendItems.push('Sim backtest');
-    }
+    // Single portfolio curve — no "Sim backtest"/"Strategy" secondary overlay (removed
+    // 2026-07-03 per product decision: one curve = the portfolio, as before). simVals/simDates
+    // are intentionally ignored here; the primary series IS the portfolio equity curve.
     c.setOption({
       tooltip:{trigger:'axis',axisPointer:{type:'line',lineStyle:{color:'#cbd5e1',type:'dashed',width:1}},
         backgroundColor:'rgba(255,255,255,.97)',borderColor:'#e2e8f0',borderWidth:1,padding:[10,14],
@@ -2333,13 +2329,15 @@ document.addEventListener('DOMContentLoaded',function(){
     setFavs(sel);applyFavs(sel);closeModePicker();
   };
   var modeCharts=${JSON.stringify(Object.fromEntries(Object.entries(modes).map(([id, m]) => {
-    // Live book primary when it has meaningful pit data; sim (frozen) then becomes the
-    // dotted secondary series. Otherwise sim stays primary (sD/sV omitted).
-    const usePit = !!(m.m.pit && m.m.pit.hasData);
+    // ONE portfolio curve per mode — mirror panel()'s sealed-primary invariant. The sealed
+    // sweep is the curve whenever the mode has a real sealed track record; pit-live is the curve
+    // only for fresh modes with no meaningful sweep yet. No dotted secondary overlay (sD/sV
+    // dropped 2026-07-03 — "one curve = the portfolio, as before").
+    const frozenMeaningful = (m.m.trades || 0) >= 10 || Math.abs(m.m.ret || 0) >= 5;
+    const usePit = !!(!frozenMeaningful && m.m.pit && m.m.pit.hasData);
     const primEc = usePit ? m.m.pit.ec : m.ec;
-    const simEc = usePit ? m.ec : null;
     const _pm = promotionMarker(m.cfg, primEc);
-    return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _pm ? _pm.lbl : null, sD: simEc ? simEc.d : null, sV: simEc ? simEc.v : null, pit: usePit }];
+    return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _pm ? _pm.lbl : null, sD: null, sV: null, pit: usePit }];
   })))};
   var _regimeMap=${JSON.stringify(regimeMap)};
   var _spyData=${JSON.stringify(spyIndexed)};
@@ -2887,8 +2885,8 @@ document.addEventListener('DOMContentLoaded',function(){
       var _ps=panel.querySelector('.perf-hero .perf-stats');
       if(_ps){ _ps.innerHTML=_tmStatsCache[activeMode]; delete _tmStatsCache[activeMode]; }
     }
-    // Always redraw the live chart from modeCharts (primary = Live book when available,
-    // with the dotted Sim-backtest overlay) — independent of the legacy lp-grid path.
+    // Always redraw the chart from modeCharts (single portfolio equity curve) —
+    // independent of the legacy lp-grid path.
     var chartEl=document.getElementById('chart-'+activeMode);
     if(chartEl && window.echarts){
       var existing=window.echarts.getInstanceByDom(chartEl);
