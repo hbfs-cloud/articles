@@ -28,6 +28,13 @@
  *   node tools/qa-content.js --type analyse    # newest du type donné
  *   node tools/qa-content.js <path> --strict   # exit 1 si erreurs (gate CI/cron)
  *   node tools/qa-content.js <path> --json      # sortie JSON machine-lisible
+ *
+ * WAIVERS (dérogations éditoriales assumées) :
+ *   `.qa-content-waivers.json` à la racine du repo — liste de {path, reason, date, checks?}.
+ *   Un choix éditorial VOLONTAIRE (ex: weekly volontairement court) ne doit pas échouer en
+ *   CI de la même façon qu'une vraie régression indétectable — voir §applyWaivers plus bas.
+ *   `checks` (optionnel) : liste d'ids canoniques (table CHECK_ID_ALIASES) ou de sous-chaînes
+ *   littérales du libellé du check à déroger. Absent/vide = TOUS les ❌ du fichier deviennent ⚠️.
  */
 
 const fs = require('fs');
@@ -43,6 +50,60 @@ const positional = ARGV.filter((a, i) => !a.startsWith('--') && ARGV[i - 1] !== 
 
 // Seuils de taille par type (bytes) — sous ce seuil = tronqué / sections manquantes
 const SIZE_MIN = { analyse: 10 * 1024, daily: 30 * 1024, weekly: 100 * 1024 };
+
+// ─── Waivers (dérogations éditoriales) ────────────────────────────────────────
+// Fichier `.qa-content-waivers.json` à la racine : liste de
+//   { path, reason, date, checks?: [...] }
+// `path` = chemin relatif au repo tel qu'affiché par ce script (ex: "weekly/20260706/index.html").
+// `checks` optionnel : ids canoniques (voir CHECK_ID_ALIASES) ou sous-chaînes littérales du
+// libellé du check (insensible à la casse). Absent/vide = dérogation TOTALE du fichier.
+const WAIVERS_PATH = path.join(ROOT, '.qa-content-waivers.json');
+function loadWaivers() {
+  if (!fs.existsSync(WAIVERS_PATH)) return [];
+  let data;
+  try {
+    data = JSON.parse(fs.readFileSync(WAIVERS_PATH, 'utf8'));
+  } catch (e) {
+    console.error(`⚠️  .qa-content-waivers.json illisible/JSON invalide — ignoré (${e.message})`);
+    return [];
+  }
+  const list = Array.isArray(data) ? data : (Array.isArray(data.waivers) ? data.waivers : []);
+  return list.filter(w => w && typeof w.path === 'string');
+}
+const WAIVERS = loadWaivers();
+
+// Table de correspondance id canonique → sous-chaîne (insensible casse) du libellé du check.
+// Permet de référencer un check par un id stable même si le libellé exact évolue.
+const CHECK_ID_ALIASES = {
+  'min-size': 'taille suffisante',
+};
+function resolveWaiverChecks(list) {
+  return list.map(id => CHECK_ID_ALIASES[id] || id);
+}
+function findWaivers(rel) {
+  const norm = rel.replace(/\/index\.html$/, '');
+  return WAIVERS.filter(w => w.path === rel || w.path === norm);
+}
+// Applique les waivers à un résultat déjà validé : les erreurs matchées deviennent des
+// warnings, préfixées par la raison + date du waiver (log explicite, jamais silencieux).
+function applyWaivers(res, rel) {
+  const ws = findWaivers(rel);
+  if (!ws.length) return;
+  const kept = [];
+  for (const err of res.errors) {
+    const hit = ws.find(w => {
+      const wantAll = !Array.isArray(w.checks) || w.checks.length === 0;
+      if (wantAll) return true;
+      return resolveWaiverChecks(w.checks).some(n => err.toLowerCase().includes(String(n).toLowerCase()));
+    });
+    if (hit) {
+      res.warnings.push(`[WAIVER ${hit.date || '?'}] ${err} — dérogation assumée: ${hit.reason || 'raison non renseignée'}`);
+    } else {
+      kept.push(err);
+    }
+  }
+  res.errors = kept;
+}
 
 // ─── Résultats par fichier ───────────────────────────────────────────────────
 function newResult(file, type) {
@@ -494,6 +555,7 @@ function validate(file) {
     });
   }
 
+  applyWaivers(res, rel);
   res.rel = rel;
   return res;
 }

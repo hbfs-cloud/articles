@@ -350,6 +350,59 @@ warn('risk-snapshots.json: var95 non-null (MCP gateway live)', () => {
   if (allStub) return 'tous modes var95_5d=null — refresh-risk-metrics a écrit un stub (MCP_GATEWAY_URL non exporté?)';
 });
 
+// ─── Check 5c (Fix #4): trou de risque réel — position ouverte SANS var95_5d ──
+// Le check ci-dessus (5b) ne remonte qu'un ⚠️ enfoui, et seulement si TOUS les modes
+// sont stub — une dégradation partielle (certains modes avec position ouverte mais
+// var95_5d resté null/absent) passait inaperçue. Ici on BLOQUE (❌) uniquement pour
+// les modes qui ont réellement une position ouverte (positionCount>0) : c'est un vrai
+// trou de couverture risque. Un mode flat (positionCount=0) sans var95_5d n'a rien à
+// couvrir → pas de blocage (var95_5d absent/null y est normal/attendu).
+check('risk-snapshots.json: var95_5d présent pour tout mode avec position(s) ouverte(s)', () => {
+  const d = readJSON('data/risk-snapshots.json');
+  if (!d.modes) return 'champ modes absent';
+  const gaps = [];
+  for (const [modeId, m] of Object.entries(d.modes)) {
+    if (!m || typeof m.positionCount !== 'number' || m.positionCount <= 0) continue;
+    if (m.var95_5d === undefined || m.var95_5d === null) {
+      const tickers = (m.tickers || []).join(',') || '?';
+      gaps.push(`${modeId} (${m.positionCount} pos: ${tickers})`);
+    }
+  }
+  if (gaps.length) {
+    return `var95_5d manquant pour mode(s) AVEC position ouverte — trou de risque réel: ${gaps.join(', ')} `
+      + `— relancer tools/refresh-risk-metrics.js avec MCP_GATEWAY_URL exporté`;
+  }
+});
+
+// ─── Check 5d (Fix #4): régime dégradé (fallback / warnings) — visible, non bloquant ──
+// scanner/status/history/<dernier>.json → regimeProbability.model / warnings[]. Le modèle
+// attendu en régime nominal est 'context_conditional' ; 'fallback_rule_based' (ou modèle
+// absent) signale que le bar service bootstrappe / est indisponible — c'est TRANSITOIRE,
+// donc jamais bloquant, mais ne doit plus rester enfoui : affiché en ⚠️ explicite ici,
+// distinct du warning générique de fraîcheur (check 28).
+const EXPECTED_REGIME_MODEL = 'context_conditional';
+warn('scanner/status/history (dernier snapshot): regimeProbability.model non dégradé', () => {
+  const histDir = path.join(ROOT, 'scanner', 'status', 'history');
+  if (!fs.existsSync(histDir)) return 'scanner/status/history/ absent';
+  const files = fs.readdirSync(histDir).filter(f => /^\d{8}\.json$/.test(f)).sort().reverse();
+  if (!files.length) return 'aucun snapshot historique trouvé';
+  let snap;
+  try { snap = JSON.parse(fs.readFileSync(path.join(histDir, files[0]), 'utf8')); }
+  catch (e) { return `${files[0]} illisible: ${e.message}`; }
+  const rp = snap.regimeProbability;
+  if (!rp) return `${files[0]}: regimeProbability absent (bar service down ?)`;
+  const issues = [];
+  if (!rp.model || rp.model !== EXPECTED_REGIME_MODEL) {
+    issues.push(`model="${rp.model || 'absent'}" (attendu "${EXPECTED_REGIME_MODEL}")`);
+  }
+  if (Array.isArray(rp.warnings) && rp.warnings.length) {
+    issues.push(`warnings: ${rp.warnings.join(' / ')}`);
+  }
+  if (issues.length) {
+    return `${files[0]} — ${issues.join(' | ')} — dégradation MCP probablement transitoire (bar service bootstrapping ?), à surveiller si récurrent`;
+  }
+});
+
 // 6. index.html — structure basique
 check('index.html: tab-scanner existe', () => {
   const html = readFile('index.html');

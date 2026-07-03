@@ -586,6 +586,12 @@ async function main() {
         // Frozen EC is authoritative — no MtM extension (append-only: sweep stats are final)
 
         m.equityCurve = ec;
+
+        // Raw last date of the SEALED curve (before the flat-tail trim above) — the
+        // "stats as of" badge must reflect the true last point of the frozen equity
+        // curve, not the last date where the value happened to change.
+        const _rawDated = frozen.equityCurve.filter(p => p && p.date && p.date <= todayISO);
+        m.frozenRawLastISO = _rawDated.length ? _rawDated[_rawDated.length - 1].date : null;
       }
       // Out-of-sample degradation flag — surface overfitting risk to the UI.
       // Triggers if OOS PF < 1.5 OR (IS_WR - OOS_WR) > 20pp on a non-trivial OOS sample.
@@ -968,7 +974,7 @@ async function main() {
 
     // Frozen-stats staleness: if the frozen equity curve's last point is older than
     // the PREVIOUS trading session, the sweep hasn't refreshed — flag it in the header.
-    const _frozenLastISO = (m.equityCurve || []).filter(p => p.date).map(p => p.date).sort().slice(-1)[0] || null;
+    const _frozenLastISO = m.frozenRawLastISO || (m.equityCurve || []).filter(p => p.date).map(p => p.date).sort().slice(-1)[0] || null;
     const _prevSessionISO = (() => {
       const d = new Date(TODAY_ISO + 'T12:00:00Z');
       do { d.setUTCDate(d.getUTCDate() - 1); } while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
