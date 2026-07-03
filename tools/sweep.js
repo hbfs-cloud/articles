@@ -2877,44 +2877,21 @@ async function main() {
 
         let stats;
         if (existingFrozen) {
-          // COURBE = FONCTION DÉTERMINISTE DES TRADES SCELLÉS (forensics 2026-07-02).
-          // L'immutabilité vit dans les TRADES (hard guard ci-dessus + chaîne SHA
-          // trade-chain.json), PAS dans la courbe MtM dérivée. Geler le préfixe EC
-          // pendant que le moteur d'exits évolue a créé un phantom (+15.7 pts sur
-          // dynamic) : préfixe optimiste jamais réconcilié + queue honnête = cliff
-          // artificiel déversé sur une date sans trade (26→29/06). On recalcule donc
-          // la courbe INTÉGRALEMENT depuis la liste de trades immuable à chaque run —
-          // pas de priorEC. Toute divergence vs l'ancien frozen est loguée [RECONCILE].
-          const advanced = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id, cfg.calendar, { priorEC: [] });
-          const prefixOk = !!(advanced && advanced.equityCurve && advanced.equityCurve.length);
-          const tradesOk = advanced && (advanced.trades ?? 0) >= (existingFrozen.trades ?? 0);
-          if (advanced && Math.abs((advanced.returnTotal ?? 0) - (existingFrozen.returnTotal ?? 0)) > 0.5) {
-            console.log(`  🔎 [RECONCILE] ${id}: frozen ${existingFrozen.returnTotal}% → recomputed ${advanced.returnTotal}% (courbe réalignée sur les trades scellés)`);
-          }
-          if (prefixOk && tradesOk) {
-            stats = {
-              ...existingFrozen,
-              returnTotal: advanced.returnTotal, returnRealized: advanced.returnRealized,
-              returnUnrealized: advanced.returnUnrealized,
-              maxDD: advanced.maxDD, winRate: advanced.winRate,
-              profitFactor: advanced.profitFactor, trades: advanced.trades,
-              calmar: advanced.calmar, sharpe: advanced.sharpe, returnDDRatio: advanced.returnDDRatio,
-              equityCurve: advanced.equityCurve,
-              // in_sample / out_sample are period-defined at first computation — kept as-is.
-            };
-            const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'MtM advanced';
-            console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}% [APPEND-ONLY]`);
-          } else {
-            // Fallback: keep frozen untouched. Never rewrite history on a failed guard.
-            stats = existingFrozen;
-            if (advanced === null) {
-              // No resolved/pending trades to compute from (empty book) — nothing to advance.
-              console.log(`  ${id} (${cfg.label}): 0 trades, frozen stats kept`);
-            } else {
-              console.error(`  ⚠️  ${id}: append-only advance REJECTED (prefixOk=${!!prefixOk} tradesOk=${!!tradesOk}) — keeping frozen stats as-is`);
-            }
-          }
-          output[`frozen_${id}`] = stats;
+          // IMMUTABLE + PORTFOLIO-AWARE: existing frozen stats are preserved byte-for-byte.
+          // They were produced by the portfolio simulation (simulatePortfolio), which respects
+          // each period's portfolioSize / horizon / config as trades were actually taken.
+          // They must NOT be recomputed here by computeStatsFromTrades: that function is
+          // config-BLIND — it ignores portfolioSize (aggregates every raw sealed trade as if
+          // size=1) and its uniform full-period replay deflated the sealed track record on
+          // 2026-07-02/03 (dynamic 91.18%→75.45%; real DD -4.59% → phantom -8.76%; orbit
+          // -5.96% → phantom -10.15%). Per the project rule "Segment-Replay Absolute DD",
+          // absolute return/DD from a uniform replay is UNRELIABLE — trust the config-aware
+          // append-only frozen. New trades still get appended to backtest-trades.json; the
+          // aggregate advances via gen-status-page snapshots, never a sweep recompute.
+          stats = existingFrozen;
+          const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'unchanged';
+          console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}% [IMMUTABLE]`);
+          output[`frozen_${id}`] = existingFrozen;
           frozenTrades[id] = merged;
           continue;
         }
