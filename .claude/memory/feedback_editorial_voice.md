@@ -15,4 +15,6 @@ Tout contenu publié (site, Substack, Telegram, notes) : **concis, direct, actio
 
 **Why:** un lecteur a détecté le post Substack « Rotation on Trial » comme fortement IA (tics, structure figée, style trop homogène). Le user : « je veux pas qu'on puisse voir aussi facilement que c'est de l'IA ».
 
-**How to apply:** avant toute publication, réécrire pour supprimer les tics + faire passer `node tools/check-ai-tells.js <path> [--strict]`. Voir [[scanner-editorial-design]] pour le pipeline scanner.
+**Deux couches** (raffinement après 3 rejets lecteur) : (1) anti-tics de style ; (2) **empreinte intellectuelle** — catalyseur PRÉCIS vérifié (`news`), flux institutionnels réels (`unusual_options`/`dark_pool`), asymétrie non-consensuelle (`technicals`), thèse falsifiable. Un texte propre mais sans info « creusée » sonne autant IA que les tics. Le critique : « aucune empreinte intellectuelle identifiable ».
+
+**How to apply:** avant toute publication, suivre la spec canonique **`EDITORIAL_STYLE.md`** (recette de recherche MCP + checklist couche 2 ≥4) puis `node tools/check-ai-tells.js <path> [--strict]`. Reproductible par les routines cloud (fichier versionné). Voir [[scanner-editorial-design]].

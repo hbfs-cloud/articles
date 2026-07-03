@@ -10,6 +10,8 @@ mobile-first dense, RTL arabe, P&L colorblind-safe, WCAG AA, reduced-motion.
 ## Voix éditoriale (OBLIGATOIRE — tout contenu publié)
 Règle #1 de rédaction, tous supports (site, Substack, Telegram, notes) : **concis, direct, actionnable, et JAMAIS "style IA"**. Un lecteur ne doit pas pouvoir dire « c'est écrit par une IA ».
 
+**⇒ Spec complète et reproductible (routines cloud incluses) : [`EDITORIAL_STYLE.md`](EDITORIAL_STYLE.md)** — 2 couches (anti-tics + **empreinte intellectuelle** : catalyseur précis vérifié, flux institutionnels réels, asymétrie non-consensuelle, thèse falsifiable) + recette de recherche MCP à exécuter AVANT d'écrire. Un texte « propre mais vide » (aucune info que seul un analyste qui a creusé pourrait écrire) échoue autant qu'un texte truffé de tics.
+
 - **Bannir les tics IA / marketing** : signposting et formules toutes faites — « Hold one idea… », « Here's the thing », « The bottom line », « That divergence is the whole story », « buckle up », « let's dive in », « it's worth noting », « in a world where », « delve », « tapestry », « game-changer », « navigating the… » (FR : « il est important de noter », « force est de constater », « sans plus attendre »…).
 - **Voix humaine** : un point de vue, du rythme varié (phrases courtes ET longues, fragments), des images concrètes. Éviter la structure ultra-templatée (contexte → 3 points → outlook → conclusion) et les paragraphes trop lisses/homogènes.
 - **Garder les chiffres réels et précis** (niveaux, entries/stops, perfs) — c'est le vrai signal de crédibilité + l'actionnable.

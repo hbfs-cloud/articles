@@ -25,6 +25,10 @@ const PHRASES = [
   "in a world where", "ever-evolving", "ever-changing", "game-changer", "game changer",
   "testament to", "tapestry", "navigating the", "unlock the", "elevate your", "seamless",
   "look no further", "rest assured", "the key takeaway", "without further ado",
+  // forced explainer openers / LLM transitions (reader-flagged)
+  "one more thing", "here's what", "here's how", "here's the part", "here's the map",
+  "picture this", "imagine you", "think of it like", "let me explain", "in other words",
+  "simply put", "to put it simply", "the takeaway", "picture musical",
   // FR equivalents
   "il est important de noter", "il convient de noter", "en conclusion", "cela dit",
   "force est de constater", "dans un monde", "sans plus attendre", "la clé réside",

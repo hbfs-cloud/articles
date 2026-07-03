@@ -31,6 +31,17 @@ if [ -n "$STAGED_ARTICLES" ]; then
   fi
 fi
 
+# ─── Voix éditoriale : advisory anti-tics IA (NON bloquant) — voir EDITORIAL_STYLE.md ───
+# Attrape la couche 1 (tics de style). La couche 2 (empreinte intellectuelle) reste un jugement.
+if [ -n "$STAGED_ARTICLES" ]; then
+  TELLS=$(echo "$STAGED_ARTICLES" | xargs node tools/check-ai-tells.js 2>/dev/null | grep -E "❌|⚠️" || true)
+  if [ -n "$TELLS" ]; then
+    echo "✍️  [Pre-commit] Voix éditoriale — tics IA détectés (non bloquant, cf EDITORIAL_STYLE.md) :"
+    echo "$TELLS" | head -12
+    echo "   → réécrire si possible ; vérifier aussi la couche 2 (catalyseur/flux/asymétrie/thèse)."
+  fi
+fi
+
 echo "📈 [Pre-commit] Updating search index and sitemap..."
 
 # Run the python scripts to rebuild the index and sitemap
