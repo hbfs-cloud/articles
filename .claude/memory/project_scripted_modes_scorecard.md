@@ -29,3 +29,23 @@ barres ≤ D > $5M), porté du frère systematic-tss (`applyEstablishedLiquidity
 **Règle** : disabling d'un mode = Mode Status State Machine (`set-mode-status.js`, pausing→stopped),
 JAMAIS supprimer les données/trades scellés. Toujours projeter l'impact + laisser le user choisir.
 Lié : [[frozen-portfolio-aware]], [[segment-replay-absolute-dd]].
+
+## MAJ 2026-07-03 — Clean-slate + constat re-port
+User a décidé clean-slate : **10 modes scriptés wipés** (bull/momentum/highvol/trendline/etf/etf_eu/
+casablanca + crypto/metals/forex), archivés dans `archive/20260703/scripted-wipe/` (réversible).
+PRÉSERVÉS : turbo/dynamic/balanced/secured/fortress/aplus/tkl/alpha (quality/LLM, pas des ports).
+Chaîne SHA valide, frozen quality intacts.
+
+**Constat re-port (architectural, important)** : le moteur articles NE PEUT PAS répliquer
+fidèlement les stratégies Go. 4 écarts (audit workflow) : (1) params **régime-dépendants** (Go varie
+positions/sizing/stops par régime ; articles = constant) ; (2) **pyramiding** non modélisé (ex
+ultra-v5 189%→44%) ; (3) gate liquidité absent des scanners survivants (wiré highvol 2026-07-03,
+reste etf/forex) ; (4) **pas de scan PIT historique** (articles accumule en marche avant, ne
+re-scanne pas 2021-2026 → pas de backtest full-period sans backfill lourd). Donc re-port =
+**approximation**, pas réplication. Configs fidèles staged dans `archive/20260703/reports-staging/`
+(highvol/etf/forex infraOk ; ultra/hybrid infra à compléter).
+
+**Voie en attente d'arbitrage user** : (a) forward-only gaté (draft modes qui accumulent un track
+record honnête en marche avant), (b) étendre le moteur (params régime + pyramiding + backfill PIT),
+(c) consommer les signaux Go directement (Go décide, articles affiche). Modes NON déployés tant que
+non tranché.
