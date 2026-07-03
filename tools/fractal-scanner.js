@@ -48,6 +48,13 @@ const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 const SOURCE = getArg('source', 'yahoo').toLowerCase();
 
+// Point-in-time established-liquidity gate (survivorship / look-ahead guard) — MEDIAN dollar
+// volume over ESTABLISHED_LOOKBACK bars ≤ scanDate must exceed the threshold. Robust to the
+// signal-day spike (unlike P80). OFF by default (0); each re-ported mode passes its own Go value
+// via --min-established-dollar-volume (portfolio_us hybrid = $5M, established_lookback_days=60).
+const MIN_ESTABLISHED_DOLLAR_VOLUME = parseFloat(getArg('min-established-dollar-volume', '0'));
+const ESTABLISHED_LOOKBACK = parseInt(getArg('established-lookback', '60'));
+
 // ─── tp1/tp2/rr exit model (mirrors data/modes-config.json per assetClass) ───
 // Each pool has its own partialTPGain — the mode's REAL partial-TP trigger (% price gain),
 // not a fixed R multiple. tp1 = entry × (1 + gain/100); tp2 = 2x that gain (informational for
@@ -318,6 +325,12 @@ async function main() {
     const minDolVol = ['crypto', 'forex', 'casablanca'].includes(assetClass) ? 100_000 : 1_000_000;
     const dvP80 = calcDollarVolumePercentile(bars, 20, 0.80);
     if (dvP80 < minDolVol) continue;
+
+    // Established-liquidity gate (opt-in): median dollar volume over the lookback, spike-robust.
+    if (MIN_ESTABLISHED_DOLLAR_VOLUME > 0) {
+      if (bars.length < ESTABLISHED_LOOKBACK) continue;
+      if (calcDollarVolumePercentile(bars, ESTABLISHED_LOOKBACK, 0.50) < MIN_ESTABLISHED_DOLLAR_VOLUME) continue;
+    }
 
     const result = scoreSymbolAF(bars, REGIME, assetClass);
     if (!result) continue;

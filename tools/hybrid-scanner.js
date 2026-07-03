@@ -45,6 +45,13 @@ const TOP_N = parseInt(getArg('top', '30'));
 const CONCURRENCY = parseInt(getArg('concurrency', '15'));
 const STRATEGY_TAG = getArg('strategy', null);
 
+// Point-in-time established-liquidity gate (survivorship / look-ahead guard) — MEDIAN dollar
+// volume over ESTABLISHED_LOOKBACK bars ≤ scanDate. OFF by default (0); a re-ported mode passes
+// its Go value via --min-established-dollar-volume. Near-moot on this hard-coded mega-cap list but
+// kept for parity with fractal/highvol scanners so the whole hybrid sleeve is gate-consistent.
+const MIN_ESTABLISHED_DOLLAR_VOLUME = parseFloat(getArg('min-established-dollar-volume', '0'));
+const ESTABLISHED_LOOKBACK = parseInt(getArg('established-lookback', '60'));
+
 const MEGA_CAP_TICKERS = [
   'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'META', 'TSLA', 'BRK-B',
   'UNH', 'LLY', 'JPM', 'V', 'XOM', 'MA', 'JNJ', 'PG', 'HD', 'COST',
@@ -290,6 +297,10 @@ async function main() {
       if (!rawBars) continue;
       const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
       const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
+      if (MIN_ESTABLISHED_DOLLAR_VOLUME > 0) {
+        if (bars.length < ESTABLISHED_LOOKBACK) continue;
+        if (calcDollarVolumePercentile(bars, ESTABLISHED_LOOKBACK, 0.50) < MIN_ESTABLISHED_DOLLAR_VOLUME) continue;
+      }
       const result = scoreMegaCap(bars, REGIME);
       if (!result || result.score < 50) continue;
 
