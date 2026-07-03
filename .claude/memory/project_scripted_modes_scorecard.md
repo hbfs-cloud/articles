@@ -49,3 +49,27 @@ re-scanne pas 2021-2026 → pas de backtest full-period sans backfill lourd). Do
 record honnête en marche avant), (b) étendre le moteur (params régime + pyramiding + backfill PIT),
 (c) consommer les signaux Go directement (Go décide, articles affiche). Modes NON déployés tant que
 non tranché.
+
+## MAJ 2026-07-03 (suite) — Phase A moteur + gate 4 scanners + état re-port précis
+User a choisi option (b) « étendre le moteur ». Fait :
+- **Phase A regimeParams** (opt-in) dans sweep.js : A1 `regimeParams.maxPositions` par régime (simulatePortfolio),
+  A2 `regimeParams.maxLoss` par régime (simulateTrade via normalizeRegime). Sans regimeParams → comportement
+  inchangé. Parité Go dynamic_max_positions/dynamic_max_loss.
+- **Gate liquidité établie** (médiane PIT 60j) désormais sur les **4 scanners** : candlestick (401cbd1ff),
+  highvol (sync $3M, 73ef20633), **fractal + hybrid (367ddec5d)** — opt-in `--min-established-dollar-volume`
+  défaut 0=OFF. Ferme l'écart (3) pour hybridaf.
+- **highvol** ré-intégré en `draft` avec regimeParams (347927d6f), config archivée prouvée (PAS la sortie Sonnet).
+
+**État re-port précis par mode (2026-07-03)** :
+- highvol → **draft OK** (gate $3M, regimeParams). Attend Phase D pour validation backtest.
+- hybridaf → gate résolu, MAIS **pas un drop-in** : hybrid-scanner émet `Hybrid-AF/Hybrid-DSL/Hybrid-MegaCap`
+  qui ne mappent pas proprement vers detectStrategy (sweep) ; le set `hybrid_af` (sweep L438) est inutilisé +
+  gen-status-page n'a pas de regex `hybrid_af`. À faire avant intégration : mapping tag→filtre cohérent (sweep +
+  2 copies gen-status) + câblage pipeline. NON intégré (éviter fausse progression).
+- uk-selective → **infra absente** (univers/scanner LSE). Gros chantier.
+- forex → forex-scanner.js existe (port fidèle) mais **jamais invoqué par le pipeline daily** → forex_pool vide.
+
+**Vrai déblocage = Phase D (backfill scan PIT 2021-2026)** : sans lui aucun re-port draft ne se backteste sur
+l'historique → impossible de prouver la fidélité. Prochain gros sous-projet data. Claims Sonnet à re-vérifier
+systématiquement (2× fausses : « sweep n'a pas highvol_breakout » → FAUX L168/439 ; filterName hybridaf
+`adaptive_fractal` → devrait être `hybrid_af`).
