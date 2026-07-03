@@ -35,6 +35,8 @@ const PHRASES = [
   // reflexive inline definitions (LLM explains basic terms every time)
   "a call option is", "a put option is", "a call is a bet", "a put is a bet",
   "which is a bet that", "is a bet that a price",
+  // internal/infra terms that must never reach readers
+  "dailytickers mcp", "dailytickers gateway", "via gateway", "mcp market data", "market data service",
   // FR equivalents
   "il est important de noter", "il convient de noter", "en conclusion", "cela dit",
   "force est de constater", "dans un monde", "sans plus attendre", "la clé réside",

@@ -15,6 +15,7 @@ Règle #1 de rédaction, tous supports (site, Substack, Telegram, notes) : **con
 - **Bannir les tics IA / marketing** : signposting et formules toutes faites — « Hold one idea… », « Here's the thing », « The bottom line », « That divergence is the whole story », « buckle up », « let's dive in », « it's worth noting », « in a world where », « delve », « tapestry », « game-changer », « navigating the… » (FR : « il est important de noter », « force est de constater », « sans plus attendre »…).
 - **Voix humaine** : un point de vue, du rythme varié (phrases courtes ET longues, fragments), des images concrètes. Éviter la structure ultra-templatée (contexte → 3 points → outlook → conclusion) et les paragraphes trop lisses/homogènes.
 - **Garder les chiffres réels et précis** (niveaux, entries/stops, perfs) — c'est le vrai signal de crédibilité + l'actionnable.
+- **JAMAIS de terme interne/technique dans le contenu publié** (texte, légendes, images) : pas de « MCP », « DailyTickers MCP », « Gateway », « market data service », noms de scripts/pipeline. Décrire la donnée (« options flow & levels », « avg constituent return »), pas l'infra.
 - **Registre selon le support** : site = institutionnel (FT/Economist + terminal, cf `PRODUCT.md`) ; Substack/Telegram = ultra-simple, lisible par un enfant de 10 ans. La concision + l'anti-IA s'appliquent PARTOUT ; seul le niveau de langue change.
 - **Contrôle** : `node tools/check-ai-tells.js <path> [--strict]` flague les tics avant publication. Zéro finding ≠ garantie humain, mais tout finding = réécrire.
 
