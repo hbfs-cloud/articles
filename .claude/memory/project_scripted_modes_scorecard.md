@@ -60,16 +60,22 @@ User a choisi option (b) « étendre le moteur ». Fait :
   défaut 0=OFF. Ferme l'écart (3) pour hybridaf.
 - **highvol** ré-intégré en `draft` avec regimeParams (347927d6f), config archivée prouvée (PAS la sortie Sonnet).
 
-**État re-port précis par mode (2026-07-03)** :
-- highvol → **draft OK** (gate $3M, regimeParams). Attend Phase D pour validation backtest.
-- hybridaf → gate résolu, MAIS **pas un drop-in** : hybrid-scanner émet `Hybrid-AF/Hybrid-DSL/Hybrid-MegaCap`
-  qui ne mappent pas proprement vers detectStrategy (sweep) ; le set `hybrid_af` (sweep L438) est inutilisé +
-  gen-status-page n'a pas de regex `hybrid_af`. À faire avant intégration : mapping tag→filtre cohérent (sweep +
-  2 copies gen-status) + câblage pipeline. NON intégré (éviter fausse progression).
-- uk-selective → **infra absente** (univers/scanner LSE). Gros chantier.
-- forex → forex-scanner.js existe (port fidèle) mais **jamais invoqué par le pipeline daily** → forex_pool vide.
+**État re-port précis par mode (2026-07-03, MAJ soir — hybrid + forex DONE)** :
+- highvol → **draft OK** (gate $3M, regimeParams). Commit 347927d6f. Attend Phase D.
+- hybrid → **draft OK** (commit c7ad76114). Défaut corrigé : detectStrategy renvoyait 'momentum' pour
+  Hybrid-AF/Hybrid-DSL. Ajout pattern `hybrid_af` (sweep) + redéf set filtre `hybrid_af` (admet
+  adaptive_fractal+hybrid_megacap+hybrid_af only) + regex SF hybrid_af dans les 2 copies gen-status +
+  filterLabel + SCRIPTED_FILTERS. universeFilter=null (americanbull aurait rejeté 100% — hybrid-scanner ne
+  tague pas de champ universe). regimeParams. fractal+hybrid déjà dans le pipeline.
+- forex → **draft OK** (commit dd38e6c15, workflow Sonnet + revue Fable). Pipeline L295 : générique
+  fractal --universe forex REMPLACÉ par forex-scanner.js --output signals (3-axes fidèle, Yahoo direct,
+  41 candidats dry-run). sweep consomme déjà forex_pool. Pas de regimeParams (config archivée sans
+  variation régime + Go forex config indispo MCP down → non fabriqué ; réconcilier à Phase D).
+- uk-selective → **infra absente** (univers/scanner LSE). Spec `docs/specs/uk-selective.md`. BLOQUÉ MCP.
+- Phase D (backfill PIT) → spec `docs/specs/phase-d-backfill-pit.md`. BLOQUÉ MCP. **Vrai déblocage.**
 
 **Vrai déblocage = Phase D (backfill scan PIT 2021-2026)** : sans lui aucun re-port draft ne se backteste sur
-l'historique → impossible de prouver la fidélité. Prochain gros sous-projet data. Claims Sonnet à re-vérifier
-systématiquement (2× fausses : « sweep n'a pas highvol_breakout » → FAUX L168/439 ; filterName hybridaf
-`adaptive_fractal` → devrait être `hybrid_af`).
+l'historique → impossible de prouver la fidélité. Prochain gros sous-projet data (spec prête, BLOQUÉ MCP).
+Claims Sonnet à re-vérifier systématiquement (3× fausses ce jour : « sweep n'a pas highvol_breakout » → FAUX
+L168/439 ; filterName hybridaf `adaptive_fractal` → devrait être `hybrid_af` ; universeFilter='americanbull'
+pour hybrid → aurait rejeté 100% des signaux). Modèle de travail : cf [[fable-plans-sonnet-implements]].
