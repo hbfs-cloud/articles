@@ -7,6 +7,15 @@ générique, Bloomberg overload, cream/sand AI) et **`DESIGN.md`** (système vis
 direction de refonte). Refonte pilotée par le skill `impeccable` (`/impeccable <command>`). A11y :
 mobile-first dense, RTL arabe, P&L colorblind-safe, WCAG AA, reduced-motion.
 
+## Voix éditoriale (OBLIGATOIRE — tout contenu publié)
+Règle #1 de rédaction, tous supports (site, Substack, Telegram, notes) : **concis, direct, actionnable, et JAMAIS "style IA"**. Un lecteur ne doit pas pouvoir dire « c'est écrit par une IA ».
+
+- **Bannir les tics IA / marketing** : signposting et formules toutes faites — « Hold one idea… », « Here's the thing », « The bottom line », « That divergence is the whole story », « buckle up », « let's dive in », « it's worth noting », « in a world where », « delve », « tapestry », « game-changer », « navigating the… » (FR : « il est important de noter », « force est de constater », « sans plus attendre »…).
+- **Voix humaine** : un point de vue, du rythme varié (phrases courtes ET longues, fragments), des images concrètes. Éviter la structure ultra-templatée (contexte → 3 points → outlook → conclusion) et les paragraphes trop lisses/homogènes.
+- **Garder les chiffres réels et précis** (niveaux, entries/stops, perfs) — c'est le vrai signal de crédibilité + l'actionnable.
+- **Registre selon le support** : site = institutionnel (FT/Economist + terminal, cf `PRODUCT.md`) ; Substack/Telegram = ultra-simple, lisible par un enfant de 10 ans. La concision + l'anti-IA s'appliquent PARTOUT ; seul le niveau de langue change.
+- **Contrôle** : `node tools/check-ai-tells.js <path> [--strict]` flague les tics avant publication. Zéro finding ≠ garantie humain, mais tout finding = réécrire.
+
 ## Project Overview
 Site de publication d'analyses financières institutionnelles, hébergé sur GitHub Pages.
 - **URL articles** : `https://articles.dailytickers.com/` (CNAME = `articles.dailytickers.com`)
