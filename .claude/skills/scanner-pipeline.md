@@ -292,7 +292,7 @@ node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMD
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
 node tools/highvol-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 20  # HighVol mode (dedicated scanner)
 node tools/fractal-scanner.js --universe metals --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Metals scan
-node tools/fractal-scanner.js --universe forex --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 20 --top 10  # Forex scan
+node tools/forex-scanner.js --output signals --date YYYYMMDD --min-score 20 --top 10  # Forex 3-axis faithful (systematic-tss port: Momentum 40%/MeanRev 30%/RelStrength vs DXY 30%, Yahoo direct) → forex_pool in signals.json. No --folder/--regime flags (unsupported by this script).
 node tools/casablanca-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Casablanca Bourse scan
 node tools/momentum-scanner.js --universe casablanca --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 15  # Casablanca Momentum Rotation
 node tools/momentum-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 20  # Momentum Rotation (US)
