@@ -44,3 +44,20 @@ Audit read-only (workflow, 2026-07-03) → 11 findings priorisés. État :
 - #11 code-review-graph MCP absent de l'env (consigne CLAUDE.md racine) → vérifier infra ou acter obsolète.
 
 Règle transverse confirmée par l'audit : l'invariant SEALED-PRIMARY tient, aucune hallucination détectée, drafts sans track record publié. Le risque principal = écart « documenté comme fait » vs « réellement câblé dans le runner de prod » (cf #2).
+
+## MAJ 2026-07-04 — diagnostic balanced/secured + archéologie
+- **balanced** : stratégie user (P4, 9752c1866) INTACTE et gate-validée (+18.35% vs -13.95%, PF 2.09).
+  La sous-perf mai-juin dans le scellé est PRÉ-fix (stops non-capés -8/-9% après désactivation du
+  stale-tightening à v7-20260604). Rien à défaire.
+- **secured/Orbit — root cause trouvée** : resserré H8→5 / trail ON→OFF / minScore 90→85 / filter
+  all→breakout_only par la **recalibration régime v9.6 EARLY RISK-OFF** (commit war room 9cb428d6d,
+  27/06) et **jamais desserré** au retour RISK-ON. Config live contredit le mandat Orbit documenté
+  (H20/ATR3.5/trail ON, cf b1c6b98eb + project_orbit_mode.md). Résultat : 0 sortie trail/13, avg loss
+  -6.15%, horizon coupe des gagnants pré-TP1 (GE -1.6pt vs balanced sur signal identique).
+  **LEÇON : regime-recalibrate.js est un aller sans retour — pas de mécanisme de dé-recalibration au
+  changement de régime.** À corriger structurellement.
+- **NVS cv=NONE** : bloc d'injection positions réelles de sweep.js ne stampe jamais configVersion
+  (oubli générique). Bonne valeur 26/06 = v9.4-20260616. Fix data+code en cours (workflow).
+  Bug secondaire : FCX/GE/AVGO stampés v10.0 en look-ahead — à investiguer séparément.
+- Gate 30j lancé sur 2 candidats secured (A staged H10/trail/atr1.8 ; B mandat Orbit complet) —
+  chiffres pour arbitrage user, AUCUNE application sans son accord.
