@@ -111,7 +111,7 @@ Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fic
 10. **Fonts** : Inter (Google Fonts) + Font Awesome 6.4.0.
 11. **Charts** : ECharts préféré. Ne pas mélanger ApexCharts et ECharts dans un même article.
 12. **Accents français OBLIGATOIRES** : UTF-8 direct (résultat, bénéfice, marché, première).
-13. **Logo** : brand-bar = logo MW `/logo.svg`. Cartes index.html = logo parqet.com. JAMAIS logo société dans ticker-header.
+13. **Logo** : brand-bar = logo MW `/logo.svg`. Cartes index.html = logo parqet.com. JAMAIS logo société dans ticker-header. **Images générées (charts/boards/PNG pour Substack/Telegram) : embarquer le VRAI `/logo.svg` (radar `#50b4ee`) en data-URI, JAMAIS un wordmark dessiné à la main.** Template de référence : `tools/templates/positioning-board.html`.
 14. **⚠️ Ticker-header metrics (CRITIQUE)** :
     - `<div class="ticker-metric"><div class="tm-value">VALUE</div><div class="tm-label">LABEL</div></div>` (value AVANT label)
     - **JAMAIS** `metric-value` (font trop grande), **JAMAIS** `metric-label`, **JAMAIS** `ticker-metric-value`/`ticker-metric-label`
