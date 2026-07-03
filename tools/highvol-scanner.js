@@ -54,6 +54,12 @@ const PARTIAL_TP_GAIN_PCT = 30; // modes-config.json modes.highvol.partialTPGain
 // systematic-tss us_highvol allocation: strategy=highvol-breakout-corr.
 // These MUST match the Go ScannerFilterConfig so JS produces the same BUY entries.
 const MIN_P80_DOLLAR_VOLUME = 5_000_000;   // scanner_filters.min_p80_dollar_volume ($5M, not $100K)
+// Point-in-time established-liquidity gate (survivorship / look-ahead guard) — MEDIAN dollar
+// volume over the trailing window (robust to the signal-day spike, unlike the P80 above) must
+// exceed the threshold. Mirrors systematic-tss applyEstablishedLiquidityGate. ON by default at
+// $5M/60 bars = the honest-backtest baseline for this strategy (removes microcap look-ahead).
+const MIN_ESTABLISHED_DOLLAR_VOLUME = parseFloat(getArg('min-established-dollar-volume', '5000000'));
+const ESTABLISHED_LOOKBACK = parseInt(getArg('established-lookback', '60'));
 const MAX_RSI = 85;                        // scanner_filters.max_rsi (Go rejects rsi > 85)
 const MAX_VOLATILITY_INDEX = 28;           // scanner_filters.max_volatility_index (VIX > 28 => no scan)
 // Allocation-level blacklist (toxic serial losers). In Go these symbols are excluded
@@ -388,6 +394,12 @@ async function main() {
 
     const dvP80 = calcDollarVolumePercentile(bars, 20, 0.80);
     if (dvP80 < MIN_P80_DOLLAR_VOLUME) continue;
+    // Established-liquidity gate (point-in-time; `bars` already ≤ scanDate). Median over the
+    // trailing window, robust to the signal-day spike. Insufficient history → ineligible.
+    if (MIN_ESTABLISHED_DOLLAR_VOLUME > 0) {
+      if (bars.length < ESTABLISHED_LOOKBACK) continue;
+      if (calcDollarVolumePercentile(bars, ESTABLISHED_LOOKBACK, 0.50) < MIN_ESTABLISHED_DOLLAR_VOLUME) continue;
+    }
 
     const result = scoreSymbol(bars, REGIME, vixLevel, vixTrend);
     if (!result) continue;

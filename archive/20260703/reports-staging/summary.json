@@ -1,0 +1,32 @@
+{
+  "ultra": {
+    "infraOk": false,
+    "infraNotes": "Scanner: OK — tools/hybrid-scanner.js EST le port de systematic-tss HybridScanner (AF/MegaCap/DSL), tags \"Hybrid-AF/Hybrid-MegaCap/Hybrid-DSL\" normalises hybrid_megacap. Filtre: OK",
+    "backtestCmd": "Deux etapes (le gate doit d'abord etre porte dans hybrid/fractal — cf infraNotes #1).\n\n# 1) Regenerer les signaux historiques hybrid GATES (apres port de calcDollarVolumeMedian dans fractal-scanner.js",
+    "concerns": "Ecarts de fidelite classes par impact:\n\nCRITIQUE (expliquent l'ecart au header 189% -> cible honnete 44%):\n- Pyramiding non porte (add +50% a +17% de gain, mome"
+  },
+  "etf": {
+    "infraOk": true,
+    "infraNotes": "Les 3 pièces requises existent côté articles : (1) scanner tools/etf-scanner.js (port régime-adaptatif, univers ETF interne ETF_UNIVERSE L90, SOXL/TQQQ exclus L97, blacklist BITI/V",
+    "backtestCmd": "# 1) Signaux ETF US historiques GATÉS (anti-survivorship ON) — requiert le port du gate + --backtest dans etf-scanner.js (cf infraNotes #1)\nnode tools/etf-scanner.js --backtest --universe etf-us --sou",
+    "concerns": "1. dynamic_max_positions par régime (risk_on 7 → risk_off 1, early_risk_off 5) : NON répliqué — le mode articles fixe portfolioSize=7 constant. En crise le Go s"
+  },
+  "trend_hybrid_af": {
+    "infraOk": false,
+    "infraNotes": "CE QUI EXISTE (OK): (1) scanners tools/hybrid-scanner.js (bascule AF/MegaCap/DSL/BLEND par breadth) + tools/fractal-scanner.js (scoreSymbolAF, port exact) ; (2) filtre hybrid_af pr",
+    "backtestCmd": "# PREREQUIS (fix infra): porter le gate 5M/60 dans fractal-scanner.js (flags --min-established-dollar-volume / --established-lookback + calcDollarVolumeMedian, cf candlestick-scanner.js L400/444-447).",
+    "concerns": "1) COLLAPSE regime->constante: le moteur Go pilote 5 parametres INDEPENDANTS par regime (dynamic_max_positions 5-15, dynamic_position_size 0.13-0.26, dynamic_ba"
+  },
+  "forex": {
+    "infraOk": true,
+    "infraNotes": "Les 3 briques requises existent côté articles : (1) scanner = tools/forex-scanner.js (444 l., port fidèle de scanner_forex.go, émet forex_pool via --output signals) ; (2) filtre = ",
+    "backtestCmd": "# Contrôle GATÉ post-intégration du mode \"forex\" (gate FX-scalé = univers curaté 8 majors G7 + min-score 8).\n# 1) Backfill point-in-time des signaux FX restreints aux 8 majors, sur les dossiers scanne",
+    "concerns": "Écarts restants (le mode approche mais ne réplique pas 100% le moteur Go) : (1) dynamic_max_positions par régime (risk_on:3 / recovery:1 / neutral:4 / early_ris"
+  },
+  "highvol": {
+    "infraOk": true,
+    "infraNotes": "Les 3 briques demandées EXISTENT (→ infraOk=true) :\n- Scanner : tools/highvol-scanner.js (« exact port of systematic-tss », scoring V9 identique, VIX cluster gates, blacklist, sect",
+    "backtestCmd": "node tools/pit-engine.js --modes=highvol --from=2026-02-15 --to=2026-07-03 --out=data/pit-highvol.json --verbose\n\nPRÉREQUIS (sinon le backtest est vide/biaisé, cf infraNotes) :\n1) Ajouter le bloc mode",
+    "concerns": "1. trail_atr_mult (Go, distance ATR) → trailMultR (articles, R-multiple) : le port n'importe que le TRIGGER (+12%), pas la distance de trailing exacte. Divergen"
+  }
+}
