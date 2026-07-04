@@ -73,3 +73,18 @@ Règle transverse confirmée par l'audit : l'invariant SEALED-PRIMARY tient, auc
 - Restes backlog : #6 pit-engine cron (pit-forward déjà câblé Step 4c — pit-engine legacy = rôle
   secondaire), #7 deploy debounce, #12 root-cause var95 (bar service, infra), Phase D backfill PIT
   (spec prête, LE gros déblocage), uk-selective (spec prête).
+
+## MAJ 2026-07-04 (matin) — Phase D PoC + vwapGate
+- **PoC Phase D VALIDÉ** (fe4be9848) : tools/pit-backfill.js prouve la boucle re-scan PIT→sweep de
+  bout en bout, cache-first (0 fetch massif), namespace isolé data/pit-backfill/ (gitignoré).
+  highvol 90 séances = +4.35% (~12.7% ann.), PF 1.86, WR 54.5%, maxDD -2.4% — directionnellement
+  cohérent Go (magnitude<5Y = fenêtre calme, attendu). Exports module ajoutés highvol-scanner/
+  pit-engine (behavior-neutral, require.main guard) pour parité harnais.
+- **vwapGate fidélité** (1d706e638) : highvol vwapGate true→false (draft). Le cap VWAP same-day
+  (prev-typical×1.01) rejetait ~20/47 entrées = les gap-up breakouts (gagnants). Approuvé user.
+  PENDING (limite session) : confirmer la config Go + re-run PoC pour PROUVER la remontée de magnitude.
+- **PROCHAINE REPRISE (budget requis)** : (1) confirmer Go highvol sans cap VWAP + re-run PoC preuve ;
+  (2) FULL Phase D run 2021-2026 (gros fetch MCP ~3500 tickers×2.5ans, accord user OBTENU en principe
+  mais à lancer après la reprise) → backtest full-period highvol/hybrid/forex → sortir du draft.
+  Gaps full run : univers PIT historique (survivorship), regime source réel, adjusted closes,
+  sharding compute, pit-engine --scan-dir pour consommer le backfill multi-mode.
