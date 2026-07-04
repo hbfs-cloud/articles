@@ -883,4 +883,13 @@ async function run() {
   console.log(`Results saved to ${OUT}`);
 }
 
-run().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+// ─── Module exports (for tools/pit-backfill.js — reuse EXACT trade mechanics for PIT parity) ──
+// Backward-compatible: run() still fires unchanged when invoked as CLI entrypoint.
+module.exports = {
+  openPosition, stepPosition, computePnl, buildCandidates,
+  cooldownDaysForStatus, addBizDays, bizDaysBetween, getAllBizDays, computeATR,
+};
+
+if (require.main === module) {
+  run().catch(e => { console.error('Fatal:', e.message, e.stack); process.exit(1); });
+}

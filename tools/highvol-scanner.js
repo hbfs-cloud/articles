@@ -475,4 +475,15 @@ async function main() {
   return topCandidates;
 }
 
-main().catch(e => { console.error('❌', e.message); process.exit(1); });
+// ─── Module exports (for tools/pit-backfill.js — reuse EXACT scoring for PIT parity) ──
+// Backward-compatible: CLI behavior unchanged when run directly; main() only fires as entrypoint.
+module.exports = {
+  scoreSymbol, calcStdDev, loadUniverse, passesSectorMcap,
+  BLACKLIST,
+  MIN_P80_DOLLAR_VOLUME, MIN_ESTABLISHED_DOLLAR_VOLUME, ESTABLISHED_LOOKBACK,
+  PARTIAL_TP_GAIN_PCT, MAX_VOLATILITY_INDEX,
+};
+
+if (require.main === module) {
+  main().catch(e => { console.error('❌', e.message); process.exit(1); });
+}
