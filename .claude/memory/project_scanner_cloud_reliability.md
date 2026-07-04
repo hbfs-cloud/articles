@@ -61,3 +61,15 @@ Règle transverse confirmée par l'audit : l'invariant SEALED-PRIMARY tient, auc
   Bug secondaire : FCX/GE/AVGO stampés v10.0 en look-ahead — à investiguer séparément.
 - Gate 30j lancé sur 2 candidats secured (A staged H10/trail/atr1.8 ; B mandat Orbit complet) —
   chiffres pour arbitrage user, AUCUNE application sans son accord.
+
+## MAJ 2026-07-04 (nuit) — chantier balanced/secured CLOS
+- **NVS fixé** (608c65e2e) : code (injection stampe configVersion) + data (NVS=v9.4-20260616).
+  balanced forward healthy → hero 50.76. secured healthy (ancre 07-02, 0 trade post-ancre).
+- **secured : mandat Orbit RESTAURÉ** (d84581d15) : H20/ATR3.5/trail 2R/grace3/minScore 90.
+  DÉROGATION EXPLICITE user au gate (WAIT artefact H20 : n=0 résolus sur 30j). Version v10.6-20260704.
+  **Re-gate à la review 2026-08-01** — vérifier alors que les trades H20 résolus valident le mandat.
+- **getConfigVersion fixé** : effectiveFrom 2026-06-29 ajouté à v10.0 (root-cause stamps look-ahead
+  FCX/GE/AVGO). Trades clos NON re-stampés (immutabilité, décision user).
+- Restes backlog : #6 pit-engine cron (pit-forward déjà câblé Step 4c — pit-engine legacy = rôle
+  secondaire), #7 deploy debounce, #12 root-cause var95 (bar service, infra), Phase D backfill PIT
+  (spec prête, LE gros déblocage), uk-selective (spec prête).
