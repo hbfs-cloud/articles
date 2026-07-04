@@ -88,3 +88,39 @@ Règle transverse confirmée par l'audit : l'invariant SEALED-PRIMARY tient, auc
   mais à lancer après la reprise) → backtest full-period highvol/hybrid/forex → sortir du draft.
   Gaps full run : univers PIT historique (survivorship), regime source réel, adjusted closes,
   sharding compute, pit-engine --scan-dir pour consommer le backfill multi-mode.
+
+## ============ TODO CONSOLIDÉ (2026-07-04) — RESTE À FAIRE ============
+
+### A. Re-port modes scriptés systematic-tss (INCOMPLET — 3/N faits)
+FAITS (draft) : highvol ✅, hybrid (trend-hybrid-af) ✅, forex ✅.
+À FAIRE — re-portables MAINTENANT (infra complète) :
+- [ ] **etf** (etf_momentum) — KEEP scorecard (68.5% CAGR, SR 2.14, PASS 5/5). Infra OK : etf-scanner.js
+      + data/etf-universe.json. Config archivée dispo (archive/20260703/scripted-wipe/scripted-modes-extract.json,
+      key=etf : pSize 7, horizon 21, trail 2R, maxStop 17, atrStop 2.5). Ré-intégrer en draft.
+- [ ] **etf_eu** (etf_momentum) — KEEP scorecard (74.8% CAGR, SR 2.24, R² 0.97). Infra OK : etf-scanner.js
+      --universe etf-eu + data/etf-eu-universe.json. Config archivée (key=etf_eu : pSize 3, minScore 80,
+      horizon 21, trail 2R, atrStop 1.5). Ré-intégrer en draft.
+À FAIRE — BLOQUÉS (infra/moteur absents) :
+- [ ] **ultra-v5** — bloqué : pyramiding non modélisé dans le moteur (ex 189%→44% sans pyramiding).
+- [ ] **uk-selective** — bloqué : univers/scanner LSE absents. Spec docs/specs/uk-selective.md.
+- [ ] **in-composite** (Inde) — bloqué : univers/scanner IN absents.
+- [ ] **jp-recovery** (Japon) — bloqué : univers/scanner JP absents.
+NE PAS re-porter (verdict scorecard/mission) : momentum (momentum-rotation = mort, scorecard gaté),
+bull (AmericanBulls = artefact survivorship), trendline (à requalifier), casablanca (marché marocain, à part).
+
+### B. Phase D — validation backtest full-period (LE déblocage)
+- [ ] Confirmer config Go highvol (sans cap VWAP) + re-run PoC pour PROUVER la remontée de magnitude
+      (highvol vwapGate déjà mis false, reproof pending).
+- [ ] FULL Phase D run 2021-2026 : gros fetch MCP (~3500 tickers × 2.5 ans, batché/async Jobs) →
+      backfill highvol/hybrid/forex (+etf/etf_eu une fois re-portés) → backtest full-period → compare Go
+      → sortir du draft. Gaps : univers PIT historique (survivorship), regime source réel, adjusted closes,
+      sharding compute, pit-engine --scan-dir pour consommer le backfill multi-mode.
+
+### C. Fiabilisation restante
+- [ ] secured/Orbit : RE-GATE à la review 2026-08-01 (vérifier trades H20 résolus valident le mandat).
+- [ ] regime-recalibrate.js : aller sans retour — ajouter une dé-recalibration au changement de régime.
+- [ ] #7 deploy.yml GitHub Pages : debounce (double artifact ~23% échec).
+- [ ] #12 var95 absent depuis ~30/06 : root-cause bar service (infra), fait tomber le hard-gate MCP.
+- [ ] getConfigVersion look-ahead FCX/GE/AVGO (clos) : laissés tels quels (immutabilité). Fix historique
+      (effectiveFrom v10.0) déjà appliqué pour les futurs.
+- [ ] uk-selective + Phase D specs déjà écrites (docs/specs/), prêtes à déléguer.
