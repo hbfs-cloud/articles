@@ -111,19 +111,18 @@ Propriétés établies par backtest relatif (2 ans, univers neutres, 600+ trades
 > réutiliser un mark mémorisé comme prix vivant. Seed ci-dessous = clôture de session 30/06/2026.
 
 Book ouvert le 10/06/2026 (entrée = close 10/06). Lignes legacy équipondérées ; **nouvelles
-entrées au sizing par conviction (§1bis)**.
+entrées au sizing par conviction (§1bis)**. Seed ci-dessous = clôture session 06/07/2026.
 
 **TENUS** (✅ Halal) | entrée | dernier mark | P&L | note groupe/trail
-- KLAC | 213,56 | 302,70 | +41,7% | Semicap LEADER — extreme runner, trail EMA20 ($243)
-- TEX  | 59,51  | 71,00  | +19,3% | Industrials LEADER — trail EMA20 ($67)
-- ACA  | 122,85 | 145,00 | +18,0% | Building materials — RSI 72,9 → partiel 33% + trail EMA20 ($136)
-- BTSG | 60,59  | 70,90  | +17,0% | Healthcare — RSI 73,4 → partiel 33% + trail EMA20 ($65)
-- AMGN | 347,84 | 362,12 | +4,1%  | Biotech LEADER — trail EMA20 ($348)
+- TEX  | 59,51  | 69,58  | +16,9% | Industrials LEADER — RSI 56,3, trail EMA20 ($67,58)
+- ACA  | 122,85 | 145,38 | +18,3% | Building materials — RSI 71,4 (juste sous 72), trail EMA20 ($138,40). Secteur Materials LAGGARD -1%, surveiller
+- BTSG | 60,59  | 70,56  | +16,4% | Healthcare — RSI 74,0 → PARTIEL 33% exécuté, trail EMA20 ($66,11). Nouveau ATH $72,06
+- AMGN | 347,84 | 366,44 | +5,3%  | Biotech — RSI 62,9, trail EMA20 ($353,60)
 
-**SORTIES** : CECO (technique, sous EMA20) · ENVA (riba, prêt à intérêt) · ING (riba, banque) → CASH.
-**CASH** : SNEX (+5,7% réalisé) · ASML (+2,5% réalisé) · CECO · ENVA · ING.
-**Held avg ≈ +20,0%** · MaxDD ≈ −2,5% · slots cash : 5 — REDÉPLOYER en A+ Halal ou ETF Sharia (SPUS/HLAL).
-Régime RISK-ON DEPLOY. Rotation : Tech, Industrials, Biotech, Semicap mènent. ACA/BTSG RSI >72 → partiels.
+**SORTIES** : CECO (technique, sous EMA20) · ENVA (riba) · ING (riba) · KLAC (sous EMA20, anti-give-back violé : +41,7%→+9,3%, close $233,31 < EMA20 $243,47, exit à $233,31) → CASH.
+**CASH** : SNEX (+5,7% réalisé) · ASML (+2,5% réalisé) · CECO · ENVA · ING · KLAC (+9,3% réalisé, leçon anti-give-back) · BTSG partiel 33%.
+**Held avg ≈ +14,2%** · MaxDD ≈ −2,5% · slots cash : 6 — REDÉPLOYER en A+ Halal ou ETF Sharia (SPUS/HLAL).
+Régime RISK-ON DEPLOY. Rotation : Capital Markets, Semis, Auto Manufacturers, Electrical Equipment mènent. Secteurs top : Financials, Technology, Consumer Discretionary. Laggards : Consumer Staples, Materials.
 
 ---
 
