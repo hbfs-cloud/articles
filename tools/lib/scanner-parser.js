@@ -153,13 +153,15 @@ function loadSignals(dir) {
         fortressPool = poolFrom('fortress_pool');
         fortressPoolSource = 'fortress_pool';
       } else {
-        // Sharia compliance: scan signals almost always arrive with sharia=null (compliance is
-        // DERIVED, not scan-tagged — same convention as signalsFor() in gen-status-page.js).
-        // A literal `s.sharia === true` check would near-permanently yield 0 fallback candidates
-        // since the scanner rarely stamps an explicit true. isHaramForHalalMode() is the shared
-        // source of truth (ticker/sector exclusion list) also used by sweep.js/gen-status-page.js.
+        // Sharia compliance — FAIL-CLOSED: a Halal-mandated mode (aplus/fortress) must NEVER
+        // surface a name that wasn't EXPLICITLY vetted Halal. The scanner now stamps an explicit
+        // `sharia:true` on compliant rows (real ratio screen at generation), so we require
+        // `s.sharia === true` here — sharia=null/false/undefined are rejected. isHaramForHalalMode()
+        // stays as a second, redundant guard (shared source of truth with sweep.js/gen-status-page.js).
+        // Consequence: on a scan where no score>=92 signal is stamped Halal, the fallback is EMPTY —
+        // that is correct (0 A+ Halal today) and infinitely safer than leaking a haram name (SEZL/RTX/…).
         fortressPool = signals
-          .filter(s => (s.score || 0) >= 92 && !isHaramForHalalMode(s))
+          .filter(s => (s.score || 0) >= 92 && s.sharia === true && !isHaramForHalalMode(s))
           .map(s => ({ ...s, strategy: 'FortressA+', source: 'fortress_fallback' }));
         fortressPoolSource = 'fortress_fallback';
         console.log(`[scanner-parser] ${dir}: fortress_pool absent from scan (fortress-pm skill not run) — fallback to ${fortressPool.length} scan signal(s) with score>=92 & sharia-compliant (source=fortress_fallback)`);

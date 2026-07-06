@@ -834,7 +834,16 @@ async function main() {
     const f = SF[cfg.filterName] || (() => true);
     const uf = cfg.universeFilter || null;
     const cur = curOf(cfg); // MAD for casablanca, USD otherwise
-    return signals.filter(s => f(s.strategy || '')).filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s)).slice(0, cfg.topN).map(s => {
+    // Asset-class gate: forex (and future crypto/metals) modes ship filterName='all' and NO
+    // universeFilter, so 'all' otherwise matches top equity signals and the forex panel renders
+    // stocks (pre-existing bug: HEAD showed RTX/V/FTNT — even a haram defense name — in the forex
+    // mode). These modes draw from a dedicated asset pool whose signals carry source='<class>_pool'
+    // (set by scanner-parser.poolFrom). Restricted to the exact pool-backed classes so universe-gated
+    // scripted modes (etf=us_etf, etf_eu=etf, highvol/stockbox=us_equity) are NOT caught.
+    const ac = cfg.assetClass;
+    const POOL_ASSET_CLASSES = new Set(['forex', 'crypto', 'metals']);
+    const isAssetMode = POOL_ASSET_CLASSES.has(ac);
+    return signals.filter(s => f(s.strategy || '')).filter(s => !isAssetMode || (s.source || '') === ac + '_pool').filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s))).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
       // Return display-ready strings for HTML rendering, keep numeric _raw for computations
       const vwapRef = signalVwap[s.ticker] || null;
@@ -973,7 +982,7 @@ async function main() {
     const isScripted = (SCRIPTED_FILTERS.has(cfg.filterName) || SCRIPTED_IDS.has(id)) && id !== 'fortress' && id !== 'aplus';
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
-    const fallback = isScripted ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
+    const fallback = isScripted ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s)))
       .slice(cfg.topN, cfg.topN + 4).map(s => {
         const st = clampStop(s.entry, s.stop, cfg.maxStopPct);
         return { ...s, vwapRef: signalVwap[s.ticker] || null, entry: price(s.entry), stop: price(st), tp1: price(s.tp1), tp2: price(s.tp2), _entry: s.entry, _stop: st, _tp1: s.tp1, _tp2: s.tp2 };
@@ -3709,7 +3718,7 @@ function backfillHistory() {
         .filter(s => filterFn(s.strategy || ''))
         .filter(s => !_ufBF || (s.universe || '') === _ufBF)
         .filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore)
-        .filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
+        .filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s)))
         .slice(0, cfg.topN)
         .map(s => ({ ticker: s.ticker, score: s.score, strategy: s.strategy, entry: s.entry, stop: s.stop, tp1: s.tp1, tp2: s.tp2, rr: s.rr, thesis: s.thesis || '' }));
 
