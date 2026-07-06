@@ -449,7 +449,18 @@ const STRATEGY_FILTERS_MAP = {
   'momentum_rotation': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
   'etf_momentum': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'hybrid_megacap', 'pullback', 'candlestick']),
   'trendline_breakout': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'etf_momentum', 'hybrid_megacap', 'pullback', 'candlestick']),
+  // index_rotation (StockBox Nasdaq top-8): signals carry strategy tag 'IndexRotation' +
+  // universe 'stockbox'. This filter admits ONLY IndexRotation (excludes every other tag);
+  // the universeFilter='stockbox' gate is the second layer. Without this entry,
+  // STRATEGY_FILTERS_MAP['index_rotation'] was undefined and simulatePortfolio crashed on
+  // `activeFilter.has(...)` (frozen-mode path has no `|| new Set()` fallback).
+  'index_rotation': new Set(['short_squeeze', 'pre_squeeze', 'momentum', 'momentum_rotation', 'breakout', 'highvol_breakout', 'adaptive_fractal', 'trendline_breakout', 'etf_momentum', 'hybrid_megacap', 'hybrid_af', 'pullback', 'candlestick']),
 };
+// The 'IndexRotation' tag is brand-new (stockbox): exclude it from EVERY other mode so it
+// can never leak into quality/specialist portfolios (belt-and-suspenders with universeFilter).
+for (const [_k, _set] of Object.entries(STRATEGY_FILTERS_MAP)) {
+  if (_k !== 'index_rotation') _set.add('IndexRotation');
+}
 
 // Normalize regime string to lookup key
 function normalizeRegime(regime) {

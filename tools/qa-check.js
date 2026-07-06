@@ -184,7 +184,7 @@ check('scan dernier jour ouvré: labels stratégie conformes (pas de Trend Follo
   // (le HTML contient légitimement le mot "defensive" en prose descriptive).
   // 'Candlestick' = AmericanBulls reversal patterns appended by candlestick-scanner.js
   // for the "bull" mode (filterName=candlestick_only). Legitimate, not the 4 core A+ labels.
-  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout', 'highvol_breakout', 'TrendlineBreakout', 'trendline_breakout', 'MomentumRotation', 'momentum_rotation', 'ETFMomentum', 'etf_momentum']);
+  const ALLOWED = new Set(['Momentum', 'Pullback', 'Breakout', 'Pre-Squeeze', 'Candlestick', 'AdaptiveFractal', 'HighVolBreakout', 'highvol_breakout', 'TrendlineBreakout', 'trendline_breakout', 'MomentumRotation', 'momentum_rotation', 'ETFMomentum', 'etf_momentum', 'IndexRotation', 'index_rotation']);
   const scannerDir = path.join(ROOT, 'scanner');
   const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse().slice(0, 2);
   const found = [];

@@ -51,7 +51,7 @@ function loadScanSignals(arg) {
   // (multi-pool, enum stratégie) lisent le fichier RAW et couvrent tout le monde.
   // Candlestick est aussi exclu de l'éditorial (stops pattern larges + small caps by design,
   // parité AB) : sa règle dédiée (15) lit le fichier RAW ci-dessous.
-  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap', 'candlestick']);
+  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap', 'candlestick', 'indexrotation']);
   const isSpecialist = s => SPECIALIST_STRATEGIES.has(String(s.strategy || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
   const editorial = loaded.signals.filter(s => !isSpecialist(s));
   const specialistCount = loaded.signals.length - editorial.length;
@@ -530,8 +530,14 @@ async function main() {
         }
       }
 
+      // Scope to EDITORIAL (composite top-10) signals only. Specialist scanner pools
+      // (stockbox/highvol/etf/momentum/fractal/...) legitimately emit the same ticker
+      // across independent modes — "même ticker dans plusieurs modes = confirmation".
+      const SPECIALIST_NORM = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap', 'candlestick', 'indexrotation']);
+      const _isSpec = s => SPECIALIST_NORM.has(String(s.strategy || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
       const signalsTickerCounts = {};
       for (const s of raw.signals || []) {
+        if (_isSpec(s)) continue;
         const t = String(s.ticker || '').toUpperCase();
         if (!t) continue;
         signalsTickerCounts[t] = (signalsTickerCounts[t] || 0) + 1;
@@ -563,6 +569,7 @@ async function main() {
     'HybridMegaCap', 'HybridMegacap', 'Hybrid-MegaCap', 'Hybrid-AF', 'Hybrid-DSL', 'megacap', 'hybrid_megacap',
     'FortressA+',
     'CryptoMomentum', 'MetalsMomentum', 'ForexMultiStrategy',
+    'IndexRotation', 'index-rotation', 'index_rotation',
   ]);
   for (const s of signals) {
     const strat = (s.strategy || '').trim();
