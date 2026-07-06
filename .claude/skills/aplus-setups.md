@@ -76,6 +76,17 @@ Post-filter: `market_cap >= 2-3e9`, drop tickers already covered (existing `anal
 - **Price-scale sanity (MANDATORY — KLAC lesson):** the entry/stop/TP printed in the article MUST be in the **same scale as the live quote**. Cross-check entry vs `QueryData types=quote` price — if it deviates by ≥2× (or ≈10×), it's a **stock-split / unadjusted-quote / typo error** (KLAC printed $2120 entry on a $212 stock post a ~10:1 split). Also sanity-check ATR, EMAs and the 52-week range are in the same scale.
 - **R/R-at-spot:** entry near EMA20/support, stop below EMA50 or ~1.6×ATR, TP1 at structure. R/R must be ≥1.5 at that entry. Reject "fictional R/R" names.
 
+### 3b. Post-entry management — anti-give-back
+Every published A+ plan must include a real stop and this management ladder. The stop only ratchets upward on confirmed daily closes, never on intraday wicks.
+
+- +1R → stop to breakeven.
+- +2R → partial TP or trailing stop.
+- +20% latent gain → stop floor at `entry × 1.10`.
+- +30% latent gain → stop floor at `entry × 1.18`; sell 1/3 if the move is vertical, gap-driven, or volume-extreme.
+- +40% latent gain → sell 1/3 to 1/2 automatically; remaining stop ≥ `max(current_stop, entry × 1.25, highest_daily_close × 0.85)`.
+
+This is the KLAC lesson: an ATR trail can widen after volatility expands, so a +40% runner must not be allowed to give back most of the move.
+
 ### 4. Select ~10 with sector diversity + basket sanity
 Check correlation/concentration (e.g. aero + airline can be one oil/rate-cyclical bet at corr 0.70; banks cluster high-beta-to-SPY). Aim for genuinely independent bets, and fit to the regime (don't load a high-beta cyclical bloc into a neutral/early-risk-off tape).
 

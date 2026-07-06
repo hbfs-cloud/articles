@@ -342,6 +342,7 @@ Déterminer l'état moteur : CŒUR ON (toujours) / SATELLITE ON ou OFF (risk_on/
 son groupe :
 - Groupe MÈNE → trail EMA20, tenir / pyramider si pullback
 - Groupe BASCULE LAGGARD → resserrer stop, préparer sortie
+- Profit-lock anti-give-back A+ : +20% latent → stop ≥ entrée×1.10 ; +30% → stop ≥ entrée×1.18 et partiel 1/3 si extension verticale/gap/volume extrême ; +40% → vendre 1/3 à 1/2 puis stop du solde ≥ max(stop courant, entrée×1.25, plus haut close×0.85)
 - Sous EMA20 close → SORTIR
 - RSI extrême (>75) → partiel 33% + serrage
 - Stall ≥4 jours → serrage 50%
