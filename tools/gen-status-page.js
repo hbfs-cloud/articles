@@ -2523,12 +2523,17 @@ document.addEventListener('DOMContentLoaded',function(){
     });
   }
   setTimeout(updateLiveActions, 800);
-  // Hide stale orders: orders only show on their scan date
+  // Hide STALE orders only. data-scan-date = the SESSION the orders are for (next-session
+  // convention: D+1 after 22:30, D+3 on Fri). A scan published the evening of day D carries
+  // scanDir=D+1, so an exact not-equal test hid the freshest orders the very night they were
+  // meant to be placed (proven: etf/etf_eu/stockbox showed 5/1/5 orders but display:none on the
+  // eve of the session). Correct rule: hide only when the session is in the PAST (sd less than today).
+  // YYYYMMDD strings compare lexicographically == numerically, so string compare is safe.
   (function(){
     var today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/New_York'}).format(new Date()).replace(/-/g,'');
     document.querySelectorAll('.cta-orders[data-scan-date]').forEach(function(el){
       var sd=el.getAttribute('data-scan-date');
-      if(sd&&sd!==today) el.style.display='none';
+      if(sd&&sd<today) el.style.display='none';
     });
   })();
   // ═══ TIME MACHINE — template approach: hide grid, render into .tm-render ═══

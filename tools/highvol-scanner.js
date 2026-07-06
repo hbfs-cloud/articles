@@ -368,35 +368,55 @@ async function main() {
   const regimeStr = REGIME || '';
   const regimeUp = regimeStr.toUpperCase().replace(/[- ]/g, '_');
 
+  // Authentic 0-signal exit: write the _scanRuns.highvol marker BEFORE early-returning so the
+  // "scanner actually ran" proof is scanner-authored (never hand-fabricated downstream). qa-check
+  // requires a marker per scripted mode; a legitimate 0-signal day (TOXIC VIX cluster / RISK_OFF)
+  // must still emit one. Idempotent: overwrites the highvol key on re-run without touching others.
+  const earlyExit = (note) => {
+    console.log(`\n❌ ${note}`);
+    if (OUTPUT_MODE === 'signals') {
+      const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+      const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+      if (fs.existsSync(sigPath)) {
+        const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+        if (!signals._scanRuns) signals._scanRuns = {};
+        signals._scanRuns.highvol = { at: new Date().toISOString(), universe: 'americanbull', candidates: 0, signals: 0, added: 0, note };
+        fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+        console.log(`📁 Wrote highvol 0-signal marker to ${sigPath}`);
+      }
+    }
+    return [];
+  };
+
   // RISK_OFF = no new positions
   if (regimeUp === 'RISK_OFF') {
-    console.log(`\n❌ Regime RISK_OFF — no new positions.`); return [];
+    return earlyExit('Regime RISK_OFF — no new positions.');
   }
 
   // Max volatility index (scanner_filters.max_volatility_index = 28): VIX above cap => no scan
   if (vixLevel > MAX_VOLATILITY_INDEX) {
-    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} > ${MAX_VOLATILITY_INDEX} (max_volatility_index) — no signals.`); return [];
+    return earlyExit(`VIX ${vixLevel.toFixed(1)} > ${MAX_VOLATILITY_INDEX} (max_volatility_index) — no signals.`);
   }
 
   // VIX 18-22 + not stable = toxic
   if (vixLevel >= 18 && vixLevel < 22 && vixTrend !== 'stable') {
-    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (18-22) + ${vixTrend} = TOXIC cluster, no signals.`); return [];
+    return earlyExit(`VIX ${vixLevel.toFixed(1)} (18-22) + ${vixTrend} = TOXIC cluster, no signals.`);
   }
   // VIX 15-18 + falling = toxic
   if (vixLevel >= 15 && vixLevel < 18 && vixTrend === 'falling') {
-    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (15-18) + falling = TOXIC cluster, no signals.`); return [];
+    return earlyExit(`VIX ${vixLevel.toFixed(1)} (15-18) + falling = TOXIC cluster, no signals.`);
   }
   // VIX < 15 + rising = toxic
   if (vixLevel > 0 && vixLevel < 15 && vixTrend === 'rising') {
-    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (<15) + rising = TOXIC cluster, no signals.`); return [];
+    return earlyExit(`VIX ${vixLevel.toFixed(1)} (<15) + rising = TOXIC cluster, no signals.`);
   }
   // VIX 22-30 + falling = toxic
   if (vixLevel >= 22 && vixLevel < 30 && vixTrend === 'falling') {
-    console.log(`\n❌ VIX ${vixLevel.toFixed(1)} (22-30) + falling = TOXIC cluster, no signals.`); return [];
+    return earlyExit(`VIX ${vixLevel.toFixed(1)} (22-30) + falling = TOXIC cluster, no signals.`);
   }
   // RECOVERY + VIX 18-22 = toxic
   if (regimeUp.includes('RECOVERY') && vixLevel >= 18 && vixLevel < 22) {
-    console.log(`\n❌ RECOVERY + VIX ${vixLevel.toFixed(1)} (18-22) = TOXIC cluster, no signals.`); return [];
+    return earlyExit(`RECOVERY + VIX ${vixLevel.toFixed(1)} (18-22) = TOXIC cluster, no signals.`);
   }
 
   console.log(`📡 Fetching OHLCV data via Yahoo...`);
