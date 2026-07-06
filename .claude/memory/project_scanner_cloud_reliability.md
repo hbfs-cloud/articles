@@ -124,3 +124,19 @@ bull (AmericanBulls = artefact survivorship), trendline (à requalifier), casabl
 - [ ] getConfigVersion look-ahead FCX/GE/AVGO (clos) : laissés tels quels (immutabilité). Fix historique
       (effectiveFrom v10.0) déjà appliqué pour les futurs.
 - [ ] uk-selective + Phase D specs déjà écrites (docs/specs/), prêtes à déléguer.
+
+## MAJ 2026-07-06 — preuve vwapGate = RÉFUTÉE (revert) + leçon
+- **vwapGate proof (whyyyvql3)** : re-run PoC highvol vwapGate=false → +4.35%→+0.29%, PF 1.86→1.03,
+  WR 54.5→34.6%. RÉFUTE l'hypothèse "le cap écarte les gagnants". REVERT vwapGate→true (8f6b89496).
+- **LEÇON (réutilisable)** : dans un portefeuille SLOT-CONTRAINT (topN fixe), un gate n'est PAS
+  "rejeter = perdre le trade" — la boucle promeut le candidat suivant mieux classé dans le slot.
+  Donc un gate peut PRÉSERVER la qualité (écarte l'étendu chassé, promeut un alternate meilleur),
+  pas seulement restreindre. Ne jamais juger un gate par "combien il rejette" mais par l'effet net
+  sur le roster.
+- **Vérité Go** (grep systematic-tss : 0 'vwap') : highvol Go entre via LIMIT order à signal-price
+  × 1.025 (limit_price_markup), PAS de VWAP. Ni vwapGate=true ni false ne matche. VRAI fix fidélité =
+  modéliser le limit-markup (cape gap-ups >2.5% sans clamp synthétique) — chantier Phase D moteur.
+- **etf/etf_eu** re-portés draft (1dd6f9d38). Tous les modes scriptés re-portables faits (5 draft :
+  highvol/hybrid/forex/etf/etf_eu). Bloqués : ultra-v5 (pyramiding), uk/in/jp (univers).
+- **Prochain gros = full Phase D run** (fetch MCP), MAIS sa fidélité de MAGNITUDE dépend d'abord de
+  modéliser l'entrée Go (limit-markup) + pyramiding. Décision séquencement à trancher user.
