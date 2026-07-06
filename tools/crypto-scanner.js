@@ -34,9 +34,12 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { calcSMA, calcRSI, calcATR, calcReturn, volRatio } = require('./lib/crypto-indicators');
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+// Cache prix DATÉ partagé (data/.price-cache/<date>/<interval>/<market>/<ticker>.json).
+// Marché=CRYPTO, interval=1d. La date du bucket = SCAN_DATE (le jour de scan).
+const CACHE_OPTS = { market: priceCache.MARKETS.CRYPTO, interval: '1d' };
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -94,19 +97,6 @@ function toBinanceSymbol(ticker) {
 
 // ─── Binance klines OHLCV fetch (daily, with volume) ────────────────────────
 
-function loadCachedPrice(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const stat = fs.statSync(fp);
-  if ((Date.now() - stat.mtimeMs) / 3600000 > 12) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
-}
-
-function saveCachedOHLCV(ticker, bars) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
-}
-
 // Binance klines API: GET /api/v3/klines?symbol=BTCUSDT&interval=1d&limit=250
 // Response: [[openTime, open, high, low, close, volume, ...], ...]
 // (internal/ohlcv/binance.go:75-142)
@@ -143,7 +133,6 @@ function fetchBinanceKlines(ticker, attempt = 0) {
               volume: parseFloat(k[5]),
             });
           }
-          saveCachedOHLCV(ticker, bars);
           resolve(bars);
         } catch { resolve(null); }
       });
@@ -156,10 +145,18 @@ function fetchBinanceKlines(ticker, attempt = 0) {
   });
 }
 
-function fetchOHLCV(ticker) {
-  const cached = loadCachedPrice(ticker);
-  if (cached) return Promise.resolve(cached);
-  return fetchBinanceKlines(ticker);
+// Cache DATÉ partagé : lit le snapshot gelé …/SCAN_DATE/1d/CRYPTO/…, sinon fetch live
+// puis writeBars (TRONQUE à bar.date <= SCAN_DATE, anti-look-ahead). Forward (SCAN_DATE=aujourd'hui)
+// → troncature no-op → iso comportement. Le TTL 12h ne s'applique qu'à la date du jour (dans le helper).
+async function fetchOHLCV(ticker) {
+  const opts = { ...CACHE_OPTS, date: SCAN_DATE };
+  const cached = priceCache.readBars(ticker, opts);
+  if (cached && cached.length) return cached;
+  const bars = await fetchBinanceKlines(ticker);
+  if (!bars) return null;
+  priceCache.writeBars(ticker, bars, opts);
+  // Relit le snapshot canonique (tronqué/trié) pour parité cache-hit / cache-miss.
+  return priceCache.readBars(ticker, opts) || bars;
 }
 
 // ─── Batch fetch with concurrency ───────────────────────────────────────────

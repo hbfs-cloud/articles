@@ -5,11 +5,29 @@
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
+const priceCache = require('./price-cache');
 
 const BVC_API = 'https://api.casablanca-bourse.com/fr/api/bourse_data';
-// Cache marché-namespacé: BVC (Casablanca) = CVA/, pour éviter la collision de ticker avec le
-// cache US flat (ex "SNA" = Snap-on US $402 vs Stokvis Nord BVC ~74 MAD). Voir data/.price-cache/US/.
+const CVA = priceCache.MARKETS.CVA; // marché Casablanca dans le cache prix DATÉ partagé.
+// Répertoire flat CVA/ : conservé UNIQUEMENT pour la métadonnée instruments (_bvc_instruments.json)
+// + le shadow plat ${ticker}_ohlcv.json que sweep.js lit encore (loadCachedPrice step 3). Les BARS
+// de prix passent désormais par price-cache.js → data/.price-cache/<date>/1d/CVA/<ticker>.json,
+// point-in-time rejouable. Le namespace CVA évite la collision de ticker qui donnait "SNA" = Snap-on
+// US $402 au lieu de Stokvis Nord BVC ~74 MAD (le bug racine).
 const CACHE_DIR = path.join(__dirname, '..', '..', 'data', '.price-cache', 'CVA');
+
+/** Options de cache normalisées pour un fetch BVC : marché=CVA, interval=1d, date=fetch (déf. aujourd'hui). */
+function bvcCacheOpts(opts = {}) {
+  return { date: opts.date || priceCache.todayISO(), market: CVA, interval: '1d' };
+}
+
+/** Shadow plat CVA/${ticker}_ohlcv.json (ARRAY) — compat sweep.js. Écrit les bars complets triés asc. */
+function writeLegacyShadow(symbol, bars) {
+  try {
+    fs.mkdirSync(CACHE_DIR, { recursive: true });
+    fs.writeFileSync(path.join(CACHE_DIR, `${symbol}_ohlcv.json`), JSON.stringify(bars));
+  } catch { /* le shadow est best-effort ; le cache daté reste la source de vérité */ }
+}
 
 // BVC uses self-signed/incomplete cert chain
 const agent = new https.Agent({ rejectUnauthorized: false });
@@ -69,18 +87,15 @@ function parseFloat2(raw) {
   return 0;
 }
 
-async function fetchOHLCV(symbol, instrumentID) {
-  // Check cache first
-  const cached = path.join(CACHE_DIR, `${symbol}_ohlcv.json`);
-  if (fs.existsSync(cached)) {
-    const age = (Date.now() - fs.statSync(cached).mtimeMs) / 3600000;
-    if (age < 12) {
-      try {
-        const bars = JSON.parse(fs.readFileSync(cached, 'utf8'));
-        if (bars.length >= 60) return bars;
-      } catch {}
-    }
-  }
+async function fetchOHLCV(symbol, instrumentID, opts = {}) {
+  const cacheOpts = bvcCacheOpts(opts);
+  // 1. Snapshot DATÉ …/<date>/1d/CVA/<symbol>.json. Une date passée relit le fichier gelé (jamais
+  //    de re-fetch) ; le jour courant applique le TTL 12h du helper. allowLegacyFallback:FALSE est
+  //    CRITIQUE : un fallback plat lirait PRICE_CACHE_ROOT/<symbol>_ohlcv.json (racine, sans namespace),
+  //    qui pour "SNA" est le fichier US Snap-on ($402) → collision de ticker = le bug racine. Le namespace
+  //    CVA du cache daté garantit que les prix Casablanca restent en MAD.
+  const cachedBars = priceCache.readBars(symbol, { ...cacheOpts, allowLegacyFallback: false });
+  if (cachedBars && cachedBars.length >= 60) return cachedBars;
 
   const baseUrl = `${BVC_API}/instrument_history?` +
     `fields%5Binstrument_history%5D=drupal_internal__id,coursCourant,cumulVolumeEchange,created,lowPrice,highPrice,openingPrice,closingPrice,ratioConsolide` +
@@ -118,16 +133,20 @@ async function fetchOHLCV(symbol, instrumentID) {
   bars.sort((a, b) => a.date.localeCompare(b.date));
 
   if (bars.length >= 60) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
-    fs.writeFileSync(cached, JSON.stringify(bars));
+    // writeBars TRONQUE à bar.date <= cacheOpts.date (anti-look-ahead ; no-op en forward où
+    // date == aujourd'hui) puis écrit l'ARRAY canonique dans le snapshot daté CVA.
+    priceCache.writeBars(symbol, bars, cacheOpts);
+    // Shadow plat CVA/<symbol>_ohlcv.json : sweep.js le lit encore (loadCachedPrice step 3).
+    writeLegacyShadow(symbol, bars);
   }
   return bars.length >= 60 ? bars : null;
 }
 
-async function batchFetchBVC(concurrency = 5) {
+async function batchFetchBVC(concurrency = 5, opts = {}) {
   const instruments = await loadInstruments();
   const symbols = Object.keys(instruments);
-  console.log(`📊 BVC: ${symbols.length} instruments from Casablanca Bourse`);
+  const fetchDate = bvcCacheOpts(opts).date;
+  console.log(`📊 BVC: ${symbols.length} instruments from Casablanca Bourse (cache daté ${fetchDate} / CVA)`);
 
   const results = new Map();
   const queue = [...symbols];
@@ -136,7 +155,7 @@ async function batchFetchBVC(concurrency = 5) {
   async function worker() {
     while (queue.length) {
       const s = queue.shift();
-      const bars = await fetchOHLCV(s, instruments[s].id).catch(() => null);
+      const bars = await fetchOHLCV(s, instruments[s].id, { date: fetchDate }).catch(() => null);
       if (bars) results.set(s, bars);
       done++;
       if (done % 10 === 0) process.stderr.write(`  BVC: ${done}/${symbols.length} (${results.size} valid)\r`);

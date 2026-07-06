@@ -25,9 +25,9 @@ const {
   calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
   calcAvgVolume, calcDollarVolumePercentile, calcStochastic,
 } = require('./lib/fractal-indicators');
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -37,6 +37,11 @@ function getArg(name, def) {
 const hasFlag = name => args.includes(`--${name}`);
 
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
+// Cache prix DATÉ partagé (source unique de vérité). Marché=US, interval=1d.
+// La date = le jour de scan (--date) → snapshot point-in-time rejouable, jamais de pollution
+// inter-dates. Fallback lecture legacy géré par le helper si le fichier daté manque.
+const CACHE_OPTS = { date: SCAN_DATE, market: priceCache.MARKETS.US, interval: '1d' };
+const SCAN_DATE_IS_TODAY = priceCache.normalizeDate(SCAN_DATE) === priceCache.todayISO();
 const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const DRY_RUN = hasFlag('dry-run');
@@ -64,14 +69,22 @@ const MEGA_CAP_TICKERS = [
 // ─── Yahoo OHLCV fetcher ──────────────────────────────────────────────────
 
 function readCache(ticker, minBars = 60) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
-  if (age > 24) return null; // 24h for breadth analysis
-  try {
-    const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
-    return bars.length >= minBars ? bars : null;
-  } catch { return null; }
+  // Lecture via le cache daté partagé (TTL 12h appliqué SEULEMENT si SCAN_DATE == aujourd'hui ;
+  // date passée = snapshot immuable). Fallback legacy plat en lecture seule si fichier daté absent.
+  const bars = priceCache.readBars(ticker, CACHE_OPTS);
+  if (!bars || bars.length < minBars) return null;
+  // Parité migration : le helper ne TTL pas le fallback legacy. Tant qu'aucun snapshot DATÉ n'existe
+  // pour aujourd'hui, on lit encore le plat — on restaure alors le gate de fraîcheur 24h historique de
+  // la breadth (identique en forward, où l'amont rafraîchit le cache le jour même). No-op dès qu'un
+  // snapshot daté existe (le helper prend le relais avec son TTL 12h) ou pour une date passée (immuable).
+  if (SCAN_DATE_IS_TODAY && !fs.existsSync(priceCache.cacheFile(ticker, CACHE_OPTS))) {
+    try {
+      const legacy = path.join(priceCache.PRICE_CACHE_ROOT, `${ticker}_ohlcv.json`);
+      const age = (Date.now() - fs.statSync(legacy).mtimeMs) / 3600000;
+      if (age > 24) return null;
+    } catch { /* pas de legacy lisible → laisser passer (le helper a déjà validé les bars) */ }
+  }
+  return bars;
 }
 
 function fetchOHLCV(ticker) {
@@ -96,8 +109,9 @@ function fetchOHLCV(ticker) {
             }
           }
           if (bars.length >= 60) {
-            fs.mkdirSync(CACHE_DIR, { recursive: true });
-            fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+            // Écrit dans le snapshot daté ; writeBars TRONQUE à bar.date <= SCAN_DATE
+            // (anti-look-ahead au backfill ; no-op en forward).
+            priceCache.writeBars(ticker, bars, CACHE_OPTS);
           }
           resolve(bars.length >= 60 ? bars : null);
         } catch { resolve(null); }

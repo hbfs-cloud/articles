@@ -21,9 +21,13 @@ const {
   calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
   calcAvgVolume, calcMedianVolume, calcDollarVolumePercentile, calcStochastic,
 } = require('./lib/fractal-indicators');
+const priceCache = require('./lib/price-cache'); // cache prix DATÉ partagé (source unique de vérité)
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+// Marché/interval de ce scanner (US equities, daily). La date de cache = SCAN_DATE (jour de scan),
+// jamais aujourd'hui par défaut : le helper gèle un snapshot point-in-time par date (anti-pollution).
+const CACHE_MARKET = 'US';
+const CACHE_INTERVAL = '1d';
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -77,9 +81,24 @@ const EXCLUDED_SECTORS = new Set(['Real Estate', 'Utilities', 'Materials', 'Comm
 const MIN_MARKET_CAP = 1_000_000_000; // allocation min_market_cap = $1B
 let TICKER_META = {};
 try { TICKER_META = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'ticker-metadata.json'), 'utf8')); } catch (_) { /* metadata absent → filtre secteur/mcap OFF (fail-open) */ }
-// Rejette un ticker si son secteur est exclu OU mcap < $1B. Fail-open si pas de metadata (inconnu = gardé).
+// ISO-parity source de vérité pour secteur/mcap = LE MÊME snapshot gelé que Go lit pour bâtir
+// l'univers US : systematic-tss cache/stockanalysis/stock/US/tickers-frozen.json (copie versionnée
+// ici dans data/tickers-frozen.json — valeurs identiques). Go itère cet univers et rejette
+// stock.MarketCap < min_market_cap ($1B) + excluded_sectors. Le ticker-metadata.json (fetch
+// stockanalysis live) a dérivé : mcaps gonflés pour des noms limites (INDI 1.02B vs 580M réel,
+// SLS 2.75B vs 889M, VPG 1.99B vs 567M) → le port JS fabriquait INDI/SLS/VPG que Go exclut sous
+// le plancher $1B. On lit le frozen en PRIORITÉ (= exactement ce que Go filtre) et on retombe sur
+// ticker-metadata seulement si le ticker est absent du frozen (fail-open préservé, jamais de goOnly
+// nouveau car les picks Go proviennent tous du frozen).
+let FROZEN_META = {};
+try {
+  const fz = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'tickers-frozen.json'), 'utf8'));
+  FROZEN_META = (fz && fz.data && fz.data.data) ? fz.data.data : (fz.Data && fz.Data.Data ? fz.Data.Data : {});
+} catch (_) { /* frozen absent → fallback ticker-metadata seul (comportement antérieur) */ }
+// Rejette un ticker si son secteur est exclu OU mcap < $1B. Frozen (Go-authoritative) d'abord,
+// puis ticker-metadata en fallback, puis fail-open si les deux sont muets (inconnu = gardé).
 function passesSectorMcap(ticker) {
-  const m = TICKER_META[ticker];
+  const m = FROZEN_META[ticker] || TICKER_META[ticker];
   if (!m) return true; // metadata inconnue → ne pas rejeter (fail-open, comportement offline antérieur)
   if (m.sector && EXCLUDED_SECTORS.has(m.sector)) return false;
   if (m.marketCap && m.marketCap > 0 && m.marketCap < MIN_MARKET_CAP) return false;
@@ -99,14 +118,13 @@ function loadUniverse() {
 const MIN_BARS = 200;
 
 function readCache(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
-  if (age > 12) return null;
-  try {
-    const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
-    if (bars.length >= MIN_BARS) return bars;
-  } catch {}
+  // Décision de fetch : on ne lit QUE le snapshot daté pour SCAN_DATE (immuable si date passée ;
+  // TTL 12h si SCAN_DATE == aujourd'hui). PAS de fallback legacy ici — un snapshot absent DOIT
+  // déclencher un fetch live puis writeBars daté, garantissant « TOUJOURS écrire en daté » (migration
+  // hors des vieux fichiers plats + pas de service de données figées legacy sans TTL). Canonique =
+  // candlestick-scanner.js. (Le fallback legacy lecture-seule reste dispo pour les chemins cache-only.)
+  const bars = priceCache.readBars(ticker, { date: SCAN_DATE, market: CACHE_MARKET, interval: CACHE_INTERVAL, allowLegacyFallback: false });
+  if (bars && bars.length >= MIN_BARS) return bars;
   return null;
 }
 
@@ -136,8 +154,9 @@ function fetchOHLCV(ticker) {
             });
           }
           if (bars.length >= MIN_BARS) {
-            fs.mkdirSync(CACHE_DIR, { recursive: true });
-            fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+            // Écriture DATÉE : le helper tronque à bar.date <= SCAN_DATE (anti-look-ahead) puis mkdir -p.
+            // Forward (SCAN_DATE == aujourd'hui) → troncature no-op → zéro régression.
+            priceCache.writeBars(ticker, bars, { date: SCAN_DATE, market: CACHE_MARKET, interval: CACHE_INTERVAL });
           }
           resolve(bars.length >= MIN_BARS ? bars : null);
         } catch { resolve(null); }

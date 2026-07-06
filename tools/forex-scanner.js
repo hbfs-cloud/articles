@@ -31,11 +31,12 @@
  *
  *   FINAL = momentumScore*0.40 + mrScoreNorm*0.30 + rsScoreNorm*0.30  (line 251)
  *
- * FILTERS (scanner_forex.go):
+ * FILTERS (scanner_forex.go bare defaults, OVERRIDDEN by the forex-majors sleeve
+ * scanner_filters in config/portfolio_multi_survivors.yaml — the authoritative ISO values):
  *   - need ≥200 bars (line 74)
- *   - atrPct ≥ 0.001 (lines 113-119)
- *   - RSI in [20, 80] (lines 122-134)
- *   - finalScore ≥ 5.0 (lines 261-263)  [plus --min-score CLI gate]
+ *   - atrPct ≥ 0.006  (config min_atr_pct ; scanner default 0.001)
+ *   - RSI in [30, 75] (config min_rsi/max_rsi ; scanner default [20, 80])
+ *   - finalScore ≥ 8  (config min_score ; scanner hard floor 5.0)
  *
  * DXY: fetched once (DX-Y.NYB) and dxyMom30 = calcReturn(dxy, 30) used for the
  * relative-strength axis (scanner_forex.go:58-62, 211-227). Equity business-day
@@ -59,9 +60,10 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { calcSMA, calcRSI, calcATR, calcReturn, calcBBPctB } = require('./lib/forex-indicators');
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+const FX_MARKET = priceCache.MARKETS.FX;   // marché FX (arbo cache datée)
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -73,12 +75,18 @@ function getArg(name, def) {
 const hasFlag = name => args.includes(`--${name}`);
 
 const CUSTOM_TICKERS = getArg('tickers', '').split(',').filter(Boolean);
-const MIN_SCORE = parseFloat(getArg('min-score', '5'));   // scanner_forex.go:261 floor is 5.0
+// forex-majors sleeve scanner_filters.min_score = 8 (config/portfolio_multi_survivors.yaml).
+// Go effective gate = max(filters.MinScore=8, hard floor 5.0) = 8. Keep the JS default in sync.
+const MIN_SCORE = parseFloat(getArg('min-score', '8'));
 const TOP_N = parseInt(getArg('top', '10'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const AS_OF = getArg('as-of', '');                         // YYYY-MM-DD point-in-time; '' = today/all bars
+// Date effective du snapshot cache (point-in-time). --as-of prime (backfill d'une date passée →
+// snapshot immuable), sinon SCAN_DATE (par défaut aujourd'hui → TTL 12h dans le helper).
+const CACHE_DATE = AS_OF || SCAN_DATE;
+const CACHE_OPTS = { date: CACHE_DATE, market: FX_MARKET, interval: '1d' };
 const CONCURRENCY = parseInt(getArg('concurrency', '8'));
 const KLINE_RANGE = '250d';                                // enough for MA200 + 30d return headroom
 
@@ -88,6 +96,16 @@ const MW30 = 0.40, MW14 = 0.35, MW7 = 0.25;
 const W_MOM = 0.40, W_MR = 0.30, W_RS = 0.30;
 
 const DXY_SYMBOL_DEFAULT = 'DX-Y.NYB';
+
+// Scanner filters — MUST mirror the forex-majors sleeve scanner_filters in
+// config/portfolio_multi_survivors.yaml (Go applies these via SetFilters). The bare
+// scanner_forex.go defaults (RSI 20-80, ATR≥0.001, score≥5) are OVERRIDDEN per-sleeve;
+// forex mode = forex-majors, so these are the authoritative ISO thresholds:
+//   scanner_filters: { min_rsi: 30, max_rsi: 75, min_score: 8, min_atr_pct: 0.006 }
+const FILTER_MIN_RSI = 30.0;      // config min_rsi (scanner_forex.go default 20)
+const FILTER_MAX_RSI = 75.0;      // config max_rsi (scanner_forex.go default 80)
+const FILTER_MIN_ATR_PCT = 0.006; // config min_atr_pct (scanner_forex.go default 0.001)
+const FILTER_MIN_SCORE = 8.0;     // config min_score (Go gates finalScore < 8 → nil)
 
 // ─── Universe: local pre-built file (forex-universe.json) ───────────────────
 
@@ -113,22 +131,24 @@ function loadUniverse() {
 // ─── Yahoo chart OHLCV fetch (daily, business-day calendar) ─────────────────
 // Same endpoint as candlestick-scanner.js:93 — query1.finance.yahoo.com/v8/finance/chart.
 
+// Cache prix DATÉ via le helper partagé (source unique de vérité, arbo point-in-time) :
+//   data/.price-cache/<CACHE_DATE>/1d/FX/<ticker>.json
+// readBars applique le TTL 12h uniquement si CACHE_DATE == aujourd'hui ; une date passée est un
+// snapshot immuable. Fallback LECTURE seule sur l'ancien cache plat si le fichier daté manque.
 function loadCachedPrice(ticker) {
-  const fp = path.join(CACHE_DIR, `${cacheKey(ticker)}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const stat = fs.statSync(fp);
-  if ((Date.now() - stat.mtimeMs) / 3600000 > 12) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
+  // PIT-strict read: ONLY the dated snapshot …/<CACHE_DATE>/1d/FX/<ticker>.json.
+  // If it is absent we return null so fetchOHLCV fetches fresh live bars and writes a
+  // clean truncated snapshot (safety rule #2: "absent → fetch live puis TRONQUE").
+  // The legacy flat cache (…/<ticker>_ohlcv.json) is deliberately NOT trusted here: it is
+  // undated and gap-prone (a missing session — e.g. FX 2026-07-01 — shifts the positional
+  // lookback windows of calcReturn/SMA/RSI/ATR by one bar and corrupts every score, which
+  // was the sole remaining source of forex ISO drift vs systematic-tss once the universe
+  // was aligned to the 8 forex_universe majors).
+  return priceCache.readBars(ticker, { ...CACHE_OPTS, allowLegacyFallback: false });
 }
 
 function saveCachedOHLCV(ticker, bars) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(CACHE_DIR, `${cacheKey(ticker)}_ohlcv.json`), JSON.stringify(bars));
-}
-
-// Filesystem-safe cache key (EURUSD=X, DX-Y.NYB → safe filenames).
-function cacheKey(ticker) {
-  return ticker.replace(/[^A-Za-z0-9._-]/g, '_');
+  priceCache.writeBars(ticker, bars, CACHE_OPTS);   // tronque à bar.date <= CACHE_DATE (anti-look-ahead)
 }
 
 function fetchYahooChart(ticker, attempt = 0) {
@@ -224,13 +244,11 @@ function scoreForexPair(symbol, bars, dxyMom30) {
   const atr = calcATR(bars, 14);
   const atrPct = atr / price;
 
-  // Filter: dead pairs (scanner_forex.go:113-119)
-  const minATRPct = 0.001;
-  if (atrPct < minATRPct) return null;
+  // Filter: dead pairs (scanner_forex.go:113-119) — forex-majors config min_atr_pct
+  if (atrPct < FILTER_MIN_ATR_PCT) return null;
 
-  // RSI band filter (scanner_forex.go:122-134)
-  const minRSI = 20.0, maxRSI = 80.0;
-  if (rsi < minRSI || rsi > maxRSI) return null;
+  // RSI band filter (scanner_forex.go:122-134) — forex-majors config min_rsi/max_rsi
+  if (rsi < FILTER_MIN_RSI || rsi > FILTER_MAX_RSI) return null;
 
   // Moving averages (scanner_forex.go:137-139)
   const sma20 = calcSMA(bars, 20);
@@ -289,8 +307,8 @@ function scoreForexPair(symbol, bars, dxyMom30) {
   // === COMBINED SCORE === scanner_forex.go:239-251
   const finalScore = momentumScore * W_MOM + mrScoreNorm * W_MR + rsScoreNorm * W_RS;
 
-  // Skip negative/low scores (scanner_forex.go:261-263)
-  if (finalScore < 5.0) return null;
+  // Score gate (scanner_forex.go:255-263): config min_score=8 then hard floor 5 → effective 8.
+  if (finalScore < FILTER_MIN_SCORE) return null;
 
   // Distances from MAs (scanner_forex.go:276-283)
   const distMA50 = sma50 > 0 ? (price - sma50) / sma50 : 0;

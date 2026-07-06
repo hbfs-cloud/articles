@@ -35,6 +35,10 @@ const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/ca
 // candlestick_missing_sharia). Detection logic (pattern/score/vol-gate) is untouched — this is
 // metadata attached to already-qualified candidates.
 const { getSector, isHaramForHalalMode } = require('./lib/sharia-filter');
+// Cache prix DATÉ partagé (source unique de vérité). Remplace la logique inline
+// (fichiers plats ${ticker}_ohlcv.json sans date) qui polluait les snapshots passés.
+// Arbo: data/.price-cache/<SCAN_DATE>/1d/US/<ticker>.json — point-in-time, rejouable.
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
 const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
@@ -131,17 +135,22 @@ async function fetchScreenerUniverse() {
 
 // ─── Yahoo Finance OHLCV fetch (120d, with volume) ──────────────────────────
 
+// Marché US, interval 1d, snapshot daté = SCAN_DATE (jour de scan). readBars applique
+// le TTL 12h uniquement quand SCAN_DATE == aujourd'hui ; une date passée = snapshot immuable.
+// Fallback lecture seule sur l'ancien fichier plat si le fichier daté manque (compat descendante).
+const CACHE_OPTS = () => ({ date: SCAN_DATE, market: priceCache.MARKETS.US, interval: '1d' });
+
 function loadCachedPrice(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const stat = fs.statSync(fp);
-  if ((Date.now() - stat.mtimeMs) / 3600000 > 12) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
+  // Décision de fetch : on ne lit QUE le snapshot daté (pas de fallback legacy ici) — un snapshot
+  // absent doit déclencher un fetch live suivi d'un writeBars daté, garantissant "toujours écrire
+  // en daté" (migration hors des vieux fichiers plats). Le fallback legacy lecture-seule reste
+  // disponible pour --source cache (fetchOHLCVCacheOnly), qui ne peut pas re-fetch.
+  return priceCache.readBars(ticker, { ...CACHE_OPTS(), allowLegacyFallback: false });
 }
 
 function saveCachedOHLCV(ticker, bars) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+  // writeBars tronque à bar.date <= SCAN_DATE (anti-look-ahead ; no-op en forward) et écrit en daté.
+  priceCache.writeBars(ticker, bars, CACHE_OPTS());
 }
 
 function fetchOHLCV(ticker) {
@@ -281,14 +290,9 @@ function rowsToBars(rows) {
 // pre-populate the cache via MCP QueryData before running the scanner.
 function fetchOHLCVCacheOnly(tickers) {
   const results = new Map();
-  let stale = 0;
   for (const t of tickers) {
-    const fp = path.join(CACHE_DIR, `${t}_ohlcv.json`);
-    if (!fs.existsSync(fp)) continue;
-    try {
-      const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
-      if (bars && bars.length >= 60) results.set(t, bars);
-    } catch { /* skip corrupt */ }
+    const bars = priceCache.readBars(t, CACHE_OPTS());
+    if (bars && bars.length >= 60) results.set(t, bars);
   }
   process.stderr.write(`  cache-only: ${results.size}/${tickers.length} loaded\n`);
   return results;

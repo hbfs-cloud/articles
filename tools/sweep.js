@@ -29,6 +29,10 @@ const VERBOSE = process.argv.includes('--verbose');
 const FULL_SWEEP = process.argv.includes('--full-sweep');
 const FROZEN_ONLY = !FULL_SWEEP;
 const { verify: verifyTradeChain, seal: sealTradeChain } = require('./lib/trade-integrity');
+// Shared DATED price cache (point-in-time, source unique de vérité). Fixes the flat-cache
+// pollution bug (data/.price-cache/TICKER.json without a date getting overwritten across days).
+// sweep only touches the PRICE cache via this helper — trade simulation is untouched.
+const priceCacheLib = require('./lib/price-cache');
 const SWEEP_SHARD = +(process.env.SWEEP_SHARD ?? -1);
 const SWEEP_SHARDS = +(process.env.SWEEP_SHARDS ?? 1);
 const SHARD_OUT = process.env.SWEEP_SHARD_OUT || '';
@@ -460,7 +464,28 @@ fs.mkdirSync(PRICE_CACHE_DIR, { recursive: true });
 
 const priceCache = {};
 
+// Reference date for the price-cache layer = the day the sweep runs. sweep fetches live
+// data up to "now", so its snapshot is a point-in-time as of today. A re-run tomorrow reads
+// data/.price-cache/<tomorrow>/… → cannot overwrite/pollute today's snapshot (the root bug).
+// The helper's anti-look-ahead truncation (bar.date <= REF_DATE) is a no-op in this forward
+// path → zero stat regression vs the old flat cache.
+const REF_DATE = priceCacheLib.todayISO();
+const marketForTicker = (t) =>
+  isCryptoTicker(t) ? priceCacheLib.MARKETS.CRYPTO : priceCacheLib.MARKETS.US;
+
 function loadCachedPrice(ticker) {
+  // 1. DATED snapshot (the fix). readHistory applies the 12h TTL only for REF_DATE==today
+  //    (today's bar may still move); a past date would be immutable. allowLegacyFallback:false
+  //    so the helper's generic flat fallback (which prefers *_ohlcv.json) can't silently swap
+  //    the data source vs the pre-existing sweep behavior — we do our OWN legacy fallback below,
+  //    byte-for-byte identical to the old logic, to guarantee no stat drift.
+  const market = marketForTicker(ticker);
+  try {
+    const dated = priceCacheLib.readHistory(ticker, { date: REF_DATE, market, allowLegacyFallback: false });
+    if (dated && Object.keys(dated).length) return dated;
+  } catch { /* never let a cache read break the sim */ }
+
+  // 2. Legacy flat ${ticker}.json (date-keyed, sweep's own) — EXACT pre-existing behavior incl. 12h TTL.
   const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
   if (fs.existsSync(fp)) {
     const stat = fs.statSync(fp);
@@ -472,7 +497,7 @@ function loadCachedPrice(ticker) {
       } catch { /* fall through to BVC */ }
     }
   }
-  // BVC (Casablanca) fallback: Moroccan tickers are NOT on Yahoo, so ${ticker}.json is empty.
+  // 3. BVC (Casablanca) fallback: Moroccan tickers are NOT on Yahoo, so ${ticker}.json is empty.
   // bvc-fetcher writes ${ticker}_ohlcv.json as an ARRAY of bars — convert it to the date-keyed
   // priceHistory the simulator expects so casablanca-universe setups can actually be traded.
   const bvcFp = path.join(PRICE_CACHE_DIR, 'CVA', `${ticker}_ohlcv.json`);
@@ -490,6 +515,13 @@ function loadCachedPrice(ticker) {
 }
 
 function saveCachedPrice(ticker, history) {
+  // Primary: DATED snapshot via the shared helper (truncates to date<=REF_DATE = no-op forward).
+  try {
+    priceCacheLib.writeHistory(ticker, history, { date: REF_DATE, market: marketForTicker(ticker) });
+  } catch { /* never let a cache write break the sim */ }
+  // Compat shadow: keep the flat ${ticker}.json so other read-only consumers (qa-check.js MtM
+  // drift check, optimize-param.js) keep working unchanged. sweep always writes current-to-today
+  // data here, so this flat write never carries a stale past-dated snapshot.
   const fp = path.join(PRICE_CACHE_DIR, `${ticker}.json`);
   fs.writeFileSync(fp, JSON.stringify(history));
 }
@@ -2567,6 +2599,12 @@ async function main() {
         console.log(`  Force-refreshing ${liveTickers.length} live tickers (bypass cache TTL)...`);
         for (const t of liveTickers) {
           delete priceCache[t];
+          // Purge BOTH the dated snapshot (TTL would otherwise serve a <12h file) and the
+          // legacy flat file, so fetchOHLCV is forced to re-fetch live.
+          try {
+            const dc = priceCacheLib.cacheFile(t, { date: REF_DATE, market: marketForTicker(t) });
+            if (fs.existsSync(dc)) fs.unlinkSync(dc);
+          } catch { /* ignore */ }
           const fp = path.join(PRICE_CACHE_DIR, `${t}.json`);
           if (fs.existsSync(fp)) fs.unlinkSync(fp);
           await fetchOHLCV(t);

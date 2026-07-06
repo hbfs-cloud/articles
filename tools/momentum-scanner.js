@@ -21,9 +21,9 @@ const {
   calcAvgVolume, calcMedianVolume, calcDollarVolumePercentile,
 } = require('./lib/fractal-indicators');
 const { batchFetchBVC } = require('./lib/bvc-fetcher');
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -54,6 +54,12 @@ const PARTIAL_TP_GAIN_PCT = 10; // modes-config.json modes.momentum.partialTPGai
 
 const IS_BVC = UNIVERSE_NAME === 'casablanca';
 
+// Cache prix DATÉ partagé (tools/lib/price-cache.js). marché=CVA pour casablanca (chemin BVC
+// géré par bvc-fetcher), US sinon ; interval 1d ; date = jour de scan (--date ou aujourd'hui).
+// Snapshot point-in-time rejouable : une date passée relit le fichier gelé, jamais de re-fetch.
+const CACHE_MARKET = IS_BVC ? priceCache.MARKETS.CVA : priceCache.MARKETS.US;
+const CACHE_OPTS = { date: SCAN_DATE, market: CACHE_MARKET, interval: '1d' };
+
 const UNIVERSE_FILES = {
   americanbull: 'americanbull-universe.json',
   metals: 'metals-universe.json',
@@ -81,14 +87,10 @@ function loadUniverse() {
 const MIN_BARS = IS_BVC ? 120 : 200;
 
 function readCache(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
-  if (age > 12) return null;
-  try {
-    const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
-    if (bars.length >= MIN_BARS) return bars;
-  } catch {}
+  // Snapshot DATÉ …/<SCAN_DATE>/1d/US/<ticker>.json (TTL 12h uniquement si SCAN_DATE==aujourd'hui ;
+  // date passée = immuable). Fallback lecture seule sur le legacy plat géré par le helper.
+  const bars = priceCache.readBars(ticker, CACHE_OPTS);
+  if (bars && bars.length >= MIN_BARS) return bars;
   return null;
 }
 
@@ -118,8 +120,8 @@ function fetchOHLCV(ticker) {
             });
           }
           if (bars.length >= MIN_BARS) {
-            fs.mkdirSync(CACHE_DIR, { recursive: true });
-            fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+            // writeBars TRONQUE à bar.date <= SCAN_DATE (anti-look-ahead ; no-op en forward).
+            priceCache.writeBars(ticker, bars, CACHE_OPTS);
           }
           resolve(bars.length >= MIN_BARS ? bars : null);
         } catch { resolve(null); }
@@ -226,7 +228,7 @@ async function main() {
   let priceData;
   if (IS_BVC) {
     console.log(`📡 Fetching OHLCV data via BVC API...`);
-    priceData = await batchFetchBVC(CONCURRENCY);
+    priceData = await batchFetchBVC(CONCURRENCY, { date: SCAN_DATE });
   } else {
     console.log(`📡 Fetching OHLCV data via Yahoo...`);
     priceData = await batchFetch(universe, CONCURRENCY);

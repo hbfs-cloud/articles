@@ -295,7 +295,27 @@ function openPosition(setup, scanDate, entryDate, cfg) {
   if (prevBar && prevBar.high && prevBar.low && prevBar.close) {
     vwapRef = (prevBar.high + prevBar.low + prevBar.close) / 3;
   }
-  if (cfg.vwapGate && vwapRef !== null && setup.strategy !== 'candlestick') {
+  // Entry model. Two mutually-exclusive paths (they NEVER stack):
+  //   - entryModel='limit_markup' (opt-in): models the Go PM's LIMIT BUY order
+  //     (systematic-tss pm_highvol_corr, limit_price_markup=1.025 → default 2.5%).
+  //     limitPrice = signalPrice(setup.entry) × (1 + limitMarkupPct/100). Fill on the
+  //     J+1 daily bar: open ≤ limit → fill at open; else low ≤ limit → fill at limit;
+  //     else (low > limit, price gapped above the cap) → NO FILL → return null so the
+  //     slot falls through to the next candidate (behaves like a gate, no clamp).
+  //     vwapGate is BYPASSED here (limit_markup owns the entry price).
+  //   - otherwise: legacy vwapGate path (unchanged, strict rétro-compat for every mode
+  //     without entryModel — cfg.entryModel is undefined → this else-if runs as before).
+  if (cfg.entryModel === 'limit_markup') {
+    const markupPct = (cfg.limitMarkupPct != null) ? cfg.limitMarkupPct : 2.5;
+    const limitPrice = setup.entry * (1 + markupPct / 100);
+    if (actualEntry <= limitPrice) {
+      entryPrice = actualEntry;                 // gap-up ≤ cap (or flat/down): fill at open
+    } else if (entryBar.low <= limitPrice) {
+      entryPrice = limitPrice;                  // opened above cap but pulled back to it intraday
+    } else {
+      return null;                              // whole J+1 bar above cap → no fill
+    }
+  } else if (cfg.vwapGate && vwapRef !== null && setup.strategy !== 'candlestick') {
     if (actualEntry > vwapRef * 1.01) return null;
     entryPrice = Math.max(Math.min(actualEntry, vwapRef), entryBar.low);
   }

@@ -52,6 +52,9 @@ const DAYS = parseInt(getArg('days', '90'), 10);
 const FROM = getArg('from', null);
 const TO = getArg('to', null);
 const OUT_DIR = path.resolve(getArg('out-dir', path.join(ROOT, 'data', 'pit-backfill')));
+// --config override (validation only): point at an isolated temp modes-config to A/B the
+// entry model (vwapGate vs limit_markup) without mutating the real data/modes-config.json.
+const CONFIG_PATH = path.resolve(getArg('config', path.join(ROOT, 'data', 'modes-config.json')));
 const VERBOSE = hasFlag('verbose');
 const log = (...a) => VERBOSE && console.log(...a);
 
@@ -67,7 +70,7 @@ if (OUT_DIR.includes(`${path.sep}scanner${path.sep}`) || path.basename(OUT_DIR) 
 }
 
 // ─── Load config + universe ────────────────────────────────────────────────
-const cfgFile = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8'));
+const cfgFile = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
 const CFG = (cfgFile.modes || cfgFile)[MODE_ID];
 if (!CFG) { console.error(`No config for mode ${MODE_ID}`); process.exit(1); }
 const TOP_N = CFG.topN || CFG.portfolioSize || 15;
@@ -248,6 +251,12 @@ const cfg = CFG;
 const mode = { id: MODE_ID, cfg };
 const state = { positions: [], closedTrades: [], equityCurve: [], cooldown: {}, cbStopDates: [], cbPauseUntil: null };
 
+// Entry-model diagnostics (limit_markup only): count fills vs no-fills (gap-up above the cap).
+// Read-only — does NOT touch trade mechanics. A no-fill = the whole J+1 bar traded above the
+// limit price, so pit-engine.openPosition returned null and the slot fell through.
+let fillCount = 0, noFillCount = 0;
+const markupPct = (cfg.limitMarkupPct != null) ? cfg.limitMarkupPct : 2.5;
+
 const entryDays = calendar.slice(startIdx + 1, endIdx + 1);   // sessions on which entries/MtM happen
 const statusSinceDay = (cfg.statusSince || '').slice(0, 10);
 const cfgStatus = ms.isValidState(cfg.status) ? cfg.status : ms.DEFAULT_STATE;
@@ -322,7 +331,17 @@ for (const day of entryDays) {
           if (stopPct > 0) weight = baseWeight * Math.max(0.5, Math.min(1.5, SIZING_REF / Math.max(stopPct, 0.005)));
         }
         const pos = pe.openPosition(cand, day, day, cfg);
-        if (!pos) { log(`  ${day} reject ${cand.ticker} (gate)`); continue; }
+        if (!pos) {
+          // limit_markup diagnostic: classify a null as a genuine no-fill (whole J+1 bar
+          // above the cap) vs an ordinary gate reject (rr<1.5, stop, etc.).
+          if (cfg.entryModel === 'limit_markup') {
+            const b = sweep.priceCache[cand.ticker]?.[day];
+            const limitPrice = cand.entry * (1 + markupPct / 100);
+            if (b && b.low > limitPrice) { noFillCount++; log(`  ${day} NO-FILL ${cand.ticker} (low ${b.low.toFixed(2)} > limit ${limitPrice.toFixed(2)})`); continue; }
+          }
+          log(`  ${day} reject ${cand.ticker} (gate)`); continue;
+        }
+        if (cfg.entryModel === 'limit_markup') fillCount++;
         pos.weight = weight;
         state.positions.push(pos);
         openTickers.add(cand.ticker);
@@ -377,6 +396,10 @@ const summary = {
   ret: +ret.toFixed(2), cagrAnnualized: +cagr.toFixed(1), maxDD: +(-maxDD).toFixed(2),
   wr: +wr.toFixed(1), pf: +pf.toFixed(2), sharpe: +sharpe.toFixed(2),
   trades: resolved.length, openAtEnd: state.positions.length,
+  entryModel: cfg.entryModel || 'vwap_gate',
+  limitMarkupPct: cfg.entryModel === 'limit_markup' ? markupPct : null,
+  fills: cfg.entryModel === 'limit_markup' ? fillCount : null,
+  noFills: cfg.entryModel === 'limit_markup' ? noFillCount : null,
   scan: { decisionSessions: scanRunLog.length, vixGatedSessions: gatedDays, totalSignalSlots: totalSignals },
 };
 
@@ -390,5 +413,6 @@ console.log(`maxDD        : ${summary.maxDD}%`);
 console.log(`WR / PF      : ${summary.wr}% / ${summary.pf}`);
 console.log(`sharpe       : ${summary.sharpe}`);
 console.log(`trades       : ${summary.trades} resolved (+${summary.openAtEnd} open at window end)`);
+console.log(`entryModel   : ${summary.entryModel}${cfg.entryModel === 'limit_markup' ? ` (markup ${markupPct}% · fills=${fillCount} · no-fills=${noFillCount})` : ''}`);
 console.log(`scan         : ${scanRunLog.length} sessions, ${gatedDays} VIX-gated, ${totalSignals} signal-slots`);
 console.log(`\nOutput (isolated): ${OUT_DIR}`);

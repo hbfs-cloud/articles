@@ -194,7 +194,7 @@ async function main() {
     return [];
   }
 
-  const priceData = await batchFetchBVC(CONCURRENCY);
+  const priceData = await batchFetchBVC(CONCURRENCY, { date: SCAN_DATE });
   if (!priceData.size) { console.error('❌ No BVC OHLCV data — aborting.'); process.exit(1); }
 
   console.log('🔍 Scoring candidates (momentum-rotation)...');

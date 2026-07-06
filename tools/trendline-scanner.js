@@ -29,6 +29,7 @@ const {
   calcSMA, calcRSI, calcATR, calcMomentum, calcAvgVolume,
   calcVolatility, calcDollarVolumePercentile,
 } = require('./lib/fractal-indicators');
+const priceCache = require('./lib/price-cache'); // cache prix DATÉ partagé (source unique de vérité)
 
 const ROOT = path.join(__dirname, '..');
 
@@ -129,21 +130,38 @@ const INTERVAL_CONFIG = {
   '1d': { yahooInterval: '1d', range: '2y',  cacheDir: '.price-cache',    cacheTTL: 12, minBars: 120 },
 };
 const IC = INTERVAL_CONFIG[INTERVAL] || INTERVAL_CONFIG['1d'];
-const CACHE_DIR = path.join(ROOT, 'data', IC.cacheDir);
 const MIN_BARS = IC.minBars;
 
+// ─── Cache DATÉ partagé (tools/lib/price-cache.js) ───────────────────────────
+// Remplace l'ancien cache PLAT sans date (data/.price-cache[-1h]/${ticker}_ohlcv.json) qui
+// polluait/écrasait les données d'une date passée lors d'un re-run un autre jour. Nouvelle arbo :
+//   data/.price-cache/<SCAN_DATE>/<INTERVAL>/<market>/<ticker>.json (ARRAY de bars, point-in-time).
+// - market : forex (=X) → FX, sinon US (par ticker → jamais de collision inter-marchés).
+// - interval : l'interval demandé (1d/1h/4h) → dossier dédié, pas de partage 1h↔4h (évite
+//   toute contamination entre barres pure-date et barres timestampées).
+// - date : SCAN_DATE (le jour de scan) → snapshot immuable rejouable, TTL 12h le jour même.
+// Compat descendante : si le fichier daté manque, readBars retombe en LECTURE seule sur l'ancien
+// fichier plat ; on n'écrit QUE en daté.
+function marketOf(ticker) {
+  return String(ticker).includes('=X') ? priceCache.MARKETS.FX : priceCache.MARKETS.US;
+}
+const CACHE_INTERVAL = INTERVAL;
+const cacheOpts = ticker => ({ date: SCAN_DATE, market: marketOf(ticker), interval: CACHE_INTERVAL });
+
 function readCache(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker.replace(/[^a-zA-Z0-9]/g, '_')}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
-  if (age > IC.cacheTTL) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
+  return priceCache.readBars(ticker, cacheOpts(ticker));
 }
 
 function writeCache(ticker, bars) {
-  if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
-  const fp = path.join(CACHE_DIR, `${ticker.replace(/[^a-zA-Z0-9]/g, '_')}_ohlcv.json`);
-  fs.writeFileSync(fp, JSON.stringify(bars));
+  // Anti-look-ahead : writeBars tronque à bar.date <= SCAN_DATE. Les barres de ce scanner portent
+  // un timestamp complet (YYYY-MM-DDTHH:MM:SS) ; comparées à une borne pure-date, les barres du
+  // JOUR de scan seraient supprimées. Pour 1d/1h (scoring purement ordinal, pas d'agrégation) on
+  // normalise donc la date au jour (slice 0,10) afin de conserver la barre du jour. Pour 4h, on
+  // garde le timestamp (aggregateTo4h en a besoin pour bucketiser par heure).
+  const out = (INTERVAL === '4h')
+    ? bars
+    : bars.map(b => ({ ...b, date: String(b.date).slice(0, 10) }));
+  priceCache.writeBars(ticker, out, cacheOpts(ticker));
 }
 
 function aggregateTo4h(bars1h) {

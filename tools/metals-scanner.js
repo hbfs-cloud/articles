@@ -47,9 +47,12 @@ const https = require('https');
 const {
   calcSMA, calcRSI, calcATR, calcReturn, volRatio, calcDollarVolumePercentile,
 } = require('./lib/metals-indicators');
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
+// Marché/intervalle du scanner metals (Yahoo equity tickers, daily).
+const CACHE_MARKET = priceCache.MARKETS.US;
+const CACHE_INTERVAL = '1d';
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -101,17 +104,17 @@ function loadUniverse() {
 // ─── Yahoo Finance OHLCV fetch (250d, with volume) ──────────────────────────
 // Same endpoint as candlestick-scanner.js — equity business-day calendar.
 
+// Cache prix DATÉ, point-in-time (helper partagé tools/lib/price-cache.js).
+// Lecture : snapshot gelé …/<SCAN_DATE>/1d/US/<ticker>.json (TTL 12h seulement si
+// SCAN_DATE == aujourd'hui ; date passée = immuable). Fallback lecture legacy plat.
 function loadCachedPrice(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const stat = fs.statSync(fp);
-  if ((Date.now() - stat.mtimeMs) / 3600000 > 12) return null;
-  try { return JSON.parse(fs.readFileSync(fp, 'utf8')); } catch { return null; }
+  return priceCache.readBars(ticker, { date: SCAN_DATE, market: CACHE_MARKET, interval: CACHE_INTERVAL });
 }
 
+// Écriture : toujours en daté, tronqué à bar.date <= SCAN_DATE (anti-look-ahead ;
+// no-op en pipeline forward où SCAN_DATE == aujourd'hui).
 function saveCachedOHLCV(ticker, bars) {
-  fs.mkdirSync(CACHE_DIR, { recursive: true });
-  fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+  priceCache.writeBars(ticker, bars, { date: SCAN_DATE, market: CACHE_MARKET, interval: CACHE_INTERVAL });
 }
 
 function fetchYahooChart(ticker, attempt = 0) {
@@ -163,7 +166,12 @@ function fetchYahooChart(ticker, attempt = 0) {
 
 function fetchOHLCV(ticker) {
   const cached = loadCachedPrice(ticker);
-  if (cached) return Promise.resolve(cached);
+  // A cache hit must carry enough history to be scoreable (≥ maPeriod bars).
+  // This rejects short/foreign legacy caches the original scanner never consulted —
+  // notably a sweep-written date-keyed ${ticker}.json (< maPeriod bars) that the
+  // shared helper now also reads as legacy fallback (e.g. GOLD/Barrick 120 bars).
+  // Preserves iso candidate output; a fresh fetch then writes a full dated snapshot.
+  if (cached && cached.length >= MA_FILTER_PERIOD) return Promise.resolve(cached);
   return fetchYahooChart(ticker);
 }
 

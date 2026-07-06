@@ -24,9 +24,9 @@ const {
   calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
   calcAvgVolume, calcMedianVolume, calcDollarVolumePercentile, calcStochastic,
 } = require('./lib/fractal-indicators');
+const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 
 const args = process.argv.slice(2);
 function getArg(name, def) {
@@ -103,15 +103,13 @@ if (UNIVERSE_NAME === 'casablanca') { console.error('❌ Use casablanca-scanner.
 
 const MIN_BARS = 120; // Go scoreSymbolAF rejects < 120; SMA200 gracefully returns 0 if < 200 bars
 
+// Dated point-in-time cache (shared helper). Market=US, interval=1d for this scanner.
+// TTL 12h applies only when SCAN_DATE == today; past dates are immutable snapshots.
+const CACHE_OPTS = { date: SCAN_DATE, market: priceCache.MARKETS.US, interval: '1d' };
+
 function readCache(ticker) {
-  const fp = path.join(CACHE_DIR, `${ticker}_ohlcv.json`);
-  if (!fs.existsSync(fp)) return null;
-  const age = (Date.now() - fs.statSync(fp).mtimeMs) / 3600000;
-  if (age > 12) return null;
-  try {
-    const bars = JSON.parse(fs.readFileSync(fp, 'utf8'));
-    if (bars.length >= MIN_BARS) return bars;
-  } catch { /* corrupt — re-fetch */ }
+  const bars = priceCache.readBars(ticker, CACHE_OPTS);
+  if (bars && bars.length >= MIN_BARS) return bars;
   return null;
 }
 
@@ -137,8 +135,8 @@ function fetchOHLCV(ticker) {
             }
           }
           if (bars.length >= MIN_BARS) {
-            fs.mkdirSync(CACHE_DIR, { recursive: true });
-            fs.writeFileSync(path.join(CACHE_DIR, `${ticker}_ohlcv.json`), JSON.stringify(bars));
+            // writeBars truncates to bar.date <= SCAN_DATE (anti-look-ahead on backfill; no-op forward).
+            priceCache.writeBars(ticker, bars, CACHE_OPTS);
           }
           resolve(bars.length >= MIN_BARS ? bars : null);
         } catch { resolve(null); }
