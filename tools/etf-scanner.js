@@ -18,7 +18,12 @@
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
-const yaml = require('js-yaml');
+// js-yaml is OPTIONAL: it's only used to read the (tuned) systematic-tss config when that
+// repo is present. Cloud routines clone only `articles` and may not have js-yaml installed —
+// guard the require so the scanner never crashes with "missing module"; we fall back to the
+// embedded DEFAULT_PARAMS_{US,EU} (verbatim copies of the tuned configs) in that case.
+let yaml = null;
+try { yaml = require('js-yaml'); } catch { /* absent → embedded DEFAULT_PARAMS used */ }
 const {
   calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
   calcAvgVolume, calcMedianVolume, calcDollarVolumePercentile,
@@ -139,6 +144,7 @@ function resolveTssRoot() {
 // file is missing/unparseable (so the scanner is usable without systematic-tss).
 function loadScannerParams(isEu) {
   const defaults = isEu ? DEFAULT_PARAMS_EU : DEFAULT_PARAMS_US;
+  if (!yaml) return { params: { ...defaults }, source: 'embedded DEFAULT_PARAMS (js-yaml absent)' };
   const rel = isEu ? 'config/pre-live/portfolio_etf_eu.yaml' : 'config/pre-live/portfolio_etf_us.yaml';
   const fp = path.join(resolveTssRoot(), rel);
   try {
