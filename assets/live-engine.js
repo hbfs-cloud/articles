@@ -229,8 +229,10 @@
       return null;
     }
 
-    var pnlPct = ((price - entry) / entry) * 100;
     var isLong = stop < entry;
+    // P&L sign-corrected for direction: a short profits when price falls below entry.
+    // (Long-only formula here previously mismarked shorts as UNDERWATER and blocked breakeven lock.)
+    var pnlPct = ((isLong ? price - entry : entry - price) / entry) * 100;
 
     // State from localStorage
     var stateKey = 'le_' + (pos._modeId || '') + '_' + pos.ticker + '_' + (pos.scan_date || '');
@@ -332,7 +334,7 @@
       tp1: tp1,
       tp2: tp2,
       pnlPct: pnlPct,
-      pnlAbs: price - entry,
+      pnlAbs: isLong ? price - entry : entry - price,
       dayHigh: dayHigh,
       dayLow: dayLow,
       daysLeft: daysLeft,

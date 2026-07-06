@@ -1547,8 +1547,10 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
             const exitPrice = rotatedTickerLive && rotatedTickerLive.current_price
               ? rotatedTickerLive.current_price
               : t.exitPrice;
+            const _isLong = !(t.actualStop > t.actualEntry); // short = stop above entry; default long
+            const _delta = _isLong ? exitPrice - t.actualEntry : t.actualEntry - exitPrice;
             const pnlPct = (t.actualEntry > 0 && exitPrice > 0)
-              ? +(((exitPrice - t.actualEntry) / t.actualEntry) * 100).toFixed(2)
+              ? +((_delta / t.actualEntry) * 100).toFixed(2)
               : t.pnlPct;
             return { ...t, status: 'rotated', exitDate: _todayISOLocal, exitPrice, pnlPct, _rotatedTo: recentExecutedRotation && recentExecutedRotation.ticker };
           }
