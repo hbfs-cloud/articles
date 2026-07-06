@@ -964,9 +964,13 @@ async function main() {
     // leurs signaux SONT les ordres à placer (répliquent systematic-tss), pas des candidats de
     // remplacement comme les modes quality (turbo/balanced...). Donc aucun "Fallback candidates".
     const SCRIPTED_FILTERS = new Set(['candlestick_only', 'momentum_rotation', 'highvol_breakout', 'trendline_breakout', 'etf_momentum', 'adaptive_fractal', 'hybrid_af', 'fortress_pm']);
+    // forex utilise forex-scanner.js (3-axes fidèle) mais garde filterName='all' en config — collision
+    // avec turbo (LLM, aussi 'all'). On le détecte donc par ID. Idem pour les modes scriptés wipés si
+    // un jour restaurés (bull/momentum/trendline/casablanca) — ID explicite = future-proof.
+    const SCRIPTED_IDS = new Set(['bull', 'momentum', 'highvol', 'trendline', 'etf', 'etf_eu', 'hybrid', 'forex', 'casablanca']);
     // fortress + aplus = modes LLM (pilotés par le skill fortress-pm, signaux = CANDIDATS A+),
     // PAS scriptés — ils gardent Today's Signals + Orders + fallback comme les autres modes LLM.
-    const isScripted = SCRIPTED_FILTERS.has(cfg.filterName) && id !== 'fortress' && id !== 'aplus';
+    const isScripted = (SCRIPTED_FILTERS.has(cfg.filterName) || SCRIPTED_IDS.has(id)) && id !== 'fortress' && id !== 'aplus';
     const _sf = SF[cfg.filterName] || (() => true);
     const _uf = cfg.universeFilter || null;
     const fallback = isScripted ? [] : signals.filter(s => _sf(s.strategy || '')).filter(s => !_uf || (s.universe || '') === _uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || !isHaramForHalalMode(s))
