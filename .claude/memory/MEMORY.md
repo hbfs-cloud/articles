@@ -1,5 +1,7 @@
 # Market Watch Articles - Memory
 
+- [Iso Cache & Resync](project_iso_cache_and_resync.md) — cache marketdata daté PIT-safe (price-cache.js) + verify-iso.js/manifeste alignant 6 modes scriptés sur systematic-tss ; root bug récurrent = seuils hardcodés au lieu de lire scanner_filters.params. Nouveau mode stockbox.
+- [Verify iso by running](feedback_verify_iso_by_running.md) — prouver l'iso d'un port en LANÇANT le Go (backtest/scanner-debug/oracle), jamais en lisant le code ; comparer candidats-scanner par date, pas l'état (pending/positions).
 - [Scripted Modes TSS Order Parity](feedback_scripted_modes_tss_order_parity.md) — Les modes scriptés (Bull/Momentum/HighVol/Trendline/ETF/Casablanca) = ordres BUY/SELL du lendemain qui doivent RÉPLIQUER systematic-tss NATIVEMENT (articles reste INDÉPENDANT ; tss = comparaison seule via tss-orders.js). Scanners alignés 2026-07-01: bull/highvol FULL, etf/casablanca partial, momentum/trendline EU=infra data. Bull: le vrai bug était un filtre liquidité inconditionnel (PAS le 8×, qui est correct — bull-8x-parity JUSTE). Technique backtest offline (.env vide, skip Infisical cert expiré).
 
 ## Résumé
