@@ -132,6 +132,36 @@ const METRICS_FILE = path.join(ROOT, 'data/scanner-metrics.json');
 const RISK_SNAP_FILE = path.join(ROOT, 'data/risk-snapshots.json');
 const OUT = path.join(ROOT, 'scanner/status/index.html');
 
+// ── dtx (systematic-tss) staging bridge — SCRIPTED modes only ──
+// Phase 2: the SCRIPTED books are driven by the REAL systematic-tss engine (dtx binary, native
+// mode) via tools/dtx-scan.js → data/dtx/<portfolioId>.json. This dashboard READS that staging
+// for those modes' Orders to Place (decide CREATE) + equity/hero stats (replay). It NEVER rewrites
+// the sealed backtest-trades.json / trade-chain.json (Phase 3 = track-record re-baseline, needs
+// consent). Trade History stays on the sweep source (dtx replay has no per-trade array).
+// Maps the dashboard mode id → the dtx portfolio staging file. hybrid has NO config/dtx/ yaml →
+// not wired (stays on sweep). QUALITY modes (turbo/dynamic/balanced/secured/fortress/aplus) are
+// absent by design — LLM/MCP-driven, never dtx.
+const DTX_STAGING_MAP = {
+  highvol: 'us_highvol',
+  forex: 'forex',
+  etf: 'etf_us',
+  etf_eu: 'etf_eu',
+  stockbox: 'stockbox_nasdaq',
+};
+const _dtxStagingCache = {};
+function loadDtxStaging(id) {
+  const f = DTX_STAGING_MAP[id];
+  if (!f) return null;
+  if (f in _dtxStagingCache) return _dtxStagingCache[f];
+  let data = null;
+  try {
+    const p = path.join(ROOT, 'data', 'dtx', `${f}.json`);
+    if (fs.existsSync(p)) data = JSON.parse(fs.readFileSync(p, 'utf8'));
+  } catch (_) { data = null; }
+  _dtxStagingCache[f] = data;
+  return data;
+}
+
 // ── Canonical trading-day key (America/New_York) — ONE source of truth for "today" ──
 // Snapshot filename, chart "today" labels, closed-today detection and Time-Machine keys
 // all derive from these three constants. Before this, the page mixed THREE clocks
@@ -751,6 +781,38 @@ async function main() {
     // post-anchor points — panel()/modeCharts fall back to sealed/pit-live otherwise.
     m.forward = forwardViewFor(pitForwardModes[id]);
 
+    // ── dtx (systematic-tss) hero override — SCRIPTED modes ──
+    // The displayed equity + hero stats for scripted books come from the REAL engine (dtx replay),
+    // supersede the sweep-frozen sim. READ-ONLY (sealed data untouched). dtx replay IS the hero →
+    // clear pit-live/forward overlays so panel()/modeCharts render the dtx curve as primary.
+    const _dtx = loadDtxStaging(id);
+    if (_dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
+      const met = _dtx.metrics, eq = _dtx.equity;
+      const base = met.initial_capital || eq.values[0] || 100000;
+      m.equityCurve = eq.dates.map((d, i) => ({ date: String(d).slice(0, 10), value: +(eq.values[i] / base * 100).toFixed(2) }));
+      m.ret = met.return_pct;
+      m.realized = met.return_pct;
+      m.unrealized = 0;
+      if (met.max_dd_pct != null) m.dd = -Math.abs(met.max_dd_pct);
+      if (met.win_rate != null) m.wr = met.win_rate;
+      if (met.total_trades != null) m.trades = met.total_trades;
+      if (met.sharpe != null) m.sharpe = met.sharpe;
+      if (met.r2 != null) m.r2 = met.r2;
+      if (met.cagr_pct != null) m.cagr = met.cagr_pct;
+      // dtx replay gives aggregate {win_rate,cagr,dd,sharpe,r2} but NOT gross-win/gross-loss
+      // (no Profit Factor) nor per-trade hold time (no Avg Hold) — render "—" not a fake 0.
+      m.pf = null; m.pfLow = null; m.pfHigh = null; m.pfReliable = null; m.avgHold = null;
+      m.dtxEngine = true;
+      m.oosWarn = null;
+      m.frozenRawLastISO = String(eq.dates[eq.dates.length - 1]).slice(0, 10);
+      m.pit = null;
+      m.forward = null;
+      // Rebuild the chart series (ec) from the dtx curve (MM/DD labels, dedup per day).
+      const _dd = new Map();
+      for (const p of m.equityCurve) _dd.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+      ec = { d: [..._dd.keys()], v: [..._dd.values()] };
+    }
+
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced
@@ -861,6 +923,42 @@ async function main() {
       };
     });
   }
+  // dtx (systematic-tss) Orders to Place — SCRIPTED modes. Builds display-ready "signals" (the
+  // dashboard's signals ARE the orders) from the dtx `decide` CREATE set (data/dtx/<mode>.json).
+  // Same display shape as signalsFor() so the Orders table / signal cards render unchanged.
+  // Tolerates MARKET orders (no limit/stop) and missing score — shows "—" like a real market order.
+  function dtxSignalsFor(id, cfg) {
+    const stg = loadDtxStaging(id);
+    if (!stg) return null; // caller falls back to signalsFor
+    const cur = curOf(cfg);
+    const buys = (stg.orders || []).filter(o => String(o.side || '').toUpperCase() === 'BUY');
+    const topN = cfg.topN > 0 ? cfg.topN : buys.length;
+    return buys.slice(0, topN).map(o => {
+      const ticker = String(o.symbol || '').replace(/=X$/, ''); // forex GBPUSD=X → GBPUSD
+      const entryN = (o.entry != null ? o.entry : o.limitPrice) || null;
+      const stopN = clampStop(entryN, o.stopLoss || null, cfg.maxStopPct);
+      const tp1N = o.takeProfit || null;
+      const rr = (tp1N && entryN && stopN && entryN > stopN) ? +((tp1N - entryN) / (entryN - stopN)).toFixed(2) : null;
+      const scoreN = (o.score != null && !isNaN(o.score)) ? o.score : null;
+      return {
+        ticker,
+        score: scoreN != null ? scoreN : '—',
+        strategy: filterLabel(cfg.filterName),
+        universe: cfg.universeFilter || cfg.assetClass || '',
+        source: 'dtx',
+        sharia: (() => { try { return !isHaramForHalalMode({ ticker }); } catch (_) { return null; } })(),
+        thesis: thesisMap[ticker] || '',
+        vwapRef: null,
+        entry: entryN != null ? fmtCur(entryN, cur) : '—',
+        stop: stopN != null ? fmtCur(stopN, cur) : '—',
+        tp1: tp1N != null ? fmtCur(tp1N, cur) : '—',
+        tp2: '—',
+        rr: rr != null ? rr : '—',
+        _entry: entryN, _stop: stopN, _tp1: tp1N, _tp2: null,
+        _dtx: true,
+      };
+    });
+  }
   // Open positions = scanner-positions.json entries matched to this mode's signals.
   // scanner-positions.json is the source of truth for live-tracked positions.
   // Each position is matched to a mode by checking if its ticker+scan_date appeared
@@ -939,7 +1037,9 @@ async function main() {
 
   // ── Panel builder ──
   function panel(id, cfg, m, trades, ec, chartId, active) {
-    const sig = signalsFor(cfg);
+    // SCRIPTED modes: Orders to Place come from the dtx engine (decide CREATE); fall back to the
+    // JS-scanner signal pool when no dtx staging exists (e.g. hybrid, or dtx not yet run).
+    const sig = dtxSignalsFor(id, cfg) || signalsFor(cfg);
     // ── Live book vs Sim backtest ──
     // P (when non-null) = the live-book primary stats (from pit-state). H = the stats source
     // for the hero (P when live data exists, else the frozen sim m). When P is set the hero is
@@ -1178,13 +1278,13 @@ ${renderStatusBanner(cfg)}
       <span class="ps-v">${H.wr}%</span><span class="ps-l">Win Rate</span>
     </div>
     <div class="ps" title="Sum of winning P&amp;L divided by sum of losing P&amp;L. >1 = profitable. >2 = robust. >5 = small-sample inflated.${!P && m.pfLow != null && m.pfHigh != null ? ` 90% bootstrap CI: [${m.pfLow}x — ${m.pfHigh}x] over ${m.trades} trades.` : (!P && m.pfReliable === false ? ` Sample ${m.trades}<50 trades — point estimate only, treat as fragile.` : '')}">
-      <span class="ps-v"><span class="ps-num">${H.pf}x</span>${!P && m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${!P && m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
+      <span class="ps-v"><span class="ps-num">${H.pf == null ? '—' : H.pf + 'x'}</span>${!P && m.pfLow != null && m.pfHigh != null ? `<span class="ps-ci" style="font-size:.55rem;color:var(--muted);margin-left:.2rem;font-weight:500">[${m.pfLow}–${m.pfHigh}]</span>` : ''}</span><span class="ps-l">Profit Factor${!P && m.pfReliable === false ? ' <span style="color:var(--warn-ink);font-size:.55rem;background:var(--warn-wk);padding:0 .25rem;border-radius:3px;font-weight:700;text-transform:uppercase">small n</span>' : ''}</span>
     </div>
     <div class="ps" title="Number of fully-closed trades counted in the stats above. Pending/open positions excluded.">
       <span class="ps-v">${H.trades}</span><span class="ps-l">Closed Trades</span>
     </div>
     <div class="ps" title="Average number of trading days each closed trade was held.">
-      <span class="ps-v">${H.avgHold}d</span><span class="ps-l">Avg Hold</span>
+      <span class="ps-v">${H.avgHold == null ? '—' : H.avgHold + 'd'}</span><span class="ps-l">Avg Hold</span>
     </div>
     <div class="ps" title="R-squared: how closely the equity curve follows a straight line. 1.0 = perfect linear growth, 0 = random.">
       <span class="ps-v">${H.r2 != null ? H.r2.toFixed(3) : '—'}</span><span class="ps-l">R²</span>
@@ -3469,7 +3569,7 @@ document.addEventListener('DOMContentLoaded',function(){
   fs.writeFileSync(OUT, html);
   console.log(`\u2705 ${OUT} generated (${(html.length / 1024).toFixed(0)}KB)`);
   for (const [id, m] of Object.entries(modes)) {
-    console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf}x, ${m.m.trades} trades`);
+    console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf == null ? '—' : m.m.pf + 'x'}, ${m.m.trades} trades${m.m.dtxEngine ? ' [dtx]' : ''}`);
   }
 
   // ── Save daily snapshot for time machine ──
