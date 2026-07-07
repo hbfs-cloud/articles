@@ -23,9 +23,23 @@ sont DÉJÀ au bon format ({date,open,high,low,close,volume} array). PIT-safe vi
 - `replay --portfolio cfg.yaml --bars b.json --from D --to D` → stdout JSON {results:[{cagr_pct,
   max_dd_pct,sharpe,r2,win_rate,equity_dates[],equity_values[],...}]}. Logs sur STDERR.
 - `decide --portfolio cfg.yaml --asof D --bars b.json --positions pos.json --orders ord.json
-  --balances bal.json [--state s.json]` → {state, actions:{CREATE,UPDATE,CANCEL}}. ⚠️ GOTCHA :
-  --positions/--orders = ARRAYS JSON ([]) ; --balances = OBJET ({"EUR":100000}). `state` à persister.
-- Smoke test : replay us_highvol sur 40 tickers cache → cagr 6.56/dd 13.69/sharpe 0.37, 22 trades, exit 0.
+  --balances bal.json [--state s.json]` → {state, actions:{CREATE,UPDATE,CANCEL}}.
+  - ⚠️ `--positions`/`--orders` = ARRAYS JSON (`[]`).
+  - ⚠️⚠️ **CORRIGÉ** : `--balances` n'est PAS un objet plat `{"USD":100000}` (ça parse en
+    `total_equity=0` → 0 buying power → **0 ordres SILENCIEUX**). Vrai schéma (cmd/dtx/decide_cmd.go) :
+    `{base_currency, cash_by_currency:{CUR:amt}, total_equity}`. Le wrapper `dtx-engine.js` accepte la
+    forme plate par commodité et la normalise.
+  - ⚠️ Output OrderRequest en **snake_case** : `symbol, side, order_type, limit_price, stop_loss,
+    take_profit, qty, reason, priority` (pas de TimeInForce/OCOGroup/TrailingStop dans la sérialisation).
+  - Certains fichiers cache portent des timestamps `YYYY-MM-DDThh:mm:ss` que le moteur rejette →
+    dtx-bars.js normalise en `YYYY-MM-DD`.
+  - `state` persisté (`data/dtx/state/<mode>.json`) → re-run du MÊME asof = non-idempotent (les entrées
+    du jour sont déjà "created" → 0 nouveaux ordres). Correct pour cadence live ; cold run (rm state) =
+    reproduit les ordres.
+- Preuve reproduite (asof 2026-06-30, cold) : replay us_highvol cagr 44.91/dd 24.95/sharpe 1.19/117
+  trades ; decide → 2 BUY (ATEX qty145, ABVX qty112). stockbox → 8 rotations dont 7/8 = box publiée
+  (parité forte). etf_us/us_ablite/etf_eu/metals OK. crypto/forex = vrais bars mais 0 trades (régime
+  gating + histo court). jp/in/eu_dax/eu_uk = **échouent honnêtement** (cache sans tickers .T/.NS/.DE).
 
 **Book viable (~11 stratégies, configs systematic-tss/config/)** : forex, us_highvol, etf_us, etf_eu,
 uk, jp, stockbox_nasdaq, us_ablite, crypto, eu_dax, in, eu_uk (+metals). Caveat : CAGR absolus =
