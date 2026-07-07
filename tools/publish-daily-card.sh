@@ -28,6 +28,26 @@ echo "=== Scanner Daily Card Publisher ==="
 echo "Date: $(date '+%Y-%m-%d %H:%M:%S')"
 echo "Options: sweep=$([ "$SKIP_SWEEP" = true ] && echo "skip" || echo "yes") telegram=$([ "$DRY_RUN" = true ] && echo "no" || echo "yes")"
 
+# ─── Next trading session (séance J+1) — computed ONCE, used by dtx-scan (Step 4d) ─────
+# and by the commit step (Step 6). Convention: scanner du soir = prochaine séance ouvrable
+# (Lun→Mar … Ven→Lun). Cross-platform date arithmetic (BSD on macOS / GNU on Linux).
+if date -v +1d '+%Y' >/dev/null 2>&1; then
+  _date_add_days() { date -v "+${1}d" "$2"; }   # BSD
+else
+  _date_add_days() { date -d "+${1} days" "$2"; } # GNU
+fi
+_DOW=$(date '+%u')  # 1=Mon … 5=Fri, 6=Sat, 7=Sun
+case "$_DOW" in
+  5) _ADD=3 ;;  # Vendredi → lundi
+  6) _ADD=2 ;;  # Samedi → lundi
+  7) _ADD=1 ;;  # Dimanche → lundi
+  *) _ADD=1 ;;  # Lun-Jeu → J+1
+esac
+SCAN_DATE=$(_date_add_days "$_ADD" '+%Y%m%d')       # YYYYMMDD (folders / commits)
+SCAN_DATE_ISO=$(_date_add_days "$_ADD" '+%Y-%m-%d') # YYYY-MM-DD (dtx --asof)
+TODAY=$(date '+%Y%m%d')
+echo "Scan date (séance): $SCAN_DATE ($SCAN_DATE_ISO) | Today: $TODAY"
+
 # ─── Step 1: Update tracking (positions + metrics from live prices) ──────────
 echo ""
 echo "📊 Step 1: Updating tracking data..."
@@ -143,6 +163,22 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "🧭 Step 4c: Forward continuity (pit-forward)..."
   node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
 
+  # ─── Step 4d: dtx (systematic-tss) refresh for SCRIPTED modes — FAIL-SAFE ───
+  # The 5 dtx-wired scripted modes (highvol/forex/etf/etf_eu/stockbox) get their
+  # "Orders to Place" + backtest equity curve from the REAL systematic-tss engine (dtx),
+  # staged to data/dtx/<mode>.json which gen-status-page READS. NATIVE dtx needs the
+  # systematic-tss repo (../systematic-tss or $DTX_TSS_ROOT) + network — present on a dev/ser
+  # host, ABSENT in the cloud sandbox (clones only `articles`). --skip-if-no-tss makes the step
+  # exit 0 and SKIP cleanly when systematic-tss is missing → gen-status-page then uses the
+  # COMMITTED staging. NEVER blocks the 23h routine. Refresh + commit must happen upstream
+  # (see docs) so the cloud reads fresh dtx data; without it, the cloud shows last-committed staging.
+  echo ""
+  echo "🧩 Step 4d: dtx scripted-mode refresh (fail-safe skip if no systematic-tss)..."
+  for _DTXMODE in us_highvol forex etf_us etf_eu stockbox_nasdaq; do
+    node tools/dtx-scan.js --mode "$_DTXMODE" --asof "$SCAN_DATE_ISO" --skip-if-no-tss --quiet \
+      || echo "⚠️  dtx-scan $_DTXMODE failed (non-blocking — staging kept)"
+  done
+
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""
   echo "📄 Step 5: Generating scanner/status page + portfolio endpoints..."
@@ -168,25 +204,7 @@ fi
 # ─── Step 6: Commit & push everything ────────────────────────────────────────
 echo ""
 echo "📤 Step 6: Committing..."
-# Convention: scanner du soir = séance J+1 (prochain jour de trading ouvrable)
-# Lundi→Mardi, Mardi→Mercredi, ..., Vendredi→Lundi (skip weekend)
-# Cross-platform date arithmetic (BSD on macOS / GNU on Linux)
-if date -v +1d '+%Y' >/dev/null 2>&1; then
-  _date_add_days() { date -v "+${1}d" '+%Y%m%d'; }   # BSD
-else
-  _date_add_days() { date -d "+${1} days" '+%Y%m%d'; } # GNU
-fi
-_DOW=$(date '+%u')  # 1=Mon, 5=Fri, 6=Sat, 7=Sun
-if [ "$_DOW" -eq 5 ]; then
-  SCAN_DATE=$(_date_add_days 3)  # Vendredi soir → lundi
-elif [ "$_DOW" -eq 6 ]; then
-  SCAN_DATE=$(_date_add_days 2)  # Samedi → lundi
-elif [ "$_DOW" -eq 7 ]; then
-  SCAN_DATE=$(_date_add_days 1)  # Dimanche → lundi
-else
-  SCAN_DATE=$(_date_add_days 1)  # Lun-Jeu → J+1
-fi
-TODAY=$(date '+%Y%m%d')  # Date réelle (pour commits/logs)
+# SCAN_DATE / SCAN_DATE_ISO / TODAY were computed once at the top of this script.
 echo "   Scan date (séance): $SCAN_DATE | Today: $TODAY"
 
 # Stage all potentially changed files (ignore errors for missing files)
@@ -209,6 +227,7 @@ if [ "$SKIP_SWEEP" = false ]; then
     data/modes-config.json \
     data/modes-config-history.json \
     data/risk-snapshots.json \
+    data/dtx/*.json \
     scanner/status/mode-*-*.png \
     scanner/status/index.html \
     scanner/status/manifest.json \

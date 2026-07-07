@@ -1,3 +1,13 @@
-# dtx-scan staging outputs + per-mode engine state are generated artifacts — not versioned.
+# dtx-scan staging. The cloud pipeline (no systematic-tss, no network) READS committed staging;
+# a systematic-tss+network host (dev nightly / ser) refreshes + commits it BEFORE the 23h routine.
+#
+# Only the 5 WIRED scripted modes are read by gen-status-page (DTX_STAGING_MAP), so only those are
+# versioned. Unwired portfolios (crypto/eu_dax/eu_uk/in/jp/metals/uk/us_ablite) and machine-local
+# engine state stay ignored — they're regenerable byproducts nothing on the site consumes.
 *.json
 state/
+!us_highvol.json
+!forex.json
+!etf_us.json
+!etf_eu.json
+!stockbox_nasdaq.json

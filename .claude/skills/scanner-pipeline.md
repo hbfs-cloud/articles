@@ -306,11 +306,53 @@ node tools/sweep.js                     # Append-only: nouveaux trades fermés
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
-node tools/gen-status-page.js           # Snapshot J + Dashboard (lit fortress_pool)
+# ── dtx (systematic-tss) refresh — SCRIPTED modes (highvol/forex/etf/etf_eu/stockbox) — FAIL-SAFE ──
+# NATIVE dtx (le VRAI moteur systematic-tss) recalcule Orders-to-Place + courbe backtest → staging
+# data/dtx/<mode>.json que gen-status-page LIT. --skip-if-no-tss = exit 0 propre SI ../systematic-tss
+# (ou $DTX_TSS_ROOT) absent → sur cloud on garde le staging COMMITTÉ (pas de systematic-tss dans le
+# sandbox). NE BLOQUE JAMAIS la routine. Voir "dtx refresh (DÉCOUPLÉ)" §ci-dessous.
+for M in us_highvol forex etf_us etf_eu stockbox_nasdaq; do \
+  node tools/dtx-scan.js --mode "$M" --asof YYYY-MM-DD --skip-if-no-tss --quiet || true; done
+node tools/gen-status-page.js           # Snapshot J + Dashboard (lit fortress_pool + data/dtx/*.json)
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 node tools/trading-executor/run-session.js  # Generate plans + execute
 node tools/substack-publish.js scanner/YYYYMMDD/index.html  # OPTIONAL/non-blocking: Substack draft + Notes teaser (needs MCP_AUTH_TOKEN, else draft-only local); disable via SUBSTACK_DISABLE=1
 ```
+
+### dtx refresh (DÉCOUPLÉ) — les modes scriptés lisent un staging COMMITTÉ, jamais dtx sur cloud
+
+**Architecture (immuable) :** le vrai moteur systematic-tss (binaire `dtx`, mode NATIF) tourne
+**en amont**, là où `../systematic-tss` (`data/instruments/*.json` + staticdata) et le **réseau**
+existent (dev local / box `ser`). Il écrit le staging `data/dtx/<mode>.json` (equity + metrics +
+orders) qui **EST maintenant versionné** (5 modes câblés : `us_highvol`, `forex`, `etf_us`,
+`etf_eu`, `stockbox_nasdaq`). Le **cloud** (sandbox 23h qui ne clone QUE `articles`) n'a NI
+systematic-tss NI réseau NI binaire Linux exécuté : il **LIT seulement** le staging committé via
+`gen-status-page` → `DTX_STAGING_MAP`. Fail-safe partout : `--skip-if-no-tss` fait `exit 0` si
+systematic-tss absent → la routine continue sur le dernier staging committé.
+
+**Le binaire Linux n'est JAMAIS exécuté sur cloud** (le cloud lit du JSON, il ne lance pas dtx) →
+le risque « linux-amd64 jamais run » est **hors-scope pour le chemin cloud**. (Un fallback dtx
+côté-cloud serait possible — binaire Linux + injecter nos bars via `--bars`, sans systematic-tss —
+mais **non nécessaire** tant que le staging est rafraîchi en amont ; ne pas le construire.)
+
+**⚠️ EXIGENCE DE FRAÎCHEUR :** le staging vaut le dernier `dtx-scan` amont. **Un host
+systematic-tss+réseau (dev nightly, ou `ser`) DOIT lancer `dtx-scan` et committer `data/dtx/`
+AVANT la routine cloud de 23h**, sinon le site affiche les ordres/courbes du dernier commit (stale).
+Commande cron proposée (host avec systematic-tss checké out + réseau, ~22h30, avant le 23h cloud) :
+
+```bash
+# 30 22 * * 1-5  (host avec ../systematic-tss + réseau) — NE PAS configurer ser depuis ici
+cd /path/to/articles && ASOF=$(node -e "let d=new Date();do{d.setDate(d.getDate()+1)}while([0,6].includes(d.getDay()));process.stdout.write(d.toISOString().slice(0,10))") \
+  && for M in us_highvol forex etf_us etf_eu stockbox_nasdaq; do node tools/dtx-scan.js --mode "$M" --asof "$ASOF" --quiet; done \
+  && git pull --rebase && git add data/dtx/us_highvol.json data/dtx/forex.json data/dtx/etf_us.json data/dtx/etf_eu.json data/dtx/stockbox_nasdaq.json \
+  && git commit -m "chore(dtx): refresh scripted-mode staging" && git push origin main
+```
+
+Dans le pipeline `publish-daily-card.sh`, l'étape **4d** appelle `dtx-scan --skip-if-no-tss` pour
+les 5 modes : sur un host avec systematic-tss elle rafraîchit+committe le staging ; sur cloud elle
+skip proprement. `PORTFOLIO_TO_MODE` splice le backtest (`--to` = `statusSince` du mode) à la
+courbe live. Parité prouvée : `dtx replay` natif == `cmd/backtest` (Go) champ-à-champ (eu_dax /
+us_highvol / etf_us / stockbox_nasdaq).
 
 ### ⛔ Phase 5.5 — FORTRESS-PM A+ HALAL POOL — ÉTAPE OBLIGATOIRE (systématique, AVANT gen-status-page)
 

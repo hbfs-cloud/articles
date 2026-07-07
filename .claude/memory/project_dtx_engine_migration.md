@@ -123,3 +123,60 @@ Yahoo/Binance/BVC), et pointer `DTX_TSS_ROOT` dessus. Injecté serait 100% porta
 
 **PHASE 3 (reste, CONSENTEMENT)** : re-baseline du track-record scellé (dtx replay = source de vérité vs
 sweep), ce qui permettrait ENSUITE de retirer les scanners JS + le pipeline iso. Règle immutable-trades.
+
+---
+
+## PHASE 2.5 — CLOUD-VIABLE (DÉCOUPLAGE) FAITE (2026-07-07)
+
+**Problème résolu** : Phase 2 avait câblé la machinerie mais dtx-scan n'était wired dans AUCUN
+pipeline, et le staging `data/dtx/*.json` était **gitignoré** → la routine cloud 23h (sandbox qui
+clone SEULEMENT `articles`, sans `../systematic-tss` ni réseau) ne voyait jamais de sortie dtx → les
+modes scriptés retombaient silencieusement sur le pool JS legacy. **Pas cloud-viable.**
+
+**Architecture = DÉCOUPLAGE** : le natif dtx tourne EN AMONT (dev local / box `ser` où
+systematic-tss + réseau existent) et **COMMITTE le staging** ; le cloud **LIT seulement** le staging
+committé (zéro systematic-tss, zéro binaire Linux exécuté, zéro réseau requis côté cloud).
+
+**Changements (commit à venir)** :
+1. **`data/dtx/.gitignore`** : les 5 staging WIRED (`us_highvol/forex/etf_us/etf_eu/stockbox_nasdaq`)
+   sont maintenant VERSIONNÉS (whitelist `!<mode>.json`) ; `state/` + portfolios non-câblés restent
+   ignorés (byproducts regénérables, machine-local).
+2. **`tools/dtx-scan.js`** : flag **`--skip-if-no-tss`** → si `../systematic-tss`/`$DTX_TSS_ROOT`
+   absent, `exit 0` + warning (fail-SAFE) au lieu de `exit 3` (fail-closed). Un run manuel direct SANS
+   le flag garde le hard-error. Le pipeline passe le flag → jamais de blocage cloud.
+3. **`tools/publish-daily-card.sh`** : Step 4d (avant gen-status-page) boucle `dtx-scan --mode <M>
+   --asof $SCAN_DATE_ISO --skip-if-no-tss` sur les 5 modes ; date de séance hoistée en tête (SCAN_DATE
+   + SCAN_DATE_ISO) ; `data/dtx/*.json` ajouté au `git add` du commit.
+4. **`.claude/skills/scanner-pipeline.md`** : étape dtx dans le bloc pipeline + section « dtx refresh
+   (DÉCOUPLÉ) » (exigence de fraîcheur + cron proposé).
+
+**PARITÉ (preuve de correction, vs Go — pas vs les scanners JS)** : `cmd/backtest` (Go, buildé
+`go build -o bin/backtest ./cmd/backtest`) VS `dtx replay` natif, MÊME config + fenêtre
+(2024-01-01→2024-07-01). **Champ-à-champ EXACT (headline ET courbe equity dates+valeurs)** sur les 4
+books testés :
+| book | cagr | dd | sharpe | trades | final_equity | verdict |
+|---|---|---|---|---|---|---|
+| eu_dax | 1.14 | 9.41 | 0.15 | 12 | 100566.43 | EXACT |
+| us_highvol | 166.96 | 11.08 | 2.67 | 78 | 163113.81 | EXACT |
+| etf_us | 16.48 | 11.1 | 0.81 | 198 | 107895.61 | EXACT |
+| stockbox_nasdaq | 35.12 | 24.45 | 0.97 | 18 | 116181.21 | EXACT |
+Aucune divergence → le moteur dtx EST cmd/backtest (universe_provider partagé). Confirme la claim
+README d'une parité qui n'était mesurée que sur eu_dax.
+
+**DRY-RUN CLOUD SIMULÉ** (`DTX_TSS_ROOT=/nonexistent`) : dtx-scan skip proprement (exit 0, warning)
+pour les 5 modes → `gen-status-page` + `gen-api` tournent jusqu'au bout en LISANT le staging committé
+(les 5 modes marqués `[dtx]`) → `qa-check` **0 ❌** (38 ✅ / 7 ⚠️ pré-existants). Playwright 1440px
+(HTTP) : highvol/etf/stockbox rendent chart canvas + « Backtest 2021 »/« backtest + live » + panneau
+Orders (etf/stockbox 24 rows ; highvol 0 = jour calme légitime, 0 CREATE), 0 hard JS error,
+overflowX=0 (aucune régression layout). **⇒ la routine 23h ne casse PAS si systematic-tss est absent.**
+
+**BINAIRE LINUX = MOOT pour le cloud** : avec le découplage, le cloud ne LANCE jamais dtx (il lit du
+JSON) → le risque « dtx-linux-amd64 jamais exécuté » ne concerne plus le chemin cloud. (Un fallback
+cloud-side serait possible — dtx-linux + nos bars via `--bars`, sans systematic-tss — mais NON
+nécessaire tant que le staging est rafraîchi en amont ; non construit, à dessein.)
+
+**EXIGENCE RÉCURRENTE (à ne pas oublier)** : le staging vaut le dernier `dtx-scan` amont. Un host
+systematic-tss+réseau (dev nightly ou `ser`) DOIT `dtx-scan` + committer `data/dtx/` AVANT le 23h
+cloud, sinon le site affiche le dernier staging committé (stale, pas cassé). Cron proposé (~22h30,
+NON configuré sur ser depuis ici) : voir `.claude/skills/scanner-pipeline.md` § « dtx refresh
+(DÉCOUPLÉ) ». Le `statusSince` de chaque mode pilote le splice backtest→live (`--to`).

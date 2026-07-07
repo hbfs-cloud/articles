@@ -88,6 +88,11 @@ function parseArgs(argv) {
     else if (a === '--no-replay') o.replay = false;
     else if (a === '--quiet') o.quiet = true;
     else if (a === '--out') o.out = argv[++i];
+    // FAIL-SAFE (pipeline/cloud): when systematic-tss is absent, skip cleanly (exit 0) instead of
+    // erroring. The cloud sandbox clones only `articles` → no ../systematic-tss → native dtx cannot
+    // run there. In that case the 23h routine keeps going on the COMMITTED staging (data/dtx/*.json)
+    // that an upstream host refreshed. A direct manual run WITHOUT this flag still hard-errors.
+    else if (a === '--skip-if-no-tss') o.skipIfNoTss = true;
   }
   return o;
 }
@@ -249,7 +254,20 @@ function main() {
 
   if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
 
-  try { assertTssRoot(); } catch (e) { console.error(`ERROR: ${e.message}`); process.exit(3); }
+  try {
+    assertTssRoot();
+  } catch (e) {
+    if (opts.skipIfNoTss) {
+      // Fail-SAFE skip: the cloud pipeline reads the committed staging instead.
+      console.warn(`⚠️  dtx-scan: ${e.message}`);
+      console.warn('⚠️  dtx-scan: --skip-if-no-tss set → SKIPPING native refresh. The pipeline will ' +
+        'READ the committed staging (data/dtx/<mode>.json). This is EXPECTED on cloud (no systematic-tss). ' +
+        'Staging is only as fresh as the last upstream dtx-scan+commit.');
+      process.exit(0);
+    }
+    console.error(`ERROR: ${e.message}`);
+    process.exit(3);
+  }
 
   let targets;
   if (opts.all) targets = Object.values(modes).filter((m) => !m.error);
