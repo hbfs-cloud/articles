@@ -28,9 +28,25 @@ le book à tort. Le fix doit être CIBLÉ sur la détection.
 Re-sweep → IBN exclu à l'entrée → sorti du book (5 pending Halal conservés). Chaîne SHA intacte.
 Aussi ce jour : `aplus.minScore` 92→85.
 
-**Why** : la détection Halal par secteur échoue silencieusement sur les émetteurs sans data secteur
-dans SECTOR_MAP (banques/assureurs non-US surtout). Un gate permissif + détection trouée = riba qui
-passe. **How to apply** : quand on ajoute/évalue un mode shariaOnly, tester explicitement des banques
-non-US (IBN/ING/MUFG) ; toute nouvelle source de tickers doit résoudre son secteur (ticker-metadata)
-avant le gate. Hors-scope noté : XLP (ETF Consumer Staples avec noms tabac) dans les trades aplus —
-screening des constituants d'ETF à évaluer séparément. Lié à [[fortress-pm-systematic-pipeline-step]].
+**2e trou (même thème) — ETF non screenés (commit 8f568dae0)** : XLP (Consumer Staples SPDR,
+contient PM/MO tabac) est entré dans aplus (shariaOnly). Le filtre screenait les ACTIONS par secteur
+mais ne regardait jamais les CONSTITUANTS d'un ETF ; SHARIA_EXCLUDED n'attrapait que XLF/XLV/bond/
+leveraged, pas broad/sector/commodity (XLP/SPY/QQQ/USO/GLD/GDX...). Fix : en shariaOnly, **tout ETF
+est haram sauf whitelist de fonds certifiés Sharia** (SPUS/HLAL/UMMA/ISDW...). Détection via tags
+SECTOR_MAP 'ETF-*' + `isEtf(ticker,s)` (fallback asset_type du signal) ; ~50 ETF miners/thématiques/
+énergie/REIT/biotech ajoutés au SECTOR_MAP (GDX/TAN/ARKG/JETS/IBB/VNQ) pour les entrées futures sans
+asset_type. Re-sweep → XLP sorti (pending, comme IBN), chaîne SHA intacte.
+
+**Book fortress clôturé = haram pré-mandat (DÉCISION USER EN ATTENTE)** : les trades CLÔTURÉS de
+fortress contiennent des noms haram entrés avant le mandat Halal (LMT/RTX/BA/MS/SCHW/SAN/USO/GDX/
+FXI/SMH/TAN...). Immuables (chaîne SHA) — ne PAS modifier. 3 options proposées : date-scope le mandat
+/ filtrer l'affichage du track-record / statu quo. Le gate shariaOnly n'affecte que les entrées
+nouvelles+pending, jamais l'historique scellé (c'est pour ça que MS/SCHW sont dans l'historique alors
+qu'ils sont dans SHARIA_EXCLUDED).
+
+**Why** : la détection Halal échoue silencieusement (1) sur les émetteurs sans data secteur dans
+SECTOR_MAP (banques/assureurs non-US) et (2) sur les ETF dont on ne peut screener les constituants.
+Gate permissif + détection trouée = haram qui passe. **How to apply** : mode shariaOnly = tester
+explicitement banques non-US (IBN/ING/MUFG) ET ETF (XLP/SPY/GDX) ; toute nouvelle source de tickers
+doit résoudre secteur+asset_type avant le gate ; ne jamais autoriser un ETF non certifié Sharia.
+Lié à [[fortress-pm-systematic-pipeline-step]].
