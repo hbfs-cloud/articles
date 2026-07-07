@@ -1237,6 +1237,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "Samsung Electronics",
+    "exchange": "Bourse de Corée (KRX) • Technologie • Mémoire & puces",
+    "name": "Samsung Electronics — Samsung +1,9% et SK Hynix +2,4% sur leurs résultats, mais Micron -6,9%, AMD -8,2%, ASML...",
+    "title": "Samsung Electronics — Samsung +1,9% et SK Hynix +2,4% sur leurs résultats, mais Micron -6,9%, AMD -8,2%, ASML...",
+    "desc": "Samsung publie un trimestre en forte hausse (mémoire IA) et grimpe à Séoul, mais les semi-conducteurs américains plongent. Pourquoi ce sell-off, et quelles opportunités saisir.",
+    "tags": "asia,semis,ai,earnings,macro",
+    "grade": "B+",
+    "href": "/analyses/SAMSUNG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "NOG",
     "exchange": "NYSE • Énergie • E&P non-opéré\n            — Working interests minoritaires (Williston, Permien, Appalaches)",
     "name": "NOG — NOG à book value, EV/EBITDA 3x, RSI 31. Mean-reversion contrarian avec 19% de short com...",
