@@ -1,0 +1,42 @@
+# EU deliverable — DAX intra-index top-5 momentum rotation (long-only).
+# Rotates into the 5 strongest DAX constituents by 63-day momentum, rebalanced every 21d,
+# absolute-momentum filter (cash when a slot has no positive-momentum name).
+#
+# HONEST PERF (MUST run with TOTAL_RETURN=1 to capture dividends; -end 2026-06-30 to dodge the
+# 2026-07-02 cache close=0 glitch), 2021-01-01 → 2026-06-30:
+#   CAGR 24.8% / MaxDD 30.7% / Sharpe 1.09 / R2 0.84 / WR 55% / 137 trades.
+#   ~2x the DAX index B&H (~10-13% total-return). Concentration healthy (top-1 trade 13% of PnL).
+#
+# BAR STATUS: relaxed-bar EU deliverable. Clears Sharpe>1 AND R2>0.8 AND beats index 2x, but does
+# NOT clear the strict CAGR>MaxDD leg (EU large-cap magnitude ceiling — exhaustively confirmed:
+# DD-reduction levers (regime gate, gradual scaler, smooth-start, faster rebalance, wider top_k) all
+# cut CAGR proportionally to DD and never invert CAGR>DD; smooth-start only trims launch exposure,
+# not the 2022 mid-sample drawdown that sets MaxDD). Accepted as EU exposure by user decision.
+#
+# CAVEATS: 2026 DAX membership = mild look-ahead on composition (blue chips stable). Prices are
+# total-return (dividend-adjusted) ONLY when TOTAL_RETURN=1 — without it, understated ~3%/yr.
+portfolios:
+- id: eu_dax
+  name: EU DAX Top-5 Momentum Rotation
+  currency: EUR
+  initial_capital: 100000
+  allocations:
+  - name: eu_dax
+    region: DE
+    currency: EUR
+    percent: 100
+    broker: saxo
+    strategy: index-rotation
+    stocks: true
+    etfs: false
+    pure: true
+    whitelist: "SAP.DE,SIE.DE,DTE.DE,ALV.DE,RHM.DE,MUV2.DE,IFX.DE,DHL.DE,DBK.DE,BMW.DE,MRK.DE,DB1.DE,VOW3.DE,BAS.DE,SHL.DE,RWE.DE,CBK.DE,HEI.DE,HNR1.DE,HOT.DE,TLX.DE,HEN.DE,FRE.DE,ADS.DE,VNA.DE,MTX.DE,UN0.DE,KBX.DE,BEI.DE,SRT.DE,CON.DE,DWS.DE,FME.DE,G1A.DE,PAH3.DE"
+    regime_tickers:
+      index: ^STOXX50E
+      volatility: ^VIX
+    scanner_filters:
+      params:
+        rotation_lookback_days: 63
+        rotation_top_k: 5
+        rotation_rebalance_days: 21
+        rotation_abs_filter: 1

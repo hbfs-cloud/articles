@@ -1,0 +1,99 @@
+# US ETF Strategy - via STRATEGY_DISCOVER.md
+# De-overfitted 2026-02-19: risk_off 0→1, removed redundant min_score
+# CAGR 66.48%, MaxDD 17.23%, Sharpe 2.08, R2 0.93 (7 positions)
+portfolios:
+  - id: etf_us
+    name: US ETF / Alpaca
+    currency: USD
+    initial_capital: 100000
+
+    allocations:
+      - name: etf_us
+        region: US
+        currency: USD
+        percent: 100
+        max_open_positions: 7
+        dynamic_max_positions:
+          risk_on: 7
+          recovery: 7
+          neutral: 7
+          early_risk_off: 5
+          risk_off: 1       # was 0, allow 1 position in crisis (reduce perturbation cliff)
+        stocks: false
+        etfs: true
+        pure: true  # Non-leveraged ETFs only
+        # No min_volume - use full ETF universe for best CAGR
+        broker: alpaca
+        strategy: etf-momentum  # Custom ETF strategy based on cluster analysis
+        regime_tickers:
+          index: "^GSPC"
+          volatility: "^VIX"
+        # PM parameters (cluster-specific defaults in pm_etf.go)
+        risk_per_trade_pct: 2.5
+        base_stop_atr: 2.5
+        min_cash_reserve: 10  # Keep $10 minimum cash
+        pending_buy_cancel_days: 1
+        # Early exit: cut fast losers (>5% loss in first 5 days)
+        early_exit:
+          enabled: true
+          min_days: 2
+          max_days: 5
+          max_loss_pct: 0.05
+        # Circuit breaker: pause after 4 stops in 5 days
+        circuit_breaker:
+          stop_period_days: 5
+          max_stops_before_pause: 4
+          base_pause_days: 3
+          max_pause_multiplier: 2
+        # Dynamic max loss by regime (optimized via quantitative analysis)
+        dynamic_max_loss:
+          risk_on: 0.17
+          recovery: 0.17
+          neutral: 0.17
+          early_risk_off: 0.17
+          risk_off: 0.17
+        # Scanner filters - simple momentum rotation
+        scanner_filters:
+          min_price: 10
+          max_atr_ratio: 0.06   # 6% ATR max - sweet spot is 2-4%
+          # min_score removed — per-regime params handle filtering, reduces perturbation surface
+          # Regime-specific params (all optional, defaults shown)
+          params:
+            # Blacklist - test incrementally
+            blacklist:
+              - BITI   # Short Bitcoin: -$10K, 10% WR
+              - VXX    # VIX futures: -$3K, 31% WR (contango decay)
+              - VXZ    # VIX mid-term: -$5K, 29% WR
+              - COPJ   # Carbon ETF: -$40K worst single trade
+              - CTEX   # -37K, PF 0.04 (71% WR but catastrophic losses)
+            # RISK_ON: Buy momentum (high RSI works in bull markets)
+            riskon_max_atr: 0.045        # Max ATR% for RISK_ON entries
+            riskon_min_mom: 0.02         # Min 20d momentum
+            riskon_rsi_boost_thresh: 60  # RSI above this gets score boost
+            riskon_rsi_boost_factor: 2.0 # Points per RSI above threshold
+            # RECOVERY: More selective (loses money otherwise)
+            recovery_max_rsi: 48         # Max RSI for RECOVERY entries
+            recovery_max_atr: 0.04       # Max ATR%
+            recovery_min_mom: 0.03       # Min momentum
+            # RISK_OFF: Mean reversion (best regime)
+            riskoff_deep_dip_dist: -0.05 # DistMA20 for deep dip entry
+            riskoff_oversold_rsi: 40     # RSI threshold for oversold
+            riskoff_meanrev_rsi: 50      # RSI threshold for mean reversion
+            # NEUTRAL: Balanced approach
+            neutral_meanrev_rsi: 40
+            neutral_meanrev_dist: -0.03
+            neutral_lowvol_atr: 0.04
+            neutral_lowvol_mom: 0.05
+            # EARLY_RISK_OFF: Very strict (usually bad regime)
+            early_riskoff_max_rsi: 25
+            early_riskoff_min_dist: -0.10
+            # EXTREME: Fallback for strong signals
+            extreme_mom_thresh: 0.15
+            extreme_oversold_rsi: 30
+            extreme_oversold_dist: -0.05
+            # EXTREME_MOMENTUM in RECOVERY/NEUTRAL: require price > MA20 (trend confirmation)
+            # This filters fake momentum that loses money
+            extreme_min_dist_ma20: 0.0  # 0.0 = price must be above MA20
+            # NOTE: MA200 analysis attempted but did not improve performance
+            # The correlation between MA200 position and PnL is not causal
+            # Leaving baseline strategy unchanged

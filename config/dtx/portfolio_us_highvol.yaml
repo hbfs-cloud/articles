@@ -1,0 +1,103 @@
+# US HighVol Breakout — flagship honest strategy (small-retail calibrated).
+# The scanner selects on ATR (range expansion) + vol_ratio (volume surge) = the ONLY signal
+# proven STABLE across all 6 years on the gated universe (edge_discovery.py; trend/momentum/
+# RSI/distMA flip sign year-to-year = noise). This is mechanically WHY highvol is our best survivor.
+# HONEST perf (PIT $3M gate, retail-tradeable) 2021-present: CAGR 87.3% / MaxDD 27.7% /
+#   Sharpe 1.86 / R2 0.93 / WR 54.5%. (Old "114%" header = pre-gate biased universe, discard.)
+# 2026-03-23 tuning: max_positions 15, max_correlation 0.80, max_position_value 500K.
+portfolios:
+- id: us_highvol
+  name: US HighVol Breakout / Alpaca
+  currency: USD
+  initial_capital: 100000
+
+  allocations:
+  - name: us_highvol
+    region: US
+    currency: USD
+    # Toxic stocks: 0% WR with 2+ trades + chronic losers (≤20% WR, 5+ trades, PnL < -60K)
+    # Toxic stocks: 0% WR serial losers + PF<0.5 chronic losers (KOD+AUR combo validated)
+    # Toxic: 0% WR serial losers + PF<0.5 chronic losers + repeat losers from deep analysis
+    blacklist: SKYT,ALAB,RERE,QBTS,ATAI,DQ,NTLA,LCID,TE,IBRX,KOD,AUR,RXRX,TERN,NVAX,ASTS,DAWN,GLDD
+    percent: 100
+    broker: alpaca
+    strategy: highvol-breakout-corr  # Uses highvol-corr PM with correlation filter
+
+    # Smooth start ("démarrage progressif"): ramp deployable capital 50%→100% over ~4 weeks at
+    # launch (softer variant — measured to cut the from-2021 backtest cost while still reducing
+    # launch-timing dispersion). Live-launch insurance. DD-breaker left OFF (measured to destroy
+    # momentum CAGR when always-on). smooth_start_regime_gated available but over-conservative.
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.50
+
+    # Universe filters
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 1_000_000_000  # Filter worst small-caps while keeping enough volume
+    min_volume: 10_000_000
+
+    # Position Manager parameters
+    max_open_positions: 15
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    max_position_value: 500_000
+
+    # CORRELATION FILTER: Reject candidates highly correlated with existing positions
+    # Swept 2026-03-23: 0.60=97.0%, 0.70=107.8%, 0.75=109.2%, 0.80=109.2%, 0.85=105.6%
+    # 0.80 chosen: slightly better CAGR, less path-dependent than 0.75
+    max_correlation: 0.80
+
+    # Exit parameters
+    base_stop_atr: 2.5
+    take_profit_pct: 30
+
+    # Dynamic max loss by regime — wide for highvol winners
+    dynamic_max_loss:
+      risk_on: 0.35
+      recovery: 0.25
+      neutral: 0.30
+      early_risk_off: 0.20
+      risk_off: 0.15
+    trail_trigger_pct: 0.12
+    trail_atr_mult: 1.5
+    timeout_days: 14
+
+    # Entry parameters
+    limit_price_markup: 1.025
+    entry_stop_atr_mult: 6.0
+    max_portfolio_risk_pct: 0.05
+
+    # Dynamic parameters by regime
+    dynamic_max_positions:
+      risk_on: 15
+      recovery: 8
+      neutral: 3
+      early_risk_off: 3
+      risk_off: 0
+
+    # Scanner filters
+    scanner_filters:
+      min_p80_dollar_volume: 5_000_000
+      # Point-in-time survivorship / look-ahead guard (MEDIAN $vol over 60 bars, robust to
+      # the signal-day spike). Makes backtest = live: excludes names that were invisible
+      # microcaps at signal time (~$0 volume, untradeable by anyone).
+      # RETAIL-CALIBRATED gate (2026-07-03): a small retail account fills $3M/day names
+      # trivially (<1% of daily volume), so the floor is honesty (was this a real trading
+      # company?) not fill-scale. Gate sensitivity (est. $vol → CAGR/DD/Sharpe):
+      #   $2M→94%/29%/1.94  $3M→87%/27.7%/1.86  $5M→79%/29%/1.76  $20M→53%/34%/1.46  $50M→26%/36%/1.10
+      # $3M chosen: strictly dominates $5M (higher CAGR, LOWER DD, higher Sharpe) and is a
+      # defensible retail liquidity floor (60-bar median => no look-ahead microcap reintroduced).
+      # WR stays ~54% at every tier => the vol-surge+range signal is genuinely robust (validated
+      # universal on US+DE via edge_discovery.py: VolRatio is the stable predictor everywhere).
+      min_established_dollar_volume: 3_000_000
+      established_lookback_days: 60
+      min_atr_pct: 0.07
+      max_atr_ratio: 0.10
+      min_dist_ma20: 0.05
+      min_vol_ratio: 1.5
+      max_volatility_index: 28
+      max_rsi: 85               # was 88 (swept), rounded for robustness
+      min_score: 50
+      excluded_sectors: [Real Estate, Utilities, Materials, Communication Services]
+      # level2_scoring removed — swept params add fragility without stable benefit

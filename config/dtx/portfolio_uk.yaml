@@ -1,0 +1,66 @@
+# UK Selective Momentum Strategy / IBKR
+# v3: 37.31% CAGR, MaxDD 12.65%, R² 0.87, Sharpe 2.19
+# Key: timeout 8d + TP 10.5% + trail 3%/1.0ATR + stop 1.5ATR + VR 2.0
+
+portfolios:
+- id: uk
+  name: UK Stocks / IBKR
+  currency: GBP
+  initial_capital: 100000
+
+  allocations:
+  - name: uk
+    region: UK
+    currency: GBP
+    blacklist: 0LOV.L,0A91.L,0A6A.L,0V6R.L,0K17.L,0L35.L,0QCO.L,0A8O.L,0I0H.L,0JPO.L
+    percent: 100
+    max_open_positions: 22
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 100_000_000
+    broker: ibkr
+    strategy: selective-momentum
+    pending_buy_cancel_days: 2
+    min_cash_reserve: 10
+    max_loss_pct: 0.15
+    timeout_days: 10
+    regime_tickers:
+      index: "^FTSE"
+      volatility: "^VIX"
+    # PM defaults to 22 positions for all regimes — tested: dynamic caps hurt UK
+    dynamic_timeout:
+      risk_on: 8
+      recovery: 8
+      neutral: 8
+      early_risk_off: 8
+      risk_off: 8
+    dynamic_take_profit:
+      risk_on: 0.105
+      recovery: 0.105
+      neutral: 0.105
+      early_risk_off: 0.105
+      risk_off: 0.105
+    dynamic_base_stop_atr:
+      risk_on: 1.5
+      recovery: 1.5
+      neutral: 1.5
+      early_risk_off: 1.5
+      risk_off: 1.5
+    dynamic_trail_trigger:
+      risk_on: 0.03
+      recovery: 0.03
+      neutral: 0.03
+      early_risk_off: 0.03
+      risk_off: 0.03
+    dynamic_trail_atr:
+      risk_on: 1.0
+      recovery: 1.0
+      neutral: 1.0
+      early_risk_off: 1.0
+      risk_off: 1.0
+    scanner_filters:
+      max_rsi: 85
+      min_vol_ratio: 2.0
+      min_dist_ma20: 0.10
+      min_score: 90

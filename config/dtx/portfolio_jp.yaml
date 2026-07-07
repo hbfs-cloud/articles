@@ -1,0 +1,87 @@
+portfolios:
+- id: jp
+  name: Japan Recovery Strategy
+  currency: JPY
+  initial_capital: 10000000
+
+  allocations:
+  - name: jp
+    region: JP
+    currency: JPY
+    percent: 100
+    max_open_positions: 30
+    stocks: true
+    etfs: false
+    pure: false
+    min_market_cap: 50_000_000_000
+    min_volume: 0
+    broker: ""
+    strategy: jp-recovery
+
+    # Smooth start at launch (live insurance).
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.50
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    regime_tickers:
+      index: "^N225"
+      volatility: "^VIX"
+      vol_neutral: 20.0
+      vol_range: 8.0
+      vol_risk_off: 35.0
+      vol_early_ro: 28.0
+      vol_exit_ro: 25.0
+      vol_exit_early_ro: 22.0
+    # Moderate per-position loss limits
+    dynamic_max_loss:
+      risk_on: 0.15
+      recovery: 0.15
+      neutral: 0.12
+      early_risk_off: 0.10
+      risk_off: 0.08
+    # JP position limits - AGGRESSIVE for CAGR
+    # Scanner applies stricter filters per regime
+    dynamic_max_positions:
+      risk_on: 0        # BLOCKED in scanner
+      recovery: 0       # BLOCKED in scanner
+      neutral: 20       # Now with strict filter (RSI<30, DistMA20<-7%)
+      early_risk_off: 30 # VERY AGGRESSIVE - best volume
+      risk_off: 30      # VERY AGGRESSIVE - best WR
+    dynamic_timeout:
+      risk_on: 14
+      recovery: 14
+      neutral: 14
+      early_risk_off: 14
+      risk_off: 14
+    # Tighter stops to reduce DD
+    dynamic_base_stop_atr:
+      risk_on: 1.8
+      recovery: 1.8
+      neutral: 1.5
+      early_risk_off: 1.3
+      risk_off: 1.2
+    # JP scanner filters - AGGRESSIVE for CAGR
+    # BEST COMBO: EARLY_RO + RSI<35 = 61.1% WR, n=27K
+    scanner_filters:
+      # Point-in-time survivorship / look-ahead gate. JPY threshold ≈ $5M (150 JPY/USD).
+      # Honest CAGR with gate: 14.4% (vs 16% biased).
+      min_established_dollar_volume: 750_000_000
+      established_lookback_days: 60
+      max_dist_ma20: -0.03   # Relaxed to get more trades
+      min_rsi: 10            # Allow deeply oversold
+      max_rsi: 35            # KEY: RSI < 35 (best combo)
+      min_atr_pct: 0.02      # Minimum volatility
+      max_atr_ratio: 0.15    # Cap extreme volatility
+      min_vol_ratio: 0.5     # Very relaxed for more trades
+      min_score: 45          # Lower threshold
+      skip_regimes: [RECOVERY, RISK_ON]  # These have negative returns
+    # PM parameters - AGGRESSIVE
+    # PeakReturn avg=8.4% → take_profit=10%
+    # Stop rate 35% → keep 2xATR but trail faster
+    base_stop_atr: 2.0
+    take_profit_pct: 10      # Lower for faster exits
+    timeout_days: 12         # Faster timeout (median peak=11)
+    trail_trigger_pct: 0.05  # Trail earlier
+    trail_atr_mult: 1.2      # Tighter trail
+    risk_per_trade_pct: 2.5  # More risk per trade
+    max_portfolio_risk_pct: 0.06

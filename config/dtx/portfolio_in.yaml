@@ -1,0 +1,55 @@
+# India Strategy - via STRATEGY_DISCOVER.md
+#
+# KEY FINDINGS (63,551 opportunities):
+# - RISK_OFF + VIX>=30: 93.2% WR, +19.37% Fwd20 (BEST!)
+# - RISK_OFF: 91.46% WR, +16.78% Fwd20
+# - RECOVERY: 84.57% WR, +13.93% Fwd20 (most opportunities)
+# - Overall IN: 83.3% WR, +13.19% Fwd20
+#
+# RESULT: 48.29% CAGR, 33.94% MaxDD (passes CAGR>=40%)
+# Using original momentum-rotation config which performs best
+#
+portfolios:
+  - id: in
+    name: IN Momentum Strategy
+    currency: INR
+    initial_capital: 8300000  # ~100k USD
+
+    allocations:
+      - name: in
+        region: IN
+        currency: INR
+        percent: 100
+        max_open_positions: 15
+        stocks: true
+        etfs: false
+        pure: true
+        min_market_cap: 100_000_000_000  # 100B INR
+        min_volume: 0
+        broker: ibkr
+        strategy: in-composite
+
+        # Smooth start at launch (live insurance).
+        smooth_start_days: 20
+        smooth_start_initial_pct: 0.50
+        regime_tickers:
+          index: "^NSEI"
+          volatility: "^VIX"
+        # PM parameters
+        risk_per_trade_pct: 2.0
+        base_stop_atr: 2.5
+        min_cash_reserve: 10000
+        pending_buy_cancel_days: 2
+        take_profit_pct: 30
+        timeout_days: 60
+        # Scanner filters
+        scanner_filters:
+          # Point-in-time survivorship / look-ahead gate. INR threshold ≈ $5M (83 INR/USD).
+          # Honest CAGR with gate: 28.7% (vs 34.6% biased).
+          min_established_dollar_volume: 415_000_000
+          established_lookback_days: 60
+          min_price: 100
+          max_rsi: 80
+          min_atr_pct: 0.02
+          max_atr_ratio: 0.15
+          min_score: 10

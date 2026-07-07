@@ -1,0 +1,56 @@
+# StockBox Nasdaq reproduction — native to our engine (index-rotation), our philosophy.
+# The WH SelfInvest "Stock-Box Nasdaq" = 8 highest-momentum Nasdaq-100 names, equal-weight,
+# monthly rebalance. That is EXACTLY our index-rotation strategy: top_k=8, monthly cadence,
+# momentum lookback, abs-filter. No Python/Docker/Postgres — reproduced in the Go backtester
+# with PIT gating + total-return + walk-forward, same as our other strategies.
+#
+# MEASURED (prefetched NDX-100, TOTAL_RETURN=1, 2021-01-01..2026-06-30, universe=99 names),
+# lookback 84 (anneal-optimizer campaign 2026-07-06, seed42, walk-forward + stability audit):
+#   CAGR 77.3% / MaxDD 31.6% / Sharpe 1.65 / R2 0.83 / 230 trades / WR 53.9%. Clears the whole
+#   bar with margin. Old lookback 126: 54.9/49.1/1.24/0.81 (kept reproducible via optimizer cache).
+#   WHY 84: top-5 walk-forward fitness are ALL lb84 variants (k5-k8, reb5-21) — rounded hill, not a
+#   knife-edge (axis: 63→57%, 84→77-84%, 105→66%, 126→55%); EVERY ±1-step neighbor of lb84 beats
+#   the old 126 config's fitness. More aggressive combos (lb84+k6 83.6% CAGR) have shakier
+#   neighborhoods — deliberately not taken.
+#   ⚠ CAVEATS: 2022-23 window ~flat (+0.8% — stagnates in the bear, doesn't dodge it); the
+#   2025-26 window (+220%) carries a big share (true for ALL lookbacks incl. 126); 2026 NDX
+#   membership = mild look-ahead on composition. Reverse-engineering note: the VENDOR's box is
+#   best explained by 63d momentum (8/8 exact on July-2026, cmd/stockbox-overlap), but lb63
+#   backtests worse (56.8/36.8/1.38/R2 0.74) — fidelity and performance diverge; we trade 84.
+#   OOS checkpoint: August-2026 publication (rerun stockbox-overlap).
+# Prefetch first: ./prefetch -config config/portfolio_stockbox_nasdaq.yaml  (whitelist-only fetch).
+#
+# REVERSE-ENGINEERING NOTE: the published July-2026 selection (ALAB,SNDK,MU,INTC,MRVL,AMD,NBIS,STX)
+# is reproduced 8/8 by 6-month momentum when ranked among the cached published names — encouraging,
+# but that is a degenerate universe. A REAL reproduction ranks the 8 vs the full ~100 NDX names;
+# do that (walk-forward, no look-ahead) before claiming the formula. Membership uses the 2026 list
+# = mild look-ahead on composition (same caveat as our DAX/UK configs).
+#
+# CAVEAT: the "8 strongest momentum" logic is an assumption to be VALIDATED against multiple
+# published months (per the reverse-engineering discipline), not assumed constant since 2016.
+portfolios:
+- id: stockbox_nasdaq
+  name: StockBox Nasdaq (top-8 momentum, monthly)
+  currency: USD
+  initial_capital: 100000
+  allocations:
+  - name: stockbox_nasdaq
+    region: US
+    currency: USD
+    percent: 100
+    broker: alpaca
+    strategy: index-rotation
+    stocks: true
+    etfs: false
+    pure: true
+    # Nasdaq-100 constituents (2026 membership — verify/prefetch before running).
+    whitelist: "NVDA,AAPL,MSFT,AMZN,AVGO,META,GOOGL,GOOG,TSLA,NFLX,COST,PLTR,ASML,CSCO,AMD,TMUS,AZN,LIN,INTU,PEP,ISRG,BKNG,ADBE,QCOM,TXN,AMGN,GILD,HON,CMCSA,AMAT,PANW,ADP,VRTX,MU,ADI,LRCX,MELI,KLAC,SBUX,INTC,CRWD,MDLZ,CTAS,CEG,CDNS,ORLY,MAR,SNPS,PYPL,MRVL,REGN,FTNT,DASH,ADSK,WDAY,MNST,NXPI,ROP,AEP,TTD,CPRT,PCAR,CHTR,PAYX,ROST,KDP,FANG,ODFL,FAST,EA,BKR,VRSK,CTSH,EXC,XEL,CCEP,GEHC,KHC,LULU,DDOG,TTWO,IDXX,CSGP,ANSS,ON,ZS,BIIB,ARM,MDB,GFS,WBD,ILMN,DXCM,MCHP,SMCI,STX,SNDK,ALAB,NBIS"
+    regime_tickers:
+      index: ^IXIC
+      volatility: ^VIX
+    scanner_filters:
+      params:
+        rotation_lookback_days: 84       # optimizer-validated plateau (was 126; vendor-faithful is 63, see header)
+        rotation_top_k: 8                # the box holds exactly 8
+        rotation_rebalance_days: 21      # monthly rebalance
+        rotation_abs_filter: 0           # the box always holds 8 (no cash filter) — momentum RANK only
