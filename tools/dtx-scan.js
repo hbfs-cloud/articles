@@ -44,6 +44,34 @@ const TSS_ROOT = process.env.DTX_TSS_ROOT ||
 // Default replay window start. Configs cite "2021-present" honest track records.
 const DEFAULT_FROM = '2021-01-01';
 
+// ── Backtest→Live splice: replay ends at each mode's GO-LIVE date ──────────────
+// The status-page hero shows one continuous curve: dtx BACKTEST (2021→go-live) then the
+// mode's REAL live track (go-live→now, from the sweep). So the replay `--to` must be the
+// mode's go-live date (modes-config.json statusSince) — NOT a fixed date — so the backtest
+// ends exactly where live begins (no gap, no overlap). Maps the dtx portfolio id → the
+// dashboard mode id that carries statusSince. Unwired portfolios (crypto/eu_dax/…) fall back
+// to --asof (they are not launched, so there is no live segment to splice against).
+const MODES_CFG = path.join(REPO_ROOT, 'data', 'modes-config.json');
+const PORTFOLIO_TO_MODE = {
+  us_highvol: 'highvol', forex: 'forex', etf_us: 'etf', etf_eu: 'etf_eu', stockbox_nasdaq: 'stockbox',
+};
+let _modesCfgCache;
+function loadModesCfg() {
+  if (_modesCfgCache !== undefined) return _modesCfgCache;
+  try { _modesCfgCache = JSON.parse(fs.readFileSync(MODES_CFG, 'utf8')); }
+  catch (_) { _modesCfgCache = null; }
+  return _modesCfgCache;
+}
+/** Go-live (YYYY-MM-DD) for a dtx portfolio id, from the dashboard mode's statusSince. null if unwired. */
+function goLiveFor(portfolioId) {
+  const modeId = PORTFOLIO_TO_MODE[portfolioId];
+  if (!modeId) return null;
+  const cfg = loadModesCfg();
+  const modes = (cfg && (cfg.modes || cfg)) || {};
+  const since = modes[modeId] && modes[modeId].statusSince;
+  return since ? String(since).slice(0, 10) : null;
+}
+
 // ---------------------------------------------------------------------------
 // arg parsing
 // ---------------------------------------------------------------------------
@@ -151,7 +179,8 @@ function scanMode(modeInfo, opts) {
   if (opts.replay) {
     try {
       const from = opts.from || DEFAULT_FROM;
-      const to = opts.to || asof;
+      // Backtest ends at go-live (splice with live track); unwired modes fall back to asof.
+      const to = opts.to || goLiveFor(cfg.id) || asof;
       const rep = engine.replay({ portfolioPath: modeInfo.path, from, to, cwd: TSS_ROOT });
       const r = rep.results && rep.results[0];
       if (r) {

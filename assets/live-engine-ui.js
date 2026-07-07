@@ -1123,7 +1123,10 @@
               var hero = chartEl.closest('.perf-hero');
               if (hero) {
                 var statsTxt = (hero.querySelector('.perf-stats') || {}).textContent || '';
-                if (/\b0\s*closed/i.test(statsTxt)) {
+                // Zero-trade → hide the empty curve behind a "No trades yet" watermark. EXCEPT the
+                // scripted dtx modes: their hero carries a real BACKTEST+LIVE spliced curve (.bt-ctx
+                // block) even with 0 live closed trades — that curve must stay visible.
+                if (/\b0\s*closed/i.test(statsTxt) && !hero.querySelector('.bt-ctx')) {
                   chartEl.setAttribute('data-empty', '1');
                   if (chart) chart.getDom().style.opacity = '0';
                 }

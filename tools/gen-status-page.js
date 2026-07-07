@@ -781,35 +781,82 @@ async function main() {
     // post-anchor points — panel()/modeCharts fall back to sealed/pit-live otherwise.
     m.forward = forwardViewFor(pitForwardModes[id]);
 
-    // ── dtx (systematic-tss) hero override — SCRIPTED modes ──
-    // The displayed equity + hero stats for scripted books come from the REAL engine (dtx replay),
-    // supersede the sweep-frozen sim. READ-ONLY (sealed data untouched). dtx replay IS the hero →
-    // clear pit-live/forward overlays so panel()/modeCharts render the dtx curve as primary.
+    // ── dtx (systematic-tss) BACKTEST + LIVE splice — SCRIPTED modes ──
+    // One continuous fund-tearsheet curve: the REAL engine's BACKTEST (dtx replay, 2021→go-live,
+    // rendered muted/dashed) spliced to the mode's REAL LIVE track (sweep MtM since launch,
+    // rendered solid/colored), joined at the go-live date (statusSince). The hero HEADLINE is the
+    // honest LIVE return since launch (like the quality modes) — NOT the multi-thousand-percent
+    // backtest cumulative. A labelled "Backtest (2021→)" block carries the book's CAGR/MaxDD/Sharpe.
+    // READ-ONLY: sealed backtest-trades.json / trade-chain.json untouched.
     const _dtx = loadDtxStaging(id);
     if (_dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
       const met = _dtx.metrics, eq = _dtx.equity;
       const base = met.initial_capital || eq.values[0] || 100000;
-      m.equityCurve = eq.dates.map((d, i) => ({ date: String(d).slice(0, 10), value: +(eq.values[i] / base * 100).toFixed(2) }));
-      m.ret = met.return_pct;
-      m.realized = met.return_pct;
-      m.unrealized = 0;
-      if (met.max_dd_pct != null) m.dd = -Math.abs(met.max_dd_pct);
-      if (met.win_rate != null) m.wr = met.win_rate;
-      if (met.total_trades != null) m.trades = met.total_trades;
-      if (met.sharpe != null) m.sharpe = met.sharpe;
-      if (met.r2 != null) m.r2 = met.r2;
-      if (met.cagr_pct != null) m.cagr = met.cagr_pct;
-      // dtx replay gives aggregate {win_rate,cagr,dd,sharpe,r2} but NOT gross-win/gross-loss
-      // (no Profit Factor) nor per-trade hold time (no Avg Hold) — render "—" not a fake 0.
-      m.pf = null; m.pfLow = null; m.pfHigh = null; m.pfReliable = null; m.avgHold = null;
+      const goLiveISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : String(eq.dates[eq.dates.length - 1]).slice(0, 10);
+      const goLiveLbl = goLiveISO.slice(5, 7) + '/' + goLiveISO.slice(8, 10);
+
+      // 1) BACKTEST segment — dtx replay rebased to base 100 at the 2021 start.
+      //    Strictly BEFORE go-live (the live track owns go-live onward).
+      const btObjs = eq.dates
+        .map((d, i) => ({ date: String(d).slice(0, 10), value: +(eq.values[i] / base * 100).toFixed(2) }))
+        .filter(p => p.date < goLiveISO);
+      const btEnd = btObjs.length ? btObjs[btObjs.length - 1].value : 100;
+
+      // 2) LIVE segment — the mode's REAL tracked equity since launch (sweep/pit MtM, base 100 at
+      //    launch), rescaled to CONTINUE from the backtest's end value (continuity). No fabrication:
+      //    when there are no live points yet (mode just launched), we anchor ONE point at go-live =
+      //    btEnd (0% since launch) purely to mark "live starts here / building" — not invented P&L.
+      const liveRaw = (m.equityCurve || []).filter(p => p && p.date && p.date >= goLiveISO);
+      const liveRet = liveRaw.length ? +(liveRaw[liveRaw.length - 1].value - 100).toFixed(2) : 0;
+      const liveObjs = liveRaw.map(p => ({ date: p.date, value: +(btEnd * p.value / 100).toFixed(2), _live: true }));
+      if (!liveObjs.some(p => p.date === goLiveISO)) {
+        liveObjs.unshift({ date: goLiveISO, value: btEnd, _live: true, _anchor: true });
+      }
+
+      // Spliced continuous curve (backtest + live).
+      m.equityCurve = btObjs.concat(liveObjs);
+      m.liveFrom = goLiveISO;
+      // Chart-matching label = the FULL go-live ISO date. The spliced curve spans 5+ calendar
+      // years, so the chart must key on full ISO dates (MM/DD would collapse 2021..2026 onto the
+      // same 12-month axis). Human display uses liveFromHuman.
+      m.liveFromLbl = goLiveISO;
+      m.liveFromHuman = fmtDateEN(goLiveISO);
+
+      // Hero HEADLINE = live return since launch (honest). Live-book stats stay live — mostly 0/—
+      // for a freshly-launched mode, which is the correct "building" state (not the backtest's).
+      const _liveHero = (m.pit && m.pit.hasData) ? m.pit : null;
+      m.ret = _liveHero ? _liveHero.ret : liveRet;
+      m.realized = _liveHero ? _liveHero.realized : (m.realized != null && frozen ? m.realized : (liveRet - (m.unrealized || 0)));
+      m.unrealized = _liveHero ? _liveHero.unrealized : (m.unrealized != null && frozen ? m.unrealized : 0);
+      m.dd = _liveHero ? _liveHero.dd : (frozen && frozen.maxDD != null ? frozen.maxDD : 0);
+      m.wr = _liveHero ? _liveHero.wr : (frozen && frozen.trades ? m.wr : 0);
+      m.trades = _liveHero ? _liveHero.trades : (frozen && frozen.trades ? m.trades : 0);
+      m.avgHold = _liveHero ? _liveHero.avgHold : (frozen && frozen.trades ? m.avgHold : null);
+      m.pf = _liveHero ? _liveHero.pf : (frozen && frozen.trades ? m.pf : null);
+      m.pfLow = null; m.pfHigh = null; m.pfReliable = null;
+      m.r2 = _liveHero ? _liveHero.r2 : null;
+      m.cagr = _liveHero ? _liveHero.cagr : null;
+      m.sharpe = _liveHero ? _liveHero.sharpe : null;
+
+      // BACKTEST context block — labelled, separate from the live headline.
+      m.dtxBacktest = {
+        ret: met.return_pct, cagr: met.cagr_pct,
+        dd: met.max_dd_pct != null ? -Math.abs(met.max_dd_pct) : null,
+        sharpe: met.sharpe, r2: met.r2, wr: met.win_rate, trades: met.total_trades,
+        from: met.from, to: met.to,
+        fromYr: String(met.from || '2021').slice(0, 4), toYr: String(met.to || goLiveISO).slice(0, 4),
+      };
+
       m.dtxEngine = true;
       m.oosWarn = null;
-      m.frozenRawLastISO = String(eq.dates[eq.dates.length - 1]).slice(0, 10);
+      m.frozenRawLastISO = liveRaw.length ? liveRaw[liveRaw.length - 1].date : goLiveISO;
       m.pit = null;
       m.forward = null;
-      // Rebuild the chart series (ec) from the dtx curve (MM/DD labels, dedup per day).
+      // Rebuild the chart series (ec) from the spliced curve. FULL ISO date labels (not MM/DD) so
+      // the multi-year backtest stays chronological and unique; the renderer compacts them to YY/MM
+      // on the axis and splits backtest↔live at the first date >= liveFrom.
       const _dd = new Map();
-      for (const p of m.equityCurve) _dd.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
+      for (const p of m.equityCurve) _dd.set(p.date, p.value);
       ec = { d: [..._dd.keys()], v: [..._dd.values()] };
     }
 
@@ -1263,13 +1310,23 @@ ${renderStatusBanner(cfg)}
 <div class="perf-hero" style="border-top:3px solid ${cfg.color}">
   <div class="perf-chart-wrap">
     <div class="perf-hero-left">
-      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve</span>
+      <span class="perf-hero-label"><i class="fas fa-chart-line" style="color:${cfg.color};margin-right:.3rem"></i>Equity Curve${m.dtxEngine ? ' <small style="text-transform:none;letter-spacing:0;font-weight:600;color:var(--muted)">· backtest + live</small>' : ''}</span>
     </div>
     <div class="perf-chart" id="${chartId}"></div>
+    ${m.dtxBacktest ? `<div class="bt-ctx">
+      <span class="bt-ctx-tag"><i class="fas fa-clock-rotate-left"></i> Backtest ${m.dtxBacktest.fromYr}→${m.dtxBacktest.toYr}</span>
+      <span class="bt-ctx-items">
+        <span><b>${m.dtxBacktest.cagr != null ? (m.dtxBacktest.cagr > 0 ? '+' : '') + m.dtxBacktest.cagr + '%' : '—'}</b> CAGR</span>
+        <span><b>${m.dtxBacktest.dd != null ? m.dtxBacktest.dd + '%' : '—'}</b> Max DD</span>
+        <span><b>${m.dtxBacktest.sharpe != null ? m.dtxBacktest.sharpe : '—'}</b> Sharpe</span>
+        <span class="bt-ctx-cum"><b>${m.dtxBacktest.ret != null ? (m.dtxBacktest.ret > 0 ? '+' : '') + m.dtxBacktest.ret + '%' : '—'}</b> cumulative</span>
+      </span>
+      <span class="bt-ctx-note">Real engine · ${m.dtxBacktest.trades} trades over the book history (muted/dashed). Live track (solid) begins ${m.liveFromHuman} — building.</span>
+    </div>` : ''}
   </div>
   <div class="perf-stats">
-    <div class="ps" title="Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.">
-      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">Total Return${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>
+    <div class="ps" title="${m.dtxEngine ? 'Real LIVE return since this mode went live (' + m.liveFromHuman + '). Includes mark-to-market on open positions. The multi-year backtest is summarised separately under the curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
+      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxEngine ? `Live Return <small style="opacity:.7">since ${m.liveFromHuman}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
       <span class="ps-v neg">${H.dd}%</span><span class="ps-l">Max Drawdown</span>
@@ -1929,6 +1986,12 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .perf-hero-label{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
 .perf-chart-wrap{flex:1;min-width:0;display:flex;flex-direction:column}
 .perf-chart{flex:1;min-height:360px}
+.bt-ctx{margin-top:.55rem;padding:.5rem .7rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-s);display:flex;flex-wrap:wrap;align-items:baseline;gap:.35rem .9rem;font-size:.72rem;line-height:1.3}
+.bt-ctx-tag{font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-size:.6rem;display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.bt-ctx-items{display:flex;flex-wrap:wrap;gap:.1rem .85rem;color:var(--muted)}
+.bt-ctx-items b{color:var(--ink);font-weight:700}
+.bt-ctx-cum b{color:var(--muted)}
+.bt-ctx-note{flex-basis:100%;color:var(--muted);font-size:.62rem;opacity:.85;margin-top:.1rem}
 .perf-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.55rem .65rem;align-content:center;min-width:260px}
 @media(max-width:600px){.perf-stats{grid-template-columns:1fr 1fr}}
 .ps{text-align:center;padding:.75rem .6rem;border-radius:var(--r);background:var(--surface-2);border:1px solid var(--border-2);transition:border-color .15s}
@@ -2276,7 +2339,7 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape')fvClose()});
 <script>
 var _v='${buildVer}';
 document.addEventListener('DOMContentLoaded',function(){
-  function mk(el,dates,vals,color,sinceLbl,simDates,simVals){
+  function mk(el,dates,vals,color,sinceLbl,simDates,simVals,liveFrom){
     if(!document.getElementById(el))return null;
     var dom=document.getElementById(el);
     var existing=echarts.getInstanceByDom(dom);
@@ -2312,26 +2375,52 @@ document.addEventListener('DOMContentLoaded',function(){
         spyVals=rawSpy.map(function(v){return v!=null?+(v/spyFirst*100).toFixed(2):null;});
       }else{spyVals=rawSpy;}
     }
-    // Promotion marker: vertical line + short label at the status-change date (e.g. "live 07/01").
-    // Full history is still plotted on both sides — this is an annotation, not a truncation.
-    var sinceMarkLine=null;
-    if(sinceLbl && dates.indexOf(sinceLbl)>=0){
-      sinceMarkLine={symbol:'none',silent:true,
+    // ── Backtest→Live splice OR single-curve promotion marker ──
+    // liveFrom (MM/DD) present → split the equity into a MUTED/DASHED backtest segment (up to
+    // liveFrom) and a SOLID/colored live segment (from liveFrom), joined at liveFrom, plus a
+    // vertical "Live" markLine. Otherwise (quality modes) → one solid Portfolio curve + the
+    // optional promotion marker (unchanged). A near-empty live segment (mode just launched) shows
+    // as an isolated dot at the marker — the backtest + "Live" line still render.
+    // liveIdx = first x-label at/after go-live (full ISO compare — safe across years). The join
+    // point (last backtest label) is liveIdx-1 so the two segments share a point and connect.
+    var liveIdx=-1;
+    if(liveFrom){for(var li=0;li<dates.length;li++){if(dates[li]>=liveFrom){liveIdx=li;break;}}}
+    var splitIdx=liveIdx>=0?Math.max(0,liveIdx-1):-1;
+    var markLbl=liveIdx>=0?dates[liveIdx]:((sinceLbl && dates.indexOf(sinceLbl)>=0)?sinceLbl:null);
+    var eqMarkLine=markLbl?{symbol:'none',silent:true,
         lineStyle:{color:'#64748b',width:1.5,type:'dashed'},
-        label:{formatter:'live '+sinceLbl,position:'insideEndTop',color:'#64748b',fontSize:10,fontWeight:600},
-        data:[{xAxis:sinceLbl}]};
+        label:{formatter:(splitIdx>=0?'Live':'live '+markLbl),position:'insideEndTop',color:'#64748b',fontSize:10,fontWeight:600},
+        data:[{xAxis:markLbl}]}:null;
+    var eqSeries;
+    if(splitIdx>=0){
+      var btV=vals.map(function(v,i){return i<=splitIdx?v:null;});
+      var lvV=vals.map(function(v,i){return i>=splitIdx?v:null;});
+      eqSeries=[
+        {name:'Backtest',data:btV,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:4,
+          lineStyle:{color:'#94a3b8',width:1.8,type:'dashed',opacity:.9},
+          areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(148,163,184,.10)'},{offset:1,color:'rgba(148,163,184,0)'}])},
+          markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined,
+          markLine:eqMarkLine||undefined},
+        {name:'Live',data:lvV,type:'line',smooth:.3,symbol:'circle',symbolSize:5,showSymbol:false,connectNulls:false,xAxisIndex:0,yAxisIndex:0,z:6,
+          lineStyle:{color:color,width:2.8,shadowColor:color+'30',shadowBlur:8,shadowOffsetY:2},
+          itemStyle:{color:color},
+          areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])}}
+      ];
+    }else{
+      eqSeries=[
+        {name:'Portfolio',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
+          lineStyle:{color:color,width:2.8,shadowColor:color+'30',shadowBlur:8,shadowOffsetY:2},
+          areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])},
+          markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined,
+          markLine:eqMarkLine||undefined}
+      ];
     }
-    var series=[
-      {name:'Portfolio',data:vals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:5,
-        lineStyle:{color:color,width:2.8,shadowColor:color+'30',shadowBlur:8,shadowOffsetY:2},
-        areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:color+'15'},{offset:.7,color:color+'06'},{offset:1,color:color+'00'}])},
-        markArea:regimeAreas.length?{silent:true,data:regimeAreas}:undefined,
-        markLine:sinceMarkLine||undefined},
+    var series=eqSeries.concat([
       {name:'Drawdown',data:ddS,type:'line',smooth:.3,symbol:'none',xAxisIndex:1,yAxisIndex:2,z:2,
         lineStyle:{color:'#ef4444',width:2,opacity:1},
         areaStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'rgba(239,68,68,.18)'},{offset:1,color:'rgba(239,68,68,.02)'}])}}
-    ];
-    var legendItems=['Portfolio','Drawdown'];
+    ]);
+    var legendItems=(splitIdx>=0?['Backtest','Live']:['Portfolio']).concat(['Drawdown']);
     if(spyVals){
       series.splice(1,0,{name:'SPY',data:spyVals,type:'line',smooth:.3,symbol:'none',xAxisIndex:0,yAxisIndex:0,z:4,
         lineStyle:{color:'#94a3b8',width:1.6,type:[6,4]},connectNulls:true});
@@ -2361,7 +2450,7 @@ document.addEventListener('DOMContentLoaded',function(){
       grid:[{top:28,bottom:'30%',left:48,right:14},{top:'76%',bottom:20,left:48,right:14}],
       xAxis:[
         {type:'category',data:dates,gridIndex:0,axisLine:{lineStyle:{color:'#e2e8f0'}},axisLabel:{show:false},axisTick:{show:false},splitLine:{show:false}},
-        {type:'category',data:dates,gridIndex:1,axisLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:9,interval:'auto',fontFamily:'Inter'},axisTick:{lineStyle:{color:'#e2e8f0'}},splitLine:{show:false}}
+        {type:'category',data:dates,gridIndex:1,axisLine:{lineStyle:{color:'#f1f5f9'}},axisLabel:{color:'#94a3b8',fontSize:9,interval:'auto',fontFamily:'Inter',formatter:function(v){return /^\\d{4}-\\d{2}-\\d{2}$/.test(v)?v.slice(2,7):v;}},axisTick:{lineStyle:{color:'#e2e8f0'}},splitLine:{show:false}}
       ],
       yAxis:[
         {type:'value',gridIndex:0,min:function(v){return Math.floor(v.min-1)},axisLine:{show:false},splitLine:{lineStyle:{color:'#f1f5f9',type:'dashed'}},axisLabel:{color:'#94a3b8',fontSize:9,fontFamily:'Inter'}},
@@ -2522,7 +2611,11 @@ document.addEventListener('DOMContentLoaded',function(){
     const usePit = !!(!useFwd && !frozenMeaningful && m.m.pit && m.m.pit.hasData);
     const primEc = useFwd ? m.m.forward.ec : (usePit ? m.m.pit.ec : m.ec);
     const _pm = promotionMarker(m.cfg, primEc);
-    return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _pm ? _pm.lbl : null, sD: null, sV: null, pit: usePit }];
+    // Backtest→Live splice (scripted dtx modes): lf = the go-live label. The renderer splits the
+    // curve into a muted/dashed backtest segment + a solid/colored live segment and draws a "Live"
+    // markLine there. When lf is set it replaces the generic promotion marker (avoid a double line).
+    const _lf = m.m.liveFromLbl || null;
+    return [id, { d: primEc.d, v: primEc.v, c: m.cfg.color, s: _lf ? null : (_pm ? _pm.lbl : null), sD: null, sV: null, pit: usePit, lf: _lf }];
   })))};
   var _regimeMap=${JSON.stringify(regimeMap)};
   var _spyData=${JSON.stringify(spyIndexed)};
@@ -2551,7 +2644,7 @@ document.addEventListener('DOMContentLoaded',function(){
     var chartEl=document.getElementById('chart-'+id);
     if(chartEl){
       var inst=echarts.getInstanceByDom(chartEl);
-      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s,cfg.sD,cfg.sV);}
+      if(!inst){var cfg=modeCharts[id];if(cfg)mk('chart-'+id,cfg.d,cfg.v,cfg.c,cfg.s,cfg.sD,cfg.sV,cfg.lf);}
       else{inst.resize();}
     }
     updateLiveActions(id);
@@ -3082,7 +3175,7 @@ document.addEventListener('DOMContentLoaded',function(){
       var existing=window.echarts.getInstanceByDom(chartEl);
       if(existing) existing.dispose();
       var dflt=modeCharts[activeMode];
-      if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s, dflt.sD, dflt.sV);
+      if(dflt) mk('chart-'+activeMode, dflt.d, dflt.v, dflt.c, dflt.s, dflt.sD, dflt.sV, dflt.lf);
     }
     document.getElementById('tmBanner').className='tm-banner';
     var fab=document.getElementById('tmFab');
@@ -3122,7 +3215,7 @@ document.addEventListener('DOMContentLoaded',function(){
   };
   // Init chart for the default visible mode
   var dflt=modeCharts[activeMode];
-  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s,dflt.sD,dflt.sV);
+  if(dflt)mk('chart-'+activeMode,dflt.d,dflt.v,dflt.c,dflt.s,dflt.sD,dflt.sV,dflt.lf);
   // Mobile: rotating the device or the address-bar collapsing changes the viewport — resize the
   // active equity chart so it doesn't stay stuck at its pre-rotation (possibly 0) width.
   window.addEventListener('orientationchange',function(){setTimeout(function(){try{var el=document.getElementById('chart-'+activeMode);var inst=el&&window.echarts&&window.echarts.getInstanceByDom(el);if(inst)inst.resize();}catch(_){}},300);});

@@ -751,8 +751,10 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
     if (start === -1) continue; // panel presence covered by another check
     const next = html.indexOf('id="p-', start + anchor.length);
     const panel = html.slice(start, next === -1 ? html.length : next);
-    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">Total Return/);
-    if (!heroM) { issues.push(`${id}: hero Total Return introuvable`); continue; }
+    // Scripted dtx modes (backtest+live splice) label the headline "Live Return" (honest live
+    // since-launch number), quality modes label it "Total Return" — accept either.
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return)/);
+    if (!heroM) { issues.push(`${id}: hero Total/Live Return introuvable`); continue; }
     const heroRet = parseFloat(heroM[1]);
     const frozen = br[`frozen_${id}`];
     const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
