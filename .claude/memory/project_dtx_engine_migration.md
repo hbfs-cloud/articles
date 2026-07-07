@@ -180,3 +180,64 @@ systematic-tss+réseau (dev nightly ou `ser`) DOIT `dtx-scan` + committer `data/
 cloud, sinon le site affiche le dernier staging committé (stale, pas cassé). Cron proposé (~22h30,
 NON configuré sur ser depuis ici) : voir `.claude/skills/scanner-pipeline.md` § « dtx refresh
 (DÉCOUPLÉ) ». Le `statusSince` de chaque mode pilote le splice backtest→live (`--to`).
+
+---
+
+## PHASE 2.6 — NATIF AUTOPORTANT : dépendance systematic-tss CASSÉE (2026-07-07)
+
+**But atteint** : le natif `dtx` n'a PLUS besoin du repo frère `systematic-tss`. Il tourne avec le
+binaire + un **bundle data vendorisé in-repo** + le réseau (fetch OHLCV). Le cloud peut donc lancer le
+natif dès qu'il a le réseau (Yahoo/Binance) ; **plus aucune dépendance au sibling repo**.
+
+**Comment (approche prouvée, reprise du repo `trading`)** — PAS le vendoring brut 34M de
+`data/instruments/`, mais un **BUNDLE compacté 9,9 Mo** à `articles/tools/bin/dtx-data/` (git-lfs) :
+univers (frozen ticker lists stockanalysis) + instruments brokers, champs strippés/minifiés/élagués
+par market-cap (behavior-preserving, parité vérifiée). Le binaire **Jul-2026 (commit `43d53455`)**
+auto-découvre un dossier `dtx-data/` **à côté du binaire**, ou prend `--data-dir DIR` / `$DTX_DATA_DIR`.
+Les binaires articles ont été **mis à jour** vers ce build (l'ancien `076c38ab` ne supportait pas
+`--data-dir`). Cache OHLCV → `$DTX_WRITABLE_CACHE_DIR` (sinon MkdirTemp) → **checkout read-only OK**.
+
+**Fichiers vendorisés (commit)** : `tools/bin/{dtx-darwin-arm64,dtx-linux-amd64,PROVENANCE.json,
+README.md}` (binaires Jul-7 écrasent les vieux) + bundle `tools/bin/dtx-data/**` (15 fichiers lfs) :
+build-report.json, data/instruments/{alpaca,saxo,trading212}.json, cache/stockanalysis/stock/{US,UK,DE,
+JP,IN}/tickers-frozen.json, cache/stockanalysis/etf/US/... + **5 fichiers EU ETF minifiés ajoutés
+localement pour etf_eu** (etf/{FR,DE,NL,IT,ES}, strip aux 5 champs ETF `averageVolume/etfCategory/
+etfCountry/exchange/name` — identique au minifier du bundle, 10,9M brut → 707K). IBKR ne requiert aucun
+fichier (construit depuis staticdata). forex/crypto = univers INLINE dans le YAML (rien à bundler).
+
+**Rewire** : `tools/dtx-scan.js` — `TSS_ROOT`/cwd remplacés par `resolveDataCtx()` : `DTX_DATA_DIR` →
+`tools/bin/dtx-data` (bundle, défaut) → `../systematic-tss` (fallback legacy cwd). Passe `dataDir` (→
+`--data-dir`) à `engine.decide/replay`. Pose `DTX_WRITABLE_CACHE_DIR` (défaut `os.tmpdir/dtx-ohlcv-cache`).
+`.gitattributes` : `tools/bin/dtx-*` + `tools/bin/dtx-data/**` en lfs. `.gitignore` : négation
+`!tools/bin/dtx-data/cache/**` (la règle globale `cache/` masquait le bundle). `dtx-engine.js` déjà
+compatible `dataDir`/`--data-dir` (juste comments MAJ).
+
+**PREUVE (systematic-tss DÉPLACÉ `../systematic-tss.hidden`, injoignable)** — 5 modes wired natif,
+bundle + réseau seuls, asof 2026-07-06, from 2024-01-01 :
+| mode | orders (decide) | replay | vs sibling |
+|---|---|---|---|
+| us_highvol | 0 | cagr 111.24 / 383 tr | EXACT (orders + replay) |
+| forex | 1 | cagr 5.32 / 388 tr | EXACT (orders + replay) |
+| etf_us | 7 | cagr 41–43 / ~1240 tr | orders EXACT ; replay ≠ (voir caveat) |
+| stockbox_nasdaq | 8 | cagr 157 / 104 tr | orders EXACT ; replay ≈ |
+| etf_eu | 0 | 0 trades | **byte-identique au sibling** (0=0) |
+
+**decide (= les picks du dashboard) = EXACT vs sibling pour les 5 modes.** ⇒ la dépendance repo est
+bien cassée : tout ce qui est lu du disque vient du bundle.
+
+**CAVEAT réseau (honnête, pas une régression)** : le **replay** (courbe equity) est NON-déterministe
+quand le cache OHLCV est froid. Le sibling est déterministe UNIQUEMENT parce qu'il a un `cache/yahoo/`
+CHAUD local (aucun fetch) ; le bundle ne vendorise QUE le référentiel univers (pas l'OHLCV) → il fetch
+tout en live et se fait **rate-limiter (429) par Yahoo** → sous-ensemble de symboles différent à chaque
+run (etf_us : 1231 vs 1249 tr entre 2 runs bundle ; sibling stable 1118). C'est le caveat README
+« déterminisme replay = cache chaud ». **Résidu = RÉSEAU, pas le sibling repo.** Pour un replay
+déterministe : chauffer/persister `$DTX_WRITABLE_CACHE_DIR` en amont.
+
+**etf_eu = 0 trades en natif** : l'univers CHARGE bien depuis le bundle (« ETFs loaded: 3161 » —
+mes fichiers EU ETF minifiés marchent), mais l'étape OHLCV échoue (« failed to load any symbols
+(errors: 3192) ») — **Yahoo ne sert pas l'OHLCV des tickers ETF européens**. IDENTIQUE avec le sibling
+(0=0) → limitation data-source pré-existante, PAS liée à la migration.
+
+**RÉSIDU unique** = le **réseau** (Yahoo/Binance OHLCV), plus le repo sibling. Le fallback legacy
+`../systematic-tss` (cwd) reste pour un dev qui l'a encore. `--skip-if-no-tss` (alias `--skip-if-no-data`)
+ne se déclenche plus que si git-lfs n'a pas pull `tools/bin/dtx-data/`.

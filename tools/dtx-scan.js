@@ -9,8 +9,10 @@
  * staticdata) AND fetches OHLCV itself (Yahoo/Binance/BVC), exactly like cmd/backtest. The books
  * self-manage universe + cache — we do NOT build universe lists or backfill bars anymore.
  *
- * CONSTRAINT: native mode MUST run with CWD = the systematic-tss repo root (it needs
- * data/instruments/<broker>.json + staticdata + network). Set DTX_TSS_ROOT to override the default.
+ * CWD: native mode runs dtx with CWD = a "TSS data root" that provides data/instruments/<broker>.json
+ * (the only thing read from disk; staticdata is compiled into the binary). This context is now VENDORED
+ * in-repo at vendor/dtx-tss/ (git-lfs) — no sibling systematic-tss checkout required. Only network
+ * (Yahoo/Binance/BVC OHLCV) remains external. Set DTX_TSS_ROOT to override the resolved root.
  *
  * This is a PARALLEL, STAGING-ONLY pipeline. It does NOT touch the live JS scanners, sweep.js,
  * signals.json, backtest-trades.json, trade-chain.json, or modes-config.json. It writes to a
@@ -29,6 +31,7 @@
  */
 
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const engine = require('./lib/dtx-engine');
 const dtxBars = require('./lib/dtx-bars'); // still used for readConfig()
@@ -37,9 +40,47 @@ const REPO_ROOT = path.resolve(__dirname, '..');
 const CONFIG_DIR = path.join(REPO_ROOT, 'config', 'dtx');
 const STAGING_DIR = path.join(REPO_ROOT, 'data', 'dtx');
 
-// systematic-tss repo root — required for NATIVE mode (staticdata + instruments + network).
-const TSS_ROOT = process.env.DTX_TSS_ROOT ||
-  path.resolve(REPO_ROOT, '..', 'systematic-tss');
+// DATA BUNDLE — self-contained, autoportant (no sibling systematic-tss checkout needed) ────────────
+// NATIVE mode resolves the universe from the YAML filters + fetches OHLCV itself. It needs a small
+// referential on disk: the stockanalysis frozen ticker lists (universe) + broker instrument lists.
+// This is now VENDORED in-repo as a compacted 9.9M BUNDLE at tools/bin/dtx-data/ (git-lfs) — the same
+// bundle proven in the `trading` desk: fields stripped/minified/market-cap-pruned (behavior-preserving,
+// parity-verified). The `dtx` binary (Jul-2026 build, commit 43d53455) auto-discovers a `dtx-data/`
+// folder NEXT TO the binary, or takes `--data-dir DIR` / `$DTX_DATA_DIR`. Strategy logic + staticdata
+// are compiled INTO the binary; configs are passed by absolute path. Only network (Yahoo/Binance OHLCV)
+// remains external.
+//
+// Resolution order:
+//   1. process.env.DTX_DATA_DIR   — explicit override
+//   2. <repo>/tools/bin/dtx-data  — VENDORED bundle (default, autoportant)
+//   3. legacy DTX_TSS_ROOT / ../systematic-tss  — last-resort fallback (dev who still has the sibling)
+// The last fallback is a CWD (old binary behaviour: reads data/instruments + cache RELATIVE to cwd);
+// the bundle path is passed via --data-dir so cwd is irrelevant with the new binary.
+const BUNDLE_DIR = path.resolve(__dirname, 'bin', 'dtx-data');
+const SIBLING_TSS_ROOT = process.env.DTX_TSS_ROOT || path.resolve(REPO_ROOT, '..', 'systematic-tss');
+
+// Where the engine writes its OHLCV cache. The new binary honours $DTX_WRITABLE_CACHE_DIR (else it
+// MkdirTemps) so the bundle/repo stays read-only — essential on a cloud checkout. A stable dir keeps
+// the cache warm across runs (faster + deterministic replay).
+const WRITABLE_CACHE_DIR = process.env.DTX_WRITABLE_CACHE_DIR ||
+  path.join(os.tmpdir(), 'dtx-ohlcv-cache');
+
+/** Resolve the data context. Returns { dataDir, cwd } — dataDir passed via --data-dir (preferred),
+ *  cwd only used for the legacy sibling fallback. null if nothing resolves. */
+function resolveDataCtx() {
+  if (process.env.DTX_DATA_DIR && fs.existsSync(process.env.DTX_DATA_DIR)) {
+    return { dataDir: process.env.DTX_DATA_DIR, cwd: undefined, kind: 'env' };
+  }
+  if (fs.existsSync(path.join(BUNDLE_DIR, 'data', 'instruments'))) {
+    return { dataDir: BUNDLE_DIR, cwd: undefined, kind: 'bundle' };
+  }
+  if (fs.existsSync(path.join(SIBLING_TSS_ROOT, 'data', 'instruments'))) {
+    // Legacy fallback: old binary reads relative to cwd; pass no --data-dir, chdir into sibling.
+    return { dataDir: undefined, cwd: SIBLING_TSS_ROOT, kind: 'sibling' };
+  }
+  return null;
+}
+const DATA_CTX = resolveDataCtx();
 
 // Default replay window start. Configs cite "2021-present" honest track records.
 const DEFAULT_FROM = '2021-01-01';
@@ -88,23 +129,23 @@ function parseArgs(argv) {
     else if (a === '--no-replay') o.replay = false;
     else if (a === '--quiet') o.quiet = true;
     else if (a === '--out') o.out = argv[++i];
-    // FAIL-SAFE (pipeline/cloud): when systematic-tss is absent, skip cleanly (exit 0) instead of
-    // erroring. The cloud sandbox clones only `articles` → no ../systematic-tss → native dtx cannot
-    // run there. In that case the 23h routine keeps going on the COMMITTED staging (data/dtx/*.json)
-    // that an upstream host refreshed. A direct manual run WITHOUT this flag still hard-errors.
-    else if (a === '--skip-if-no-tss') o.skipIfNoTss = true;
+    // FAIL-SAFE (pipeline/cloud): if NO data context resolves at all, skip cleanly (exit 0) instead of
+    // erroring. With the vendored bundle committed this should never trigger on a normal checkout — it
+    // only fires if git-lfs did not pull tools/bin/dtx-data/. Then the 23h routine keeps going on the
+    // COMMITTED staging (data/dtx/*.json). A direct manual run WITHOUT this flag still hard-errors.
+    // (--skip-if-no-tss kept as the flag name for backward-compat with existing pipeline invocations.)
+    else if (a === '--skip-if-no-tss' || a === '--skip-if-no-data') o.skipIfNoTss = true;
   }
   return o;
 }
 
-/** Fail-closed: verify the systematic-tss data context is present before any native run. */
-function assertTssRoot() {
-  const probe = path.join(TSS_ROOT, 'data', 'instruments');
-  if (!fs.existsSync(TSS_ROOT) || !fs.existsSync(probe)) {
+/** Fail-closed: verify a native data context (vendored bundle / env / sibling) resolves. */
+function assertDataCtx() {
+  if (!DATA_CTX) {
     throw new Error(
-      `dtx-scan: NATIVE mode needs the systematic-tss repo root at "${TSS_ROOT}" ` +
-      `(with data/instruments/<broker>.json + staticdata + network). Not found. ` +
-      `Set DTX_TSS_ROOT to the checkout path. FAIL-CLOSED (won't fabricate).`
+      `dtx-scan: NATIVE mode needs a data context. Expected the vendored bundle at ` +
+      `"${BUNDLE_DIR}" (data/instruments + cache/stockanalysis). Not found — git-lfs may not have ` +
+      `pulled tools/bin/dtx-data/ (run \`git lfs pull\`), or set DTX_DATA_DIR. FAIL-CLOSED (won't fabricate).`
     );
   }
 }
@@ -165,16 +206,16 @@ function scanMode(modeInfo, opts) {
   const currency = cfg.currency || 'USD';
   const balances = { [currency]: cfg.initial_capital || 100000 };
 
-  // 1) decide → orders for the session (NATIVE: no bars, cwd = tss root).
-  // STATELESS / COLD by design: the articles dashboard is a stateless nightly advisory (like the
-  // legacy JS scanners) — it holds no live book. We start from a FLAT book (positions:[], no --state)
-  // so CREATE = the FULL set of BUY orders the engine would place tomorrow given no holdings.
+  // 1) decide → orders for the session (NATIVE: no bars; universe/instruments from the vendored bundle
+  // via --data-dir). STATELESS / COLD by design: the articles dashboard is a stateless nightly advisory
+  // (like the legacy JS scanners) — it holds no live book. We start from a FLAT book (positions:[], no
+  // --state) so CREATE = the FULL set of BUY orders the engine would place tomorrow given no holdings.
   // (A warm state makes decide incremental → re-running the same asof yields 0 new orders — correct
   // for a live book, wrong for a stateless advisory. See dtx README "state persists".)
   const decision = engine.decide({
     portfolioPath: modeInfo.path, asof,
     positions: [], orders: [], balances,
-    cwd: TSS_ROOT,
+    dataDir: DATA_CTX.dataDir, cwd: DATA_CTX.cwd,
   });
   const create = (decision.actions && decision.actions.CREATE) || [];
   const orders = create.map(mapOrder);
@@ -186,7 +227,7 @@ function scanMode(modeInfo, opts) {
       const from = opts.from || DEFAULT_FROM;
       // Backtest ends at go-live (splice with live track); unwired modes fall back to asof.
       const to = opts.to || goLiveFor(cfg.id) || asof;
-      const rep = engine.replay({ portfolioPath: modeInfo.path, from, to, cwd: TSS_ROOT });
+      const rep = engine.replay({ portfolioPath: modeInfo.path, from, to, dataDir: DATA_CTX.dataDir, cwd: DATA_CTX.cwd });
       const r = rep.results && rep.results[0];
       if (r) {
         metrics = {
@@ -244,7 +285,8 @@ function main() {
   const modes = discoverModes();
 
   if (opts.list) {
-    console.log(`Discovered modes (config/dtx/) — NATIVE mode, TSS_ROOT=${TSS_ROOT}:`);
+    const ctx = DATA_CTX ? `${DATA_CTX.kind} (${DATA_CTX.dataDir || DATA_CTX.cwd})` : 'NONE';
+    console.log(`Discovered modes (config/dtx/) — NATIVE mode, data-ctx=${ctx}:`);
     for (const m of Object.values(modes)) {
       if (m.error) console.log(`  ${String(m.id).padEnd(22)} ERROR: ${m.error}`);
       else console.log(`  ${m.id.padEnd(22)} ${m.currency} ${m.initialCapital}  (${m.file})`);
@@ -255,19 +297,23 @@ function main() {
   if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
 
   try {
-    assertTssRoot();
+    assertDataCtx();
   } catch (e) {
     if (opts.skipIfNoTss) {
-      // Fail-SAFE skip: the cloud pipeline reads the committed staging instead.
+      // Fail-SAFE skip: the pipeline reads the committed staging instead.
       console.warn(`⚠️  dtx-scan: ${e.message}`);
-      console.warn('⚠️  dtx-scan: --skip-if-no-tss set → SKIPPING native refresh. The pipeline will ' +
-        'READ the committed staging (data/dtx/<mode>.json). This is EXPECTED on cloud (no systematic-tss). ' +
-        'Staging is only as fresh as the last upstream dtx-scan+commit.');
+      console.warn('⚠️  dtx-scan: --skip-if-no-data set → SKIPPING native refresh. The pipeline will ' +
+        'READ the committed staging (data/dtx/<mode>.json). Only happens if the vendored bundle was not ' +
+        'pulled (git lfs pull). Staging is only as fresh as the last upstream dtx-scan+commit.');
       process.exit(0);
     }
     console.error(`ERROR: ${e.message}`);
     process.exit(3);
   }
+
+  // Point the engine's OHLCV cache at a writable dir so the bundle/repo stays read-only (cloud-safe).
+  if (!process.env.DTX_WRITABLE_CACHE_DIR) process.env.DTX_WRITABLE_CACHE_DIR = WRITABLE_CACHE_DIR;
+  try { fs.mkdirSync(process.env.DTX_WRITABLE_CACHE_DIR, { recursive: true }); } catch (_) {}
 
   let targets;
   if (opts.all) targets = Object.values(modes).filter((m) => !m.error);
@@ -279,7 +325,7 @@ function main() {
     targets = [modes[id]];
   } else { console.error('ERROR: --mode <id> or --all required'); process.exit(2); }
 
-  console.log(`dtx-scan (NATIVE) asof=${opts.asof} cwd=${TSS_ROOT} modes=${targets.map((m) => m.id).join(',')}\n`);
+  console.log(`dtx-scan (NATIVE) asof=${opts.asof} data-ctx=${DATA_CTX.kind}:${DATA_CTX.dataDir || DATA_CTX.cwd} cache=${process.env.DTX_WRITABLE_CACHE_DIR} modes=${targets.map((m) => m.id).join(',')}\n`);
   const summary = [];
   for (const m of targets) {
     try {
@@ -300,4 +346,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { scanMode, discoverModes, TSS_ROOT };
+module.exports = { scanMode, discoverModes, DATA_CTX, BUNDLE_DIR };

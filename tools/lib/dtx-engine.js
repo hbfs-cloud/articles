@@ -132,9 +132,9 @@ function withTmpDir(fn) {
 function replay({ portfolioPath, bars, from, to, cwd, dataDir }) {
   if (!portfolioPath) throw new Error('dtx-engine.replay: portfolioPath required');
   // NATIVE mode: bars omitted → dtx resolves the universe from the YAML filters AND fetches OHLCV
-  // itself (Yahoo/Binance/BVC), exactly like cmd/backtest. Requires cwd = systematic-tss repo root
-  // (needs data/instruments/<broker>.json + staticdata + network). portfolioPath must be absolute
-  // (the binary absolutizes path flags before it chdirs into the data dir).
+  // itself (Yahoo/Binance/BVC), exactly like cmd/backtest. The referential (universe frozen lists +
+  // broker instruments) comes from the vendored bundle via --data-dir (dataDir); staticdata + strategy
+  // are compiled into the binary. portfolioPath must be absolute (path flags are absolutized).
   if (!bars) {
     const args = ['replay', '--portfolio', path.resolve(portfolioPath)];
     if (from) args.push('--from', from);
@@ -223,8 +223,8 @@ function normalizeBalances(balances, positions, baseCurrency) {
 function decide({ portfolioPath, asof, bars, positions = [], orders = [], balances = {}, baseCurrency, statePath, cwd, dataDir }) {
   if (!portfolioPath) throw new Error('dtx-engine.decide: portfolioPath required');
   if (!asof) throw new Error('dtx-engine.decide: asof (YYYY-MM-DD) required');
-  // NATIVE mode: bars omitted → dtx resolves universe + fetches OHLCV itself. cwd must be the
-  // systematic-tss repo root. All path flags are absolutized (the binary chdirs into the data dir).
+  // NATIVE mode: bars omitted → dtx resolves universe + fetches OHLCV itself. The referential comes
+  // from the vendored bundle via --data-dir (dataDir). All path flags are absolutized.
   const native = !bars;
   if (!native && typeof bars !== 'object') throw new Error('dtx-engine.decide: bars object required');
   if (!Array.isArray(positions)) throw new Error('dtx-engine.decide: positions must be an array');
