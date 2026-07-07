@@ -302,17 +302,42 @@ node tools/trendline-scanner.js --universe forex --output signals --date YYYYMMD
 node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (indices 4h)
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
 node tools/sweep.js                     # Append-only: nouveaux trades fermés
+# ⛔ Phase 5.5 OBLIGATOIRE (AI-driven, PAS un script node) : Skill(skill="fortress-pm")
+#    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
+#    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
-node tools/gen-status-page.js           # Snapshot J + Dashboard
+node tools/gen-status-page.js           # Snapshot J + Dashboard (lit fortress_pool)
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 node tools/trading-executor/run-session.js  # Generate plans + execute
 node tools/substack-publish.js scanner/YYYYMMDD/index.html  # OPTIONAL/non-blocking: Substack draft + Notes teaser (needs MCP_AUTH_TOKEN, else draft-only local); disable via SUBSTACK_DISABLE=1
 ```
 
-### ⛔ Fortress PM A+ Halal — ÉTAPE OBLIGATOIRE (entre sweep et refresh-risk)
+### ⛔ Phase 5.5 — FORTRESS-PM A+ HALAL POOL — ÉTAPE OBLIGATOIRE (systématique, AVANT gen-status-page)
 
-**NE PAS SKIPPER.** Fortress est géré par le PM (toi), pas par sweep.js. Cette étape est
-AI-driven (appels MCP), exécutée DANS le pipeline au même titre que les scripts node.
+**NE PAS SKIPPER — SYSTÉMATIQUE À CHAQUE `/scanner` (local ET cloud).** Fortress est géré par le
+PM (toi), pas par sweep.js. Cette étape est AI-driven (appels MCP), exécutée DANS le pipeline au
+même titre que les scripts node. `Skill(skill="fortress-pm")` → lire et appliquer
+`.claude/skills/fortress-pm.md` (§3.0 Sharia → §3.2 loose screen RunScreener → §3.3 les 4
+éliminatoires : guidance relevée, ≥5 EPS beats, PE fwd <35x, extension EMA20 ≤3%).
+
+**⚠️ LIVRABLE CRITIQUE — écrire `fortress_pool` dans `scanner/YYYYMMDD/signals.json` AVANT
+`gen-status-page.js`.** Les modes **aplus** ET **fortress** consomment cette clé
+(`poolFrom('fortress_pool')` dans `scanner-parser.js`) comme source dédiée de leurs panneaux
+d'ordres. **Sans `fortress_pool` écrit :**
+- `scanner-parser.js` tombe en **fallback** (`fortress_fallback` = signaux du scan score≥92 &
+  `sharia===true`) — fail-closed mais fragile ; les jours sans signal Halal ≥92 stampé, aplus/fortress
+  rendent **vides**.
+- Un `fortress_pool` **présent mais vide `[]`** = "0 A+ Halal aujourd'hui" légitime (PAS de fallback) —
+  acceptable, mais uniquement APRÈS avoir réellement tourné le screen + les 4 éliminatoires et l'avoir
+  documenté (combien screenés / recalés / pourquoi).
+
+**Format `fortress_pool` (chaque entrée) :** `{ticker, name, score, strategy:"FortressA+", region,
+sector, entry, stop, tp1, tp2, rr, horizon, sharia:true, earnings_clear, dilution_clear, thesis}`.
+La clé `strategy:"FortressA+"` est OBLIGATOIRE (le filtre `fortress_pm` matche `/^FortressA\+$/i` ;
+sans elle les ordres ne s'affichent pas). `aplus` gate `minScore≥92` (A+ strict), `fortress` gate
+`minScore≥85` (déploiement Halal). **ZÉRO haram** — chaque ticker MCP-factchecké, `sharia===true`,
+jamais d'invention (⛔ MCP hard-stop si données incohérentes). Écrire via script (jamais à la main).
+
 Le prompt opérationnel complet est dans `.claude/skills/fortress-pm.md` — le LIRE et l'APPLIQUER.
 
 **Séquence DÉTERMINISTE — 7 étapes, dans cet ordre, TOUTES obligatoires :**

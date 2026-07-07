@@ -160,6 +160,14 @@ scanner/
 **Chaque scan DOIT produire `scanner/YYYYMMDD/signals.json` AVANT le HTML.**
 Tous les outils downstream (sweep.js, gen-status-page.js, update-tracking.js, generate-scanner-image.js) lisent ce JSON en priorité. Le HTML est pour l'affichage humain uniquement.
 
+> ⛔ **fortress-pm = étape SYSTÉMATIQUE du pipeline (local ET cloud), PAS optionnelle.** À chaque
+> `/scanner`, après `sweep.js` et AVANT `gen-status-page.js`, invoquer `Skill(skill="fortress-pm")`
+> et écrire la clé **`fortress_pool`** dans `signals.json` (candidats A+ Halal MCP-factcheckés,
+> `strategy:"FortressA+"`, `sharia:true`). C'est la source dédiée des panneaux d'ordres des modes
+> **aplus** (gate score≥92) et **fortress** (gate score≥85). Sans elle, `scanner-parser.js` tombe en
+> `fortress_fallback` et ces modes peuvent rendre vides. `fortress_pool` présent mais `[]` = 0 A+ Halal
+> légitime (aucun fallback). Détails : `.claude/skills/scanner-pipeline.md` §5.5 + `.claude/skills/fortress-pm.md`.
+
 ```json
 {
   "scanDate": "2026-04-14",
