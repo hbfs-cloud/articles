@@ -78,9 +78,54 @@ const SECTOR_MAP = {
   'GLD':'ETF-Commodity','SLV':'ETF-Commodity','USO':'ETF-Commodity','TLT':'ETF-Bond',
 };
 
+// Lazy-loaded per-ticker sector/industry metadata (data/ticker-metadata.json).
+// Used ONLY as a fallback for tickers absent from the embedded SECTOR_MAP above —
+// notably non-US banks/insurers (e.g. IBN=ICICI Bank, sector "Financials") whose
+// sector we don't hardcode. Loaded once; tolerant of a missing/unreadable file.
+const path = require('path');
+let _tickerMeta;
+function loadTickerMeta() {
+  if (_tickerMeta !== undefined) return _tickerMeta;
+  try {
+    _tickerMeta = require(path.join(__dirname, '..', '..', 'data', 'ticker-metadata.json'));
+  } catch (e) {
+    _tickerMeta = {};
+  }
+  return _tickerMeta;
+}
+
+// Map a free-text sector/industry label (from ticker-metadata.json OR an incoming
+// signal object) to an internal SECTOR_MAP bucket. Banking / insurance / financial-
+// services labels → 'Finance' (haram: interest-based revenue / riba per AAOIFI).
+// Returns null when the label is not a recognised haram-sector label.
+// Covers: "Financials", "Financial Services", "Banks", "Bank", "Diversified
+// Financials", "Insurance" — plus their metadata industry variants
+// ("Banks - Regional", "Banks - Diversified", "Insurance - Life", ...).
+// Deliberately does NOT match "Credit Services" (V/MA payment networks) here — those
+// are already bucketed 'Finance' explicitly in SECTOR_MAP; keeping the keyword list
+// narrow avoids over-broad false positives on non-financial industries.
+function labelToSector(sector, industry) {
+  const hay = `${sector || ''} ${industry || ''}`.toLowerCase();
+  if (/\bbank\b|\bbanks\b|insurance|financial services|diversified financ|^financials?$|\bfinancials\b/.test(hay)
+      || (sector || '').trim().toLowerCase() === 'financials') {
+    return 'Finance';
+  }
+  return null;
+}
+
 function getSector(ticker) {
   if (!ticker) return 'Other';
-  return SECTOR_MAP[ticker] || SECTOR_MAP[String(ticker).toUpperCase()] || 'Other';
+  const tk = String(ticker).toUpperCase();
+  const direct = SECTOR_MAP[ticker] || SECTOR_MAP[tk];
+  if (direct) return direct;
+  // Fallback: derive from ticker-metadata.json for tickers not in the embedded map
+  // (e.g. IBN=ICICI Bank → sector "Financials" → 'Finance'/haram).
+  const meta = loadTickerMeta()[tk] || loadTickerMeta()[ticker];
+  if (meta) {
+    const mapped = labelToSector(meta.sector, meta.industry);
+    if (mapped) return mapped;
+  }
+  return 'Other';
 }
 
 // Sectors excluded by the AAOIFI Sharia screen. Used by per-mode shariaOnly modes (Fortress = PM
@@ -95,6 +140,9 @@ function isHaramForHalalMode(s) {
   if (s.sharia === false) return true;
   if (SHARIA_EXCLUDED.has(tk)) return true;
   if (HARAM_SECTORS.has(getSector(tk))) return true;
+  // Signal may carry its own sector/industry label (from screener/enrichment) even
+  // when the ticker isn't in SECTOR_MAP or ticker-metadata — map it too (banks/insurers).
+  if (HARAM_SECTORS.has(labelToSector(s.sector, s.industry))) return true;
   return false;
 }
 
