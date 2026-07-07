@@ -59,8 +59,9 @@
     '    grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);',
     '    grid-auto-rows:min-content;',
     '    gap:1rem;',
-    '    align-items:stretch;',
+    '    align-items:start;', /* start (not stretch): a lone right-column card (sparse scripted modes) keeps its natural height instead of stretching to the equity chart's ~680px */
     '  }',
+    '  .lp-grid>[data-grid="equity"]{align-self:stretch}', /* equity still fills the rows it spans so the chart stays balanced against a multi-item right stack */
 
     /* Live card — full width hero at top */
     '  .lp-grid>[data-grid="live"]{',
@@ -548,6 +549,52 @@
   var cards = {};
   var connState = 'idle';
 
+  /* ── Content-adaptive desktop row placement ──
+     The CSS grid (@media min-width:1024px) hardcodes grid-row 1-8 assuming the FULL quality-mode
+     section set (live/equity/signals/expiring/closenow/orders/watch/positions/history). Scripted
+     modes emit a sparse subset (often just live+equity+orders+positions), so equity's fixed
+     `grid-row:2/span 5` stretched over empty rows ("Live portfolio takes the whole screen") and the
+     right stack fell into gaps. Recompute rows from the sections actually present + visible so the
+     layout stays dense whatever the mode. Below 1024px the grid is block-flow → clear inline rows. */
+  var LP_RIGHT = ['signals', 'expiring', 'closenow', 'orders', 'watch'];
+  function placeDesktopGrid(grid) {
+    if (!grid) return;
+    var q = function (g) { return grid.querySelector('[data-grid="' + g + '"]'); };
+    var vis = function (el) { return el && getComputedStyle(el).display !== 'none' && el.getAttribute('data-grid-empty') !== '1'; };
+    var setRow = function (el, v) {
+      if (!el) return;
+      if (v) el.style.setProperty('grid-row', v, 'important'); // inline !important beats the CSS !important
+      else el.style.removeProperty('grid-row');
+    };
+    if (!window.matchMedia('(min-width:1024px)').matches) {
+      setRow(q('equity'), null);
+      LP_RIGHT.concat(['positions', 'history', 'method', 'footer']).forEach(function (g) { setRow(q(g), null); });
+      return;
+    }
+    var rights = LP_RIGHT.map(q).filter(vis);
+    var N = Math.max(1, rights.length);
+    setRow(q('equity'), '2 / span ' + N);         // equity spans exactly the right stack's height
+    rights.forEach(function (el, i) { setRow(el, String(2 + i)); });
+    var nextRow = 2 + N;
+    ['positions', 'history', 'method', 'footer'].forEach(function (g) {
+      var el = q(g);
+      if (vis(el)) setRow(el, String(nextRow++));  // full-width rows stack below the middle block
+      else setRow(el, null);
+    });
+  }
+  var _lpResizeBound = false;
+  function bindLpResize() {
+    if (_lpResizeBound) return; _lpResizeBound = true;
+    var t;
+    window.addEventListener('resize', function () {
+      clearTimeout(t);
+      t = setTimeout(function () {
+        var grids = document.querySelectorAll('.lp-grid');
+        for (var i = 0; i < grids.length; i++) placeDesktopGrid(grids[i]);
+      }, 150);
+    });
+  }
+
   /* ── Reorganize panel children into a CSS grid wrapper ── */
   function reorganizePanel(modeId) {
     var panel = document.getElementById('p-' + modeId);
@@ -595,10 +642,13 @@
           child.setAttribute('data-grid', 'orders');
         } else if (text.indexOf('watch') >= 0) {
           child.setAttribute('data-grid', 'watch');
+        } else if (text.indexOf('history') >= 0) {
+          // History MUST be checked before positions: "Trade History … N open" contains the word
+          // "open" and would otherwise be mis-tagged as positions, overlapping the real Open
+          // Positions card on the same grid row. Match on "history" only (not generic "trade").
+          child.setAttribute('data-grid', 'history');
         } else if (text.indexOf('open') >= 0 || text.indexOf('position') >= 0) {
           child.setAttribute('data-grid', 'positions');
-        } else if (text.indexOf('history') >= 0 || text.indexOf('trade') >= 0) {
-          child.setAttribute('data-grid', 'history');
         } else {
           child.setAttribute('data-grid', 'footer');
         }
@@ -622,6 +672,9 @@
         else if (txt.indexOf('no active') < 0 && txt.indexOf('0 closed') < 0 && txt.length > 60) hasMeaningfulText = true;
         if (!hasMeaningfulText) node.setAttribute('data-grid-empty', '1');
       });
+      // Recompute rows from the sections actually present (after empties are flagged above).
+      placeDesktopGrid(grid);
+      bindLpResize();
     }, 50);
   }
 
