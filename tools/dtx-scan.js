@@ -1,20 +1,27 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * dtx-scan.js — orchestrator: drive the REAL systematic-tss engine (dtx binary) per book config.
+ * dtx-scan.js — orchestrator: drive the REAL systematic-tss engine (dtx binary) per book config,
+ * in NATIVE mode.
  *
- * Phase 1 = PARALLEL, STAGING-ONLY pipeline. It does NOT touch the live JS scanners, sweep.js,
+ * NATIVE mode (Phase 2): we OMIT --bars. dtx resolves the universe from the YAML filters
+ * (region / min_market_cap / min_volume / stocks/etfs / whitelist / forex_universe / blacklist via
+ * staticdata) AND fetches OHLCV itself (Yahoo/Binance/BVC), exactly like cmd/backtest. The books
+ * self-manage universe + cache — we do NOT build universe lists or backfill bars anymore.
+ *
+ * CONSTRAINT: native mode MUST run with CWD = the systematic-tss repo root (it needs
+ * data/instruments/<broker>.json + staticdata + network). Set DTX_TSS_ROOT to override the default.
+ *
+ * This is a PARALLEL, STAGING-ONLY pipeline. It does NOT touch the live JS scanners, sweep.js,
  * signals.json, backtest-trades.json, trade-chain.json, or modes-config.json. It writes to a
  * staging dir (data/dtx/<mode>.json) and persists per-mode engine state (data/dtx/state/<mode>.json).
  *
  * Per book config it:
- *   1. resolves the universe (dtx-bars.resolveUniverse)
- *   2. builds PIT-safe bars for --asof (dtx-bars.buildBars, anti-look-ahead)
- *   3. `dtx decide --asof <session>` → maps actions.CREATE (BUY) into our order/pool shape
- *   4. `dtx replay` over the bars window → equity + metrics
+ *   1. `dtx decide --asof <session>` (native) → maps actions.CREATE (BUY) into our order/pool shape
+ *   2. `dtx replay --from --to` (native) → equity curve + aggregate metrics
  *
  * Usage:
- *   node tools/dtx-scan.js --mode highvol --asof 2026-06-30 [--cap 1200] [--no-replay] [--quiet]
+ *   node tools/dtx-scan.js --mode highvol --asof 2026-06-30 [--from 2021-01-01] [--no-replay] [--quiet]
  *   node tools/dtx-scan.js --all --asof 2026-06-30
  *   node tools/dtx-scan.js --list
  *
@@ -24,12 +31,18 @@
 const fs = require('fs');
 const path = require('path');
 const engine = require('./lib/dtx-engine');
-const dtxBars = require('./lib/dtx-bars');
+const dtxBars = require('./lib/dtx-bars'); // still used for readConfig()
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CONFIG_DIR = path.join(REPO_ROOT, 'config', 'dtx');
 const STAGING_DIR = path.join(REPO_ROOT, 'data', 'dtx');
-const STATE_DIR = path.join(STAGING_DIR, 'state');
+
+// systematic-tss repo root — required for NATIVE mode (staticdata + instruments + network).
+const TSS_ROOT = process.env.DTX_TSS_ROOT ||
+  path.resolve(REPO_ROOT, '..', 'systematic-tss');
+
+// Default replay window start. Configs cite "2021-present" honest track records.
+const DEFAULT_FROM = '2021-01-01';
 
 // ---------------------------------------------------------------------------
 // arg parsing
@@ -40,7 +53,6 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--mode') o.mode = argv[++i];
     else if (a === '--asof') o.asof = argv[++i];
-    else if (a === '--cap') o.cap = parseInt(argv[++i], 10);
     else if (a === '--from') o.from = argv[++i];
     else if (a === '--to') o.to = argv[++i];
     else if (a === '--all') o.all = true;
@@ -50,6 +62,18 @@ function parseArgs(argv) {
     else if (a === '--out') o.out = argv[++i];
   }
   return o;
+}
+
+/** Fail-closed: verify the systematic-tss data context is present before any native run. */
+function assertTssRoot() {
+  const probe = path.join(TSS_ROOT, 'data', 'instruments');
+  if (!fs.existsSync(TSS_ROOT) || !fs.existsSync(probe)) {
+    throw new Error(
+      `dtx-scan: NATIVE mode needs the systematic-tss repo root at "${TSS_ROOT}" ` +
+      `(with data/instruments/<broker>.json + staticdata + network). Not found. ` +
+      `Set DTX_TSS_ROOT to the checkout path. FAIL-CLOSED (won't fabricate).`
+    );
+  }
 }
 
 /** Discover mode → config path from config/dtx/. */
@@ -70,14 +94,17 @@ function discoverModes() {
 // ---------------------------------------------------------------------------
 // CREATE OrderRequest → our order/pool shape
 // ---------------------------------------------------------------------------
-function mapOrder(or, bars) {
+function parseScore(reason) {
+  const m = /Score=(-?\d+(?:\.\d+)?)/.exec(reason || '');
+  return m ? Number(m[1]) : null;
+}
+
+function mapOrder(or) {
   // dtx serializes OrderRequest in snake_case: {order_id,symbol,side,order_type,qty,limit_price,
   // stop_price,stop_loss,take_profit,reason,priority}.
-  const sym = or.symbol;
-  const lastClose = bars[sym] && bars[sym].length ? bars[sym][bars[sym].length - 1].close : null;
-  const entry = or.limit_price || or.stop_price || lastClose;
+  const entry = or.limit_price || or.stop_price || null;
   return {
-    symbol: sym,
+    symbol: or.symbol,
     side: or.side,
     orderType: or.order_type,
     qty: or.qty,
@@ -86,27 +113,15 @@ function mapOrder(or, bars) {
     stopPrice: or.stop_price || null,
     stopLoss: or.stop_loss || null,
     takeProfit: or.take_profit || null,
+    score: parseScore(or.reason),
     reason: or.reason || null,
     priority: or.priority != null ? or.priority : null,
     orderId: or.order_id || null,
-    lastClose,
   };
 }
 
-/** min/max bar date across the bars map. */
-function barsDateRange(bars) {
-  let min = null, max = null;
-  for (const arr of Object.values(bars)) {
-    if (!arr.length) continue;
-    const f = arr[0].date, l = arr[arr.length - 1].date;
-    if (min === null || f < min) min = f;
-    if (max === null || l > max) max = l;
-  }
-  return { min, max };
-}
-
 // ---------------------------------------------------------------------------
-// scan one mode
+// scan one mode (NATIVE)
 // ---------------------------------------------------------------------------
 function scanMode(modeInfo, opts) {
   const asof = opts.asof;
@@ -114,45 +129,40 @@ function scanMode(modeInfo, opts) {
   const t0 = Date.now();
 
   const cfg = dtxBars.readConfig(modeInfo.path);
-  const alloc = cfg.allocations[0];
-  const cacheSet = dtxBars.listCacheTickers();
-
-  const uni = dtxBars.resolveUniverse(alloc, { cacheSet, cap: opts.cap });
-  const { bars, resolved, missing, thin } = dtxBars.buildBars(uni.symbols, asof, { market: uni.market, cacheSet });
-
-  if (resolved.length === 0) {
-    throw new Error(`no bars resolved for mode ${modeInfo.id} (universe=${uni.symbols.length}, source="${uni.source}", missing=${missing.length}). Cache lacks these symbols.`);
-  }
-
   const currency = cfg.currency || 'USD';
   const balances = { [currency]: cfg.initial_capital || 100000 };
-  const statePath = path.join(STATE_DIR, `${modeInfo.id}.json`);
 
-  // 1) decide → orders for the session
+  // 1) decide → orders for the session (NATIVE: no bars, cwd = tss root).
+  // STATELESS / COLD by design: the articles dashboard is a stateless nightly advisory (like the
+  // legacy JS scanners) — it holds no live book. We start from a FLAT book (positions:[], no --state)
+  // so CREATE = the FULL set of BUY orders the engine would place tomorrow given no holdings.
+  // (A warm state makes decide incremental → re-running the same asof yields 0 new orders — correct
+  // for a live book, wrong for a stateless advisory. See dtx README "state persists".)
   const decision = engine.decide({
-    portfolioPath: modeInfo.path, asof, bars,
-    positions: [], orders: [], balances, statePath,
+    portfolioPath: modeInfo.path, asof,
+    positions: [], orders: [], balances,
+    cwd: TSS_ROOT,
   });
   const create = (decision.actions && decision.actions.CREATE) || [];
-  const orders = create.map((or) => mapOrder(or, bars));
+  const orders = create.map(mapOrder);
 
-  // 2) replay → metrics + equity over the available window
+  // 2) replay → metrics + equity over the window (NATIVE)
   let metrics = null, equity = null, replayErr = null;
   if (opts.replay) {
     try {
-      const range = barsDateRange(bars);
-      const from = opts.from || range.min;
-      const to = opts.to || (asof < range.max ? asof : range.max);
-      const rep = engine.replay({ portfolioPath: modeInfo.path, bars, from, to });
+      const from = opts.from || DEFAULT_FROM;
+      const to = opts.to || asof;
+      const rep = engine.replay({ portfolioPath: modeInfo.path, from, to, cwd: TSS_ROOT });
       const r = rep.results && rep.results[0];
       if (r) {
         metrics = {
           allocation: r.allocation, strategy: r.strategy,
-          final_equity: r.final_equity, total_trades: r.total_trades, win_rate: r.win_rate,
+          initial_capital: r.initial_capital,
+          final_equity: r.final_equity, total_trades: r.total_trades,
+          winners: r.winners, losers: r.losers, win_rate: r.win_rate,
           return_pct: r.return_pct, cagr_pct: r.cagr_pct, max_dd_pct: r.max_dd_pct,
           sharpe: r.sharpe, r2: r.r2, from, to,
         };
-        // trim equity to endpoints + length to keep staging small; keep full series but compact
         equity = { dates: r.equity_dates || [], values: r.equity_values || [] };
       }
     } catch (e) {
@@ -166,22 +176,17 @@ function scanMode(modeInfo, opts) {
     name: cfg.name,
     asof,
     generatedAt: new Date().toISOString(),
-    engine: 'dtx (systematic-tss)',
+    engine: 'dtx (systematic-tss) — NATIVE',
+    engineMode: 'native',
     config: path.relative(REPO_ROOT, modeInfo.path),
     currency,
-    universe: {
-      market: uni.market, source: uni.source, note: uni.note,
-      requested: uni.symbols.length, resolved: resolved.length,
-      missing: missing.length, missingSample: missing.slice(0, 20),
-      thin: thin.length,
-    },
     orders,
     updates: (decision.actions && decision.actions.UPDATE) || [],
     cancels: (decision.actions && decision.actions.CANCEL) || [],
     metrics,
     equity,
     replayError: replayErr,
-    stateFile: path.relative(REPO_ROOT, statePath),
+    stateless: true,
     tookMs: Date.now() - t0,
   };
 
@@ -189,8 +194,7 @@ function scanMode(modeInfo, opts) {
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
 
-  log(`  [${modeInfo.id}] ${uni.market} src="${uni.source}"`);
-  log(`    universe ${resolved.length}/${uni.symbols.length} resolved (${missing.length} missing) | orders(BUY)=${orders.length}`);
+  log(`  [${modeInfo.id}] native ${currency} | orders(CREATE)=${orders.length}`);
   if (metrics) log(`    replay ${metrics.from}→${metrics.to}: cagr=${metrics.cagr_pct} dd=${metrics.max_dd_pct} sharpe=${metrics.sharpe} trades=${metrics.total_trades} wr=${metrics.win_rate}`);
   else if (replayErr) log(`    replay ERROR: ${replayErr}`);
   log(`    → ${path.relative(REPO_ROOT, outPath)} (${out.tookMs}ms)`);
@@ -206,7 +210,7 @@ function main() {
   const modes = discoverModes();
 
   if (opts.list) {
-    console.log('Discovered modes (config/dtx/):');
+    console.log(`Discovered modes (config/dtx/) — NATIVE mode, TSS_ROOT=${TSS_ROOT}:`);
     for (const m of Object.values(modes)) {
       if (m.error) console.log(`  ${String(m.id).padEnd(22)} ERROR: ${m.error}`);
       else console.log(`  ${m.id.padEnd(22)} ${m.currency} ${m.initialCapital}  (${m.file})`);
@@ -216,22 +220,24 @@ function main() {
 
   if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
 
+  try { assertTssRoot(); } catch (e) { console.error(`ERROR: ${e.message}`); process.exit(3); }
+
   let targets;
   if (opts.all) targets = Object.values(modes).filter((m) => !m.error);
   else if (opts.mode) {
-    // accept portfolio id OR a friendly alias (highvol→us_highvol, stockbox→stockbox_nasdaq)
-    const alias = { highvol: 'us_highvol', stockbox: 'stockbox_nasdaq' };
+    // accept portfolio id OR a friendly alias
+    const alias = { highvol: 'us_highvol', stockbox: 'stockbox_nasdaq', etf: 'etf_us', bull: 'us_ablite' };
     const id = modes[opts.mode] ? opts.mode : (alias[opts.mode] && modes[alias[opts.mode]] ? alias[opts.mode] : null);
     if (!id) { console.error(`ERROR: unknown mode "${opts.mode}". Try --list.`); process.exit(2); }
     targets = [modes[id]];
   } else { console.error('ERROR: --mode <id> or --all required'); process.exit(2); }
 
-  console.log(`dtx-scan asof=${opts.asof} modes=${targets.map((m) => m.id).join(',')}\n`);
+  console.log(`dtx-scan (NATIVE) asof=${opts.asof} cwd=${TSS_ROOT} modes=${targets.map((m) => m.id).join(',')}\n`);
   const summary = [];
   for (const m of targets) {
     try {
       const out = scanMode(m, opts);
-      summary.push({ mode: m.id, ok: true, orders: out.orders.length, resolved: out.universe.resolved, cagr: out.metrics && out.metrics.cagr_pct, trades: out.metrics && out.metrics.total_trades, replayError: out.replayError });
+      summary.push({ mode: m.id, ok: true, orders: out.orders.length, cagr: out.metrics && out.metrics.cagr_pct, trades: out.metrics && out.metrics.total_trades, dd: out.metrics && out.metrics.max_dd_pct, replayError: out.replayError });
     } catch (e) {
       console.error(`  [${m.id}] FAILED: ${e.message}`);
       summary.push({ mode: m.id, ok: false, error: e.message });
@@ -240,11 +246,11 @@ function main() {
 
   console.log('\n=== SUMMARY ===');
   for (const s of summary) {
-    if (s.ok) console.log(`  ${s.mode.padEnd(22)} OK   orders=${s.orders} universe=${s.resolved} cagr=${s.cagr != null ? s.cagr : '-'} trades=${s.trades != null ? s.trades : '-'}${s.replayError ? ' (replay err: ' + s.replayError + ')' : ''}`);
+    if (s.ok) console.log(`  ${s.mode.padEnd(22)} OK   orders=${s.orders} cagr=${s.cagr != null ? s.cagr : '-'} dd=${s.dd != null ? s.dd : '-'} trades=${s.trades != null ? s.trades : '-'}${s.replayError ? ' (replay err: ' + s.replayError + ')' : ''}`);
     else console.log(`  ${s.mode.padEnd(22)} FAIL ${s.error}`);
   }
 }
 
 if (require.main === module) main();
 
-module.exports = { scanMode, discoverModes };
+module.exports = { scanMode, discoverModes, TSS_ROOT };

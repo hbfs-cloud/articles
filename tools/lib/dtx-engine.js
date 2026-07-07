@@ -129,15 +129,26 @@ function withTmpDir(fn) {
  * @returns {object} { portfolio_id, results:[{allocation,strategy,final_equity,total_trades,win_rate,
  *                     return_pct,cagr_pct,max_dd_pct,sharpe,r2,equity_dates[],equity_values[]}] }
  */
-function replay({ portfolioPath, bars, from, to }) {
+function replay({ portfolioPath, bars, from, to, cwd, dataDir }) {
   if (!portfolioPath) throw new Error('dtx-engine.replay: portfolioPath required');
-  if (!bars || typeof bars !== 'object') throw new Error('dtx-engine.replay: bars object required');
+  // NATIVE mode: bars omitted → dtx resolves the universe from the YAML filters AND fetches OHLCV
+  // itself (Yahoo/Binance/BVC), exactly like cmd/backtest. Requires cwd = systematic-tss repo root
+  // (needs data/instruments/<broker>.json + staticdata + network). portfolioPath must be absolute
+  // (the binary absolutizes path flags before it chdirs into the data dir).
+  if (!bars) {
+    const args = ['replay', '--portfolio', path.resolve(portfolioPath)];
+    if (from) args.push('--from', from);
+    if (to) args.push('--to', to);
+    if (dataDir) args.push('--data-dir', path.resolve(dataDir));
+    return run(args, { cwd });
+  }
+  if (typeof bars !== 'object') throw new Error('dtx-engine.replay: bars object required');
   return withTmpDir((dir) => {
     const barsPath = writeTmp(dir, 'bars.json', bars);
     const args = ['replay', '--portfolio', portfolioPath, '--bars', barsPath];
     if (from) args.push('--from', from);
     if (to) args.push('--to', to);
-    return run(args);
+    return run(args, { cwd });
   });
 }
 
@@ -209,10 +220,13 @@ function normalizeBalances(balances, positions, baseCurrency) {
  *          orderReq keys (snake_case): order_id, symbol, side, order_type, qty, limit_price,
  *          stop_price, stop_loss, take_profit, reason, priority.
  */
-function decide({ portfolioPath, asof, bars, positions = [], orders = [], balances = {}, baseCurrency, statePath }) {
+function decide({ portfolioPath, asof, bars, positions = [], orders = [], balances = {}, baseCurrency, statePath, cwd, dataDir }) {
   if (!portfolioPath) throw new Error('dtx-engine.decide: portfolioPath required');
   if (!asof) throw new Error('dtx-engine.decide: asof (YYYY-MM-DD) required');
-  if (!bars || typeof bars !== 'object') throw new Error('dtx-engine.decide: bars object required');
+  // NATIVE mode: bars omitted → dtx resolves universe + fetches OHLCV itself. cwd must be the
+  // systematic-tss repo root. All path flags are absolutized (the binary chdirs into the data dir).
+  const native = !bars;
+  if (!native && typeof bars !== 'object') throw new Error('dtx-engine.decide: bars object required');
   if (!Array.isArray(positions)) throw new Error('dtx-engine.decide: positions must be an array');
   if (!Array.isArray(orders)) throw new Error('dtx-engine.decide: orders must be an array');
   if (Array.isArray(balances) || typeof balances !== 'object') {
@@ -222,19 +236,23 @@ function decide({ portfolioPath, asof, bars, positions = [], orders = [], balanc
   const ordSnake = orders.map(normalizeOrder);
   const balancePayload = normalizeBalances(balances, posSnake, baseCurrency);
   return withTmpDir((dir) => {
-    const barsPath = writeTmp(dir, 'bars.json', bars);
     const posPath = writeTmp(dir, 'positions.json', posSnake);
     const ordPath = writeTmp(dir, 'orders.json', ordSnake);
     const balPath = writeTmp(dir, 'balances.json', balancePayload);
     const args = [
-      'decide', '--portfolio', portfolioPath, '--asof', asof,
-      '--bars', barsPath, '--positions', posPath, '--orders', ordPath, '--balances', balPath,
+      'decide', '--portfolio', native ? path.resolve(portfolioPath) : portfolioPath, '--asof', asof,
+      '--positions', posPath, '--orders', ordPath, '--balances', balPath,
     ];
-    // Pass prior state if it exists on disk (first run has none).
-    if (statePath && fs.existsSync(statePath)) {
-      args.push('--state', statePath);
+    if (!native) {
+      const barsPath = writeTmp(dir, 'bars.json', bars);
+      args.push('--bars', barsPath);
     }
-    const result = run(args);
+    if (dataDir) args.push('--data-dir', path.resolve(dataDir));
+    // Pass prior state if it exists on disk (first run has none). Absolutize — cwd may differ.
+    if (statePath && fs.existsSync(statePath)) {
+      args.push('--state', path.resolve(statePath));
+    }
+    const result = run(args, { cwd });
     // Persist state for the next run if a path was requested.
     if (statePath && result && result.state !== undefined) {
       fs.mkdirSync(path.dirname(statePath), { recursive: true });
