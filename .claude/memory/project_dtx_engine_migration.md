@@ -15,9 +15,16 @@ ré-implémenter la logique ailleurs, on l'APPELLE. Ça supprime toute la classe
 `trading/tools/bin/README.md`. Sous-commandes `decide|replay|regime`. Rebuild : systematic-tss
 `git checkout feat/dtx-binaries && bash scripts/build-dtx.sh`.
 
-**Mode injecté (celui qu'on utilise ici)** : `--bars bars.json` = TU fournis les bars → offline,
-déterministe, portable (juste binaire + JSON). Nos fichiers `data/.price-cache/<TICKER>_ohlcv.json`
-sont DÉJÀ au bon format ({date,open,high,low,close,volume} array). PIT-safe via price-cache.js.
+**⚠️ MODE NATIF = LE BON (corrigé 2026-07-07)** : on OMET `--bars` → dtx **résout lui-même l'univers**
+depuis les filtres du YAML (region/min_market_cap/stocks/etfs/forex_universe/blacklist via staticdata)
+ET **fetch l'OHLCV lui-même** (Yahoo/Binance/BVC), exactement comme cmd/backtest. **Les books gèrent
+eux-mêmes leur cache + univers** — on ne construit RIEN (ni listes univers, ni backfill bars). Prouvé :
+`replay eu_dax` natif → cagr 17.86/dd 20.38/sharpe 0.81/r2 0.87/52 trades sur les VRAIS noms DAX
+(MRK.DE/SIE.DE/UN0.DE). Contrainte : **lancer depuis la racine systematic-tss** (a besoin de
+`data/instruments/<broker>.json` + staticdata + réseau) — PAS autoportant → à gérer côté cloud.
+Mon erreur Phase 1 = avoir câblé le mode INJECTÉ (`--bars` avec notre price-cache biaisé/incomplet) →
+jp/in/eu échouaient. Le mode injecté (`--bars`) reste utile pour un run 100% offline/portable, mais
+le book se pilote en NATIF.
 
 **Invocations vérifiées (2026-07-07, marchent)** :
 - `replay --portfolio cfg.yaml --bars b.json --from D --to D` → stdout JSON {results:[{cagr_pct,
@@ -50,7 +57,10 @@ d'univers point-in-time en mode injecté.
 **Phasage** :
 - Phase 1 (déléguée) : vendorer binaires (lfs) + wrapper Node dtx-engine.js + assembleur PIT bars
   dtx-bars.js + orchestrateur dtx-scan.js → sortie STAGING (data/dtx/) sans toucher JS/sweep/signals live.
-- Phase 2 : câbler dans gen-status-page (pools) + listes univers PIT + retirer les scanners JS.
+- Phase 2 : basculer dtx-scan.js en MODE NATIF (lancé depuis racine systematic-tss, dtx résout
+  univers + fetch data pour TOUS les books y compris jp/in/eu/crypto/forex) + câbler la sortie dans
+  les pools de gen-status-page + retirer les scanners JS. (Les « listes univers PIT » et « backfill
+  bars étrangers » de mon plan initial sont MOOT en natif — les books gèrent ça eux-mêmes.)
 - Phase 3 (CONSENTEMENT requis) : re-baseline du track-record (dtx replay ≠ sweep.js scellé) — règle
   immutable-trades, ne jamais toucher les trades clôturés sans accord.
 - Cloud : dtx-linux-amd64 committé mais JAMAIS exécuté → valider au 1er run cloud réel.
