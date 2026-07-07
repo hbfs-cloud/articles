@@ -68,3 +68,58 @@ d'univers point-in-time en mode injecté.
 **Caveats francs (README)** : parité natif mesurée sur 1 seule config (EU DAX) ; crypto/forex/
 casablanca câblés mais non exercés par un run réel ; linux-amd64 jamais lancé. Lié à
 [[verify-iso-by-running]], [[iso-cache-and-resync]], [[scripted-modes-tss-order-parity]].
+
+---
+
+## PHASE 2 FAITE (2026-07-07, commits dae33e745 + 39cd94830, pushés)
+
+**Étape 1 — dtx-scan natif** (`tools/dtx-scan.js` réécrit, `tools/lib/dtx-engine.js` étendu) :
+- `dtx-engine.replay/decide` acceptent `{cwd, dataDir}` ; `bars` devient optionnel (omis → NATIF).
+  Chemins absolutisés (le binaire chdir dans le data-dir). Mode injecté inchangé (selftest OK).
+- `dtx-scan.js` : abandonne dtx-bars (univers/backfill) ; NATIF, `cwd=$DTX_TSS_ROOT` (défaut
+  `../systematic-tss`), fail-closed si `data/instruments/` absent. **decide STATELESS/COLD par
+  design** (book à plat → set COMPLET des BUY du lendemain, comme l'ancien scanner JS stateless ;
+  un state chaud rend decide incrémental → 0 ordre au re-run même asof).
+- **Les 13 books produisent en natif, Y COMPRIS les échecs Phase 1** (jp/in/eu_dax/eu_uk/crypto/
+  forex sur VRAIS noms étrangers). **Parité us_highvol natif 87.94/27.68/1.87 ≈ publié 87.3/27.7/1.86**
+  (quasi-exact). Table (asof 2026-06-30, from 2021-01-01) : etf_eu 68.73/SR2.03, etf_us 52.38/SR1.66,
+  stockbox 77.73/SR1.65, forex 7.28/SR2.39, jp 15.56, in 20.23, crypto 40.08(14 tr), us_ablite 20.08,
+  eu_dax 21.17, eu_uk 20.69, uk 27.36. metals = 0 trades (config à revoir). CAGR = univers courant
+  (survivorship-optimiste, cf README) → signal de parité, pas vérité absolue.
+
+**Étape 2 — câblage gen-status-page** (SCRIPTED live seulement) :
+- Bridge `DTX_STAGING_MAP` (dashboard id → staging) : highvol→us_highvol, forex→forex, etf→etf_us,
+  etf_eu→etf_eu, stockbox→stockbox_nasdaq. **hybrid = PAS de yaml config/dtx → reste sur sweep.**
+- Orders to Place ← dtx `decide` CREATE (`dtxSignalsFor`, tolère MARKET sans limit/stop → "—").
+- Equity + hero stats (ret/DD/WR/CAGR/Sharpe/R²) ← dtx `replay` (courbe base-100 ; pit/forward
+  neutralisés → dtx = hero). **Profit Factor + Avg Hold = "—"** (replay ne les donne pas → pas de faux 0x/0d).
+- **Trade History = INCHANGÉ (sweep)** : `dtx replay` n'a AUCUN tableau per-trade ni flag `--trades`
+  (vérifié cmd/dtx/replay_cmd.go : seulement l'agrégat). → source per-trade impossible depuis replay.
+- Fail-safe : pas de staging → fallback gracieux (ancien pool signaux + equity sweep).
+- QUALITY (turbo/dynamic/balanced/secured/fortress/aplus) NON touchés (turbo +112.24% vérifié).
+- **Browser-verifié (Playwright 1440px + 390px)** : orders rendus, canvas equity présent, hero peuplé,
+  ZÉRO régression layout (bodyOverflow=false desktop+mobile).
+
+**PAS retiré (contrairement au plan initial) — DÉCISION honnête** : les scanners JS (highvol-scanner.js,
+etf-scanner.js, forex/candlestick/crypto/…) ÉCRIVENT `signals.json` qui alimente `sweep.js` → le
+**track-record SCELLÉ** (`frozen_<mode>`) + les snapshots **Time Machine** + `posFor` positions. Phase 2
+n'a remplacé QUE l'AFFICHAGE live (orders/equity/stats), pas le pipeline scellé. Donc les scanners +
+`verify-iso.js`/`iso-alignment.json` restent LOAD-BEARING → **on ne retire rien tant que Phase 3
+(re-baseline, consentement) n'est pas faite**. Retirer casserait signals.json (partagé) + les modes quality.
+NB : les modes scriptés n'avaient AUCUN track-record scellé avant (frozen_highvol/forex/stockbox absents)
+→ dtx remplit un vide, ne déplace pas de donnée scellée.
+
+**LIMITES connues** : (1) fenêtre replay = 2021-présent → total return énorme (+3098% highvol) à côté des
+quality since-launch (~+112%) — honnête (courbe pluriannuelle visible) mais **décision produit à confirmer**
+(trivial à changer via `--from`). (2) Labels axe MM/DD répètent sur une courbe pluriannuelle (limite
+pré-existante). (3) Time Machine des modes scriptés reste sur les snapshots JS (pas dtx) → léger décrochage
+historique. (4) metals = 0 trades natif.
+
+**CLOUD (requirement natif)** : la routine nightly qui lance `dtx-scan.js` doit avoir **systematic-tss
+checké out avec son contexte data** (`data/instruments/<broker>.json` + staticdata) **+ réseau** (fetch
+Yahoo/Binance/BVC), et pointer `DTX_TSS_ROOT` dessus. Injecté serait 100% portable mais on est en natif.
+**`dtx-linux-amd64` = ELF valide JAMAIS exécuté** → valider au 1er run cloud (`git lfs pull` +
+`node tools/lib/dtx-engine.js --selftest`). Ne PAS reconfigurer le trigger ici — juste ce requirement noté.
+
+**PHASE 3 (reste, CONSENTEMENT)** : re-baseline du track-record scellé (dtx replay = source de vérité vs
+sweep), ce qui permettrait ENSUITE de retirer les scanners JS + le pipeline iso. Règle immutable-trades.
