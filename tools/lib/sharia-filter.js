@@ -76,6 +76,19 @@ const SECTOR_MAP = {
   'XLY':'ETF-Sector','XLP':'ETF-Sector','XLU':'ETF-Sector','XLB':'ETF-Sector','XLRE':'ETF-Sector',
   'XLC':'ETF-Sector','SMH':'ETF-Sector','SOXX':'ETF-Sector','XBI':'ETF-Sector','ITA':'ETF-Sector','ANET':'Tech',
   'GLD':'ETF-Commodity','SLV':'ETF-Commodity','USO':'ETF-Commodity','TLT':'ETF-Bond',
+  // Commonly-screened thematic / miner / energy / REIT / biotech ETFs — none is Sharia-certified,
+  // so bucketing them 'ETF-*' makes the Halal gate reject them (constituents unscreenable).
+  'GDX':'ETF-Sector','GDXJ':'ETF-Sector','SIL':'ETF-Sector','SILJ':'ETF-Sector','XME':'ETF-Sector',
+  'SLX':'ETF-Sector','COPX':'ETF-Sector','URA':'ETF-Sector','URNM':'ETF-Sector','LIT':'ETF-Sector',
+  'REMX':'ETF-Sector','TAN':'ETF-Sector','ICLN':'ETF-Sector','XOP':'ETF-Sector','OIH':'ETF-Sector',
+  'IBB':'ETF-Sector','KRE':'ETF-Sector','KBE':'ETF-Sector','IYR':'ETF-Sector','VNQ':'ETF-Sector',
+  'SCHH':'ETF-Sector','JETS':'ETF-Sector','KWEB':'ETF-Broad','ARKK':'ETF-Sector','ARKG':'ETF-Sector',
+  'ARKW':'ETF-Sector','ARKF':'ETF-Sector','BOTZ':'ETF-Sector','ROBO':'ETF-Sector','HACK':'ETF-Sector',
+  'SKYY':'ETF-Sector','SLV.':'ETF-Commodity','UNG':'ETF-Commodity','DBA':'ETF-Commodity',
+  'DBC':'ETF-Commodity','IAU':'ETF-Commodity','SGOL':'ETF-Commodity','PPLT':'ETF-Commodity',
+  'SCHD':'ETF-Broad','VIG':'ETF-Broad','DVY':'ETF-Broad','VYM':'ETF-Broad','HDV':'ETF-Broad',
+  'VT':'ETF-Broad','ACWI':'ETF-Broad','IEFA':'ETF-Broad','IEMG':'ETF-Broad','ITOT':'ETF-Broad',
+  'VXX':'ETF-Leveraged','VIXY':'ETF-Leveraged','KWEB.':'ETF-Broad',
 };
 
 // Lazy-loaded per-ticker sector/industry metadata (data/ticker-metadata.json).
@@ -132,9 +145,34 @@ function getSector(ticker) {
 // Halal). Defense names live under 'Industrials' in SECTOR_MAP so they're caught by SHARIA_EXCLUDED,
 // not this set; this catches mapped Finance/Insurance names even when a signal arrives sharia:null.
 const HARAM_SECTORS = new Set(['Finance']);
+
+// Certified Sharia-screened ETFs — the ONLY ETFs allowed to enter a shariaOnly mode. A plain ETF
+// pools constituents we cannot screen per-issuer (XLP holds tobacco PM/MO, SPY/QQQ hold banks,
+// USO/GLD are commodity/futures wrappers), so every non-certified fund is treated as haram below.
+const SHARIA_COMPLIANT_ETFS = new Set([
+  'SPUS', 'SPWO', 'SPRE', 'SPTE', 'SPSK', // SP Funds (S&P 500 Sharia / World / REIT / Tech / Sukuk)
+  'HLAL', 'UMMA',                         // Wahed (FTSE USA Shariah / Dow Jones Islamic World)
+  'ISDW', 'ISWD', 'ISDE', 'ISUS',         // iShares MSCI Islamic
+  'WSHR',                                 // Wealthsimple Shariah World Equity
+]);
+
+// Is this ticker an ETF? Detected via the embedded SECTOR_MAP 'ETF-*' tags (SPY/XLP/SMH/GLD/USO/…)
+// and, as a fallback, an asset-type field the signal/trade may carry (scanner enrichment). Physical
+// tickers never resolve to an 'ETF-' bucket, so this stays tight.
+function isEtf(ticker, s) {
+  const sec = getSector(ticker);
+  if (typeof sec === 'string' && sec.indexOf('ETF-') === 0) return true;
+  if (s) {
+    const at = String(s.assetType || s.asset_type || s.asset || s.quoteType || '').toLowerCase();
+    if (at === 'etf' || at === 'fund') return true;
+  }
+  return false;
+}
+
 // Conservative haram check for Halal-mandated modes: reject if explicitly non-compliant, OR a known
-// haram ticker (banks/insurance/defense/etc.), OR a mapped haram sector. Untagged 'Other' tickers
-// pass (can't determine) — the scanner's own sector tagging is the upstream defense.
+// haram ticker (banks/insurance/defense/etc.), OR a mapped haram sector, OR a non-certified ETF.
+// Untagged 'Other' single stocks pass (can't determine) — the scanner's own sector tagging is the
+// upstream defense.
 function isHaramForHalalMode(s) {
   const tk = (s.ticker || '').toUpperCase();
   if (s.sharia === false) return true;
@@ -143,7 +181,9 @@ function isHaramForHalalMode(s) {
   // Signal may carry its own sector/industry label (from screener/enrichment) even
   // when the ticker isn't in SECTOR_MAP or ticker-metadata — map it too (banks/insurers).
   if (HARAM_SECTORS.has(labelToSector(s.sector, s.industry))) return true;
+  // Non-certified ETFs are haram: their constituents can't be screened (XLP=tobacco, SPY=banks, …).
+  if (isEtf(tk, s) && !SHARIA_COMPLIANT_ETFS.has(tk)) return true;
   return false;
 }
 
-module.exports = { SHARIA_EXCLUDED, HARAM_SECTORS, SECTOR_MAP, getSector, isHaramForHalalMode };
+module.exports = { SHARIA_EXCLUDED, HARAM_SECTORS, SECTOR_MAP, SHARIA_COMPLIANT_ETFS, getSector, isEtf, isHaramForHalalMode };
