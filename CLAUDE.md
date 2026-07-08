@@ -48,6 +48,7 @@ Tous les MCPs sont enregistrés via OAuth2 dans Claude Code / claude.ai. **Aucun
 - **Memory** : `https://memory.hbfs-cloud.com/mcp` — mémoire long-terme partagée entre agents
 - **Notification** : `https://notification.hbfs-cloud.com/mcp` — notifications multi-canal (Telegram, Discord, Slack, Email)
 - **Broker Simulator** : `https://simulator.dailytickers.com/` — via MCP OAuth2
+- **dtx (moteur systematic-tss)** : `https://systematic.dailytickers.com` — backtest/décision/régime des stratégies systematic-tss. Voir la règle dtx ci-dessous.
 
 Namespace outils marché courant : `mcp__claude_ai_marketdata__*` (ex-Gateway/DailyTickers — morts).
 **Surface v5 consolidée (2026-07)** : `GetMarketContext`/`Jobs`/`PortfolioRisk`/`GetStatus`/`OptionsAnalytics`
@@ -58,6 +59,27 @@ CalculateSABRVolatility/AnalyzeOptionsStrategy). Les anciens noms restent des al
 sont plus découvrables via ToolSearch — toujours utiliser les noms canoniques. Détails : `.claude/skills/mcp-gateway-tools.md`.
 
 **Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
+
+### ⚙️ dtx MCP — moteur systematic-tss (OBLIGATOIRE)
+Pour TOUTE opération de **backtest / décision / régime** sur les stratégies systematic-tss, utiliser
+**EXCLUSIVEMENT le serveur MCP « dtx »** (`systematic.dailytickers.com`). **Ne PLUS appeler** le binaire
+dtx local ni les fichiers `dtx-data/`/`PROVENANCE` vendorés — ceux-ci restent **uniquement en fallback
+offline** si le MCP est injoignable.
+
+Outils MCP :
+- `DtxListConfigs()` → liste des 13 stratégies (`id`, `strategy`, `currency`). Toujours passer l'`id` tel
+  que retourné (ex: `us_highvol`, `crypto`, `etf_us`).
+- `DtxReplay(portfolio, from?, to?)` → backtest depuis une date de départ →
+  `{results:[{cagr_pct, max_dd_pct, sharpe, r2, win_rate, total_trades, equity_dates[], equity_values[]}]}`.
+- `DtxDecide(portfolio, asof, balances, positions?=[], orders?=[], state?)` → décisions du soir →
+  `{state, actions:{CREATE,UPDATE,CANCEL}}`. **GOTCHA** : `balances` DOIT être un OBJET
+  `{base_currency, cash_by_currency:{CUR:montant}, total_equity}` (un `{"USD":100000}` plat est normalisé
+  mais préférer la forme objet) ; **persister `state`** et le repasser au run suivant.
+- `DtxRegime(asof)` → `{regime, regime_score, ...}`.
+
+Le serveur a un **cache OHLCV chaud** (replays déterministes, prefetch auto au boot + chaque soir), gère la
+RAM (date-clamp), et couvre les 13 stratégies (crypto via Binance, actions/ETF via Yahoo). Consumer repo :
+`tools/lib/dtx-engine.js` a un patch de transport MCP prêt → bascule `dtx-scan.js` sur le MCP au go du user.
 
 ### Notification MCP — Outils & Aliases
 | Outil | Usage |
