@@ -31,7 +31,29 @@ Seul l'**AGENT** (`claude -p`, qui a les outils MCP enregistrés) l'appelle. Câ
 `publish-daily-card.sh` Step 4d détecte un staging `engineMode:"mcp"` daté d'aujourd'hui → le CONSERVE
 (canonique) ; sinon régénère via binaire. Skill `scanner-pipeline.md` §"dtx refresh (MCP CANONIQUE)".
 
-## ⚠️ Résultat de parité MCP↔binaire (2026-07-08) — MIXTE, à re-vérifier si le serveur change
+## 🚧 Re-vérif 2026-07-08 (soir) — BLOQUÉE : serveur passé en async, tool de poll NON exposé
+Tentative de re-vérif après le « fix RAM » serveur. Résultat : **impossible de re-vérifier ou de flipper
+quoi que ce soit**, parité **inchangée** (seul `etf_eu` reste MCP-canonique).
+
+- **GetHealth** (avant/après) = `{ok:true, binary_ok:true, data_dir_ok:true, config_count:13, cache_writable:true}`.
+  Aucun champ RAM/version/provenance surfacé par GetHealth (le schéma le promet — commit systematic-tss,
+  go version, sha256 depuis PROVENANCE.json — mais l'output ne les contient pas). DtxListConfigs=13 OK.
+  DtxRegime OK sync (asof 2026-07-08 : RISK_ON, score 0.76, VIX 16.13).
+- **Cause racine du blocage** : le « fix RAM » a déplacé **DtxDecide ET DtxReplay** vers un **modèle de job
+  asynchrone**. Chaque appel renvoie désormais `{"status":"async_pending","job_id":"…","poll":{"tool":
+  "DtxJobStatus"}}` — y compris les modes qui répondaient en SYNC avant (etf_eu decide, forex replay).
+  **Mais `DtxJobStatus` n'est PAS enregistré dans la surface d'outils du serveur `systematic`** : seuls 5
+  outils existent (GetHealth, DtxListConfigs, DtxDecide, DtxReplay, DtxRegime) — vérifié par ToolSearch sur
+  toutes les variantes de nom (DtxJobStatus/JobStatus/GetJob/DtxJob/DtxResult/DtxPoll/DtxJobResult…). Le
+  `marketdata.Jobs` est un AUTRE serveur (ne connaît pas les job_id systematic). Ré-appeler DtxDecide à
+  l'identique **ne renvoie PAS le résultat caché** → juste un nouveau job_id.
+- **Conséquence** : aucun résultat decide/replay récupérable → parité non re-calculable, OOM non
+  confirmable, **0 mode flippé**. Règle No-Hallucination / MCP Hard Stop : on ne fabrique pas de parité.
+- **À faire côté serveur** avant de reprendre : exposer `DtxJobStatus` (ou repasser Decide/Replay en sync,
+  ou renvoyer le résultat inline sur un ré-appel same-day idempotent). Dès que le poll existe : relancer les
+  5 modes (asof=statusSince, balances flat `{CUR:100000}`, from=2021-01-01, to=go-live), ingérer, comparer.
+
+## ⚠️ Résultat de parité MCP↔binaire (2026-07-08 matin) — MIXTE, périmé côté re-vérif (voir bloc ci-dessus)
 | Mode | DtxDecide (orders) | DtxReplay (metrics) | Verdict |
 |------|--------------------|---------------------|---------|
 | `etf_eu` | ✅ match 3/3 (noms+qty+prix) | ✅ identique (1 779 587,59 ; 1104 tr ; DD 26,55) | **MCP canonique OK** (flippé engineMode:mcp) |
