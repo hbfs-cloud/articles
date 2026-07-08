@@ -66,6 +66,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - **Data** : Yahoo Finance via allorigins, Binance direct, radar.json, watchlist.json
 
 ## Feedback
+- [Balanced SL-bleed = NOT a bug](feedback_balanced_sl_bleed_not_a_bug.md) — la "wall of stop-losses" balanced est du legacy de configs remplacées (0 trade sous v10.1 courant) + scratches de trailing mal-labellisés 'sl' ; les stops same-day sur modes vwapGate=false sont légitimes (HON 06-30 low 219.33 a percé le stop 220.7), PAS des artefacts → pas de guard entry-bar. Bug réel corrigé (a81b5255f) : open/pending fuyaient dans Trade History + closedTrades ledger → closed-only. Hero(60 frozen) vs history(64 ledger) divergent par design (immutabilité).
 - [Fable plans, Sonnet/Opus implement](feedback_fable_plans_sonnet_implements.md) — modèle de travail permanent : Fable spécifie, Sonnet/Opus implémentent selon complexité, toujours en workflow dynamic. (miroir MCP en attente — memory MCP down 2026-07-03)
 - [Modes independent](feedback_modes_independent.md) — Dynamic/Balanced/Secured = 3 stratégies alternatives indépendantes. Pas de cross-mode gating. Même ticker dans plusieurs modes = confirmation, pas doublon.
 - [Dilution Check](feedback_dilution_check.md) — Toujours vérifier SEC filings (S-3, warrants, ATM, fonds toxiques) avant de recommander un ticker. Leçon INDO.
