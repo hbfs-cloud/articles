@@ -35,6 +35,23 @@ revert) → push main → `deploy.yml` (Pages) + `qa-content.yml`. Si **rouge** 
 check ❌ ne dépend du MCP (var95/risk dégradent en ⚠️). Donc `--strict` en CI n'échoue que sur un vrai
 ❌ data/structure. Les tools sont en builtins node (pas de `npm ci` requis, cf `qa-content.yml`).
 
+## Prompt de la routine patché (2026-07-09 via RemoteTrigger)
+Le trigger `trig_016idAivWzRTwcoeGnUgJB2S` (« Scanner Nocturne Lun-Ven 23h Paris », cron `0 21 * * 1-5`,
+env CCR `env_01L5GnZwWrCtx6V4ENARkqTg`, model `claude-opus-4-6`) est éditable via l'outil `RemoteTrigger`
+(`action:get|update|run`, API `/v1/code/triggers`). Son prompt était **périmé** : étape 11 listait les
+anciens scanners JS (`highvol/etf/forex/stockbox-scanner.js`) sans AUCUNE mention de la chaîne dtx MCP
+(ça ne marchait que parce qu'il défère à `scanner-pipeline.md`). Patché le 2026-07-09 :
+- **Étape 11 = chaîne dtx MCP** (GetHealth preflight → DtxReplay/DtxDecide → poll DtxJobStatus →
+  `dtx-mcp-ingest.js` pour les 5 modes ; alerte Telegram consolidée par mode en échec ; puis scanners
+  non-dtx restants via la skill).
+- **Étape 15 = publish robuste** : `git fetch origin main` + reconcile en gardant TOUJOURS les fichiers
+  générés (data/portfolio/scanner) sur conflit → `git push origin HEAD:main` ; si rejeté → push la branche
+  (le CI auto-merge gère) + alerte. Cible la cause racine du repli-sur-branche du 07-08 (conflits de JSON
+  régénérés au rebase car main avait bougé pendant la journée).
+Tous les connectors MCP (dont `systematic`) + tools + model préservés (vérifié dans la réponse update).
+Le prompt disait DÉJÀ « git push origin main » — le repli branche venait d'un push rejeté, pas d'une
+instruction manquante.
+
 ## ⚠️ À vérifier au prochain run nocturne (non encore prouvé)
 Est-ce que le push de la routine sur `claude/**` **déclenche** bien le workflow Actions ? Si la routine
 pousse avec un credential traité comme le `GITHUB_TOKEN` d'Actions, les workflows ne se re-déclenchent
