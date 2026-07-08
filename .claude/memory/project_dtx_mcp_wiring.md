@@ -1,20 +1,44 @@
 ---
 name: project-dtx-mcp-wiring
-description: Wiring du chemin scripted-mode dtx vers le MCP hébergé (canonique) + binaire vendoré (fallback) + résultat de parité MCP↔binaire par mode (2026-07-08)
+description: CUT-OVER 2026-07-08 — dtx MCP hébergé = SEUL moteur ("le MCP fait foi"). Binaire local + bundle SUPPRIMÉS. Câblage agent→MCP→ingest. Cloud routine vérifiée (connector compte claude.ai reachable headless).
 metadata:
   type: project
 ---
 
-# dtx MCP wiring — canonique + fallback + parité (2026-07-08)
+# dtx MCP wiring — MCP SEUL MOTEUR (cut-over 2026-07-08)
+
+## ✅ CUT-OVER FINAL (2026-07-08) — le MCP fait foi, binaires supprimés
+Décision utilisateur : **cut-over complet et décisif** vers le MCP hébergé comme **SEUL moteur** dtx.
+- **SUPPRIMÉS du repo** (git rm) : `tools/bin/dtx-darwin-arm64` (17M), `tools/bin/dtx-linux-amd64` (18M),
+  stray `tools/bin/dtx-linux-arm64` (17M, untracked → rm), bundle `tools/bin/dtx-data/` (9.9M),
+  `tools/bin/PROVENANCE.json`, `tools/bin/README.md`, `tools/lib/dtx-engine.js` (wrapper binaire),
+  et les 2 lignes LFS de `.gitattributes` (fichier supprimé, ne contenait que ça).
+- **`tools/dtx-scan.js`** réécrit : ne spawn PLUS aucun binaire. Porte le schéma partagé
+  (`buildStaging`/`extractReplayMetrics`/`writeStaging`/`mapOrder`/`goLiveFor`) + `stagingStatus()` +
+  `--list`. Un `--mode`/`--all` affiche la marche à suivre MCP-ingest et sort en **0** (dégradation
+  gracieuse, jamais bloquant, ne fabrique jamais et ne fallback jamais sur un binaire supprimé).
+- **`publish-daily-card.sh` Step 4d** = garde de fraîcheur uniquement (`stagingStatus` par mode → warn si
+  staging manquant/stale). Ne régénère plus rien.
+- **5 modes câblés flippés `engineMode:"mcp"`** dans `data/dtx/*.json` (KEPT). Parité MCP↔binaire n'est
+  PLUS un critère (le binaire n'existe plus). Le replay MCP dérive légèrement jour-à-jour (re-fetch
+  adj-close plus frais) — **attendu, pas un bug**.
+- **Vérif locale** : chaîne MCP→ingest re-testée end-to-end sur `etf_eu` (decide COFF/ECOF/ARKG
+  554/4317/4686 ; replay final €1 774 706, 1102 tr, DD 29.67, Sharpe 2.08 ; ingest → engineMode:mcp OK) ;
+  `gen-status-page` + `gen-api` (109 endpoints), qa-check **0 ❌** (45 checks, 39 ✅, 6 ⚠️ pré-existants),
+  les 5 modes rendent `[dtx]`.
+- **Cloud routine vérifiée** (voir `reference_dtx_mcp.md` §Cloud) : `mcp__claude_ai_systematic__*` est un
+  connector de niveau COMPTE claude.ai (absent de `.mcp.json`/`~/.claude.json`) → un `claude -p` headless
+  (exactement l'invocation du bot, même Mac + même compte) a appelé `GetHealth` avec succès. Prompt du
+  schedule #1 renforcé pour appeler la chaîne dtx MCP + ingest.
 
 Le chemin scripted-mode dtx (5 modes câblés : `us_highvol`, `forex`, `etf_us`, `etf_eu`,
-`stockbox_nasdaq`) est câblé pour préférer le **MCP hébergé** `systematic.dailytickers.com`
-(namespace agent `mcp__claude_ai_systematic__*`), binaire vendoré = **fallback offline**.
+`stockbox_nasdaq`) passe **EXCLUSIVEMENT** par le **MCP hébergé** `systematic.dailytickers.com`
+(namespace agent `mcp__claude_ai_systematic__*`). Plus de fallback binaire.
 
 ## Contrainte dure (immuable)
 Un subprocess `node` ne PEUT PAS appeler le MCP (OAuth2 sur claude.ai, règle ZÉRO token en .env).
 Seul l'**AGENT** (`claude -p`, qui a les outils MCP enregistrés) l'appelle. Câblage :
-**agent → `DtxDecide`/`DtxReplay` → écrit les JSON bruts → `node tools/dtx-mcp-ingest.js` → `data/dtx/<id>.json`**.
+**agent → `DtxReplay`/`DtxDecide` (poll `DtxJobStatus`) → écrit les JSON bruts → `node tools/dtx-mcp-ingest.js` → `data/dtx/<id>.json` (engineMode:mcp)**.
 
 ## Mécanisme (nouveau)
 - `tools/dtx-mcp-ingest.js` — ingère une paire DtxDecide+DtxReplay et écrit le staging dans le
@@ -24,12 +48,14 @@ Seul l'**AGENT** (`claude -p`, qui a les outils MCP enregistrés) l'appelle. Câ
   Byte-identité prouvée sur `etf_eu` (payload identique au binaire, seuls engine/engineMode/generatedAt/tookMs diffèrent).
 - `PORTFOLIO_TO_MODE` splice le backtest (`--to`=`statusSince`) à la courbe live.
 
-## Préférence (par mode), fail-safe
-1. **MCP** (canonique) — agent, Phase 5, AVANT `publish-daily-card.sh`.
-2. **Binaire vendoré** `dtx-scan --skip-if-no-tss` (bundle `tools/bin/dtx-data`, offline) — si MCP down/OOM/hors-agent.
-3. **Staging committé** — lecture seule, jamais bloquant.
-`publish-daily-card.sh` Step 4d détecte un staging `engineMode:"mcp"` daté d'aujourd'hui → le CONSERVE
-(canonique) ; sinon régénère via binaire. Skill `scanner-pipeline.md` §"dtx refresh (MCP CANONIQUE)".
+## Dégradation gracieuse (MCP-only, plus de binaire)
+1. **MCP** (SEUL moteur) — agent, Phase 5, AVANT `publish-daily-card.sh`.
+2. **Staging committé** — lecture seule si le MCP est injoignable pour un mode ce run (warn loggé,
+   jamais bloquant, jamais de données inventées ; sinon fallback pool JS dans gen-status-page).
+`publish-daily-card.sh` Step 4d = garde de fraîcheur (`stagingStatus` par mode : warn si absent/stale) —
+ne régénère plus rien (binaire supprimé). Skill `scanner-pipeline.md` §"dtx refresh — MCP SEUL MOTEUR".
+Les tables de parité MCP↔binaire ci-dessous sont **historiques** (le binaire n'existe plus, la parité
+n'est plus un critère de flip).
 
 ## ✅ Re-vérif 2026-07-08 (nuit) — DÉBLOQUÉE + OOM levé + us_highvol flippé
 `DtxJobStatus(job_id)` est désormais **exposé** (poll pending→running→done, `result` isolé par job_id).

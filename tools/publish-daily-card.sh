@@ -163,27 +163,31 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "🧭 Step 4c: Forward continuity (pit-forward)..."
   node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
 
-  # ─── Step 4d: dtx (systematic-tss) refresh for SCRIPTED modes — MCP-CANONICAL, binary FALLBACK ───
-  # The 5 dtx-wired scripted modes (highvol/forex/etf/etf_eu/stockbox) get their "Orders to Place"
-  # + backtest equity curve from the REAL systematic-tss engine, staged to data/dtx/<mode>.json which
-  # gen-status-page READS. PREFERENCE ORDER (per mode), fail-safe throughout:
-  #   1. dtx MCP (systematic.dailytickers.com) = CANONICAL. Only the AGENT (claude -p, which holds the
-  #      registered MCP tools) can call it — a `node` subprocess CANNOT (OAuth2, zero-token rule). When
-  #      the 23h routine runs under the agent, the skill's Phase 5 calls DtxDecide+DtxReplay and
-  #      `node tools/dtx-mcp-ingest.js` writes data/dtx/<mode>.json (engineMode:"mcp") BEFORE this step.
-  #      This step DETECTS that fresh-today MCP staging and KEEPS it (never clobbers canonical MCP).
-  #   2. Local binary (vendored bundle tools/bin/dtx-data, offline/native) = FALLBACK — for modes the
-  #      MCP could not produce (server RAM-guard OOMs us_highvol & stockbox_nasdaq `decide` as of
-  #      2026-07-08) or when no agent/MCP is available. --skip-if-no-tss = exit 0 clean if even the
-  #      bundle is missing → gen-status-page uses the COMMITTED staging. NEVER blocks the routine.
+  # ─── Step 4d: dtx (systematic-tss) staging GUARD for SCRIPTED modes — MCP is the SOLE engine ───
+  # CUT-OVER (2026-07-08): the hosted dtx MCP (systematic.dailytickers.com) is the ONLY engine
+  # ("le MCP fait foi"). The vendored local binary + data bundle have been REMOVED. A `node`
+  # subprocess CANNOT call the MCP (OAuth2 on claude.ai, ZERO-token rule) — only the AGENT
+  # (Claude Code locally; `claude -p` in the cloud bot) holds mcp__claude_ai_systematic__*.
+  #
+  # So the 5 dtx-wired scripted modes (highvol/forex/etf/etf_eu/stockbox) get their staging
+  # (data/dtx/<mode>.json — "Orders to Place" from DtxDecide + backtest equity from DtxReplay)
+  # produced by the AGENT via `tools/dtx-mcp-ingest.js` BEFORE this shell pipeline runs (see the
+  # scanner-pipeline skill §"dtx refresh — MCP SOLE ENGINE", Phase 5). This step can NO LONGER
+  # regenerate anything (no binary to spawn). It is a GRACEFUL GUARD only: it warns per mode if the
+  # committed staging is missing or not a fresh (today, engineMode:"mcp") MCP snapshot, then lets
+  # gen-status-page READ whatever staging is committed. It NEVER blocks the scan.
   echo ""
-  echo "🧩 Step 4d: dtx scripted-mode refresh (MCP-canonical if fresh, else binary fallback)..."
+  echo "🧩 Step 4d: dtx scripted-mode staging guard (MCP sole engine — no binary)..."
   for _DTXMODE in us_highvol forex etf_us etf_eu stockbox_nasdaq; do
-    if node -e 'const fs=require("fs");try{const j=JSON.parse(fs.readFileSync(`data/dtx/${process.argv[1]}.json`));const t=new Date().toISOString().slice(0,10);process.exit(j.engineMode==="mcp"&&String(j.generatedAt||"").slice(0,10)===t?0:1)}catch(_){process.exit(1)}' "$_DTXMODE"; then
-      echo "  [$_DTXMODE] fresh MCP staging present → keep (canonical)"
+    if node -e 'const s=require("./tools/dtx-scan").stagingStatus(process.argv[1]);process.exit(s.fresh?0:(s.exists?2:1))' "$_DTXMODE"; then
+      echo "  [$_DTXMODE] fresh MCP staging present (engineMode:mcp, today) → OK"
     else
-      node tools/dtx-scan.js --mode "$_DTXMODE" --asof "$SCAN_DATE_ISO" --skip-if-no-tss --quiet \
-        || echo "⚠️  dtx-scan $_DTXMODE failed (non-blocking — staging kept)"
+      _RC=$?
+      if [ "$_RC" = "2" ]; then
+        echo "  ⚠️  [$_DTXMODE] committed staging is STALE or non-MCP — agent did not refresh it via MCP this run. gen-status-page will READ it as-is (non-blocking)."
+      else
+        echo "  ⚠️  [$_DTXMODE] NO committed staging found — this mode will fall back to its JS-scanner pool in gen-status-page (non-blocking)."
+      fi
     fi
   done
 

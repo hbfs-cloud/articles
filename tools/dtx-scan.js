@@ -1,86 +1,47 @@
 #!/usr/bin/env node
 'use strict';
 /**
- * dtx-scan.js — orchestrator: drive the REAL systematic-tss engine (dtx binary) per book config,
- * in NATIVE mode.
+ * dtx-scan.js — staging SCHEMA authority + mode discovery for the SCRIPTED dtx modes.
  *
- * NATIVE mode (Phase 2): we OMIT --bars. dtx resolves the universe from the YAML filters
- * (region / min_market_cap / min_volume / stocks/etfs / whitelist / forex_universe / blacklist via
- * staticdata) AND fetches OHLCV itself (Yahoo/Binance/BVC), exactly like cmd/backtest. The books
- * self-manage universe + cache — we do NOT build universe lists or backfill bars anymore.
+ * ⚠️ CUT-OVER (2026-07-08): the hosted dtx MCP (systematic.dailytickers.com) is now the SOLE engine
+ * ("le MCP fait foi"). The vendored local binaries + data bundle (tools/bin/dtx-*, tools/bin/dtx-data/)
+ * have been REMOVED. This file NO LONGER spawns any binary and NO LONGER produces staging on its own.
  *
- * CWD: native mode runs dtx with CWD = a "TSS data root" that provides data/instruments/<broker>.json
- * (the only thing read from disk; staticdata is compiled into the binary). This context is now VENDORED
- * in-repo at vendor/dtx-tss/ (git-lfs) — no sibling systematic-tss checkout required. Only network
- * (Yahoo/Binance/BVC OHLCV) remains external. Set DTX_TSS_ROOT to override the resolved root.
+ * WHY a `node` subprocess can't produce staging anymore (the no-token architecture): the dtx MCP is
+ * OAuth2 on claude.ai and the repo rule is ZERO token in .env / no hardcoded secrets. Only the AGENT
+ * (Claude Code locally; `claude -p` in the cloud bot) holds `mcp__claude_ai_systematic__*`. So the
+ * staging MUST be produced by the AGENT, BEFORE the shell pipeline reads data/dtx/*.json:
  *
- * This is a PARALLEL, STAGING-ONLY pipeline. It does NOT touch the live JS scanners, sweep.js,
- * signals.json, backtest-trades.json, trade-chain.json, or modes-config.json. It writes to a
- * staging dir (data/dtx/<mode>.json) and persists per-mode engine state (data/dtx/state/<mode>.json).
+ *   AGENT calls mcp__claude_ai_systematic__DtxDecide / DtxReplay (async → poll DtxJobStatus)
+ *     → writes each raw tool result to a JSON file
+ *       → `node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> [--replay <f>] --asof <J+1>`
+ *         → writes data/dtx/<id>.json (engineMode:"mcp")
+ *           → gen-status-page.js reads it (orders = decide CREATE, equity/metrics = replay).
  *
- * Per book config it:
- *   1. `dtx decide --asof <session>` (native) → maps actions.CREATE (BUY) into our order/pool shape
- *   2. `dtx replay --from --to` (native) → equity curve + aggregate metrics
+ * This file's remaining jobs:
+ *   1. Own the staging SCHEMA (buildStaging / extractReplayMetrics / writeStaging / mapOrder) — the ONE
+ *      source of truth, imported by tools/dtx-mcp-ingest.js so the MCP producer stays byte-compatible.
+ *   2. Discover modes from config/dtx/portfolio_*.yaml + expose the go-live splice (goLiveFor).
+ *   3. As a CLI: `--list` still works; an actual `--mode/--all` scan is a GRACEFUL no-op that points at
+ *      the MCP-ingest path (exit 0 — never crashes the pipeline, never falls back to a deleted binary).
+ *
+ * This is a PARALLEL, STAGING-ONLY concern. It does NOT touch the live JS scanners, sweep.js,
+ * signals.json, backtest-trades.json, trade-chain.json, or modes-config.json.
  *
  * Usage:
- *   node tools/dtx-scan.js --mode highvol --asof 2026-06-30 [--from 2021-01-01] [--no-replay] [--quiet]
- *   node tools/dtx-scan.js --all --asof 2026-06-30
  *   node tools/dtx-scan.js --list
+ *   node tools/dtx-scan.js --mode etf_eu --asof 2026-07-09   # → prints MCP-ingest guidance, exit 0
  *
  * Modes are auto-discovered from config/dtx/portfolio_*.yaml (mode id = portfolio id).
  */
 
 const fs = require('fs');
-const os = require('os');
 const path = require('path');
-const engine = require('./lib/dtx-engine');
 const dtxBars = require('./lib/dtx-bars'); // still used for readConfig()
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CONFIG_DIR = path.join(REPO_ROOT, 'config', 'dtx');
 const STAGING_DIR = path.join(REPO_ROOT, 'data', 'dtx');
-
-// DATA BUNDLE — self-contained, autoportant (no sibling systematic-tss checkout needed) ────────────
-// NATIVE mode resolves the universe from the YAML filters + fetches OHLCV itself. It needs a small
-// referential on disk: the stockanalysis frozen ticker lists (universe) + broker instrument lists.
-// This is now VENDORED in-repo as a compacted 9.9M BUNDLE at tools/bin/dtx-data/ (git-lfs) — the same
-// bundle proven in the `trading` desk: fields stripped/minified/market-cap-pruned (behavior-preserving,
-// parity-verified). The `dtx` binary (Jul-2026 build, commit 43d53455) auto-discovers a `dtx-data/`
-// folder NEXT TO the binary, or takes `--data-dir DIR` / `$DTX_DATA_DIR`. Strategy logic + staticdata
-// are compiled INTO the binary; configs are passed by absolute path. Only network (Yahoo/Binance OHLCV)
-// remains external.
-//
-// Resolution order:
-//   1. process.env.DTX_DATA_DIR   — explicit override
-//   2. <repo>/tools/bin/dtx-data  — VENDORED bundle (default, autoportant)
-//   3. legacy DTX_TSS_ROOT / ../systematic-tss  — last-resort fallback (dev who still has the sibling)
-// The last fallback is a CWD (old binary behaviour: reads data/instruments + cache RELATIVE to cwd);
-// the bundle path is passed via --data-dir so cwd is irrelevant with the new binary.
-const BUNDLE_DIR = path.resolve(__dirname, 'bin', 'dtx-data');
-const SIBLING_TSS_ROOT = process.env.DTX_TSS_ROOT || path.resolve(REPO_ROOT, '..', 'systematic-tss');
-
-// Where the engine writes its OHLCV cache. The new binary honours $DTX_WRITABLE_CACHE_DIR (else it
-// MkdirTemps) so the bundle/repo stays read-only — essential on a cloud checkout. A stable dir keeps
-// the cache warm across runs (faster + deterministic replay).
-const WRITABLE_CACHE_DIR = process.env.DTX_WRITABLE_CACHE_DIR ||
-  path.join(os.tmpdir(), 'dtx-ohlcv-cache');
-
-/** Resolve the data context. Returns { dataDir, cwd } — dataDir passed via --data-dir (preferred),
- *  cwd only used for the legacy sibling fallback. null if nothing resolves. */
-function resolveDataCtx() {
-  if (process.env.DTX_DATA_DIR && fs.existsSync(process.env.DTX_DATA_DIR)) {
-    return { dataDir: process.env.DTX_DATA_DIR, cwd: undefined, kind: 'env' };
-  }
-  if (fs.existsSync(path.join(BUNDLE_DIR, 'data', 'instruments'))) {
-    return { dataDir: BUNDLE_DIR, cwd: undefined, kind: 'bundle' };
-  }
-  if (fs.existsSync(path.join(SIBLING_TSS_ROOT, 'data', 'instruments'))) {
-    // Legacy fallback: old binary reads relative to cwd; pass no --data-dir, chdir into sibling.
-    return { dataDir: undefined, cwd: SIBLING_TSS_ROOT, kind: 'sibling' };
-  }
-  return null;
-}
-const DATA_CTX = resolveDataCtx();
 
 // Default replay window start. Configs cite "2021-present" honest track records.
 const DEFAULT_FROM = '2021-01-01';
@@ -113,6 +74,9 @@ function goLiveFor(portfolioId) {
   return since ? String(since).slice(0, 10) : null;
 }
 
+// The 5 SCRIPTED modes wired to the dtx engine (the MCP produces their staging).
+const SCRIPTED_MODES = Object.keys(PORTFOLIO_TO_MODE);
+
 // ---------------------------------------------------------------------------
 // arg parsing
 // ---------------------------------------------------------------------------
@@ -129,25 +93,11 @@ function parseArgs(argv) {
     else if (a === '--no-replay') o.replay = false;
     else if (a === '--quiet') o.quiet = true;
     else if (a === '--out') o.out = argv[++i];
-    // FAIL-SAFE (pipeline/cloud): if NO data context resolves at all, skip cleanly (exit 0) instead of
-    // erroring. With the vendored bundle committed this should never trigger on a normal checkout — it
-    // only fires if git-lfs did not pull tools/bin/dtx-data/. Then the 23h routine keeps going on the
-    // COMMITTED staging (data/dtx/*.json). A direct manual run WITHOUT this flag still hard-errors.
-    // (--skip-if-no-tss kept as the flag name for backward-compat with existing pipeline invocations.)
+    // Legacy pipeline flags (--skip-if-no-tss / --skip-if-no-data) are accepted and IGNORED — the
+    // binary/bundle they guarded is gone. Kept only so an old invocation doesn't error on the token.
     else if (a === '--skip-if-no-tss' || a === '--skip-if-no-data') o.skipIfNoTss = true;
   }
   return o;
-}
-
-/** Fail-closed: verify a native data context (vendored bundle / env / sibling) resolves. */
-function assertDataCtx() {
-  if (!DATA_CTX) {
-    throw new Error(
-      `dtx-scan: NATIVE mode needs a data context. Expected the vendored bundle at ` +
-      `"${BUNDLE_DIR}" (data/instruments + cache/stockanalysis). Not found — git-lfs may not have ` +
-      `pulled tools/bin/dtx-data/ (run \`git lfs pull\`), or set DTX_DATA_DIR. FAIL-CLOSED (won't fabricate).`
-    );
-  }
 }
 
 /** Discover mode → config path from config/dtx/. */
@@ -196,10 +146,9 @@ function mapOrder(or) {
 
 // ---------------------------------------------------------------------------
 // SHARED schema helpers — the ONE source of truth for the staging JSON shape.
-// Both the NATIVE path (scanMode, below) and the MCP ingest (tools/dtx-mcp-ingest.js) build the
-// staging via these, so the two producers are byte-compatible by construction (only the provenance
-// fields engine/engineMode/generatedAt/tookMs differ). gen-status-page reads orders + metrics +
-// equity from this shape — see DTX_STAGING_MAP there.
+// The MCP ingest (tools/dtx-mcp-ingest.js) builds the staging via these, so the sole producer is
+// byte-consistent with this schema by construction. gen-status-page reads orders + metrics + equity
+// from this shape — see DTX_STAGING_MAP there.
 // ---------------------------------------------------------------------------
 
 /** Extract {metrics, equity} from a replay result envelope ({results:[{...}]}). from/to stamp the
@@ -220,8 +169,8 @@ function extractReplayMetrics(rep, from, to) {
   };
 }
 
-/** Build the staging object. `decision` = {actions:{CREATE,UPDATE,CANCEL}} (native OR MCP DtxDecide —
- *  both snake_case, mapOrder handles it). engineLabel/engineMode carry provenance. */
+/** Build the staging object. `decision` = {actions:{CREATE,UPDATE,CANCEL}} (MCP DtxDecide, snake_case
+ *  — mapOrder handles it). engineLabel/engineMode carry provenance (MCP path: "…— MCP" / "mcp"). */
 function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
   const create = (decision && decision.actions && decision.actions.CREATE) || [];
   return {
@@ -252,130 +201,62 @@ function writeStaging(out, outPath) {
 }
 
 // ---------------------------------------------------------------------------
-// scan one mode (NATIVE)
+// Staging freshness helper — used by the pipeline guard (publish-daily-card.sh Step 4d) and here.
 // ---------------------------------------------------------------------------
-function scanMode(modeInfo, opts) {
-  const asof = opts.asof;
-  const log = (...m) => { if (!opts.quiet) console.log(...m); };
-  const t0 = Date.now();
-
-  const cfg = dtxBars.readConfig(modeInfo.path);
-  const currency = cfg.currency || 'USD';
-  const balances = { [currency]: cfg.initial_capital || 100000 };
-
-  // 1) decide → orders for the session (NATIVE: no bars; universe/instruments from the vendored bundle
-  // via --data-dir). STATELESS / COLD by design: the articles dashboard is a stateless nightly advisory
-  // (like the legacy JS scanners) — it holds no live book. We start from a FLAT book (positions:[], no
-  // --state) so CREATE = the FULL set of BUY orders the engine would place tomorrow given no holdings.
-  // (A warm state makes decide incremental → re-running the same asof yields 0 new orders — correct
-  // for a live book, wrong for a stateless advisory. See dtx README "state persists".)
-  const decision = engine.decide({
-    portfolioPath: modeInfo.path, asof,
-    positions: [], orders: [], balances,
-    dataDir: DATA_CTX.dataDir, cwd: DATA_CTX.cwd,
-  });
-
-  // 2) replay → metrics + equity over the window (NATIVE)
-  let metrics = null, equity = null, replayErr = null;
-  if (opts.replay) {
-    try {
-      const from = opts.from || DEFAULT_FROM;
-      // Backtest ends at go-live (splice with live track); unwired modes fall back to asof.
-      const to = opts.to || goLiveFor(cfg.id) || asof;
-      const rep = engine.replay({ portfolioPath: modeInfo.path, from, to, dataDir: DATA_CTX.dataDir, cwd: DATA_CTX.cwd });
-      ({ metrics, equity } = extractReplayMetrics(rep, from, to));
-    } catch (e) {
-      replayErr = e.message;
-    }
+/** Inspect a mode's committed staging. Returns {exists, engineMode, generatedAt, fresh} where
+ *  fresh = engineMode:"mcp" AND generatedAt is today (UTC). Never throws. */
+function stagingStatus(portfolioId, todayIso) {
+  const today = todayIso || new Date().toISOString().slice(0, 10);
+  const p = path.join(STAGING_DIR, `${portfolioId}.json`);
+  try {
+    const j = JSON.parse(fs.readFileSync(p, 'utf8'));
+    const gen = String(j.generatedAt || '').slice(0, 10);
+    return { exists: true, engineMode: j.engineMode || null, generatedAt: gen, fresh: j.engineMode === 'mcp' && gen === today };
+  } catch (_) {
+    return { exists: false, engineMode: null, generatedAt: null, fresh: false };
   }
-
-  const out = buildStaging({
-    modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr,
-    engineLabel: 'dtx (systematic-tss) — NATIVE', engineMode: 'native', t0,
-  });
-
-  const outPath = opts.out || path.join(STAGING_DIR, `${modeInfo.id}.json`);
-  writeStaging(out, outPath);
-
-  log(`  [${modeInfo.id}] native ${currency} | orders(CREATE)=${out.orders.length}`);
-  if (metrics) log(`    replay ${metrics.from}→${metrics.to}: cagr=${metrics.cagr_pct} dd=${metrics.max_dd_pct} sharpe=${metrics.sharpe} trades=${metrics.total_trades} wr=${metrics.win_rate}`);
-  else if (replayErr) log(`    replay ERROR: ${replayErr}`);
-  log(`    → ${path.relative(REPO_ROOT, outPath)} (${out.tookMs}ms)`);
-
-  return out;
 }
 
 // ---------------------------------------------------------------------------
-// main
+// main — CLI. Actual scanning is delegated to the AGENT + MCP ingest (binary removed).
 // ---------------------------------------------------------------------------
 function main() {
   const opts = parseArgs(process.argv);
   const modes = discoverModes();
 
   if (opts.list) {
-    const ctx = DATA_CTX ? `${DATA_CTX.kind} (${DATA_CTX.dataDir || DATA_CTX.cwd})` : 'NONE';
-    console.log(`Discovered modes (config/dtx/) — NATIVE mode, data-ctx=${ctx}:`);
+    console.log('Discovered modes (config/dtx/) — staging produced by the AGENT via MCP + dtx-mcp-ingest:');
     for (const m of Object.values(modes)) {
       if (m.error) console.log(`  ${String(m.id).padEnd(22)} ERROR: ${m.error}`);
-      else console.log(`  ${m.id.padEnd(22)} ${m.currency} ${m.initialCapital}  (${m.file})`);
+      else {
+        const wired = SCRIPTED_MODES.includes(m.id) ? ' [scripted/wired]' : '';
+        console.log(`  ${m.id.padEnd(22)} ${m.currency} ${m.initialCapital}  (${m.file})${wired}`);
+      }
     }
     return;
   }
 
-  if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
-
-  try {
-    assertDataCtx();
-  } catch (e) {
-    if (opts.skipIfNoTss) {
-      // Fail-SAFE skip: the pipeline reads the committed staging instead.
-      console.warn(`⚠️  dtx-scan: ${e.message}`);
-      console.warn('⚠️  dtx-scan: --skip-if-no-data set → SKIPPING native refresh. The pipeline will ' +
-        'READ the committed staging (data/dtx/<mode>.json). Only happens if the vendored bundle was not ' +
-        'pulled (git lfs pull). Staging is only as fresh as the last upstream dtx-scan+commit.');
-      process.exit(0);
-    }
-    console.error(`ERROR: ${e.message}`);
-    process.exit(3);
+  // Any actual --mode/--all "scan": the binary is gone. Emit clear guidance and exit 0 (graceful,
+  // non-blocking) — NEVER crash the pipeline and NEVER fall back to a deleted binary.
+  const targets = opts.all ? SCRIPTED_MODES : (opts.mode ? [opts.mode] : []);
+  console.warn('⚠️  dtx-scan: the local dtx binary + data bundle have been REMOVED (2026-07-08 cut-over).');
+  console.warn('⚠️  dtx-scan: this tool no longer produces staging. The hosted dtx MCP is the SOLE engine.');
+  console.warn('⚠️  dtx-scan: staging MUST be produced by the AGENT, BEFORE the shell pipeline, e.g.:');
+  console.warn('⚠️      (agent) DtxReplay + DtxDecide → poll DtxJobStatus → write raw JSON, then:');
+  console.warn('⚠️      node tools/dtx-mcp-ingest.js --portfolio <id> --decide <f> --replay <f> --asof <J+1>');
+  if (targets.length) {
+    console.warn(`⚠️  dtx-scan: requested mode(s) [${targets.join(', ')}] — the pipeline will READ the`);
+    console.warn('⚠️      committed staging (data/dtx/<id>.json) as-is. Skipping (no regeneration). exit 0.');
   }
-
-  // Point the engine's OHLCV cache at a writable dir so the bundle/repo stays read-only (cloud-safe).
-  if (!process.env.DTX_WRITABLE_CACHE_DIR) process.env.DTX_WRITABLE_CACHE_DIR = WRITABLE_CACHE_DIR;
-  try { fs.mkdirSync(process.env.DTX_WRITABLE_CACHE_DIR, { recursive: true }); } catch (_) {}
-
-  let targets;
-  if (opts.all) targets = Object.values(modes).filter((m) => !m.error);
-  else if (opts.mode) {
-    // accept portfolio id OR a friendly alias
-    const alias = { highvol: 'us_highvol', stockbox: 'stockbox_nasdaq', etf: 'etf_us', bull: 'us_ablite' };
-    const id = modes[opts.mode] ? opts.mode : (alias[opts.mode] && modes[alias[opts.mode]] ? alias[opts.mode] : null);
-    if (!id) { console.error(`ERROR: unknown mode "${opts.mode}". Try --list.`); process.exit(2); }
-    targets = [modes[id]];
-  } else { console.error('ERROR: --mode <id> or --all required'); process.exit(2); }
-
-  console.log(`dtx-scan (NATIVE) asof=${opts.asof} data-ctx=${DATA_CTX.kind}:${DATA_CTX.dataDir || DATA_CTX.cwd} cache=${process.env.DTX_WRITABLE_CACHE_DIR} modes=${targets.map((m) => m.id).join(',')}\n`);
-  const summary = [];
-  for (const m of targets) {
-    try {
-      const out = scanMode(m, opts);
-      summary.push({ mode: m.id, ok: true, orders: out.orders.length, cagr: out.metrics && out.metrics.cagr_pct, trades: out.metrics && out.metrics.total_trades, dd: out.metrics && out.metrics.max_dd_pct, replayError: out.replayError });
-    } catch (e) {
-      console.error(`  [${m.id}] FAILED: ${e.message}`);
-      summary.push({ mode: m.id, ok: false, error: e.message });
-    }
-  }
-
-  console.log('\n=== SUMMARY ===');
-  for (const s of summary) {
-    if (s.ok) console.log(`  ${s.mode.padEnd(22)} OK   orders=${s.orders} cagr=${s.cagr != null ? s.cagr : '-'} dd=${s.dd != null ? s.dd : '-'} trades=${s.trades != null ? s.trades : '-'}${s.replayError ? ' (replay err: ' + s.replayError + ')' : ''}`);
-    else console.log(`  ${s.mode.padEnd(22)} FAIL ${s.error}`);
-  }
+  // exit 0: graceful degrade. If the agent already refreshed staging via MCP, it is used; otherwise
+  // the last committed staging is read by gen-status-page. Either way we never block the scan.
+  process.exit(0);
 }
 
 if (require.main === module) main();
 
 module.exports = {
-  scanMode, discoverModes, DATA_CTX, BUNDLE_DIR,
+  discoverModes, stagingStatus, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
   buildStaging, writeStaging, extractReplayMetrics, mapOrder, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,

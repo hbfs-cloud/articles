@@ -60,11 +60,11 @@ sont plus découvrables via ToolSearch — toujours utiliser les noms canoniques
 
 **Ne JAMAIS ajouter de token en .env** — utiliser les outils MCP déjà enregistrés.
 
-### ⚙️ dtx MCP — moteur systematic-tss (OBLIGATOIRE)
+### ⚙️ dtx MCP — moteur systematic-tss (SEUL MOTEUR — "le MCP fait foi")
 Pour TOUTE opération de **backtest / décision / régime** sur les stratégies systematic-tss, utiliser
-**EXCLUSIVEMENT le serveur MCP « dtx »** (`systematic.dailytickers.com`). **Ne PLUS appeler** le binaire
-dtx local ni les fichiers `dtx-data/`/`PROVENANCE` vendorés — ceux-ci restent **uniquement en fallback
-offline** si le MCP est injoignable.
+**EXCLUSIVEMENT le serveur MCP « dtx »** (`systematic.dailytickers.com`). **Cut-over 2026-07-08 : le
+binaire dtx local + le bundle `tools/bin/dtx-data/`/`PROVENANCE` ont été SUPPRIMÉS du repo.** Il n'y a
+**plus aucun fallback binaire** — le MCP est la source de vérité unique.
 
 Outils MCP :
 - `DtxListConfigs()` → liste des 13 stratégies (`id`, `strategy`, `currency`). Toujours passer l'`id` tel
@@ -77,9 +77,19 @@ Outils MCP :
   mais préférer la forme objet) ; **persister `state`** et le repasser au run suivant.
 - `DtxRegime(asof)` → `{regime, regime_score, ...}`.
 
-Le serveur a un **cache OHLCV chaud** (replays déterministes, prefetch auto au boot + chaque soir), gère la
-RAM (date-clamp), et couvre les 13 stratégies (crypto via Binance, actions/ETF via Yahoo). Consumer repo :
-`tools/lib/dtx-engine.js` a un patch de transport MCP prêt → bascule `dtx-scan.js` sur le MCP au go du user.
+**Chaîne async** : `DtxDecide`/`DtxReplay` renvoient `{status:"async_pending", job_id}` → poller
+`DtxJobStatus(job_id)` jusqu'à `status:"done"` → lire `result`. Le serveur a un **cache OHLCV chaud**
+(prefetch auto au boot + chaque soir) et un garde-fou RAM (date-clamp) qui a levé l'OOM des gros univers.
+
+**Câblage scanner (staging des 5 modes scriptés).** Un subprocess `node` NE PEUT PAS appeler le MCP
+(OAuth2, ZÉRO token) → seul l'**AGENT** (Claude Code / `claude -p`) l'appelle. Le staging
+`data/dtx/<id>.json` est donc produit par l'agent AVANT le pipeline shell :
+**agent → DtxReplay/DtxDecide (poll DtxJobStatus) → JSON bruts → `node tools/dtx-mcp-ingest.js` → staging
+`engineMode:"mcp"`**. `tools/dtx-scan.js` ne fait plus tourner de binaire : il porte le schéma partagé
+(`buildStaging`/`extractReplayMetrics`/…) + `stagingStatus()`/`--list` ; un `--mode` affiche la marche à
+suivre et sort en 0 (dégradation gracieuse, jamais bloquant). Voir skill `scanner-pipeline` §"dtx refresh
+— MCP SEUL MOTEUR". Le MCP est accessible en headless : `claude -p` (bot cloud, même compte claude.ai)
+voit le connector `mcp__claude_ai_systematic__*` (vérifié 2026-07-08).
 
 ### Notification MCP — Outils & Aliases
 | Outil | Usage |
