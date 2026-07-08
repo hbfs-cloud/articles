@@ -58,15 +58,20 @@ const STATUS_LABEL = {
   deploying: 'Déploiement (paper-ramp)',
 };
 
-// ─── Filtres stratégie (parité SF_NOTIFY de notify-scanner-status.js) ──────────
+// ─── Filtres stratégie (parité ANCRÉE avec SF de gen-status-page.js + STRATEGY_FILTERS_MAP
+// de sweep.js). ⚠️ NE PAS utiliser de regex "substring" : `/momentum|breakout/i` matche
+// "ETFMomentum", "MomentumRotation", "HighVolBreakout", "TrendlineBreakout" → les ETF/spécialistes
+// (score 200-300) polluaient les candidats mom_bo surfacés (SBIO/SSK/BBC dans balanced). Les
+// stratégies quality mécaniques sont EXACTEMENT "Momentum" et "Breakout" (ancrées ^...$). ──────
+const SPECIALIST_RE = /^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|IndexRotation|candlestick|FortressA\+)$/i;
 const STRAT_FILTER = {
-  all:            () => true,
-  no_sq:          s => !/short.?squeeze/i.test(s),
-  no_sq_pb:       s => !/short.?squeeze|pullback/i.test(s),
-  momentum_only:  s => /momentum/i.test(s),
-  breakout_only:  s => /breakout/i.test(s),
-  mom_bo:         s => /momentum|breakout/i.test(s),
-  candlestick_only: s => /candlestick|hammer|engulf|pin.?bar|doji|star/i.test(s),
+  all:            s => s && !SPECIALIST_RE.test(s),
+  no_sq:          s => !/short.?squeeze/i.test(s) && !SPECIALIST_RE.test(s),
+  no_sq_pb:       s => !/short.?squeeze|pullback/i.test(s) && !SPECIALIST_RE.test(s),
+  momentum_only:  s => /^Momentum$/i.test(s),
+  breakout_only:  s => /^Breakout$/i.test(s),
+  mom_bo:         s => /^(Momentum|Breakout)$/i.test(s),
+  candlestick_only: s => /candlestick/i.test(s),
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

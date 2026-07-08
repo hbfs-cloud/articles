@@ -462,6 +462,33 @@ for (const [_k, _set] of Object.entries(STRATEGY_FILTERS_MAP)) {
   if (_k !== 'index_rotation') _set.add('IndexRotation');
 }
 
+// Frozen (exit-config) key for a mode config — the composite of every EXIT parameter that
+// determines a candidate's precomputed outcome (horizon, stops, trailing, partials, gates).
+// Two configs sharing this key produce byte-identical simulateTrade results. Kept in ONE place
+// so the append-path (per-date pool selection) and the pre-sim loop can't drift.
+function frozenKeyOfCfg(c) {
+  return `${c.horizon}_${c.partialTP || false}_${c.partialTPPct || 0.5}_${c.trailingStop || false}_${c.maxStopPct || 0}_${c.atrStopMult || 0}_${c.dailyTrailPct || 0}_${c.breakevenPct || 0}_${c.beGraceDays || 0}_${c.staleGraceDays || 0}_${c.staleRaiseRate ?? 0.001}_${c.staleAccel || 'log'}_${c.partialTPGain || 0}_${c.disableTP2 || false}_${c.entryGatePct || 0}_${c.vwapGate || false}_${c.trailMultR ?? 1.5}_${c.trailGraceDays ?? 0}`;
+}
+// Given a mode's current frozen key and the (chronological) config history, find WHEN the
+// current exit config took effect (ownEffFrom = effectiveFrom of the earliest version in the
+// trailing run that still carries the current key) and the exit config immediately BEFORE it
+// (priorCfg). Returns {} if the mode never changed its exit config. Used to re-sim pre-change
+// scans under the prior exit config so a forward-only exit change never rewrites sealed history.
+function exitConfigTransition(id, curFrozenKey, historyVersions) {
+  const vers = (historyVersions || []).filter(v => v.config && v.config[id]);
+  if (vers.length < 2) return {};
+  let ownEffFrom = null, priorCfg = null;
+  for (let i = vers.length - 1; i >= 0; i--) {
+    if (frozenKeyOfCfg(vers[i].config[id]) === curFrozenKey) {
+      ownEffFrom = vers[i].effectiveFrom || (vers[i].timestamp || '').slice(0, 10) || ownEffFrom;
+    } else {
+      priorCfg = vers[i].config[id];
+      break;
+    }
+  }
+  return { ownEffFrom, priorCfg };
+}
+
 // Normalize regime string to lookup key
 function normalizeRegime(regime) {
   if (!regime) return '';
@@ -2771,9 +2798,57 @@ async function main() {
         let newClosedTrades = [];
         if (newScans.length > 0) {
           // Build a trade list for only the new scans using the frozen config key
-          const allTradesForKey = tradesByKey[frozenKey] || [];
           const newScanDateSet = new Set(newScans.map(s => s.scanDate));
-          const newTrades = allTradesForKey.filter(t => newScanDateSet.has(t.scanDate));
+          // Config-version-aware candidate pool. A forward-only EXIT change (e.g. balanced
+          // v10.0→v10.1: H2/no-stop/aggressive → H8/atr1.8/maxStop7/daily_max1) must NOT
+          // retroactively rewrite the outcome of seed positions that already closed under the
+          // prior config. Scans that predate the current exit config's effectiveFrom are sourced
+          // from the PRIOR exit key's precomputed trades (their real outcome), scans on/after it
+          // from the current key. Without this, a seed that stopped same-day under the old narrow
+          // stop (HON, 06-30) gets re-opened under the new wide stop, never exits, and permanently
+          // occupies a slot → daily_max1 rotation (score margin) can't dislodge it → the mode is
+          // starved of every subsequent entry (balanced: 0 trades since 07-01).
+          const { ownEffFrom, priorCfg } = exitConfigTransition(id, frozenKey, configHistory);
+          let priorFrozenKey = null;
+          if (ownEffFrom && priorCfg) {
+            priorFrozenKey = frozenKeyOfCfg(priorCfg);
+            if (priorFrozenKey === frozenKey) priorFrozenKey = null; // no real exit change
+          }
+          // Build the prior-key pool on demand (pre-sim only covers current-config keys).
+          if (priorFrozenKey && !tradesByKey[priorFrozenKey]) {
+            const ptrades = [];
+            for (const setup of allSetups) {
+              const result = simulateTrade(setup, setup.scanDate, priceCache[setup.ticker], {
+                horizonDays: priorCfg.horizon, partialTP: priorCfg.partialTP || false, partialTPPct: priorCfg.partialTPPct || 0.5,
+                trailingStop: priorCfg.trailingStop || false, maxStopPct: priorCfg.maxStopPct || 0, atrStopMult: priorCfg.atrStopMult || 0,
+                dailyTrailPct: priorCfg.dailyTrailPct || 0, breakevenPct: priorCfg.breakevenPct || 0, beGraceDays: priorCfg.beGraceDays || 0,
+                staleGraceDays: priorCfg.staleGraceDays || 0, staleRaiseRate: priorCfg.staleRaiseRate ?? 0.001,
+                staleAccel: priorCfg.staleAccel || 'log', partialTPGain: priorCfg.partialTPGain || 0,
+                disableTP2: priorCfg.disableTP2 || false, entryGatePct: priorCfg.entryGatePct || 0, vwapGate: priorCfg.vwapGate || false,
+                trailMultR: priorCfg.trailMultR ?? 1.5, trailGraceDays: priorCfg.trailGraceDays ?? 0,
+                postWideningRRMin: priorCfg.postWideningRRMin || 0, blacklist: priorCfg.blacklist || null,
+                trailTriggerPct: priorCfg.trailTriggerPct || 0,
+                earlyExitLossPct: priorCfg.earlyExitLossPct || 0, earlyExitDays: priorCfg.earlyExitDays || 0,
+                tightenAfterDays: priorCfg.tightenAfterDays || 0, tightenToPct: priorCfg.tightenToPct || 0,
+              });
+              if (result) ptrades.push({ ...result, regime: setup.regime || null, regimeScore: setup.regimeScore ?? null });
+            }
+            tradesByKey[priorFrozenKey] = ptrades;
+          }
+          const curPool = tradesByKey[frozenKey] || [];
+          let newTrades;
+          if (priorFrozenKey) {
+            const priorByDate = {}, curByDate = {};
+            for (const t of (tradesByKey[priorFrozenKey] || [])) (priorByDate[t.scanDate] = priorByDate[t.scanDate] || []).push(t);
+            for (const t of curPool) (curByDate[t.scanDate] = curByDate[t.scanDate] || []).push(t);
+            newTrades = [];
+            for (const d of newScanDateSet) {
+              const src = (d < ownEffFrom) ? (priorByDate[d] || curByDate[d] || []) : (curByDate[d] || []);
+              newTrades.push(...src);
+            }
+          } else {
+            newTrades = curPool.filter(t => newScanDateSet.has(t.scanDate));
+          }
 
           // Seed sim2 with existing positions still open at start of new simulation period.
           // Without this, sim2 starts with empty openPositions and over-allocates slots.
