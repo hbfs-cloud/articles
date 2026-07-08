@@ -54,3 +54,23 @@ sur la même machine (launchd) que la session locale, **même compte claude.ai**
 `~/.claude.json`) → disponible en headless. **Prouvé** : un `claude -p` headless a appelé `GetHealth` et
 reçu un résultat live. Le prompt du schedule #1 a été renforcé pour appeler explicitement la chaîne dtx MCP
 + ingest avant le shell.
+
+## Durcissement anti-skip-silencieux (2026-07-08) — 3 couches
+Puisqu'il n'y a **plus de fallback binaire**, un MCP injoignable ne doit JAMAIS produire un skip
+silencieux. Trois couches, sans mécanisme parallèle (intégré à la porte de complétude existante du
+scanner = `qa-check.js`) :
+1. **Preflight AGENT** (prompt schedule #1 + skill `scanner-pipeline` §"Preflight & complétude dtx") : en
+   haut de l'étape dtx, `GetHealth` ; garder (a) outils `mcp__claude_ai_systematic__*` ABSENTS (connector
+   compte non chargé → token/login expiré) et (b) GetHealth non-ok/timeout → `send_message(to='alerts')`
+   précise (cause nommée), NE PAS fabriquer, consigner l'échec. Jamais continuer en silence.
+2. **Complétude PAR MODE (AGENT)** : chaque mode dont `DtxReplay`/`DtxDecide`/`DtxJobStatus`/ingest échoue
+   est collecté ; après la boucle, **UNE** alerte Telegram consolidée liste les modes stale/manquants → run
+   marqué incomplet (pas un pass silencieux).
+3. **Filet de fraîcheur SHELL** (`publish-daily-card.sh` Step 4d) : `writeStagingCompleteness(<J+1>)`
+   (`tools/dtx-scan.js`) écrit `data/dtx/_staging-completeness.json` (`{scanDate, generatedAt, modes,
+   generated[], skipped[], complete}`) + résumé LOUD ; `tools/qa-check.js` lit ce marqueur et **escalade en
+   ❌** tout mode stale/manquant d'un run daté d'aujourd'hui (non-crashant sans `--strict`, mais posté
+   Discord). Le rapport de fin liste GÉNÉRÉS vs SKIPPÉS.
+**Gap résiduel honnête** : l'alerte partage la connexion compte du MCP → si `claude -p` est totalement mort
+(token compte expiré, run ne démarre pas), il ne peut pas alerter ; seul le filet de fraîcheur attrape le
+trou (marqueur non rafraîchi → `qa-check` ❌ au run suivant).

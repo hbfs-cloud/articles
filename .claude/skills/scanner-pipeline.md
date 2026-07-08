@@ -341,19 +341,54 @@ pipeline shell** (`publish-daily-card.sh` / `gen-status-page`) :
 Poller `DtxJobStatus(job_id)` jusqu'à `status:"done"` → lire `result` (isolé par job_id). Le cache serveur
 étant chaud, beaucoup de jobs répondent quasi-inline, mais **toujours** passer par le poll.
 
-**Procédure AGENT (Phase 5, AVANT `publish-daily-card.sh` / `gen-status-page`)** — pour CHACUN des 5 modes
-(`us_highvol`, `forex`, `etf_us`, `etf_eu`, `stockbox_nasdaq`), `asof` = séance J+1, `from`=`2021-01-01`,
-`to` = `statusSince` du mode (splice backtest↔live) :
+### ⛔ Preflight & complétude dtx — ANTI-SKIP SILENCIEUX (OBLIGATOIRE)
+
+**Aucun skip silencieux.** Depuis le cut-over 2026-07-08 il n'y a plus de fallback binaire : si le MCP
+ne produit pas le staging d'un mode scripté, la routine doit **échouer bruyamment** (alerte Telegram) et
+le **rapport de fin** doit lister les modes SKIPPÉS. Le budget tokens/temps n'est jamais une raison de
+skipper — soit régénérer, soit ALERTER + marquer le run incomplet.
+
+**PREFLIGHT (tout en haut de l'étape dtx, AVANT tout `DtxReplay`/`DtxDecide`)** — appeler
+`mcp__claude_ai_systematic__GetHealth`. Garder **DEUX** modes d'échec :
+- **(a) connector ABSENT** : les outils `mcp__claude_ai_systematic__*` **n'existent pas** dans ce run
+  (connector de niveau compte non chargé → token/login claude.ai expiré / compte déconnecté).
+- **(b) GetHealth KO** : renvoie non-ok / timeout / erreur (serveur dtx down).
+
+Dans l'un OU l'autre cas : **NE PAS régénérer** les modes, **NE PAS fabriquer** de staging (⛔ jamais de
+données inventées), envoyer l'alerte Telegram
+`send_message(to='alerts', format='html', body='⚠️ dtx MCP injoignable/connector absent au scan {date} — modes scriptés NON régénérés, staging conservé = stale')`
+en nommant la **cause réelle** si connue (connector-absent vs serveur-down), consigner l'échec dans le
+rapport, et **ne jamais continuer cette étape en silence**.
+
+**Procédure AGENT PAR MODE (Phase 5, AVANT `publish-daily-card.sh` / `gen-status-page`)** — si le
+preflight passe, pour CHACUN des 5 modes (`us_highvol`, `forex`, `etf_us`, `etf_eu`, `stockbox_nasdaq`),
+`asof` = séance J+1, `from`=`2021-01-01`, `to` = `statusSince` du mode (splice backtest↔live) :
 
 1. `DtxReplay(portfolio=<id>, from=2021-01-01, to=<statusSince>)` → poll `DtxJobStatus` → écrire `result` dans `/tmp/<id>.replay.json`.
 2. `DtxDecide(portfolio=<id>, asof=<J+1>, balances={base_currency:<cur>, cash_by_currency:{<cur>:100000}, total_equity:100000}, positions=[], orders=[])` → poll `DtxJobStatus` → écrire `result` dans `/tmp/<id>.decide.json`.
 3. `node tools/dtx-mcp-ingest.js --portfolio <id> --decide /tmp/<id>.decide.json --replay /tmp/<id>.replay.json --asof <J+1> --from 2021-01-01 --to <statusSince>` → `data/dtx/<id>.json` (engineMode:"mcp").
-4. **Dégradation gracieuse par mode** : si le MCP est injoignable / un job échoue pour un mode → **NE PAS ingérer** ce mode, logguer un warning et **laisser le staging committé** en place (gen-status-page le lit tel quel ; sinon fallback pool JS). NE JAMAIS crasher le scan, NE JAMAIS fabriquer de données.
+4. **Échec par mode NON silencieux** : si un job (`DtxReplay`/`DtxDecide`/`DtxJobStatus`) échoue OU l'ingest KO pour un mode → **NE PAS ingérer** ce mode (laisser le staging committé = stale, jamais fabriqué) et **COLLECTER** le mode échoué. NE JAMAIS crasher le scan, NE JAMAIS fabriquer de données.
 
-`publish-daily-card.sh` **Step 4d** = **garde de fraîcheur uniquement** (ne régénère plus rien) : pour
-chaque mode il vérifie `stagingStatus()` (staging présent + `engineMode:"mcp"` + daté d'aujourd'hui) et
-warn si stale/absent. `node tools/dtx-scan.js --mode X` n'exécute plus de scan : il affiche la marche à
-suivre MCP-ingest et sort en 0 (jamais bloquant). `--list` reste disponible.
+**Alerte consolidée par mode** — après la boucle, si **AU MOINS un** mode a échoué : envoyer **UNE seule**
+alerte Telegram consolidée `send_message(to='alerts', format='html', body=…)` listant **exactement** les
+modes stale/manquants (+ la cause par mode si connue). C'est la preuve que le run est incomplet, pas un
+pass silencieux.
+
+**Complétude machine + rapport.** `publish-daily-card.sh` **Step 4d** est le **filet de fraîcheur
+secondaire** (un subprocess `node` ne peut PAS appeler le MCP, donc il ne régénère rien) : il appelle
+`writeStagingCompleteness(<J+1>)` (dans `tools/dtx-scan.js`) qui vérifie `stagingStatus()` par mode
+(staging présent + `engineMode:"mcp"` + daté d'aujourd'hui) et **écrit** `data/dtx/_staging-completeness.json`
+(`{scanDate, generatedAt, modes, generated[], skipped[], complete}`) + imprime un résumé LOUD. Ce marqueur
+est **lu par `tools/qa-check.js`** qui **escalade** en **❌** tout mode stale/manquant d'un run daté
+d'aujourd'hui (fail loud ; `qa-check` sans `--strict` reste non-crashant mais poste le ❌ dans Discord). Le
+**rapport de fin DOIT** lister les modes scriptés **GÉNÉRÉS vs SKIPPÉS** — ne jamais écrire « scan complet »
+si `qa-check` remonte le ❌ dtx. `node tools/dtx-scan.js --mode X` n'exécute plus de scan (guidance + exit 0).
+
+**Gap résiduel honnête** : l'alerte Telegram passe par la **même connexion compte** que le MCP systematic.
+Si `claude -p` est **totalement mort** (token compte expiré → le run ne démarre pas), il ne peut ni scanner
+ni alerter — dans ce cas seul le **filet de fraîcheur** attrape le trou : le staging reste stale et
+`qa-check` remonte le ❌ dtx **au run suivant** (marqueur non rafraîchi). C'est le seul garde-fou quand le
+compte lui-même est déconnecté.
 
 **Splice backtest↔live** via `PORTFOLIO_TO_MODE` (`--to` = `statusSince`). Le replay MCP n'est **pas**
 byte-déterministe (le serveur re-fetch des adj-close plus frais que l'ancien bundle gelé) : la courbe

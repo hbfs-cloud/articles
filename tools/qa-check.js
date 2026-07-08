@@ -312,6 +312,34 @@ warn('scanner: modes live scriptés — marqueur présent mais 0 signal (jour ca
   }
 });
 
+// 4d. dtx scripted-mode staging COMPLETENESS (anti-silent-skip). Depuis le cut-over 2026-07-08, le
+// MCP dtx (systematic.dailytickers.com) est le SEUL moteur des 5 modes scriptés (us_highvol, forex,
+// etf_us, etf_eu, stockbox_nasdaq) — le binaire local a été SUPPRIMÉ. Seul l'AGENT peut appeler le MCP ;
+// un subprocess `node` ne le peut pas. publish-daily-card.sh Step 4d écrit data/dtx/_staging-completeness.json
+// enregistrant, PAR MODE, si le staging committé est un snapshot MCP frais (aujourd'hui) au moment du scan.
+// Ici on ESCALADE un mode stale/absent en ❌ (fail loud) — mais UNIQUEMENT si le marqueur vient d'un run
+// qui a eu lieu aujourd'hui (generatedAt = aujourd'hui). Pas de marqueur / marqueur ancien → skip (pas de
+// faux ❌ hors run). C'est la porte de complétude : une nuit où le MCP dtx était injoignable et où l'agent
+// n'a pas pu régénérer un mode est ATTRAPÉE ici, jamais passée en silence.
+check('dtx: staging scriptés complets (5 modes MCP frais — pas de skip silencieux)', () => {
+  const markerPath = path.join(ROOT, 'data', 'dtx', '_staging-completeness.json');
+  let marker;
+  try { marker = JSON.parse(fs.readFileSync(markerPath, 'utf8')); }
+  catch { return; } // pas de marqueur (aucun run récent) → rien à garantir ici
+  const genDay = String(marker.generatedAt || '').slice(0, 10);
+  const today = new Date().toISOString().slice(0, 10);
+  if (genDay !== today) return; // marqueur d'un run antérieur → ne pas remonter de faux ❌
+  if (marker.complete) return;  // les 5 modes frais → OK
+  const skipped = (marker.skipped || []).map(id => {
+    const m = (marker.modes || {})[id] || {};
+    return `${id} (${m.status || '?'})`;
+  });
+  return `staging dtx INCOMPLET pour le scan ${marker.scanDate || '?'} — mode(s) NON régénéré(s) via MCP ce run: `
+    + `${skipped.join(', ')}. MCP dtx injoignable / connector absent / job(s) échoué(s) → staging conservé = STALE `
+    + `(jamais fabriqué). L'agent DOIT avoir alerté Telegram (alias 'alerts'). Régénérer via `
+    + `DtxReplay+DtxDecide → dtx-mcp-ingest, PUIS relancer gen-status-page.`;
+});
+
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
 check('bench-spy.json: fichier existe', () => {
   if (!fs.existsSync(path.join(ROOT, 'data', 'bench-spy.json'))) return 'data/bench-spy.json absent — relancer node tools/fetch-bench-spy.js';

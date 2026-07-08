@@ -177,19 +177,22 @@ if [ "$SKIP_SWEEP" = false ]; then
   # committed staging is missing or not a fresh (today, engineMode:"mcp") MCP snapshot, then lets
   # gen-status-page READ whatever staging is committed. It NEVER blocks the scan.
   echo ""
-  echo "🧩 Step 4d: dtx scripted-mode staging guard (MCP sole engine — no binary)..."
-  for _DTXMODE in us_highvol forex etf_us etf_eu stockbox_nasdaq; do
-    if node -e 'const s=require("./tools/dtx-scan").stagingStatus(process.argv[1]);process.exit(s.fresh?0:(s.exists?2:1))' "$_DTXMODE"; then
-      echo "  [$_DTXMODE] fresh MCP staging present (engineMode:mcp, today) → OK"
-    else
-      _RC=$?
-      if [ "$_RC" = "2" ]; then
-        echo "  ⚠️  [$_DTXMODE] committed staging is STALE or non-MCP — agent did not refresh it via MCP this run. gen-status-page will READ it as-is (non-blocking)."
-      else
-        echo "  ⚠️  [$_DTXMODE] NO committed staging found — this mode will fall back to its JS-scanner pool in gen-status-page (non-blocking)."
-      fi
-    fi
-  done
+  echo "🧩 Step 4d: dtx scripted-mode staging COMPLETENESS guard (MCP sole engine — no binary)..."
+  # ANTI-SILENT-SKIP FRESHNESS NET. A `node` subprocess CANNOT call the MCP, so it cannot regenerate
+  # staging — the AGENT must do that BEFORE this shell pipeline (GetHealth preflight + per-mode
+  # DtxReplay/DtxDecide → dtx-mcp-ingest; see scanner-pipeline skill §"dtx preflight & completeness").
+  # This step is the SECONDARY net that catches a stale-staging night even if the agent's MCP preflight
+  # was skipped: it writes data/dtx/_staging-completeness.json (the marker tools/qa-check.js reads →
+  # escalates a stale/missing mode to ❌) and prints a LOUD summary. It is NON-crashing (never exits
+  # non-zero here) but NEVER silent — an incomplete run is surfaced, not swallowed.
+  if node -e 'const r=require("./tools/dtx-scan").writeStagingCompleteness(process.argv[1]);process.exit(r.complete?0:1)' "$SCAN_DATE_ISO"; then
+    echo "  ✅ dtx staging COMPLET — les 5 modes scriptés ont un staging MCP frais (engineMode:mcp, aujourd'hui)."
+  else
+    echo "  ❗❗❗ dtx staging INCOMPLET — un ou plusieurs des 5 modes scriptés n'ont PAS de staging MCP frais."
+    echo "  ❗❗❗ L'AGENT n'a PAS régénéré ces modes via le MCP dtx ce run (MCP injoignable / connector absent / job échoué)."
+    echo "  ❗❗❗ → data/dtx/_staging-completeness.json marque le run INCOMPLET ; qa-check.js le remontera en ❌ (fail loud)."
+    echo "  ❗❗❗ → l'agent DOIT avoir envoyé une alerte Telegram (alias 'alerts'). Staging conservé = STALE, JAMAIS fabriqué."
+  fi
 
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────
   echo ""

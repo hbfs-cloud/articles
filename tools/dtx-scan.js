@@ -218,6 +218,44 @@ function stagingStatus(portfolioId, todayIso) {
 }
 
 // ---------------------------------------------------------------------------
+// Staging COMPLETENESS marker (anti-silent-skip) — written by publish-daily-card.sh Step 4d,
+// READ by tools/qa-check.js. Since the local binary was removed (2026-07-08 cut-over) the dtx MCP
+// is the SOLE engine and only the AGENT can call it; a `node` subprocess CANNOT regenerate staging.
+// This function is the secondary FRESHNESS NET: it records, per scripted mode, whether the committed
+// staging is a fresh (today, engineMode:"mcp") MCP snapshot AT SCAN TIME, and persists the verdict so
+// the run is provably marked complete/INCOMPLETE — never a silent pass. It NEVER throws.
+const COMPLETENESS_MARKER = path.join(STAGING_DIR, '_staging-completeness.json');
+function writeStagingCompleteness(scanDateIso, todayIso) {
+  const today = todayIso || new Date().toISOString().slice(0, 10);
+  const modes = {};
+  const generated = [];
+  const skipped = [];
+  for (const id of SCRIPTED_MODES) {
+    let s;
+    try { s = stagingStatus(id, today); } catch (_) { s = { exists: false, engineMode: null, generatedAt: null, fresh: false }; }
+    let status;
+    if (s.fresh) { status = 'fresh'; generated.push(id); }
+    else if (s.exists) { status = 'stale'; skipped.push(id); }
+    else { status = 'missing'; skipped.push(id); }
+    modes[id] = { status, engineMode: s.engineMode, generatedAt: s.generatedAt, fresh: !!s.fresh };
+    const icon = s.fresh ? '✅ fresh' : (s.exists ? '⚠️  STALE' : '❌ MISSING');
+    console.log(`  [${id}] ${icon} (engineMode:${s.engineMode || '—'}, generatedAt:${s.generatedAt || '—'})`);
+  }
+  const complete = skipped.length === 0;
+  const marker = {
+    scanDate: scanDateIso || null,
+    generatedAt: new Date().toISOString(),
+    engine: 'dtx-mcp',
+    modes,
+    generated,   // modes with a fresh MCP staging this run
+    skipped,     // modes NOT regenerated (stale/missing) → run is incomplete
+    complete,
+  };
+  try { writeStaging(marker, COMPLETENESS_MARKER); } catch (_) { /* never crash the pipeline */ }
+  return marker;
+}
+
+// ---------------------------------------------------------------------------
 // main — CLI. Actual scanning is delegated to the AGENT + MCP ingest (binary removed).
 // ---------------------------------------------------------------------------
 function main() {
@@ -256,7 +294,7 @@ function main() {
 if (require.main === module) main();
 
 module.exports = {
-  discoverModes, stagingStatus, SCRIPTED_MODES,
+  discoverModes, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
   buildStaging, writeStaging, extractReplayMetrics, mapOrder, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
