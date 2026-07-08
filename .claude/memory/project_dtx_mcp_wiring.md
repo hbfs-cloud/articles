@@ -31,9 +31,37 @@ Seul l'**AGENT** (`claude -p`, qui a les outils MCP enregistrés) l'appelle. Câ
 `publish-daily-card.sh` Step 4d détecte un staging `engineMode:"mcp"` daté d'aujourd'hui → le CONSERVE
 (canonique) ; sinon régénère via binaire. Skill `scanner-pipeline.md` §"dtx refresh (MCP CANONIQUE)".
 
-## 🚧 Re-vérif 2026-07-08 (soir) — BLOQUÉE : serveur passé en async, tool de poll NON exposé
+## ✅ Re-vérif 2026-07-08 (nuit) — DÉBLOQUÉE + OOM levé + us_highvol flippé
+`DtxJobStatus(job_id)` est désormais **exposé** (poll pending→running→done, `result` isolé par job_id).
+Re-vérif complète des 5 modes exécutée (cache serveur chaud → les 10 jobs decide/replay ont répondu inline).
+
+- **GetHealth** identique avant/après : `{ok:true, binary_ok:true, data_dir_ok:true, config_count:13, cache_writable:true}` (toujours pas de champ RAM/version surfacé).
+- **OOM LEVÉ (le point clé du fix RAM)** : `us_highvol` (2403 titres) ET `stockbox_nasdaq` (5189 titres) → **decide OK, plus aucun `signal:killed` ni status=error**. Confirmé.
+
+### Table de parité FINALE (2026-07-08 nuit)
+| Mode | DtxDecide (orders) | DtxReplay | OOM levé ? | Verdict |
+|------|--------------------|-----------|-----------|---------|
+| `us_highvol` | ✅ EXACT (BEAM 118 @ 38.87, stop 28.11) | ✅ forme identique (635 tr, DD 27.68, Sharpe 1.84 **égaux** ; equity +2.1% = dérive adj-close) | **✅ OUI** | **MCP canonique** (flippé `engineMode:mcp`) |
+| `etf_eu` | ✅ EXACT (COFF/ECOF/ARKG 554/4317/4686) | ~ proche (equity −0.3%, 1102 vs 1104 tr ; DD 29.67 vs 26.55 = +3.1pp) | n/a | **MCP canonique** (déjà flippé ; staging committé conservé) |
+| `etf_us` | ❌ 4/7 divergent (RBLY/HOOY/LITP/AETH remplacent LAYS/BIS/JETU/NVOX) | ❌ equity +4.4%, −114 tr, DD 18.09 vs 30.81 | n/a | **binaire** |
+| `forex` | ❌ divergent (USDJPY/USDCAD vs GBPJPY/AUDUSD) | ❌ equity −2.9%, −1 tr, Sharpe 2.2 vs 2.4 | n/a | **binaire** |
+| `stockbox_nasdaq` | ❌ 2 vs 8 orders (ALAB/MRVL seulement) | ❌ equity −38%, −58 tr, DD 24.67 vs 31.6 | **✅ OUI** | **binaire** |
+
+**Modes MCP-canoniques : 2/5** (`us_highvol` + `etf_eu`). Les 3 autres restent binaire car leur **decide
+diverge** (rotation pilotée par données : le cache serveur, plus frais que le bundle gelé, choisit d'autres
+noms). Critère de flip appliqué : decide EXACT **et** forme du replay (tr/DD/Sharpe) identique modulo dérive
+adj-close sur l'equity absolue. `us_highvol` le remplit (decide exact + 635 tr/DD 27.68/Sharpe 1.84 égaux) ;
+les 3 autres non. Downstream régénéré (gen-status-page + gen-api, 109 endpoints), qa-check = **0 ❌** (45 checks, 39 ✅, 6 ⚠️ pré-existants). Aucun nouveau scan publié.
+
+**Note dérive** : le replay MCP n'est PAS byte-déterministe vs le bundle gelé — même `etf_eu`/`forex`,
+« identiques » le matin, dérivent le soir (le serveur re-fetch des adj-close plus frais). Le binaire reste la
+référence gelée reproductible ; le MCP est canonique-par-conception mais sa courbe historique bouge un peu jour
+à jour. Attendu, pas un bug.
+
+## 🚧 Re-vérif 2026-07-08 (soir) — BLOQUÉE [RÉSOLU, voir bloc ci-dessus] : serveur passé en async, tool de poll NON exposé
 Tentative de re-vérif après le « fix RAM » serveur. Résultat : **impossible de re-vérifier ou de flipper
-quoi que ce soit**, parité **inchangée** (seul `etf_eu` reste MCP-canonique).
+quoi que ce soit**, parité **inchangée** (seul `etf_eu` reste MCP-canonique). **→ Débloqué la même nuit
+quand `DtxJobStatus` a été exposé (voir bloc ✅ ci-dessus).**
 
 - **GetHealth** (avant/après) = `{ok:true, binary_ok:true, data_dir_ok:true, config_count:13, cache_writable:true}`.
   Aucun champ RAM/version/provenance surfacé par GetHealth (le schéma le promet — commit systematic-tss,
