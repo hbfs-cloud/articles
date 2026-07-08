@@ -18,12 +18,14 @@ No DailyTickers artifact ships without passing a **senior panel**. This codifies
 - **Quant Senior** (data integrity): re-fetch via MCP; every price/cap/PE/EV-EBITDA/PEG/beta/margin/EPS-beat/index-move and every computed ratio (R/R, %, win rate, profit factor) must reconcile; no fabricated/stale numbers; performance stats must match the underlying table (no phantom win/return).
 - **Trader Senior** (actionability): R/R ≥ 1.5 **at an actionable entry within ~3% of spot** (reject fictional-R/R-on-far-pullback and chasing extended names >~5–8% above EMA20); stop placement, invalidation, event proximity, sizing vs beta/ATR; daily/weekly calls defensible.
 - **Risk & Compliance Senior**: SEC dilution (ATM/S-3/M&A-stock/mandatory-convertible/SBC) honestly disclosed; disclaimer present; no invented macro/geopolitics (verify, we are June 2026); balanced bull/bear; catalyst not macro-inverted; basket concentration/correlation.
+- **Macro/PM Strategist** (portfolio coherence): the PORTFOLIO-level gate per-trade review misses. **Does the book express its own stated thesis?** — a declared risk-off / reduce-size / defensive posture paired with a high-beta growth/momentum basket is a **BLOCK-level contradiction**. Collapse the basket to its dominant factors (net beta, growth-vs-value, rate-sensitivity, cyclical-vs-defensive, sector/geo concentration) and flag when a "diversified" list is secretly ONE bet; check event positioning (is the book long the exact factor the named CPI/Fed/oil catalyst threatens?) and narrative↔actual-risk match. FIX by reweighting/trimming/cutting the contradicting names OR correcting the narrative — thesis and positions must AGREE. The "a good analyst dismantles it in 30 seconds" gate.
 - **Editor Senior** (FT/Economist desk): accurate headline, coherent structure, ≥1 inline `.source-ref` per section, FT/terminal tone (no hype/filler), FR accents, valid cross-links; never invent facts to fill gaps.
 
 ## Type → persona matrix (engine applies automatically)
 | type | personas |
 |------|----------|
-| analyses, scanner, daily, weekly | QA · Quant · Trader · Risk · Editor (full panel) |
+| analyses, scanner, daily, weekly | QA · Quant · Trader · Risk · **Strategist** · Editor · AI-Forensics (full panel) |
+| basket (trade list / swing set) | Quant · Trader · Risk · **Strategist** · AI-Forensics |
 | retro | QA · Quant · Trader · Editor |
 | series | QA · Quant · Risk · Editor |
 | tech | QA · Quant · Editor |
