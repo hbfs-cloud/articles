@@ -195,6 +195,63 @@ function mapOrder(or) {
 }
 
 // ---------------------------------------------------------------------------
+// SHARED schema helpers — the ONE source of truth for the staging JSON shape.
+// Both the NATIVE path (scanMode, below) and the MCP ingest (tools/dtx-mcp-ingest.js) build the
+// staging via these, so the two producers are byte-compatible by construction (only the provenance
+// fields engine/engineMode/generatedAt/tookMs differ). gen-status-page reads orders + metrics +
+// equity from this shape — see DTX_STAGING_MAP there.
+// ---------------------------------------------------------------------------
+
+/** Extract {metrics, equity} from a replay result envelope ({results:[{...}]}). from/to stamp the
+ *  window (metrics.to = go-live splice). Returns {metrics:null, equity:null} if no result row. */
+function extractReplayMetrics(rep, from, to) {
+  const r = rep && rep.results && rep.results[0];
+  if (!r) return { metrics: null, equity: null };
+  return {
+    metrics: {
+      allocation: r.allocation, strategy: r.strategy,
+      initial_capital: r.initial_capital,
+      final_equity: r.final_equity, total_trades: r.total_trades,
+      winners: r.winners, losers: r.losers, win_rate: r.win_rate,
+      return_pct: r.return_pct, cagr_pct: r.cagr_pct, max_dd_pct: r.max_dd_pct,
+      sharpe: r.sharpe, r2: r.r2, from, to,
+    },
+    equity: { dates: r.equity_dates || [], values: r.equity_values || [] },
+  };
+}
+
+/** Build the staging object. `decision` = {actions:{CREATE,UPDATE,CANCEL}} (native OR MCP DtxDecide —
+ *  both snake_case, mapOrder handles it). engineLabel/engineMode carry provenance. */
+function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
+  const create = (decision && decision.actions && decision.actions.CREATE) || [];
+  return {
+    mode: modeInfo.id,
+    portfolioId: cfg.id,
+    name: cfg.name,
+    asof,
+    generatedAt: new Date().toISOString(),
+    engine: engineLabel,
+    engineMode,
+    config: path.relative(REPO_ROOT, modeInfo.path),
+    currency,
+    orders: create.map(mapOrder),
+    updates: (decision && decision.actions && decision.actions.UPDATE) || [],
+    cancels: (decision && decision.actions && decision.actions.CANCEL) || [],
+    metrics,
+    equity,
+    replayError: replayErr,
+    stateless: true,
+    tookMs: Date.now() - t0,
+  };
+}
+
+/** Write the staging object (pretty JSON, mkdir -p). */
+function writeStaging(out, outPath) {
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
+}
+
+// ---------------------------------------------------------------------------
 // scan one mode (NATIVE)
 // ---------------------------------------------------------------------------
 function scanMode(modeInfo, opts) {
@@ -217,8 +274,6 @@ function scanMode(modeInfo, opts) {
     positions: [], orders: [], balances,
     dataDir: DATA_CTX.dataDir, cwd: DATA_CTX.cwd,
   });
-  const create = (decision.actions && decision.actions.CREATE) || [];
-  const orders = create.map(mapOrder);
 
   // 2) replay → metrics + equity over the window (NATIVE)
   let metrics = null, equity = null, replayErr = null;
@@ -228,48 +283,21 @@ function scanMode(modeInfo, opts) {
       // Backtest ends at go-live (splice with live track); unwired modes fall back to asof.
       const to = opts.to || goLiveFor(cfg.id) || asof;
       const rep = engine.replay({ portfolioPath: modeInfo.path, from, to, dataDir: DATA_CTX.dataDir, cwd: DATA_CTX.cwd });
-      const r = rep.results && rep.results[0];
-      if (r) {
-        metrics = {
-          allocation: r.allocation, strategy: r.strategy,
-          initial_capital: r.initial_capital,
-          final_equity: r.final_equity, total_trades: r.total_trades,
-          winners: r.winners, losers: r.losers, win_rate: r.win_rate,
-          return_pct: r.return_pct, cagr_pct: r.cagr_pct, max_dd_pct: r.max_dd_pct,
-          sharpe: r.sharpe, r2: r.r2, from, to,
-        };
-        equity = { dates: r.equity_dates || [], values: r.equity_values || [] };
-      }
+      ({ metrics, equity } = extractReplayMetrics(rep, from, to));
     } catch (e) {
       replayErr = e.message;
     }
   }
 
-  const out = {
-    mode: modeInfo.id,
-    portfolioId: cfg.id,
-    name: cfg.name,
-    asof,
-    generatedAt: new Date().toISOString(),
-    engine: 'dtx (systematic-tss) — NATIVE',
-    engineMode: 'native',
-    config: path.relative(REPO_ROOT, modeInfo.path),
-    currency,
-    orders,
-    updates: (decision.actions && decision.actions.UPDATE) || [],
-    cancels: (decision.actions && decision.actions.CANCEL) || [],
-    metrics,
-    equity,
-    replayError: replayErr,
-    stateless: true,
-    tookMs: Date.now() - t0,
-  };
+  const out = buildStaging({
+    modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr,
+    engineLabel: 'dtx (systematic-tss) — NATIVE', engineMode: 'native', t0,
+  });
 
   const outPath = opts.out || path.join(STAGING_DIR, `${modeInfo.id}.json`);
-  fs.mkdirSync(path.dirname(outPath), { recursive: true });
-  fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
+  writeStaging(out, outPath);
 
-  log(`  [${modeInfo.id}] native ${currency} | orders(CREATE)=${orders.length}`);
+  log(`  [${modeInfo.id}] native ${currency} | orders(CREATE)=${out.orders.length}`);
   if (metrics) log(`    replay ${metrics.from}→${metrics.to}: cagr=${metrics.cagr_pct} dd=${metrics.max_dd_pct} sharpe=${metrics.sharpe} trades=${metrics.total_trades} wr=${metrics.win_rate}`);
   else if (replayErr) log(`    replay ERROR: ${replayErr}`);
   log(`    → ${path.relative(REPO_ROOT, outPath)} (${out.tookMs}ms)`);
@@ -346,4 +374,9 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { scanMode, discoverModes, DATA_CTX, BUNDLE_DIR };
+module.exports = {
+  scanMode, discoverModes, DATA_CTX, BUNDLE_DIR,
+  // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
+  buildStaging, writeStaging, extractReplayMetrics, mapOrder, goLiveFor,
+  DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
+};

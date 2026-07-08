@@ -163,20 +163,28 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "🧭 Step 4c: Forward continuity (pit-forward)..."
   node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
 
-  # ─── Step 4d: dtx (systematic-tss) refresh for SCRIPTED modes — FAIL-SAFE ───
-  # The 5 dtx-wired scripted modes (highvol/forex/etf/etf_eu/stockbox) get their
-  # "Orders to Place" + backtest equity curve from the REAL systematic-tss engine (dtx),
-  # staged to data/dtx/<mode>.json which gen-status-page READS. NATIVE dtx needs the
-  # systematic-tss repo (../systematic-tss or $DTX_TSS_ROOT) + network — present on a dev/ser
-  # host, ABSENT in the cloud sandbox (clones only `articles`). --skip-if-no-tss makes the step
-  # exit 0 and SKIP cleanly when systematic-tss is missing → gen-status-page then uses the
-  # COMMITTED staging. NEVER blocks the 23h routine. Refresh + commit must happen upstream
-  # (see docs) so the cloud reads fresh dtx data; without it, the cloud shows last-committed staging.
+  # ─── Step 4d: dtx (systematic-tss) refresh for SCRIPTED modes — MCP-CANONICAL, binary FALLBACK ───
+  # The 5 dtx-wired scripted modes (highvol/forex/etf/etf_eu/stockbox) get their "Orders to Place"
+  # + backtest equity curve from the REAL systematic-tss engine, staged to data/dtx/<mode>.json which
+  # gen-status-page READS. PREFERENCE ORDER (per mode), fail-safe throughout:
+  #   1. dtx MCP (systematic.dailytickers.com) = CANONICAL. Only the AGENT (claude -p, which holds the
+  #      registered MCP tools) can call it — a `node` subprocess CANNOT (OAuth2, zero-token rule). When
+  #      the 23h routine runs under the agent, the skill's Phase 5 calls DtxDecide+DtxReplay and
+  #      `node tools/dtx-mcp-ingest.js` writes data/dtx/<mode>.json (engineMode:"mcp") BEFORE this step.
+  #      This step DETECTS that fresh-today MCP staging and KEEPS it (never clobbers canonical MCP).
+  #   2. Local binary (vendored bundle tools/bin/dtx-data, offline/native) = FALLBACK — for modes the
+  #      MCP could not produce (server RAM-guard OOMs us_highvol & stockbox_nasdaq `decide` as of
+  #      2026-07-08) or when no agent/MCP is available. --skip-if-no-tss = exit 0 clean if even the
+  #      bundle is missing → gen-status-page uses the COMMITTED staging. NEVER blocks the routine.
   echo ""
-  echo "🧩 Step 4d: dtx scripted-mode refresh (fail-safe skip if no systematic-tss)..."
+  echo "🧩 Step 4d: dtx scripted-mode refresh (MCP-canonical if fresh, else binary fallback)..."
   for _DTXMODE in us_highvol forex etf_us etf_eu stockbox_nasdaq; do
-    node tools/dtx-scan.js --mode "$_DTXMODE" --asof "$SCAN_DATE_ISO" --skip-if-no-tss --quiet \
-      || echo "⚠️  dtx-scan $_DTXMODE failed (non-blocking — staging kept)"
+    if node -e 'const fs=require("fs");try{const j=JSON.parse(fs.readFileSync(`data/dtx/${process.argv[1]}.json`));const t=new Date().toISOString().slice(0,10);process.exit(j.engineMode==="mcp"&&String(j.generatedAt||"").slice(0,10)===t?0:1)}catch(_){process.exit(1)}' "$_DTXMODE"; then
+      echo "  [$_DTXMODE] fresh MCP staging present → keep (canonical)"
+    else
+      node tools/dtx-scan.js --mode "$_DTXMODE" --asof "$SCAN_DATE_ISO" --skip-if-no-tss --quiet \
+        || echo "⚠️  dtx-scan $_DTXMODE failed (non-blocking — staging kept)"
+    fi
   done
 
   # ─── Step 5: Regenerate scanner/status page + portfolio endpoints ──────────

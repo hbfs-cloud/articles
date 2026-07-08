@@ -306,11 +306,11 @@ node tools/sweep.js                     # Append-only: nouveaux trades fermés
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
-# ── dtx (systematic-tss) refresh — SCRIPTED modes (highvol/forex/etf/etf_eu/stockbox) — FAIL-SAFE ──
-# NATIVE dtx (le VRAI moteur systematic-tss) recalcule Orders-to-Place + courbe backtest → staging
-# data/dtx/<mode>.json que gen-status-page LIT. --skip-if-no-tss = exit 0 propre SI ../systematic-tss
-# (ou $DTX_TSS_ROOT) absent → sur cloud on garde le staging COMMITTÉ (pas de systematic-tss dans le
-# sandbox). NE BLOQUE JAMAIS la routine. Voir "dtx refresh (DÉCOUPLÉ)" §ci-dessous.
+# ── dtx (systematic-tss) refresh — SCRIPTED modes (highvol/forex/etf/etf_eu/stockbox) ──────────────
+# PRÉFÉRENCE (par mode), fail-safe de bout en bout — voir "dtx refresh (MCP CANONIQUE)" §ci-dessous :
+#   1. dtx MCP (systematic.dailytickers.com) = CANONIQUE. Étape AGENT (voir §) : appeler DtxDecide +
+#      DtxReplay, écrire les JSON bruts, puis `node tools/dtx-mcp-ingest.js` → data/dtx/<id>.json.
+#   2. Binaire vendoré (bundle offline) = FALLBACK si MCP indispo / OOM / hors-agent :
 for M in us_highvol forex etf_us etf_eu stockbox_nasdaq; do \
   node tools/dtx-scan.js --mode "$M" --asof YYYY-MM-DD --skip-if-no-tss --quiet || true; done
 node tools/gen-status-page.js           # Snapshot J + Dashboard (lit fortress_pool + data/dtx/*.json)
@@ -319,40 +319,49 @@ node tools/trading-executor/run-session.js  # Generate plans + execute
 node tools/substack-publish.js scanner/YYYYMMDD/index.html  # OPTIONAL/non-blocking: Substack draft + Notes teaser (needs MCP_AUTH_TOKEN, else draft-only local); disable via SUBSTACK_DISABLE=1
 ```
 
-### dtx refresh (DÉCOUPLÉ) — les modes scriptés lisent un staging COMMITTÉ, jamais dtx sur cloud
+### dtx refresh (MCP CANONIQUE, binaire = FALLBACK) — modes scriptés
 
-**Architecture (immuable) :** le vrai moteur systematic-tss (binaire `dtx`, mode NATIF) tourne
-**en amont**, là où `../systematic-tss` (`data/instruments/*.json` + staticdata) et le **réseau**
-existent (dev local / box `ser`). Il écrit le staging `data/dtx/<mode>.json` (equity + metrics +
-orders) qui **EST maintenant versionné** (5 modes câblés : `us_highvol`, `forex`, `etf_us`,
-`etf_eu`, `stockbox_nasdaq`). Le **cloud** (sandbox 23h qui ne clone QUE `articles`) n'a NI
-systematic-tss NI réseau NI binaire Linux exécuté : il **LIT seulement** le staging committé via
-`gen-status-page` → `DTX_STAGING_MAP`. Fail-safe partout : `--skip-if-no-tss` fait `exit 0` si
-systematic-tss absent → la routine continue sur le dernier staging committé.
+**Architecture (2026-07-08).** Le staging `data/dtx/<id>.json` (orders = `decide` CREATE, equity+metrics
+= `replay`) alimente les 5 modes câblés (`us_highvol`, `forex`, `etf_us`, `etf_eu`, `stockbox_nasdaq`)
+via `gen-status-page` → `DTX_STAGING_MAP`. Deux producteurs, **byte-compatibles par construction**
+(schéma partagé dans `tools/dtx-scan.js`, seuls `engine`/`engineMode`/`generatedAt`/`tookMs` diffèrent) :
 
-**Le binaire Linux n'est JAMAIS exécuté sur cloud** (le cloud lit du JSON, il ne lance pas dtx) →
-le risque « linux-amd64 jamais run » est **hors-scope pour le chemin cloud**. (Un fallback dtx
-côté-cloud serait possible — binaire Linux + injecter nos bars via `--bars`, sans systematic-tss —
-mais **non nécessaire** tant que le staging est rafraîchi en amont ; ne pas le construire.)
+| Priorité | Producteur | Qui l'exécute | Quand |
+|---|---|---|---|
+| 1 (CANONIQUE) | **dtx MCP** `systematic.dailytickers.com` | l'**AGENT** (`claude -p` a les outils MCP) | routine 23h sous agent |
+| 2 (FALLBACK) | **binaire vendoré** `tools/dtx-scan.js` (bundle offline `tools/bin/dtx-data`) | n'importe quel host node | MCP indispo / OOM / hors-agent |
+| 3 (dernier recours) | **staging committé** | rien (lecture seule) | ni MCP ni binaire dispo |
 
-**⚠️ EXIGENCE DE FRAÎCHEUR :** le staging vaut le dernier `dtx-scan` amont. **Un host
-systematic-tss+réseau (dev nightly, ou `ser`) DOIT lancer `dtx-scan` et committer `data/dtx/`
-AVANT la routine cloud de 23h**, sinon le site affiche les ordres/courbes du dernier commit (stale).
-Commande cron proposée (host avec systematic-tss checké out + réseau, ~22h30, avant le 23h cloud) :
+**Contrainte dure (pas de token).** Un **subprocess `node` ne peut PAS** appeler le MCP (OAuth2 sur
+claude.ai, règle ZÉRO token en .env). Seul l'agent l'appelle. Donc le câblage MCP est :
+**agent → DtxDecide/DtxReplay → écrit les JSON bruts → `dtx-mcp-ingest.js` → staging**.
 
-```bash
-# 30 22 * * 1-5  (host avec ../systematic-tss + réseau) — NE PAS configurer ser depuis ici
-cd /path/to/articles && ASOF=$(node -e "let d=new Date();do{d.setDate(d.getDate()+1)}while([0,6].includes(d.getDay()));process.stdout.write(d.toISOString().slice(0,10))") \
-  && for M in us_highvol forex etf_us etf_eu stockbox_nasdaq; do node tools/dtx-scan.js --mode "$M" --asof "$ASOF" --quiet; done \
-  && git pull --rebase && git add data/dtx/us_highvol.json data/dtx/forex.json data/dtx/etf_us.json data/dtx/etf_eu.json data/dtx/stockbox_nasdaq.json \
-  && git commit -m "chore(dtx): refresh scripted-mode staging" && git push origin main
-```
+**Procédure AGENT (Phase 5, AVANT `publish-daily-card.sh` / `gen-status-page`)** — pour chaque mode
+(`us_highvol`, `forex`, `etf_us`, `etf_eu`, `stockbox_nasdaq`), `asof` = séance J+1, `from`=`2021-01-01`,
+`to` = `statusSince` du mode (splice backtest↔live) :
 
-Dans le pipeline `publish-daily-card.sh`, l'étape **4d** appelle `dtx-scan --skip-if-no-tss` pour
-les 5 modes : sur un host avec systematic-tss elle rafraîchit+committe le staging ; sur cloud elle
-skip proprement. `PORTFOLIO_TO_MODE` splice le backtest (`--to` = `statusSince` du mode) à la
-courbe live. Parité prouvée : `dtx replay` natif == `cmd/backtest` (Go) champ-à-champ (eu_dax /
-us_highvol / etf_us / stockbox_nasdaq).
+1. `DtxReplay(portfolio=<id>, from=2021-01-01, to=<statusSince>)` → écrire dans `/tmp/<id>.replay.json`.
+2. `DtxDecide(portfolio=<id>, asof=<J+1>, balances={base_currency:<cur>, cash_by_currency:{<cur>:100000}, total_equity:100000}, positions=[], orders=[])` → écrire `/tmp/<id>.decide.json`.
+3. `node tools/dtx-mcp-ingest.js --portfolio <id> --decide /tmp/<id>.decide.json --replay /tmp/<id>.replay.json --asof <J+1> --from 2021-01-01 --to <statusSince>` → `data/dtx/<id>.json` (engineMode:"mcp").
+4. **Fallback par mode** : si `DtxDecide` échoue (OOM `signal: killed`) OU `DtxReplay` diverge du baseline committé au-delà d'une tolérance de bon sens → **NE PAS ingérer**, laisser `dtx-scan` (Step 4d) régénérer ce mode via le binaire. Ne jamais forcer une donnée MCP douteuse dans le staging live.
+
+`publish-daily-card.sh` **Step 4d** détecte un staging `engineMode:"mcp"` daté d'aujourd'hui et le
+**conserve** (canonique) ; sinon il lance `dtx-scan --skip-if-no-tss` (binaire → sinon staging committé).
+Jamais bloquant.
+
+**⚠️ Résultat de parité MCP↔binaire (2026-07-08, à re-vérifier si le serveur change) :**
+- `etf_eu` : **match parfait** decide (3/3) + replay (identique) → MCP canonique OK.
+- `etf_us` : decide **match** (7/7 noms+qty, prix ~4 déc.) mais replay **diverge** (final 440K vs 530K, 2668 vs 2652 trades — dérive adjusted-close/univers ETF US) → garder binaire.
+- `forex` : replay **identique** (147 278,29 ; 949 trades) mais decide **diverge** (USDJPY/USDCAD vs GBPJPY/AUDUSD — recence des données J+2) → garder binaire.
+- `us_highvol` : replay tourne mais **diverge** (final 3,23M vs 3,04M ; mêmes 635 trades + même DD — dérive adjusted-close actions US) ; **decide OOM** (`signal: killed`, 2403 titres) → binaire obligatoire.
+- `stockbox_nasdaq` : replay **quasi-identique** (2,031M vs 2,037M = 0,26 % ; DD identique) ; **decide OOM** (5189 titres) → binaire obligatoire.
+
+**Cause des écarts** : (a) le serveur MCP a un cache OHLCV **plus frais** que le bundle vendoré gelé →
+re-ajustements dividendes/splits sur actions/ETF US décalent les fills (forex/ETF EU sans dividende =
+identiques) ; (b) `decide` charge tout l'univers actions (2,4–5,2k titres) en RAM → le garde-fou RAM du
+serveur **tue** les 2 gros univers (`us_highvol`, `stockbox_nasdaq`). Ces 2 modes **doivent** rester sur
+le binaire tant que la RAM serveur n'est pas augmentée. Splice backtest↔live via `PORTFOLIO_TO_MODE`
+(`--to` = `statusSince`). Parité binaire native == `cmd/backtest` (Go) champ-à-champ (inchangée).
 
 ### ⛔ Phase 5.5 — FORTRESS-PM A+ HALAL POOL — ÉTAPE OBLIGATOIRE (systématique, AVANT gen-status-page)
 
