@@ -1,0 +1,78 @@
+name: Auto-merge nightly cloud branch
+
+# Les routines Claude cloud (ex: /scanner de 23h) poussent leur run sur une branche
+# `claude/**` au lieu de main (comportement par défaut = branche + revue). Ce workflow
+# ferme la boucle d'auto-publication : il passe le MÊME gate QA que la pipeline locale
+# (qa-check --strict = données scanner/dtx, + qa-content --strict = structure articles)
+# et, si 0 ❌, ouvre une PR et la merge (fast-forward-friendly, trace + rollback via revert).
+# Sur échec QA, la PR est OUVERTE mais RETENUE (label qa-failed) pour revue humaine — jamais
+# de publication silencieuse d'un run cassé.
+#
+# Désactivation : supprimer ce fichier. Bascule "push direct sans PR" : remplacer l'étape
+# merge par `git push origin HEAD:main`.
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-merge-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  qa-and-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: QA gate — qa-check --strict (données scanner/dtx, 0 ❌ requis)
+        run: node tools/qa-check.js --strict
+
+      - name: QA gate — qa-content --strict (articles modifiés vs main)
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACM origin/main...HEAD \
+            | grep -E '^(analyses|daily|weekly|scanner)/[^/]+/index\.html$' \
+            | grep -vE '(/archive/|^scanner/status/)' || true)
+          if [ -z "$CHANGED" ]; then echo "Aucun article éditorial modifié — skip qa-content."; exit 0; fi
+          echo "Articles à vérifier:"; echo "$CHANGED"
+          echo "$CHANGED" | xargs node tools/qa-content.js --strict
+
+      - name: PR + auto-merge (QA verte)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BR="${GITHUB_REF_NAME}"
+          # Réutilise une PR existante si présente, sinon la crée.
+          gh pr view "$BR" --json number >/dev/null 2>&1 || \
+            gh pr create --base main --head "$BR" \
+              --title "nightly (cloud routine): $BR" \
+              --body "Run auto-généré par la routine cloud. Gate QA ✅ — qa-check --strict + qa-content --strict, 0 ❌. Auto-mergé sur main → déploiement Pages." \
+              2>/dev/null || true
+          gh pr merge "$BR" --merge --delete-branch
+
+      - name: PR retenue (QA rouge — revue humaine)
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BR="${GITHUB_REF_NAME}"
+          gh label create qa-failed --color B60205 --description "QA gate a échoué — ne pas merger tel quel" 2>/dev/null || true
+          gh pr view "$BR" --json number >/dev/null 2>&1 || \
+            gh pr create --base main --head "$BR" \
+              --title "⚠️ nightly QA FAILED: $BR" \
+              --body "qa-check/qa-content --strict a échoué (≥1 ❌). PR RETENUE pour revue humaine — inspecter le run rouge avant de merger." \
+              2>/dev/null || true
+          gh pr edit "$BR" --add-label qa-failed 2>/dev/null || true
+          echo "::error::QA gate rouge sur $BR — PR retenue, pas d'auto-merge."
