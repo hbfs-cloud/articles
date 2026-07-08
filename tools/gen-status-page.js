@@ -1167,6 +1167,17 @@ async function main() {
         };
       }
     }
+    // Trade History = CLOSED trades only. A trade is "still open" (belongs to Open Positions,
+    // NOT the closed ledger) when it is status 'pending' or a premature-expired hold whose
+    // horizon has not elapsed in real time. Rotated-out trades ARE closed (relabelled below).
+    // histClosedCount drives the section header so the count matches the rows actually rendered.
+    const _rotatedKeySet = new Set();
+    if (recentExecutedRotation && recentExecutedRotation.replaces && recentExecutedRotation.fromDate) {
+      _rotatedKeySet.add(recentExecutedRotation.replaces + '|' + recentExecutedRotation.fromDate);
+    }
+    const _isStillOpenHist = t => t.status === 'pending' || (t._premature && !t._horizonExpired);
+    const histClosedCount = trades.filter(t => !_isStillOpenHist(t) || _rotatedKeySet.has(t.ticker + '|' + t.scanDate)).length;
+
     // Simple mean over OPEN rows only (terminal closed-today rows excluded — their
     // P&L already lives in the frozen stats). Header label: "avg/pos".
     const _openForAvg = pos.filter(p => !p._terminal);
@@ -1672,7 +1683,7 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
 <!-- ══ 7. TRADE HISTORY (collapsible) ══ -->
 <div class="section-card" id="sec-hist-${id}">
   <details>
-    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${m.trades} closed${liveCount ? ' · ' + liveCount + ' open' : ''}</span></span></summary>
+    <summary class="sc-summary"><span class="sc-sum-title"><i class="fas fa-clock-rotate-left" style="color:var(--muted);font-size:.78rem"></i> Trade History <span class="count">${histClosedCount} closed</span></span></summary>
   <div class="th-scroll">
   <table class="t" style="margin-top:.6rem">
     <thead><tr><th>Ticker</th><th class="hide-m">Start</th><th class="hide-m">End</th><th class="hide-m">Entry</th><th class="hide-m">Exit</th><th>P&amp;L</th><th class="hide-m">Hold</th><th>Result</th></tr></thead>
@@ -1700,14 +1711,18 @@ ${watchRows.length ? `<div class="section-card" data-section="watch">
         const rotatedTickerLive = (recentExecutedRotation && recentExecutedRotation.replaces)
           ? (livePositions || []).find(p => p.ticker === recentExecutedRotation.replaces)
           : null;
-        // Trade History = closed trades only (status !== 'pending'). Open positions live in their own section.
-        // Premature trades from rotation (status='expired' + _premature) ARE kept if they match keptPremature.
+        // Trade History = CLOSED trades ONLY. Genuinely-open positions (status 'pending', or a
+        // premature-expired hold whose horizon has NOT elapsed) belong exclusively to the Open
+        // Positions section above — they must never render as a Trade-History row (that produced
+        // the "N closed · M open" leak where the same open positions appeared in both panels).
+        // Rotated-out trades ARE closed (force-exited before horizon) → keep them, relabelled below.
+        // keptPremature is retained only to gate the rotated-out exception, not to re-admit opens.
         const filtered = trades
-          // Keep genuinely-open positions (status 'pending' AND currently held = in keptPremature)
-          // so Trade History shows open trades at the top with live MtM P&L, as it did before —
-          // NOT the backtest-overflow pendings dropped by the portfolio cap.
-          .filter(t => t.status !== 'pending' || keptPremature.has(t.ticker + '|' + t.scanDate))
-          .filter(t => !t._premature || keptPremature.has(t.ticker + '|' + t.scanDate))
+          .filter(t => {
+            const stillOpen = t.status === 'pending' || (t._premature && !t._horizonExpired);
+            const rotatedOut = rotatedKeys.has(t.ticker + '|' + t.scanDate);
+            return !stillOpen || rotatedOut;
+          })
           .map(t => {
           if (rotatedKeys.has(t.ticker + '|' + t.scanDate)) {
             const exitPrice = rotatedTickerLive && rotatedTickerLive.current_price

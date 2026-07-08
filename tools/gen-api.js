@@ -171,9 +171,15 @@ function writeMode(mode, prefix) {
   // two endpoints consistent when a mode is stopped while still present in the current snapshot.
   const isTerminalMode = status.state === 'stopped' || status.state === 'liquidated';
   const _sinceISO = (((modesConfigFull && modesConfigFull.modes && modesConfigFull.modes[modeId]) || {}).statusSince || '').slice(0, 10) || null;
+  // Trade History (trades.json / all.json#closedTrades) = CLOSED trades ONLY. A genuinely-open
+  // trade (status 'pending' or no exitDate) is surfaced via positions.json / all.json#positions —
+  // it must NOT also appear in the closed-trade ledger (that produced the "open leaks into Trade
+  // History" bug). Terminal modes (stopped/liquidated) hold nothing → liquidatePending() realizes
+  // any still-open trade so the closed ledger and positions (0) stay consistent.
+  const _isOpenTrade = t => t.status === 'pending' || !t.exitDate;
   const closedTradesSrc = isTerminalMode
     ? (mode.closedTrades || []).map(t => liquidatePending(t, _sinceISO))
-    : (mode.closedTrades || []);
+    : (mode.closedTrades || []).filter(t => !_isOpenTrade(t));
 
   const positions = mode.positions || [];
   const equity = mode.equity || {};
