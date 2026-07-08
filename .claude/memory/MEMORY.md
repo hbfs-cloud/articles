@@ -136,6 +136,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 
 ## Routines Cloud
 - [Routine Redesign v2](project_routine_redesign_v2.md) — Conductors replaced by simple Sonnet routines (crash detector, market pulse, rotation detector). Old conductors disabled 2026-06-24.
+- [Cloud routine auto-merge](project_cloud_routine_automerge.md) — les routines Claude cloud poussent sur une branche `claude/**` (pas main, pas de PR) ; MCP systematic PROUVÉ présent dans le sandbox cloud (run 20260709 : 5 modes engineMode:mcp) ; auto-merge câblé via `.github/workflows/auto-merge-nightly.yml` (gate qa-check+qa-content --strict → vert=PR+merge, rouge=PR retenue label qa-failed).
 
 ## Références Externes
 - [Screener Reliability 2026-07-02](reference_screener_reliability_20260702.md) — RunScreener DSL fiable (rising OK, mcap OK, as_of OK) ; gaps gateway : enable_backtest sans backtest_result, region=eu vide, AutoScreener sans floor mcap.
