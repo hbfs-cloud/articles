@@ -59,6 +59,22 @@ portfolios:
           # min_score removed — per-regime params handle filtering, reduces perturbation surface
           # Regime-specific params (all optional, defaults shown)
           params:
+            # CBPM market-level de-risk overlay. CUT exposure (availableCash*0.40, maxPos*0.5)
+            # on a divergence-less high-VIX selloff (VIX>=30, index CBPM<50, no bullish div).
+            # MEASURED (this frozen cache, TOTAL_RETURN, -max-participation 0.1, deterministic x2):
+            #   baseline  2021-present 34.79% / DD22.61 / S1.35 / R2 0.83
+            #   +overlay  2021-present 45.36% / DD19.45 / S1.67 / R2 0.88   (+10.6pp CAGR, -3.2 DD)
+            #   2020 COVID  13.25/DD32.05 -> 16.54/DD28.63 ; 2022 bear -3.21/DD21.62 -> -0.06/DD21.62
+            # Arm isolation: the ENTIRE gain is the CUT arm. The BOOST arm is inert here (the ETF
+            # PM's SMA position cap is disabled -> nothing to bypass), so it is left OFF.
+            # NB: this cache's ETF baseline (34.79%) runs below the documented reference (~52%);
+            # the RELATIVE de-risk effect is the result, not the absolute level.
+            cbpm_overlay_enabled: 1
+            cbpm_vix_cut: 30.0
+            cbpm_bottom: 50.0
+            cbpm_deploy_frac_cut: 0.40
+            cbpm_max_pos_frac_cut: 0.5
+            cbpm_boost_reentry: 0
             # Blacklist - test incrementally
             blacklist:
               - BITI   # Short Bitcoin: -$10K, 10% WR
