@@ -207,6 +207,7 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | `telegram-notifications-qa` | telegram-publish-notify, topic Telegram, notif article |
 | `scheduled-tasks-veille` | veille tech, tâche planifiée, Discord bot, claude-discord-bot |
 | `fortress-pm` | fortress, fortress pm, fortress halal, pm halal, portfolio manager fortress |
+| `signals-desk` | meilleurs signaux, signaux du jour, desk signaux, best setups, pick les meilleurs, signaux auto, run signaux, signal desk (CHEF D'ORCHESTRE — sélectionne + poste) |
 | `swing-signals` | swing, signaux swing, swings tactiques, trade court terme, bilan swing, quels signaux today, coups rapides, jouable aujourd'hui |
 | `squeeze-radar` | squeeze, short squeeze, short interest, cost to borrow, CTB, days to cover, gamma squeeze |
 | `earnings-reaction` | earnings, résultats, post-earnings, earnings drift, gap and go, beat, guidance relevée, saison des résultats, PEAD |
