@@ -2240,6 +2240,12 @@ details[open] summary::after{transform:rotate(90deg)}
   .perf-hero{border:1px solid var(--border)!important;box-shadow:0 1px 2px oklch(22% 0.02 250/.045),0 8px 24px oklch(22% 0.02 250/.05)}
   .ps{border-left:1px solid var(--border)!important}
   @media (prefers-reduced-motion:reduce){.section-card{transition:none}}
+
+  /* ── Page ground — shift the status page off the warm near-white (cream tell)
+     onto a clean cool light-grey, re-scoped via tokens on <body> only (no global
+     report.css change). White cards (--surface) now separate cleanly and the soft
+     card shadow reads. Cool hue (250) harmonises with the azure accent. ── */
+  body{--bg:oklch(96.4% 0.005 250);--surface-2:oklch(98% 0.004 250);--border:oklch(89% 0.007 250);background:var(--bg)}
   </style>
 </head>
 <body>
