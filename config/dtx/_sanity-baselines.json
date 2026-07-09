@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "purpose": "Deterministic sanity bounds for DtxReplay metrics ingested into data/dtx/<id>.json. Guards against the routine capturing a corrupt/param-drifted replay result (trade-count blowup, DD explosion) and publishing it to the status page. Consumed by assertReplaySanity() in tools/dtx-scan.js.",
+    "source": "Healthy MCP rehearsal 2026-07-08 + live diagnostic 2026-07-10 (DtxReplay from=2021-01-01 to=2026-07-06, server commit 9a680ed).",
+    "incident": "2026-07-09 nightly routine published us_highvol 1169tr/DD-63%, etf_eu 3404tr/DD-89.6%, stockbox 1470tr/DD-41% — NOT reproducible on the server (which returns ~635/~1102/~172 tr, DD ~-28/-30/-25%). Bug was upstream param drift; this guard catches the signature (2-8x trade blowup + DD>50%) so it never reaches publish again.",
+    "note": "total_trades grows ~monotonically as the window extends past 2026-07-06 (a few trades/week). ratio bounds are generous to avoid false positives on legitimate window extension; the DD/sharpe/win_rate/cagr bounds are the primary tripwires."
+  },
+  "_universal": {
+    "max_dd_abs_ceiling": 50,
+    "min_sharpe": 0,
+    "win_rate_min": 15,
+    "win_rate_max": 92,
+    "min_cagr": -5,
+    "trades_ratio_high": 2.2,
+    "trades_ratio_low": 0.4
+  },
+  "modes": {
+    "us_highvol":      { "total_trades": 635,  "max_dd_pct": -27.68, "sharpe": 1.81, "cagr_pct": 84.48, "win_rate": 54.33 },
+    "etf_eu":          { "total_trades": 1102, "max_dd_pct": -29.67, "sharpe": 2.08, "cagr_pct": 68.56, "win_rate": 50.91 },
+    "stockbox_nasdaq": { "total_trades": 172,  "max_dd_pct": -24.66, "sharpe": 1.56, "cagr_pct": 58.76, "win_rate": 60.47 }
+  }
+}

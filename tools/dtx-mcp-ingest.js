@@ -137,6 +137,20 @@ function main() {
     else if (replayErr) console.log(`    replay SKIPPED/ERROR: ${replayErr}`);
     console.log(`    → ${path.relative(scan.REPO_ROOT, outPath)} (${out.tookMs}ms)`);
   }
+
+  // DETERMINISTIC SANITY GATE — a corrupt/param-drifted replay (2026-07-09 incident: DD-89.6%,
+  // 2-8× trade blowup) is caught HERE, at ingest, before the number can reach the status page.
+  // The staging is still written (metricsSuspect:true + _sanityWarning[…]) so the corruption is
+  // auditable and qa-check.js fails loud on it — but we exit NON-ZERO so the calling routine sees
+  // the failure, ALERTS Telegram (alias 'alerts'), and does NOT publish this mode's metrics.
+  if (out.metricsSuspect) {
+    console.error(`⛔ [${modeInfo.id}] REPLAY SUSPECT — métriques hors bornes de sanité (staging marqué metricsSuspect:true, NON publiable) :`);
+    for (const w of out._sanityWarning) console.error(`     • ${w}`);
+    console.error(`   → Le MCP dtx est sain (vérifié). Un replay aberrant = param drift / job result corrompu au run.`);
+    console.error(`     Re-appeler DtxReplay(${cfg.id}, from=2021-01-01, to=<J-1 ou 2026-07-06>), re-vérifier trades vs baseline, PUIS ré-ingérer.`);
+    console.error(`     ALERTER Telegram 'alerts' + NE PAS publier les métriques de ce mode.`);
+    process.exitCode = 7;
+  }
   return out;
 }
 

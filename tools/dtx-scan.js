@@ -182,10 +182,62 @@ function extractReplayMetrics(rep, from, to) {
   };
 }
 
+// ---------------------------------------------------------------------------
+// DETERMINISTIC SANITY GUARD on replay metrics (anti-corrupt-publish).
+// The MCP engine is trustworthy (verified 2026-07-10 diagnostic: queried live it reproduces the
+// healthy rehearsal numbers). But the NIGHTLY ROUTINE can capture a corrupt/param-drifted replay
+// result (2026-07-09 incident: us_highvol 1169tr/DD-63%, etf_eu 3404tr/DD-89.6% — a 2-8× trade
+// blowup + DD explosion NOT reproducible on the server). extractReplayMetrics is a faithful
+// pass-through, so a garbage input reaches the published status page unchecked. This guard runs at
+// INGEST time: any metric outside sane bounds (or wildly off the committed per-mode baseline) marks
+// the staging `metricsSuspect:true` + `_sanityWarning:[…]`, which (a) makes dtx-mcp-ingest exit 7 so
+// the routine alerts+skips publishing that mode, and (b) makes qa-check.js fail loud. Bounds live in
+// config/dtx/_sanity-baselines.json (universal tripwires + per-mode baselines from the healthy run).
+let _sanityBaselinesCache;
+function loadSanityBaselines() {
+  if (_sanityBaselinesCache !== undefined) return _sanityBaselinesCache;
+  try {
+    _sanityBaselinesCache = JSON.parse(fs.readFileSync(path.join(CONFIG_DIR, '_sanity-baselines.json'), 'utf8'));
+  } catch (_) { _sanityBaselinesCache = null; }
+  return _sanityBaselinesCache;
+}
+
+/** Returns an array of warning strings for a replay metrics row that fails sanity bounds (empty = OK).
+ *  Never throws. `portfolioId` selects the per-mode baseline; unknown modes get only universal checks. */
+function assertReplaySanity(portfolioId, metrics) {
+  const warns = [];
+  if (!metrics) return warns;
+  const base = loadSanityBaselines();
+  const U = (base && base._universal) || {
+    max_dd_abs_ceiling: 50, min_sharpe: 0, win_rate_min: 15, win_rate_max: 92, min_cagr: -5,
+    trades_ratio_high: 2.2, trades_ratio_low: 0.4,
+  };
+  const num = (v) => (typeof v === 'number' && isFinite(v) ? v : null);
+  const dd = num(metrics.max_dd_pct);
+  const sh = num(metrics.sharpe);
+  const wr = num(metrics.win_rate);
+  const cg = num(metrics.cagr_pct);
+  const tr = num(metrics.total_trades);
+  // Universal tripwires (asset-class-agnostic; systematic-tss configs with real risk mgmt never breach these).
+  if (dd != null && Math.abs(dd) > U.max_dd_abs_ceiling) warns.push(`max_dd_pct=${dd} (|DD|>${U.max_dd_abs_ceiling}% ⇒ replay corrompu — cf. incident etf_eu 2026-07-09 DD-89.6%)`);
+  if (sh != null && sh < U.min_sharpe) warns.push(`sharpe=${sh} (<${U.min_sharpe} ⇒ métriques cassées)`);
+  if (wr != null && (wr < U.win_rate_min || wr > U.win_rate_max)) warns.push(`win_rate=${wr} (hors [${U.win_rate_min},${U.win_rate_max}])`);
+  if (cg != null && cg < U.min_cagr) warns.push(`cagr_pct=${cg} (<${U.min_cagr}% sur fenêtre complète ⇒ suspect)`);
+  // Per-mode baseline deviation (trade-count blowup is THE signature of the ingest corruption).
+  const mb = base && base.modes && base.modes[portfolioId];
+  if (mb && tr != null && num(mb.total_trades)) {
+    const ratio = tr / mb.total_trades;
+    if (ratio > U.trades_ratio_high) warns.push(`total_trades=${tr} = ${ratio.toFixed(1)}× baseline ${mb.total_trades} (>${U.trades_ratio_high}× ⇒ double-comptage/concaténation)`);
+    else if (ratio < U.trades_ratio_low) warns.push(`total_trades=${tr} = ${ratio.toFixed(2)}× baseline ${mb.total_trades} (<${U.trades_ratio_low}× ⇒ replay tronqué)`);
+  }
+  return warns;
+}
+
 /** Build the staging object. `decision` = {actions:{CREATE,UPDATE,CANCEL}} (MCP DtxDecide, snake_case
  *  — mapOrder handles it). engineLabel/engineMode carry provenance (MCP path: "…— MCP" / "mcp"). */
 function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity, replayErr, engineLabel, engineMode, t0 }) {
   const create = (decision && decision.actions && decision.actions.CREATE) || [];
+  const sanityWarnings = assertReplaySanity(cfg.id, metrics);
   return {
     mode: modeInfo.id,
     portfolioId: cfg.id,
@@ -202,6 +254,8 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     metrics,
     equity,
     replayError: replayErr,
+    metricsSuspect: sanityWarnings.length > 0,
+    _sanityWarning: sanityWarnings.length > 0 ? sanityWarnings : null,
     stateless: true,
     tookMs: Date.now() - t0,
   };
@@ -309,6 +363,6 @@ if (require.main === module) main();
 module.exports = {
   discoverModes, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
-  buildStaging, writeStaging, extractReplayMetrics, mapOrder, goLiveFor,
+  buildStaging, writeStaging, extractReplayMetrics, assertReplaySanity, mapOrder, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
 };
