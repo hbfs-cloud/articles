@@ -1,0 +1,73 @@
+# Bibliothèque de presets de signaux — filtres NOMMÉS, TESTÉS, versionnés.
+# Consommés par les skills signals-desk / swing-signals : au lieu d'un pass_expr ad-hoc,
+# le desk pioche ici (pass_expr/score_expr → RunScreener ; entry/sl/tp → niveaux du signal).
+# Le registre (tools/signals-ledger.js) tague chaque signal avec le nom du preset → leçons PAR preset.
+#
+# Schéma par preset :
+#   name          identifiant unique (sert de tag famille dans le registre)
+#   description   à quoi il sert
+#   vendor        source données (yahoo)
+#   timeframe     1d | 1h | 15m | 4h  ⚠️ voir CAVEAT timeframe ci-dessous
+#   min_bars      barres mini requises
+#   topk          nb de candidats
+#   pass_expr     filtre booléen (DSL RunScreener)
+#   score_expr    ranking numérique (DSL)
+#   entry_expr    prix d'entrée (ex: close)
+#   sl_expr       stop = fonction ATR (ex: atr(14)*1.3 sous l'entrée)
+#   tp_expr       cible = fonction ATR (ex: atr(14)*3.0 au-dessus)  → R/R implicite = tp/sl
+#   ref_price     prix de référence
+#   status        tested | draft | deprecated
+#
+# ⚠️ CAVEAT timeframe : sur le chemin pass_expr CUSTOM, RunScreener évalue en DAILY quel que soit
+#    `timeframe` (cf doc RunScreener). Un preset 1h/15m n'est donc PAS honoré tel quel par RunScreener —
+#    il faut soit l'accepter comme approximation daily, soit le router vers le moteur dtx/systematic
+#    (qui, lui, respecte le timeframe). Ne pas prétendre qu'un preset 1h a tourné en 1h via RunScreener.
+
+presets:
+  - name: "Momentum_Explosion_v5.1"
+    description: "Micro-breakout / confirmation momentum — détecte les micro-explosions de momentum après compression (élargissement de volatilité), sans attraper les faux signaux latéraux. Intraday → swing 1-3 jours."
+    type: "micro-breakout / confirmation momentum"
+    vendor: "yahoo"
+    timeframe: "1h"          # ⚠️ voir CAVEAT timeframe (RunScreener custom = daily)
+    min_bars: 80
+    topk: 10
+    horizon_days: 3
+    # Logique : croisement EMA20/EMA50 OU maintien haussier ; tendance installée (trend_strength>0.25) ;
+    # RSI>50 (momentum validé) ; spike volume récent (1.4× sur 6 barres) ; prix à <5% d'un breakout.
+    pass_expr: "(cross_up('ema20','ema50') || ema('close',20) > ema('close',50)) && trend_strength(10) > 0.25 && rsi14 > 50 && vol_spike45_lookback(1.4, 6) && near_breakout(0.05)"
+    # Pondère RSI (timing) + force de tendance + proximité SR (tension structurelle).
+    score_expr: "(rsi14 - 50.0) * 0.5 + trend_strength(10) * 8.0 + (near_sr_score() * 4.0)"
+    entry_expr: "close"
+    sl_expr: "atr(14) * 1.3"
+    tp_expr: "atr(14) * 3.0"   # R/R implicite ≈ 3.0/1.3 ≈ 2.3
+    ref_price: "close"
+    status: "tested"
+
+  # --- Presets desk (utilisés en session, provenance = swing-signals, à durcir/backtester) ---
+  - name: "swing_momentum_v1"
+    description: "Momentum propre non étendu : RSI 48-62, MACD>0, au-dessus MM20, volume au rendez-vous."
+    vendor: "yahoo"
+    timeframe: "1d"
+    min_bars: 100
+    topk: 15
+    pass_expr: "rsi14 > 48 && rsi14 < 62 && macd > 0 && close > ema20 && vol > sma('vol', 20)"
+    score_expr: "100 - rsi14"
+    entry_expr: "close"
+    sl_expr: "atr(14) * 1.5"
+    tp_expr: "atr(14) * 2.5"   # R/R implicite ≈ 1.7
+    ref_price: "close"
+    status: "draft"
+
+  - name: "swing_continuation_v1"
+    description: "Continuation stack MM complet, repli léger (≤3% au-dessus MM20), RSI 50-68."
+    vendor: "yahoo"
+    timeframe: "1d"
+    min_bars: 100
+    topk: 15
+    pass_expr: "close > ema20 && ema20 > ema50 && ema50 > ema200 && (close - ema20) / ema20 <= 0.03 && rsi14 > 50 && rsi14 < 68"
+    score_expr: "100 - rsi14"
+    entry_expr: "close"
+    sl_expr: "atr(14) * 1.5"
+    tp_expr: "atr(14) * 3.0"   # R/R implicite ≈ 2.0
+    ref_price: "close"
+    status: "draft"

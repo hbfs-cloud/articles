@@ -33,6 +33,7 @@ Pour chaque ticker des plans : `QueryData(symbols=T, types="quote,technicals,bar
 - **(a) momentum** : `pass_expr="rsi14>48 && rsi14<62 && macd>0 && close>ema20 && vol>sma('vol',20)"`, `score_expr="100-rsi14"`
 - **(b) continuation** : `pass_expr="close>ema20 && ema20>ema50 && ema50>ema200 && (close-ema20)/ema20<=0.03 && rsi14>50 && rsi14<68"`, `score_expr="100-rsi14"`
 - ⚠️ Le floor mcap n'est **pas** appliqué sur `pass_expr` custom → filtre ≥$2B À LA MAIN. Lire `warnings[]`.
+- **Presets testés** : préférer les filtres nommés de `config/signal-presets.yaml` (ex. `Momentum_Explosion_v5.1`) — utiliser leur `pass_expr`/`score_expr` et dériver les niveaux du bracket ATR (`entry_expr`/`sl_expr`/`tp_expr`) plutôt que des exprs ad-hoc. Taguer le signal avec le nom du preset. Respecter le CAVEAT timeframe (RunScreener custom = daily).
 
 ### 4. Validation en niveaux (règle desk — sinon on jette)
 Par candidat retenu :

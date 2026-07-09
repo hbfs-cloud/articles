@@ -33,6 +33,8 @@ Choisir 2-3 familles à activer, PAS les cinq :
 
 Appliquer chaque brique retenue **selon sa propre recette** (ne pas ré-inventer — suivre le .md de la brique : screener, validation niveaux, anti-dilution, earnings ±3j).
 
+**Presets de filtres (bibliothèque testée).** Les filtres concrets viennent de `config/signal-presets.yaml` (presets NOMMÉS/versionnés, ex. `Momentum_Explosion_v5.1`). Pour chaque preset pertinent au contexte : passer son `pass_expr`/`score_expr` à `RunScreener`, puis **dériver les niveaux du bracket ATR du preset** — entrée=`entry_expr`, stop=entrée−`sl_expr`, cible=entrée+`tp_expr` (R/R implicite = tp/sl) — au lieu de niveaux ad-hoc. **Taguer** chaque signal avec le nom du preset (= `family` dans le registre) → leçons PAR preset. Respecter le **CAVEAT timeframe** (RunScreener custom = daily ; un preset 1h/15m n'est pas honoré tel quel — l'accepter en daily OU router vers dtx/systematic). Préférer les presets `status: tested`.
+
 ## Étape 3 — Classement unifié (cross-familles) + BOUCLE D'AMÉLIORATION
 **D'abord** consulter les leçons du track-record : `node tools/signals-ledger.js lessons` puis lire `data/signals-lessons.json` (win-rate + R moyen **par famille × régime**). Utiliser ça pour **pondérer** la sélection : sur-pondérer les familles qui gagnent dans le régime courant, sous-pondérer/écarter celles qui perdent. (Comme le principe absolu du scanner : les leçons ne peuvent qu'ajuster/pondérer, JAMAIS inverser un signal quantitatif ni créer une entrée de zéro — cf `feedback_regime_aware_eval`.)
 
