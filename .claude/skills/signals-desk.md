@@ -57,11 +57,47 @@ Passer le panier final + le message par le harness `senior-review` (type `basket
 - FIX → appliquer les corrections en place.
 - **BLOCK → NE PAS POSTER**, remonter la raison. (Réutilise `.claude/workflows/senior-review.js` si dispo, sinon la passe multi-persona inline.)
 
-## Étape 6 — Digest + POST Telegram
-Composer le message (gabarit `swing-signals` : bilan → signaux du jour avec **thèse 1 phrase + `▸ Achète si` + `▸ Skip si` + Stop (−%) · Cibles (+% vs prix) · R/R**), zéro tic IA (`EDITORIAL_STYLE.md`), finir « Idées de trading, pas un conseil ». **Poster** via `send_message(to='alerts', format='html', ...)` — c'est le job de ce skill (contrairement aux briques qui demandent). **Sauf** : (a) argument « ne poste pas » → dry-run, montrer seulement ; (b) STOP MCP ou BLOCK Strategist → ne pas poster, remonter le problème.
+## Étape 6 — Digest + POST Telegram (FORMAT EXACT, obligatoire)
+Zéro tic IA (`EDITORIAL_STYLE.md`). **Émettre en `format:"html"`** avec balises `<b>`/`<i>` — JAMAIS de markdown `**` (rendu littéral), échapper `&`→`&amp;`, `<`/`>` hors balises. Suivre CE gabarit **au caractère près** (c'est le style validé, ne pas improviser un autre) :
+
+```
+📊 <b>Bilan &amp; signaux — [JJ mois]</b>
+
+🕌 <b>Portefeuille accumulation ([date pose], horizon)</b>   ← seulement s'il y en a un en cours
+[1 ligne/nom : emoji + TICKER + % move + statut court (repli/étendu/zone d'achat)]
+
+⚡ <b>Signaux précédents — statut</b>
+[1 ligne/nom : emoji + TICKER + prix (+/−%) + verdict (marche / valide / touché cible / stoppé / raté / non déclenché)]
+
+🎯 <b>Signaux du jour — [régime] · [caveat événement s'il y en a]</b>
+
+🟢 <b>TICKER</b> (secteur) — [thèse en 1 phrase].
+▸ Achète si : [condition d'entrée] <b>[niveau]</b>.
+▸ Skip si : [invalidation].
+Stop [x] (−x %) · Cibles [y] (+y % vs prix) / [z] (+z %) · R/R [n]
+
+[répéter le bloc 🟢/🟡 pour chaque signal, 3-5 max]
+
+⚠️ [ce qui casse le lot — l'événement/risque principal]
+<i>Idées de trading, pas un conseil — gère ta taille.</i>
+```
+
+Emojis statut : 🟢 solide / 🟡 conditionnel-ou-volatil / 🔴 faible · ✅ marche · ❌ raté/stoppé · ⏸️ non déclenché.
+
+**Poster** via `send_message(to='alerts', format='html', ...)` — c'est le job de ce skill (contrairement aux briques qui demandent). **Sauf** : (a) argument « ne poste pas » → dry-run, montrer seulement ; (b) STOP MCP ou BLOCK harness/Strategist → ne pas poster, remonter le problème.
 
 ## Étape 7 — Log (registre append-only)
 Écrire les signaux émis dans un fichier JSON `[{date,family,ticker,entry,stop,tp1,tp2,rr,thesis,regime,confidence,status}]` puis `node tools/signals-ledger.js append --payload <f.json>` → alimente le track-record (dédup par id, jamais d'écrasement). Le prochain run les revalide (étape 5) et en tire des leçons (étape 3) = **boucle d'amélioration fermée**. Optionnel : `remember(workspace='dailystocks', type='project', ...)` pour le contexte cross-agent.
+
+## Étape 8 — Git : PUSH DIRECT SUR MAIN
+Les changements de ce skill sont **minuscules** (2 fichiers : `data/signals-ledger.json` + `data/signals-lessons.json`), **aucun scan scanner** → **push DIRECT sur `main`**, PAS de branche/PR :
+```
+git fetch origin main && git rebase origin/main   # ou merge ; garder les fichiers générés sur conflit
+git add data/signals-ledger.json data/signals-lessons.json   # fichiers SPÉCIFIQUES uniquement (jamais git add -A)
+git commit -m "signals(ledger): <date> <matin|soir> — <n> signaux + sweep"
+git push origin HEAD:main
+```
+Si le push est rejeté (divergence) → re-`fetch`/`rebase` et re-push. **NE PAS** créer de branche `claude/**` en comptant sur le workflow auto-merge scanner : son `qa-check --strict` est **spécifique au scanner** (attend un scan frais + complétude dtx) et **échouera** sur un run signals-desk (branche sans scan). Le push direct main est propre et déclenche `deploy.yml` (Pages).
 
 ## Automatisation
 Pensé pour tourner **mains libres** (cron/routine cloud pré-marché). Pour planifier : skill `schedule` / `RemoteTrigger` (voir `project_cloud_routine_automerge`). En run planifié, l'étape 6 poste directement (pas de confirmation).
