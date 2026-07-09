@@ -207,6 +207,7 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | `telegram-notifications-qa` | telegram-publish-notify, topic Telegram, notif article |
 | `scheduled-tasks-veille` | veille tech, tâche planifiée, Discord bot, claude-discord-bot |
 | `fortress-pm` | fortress, fortress pm, fortress halal, pm halal, portfolio manager fortress |
+| `swing-signals` | swing, signaux swing, swings tactiques, trade court terme, bilan swing, quels signaux today, coups rapides, jouable aujourd'hui |
 
 ## Mode Status State Machine
 Doc complète : [`tools/lib/MODE_STATUS.md`](tools/lib/MODE_STATUS.md). Résumé :
