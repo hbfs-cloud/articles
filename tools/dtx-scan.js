@@ -125,8 +125,18 @@ function parseScore(reason) {
 
 function mapOrder(or) {
   // dtx serializes OrderRequest in snake_case: {order_id,symbol,side,order_type,qty,limit_price,
-  // stop_price,stop_loss,take_profit,reason,priority}.
+  // stop_price,stop_loss,take_profit,reason,priority} plus optional execution metadata:
+  // exec_options {gap_up_pct,gap_down_pct,vwap_weak_skip,regime…,slicer,fill_window…} and
+  // alternates [{symbol,limit_price,qty,stop_loss}] (the gap-gate substitution cascade).
   const entry = or.limit_price || or.stop_price || null;
+  const alts = Array.isArray(or.alternates)
+    ? or.alternates.map((a) => ({
+        symbol: a.symbol,
+        limitPrice: a.limit_price || null,
+        qty: a.qty || null,
+        stopLoss: a.stop_loss || null,
+      }))
+    : null;
   return {
     symbol: or.symbol,
     side: or.side,
@@ -141,6 +151,9 @@ function mapOrder(or) {
     reason: or.reason || null,
     priority: or.priority != null ? or.priority : null,
     orderId: or.order_id || null,
+    // Execution metadata so the status page / analyses can surface the gates a consumer must honor.
+    execOptions: or.exec_options || null,
+    alternates: alts,
   };
 }
 

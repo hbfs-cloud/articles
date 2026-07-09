@@ -22,7 +22,9 @@
  * The local binary path (`node tools/dtx-scan.js`) stays the OFFLINE / no-agent FALLBACK.
  *
  * DtxDecide JSON shape : { state, actions:{ CREATE:[{symbol,side,order_type,qty,limit_price,
- *                         stop_price,stop_loss,take_profit,reason,priority,order_id}], UPDATE, CANCEL } }
+ *                         stop_price,stop_loss,take_profit,reason,priority,order_id,
+ *                         exec_options?{gap_*,vwap_weak_skip,regime…,slicer,fill_window…},
+ *                         alternates?[{symbol,limit_price,qty,stop_loss}]}], UPDATE, CANCEL } }
  * DtxReplay JSON shape : { portfolio_id, results:[{cagr_pct,max_dd_pct,sharpe,r2,win_rate,
  *                         total_trades,final_equity,equity_dates[],equity_values[], ...}] }
  * Order fields are snake_case; dtx-scan.mapOrder maps them → the staging camelCase order fields.
