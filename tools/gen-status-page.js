@@ -2231,6 +2231,15 @@ details[open] summary::after{transform:rotate(90deg)}
 .yt-btn{background:oklch(30% 0.02 250);color:#fff;border:1px solid oklch(40% 0.02 250)}
 .dc-btn{background:#5865F2;color:#fff}
 @media(max-width:600px){.community-inner{flex-direction:column;align-items:flex-start}.cta-btn{min-width:unset;width:100%}}
+
+  /* ── Premium cards — single clean theme: calm elevation via soft shadow,
+     no mode-colored side/top stripes (the AI "side-tab" tell). Mode identity
+     lives in the active tab + dot, not painted onto every card edge. ── */
+  .section-card{border:1px solid var(--border)!important;box-shadow:0 1px 2px oklch(22% 0.02 250/.045),0 8px 24px oklch(22% 0.02 250/.05);transition:box-shadow .22s cubic-bezier(.2,.6,.2,1),border-color .22s ease}
+  .section-card:hover{box-shadow:0 2px 6px oklch(22% 0.02 250/.06),0 14px 34px oklch(22% 0.02 250/.09);border-color:var(--border-2)}
+  .perf-hero{border:1px solid var(--border)!important;box-shadow:0 1px 2px oklch(22% 0.02 250/.045),0 8px 24px oklch(22% 0.02 250/.05)}
+  .ps{border-left:1px solid var(--border)!important}
+  @media (prefers-reduced-motion:reduce){.section-card{transition:none}}
   </style>
 </head>
 <body>
