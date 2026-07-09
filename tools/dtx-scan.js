@@ -218,6 +218,10 @@ function assertReplaySanity(portfolioId, metrics) {
   const wr = num(metrics.win_rate);
   const cg = num(metrics.cagr_pct);
   const tr = num(metrics.total_trades);
+  // Empty/unlaunched replay (≈0 trades) is NOT "corrupt metrics" — it's a no-data condition handled by the
+  // completeness gate, not the sanity gate. Skip the metric tripwires below the minimum sample to avoid false
+  // positives on modes that legitimately produced no trades (e.g. metals with no universe data → win_rate 0).
+  if (tr != null && tr < 10) return warns;
   // Universal tripwires (asset-class-agnostic; systematic-tss configs with real risk mgmt never breach these).
   if (dd != null && Math.abs(dd) > U.max_dd_abs_ceiling) warns.push(`max_dd_pct=${dd} (|DD|>${U.max_dd_abs_ceiling}% ⇒ replay corrompu — cf. incident etf_eu 2026-07-09 DD-89.6%)`);
   if (sh != null && sh < U.min_sharpe) warns.push(`sharpe=${sh} (<${U.min_sharpe} ⇒ métriques cassées)`);

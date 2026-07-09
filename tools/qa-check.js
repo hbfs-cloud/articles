@@ -346,23 +346,35 @@ check('dtx: staging scriptés complets (5 modes MCP frais — pas de skip silenc
 // dtx-mcp-ingest marque alors le staging `metricsSuspect:true` + `_sanityWarning[…]` (bornes dans
 // config/dtx/_sanity-baselines.json). On ESCALADE ici en ❌ tout staging FRAIS (généré aujourd'hui) marqué
 // suspect — un DD aberrant ne repart JAMAIS en publication en silence. Staging ancien → skip (pas de faux ❌).
-check('dtx: métriques replay saines (aucun staging frais suspect — DD/trades/sharpe dans les bornes)', () => {
+check('dtx: métriques replay saines (AUCUN staging corrompu — frais OU stale — DD/trades/sharpe dans les bornes)', () => {
   const dir = path.join(ROOT, 'data', 'dtx');
-  const today = new Date().toISOString().slice(0, 10);
   let files;
   try { files = fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_')); }
   catch { return; } // pas de dossier dtx → rien à garantir
+  // Ré-ÉVALUE chaque staging via assertReplaySanity (pas seulement le flag metricsSuspect écrit à l'ingest) :
+  // un staging STALE committé AVANT le garde (ex. us_highvol 07-08 = 1176tr/DD-64%) porte metricsSuspect=false
+  // par défaut mais reste corrompu et s'affiche sur la status page. On flague TOUT staging aberrant, quelle que
+  // soit sa date de génération — le trou "stale corrompu affiché en silence" est ainsi fermé.
+  let scan;
+  try { scan = require('./dtx-scan'); } catch { scan = null; }
   const suspects = [];
   for (const f of files) {
     let j;
     try { j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')); } catch { continue; }
-    if (String(j.generatedAt || '').slice(0, 10) !== today) continue; // staging antérieur → pas de faux ❌
-    if (j.metricsSuspect) suspects.push(`${j.portfolioId || f}: ${(j._sanityWarning || []).join(' ; ')}`);
+    const id = j.portfolioId || f.replace(/\.json$/, '');
+    let warns = [];
+    if (scan && j.metrics) warns = scan.assertReplaySanity(id, j.metrics) || [];
+    // fallback: si le fichier porte déjà le flag/_sanityWarning (ingest récent), le respecter aussi.
+    if (warns.length === 0 && j.metricsSuspect) warns = (j._sanityWarning || ['metricsSuspect:true']);
+    if (warns.length > 0) {
+      const gen = String(j.generatedAt || '').slice(0, 10) || '?';
+      suspects.push(`${id} (gen ${gen}): ${warns.join(' ; ')}`);
+    }
   }
   if (suspects.length === 0) return;
-  return `staging dtx FRAIS avec métriques replay ABERRANTES (NON publiable) — `
-    + `${suspects.join(' | ')}. Le MCP dtx est sain : un replay hors bornes = param drift / job corrompu. `
-    + `Re-appeler DtxReplay (from=2021-01-01), vérifier trades vs config/dtx/_sanity-baselines.json, ré-ingérer, alerter 'alerts'.`;
+  return `staging dtx avec métriques replay ABERRANTES (NON publiable, y compris stale) — `
+    + `${suspects.join(' | ')}. Un replay hors bornes = param drift / job corrompu / OOM serveur ayant laissé un staging cassé. `
+    + `Re-appeler DtxReplay (from=2021-01-01) séquentiellement, vérifier trades vs config/dtx/_sanity-baselines.json, ré-ingérer, alerter 'alerts'.`;
 });
 
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
