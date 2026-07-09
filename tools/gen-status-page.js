@@ -2246,6 +2246,19 @@ details[open] summary::after{transform:rotate(90deg)}
      report.css change). White cards (--surface) now separate cleanly and the soft
      card shadow reads. Cool hue (250) harmonises with the azure accent. ── */
   body{--bg:oklch(96.4% 0.005 250);--surface-2:oklch(98% 0.004 250);--border:oklch(89% 0.007 250);background:var(--bg)}
+
+  /* ── Rhythm — more generous, consistent whitespace on desktop (breathing room
+     is the calm-premium signal). Mobile stays dense per the mobile-first mandate,
+     so this is gated to ≥768px. ── */
+  @media (min-width:768px){
+    .section-card{padding:1.65rem 1.9rem;margin-bottom:1.85rem}
+    .perf-hero{padding:1.9rem;margin-bottom:1.85rem;gap:2rem}
+    .sc-head{margin-bottom:1.25rem}
+    .panel-section-title{margin-bottom:1.25rem}
+    .mode-tabs{margin-bottom:1.85rem}
+    .hero{padding:2.75rem 1.5rem 2.25rem}
+    .w{padding-bottom:5rem}
+  }
   </style>
 </head>
 <body>
