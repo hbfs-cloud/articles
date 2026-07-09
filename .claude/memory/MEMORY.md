@@ -138,6 +138,9 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - [Routine Redesign v2](project_routine_redesign_v2.md) — Conductors replaced by simple Sonnet routines (crash detector, market pulse, rotation detector). Old conductors disabled 2026-06-24.
 - [Cloud routine auto-merge](project_cloud_routine_automerge.md) — les routines Claude cloud poussent sur une branche `claude/**` (pas main, pas de PR) ; MCP systematic PROUVÉ présent dans le sandbox cloud (run 20260709 : 5 modes engineMode:mcp) ; auto-merge câblé via `.github/workflows/auto-merge-nightly.yml` (gate qa-check+qa-content --strict → vert=PR+merge, rouge=PR retenue label qa-failed).
 
+## Design
+- [Scanner Status Reskin](project_scanner_status_reskin.md) — thème clair UNIQUE (dark reverté, ne pas re-tenter) ; reskin premium en 3 leviers scopés dans gen-status-page.js (cartes sans side-stripe + élévation, fond gris cool, rythme desktop) ; l'equity chart est déjà cohérent (ne pas "unifier") ; commits 3477590fe/a5a90b42f/fffd48f93.
+
 ## Références Externes
 - [Screener Reliability 2026-07-02](reference_screener_reliability_20260702.md) — RunScreener DSL fiable (rising OK, mcap OK, as_of OK) ; gaps gateway : enable_backtest sans backtest_result, region=eu vide, AutoScreener sans floor mcap.
 - [Exa.ai API](reference_exa_api.md) — API de recherche sémantique, alternative à WebSearch pour deep research
