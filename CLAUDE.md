@@ -208,6 +208,10 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 | `scheduled-tasks-veille` | veille tech, tâche planifiée, Discord bot, claude-discord-bot |
 | `fortress-pm` | fortress, fortress pm, fortress halal, pm halal, portfolio manager fortress |
 | `swing-signals` | swing, signaux swing, swings tactiques, trade court terme, bilan swing, quels signaux today, coups rapides, jouable aujourd'hui |
+| `squeeze-radar` | squeeze, short squeeze, short interest, cost to borrow, CTB, days to cover, gamma squeeze |
+| `earnings-reaction` | earnings, résultats, post-earnings, earnings drift, gap and go, beat, guidance relevée, saison des résultats, PEAD |
+| `sector-rotation` | rotation, rotation sectorielle, force relative, RS, leaders, quel secteur, surpondérer, sous-pondérer, sector tilt |
+| `macro-event-playbook` | CPI, Fed, FOMC, macro, événement, playbook, OPEP, jobs, NFP, calendrier économique, positionnement, de-risk |
 
 ## Mode Status State Machine
 Doc complète : [`tools/lib/MODE_STATUS.md`](tools/lib/MODE_STATUS.md). Résumé :
