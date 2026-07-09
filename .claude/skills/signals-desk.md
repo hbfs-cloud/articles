@@ -82,7 +82,9 @@ Stop [x] (−x %) · Cibles [y] (+y % vs prix) / [z] (+z %) · R/R [n]
 <i>Idées de trading, pas un conseil — gère ta taille.</i>
 ```
 
-Emojis statut : 🟢 solide / 🟡 conditionnel-ou-volatil / 🔴 faible · ✅ marche · ❌ raté/stoppé · ⏸️ non déclenché.
+**Pastilles (obligatoires, une par ligne de ticker)** : 🟢 solide/zone d'achat · 🟡 conditionnel/volatil · 🟠 étendu (parti sans repli, ne pas chaser) · 🔴 faible · ✅ marche · ❌ raté/stoppé · ⏸️ non déclenché.
+
+**À NE PAS FAIRE (ce qui casse le style) :** pas de paragraphes de prose (thèse = **1 phrase** max) ; pas de section « Contexte » verbeuse séparée (le régime va dans le titre 🎯, le risque dans le ⚠️ final) ; pas de setups numérotés `1. / 2.` — chaque signal = **pastille + `<b>TICKER</b>` (secteur) + 1 phrase**, puis `▸ Achète si` / `▸ Skip si`, puis la ligne `Stop · Cibles · R/R`. Toujours des **pastilles couleur** devant chaque ticker (bilan ET signaux du jour), jamais des `▸` nus. Compact et scannable, exactement comme le gabarit.
 
 **Poster** via `send_message(to='alerts', format='html', ...)` — c'est le job de ce skill (contrairement aux briques qui demandent). **Sauf** : (a) argument « ne poste pas » → dry-run, montrer seulement ; (b) STOP MCP ou BLOCK harness/Strategist → ne pas poster, remonter le problème.
 
