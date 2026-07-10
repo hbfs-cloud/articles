@@ -7096,5 +7096,18 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/series/banques-centrales/part1-role-et-mandat/",
     "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Énergie & Refroidissement",
+    "desc": "Série La Chaîne de l'IA au-delà de Nvidia — Partie 1/6 : le vrai plafond du build-out n'est plus la puce, c'est le mégawatt et la chaleur. Vertiv, Eaton, GE Vernova, Vistra : qui fournit le courant et évacue les watts.",
+    "tags": "formation,us,tech,ai,energy,industrials",
+    "grade": "",
+    "href": "/series/chaine-ia-au-dela-nvidia/part1-energie-refroidissement/",
+    "date": ""
   }
 ];

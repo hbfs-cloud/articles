@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="formation,us,asia,tech,ai,semis" data-tab="analyses">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Packaging Avancé | La Chaîne de l'IA au-delà de Nvidia — Partie 5/6 | DailyTickers</title>
+ <meta name="description" content="Série La Chaîne de l'IA au-delà de Nvidia — Partie 5/6 : le vrai plafond de la production de GPU haut de gamme n'est pas la gravure du silicium, c'est le packaging avancé. Le goulet dans le goulet. Amkor, TSMC et le CoWoS.">
+ <meta property="og:title" content="Packaging Avancé | La Chaîne de l'IA 5/6 | DailyTickers">
+ <meta property="og:description" content="Le plafond de production des GPU n'est pas la gravure, c'est le packaging avancé. Le goulet dans le goulet. Amkor, TSMC.">
+ <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+ <meta property="og:url" content="https://articles.dailytickers.com/series/chaine-ia-au-dela-nvidia/part5-packaging-avance/">
+ <meta property="og:type" content="article">
+ <link rel="icon" href="/favicon.ico">
+
+ <!-- Google Tag Manager -->
+ <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+ 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+ })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+ <!-- Fonts & Icons -->
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+ <!-- Charts -->
+ <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+
+ <!-- Base CSS -->
+ <link rel="stylesheet" href="/assets/report.css">
+
+ <style>
+ /* TEAL THEME — La Chaîne de l'IA au-delà de Nvidia */
+ .hero-section { padding:4rem 2rem 8rem 2rem; background:linear-gradient(180deg, #ecfeff 0%, #f8fafc 100%); text-align:center; }
+ .hero-date { font-size:0.85rem; font-weight:700; color:#0d9488; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
+ .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
+ .hero-badge-teal { background:rgba(13,148,136,0.1); color:#0d9488; border:1px solid rgba(13,148,136,0.2); }
+ .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
+ .hero-badge-green { background:rgba(16,185,129,0.1); color:#10b981; border:1px solid rgba(16,185,129,0.2); }
+ .hero-badge-amber { background:rgba(245,158,11,0.1); color:#d97706; border:1px solid rgba(245,158,11,0.2); }
+ .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
+
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+ .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; }
+ .compare-table th { background:#134e4a; color:white; padding:1rem; font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; text-align:left; }
+ .compare-table td { padding:0.85rem 1rem; border-bottom:1px solid #f1f5f9; font-size:0.9rem; color:#334155; }
+ .compare-table tr:nth-child(even) td { background:#f8fafc; }
+ .compare-table tr:last-child td { border-bottom:none; }
+
+ .checklist { list-style:none; padding:0; margin:1.5rem 0; }
+ .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
+ .checklist li i { margin-top:0.15rem; flex-shrink:0; }
+
+ details { margin:0.75rem 0; }
+ details summary { cursor:pointer; padding:1rem 1.25rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; font-weight:700; color:#0f172a; font-size:0.95rem; transition:all 0.2s; list-style:none; }
+ details summary::-webkit-details-marker { display:none; }
+ details summary::before { content:'\f059'; font-family:'Font Awesome 6 Free'; font-weight:900; color:#0d9488; margin-right:0.75rem; }
+ details[open] summary { border-color:#0d9488; background:#ecfeff; border-radius:12px 12px 0 0; }
+ details .quiz-answer { padding:1rem 1.25rem; background:#f0fdfa; border:1px solid #5eead4; border-radius:0 0 12px 12px; font-size:0.9rem; color:#334155; line-height:1.7; }
+
+ .name-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:1rem; margin:2rem 0; }
+ .name-card { background:white; border:1px solid #e2e8f0; border-radius:16px; padding:1.5rem; border-top:4px solid #0d9488; transition:all 0.3s; }
+ .name-card:hover { transform:translateY(-3px); box-shadow:0 12px 30px -8px rgba(0,0,0,0.12); }
+ .name-card .nc-ticker { font-size:1.2rem; font-weight:900; color:#0f172a; }
+ .name-card .nc-mcap { font-size:0.8rem; font-weight:700; color:#0d9488; margin-left:0.4rem; }
+ .name-card .nc-role { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; font-weight:700; margin:0.25rem 0 0.75rem; }
+ .name-card p { font-size:0.88rem; color:#475569; line-height:1.55; margin:0; }
+ .name-card .nc-stat { display:inline-block; margin-top:0.75rem; font-size:0.72rem; font-weight:700; color:#475569; background:#f1f5f9; padding:0.2rem 0.55rem; border-radius:6px; }
+
+ .takeaway-box { background:linear-gradient(135deg, #ecfeff 0%, #cffafe 100%); border:1px solid #0d9488; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box h3 { color:#0f766e; margin-top:0; }
+ .takeaway-list { list-style:none; padding:0; margin:0; }
+ .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(13,148,136,0.15); }
+ .takeaway-list li:last-child { border-bottom:none; }
+ .takeaway-list li i { color:#0d9488; margin-top:0.2rem; flex-shrink:0; }
+
+ .next-cta { display:flex; align-items:center; justify-content:center; gap:1rem; padding:2rem; background:linear-gradient(135deg, #0f766e 0%, #14b8a6 100%); color:white; border-radius:16px; margin:2rem 0; text-decoration:none; transition:transform 0.2s, box-shadow 0.2s; }
+ .next-cta:hover { transform:translateY(-2px); box-shadow:0 12px 30px rgba(13,148,136,0.3); }
+ .next-cta .next-label { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; opacity:0.85; }
+ .next-cta .next-title { font-size:1.25rem; font-weight:800; }
+ .prev-cta { display:inline-flex; align-items:center; gap:0.5rem; color:#0d9488; font-weight:700; text-decoration:none; font-size:0.9rem; margin:1rem 0; }
+
+ .thesis-box { background:#0f172a; border-radius:16px; padding:1.75rem 2rem; margin:2rem 0; border-left:5px solid #14b8a6; }
+ .thesis-box h4 { color:#5eead4; margin:0 0 0.6rem; font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em; }
+ .thesis-box p { color:#e2e8f0; margin:0; font-size:0.95rem; line-height:1.65; }
+ .thesis-box strong { color:#fff; }
+
+ @media (max-width:768px) {
+   .hero-section { padding:2.5rem 1rem 5rem; }
+   .hero-section h1 { font-size:1.8rem !important; }
+   .hero-badge { font-size:0.7rem; padding:0.35rem 0.75rem; }
+   .next-cta { flex-direction:column; text-align:center; }
+   .name-grid { grid-template-columns:1fr; }
+ }
+ @media (max-width:480px) {
+   .hero-section h1 { font-size:1.4rem !important; }
+   .hero-section { padding:2rem 1rem 4rem; }
+   .hero-badge { font-size:0.65rem; padding:0.3rem 0.6rem; gap:0.25rem; }
+ }
+ </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+    <div class="brand-bar-inner">
+      <a href="/" class="brand-logo">
+        <img src="/logo.svg" alt="" width="36" height="36">
+        <span class="brand-title">DailyTickers</span>
+      </a>
+      <div class="brand-nav">
+        <a href="/?tab=weekly">Hebdo</a>
+        <a href="/?tab=daily">Daily</a>
+        <a href="/?tab=analyses">Analyses</a>
+        <a href="/?tab=scanner">Scanner</a>
+        <a href="/?tab=radar">Radar</a>
+        <a href="/?tab=series">Séries</a>
+      </div>
+      <div class="brand-actions">
+        <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+      </div>
+    </div>
+  </nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-cubes-stacked" style="margin-right:0.4rem;"></i> La Chaîne de l'IA au-delà de Nvidia — Partie 5 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem; max-width:850px; margin:0 auto 1.5rem;">Packaging Avancé</h1>
+  <p class="hero-subtitle">Le nombre de GPU haut de gamme que l'industrie peut livrer chaque trimestre ne dépend pas d'abord de la gravure du silicium. Il dépend d'une étape que presque personne ne cite : le packaging avancé, où la puce et ses piles de mémoire sont mariées sur un même support. C'est le goulet caché dans le goulet, et il est dangereusement concentré.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-cubes-stacked"></i> Le goulet caché</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-object-group"></i> Puce + mémoire mariées</span>
+    <span class="hero-badge hero-badge-amber"><i class="fa-solid fa-industry"></i> Sous-traitance qui monte</span>
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-earth-asia"></i> Concentration géographique</span>
+  </div>
+    <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem; display:flex; justify-content:center;"></div>
+</section>
+    <div class="series-bar"><div class="series-bar-inner"><a href="/series/chaine-ia-au-dela-nvidia/part4-serveurs-odm/" class="series-arrow" title="Serveurs & Intégrateurs"><i class="fas fa-chevron-left"></i></a><span class="series-title">La Chaîne de l'IA au-delà de Nvidia</span><div class="series-steps"><a href="/series/chaine-ia-au-dela-nvidia/part1-energie-refroidissement/" class="series-step" title="Énergie & Refroidissement"><span class="series-num">1</span><span class="series-label">Énergie</span></a><a href="/series/chaine-ia-au-dela-nvidia/part2-memoire-stockage/" class="series-step" title="Mémoire HBM & Stockage"><span class="series-num">2</span><span class="series-label">Mémoire</span></a><a href="/series/chaine-ia-au-dela-nvidia/part3-optique-interconnect/" class="series-step" title="Optique & Interconnexion"><span class="series-num">3</span><span class="series-label">Optique</span></a><a href="/series/chaine-ia-au-dela-nvidia/part4-serveurs-odm/" class="series-step" title="Serveurs & Intégrateurs"><span class="series-num">4</span><span class="series-label">Serveurs</span></a><a href="/series/chaine-ia-au-dela-nvidia/part5-packaging-avance/" class="series-step current" title="Packaging Avancé"><span class="series-num">5</span><span class="series-label">Packaging</span></a><a href="/series/chaine-ia-au-dela-nvidia/part6-equipement-fab/" class="series-step" title="Équipement de Fabrication"><span class="series-num">6</span><span class="series-label">Équipement</span></a></div><span class="series-counter">5/6</span><a href="/series/chaine-ia-au-dela-nvidia/part6-equipement-fab/" class="series-arrow" title="Équipement de Fabrication"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#goulet" class="fnav-item" data-section="goulet"><i class="fas fa-bookmark"></i><span>Le goulet caché</span></a><a href="#cowos" class="fnav-item" data-section="cowos"><i class="fas fa-bookmark"></i><span>Marier puce et mémoire</span></a><a href="#noms" class="fnav-item" data-section="noms"><i class="fas fa-bookmark"></i><span>Les noms</span></a><a href="#sous-estime" class="fnav-item" data-section="sous-estime"><i class="fas fa-bookmark"></i><span>Ce que le marché rate</span></a><a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-bookmark"></i><span>Quiz</span></a></div>
+<button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+<script>
+(function() {
+  var fab = document.getElementById('fnavBtn');
+  var menu = document.getElementById('fnavMenu');
+  var icon = document.getElementById('fnavIcon');
+  var label = document.getElementById('fnavLabel');
+  if (!fab || !menu) return;
+  var items = menu.querySelectorAll('.fnav-item');
+  var sections = [];
+  var isOpen = false;
+  items.forEach(function(item) {
+    var id = item.getAttribute('data-section');
+    var el = document.getElementById(id);
+    if (el) sections.push({ id: id, el: el, item: item });
+  });
+  function toggle() {
+    isOpen = !isOpen;
+    menu.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    icon.className = isOpen ? 'fas fa-times' : 'fas fa-bars';
+  }
+  fab.addEventListener('click', function(e) { e.stopPropagation(); toggle(); });
+  document.addEventListener('click', function(e) {
+    if (isOpen && !menu.contains(e.target) && !fab.contains(e.target)) toggle();
+  });
+  document.addEventListener('keydown', function(e) { if (e.key === 'Escape' && isOpen) toggle(); });
+  items.forEach(function(item) {
+    item.addEventListener('click', function(e) {
+      e.preventDefault();
+      var id = this.getAttribute('data-section');
+      var target = document.getElementById(id);
+      if (target) {
+        var brandBar = document.querySelector('.brand-bar');
+        var offset = (brandBar ? brandBar.offsetHeight : 56) + 20;
+        window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - offset, behavior: 'smooth' });
+      }
+      if (isOpen) toggle();
+    });
+  });
+  var currentActive = null;
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var match = sections.find(function(s) { return s.el === entry.target; });
+        if (match) {
+          if (currentActive) currentActive.item.classList.remove('active');
+          match.item.classList.add('active');
+          currentActive = match;
+          label.textContent = match.item.querySelector('span').textContent;
+        }
+      }
+    });
+  }, { rootMargin: '-15% 0px -65% 0px', threshold: 0 });
+  sections.forEach(function(s) { observer.observe(s.el); });
+  if (sections.length > 0) {
+    sections[0].item.classList.add('active');
+    currentActive = sections[0];
+    label.textContent = sections[0].item.querySelector('span').textContent;
+  }
+})();
+</script>
+<div class="container">
+
+<a href="/series/chaine-ia-au-dela-nvidia/part4-serveurs-odm/" class="prev-cta"><i class="fa-solid fa-arrow-left"></i> Partie 4 — Serveurs & Intégrateurs</a>
+
+<div class="section-divider" id="goulet"><i class="fa-solid fa-cubes-stacked" style="color:#0d9488;"></i> Le goulet caché</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-filter" style="color:#0d9488;"></i> Le vrai plafond de la production de GPU</h2>
+
+  <p>Quand une pénurie de puces IA fait la une, l'intuition est de blâmer les usines de gravure. Erreur fréquente. Depuis plusieurs cycles, ce qui limite réellement le nombre d'accélérateurs haut de gamme livrés, c'est l'étape d'après : le packaging avancé. C'est là que le processeur et ses piles de mémoire haute performance sont assemblés sur un même support, avec des dizaines de milliers de connexions. Sans cette capacité, une usine de gravure peut tourner à plein sans que davantage de GPU finis ne sortent.</p>
+
+  <p>Ce détail change la façon de lire toute la chaîne. Le goulet n'est pas là où on le cherche. La capacité de packaging avancé fixe le débit de sortie des puces les plus chères du monde, et donc, en amont, la demande de mémoire, d'optique et de racks. Comprendre ce maillon, c'est comprendre le robinet principal.</p>
+
+  <div class="pedagogy-box">
+    <h4 style="color:#0d9488;"><i class="fa-solid fa-lightbulb"></i> Packaging avancé, en clair</h4>
+    <p style="margin:0;">Le packaging classique consiste à enfermer une puce dans un boîtier. Le packaging avancé va bien plus loin : il place côte à côte, sur un support commun appelé interposeur, le processeur et plusieurs piles de mémoire, reliés par un réseau ultra-dense de connexions. C'est cette proximité qui donne à l'accélérateur sa bande passante mémoire. La technique phare de l'industrie porte le nom de CoWoS.</p>
+  </div>
+</div>
+
+<div class="section-divider" id="cowos"><i class="fa-solid fa-object-group" style="color:#2563eb;"></i> Marier puce et mémoire</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-object-group" style="color:#2563eb;"></i> Deux modèles : le fondeur intégré et le sous-traitant</h2>
+
+  <p>Il existe deux façons de faire ce travail. La première, intégrée : le grand fondeur asiatique qui grave aussi la puce réalise lui-même le packaging avancé, dans la foulée. C'est le modèle dominant pour les accélérateurs de pointe, et il explique pourquoi la capacité de packaging de ce fondeur est le véritable compteur de la production mondiale de GPU. La seconde, sous-traitée : des spécialistes indépendants du packaging et du test, les OSAT, prennent en charge cette étape pour des clients variés.</p>
+
+  <p>À mesure que le packaging se complexifie et que les volumes explosent, la sous-traitance gagne du terrain. Les concepteurs de puces qui n'ont pas accès à la capacité du grand fondeur, ou qui veulent une seconde source, se tournent vers les OSAT. C'est la porte d'entrée boursière la plus directe sur ce maillon, à côté du fondeur géant lui-même.</p>
+</div>
+
+<div class="section-divider" id="noms"><i class="fa-solid fa-list-check" style="color:#0d9488;"></i> Les noms</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-microchip" style="color:#0d9488;"></i> Le géant et le petit levier</h2>
+
+  <div class="name-grid">
+    <div class="name-card">
+      <div><span class="nc-ticker">TSM</span><span class="nc-mcap">~2 260 Md$</span></div>
+      <div class="nc-role">TSMC · Fondeur + packaging intégré</div>
+      <p>Le fondeur qui grave les puces de pointe et réalise leur packaging avancé. Sa capacité de packaging est, de fait, le compteur de la production mondiale de GPU haut de gamme. Position dominante, mais concentration géographique qui en fait un point unique de défaillance pour toute l'industrie.</p>
+      <span class="nc-stat">Bêta 1,25</span> <span class="nc-stat">PE fwd ~21×</span>
+    </div>
+    <div class="name-card">
+      <div><span class="nc-ticker">AMKR</span><span class="nc-mcap">~18 Md$</span></div>
+      <div class="nc-role">Amkor · Sous-traitant packaging & test</div>
+      <p>Le plus grand OSAT coté, celui qui gagne à mesure que le packaging avancé se sous-traite. Petite capitalisation, donc levier fort sur le thème, mais bêta de 2,21 et environ 15% du flottant à découvert : le marché reste partagé sur la vitesse de bascule vers la sous-traitance.</p>
+      <span class="nc-stat">Bêta 2,21</span> <span class="nc-stat">Short ~15% du flottant</span>
+    </div>
+  </div>
+
+  <div id="chart-p5-mcap" style="width:100%; height:300px; margin:2rem 0;"></div>
+  <p style="font-size:0.8rem; color:#94a3b8; margin-top:-1rem;">Capitalisations relevées le 10 juillet 2026. L'écart de taille illustre à lui seul la structure du maillon. À titre indicatif.</p>
+
+  <table class="compare-table">
+    <thead>
+      <tr><th>Société</th><th>Modèle</th><th>Capitalisation</th><th>Rôle dans le goulet</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>TSMC (TSM)</strong></td><td>Fondeur intégré</td><td>~2 260 Md$</td><td>Fixe le débit mondial de GPU haut de gamme</td></tr>
+      <tr><td><strong>Amkor (AMKR)</strong></td><td>Sous-traitant (OSAT)</td><td>~18 Md$</td><td>Capte la sous-traitance qui déborde</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="section-divider" id="sous-estime"><i class="fa-solid fa-magnifying-glass-chart" style="color:#ef4444;"></i> Ce que le marché rate</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-eye-slash" style="color:#ef4444;"></i> Le robinet le plus étroit de toute la chaîne</h2>
+
+  <p>Le consensus surveille les carnets de commandes de GPU et la capacité de gravure. Le vrai compteur est ailleurs : la cadence d'ajout de capacité de packaging avancé. Tant qu'elle reste inférieure à la demande, chaque accélérateur de pointe est rationné à la sortie de cette ligne, quelle que soit l'abondance de silicium en amont. C'est le maillon où une pénurie se crée, et où elle se résorbe.</p>
+
+  <p>Deux conséquences pour l'investisseur. D'abord, une petite société comme Amkor offre un levier disproportionné sur ce thème, avec la volatilité qui va avec, à condition que la sous-traitance s'accélère vraiment. Ensuite, un risque que le marché sous-estime par habitude : la concentration géographique. L'essentiel du packaging avancé de pointe se fait dans une zone unique. Un incident, une tension géopolitique, et c'est le robinet principal de l'IA mondiale qui se referme. Ce risque ne se voit pas dans un multiple, il se voit sur une carte.</p>
+
+  <div class="thesis-box">
+    <h4><i class="fa-solid fa-flask"></i> Thèse falsifiable · ce qui invaliderait le maillon</h4>
+    <p>Le packaging reste tendu, et la sous-traitance profite à Amkor, tant que la capacité de packaging avancé reste inférieure à la demande de GPU. <strong>Je change d'avis</strong> si les ajouts de capacité rattrapent la demande et effacent la prime de rareté, ou si les concepteurs de puces internalisent davantage cette étape. Signal avancé : rythme d'expansion de la capacité de packaging et délais de livraison des accélérateurs, pas les seuls carnets de commandes de gravure.</p>
+  </div>
+</div>
+
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz — vérifie tes acquis</div>
+
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#0d9488;"></i> Quiz Partie 5</h2>
+
+  <details>
+    <summary>Pourquoi le packaging avancé, et non la gravure, plafonne-t-il la production de GPU ?</summary>
+    <div class="quiz-answer">Parce que c'est l'étape où le processeur et ses piles de mémoire sont assemblés sur un support commun. Sans cette capacité, une usine de gravure peut tourner à plein sans que davantage de GPU finis ne sortent. La capacité de packaging fixe donc le débit de sortie des puces les plus chères.</div>
+  </details>
+  <details>
+    <summary>Quelle différence entre le fondeur intégré et l'OSAT ?</summary>
+    <div class="quiz-answer">Le fondeur intégré (TSMC) grave la puce et réalise lui-même le packaging avancé dans la foulée : c'est le modèle dominant pour les accélérateurs de pointe. L'OSAT (Amkor) est un sous-traitant indépendant du packaging et du test, qui capte la demande qui déborde à mesure que l'étape se complexifie.</div>
+  </details>
+  <details>
+    <summary>Quel risque le marché sous-estime-t-il sur ce maillon ?</summary>
+    <div class="quiz-answer">La concentration géographique. L'essentiel du packaging avancé de pointe se fait dans une zone unique. Un incident ou une tension géopolitique refermerait le robinet principal de l'IA mondiale. Ce risque ne se lit pas dans un multiple de valorisation, il se lit sur une carte.</div>
+  </details>
+</div>
+
+<div class="takeaway-box">
+  <h3><i class="fa-solid fa-bookmark" style="margin-right:0.5rem;"></i> À retenir — Partie 5</h3>
+  <ul class="takeaway-list">
+    <li><i class="fa-solid fa-check"></i> Le plafond de production des GPU haut de gamme, c'est le <strong>packaging avancé</strong>, pas la gravure. Le goulet dans le goulet.</li>
+    <li><i class="fa-solid fa-check"></i> Le packaging avancé marie <strong>puce et piles de mémoire</strong> sur un interposeur (technique phare : le CoWoS).</li>
+    <li><i class="fa-solid fa-check"></i> <strong>TSMC</strong> (~2 260 Md$) fixe le débit mondial ; <strong>Amkor</strong> (~18 Md$) capte la sous-traitance qui déborde.</li>
+    <li><i class="fa-solid fa-check"></i> Amkor = petit levier à fort bêta (2,21) ; ~15% du flottant à découvert : le marché reste partagé.</li>
+    <li><i class="fa-solid fa-check"></i> Risque sous-estimé : la <strong>concentration géographique</strong> du packaging de pointe. Surveiller les ajouts de capacité.</li>
+  </ul>
+</div>
+
+<a href="/series/chaine-ia-au-dela-nvidia/part6-equipement-fab/" class="next-cta"><div><div class="next-label">Partie 6 sur 6</div><div class="next-title">Équipement de Fabrication <i class="fa-solid fa-arrow-right"></i></div></div></a>
+
+</div><!-- /container -->
+
+    <div class="series-bar"><div class="series-bar-inner"><a href="/series/chaine-ia-au-dela-nvidia/part4-serveurs-odm/" class="series-arrow" title="Serveurs & Intégrateurs"><i class="fas fa-chevron-left"></i></a><span class="series-title">La Chaîne de l'IA au-delà de Nvidia</span><div class="series-steps"><a href="/series/chaine-ia-au-dela-nvidia/part1-energie-refroidissement/" class="series-step" title="Énergie & Refroidissement"><span class="series-num">1</span><span class="series-label">Énergie</span></a><a href="/series/chaine-ia-au-dela-nvidia/part2-memoire-stockage/" class="series-step" title="Mémoire HBM & Stockage"><span class="series-num">2</span><span class="series-label">Mémoire</span></a><a href="/series/chaine-ia-au-dela-nvidia/part3-optique-interconnect/" class="series-step" title="Optique & Interconnexion"><span class="series-num">3</span><span class="series-label">Optique</span></a><a href="/series/chaine-ia-au-dela-nvidia/part4-serveurs-odm/" class="series-step" title="Serveurs & Intégrateurs"><span class="series-num">4</span><span class="series-label">Serveurs</span></a><a href="/series/chaine-ia-au-dela-nvidia/part5-packaging-avance/" class="series-step current" title="Packaging Avancé"><span class="series-num">5</span><span class="series-label">Packaging</span></a><a href="/series/chaine-ia-au-dela-nvidia/part6-equipement-fab/" class="series-step" title="Équipement de Fabrication"><span class="series-num">6</span><span class="series-label">Équipement</span></a></div><span class="series-counter">5/6</span><a href="/series/chaine-ia-au-dela-nvidia/part6-equipement-fab/" class="series-arrow" title="Équipement de Fabrication"><i class="fas fa-chevron-right"></i></a></div></div>
+
+  <footer class="article-footer">
+    &copy; 2026 DailyTickers. Données de marché en temps réel.
+    Ceci n'est pas un conseil financier.
+    <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+  </footer>
+
+<script>
+var chart_p5 = echarts.init(document.getElementById('chart-p5-mcap'));
+chart_p5.setOption({
+  title: { text: 'Packaging avancé — capitalisation (Md$)', left: 'center', textStyle: { fontSize: 14, fontWeight: 700, color: '#0f172a' } },
+  tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: ~{c} Md$' },
+  grid: { left: '3%', right: '10%', bottom: '8%', top: '18%', containLabel: true },
+  xAxis: { type: 'value', name: 'Md$', nameLocation: 'middle', nameGap: 28, axisLabel: { fontSize: 11 }, nameTextStyle: { fontSize: 11, color: '#64748b' } },
+  yAxis: { type: 'category', data: ['Amkor (AMKR)', 'TSMC (TSM)'], axisLabel: { fontSize: 12, fontWeight: 600 } },
+  series: [{
+    type: 'bar', barWidth: '45%',
+    data: [
+      { value: 18, itemStyle: { color: '#5eead4' } },
+      { value: 2260, itemStyle: { color: '#0d9488' } }
+    ],
+    label: { show: true, position: 'right', formatter: '~{c} Md$', fontWeight: 700, fontSize: 12, color: '#1e293b' }
+  }]
+});
+window.addEventListener('resize', function() { chart_p5.resize(); });
+</script>
+
+    <script src="/assets/core.js"></script><script src="/assets/echarts-responsive.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+</body>
+</html>
