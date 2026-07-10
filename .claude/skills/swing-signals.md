@@ -63,6 +63,14 @@ Par candidat retenu :
   suivant (jamais de « limit sur repli d'ouverture » remplie dans un couteau qui tombe — post-mortem
   10/07 : INTC a gappé −2,8 % sous sa zone d'entrée 112).
 
+### 4bis. FLUX (obligatoire — un signal sans lecture des flux est une éval molle, feedback 2026-07-10)
+Pour CHAQUE candidat survivant du §4, fetcher et lire (MCP de la session, jamais un chiffre repris de mémoire) :
+- `QueryData types=insider_transactions days=30` (Form 4 EDGAR, async) → acheteurs P vs vendeurs S distincts, montants nets ; ≥2 acheteurs = porteur, ventes nettes = contre.
+- `QueryData types=unusual_options,max_pain` → put/call OI, prime inhabituelle et son SENS, max pain vs spot (max pain loin SOUS le spot = positionnement tendu à signaler).
+- `QueryData types=short_interest days=180` → SI % float + DTC, **TENDANCE sur 3-4 settlements** (une hausse continue de SI pendant que le prix monte = conviction short à ne pas ignorer).
+- `QueryData types=institutional_holdings` (13F trackés) → deltas notables des filers suivis. **Caveats à écrire tels quels** : univers partiel (universe_note) ET lag ~45 j post-trimestre — c'est du positionnement au 31/03, pas du flux d'hier.
+**Lecture DIRECTIONNELLE et règle de pondération** : une divergence flux/prix pèse PLUS qu'une confirmation ; des flux contraires (put-skew + distribution 13F + SI en hausse) **dégradent un signal publiable en watch** ; des flux porteurs ne contournent JAMAIS un red flag du §4 (R/R, stop/ATR, earnings, dilution). Le digest cite en 1 ligne le flux dominant de chaque signal (preuve du 10/07 : sur 5 signaux, les flux n'en laissaient qu'un debout — BA ; CARR/KDP/HLT contredits par put-skew/SI/13F).
+
 ### 5. Cohérence panier↔thèse (persona Strategist — avant publication)
 Régime live : `GetMarketContext(facets="overview")` (régime, VIX, indices, pétrole). Réduis le panier à son **facteur net** (béta / growth-value / duration / cyclique-défensif / concentration). **BLOQUE** si :
 - le **narratif contredit le book** (ex. dire « risk-off » avec un book long béta/croissance — l'incident du 2026-07-08, cf `feedback_harness_portfolio_coherence`), OU
