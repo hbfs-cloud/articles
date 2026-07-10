@@ -4516,9 +4516,9 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RISK-ON — META, MPC, ROIV, UNP, ETSY, NTNX, DLO, RDY, EWY, VGK",
-    "desc": "Score de régime 0,84, classé RISK-ON. Composantes : crédit 1,00 (spreads serrés), DXY 0,96 (dollar à 100,97), SPX 0,83 (au-dessus des MM50 et MM200), VIX 0,90 (indice à 15), TLT 0,49 (obligations neutres), BTC 0,50. La confiance de l’ensemble reste modérée (51% risk-on / 49% neutre) : régime porteur...",
-    "tags": "us,asia,eu,tech,healthcare,energy,industrials,consumer,financials,macro,technique,trade-idea,momentum,etf",
+    "title": "Top 4 A+ NEUTRAL — CAH, NVO, INCY, META",
+    "desc": "Les moteurs quantitatifs lisent encore un régime porteur — score composite 0,78, VIX à 15,8 non ascendant, crédit serré, indice au-dessus de ses moyennes 50 et 200 jours. Mais la confiance de l'ensemble n'est que de 51% risk-on contre 49% neutre, et les probabilités de transition à 5 jours montrent ...",
+    "tags": "us,healthcare,comms,macro,technique,trade-idea,defensive,breakout",
     "grade": "",
     "href": "/scanner/20260713/",
     "date": "13 juillet 2026"
