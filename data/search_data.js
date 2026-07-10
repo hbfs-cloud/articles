@@ -1263,6 +1263,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "DailyTickers",
+    "title": "DailyTickers",
+    "desc": "Un post promet « les 3 actions que Claude recommande pour 2026 » : ATEME, SIGA, Amplitude. On confronte chaque affirmation aux chiffres réels. Une seule tient debout, et pas pour les raisons annoncées.",
+    "tags": "us,eu,tech,software,defense,value,education",
+    "grade": "B",
+    "href": "/analyses/3-actions-claude-chiffres-reels/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "BA",
     "exchange": "NYSE • Industriels • Aéronautique & Défense",
     "name": "BA — BA au contact de son 50 jours, résultats le 28/07. Redressement réel mais capé : la thè...",
@@ -6050,6 +6063,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Pourquoi la Plupart des Alertes de Trading Sont du Bruit",
+    "desc": "La méthode pour trier une alerte : plancher de bruit ATR, rapport risque/récompense compté depuis la première cible, réconciliation à une seule source, invalidation conditionnelle et contexte de régime. Exemple chiffré vérifié.",
+    "tags": "tech,technique,education,momentum",
+    "grade": "",
+    "href": "/tech/pourquoi-les-alertes-sont-du-bruit/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Workflows Multi-Agents : Orchestrer des Escouades d’Agents IA",
     "desc": "Guide technique sur l'orchestration multi-agents : fan-out parallèle, pipelines, vérification adverse (war rooms), panels de juges, boucles jusqu'à épuisement. Patterns concrets, schémas, arbitrages coût/latence, et un cas réel sur le scanner DailyTickers.",
     "tags": "formation,ai,tech",
@@ -6419,19 +6445,6 @@ window.searchDataPrebuilt = [
     "tags": "formation,tech,trading,architecture",
     "grade": "",
     "href": "/tech/broker-simulator/",
-    "date": ""
-  },
-  {
-    "type": "tech",
-    "icon": "fa-microchip",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Pourquoi la Plupart des Alertes de Trading Sont du Bruit",
-    "desc": "La méthode pour trier une alerte : plancher de bruit ATR, rapport risque/récompense compté depuis la première cible, réconciliation à une seule source, invalidation conditionnelle et contexte de régime. Exemple chiffré vérifié.",
-    "tags": "tech,technique,education,momentum",
-    "grade": "",
-    "href": "/tech/pourquoi-les-alertes-sont-du-bruit/",
     "date": ""
   },
   {
