@@ -79,12 +79,16 @@ function cmdSweep(nowIso) {
     const high = num(typeof q === 'object' ? (q.high ?? q.price) : q);
     const low = num(typeof q === 'object' ? (q.low ?? q.price) : q);
     if (price == null) continue;
-    const denom = (s.entry != null && s.stop != null) ? (s.entry - s.stop) : null;
+    // Niveaux ≤ 0 (ou NaN) = ABSENTS, pas des cibles/stop à prix 0 (sinon high>=0 déclenche tp2 à tort → R aberrant).
+    const stopLvl = (s.stop != null && s.stop > 0) ? s.stop : null;
+    const tp1Lvl = (s.tp1 != null && s.tp1 > 0) ? s.tp1 : null;
+    const tp2Lvl = (s.tp2 != null && s.tp2 > 0) ? s.tp2 : null;
+    const denom = (s.entry != null && stopLvl != null) ? (s.entry - stopLvl) : null;
     const rOf = (exit) => (denom && denom !== 0) ? +(((exit - s.entry) / denom).toFixed(2)) : null;
     // stop d'abord (conservateur), puis cibles
-    if (s.stop != null && low != null && low <= s.stop) { s.status = 'stopped'; s.outcomeR = rOf(s.stop); s.closedDate = asof; updated++; continue; }
-    if (s.tp2 != null && high != null && high >= s.tp2) { s.status = 'tp2'; s.outcomeR = rOf(s.tp2); s.closedDate = asof; updated++; continue; }
-    if (s.tp1 != null && high != null && high >= s.tp1 && s.status !== 'tp1') { s.status = 'tp1'; s.outcomeR = rOf(s.tp1); updated++; continue; }
+    if (stopLvl != null && low != null && low <= stopLvl) { s.status = 'stopped'; s.outcomeR = rOf(stopLvl); s.closedDate = asof; updated++; continue; }
+    if (tp2Lvl != null && high != null && high >= tp2Lvl) { s.status = 'tp2'; s.outcomeR = rOf(tp2Lvl); s.closedDate = asof; updated++; continue; }
+    if (tp1Lvl != null && high != null && high >= tp1Lvl && s.status !== 'tp1') { s.status = 'tp1'; s.outcomeR = rOf(tp1Lvl); updated++; continue; }
     // expiration par horizon
     const ageDays = s.date ? Math.round((Date.parse(asof) - Date.parse(s.date)) / 86400000) : 0;
     if (ageDays >= (s.maxHoldDays || DEFAULT_HOLD) * 1.4) { // ~jours calendaires ≈ 1.4× séances
