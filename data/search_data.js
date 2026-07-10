@@ -1263,6 +1263,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "NBIS",
+    "exchange": "NASDAQ • Communication Services • Infrastructure\n            AI — Cloud GPU pleine pile\n            \n                 Historique",
+    "name": "NBIS — x5 depuis le creux, ATR 12%/jour. Bénéfice comptable = gains ponctuels, cœur de métier ...",
+    "title": "NBIS — x5 depuis le creux, ATR 12%/jour. Bénéfice comptable = gains ponctuels, cœur de métier ...",
+    "desc": "Nebius Group ($218) : infra AI hypercroissance (revenus +684%) mais pré-profit, valorisée 63× les ventes, short 24% du flottant à un plus-haut, dilution active. Un véhicule de momentum à taille réduite.",
+    "tags": "us,tech,ai,software,trade-idea,speculative,momentum",
+    "grade": "C",
+    "href": "/analyses/NBIS/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "ENTG",
     "exchange": "NASDAQ • Technology • Semiconductor Materials &\n            Contamination Control",
     "name": "ENTG — ENTG à $145 sur sa MM50 pendant que les équipementiers sont étendus. Reflux ou distribu...",
@@ -2623,19 +2636,6 @@ window.searchDataPrebuilt = [
     "tags": "eu,tech,semis,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/AIXA/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "NBIS",
-    "exchange": "NASDAQ • Communication Services • AI Infrastructure\n    — Full-Stack GPU Cloud",
-    "name": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
-    "title": "NBIS — AI infrastructure pure-play, $20B+ backlog, $7-9B ARR target by end 2026. Pullback from...",
-    "desc": "Nebius Group full-stack AI infrastructure analysis: $530M revenue (+501% YoY), $3.7B cash, $20B+ backlog, MSFT $17.4B contract. Target $147.",
-    "tags": "us,tech,ai,trade-idea",
-    "grade": "A",
-    "href": "/analyses/NBIS/",
     "date": ""
   },
   {
