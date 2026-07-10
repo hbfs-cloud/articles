@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="technique,education,formation" data-tab="analyses">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Le R/R gonflé : quand 1:4 cache un 1:1 | Anatomie d'un Signal de Trade — Partie 2/6 | DailyTickers</title>
+  <meta name="description" content="Série Anatomie d'un Signal de Trade — Partie 2/6 : comment un ratio risque/récompense affiché sur la cible lointaine masque un premier objectif à peine à 1:1. Le calcul qui démasque le maquillage.">
+  <meta property="og:title" content="Le R/R gonflé : quand 1:4 cache un 1:1 | Anatomie d'un Signal de Trade — 2/6 | DailyTickers">
+  <meta property="og:description" content="Le ratio qui compte se mesure à la première cible, pas à celle du rêve.">
+  <meta property="og:image" content="https://articles.dailytickers.com/favicon.ico">
+  <meta property="og:url" content="https://articles.dailytickers.com/series/anatomie-signal-trade/part2-risk-reward/">
+  <meta property="og:type" content="article">
+  <link rel="icon" href="/favicon.ico">
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-T5Z595CW');</script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/assets/report.css">
+
+  <style>
+  /* Anatomie d'un Signal — TEAL THEME (#0f766e) */
+  .hero-section{padding:4rem 2rem 3rem;background:linear-gradient(180deg,#f0fdfa 0%,#f8fafc 100%);text-align:center;}
+  .hero-date{font-size:.85rem;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:.1em;margin-bottom:1rem;}
+  .hero-badges{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap;margin-top:2rem;}
+  .hero-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:99px;font-size:.8rem;font-weight:700;}
+  .hero-badge-teal{background:rgba(15,118,110,.1);color:#0f766e;border:1px solid rgba(15,118,110,.2);}
+  .hero-badge-green{background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2);}
+  .hero-badge-red{background:rgba(220,38,38,.1);color:#dc2626;border:1px solid rgba(220,38,38,.2);}
+  .hero-badge-amber{background:rgba(217,119,6,.1);color:#d97706;border:1px solid rgba(217,119,6,.2);}
+  .hero-badge-blue{background:rgba(37,99,235,.1);color:#2563eb;border:1px solid rgba(37,99,235,.2);}
+  .section-divider{display:flex;align-items:center;gap:1rem;margin:3rem 0 2rem;color:#94a3b8;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;}
+  .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:#e2e8f0;}
+  .compare-table{width:100%;border-collapse:separate;border-spacing:0;border-radius:12px;overflow:hidden;border:1px solid #e2e8f0;margin:2rem 0;font-size:.9rem;}
+  .compare-table th{background:#0f172a;color:#fff;padding:.85rem 1rem;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;text-align:left;}
+  .compare-table td{padding:.8rem 1rem;border-bottom:1px solid #f1f5f9;color:#334155;}
+  .compare-table tr:nth-child(even) td{background:#f8fafc;}
+  .compare-table tr:last-child td{border-bottom:none;}
+  .checklist{list-style:none;padding:0;margin:1.5rem 0;}
+  .checklist li{display:flex;align-items:flex-start;gap:.75rem;padding:.6rem 0;font-size:.95rem;color:#334155;line-height:1.55;border-bottom:1px solid #f1f5f9;}
+  .checklist li:last-child{border-bottom:none;}
+  .checklist li i{margin-top:.2rem;flex-shrink:0;}
+  details{margin:.75rem 0;}
+  details summary{cursor:pointer;padding:1rem 1.25rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;font-weight:700;color:#0f172a;font-size:.95rem;list-style:none;}
+  details summary::-webkit-details-marker{display:none;}
+  details summary::before{content:'\f059';font-family:'Font Awesome 6 Free';font-weight:900;color:#0f766e;margin-right:.75rem;}
+  details[open] summary{border-color:#0f766e;background:#f0fdfa;border-radius:12px 12px 0 0;}
+  details .quiz-answer{padding:1rem 1.25rem;background:#f0fdf4;border:1px solid #86efac;border-radius:0 0 12px 12px;font-size:.9rem;color:#334155;line-height:1.7;}
+  .formula-box{background:linear-gradient(135deg,#0f172a 0%,#134e4a 100%);color:#fff;padding:1.5rem 2rem;border-radius:12px;margin:1.5rem 0;text-align:center;font-size:1.15rem;font-weight:700;letter-spacing:.02em;line-height:1.6;}
+  .formula-box .formula-label{font-size:.7rem;color:#5eead4;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.6rem;font-weight:600;}
+  .formula-box .hl{color:#5eead4;}
+  .formula-box .hl-red{color:#fca5a5;}
+  .formula-box .hl-green{color:#86efac;}
+  .takeaway-box{background:linear-gradient(135deg,#f0fdfa 0%,#ccfbf1 100%);border:1px solid #0f766e;border-radius:16px;padding:2rem;margin:2rem 0;}
+  .takeaway-box h3{color:#0f766e;margin-top:0;}
+  .takeaway-list{list-style:none;padding:0;margin:0;}
+  .takeaway-list li{display:flex;align-items:flex-start;gap:.75rem;padding:.75rem 0;font-size:1rem;color:#334155;line-height:1.55;border-bottom:1px solid rgba(15,118,110,.15);}
+  .takeaway-list li:last-child{border-bottom:none;}
+  .takeaway-list li i{color:#0f766e;margin-top:.2rem;flex-shrink:0;}
+  .next-cta{display:flex;align-items:center;justify-content:center;gap:1rem;padding:2rem;background:linear-gradient(135deg,#0f766e 0%,#115e59 100%);color:#fff;border-radius:16px;margin:2.5rem 0 1rem;text-decoration:none;transition:transform .2s,box-shadow .2s;}
+  .next-cta:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(15,118,110,.3);}
+  .next-cta .next-label{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;opacity:.85;}
+  .next-cta .next-title{font-size:1.25rem;font-weight:800;}
+  .next-cta i{font-size:1.5rem;}
+  .sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin:1.75rem 0;}
+  .sig-card{border-radius:16px;padding:1.5rem;border:1px solid #e2e8f0;background:#fff;}
+  .sig-card.good{border-left:4px solid #16a34a;}
+  .sig-card.bad{border-left:4px solid #dc2626;}
+  .sig-card h4{margin:0 0 .75rem;font-size:1rem;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:.5rem;}
+  .sig-card.good h4{color:#16a34a;}
+  .sig-card.bad h4{color:#dc2626;}
+  .sig-row{display:flex;justify-content:space-between;padding:.4rem 0;font-size:.88rem;color:#475569;border-bottom:1px dashed #e2e8f0;}
+  .sig-row:last-child{border-bottom:none;}
+  .sig-row b{color:#0f172a;font-variant-numeric:tabular-nums;}
+  @media(max-width:768px){.hero-section{padding:2.5rem 1rem 2rem;}.hero-title{font-size:1.8rem !important;}.sig-grid{grid-template-columns:1fr;}.formula-box{font-size:1rem;padding:1.25rem;}.next-cta{flex-direction:column;text-align:center;}}
+  </style>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+<nav class="brand-bar">
+  <div class="brand-bar-inner">
+    <a href="/" class="brand-logo">
+      <img src="/logo.svg" alt="" width="36" height="36">
+      <span class="brand-title">DailyTickers</span>
+    </a>
+    <div class="brand-nav">
+      <a href="/?tab=weekly">Hebdo</a>
+      <a href="/?tab=daily">Daily</a>
+      <a href="/?tab=analyses">Analyses</a>
+      <a href="/?tab=scanner">Scanner</a>
+      <a href="/?tab=radar">Radar</a>
+      <a href="/?tab=series">Séries</a>
+    </div>
+    <div class="brand-actions">
+      <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+    </div>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="hero-date"><i class="fa-solid fa-scale-unbalanced" style="margin-right:.4rem;"></i> Série Anatomie d'un Signal de Trade — Partie 2 sur 6</div>
+  <h1 class="hero-title" style="font-size:2.8rem;max-width:850px;margin:0 auto 1.5rem;">Le R/R gonflé : quand 1:4 cache un 1:1</h1>
+  <p class="hero-subtitle">Le ratio risque/récompense est le chiffre le plus facile à maquiller d'un signal. Il suffit de l'afficher sur la cible du rêve, pas sur celle que vous touchez en premier. On sort la calculette.</p>
+  <div class="hero-badges">
+    <span class="hero-badge hero-badge-red"><i class="fa-solid fa-scale-unbalanced"></i> Piège n°1</span>
+    <span class="hero-badge hero-badge-teal"><i class="fa-solid fa-calculator"></i> Le calcul</span>
+    <span class="hero-badge hero-badge-green"><i class="fa-solid fa-circle-check"></i> La version saine</span>
+    <span class="hero-badge hero-badge-blue"><i class="fa-solid fa-graduation-cap"></i> Éducatif</span>
+  </div>
+  <div id="article-clickable-tags" class="card-tags" style="margin-top:1.5rem;display:flex;justify-content:center;"></div>
+</section>
+
+<div class="series-bar"><div class="series-bar-inner"><a href="/series/anatomie-signal-trade/part1-le-cadre/" class="series-arrow" title="Le cadre"><i class="fas fa-chevron-left"></i></a><span class="series-title">Anatomie d'un Signal de Trade</span><div class="series-steps"><a href="/series/anatomie-signal-trade/part1-le-cadre/" class="series-step" title="Le cadre"><span class="series-num">1</span><span class="series-label">Cadre</span></a><a href="/series/anatomie-signal-trade/part2-risk-reward/" class="series-step current" title="Risk/Reward"><span class="series-num">2</span><span class="series-label">R/R</span></a><a href="/series/anatomie-signal-trade/part3-le-stop/" class="series-step" title="Le stop"><span class="series-num">3</span><span class="series-label">Stop</span></a><a href="/series/anatomie-signal-trade/part4-earnings/" class="series-step" title="Le timing"><span class="series-num">4</span><span class="series-label">Timing</span></a><a href="/series/anatomie-signal-trade/part5-donnees-couteau/" class="series-step" title="Preuves & couteau"><span class="series-num">5</span><span class="series-label">Preuves</span></a><a href="/series/anatomie-signal-trade/part6-checklist/" class="series-step" title="Checklist"><span class="series-num">6</span><span class="series-label">Checklist</span></a></div><span class="series-counter">2/6</span><a href="/series/anatomie-signal-trade/part3-le-stop/" class="series-arrow" title="Le stop"><i class="fas fa-chevron-right"></i></a></div></div>
+
+<div class="container">
+
+<div class="section-divider" id="maquillage"><i class="fa-solid fa-mask" style="color:#dc2626;"></i> Le maquillage</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-mask" style="color:#dc2626;"></i> « Risque/récompense : 1:4 » — sur quelle cible ?</h2>
+  <p>Vous recevez ce signal sur XYZ, à 50 $ :</p>
+  <div class="sig-grid">
+    <div class="sig-card bad">
+      <h4><i class="fa-solid fa-mask"></i> Le signal vendu</h4>
+      <div class="sig-row"><span>Entrée</span><b>50,00 $</b></div>
+      <div class="sig-row"><span>Stop</span><b>47,00 $</b></div>
+      <div class="sig-row"><span>Cible 1</span><b>53,00 $</b></div>
+      <div class="sig-row"><span>Cible 2</span><b>62,00 $</b></div>
+      <div class="sig-row"><span>R/R annoncé</span><b style="color:#dc2626;">1:4,0</b></div>
+    </div>
+    <div class="sig-card good">
+      <h4><i class="fa-solid fa-magnifying-glass"></i> Ce que le chiffre cache</h4>
+      <div class="sig-row"><span>Risque par action</span><b>50 − 47 = 3 $</b></div>
+      <div class="sig-row"><span>Gain jusqu'à C1</span><b>53 − 50 = 3 $</b></div>
+      <div class="sig-row"><span>Gain jusqu'à C2</span><b>62 − 50 = 12 $</b></div>
+      <div class="sig-row"><span>R/R à la <b>C1</b></span><b style="color:#dc2626;">1:1,0</b></div>
+      <div class="sig-row"><span>R/R à la C2</span><b>1:4,0</b></div>
+    </div>
+  </div>
+  <p>Le « 1:4 » n'est pas faux. Il est simplement calculé sur la cible 2, celle qui est loin, celle que vous n'atteindrez pas souvent. Le premier endroit où vous encaissez, la cible 1, offre un misérable <strong>1:1</strong> : vous risquez 3 $ pour en gagner 3. Et comme la plupart des opérateurs allègent la moitié de la position à la première cible, c'est ce 1:1 qui pilote réellement le résultat, pas le rêve du haut.</p>
+</div>
+
+<div class="section-divider" id="calcul"><i class="fa-solid fa-calculator" style="color:#0f766e;"></i> Le calcul qui démasque</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-calculator" style="color:#0f766e;"></i> Mesurez le R/R là où vous agissez</h2>
+  <div class="formula-box">
+    <div class="formula-label">La seule formule qui compte</div>
+    R/R = <span class="hl-green">(cible 1 − entrée)</span> ÷ <span class="hl-red">(entrée − stop)</span>
+  </div>
+  <p>La cible 1 est le premier prix où vous prenez une décision : sécuriser, alléger, remonter le stop. C'est donc à elle qu'on juge la qualité du signal. Exiger <strong>au moins 1:1,5</strong> à la cible 1, c'est refuser tous les trades où vous risquez plus que ce que vous prenez d'abord.</p>
+  <p>Faites-le tourner sur une saison entière. Un système à 1:1 doit gagner plus d'une fois sur deux juste pour rentrer dans ses frais, avant même les commissions et les glissements. Un système à 1:1,5 supporte de perdre plus souvent qu'il ne gagne. C'est toute la marge de sécurité, et elle se joue sur ce seul rapport.</p>
+  <table class="compare-table">
+    <thead><tr><th>R/R à la cible 1</th><th>Taux de réussite nécessaire pour être à l'équilibre</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1:1,0</strong></td><td>&gt; 50 %</td><td><span style="color:#dc2626;font-weight:700;">Fragile</span></td></tr>
+      <tr><td><strong>1:1,5</strong></td><td>40 %</td><td><span style="color:#16a34a;font-weight:700;">Correct</span></td></tr>
+      <tr><td><strong>1:2,0</strong></td><td>33 %</td><td><span style="color:#16a34a;font-weight:700;">Confortable</span></td></tr>
+      <tr><td><strong>1:3,0</strong></td><td>25 %</td><td><span style="color:#16a34a;font-weight:700;">Généreux</span></td></tr>
+    </tbody>
+  </table>
+  <div class="alert-box">
+    <h4><i class="fa-solid fa-triangle-exclamation"></i> Le tour de passe-passe classique</h4>
+    <p style="margin:0;">Éloigner la cible 2 pour embellir le ratio ne coûte rien à celui qui rédige le signal : il ne trade pas. Un objectif à 62 $, 80 $, 100 $ fait toujours un beau « 1:4 », « 1:10 », « 1:16 ». Plus la cible affichée est lointaine et ronde, plus vous devez vérifier ce que donne le premier palier.</p>
+  </div>
+</div>
+
+<div class="section-divider" id="sain"><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> La version saine</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-check" style="color:#16a34a;"></i> Le même trade, honnête</h2>
+  <p>On garde l'entrée et le stop. On corrige la cible 1 pour qu'elle porte réellement le trade :</p>
+  <div class="sig-grid">
+    <div class="sig-card good">
+      <h4><i class="fa-solid fa-circle-check"></i> Signal jouable</h4>
+      <div class="sig-row"><span>Entrée</span><b>50,00 $</b></div>
+      <div class="sig-row"><span>Stop</span><b>47,00 $ (risque 3 $)</b></div>
+      <div class="sig-row"><span>Cible 1</span><b>55,00 $ (gain 5 $)</b></div>
+      <div class="sig-row"><span>R/R à la C1</span><b style="color:#16a34a;">1:1,67</b></div>
+      <div class="sig-row"><span>Cible 2</span><b>62,00 $ (bonus)</b></div>
+    </div>
+    <div class="sig-card bad">
+      <h4><i class="fa-solid fa-circle-xmark"></i> Signal à jeter</h4>
+      <div class="sig-row"><span>Entrée</span><b>50,00 $</b></div>
+      <div class="sig-row"><span>Stop</span><b>47,00 $ (risque 3 $)</b></div>
+      <div class="sig-row"><span>Cible 1</span><b>53,00 $ (gain 3 $)</b></div>
+      <div class="sig-row"><span>R/R à la C1</span><b style="color:#dc2626;">1:1,0</b></div>
+      <div class="sig-row"><span>Cible 2</span><b>62,00 $ (vitrine)</b></div>
+    </div>
+  </div>
+  <p>Même point d'entrée, même risque, deux mondes. À gauche, la première prise de bénéfice paie déjà 1,67 fois le risque : le trade tient debout tout seul, la cible 2 n'est qu'un bonus si le prix court. À droite, vous travaillez à 1:1 en priant pour un objectif lointain. Un signal ne se juge pas à la hauteur de son rêve, mais à la solidité de sa première marche.</p>
+
+  <div class="takeaway-box">
+    <h3><i class="fa-solid fa-key"></i> Ce qu'il faut retenir</h3>
+    <ul class="takeaway-list">
+      <li><i class="fa-solid fa-check"></i> Le R/R se mesure à la cible 1, le premier prix où vous agissez, jamais à la cible du rêve.</li>
+      <li><i class="fa-solid fa-check"></i> Seuil de tri simple : moins de 1:1,5 à la cible 1, on passe son chemin.</li>
+      <li><i class="fa-solid fa-check"></i> Une cible 2 lointaine et ronde qui « fait le ratio » est un signal d'alerte, pas de qualité.</li>
+      <li><i class="fa-solid fa-check"></i> À 1:1, il faut gagner plus d'une fois sur deux juste pour ne rien perdre. Peu de méthodes y arrivent.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section-divider" id="quiz"><i class="fa-solid fa-circle-question" style="color:#0f766e;"></i> Quiz</div>
+<div class="content-card">
+  <h2><i class="fa-solid fa-circle-question" style="color:#0f766e;"></i> Vérifiez que c'est passé</h2>
+  <details>
+    <summary>Entrée 40 $, stop 38 $, cible 1 à 43 $. Quel est le R/R à la cible 1 ?</summary>
+    <div class="quiz-answer">Risque = 40 − 38 = 2 $. Gain jusqu'à la cible 1 = 43 − 40 = 3 $. R/R = 3 ÷ 2 = 1:1,5. Juste au seuil : jouable, sans plus.</div>
+  </details>
+  <details>
+    <summary>Un signal affiche « 1:5 » avec une cible 2 très haute. Que faites-vous avant tout ?</summary>
+    <div class="quiz-answer">Vous recalculez le ratio jusqu'à la cible 1. Si le premier palier ne donne que 1:1 ou 1:1,2, le « 1:5 » est une vitrine : le trade réel se joue sur la première marche, et elle est trop courte.</div>
+  </details>
+  <details>
+    <summary>Pourquoi un système à 1:1 est-il fragile ?</summary>
+    <div class="quiz-answer">Parce qu'il exige un taux de réussite au-dessus de 50 % rien que pour être à l'équilibre, avant frais et glissements. La moindre série de pertes le met en négatif. Le 1:1,5 rend le compte robuste même en gagnant moins d'une fois sur deux.</div>
+  </details>
+</div>
+
+<a href="/series/anatomie-signal-trade/part3-le-stop/" class="next-cta">
+  <div>
+    <div class="next-label">Partie 3 sur 6</div>
+    <div class="next-title">Le stop dans le bruit : sorti avant d'avoir eu tort</div>
+  </div>
+  <i class="fas fa-arrow-right"></i>
+</a>
+
+</div>
+
+<footer class="article-footer">
+  &copy; 2026 DailyTickers. Contenu éducatif. Ceci n'est pas un conseil financier.
+  <br><a href="/" title="Accueil"><i class="fas fa-house" style="margin-right:4px;"></i></a>
+</footer>
+
+<div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"><a href="#maquillage" class="fnav-item" data-section="maquillage"><i class="fas fa-mask"></i><span>Le maquillage</span></a><a href="#calcul" class="fnav-item" data-section="calcul"><i class="fas fa-calculator"></i><span>Le calcul</span></a><a href="#sain" class="fnav-item" data-section="sain"><i class="fas fa-circle-check"></i><span>La version saine</span></a><a href="#quiz" class="fnav-item" data-section="quiz"><i class="fas fa-circle-question"></i><span>Quiz</span></a></div><button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation"><i class="fas fa-bars" id="fnavIcon"></i><span class="fnav-btn-label" id="fnavLabel">Menu</span></button></div>
+
+<script src="/assets/core.js"></script>
+<script src="/assets/tag-renderer.js"></script>
+<script>
+(function(){
+  var fab=document.getElementById('fnavBtn'),menu=document.getElementById('fnavMenu'),icon=document.getElementById('fnavIcon'),label=document.getElementById('fnavLabel');
+  if(!fab||!menu)return;
+  var items=menu.querySelectorAll('.fnav-item'),sections=[],isOpen=false;
+  items.forEach(function(item){var el=document.getElementById(item.getAttribute('data-section'));if(el)sections.push({el:el,item:item});});
+  function toggle(){isOpen=!isOpen;menu.classList.toggle('open',isOpen);fab.classList.toggle('open',isOpen);icon.className=isOpen?'fas fa-times':'fas fa-bars';}
+  fab.addEventListener('click',function(e){e.stopPropagation();toggle();});
+  document.addEventListener('click',function(e){if(isOpen&&!menu.contains(e.target)&&!fab.contains(e.target))toggle();});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&isOpen)toggle();});
+  items.forEach(function(item){item.addEventListener('click',function(e){e.preventDefault();var t=document.getElementById(this.getAttribute('data-section'));if(t){var bb=document.querySelector('.brand-bar');var off=(bb?bb.offsetHeight:56)+20;window.scrollTo({top:t.getBoundingClientRect().top+window.pageYOffset-off,behavior:'smooth'});}if(isOpen)toggle();});});
+  var cur=null;
+  var obs=new IntersectionObserver(function(es){es.forEach(function(en){if(en.isIntersecting){var m=sections.find(function(s){return s.el===en.target;});if(m){if(cur)cur.item.classList.remove('active');m.item.classList.add('active');cur=m;label.textContent=m.item.querySelector('span').textContent;}}});},{rootMargin:'-15% 0px -65% 0px',threshold:0});
+  sections.forEach(function(s){obs.observe(s.el);});
+  if(sections.length){sections[0].item.classList.add('active');cur=sections[0];label.textContent=sections[0].item.querySelector('span').textContent;}
+})();
+</script>
+</body>
+</html>

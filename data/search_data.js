@@ -6427,6 +6427,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Énergie & Refroidissement",
+    "desc": "Série La Chaîne de l'IA au-delà de Nvidia — Partie 1/6 : le vrai plafond du build-out n'est plus la puce, c'est le mégawatt et la chaleur. Vertiv, Eaton, GE Vernova, Vistra : qui fournit le courant et évacue les watts.",
+    "tags": "formation,us,tech,ai,energy,industrials",
+    "grade": "",
+    "href": "/series/chaine-ia-au-dela-nvidia/part1-energie-refroidissement/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Démarrer sans se faire détruire le jour 1",
     "desc": "Comment lancer un portefeuille ou une stratégie sans encaisser un gros drawdown dès le départ : déploiement progressif (ramp-up), dimensionnement initial sous-calibré, échelonnement des entrées et garde-fous jour 1.",
     "tags": "formation,macro,technique",
@@ -7103,11 +7116,11 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Énergie & Refroidissement",
-    "desc": "Série La Chaîne de l'IA au-delà de Nvidia — Partie 1/6 : le vrai plafond du build-out n'est plus la puce, c'est le mégawatt et la chaleur. Vertiv, Eaton, GE Vernova, Vistra : qui fournit le courant et évacue les watts.",
-    "tags": "formation,us,tech,ai,energy,industrials",
+    "title": "Le cadre : qu'est-ce qu'un bon signal ?",
+    "desc": "Série Anatomie d'un Signal de Trade — Partie 1/6 : les quatre nombres qui définissent un signal, la thèse falsifiable, et pourquoi la plupart des « signaux » vendus n'en sont pas.",
+    "tags": "technique,education,formation",
     "grade": "",
-    "href": "/series/chaine-ia-au-dela-nvidia/part1-energie-refroidissement/",
+    "href": "/series/anatomie-signal-trade/part1-le-cadre/",
     "date": ""
   }
 ];
