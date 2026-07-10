@@ -6422,6 +6422,32 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Pourquoi la Plupart des Alertes de Trading Sont du Bruit",
+    "desc": "La méthode pour trier une alerte : plancher de bruit ATR, rapport risque/récompense compté depuis la première cible, réconciliation à une seule source, invalidation conditionnelle et contexte de régime. Exemple chiffré vérifié.",
+    "tags": "tech,technique,education,momentum",
+    "grade": "",
+    "href": "/tech/pourquoi-les-alertes-sont-du-bruit/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Le cadre : qu'est-ce qu'un bon signal ?",
+    "desc": "Série Anatomie d'un Signal de Trade — Partie 1/6 : les quatre nombres qui définissent un signal, la thèse falsifiable, et pourquoi la plupart des « signaux » vendus n'en sont pas.",
+    "tags": "technique,education,formation",
+    "grade": "",
+    "href": "/series/anatomie-signal-trade/part1-le-cadre/",
+    "date": ""
+  },
+  {
     "type": "série",
     "icon": "fa-graduation-cap",
     "ticker": "",
@@ -7108,19 +7134,6 @@ window.searchDataPrebuilt = [
     "tags": "formation,macro,us,eu,asia",
     "grade": "",
     "href": "/series/banques-centrales/part1-role-et-mandat/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Le cadre : qu'est-ce qu'un bon signal ?",
-    "desc": "Série Anatomie d'un Signal de Trade — Partie 1/6 : les quatre nombres qui définissent un signal, la thèse falsifiable, et pourquoi la plupart des « signaux » vendus n'en sont pas.",
-    "tags": "technique,education,formation",
-    "grade": "",
-    "href": "/series/anatomie-signal-trade/part1-le-cadre/",
     "date": ""
   }
 ];
