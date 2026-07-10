@@ -39,11 +39,29 @@ Pour chaque ticker des plans : `QueryData(symbols=T, types="quote,technicals,bar
 Par candidat retenu :
 - **Support/résistance depuis les barres** (le type `support_resistance` renvoie souvent vide → lire les swing highs/lows des 30-40 barres).
 - **Entrée actionnable à ≤3% du spot** : achat-maintenant SEULEMENT si propre au-dessus de la MM20 et **pas étendu** (>~4% au-dessus MM20 = chase → refus, cf `feedback_no_false_caveats`/discipline Trader). Sinon **entrée sur repli** (MM20) ou **sur cassure** (> swing-high).
-- **Stop** = sous le plus-bas de swing OU entrée − 1,5×ATR (prix concret).
+- **Stop** = sous le plus-bas de swing OU entrée − 1,5×ATR (prix concret). **PLANCHER DUR : distance
+  (entrée−stop) ≥ 1,5×ATR14** — un stop plus serré est DANS LE BRUIT d'une séance normale (post-mortem
+  10/07 : INTC stop 6 pts = 0,6×ATR, stop-out quasi certain sans invalidation de thèse) → élargir le
+  stop ET recalculer le R/R, ou écarter. **ATR distordu** : si un gap >15 % existe dans les 90 dernières
+  barres, l'ATR14 est gonflé/faussé — le dire dans le signal et raisonner le stop en % du prix.
 - **Cibles** = prochaine résistance / mesure ; afficher le **% vs prix actuel**.
-- **R/R** = (TP1−entrée)/(entrée−stop) **≥ 1,5** sinon « pas de R/R propre » → écarter ou reléguer en watch.
-- **Earnings** : `GetEarningsCalendarFiltered` + `QueryData types="calendar"` → **DROP si ±3 séances**.
+- **R/R** = (TP1−entrée)/(entrée−stop) **≥ 1,5** sinon « pas de R/R propre » → écarter ou reléguer en
+  watch. **Le R/R AFFICHÉ dans le digest est CELUI-LÀ (TP1), jamais celui de TP2** (post-mortem 10/07 :
+  HLT publié « R/R 2,0 » = TP2 alors que TP1 donnait 1,42 < 1,5 — le signal n'aurait pas dû sortir).
+  Le calcul est ARITHMÉTIQUE sur les niveaux publiés, pas déclaratif : re-vérifier avant d'écrire.
+- **Earnings** : `GetEarningsCalendarFiltered` + `QueryData types="calendar"` → **DROP si ±3 séances**,
+  et **FLAG OBLIGATOIRE dans le signal si les earnings tombent dans l'horizon de détention** (swing
+  5-10 séances : toute date ≤ J+12 se mentionne — post-mortem 10/07 : BA/HLT/CARR portaient tous
+  earnings 28/07 non signalés, INTC 23/07 non signalé).
 - **Dilution** : `QueryData types="sec_filings,flags"` → DROP si S-3/ATM/offering réel (cf `feedback_dilution_check`).
+- **Claim de données porteur de thèse** (dark pool %, put/call, flux inhabituel) : le chiffre DOIT être
+  tracé à un appel MCP de LA session (citer l'outil) — invérifiable sur le feed = la thèse tombe, le
+  signal est écarté ou re-fondé sur ce qui est vérifiable (post-mortem 10/07 : INTC « dark pool 46 % »
+  invérifiable, `types=dark_pool` renvoyait vide).
+- **Invalidation par gap (plans conditionnels)** : tout signal publié le soir porte sa règle de gap —
+  un gap adverse pré-open > 1×ATR14 qui TRAVERSE la zone d'entrée = plan **invalidé d'office** au bilan
+  suivant (jamais de « limit sur repli d'ouverture » remplie dans un couteau qui tombe — post-mortem
+  10/07 : INTC a gappé −2,8 % sous sa zone d'entrée 112).
 
 ### 5. Cohérence panier↔thèse (persona Strategist — avant publication)
 Régime live : `GetMarketContext(facets="overview")` (régime, VIX, indices, pétrole). Réduis le panier à son **facteur net** (béta / growth-value / duration / cyclique-défensif / concentration). **BLOQUE** si :
