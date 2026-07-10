@@ -1263,6 +1263,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "BA",
+    "exchange": "NYSE • Industriels • Aéronautique & Défense",
+    "name": "BA — BA au contact de son 50 jours, résultats le 28/07. Redressement réel mais capé : la thè...",
+    "title": "BA — BA au contact de son 50 jours, résultats le 28/07. Redressement réel mais capé : la thè...",
+    "desc": "Boeing tente de reconquérir sa moyenne 50 jours (~223$) au-dessus d'un 200 jours en pente positive. Thèse falsifiable, dette de 49,6 Md$ et binaire des résultats du 28 juillet. Trade Idea avec caveat earnings.",
+    "tags": "us,industrials,defense,earnings,trade-idea",
+    "grade": "B",
+    "href": "/analyses/BA/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "NBIS",
     "exchange": "NASDAQ • Communication Services • Infrastructure\n            AI — Cloud GPU pleine pile\n            \n                 Historique",
     "name": "NBIS — x5 depuis le creux, ATR 12%/jour. Bénéfice comptable = gains ponctuels, cœur de métier ...",
