@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v3.0-20260702",
-  "_updated": "2026-07-02",
+  "_version": "v3.1-20260710",
+  "_updated": "2026-07-10",
   "_source_retros": [
     "20260220",
     "20260228",
@@ -20,7 +20,9 @@
     "20260606",
     "20260612",
     "20260619",
-    "20260626"
+    "20260626",
+    "20260702",
+    "20260710"
   ],
   "_methodology": "Append-only. Each rule cites the retros that triggered it. Conflict resolution: most recent retro wins.\n\n  Severity levels:\n  - 'hard_block' = encoded in scanner-filters.json + validate-scan.js to refuse publication outright. Scan FAILS validation if violated.\n  - 'selection_filter' = Claude applies the rule when CHOOSING the top 10 candidates at Phase 2. validate-scan.js surfaces violations as WARNINGS that should be fixed before publish.\n  - 'advisory' = Claude biases selection (e.g. weight Pre-Squeeze higher in EARLY RISK-OFF) but a deviation is acceptable with rationale.\n  - 'infrastructure' = always-on execution logic in sweep.js/signal-monitor.js, not a selection rule.\n  - 'deprecated' = rule is no longer active, kept for historical context.\n\n  v2.0 UPGRADE NOTES (20260619 audit):\n  - Promoted regime-score-label-lag from advisory to hard_block (prevented D* grade week)\n  - Promoted rr-min-by-regime from selection_filter to hard_block (100% violation rate with zero enforcement)\n  - Promoted stopped-ticker-cooldown from selection_filter to hard_block (RIO double loss pattern)\n  - Deprecated energy-early-risk-off-sizing (redundant with energy-early-risk-off-block)\n  - Added 12 new rules from audit of 17 retros\n  - All '?' values resolved, all rules have complete field sets",
   "rules": [
@@ -46,10 +48,10 @@
         }
       },
       "evidence": {
-        "sample_size": 3,
+        "sample_size": 7,
         "wins": 0,
-        "losses": 3,
-        "expectancy": -1,
+        "losses": 7,
+        "expectancy": -2.57,
         "period": "2026-06-30",
         "tickers": [
           "VRT",
@@ -60,10 +62,22 @@
           "GRAF",
           "TS",
           "SPH",
-          "FSUN"
+          "FSUN",
+          "V",
+          "ING",
+          "IBN",
+          "DASH",
+          "EW",
+          "RTX",
+          "FTNT"
         ],
         "clusters": [
-          "tight-stop-whipsaw-20260630"
+          "tight-stop-whipsaw-20260630",
+          "financials",
+          "consumer",
+          "healthcare",
+          "software",
+          "defense"
         ],
         "source_retros": [
           "20260327",
@@ -73,12 +87,12 @@
           "20260619"
         ]
       },
-      "confidence": 0.7301,
+      "confidence": 0.75,
       "confidence_base": 0.75,
       "half_life_days": 180,
       "created_at": "2026-03-27",
-      "last_validated_at": "2026-07-02",
-      "expires_at": "2027-02-25",
+      "last_validated_at": "2026-07-10",
+      "expires_at": "2027-03-05",
       "invalidation_conditions": [
         "If Candlestick or any strategy is found to bypass the 3-8% / 1.5x ATR band check again after a validate-scan.js audit, escalate to infra bug not policy issue."
       ],
@@ -149,7 +163,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.4629,
+      "confidence": 0.4612,
       "confidence_base": 0.5,
       "half_life_days": 180,
       "created_at": "2026-05-22",
@@ -213,7 +227,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.6658,
+      "confidence": 0.6633,
       "confidence_base": 0.7,
       "half_life_days": 180,
       "created_at": "2026-06-06",
@@ -270,7 +284,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.6481,
+      "confidence": 0.6456,
       "confidence_base": 0.7,
       "half_life_days": 180,
       "created_at": "2026-06-19",
@@ -319,7 +333,7 @@
           "20260612"
         ]
       },
-      "confidence": 0.6309,
+      "confidence": 0.6285,
       "confidence_base": 0.7,
       "half_life_days": 180,
       "created_at": "2026-06-12",
@@ -370,7 +384,7 @@
           "20260327"
         ]
       },
-      "confidence": 0.335,
+      "confidence": 0.3337,
       "confidence_base": 0.5,
       "half_life_days": 180,
       "created_at": "2026-02-28",
@@ -534,7 +548,7 @@
           "20260522"
         ]
       },
-      "confidence": 0.3455,
+      "confidence": 0.3428,
       "confidence_base": 0.5,
       "half_life_days": 90,
       "created_at": "2026-03-27",
@@ -651,7 +665,7 @@
           "20260612"
         ]
       },
-      "confidence": 0.5686,
+      "confidence": 0.5642,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-12",
@@ -706,7 +720,7 @@
           "20260327"
         ]
       },
-      "confidence": 0.3142,
+      "confidence": 0.3118,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-03-13",
@@ -910,7 +924,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.5211,
+      "confidence": 0.5171,
       "confidence_base": 0.55,
       "half_life_days": 90,
       "created_at": "2026-04-03",
@@ -1199,7 +1213,7 @@
           "20260522"
         ]
       },
-      "confidence": 0.4738,
+      "confidence": 0.4701,
       "confidence_base": 0.5,
       "half_life_days": 90,
       "created_at": "2026-05-15",
@@ -1267,7 +1281,7 @@
           "20260606"
         ]
       },
-      "confidence": 0.5429,
+      "confidence": 0.5387,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-05-15",
@@ -1366,16 +1380,25 @@
         }
       },
       "evidence": {
-        "sample_size": 1,
-        "wins": null,
-        "losses": null,
-        "expectancy": null,
+        "sample_size": 5,
+        "wins": 2,
+        "losses": 3,
+        "expectancy": 1.54,
         "period": "2026-06-30",
         "tickers": [
-          "HON"
+          "HON",
+          "SE",
+          "STM",
+          "IBN",
+          "ING",
+          "RTX"
         ],
         "clusters": [
-          "regime-switch-day1-20260630"
+          "regime-switch-day1-20260630",
+          "consumer",
+          "semis",
+          "financials",
+          "defense"
         ],
         "source_retros": [
           "20260425",
@@ -1384,12 +1407,12 @@
           "20260626"
         ]
       },
-      "confidence": 0.4738,
-      "confidence_base": 0.5,
+      "confidence": 0.55,
+      "confidence_base": 0.55,
       "half_life_days": 90,
       "created_at": "2026-04-25",
-      "last_validated_at": "2026-07-02",
-      "expires_at": "2026-09-06",
+      "last_validated_at": "2026-07-10",
+      "expires_at": "2026-09-27",
       "invalidation_conditions": [
         "Audit found 80% Momentum allocation in EARLY RISK-OFF (20260618) vs 20% target — weights are advisory-in-practice despite selection_filter severity; needs an enforcement mechanism, not just a Phase 2 guideline."
       ],
@@ -1590,13 +1613,28 @@
         }
       },
       "evidence": {
-        "sample_size": 14,
-        "wins": null,
-        "losses": null,
-        "expectancy": null,
+        "sample_size": 10,
+        "wins": 3,
+        "losses": 7,
+        "expectancy": 0.64,
         "period": null,
-        "tickers": [],
-        "clusters": [],
+        "tickers": [
+          "SE",
+          "CSCO",
+          "STM",
+          "V",
+          "ING",
+          "IBN",
+          "DASH",
+          "EW",
+          "RTX",
+          "FTNT"
+        ],
+        "clusters": [
+          "momentum",
+          "breakout",
+          "pullback"
+        ],
         "source_retros": [
           "20260403",
           "20260619"
@@ -1607,7 +1645,7 @@
       "confidence_base": 0.7,
       "half_life_days": null,
       "created_at": "2026-04-03",
-      "last_validated_at": "2026-06-19",
+      "last_validated_at": "2026-07-10",
       "expires_at": null,
       "invalidation_conditions": [],
       "notes": "Entry effective = min(open_next_session, VWAP_next_session) clamped to day_low. Gap-up > 2% triggers VWAP pullback fill only. | Rationale: Sweep optimization validated +29% PnL, +16pp WR, 2.5x PF (commit 91596bd9). Protected the book from 14 gap-up traps in 20260619 retro (31% no-fill rate). Always-on infrastructure. | Classified process_rule: deterministic always-on execution/fill mechanics implemented in sweep.js/signal-monitor.js, not a selection-time market belief (per original methodology: \"infrastructure = always-on execution logic, not a selection rule\").",
@@ -1712,7 +1750,7 @@
           "20260529"
         ]
       },
-      "confidence": 0.5105,
+      "confidence": 0.5065,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-05-15",
@@ -1764,7 +1802,7 @@
           "20260606"
         ]
       },
-      "confidence": 0.3415,
+      "confidence": 0.3376,
       "confidence_base": 0.5,
       "half_life_days": 60,
       "created_at": "2026-05-29",
@@ -1825,7 +1863,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.6001,
+      "confidence": 0.5955,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-05-29",
@@ -1868,26 +1906,29 @@
         }
       },
       "evidence": {
-        "sample_size": null,
-        "wins": null,
-        "losses": null,
-        "expectancy": null,
+        "sample_size": 1,
+        "wins": 1,
+        "losses": 0,
+        "expectancy": 8.88,
         "period": "2026-05-19 to 2026-05-29",
         "tickers": [
-          "RIO"
+          "RIO",
+          "CSCO"
         ],
-        "clusters": [],
+        "clusters": [
+          "tech"
+        ],
         "source_retros": [
           "20260529",
           "20260619"
         ]
       },
-      "confidence": 0.6001,
-      "confidence_base": 0.7,
+      "confidence": 0.75,
+      "confidence_base": 0.75,
       "half_life_days": 90,
       "created_at": "2026-05-29",
-      "last_validated_at": "2026-06-19",
-      "expires_at": "2026-10-07",
+      "last_validated_at": "2026-07-10",
+      "expires_at": "2026-11-06",
       "invalidation_conditions": [],
       "notes": "Pullback strategy only allowed when regime confidence > 60%. In oscillating regime, replace Pullback with Momentum or Breakout. | Rationale: Pullback 0% WR on 20260519-29. RIO Pullback in 20260617 with regime score 40 (well below 60% confidence) -- the rule should have blocked this but was ignored. Audit recommends upgrade from advisory.",
       "applies_to": [
@@ -1929,7 +1970,7 @@
           "backtest_v8"
         ]
       },
-      "confidence": 0.5346,
+      "confidence": 0.5305,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-04",
@@ -1985,7 +2026,7 @@
         ],
         "notes": "7 losers saved / 1 winner lost = filter precision, not raw strategy WR."
       },
-      "confidence": 0.5346,
+      "confidence": 0.5305,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-04",
@@ -2031,7 +2072,7 @@
           "backtest_v8"
         ]
       },
-      "confidence": 0.5346,
+      "confidence": 0.5305,
       "confidence_base": 0.7,
       "half_life_days": 90,
       "created_at": "2026-06-04",
@@ -2078,7 +2119,7 @@
         ],
         "notes": "14/45 (31%) no-fill due to Iran ceasefire rally 20260619."
       },
-      "confidence": 0.5556,
+      "confidence": 0.5492,
       "confidence_base": 0.7,
       "half_life_days": 60,
       "created_at": "2026-06-19",
@@ -2128,7 +2169,7 @@
           "20260619"
         ]
       },
-      "confidence": 0.5556,
+      "confidence": 0.5492,
       "confidence_base": 0.7,
       "half_life_days": 60,
       "created_at": "2026-06-19",
@@ -2242,7 +2283,7 @@
           "20260626"
         ]
       },
-      "confidence": 0.6024,
+      "confidence": 0.5955,
       "confidence_base": 0.7,
       "half_life_days": 60,
       "created_at": "2026-06-26",
@@ -2285,23 +2326,33 @@
         }
       },
       "evidence": {
-        "sample_size": null,
-        "wins": null,
-        "losses": null,
-        "expectancy": null,
+        "sample_size": 4,
+        "wins": 0,
+        "losses": 4,
+        "expectancy": -2.54,
         "period": "2026-06-16 to 2026-06-26",
-        "tickers": [],
-        "clusters": [],
+        "tickers": [
+          "V",
+          "DASH",
+          "EW",
+          "FTNT"
+        ],
+        "clusters": [
+          "financials",
+          "consumer",
+          "healthcare",
+          "software"
+        ],
         "source_retros": [
           "20260626"
         ]
       },
-      "confidence": 0.4303,
-      "confidence_base": 0.5,
+      "confidence": 0.55,
+      "confidence_base": 0.55,
       "half_life_days": 60,
       "created_at": "2026-06-26",
-      "last_validated_at": "2026-06-26",
-      "expires_at": "2026-08-09",
+      "last_validated_at": "2026-07-10",
+      "expires_at": "2026-08-31",
       "invalidation_conditions": [
         "See _open_questions:breakout-vol-penalty-calibration — magnitude of -15 not yet validated as correctly calibrated (could be too aggressive), review 2026-07-04."
       ],
