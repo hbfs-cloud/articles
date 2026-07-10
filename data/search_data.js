@@ -1263,6 +1263,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ENTG",
+    "exchange": "NASDAQ • Technology • Semiconductor Materials &\n            Contamination Control",
+    "name": "ENTG — ENTG à $145 sur sa MM50 pendant que les équipementiers sont étendus. Reflux ou distribu...",
+    "title": "ENTG — ENTG à $145 sur sa MM50 pendant que les équipementiers sont étendus. Reflux ou distribu...",
+    "desc": "Entegris ($145) revient tester sa moyenne 50 jours (~147) pendant que KLAC et le SMH restent au-dessus des leurs. Zone d'achat réelle ou piège de distribution : niveaux, invalidation, Trade Idea R/R 1:1.5.",
+    "tags": "us,semis,tech,technique,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/ENTG/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "Samsung Electronics",
     "exchange": "Bourse de Corée (KRX) • Technologie • Mémoire & puces",
     "name": "Samsung Electronics — Samsung +1,9% et SK Hynix +2,4% sur leurs résultats, mais Micron -6,9%, AMD -8,2%, ASML...",
