@@ -46,6 +46,33 @@ Supporte tous les asset types : stock, etf, crypto, forex, commodity, index.
    node tools/publish-analysis.js --update {TICKER} --grade B+ --reason "R/R collapsed" --commit
    ```
 
+### Encart valorisation — « ce qu'en pensent 5 méthodes de valorisation »
+Axe de score CONSULTATIF, chiffré et vérifiable (anti-slop). Lib déterministe `tools/lib/valuation-multi.js`
+(idée #5) : elle NE FETCH RIEN — l'agent tire les financials du MCP et les lui passe. Aucun LLM dans la
+math, aucun chiffre fabriqué (fail-closed : un input manquant ⇒ la méthode devient `na`, jamais estimée).
+
+1. **Collecter les financials MCP** (l'agent, pas le subprocess) : `QueryData types=financials,stats,quote`
+   → `profitMargins, totalRevenue, totalCash, totalDebt, ebitda, earningsGrowth/revenueGrowth, bookValue,
+   sharesOutstanding, beta, price`. Passer aussi, SI disponibles depuis un autre type MCP : `freeCashFlow`
+   (→ DCF), `depreciation`/`capex`/`netIncome` (→ Owner Earnings), `interestCoverage` ou `ebit`+`interestExpense`
+   (→ coût de la dette du WACC), `medianEvEbitda` ou `evEbitdaHistory[]` (→ EV/EBITDA médian). Chaque champ absent
+   ⇒ méthode `na` FLAGGÉE (jamais comblée). Si MCP stale/incohérent → **MCP HARD STOP**, on ne valorise pas.
+2. **Écrire les financials dans un fichier** puis lancer :
+   ```bash
+   node tools/lib/valuation-multi.js --in financials.json --ticker {TICKER}
+   ```
+   Blend déterministe : **DCF 35% + Owner Earnings 35% + EV/EBITDA médian 20% + Residual Income (EBO) 10%**,
+   sur scénarios **bear/base/bull 20/60/20** ; WACC = CAPM (rf 4,5% + β×6%, coût dette via interest coverage,
+   tax shield 0,75, clampé [6%,20%]) ; croissance haute plafonnée 25% (10% si mcap>50 Md), terminal 3%.
+   Sortie au **schéma pivot** `{ signal, confidence, reasoning }` (réutilise `tools/lib/signal-schema.js`) :
+   `signal = weighted_gap = (valeur_modèle − marketCap)/marketCap` → bullish >+15%, bearish <−15% ; confidence
+   explicable `= min(|gap|/0.30 × 100, 100)`.
+3. **Rédiger l'encart** dans l'analyse à partir de la SORTIE (jamais d'un chiffre inventé par le LLM) :
+   valeur modèle vs capitalisation, gap %, méthodes utilisées (ex. `4/4`), fourchette bear/base/bull, WACC,
+   et honnêteté sur les méthodes `na`. Le LLM = narration seulement. Contrat pivot commun au board Value/Quality
+   (`tools/lib/value-quality-board.js`) → les deux axes se juxtaposent proprement dans l'analyse.
+   Smoke-test / exemple reproductible : `node tools/lib/valuation-multi.js --self-test`.
+
 ## "Analyse Daily" / "Briefing du jour"
 **Langue par défaut : anglais intermediate.** Voir `daily/CLAUDE.md` pour template complet et 17 sections obligatoires.
 
