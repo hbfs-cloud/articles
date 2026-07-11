@@ -6,6 +6,33 @@
 
 ---
 
+## ⚡ MISE À JOUR 2026-07-11 (soir) — backfill reçu, MAIS un 3ᵉ blocker découvert
+
+**Merci** : les 2 blockers initiaux sont levés — `RunScreener region=EU` renvoie des candidats (180),
+`QueryData bars_daily` EU sert l'historique (AIR.PA = 4 ans, earliest **2022-06-02** avec `days=1500`).
+
+**MAIS blocker #3 (bloquant pour valider toute stratégie EU) : le moteur de backtest/screener ne voit
+que ~1 an d'historique EU, alors que QueryData en a 4.** Preuve sur le MÊME symbole (AIR.PA / Airbus) :
+- `QueryData(symbols=AIR.PA, types=bars_daily, days=1500)` → `earliest 2022-06-02`, 1500 barres. ✅ profond.
+- `RunBacktest(symbols=AIR.PA, pass_expr="rsi14>50 and rsi14<72 and ema20>ema50 and macd>0", from=2022-06-01,
+  to=2026-07-10)` → renvoie `days:1500, start_date:2022-06-01` MAIS `yearly_stats` = **2025 (13 trades) +
+  2026 (4 trades) UNIQUEMENT, ZÉRO trade en 2022/2023/2024** — impossible pour Airbus qui a eu de longues
+  phases de momentum sur ces années.
+→ Le store de barres **persistées** du screener / `RunBacktest` EU ne remonte qu'à ~2025-06 (le backfill
+  récent), alors que le chemin `QueryData` on-demand remonte à 2022. **Tout backtest EU est donc confiné à
+  ~1 an** → impossible de valider une stratégie EU sur un cycle complet. (Notre backtest `eu_smallcap` sort
+  PF 0.94 / Sharpe -0.35 sur cette fenêtre courte = non concluant, pas un verdict sur la stratégie.)
+
+**DEMANDE #1 (prioritaire, nouvelle)** : persister l'historique EU profond (**2-5 ans, comme l'US**) dans
+le **store de barres du screener + `RunBacktest`** (pas seulement le chemin `QueryData` on-demand).
+**Critère d'acceptation** : `RunBacktest(AIR.PA, from=2022-06-01)` doit produire des trades en
+2022/2023/2024, pas seulement 2025+.
+
+Les demandes #2→#5 ci-dessous (country dans les rows, market_cap=0, GetReferentialData, secmaster) restent
+valides et non bloquantes.
+
+---
+
 ## TL;DR
 
 Le MCP sert **très bien** l'EU **en per-ticker** (`QueryData` : prix, mcap, devise EUR, 52w, float, et
