@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202607111026"></script>
+  <script src="/data/search_data.js?v=202607111431"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -1650,8 +1650,6 @@
           '<option value="en">\ud83c\uddfa\ud83c\uddf8 EN</option>' +
           '<option value="fr">\ud83c\uddeb\ud83c\uddf7 FR</option>' +
           '<option value="ar">\ud83c\uddf8\ud83c\udde6 AR</option>' +
-          '<option value="es">\ud83c\uddea\ud83c\uddf8 ES</option>' +
-          '<option value="zh">\ud83c\udde8\ud83c\uddf3 ZH</option>' +
         '</select>' +
       '</div>' +
       '<nav class="sidebar-nav">' + navLinks + '</nav>' +
@@ -2250,6 +2248,18 @@
         </div>
       </div>
       <!-- ===== END SCANNER PERFORMANCE DASHBOARD ===== -->
+
+      <!-- Sub-filter: only visible while the Scanner tab is active (inside the panel) -->
+      <div class="filter-bar" style="margin-top: 1.25rem">
+        <div class="filter-group">
+          <div class="filter-chips" id="scannerCatFilter">
+            <button class="filter-chip active" data-scat="scan" data-i18n="scanner.cat.scans">Scans</button>
+            <button class="filter-chip" data-scat="retro" data-i18n="scanner.cat.retros">Rétrospectives</button>
+            <button class="filter-chip" data-scat="status" data-i18n="scanner.cat.status">Statut</button>
+            <button class="filter-chip" data-scat="all" data-i18n="scanner.cat.all">Tous</button>
+          </div>
+        </div>
+      </div>
 
       <div class="grid-cards" style="margin-top: 1rem"></div>
 
@@ -2857,6 +2867,58 @@
       .forEach(function (btn) {
         btn.addEventListener("click", function () {
           setGradeFilter(this.dataset.grade);
+        });
+      });
+
+    // ===================================================================
+    // SCANNER SUB-FILTER (Scans / Rétrospectives / Statut / Tous)
+    // ===================================================================
+    // Classify a scanner card by its report href:
+    //   /scanner/retrospective/… = retro, /scanner/status/… = status, else = scan
+    function scannerCardCategory(card) {
+      var a = card.querySelector('a[href*="/scanner/"]');
+      var href = a ? (a.getAttribute("href") || "") : "";
+      if (/\/scanner\/retrospective/.test(href)) return "retro";
+      if (/\/scanner\/status/.test(href)) return "status";
+      return "scan";
+    }
+
+    // Sole authority for scanner-tab card visibility: category (sub-filter) AND language.
+    // Idempotent — safe to call after setLang / renderCards; it always has the final say on scanner cards.
+    function applyScannerFilter() {
+      var activeBtn = document.querySelector("#scannerCatFilter .filter-chip.active");
+      var scat = activeBtn ? activeBtn.dataset.scat : "scan";
+      var langF = typeof currentLangFilter !== "undefined" ? currentLangFilter : "all";
+      document
+        .querySelectorAll("#tab-scanner .grid-cards .report-card")
+        .forEach(function (card) {
+          var catMatch = scat === "all" || scannerCardCategory(card) === scat;
+          var langMatch = true;
+          if (langF && langF !== "all") {
+            var langs = typeof detectCardLangs === "function" ? detectCardLangs(card) : ["fr"];
+            langMatch = langs.indexOf(langF) !== -1;
+          }
+          card.style.display = catMatch && langMatch ? "" : "none";
+        });
+    }
+
+    function setScannerCat(scat) {
+      document
+        .querySelectorAll("#scannerCatFilter .filter-chip")
+        .forEach(function (b) {
+          b.classList.remove("active");
+        });
+      var target = document.querySelector(
+        '#scannerCatFilter .filter-chip[data-scat="' + scat + '"]',
+      );
+      if (target) target.classList.add("active");
+      applyScannerFilter();
+    }
+    document
+      .querySelectorAll("#scannerCatFilter .filter-chip")
+      .forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setScannerCat(this.dataset.scat);
         });
       });
 
@@ -3990,10 +4052,14 @@
             if (typeof applyAllFilters === 'function') {
               applyAllFilters();
             }
+            if (tab === 'scanner' && typeof applyScannerFilter === 'function') applyScannerFilter();
           }
         });
         observer.observe(trigger);
       }
+
+      // Scanner tab: apply the sub-filter (Scans/Rétros/Statut) + language after (re)render.
+      if (tab === 'scanner' && typeof applyScannerFilter === 'function') applyScannerFilter();
     }
 
     function loadTabContent(tab) {
@@ -5177,6 +5243,8 @@
       if (typeof applyAllFilters === 'function') {
         applyAllFilters();
       }
+      // Scanner tab: re-assert its sub-filter (category) + language after a language change
+      if (typeof applyScannerFilter === 'function') applyScannerFilter();
       // Also update tab counters for all tabs
       updateTabCounts();
     }
@@ -5308,9 +5376,14 @@
       });
     }
 
-    // Init from stored preference
+    // Init from stored preference — else default to browser language (FR or EN)
+    // so a first-time visitor sees a single language of cards (not FR/EN mixed).
     (function() {
-      var stored = localStorage.getItem('mw-lang') || 'all';
+      var stored = localStorage.getItem('mw-lang');
+      if (!stored) {
+        var nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+        stored = nav.indexOf('fr') === 0 ? 'fr' : 'en';
+      }
       setLang(stored);
     })();
   </script>
