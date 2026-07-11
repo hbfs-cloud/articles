@@ -15,6 +15,18 @@ L'owner du MCP a livré le backfill EU (brief `docs/specs/mcp-eu-coverage-reques
   (ready_symbols 3762/3763), le gate 200-barres passe. Avant = 0.
 - ⇒ **Scanner `eu_smallcap` DÉBLOQUÉ, constructible.** Re-jouer `scratchpad/eu-pea-scanner.mjs`.
 
+## Build eu_smallcap (2026-07-11 soir) — infra OK, stratégie NON viable en l'état
+Workflow re-joué → **couverture confirmée** (RunScreener EU 180 candidats, AFX.DE 397 barres). Pool PEA
+produit (13-15 titres EEA domicile-vérifiés : REVO.MI, AFX.DE, PLX.PA, ALR.WA, INPST.AS… ; UK/.L/.SW
+exclus). **Wiring end-to-end livré** (parser/sweep/gen-status EUR, mode `eu_smallcap` assetClass=equity_eu,
+isolé des pools US) — commits b7ab59e2d + 15150d9f5. **L'infra EU marche.**
+⚠️ MAIS **backtest MCP RÉEL NÉGATIF** (RunBacktest, 144 trades) : CAGR -11,4%, total -34,8%, PF 0,94,
+Sharpe -0,35, WR 36% (max DD 70% = artefact moteur non fiable, cf segment-replay-absolute-dd). Sur ~1 an
+d'historique EU seulement (backfill récent). L'agent avait aussi **abaissé minScore 80→72 pour forcer des
+signaux** (anti-pattern). → **corrigé (commit 3a6e580b4)** : mode repassé `test → draft` (MASQUÉ), minScore
+restauré 80, faux `universe:data/eu-smallcap-universe.json` retiré. **Ne PAS promouvoir eu_smallcap** avant
+(a) plus d'historique EU (backfill 2-5 ans) ET (b) une stratégie EU qui bat sa baseline (walk-forward).
+
 ## Résiduels (non bloquants, à finir côté MCP — brief owner)
 - **Pas de champ `country` dans les rows du screener** (blocker 4) → le filtre PEA par domicile se fait
   encore **par ticker** via `QueryData(types='profile').country` (UE/EEE ; EXCLURE UK/GB et les listings
