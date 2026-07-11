@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Le CPI de lundi décide de tout — Semaine du 13 au 17 juillet 2026",
+    "desc": "Le S&P clôture la semaine sur un record, la croissance a repris le volant et le VIX est retombé à 15. Toute la semaine à venir se joue lundi avant l'ouverture, sur un seul chiffre d'inflation. Positionnement, niveaux réels et bilan honnête des idées de la semaine écoulée.",
+    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,energy,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260713/",
+    "date": "13 juillet 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Rotation on Trial: Where the Money Goes Next — Week of July 6–10, 2026",
     "desc": "A flat S&P hid the sharpest factor rotation of the summer: tech and semis dumped into gold, materials, healthcare and international. Credit and crypto say risk is still on. Here is how to trade the week ahead — with real levels.",
     "tags": "us,eu,commodity,gold,mining,healthcare,semis,macro,technique,trade-idea,etf",
@@ -310,19 +323,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Le CPI de lundi décide de tout — Semaine du 13 au 17 juillet 2026",
-    "desc": "Le S&P clôture la semaine sur un record, la croissance a repris le volant et le VIX est retombé à 15. Toute la semaine à venir se joue lundi avant l'ouverture, sur un seul chiffre d'inflation. Positionnement, niveaux réels et bilan honnête des idées de la semaine écoulée.",
-    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,energy,trade-idea,etf",
-    "grade": "",
-    "href": "/weekly/20260713/",
-    "date": "13 juillet 2026"
   },
   {
     "type": "daily",
@@ -1512,11 +1512,11 @@ window.searchDataPrebuilt = [
     "icon": "fa-chart-column",
     "ticker": "ALT",
     "exchange": "NASDAQ · Healthcare",
-    "name": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $535M cash,...",
-    "title": "ALT — Phase 2b MASH réussie (54.7% réduction graisse hépatique), Phase 3 H2 2026, $535M cash,...",
-    "desc": "Analyse Altimmune : pemvidutide Phase 3 MASH imminente, FDA Breakthrough Therapy, cash $535M post-offering, market cap ~$525M. Grade B+.",
-    "tags": "us,healthcare,speculative,trade-idea",
-    "grade": "B+",
+    "name": "ALT — Pari binaire Phase 3 : cash ~$331M vs mcap ~$576M, short interest 29% du float, initiés acheteurs...",
+    "title": "ALT — Pari binaire Phase 3 : cash ~$331M vs mcap ~$576M, short interest 29% du float, initiés acheteurs...",
+    "desc": "Analyse Altimmune régénérée : pemvidutide en Phase 3 (MASH + alcool), trésorerie ~$331M, capitalisation ~$576M, short interest à 29% du float, initiés acheteurs. Grade B.",
+    "tags": "us,healthcare,biotech,speculative,trade-idea",
+    "grade": "B",
     "href": "/analyses/ALT/",
     "date": ""
   },
@@ -6484,6 +6484,19 @@ window.searchDataPrebuilt = [
     "tags": "formation,tech,trading,architecture",
     "grade": "",
     "href": "/tech/broker-simulator/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Fiscalité & wrappers : l'alpha caché du retail européen (PEA, PEA-PME, CTO, UCITS)",
+    "desc": "Le PEA fait travailler vos gains sans frottement fiscal : après 5 ans, zéro impôt sur le revenu, seuls les prélèvements sociaux restent. Un avantage composé qu'un retail américain n'a pas. Exemple chiffré CTO vs PEA sur 10 ans, contrainte UCITS (pourquoi vous ne pouvez pas acheter SPY), et le seul paramètre qui fait exploser l'écart : le turnover.",
+    "tags": "eu,etf,education,technique,formation",
+    "grade": "",
+    "href": "/tech/fiscalite-pea/",
     "date": ""
   },
   {

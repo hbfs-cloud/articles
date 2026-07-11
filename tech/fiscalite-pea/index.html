@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="eu,etf,education,technique,formation" data-tab="tech">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fiscalité & wrappers : l'alpha caché du retail européen (PEA, PEA-PME, CTO, UCITS) | DailyTickers</title>
+    <meta name="description"
+        content="Le PEA fait travailler vos gains sans frottement fiscal : après 5 ans, zéro impôt sur le revenu, seuls les prélèvements sociaux restent. Un avantage composé qu'un retail américain n'a pas. Exemple chiffré CTO vs PEA sur 10 ans, contrainte UCITS (pourquoi vous ne pouvez pas acheter SPY), et le seul paramètre qui fait exploser l'écart : le turnover.">
+    <meta property="og:title" content="Fiscalité & wrappers : l'alpha caché du retail européen">
+    <meta property="og:description"
+        content="PEA, PEA-PME, CTO, UCITS vs ETF US : où se cache l'alpha fiscal du retail européen, chiffré sur 10 ans.">
+    <meta property="og:image" content="/logo.svg">
+    <meta property="og:url" content="https://articles.dailytickers.com/tech/fiscalite-pea/">
+    <meta property="og:type" content="article">
+    <!-- Google Tag Manager -->
+    <script>(function (w, d, s, l, i) {
+            w[l] = w[l] || []; w[l].push({
+                'gtm.start':
+                    new Date().getTime(), event: 'gtm.js'
+            }); var f = d.getElementsByTagName(s)[0],
+                j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                    'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+        })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <!-- End Google Tag Manager -->
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+    <style>
+        .hero-section {
+            padding: 5rem 2rem 7rem 2rem;
+            background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
+            text-align: center;
+            border-bottom: 1px solid #bfdbfe;
+        }
+
+        .hero-date {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #1d4ed8;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 1rem;
+        }
+
+        .hero-badges {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2rem;
+        }
+
+        .hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1rem;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            background: rgba(29, 78, 216, 0.1);
+            color: #1d4ed8;
+            border: 1px solid rgba(29, 78, 216, 0.2);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            position: relative;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            padding: 3rem;
+            margin: -3rem auto 2rem;
+        }
+
+        .content-card + .content-card {
+            margin-top: 2rem;
+        }
+
+        .content-card h2 {
+            font-size: 1.7rem;
+            font-weight: 900;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+            margin: 0 0 1.25rem;
+        }
+
+        .content-card h3 {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #1e293b;
+            margin: 2rem 0 0.75rem;
+        }
+
+        .content-card p {
+            font-size: 1rem;
+            line-height: 1.7;
+            color: #334155;
+            margin: 0 0 1rem;
+        }
+
+        .chart-box {
+            width: 100%;
+            height: 420px;
+            margin: 1.5rem 0 0.5rem;
+        }
+
+        .chart-cap {
+            font-size: 0.8rem;
+            color: #64748b;
+            text-align: center;
+            margin-top: 0.25rem;
+        }
+
+        .lead {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #1e293b;
+        }
+
+        .num {
+            font-variant-numeric: tabular-nums;
+            font-weight: 800;
+        }
+
+        @media (max-width: 600px) {
+            .hero-section { padding: 3.5rem 1rem 6rem; }
+            .content-card { padding: 1.5rem; }
+            .content-card h2 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section">
+        <div class="hero-date">GUIDE TECHNIQUE — DONNÉE & MÉTHODE</div>
+        <h1
+            style="font-size:2.6rem; font-weight:900; color:#0f172a; margin:1rem 0; letter-spacing:-0.03em; line-height:1.12;">
+            Fiscalité &amp; wrappers : l'alpha caché du retail européen
+        </h1>
+        <p
+            style="font-size:1.15rem; color:#475569; max-width:760px; margin:1.5rem auto 0; font-weight:400; line-height:1.6;">
+            Un investisseur français dispose d'une enveloppe qui fait travailler ses gains sans les taxer
+            chaque année, puis les libère de l'impôt sur le revenu après cinq ans. C'est un rendement composé
+            que le retail américain n'a pas. On le chiffre sur dix ans, on explique pourquoi vous ne pouvez
+            pas acheter SPY, et on montre le seul paramètre qui fait vraiment gonfler l'écart.
+        </p>
+
+        <div class="hero-badges">
+            <div class="hero-badge"><i class="fa-solid fa-piggy-bank"></i> PEA / PEA-PME / CTO</div>
+            <div class="hero-badge"><i class="fa-solid fa-clock"></i> 12 min</div>
+            <div class="hero-badge"><i class="fa-solid fa-calculator"></i> Exemple chiffré</div>
+            <div class="hero-badge"><i class="fa-solid fa-scale-balanced"></i> UCITS vs ETF US</div>
+        </div>
+        <div id="article-clickable-tags" class="card-tags"></div>
+    </header>
+
+    <div class="container">
+
+        <!-- SECTION 1 — EDGE -->
+        <div id="edge" class="content-card">
+            <h2><i class="fa-solid fa-lightbulb" style="color:#1d4ed8;"></i> L'avantage que le retail américain n'a pas</h2>
+
+            <p class="lead">La plupart des débats sur la performance tournent autour du choix des titres. On
+                cherche le bon secteur, le bon point d'entrée, le bon signal. On regarde beaucoup moins souvent
+                l'enveloppe dans laquelle on loge tout ça. C'est une erreur, parce que le contenant décide de la
+                part de vos gains que vous gardez réellement.</p>
+
+            <p>Un investisseur américain paie l'impôt sur ses plus-values réalisées, chaque année où il vend
+                gagnant. Un investisseur français peut loger un portefeuille d'actions européennes dans un Plan
+                d'Épargne en Actions (PEA) : tant qu'il ne retire rien, aucun gain n'est imposé. Les plus-values et
+                les dividendes s'accumulent bruts à l'intérieur du plan, se réinvestissent en entier, et composent.
+                Après cinq ans de détention, un retrait n'est plus soumis à l'impôt sur le revenu. Il reste les
+                prélèvements sociaux, et rien d'autre.</p>
+
+            <p>Cette différence n'est pas cosmétique. Ne pas payer d'impôt sur un gain aujourd'hui, c'est laisser
+                ce montant continuer à produire du rendement pendant des années. Répété à chaque rotation, l'effet
+                se cumule. C'est un avantage structurel, gratuit, et il appartient à la géographie de votre compte,
+                pas à votre talent de stock-picker.</p>
+
+            <div class="metric-grid">
+                <div class="metric-card">
+                    <div class="metric-value">150 000 €</div>
+                    <div class="metric-label">Plafond de versements sur un PEA classique, par personne</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">225 000 €</div>
+                    <div class="metric-label">Capacité cumulée en ouvrant aussi un PEA-PME (plafond du couple d'enveloppes)</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">0 %</div>
+                    <div class="metric-label">Impôt sur le revenu sur les gains retirés après 5 ans de détention</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2 — PEA MECHANIQUE -->
+        <div id="pea" class="content-card">
+            <h2><i class="fa-solid fa-gears" style="color:#1d4ed8;"></i> Comment le PEA supprime le frottement fiscal</h2>
+
+            <p>Le mécanisme tient en deux idées. Première idée : à l'intérieur du plan, vendre puis racheter
+                ne déclenche aucun impôt. Vous pouvez solder une position gagnante et redéployer la totalité du
+                produit, plus-value comprise. C'est ce que le fisc appelle un environnement sans frottement, et
+                c'est précisément ce qui manque à un compte-titres ordinaire, où chaque vente gagnante est un
+                fait générateur d'imposition.</p>
+
+            <p>Deuxième idée : à la sortie, la fiscalité dépend de l'ancienneté du plan. Avant cinq ans, un
+                retrait est taxé au prélèvement forfaitaire unique, la « flat tax », soit <span class="num">30 %</span>
+                du gain (12,8 % d'impôt sur le revenu et 17,2 % de prélèvements sociaux). Après cinq ans, la part
+                impôt sur le revenu tombe à zéro. Il ne reste que les prélèvements sociaux sur le gain, prélevés
+                au moment du retrait.</p>
+
+            <div class="alert-box">
+                <p style="margin:0;"><strong>Paramètre mouvant en 2026.</strong> Les prélèvements sociaux sur les
+                    revenus du capital étaient de <span class="num">17,2 %</span> depuis 2018. Plusieurs textes de
+                    la loi de finances 2026 relèvent ce taux à <span class="num">18,6 %</span> pour les gains logés
+                    en PEA. Le débat n'est pas clos et le taux applicable dépendra de votre date de retrait. Les
+                    calculs ci-dessous utilisent 17,2 % pour rester reproductibles ; on montre plus bas que passer
+                    à 18,6 % ne change pas la conclusion, seulement son ampleur.</p>
+            </div>
+
+            <p>Deux limites à garder en tête, parce qu'elles cadrent tout le reste. Le PEA n'accepte que des
+                actions et fonds éligibles, essentiellement de sociétés ayant leur siège dans l'Union européenne
+                ou l'Espace économique européen. Vous ne logez pas Nvidia ou Apple en direct dans un PEA. Et le
+                PEA-PME, plafonné à part, cible les petites et moyennes capitalisations : c'est là que se trouve
+                une bonne partie de l'univers peu suivi, moins arbitragé, où un retail agile a le plus de marge.</p>
+        </div>
+
+        <!-- SECTION 3 — EXEMPLE CHIFFRE -->
+        <div id="chiffre" class="content-card">
+            <h2><i class="fa-solid fa-calculator" style="color:#1d4ed8;"></i> L'écart chiffré sur dix ans</h2>
+
+            <p>Prenons un cas volontairement générique, pour que chacun puisse refaire le calcul avec ses propres
+                chiffres. Capital de départ : <span class="num">20 000 €</span>. Rendement brut supposé :
+                <span class="num">8 %</span> par an. Horizon : <span class="num">10 ans</span>. Ce n'est pas une
+                prévision, c'est une hypothèse d'école pour isoler l'effet fiscal, toutes choses égales par
+                ailleurs. Trois trajectoires, même actif sous-jacent, seule l'enveloppe change.</p>
+
+            <p><strong>Cas 1, achat-conservation.</strong> On achète, on garde dix ans, on vend une fois. En PEA
+                après cinq ans, on ne paie que les prélèvements sociaux sur le gain final. En compte-titres, on paie
+                la flat tax à 30 % sur ce même gain. Résultat net : <span class="num">39 192 €</span> en PEA contre
+                <span class="num">36 225 €</span> en compte-titres. L'enveloppe rapporte <span class="num">2 967 €</span>
+                de plus, soit environ <span class="num">18 %</span> de gain net supplémentaire, sans avoir rien fait
+                de différent.</p>
+
+            <p><strong>Cas 2, stratégie qui solde ses gains.</strong> Cette fois, on suppose une approche active qui
+                réalise sa plus-value chaque année et la réinvestit : rotation, prise de bénéfice, rééquilibrage
+                régulier. En compte-titres, chaque gain annuel est amputé de 30 % avant d'être réinvesti, donc le
+                rendement composé passe de 8 % à <span class="num">5,6 %</span> net. En PEA, il reste 8 % brut,
+                l'impôt étant reporté à la sortie. Résultat net : <span class="num">39 192 €</span> en PEA contre
+                <span class="num">34 488 €</span> en compte-titres. L'écart grimpe à <span class="num">4 704 €</span>,
+                soit près de <span class="num">32 %</span> de gain net en plus.</p>
+
+            <div id="chart-compound" class="chart-box"></div>
+            <p class="chart-cap">Capital qui travaille avant impôt de sortie, sur 10 ans. La courbe basse montre
+                l'érosion du composé quand chaque gain annuel est taxé à 30 % dans un compte-titres.</p>
+
+            <div class="data-table" style="margin-top:1.5rem; overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="text-align:left; padding:0.75rem;">Scénario</th>
+                            <th style="text-align:right; padding:0.75rem;">Valeur nette à 10 ans</th>
+                            <th style="text-align:right; padding:0.75rem;">Gain net</th>
+                            <th style="text-align:right; padding:0.75rem;">Écart vs PEA</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-variant-numeric:tabular-nums;">
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;"><strong>PEA</strong> (achat-conservation ou actif)</td>
+                            <td style="text-align:right; padding:0.75rem;">39 192 €</td>
+                            <td style="text-align:right; padding:0.75rem;">+19 192 €</td>
+                            <td style="text-align:right; padding:0.75rem;">référence</td>
+                        </tr>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Compte-titres, achat-conservation</td>
+                            <td style="text-align:right; padding:0.75rem;">36 225 €</td>
+                            <td style="text-align:right; padding:0.75rem;">+16 225 €</td>
+                            <td style="text-align:right; padding:0.75rem; color:#b91c1c;">−2 967 €</td>
+                        </tr>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Compte-titres, gains soldés chaque année</td>
+                            <td style="text-align:right; padding:0.75rem;">34 488 €</td>
+                            <td style="text-align:right; padding:0.75rem;">+14 488 €</td>
+                            <td style="text-align:right; padding:0.75rem; color:#b91c1c;">−4 704 €</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="margin-top:1.25rem;">Le message est net. Sur un buy-and-hold, l'avantage du PEA existe mais reste
+                modéré, parce qu'un compte-titres reporte lui aussi l'impôt tant que vous ne vendez pas. C'est quand la
+                stratégie tourne, quand elle réalise ses gains, que l'enveloppe fait la différence : le compte-titres
+                ponctionne à chaque cycle, le PEA laisse tout composer.</p>
+        </div>
+
+        <!-- SECTION 4 — UCITS -->
+        <div id="ucits" class="content-card">
+            <h2><i class="fa-solid fa-ban" style="color:#1d4ed8;"></i> Pourquoi vous ne pouvez pas acheter SPY</h2>
+
+            <p>Un débutant européen qui veut suivre le S&amp;P 500 tape « SPY » chez son courtier et se heurte à un
+                refus. Ce n'est pas une lubie du courtier. La réglementation européenne impose qu'un produit vendu à
+                un particulier publie un document d'informations clés standardisé. Les émetteurs américains d'ETF
+                n'ont aucune obligation de le produire, et ne le font pas. Sans ce document, un courtier européen n'a
+                pas le droit de proposer SPY, VOO ou consorts à un client retail. La règle est la même chez tous les
+                grands courtiers accessibles depuis l'Europe.</p>
+
+            <p>La solution est un ETF de droit européen, dit UCITS, qui réplique le même indice. Pour le S&amp;P 500,
+                l'équivalent le plus courant est domicilié en Irlande, capitalise les dividendes au lieu de les
+                verser, et affiche des frais de gestion de <span class="num">0,07 %</span> par an pour environ
+                95 milliards de dollars d'encours. Vous obtenez la même exposition, avec un habillage juridique
+                compatible avec votre courtier.</p>
+
+            <div class="pedagogy-box">
+                <h3 style="margin-top:0;"><i class="fa-solid fa-graduation-cap"></i> Le détail qui se paie : la domiciliation</h3>
+                <p style="margin-bottom:0;">Le domicile du fonds n'est pas neutre. Sur les dividendes d'actions
+                    américaines, le traité fiscal entre l'Irlande et les États-Unis ramène la retenue à la source de
+                    30 % à <span class="num">15 %</span>. Un fonds irlandais qui capitalise ses dividendes ne laisse
+                    fuir que cette moitié, et vous n'êtes pas prélevé une seconde fois au niveau individuel. Deux ETF
+                    qui suivent le même indice, avec le même ticker d'indice, peuvent donc ne pas rendre exactement
+                    pareil, uniquement à cause du pays où le fonds est enregistré. C'est une couche d'alpha invisible
+                    dans le prix affiché.</p>
+            </div>
+
+            <p>Petite subtilité de cohabitation : la plupart de ces ETF UCITS ne sont pas éligibles au PEA, parce
+                que leur indice contient des actions non européennes. Pour obtenir du S&amp;P 500 à l'intérieur d'un
+                PEA, il faut passer par un ETF à réplication synthétique construit pour rester éligible. Le rendement
+                indiciel logé dans l'enveloppe zéro impôt, au prix d'un léger risque de contrepartie à comprendre
+                avant d'acheter.</p>
+        </div>
+
+        <!-- SECTION 5 — ARBITRAGE -->
+        <div id="arbitrage" class="content-card">
+            <h2><i class="fa-solid fa-scale-balanced" style="color:#1d4ed8;"></i> Quand le compte-titres reste le bon choix</h2>
+
+            <p>Le PEA n'est pas supérieur en tout. Le présenter comme une enveloppe magique serait malhonnête. Il y
+                a des cas nets où le compte-titres ordinaire gagne, et il faut les nommer.</p>
+
+            <div class="data-table" style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f1f5f9;">
+                            <th style="text-align:left; padding:0.75rem;">Besoin</th>
+                            <th style="text-align:left; padding:0.75rem;">PEA / PEA-PME</th>
+                            <th style="text-align:left; padding:0.75rem;">Compte-titres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Actions US, asiatiques, en direct</td>
+                            <td style="padding:0.75rem; color:#b91c1c;">Non éligible</td>
+                            <td style="padding:0.75rem; color:#15803d;">Accès total</td>
+                        </tr>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Options, produits à levier, dérivés</td>
+                            <td style="padding:0.75rem; color:#b91c1c;">Interdit</td>
+                            <td style="padding:0.75rem; color:#15803d;">Disponible</td>
+                        </tr>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Imputer une moins-value sur d'autres gains</td>
+                            <td style="padding:0.75rem; color:#b91c1c;">Non, pertes cloisonnées</td>
+                            <td style="padding:0.75rem; color:#15803d;">Oui, report 10 ans</td>
+                        </tr>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Retirer avant 5 ans sans casser l'avantage</td>
+                            <td style="padding:0.75rem; color:#b91c1c;">Retrait = clôture avant 5 ans</td>
+                            <td style="padding:0.75rem; color:#15803d;">Libre à tout moment</td>
+                        </tr>
+                        <tr style="border-top:1px solid #e2e8f0;">
+                            <td style="padding:0.75rem;">Composer les gains sans impôt annuel</td>
+                            <td style="padding:0.75rem; color:#15803d;">Oui, c'est tout l'intérêt</td>
+                            <td style="padding:0.75rem; color:#b91c1c;">Impôt à chaque vente gagnante</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p style="margin-top:1.25rem;">La lecture pratique tient en une phrase : le compte-titres est l'outil de
+                l'accès et de la flexibilité, le PEA est l'outil de la capitalisation longue sur actions européennes.
+                La plupart des investisseurs sérieux tiennent les deux, et logent chaque stratégie dans l'enveloppe qui
+                la sert. Une position spéculative sur une valeur américaine ou un panier optionnel vit dans le
+                compte-titres ; un portefeuille d'actions européennes destiné à tourner sur plusieurs années vit dans
+                le PEA.</p>
+        </div>
+
+        <!-- SECTION 6 — TURNOVER -->
+        <div id="turnover" class="content-card">
+            <h2><i class="fa-solid fa-rotate" style="color:#1d4ed8;"></i> L'edge grandit avec le turnover</h2>
+
+            <p>Voici le point que la plupart des comparatifs ratent. L'avantage fiscal du PEA n'est pas une constante,
+                c'est une fonction du nombre de fois où vous réalisez vos gains. Un investisseur qui achète un ETF et
+                ne le touche pas pendant dix ans tire un bénéfice réel mais limité, parce que le compte-titres reporte
+                lui aussi l'impôt tant qu'il ne vend pas. Notre cas 1 le montre : <span class="num">18 %</span> de gain
+                net en plus, pas davantage.</p>
+
+            <p>Une stratégie qui fait tourner son portefeuille change l'équation. Chaque fois qu'elle solde une
+                position gagnante, le compte-titres prélève 30 % avant réinvestissement, et ce prélèvement ne compose
+                plus jamais. Le PEA, lui, réinvestit le montant brut. Plus le turnover est élevé, plus le nombre de
+                prélèvements évités augmente, plus l'écart se creuse. Le cas 2 le chiffre : on passe de 18 % à
+                <span class="num">32 %</span> de gain net en plus, avec exactement le même actif et le même rendement
+                brut. La seule variable qui a bougé, c'est la fréquence des ventes.</p>
+
+            <p>C'est une conclusion inconfortable pour le récit dominant, qui répète que le buy-and-hold passif est
+                toujours la meilleure approche fiscale. En enveloppe non fiscalisée, oui. En PEA, le raisonnement
+                s'inverse : l'enveloppe absorbe le coût fiscal du turnover, ce qui rend une approche active,
+                systématique, dictée par des signaux, bien moins pénalisée qu'elle ne le serait ailleurs. Pour un
+                retail européen peu capitalisé et à l'aise avec l'automatisation, c'est un terrain de jeu que le
+                cadre américain ne propose pas.</p>
+
+            <div class="takeaway-box">
+                <p style="margin:0;"><strong>Formule mentale.</strong> Avantage PEA ≈ (impôt évité à chaque
+                    réalisation) × (nombre de réalisations) × (années restantes pour composer). Les trois facteurs se
+                    multiplient. Un turnover annuel sur un horizon long est le scénario où l'enveloppe vaut le plus.</p>
+            </div>
+        </div>
+
+        <!-- SECTION 7 — LIMITES / FALSIFIABLE -->
+        <div id="limites" class="content-card">
+            <h2><i class="fa-solid fa-flask" style="color:#1d4ed8;"></i> Ce qui ferait tomber la thèse</h2>
+
+            <p>Une affirmation qui ne peut pas être fausse ne vaut rien. Voici les conditions précises où l'avantage
+                chiffré ci-dessus rétrécit ou disparaît. Changez une hypothèse, refaites le calcul, vérifiez.</p>
+
+            <h3>Le rendement est faible ou négatif</h3>
+            <p>L'avantage porte sur l'impôt évité, donc sur le gain. Sans gain, il n'y a rien à ne pas taxer. À
+                rendement nul ou en perte, le compte-titres reprend même l'avantage, puisqu'il permet d'imputer les
+                moins-values sur d'autres plus-values, ce que le PEA ne permet pas.</p>
+
+            <h3>L'horizon est court</h3>
+            <p>Avant cinq ans, le PEA est taxé comme un compte-titres, à 30 %. L'exonération d'impôt sur le revenu ne
+                se déclenche qu'au cinquième anniversaire. Sur trois ans, l'écart des deux scénarios se réduit
+                fortement ; l'essentiel du bénéfice vient du franchissement du cap des cinq ans.</p>
+
+            <h3>Le turnover est nul</h3>
+            <p>En achat-conservation strict, la part d'avantage liée au report d'impôt s'évapore, parce que le
+                compte-titres reporte aussi. Il ne reste que l'écart de taux à la sortie, 30 % contre 17,2 %. C'est le
+                plancher de l'avantage, pas son plafond.</p>
+
+            <h3>Les prélèvements sociaux montent</h3>
+            <p>Si le taux passe de 17,2 % à 18,6 % comme le prévoient plusieurs textes 2026, le net PEA du cas 1
+                descend d'environ <span class="num">39 192 €</span> à <span class="num">38 867 €</span>. L'avantage
+                se réduit de quelques centaines d'euros, il ne s'annule pas. La hiérarchie tient tant que la part
+                impôt sur le revenu reste exonérée après cinq ans. Si cette exonération disparaissait, toute la thèse
+                tomberait : c'est le vrai risque réglementaire à surveiller, pas le taux social.</p>
+
+            <div class="alert-box" style="margin-top:1.5rem;">
+                <p style="margin:0;">Ceci est un document d'information général, pas un conseil fiscal ou financier
+                    personnalisé. Les plafonds, taux et règles d'éligibilité évoluent et dépendent de votre situation.
+                    Vérifiez les paramètres en vigueur au moment où vous agissez, et rapprochez-vous d'un professionnel
+                    pour votre cas propre.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#edge" class="fnav-item" data-section="edge"><i class="fas fa-lightbulb"></i><span>L'avantage</span></a>
+            <a href="#pea" class="fnav-item" data-section="pea"><i class="fas fa-gears"></i><span>Le PEA</span></a>
+            <a href="#chiffre" class="fnav-item" data-section="chiffre"><i class="fas fa-calculator"></i><span>Chiffré 10 ans</span></a>
+            <a href="#ucits" class="fnav-item" data-section="ucits"><i class="fas fa-ban"></i><span>UCITS vs SPY</span></a>
+            <a href="#arbitrage" class="fnav-item" data-section="arbitrage"><i class="fas fa-scale-balanced"></i><span>Arbitrage</span></a>
+            <a href="#turnover" class="fnav-item" data-section="turnover"><i class="fas fa-rotate"></i><span>Turnover</span></a>
+            <a href="#limites" class="fnav-item" data-section="limites"><i class="fas fa-flask"></i><span>Falsifiable</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Document d'information général, pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script>
+        (function () {
+            var el = document.getElementById('chart-compound');
+            if (!el || typeof echarts === 'undefined') return;
+            var chart = echarts.init(el);
+            var years = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+            var peaGross = [20000, 21600, 23328, 25194, 27210, 29387, 31737, 34276, 37019, 39980, 43179];
+            var ctoActive = [20000, 21120, 22303, 23552, 24871, 26263, 27734, 29287, 30927, 32659, 34488];
+            chart.setOption({
+                grid: { left: 64, right: 24, top: 48, bottom: 40 },
+                tooltip: {
+                    trigger: 'axis',
+                    valueFormatter: function (v) { return Math.round(v).toLocaleString('fr-FR') + ' €'; }
+                },
+                legend: { top: 8, textStyle: { fontSize: 12 } },
+                xAxis: {
+                    type: 'category', data: years, name: 'Années',
+                    nameLocation: 'middle', nameGap: 26,
+                    axisLabel: { color: '#64748b' }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                        color: '#64748b',
+                        formatter: function (v) { return (v / 1000) + ' k€'; }
+                    },
+                    splitLine: { lineStyle: { color: '#e2e8f0' } }
+                },
+                series: [
+                    {
+                        name: 'PEA — gains composés bruts',
+                        type: 'line', data: peaGross, smooth: true, symbol: 'circle', symbolSize: 6,
+                        lineStyle: { width: 3, color: '#1d4ed8' }, itemStyle: { color: '#1d4ed8' },
+                        areaStyle: { color: 'rgba(29,78,216,0.08)' }
+                    },
+                    {
+                        name: 'Compte-titres — gains soldés (5,6 % net)',
+                        type: 'line', data: ctoActive, smooth: true, symbol: 'triangle', symbolSize: 7,
+                        lineStyle: { width: 3, color: '#ea580c', type: 'dashed' }, itemStyle: { color: '#ea580c' }
+                    }
+                ]
+            });
+            window.addEventListener('resize', function () { chart.resize(); });
+        })();
+    </script>
+
+    <script src="/assets/echarts-responsive.js"></script>
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+</body>
+
+</html>
