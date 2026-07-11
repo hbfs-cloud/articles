@@ -145,6 +145,15 @@ if [ "$SKIP_SWEEP" = false ]; then
   export MCP_GATEWAY_URL="${MCP_GATEWAY_URL:-https://mcp.dailytickers.com/mcp}"
   node tools/refresh-risk-metrics.js
 
+  # Step 4a1: re-grade mécanique des analyses (prix courants) + watchlist forcée (ALLR/IOVA/ALT/EQX).
+  # Met à jour grade + meta.lastCheckedAt/lastCheckedDisplay ("prix vérifié le X"), non-bloquant.
+  # NB : le DEEP-refresh (régénération de contenu fact-checkée MCP → bump de la date de PUBLICATION)
+  # est une passe AGENT séparée (un subprocess node ne peut pas appeler le MCP marché) — cf
+  # scanner-pipeline.md §"Analyses Refresh" Étape 2. Ici = re-grade mécanique seulement.
+  echo ""
+  echo "🔄 Step 4a1: Re-grade analyses (watchlist + max-age 30)..."
+  node tools/refresh-analyses.js --max-age 30 --commit || echo "⚠️  refresh-analyses failed (non-blocking)"
+
   # ─── Step 4b: Replay trades with 1-min OHLCV (realistic entry/exit times) ──
   echo ""
   echo "🔁 Step 4b: Replaying trades with 1-min data..."

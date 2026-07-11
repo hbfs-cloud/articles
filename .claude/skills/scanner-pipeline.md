@@ -591,19 +591,27 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
 
 ## Analyses Refresh (à chaque run scanner)
 
-À chaque exécution du pipeline `/scanner`, après la Phase 5 (downstream) et avant le commit final :
+⚠️ **DEUX DATES DISTINCTES (garde anti-hallucination, diagnostic 2026-07-11)** :
+- **"prix vérifié le X"** = `meta.lastCheckedDisplay` — re-grade MÉCANIQUE (prix courants). Bumpé à chaque
+  refresh. NE bumpe PAS la date de publication.
+- **"analyse régénérée le X"** = `meta.date` / `report-card-meta` — DEEP-refresh (contenu régénéré,
+  fact-checké MCP par l'AGENT). Bumpé UNIQUEMENT sur une vraie régénération. Ne JAMAIS afficher une date
+  d'analyse "fraîche" sans un vrai passage MCP (leçon IOVA/ALT/ALLR : hallucination de 52W/cash/mcap).
 
-### Étape 1 — Grade Auto-Refresh (AUTOMATIQUE)
+### Étape 1 — Grade Auto-Refresh (AUTOMATIQUE — CÂBLÉ dans publish-daily-card.sh Step 4a1 depuis 2026-07-11)
 ```bash
 node tools/refresh-analyses.js --max-age 30 --commit
 ```
-Rafraîchit toutes les analyses < 30 jours :
+⚠️ Historique : cette étape n'était JAMAIS appelée par `/scanner` (uniquement documentée ici) → les analyses
+gelaient (ALLR/IOVA/ALT figées au 01/07). Désormais **câblée dans `tools/publish-daily-card.sh` Step 4a1**
+(non-bloquant). Rafraîchit toutes les analyses < 30 jours **+ force la watchlist** (`data/analyses-watchlist.json`,
+lue automatiquement) :
 - Fetch prix courants via MCP Gateway (fallback Yahoo/allorigins)
-- Re-évalue le grade basé sur : prix vs stop/entry/TP, R/R courant, signaux techniques
-- Si grade change → met à jour le JSON, re-rend le HTML, ajoute badge `⬇ A+ → A` sur la carte
+- Re-évalue le grade ; met à jour `meta.lastCheckedAt` + `meta.lastCheckedDisplay` ("prix vérifié le X")
+- Si grade change → met à jour le JSON, re-rend le HTML, badge `⬇ A+ → A` sur la carte
 - Si trade complété (prix > TP2) → marque `status: completed` sans dégrader le grade
-- Ajoute `gradeHistory[]` pour traçabilité
-- `--dry` pour preview, `--tickers AAPL,MSFT` pour forcer des tickers spécifiques
+- Ajoute `gradeHistory[]` ; `--dry` preview, `--tickers` pour forcer d'autres tickers
+- **NE bumpe PAS `meta.date`** (publication) — c'est le rôle du DEEP-refresh (Étape 2, agent).
 
 ### Étape 2 — Watchlist Deep Refresh (MANUEL, tickers critiques)
 Fichier : `data/analyses-watchlist.json` — liste de tickers dont l'analyse doit être régénérée complètement.

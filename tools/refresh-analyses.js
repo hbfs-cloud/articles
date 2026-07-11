@@ -330,6 +330,16 @@ async function main() {
     forceTickers = args[tickerIdx + 1].split(',').map(t => t.trim().toUpperCase());
   }
 
+  // Force the WATCHLIST tickers (data/analyses-watchlist.json) in ADDITION to --tickers.
+  // Ce sont les analyses "à ne jamais laisser geler" — bug diagnostiqué 2026-07-11 : le refresh
+  // ne lisait pas la watchlist, donc ALLR/IOVA/ALT/EQX restaient figées. On les force ici, toujours.
+  try {
+    const wl = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'data', 'analyses-watchlist.json'), 'utf8'));
+    const wlTickers = (Array.isArray(wl) ? wl : (wl.tickers || wl.watchlist || [])).map(t => String(t).trim().toUpperCase());
+    for (const t of wlTickers) if (t && !forceTickers.includes(t)) forceTickers.push(t);
+    if (wlTickers.length) console.log(`   watchlist forcée : ${wlTickers.join(', ')}`);
+  } catch (_) { /* watchlist absente → skip, non bloquant */ }
+
   // Find eligible analyses
   const now = Date.now();
   const cutoff = maxAge * 86400000;
@@ -389,8 +399,12 @@ async function main() {
       data.meta.status = status;
     }
 
-    // Always update lastCheckedAt
+    // Always update lastCheckedAt + a DISPLAY date (garde 2-dates, diagnostic 2026-07-11) :
+    // "prix vérifié le X" (mécanique, ici) est DISTINCT de meta.date "analyse régénérée le X"
+    // (deep-refresh AGENT via MCP). Un simple re-grade NE bumpe PAS meta.date/report-card-meta —
+    // sinon on afficherait une analyse "fraîche" sans vrai passage MCP (leçon IOVA/hallucination).
     data.meta.lastCheckedAt = new Date().toISOString();
+    data.meta.lastCheckedDisplay = new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
     if (currentPrice > 0) {
       data.meta.lastCheckedPrice = currentPrice;
     }
