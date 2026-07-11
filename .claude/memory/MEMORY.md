@@ -1,5 +1,6 @@
 # Market Watch Articles - Memory
 
+- [MCP-only data path](project_mcp_only_data_path.md) — Décision 2026-07-11 : la donnée marché passe par le MCP marketdata, PAS les scripts/univers locaux (stockanalysis-fetcher, eu-universe.json, Yahoo direct) = legacy à migrer/virer. Contrainte : subprocess node ≠ MCP → tout mode data-MCP est une ÉTAPE AGENT (comme top-10/staging dtx). eu_smallcap construit 100% MCP.
 - [Site Lang & Nav](project_site_lang_and_nav.md) — Décision 2026-07-11 : site **bilingue FR/EN assumé** (ES/ZH = 0 fichier → retirés du sélecteur ; défaut = navigator.language, plus 'all' qui entremêlait). Tags : 3 sources à synchroniser (CLAUDE.md ↔ core.js ↔ index.html), 16 tags manquaient → pas filtrables. Onglet Scanner → sous-filtre Scans/Rétros/Statut.
 - [Systematic North Star](project_systematic_north_star.md) — Cap : retail EU peu capitalisé, multi-broker API, DevOps ; max alpha risque maîtrisé → systematic. 4 edges (capacity/fiscal PEA/API/event-driven). ⛔ STOP à la simulation+signaux (scanner/status), PAS de paper/live broker. Build gated harness+adversarial à CHAQUE loop.
 
