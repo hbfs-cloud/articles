@@ -25,4 +25,7 @@ Cadre le **prochain événement macro** (CPI/Fed/OPEP/jobs), ses **scénarios** 
 6. **Cohérence** : persona Strategist — le positionnement proposé doit être cohérent avec le régime et honnête sur le risque de gap.
 7. **Sortie digest** : événement + heure → scénarios (si X → faire Y) → de-risk → bilan. « Idées de trading, pas un conseil ».
 
+## Format de sortie (schéma pivot)
+En plus des scénarios et paniers réactifs (inchangés), émettre pour chaque facteur/proxy le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='macro'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe : avant un événement à issue binaire, rester prudent (souvent `neutral` + de-risk) — jamais un chiffre inventé pour paraître tranché. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
+
 Voir aussi : `sector-rotation`, `swing-signals`, `mcp-gateway-tools` (economic_events, GetMarketContext).

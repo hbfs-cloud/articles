@@ -39,6 +39,8 @@
  *   --asof YYYY-MM-DD  REQUIRED — the session the decide was run for
  *   --from / --to      OPTIONAL — replay window stamp (default from=2021-01-01, to=go-live splice||asof)
  *   --out <file>       OPTIONAL — override output path (default data/dtx/<id>.json)
+ *   --pit              OPTIONAL — POINT-IN-TIME / rétro : écrit data/dtx/<id>@<asof>.json (entrée
+ *                      dédiée par as-of) au lieu d'écraser la staging LIVE du mode. Idea #8.
  */
 
 const fs = require('fs');
@@ -57,6 +59,7 @@ function parseArgs(argv) {
     else if (a === '--from') o.from = argv[++i];
     else if (a === '--to') o.to = argv[++i];
     else if (a === '--out') o.out = argv[++i];
+    else if (a === '--pit') o.pit = true;
     else if (a === '--quiet') o.quiet = true;
   }
   return o;
@@ -128,7 +131,10 @@ function main() {
     engineLabel: 'dtx (systematic-tss) — MCP', engineMode: 'mcp', t0,
   });
 
-  const outPath = opts.out || path.join(scan.STAGING_DIR, `${modeInfo.id}.json`);
+  // POINT-IN-TIME (idea #8) : --pit → écrit dans data/dtx/<id>@<asof>.json (entrée dédiée par as-of)
+  // pour qu'un replay de RÉTRO n'écrase JAMAIS la staging LIVE du mode (data/dtx/<id>.json), et
+  // réciproquement. Sans --pit → chemin live inchangé (pipeline nocturne intact). --out prime toujours.
+  const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: opts.asof, pit: opts.pit });
   scan.writeStaging(out, outPath);
 
   if (!opts.quiet) {

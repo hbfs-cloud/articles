@@ -25,4 +25,7 @@ Deux volets : **PRÉ** (ce qui rapporte cette semaine + les setups à surveiller
 6. **Cohérence + régime** (`GetMarketContext`) — un beat en régime hostile drift moins ; persona Strategist.
 7. **Sortie digest** (gabarit `swing-signals`) : PRÉ (à surveiller) + POST (jouable, niveaux) + bilan.
 
+## Format de sortie (schéma pivot)
+En plus des niveaux (entry/stop/cible — inchangés), émettre pour chaque idée le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='earnings'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe, dérivée de la réaction réelle (beat + guidance relevée + gap tenu sur volume ⇒ plus haute ; gap-risk avant print ⇒ prudente) — jamais inventée. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
+
 Voir aussi : `swing-signals`, `aplus-setups` (les 4 éliminatoires incluent guidance relevée + ≥5 beats), `mcp-gateway-tools`.

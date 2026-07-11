@@ -17,6 +17,20 @@ license: Apache 2.0
 - **Idées ≠ données desk** — ce sont des idées publiées → alias Telegram public OK ; ne JAMAIS y mettre positions/equity/P&L/ordres réels (`rule/never-send-sensitive-data-to-public-telegram`). Vérifier la destination avant envoi.
 - **Telegram `format:"html"` `<b>`** (jamais `**`), `&`→`&amp;`.
 
+## Contrat des signaux — SCHÉMA PIVOT + STATE + AGRÉGATION (déterministe, zéro LLM)
+_Adopté de `virattt/ai-hedge-fund` (§2 idées #2/#3/#6 de `docs/research/ai-hedge-fund-ideas.md`) — mais 100 % code reproductible : le LLM ne sert (au plus) qu'à la narration édito finale, JAMAIS à produire un chiffre de confidence ni un verdict._
+
+**Schéma PIVOT (#2) — `tools/lib/signal-schema.js`.** Chaque générateur (`swing-signals`, `squeeze-radar`, `earnings-reaction`, `sector-rotation`, `macro-event-playbook`) DOIT émettre, EN PLUS de ses niveaux (entry/stop/tp — inchangés), un méta-objet au contrat unique :
+```
+{ signal: 'bullish' | 'bearish' | 'neutral', confidence: 0-100 (entier), reasoning: string non vide }
+```
+Le pivot est une COUCHE de méta qui accompagne les niveaux, pas un remplacement. `validateSignal`/`normalizeSignal` REJETTENT un signal malformé (enum invalide, confidence non numérique, reasoning vide) — jamais de valeur par défaut fabriquée (anti-pattern `create_default_response()` du repo source = interdit ici, cf MCP HARD STOP). `value-quality-board.js` émet déjà exactement ce schéma. **Confidence auditables (#6a)** exposées par ce module : `valuationConfidence(gap)` = `min(|gap|/0.30 × 100, 100)` et `consensusConfidence(bull,bear,n)` = `max(bull,bear)/n × 100` — jamais une « confidence LLM opaque ».
+
+**State partagé merge_dicts (#3) — `tools/lib/signals-desk-state.js`.** Le desk assemble les signaux via ce state (remplace toute glue ad-hoc) : chaque générateur écrit SA propre clé `source` → `state[ticker][source] = {signal,confidence,reasoning}`. Fusion `mergeState({...a,...b})` non destructive → N sources sans collision (`setSignal(state, ticker, source, pivot)` valide au schéma pivot puis merge ; fail-closed si malformé). L'agrégation = simple lecture du state.
+
+**Agrégation confidence-weighted (#6b) — `aggregateTicker` / `aggregateAll`.** Verdict desk REPRODUCTIBLE par ticker, en code :
+`weightedScore = Σ(valeur(signal_i) × confidence_i) / Σ(confidence_i) ∈ [-1,1]` (bullish=+1, bearish=−1, neutral=0) → `≥ +0.25` bullish, `≤ −0.25` bearish, sinon neutral ; confidence du verdict = moyenne des confidences des sources alignées. C'est l'INVERSE de l'anti-pattern du repo (convictions agrégées sans pondération, tranchées par un LLM non reproductible). Chaque chiffre du verdict est justifiable → colle à `EDITORIAL_STYLE`. Ce verdict alimente le classement (étape 3) et les digests (étape 6). CLI : `node tools/lib/signals-desk-state.js --in state.json`.
+
 ## Étape 1 — Contexte (le cerveau)
 `GetMarketContext(facets="overview")` + `RunAutoScreener` intensité → **régime** (risk-on/off + score), VIX, indices/breadth, pétrole/or/taux. `QueryData types="economic_events"` + `GetEarningsCalendarFiltered(days_ahead=7)` → **proximité d'un événement macro** (CPI/Fed/jobs ±3 séances ?) et **densité earnings** (saison ?).
 
@@ -38,7 +52,7 @@ Appliquer chaque brique retenue **selon sa propre recette** (ne pas ré-inventer
 ## Étape 3 — Classement unifié (cross-familles) + BOUCLE D'AMÉLIORATION
 **D'abord** consulter les leçons du track-record : `node tools/signals-ledger.js lessons` puis lire `data/signals-lessons.json` (win-rate + R moyen **par famille × régime**). Utiliser ça pour **pondérer** la sélection : sur-pondérer les familles qui gagnent dans le régime courant, sous-pondérer/écarter celles qui perdent. (Comme le principe absolu du scanner : les leçons ne peuvent qu'ajuster/pondérer, JAMAIS inverser un signal quantitatif ni créer une entrée de zéro — cf `feedback_regime_aware_eval`.)
 
-Puis réunir tous les candidats validés, dédupliquer, et **classer** sur un score commun — **qui intègre les FLUX (swing-signals §4bis, obligatoire depuis le 10/07)** : insiders 30j, put/call + max pain, tendance short interest, 13F trackés (avec leurs caveats lag/couverture). Flux contraires = le candidat descend ou sort du top ; flux porteurs = bonus, jamais un contournement d'un red flag :
+Puis réunir tous les candidats validés dans le **state partagé** (`setSignal(state, ticker, source, {signal,confidence,reasoning})` par générateur — cf « Contrat des signaux » ci-dessus), et produire le **verdict desk par ticker** via `aggregateTicker`/`aggregateAll` (agrégation confidence-weighted déterministe : un même ticker signalé par swing + squeeze + rotation ⇒ un verdict pondéré unique, reproductible et auditable — remplace toute réconciliation manuelle). Dédupliquer, et **classer** sur un score commun — **qui intègre les FLUX (swing-signals §4bis, obligatoire depuis le 10/07)** : insiders 30j, put/call + max pain, tendance short interest, 13F trackés (avec leurs caveats lag/couverture). Flux contraires = le candidat descend ou sort du top ; flux porteurs = bonus, jamais un contournement d'un red flag :
 - **R/R** (≥1,5 obligatoire, plus haut = mieux) · **qualité de tendance** (stack MM, RSI non étendu) · **catalyseur** (earnings/flux/squeeze) · **force relative** (perf_rank secteur) · **confiance** · **actionnable au spot** (entrée ≤3%, pas de chase) · **biais leçons** (famille×régime performante).
 Garder les **3-5 meilleurs** (pas plus — digest). Si rien de propre : le dire (« pas de setup propre aujourd'hui, on attend »), ne pas forcer.
 

@@ -27,4 +27,7 @@ Sort des candidats **short-squeeze** avec un vrai edge donnée (FINRA + coût d'
 7. **Cohérence + régime** : `GetMarketContext(facets="overview")` — les squeezes marchent mieux en risk-on/liquidité ; flag si régime hostile. Persona Strategist (`feedback_harness_portfolio_coherence`).
 8. **Sortie digest** (gabarit `swing-signals`) : bilan → candidats (SI% / DTC / CTB / catalyseur / entrée-stop-cible-RR) → « idées de trading, pas un conseil ».
 
+## Format de sortie (schéma pivot)
+En plus des niveaux (entry/stop/cible — inchangés), émettre pour chaque candidat le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='squeeze'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe, dérivée du faisceau réel (SI% float, days-to-cover, CTB↑, call-buying, catalyseur daté) — jamais inventée ; un squeeze reste haute-vol ⇒ confidence prudente. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
+
 Voir aussi : `swing-signals`, `mcp-gateway-tools`, `decision/short-squeeze-strategy`.

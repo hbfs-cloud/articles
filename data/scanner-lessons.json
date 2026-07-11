@@ -1,7 +1,7 @@
 {
   "_comment": "Synthesized rules accumulated from weekly retrospectives. Updated at end of each scanner/retrospective/YYYYMMDD/ — append-only with conflict resolution. Read by /scanner Phase 0 step 8 and applied during Phase 2 selection.",
-  "_version": "v3.1-20260710",
-  "_updated": "2026-07-10",
+  "_version": "v3.2-20260711",
+  "_updated": "2026-07-11",
   "_source_retros": [
     "20260220",
     "20260228",
@@ -2363,6 +2363,69 @@
       "from_retros": [
         "20260626"
       ]
+    },
+    {
+      "id": "pit-cache-key-end-date",
+      "class": "infrastructure",
+      "status": "active",
+      "severity": "infrastructure",
+      "rule": "Tout enrichissement point-in-time mis en cache pour une RÉTROSPECTIVE (ou un staging dtx rejoué) DOIT encoder l as-of (end_date) dans la clé de cache — jamais une clé ticker-only servie à une date historique. Un cache `${ticker}` (ou `${type}-${country}-today`) servi à une rétro d as-of D peut renvoyer un filing/rapport/fondamental POSTÉRIEUR à D = look-ahead (leçons IOVA/INDO). Clé PIT: `${ticker}:${asof}` / `${type}-${country}-${asof}` / chemin daté (price-cache.js). Côté MCP, borner serveur: GetInstruments(as_of=D) et QueryData(end_date=D[,form_types]) pour sec_filings/financials/earnings/insider_transactions. Garder la convention de date scanner D+1/D+3 (jours fériés marché) — jamais un freq=B pandas.",
+      "scope": {
+        "setups": [],
+        "regimes": [],
+        "modes": []
+      },
+      "effect": {
+        "action": "require_pit_cache_key",
+        "target": {
+          "tools": [
+            "tools/lib/stockanalysis-fetcher.js",
+            "tools/lib/price-cache.js",
+            "tools/dtx-mcp-ingest.js",
+            "tools/dtx-scan.js"
+          ]
+        },
+        "params": {
+          "cache_key": "encode end_date/as-of (ticker:asof), une entrée dédiée par date",
+          "mcp_server_side_lte": {
+            "GetInstruments": "as_of=D",
+            "QueryData": "end_date=D (+ form_types) pour sec_filings/financials/earnings_quarterly/insider_transactions"
+          },
+          "forward_mode": "as-of == aujourd hui (ou absent) → comportement inchangé (zéro régression)",
+          "date_convention": "scanner D+1/D+3 (jours fériés marché) — PAS freq=B pandas"
+        }
+      },
+      "counter_example": {
+        "id": "silent-fallback-serving-posterior",
+        "source": "virattt/ai-hedge-fund create_default_response()",
+        "why_bad": "Fallback SILENCIEUX qui, à défaut de donnée PIT, sert le snapshot le plus récent (postérieur au setup) OU une valeur par défaut — avale l échec et fabrique du look-ahead. Chez nous = MCP HARD STOP: on STOPPE, on ne substitue JAMAIS un snapshot postérieur. findLatestCache/fetchScreener en mode PIT throw si aucun snapshot <= asof, jamais ne sert un fichier daté > asof."
+      },
+      "evidence": {
+        "sample_size": 0,
+        "note": "Durcissement anti-look-ahead (idea #8 docs/research/ai-hedge-fund-ideas.md). Non déclenché par un trade, par une revue d architecture.",
+        "period": "2026-07-11",
+        "tickers": [
+          "IOVA",
+          "INDO"
+        ],
+        "source_retros": []
+      },
+      "confidence": 0.9,
+      "confidence_base": 0.9,
+      "half_life_days": 3650,
+      "created_at": "2026-07-11",
+      "last_validated_at": "2026-07-11",
+      "expires_at": "2036-07-11",
+      "invalidation_conditions": [
+        "Si un mode de rétro/PIT sert un enrichissement daté > as-of (fichier cache postérieur, ou API live rejouée en mode PIT) → bug infra, escalader."
+      ],
+      "notes": "Idea #8 (ai-hedge-fund). Implémenté: stockanalysis-fetcher.js (opt asof → clé type-country-asof, lecture seule bornée <= asof, throw si rien, findLatestCache maxDate) ; dtx-mcp-ingest.js --pit → data/dtx/<id>@<asof>.json (n écrase pas la staging live) ; price-cache.js encodait déjà la date dans le chemin (PIT natif). NE PAS copier le cache 100%-mémoire d ai-hedge-fund (explosion) — on garde staging fichier + cache OHLCV chaud dtx.",
+      "applies_to": [
+        "retrospective",
+        "dtx_staging",
+        "analyses_refresh"
+      ],
+      "from_retros": []
     }
   ],
   "_open_questions": [

@@ -271,6 +271,22 @@ function writeStaging(out, outPath) {
   fs.writeFileSync(outPath, JSON.stringify(out, null, 2), 'utf8');
 }
 
+/**
+ * POINT-IN-TIME staging path (idea #8 : end_date dans la clé).
+ *
+ * LIVE (nightly, forward) → data/dtx/<id>.json (INCHANGÉ — c'est ce que gen-status-page lit).
+ * PIT / RÉTRO ({pit:true}) → data/dtx/<id>@<asof>.json — une ENTRÉE DÉDIÉE par as-of, pour qu'un
+ *   replay historique (rétro) n'ÉCRASE PAS la staging live du mode (et réciproquement). La clé
+ *   encode l'as-of exactement comme price-cache.js encode la date dans le chemin : chaque date =
+ *   snapshot isolé, jamais de collision live↔rétro.
+ * Sans {pit} → chemin live, quel que soit l'as-of (zéro régression sur le pipeline nocturne).
+ */
+function stagingPathFor(portfolioId, { asof = null, pit = false } = {}) {
+  const id = String(portfolioId);
+  if (pit && asof) return path.join(STAGING_DIR, `${id}@${String(asof).slice(0, 10)}.json`);
+  return path.join(STAGING_DIR, `${id}.json`);
+}
+
 // ---------------------------------------------------------------------------
 // Staging freshness helper — used by the pipeline guard (publish-daily-card.sh Step 4d) and here.
 // ---------------------------------------------------------------------------
@@ -367,6 +383,6 @@ if (require.main === module) main();
 module.exports = {
   discoverModes, stagingStatus, writeStagingCompleteness, COMPLETENESS_MARKER, SCRIPTED_MODES,
   // Shared schema surface — reused by tools/dtx-mcp-ingest.js so the MCP path is byte-compatible.
-  buildStaging, writeStaging, extractReplayMetrics, assertReplaySanity, mapOrder, goLiveFor,
+  buildStaging, writeStaging, stagingPathFor, extractReplayMetrics, assertReplaySanity, mapOrder, goLiveFor,
   DEFAULT_FROM, STAGING_DIR, CONFIG_DIR, REPO_ROOT, PORTFOLIO_TO_MODE,
 };

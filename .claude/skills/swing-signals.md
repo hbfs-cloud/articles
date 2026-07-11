@@ -103,4 +103,7 @@ Stop [x] (−x %) · Cibles [y] (+y %) / [z] (+z %) · R/R [n]
 ## Après publication (optionnel)
 Loguer les signaux émis (tickers + entrées/stops/cibles + thèse + date) via `remember(workspace='dailystocks', type='project', ...)` pour que le bilan du lendemain (étape 1-2) soit automatique.
 
+## Format de sortie (schéma pivot)
+En plus des niveaux (entry/stop/tp — inchangés), émettre pour chaque signal le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='swing'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe (ex. `consensusConfidence` sur les checks tendance/flux, ou dérivée du R/R + qualité de tendance) — jamais une valeur inventée. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
+
 Voir aussi : skill `senior-review` (passe Strategist formelle), `aplus-setups`, `mcp-gateway-tools` (DSL screener), `scanner-pipeline`.

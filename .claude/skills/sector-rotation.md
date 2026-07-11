@@ -24,4 +24,7 @@ Vue **top-down** : quels secteurs sur/sous-pondérer *maintenant*, et dans les s
 5. **Cohérence** : le tilt doit s'accorder avec le régime (pas « risk-on » + tilt 100% défensif). Persona Strategist (`feedback_harness_portfolio_coherence`). Flag l'événement proche (CPI/Fed).
 6. **Sortie digest** : tilt (surpondérer / sous-pondérer, 1 raison chacun) → 2-3 leaders RS par secteur favorisé → bilan. « Idées de trading, pas un conseil ».
 
+## Format de sortie (schéma pivot)
+En plus du tilt et des leaders RS (inchangés), émettre pour chaque leader/secteur le méta-objet PIVOT commun au desk : `{ signal: 'bullish'|'bearish'|'neutral', confidence: 0-100, reasoning: string }` (contrat + validateur : `tools/lib/signal-schema.js`). `source='sector'` dans le state partagé du desk (`tools/lib/signals-desk-state.js`). Confidence déterministe, dérivée de la force relative réelle (perf_rank secteur, momentum relatif, cohérence macro) — jamais inventée. Le desk agrège ces pivots (confidence-weighted). Voir signals-desk « Contrat des signaux ».
+
 Voir aussi : `swing-signals` (pour transformer un leader RS en entrée jouable), `macro-event-playbook`, `mcp-gateway-tools`.
