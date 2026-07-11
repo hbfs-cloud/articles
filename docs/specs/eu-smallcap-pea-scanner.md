@@ -1,6 +1,9 @@
 # SPEC — Scanner EU small-cap PEA-éligible (mode `eu_smallcap`)
 
-> **Statut** : draft technique, prêt à implémenter.
+> **Statut** : **DRAFT (masqué)** — infra complète et câblée, mais le **deep backtest EU ne bat pas la
+> baseline**. Reste draft jusqu'à une stratégie EU viable. Détail : **§9 Journal de décision**.
+
+> **Statut technique** : implémenté, prêt à implémenter.
 > **Auteur** : DailyTickers / scanner-pipeline.
 > **Livrable** : **perf simulée + signaux** (sortie type `scanner/status`). **AUCUNE exécution réelle,
 > aucun concept paper/live broker.** Tout est embarquable dans la cmd `/scanner` + la page `scanner/status`.
@@ -506,3 +509,50 @@ de câblage :
 
 > **Ne pas** toucher : `DTX_STAGING_MAP` (mode non-dtx), `trading-executor/*`, `run-session.js`,
 > `gen-trading-plan.js` (out of scope §0).
+
+---
+
+## 9. Journal de décision
+
+### 9.1 2026-07-12 — Deep backtest EU (couverture résolue) → **KEEP DRAFT** (honnête)
+
+Couverture EU débloquée (backfill MCP v111, `RunBacktest` lit l'historique EU profond). Deep backtest
+lancé sur le **cycle complet** — les 13 noms PEA du pool `scanner/20260713/signals.json`
+(REVO.MI, AFX.DE, PLX.PA, ALR.WA, UBI.PA, EDR.MC, MDV.WA, APR.WA, GVS.MI, BFF.MI, NANO.PA, TIP.MI,
+FTK.DE), stratégie `momentum_expansion`, total-return ajusté, `from=2022-01-01 to=2026-07-12`
+(job MCP `job-a86436a0`, GetStatus healthy avant run — zéro fabrication).
+
+**Métriques deep (réelles, MCP)** :
+
+| Métrique | eu_smallcap (pool) | SPY (baseline) | VGK (proxy EU) |
+|---|---|---|---|
+| CAGR | **+12.0 %** | +12.2 % | +9.3 % |
+| Total return | +67.0 % | +68.0 % | +49.3 % |
+| Max drawdown | **-27.4 %** | -24.5 % | -32.3 % |
+| Sharpe | 0.35 | — | — |
+| Profit factor | 1.44 | — | — |
+| Win rate | 53 % (83 trades) | — | — |
+
+**Par année (walk-forward, pas de replay uniforme)** :
+
+| Année | eu_smallcap | VGK | SPY | Verdict année |
+|---|---|---|---|---|
+| 2023 | +11.2 % (DD -17.7 %) | +18.7 % | +26.7 % | perd vs les deux |
+| 2024 | +34.6 % (DD -8.4 %) | +3.2 % | +25.6 % | gagne |
+| 2025 | +2.1 % (DD -26.7 %) | +36.4 % | +18.0 % | perd lourdement |
+| 2026 YTD | +9.3 % (DD -16.6 %) | +6.7 % | +11.1 % | bat VGK, perd vs SPY |
+
+**Décision : reste DRAFT.** Le gate dur (config-change-backtest + mode-success-criteria +
+regime-aware-eval) n'est pas franchi :
+- **Sous SPY** en absolu (CAGR 12.0 % < 12.2 %) et perd **3 années sur 4** face à SPY.
+- Ne dépasse VGK que sur le **CAGR plein-période** (+2.7 pts) mais perd **2 années sur 4** face au proxy
+  EU, dont 2025 catastrophique (+2.1 % vs VGK +36.4 %) → **pas d'edge persistant** en walk-forward.
+- **Échoue le gate risque** : maxDD réalisé **-27.4 %** (2025 : -26.7 %) contre cible mode **≤ 8 %**
+  (>3× la limite). Sharpe 0.35 très faible. Loin de « battre SPY ≥ 3× ».
+- **Breadth insuffisante** : à `minScore=80`, seulement **4/13** noms du pool qualifient
+  (REVO 84, AFX 83, PLX 83, ALR 80) — le backtest ci-dessus inclut pourtant les 13 (généreux) et
+  n'a quand même pas d'edge. **`minScore` NON abaissé** (l'anti-pattern 80→72 avait été corrigé,
+  commit `3a6e580b4`).
+
+Mode masqué, `assetClass=equity_eu` isolé des pools US, chaîne SHA-256 des trades intacte. Prochaine
+revue **2026-08-11**.
