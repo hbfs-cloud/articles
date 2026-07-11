@@ -1,6 +1,6 @@
 ---
 name: mcp-eu-coverage-gap
-description: 2026-07-11 — RÉSOLU (backfill MCP le soir même) : OHLCV EU backfillé (AIR.PA 395 barres) + RunScreener region=EU renvoie des candidats → scanner eu_smallcap DÉBLOQUÉ. Résiduels : pas de country dans les rows screener (filtre PEA par ticker QueryData profile.country) + exclure UK/.L + market_cap=0 sur certains.
+description: 2026-07-12 — les 4 points MCP EU RÉSOLUS + vérifiés live (v111) : deep backtest (AIR.PA 52 trades 2023-2026), country + market_cap dans les rows screener, GetReferentialData EU. Le blocage n'est PLUS côté MCP. Re-validation eu_smallcap = KEEP_DRAFT (CAGR +12% mais DD -27%, ne bat pas SPY risk-adjusted) → c'est la STRATÉGIE momentum EU qui n'est pas viable, pas la data.
 metadata:
   type: project
 ---
@@ -14,6 +14,26 @@ L'owner du MCP a livré le backfill EU (brief `docs/specs/mcp-eu-coverage-reques
 - **Blocker 2 (énumération) LEVÉ** : `RunScreener(region='EU', pass_expr='close>0')` → **20+ candidats**
   (ready_symbols 3762/3763), le gate 200-barres passe. Avant = 0.
 - ⇒ **Scanner `eu_smallcap` DÉBLOQUÉ, constructible.** Re-jouer `scratchpad/eu-pea-scanner.mjs`.
+
+## ✅ TOUS LES 4 POINTS MCP RÉSOLUS + VÉRIFIÉS LIVE (v111, 2026-07-12)
+L'owner a livré le backfill complet (v111, déployé). Vérifié en session :
+- **#1 backtest deep** : `RunBacktest(AIR.PA, from=2022-06-01)` → **52 trades sur 2023/2024/2025/2026**
+  (avant : seulement 2025+). PF 1.30, Sharpe +0.17. Le moteur lit l'historique EU profond.
+- **#2 country dans les rows** : `RunScreener region=EU` → chaque row porte `country` (France/Germany/UK/
+  Spain…), démasque les cross-listings (1AMD.MI→United States = non-PEA). Filtre PEA EN UNE PASSE.
+- **#3 market_cap dans les rows** : mcaps réels, `market_cap>1e9` filtre l'EU correctement (avant : 0).
+- **#4 GetReferentialData EU** : format Yahoo + colonne country (rapporté owner, corroboré par #2/#3).
+
+## Re-validation eu_smallcap sur cycle complet (2026-07-12) → reste DRAFT (honnête)
+Deep re-validation gated (backfill v111, 2022-2026, total-return ajusté, 13 noms PEA, review adversariale) :
+**CAGR +12.0%, maxDD -27.4%, Sharpe 0.35, PF 1.44, WR 53%, 83 trades** (par année : 2023 +11.2% / 2024
++34.6% / 2025 +2.1% / 2026 +9.3%). **NE BAT PAS la baseline en risk-adjusted / walk-forward** : sous SPY
+(+12.2% CAGR à -24.5% DD, perd 3/4 ans), ne dépasse VGK que sur le CAGR plein en perdant 2/4 ans. Échoue le
+gate risque (DD -27% ≫ cible ≤8%) + "battre SPY ≥3×". Breadth insuffisante (4/13 noms ≥80). → **KEEP_DRAFT**
+(commit 4595998a9), minScore 80 maintenu (anti-pattern 80→72 non répété). Mémoire MCP :
+`decision/eu-smallcap-deep-revalidation-keep-draft`. **Le blocage n'est PLUS côté MCP (tout résolu) — c'est
+la stratégie momentum sur small-caps EU qui n'est pas viable.** Pour activer : trouver une meilleure
+stratégie EU (pas juste momentum), pas rouvrir un ticket MCP.
 
 ## Build eu_smallcap (2026-07-11 soir) — infra OK, stratégie NON viable en l'état
 Workflow re-joué → **couverture confirmée** (RunScreener EU 180 candidats, AFX.DE 397 barres). Pool PEA
