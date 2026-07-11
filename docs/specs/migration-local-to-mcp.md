@@ -1,7 +1,18 @@
 # Migration Plan — Local Scanners → MCP `marketdata` Data Path
 
-**Statut : SPEC (lecture seule). Aucun code modifié. Aucun scanner supprimé.**
+**Statut : SPEC + POC #1 (`factor`) LIVRÉ. Aucun scanner supprimé, aucun univers legacy retiré.**
 **Auteur : recon agent · Date : 2026-07-11**
+
+> **✅ POC #1 — `factor` : voie MCP `--ingest` ACTIVE (2026-07-11).** `tools/factor-scanner.js` a
+> désormais **deux voies** : (a) **VOIE MCP `--ingest <staging>`** (RECOMMANDÉE — l'agent appelle
+> `mcp__marketdata__*` `RunScreener`+`QueryData`, écrit `/tmp/factor-stage.json`, le node le PARSE)
+> et (b) **VOIE LOCALE Yahoo+`tkl-universe.json`** (conservée comme **fallback DEPRECATED**, non cassée).
+> Les deux partagent le MÊME `buildPool()` → `factor_pool` byte-identique (cohérence A/B). Gates hérités
+> appliqués côté ingest : penny<5, sharia passthrough, rr(sanity) ; fail-closed exit 3 + marker incomplet
+> si staging absent/`mcp_ok:false`. Détail agent→MCP→`--ingest` : `scanner-pipeline.md` §"factor — voie
+> MCP (`--ingest`)". Exemple de staging : `docs/specs/examples/factor-stage.example.json`.
+> **Reste à faire (chantier séparé, gated)** : gate A/B régime-aware complet (backtest local↔MCP) avant
+> de retirer `tkl-universe.json` + le fetcher Yahoo de `factor-scanner.js` (§6, candidat de retrait #1).
 
 ## 0. Décision-cadre & contraintes (immuables)
 
@@ -147,12 +158,14 @@ légère.
 
 ## 5. ORDRE DE MIGRATION PHASÉ (gated, réversible, du plus sûr au plus risqué)
 
-1. **`factor` — POC recommandé.** Pourquoi : `status=test` + **sim-only** (aucun capital, aucune parité
-   Go à casser), univers US (`tkl-universe.json`) **entièrement couvert** par le MCP, facteurs prix-only
-   (mapping direct `QueryData bars_daily` 5y). Un échec est sans conséquence de production. Valide de
-   bout en bout le pattern **agent → `RunScreener`/`QueryData` → `--ingest` → `factor_pool`** + le gate
-   A/B avant de toucher un mode live. **Bonus** : débloque la « quality fondamentale » (TODO déjà noté
-   dans `scanner-pipeline`) via `QueryData` fondamentaux.
+1. **`factor` — POC ✅ LIVRÉ (voie MCP `--ingest` active, local deprecated).** Pourquoi : `status=test` +
+   **sim-only** (aucun capital, aucune parité Go à casser), univers US (`tkl-universe.json`) **entièrement
+   couvert** par le MCP, facteurs prix-only (mapping direct `QueryData bars_daily` 5y). Un échec est sans
+   conséquence de production. Le pattern **agent → `RunScreener`/`QueryData` → `--ingest` → `factor_pool`**
+   est **implémenté et testé** (`tools/factor-scanner.js` : branche `ingestMain()`, fail-closed exit 3,
+   fusion non destructive, `buildPool` partagé). **Reste** : gate A/B régime-aware (backtest local↔MCP)
+   AVANT de retirer le legacy (§6) et avant de toucher un mode live. **Bonus dispo** : débloquer la
+   « quality fondamentale » (TODO) en ajoutant les fondamentaux `QueryData` au staging.
 2. **`stockbox`** — univers Nasdaq hardcodé (petit, US, couvert), déjà dtx-autoritatif (migrer la data ne
    déplace pas les chiffres du mode) ⇒ risque contenu.
 3. **`highvol`** — US, dtx-autoritatif, americanbull couvert. A/B régime-aware.
@@ -205,9 +218,10 @@ une fois `factor` en voie-B validé.
 
 - **13 scanners inventoriés** (momentum, etf, highvol, fractal, trendline, hybrid, stockbox, crypto,
   forex, metals, casablanca, candlestick, factor).
-- **Premier mode POC recommandé : `factor`** — `status=test`, **sim-only** (aucune parité Go à casser),
-  univers US couvert par le MCP, facteurs prix-only ⇒ valide le pattern agent-staging + le gate A/B sans
-  risque de production.
+- **Premier mode POC : `factor` — ✅ LIVRÉ (2026-07-11).** Voie MCP `--ingest` active, voie locale Yahoo
+  deprecated mais conservée en fallback. `status=test`, **sim-only** (aucune parité Go à casser), univers
+  US couvert par le MCP, facteurs prix-only ⇒ valide le pattern agent-staging. Gate A/B régime-aware +
+  retrait legacy = chantier séparé restant.
 - **Restent fetch-direct (hors migration)** : `crypto` (Binance public), `casablanca` (BVC — non couvert MCP).
 - **Modes BLOQUÉS (EU, jusqu'au backfill MCP)** : **`etf_eu`** et **`momentum --universe eu`** (+ tout
   `eu_smallcap`/PEA futur). Cause : `RunScreener region=eu`=0, bars EU ≈ 3 séances (`mcp-eu-coverage-gap`).

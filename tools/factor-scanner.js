@@ -48,11 +48,28 @@
  * Cache: shared DATED cache (tools/lib/price-cache.js), market=US interval=1d — point-in-time,
  * replayable, anti-look-ahead. Backtest fetches the full 2y series once and slices PIT in memory.
  *
+ * ─── DEUX VOIES DE DONNÉES ──────────────────────────────────────────────────────────────────
+ *   • VOIE MCP (--ingest, RECOMMANDÉE — POC #1 de la migration local→MCP, spec
+ *     docs/specs/migration-local-to-mcp.md §5) : l'AGENT appelle mcp__marketdata__* (RunScreener US
+ *     + QueryData bars_daily) et écrit un staging JSON ; ce script le PARSE (jamais de fetch réseau,
+ *     jamais de MCP — OAuth2). C'est le 1er mode migré vers le data-path MCP.
+ *   • VOIE LOCALE (défaut, DEPRECATED) : tkl-universe.json + fetch Yahoo direct. Conservée comme
+ *     FALLBACK 100% fonctionnel tant que la voie MCP n'est pas validée en prod ; retrait ultérieur
+ *     (tkl-universe.json = candidat de retrait #1, cf migration-local-to-mcp §6) — chantier séparé.
+ *   Les deux voies partagent le MÊME buildPool() → factor_pool byte-identique (preuve de cohérence A/B).
+ *
  * Usage:
+ *   # VOIE MCP (--ingest) — l'agent a d'abord écrit /tmp/factor-stage.json via mcp__marketdata__*
+ *   node tools/factor-scanner.js --ingest /tmp/factor-stage.json --output signals --folder 20260711
+ *   node tools/factor-scanner.js --ingest /tmp/factor-stage.json --dry-run   # aucun fichier écrit
+ *   # VOIE LOCALE (deprecated, fallback Yahoo)
  *   node tools/factor-scanner.js --dry-run
  *   node tools/factor-scanner.js --backtest                 # walk-forward metrics (real bars)
  *   node tools/factor-scanner.js --date 2026-07-11 --top 15
  *   node tools/factor-scanner.js --output signals --folder 20260711
+ *
+ * Codes de sortie (voie --ingest, alignés pead-scanner) : 0 = OK (0 signal légitime inclus) ;
+ * 3 = staging absent/vide/malformé/mcp_ok:false (run marqué incomplet, RIEN fabriqué) ; 1 = inattendu.
  */
 
 const fs = require('fs');
@@ -98,6 +115,13 @@ const SCAN_FOLDER = getArg('folder', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'), 10);
 const UNIVERSE_ARG = getArg('universe', 'data/tkl-universe.json');
 const MIN_DVOL = parseFloat(getArg('min-dollar-vol', String(MIN_DOLLAR_VOL)));
+// ─── VOIE MCP (--ingest) — POC #1 de la migration local→MCP (docs/specs/migration-local-to-mcp.md §5) ──
+// Quand --ingest est fourni, le scanner NE FETCH RIEN (ni Yahoo, ni cache) : il PARSE un staging
+// JSON écrit par l'AGENT (qui, LUI, a appelé mcp__marketdata__*). Le chemin LOCAL (Yahoo +
+// tkl-universe.json) reste 100% fonctionnel comme fallback mais est DEPRECATED au profit de cette voie.
+const INGEST_PATH = getArg('ingest', null);
+const CLI_REGIME = getArg('regime', null);
+const PENNY_MIN_PRICE = 5;   // penny < $5 rejeté (gate hérité, cohérent avec les autres scanners)
 
 const CACHE_OPTS = { date: SCAN_DATE, market: priceCache.MARKETS.US, interval: '1d' };
 
@@ -384,6 +408,223 @@ function buildPool(top, weight, rebalanceDay) {
   });
 }
 
+// ─── VOIE MCP : --ingest (POC #1 migration local→MCP) ───────────────────────────────────────────
+// L'AGENT (claude -p / /scanner) appelle mcp__marketdata__* :
+//   RunScreener(region=us, asset=stock, pass_expr="vol>1500000 && close>10", force_async → Jobs)
+//     → univers US énuméré (post-filtre market_cap>=2e9 EN CODE côté agent — JAMAIS market_cap
+//       dans pass_expr, il s'évalue à 0 → 0 candidat silencieux ; cf scanner-pipeline §DSL)
+//   QueryData(types=bars_daily[,technicals]) 5y ajusté → momentum 12-1 + low-vol + maxDD par nom
+//   → l'agent z-score/winsorise le composite sur l'univers ÉLIGIBLE et écrit /tmp/factor-stage.json.
+// CE script PARSE le staging (jamais de fetch réseau, jamais d'appel MCP — OAuth2, zéro token),
+// applique les gates hérités, et RE-DÉRIVE le pool via le MÊME buildPool() que la voie locale →
+// shape byte-identique (c'est la PREUVE de cohérence A/B locale↔MCP).
+//
+// ⛔ ZÉRO FABRICATION (MCP HARD STOP) : staging absent / vide / malformé / mcp_ok:false / error →
+// marqueur _scanRuns['factor'] {incomplete:true, signals:0} + exit 3, RIEN fabriqué (comme pead).
+//
+// Gates hérités appliqués :
+//   • penny < $5 → rejeté (entry < PENNY_MIN_PRICE)
+//   • sharia : tag hérité, passé tel quel (null pour factor, facteurs prix-only)
+//   • rr ≥ seuil régime : SANITY — le disaster-stop informationnel donne rr ≡ 2.0 par construction
+//     (tp far = entry×1.5, stop = entry×0.75 → 0.5/0.25). Ne droppe jamais un panier sain ; garde-fou.
+// ⚠️ NON APPLICABLE à factor — la bande « stop 3-8% & ≥1.5×ATR » : c'est un stop de trade PAR LIGNE
+//   (logique PEAD/momentum). factor est une stratégie de ROTATION : la rotation mensuelle EST la
+//   sortie, il n'y a AUCUN SL/TP par nom. Le stop = entry×0.75 (25%) est un filet disaster
+//   INFORMATIONNEL downstream (sweep), PAS un stop de 3-8%. Le clamper à 3-8% rejetterait TOUT le
+//   panier et casserait la cohérence avec la voie locale — donc volontairement non appliqué (spec
+//   factor-scanners-lowturnover.md + modes-config.json modes.factor._note).
+//
+// Shape attendu (docs/specs/examples/factor-stage.example.json) :
+//   { mcp_ok:true, asof, regime?, universeFetched, universeEligible?, rebalance_day?,
+//     candidates:[ { ticker, name?, sector?, market_cap?, sharia?,
+//                    momentum_12_1, realized_vol, max_drawdown, composite, entry, rebalance_day? } ] }
+function normRegime(r) { return String(r || '').toUpperCase().trim(); }
+// R/R ≥ 1,5 (RISK-ON/NEUTRAL/RECOVERY) ou ≥ 2,0 (EARLY RISK-OFF/RISK-OFF) — hérité (cf pead-scanner).
+function rrThresholdFor(regime) {
+  const r = normRegime(regime);
+  return (r === 'RISK-OFF' || r === 'EARLY RISK-OFF') ? 2.0 : 1.5;
+}
+
+function resolveSigPathFactor() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
+}
+
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de pool. No-op en dry-run / hors signals.
+function writeFactorIncompleteMarker(reason, extra) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPathFactor();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude factor.`);
+    return false;
+  }
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  if (!signals._scanRuns) signals._scanRuns = {};
+  signals._scanRuns.factor = Object.assign({
+    at: new Date().toISOString(), universe: 'factor', dataPath: 'mcp-ingest',
+    signals: 0, incomplete: true, reason,
+  }, extra || {});
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _scanRuns['factor'] écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
+}
+
+// Ingest + validation du staging (mêmes règles fail-closed que pead-scanner.loadStaging).
+function loadFactorStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!Array.isArray(data.candidates)) return { ok: false, reason: 'ingest_no_candidates_array' };
+  return { ok: true, data };
+}
+
+// Un candidat stagé → row {symbol, entry, composite, mom, vol, maxDD, sharia} | null (+ raison drop).
+// N'INVENTE aucune donnée : tout champ manquant/non-fini fait tomber le candidat (fail-closed).
+function evaluateCandidate(c, regime) {
+  const drop = reason => ({ row: null, reason });
+  const num = v => (Number.isFinite(v) ? v : NaN);
+  const ticker = c.ticker && String(c.ticker).trim();
+  if (!ticker) return drop('no_ticker');
+  const entry = num(c.entry);
+  const composite = num(c.composite);
+  const mom = num(c.momentum_12_1);
+  const vol = num(c.realized_vol);
+  const maxDD = num(c.max_drawdown);
+  if (!(entry > 0) || !Number.isFinite(composite) || !Number.isFinite(mom)
+      || !Number.isFinite(vol) || !Number.isFinite(maxDD)) return drop('missing_factor_fields');
+  // Gate penny (< $5).
+  if (!(entry >= PENNY_MIN_PRICE)) return drop('penny_under_5');
+  // Gate rr ≥ seuil régime (sanity : disaster-stop → rr ≡ 2.0 par construction).
+  const rr = (entry * (1 + FAR_TP_PCT / 100) - entry) / Math.max(1e-6, entry - entry * (1 - DISASTER_STOP_PCT / 100));
+  if (rr < rrThresholdFor(regime)) return drop(`rr_below_${rrThresholdFor(regime)}`);
+  return {
+    row: {
+      symbol: ticker, name: c.name || ticker, entry, composite, mom, vol, maxDD,
+      sharia: c.sharia != null ? c.sharia : null,
+    },
+    reason: null,
+  };
+}
+
+// Branche --ingest : parse le staging, applique les gates, RE-DÉRIVE le pool via buildPool() (shape
+// identique à la voie locale), écrit factor_pool + _scanRuns['factor'] (fusion non destructive).
+function ingestMain() {
+  const staged = loadFactorStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging factor indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeFactorIncompleteMarker(staged.reason, { ingestPath: INGEST_PATH || null });
+    process.exit(3);
+  }
+  const data = staged.data;
+  const regime = CLI_REGIME || data.regime || 'NEUTRAL';
+  const candidates = data.candidates;
+  const universeFetched = Number.isFinite(data.universeFetched) ? data.universeFetched : candidates.length;
+  // rebalance_day : honore le flag calculé par l'agent (top-level ou 1er candidat), défaut true (bootstrap).
+  const rebalanceDay = (typeof data.rebalance_day === 'boolean')
+    ? data.rebalance_day
+    : (candidates[0] && typeof candidates[0].rebalance_day === 'boolean' ? candidates[0].rebalance_day : true);
+
+  console.log('🧮 Factor Scanner — VOIE MCP (--ingest, POC #1 migration local→MCP)');
+  console.log(`   Staging: ${INGEST_PATH} | candidates: ${candidates.length} | universe: ${universeFetched} | eligible: ${data.universeEligible ?? 'n/a'}`);
+  console.log(`   Date: ${SCAN_DATE} | Regime: ${regime} | rr seuil: ${rrThresholdFor(regime)} | ${rebalanceDay ? 'REBALANCE' : 'frozen'}`);
+
+  const rows = [];
+  const dropStats = {};
+  const shariaBySym = new Map();
+  for (const c of candidates) {
+    const { row, reason } = evaluateCandidate(c, regime);
+    if (row) { rows.push(row); shariaBySym.set(row.symbol, row.sharia); }
+    else dropStats[reason] = (dropStats[reason] || 0) + 1;
+  }
+  // Ordre déterministe : composite desc, symbole asc (comme rankComposite/applyBuffer).
+  rows.sort((a, b) => (b.composite - a.composite) || (a.symbol < b.symbol ? -1 : a.symbol > b.symbol ? 1 : 0));
+
+  // PARITÉ VOIE LOCALE (low-turnover) — la voie MCP DOIT appliquer les MÊMES mécaniques de
+  // construction que main() local, sinon le pool diverge dès le 1er rebalance post-bootstrap : le
+  // "byte-identique via buildPool" ne vaut que si le top-N d'ENTRÉE est identique. Deux leviers,
+  // réutilisant les fonctions déjà validées de la voie locale (aucune logique réinventée) :
+  //   • FREEZE (jour non-rebalance) : ré-émet le dernier panier committé verbatim (rebalance_day=false)
+  //     — sinon le merge dedup-append ferait CROÎTRE le panier au lieu de le tenir (churn silencieux).
+  //   • HYSTÉRÉSIS (jour rebalance) : applyBuffer garde les incumbents dans la buffer-zone (turnover < 40%).
+  // lastCommittedPool lit les signals.json antérieurs (métadonnée PIT locale, PAS un fetch data) —
+  // aucune régression de la garantie MCP-only du data-path (même source que la voie locale).
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  const prior = lastCommittedPool(scanDir);
+
+  let pool, top;
+  if (!rebalanceDay && prior && prior.length) {
+    // Jour frozen : hold verbatim (identique à la voie locale). Aucun nouveau nom, aucun churn.
+    top = [];
+    pool = prior.map(p => ({ ...p, rebalance_day: false, dataPath: 'mcp-ingest' }));
+    console.log(`   Frozen : ${pool.length} positions tenues verbatim (dernier panier committé, aucun rebalance).`);
+  } else {
+    // Jour rebalance (ou bootstrap sans prior) : hystérésis vs dernier panier, puis buildPool partagé.
+    const prevHold = new Set((prior || []).map(p => p.ticker));
+    top = applyBuffer(rows, prevHold, TOP_N);
+    const weight = +(1 / Math.max(1, top.length)).toFixed(4);
+    // RE-DÉRIVE le pool via le MÊME buildPool que la voie locale (preuve de cohérence A/B),
+    // puis ré-applique le tag sharia hérité du staging (buildPool force null par défaut).
+    pool = buildPool(top, weight, true).map(p => ({
+      ...p,
+      sharia: shariaBySym.has(p.ticker) ? shariaBySym.get(p.ticker) : null,
+      dataPath: 'mcp-ingest',
+    }));
+  }
+
+  if (top.length) {
+    const w = pool[0] ? pool[0].weight : 0;
+    console.log(`\n✅ ${top.length} lignes factor retenues (equal-weight ${(w * 100).toFixed(1)}%) sur ${candidates.length} candidats :`);
+    top.forEach((r, i) => console.log(`  ${String(i + 1).padStart(2)}. ${r.symbol.padEnd(6)} comp:${r.composite.toFixed(2).padStart(6)}  mom:${(r.mom * 100).toFixed(1).padStart(6)}%  vol:${(r.vol * 100).toFixed(0).padStart(3)}%  maxDD:${(r.maxDD * 100).toFixed(0).padStart(3)}%`));
+  }
+  if (Object.keys(dropStats).length) {
+    console.log('   drops:', Object.entries(dropStats).map(([k, v]) => `${k}=${v}`).join(' '));
+  }
+
+  if (DRY_RUN) { console.log('\n🏷️  Dry run — aucun fichier écrit.'); return pool; }
+
+  if (OUTPUT_MODE === 'json') {
+    const outPath = path.join(ROOT, 'data', `factor-scan-${SCAN_DATE}.json`);
+    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, topN: TOP_N, rebalanceDays: REBALANCE_DAYS, rebalanceDay, dataPath: 'mcp-ingest', candidates: pool }, null, 2));
+    console.log(`\n📁 Écrit dans ${outPath}`);
+    return pool;
+  }
+
+  if (OUTPUT_MODE === 'signals') {
+    const sigPath = resolveSigPathFactor();
+    if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} introuvable`); process.exit(1); }
+    const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+    // Fusion NON DESTRUCTIVE, dedup par ticker (modèle pead_pool) : on préserve le reste du fichier
+    // (autres pools + _scanRuns) et on n'écrase pas les lignes factor déjà présentes du même ticker.
+    if (!Array.isArray(signals.factor_pool)) signals.factor_pool = [];
+    const existing = new Set(signals.factor_pool.map(s => s.ticker));
+    let added = 0;
+    for (const p of pool) {
+      if (existing.has(p.ticker)) continue;
+      signals.factor_pool.push(p);
+      existing.add(p.ticker);
+      added++;
+    }
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns.factor = {
+      at: new Date().toISOString(), universe: 'factor', dataPath: 'mcp-ingest',
+      rebalanceDay, universeFetched, candidates: rows.length, signals: pool.length, added,
+      regime, incomplete: false,
+    };
+    fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+    console.log(`\n📁 ${added} lignes factor ajoutées à factor_pool (${rebalanceDay ? 'rebalance' : 'frozen'}, voie MCP) dans ${sigPath}`);
+  }
+  return pool;
+}
+
 // ─── Walk-forward backtest (real bars, monthly rebalance, equal-weight) ─────────────────────────
 async function runBacktest(universe) {
   console.log('📈 Factor composite — walk-forward backtest (monthly rebalance, equal-weight)');
@@ -477,11 +718,16 @@ async function runBacktest(universe) {
 
 // ─── Main ───────────────────────────────────────────────────────────────────────────────────────
 async function main() {
+  // VOIE MCP (POC #1) : si --ingest, on PARSE le staging agent→MCP et on NE FETCH RIEN (ni Yahoo, ni
+  // univers local). C'est la voie recommandée (data path MCP). Le chemin local ci-dessous reste le
+  // FALLBACK fonctionnel (deprecated) quand --ingest est absent.
+  if (INGEST_PATH) { ingestMain(); return; }
+
   const universe = loadUniverse(UNIVERSE_ARG);
 
   if (BACKTEST) { await runBacktest(universe); return; }
 
-  console.log('🧮 Factor Scanner (momentum 12-1 / low-vol / quality-proxy composite, low-turnover)');
+  console.log('🧮 Factor Scanner (momentum 12-1 / low-vol / quality-proxy composite, low-turnover — VOIE LOCALE Yahoo, DEPRECATED au profit de --ingest)');
   console.log(`   Universe: ${universe.length} US names (${path.basename(UNIVERSE_ARG)}) | top-${TOP_N} | rebalance ${REBALANCE_DAYS}d`);
   console.log(`   Date: ${SCAN_DATE} | liquidity floor $${(MIN_DVOL / 1e6).toFixed(1)}M/day`);
 

@@ -1,0 +1,65 @@
+{
+  "_comment": "EXAMPLE staging file for tools/factor-scanner.js --ingest (POC #1 migration data local→MCP, spec docs/specs/migration-local-to-mcp.md §5). The AGENT (claude -p / /scanner) calls mcp__marketdata__* (RunScreener US for the universe + QueryData bars_daily for the price factors), computes the winsorized cross-sectional composite over the ELIGIBLE universe, and writes THIS file. The node --ingest script PARSES it — it never calls the MCP (OAuth2, zero token) and never fetches Yahoo on this path. Zero fabrication: every candidate comes from a real MCP call. If the agent's MCP step fails, DO NOT write invented data — either omit the file or set mcp_ok:false so --ingest marks the run incomplete + exits 3.",
+  "_provenance": {
+    "GetStatus": "preflight: healthy, not stale > 48h (else MCP HARD STOP)",
+    "RunScreener": "US universe enumeration. region=us, asset=stock, pass_expr='vol>1500000 && close>10' (🔴 NEVER market_cap in pass_expr → evaluates to 0 → 0 candidates; post-filter market_cap>=2e9 IN AGENT CODE), score_expr='vol(share)', force_async:true → poll Jobs",
+    "QueryData:bars_daily": "5y adjusted OHLCV per ticker → momentum_12_1 (px[n-22]/px[n-253]-1), realized_vol (stdev(120d ret)*sqrt(252)), max_drawdown (252d). Agent z-scores + winsorizes ±3 into composite = z(mom)+z(-vol)+z(-maxDD)",
+    "QueryData:profile": "sector, market_cap (post-filter + display; sharia optional)"
+  },
+  "mcp_ok": true,
+  "source": "mcp:marketdata",
+  "asof": "2026-07-10",
+  "regime": "NEUTRAL",
+  "universeFetched": 150,
+  "universeEligible": 148,
+  "rebalance_day": true,
+  "factorDefs": {
+    "momentum_12_1": "px[n-22]/px[n-253]-1 (adj_close)",
+    "low_vol": "stdev(120d ret)*sqrt(252)",
+    "quality_proxy": "-maxDD(252)",
+    "composite": "z(mom)+z(-vol)+z(-maxDD) winsor ±3",
+    "levels": "disaster stop=entry*0.75, far tp=entry*1.5 (INFORMATIONAL only; the monthly rotation IS the exit — NO per-name SL/TP; the 3-8% trade-stop band does NOT apply to factor)"
+  },
+  "candidates": [
+    {
+      "ticker": "KO",
+      "name": "The Coca-Cola Company",
+      "sector": "Consumer Defensive",
+      "market_cap": 356933926912,
+      "sharia": null,
+      "momentum_12_1": 0.1707,
+      "realized_vol": 0.1922,
+      "max_drawdown": 0.085,
+      "composite": 2.788,
+      "entry": 83.49,
+      "rebalance_day": true
+    },
+    {
+      "ticker": "WBD",
+      "name": "Warner Bros. Discovery",
+      "sector": "Communication Services",
+      "market_cap": 64000000000,
+      "sharia": null,
+      "momentum_12_1": 1.3116,
+      "realized_vol": 0.1497,
+      "max_drawdown": 0.2131,
+      "composite": 2.561,
+      "entry": 26.59,
+      "rebalance_day": true
+    },
+    {
+      "ticker": "AAPL",
+      "name": "Apple Inc.",
+      "sector": "Technology",
+      "market_cap": 4700000000000,
+      "sharia": null,
+      "momentum_12_1": 0.376,
+      "realized_vol": 0.27,
+      "max_drawdown": 0.14,
+      "composite": 2.30,
+      "entry": 315.32,
+      "rebalance_day": true,
+      "_note": "node RE-DERIVES entry/disaster-stop/far-tp/score/thesis via the SAME buildPool() as the local path → factor_pool byte-identical (A/B coherence proof). The agent supplies the RAW factor values + composite + entry price; it does NOT hand-craft the pool object shape."
+    }
+  ]
+}

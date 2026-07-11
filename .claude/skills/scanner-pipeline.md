@@ -302,7 +302,13 @@ node tools/etf-scanner.js --universe etf-eu --output signals --date YYYYMMDD --f
 node tools/trendline-scanner.js --universe forex --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (forex)
 node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (indices 4h)
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
-node tools/factor-scanner.js --output signals --date YYYYMMDD --folder FOLDER --top 15  # Factor composite (mode `factor`, sim-only) → factor_pool in signals.json. Low-turnover multi-factor sur univers US existant (data/tkl-universe.json) : momentum 12-1 + low-vol (REELS, prix) + quality-proxy (-maxDD, prix). Rebalance mensuel (21j) equal-weight top-15 + hysteresis buffer → panier FIGÉ hors jour de rebalance (turnover ~25%/mois, backtest 3.8y CAGR ~43% / maxDD ~11.6% / Sharpe ~1.60). Facteurs prix uniquement, AUCUN appel MCP. Quality FONDAMENTALE (ROE/marges/levier) = hors portée (TODO staging agent MCP). No --regime flag (le facteur est un rank pur, pas régime-filtré).
+# FACTOR (mode `factor`, sim-only) → factor_pool. 2 voies (voir "factor — voie MCP (--ingest)" §ci-dessous) :
+#   VOIE MCP (POC #1 migration local→MCP, RECOMMANDÉE) : ÉTAPE AGENT d'abord (l'agent appelle mcp__marketdata__*
+#     RunScreener US + QueryData bars_daily, calcule le composite, écrit /tmp/factor-stage.json), PUIS :
+node tools/factor-scanner.js --ingest /tmp/factor-stage.json --output signals --date YYYYMMDD --folder FOLDER --top 15  # parse le staging (jamais de fetch), gates hérités (penny<5, sharia, rr), RE-DÉRIVE le pool via le même buildPool → factor_pool byte-identique à la voie locale. Staging absent/mcp_ok:false → marker incomplete + exit 3, RIEN fabriqué.
+#   VOIE LOCALE (DEPRECATED, fallback Yahoo — si pas de staging MCP) : momentum 12-1 + low-vol (REELS, prix) + quality-proxy (-maxDD, prix) sur data/tkl-universe.json.
+# node tools/factor-scanner.js --output signals --date YYYYMMDD --folder FOLDER --top 15  # fallback local
+# Rebalance mensuel (21j) equal-weight top-15 + hysteresis buffer → panier FIGÉ hors jour de rebalance (turnover ~25%/mois, backtest 3.8y CAGR ~43% / maxDD ~11.6% / Sharpe ~1.60). Quality FONDAMENTALE (ROE/marges/levier) = hors portée (débloquable via QueryData fondamentaux dans le staging). No --regime flag pour la voie locale ; --regime optionnel pour --ingest (sanity rr, le facteur reste un rank pur).
 node tools/sweep.js                     # Append-only: nouveaux trades fermés (le mode `factor` consomme factor_pool via assetClass us_factor, P&L via sweep comme hybrid — PAS dtx)
 # ⛔ Phase 5.5 OBLIGATOIRE (AI-driven, PAS un script node) : Skill(skill="fortress-pm")
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
@@ -322,6 +328,36 @@ node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
 node tools/trading-executor/run-session.js  # Generate plans + execute
 node tools/substack-publish.js scanner/YYYYMMDD/index.html  # OPTIONAL/non-blocking: Substack draft + Notes teaser (needs MCP_AUTH_TOKEN, else draft-only local); disable via SUBSTACK_DISABLE=1
 ```
+
+### factor — voie MCP (`--ingest`) — POC #1 migration data local→MCP
+
+**Contexte.** `factor` est le **1er mode migré** vers le data-path MCP (`mcp__marketdata__*`) — spec
+`docs/specs/migration-local-to-mcp.md` §5 (POC recommandé : `status=test`, **sim-only**, aucune parité
+Go à casser, univers US couvert par le MCP, facteurs prix-only). La source LOCALE (`data/tkl-universe.json`
++ fetch Yahoo direct) est **DEPRECATED** mais reste un **fallback fonctionnel** (retrait = chantier séparé,
+§6 : `tkl-universe.json` = candidat de retrait #1).
+
+**Câblage (identique au pattern pead/dtx — un `node` NE PEUT PAS appeler le MCP, OAuth2 zéro token).**
+C'est une **ÉTAPE AGENT** exécutée AVANT `factor-scanner.js` :
+
+1. L'AGENT appelle `mcp__marketdata__GetStatus` (preflight : healthy, pas stale > 48h — sinon **STOP**, MCP HARD STOP).
+2. `RunScreener(region:"us", asset:"stock", pass_expr:"vol>1500000 && close>10", score_expr:"vol(share)", force_async:true)` → poller `Jobs`.
+   🔴 **JAMAIS `market_cap` dans `pass_expr`** (→ 0 candidat silencieux) : post-filtrer `market_cap>=2e9` **en code** côté agent.
+3. `QueryData(types="bars_daily")` 5y ajusté sur le top univers → l'agent calcule momentum 12-1 + low-vol +
+   `-maxDD`, z-score/winsorise ±3 le composite sur l'univers **éligible**, et écrit **`/tmp/factor-stage.json`**
+   (shape : `docs/specs/examples/factor-stage.example.json` — `mcp_ok`, `candidates:[{ticker, momentum_12_1,
+   realized_vol, max_drawdown, composite, entry, sharia, …}]`). ⛔ Zéro fabrication : chaque niveau vient d'un appel MCP réel.
+4. `node tools/factor-scanner.js --ingest /tmp/factor-stage.json --output signals --folder YYYYMMDD` :
+   PARSE le staging (jamais de fetch), applique les **gates hérités** (penny<5 rejeté, sharia passthrough,
+   rr≥seuil régime en sanity), **RE-DÉRIVE le pool via le MÊME `buildPool()` que la voie locale** → `factor_pool`
+   byte-identique (preuve de cohérence A/B), écrit `_scanRuns['factor']` (fusion NON destructive, dedup par ticker).
+
+**⚠️ Bande stop 3-8% NON APPLICABLE à factor** : c'est une stratégie de ROTATION (rotation mensuelle = sortie,
+aucun SL/TP par ligne). Le `stop = entry×0.75` est un filet disaster **informationnel** downstream, pas un stop de
+trade — le clamper à 3-8% rejetterait tout le panier. Les gates réellement appliqués = penny + sharia + rr(sanity).
+
+**Fail-closed** : staging absent / vide / malformé / `mcp_ok:false` / `error` → `_scanRuns['factor']`
+`{incomplete:true, signals:0}` + **exit 3**, RIEN fabriqué (aligné `pead-scanner.js`).
 
 ### dtx refresh — MCP SEUL MOTEUR ("le MCP fait foi") — modes scriptés
 
