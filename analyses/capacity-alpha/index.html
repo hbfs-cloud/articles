@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="fr" data-tags="eu,us,small-cap,value,education" data-tab="analyses" data-level="intermediate">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DailyTickers | Alpha de capacité : pourquoi un petit compte agile bat un fonds sur les small-caps</title>
+    <meta name="description"
+        content="Un fonds de 500 M$ ne peut pas jouer une valeur qui échange 3 M$ par jour sans faire bouger le cours. Un compte de 20 000 € y pèse 0,03 %. La taille est un handicap sur les petites capitalisations : voici le mécanisme, les ordres de grandeur vérifiés, et le prix à payer.">
+    <meta property="og:title" content="DailyTickers — Alpha de capacité sur les small-caps">
+    <meta property="og:description"
+        content="La taille bride les fonds sur les petites capitalisations : impact de marché, contraintes de mandat, liquidité. Un petit compte agile capte un alpha structurel. Mécanisme + chiffres vérifiés + contreparties honnêtes.">
+    <meta property="og:image" content="https://articles.dailytickers.com/logo.svg">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://articles.dailytickers.com/analyses/capacity-alpha/">
+    <script>(function (w, d, s, l, i) { w[l] = w[l] || []; w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' }); var f = d.getElementsByTagName(s)[0], j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f); })(window, document, 'script', 'dataLayer', 'GTM-T5Z595CW');</script>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/assets/report.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .liq-chart { margin: 1.5rem 0 0.5rem; }
+        .liq-row { display: grid; grid-template-columns: 130px 1fr; gap: 0.75rem; align-items: center; margin-bottom: 0.6rem; }
+        .liq-name { font-size: 0.82rem; font-weight: 700; color: var(--ink); text-align: right; }
+        .liq-name span { display: block; font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+        .liq-bar-wrap { position: relative; }
+        .liq-bar { height: 30px; border-radius: 0 6px 6px 0; display: flex; align-items: center; padding-left: 0.6rem; color: #fff; font-weight: 700; font-size: 0.78rem; white-space: nowrap; }
+        .edge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-top: 1.25rem; }
+        .edge-card { border: 1px solid var(--border); border-radius: 12px; padding: 1.15rem 1.25rem; background: var(--card, #fff); }
+        .edge-card h3 { margin: 0 0 0.4rem; font-size: 1rem; color: var(--ink); display: flex; align-items: center; gap: 0.5rem; }
+        .edge-card h3 i { color: var(--accent); }
+        .edge-card p { margin: 0; font-size: 0.85rem; line-height: 1.6; color: var(--ink-2); }
+        .cost-line { display: flex; gap: 0.9rem; align-items: flex-start; padding: 1rem 1.25rem; border-radius: 12px; margin-top: 1rem; background: var(--neg-wk); border: 1px solid var(--neg-wk); line-height: 1.6; font-size: 0.9rem; }
+        .cost-line i { color: var(--neg); font-size: 1.1rem; margin-top: 0.15rem; flex-shrink: 0; }
+        .cost-line b { color: var(--ink); }
+        .these-box { border-left: 4px solid var(--accent); background: var(--accent-wk); border-radius: 0 12px 12px 0; padding: 1.25rem 1.5rem; margin-top: 1rem; line-height: 1.7; }
+        .these-box b { color: var(--ink); }
+    </style>
+</head>
+
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-T5Z595CW" height="0" width="0"
+            style="display:none;visibility:hidden"></iframe></noscript>
+    <nav class="brand-bar">
+        <div class="brand-bar-inner">
+            <a href="/" class="brand-logo">
+                <img src="/logo.svg" alt="" width="36" height="36">
+                <span class="brand-title">DailyTickers</span>
+            </a>
+            <div class="brand-nav">
+                <a href="/?tab=weekly">Hebdo</a>
+                <a href="/?tab=daily">Daily</a>
+                <a href="/?tab=analyses">Analyses</a>
+                <a href="/?tab=scanner">Scanner</a>
+                <a href="/?tab=radar">Radar</a>
+                <a href="/?tab=series">Séries</a>
+            </div>
+            <div class="brand-actions">
+                <a href="/" class="brand-home-btn" title="Accueil"><i class="fas fa-house"></i></a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-section">
+        <div class="hero-date">Analyse thématique · 11 juillet 2026</div>
+        <h1 class="hero-title">Alpha de capacité :<br>le petit compte a un avantage</h1>
+        <p class="hero-subtitle">La taille est un actif quand on la lit sur une brochure de gérant. Sur les petites
+            capitalisations, c'est un handicap mesurable. Un fonds de 500 millions de dollars ne peut pas prendre une
+            ligne significative dans une valeur qui n'échange que 3 millions de dollars par jour sans se battre contre
+            son propre carnet d'ordres. Un compte de 20 000 € y entre et en sort sans que personne ne le remarque. Cet
+            écart n'est pas une opinion : il se calcule.</p>
+        <div class="hero-badges">
+            <span class="hero-badge hero-badge-blue"><i class="fas fa-scale-unbalanced"></i> Le handicap de la taille</span>
+            <span class="hero-badge hero-badge-amber"><i class="fas fa-magnifying-glass-dollar"></i> Ordres de grandeur vérifiés</span>
+            <span class="hero-badge hero-badge-red"><i class="fas fa-triangle-exclamation"></i> Contreparties assumées</span>
+        </div>
+        <div id="article-clickable-tags" class="card-tags" style="margin-top:1.75rem; display:flex; justify-content:center;"></div>
+    </section>
+
+    <div class="container">
+
+        <!-- SCOREBOARD -->
+        <div class="ticker-header" style="border-radius:20px;border:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:2.5rem;box-shadow:0 20px 40px -10px rgba(0,0,0,0.08);">
+            <div class="ticker-name" style="font-weight:700;color:var(--ink);">La fracture de liquidité, en six chiffres</div>
+            <div class="ticker-metrics">
+                <div class="ticker-metric">
+                    <div class="tm-value" style="color:var(--ink);">~31 Md$</div>
+                    <div class="tm-label">Nvidia · échangés par séance</div>
+                </div>
+                <div class="ticker-metric">
+                    <div class="tm-value" style="color:var(--warn-ink);">~3,0 M$</div>
+                    <div class="tm-label">Dorchester Minerals · par séance</div>
+                </div>
+                <div class="ticker-metric">
+                    <div class="tm-value" style="color:var(--neg);">~10 000×</div>
+                    <div class="tm-label">écart de liquidité entre les deux</div>
+                </div>
+                <div class="ticker-metric">
+                    <div class="tm-value" style="color:var(--pos);">0,03 %</div>
+                    <div class="tm-label">poids d'une ligne retail de 1 000 €</div>
+                </div>
+                <div class="ticker-metric">
+                    <div class="tm-value" style="color:var(--neg);">~33 séances</div>
+                    <div class="tm-label">pour qu'un fonds de 500 M$ y bâtisse 2 %</div>
+                </div>
+                <div class="ticker-metric">
+                    <div class="tm-value" style="color:var(--accent);">225 000 €</div>
+                    <div class="tm-label">plafond fiscal PEA + PEA-PME</div>
+                </div>
+            </div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:1.25rem;">Volumes et cours au 11 juillet 2026. Le
+                dollar échangé par séance est le volume médian sur 25 séances multiplié par le cours.</div>
+        </div>
+
+        <!-- LE HANDICAP DE TAILLE -->
+        <div id="contrainte" class="content-card">
+            <h2><i class="fa-solid fa-scale-unbalanced" style="color:var(--accent);"></i> Pourquoi la taille pénalise un gérant</h2>
+            <p>Un gérant qui pilote un demi-milliard doit déployer ce demi-milliard. C'est là que commence le problème,
+                et il est purement mécanique. Pour qu'une position compte dans un portefeuille de 500 M$, il faut qu'elle
+                pèse au moins 1 à 2 % de l'actif, soit 5 à 10 M$. Sous ce seuil, même un titre qui double ne bouge pas la
+                performance du fonds : la ligne est trop petite pour justifier le temps d'analyse et le risque de suivi.</p>
+            <p>Trois murs se dressent alors devant les petites valeurs, et aucun ne concerne le retail.</p>
+            <div class="didactic-box">
+                <ol style="margin:0;padding-left:1.2rem;line-height:1.9;">
+                    <li><b>L'impact de marché.</b> Acheter 10 M$ d'un titre qui en échange 3 par jour, c'est absorber
+                        plusieurs journées de volume. Chaque ordre pousse le cours contre soi. Le prix moyen d'entrée
+                        dérive à la hausse, celui de sortie à la baisse. Cet écart entre le prix théorique et le prix
+                        réellement obtenu s'appelle le slippage, et il grossit avec la taille de l'ordre rapportée au
+                        volume disponible.</li>
+                    <li><b>Les contraintes de mandat.</b> Beaucoup de fonds s'interdisent de dépasser 5 à 10 % du capital
+                        d'une société, ou de détenir plus de X jours de volume, pour ne pas rester piégés. Franchir 5 %
+                        du capital d'une cotée déclenche aussi des obligations de déclaration. Un gérant qui veut rester
+                        discret et liquide se prive de fait des valeurs les plus petites.</li>
+                    <li><b>La liquidité de sortie.</b> Le vrai risque n'est pas d'entrer, c'est de sortir un jour de
+                        stress, quand tout le monde vend en même temps. Une ligne qui représente vingt journées de volume
+                        devient une position dont on ne se défait pas sans casser le cours. Le gérant intègre ce coût dès
+                        l'entrée, et renonce.</li>
+                </ol>
+            </div>
+            <p>Résultat : une part entière de la cote est structurellement délaissée par les gros capitaux, non parce que
+                les dossiers sont mauvais, mais parce qu'ils sont trop petits pour être investissables à leur échelle.
+                C'est exactement le terrain où un capital modeste n'a aucune contrainte.</p>
+        </div>
+
+        <!-- LES CHIFFRES -->
+        <div id="chiffres" class="content-card">
+            <h2><i class="fa-solid fa-chart-column" style="color:var(--theme);"></i> La fracture de liquidité, mesurée</h2>
+            <p>Prenons quatre titres et regardons ce qui s'échange réellement chaque séance, en euros ou en dollars, pas
+                en nombre de titres. L'écart est vertigineux, et il ne suit pas la capitalisation.</p>
+            <div class="liq-chart">
+                <div class="liq-row">
+                    <div class="liq-name">Nvidia<span>capi ~4 900 Md$</span></div>
+                    <div class="liq-bar-wrap"><div class="liq-bar" style="width:100%;background:var(--ink);">~31 000 M$ / séance</div></div>
+                </div>
+                <div class="liq-row">
+                    <div class="liq-name">Ring Energy<span>capi ~283 M$</span></div>
+                    <div class="liq-bar-wrap"><div class="liq-bar" style="width:64%;background:var(--accent);">~5,9 M$ / séance</div></div>
+                </div>
+                <div class="liq-row">
+                    <div class="liq-name">Dorchester Min.<span>capi ~1 280 M$</span></div>
+                    <div class="liq-bar-wrap"><div class="liq-bar" style="width:62%;background:var(--warn-ink);">~3,0 M$ / séance</div></div>
+                </div>
+                <div class="liq-row">
+                    <div class="liq-name">Ateme<span>capi ~145 M€</span></div>
+                    <div class="liq-bar-wrap"><div class="liq-bar" style="width:50%;background:var(--neg);">~0,2 M€ / séance</div></div>
+                </div>
+            </div>
+            <p style="font-size:0.78rem;color:var(--muted);margin-top:0.25rem;">Échelle logarithmique : chaque pas de
+                barre vaut un facteur 10. Sinon, seule la barre Nvidia serait visible.</p>
+            <p style="margin-top:1.25rem;">Deux enseignements que la capitalisation seule masque. D'abord, l'ordre de
+                grandeur : Nvidia brasse environ 31 milliards de dollars par séance, Dorchester Minerals à peine
+                3 millions. Un facteur proche de 10 000. Ce que le géant échange en deux secondes, la petite valeur met
+                une journée entière à l'échanger.</p>
+            <p>Ensuite, l'asymétrie qui compte vraiment : <b>Dorchester est près de cinq fois plus grosse que Ring Energy
+                en capitalisation, mais deux fois moins liquide.</b> La taille du flottant, le prix du titre et la base
+                d'actionnaires font qu'une capi plus élevée n'achète pas la liquidité. C'est précisément le genre de
+                nuance qu'un fonds ne peut pas exploiter et qu'un petit compte peut trancher au cas par cas.</p>
+            <table class="compare-table" style="margin-top:1.25rem;">
+                <thead>
+                    <tr>
+                        <th>Titre</th>
+                        <th>Cours</th>
+                        <th>Échangé / séance</th>
+                        <th>Une ligne retail de 1 000 €</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Nvidia</b> (NVDA)</td>
+                        <td>210,96 $</td>
+                        <td>~31 000 M$</td>
+                        <td>invisible (0,000003 %)</td>
+                    </tr>
+                    <tr>
+                        <td><b>Ring Energy</b> (REI)</td>
+                        <td>1,13 $</td>
+                        <td>~5,9 M$</td>
+                        <td>0,02 %</td>
+                    </tr>
+                    <tr>
+                        <td><b>Dorchester Minerals</b> (DMLP)</td>
+                        <td>26,52 $</td>
+                        <td>~3,0 M$</td>
+                        <td>0,03 %</td>
+                    </tr>
+                    <tr>
+                        <td><b>Ateme</b> (ATEME.PA)</td>
+                        <td>12,30 €</td>
+                        <td>~0,2 M€</td>
+                        <td>0,5 %</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="source-refs" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;margin-top:1rem;padding-top:0.5rem;border-top:1px solid var(--border);">
+                <a href="https://finance.yahoo.com/quote/DMLP/" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">Yahoo Finance · DMLP</span><span class="source-date">· 11 juil</span></a>
+                <a href="https://finance.yahoo.com/quote/REI/" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">Yahoo Finance · REI</span><span class="source-date">· 11 juil</span></a>
+                <a href="https://finance.yahoo.com/quote/ATEME.PA/" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">Yahoo Finance · Ateme</span><span class="source-date">· 11 juil</span></a>
+            </div>
+        </div>
+
+        <!-- L'ARITHMETIQUE DE CAPACITE -->
+        <div id="arithmetique" class="content-card">
+            <h2><i class="fa-solid fa-calculator" style="color:var(--accent);"></i> L'arithmétique de la capacité</h2>
+            <p>Passons du constat au calcul. Une règle de bon sens des salles de marché : ne pas représenter plus de 10 %
+                du volume d'une séance, sous peine de devenir soi-même le mouvement du cours. Appliquons-la aux deux
+                camps.</p>
+            <div class="metric-grid" style="margin-top:1rem;">
+                <div class="metric-card">
+                    <div class="metric-value" style="color:var(--neg);">~33 séances</div>
+                    <div class="metric-label">Fonds 500 M$ : bâtir une ligne de 2 % (10 M$) dans Dorchester, à 10 % du volume/jour</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:var(--warn-ink);">~17 séances</div>
+                    <div class="metric-label">Le même fonds, même ligne, dans Ring Energy</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:var(--pos);">1 séance</div>
+                    <div class="metric-label">Compte de 20 000 € : entrer sur une ligne de 5 % (1 000 €), sans effort</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" style="color:var(--pos);">0,03 %</div>
+                    <div class="metric-label">Poids de cette ligne de 1 000 € dans le volume quotidien de Dorchester</div>
+                </div>
+            </div>
+            <p style="margin-top:1.25rem;">Un mois et demi de Bourse pour qu'un gérant constitue discrètement une seule
+                position, en priant pour que le dossier ne s'emballe pas avant la fin de l'accumulation. Le petit compte,
+                lui, a fini avant le déjeuner. Cette différence de vitesse d'exécution est un avantage réel et
+                chiffrable, pas un slogan. Elle porte un nom : l'alpha de capacité, le supplément de rendement accessible
+                uniquement en dessous d'un certain plafond d'encours.</p>
+            <p>Le petit opérateur ne bat pas le fonds parce qu'il est plus intelligent. Il le bat parce qu'il joue sur un
+                terrain où le fonds n'a pas le droit d'entrer. C'est un avantage de position, pas de talent, et c'est ce
+                qui le rend durable : il ne disparaît pas quand la concurrence devient meilleure, seulement quand le
+                compte devient gros.</p>
+        </div>
+
+        <!-- LES LEVIERS -->
+        <div id="leviers" class="content-card">
+            <h2><i class="fa-solid fa-bolt" style="color:var(--theme);"></i> Les quatre leviers d'un petit compte agile</h2>
+            <p>La capacité est le levier principal, mais un particulier européen bien organisé en cumule quatre. Aucun ne
+                dépend d'un accès privilégié à l'information : ce sont des avantages de structure, pas d'initié.</p>
+            <div class="edge-grid">
+                <div class="edge-card">
+                    <h4><i class="fa-solid fa-feather-pointed"></i> Capacité</h4>
+                    <p>Le cœur du sujet. En dessous de quelques milliers d'euros par ligne, tout l'univers des petites
+                        capitalisations délaissées par les fonds s'ouvre. Là où le gérant subit son propre poids, le
+                        particulier entre et sort au prix affiché.</p>
+                </div>
+                <div class="edge-card">
+                    <h4><i class="fa-solid fa-landmark"></i> Fiscalité</h4>
+                    <p>En France, le PEA et le PEA-PME permettent d'exonérer les plus-values d'impôt sur le revenu après
+                        cinq ans, dans la limite de 225 000 € cumulés. Le PEA-PME vise précisément les petites et
+                        moyennes entreprises. Un avantage net que la plupart des véhicules institutionnels n'ont pas.</p>
+                </div>
+                <div class="edge-card">
+                    <h4><i class="fa-solid fa-terminal"></i> Automatisation</h4>
+                    <p>Un particulier à l'aise avec le code peut systématiser son travail : filtrer un large univers
+                        selon des critères précis, rejouer une stratégie sur l'historique, produire des signaux datés et
+                        suivre leur résultat. La discipline d'un processus, sans l'inertie d'un comité.</p>
+                </div>
+                <div class="edge-card">
+                    <h4><i class="fa-solid fa-bolt-lightning"></i> Réactivité</h4>
+                    <p>Multi-courtier, sans procédure interne ni réunion, le petit compte réagit à un résultat trimestriel
+                        ou à un dépôt réglementaire dans l'heure. Sur les événements ponctuels, la vitesse de décision
+                        vaut souvent plus que la profondeur d'analyse.</p>
+                </div>
+            </div>
+            <p style="margin-top:1.25rem;">Combinés, ces leviers dessinent un profil précis : un opérateur qui screene un
+                large univers, simule ses idées sur les données passées avant d'engager le moindre euro, et concentre son
+                effort sur les segments illiquides et fiscalement avantageux que les gros capitaux ne peuvent pas
+                toucher. Le tout reste au stade du filtrage, du test historique et du signal. Rien ici ne suppose une
+                exécution automatisée en marché réel : c'est la préparation qui crée l'avantage, pas l'automatisme du
+                clic.</p>
+        </div>
+
+        <!-- LE PRIX DE L'AGILITE -->
+        <div id="prix" class="content-card">
+            <h2><i class="fa-solid fa-triangle-exclamation" style="color:var(--neg);"></i> Le prix de l'agilité</h2>
+            <p>Un avantage sans contrepartie n'existe pas, et présenter l'alpha de capacité comme un repas gratuit serait
+                malhonnête. Le même mur de liquidité qui protège le petit compte à l'entrée se retourne contre lui à la
+                sortie. Voici ce qu'on paie en échange.</p>
+            <div class="cost-line">
+                <i class="fa-solid fa-water"></i>
+                <div><b>La liquidité coupe dans les deux sens.</b> Facile d'entrer avec 1 000 €. Beaucoup moins facile
+                    d'en sortir 30 000 le jour où le titre décroche de 20 %, quand l'acheteur en face a disparu. La
+                    capacité protège tant que la ligne reste minuscule ; au-delà, on redevient le problème qu'on croyait
+                    éviter.</div>
+            </div>
+            <div class="cost-line">
+                <i class="fa-solid fa-arrows-left-right"></i>
+                <div><b>Les fourchettes mangent le rendement.</b> Sur un titre à quelques dizaines de milliers d'euros de
+                    volume, l'écart entre l'offre et la demande peut atteindre plusieurs pour-cent. Un aller-retour
+                    commence donc dans le rouge. Une stratégie qui tourne beaucoup sur ces valeurs voit une part de son
+                    gain théorique absorbée avant même d'avoir raison sur le fond.</div>
+            </div>
+            <div class="cost-line">
+                <i class="fa-solid fa-chart-line"></i>
+                <div><b>La volatilité et le risque de trou.</b> Les petites valeurs sautent de 15 à 20 % sur une séance,
+                    ouvrent en écart après une annonce, et n'offrent aucune profondeur pour placer un ordre stop propre.
+                    Le risque de ruine d'une ligne isolée y est bien réel : la dilution surprise, la levée de fonds
+                    toxique ou le profit warning s'y règlent en une bougie.</div>
+            </div>
+            <div class="cost-line">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <div><b>La donnée est plus pauvre et le terrain plus piégeux.</b> Moins d'analystes, des publications plus
+                    rares, des historiques courts qui faussent les tests. C'est aussi le terrain de jeu des manipulations
+                    et des dossiers de dilution. L'avantage de capacité ne dispense jamais de vérifier le bilan, le
+                    flottant et les dépôts réglementaires, un par un.</div>
+            </div>
+            <p style="margin-top:1.25rem;">La bonne lecture n'est donc pas « le petit gagne toujours ». C'est : le petit
+                dispose d'un terrain que le gros ne peut pas fouler, à condition d'en accepter la rugosité. La
+                diversification, une taille de ligne mesurée et une discipline de vérification ne sont pas des options
+                ici, ce sont le péage d'entrée.</p>
+        </div>
+
+        <!-- THESE FALSIFIABLE -->
+        <div id="these" class="content-card">
+            <h2><i class="fa-solid fa-flask-vial" style="color:var(--accent);"></i> La thèse, et comment la casser</h2>
+            <div class="these-box">
+                <p style="margin:0 0 0.75rem;"><b>Thèse.</b> L'alpha de capacité est réel mais borné. Il n'existe qu'en
+                    dessous d'un plafond de taille, de l'ordre de quelques dizaines de milliers d'euros par ligne, et il
+                    s'évapore dès qu'il faut sortir vite ou dès que le compte grossit. Ce n'est pas un avantage de génie,
+                    c'est un avantage de gabarit : l'impossibilité mécanique pour un gros capital de fouler ce terrain est
+                    précisément ce qui laisse le rendement disponible.</p>
+                <p style="margin:0;"><b>Ce qui l'invaliderait.</b> Si un véhicule doté de centaines de millions
+                    parvenait à répliquer une stratégie small-cap et à en capter le rendement net de son propre impact de
+                    marché, l'avantage n'existerait pas. Il tiendrait aussi de la chance si, sur un échantillon large et
+                    des coûts de transaction réalistes, les petites valeurs délaissées ne surperformaient pas nettement
+                    une fois le slippage déduit. Deux tests concrets, deux façons de me donner tort.</p>
+            </div>
+            <p style="margin-top:1.25rem;">C'est la ligne de partage à garder en tête. La valeur d'un petit compte agile
+                ne vient pas d'une prose inspirée ni d'une conviction plus forte que celle du voisin. Elle vient d'un
+                fait arithmétique : à 20 000 €, on pèse 0,03 % là où un fonds pèse dix journées de volume. Tant que ce
+                chiffre reste vrai, l'avantage tient. Le jour où le compte atteint plusieurs millions, il faut relire cet
+                article comme la description d'un handicap, pas d'un privilège.</p>
+        </div>
+
+        <!-- METHODE -->
+        <div id="methode" class="content-card">
+            <h2><i class="fa-solid fa-list-check" style="color:var(--theme);"></i> Méthode et limites</h2>
+            <p>Tous les volumes et cours cités proviennent des données de marché au 11 juillet 2026. Le « montant échangé
+                par séance » est le volume médian des 25 dernières séances multiplié par le cours, pour lisser les pics
+                de rebalancement et les journées atypiques. Les délais d'accumulation pour un fonds sont des ordres de
+                grandeur obtenus en plafonnant l'achat quotidien à 10 % de ce volume, hypothèse courante mais
+                simplificatrice.</p>
+            <p>Le plafond fiscal PEA et PEA-PME relève de la réglementation française et non des données de marché. Les
+                affirmations sur les mandats des fonds décrivent des pratiques répandues, pas une règle universelle : un
+                fonds spécialisé small-cap fait de la liquidité son métier et accepte des délais plus longs. L'écart de
+                capacité reste, il est seulement moins tranché sur ce type de véhicule.</p>
+            <div class="alert-box" style="margin-top:1rem;">
+                <strong>Avertissement.</strong> Ce texte est une analyse d'information à visée pédagogique, pas un conseil
+                en investissement, et ne recommande aucun titre. Les valeurs nommées servent uniquement à illustrer des
+                écarts de liquidité. Les chiffres sont datés et évoluent. Les petites capitalisations concentrent un
+                risque élevé de perte en capital. Faites vos propres vérifications avant toute décision.
+            </div>
+            <div class="source-refs" style="display:flex;flex-wrap:wrap;gap:0.5rem 1rem;margin-top:1rem;padding-top:0.5rem;border-top:1px solid var(--border);">
+                <a href="https://www.service-public.fr/particuliers/vosdroits/F22449" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">PEA-PME · service-public.fr</span></a>
+                <a href="https://finance.yahoo.com/quote/NVDA/" class="source-ref" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square source-icon"></i><span class="source-name">Yahoo Finance · NVDA</span><span class="source-date">· 11 juil</span></a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FAB -->
+    <div class="fnav" id="floatingNav">
+        <div class="fnav-menu" id="fnavMenu">
+            <a href="#contrainte" class="fnav-item" data-section="contrainte"><i class="fas fa-scale-unbalanced"></i><span>Handicap</span></a>
+            <a href="#chiffres" class="fnav-item" data-section="chiffres"><i class="fas fa-chart-column"></i><span>Chiffres</span></a>
+            <a href="#arithmetique" class="fnav-item" data-section="arithmetique"><i class="fas fa-calculator"></i><span>Capacité</span></a>
+            <a href="#leviers" class="fnav-item" data-section="leviers"><i class="fas fa-bolt"></i><span>Leviers</span></a>
+            <a href="#prix" class="fnav-item" data-section="prix"><i class="fas fa-triangle-exclamation"></i><span>Le prix</span></a>
+            <a href="#these" class="fnav-item" data-section="these"><i class="fas fa-flask-vial"></i><span>Thèse</span></a>
+            <a href="#methode" class="fnav-item" data-section="methode"><i class="fas fa-list-check"></i><span>Méthode</span></a>
+        </div>
+        <button class="fnav-btn" id="fnavBtn" type="button" aria-label="Navigation">
+            <i class="fas fa-bars" id="fnavIcon"></i>
+            <span class="fnav-btn-label" id="fnavLabel">Menu</span>
+        </button>
+    </div>
+
+    <footer class="article-footer">
+        &copy; 2026 DailyTickers. Données de marché au 11 juillet 2026. Analyse d'information, pas un conseil financier.
+        <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
+    </footer>
+
+    <script src="/assets/core.js"></script>
+    <script src="/assets/tag-renderer.js"></script>
+    <script>
+        (function () {
+            var btn = document.getElementById('fnavBtn');
+            var menu = document.getElementById('fnavMenu');
+            var open = false;
+            if (btn && menu) {
+                btn.addEventListener('click', function () {
+                    open = !open;
+                    menu.classList.toggle('open', open);
+                });
+                menu.querySelectorAll('.fnav-item').forEach(function (a) {
+                    a.addEventListener('click', function () {
+                        open = false;
+                        menu.classList.remove('open');
+                    });
+                });
+            }
+            var items = Array.prototype.slice.call(document.querySelectorAll('.fnav-item'));
+            var map = {};
+            items.forEach(function (a) { map[a.getAttribute('data-section')] = a; });
+            if ('IntersectionObserver' in window) {
+                var obs = new IntersectionObserver(function (entries) {
+                    entries.forEach(function (e) {
+                        if (e.isIntersecting) {
+                            items.forEach(function (a) { a.classList.remove('active'); });
+                            var a = map[e.target.id];
+                            if (a) a.classList.add('active');
+                        }
+                    });
+                }, { rootMargin: '-40% 0px -55% 0px' });
+                ['contrainte', 'chiffres', 'arithmetique', 'leviers', 'prix', 'these', 'methode'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) obs.observe(el);
+                });
+            }
+        })();
+    </script>
+</body>
+
+</html>

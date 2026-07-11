@@ -1280,6 +1280,19 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "DailyTickers",
     "title": "DailyTickers",
+    "desc": "Un fonds de 500 M$ ne peut pas jouer une valeur qui échange 3 M$ par jour sans faire bouger le cours. Un compte de 20 000 € y pèse 0,03 %. La taille est un handicap sur les petites capitalisations : voici le mécanisme, les ordres de grandeur vérifiés, et le prix à payer.",
+    "tags": "eu,us,small-cap,value,education",
+    "grade": "",
+    "href": "/analyses/capacity-alpha/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "DailyTickers",
+    "title": "DailyTickers",
     "desc": "Un post promet « les 3 actions que Claude recommande pour 2026 » : ATEME, SIGA, Amplitude. On confronte chaque affirmation aux chiffres réels. Une seule tient debout, et pas pour les raisons annoncées.",
     "tags": "us,eu,tech,software,defense,value,education",
     "grade": "B",
@@ -6102,6 +6115,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Fiscalité & wrappers : l'alpha caché du retail européen (PEA, PEA-PME, CTO, UCITS)",
+    "desc": "Le PEA fait travailler vos gains sans frottement fiscal : après 5 ans, zéro impôt sur le revenu, seuls les prélèvements sociaux restent. Un avantage composé qu'un retail américain n'a pas. Exemple chiffré CTO vs PEA sur 10 ans, contrainte UCITS (pourquoi vous ne pouvez pas acheter SPY), et le seul paramètre qui fait exploser l'écart : le turnover.",
+    "tags": "eu,etf,education,technique,formation",
+    "grade": "",
+    "href": "/tech/fiscalite-pea/",
+    "date": ""
+  },
+  {
+    "type": "tech",
+    "icon": "fa-microchip",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Pourquoi la Plupart des Alertes de Trading Sont du Bruit",
     "desc": "La méthode pour trier une alerte : plancher de bruit ATR, rapport risque/récompense compté depuis la première cible, réconciliation à une seule source, invalidation conditionnelle et contexte de régime. Exemple chiffré vérifié.",
     "tags": "tech,technique,education,momentum",
@@ -6487,16 +6513,16 @@ window.searchDataPrebuilt = [
     "date": ""
   },
   {
-    "type": "tech",
-    "icon": "fa-microchip",
+    "type": "série",
+    "icon": "fa-graduation-cap",
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Fiscalité & wrappers : l'alpha caché du retail européen (PEA, PEA-PME, CTO, UCITS)",
-    "desc": "Le PEA fait travailler vos gains sans frottement fiscal : après 5 ans, zéro impôt sur le revenu, seuls les prélèvements sociaux restent. Un avantage composé qu'un retail américain n'a pas. Exemple chiffré CTO vs PEA sur 10 ans, contrainte UCITS (pourquoi vous ne pouvez pas acheter SPY), et le seul paramètre qui fait exploser l'écart : le turnover.",
-    "tags": "eu,etf,education,technique,formation",
+    "title": "Le manifeste, et une première règle qu'on peut réfuter",
+    "desc": "Le Systématique du dimanche — Épisode 1 : pourquoi un petit portefeuille a des avantages qu'un gros fonds n'aura jamais, et une première règle de gestion du risque testée sur données réelles, résultat honnête compris.",
+    "tags": "technique,education,formation,momentum",
     "grade": "",
-    "href": "/tech/fiscalite-pea/",
+    "href": "/series/systematique-du-dimanche/part1-manifeste/",
     "date": ""
   },
   {
@@ -7199,19 +7225,6 @@ window.searchDataPrebuilt = [
     "tags": "formation,macro,us,eu,asia",
     "grade": "",
     "href": "/series/banques-centrales/part1-role-et-mandat/",
-    "date": ""
-  },
-  {
-    "type": "série",
-    "icon": "fa-graduation-cap",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Le manifeste, et une première règle qu'on peut réfuter",
-    "desc": "Le Systématique du dimanche — Épisode 1 : pourquoi un petit portefeuille a des avantages qu'un gros fonds n'aura jamais, et une première règle de gestion du risque testée sur données réelles, résultat honnête compris.",
-    "tags": "technique,education,formation,momentum",
-    "grade": "",
-    "href": "/series/systematique-du-dimanche/part1-manifeste/",
     "date": ""
   }
 ];
