@@ -418,15 +418,21 @@ function annualizedVolPIT(ticker, day, lookbackDays) {
 function maxCorrToOpenPIT(cand, openPositions, day, lookbackDays) {
   const candHist = priceCache[cand.ticker];
   if (!candHist || openPositions.length === 0) return null;
-  const window = Object.keys(candHist).filter(d => d <= day).sort().slice(-(lookbackDays + 1));
-  const candRet = _logReturns(candHist, window);
-  if (candRet.length < 10) return null;
+  const candDates = new Set(Object.keys(candHist).filter(d => d <= day));
+  if (candDates.size < 11) return null;
   let signed = null;
   for (const pos of openPositions) {
     const posHist = priceCache[pos.trade.ticker];
     if (!posHist) continue;
-    const posWindow = Object.keys(posHist).filter(d => d <= day).sort().slice(-(lookbackDays + 1));
-    const posRet = _logReturns(posHist, posWindow);
+    // Align cand & pos on SHARED bars dated ≤ day (no look-ahead) so the two return
+    // series correspond to the SAME calendar dates. Tail-slicing each series with its own
+    // window (as before) misaligns them when listings have different missing bars — the
+    // same shared-window pattern betaToBTC() already uses.
+    const common = Object.keys(posHist)
+      .filter(d => d <= day && candDates.has(d)).sort().slice(-(lookbackDays + 1));
+    if (common.length < 11) continue;
+    const candRet = _logReturns(candHist, common);
+    const posRet = _logReturns(posHist, common);
     const rho = _pearson(candRet, posRet);
     if (rho != null && Math.abs(rho) > Math.abs(signed ?? 0)) signed = rho;
   }
