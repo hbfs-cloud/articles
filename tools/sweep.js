@@ -161,6 +161,10 @@ function dayFnsFor(calendar) {
 const scannerParser = require('./lib/scanner-parser');
 const { isPatternInvalidated, checkBearishExit } = require('./lib/americanbull-pm');
 const { detectBearishExit } = require('./lib/candlestick-patterns');
+// OPT-IN vol-adjusted + correlation-aware sizing (idea #4, docs/research/ai-hedge-fund-ideas.md
+// §2.4). Only engaged when a mode sets sizingMethod:'vol_corr' — no existing mode does (see the
+// grep proof in that commit). Pure/deterministic; vol & corr are derived PIT from priceCache.
+const { computeVolCorrSizing } = require('./lib/vol-corr-sizing');
 
 const scannerFiltersPath = path.join(ROOT, 'data', 'scanner-filters.json');
 const scannerFilters = fs.existsSync(scannerFiltersPath) ? JSON.parse(fs.readFileSync(scannerFiltersPath, 'utf8')) : {};
@@ -392,6 +396,39 @@ function maxCorrToOpen(cand, openPositions, lookbackDays) {
     const posRet = _logReturns(posHist, window);
     const rho = _pearson(candRet, posRet);
     if (rho != null && Math.abs(rho) > Math.abs(maxAbs)) { maxAbs = rho; signed = rho; }
+  }
+  return signed;
+}
+
+// ─── vol_corr sizing (idea #4) — POINT-IN-TIME vol & correlation from priceCache ─────────────
+// Both are computed only from bars dated ≤ `day` (no look-ahead), so they are the realized
+// measures an as-of PortfolioRisk call would have seen. Deterministic. Return null (never a
+// fabricated default) when there is not enough history → caller declines to adjust (fail-closed).
+function annualizedVolPIT(ticker, day, lookbackDays) {
+  const hist = priceCache[ticker];
+  if (!hist) return null;
+  const window = Object.keys(hist).filter(d => d <= day).sort().slice(-(lookbackDays + 1));
+  const rets = _logReturns(hist, window);
+  if (rets.length < 10) return null;
+  const n = rets.length;
+  let m = 0; for (const r of rets) m += r; m /= n;
+  let v = 0; for (const r of rets) v += (r - m) * (r - m); v /= (n - 1);
+  return Math.sqrt(v) * Math.sqrt(252); // annualized realized vol (decimal fraction)
+}
+function maxCorrToOpenPIT(cand, openPositions, day, lookbackDays) {
+  const candHist = priceCache[cand.ticker];
+  if (!candHist || openPositions.length === 0) return null;
+  const window = Object.keys(candHist).filter(d => d <= day).sort().slice(-(lookbackDays + 1));
+  const candRet = _logReturns(candHist, window);
+  if (candRet.length < 10) return null;
+  let signed = null;
+  for (const pos of openPositions) {
+    const posHist = priceCache[pos.trade.ticker];
+    if (!posHist) continue;
+    const posWindow = Object.keys(posHist).filter(d => d <= day).sort().slice(-(lookbackDays + 1));
+    const posRet = _logReturns(posHist, posWindow);
+    const rho = _pearson(candRet, posRet);
+    if (rho != null && Math.abs(rho) > Math.abs(signed ?? 0)) signed = rho;
   }
   return signed;
 }
@@ -1754,6 +1791,19 @@ function simulatePortfolio(allTrades, scans, config) {
           if (stopPct > 0) {
             const adj = Math.max(SIZING_MIN_FACTOR, Math.min(SIZING_MAX_FACTOR, SIZING_REF_STOP_PCT / Math.max(stopPct, 0.005)));
             candWeight = scanWeight * adj;
+          }
+        } else if (config.sizingMethod === 'vol_corr') {
+          // OPT-IN vol-adjusted + correlation-aware sizing (idea #4). Vol & max-corr-to-open are
+          // derived POINT-IN-TIME from priceCache (real bars, no look-ahead) and fed to the pure
+          // lib, which applies the verbatim risk_manager.py grid. We use its RELATIVE factor
+          // (volMult×corrMult, clamped 0.5×–1.5×) to keep parity with the inverse_atr path.
+          // FAIL-CLOSED: no vol computable (too little history) → keep scanWeight, DO NOT invent a
+          // vol number (this declines to adjust, it never substitutes a default value).
+          const volA = annualizedVolPIT(cand.ticker, day, 20);
+          if (volA != null) {
+            const corr = maxCorrToOpenPIT(cand, openPositions, day, 60);
+            const sized = computeVolCorrSizing({ volAnnualized: volA, correlation: corr == null ? undefined : corr });
+            if (sized.ok) candWeight = scanWeight * sized.relativeFactor;
           }
         }
         openPositions.push({ trade: cand, weight: candWeight });
