@@ -554,7 +554,7 @@ async function main() {
         // their dedicated modes gate on source==='<class>_pool' (POOL_ASSET_CLASSES in signalsFor),
         // and their specialist strategy tags (PEAD/GapAndGo/InsiderCluster/FilingCatalyst) are
         // excluded from the equity 'all' filter so they never leak into turbo/etc.
-        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || []), ...(loaded.factorPool || []), ...(loaded.peadPool || []), ...(loaded.filingsPool || []), ...(loaded.gapPool || [])];
+        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.euSmallcapPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || []), ...(loaded.factorPool || []), ...(loaded.peadPool || []), ...(loaded.filingsPool || []), ...(loaded.gapPool || [])];
         // Fortress-pm pool (tag FortressA+): source dédiée de fortress + aplus, exclue du mom_bo/all.
         const fortressPool = loaded.fortressPool || [];
         signals = [...loaded.signals, ...assetPools, ...fortressPool].map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || s.thesis || '' }));
@@ -933,12 +933,19 @@ async function main() {
 
   // Currency is derived from ONE source: cfg.assetClass. Casablanca (Bourse de
   // Casablanca / BVC) trades in MAD (dirhams); everything else in USD.
-  function curOf(cfg) { return (cfg && cfg.assetClass === 'casablanca') ? 'MAD' : 'USD'; }
+  function curOf(cfg) {
+    if (!cfg) return 'USD';
+    if (cfg.assetClass === 'casablanca') return 'MAD';
+    if (cfg.assetClass === 'equity_eu') return 'EUR'; // EU small-cap PEA — perf shown in EUR
+    return 'USD';
+  }
   // Format number for display in the given currency — data stays numeric until render.
   function fmtCur(n, cur) {
     if (n == null || isNaN(n)) return '—';
     const v = Number(n).toFixed(2);
-    return cur === 'MAD' ? v + ' MAD' : '$' + v;
+    if (cur === 'MAD') return v + ' MAD';
+    if (cur === 'EUR') return '€' + v;
+    return '$' + v;
   }
   // Legacy USD helper (kept for non-panel callers). Panel code uses the local price().
   function $fmt(n) { return fmtCur(n, 'USD'); }
@@ -1136,7 +1143,7 @@ async function main() {
     // un jour restaurés (bull/momentum/trendline/casablanca) — ID explicite = future-proof.
     // pead/filings/gap = JS-scanner pools (like forex): their signals ARE the orders to place
     // (source of truth = the scanner), so no "Fallback candidates" block. NOT dtx-staged.
-    const SCRIPTED_IDS = new Set(['bull', 'momentum', 'highvol', 'trendline', 'etf', 'etf_eu', 'hybrid', 'forex', 'casablanca', 'pead', 'filings', 'gap']);
+    const SCRIPTED_IDS = new Set(['bull', 'momentum', 'highvol', 'trendline', 'etf', 'etf_eu', 'hybrid', 'forex', 'casablanca', 'eu_smallcap', 'pead', 'filings', 'gap']);
     // fortress + aplus = modes LLM (pilotés par le skill fortress-pm, signaux = CANDIDATS A+),
     // PAS scriptés — ils gardent Today's Signals + Orders + fallback comme les autres modes LLM.
     const isScripted = (SCRIPTED_FILTERS.has(cfg.filterName) || SCRIPTED_IDS.has(id)) && id !== 'fortress' && id !== 'aplus';
@@ -3885,7 +3892,9 @@ function backfillHistory() {
   function parseScannerSignalsBF(dateKey) {
     const loaded = parser.loadSignals(dateKey);
     if (!loaded) return [];
-    return loaded.signals
+    // Include the universe-gated eu_smallcap pool (agent-produced) so the backfilled order
+    // tables surface its signals — it lives in a dedicated pool, not in loaded.signals.
+    return [...loaded.signals, ...(loaded.euSmallcapPool || [])]
       .map(s => ({ ...s, thesis: loaded.thesis[s.ticker] || '' }))
       .sort((a, b) => (b.score || 0) - (a.score || 0));
   }

@@ -139,6 +139,13 @@ function loadSignals(dir) {
       const metalsPool = poolFrom('metals_pool');
       const forexPool = poolFrom('forex_pool');
       const casablancaPool = poolFrom('casablanca_pool');
+      // eu_smallcap_pool: EU small/mid-cap PEA-eligible momentum, PRODUCED BY THE AGENT VIA MCP
+      // (like the top-10 / dtx staging — NEVER by a node subprocess). Universe-gated
+      // (universe:'eu_smallcap') + source-tagged 'eu_smallcap_pool' so it feeds ONLY the
+      // eu_smallcap mode and is excluded from every US equity portfolio (see sweep ASSET_POOL_SOURCES).
+      // NOT merged into signals[] → validate-scan.js editorial rules never see it (correct: PEA
+      // small-caps legitimately breach the $5 penny floor / mcap floor by design).
+      const euSmallcapPool = poolFrom('eu_smallcap_pool');
       // factor_pool: low-turnover multi-factor US basket (factor-scanner.js). Self-contained
       // holdings for the `factor` mode (assetClass us_factor) — consumed like the asset pools.
       const factorPool = poolFrom('factor_pool');
@@ -180,7 +187,7 @@ function loadSignals(dir) {
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, factorPool, peadPool, filingsPool, gapPool, filingsFlags, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, euSmallcapPool, factorPool, peadPool, filingsPool, gapPool, filingsFlags, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -200,7 +207,7 @@ function loadSignals(dir) {
     thesis: thesisMap[s.ticker] || '',
   }));
   const regime = extractRegimeFromHtml(html);
-  return { signals, tklPool: [], cryptoPool: [], metalsPool: [], forexPool: [], factorPool: [], peadPool: [], filingsPool: [], gapPool: [], filingsFlags: {}, thesis: thesisMap, regime, regimeScore: null };
+  return { signals, tklPool: [], cryptoPool: [], metalsPool: [], forexPool: [], casablancaPool: [], euSmallcapPool: [], factorPool: [], peadPool: [], filingsPool: [], gapPool: [], filingsFlags: {}, thesis: thesisMap, regime, regimeScore: null };
 }
 
 // ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────

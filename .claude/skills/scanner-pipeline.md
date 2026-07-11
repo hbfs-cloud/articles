@@ -262,7 +262,10 @@ Après sélection des 10 candidats, CHAQUE signal passe la checklist v2.0.
   "tkl_pool": [...],      // TKL momentum (separate pipeline)
   "crypto_pool": [...],   // crypto signals (separate pipeline)
   "metals_pool": [...],   // metals signals (separate pipeline)
-  "forex_pool": [...]     // forex signals (separate pipeline)
+  "forex_pool": [...],    // forex signals (separate pipeline)
+  "eu_smallcap_pool": [...] // EU small-cap PEA (SIM-ONLY) — PRODUIT PAR L'AGENT VIA MCP, pas un node script.
+                            // universe=eu_smallcap, strategy=MomentumRotation, +peaEligible/peaPmeEligible/peaProof.
+                            // Downstream (scanner-parser/sweep/gen-status-page) lit ce pool committé. Voir Pipeline Quotidien.
 }
 ```
 
@@ -309,7 +312,20 @@ node tools/factor-scanner.js --ingest /tmp/factor-stage.json --output signals --
 #   VOIE LOCALE (DEPRECATED, fallback Yahoo — si pas de staging MCP) : momentum 12-1 + low-vol (REELS, prix) + quality-proxy (-maxDD, prix) sur data/tkl-universe.json.
 # node tools/factor-scanner.js --output signals --date YYYYMMDD --folder FOLDER --top 15  # fallback local
 # Rebalance mensuel (21j) equal-weight top-15 + hysteresis buffer → panier FIGÉ hors jour de rebalance (turnover ~25%/mois, backtest 3.8y CAGR ~43% / maxDD ~11.6% / Sharpe ~1.60). Quality FONDAMENTALE (ROE/marges/levier) = hors portée (débloquable via QueryData fondamentaux dans le staging). No --regime flag pour la voie locale ; --regime optionnel pour --ingest (sanity rr, le facteur reste un rank pur).
-node tools/sweep.js                     # Append-only: nouveaux trades fermés (le mode `factor` consomme factor_pool via assetClass us_factor, P&L via sweep comme hybrid — PAS dtx)
+# EU SMALL-CAP PEA (mode `eu_smallcap`, SIM-ONLY) → eu_smallcap_pool. ⚠️ PAS de ligne node ici :
+#   c'est un pool PRODUIT PAR L'AGENT VIA MCP (exactement comme le top-10 / le staging dtx), PAS un
+#   script node. Un subprocess node ne peut pas appeler le MCP (OAuth2, ZÉRO token). À la Phase 1/2,
+#   l'AGENT (toi) appelle mcp__marketdata__* (RunScreener region=eu SANS market_cap en pass_expr +
+#   post-filtre, QueryData country/technicals pour l'éligibilité PEA = siège UE/EEE, exclure UK/CH/
+#   US-shares-listed-EU/foncières), écrit la clé `eu_smallcap_pool[]` dans scanner/YYYYMMDD/signals.json
+#   (shape pool : ticker/score/strategy=MomentumRotation/entry/stop/tp1/tp2/rr/sharia/region=EU/
+#   universe=eu_smallcap + peaEligible/peaPmeEligible/peaProof/hqCountry/currency). Le DOWNSTREAM lit
+#   ce pool committé : scanner-parser.js (euSmallcapPool via poolFrom, NON fusionné dans signals[]) →
+#   sweep.js (ASSET_POOL_SOURCES.equity_eu='eu_smallcap_pool' → isolé, exclu des modes equity US,
+#   gate universeFilter='eu_smallcap') → gen-status-page.js (panneau, devise EUR, SCRIPTED_IDS).
+#   ZÉRO FABRICATION : chaque chiffre vient d'un appel MCP ; MCP down/couverture EU insuffisante → STOP,
+#   ne rien inventer, laisser le pool absent/vide (géré, jamais bloquant). Spec : docs/specs/eu-smallcap-pea-scanner.md.
+node tools/sweep.js                     # Append-only: nouveaux trades fermés (le mode `factor` consomme factor_pool via assetClass us_factor ; le mode `eu_smallcap` consomme eu_smallcap_pool via assetClass equity_eu/universeFilter — P&L via sweep comme hybrid, PAS dtx)
 # ⛔ Phase 5.5 OBLIGATOIRE (AI-driven, PAS un script node) : Skill(skill="fortress-pm")
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.

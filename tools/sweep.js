@@ -269,6 +269,10 @@ function parseScan(dir) {
   const metalsPool = dedup(buildSetups(loaded.metalsPool, 'metals_pool'));
   const forexPool = dedup(buildSetups(loaded.forexPool, 'forex_pool'));
   const casablancaPool = dedup(buildSetups(loaded.casablancaPool, 'casablanca_pool'));
+  // eu_smallcap_pool: agent-produced (MCP) EU small/mid-cap PEA pool. Same source-tagged wiring
+  // as casablanca — consumed EXCLUSIVELY by the eu_smallcap mode (assetClass equity_eu) via
+  // ASSET_POOL_SOURCES; excluded from every US-equity portfolio.
+  const euSmallcapPool = dedup(buildSetups(loaded.euSmallcapPool, 'eu_smallcap_pool'));
   const factorPool = dedup(buildSetups(loaded.factorPool, 'factor_pool'));
   // Event-driven pools (pead/filings/gap) — same source-tagged wiring as forex. Each is consumed
   // EXCLUSIVELY by its matching assetClass mode (ASSET_POOL_SOURCES) via the frozen append-only path.
@@ -286,6 +290,7 @@ function parseScan(dir) {
     metalsPool,
     forexPool,
     casablancaPool,
+    euSmallcapPool,
     factorPool,
     peadPool,
     filingsPool,
@@ -295,7 +300,7 @@ function parseScan(dir) {
 
 // Asset-class pool registry: source tag → assetClass. Equity modes exclude ALL of these;
 // each asset-class mode trades ONLY its own pool. Generalizes the crypto wiring to N classes.
-const ASSET_POOL_SOURCES = { crypto: 'crypto_pool', metals: 'metals_pool', forex: 'forex_pool', casablanca: 'casablanca_pool', us_factor: 'factor_pool', pead: 'pead_pool', filings: 'filings_pool', gap: 'gap_pool' };
+const ASSET_POOL_SOURCES = { crypto: 'crypto_pool', metals: 'metals_pool', forex: 'forex_pool', casablanca: 'casablanca_pool', equity_eu: 'eu_smallcap_pool', us_factor: 'factor_pool', pead: 'pead_pool', filings: 'filings_pool', gap: 'gap_pool' };
 const ALL_ASSET_POOL_SOURCES = Object.values(ASSET_POOL_SOURCES);
 
 // ─── Regime-score override (proactive de-risk / "parachute") ─────────────────
@@ -2127,7 +2132,7 @@ async function main() {
     const list = s.setups.slice();
     if (includeTklPool) list.push(...(s.tklPool || []));
     // Asset-class pools (crypto/metals/forex/…/event-driven); equity modes exclude these via excludeSources.
-    list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []), ...(s.casablancaPool || []), ...(s.factorPool || []), ...(s.peadPool || []), ...(s.filingsPool || []), ...(s.gapPool || []));
+    list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []), ...(s.casablancaPool || []), ...(s.euSmallcapPool || []), ...(s.factorPool || []), ...(s.peadPool || []), ...(s.filingsPool || []), ...(s.gapPool || []));
     return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
@@ -3014,7 +3019,7 @@ async function main() {
             const pool = [...scan.setups];
             if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
             // Asset-class pools (incl. event-driven pead/filings/gap); each mode keeps only its own via exclSources.
-            pool.push(...(scan.cryptoPool || []), ...(scan.metalsPool || []), ...(scan.forexPool || []), ...(scan.casablancaPool || []), ...(scan.factorPool || []), ...(scan.peadPool || []), ...(scan.filingsPool || []), ...(scan.gapPool || []));
+            pool.push(...(scan.cryptoPool || []), ...(scan.metalsPool || []), ...(scan.forexPool || []), ...(scan.casablancaPool || []), ...(scan.euSmallcapPool || []), ...(scan.factorPool || []), ...(scan.peadPool || []), ...(scan.filingsPool || []), ...(scan.gapPool || []));
             const filtered = pool
               .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))
