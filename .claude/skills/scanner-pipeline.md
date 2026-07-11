@@ -302,7 +302,8 @@ node tools/etf-scanner.js --universe etf-eu --output signals --date YYYYMMDD --f
 node tools/trendline-scanner.js --universe forex --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (forex)
 node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (indices 4h)
 node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
-node tools/sweep.js                     # Append-only: nouveaux trades fermés
+node tools/factor-scanner.js --output signals --date YYYYMMDD --folder FOLDER --top 15  # Factor composite (mode `factor`, sim-only) → factor_pool in signals.json. Low-turnover multi-factor sur univers US existant (data/tkl-universe.json) : momentum 12-1 + low-vol (REELS, prix) + quality-proxy (-maxDD, prix). Rebalance mensuel (21j) equal-weight top-15 + hysteresis buffer → panier FIGÉ hors jour de rebalance (turnover ~25%/mois, backtest 3.8y CAGR ~43% / maxDD ~11.6% / Sharpe ~1.60). Facteurs prix uniquement, AUCUN appel MCP. Quality FONDAMENTALE (ROE/marges/levier) = hors portée (TODO staging agent MCP). No --regime flag (le facteur est un rank pur, pas régime-filtré).
+node tools/sweep.js                     # Append-only: nouveaux trades fermés (le mode `factor` consomme factor_pool via assetClass us_factor, P&L via sweep comme hybrid — PAS dtx)
 # ⛔ Phase 5.5 OBLIGATOIRE (AI-driven, PAS un script node) : Skill(skill="fortress-pm")
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.

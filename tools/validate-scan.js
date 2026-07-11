@@ -51,7 +51,7 @@ function loadScanSignals(arg) {
   // (multi-pool, enum stratégie) lisent le fichier RAW et couvrent tout le monde.
   // Candlestick est aussi exclu de l'éditorial (stops pattern larges + small caps by design,
   // parité AB) : sa règle dédiée (15) lit le fichier RAW ci-dessous.
-  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap', 'candlestick', 'indexrotation']);
+  const SPECIALIST_STRATEGIES = new Set(['highvolbreakout', 'etfmomentum', 'momentumrotation', 'trendlinebreakout', 'adaptivefractal', 'cryptomomentum', 'metalsmomentum', 'forexmultistrategy', 'fortressa', 'hybridmegacap', 'candlestick', 'indexrotation', 'factorcomposite']);
   const isSpecialist = s => SPECIALIST_STRATEGIES.has(String(s.strategy || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
   const editorial = loaded.signals.filter(s => !isSpecialist(s));
   const specialistCount = loaded.signals.length - editorial.length;

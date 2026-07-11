@@ -133,6 +133,13 @@ if [ "$SKIP_SWEEP" = false ]; then
   node tools/hybrid-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Hybrid scan failed (non-blocking)"
 
   echo ""
+  echo "🧮 Step 2o: Factor composite scan (low-turnover, US)..."
+  # factor-scanner.js fills signals.factor_pool — the ONLY field sweep.js reads for the `factor`
+  # mode (assetClass us_factor). Monthly rebalance (21d) with a hysteresis buffer → holdings are
+  # frozen on non-rebalance days (low turnover). Price-only factors, no MCP call. SIM-ONLY.
+  node tools/factor-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --top 15 || echo "⚠️  Factor scan failed (non-blocking)"
+
+  echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)
   node tools/sweep.js 2>&1 | tail -20

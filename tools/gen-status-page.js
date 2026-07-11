@@ -550,7 +550,7 @@ async function main() {
         // their dedicated modes can DISPLAY their signals. Equity modes never match them: the
         // asset signals carry universe tags (casablanca/crypto/…) + specialist strategy tags
         // (AdaptiveFractal) that mom_bo/all now exclude, and the asset modes gate on universeFilter.
-        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || [])];
+        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || []), ...(loaded.factorPool || [])];
         // Fortress-pm pool (tag FortressA+): source dédiée de fortress + aplus, exclue du mom_bo/all.
         const fortressPool = loaded.fortressPool || [];
         signals = [...loaded.signals, ...assetPools, ...fortressPool].map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || s.thesis || '' }));
