@@ -293,8 +293,9 @@ node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder FOLDER -
 node tools/highvol-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 20  # HighVol mode (dedicated scanner)
 node tools/fractal-scanner.js --universe metals --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Metals scan
 node tools/forex-scanner.js --output signals --date YYYYMMDD --min-score 20 --top 10  # Forex 3-axis faithful (systematic-tss port: Momentum 40%/MeanRev 30%/RelStrength vs DXY 30%, Yahoo direct) → forex_pool in signals.json. No --folder/--regime flags (unsupported by this script).
-node tools/casablanca-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Casablanca Bourse scan
-node tools/momentum-scanner.js --universe casablanca --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 15  # Casablanca Momentum Rotation
+# Casablanca RETIRÉ 2026-07-11 (univers BVC bloqué/malformé, api.casablanca-bourse.com KO) — ne plus lancer, sinon échec chaque soir + alerte Telegram. casablanca_pool reste vide (géré). Réactivation = source BVC fiable + revalidation.
+# node tools/casablanca-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15
+# node tools/momentum-scanner.js --universe casablanca --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 15
 node tools/momentum-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 20  # Momentum Rotation (US)
 node tools/etf-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (US)
 node tools/etf-scanner.js --universe etf-eu --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (Europe)

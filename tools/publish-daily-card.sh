@@ -99,13 +99,11 @@ if [ "$SKIP_SWEEP" = false ]; then
   # fractal-scanner) and strips dashes from --date internally to derive the scan folder.
   node tools/forex-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --min-score 20 --top 10 || echo "⚠️  Forex scan failed (non-blocking)"
 
-  echo ""
-  echo "🏛️  Step 2h: Casablanca Bourse scan..."
-  node tools/casablanca-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 25 --top 15 || echo "⚠️  Casablanca scan failed (non-blocking)"
-
-  echo ""
-  echo "🔄 Step 2i: Casablanca Momentum Rotation scan..."
-  node tools/momentum-scanner.js --universe casablanca --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 5 --top 15 || echo "⚠️  Casablanca MomRot scan failed (non-blocking)"
+  # Steps 2h/2i (Casablanca Bourse + Casablanca MomRot) RETIRED 2026-07-11 : la stratégie casablanca
+  # ne tourne plus (univers BVC bloqué/malformé, api.casablanca-bourse.com KO). Les appels échouaient
+  # chaque soir (exit 1) et la routine cloud alertait Telegram à chaque run. On retire du pipeline pour
+  # stopper les alertes ; casablanca_pool reste vide (gen-status-page/scanner-parser gèrent le pool vide).
+  # Pour réactiver : décommenter + rétablir une source de prix BVC fiable + revalider.
 
   echo ""
   echo "🔄 Step 2j: Momentum Rotation scan (US)..."
