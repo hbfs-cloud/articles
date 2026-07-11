@@ -1473,9 +1473,9 @@ window.searchDataPrebuilt = [
     "icon": "fa-chart-column",
     "ticker": "EQX",
     "exchange": "NYSE · Gold / Basic Materials",
-    "name": "EQX — Deep value gold producer at 6.4x PE, Orla merger creates 1.1M oz senior producer. Score...",
-    "title": "EQX — Deep value gold producer at 6.4x PE, Orla merger creates 1.1M oz senior producer. Score...",
-    "desc": "Equinox Gold is a mid-tier North American gold producer trading at 6.4x forward PE with 59% gross margins and a transformative Orla merger closing Q3 2026. Deep value but broken technical structure and 33% dilution ahead.",
+    "name": "EQX — Cheapest gold major at 6.0x PE, Orla merger de-risked as ISS and Glass Lewis back the vote. Score...",
+    "title": "EQX — Cheapest gold major at 6.0x PE, Orla merger de-risked as ISS and Glass Lewis back the vote. Score...",
+    "desc": "Equinox Gold trades at 6.0x forward PE with 59% gross margins as the Orla merger clears its final vote. Deep value, but the chart just broke $10.26 support with nothing intact until $6.46.",
     "tags": "us,materials,commodity,dividende",
     "grade": "B+",
     "href": "/analyses/EQX/",
@@ -7199,6 +7199,19 @@ window.searchDataPrebuilt = [
     "tags": "formation,macro,us,eu,asia",
     "grade": "",
     "href": "/series/banques-centrales/part1-role-et-mandat/",
+    "date": ""
+  },
+  {
+    "type": "série",
+    "icon": "fa-graduation-cap",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Le manifeste, et une première règle qu'on peut réfuter",
+    "desc": "Le Systématique du dimanche — Épisode 1 : pourquoi un petit portefeuille a des avantages qu'un gros fonds n'aura jamais, et une première règle de gestion du risque testée sur données réelles, résultat honnête compris.",
+    "tags": "technique,education,formation,momentum",
+    "grade": "",
+    "href": "/series/systematique-du-dimanche/part1-manifeste/",
     "date": ""
   }
 ];
