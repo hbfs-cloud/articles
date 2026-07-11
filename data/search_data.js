@@ -312,6 +312,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Le CPI de lundi décide de tout — Semaine du 13 au 17 juillet 2026",
+    "desc": "Le S&P clôture la semaine sur un record, la croissance a repris le volant et le VIX est retombé à 15. Toute la semaine à venir se joue lundi avant l'ouverture, sur un seul chiffre d'inflation. Positionnement, niveaux réels et bilan honnête des idées de la semaine écoulée.",
+    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,energy,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260713/",
+    "date": "13 juillet 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
