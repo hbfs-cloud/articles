@@ -19,6 +19,7 @@ const fs = require('fs');
 const path = require('path');
 const parser = require('./lib/scanner-parser');
 const { recentDilutionFilings } = require('./pre-scan-filter');
+const { computeAllowedActions, boundDecision } = require('./lib/allowed-actions');
 
 const ROOT = path.join(__dirname, '..');
 const FILTERS_FILE = path.join(ROOT, 'data', 'scanner-filters.json');
@@ -578,6 +579,46 @@ async function main() {
         rule: 'strategy_enum_whitelist',
         message: `${s.ticker}: strategy "${strat || '(empty)'}" is outside the known strategy enum — invented/typo'd label or missing strategy field.`
       });
+    }
+  }
+
+  // 19. allowed-actions BORNE (idée #7 — compute_allowed_actions + hold sûr) ─────────────
+  // Garde-fou STRUCTUREL, pas un nouveau sélecteur : chaque signal éditorial est un pick
+  // d'ENTRÉE (il propose donc un `buy`). On calcule d'abord — EN CODE, avant tout décideur —
+  // le menu d'actions permises pour ce titre à un budget sim consultatif (min(limite de
+  // position, cash)/prix), puis on borne le pick À ce menu via boundDecision(). Un pick ne
+  // peut jamais dépasser le menu : si le menu pré-borné ne contient pas `buy` (prix ≤ 0 /
+  // budget insuffisant pour ≥1 action), le pick sort de l'ensemble permis → HARD BLOCK.
+  //   • SIM-ONLY : aucune donnée de book réel, aucun ordre — budget par défaut généreux
+  //     ($20k = 20% d'une NLV sim de $100k) : les picks sains (prix ≥ $5, déjà exigé par la
+  //     règle 12) passent TOUS → borne additive, ZÉRO régression sur un scan valide.
+  //   • DÉGRADATION SÛRE (renforce le MCP HARD STOP) : un entry price manquant/invalide ne
+  //     fabrique jamais un buy — computeAllowedActions dégrade en `hold` (fallback). On ne
+  //     bloque alors PAS (donnée absente ≠ pick agressif) mais on le SIGNALE en advisory :
+  //     l'échec de donnée mène à hold, jamais à une action agressive.
+  {
+    const SIM_NLV = 100000, SIM_CASH = 100000, SIM_POS_PCT = 0.20; // budget sim consultatif
+    for (const s of signals) {
+      const menu = computeAllowedActions({
+        ticker: s.ticker,
+        price: (typeof s.entry === 'number') ? s.entry : undefined,
+        cash: SIM_CASH,
+        nlv: SIM_NLV,
+        positionLimitPct: SIM_POS_PCT,
+      });
+      if (menu.fallback) {
+        // Donnée d'entrée dégradée → menu réduit à hold. Safe-degrade, non-bloquant.
+        advisories.push(`${s.ticker}: allowed-actions dégradé en hold — ${menu.reason} [allowed_actions_hold]`);
+        continue;
+      }
+      // Le pick propose un buy ; on le borne au menu permis. Hors menu → hold = pick illégal.
+      const bounded = boundDecision({ action: 'buy', quantity: 1 }, menu);
+      if (bounded.action !== 'buy') {
+        violations.push({
+          rule: 'allowed_actions_bound',
+          message: `${s.ticker}: entry pick propose un BUY mais le menu d'actions pré-borné ne permet que [${menu.actions.join(', ')}] (${menu.reason}) — un pick ne peut jamais dépasser le menu permis (borne #7).`
+        });
+      }
     }
   }
 
