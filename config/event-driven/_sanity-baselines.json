@@ -1,0 +1,89 @@
+{
+  "_meta": {
+    "purpose": "Deterministic sanity bounds for the event-driven scanner modes (pead / filings / gap) once they are pre-simulated by sweep.js. Guards against a corrupt/param-drifted backtest result (trade-count blowup, DD explosion, negative Sharpe) reaching the status page or gating a draft->test->sim-live promotion. Consumed by the ingest/sweep sanity check + qa-check.js (hard fail on breach). Analogue of config/dtx/_sanity-baselines.json.",
+    "scope": "SIM-ONLY. Signals + simulated perf only (signals.json -> sweep.js -> gen-status-page -> gen-api). No paper/live/deploying/liquidated concept, no order execution.",
+    "source": "SPEC docs/specs/event-driven-scanners.md §4.2. Baselines produced 2026-07-11 by the Backtest-validation agent via mcp__marketdata__* (RunBacktest DSL for gap + appoint-technical for pead; GetInsiderActivity/QueryData event-study for filings). Real MCP data, sim-only, zero fabrication.",
+    "fill_instructions": "The Backtest agent replaces each null with the healthy walk-forward baseline (total_trades, max_dd_pct, sharpe, cagr_pct, win_rate) BEFORE promoting the mode past draft. Never invent these numbers — leave null until a real MCP-backed backtest exists (MCP hard-stop, zero fabrication). trades_ratio_high/low are applied to the per-mode total_trades once set (2.2x / 0.4x, generous to tolerate legitimate window extension; DD/sharpe/win_rate/cagr are the primary tripwires).",
+    "universal_note": "While a per-mode baseline is null/TBD, only the _universal tripwires apply (|max_dd|>50%, sharpe<0, win_rate outside [15,92], cagr<-5%).",
+    "coverage_caveat": "MCP bar history in this environment starts ~2025-04-30 for SPY and most names (deep-history backfill did not extend to the requested 2024-07-01). With the engine's 200-bar warmup, the simulation only produces live trades in 2026 (yearly_stats shows year 2026 only) — effectively ~2026 H1, a slice that contains the Feb–Mar 2026 correction and the June 2026 chop. A genuine per-regime walk-forward (RISK-ON / NEUTRAL / ERO across multiple years) is NOT achievable on this data. All metrics below are honest but low-coverage; treat as provisional, re-run when deeper history is available.",
+    "dsl_corrections": "SPEC §2.3/§2.1 pass_expr had two DSL bugs, corrected here: (1) gap_pct() returns a RATIO ((open-prevclose)/|prevclose|), so a 4% gap is gap_pct()>=0.04, NOT >=4 (the literal >=4 demands a 400% gap -> zero trades). (2) close > hhv('high',20) is self-defeating because hhv includes the current bar (today's high is in the window, so close can't exceed it) -> zero trades; replaced with close >= hhv('close',20) (a genuine 20-day closing-high breakout). SPEC should be patched to match."
+  },
+  "_universal": {
+    "max_dd_abs_ceiling": 50,
+    "min_sharpe": 0,
+    "win_rate_min": 15,
+    "win_rate_max": 92,
+    "min_cagr": -5,
+    "trades_ratio_high": 2.2,
+    "trades_ratio_low": 0.4
+  },
+  "_benchmark": {
+    "instrument": "SPY buy-and-hold (adjusted close)",
+    "window": "2025-04-30 -> 2026-07-01 (only history available)",
+    "total_return_pct": 34.5,
+    "cagr_pct": 28.7,
+    "max_dd_pct": 9.1,
+    "note": "Peak 695.49 (2026-01-27) -> trough 631.97 (2026-03-30) = -9.1%. This is the bar a mode must beat to be promoted (spec §4.1)."
+  },
+  "modes": {
+    "pead": {
+      "_status": "DRAFT — UNVALIDATED (kept null; only universal tripwires apply)",
+      "_verdict": "STAY DRAFT. No positive evidence. The appoint-technical proxy (gap_pct()>=0.03 && close>ema20 && vol>1.5M) came back NEGATIVE (sharpe -0.06, total_return -1.5%, max_dd 59.7%) — it fails the universal sharpe>=0 floor, so it is deliberately NOT recorded as a healthy baseline. The guidance-qualified event-study (the actual PEAD edge) could not be run cleanly: earnings_quarterly returns fiscal-quarter labels (2Q2025 …), not actual print dates, and bar history is ~14 months, so D+5/D+20 drift on a beat+guidance-up cohort is not computable without a print-date map. Do not promote.",
+      "_validation": "Earnings-beat cohort event-study (beat + guidance up + gap held) drift D+5/D+20>0, TP1 win-rate>55% in RISK-ON, + appoint technical RunBacktest (spec §2.1/§4.1).",
+      "_appoint_technical_proxy": {
+        "note": "Recorded for transparency ONLY — this is gap-up-in-uptrend WITHOUT the beat/guidance filter that defines PEAD; it is NOT the mode baseline and FAILS the universal sharpe floor.",
+        "pass_expr": "gap_pct() >= 0.03 && close > ema20 && vol > 1500000",
+        "symbols_n": 30,
+        "window": "effective 2026 (bars from ~2025-04-30, 200-bar warmup)",
+        "total_trades": 78,
+        "win_rate": 0.436,
+        "total_return_pct": -1.46,
+        "cagr_pct": -0.73,
+        "sharpe": -0.064,
+        "max_dd_pct": 59.69,
+        "profit_factor": 1.086
+      },
+      "total_trades": null,
+      "max_dd_pct": null,
+      "sharpe": null,
+      "cagr_pct": null,
+      "win_rate": null
+    },
+    "filings": {
+      "_status": "DRAFT — UNEXPLOITABLE COVERAGE (kept null; only universal tripwires apply)",
+      "_verdict": "STAY DRAFT. Event-study inexploitable, not flattered. GetInsiderActivity(days=180, direction=buy) over the default SP500 large-cap universe (200 symbols) returned net insider BUYING in only 3 names (ADSK, HUM, RBA). Applying the cluster rule (>=2 distinct insiders, code P, <=30d): only ADSK qualifies (CAHILL/Dir $378k 06-23, Anagnost/CEO $498k 06-16, Moorjani/CFO $494k 06-15). HUM = 1 buyer; RBA = same insider twice. Cohort n≈1 -> no statistically meaningful D+20 drift baseline. Insider cluster-buy is a small/mid-cap phenomenon; the default universe (SP500) structurally misses it. A real baseline needs a small/mid-cap symbol scan with deeper history. Flags leg (anti-dilution) is a non-regression check, not a return baseline.",
+      "_validation": "Insider cluster-buy (code P, >=2 insiders) event-study drift D+20>0 (US-only); flags leg validated by non-regression (avoided dilution stops). NOT a RunBacktest DSL signal (spec §2.2/§4.1).",
+      "_cohort_evidence": {
+        "scan": "GetInsiderActivity(days=180, direction=buy, max_symbols=200, include_transactions=true)",
+        "symbols_with_net_buying": ["ADSK", "HUM", "RBA"],
+        "cluster_buys_qualifying": ["ADSK"],
+        "cohort_n": 1,
+        "note": "US-only by construction (no EU PDMR feed, spec §2.2)."
+      },
+      "total_trades": null,
+      "max_dd_pct": null,
+      "sharpe": null,
+      "cagr_pct": null,
+      "win_rate": null
+    },
+    "gap": {
+      "_status": "MEASURED — DRAFT (baseline recorded; NOT promoted)",
+      "_verdict": "STAY DRAFT. This is the cleanest of the three (pure DSL) and produced a valid backtest that passes the universal sanity floor, so its metrics are recorded as the drift-detection baseline. But it does NOT meet the promotion gate (spec §4.1): total_return +10.5% << SPY buy-and-hold +34.5% over the same window, and raw-equity max_dd 29.8% >> the 8% ceiling (driven by the June-2026 cluster: 13 trades, 23% win, -28.5% that month). CAVEAT: RunBacktest applies the engine's DEFAULT exit logic, not the scanner's actual clamped 3–8% stop + R/R-gate + regime filter, so the mode's realized DD would differ — this backtest bounds signal expectancy/frequency, not the mode's true risk. Not promotable on current evidence + coverage.",
+      "_validation": "RunBacktest DSL walk-forward per regime; must beat SPY buy-and-hold with max_dd<=8% (spec §2.3/§4.1).",
+      "_backtest": {
+        "pass_expr": "gap_pct() >= 0.04 && close >= hhv('close',20) && vol > 1500000",
+        "symbols_n": 50,
+        "window": "requested 2024-07-01..2026-07-01; effective ~2026 (bars from 2025-04-30 + 200-bar warmup)",
+        "profit_factor": 1.188,
+        "sortino": 0.247,
+        "beats_spy_buyhold": false,
+        "max_dd_within_8pct": false
+      },
+      "total_trades": 43,
+      "max_dd_pct": 29.84,
+      "sharpe": 0.137,
+      "cagr_pct": 5.11,
+      "win_rate": 0.512
+    }
+  }
+}

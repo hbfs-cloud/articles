@@ -433,5 +433,47 @@
       "RISK-OFF": 0.5
     },
     "_reason": "Feb-Mar retros showed -40% of drawdown came from risk-off scan dates. Halving exposure cuts tail risk without sacrificing bull-run performance."
+  },
+  "event_driven": {
+    "_comment": "Source of truth for the event-driven scanners (PEAD / filings / gap). Read by tools/{gap,pead,filings}-scanner.js + sweep.js. SIM-ONLY: signal generation + simulated perf only, never an order. Thresholds encoded from docs/specs/event-driven-scanners.md (§2.1 PEAD, §2.2 filings, §2.3 gap, §2.0 shared gates).",
+    "_scope": "sim-only",
+    "min_gap_pct": 4,
+    "premarket_vol_ratio": 3,
+    "min_dollar_volume_usd": 1000000,
+    "min_price_usd": 5,
+    "exclude_earnings_gap": true,
+    "_gap_reason": "spec §2.3: gap >= +4% vs prev close, premarket volume >= 3x normal (calibratable default, re-tune from gap RunBacktest baseline), dollar-volume >= $1M + price >= $5 penny reject, earnings gaps route to pead_pool (dedup, one ticker never in two pools).",
+    "insider_cluster": {
+      "min_insiders": 2,
+      "min_net_usd": 250000,
+      "window_days": 30,
+      "transaction_code": "P",
+      "market": "us",
+      "_reason": "spec §2.2: cluster-buy long idea is US-only (no EU PDMR feed via MCP — never fabricate an EU insider signal). >=2 distinct insiders, code P (Purchase), net-buyer within 30d. min_net_usd is a calibratable default; re-tune from the insider event-study baseline before promoting filings past draft. Zero fabrication (MCP hard-stop) — pool absent if staging MCP fails, never estimated."
+    },
+    "pead": {
+      "min_gap_pct": 3,
+      "min_vol_ratio_confirm": 1.5,
+      "max_ext_ema20_pct": 8,
+      "require_eps_beat": true,
+      "require_guidance_raised": true,
+      "min_beats_streak_quality": 5,
+      "_reason": "spec §2.1: gap held >= +3% at print, confirmation volume >= 1.5x avg20, EMA20 extension <= 8% (drift still ahead), EPS beat + guidance raised mandatory (guidance up = A+ discriminant), >=5 consecutive beats = quality streak. Data via MCP only (earnings_quarterly/analyst_actions/technicals)."
+    },
+    "stops": {
+      "_inherits": "stops",
+      "min_pct_from_entry": 3,
+      "max_pct_from_entry": 8,
+      "min_atr_multiple": 1.5,
+      "_reason": "spec §2.0 shared gates — stop in [3%,8%] and >= 1.5x ATR14. Mirrored from the canonical top-level 'stops' block for event-driven scanners; keep in sync, do not diverge."
+    },
+    "rr_min_by_regime": {
+      "_comment": "R/R floor per regime. Reuses the regime_labels.allowed taxonomy (no new labels invented). spec §2.1/§2.3: >= 1.5 in RISK-ON/NEUTRAL, >= 2.0 in EARLY RISK-OFF/RISK-OFF.",
+      "RISK-ON": 1.5,
+      "NEUTRAL": 1.5,
+      "RECOVERY": 1.5,
+      "EARLY RISK-OFF": 2.0,
+      "RISK-OFF": 2.0
+    }
   }
 }

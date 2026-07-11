@@ -142,6 +142,14 @@ function loadSignals(dir) {
       // factor_pool: low-turnover multi-factor US basket (factor-scanner.js). Self-contained
       // holdings for the `factor` mode (assetClass us_factor) — consumed like the asset pools.
       const factorPool = poolFrom('factor_pool');
+      // Event-driven pools (pead/filings/gap) — SAME source-tagged pattern as forex_pool. Each
+      // feeds ONLY its dedicated asset-class mode (assetClass pead/filings/gap), NEVER merged into
+      // the signals[] composite. filings_flags = per-ticker dilution disqualifiers written by
+      // filings-scanner.js, exposed so the OTHER pools' validation can reject a diluted candidate.
+      const peadPool = poolFrom('pead_pool');
+      const filingsPool = poolFrom('filings_pool');
+      const gapPool = poolFrom('gap_pool');
+      const filingsFlags = (data.filings_flags && typeof data.filings_flags === 'object') ? data.filings_flags : {};
       // Fortress-pm: source dédiée du mode Fortress + A+ (scan A+ Halal produit par le skill
       // fortress-pm, PAS le composite mom_bo). Tag strategy='FortressA+', exclu du mom_bo/all.
       // fortress_pool ABSENT (key missing — the fortress-pm skill didn't run/produce a pool for
@@ -172,7 +180,7 @@ function loadSignals(dir) {
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, factorPool, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, factorPool, peadPool, filingsPool, gapPool, filingsFlags, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -192,7 +200,7 @@ function loadSignals(dir) {
     thesis: thesisMap[s.ticker] || '',
   }));
   const regime = extractRegimeFromHtml(html);
-  return { signals, tklPool: [], cryptoPool: [], metalsPool: [], forexPool: [], factorPool: [], thesis: thesisMap, regime, regimeScore: null };
+  return { signals, tklPool: [], cryptoPool: [], metalsPool: [], forexPool: [], factorPool: [], peadPool: [], filingsPool: [], gapPool: [], filingsFlags: {}, thesis: thesisMap, regime, regimeScore: null };
 }
 
 // ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────

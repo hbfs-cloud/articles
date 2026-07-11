@@ -845,6 +845,54 @@
       "statusReason": "Scanner factoriel low-turnover — validation en simulation (sweep). Backtest 3.8y: CAGR ~43%, maxDD ~11.6%, Sharpe ~1.60, turnover ~25%/mois. SIM-ONLY, aucun broker.",
       "_note": "factor_rotation: la ROTATION mensuelle EST la sortie (rebalance top-15 tous les 21j, hysteresis buffer 1.5x pour turnover bas). AUCUN SL/TP par ligne. maxStopPct/atrStopMult ici = filet disaster-stop downstream (sweep) uniquement, PAS un paramètre de la stratégie. Facteurs REELS calculés depuis les barres prix : momentum 12-1 + low-vol. 3e facteur 'quality' = PROXY prix (-maxDD), PAS la quality fondamentale (ROE/marges/levier hors portée — pas de MCP depuis le subprocess ; TODO staging agent). Signaux fournis par tools/factor-scanner.js (factor_pool), P&L via sweep (comme hybrid), PAS dtx.",
       "statusNextReviewAt": "2026-08-11"
+    },
+    "pead": {
+      "status": "draft",
+      "label": "PEAD",
+      "goal": "Post-Earnings Drift",
+      "assetClass": "pead",
+      "filterName": "pead_drift",
+      "minScore": 78,
+      "portfolioSize": 3,
+      "topN": 3,
+      "horizon": 12,
+      "maxStopPct": 8,
+      "atrStopMult": 2,
+      "sizingMethod": "inverse_atr",
+      "targetRiskPct": 0.8,
+      "regimeFilters": {
+        "risk_on": "pead_drift",
+        "risk_off": "none"
+      },
+      "statusReason": "Brique event-driven PEAD (pead-scanner.js, voie B ingest MCP). SIM-ONLY, masqué tant que draft. Promotion draft→test→sim-live(=live) seulement après backtest walk-forward par régime (drift D+5/D+20>0, win-rate TP1>55% RISK-ON, maxDD<=8%). Jamais --to deploying/liquidated."
+    },
+    "filings": {
+      "status": "draft",
+      "label": "Filings",
+      "goal": "Insider & Catalyst",
+      "assetClass": "filings",
+      "filterName": "filings_catalyst",
+      "minScore": 80,
+      "portfolioSize": 3,
+      "topN": 3,
+      "horizon": 15,
+      "maxStopPct": 8,
+      "sizingMethod": "inverse_atr",
+      "statusReason": "Brique event-driven filings/insider (filings-scanner.js, voie B ingest MCP). InsiderCluster US-only (PDMR EU inexistant côté MCP — jamais fabriqué). SIM-ONLY, masqué tant que draft. Promotion draft→test→sim-live après event-study cluster-buy (drift D+20>0). Jamais --to deploying/liquidated."
+    },
+    "gap": {
+      "status": "draft",
+      "label": "Gap&Go",
+      "goal": "Premarket Gap Continuation",
+      "assetClass": "gap",
+      "filterName": "gap_and_go",
+      "minScore": 75,
+      "portfolioSize": 2,
+      "topN": 2,
+      "horizon": 6,
+      "maxStopPct": 8,
+      "sizingMethod": "inverse_atr",
+      "statusReason": "Brique event-driven gap-and-go (gap-scanner.js, voie A fetch-direct, aucun MCP). SIM-ONLY, masqué tant que draft. Promotion draft→test→sim-live après RunBacktest DSL walk-forward (bat SPY buy-and-hold, maxDD<=8%). Jamais --to deploying/liquidated."
     }
   }
 }

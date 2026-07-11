@@ -231,6 +231,12 @@ const SCRIPT_SCANNER_MARKERS = {
   momentum:   { keys: ['momentum'] },      // momentum-scanner.js (americanbull, défaut)
   casablanca: { keys: ['casablanca'] },    // casablanca-scanner.js
   trendline:  { prefix: 'trendline' },     // trendline-scanner.js — n'importe quel univers compte
+  // Event-driven scanners. gap = voie A (fetch-direct, garde universeFetched>=100 comme bull) ;
+  // pead/filings = voie B (ingest MCP, univers = les prints/filings stagés, pas de garde de taille :
+  // 0 print un jour calme est légitime, seul le marqueur prouve que le scanner a tourné).
+  pead:       { keys: ['pead'] },          // pead-scanner.js (ingest staging MCP)
+  filings:    { keys: ['filings'] },       // filings-scanner.js (ingest staging MCP)
+  gap:        { keys: ['gap'] },           // gap-scanner.js (fetch-direct, voie A)
 };
 
 function latestScanSignals() {
@@ -282,9 +288,11 @@ check('scanner: modes live scriptés — marqueur de scan présent (chaque scann
   for (const mode of activeModes) {
     const res = resolveScanMarker(mode, parsed);
     if (!res.found) { missing.push(`${mode} (${res.key})`); continue; }
-    // Garde spécifique bull : le scanner doit avoir réellement fetché son univers
-    if (mode === 'bull' && (!res.marker.universeFetched || res.marker.universeFetched < 100)) {
-      missing.push(`${mode} (_candlestickScan: ${res.marker.universeFetched || 0} titres fetchés < 100 — source de données KO)`);
+    // Garde spécifique aux scanners fetch-direct (bull, gap) : le scanner doit avoir réellement
+    // fetché son univers (>=100 titres) — sinon source de données KO. Les scanners voie-B (pead/
+    // filings) n'ont pas de garde de taille : leur "univers" = les prints/filings stagés (peut être petit).
+    if ((mode === 'bull' || mode === 'gap') && (!res.marker.universeFetched || res.marker.universeFetched < 100)) {
+      missing.push(`${mode} (${res.key}: ${res.marker.universeFetched || 0} titres fetchés < 100 — source de données KO)`);
     }
   }
   if (missing.length) {

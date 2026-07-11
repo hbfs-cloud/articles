@@ -550,7 +550,11 @@ async function main() {
         // their dedicated modes can DISPLAY their signals. Equity modes never match them: the
         // asset signals carry universe tags (casablanca/crypto/…) + specialist strategy tags
         // (AdaptiveFractal) that mom_bo/all now exclude, and the asset modes gate on universeFilter.
-        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || []), ...(loaded.factorPool || [])];
+        // Event-driven pools (pead/filings/gap) join the universe on the SAME footing as forex:
+        // their dedicated modes gate on source==='<class>_pool' (POOL_ASSET_CLASSES in signalsFor),
+        // and their specialist strategy tags (PEAD/GapAndGo/InsiderCluster/FilingCatalyst) are
+        // excluded from the equity 'all' filter so they never leak into turbo/etc.
+        const assetPools = [...(loaded.casablancaPool || []), ...(loaded.cryptoPool || []), ...(loaded.metalsPool || []), ...(loaded.forexPool || []), ...(loaded.factorPool || []), ...(loaded.peadPool || []), ...(loaded.filingsPool || []), ...(loaded.gapPool || [])];
         // Fortress-pm pool (tag FortressA+): source dédiée de fortress + aplus, exclue du mom_bo/all.
         const fortressPool = loaded.fortressPool || [];
         signals = [...loaded.signals, ...assetPools, ...fortressPool].map(s => ({ ...s, thesis: thesisMap[s.ticker] || loaded.thesis[s.ticker] || s.thesis || '' }));
@@ -880,12 +884,17 @@ async function main() {
 
   // Filters
   const SF = {
-    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick|FortressA\+)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
+    all: s => s && !/^(MomentumRotation|HighVolBreakout|TrendlineBreakout|ETFMomentum|AdaptiveFractal|candlestick|FortressA\+|PEAD|GapAndGo|InsiderCluster|FilingCatalyst)$/i.test(s), no_sq: s => !/short.?squeeze/i.test(s),
     fortress_pm: s => /^FortressA\+$/i.test(s),
     momentum_only: s => /^Momentum$/i.test(s), breakout_only: s => /^Breakout$/i.test(s),
     no_sq_pb: s => !/short.?squeeze|pullback/i.test(s),
     mom_bo: s => /^(Momentum|Breakout)$/i.test(s),
     candlestick_only: s => /candlestick/i.test(s),
+    // Event-driven scanners (pead/filings/gap-scanner.js) — dedicated draft modes, gated by
+    // source==='<class>_pool' in signalsFor. Strategy tags excluded from 'all' above (no turbo leak).
+    pead_drift: s => /^PEAD$/i.test(s),
+    filings_catalyst: s => /^(InsiderCluster|FilingCatalyst)$/i.test(s),
+    gap_and_go: s => /^GapAndGo$/i.test(s),
     // Casablanca mode admits BOTH adaptive_fractal (casablanca-scanner) AND momentum_rotation
     // (momentum-scanner --universe casablanca, real signal source, parity portfolio_ma.yaml) —
     // kept coherent with STRATEGY_FILTERS_MAP['adaptive_fractal'] in tools/sweep.js.
@@ -896,7 +905,7 @@ async function main() {
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
     trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', hybrid_af: 'Hybrid-AF', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', hybrid_af: 'Hybrid-AF', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+', pead_drift: 'PEAD Drift', filings_catalyst: 'Insider & Catalyst', gap_and_go: 'Gap & Go' }[f] || f; }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {
@@ -950,7 +959,9 @@ async function main() {
     // (set by scanner-parser.poolFrom). Restricted to the exact pool-backed classes so universe-gated
     // scripted modes (etf=us_etf, etf_eu=etf, highvol/stockbox=us_equity) are NOT caught.
     const ac = cfg.assetClass;
-    const POOL_ASSET_CLASSES = new Set(['forex', 'crypto', 'metals']);
+    // pead/filings/gap: event-driven modes with NO universeFilter — like forex they gate on their
+    // own source tag ('<class>_pool') so each renders ONLY its scanner's pool, never equity signals.
+    const POOL_ASSET_CLASSES = new Set(['forex', 'crypto', 'metals', 'pead', 'filings', 'gap']);
     const isAssetMode = POOL_ASSET_CLASSES.has(ac);
     return signals.filter(s => f(s.strategy || '')).filter(s => !isAssetMode || (s.source || '') === ac + '_pool').filter(s => !uf || (s.universe || '') === uf).filter(s => cfg.minScore <= 0 || s.score >= cfg.minScore).filter(s => !cfg.shariaOnly || (s.sharia === true && !isHaramForHalalMode(s))).slice(0, cfg.topN).map(s => {
       const stop = clampStop(s.entry, s.stop, cfg.maxStopPct);
@@ -1123,7 +1134,9 @@ async function main() {
     // forex utilise forex-scanner.js (3-axes fidèle) mais garde filterName='all' en config — collision
     // avec turbo (LLM, aussi 'all'). On le détecte donc par ID. Idem pour les modes scriptés wipés si
     // un jour restaurés (bull/momentum/trendline/casablanca) — ID explicite = future-proof.
-    const SCRIPTED_IDS = new Set(['bull', 'momentum', 'highvol', 'trendline', 'etf', 'etf_eu', 'hybrid', 'forex', 'casablanca']);
+    // pead/filings/gap = JS-scanner pools (like forex): their signals ARE the orders to place
+    // (source of truth = the scanner), so no "Fallback candidates" block. NOT dtx-staged.
+    const SCRIPTED_IDS = new Set(['bull', 'momentum', 'highvol', 'trendline', 'etf', 'etf_eu', 'hybrid', 'forex', 'casablanca', 'pead', 'filings', 'gap']);
     // fortress + aplus = modes LLM (pilotés par le skill fortress-pm, signaux = CANDIDATS A+),
     // PAS scriptés — ils gardent Today's Signals + Orders + fallback comme les autres modes LLM.
     const isScripted = (SCRIPTED_FILTERS.has(cfg.filterName) || SCRIPTED_IDS.has(id)) && id !== 'fortress' && id !== 'aplus';
