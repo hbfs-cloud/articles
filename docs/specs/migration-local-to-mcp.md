@@ -1,6 +1,6 @@
 # Migration Plan — Local Scanners → MCP `marketdata` Data Path
 
-**Statut : SPEC + POC #1 (`factor`) LIVRÉ + `momentum` et `etf`(US) voie `--ingest` DISPONIBLE (local reste primary, pas de flip — gate A/B non franchi ; `etf` est en drift de parité connu, la migration ne l'aggrave PAS). Aucun scanner supprimé, aucun univers legacy retiré.**
+**Statut : SPEC + POC #1 (`factor`) LIVRÉ + `momentum`, `etf`(US) et `trendline`(US) voie `--ingest` DISPONIBLE (local reste primary, pas de flip — gate A/B non franchi ; `etf` ET `trendline` sont en drift de parité connu, la migration ne l'aggrave PAS — drift qa-check identique 8↔8 avant/après). Aucun scanner supprimé, aucun univers legacy retiré.**
 **Auteur : recon agent · Date : 2026-07-11**
 
 > **✅ POC #1 — `factor` : voie MCP `--ingest` ACTIVE (2026-07-11).** `tools/factor-scanner.js` a
@@ -187,7 +187,28 @@ légère.
 6. **`fractal`(americanbull)** puis **`fractal --universe metals`** (valider couverture métaux MCP d'abord).
 7. **`hybrid`** — americanbull (réutilise staging), mode live.
 8. **`forex`** — valider couverture FX MCP ; sinon rester Yahoo. dtx-autoritatif.
-9. **`trendline`** — **drift connu** + indices/FX ⇒ tardif, A/B strict, valider couverture indices/FX MCP.
+9. **`trendline`(US) — voie MCP `--ingest` DISPONIBLE (2026-07-11), mais LOCAL reste PRIMARY (pas de flip).**
+    `tools/trendline-scanner.js` a désormais la branche `ingestMain()` (modèle EXACT de `factor-scanner.js --ingest` /
+    `momentum --ingest` : `loadTrendlineStaging` fail-closed, `evaluateTrendlineCandidate` — gates hérités
+    penny<$5 + stop-band [max(3%, 1.5×ATR14), 8%] (drop si 1.5×ATR dépasse le plafond 8%) + rr≥seuil-régime
+    (1.5 risk-on/neutral/recovery, 2.0 (early) risk-off) ; tp1/tp2 RE-DÉRIVÉS du modèle partial-TP du mode
+    (`PARTIAL_TP_GAIN_PCT=10`), jamais lus du staging ; `strategy='TrendlineBreakout'` ; fusion NON destructive
+    dedup ticker dans `signals[]` + `_scanRuns['trendline'|'trendline:<universe>']`, exit 3 + marqueur `incomplete`
+    si staging absent/vide/malformé/`mcp_ok:false`). `--ingest` NE FETCH RIEN (ni Yahoo 1h/4h/1d, ni univers
+    `forex`/`americanbull`/`metals`/`etf`, ni indices hardcodés, ni cache — aucun appel MCP côté node, OAuth2 zéro token).
+    **finalFlip=FALSE** : le chemin LOCAL (Yahoo + univers local + indices) reste le **défaut/PRIMARY** (`main()` ne
+    dérive vers `ingestMain()` QUE si `--ingest` est passé) ; `--ingest` est une voie **optionnelle, non-défaut**.
+    **Pourquoi pas de flip** : `trendline` fait partie des modes en **drift de parité Go↔articles DÉJÀ flaggé par
+    qa-check** (§4 ÉLEVÉ — horizon 25 / atrStopMult 2.5 / minScore 50 hardcodés, extraction articles échouée) — le
+    gate DUR interdit de basculer en MCP-primary si l'A/B n'a PAS prouvé (1) aucune régression backtest (régime-aware
+    + walk-forward) ET (2) aucune aggravation de la parité. L'A/B n'a pas franchi ce gate ⇒ on garde LOCAL primary et
+    on laisse `--ingest` disponible mais non-défaut. **La migration n'aggrave PAS le drift** : le chemin local (et donc
+    les constantes de parité `horizon`/`atrStopMult`/`minScore`) est INCHANGÉ, et le compteur de drift qa-check est
+    identique **8↔8** avant/après (vérifié par stash A/B). Le nouveau `STOP_ATR_MULT=1.5` est **local à la voie
+    `--ingest`** (stop-band de trade) et n'est PAS l'`atrStopMult=2.5` du port Go (extracteur parité inchangé).
+    Réversible, non-destructif : aucun univers/fetcher legacy supprimé, aucun autre mode touché, chaîne SHA-256 des
+    trades intacte. `trendline --universe forex`/indices reste couvert par la voie LOCALE (couverture MCP FX/indices
+    non validée). Flip seulement après A/B validé qui ne dégrade ni le backtest ni la parité.
 10. **`etf`(US) — voie MCP `--ingest` DISPONIBLE (2026-07-11), mais LOCAL reste PRIMARY (pas de flip).**
     `tools/etf-scanner.js` a désormais la branche `ingestMain()` (modèle EXACT de `factor-scanner.js --ingest` :
     `loadEtfStaging` fail-closed, `evaluateEtfCandidate` — gates hérités blacklist + penny (`min_price` US 10) +
@@ -254,6 +275,9 @@ une fois `factor` en voie-B validé.
 - **Restent fetch-direct (hors migration)** : `crypto` (Binance public), `casablanca` (BVC — non couvert MCP).
 - **Modes BLOQUÉS (EU, jusqu'au backfill MCP)** : **`etf_eu`** et **`momentum --universe eu`** (+ tout
   `eu_smallcap`/PEA futur). Cause : `RunScreener region=eu`=0, bars EU ≈ 3 séances (`mcp-eu-coverage-gap`).
+- **Voie `--ingest` DISPONIBLE mais LOCAL primary (pas de flip, gate A/B non franchi)** : `momentum`,
+  `etf`(US), **`trendline`(US)** (2026-07-11). `etf`+`trendline` sont en drift parité connu — la migration
+  ne l'aggrave PAS (drift qa-check identique 8↔8 avant/après, vérifié par stash A/B ; chemin local inchangé).
 - **Plus risqués (drift parité connu, à faire en dernier, A/B strict)** : `etf`, `etf_eu`, `trendline`,
   `casablanca`(bull).
 - **Gate par mode** : QueryData de contrôle → backtest A/B **par régime + walk-forward** (jamais replay
