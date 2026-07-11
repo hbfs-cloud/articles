@@ -11,7 +11,8 @@ const tagMeta = {
     commodity: { labels: { fr: "Matières Premières", en: "Commodities", ar: "سلع" }, cat: "region" },
     forex: { labels: { fr: "Forex", en: "Forex", ar: "فوركس" }, cat: "region" },
     etf: { labels: { fr: "ETF", en: "ETF", ar: "صناديق" }, cat: "region" },
-    
+    em: { labels: { fr: "Marchés Émergents", en: "Emerging Markets", ar: "أسواق ناشئة" }, cat: "region" },
+
     // Sector (cat: "sector")
     tech: { labels: { fr: "Technologie", en: "Tech", ar: "تكنولوجيا" }, cat: "sector" },
     semis: { labels: { fr: "Semi-conducteurs", en: "Semis", ar: "أشباه الموصلات" }, cat: "sector" },
@@ -23,7 +24,16 @@ const tagMeta = {
     consumer: { labels: { fr: "Consommation", en: "Consumer", ar: "استهلاك" }, cat: "sector" },
     defense: { labels: { fr: "Défense", en: "Defense", ar: "دفاع" }, cat: "sector" },
     software: { labels: { fr: "Logiciel", en: "Software", ar: "برمجيات" }, cat: "sector" },
-    
+    gold: { labels: { fr: "Or", en: "Gold", ar: "ذهب" }, cat: "sector" },
+    mining: { labels: { fr: "Mines", en: "Mining", ar: "تعدين" }, cat: "sector" },
+    agriculture: { labels: { fr: "Agriculture", en: "Agriculture", ar: "زراعة" }, cat: "sector" },
+    biotech: { labels: { fr: "Biotech", en: "Biotech", ar: "تقنية حيوية" }, cat: "sector" },
+    comms: { labels: { fr: "Communications", en: "Comms", ar: "اتصالات" }, cat: "sector" },
+    staples: { labels: { fr: "Consommation de Base", en: "Staples", ar: "سلع أساسية" }, cat: "sector" },
+    utilities: { labels: { fr: "Services Publics", en: "Utilities", ar: "مرافق" }, cat: "sector" },
+    quantum: { labels: { fr: "Quantique", en: "Quantum", ar: "كم" }, cat: "sector" },
+    airlines: { labels: { fr: "Compagnies Aériennes", en: "Airlines", ar: "طيران" }, cat: "sector" },
+
     // Theme (cat: "theme")
     ai: { labels: { fr: "IA", en: "AI", ar: "ذكاء اصطناعي" }, cat: "theme" },
     earnings: { labels: { fr: "Résultats", en: "Earnings", ar: "أرباح" }, cat: "theme" },
@@ -34,6 +44,12 @@ const tagMeta = {
     dividende: { labels: { fr: "Dividende", en: "Dividend", ar: "توزيعات" }, cat: "theme" },
     "small-cap": { labels: { fr: "Small Cap", en: "Small Cap", ar: "شركات صغيرة" }, cat: "theme" },
     speculative: { labels: { fr: "Spéculatif", en: "Speculative", ar: "مضاربة" }, cat: "theme" },
+    momentum: { labels: { fr: "Momentum", en: "Momentum", ar: "زخم" }, cat: "theme" },
+    defensive: { labels: { fr: "Défensif", en: "Defensive", ar: "دفاعي" }, cat: "theme" },
+    value: { labels: { fr: "Value", en: "Value", ar: "قيمة" }, cat: "theme" },
+    "short-squeeze": { labels: { fr: "Short Squeeze", en: "Short Squeeze", ar: "ضغط المكشوف" }, cat: "theme" },
+    "penny-stocks": { labels: { fr: "Penny Stocks", en: "Penny Stocks", ar: "أسهم رخيصة" }, cat: "theme" },
+    debutant: { labels: { fr: "Débutant", en: "Beginner", ar: "مبتدئ" }, cat: "theme" },
     education: { labels: { fr: "Éducation", en: "Education", ar: "تعليم" }, cat: "theme" },
     societe: { labels: { fr: "Société", en: "Society", ar: "مجتمع" }, cat: "theme" },
     securite: { labels: { fr: "Sécurité", en: "Security", ar: "أمن" }, cat: "theme" },
