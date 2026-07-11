@@ -1,14 +1,30 @@
 ---
 name: mcp-eu-coverage-gap
-description: 2026-07-11 — le MCP marketdata sert l'EU en per-ticker (QueryData quote/profile.country/mcap/EUR) mais NE PEUT PAS alimenter un scanner EU : ~3 barres OHLCV EU seulement + aucune énumération EU (RunScreener region=eu → 0, GetReferentialData region=eu renvoie la DB US). Scanner eu_smallcap BLOQUÉ jusqu'au backfill MCP.
+description: 2026-07-11 — RÉSOLU (backfill MCP le soir même) : OHLCV EU backfillé (AIR.PA 395 barres) + RunScreener region=EU renvoie des candidats → scanner eu_smallcap DÉBLOQUÉ. Résiduels : pas de country dans les rows screener (filtre PEA par ticker QueryData profile.country) + exclure UK/.L + market_cap=0 sur certains.
 metadata:
   type: project
 ---
 
-# Couverture EU du MCP marketdata = insuffisante pour un scanner (diag 2026-07-11)
+# Couverture EU du MCP marketdata — BLOQUÉE puis RÉSOLUE le 2026-07-11
 
-Workflow EU-PEA (100% MCP, sim-only) a diagnostiqué la vraie couverture EU du MCP `marketdata`.
-Verdict : **BLOCKED_MCP_EU** — rien fabriqué, rien commité (MCP HARD STOP + [[mcp-only-data-path]]).
+## ✅ RÉSOLU (soir 2026-07-11, backfill côté MCP)
+L'owner du MCP a livré le backfill EU (brief `docs/specs/mcp-eu-coverage-request.md`). Vérifié en session :
+- **Blocker 1 (OHLCV) LEVÉ** : `QueryData(AIR.PA, bars_daily, days=400)` → **395 barres** (2025-06-09→2026-07-08),
+  au lieu de ~3. Les indicateurs/ATR EU sont calculables.
+- **Blocker 2 (énumération) LEVÉ** : `RunScreener(region='EU', pass_expr='close>0')` → **20+ candidats**
+  (ready_symbols 3762/3763), le gate 200-barres passe. Avant = 0.
+- ⇒ **Scanner `eu_smallcap` DÉBLOQUÉ, constructible.** Re-jouer `scratchpad/eu-pea-scanner.mjs`.
+
+## Résiduels (non bloquants, à finir côté MCP — brief owner)
+- **Pas de champ `country` dans les rows du screener** (blocker 4) → le filtre PEA par domicile se fait
+  encore **par ticker** via `QueryData(types='profile').country` (UE/EEE ; EXCLURE UK/GB et les listings
+  `.L` de Londres, non PEA-éligibles). Le top-N non-rankté remonte des `0Axx.L` (artefact alphabétique).
+- **`market_cap: 0`** sur des rows (gap secmaster) → mcap à récupérer via QueryData quote par ticker.
+- `GetReferentialData region=eu` : à re-vérifier (avant : ignorait la région → DB US).
+
+## Contexte diag initial (avant fix) — pour mémoire
+Workflow EU-PEA (100% MCP, sim-only) avait diagnostiqué : **BLOCKED_MCP_EU** — rien fabriqué, rien commité
+(MCP HARD STOP + [[mcp-only-data-path]]).
 
 ## Ce qui MARCHE (per-ticker via QueryData)
 `QueryData(symbols=..., types=...)` sert bien l'EU en per-ticker : `quote` (price/marketCap/volume/52w/EUR),
