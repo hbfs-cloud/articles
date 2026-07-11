@@ -1,6 +1,6 @@
 # Migration Plan — Local Scanners → MCP `marketdata` Data Path
 
-**Statut : SPEC + POC #1 (`factor`) LIVRÉ. Aucun scanner supprimé, aucun univers legacy retiré.**
+**Statut : SPEC + POC #1 (`factor`) LIVRÉ + `momentum` voie `--ingest` DISPONIBLE (local reste primary, pas de flip — gate A/B non franchi). Aucun scanner supprimé, aucun univers legacy retiré.**
 **Auteur : recon agent · Date : 2026-07-11**
 
 > **✅ POC #1 — `factor` : voie MCP `--ingest` ACTIVE (2026-07-11).** `tools/factor-scanner.js` a
@@ -169,7 +169,19 @@ légère.
 2. **`stockbox`** — univers Nasdaq hardcodé (petit, US, couvert), déjà dtx-autoritatif (migrer la data ne
    déplace pas les chiffres du mode) ⇒ risque contenu.
 3. **`highvol`** — US, dtx-autoritatif, americanbull couvert. A/B régime-aware.
-4. **`momentum`** — cœur du composite ; migrer après highvol pour réutiliser le staging americanbull MCP.
+4. **`momentum` — voie MCP `--ingest` DISPONIBLE (2026-07-11), mais LOCAL reste PRIMARY (pas de flip).**
+   `tools/momentum-scanner.js` a désormais la branche `ingestMain()` (modèle EXACT de `factor-scanner.js --ingest` :
+   `loadMomentumStaging` fail-closed, `evaluateMomentumCandidate` — gates hérités penny<$5 + stop-band
+   [max(3%,1.5×ATR14),8%] + rr≥seuil-régime, fusion NON destructive dedup ticker dans `signals[]` +
+   `_scanRuns['momentum'|'momentum:<universe>']`, exit 3 + marqueur `incomplete` si staging absent/`mcp_ok:false`).
+   `--ingest` NE FETCH RIEN (ni Yahoo, ni BVC, ni cache). **finalFlip=FALSE** : le chemin LOCAL
+   (Yahoo + `americanbull-universe.json`) reste le **défaut/PRIMARY** ; `--ingest` est une voie **optionnelle,
+   non-défaut**. **Pourquoi pas de flip** : le gate A/B régime-aware + walk-forward (§4) n'a PAS été franchi —
+   momentum alimente le composite `signals[]` consommé par des modes **live** (turbo/dynamic/balanced/fortress/aplus)
+   ⇒ basculer en MCP-primary sans A/B validé risquerait une régression backtest et/ou une aggravation de la
+   parité Go↔articles (déjà en drift sur etf/etf_eu/trendline/casablanca/bull). Réversible, non-destructif :
+   aucun univers/fetcher legacy supprimé, aucun autre mode touché, chaîne SHA-256 des trades intacte.
+   `momentum --universe eu` **reste BLOQUÉ EU** (§5 BLOQUÉ). Migrer (flip) seulement après highvol + A/B validé.
 5. **`candlestick`(bull)** — americanbull ; a déjà un `--source api` REST à convertir en voie-B propre.
    ⚠️ drift parité connu → A/B strict.
 6. **`fractal`(americanbull)** puis **`fractal --universe metals`** (valider couverture métaux MCP d'abord).

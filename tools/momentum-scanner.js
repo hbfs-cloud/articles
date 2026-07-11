@@ -42,6 +42,19 @@ const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
+// ─── VOIE MCP (--ingest) — voie optionnelle data-path MCP (modèle factor-scanner.js --ingest) ──
+// Quand --ingest est fourni, le scanner NE FETCH RIEN (ni Yahoo, ni BVC, ni cache) : il PARSE un
+// staging JSON écrit par l'AGENT (qui, LUI, a appelé mcp__marketdata__* — OAuth2, zéro token). Le
+// chemin LOCAL (Yahoo/BVC + univers local) reste PRIMARY ; --ingest est une voie MCP optionnelle.
+const INGEST_PATH = getArg('ingest', null);
+// Univers effectif de la voie MCP (résolu depuis le staging dans ingestMain — défaut = --universe).
+let INGEST_UNIVERSE = UNIVERSE_NAME;
+
+// ─── Gates hérités (voie --ingest) — mêmes seuils que pead-scanner / scanner-filters ──────────
+const PENNY_MIN_PRICE = 5;      // penny < $5 rejeté (gate hérité)
+const STOP_MIN_PCT = 0.03;      // stop floor 3% absolu (scanner-filters min stop)
+const STOP_MAX_PCT = 0.08;      // maxStopPct 8% (modes-config.json)
+const STOP_ATR_MULT = 1.5;      // min_atr_multiple 1.5× ATR14 (retro Mar 27)
 
 // ─── tp1/tp2/rr exit model (mirrors data/modes-config.json modes.momentum) ───
 // partialTPGain=10 → the mode's REAL partial-TP trigger is +10% price gain (not entry+2R).
@@ -217,9 +230,203 @@ function scoreSymbol(bars, regime) {
   };
 }
 
+// ─── VOIE MCP : --ingest (voie optionnelle data-path MCP, modèle factor-scanner.js) ────────────
+// L'AGENT (claude -p / /scanner) appelle mcp__marketdata__* (RunScreener US + QueryData bars_daily),
+// score le momentum 20/50/100 comme scoreSymbol() et écrit /tmp/momentum-stage.json. CE script PARSE
+// le staging (jamais de fetch réseau, jamais d'appel MCP — OAuth2, zéro token), applique les gates
+// hérités (stop/rr/penny/sharia) et construit le pool du mode + _scanRuns[...] dans signals.json.
+//
+// ⛔ ZÉRO FABRICATION (MCP HARD STOP, fail-closed) : staging absent / vide / malformé / mcp_ok:false /
+// error / candidates non-array → marqueur _scanRuns[...] {incomplete:true, signals:0} + exit 3, RIEN
+// fabriqué. Aucun champ manquant/non-fini n'est inventé : le candidat tombe (comme pead/factor).
+//
+// Shape staging attendu : { mcp_ok:true, asof, regime?, universe?, universeFetched?,
+//   candidates:[ { ticker, name?, score, entry, stop?, sharia?, region?, universe?, horizon?,
+//                  metrics:{ mom20, mom50, mom100, rsi, atr, ... } } ] }
+function normRegime(r) { return String(r || '').toUpperCase().trim(); }
+// R/R ≥ 1,5 (RISK-ON/NEUTRAL/RECOVERY) ou ≥ 2,0 (EARLY RISK-OFF/RISK-OFF) — hérité (cf pead/factor).
+function rrThreshold(regime) {
+  const r = normRegime(regime);
+  return (r === 'RISK-OFF' || r === 'EARLY RISK-OFF') ? 2.0 : 1.5;
+}
+// Clé _scanRuns : 'momentum' (americanbull) | 'momentum:<universe>' — MÊME convention que la voie locale.
+function scanRunKey(universe) { return universe === 'americanbull' ? 'momentum' : `momentum:${universe}`; }
+function resolveSigPath() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
+}
+
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de pool. No-op en dry-run / hors signals.
+function writeMomentumIncompleteMarker(reason, extra) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPath();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude momentum.`);
+    return false;
+  }
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  if (!signals._scanRuns) signals._scanRuns = {};
+  signals._scanRuns[scanRunKey(INGEST_UNIVERSE)] = Object.assign({
+    at: new Date().toISOString(), universe: INGEST_UNIVERSE, dataPath: 'mcp-ingest',
+    signals: 0, incomplete: true, reason,
+  }, extra || {});
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _scanRuns['${scanRunKey(INGEST_UNIVERSE)}'] écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
+}
+
+// Ingest + validation du staging (mêmes règles fail-closed que pead/factor loadStaging).
+function loadMomentumStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!Array.isArray(data.candidates)) return { ok: false, reason: 'ingest_no_candidates_array' };
+  return { ok: true, data };
+}
+
+// Un candidat stagé → signal complet (shape identique à la voie locale) | null (+ raison de drop).
+// N'INVENTE aucune donnée : tout champ manquant/non-fini fait tomber le candidat (fail-closed).
+// Gates hérités : penny < $5 ; stop clampé ∈ [max(3%, 1.5×ATR14), 8%] (drop si 1.5×ATR > 8%) ;
+// rr ≥ seuil régime ; sharia passé tel quel (tag hérité).
+function evaluateMomentumCandidate(c, regime) {
+  const drop = reason => ({ sig: null, reason });
+  const num = v => (Number.isFinite(v) ? v : NaN);
+  const ticker = c.ticker && String(c.ticker).trim();
+  if (!ticker) return drop('no_ticker');
+  const m = c.metrics || {};
+  const entry = num(c.entry);
+  const score = num(c.score);
+  const atr = num(m.atr);
+  const mom20 = num(m.mom20), mom50 = num(m.mom50), mom100 = num(m.mom100), rsi = num(m.rsi);
+  if (!(entry > 0) || !Number.isFinite(score)
+      || !Number.isFinite(mom20) || !Number.isFinite(mom50) || !Number.isFinite(mom100) || !Number.isFinite(rsi))
+    return drop('missing_momentum_fields');
+  // Gate penny (< $5).
+  if (!(entry >= PENNY_MIN_PRICE)) return drop('penny_under_5');
+  // Gate stop : bande [max(3%, 1.5×ATR14), 8%] (hérité pead/scanner-filters). momentum = trade PAR
+  // LIGNE (contrairement à factor/rotation) → le stop-band de trade S'APPLIQUE bel et bien.
+  if (!(atr > 0)) return drop('no_atr');
+  const minDist = Math.max(entry * STOP_MIN_PCT, STOP_ATR_MULT * atr);
+  const maxDist = entry * STOP_MAX_PCT;
+  if (minDist > maxDist) return drop('atr_too_wide_for_stop_band'); // 1.5×ATR dépasse le plafond 8%
+  const rawStop = num(c.stop);
+  let stopDist = Number.isFinite(rawStop) ? entry - rawStop : NaN;
+  if (!(stopDist > 0)) stopDist = minDist;
+  stopDist = Math.min(Math.max(stopDist, minDist), maxDist);
+  const stop = +(entry - stopDist).toFixed(4);
+  // tp1/tp2 : modèle partial-TP momentum (mirrors modes-config.json modes.momentum.partialTPGain).
+  const tp1 = +(entry * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(2);
+  const tp2 = +(entry * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(2);
+  // Gate rr ≥ seuil régime.
+  const rr = +((tp1 - entry) / (entry - stop)).toFixed(2);
+  if (rr < rrThreshold(regime)) return drop(`rr_below_${rrThreshold(regime)}`);
+  const region = c.region || (INGEST_UNIVERSE === 'americanbull' ? 'US' : String(INGEST_UNIVERSE).toUpperCase());
+  return {
+    sig: {
+      ticker, name: c.name || ticker, score: +score, strategy: 'MomentumRotation',
+      entry: +entry.toFixed(2), stop: +stop.toFixed(2), tp1, tp2, rr: `1:${rr.toFixed(2)}`,
+      horizon: Number.isFinite(num(c.horizon)) ? c.horizon : 21,
+      region, universe: c.universe || INGEST_UNIVERSE,
+      sharia: c.sharia != null ? c.sharia : null,
+      thesis: `MomRot score ${score.toFixed(1)}: Mom20=${(mom20 * 100).toFixed(1)}%, Mom50=${(mom50 * 100).toFixed(1)}%, Mom100=${(mom100 * 100).toFixed(1)}%, RSI=${rsi.toFixed(0)}`,
+      extension: { mom20: +mom20.toFixed(4), mom50: +mom50.toFixed(4), mom100: +mom100.toFixed(4) },
+      dataPath: 'mcp-ingest',
+    },
+    reason: null,
+  };
+}
+
+// Branche --ingest : parse le staging, applique les gates hérités, trie par score, garde top-N, et
+// construit le pool du mode (signals.signals[]) + _scanRuns[...] (fusion NON destructive, dedup ticker).
+function ingestMain() {
+  if (OUTPUT_MODE !== 'signals' && OUTPUT_MODE !== 'stdout' && OUTPUT_MODE !== 'json') {
+    console.error(`❌ --output inconnu: ${OUTPUT_MODE} (attendu: signals|stdout|json)`); process.exit(1);
+  }
+  const staged = loadMomentumStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging momentum indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeMomentumIncompleteMarker(staged.reason, { ingestPath: INGEST_PATH || null });
+    process.exit(3);
+  }
+  const data = staged.data;
+  const regime = REGIME || data.regime || 'NEUTRAL';
+  const candidates = data.candidates;
+  INGEST_UNIVERSE = data.universe || (candidates[0] && candidates[0].universe) || UNIVERSE_NAME;
+  const universeFetched = Number.isFinite(data.universeFetched) ? data.universeFetched : candidates.length;
+
+  console.log('🔄 Momentum Rotation Scanner — VOIE MCP (--ingest, data-path MCP optionnel)');
+  console.log(`   Staging: ${INGEST_PATH} | candidates: ${candidates.length} | universe: ${universeFetched} (${INGEST_UNIVERSE})`);
+  console.log(`   Date: ${SCAN_DATE} | Regime: ${regime} | rr seuil: ${rrThreshold(regime)} | top: ${TOP_N}`);
+
+  const sigs = [];
+  const dropStats = {};
+  for (const c of candidates) {
+    const { sig, reason } = evaluateMomentumCandidate(c, regime);
+    if (sig) sigs.push(sig);
+    else dropStats[reason] = (dropStats[reason] || 0) + 1;
+  }
+  sigs.sort((a, b) => b.score - a.score);
+  const top = sigs.slice(0, TOP_N);
+
+  console.log(`\n✅ ${sigs.length} signaux momentum (gates hérités passés), top ${top.length} :`);
+  for (const s of top) {
+    console.log(`  ${s.ticker.padEnd(8)} score:${s.score.toFixed(1).padStart(6)} entry:${s.entry} stop:${s.stop} tp1:${s.tp1} R/R:${s.rr}`);
+  }
+  if (Object.keys(dropStats).length) {
+    console.log('   drops:', Object.entries(dropStats).map(([k, v]) => `${k}=${v}`).join(' '));
+  }
+
+  if (DRY_RUN) { console.log('\n🏷️  Dry run — aucun fichier écrit.'); return top; }
+
+  if (OUTPUT_MODE === 'json') {
+    const outPath = path.join(ROOT, 'data', `momentum-scan-${INGEST_UNIVERSE}-${SCAN_DATE}.json`);
+    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, regime, universe: INGEST_UNIVERSE, dataPath: 'mcp-ingest', candidates: top }, null, 2));
+    console.log(`\n📁 Écrit dans ${outPath}`);
+    return top;
+  }
+
+  if (OUTPUT_MODE === 'signals') {
+    const sigPath = resolveSigPath();
+    if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} introuvable`); process.exit(1); }
+    const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+    // Fusion NON DESTRUCTIVE, dedup par ticker (identique à la voie locale) : on préserve le reste du
+    // fichier (autres scanners + _scanRuns) et on n'écrase pas un ticker déjà présent (coexistence local).
+    if (!Array.isArray(signals.signals)) signals.signals = [];
+    const existing = new Set(signals.signals.map(s => s.ticker));
+    let added = 0;
+    for (const s of top) {
+      if (existing.has(s.ticker)) continue;
+      signals.signals.push(s);
+      existing.add(s.ticker);
+      added++;
+    }
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns[scanRunKey(INGEST_UNIVERSE)] = {
+      at: new Date().toISOString(), universe: INGEST_UNIVERSE, dataPath: 'mcp-ingest',
+      candidates: sigs.length, signals: top.length, added, regime, incomplete: false,
+    };
+    fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+    console.log(`\n📁 ${added} signaux momentum ajoutés (voie MCP) dans ${sigPath}`);
+  }
+  return top;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
+  // VOIE MCP (optionnelle) : si --ingest, on PARSE le staging agent→MCP et on NE FETCH RIEN (ni Yahoo,
+  // ni BVC, ni univers local). Le chemin LOCAL ci-dessous reste PRIMARY (défaut, --ingest absent).
+  if (INGEST_PATH) { ingestMain(); return; }
+
   const universe = loadUniverse();
   console.log(`🔄 Momentum Rotation Scanner (systematic-tss port)`);
   console.log(`   Universe: ${universe.length} tickers (${UNIVERSE_NAME}) | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
