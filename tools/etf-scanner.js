@@ -221,6 +221,13 @@ const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 // Established-liquidity gate is OFF by default (ISO with portfolio_etf_us.yaml which has none).
 // Opt in with --established-gate for legacy multi-survivors parity. US-only regardless.
 const ESTABLISHED_GATE = hasFlag('established-gate');
+// ─── VOIE MCP (--ingest) — parité EXACTE avec factor-scanner.js --ingest ──────────────────────
+// Quand --ingest <path> est fourni (convention: /tmp/etf-stage.json), le scanner NE FETCH RIEN
+// (ni Yahoo, ni cache) : il PARSE un staging JSON écrit par l'AGENT (qui, LUI, a appelé
+// mcp__marketdata__* — OAuth2, zéro token dans un subprocess node). Le chemin LOCAL (Yahoo +
+// univers etf-{us,eu}-universe.json) reste 100% fonctionnel et PRIMARY ; --ingest est une voie
+// MCP OPTIONNELLE, activée uniquement quand l'argument est présent. Absent → comportement inchangé.
+const INGEST_PATH = getArg('ingest', null);
 
 // Regime: CLI > signals.json > default
 function resolveRegime() {
@@ -689,9 +696,237 @@ function diversifyByCategory(candidates, limit) {
   return result;
 }
 
+// ─── VOIE MCP : --ingest (parité factor-scanner.js --ingest) ─────────────────────────────────
+// L'AGENT (claude -p / /scanner) appelle mcp__marketdata__* :
+//   RunScreener/QueryData(types=bars_daily[,technicals]) sur l'univers ETF (US ou EU) → il calcule
+//   par ETF le cluster régime-adaptatif + score + entry + stop (ATR×STOP_ATR_MULT) + indicateurs
+//   (mom20/rsi/atrPct) EXACTEMENT comme scoreSymbol() local, et écrit /tmp/etf-stage.json.
+// CE script PARSE le staging (jamais de fetch réseau, jamais d'appel MCP), applique les gates
+// HÉRITÉS (blacklist, min_price/penny, min_score, stop valide, rr, sharia), diversifie (max 2 /
+// catégorie) et tronque à top-N — MÊME assemblage de pool que la voie locale (shape identique).
+//
+// ⛔ ZÉRO FABRICATION (MCP HARD STOP) : staging absent / vide / malformé / mcp_ok:false / error →
+// marqueur _scanRuns[etf|etf:etf_eu] {incomplete:true, signals:0} + exit 3, RIEN fabriqué (comme factor).
+//
+// Gates hérités appliqués (les MÊMES que scoreSymbol()/main() local) :
+//   • blacklist (scanner_filters.params.blacklist) → rejeté
+//   • penny : entry < min_price (US 10 / EU 5) → rejeté
+//   • min_score : score < EFFECTIVE_MIN_SCORE (US 0 / EU 80) → rejeté
+//   • stop : stop hérité du staging DOIT être un stop protecteur valide (0 < stop < entry, risk>0) →
+//     sinon rejeté. tp1/tp2/rr sont RE-DÉRIVÉS du modèle d'exit du mode (PARTIAL_TP_GAIN_PCT), jamais
+//     lus du staging (l'agent ne peut pas injecter un R/R arbitraire).
+//   • rr : sanity — rr = (tp1-entry)/risk ; rr ≤ 0 (structure dégénérée) → rejeté (miroir de la garde-fou
+//     rr de factor ; le modèle partial-TP 10% de l'ETF donne un rr>0 dès que le stop est sous l'entrée).
+//   • sharia : tag hérité, passé tel quel (null pour ETF).
+//
+// Shape attendu ({ mcp_ok:true, asof?, regime?, universeFetched?, candidates:[...] }) — chaque candidat :
+//   { ticker, name?, score, entry, stop, cluster?, mom20?, rsi?, atrPct?, category?, sharia?,
+//     estDolVol?, estBars? }  (estDolVol/estBars requis SEULEMENT si --established-gate).
+function resolveSigPathEtf() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
+}
+// _scanRuns key: 'etf' (US default) | 'etf:etf_eu' (EU) — IDENTIQUE à la voie locale.
+function etfScanRunKey() { return ACTIVE.tag === 'etf' ? 'etf' : `etf:${ACTIVE.tag}`; }
+
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de signal. No-op en dry-run / hors signals.
+function writeEtfIncompleteMarker(reason, extra) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPathEtf();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude etf.`);
+    return false;
+  }
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  if (!signals._scanRuns) signals._scanRuns = {};
+  signals._scanRuns[etfScanRunKey()] = Object.assign({
+    at: new Date().toISOString(), universe: ACTIVE.tag, dataPath: 'mcp-ingest',
+    candidates: 0, signals: 0, added: 0, incomplete: true, reason,
+  }, extra || {});
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _scanRuns['${etfScanRunKey()}'] écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
+}
+
+// Ingest + validation du staging (mêmes règles fail-closed que factor-scanner.loadFactorStaging).
+function loadEtfStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!Array.isArray(data.candidates)) return { ok: false, reason: 'ingest_no_candidates_array' };
+  return { ok: true, data };
+}
+
+// Un candidat stagé → row {ticker, name, score, entry, stop, tp1, tp2, rr, sharia, ...} | null (+ raison drop).
+// N'INVENTE aucune donnée : tout champ requis manquant/non-fini fait tomber le candidat (fail-closed).
+function evaluateEtfCandidate(c) {
+  const drop = reason => ({ row: null, reason });
+  const num = v => (Number.isFinite(v) ? v : NaN);
+  const ticker = c.ticker && String(c.ticker).trim();
+  if (!ticker) return drop('no_ticker');
+  // Gate blacklist (scanner_filters.params.blacklist).
+  if (ACTIVE_BLACKLIST.has(ticker)) return drop('blacklist');
+  const entry = num(c.entry);
+  const stop = num(c.stop);
+  const score = num(c.score);
+  if (!(entry > 0)) return drop('bad_entry');
+  if (!Number.isFinite(score)) return drop('missing_score');
+  // Gate penny (min_price per universe : US 10 / EU 5).
+  if (!(entry >= EFFECTIVE_MIN_PRICE)) return drop('penny_under_min_price');
+  // Gate min_score (scanner_filters.min_score : US 0 / EU 80).
+  if (score < EFFECTIVE_MIN_SCORE) return drop('below_min_score');
+  // Gate stop : stop protecteur valide sous l'entrée (risk>0). Le stop est hérité du staging (ATR×mult
+  // côté agent) ; on ne le recalcule pas mais on le VALIDE.
+  if (!(stop > 0) || !(stop < entry)) return drop('bad_stop');
+  const risk = entry - stop;
+  if (!(risk > 0)) return drop('nonpositive_risk');
+  // Modèle d'exit du mode (RE-DÉRIVÉ, jamais lu du staging) — parité main() local.
+  const tp1 = +(entry * (1 + PARTIAL_TP_GAIN_PCT / 100)).toFixed(2);
+  const tp2 = +(entry * (1 + (PARTIAL_TP_GAIN_PCT * 2) / 100)).toFixed(2);
+  const rr = +((tp1 - entry) / risk).toFixed(2);
+  // Gate rr (sanity — structure dégénérée uniquement ; miroir de la garde-fou rr de factor).
+  if (!(rr > 0)) return drop('nonpositive_rr');
+  return {
+    row: {
+      ticker, name: c.name || ticker, score: +score,
+      entry: +entry.toFixed(2), stop: +stop.toFixed(2), tp1, tp2, rr: `1:${rr.toFixed(2)}`,
+      sharia: c.sharia != null ? c.sharia : null,
+      cluster: c.cluster || 'MCP', mom20: num(c.mom20), rsi: num(c.rsi), atrPct: num(c.atrPct),
+      category: c.category || ACTIVE.categories[ticker] || 'OTHER',
+      estDolVol: num(c.estDolVol), estBars: num(c.estBars),
+    },
+    reason: null,
+  };
+}
+
+// Diversification catégorielle (max 2/catégorie) sur les rows stagées — même logique que
+// diversifyByCategory local, mais lit r.category (staging-aware, fallback ACTIVE.categories).
+function diversifyRowsByCategory(rows, limit) {
+  const maxPerCategory = 2;
+  const count = {};
+  const out = [];
+  for (const r of rows) {
+    if (out.length >= limit) break;
+    const cat = r.category || 'OTHER';
+    if ((count[cat] || 0) >= maxPerCategory) continue;
+    out.push(r);
+    count[cat] = (count[cat] || 0) + 1;
+  }
+  return out;
+}
+
+// Branche --ingest : parse le staging, applique les gates hérités, diversifie + top-N, écrit
+// signals.signals (tag universe=ACTIVE.tag) + _scanRuns[key] (fusion non destructive).
+function ingestMain() {
+  const staged = loadEtfStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging ETF indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeEtfIncompleteMarker(staged.reason, { ingestPath: INGEST_PATH || null });
+    process.exit(3);
+  }
+  const data = staged.data;
+  const regime = getArg('regime', null) || data.regime || REGIME;
+  const candidates = data.candidates;
+  const universeFetched = Number.isFinite(data.universeFetched) ? data.universeFetched : candidates.length;
+
+  console.log(`📊 ETF Momentum Scanner — VOIE MCP (--ingest) — ${ACTIVE.label} universe`);
+  console.log(`   Staging: ${INGEST_PATH} | candidates: ${candidates.length} | universe: ${universeFetched} | tag: ${ACTIVE.tag}`);
+  console.log(`   Date: ${SCAN_DATE} | Regime: ${regime} | minPrice: ${EFFECTIVE_MIN_PRICE} | minScore: ${EFFECTIVE_MIN_SCORE} | stop×ATR: ${STOP_ATR_MULT}`);
+
+  const rows = [];
+  const dropStats = {};
+  for (const c of candidates) {
+    const { row, reason } = evaluateEtfCandidate(c);
+    if (row) rows.push(row);
+    else dropStats[reason] = (dropStats[reason] || 0) + 1;
+  }
+  // Ordre déterministe : score desc, ticker asc (comme le tri local / Go sort.Slice).
+  rows.sort((a, b) => (b.score - a.score) || (a.ticker < b.ticker ? -1 : a.ticker > b.ticker ? 1 : 0));
+
+  // Diversification (max 2/catégorie) puis top-N — parité voie locale.
+  let top = diversifyRowsByCategory(rows, TOP_N);
+
+  // Established-liquidity gate (US only, opt-in) — parité voie locale : appliqué APRÈS diversification,
+  // droppe (jamais backfill) les noms sans médiane $-vol suffisante. Requiert estDolVol/estBars stagés ;
+  // absents (NaN) → droppés (conservateur), car on ne peut pas VÉRIFIER le seuil sans les fabriquer.
+  if (!IS_EU && ESTABLISHED_GATE) {
+    const before = top.length;
+    top = top.filter(r => Number.isFinite(r.estBars) && r.estBars >= ESTABLISHED_LOOKBACK_DAYS
+      && Number.isFinite(r.estDolVol) && r.estDolVol >= MIN_ESTABLISHED_DOLLAR_VOLUME);
+    const dropped = before - top.length;
+    if (dropped > 0) console.log(`   Established-liquidity gate: dropped ${dropped} (median $-vol < $${(MIN_ESTABLISHED_DOLLAR_VOLUME / 1e6)}M over ${ESTABLISHED_LOOKBACK_DAYS}d)`);
+  }
+
+  console.log(`\n✅ ${rows.length} candidats retenus (gates), top ${top.length} (diversifié) :`);
+  for (const r of top) {
+    console.log(`  📊 ${r.ticker.padEnd(6)} score:${String(r.score).padStart(7)} [${r.cluster}] Mom20:${Number.isFinite(r.mom20) ? (r.mom20 * 100).toFixed(1) : 'n/a'}% RSI:${Number.isFinite(r.rsi) ? r.rsi.toFixed(0) : 'n/a'} ATR%:${Number.isFinite(r.atrPct) ? (r.atrPct * 100).toFixed(1) : 'n/a'}% (${r.category})`);
+  }
+  if (Object.keys(dropStats).length) {
+    console.log('   drops:', Object.entries(dropStats).map(([k, v]) => `${k}=${v}`).join(' '));
+  }
+
+  if (DRY_RUN) { console.log('\n🏷️  Dry run — aucun fichier écrit.'); return top; }
+
+  if (OUTPUT_MODE === 'json') {
+    const suffix = ACTIVE.tag === 'etf' ? '' : `-${ACTIVE.tag}`;
+    const outPath = path.join(ROOT, 'data', `etf-scan-${SCAN_DATE}${suffix}.json`);
+    fs.writeFileSync(outPath, JSON.stringify({
+      scanDate: SCAN_DATE, regime, dataPath: 'mcp-ingest', candidates: top,
+    }, null, 2));
+    console.log(`\n📁 Written to ${outPath}`);
+    return top;
+  }
+
+  if (OUTPUT_MODE === 'signals') {
+    const sigPath = resolveSigPathEtf();
+    if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
+    const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+    // Fusion NON DESTRUCTIVE, dedup par ticker : on préserve le reste du fichier (autres scanners +
+    // _scanRuns) et on n'écrase pas un signal du même ticker déjà présent — modèle voie locale.
+    if (!Array.isArray(signals.signals)) signals.signals = [];
+    const existing = new Set(signals.signals.map(s => s.ticker));
+    let added = 0;
+    for (const r of top) {
+      if (existing.has(r.ticker)) continue;
+      signals.signals.push({
+        ticker: r.ticker, name: r.name, score: r.score, strategy: 'ETFMomentum',
+        entry: r.entry, stop: r.stop, tp1: r.tp1, tp2: r.tp2, rr: r.rr,
+        horizon: 21, region: ACTIVE.region, universe: ACTIVE.tag,
+        sharia: r.sharia,
+        thesis: `ETF ${r.cluster}: Mom20=${Number.isFinite(r.mom20) ? (r.mom20 * 100).toFixed(1) : 'n/a'}%, RSI=${Number.isFinite(r.rsi) ? r.rsi.toFixed(0) : 'n/a'}, ATR%=${Number.isFinite(r.atrPct) ? (r.atrPct * 100).toFixed(1) : 'n/a'}%`,
+        extension: { cluster: r.cluster, atrPct: Number.isFinite(r.atrPct) ? +r.atrPct.toFixed(4) : null },
+        dataPath: 'mcp-ingest',
+      });
+      existing.add(r.ticker);
+      added++;
+    }
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns[etfScanRunKey()] = {
+      at: new Date().toISOString(), universe: ACTIVE.tag, dataPath: 'mcp-ingest',
+      candidates: rows.length, signals: top.length, added, regime, incomplete: false,
+    };
+    fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+    console.log(`\n📁 Appended ${added} ETF signals (voie MCP) to ${sigPath}`);
+  }
+  return top;
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
+  // VOIE MCP (--ingest) : si présent, on PARSE le staging agent→MCP et on NE FETCH RIEN (ni Yahoo, ni
+  // univers local). Le chemin local ci-dessous reste PRIMARY et 100% inchangé quand --ingest est absent.
+  if (INGEST_PATH) { ingestMain(); return; }
+
   console.log(`📊 ETF Momentum Scanner (systematic-tss port) — ${ACTIVE.label} universe`);
   console.log(`   Universe: ${ACTIVE.tickers.length} ETFs (${ACTIVE.tag}) | minScore: ${EFFECTIVE_MIN_SCORE} | top: ${TOP_N}`);
   console.log(`   Params: ${PARAMS_SOURCE === 'embedded-defaults' ? 'embedded defaults' : path.relative(ROOT, PARAMS_SOURCE)} (maxATR ${MAX_ATR_RATIO}, minPrice ${EFFECTIVE_MIN_PRICE}, recovery_max_rsi ${paramF(PARAMS, 'recovery_max_rsi', 48)})`);

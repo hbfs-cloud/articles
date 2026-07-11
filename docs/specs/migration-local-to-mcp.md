@@ -1,6 +1,6 @@
 # Migration Plan — Local Scanners → MCP `marketdata` Data Path
 
-**Statut : SPEC + POC #1 (`factor`) LIVRÉ + `momentum` voie `--ingest` DISPONIBLE (local reste primary, pas de flip — gate A/B non franchi). Aucun scanner supprimé, aucun univers legacy retiré.**
+**Statut : SPEC + POC #1 (`factor`) LIVRÉ + `momentum` et `etf`(US) voie `--ingest` DISPONIBLE (local reste primary, pas de flip — gate A/B non franchi ; `etf` est en drift de parité connu, la migration ne l'aggrave PAS). Aucun scanner supprimé, aucun univers legacy retiré.**
 **Auteur : recon agent · Date : 2026-07-11**
 
 > **✅ POC #1 — `factor` : voie MCP `--ingest` ACTIVE (2026-07-11).** `tools/factor-scanner.js` a
@@ -188,7 +188,24 @@ légère.
 7. **`hybrid`** — americanbull (réutilise staging), mode live.
 8. **`forex`** — valider couverture FX MCP ; sinon rester Yahoo. dtx-autoritatif.
 9. **`trendline`** — **drift connu** + indices/FX ⇒ tardif, A/B strict, valider couverture indices/FX MCP.
-10. **`etf`(US)** — **drift connu**, gros univers (~4000) ⇒ tardif, A/B strict.
+10. **`etf`(US) — voie MCP `--ingest` DISPONIBLE (2026-07-11), mais LOCAL reste PRIMARY (pas de flip).**
+    `tools/etf-scanner.js` a désormais la branche `ingestMain()` (modèle EXACT de `factor-scanner.js --ingest` :
+    `loadEtfStaging` fail-closed, `evaluateEtfCandidate` — gates hérités blacklist + penny (`min_price` US 10) +
+    `min_score` + stop protecteur valide (`0<stop<entry`) + sanity `rr>0` ; tp1/tp2/rr RE-DÉRIVÉS du modèle
+    partial-TP du mode (`PARTIAL_TP_GAIN_PCT`), jamais lus du staging ; diversification max 2/catégorie +
+    established-liquidity gate opt-in ; fusion NON destructive dedup ticker dans `signals[]` +
+    `_scanRuns['etf'|'etf:etf_eu']`, exit 3 + marqueur `incomplete` si staging absent/`mcp_ok:false`).
+    `--ingest` NE FETCH RIEN (ni Yahoo, ni univers `etf-{us,eu}-universe.json`, ni cache). **finalFlip=FALSE** :
+    le chemin LOCAL (Yahoo + `etf-us-universe.json`) reste le **défaut/PRIMARY** ; `--ingest` est une voie
+    **optionnelle, non-défaut**. **Pourquoi pas de flip** : `etf` fait partie des modes en **drift de parité
+    Go↔articles DÉJÀ flaggé par qa-check** (§4 ÉLEVÉ) — le gate DUR interdit de basculer en MCP-primary si l'A/B
+    n'a PAS prouvé (1) aucune régression backtest (régime-aware + walk-forward) ET (2) aucune aggravation de la
+    parité. L'A/B n'a pas franchi ce gate ⇒ on garde LOCAL primary et on laisse `--ingest` disponible mais
+    non-défaut (la migration n'aggrave PAS le drift : le chemin local est inchangé). Réversible, non-destructif :
+    aucun univers/fetcher legacy supprimé, gros univers (~4000) inchangé, aucun autre mode touché, chaîne
+    SHA-256 des trades intacte. `etf --universe etf_eu` **reste BLOQUÉ EU** (couverture MCP EU insuffisante —
+    le code accepte l'argument par parité mais l'AGENT ne produit AUCUN staging EU). Flip seulement après A/B
+    validé qui ne dégrade ni le backtest ni la parité.
 
 **BLOQUÉ (ne pas migrer avant backfill MCP EU confirmé) :**
 - **`etf_eu`** (mode live) — dépend de la donnée EU. `RunScreener region=eu` = 0, bars EU ≈ 3.
