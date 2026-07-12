@@ -1,0 +1,119 @@
+# Retail HighVol + StockBox — book 50/50 (temporal-diversification, cost-honest).
+#
+# WHY THIS BOOK: two long-only, liquid, cost-cheap US momentum sleeves whose drawdowns do NOT
+# coincide (highvol suffers the 2022 bear on false breakouts; stockbox suffers the Q1-2025 Nasdaq
+# pullback). Blending 50/50 shifts the frontier instead of sliding along it:
+#   MEASURED cost-honest (TOTAL_RETURN=1, FROZEN_BARS_DATE=2026-07-08, COST_SPREAD_BPS=10,
+#   -max-participation 0.1, 2021-01-01..2026-06-30):
+#     us_highvol seul : CAGR 86.7% / DD 28.6% / Sharpe 1.83 / R2 0.93
+#     stockbox  seul : CAGR 76.0% / DD 31.7% / Sharpe 1.64 / R2 0.83
+#     BOOK 50/50     : CAGR 81.7% / DD 25.0% / Sharpe 2.07 / R2 0.92   <-- DD < chacun, Sharpe > chacun
+#   Walk-forward (anneal_optimizer, seed42, config/optimizer/highvol_stockbox_weights.yaml, ser):
+#     W1 2021-22 30.8%/DD23.0  ·  W2 2022-24 104.8%/DD24.4  ·  W3 2024-26 132.9%/DD25.1  — STABLE plateau,
+#     baseline 50/50 = recommended (rec_score 3.891, std 0.010, PAS de sharp peak).
+#
+# ADVERSARIAL AUDIT (2026-07-12) — verdict DÉPLOYABLE AVEC RÉSERVES :
+#   [OK, MESURÉ] Overlap de noms INFIRMÉ comme risque : seulement 5 noms tradés par les 2 sleeves
+#     (ARM,DDOG,GFS,PLTR,SMCI) = 6% des noms stockbox / 2% highvol ; sur 2024-06→2026-06 seulement
+#     3% des jours ont ≥1 nom partagé simultanément, $-exposition commune moyenne 0.5% du book.
+#     Les holdings sont quasi disjoints → la décorrélation est RÉELLE (pas qu'un décalage temporel).
+#   [RÉSERVE #1 — factor] La diversification achète une ASSURANCE DE TIMING, pas de facteur : les
+#     deux sleeves restent du momentum US semis-lourd. Un choc de FACTEUR (cycle semis/taux) frappe
+#     les deux ; le DD 25% est un plancher HISTORIQUE (2022 vs 2025 décalés), pas garanti si les deux
+#     sleeves sont pleins en même temps. Vrai diversificateur = sleeve non-US-momentum (hors scope).
+#   [RÉSERVE #2 — look-ahead] whitelist stockbox = membership NDX-2026 ; ALAB/NBIS (IPO 2024) + ARM
+#     (IPO 2023) sont dans les 8 positions finales mais n'existaient pas dans le NDX en 2021 →
+#     magnitude surestimée (biais commun à tout le book : ranking fiable, magnitude optimiste).
+#   [RÉSERVE #3 — exec] stockbox=index-rotation émet des MARKET nus → desk-guard les passe en
+#     LIMIT@prev_close×1.03 + stop 2×ATR NON backtesté : une rotation gap-up >3% peut ne pas remplir
+#     (slot en cash, gagnant raté). Non chiffré (export sans prev_close/rotation). À mesurer sur les
+#     226 rotations ; envisager MARKET réel pour la leg d'achat de rotation. highvol=bracket natif OK.
+#   [OK] Coûts : stress spread 20bp = CAGR 77.4/DD24.9/Sharpe1.98/R2 0.92 (vs 81.7/25.0/2.07 @10bp) —
+#     barre CAGR>DD tenue avec marge massive (low-turnover : 226 rot + 627 trades). Capacité 100k€ OK
+#     (~23 lignes ~2-4k€, gate $3M/j + max-participation 0.1 → <1% du volume/jour, fractional Alpaca).
+#
+# Prefetch stockbox whitelist d'abord: ./prefetch -config config/dtx/portfolio_highvol_stockbox.yaml
+portfolios:
+- id: highvol_stockbox
+  name: Retail HighVol + StockBox 50/50
+  currency: USD
+  initial_capital: 100000
+  allocations:
+
+  # === SLEEVE 1: US HighVol Breakout (50%) — identique à portfolio_us_highvol.yaml ===
+  - name: us_highvol
+    region: US
+    currency: USD
+    blacklist: SKYT,ALAB,RERE,QBTS,ATAI,DQ,NTLA,LCID,TE,IBRX,KOD,AUR,RXRX,TERN,NVAX,ASTS,DAWN,GLDD
+    percent: 50
+    broker: alpaca
+    strategy: highvol-breakout-corr
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.50
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 1_000_000_000
+    min_volume: 10_000_000
+    max_open_positions: 15
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    max_position_value: 500_000
+    max_correlation: 0.80
+    base_stop_atr: 2.5
+    take_profit_pct: 30
+    dynamic_max_loss:
+      risk_on: 0.35
+      recovery: 0.25
+      neutral: 0.30
+      early_risk_off: 0.20
+      risk_off: 0.15
+    trail_trigger_pct: 0.12
+    trail_atr_mult: 1.5
+    timeout_days: 14
+    limit_price_markup: 1.025
+    entry_stop_atr_mult: 6.0
+    max_portfolio_risk_pct: 0.05
+    dynamic_max_positions:
+      risk_on: 15
+      recovery: 8
+      neutral: 3
+      early_risk_off: 3
+      risk_off: 0
+    scanner_filters:
+      params:
+        entry_gap_down_pct: 0.13
+        entry_candidate_buffer: 8
+      min_p80_dollar_volume: 5_000_000
+      min_established_dollar_volume: 3_000_000
+      established_lookback_days: 60
+      min_atr_pct: 0.07
+      max_atr_ratio: 0.10
+      min_dist_ma20: 0.05
+      min_vol_ratio: 1.5
+      max_volatility_index: 28
+      max_rsi: 85
+      min_score: 50
+      excluded_sectors: [Real Estate, Utilities, Materials, Communication Services]
+
+  # === SLEEVE 2: StockBox Nasdaq (50%) — identique à portfolio_stockbox_nasdaq.yaml ===
+  - name: stockbox_nasdaq
+    region: US
+    currency: USD
+    percent: 50
+    broker: alpaca
+    strategy: index-rotation
+    stocks: true
+    etfs: false
+    pure: true
+    whitelist: "NVDA,AAPL,MSFT,AMZN,AVGO,META,GOOGL,GOOG,TSLA,NFLX,COST,PLTR,ASML,CSCO,AMD,TMUS,AZN,LIN,INTU,PEP,ISRG,BKNG,ADBE,QCOM,TXN,AMGN,GILD,HON,CMCSA,AMAT,PANW,ADP,VRTX,MU,ADI,LRCX,MELI,KLAC,SBUX,INTC,CRWD,MDLZ,CTAS,CEG,CDNS,ORLY,MAR,SNPS,PYPL,MRVL,REGN,FTNT,DASH,ADSK,WDAY,MNST,NXPI,ROP,AEP,TTD,CPRT,PCAR,CHTR,PAYX,ROST,KDP,FANG,ODFL,FAST,EA,BKR,VRSK,CTSH,EXC,XEL,CCEP,GEHC,KHC,LULU,DDOG,TTWO,IDXX,CSGP,ANSS,ON,ZS,BIIB,ARM,MDB,GFS,WBD,ILMN,DXCM,MCHP,SMCI,STX,SNDK,ALAB,NBIS"
+    regime_tickers:
+      index: ^IXIC
+      volatility: ^VIX
+    scanner_filters:
+      params:
+        rotation_lookback_days: 84
+        rotation_top_k: 8
+        rotation_rebalance_days: 21
+        rotation_abs_filter: 0
+        rotation_cooldown_days: 35
