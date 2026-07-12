@@ -7,63 +7,57 @@
  * Source: internal/engine/scanner_forex.go (3-axis scoring: Momentum 40%,
  * Mean Reversion 30%, Relative Strength vs DXY 30%).
  *
- * SCORING (scanner_forex.go:141-251):
- *   MOMENTUM (40%) — scanner_forex.go:141-172:
- *     momRaw   = ret30d*0.40 + ret14d*0.35 + ret7d*0.25            (lines 142-159)
- *     trendBonus = 15 (price>MA20>MA50>MA200) / 10 (price>MA50>MA200)
- *                  / 5 (price>MA200) / 0                            (lines 162-169)
- *     momentumScore = clamp(momRaw*5 + 25 + trendBonus, 0, 50)     (line 172)
+ * ─── MCP-PRIMARY (décret archi 2026-07-12 « le MCP fait foi ») ─────────────────────────────────
+ * L'univers forex (8 majors + DXY) est COUVERT par le MCP marketdata (bars_daily des paires =X +
+ * DX-Y.NYB, frais ≤48h, cohérents — volume=0 est NORMAL en FX). La voie --ingest (staging produit
+ * par l'AGENT via mcp__marketdata__* — OAuth2, zéro token) est désormais le SEUL chemin data de la
+ * SCAN. Le fetch Yahoo (query1.finance.yahoo.com), son cache prix daté (lib/price-cache) et la
+ * lecture de l'univers local (data/forex-universe.json) ont été RETIRÉS de la voie de scan : ce node
+ * NE FETCH PLUS RIEN (ni réseau, ni cache) pour scanner.
  *
- *   MEAN REVERSION (30%) — scanner_forex.go:174-199:
- *     bbPctB = calcBBPctB(20, 2.0) ; distMA20 = (price-MA20)/MA20  (lines 176-180)
- *     if bbPctB<0.3 && rsi<40: mrScore = (0.3-bbPctB)*100 + (40-rsi)*0.5  (184-186)
- *     if bbPctB>0.8 && rsi>65: mrScore = -10                       (lines 188-190)
- *     if |distMA20|>0.05 && distMA20<-0.03: mrScore += 10          (lines 192-197)
- *     mrScoreNorm = clamp(mrScore, -10, 40)                        (line 199)
+ * forex est dtx-backed : l'equity/les ordres du mode viennent DÉJÀ du MCP dtx (config forex, source
+ * autoritative). Ce scanner JS ne produit qu'un MARQUEUR D'AFFICHAGE (le pool `forex_pool` +
+ * `_scanRuns.forex`) rendu sur scanner/status. On bascule la SOURCE de ce marqueur du local/Yahoo
+ * vers le MCP marketdata (cohérence du décret), SANS toucher au chemin dtx.
  *
- *   RELATIVE STRENGTH (30%) — scanner_forex.go:201-236:
- *     pairMom = ret30d ; isUSDBase = symbol.startsWith("USD")      (lines 208-209)
- *     if dxyMom30 != 0:
- *       USD base  (USDJPY): dxy<0&&pair<0 →15 ; dxy>0&&pair>0 →10  (lines 212-218)
- *       USD quote (EURUSD): dxy<0&&pair>0 →15 ; dxy>0&&pair<0 →10  (lines 219-226)
- *     if |pairMom|>3.0: rsScore += 10 ; elif |pairMom|>1.5: +5     (lines 230-234)
- *     rsScoreNorm = min(rsScore, 30)                               (line 236)
+ * Le pool MCP est produit par l'AGENT (modèle factor-scanner.js / highvol-scanner.js / top-10) :
+ *   QueryData(types=bars_daily, symbols=<8 majors =X + DX-Y.NYB>, days≥250) → l'agent applique
+ *     EXACTEMENT les filtres/scoring forex (scoreForexPair : momentum 40% / mean-reversion 30% /
+ *     relative-strength 30% vs DXY, RSI band, ATR%, min_score) puis écrit /tmp/forex-stage.json.
+ * CE script PARSE le staging (jamais d'appel MCP — OAuth2, zéro token), applique les gates hérités
+ * (score gate, stop/rr dérivés de l'ATR) et construit le pool du mode + _scanRuns.forex.
  *
- *   FINAL = momentumScore*0.40 + mrScoreNorm*0.30 + rsScoreNorm*0.30  (line 251)
+ * ⚠️ La logique de scoring (scoreForexPair) + les constantes/filtres restent EXPORTÉS et INTACTS :
+ * seule la SOURCE des barres change (MCP au lieu de Yahoo). L'AGENT rejoue EXACTEMENT ce scoring
+ * côté MCP et écrit les métriques dans le staging. La voie de scan MCP-primary n'appelle NI fetch
+ * réseau NI lecture d'univers local.
  *
- * FILTERS (scanner_forex.go bare defaults, OVERRIDDEN by the forex-majors sleeve
- * scanner_filters in config/portfolio_multi_survivors.yaml — the authoritative ISO values):
- *   - need ≥200 bars (line 74)
- *   - atrPct ≥ 0.006  (config min_atr_pct ; scanner default 0.001)
- *   - RSI in [30, 75] (config min_rsi/max_rsi ; scanner default [20, 80])
- *   - finalScore ≥ 8  (config min_score ; scanner hard floor 5.0)
+ * SCORING (scanner_forex.go:141-251) — rejoué par l'AGENT sur les barres MCP :
+ *   MOMENTUM (40%)   : momRaw = ret30d*0.40 + ret14d*0.35 + ret7d*0.25 ; trendBonus 15/10/5/0 ;
+ *                      momentumScore = clamp(momRaw*5 + 25 + trendBonus, 0, 50)
+ *   MEAN REV (30%)   : bbPctB(20,2.0) + distMA20 ; mrScoreNorm = clamp(mrScore, -10, 40)
+ *   REL STRENGTH(30%): pairMom(ret30d) vs dxyMom30 ; rsScoreNorm = min(rsScore, 30)
+ *   FINAL = momentumScore*0.40 + mrScoreNorm*0.30 + rsScoreNorm*0.30
  *
- * DXY: fetched once (DX-Y.NYB) and dxyMom30 = calcReturn(dxy, 30) used for the
- * relative-strength axis (scanner_forex.go:58-62, 211-227). Equity business-day
- * calendar (Yahoo daily bars) — NO 24/7, despite FX trading 24/5.
- *
- * Mirrors tools/crypto-scanner.js conventions: getArg/hasFlag CLI parsing,
- * data/.price-cache OHLCV cache, batchFetch concurrency, output modes
- * (json | signals | stdout), --dry-run, --top, --min-score, --date, --as-of.
+ * FILTERS (forex-majors sleeve scanner_filters, config/portfolio_multi_survivors.yaml) :
+ *   ≥200 bars ; atrPct ≥ 0.006 ; RSI ∈ [30,75] ; finalScore ≥ 8.
  *
  * Usage:
- *   node tools/forex-scanner.js                            # full scan, stdout
- *   node tools/forex-scanner.js --dry-run --top 8         # quick test, no write
- *   node tools/forex-scanner.js --output json             # data/forex-scan-YYYY-MM-DD.json
- *   node tools/forex-scanner.js --output signals          # append forex_pool to scanner/YYYYMMDD/signals.json
- *   node tools/forex-scanner.js --as-of 2026-05-01        # point-in-time (bars <= as-of)
- *   node tools/forex-scanner.js --tickers EURUSD=X,GBPUSD=X
- *   node tools/forex-scanner.js --min-score 20 --top 10
+ *   # l'agent a d'abord écrit /tmp/forex-stage.json via mcp__marketdata__*
+ *   node tools/forex-scanner.js --ingest /tmp/forex-stage.json --output signals --folder 20260713
+ *   node tools/forex-scanner.js --ingest /tmp/forex-stage.json --dry-run --top 8
+ *   node tools/forex-scanner.js --ingest /tmp/forex-stage.json --output json --date 2026-07-13
+ *
+ * Codes de sortie : 0 = OK (0 signal légitime inclus) ; 3 = staging absent/vide/malformé/
+ * mcp_ok:false (run marqué incomplet, RIEN fabriqué) ; 2 = --ingest manquant (voie MCP obligatoire) ;
+ * 1 = inattendu.
  */
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 const { calcSMA, calcRSI, calcATR, calcReturn, calcBBPctB } = require('./lib/forex-indicators');
-const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const FX_MARKET = priceCache.MARKETS.FX;   // marché FX (arbo cache datée)
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -74,7 +68,6 @@ function getArg(name, def) {
 }
 const hasFlag = name => args.includes(`--${name}`);
 
-const CUSTOM_TICKERS = getArg('tickers', '').split(',').filter(Boolean);
 // forex-majors sleeve scanner_filters.min_score = 8 (config/portfolio_multi_survivors.yaml).
 // Go effective gate = max(filters.MinScore=8, hard floor 5.0) = 8. Keep the JS default in sync.
 const MIN_SCORE = parseFloat(getArg('min-score', '8'));
@@ -82,158 +75,37 @@ const TOP_N = parseInt(getArg('top', '10'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
-const AS_OF = getArg('as-of', '');                         // YYYY-MM-DD point-in-time; '' = today/all bars
-// Date effective du snapshot cache (point-in-time). --as-of prime (backfill d'une date passée →
-// snapshot immuable), sinon SCAN_DATE (par défaut aujourd'hui → TTL 12h dans le helper).
-const CACHE_DATE = AS_OF || SCAN_DATE;
-const CACHE_OPTS = { date: CACHE_DATE, market: FX_MARKET, interval: '1d' };
-const CONCURRENCY = parseInt(getArg('concurrency', '8'));
-const KLINE_RANGE = '250d';                                // enough for MA200 + 30d return headroom
+const SCAN_FOLDER = getArg('folder', null);
+// ─── VOIE MCP (--ingest) — SEUL chemin data de la scan (MCP-PRIMARY) ────────────────────────────
+// Quand --ingest est fourni, le scanner NE FETCH RIEN : il PARSE un staging JSON écrit par l'AGENT
+// (qui, LUI, a appelé mcp__marketdata__* — OAuth2, zéro token). --ingest est OBLIGATOIRE (le fetch
+// Yahoo local + la lecture data/forex-universe.json ont été supprimés de la voie de scan).
+const INGEST_PATH = getArg('ingest', null);
 
 // Momentum weights (scanner_forex.go:147)
 const MW30 = 0.40, MW14 = 0.35, MW7 = 0.25;
 // Combined-axis weights (scanner_forex.go:239)
 const W_MOM = 0.40, W_MR = 0.30, W_RS = 0.30;
 
-const DXY_SYMBOL_DEFAULT = 'DX-Y.NYB';
-
 // Scanner filters — MUST mirror the forex-majors sleeve scanner_filters in
 // config/portfolio_multi_survivors.yaml (Go applies these via SetFilters). The bare
 // scanner_forex.go defaults (RSI 20-80, ATR≥0.001, score≥5) are OVERRIDDEN per-sleeve;
 // forex mode = forex-majors, so these are the authoritative ISO thresholds:
 //   scanner_filters: { min_rsi: 30, max_rsi: 75, min_score: 8, min_atr_pct: 0.006 }
+// EXPORTÉS + INTACTS : l'AGENT rejoue EXACTEMENT ces gates côté MCP avant d'écrire le staging.
 const FILTER_MIN_RSI = 30.0;      // config min_rsi (scanner_forex.go default 20)
 const FILTER_MAX_RSI = 75.0;      // config max_rsi (scanner_forex.go default 80)
 const FILTER_MIN_ATR_PCT = 0.006; // config min_atr_pct (scanner_forex.go default 0.001)
 const FILTER_MIN_SCORE = 8.0;     // config min_score (Go gates finalScore < 8 → nil)
 
-// ─── Universe: local pre-built file (forex-universe.json) ───────────────────
-
-function loadUniverse() {
-  if (CUSTOM_TICKERS.length) return { tickers: CUSTOM_TICKERS, names: {}, dxySymbol: DXY_SYMBOL_DEFAULT };
-  const universeFile = path.join(ROOT, 'data', 'forex-universe.json');
-  if (!fs.existsSync(universeFile)) {
-    console.error('ERROR: Could not load universe. Provide data/forex-universe.json');
-    process.exit(1);
-  }
-  try {
-    const data = JSON.parse(fs.readFileSync(universeFile, 'utf8'));
-    const tickers = data.tickers || [];
-    if (tickers.length < 3) throw new Error('too few tickers');
-    console.log(`  ✅ Universe from local file: ${tickers.length} pairs`);
-    return { tickers, names: data.names || {}, dxySymbol: data.dxySymbol || DXY_SYMBOL_DEFAULT };
-  } catch (e) {
-    console.error(`ERROR: Could not parse data/forex-universe.json: ${e.message}`);
-    process.exit(1);
-  }
-}
-
-// ─── Yahoo chart OHLCV fetch (daily, business-day calendar) ─────────────────
-// Same endpoint as candlestick-scanner.js:93 — query1.finance.yahoo.com/v8/finance/chart.
-
-// Cache prix DATÉ via le helper partagé (source unique de vérité, arbo point-in-time) :
-//   data/.price-cache/<CACHE_DATE>/1d/FX/<ticker>.json
-// readBars applique le TTL 12h uniquement si CACHE_DATE == aujourd'hui ; une date passée est un
-// snapshot immuable. Fallback LECTURE seule sur l'ancien cache plat si le fichier daté manque.
-function loadCachedPrice(ticker) {
-  // PIT-strict read: ONLY the dated snapshot …/<CACHE_DATE>/1d/FX/<ticker>.json.
-  // If it is absent we return null so fetchOHLCV fetches fresh live bars and writes a
-  // clean truncated snapshot (safety rule #2: "absent → fetch live puis TRONQUE").
-  // The legacy flat cache (…/<ticker>_ohlcv.json) is deliberately NOT trusted here: it is
-  // undated and gap-prone (a missing session — e.g. FX 2026-07-01 — shifts the positional
-  // lookback windows of calcReturn/SMA/RSI/ATR by one bar and corrupts every score, which
-  // was the sole remaining source of forex ISO drift vs systematic-tss once the universe
-  // was aligned to the 8 forex_universe majors).
-  return priceCache.readBars(ticker, { ...CACHE_OPTS, allowLegacyFallback: false });
-}
-
-function saveCachedOHLCV(ticker, bars) {
-  priceCache.writeBars(ticker, bars, CACHE_OPTS);   // tronque à bar.date <= CACHE_DATE (anti-look-ahead)
-}
-
-function fetchYahooChart(ticker, attempt = 0) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=${KLINE_RANGE}`;
-  return new Promise(resolve => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        if (res.statusCode !== 200) {
-          if (attempt < 1 && (res.statusCode === 429 || res.statusCode >= 500)) {
-            setTimeout(() => resolve(fetchYahooChart(ticker, attempt + 1)), 600);
-          } else {
-            resolve(null);
-          }
-          return;
-        }
-        try {
-          const j = JSON.parse(data);
-          const result = j?.chart?.result?.[0];
-          if (!result) return resolve(null);
-          const ts = result.timestamp || [];
-          const q = result.indicators?.quote?.[0] || {};
-          const rmp = result.meta?.regularMarketPrice;
-          const bars = [];
-          for (let i = 0; i < ts.length; i++) {
-            const d = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-            const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i], v = q.volume?.[i] || 0;
-            if (o != null && h != null && l != null && c != null) {
-              bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v });
-            } else if (i === ts.length - 1 && rmp != null) {
-              bars.push({ date: d, open: o ?? rmp, high: h ?? rmp, low: l ?? rmp, close: rmp, volume: v });
-            }
-          }
-          if (!bars.length) return resolve(null);
-          saveCachedOHLCV(ticker, bars);
-          resolve(bars);
-        } catch { resolve(null); }
-      });
-    });
-    req.on('error', () => {
-      if (attempt < 1) setTimeout(() => resolve(fetchYahooChart(ticker, attempt + 1)), 600);
-      else resolve(null);
-    });
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-  });
-}
-
-function fetchOHLCV(ticker) {
-  const cached = loadCachedPrice(ticker);
-  if (cached) return Promise.resolve(cached);
-  return fetchYahooChart(ticker);
-}
-
-// ─── --as-of point-in-time slice ────────────────────────────────────────────
-// Keep only bars with date <= asOf so historical backfill is reproducible.
-function sliceAsOf(bars, asOf) {
-  if (!asOf) return bars;
-  return bars.filter(b => b.date <= asOf);
-}
-
-// ─── Batch fetch with concurrency ───────────────────────────────────────────
-
-async function batchFetch(tickers, concurrency) {
-  const results = new Map();
-  const queue = [...tickers];
-  let done = 0;
-  async function worker() {
-    while (queue.length) {
-      const t = queue.shift();
-      const bars = await fetchOHLCV(t);
-      if (bars && bars.length >= 60) results.set(t, bars);
-      done++;
-      if (done % 10 === 0) process.stderr.write(`  fetched ${done}/${tickers.length} (${results.size} valid)\r`);
-    }
-  }
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  process.stderr.write(`  fetched ${done}/${tickers.length} (${results.size} valid)\n`);
-  return results;
-}
-
 function clamp(v, lo, hi) { return Math.min(Math.max(v, lo), hi); }
 
 // ─── Scoring (port of scoreForexPair, scanner_forex.go:99-311) ──────────────
-
+// EXPORTÉ + INTACT : la logique de signal est conservée telle quelle (parité systematic-tss). Elle
+// N'EST PAS appelée par la voie de scan MCP-primary (l'AGENT la rejoue côté MCP sur les barres
+// fraîches et écrit les métriques dans le staging) ; conservée comme source de vérité du scoring que
+// l'agent doit reproduire + pour toute réutilisation PIT ultérieure. Seule la SOURCE des barres
+// change (MCP au lieu de Yahoo) — les indicateurs/filtres/poids sont identiques.
 function scoreForexPair(symbol, bars, dxyMom30) {
   const n = bars.length;
   const price = bars[n - 1].close;
@@ -337,87 +209,197 @@ function scoreForexPair(symbol, bars, dxyMom30) {
   };
 }
 
-// ─── Main scan ──────────────────────────────────────────────────────────────
+// ─── VOIE MCP : --ingest (SEUL chemin data de la scan) ──────────────────────────────────────────
+// L'AGENT (claude -p / /scanner) appelle mcp__marketdata__* (QueryData bars_daily des 8 majors =X +
+// DX-Y.NYB, ~250 barres), rejoue EXACTEMENT scoreForexPair (momentum/mean-rev/rel-strength vs DXY +
+// RSI band + ATR% + min_score), et écrit /tmp/forex-stage.json. CE script PARSE le staging (jamais
+// d'appel MCP, jamais de fetch réseau — OAuth2, zéro token), applique les gates hérités (score gate,
+// stop/tp/rr dérivés de l'ATR) et construit le pool.
+//
+// ⛔ ZÉRO FABRICATION (MCP HARD STOP, fail-closed) : staging absent / vide / malformé / mcp_ok:false /
+// error / candidates non-array → marqueur _scanRuns.forex {incomplete:true, signals:0} + exit 3,
+// RIEN fabriqué. Aucun champ manquant/non-fini n'est inventé : le candidat tombe (comme highvol/factor).
+//
+// Shape staging attendu :
+//   { mcp_ok:true, asof, dxyMom30?, dxySymbol?, universeFetched?,
+//     candidates:[ { ticker, name?, score, price(|entry), atr, sharia?, region?, horizon?,
+//         metrics:{ rsi, atrPct, bbPctB, ret30d, ret14d, ret7d,
+//                   momentumScore, mrScore, rsScore, distMA20, distMA50, distMA200 } } ] }
 
-async function main() {
-  const { tickers: universe, names, dxySymbol } = loadUniverse();
-  console.log(`💱  Forex Multi-Strategy Scanner (systematic-tss port)`);
-  console.log(`   Universe: ${universe.length} pairs | minScore: ${MIN_SCORE} | top: ${TOP_N} | DXY: ${dxySymbol}`);
-  console.log(`   Date: ${SCAN_DATE}${AS_OF ? ` | as-of: ${AS_OF} (point-in-time)` : ''}`);
+function resolveSigPath() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
+}
 
-  console.log(`📡 Fetching Yahoo daily bars (${KLINE_RANGE}, biz-day calendar) incl. DXY...`);
-  // Fetch DXY separately for the relative-strength axis (scanner_forex.go:58-62).
-  const dxyBarsRaw = await fetchOHLCV(dxySymbol);
-  const dxyBars = sliceAsOf(dxyBarsRaw || [], AS_OF);
-  let dxyMom30 = 0.0;
-  if (dxyBars.length > 30) dxyMom30 = calcReturn(dxyBars, 30);       // scanner_forex.go:60-62
-  console.log(`   DXY 30d momentum: ${dxyBars.length ? dxyMom30.toFixed(2) + '%' : 'N/A (DXY fetch failed → rsScore neutral)'}`);
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de pool. No-op en dry-run / hors signals.
+function writeForexIncompleteMarker(reason, extra) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPath();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude forex.`);
+    return false;
+  }
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  if (!signals._scanRuns) signals._scanRuns = {};
+  signals._scanRuns.forex = Object.assign({
+    at: new Date().toISOString(), universe: 'forex-majors', dataPath: 'mcp-ingest',
+    signals: 0, incomplete: true, reason,
+  }, extra || {});
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _scanRuns.forex écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
+}
 
-  const priceData = await batchFetch(universe, CONCURRENCY);
+// Ingest + validation du staging (mêmes règles fail-closed que highvol/factor/pead loadStaging).
+function loadForexStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!Array.isArray(data.candidates)) return { ok: false, reason: 'ingest_no_candidates_array' };
+  return { ok: true, data };
+}
 
-  console.log('🔍 Scoring 3 axes (momentum 40% / mean-reversion 30% / relative-strength 30%)...');
-  const candidates = [];
+// Un candidat stagé → signal complet (shape identique à la voie locale historique) | null (+ raison
+// de drop). N'INVENTE aucune donnée : tout champ manquant/non-fini fait tomber le candidat.
+// Gates hérités : score gate (min_score) ; stop/tp/rr dérivés de l'ATR (SL=price-2*ATR, TP2=price+3*ATR,
+// scanner_forex.go:273-274) — drop si risk ≤ 0. Formatage décimales identique (JPY vs non-JPY).
+function evaluateForexCandidate(c, dxyMom30) {
+  const drop = reason => ({ sig: null, reason });
+  const num = v => (Number.isFinite(v) ? v : NaN);
+  const ticker = c.ticker && String(c.ticker).trim();
+  if (!ticker) return drop('no_ticker');
+  const m = c.metrics || {};
+  const price = num(c.price != null ? c.price : c.entry);
+  const score = num(c.score);
+  const atr = num(c.atr);
+  const rsi = num(m.rsi);
+  const atrPct = num(m.atrPct);
+  const bbPctB = num(m.bbPctB);
+  const ret30d = num(m.ret30d);
+  const ret14d = num(m.ret14d);
+  const ret7d = num(m.ret7d);
+  const momentumScore = num(m.momentumScore);
+  const mrScore = num(m.mrScore);
+  const rsScore = num(m.rsScore);
+  const distMA20 = num(m.distMA20);
+  const distMA50 = num(m.distMA50);
+  const distMA200 = num(m.distMA200);
+  if (!(price > 0) || !Number.isFinite(score) || !(atr > 0)
+      || !Number.isFinite(rsi) || !Number.isFinite(atrPct) || !Number.isFinite(bbPctB)
+      || !Number.isFinite(ret30d) || !Number.isFinite(ret14d) || !Number.isFinite(ret7d)
+      || !Number.isFinite(momentumScore) || !Number.isFinite(mrScore) || !Number.isFinite(rsScore)
+      || !Number.isFinite(distMA20) || !Number.isFinite(distMA50) || !Number.isFinite(distMA200))
+    return drop('missing_forex_fields');
+  // Score gate (scanner_forex.go:255-263) — parité avec la voie locale (config min_score=8).
+  if (score < FILTER_MIN_SCORE) return drop('below_min_score');
 
-  for (const [symbol, barsRaw] of priceData) {
-    const bars = sliceAsOf(barsRaw, AS_OF);
-    if (bars.length < 200) continue;                                 // scanner_forex.go:73-76
+  // FX prices: 4-5 decimals for non-JPY, 2-3 for JPY crosses. Use price magnitude.
+  const dec = price >= 50 ? 3 : 5;
+  const entry = +price.toFixed(dec);
+  // Stop / take-profit (scanner_forex.go:273-274): SL = price - 2*ATR, TP = price + 3*ATR.
+  const stop = +(entry - atr * 2.0).toFixed(dec);
+  const risk = entry - stop;
+  if (!(risk > 0)) return drop('bad_stop');
+  const tp1 = +(entry + risk * 1.5).toFixed(dec);                  // intermediate (1.5R)
+  const tp2 = +(entry + atr * 3.0).toFixed(dec);                   // full target (scanner_forex.go:274)
+  const rr = ((tp2 - entry) / risk).toFixed(1);
 
-    const r = scoreForexPair(symbol, bars, dxyMom30);
-    if (!r) continue;
-    if (r.score < MIN_SCORE) continue;
-
-    // FX prices: 4-5 decimals for non-JPY, 2-3 for JPY crosses. Use price magnitude.
-    const dec = r.price >= 50 ? 3 : 5;
-    const entry = +r.price.toFixed(dec);
-
-    // Stop / take-profit (scanner_forex.go:273-274): SL = price - 2*ATR, TP = price + 3*ATR.
-    const stop = +(entry - r.atr * 2.0).toFixed(dec);
-    const risk = entry - stop;
-    if (risk <= 0) continue;
-    const tp1 = +(entry + risk * 1.5).toFixed(dec);                  // intermediate (1.5R)
-    const tp2 = +(entry + r.atr * 3.0).toFixed(dec);                 // full target (scanner_forex.go:274)
-    const rr = ((tp2 - entry) / risk).toFixed(1);
-
-    candidates.push({
-      ticker: symbol,
-      name: names[symbol] || symbol,
-      score: r.score,
+  return {
+    sig: {
+      ticker,
+      name: c.name || ticker,
+      score: +score,
       strategy: 'ForexMultiStrategy',
       entry,
       stop,
       tp1,
       tp2,
       rr: `1:${rr}`,
-      horizon: 14,
-      region: 'FOREX',
-      sharia: null,
+      horizon: Number.isFinite(num(c.horizon)) ? c.horizon : 14,
+      region: c.region || 'FOREX',
+      sharia: c.sharia != null ? c.sharia : null,
       assetClass: 'forex',
-      thesis: `3-axis FX setup: mom ${r.momentumScore.toFixed(1)}/50 (${r.ret30d >= 0 ? '+' : ''}${r.ret30d.toFixed(1)}% 30d / ${r.ret14d >= 0 ? '+' : ''}${r.ret14d.toFixed(1)}% 14d / ${r.ret7d >= 0 ? '+' : ''}${r.ret7d.toFixed(1)}% 7d), mean-rev ${r.mrScoreNorm.toFixed(1)}/40 (BB%B ${r.bbPctB.toFixed(2)}, RSI ${r.rsi.toFixed(0)}), rel-strength ${r.rsScoreNorm.toFixed(1)}/30 vs DXY (${dxyMom30 >= 0 ? '+' : ''}${dxyMom30.toFixed(1)}% 30d).`,
+      thesis: `3-axis FX setup: mom ${momentumScore.toFixed(1)}/50 (${ret30d >= 0 ? '+' : ''}${ret30d.toFixed(1)}% 30d / ${ret14d >= 0 ? '+' : ''}${ret14d.toFixed(1)}% 14d / ${ret7d >= 0 ? '+' : ''}${ret7d.toFixed(1)}% 7d), mean-rev ${mrScore.toFixed(1)}/40 (BB%B ${bbPctB.toFixed(2)}, RSI ${rsi.toFixed(0)}), rel-strength ${rsScore.toFixed(1)}/30 vs DXY (${dxyMom30 >= 0 ? '+' : ''}${dxyMom30.toFixed(1)}% 30d).`,
       extension: {
-        rsi: +r.rsi.toFixed(1),
-        atr: +r.atr.toFixed(r.price >= 50 ? 3 : 5),
-        distance_50dma_pct: +(r.distMA50 * 100).toFixed(1),
+        rsi: +rsi.toFixed(1),
+        atr: +atr.toFixed(dec),
+        distance_50dma_pct: +(distMA50 * 100).toFixed(1),
       },
       metrics: {
-        return30d: +r.ret30d.toFixed(2),
-        return14d: +r.ret14d.toFixed(2),
-        return7d: +r.ret7d.toFixed(2),
-        bbPctB: +r.bbPctB.toFixed(3),
-        atrPct: +(r.atrPct * 100).toFixed(3),
-        momentumScore: +r.momentumScore.toFixed(2),
-        mrScore: +r.mrScoreNorm.toFixed(2),
-        rsScore: +r.rsScoreNorm.toFixed(2),
-        distance_20dma_pct: +(r.distMA20 * 100).toFixed(2),
-        distance_200dma_pct: +(r.distMA200 * 100).toFixed(2),
+        return30d: +ret30d.toFixed(2),
+        return14d: +ret14d.toFixed(2),
+        return7d: +ret7d.toFixed(2),
+        bbPctB: +bbPctB.toFixed(3),
+        atrPct: +(atrPct * 100).toFixed(3),
+        momentumScore: +momentumScore.toFixed(2),
+        mrScore: +mrScore.toFixed(2),
+        rsScore: +rsScore.toFixed(2),
+        distance_20dma_pct: +(distMA20 * 100).toFixed(2),
+        distance_200dma_pct: +(distMA200 * 100).toFixed(2),
       },
-    });
+      dataPath: 'mcp-ingest',
+    },
+    reason: null,
+  };
+}
+
+// ─── Main (VOIE MCP — ingest, SEUL chemin data) ───────────────────────────────────────────────
+
+function main() {
+  // MCP-PRIMARY : --ingest (staging agent→MCP) est le SEUL chemin data. Plus aucun fallback local
+  // (Yahoo + univers local retirés — décret archi 2026-07-12). Sans --ingest → erreur claire.
+  if (!INGEST_PATH) {
+    console.error('❌ forex-scanner est MCP-PRIMARY : --ingest <staging.json> est OBLIGATOIRE.');
+    console.error('   L\'agent doit d\'abord écrire le staging via mcp__marketdata__* (QueryData bars_daily des 8 majors =X + DX-Y.NYB),');
+    console.error('   puis : node tools/forex-scanner.js --ingest /tmp/forex-stage.json --output signals --folder YYYYMMDD');
+    console.error('   Le fetch Yahoo/query1 + la lecture data/forex-universe.json ont été supprimés (MCP = référence).');
+    process.exit(2);
+  }
+
+  if (OUTPUT_MODE !== 'signals' && OUTPUT_MODE !== 'stdout' && OUTPUT_MODE !== 'json') {
+    console.error(`❌ --output inconnu: ${OUTPUT_MODE} (attendu: signals|stdout|json)`); process.exit(1);
+  }
+
+  const staged = loadForexStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging forex indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeForexIncompleteMarker(staged.reason, { ingestPath: INGEST_PATH || null });
+    process.exit(3);
+  }
+  const data = staged.data;
+  const candidates = data.candidates;
+  // dxyMom30 depuis le staging (source MCP : l'agent a lu DX-Y.NYB via QueryData). Absent → 0
+  // (rsScore neutre côté agent — EXACTEMENT le comportement « DXY fetch failed » historique).
+  const dxyMom30 = Number.isFinite(data.dxyMom30) ? data.dxyMom30 : 0.0;
+  const dxySymbol = data.dxySymbol || 'DX-Y.NYB';
+
+  console.log('💱  Forex Multi-Strategy Scanner — VOIE MCP (--ingest, MCP-PRIMARY, seul chemin data)');
+  console.log(`   Staging: ${INGEST_PATH} | candidates: ${candidates.length} | minScore: ${MIN_SCORE} | top: ${TOP_N} | DXY: ${dxySymbol}`);
+  console.log(`   Date: ${SCAN_DATE} | DXY 30d momentum: ${dxyMom30 ? (dxyMom30 >= 0 ? '+' : '') + dxyMom30.toFixed(2) + '%' : 'N/A (rsScore neutral)'}`);
+
+  console.log('🔍 Scoring 3 axes (momentum 40% / mean-reversion 30% / relative-strength 30%) — gates hérités...');
+  const sigs = [];
+  const dropStats = {};
+  for (const c of candidates) {
+    const { sig, reason } = evaluateForexCandidate(c, dxyMom30);
+    if (sig) sigs.push(sig);
+    else dropStats[reason] = (dropStats[reason] || 0) + 1;
   }
 
   // Sort by score desc, tie-break by ticker (scanner_forex.go:85-90)
-  candidates.sort((a, b) => (b.score - a.score) || (a.ticker < b.ticker ? -1 : 1));
-  const topCandidates = candidates.slice(0, TOP_N);
+  sigs.sort((a, b) => (b.score - a.score) || (a.ticker < b.ticker ? -1 : 1));
+  const topCandidates = sigs.slice(0, TOP_N);
 
-  console.log(`\n✅ Found ${candidates.length} candidates (≥200 bars, RSI/ATR filters, score≥5), top ${topCandidates.length}:`);
+  console.log(`\n✅ Found ${sigs.length} candidates (score≥${FILTER_MIN_SCORE}, valid stop), top ${topCandidates.length}:`);
   for (const c of topCandidates) {
     console.log(
       `  💱 ${c.ticker.padEnd(10)} score:${String(c.score).padStart(6)} ` +
@@ -426,19 +408,25 @@ async function main() {
       `E:${c.entry} S:${c.stop} TP2:${c.tp2} RR:${c.rr} RSI:${c.extension.rsi} BB%B:${c.metrics.bbPctB}`
     );
   }
+  if (Object.keys(dropStats).length) {
+    console.log('   drops:', Object.entries(dropStats).map(([k, v]) => `${k}=${v}`).join(' '));
+  }
 
   if (DRY_RUN) { console.log('\n🏷️  Dry run — no files written.'); return topCandidates; }
 
   if (OUTPUT_MODE === 'json') {
     const outPath = path.join(ROOT, 'data', `forex-scan-${SCAN_DATE}.json`);
-    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, asOf: AS_OF || null, dxyMom30, candidates: topCandidates }, null, 2));
+    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, dxyMom30, dataPath: 'mcp-ingest', candidates: topCandidates }, null, 2));
     console.log(`\n📁 Written to ${outPath}`);
-  } else if (OUTPUT_MODE === 'signals') {
-    const scanDir = SCAN_DATE.replace(/-/g, '');
-    const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+    return topCandidates;
+  }
+
+  if (OUTPUT_MODE === 'signals') {
+    const sigPath = resolveSigPath();
     if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
     const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
     // forex_pool — analogous to crypto_pool; consumed downstream by sweep for the forex mode.
+    // Fusion NON DESTRUCTIVE, dedup par ticker (identique à la voie locale historique).
     if (!Array.isArray(signals.forex_pool)) signals.forex_pool = [];
     const existing = new Set(signals.forex_pool.map(s => s.ticker));
     let added = 0;
@@ -448,15 +436,31 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    // Scan marker — proof the forex scanner actually ran (even with 0 signals, which is legitimate).
+    // Merged into the shared _scanRuns object (keyed 'forex') without clobbering other scanners.
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns.forex = {
+      at: new Date().toISOString(),
+      universe: 'forex-majors',
+      dataPath: 'mcp-ingest',
+      candidates: sigs.length,
+      signals: topCandidates.length,
+      added,
+      dxyMom30,
+      incomplete: false,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
-    console.log(`\n📁 Appended ${added} forex signals to forex_pool in ${sigPath}`);
+    console.log(`\n📁 Appended ${added} forex signals (voie MCP) to forex_pool in ${sigPath}`);
   }
 
   return topCandidates;
 }
 
-if (require.main === module) {
-  main().catch(err => { console.error(err); process.exit(1); });
-}
-
+// ─── Module exports ──────────────────────────────────────────────────────────
+// scoreForexPair conservé + exporté INTACT (logique de signal — parité systematic-tss ; source de
+// vérité du scoring que l'AGENT rejoue côté MCP). CLI inchangé quand lancé directement.
 module.exports = { main, scoreForexPair };
+
+if (require.main === module) {
+  main();
+}
