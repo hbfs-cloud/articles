@@ -96,18 +96,40 @@ if [ "$SKIP_SWEEP" = false ]; then
 
   echo ""
   echo "⚡ Step 2e: HighVol Breakout scan..."
-  node tools/highvol-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 20 || echo "⚠️  HighVol scan failed (non-blocking)"
+  # MCP-PRIMARY (décret archi 2026-07-12) : highvol-scanner NE FETCH PLUS (Yahoo + univers local
+  # retirés) — il ingère un staging JSON (RunScreener + QueryData bars_daily) produit par l'AGENT.
+  # Ce subprocess node NE PEUT PAS appeler le MCP (OAuth2, zéro token) : staging absent → skip
+  # non-bloquant (0 signal légitime ce run), JAMAIS de fetch local. Chemin surchargé par HIGHVOL_STAGE.
+  HIGHVOL_STAGE="${HIGHVOL_STAGE:-/tmp/highvol-stage.json}"
+  if [ -f "$HIGHVOL_STAGE" ]; then
+    node tools/highvol-scanner.js --ingest "$HIGHVOL_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 20 || echo "⚠️  HighVol scan failed (non-blocking)"
+  else
+    echo "⚠️  HighVol staging absent ($HIGHVOL_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "⛏️  Step 2f: Metals scan..."
-  node tools/fractal-scanner.js --universe metals --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 25 --top 15 || echo "⚠️  Metals scan failed (non-blocking)"
+  # MCP-PRIMARY : la voie flippée est metals-scanner.js --ingest (fractal-scanner reste NON flippé —
+  # fetch local — donc on NE l'appelle plus pour metals). Staging (RunScreener metals + QueryData
+  # bars_daily) produit par l'AGENT ; absent → skip non-bloquant. Chemin surchargé par METALS_STAGE.
+  METALS_STAGE="${METALS_STAGE:-/tmp/metals-stage.json}"
+  if [ -f "$METALS_STAGE" ]; then
+    node tools/metals-scanner.js --ingest "$METALS_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 25 --top 15 || echo "⚠️  Metals scan failed (non-blocking)"
+  else
+    echo "⚠️  Metals staging absent ($METALS_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "💱 Step 2g: Forex scan..."
   # forex-scanner.js (3-axis systematic-tss port) fills signals.forex_pool — the ONLY
-  # field sweep.js reads for the forex mode. It has NO --folder/--regime flags (unlike
-  # fractal-scanner) and strips dashes from --date internally to derive the scan folder.
-  node tools/forex-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --min-score 20 --top 10 || echo "⚠️  Forex scan failed (non-blocking)"
+  # field sweep.js reads for the forex mode. MCP-PRIMARY : staging (RunScreener FX + QueryData
+  # bars_daily) produit par l'AGENT ; absent → skip non-bloquant. Chemin surchargé par FOREX_STAGE.
+  FOREX_STAGE="${FOREX_STAGE:-/tmp/forex-stage.json}"
+  if [ -f "$FOREX_STAGE" ]; then
+    node tools/forex-scanner.js --ingest "$FOREX_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --min-score 20 --top 10 || echo "⚠️  Forex scan failed (non-blocking)"
+  else
+    echo "⚠️  Forex staging absent ($FOREX_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   # Steps 2h/2i (Casablanca Bourse + Casablanca MomRot) RETIRED 2026-07-11 : la stratégie casablanca
   # ne tourne plus (univers BVC bloqué/malformé, api.casablanca-bourse.com KO). Les appels échouaient
@@ -117,37 +139,85 @@ if [ "$SKIP_SWEEP" = false ]; then
 
   echo ""
   echo "🔄 Step 2j: Momentum Rotation scan (US)..."
-  node tools/momentum-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 5 --top 20 || echo "⚠️  Momentum scan failed (non-blocking)"
+  # MCP-PRIMARY : momentum-scanner ingère un staging PRE-SCORÉ (candidates[] scorés côté agent) produit
+  # par l'AGENT (RunScreener US + QueryData bars_daily) ; absent → skip non-bloquant. Var: MOMENTUM_STAGE.
+  MOMENTUM_STAGE="${MOMENTUM_STAGE:-/tmp/momentum-stage.json}"
+  if [ -f "$MOMENTUM_STAGE" ]; then
+    node tools/momentum-scanner.js --ingest "$MOMENTUM_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 5 --top 20 || echo "⚠️  Momentum scan failed (non-blocking)"
+  else
+    echo "⚠️  Momentum staging absent ($MOMENTUM_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "📈 Step 2k: ETF Momentum scan..."
-  node tools/etf-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF scan failed (non-blocking)"
+  # MCP-PRIMARY : etf-scanner ingère un staging (RunScreener etf-us + QueryData bars_daily) produit par
+  # l'AGENT ; absent → skip non-bloquant. Chemin surchargé par ETF_STAGE.
+  ETF_STAGE="${ETF_STAGE:-/tmp/etf-stage.json}"
+  if [ -f "$ETF_STAGE" ]; then
+    node tools/etf-scanner.js --ingest "$ETF_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF scan failed (non-blocking)"
+  else
+    echo "⚠️  ETF staging absent ($ETF_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "📈 Step 2k2: ETF Momentum scan (Europe)..."
-  node tools/etf-scanner.js --universe etf-eu --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF EU scan failed (non-blocking)"
+  # MCP-PRIMARY : même binaire, univers etf-eu. Staging distinct (RunScreener etf-eu + QueryData
+  # bars_daily) produit par l'AGENT ; absent → skip non-bloquant. Chemin surchargé par ETF_EU_STAGE.
+  ETF_EU_STAGE="${ETF_EU_STAGE:-/tmp/etf-eu-stage.json}"
+  if [ -f "$ETF_EU_STAGE" ]; then
+    node tools/etf-scanner.js --universe etf-eu --ingest "$ETF_EU_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --top 10 || echo "⚠️  ETF EU scan failed (non-blocking)"
+  else
+    echo "⚠️  ETF EU staging absent ($ETF_EU_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "📐 Step 2l: Trendline Breakout scan (forex)..."
-  node tools/trendline-scanner.js --universe forex --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 10 || echo "⚠️  Trendline forex scan failed (non-blocking)"
+  # MCP-PRIMARY : trendline-scanner ingère un staging (RunScreener/QueryData bars_daily FX) produit par
+  # l'AGENT ; absent → skip non-bloquant. Chemin surchargé par TRENDLINE_FOREX_STAGE.
+  TRENDLINE_FOREX_STAGE="${TRENDLINE_FOREX_STAGE:-/tmp/trendline-forex-stage.json}"
+  if [ -f "$TRENDLINE_FOREX_STAGE" ]; then
+    node tools/trendline-scanner.js --universe forex --ingest "$TRENDLINE_FOREX_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 10 || echo "⚠️  Trendline forex scan failed (non-blocking)"
+  else
+    echo "⚠️  Trendline forex staging absent ($TRENDLINE_FOREX_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "📐 Step 2m: Trendline Breakout scan (indices 4h)..."
-  node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 10 || echo "⚠️  Trendline indices 4h scan failed (non-blocking)"
+  # MCP-PRIMARY : même binaire, univers indices interval 4h. Staging distinct produit par l'AGENT
+  # (barres 4h QueryData) ; absent → skip non-bloquant. Chemin surchargé par TRENDLINE_INDICES_STAGE.
+  TRENDLINE_INDICES_STAGE="${TRENDLINE_INDICES_STAGE:-/tmp/trendline-indices-stage.json}"
+  if [ -f "$TRENDLINE_INDICES_STAGE" ]; then
+    node tools/trendline-scanner.js --universe indices --interval 4h --ingest "$TRENDLINE_INDICES_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" --min-score 50 --top 10 || echo "⚠️  Trendline indices 4h scan failed (non-blocking)"
+  else
+    echo "⚠️  Trendline indices staging absent ($TRENDLINE_INDICES_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   # Steps 2n (trendline ETF) and 2p (trendline stocks daily) REMOVED
   # Backtest showed negative CAGR: stocks -11.6%, ETF -3.6%. Keep only forex 4h + indices 1h/4h.
 
   echo ""
   echo "🔄 Step 2n: Hybrid breadth analysis..."
-  node tools/hybrid-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Hybrid scan failed (non-blocking)"
+  # MCP-PRIMARY : hybrid-scanner ingère un staging (RunScreener US + QueryData bars_daily pour la
+  # breadth) produit par l'AGENT ; absent → skip non-bloquant. Chemin surchargé par HYBRID_STAGE.
+  HYBRID_STAGE="${HYBRID_STAGE:-/tmp/hybrid-stage.json}"
+  if [ -f "$HYBRID_STAGE" ]; then
+    node tools/hybrid-scanner.js --ingest "$HYBRID_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Hybrid scan failed (non-blocking)"
+  else
+    echo "⚠️  Hybrid staging absent ($HYBRID_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "🧮 Step 2o: Factor composite scan (low-turnover, US)..."
   # factor-scanner.js fills signals.factor_pool — the ONLY field sweep.js reads for the `factor`
   # mode (assetClass us_factor). Monthly rebalance (21d) with a hysteresis buffer → holdings are
-  # frozen on non-rebalance days (low turnover). Price-only factors, no MCP call. SIM-ONLY.
-  node tools/factor-scanner.js --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --top 15 || echo "⚠️  Factor scan failed (non-blocking)"
+  # frozen on non-rebalance days (low turnover). MCP-PRIMARY : staging (RunScreener US + QueryData
+  # bars_daily) produit par l'AGENT ; absent → skip non-bloquant. Chemin surchargé par FACTOR_STAGE.
+  FACTOR_STAGE="${FACTOR_STAGE:-/tmp/factor-stage.json}"
+  if [ -f "$FACTOR_STAGE" ]; then
+    node tools/factor-scanner.js --ingest "$FACTOR_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --top 15 || echo "⚠️  Factor scan failed (non-blocking)"
+  else
+    echo "⚠️  Factor staging absent ($FACTOR_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."

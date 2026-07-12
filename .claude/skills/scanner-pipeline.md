@@ -151,6 +151,36 @@ Chaque signal dans les pools a la même shape que les signaux classiques (ticker
 - 4 sections "Strategy Focus" (Momentum / Breakout / Pullback / Pre-Squeeze) avec mini-tables + thesis résumée
 - Les setup cards détaillés ne sont générés que pour le Top 10 composite
 
+### Phase 1c — Production des staging MCP (AGENT) — ⛔ AVANT `publish-daily-card.sh`
+
+**10 scanners sont MCP-PRIMARY** (fetch Yahoo + univers local RETIRÉS, décret archi 2026-07-12 « le MCP fait foi »). Ils NE FETCHENT PLUS RIEN : chacun ingère (`--ingest <staging.json>`) un fichier produit **par l'AGENT** (toi). **Un subprocess `node` NE PEUT PAS appeler le MCP** (OAuth2 sur claude.ai, ZÉRO token) — seul l'AGENT (`/scanner` local ou `claude -p` cloud) voit `mcp__marketdata__*`. Donc tu produis les 10 staging **AVANT** de lancer `publish-daily-card.sh` ; le runner shell se contente de `if [ -f "$STAGE" ]` → `--ingest`, sinon **skip non-bloquant** (0 signal légitime ce run, JAMAIS de fetch local réintroduit, JAMAIS de données inventées).
+
+**`candlestick` est le MODÈLE** (déjà câblé, `CANDLESTICK_STAGE` + `--ingest`). Chaque scanner flippé suit le même gate avec sa propre env-var (défaut `/tmp/<name>-stage.json`).
+
+**Deux familles de staging :**
+- **`candidates[]` PRE-SCORÉ** (l'AGENT calcule métriques + score, le scanner applique les gates hérités penny<5 / Sharia / R:R puis top-N) : `highvol`, `forex`, `momentum`, `etf`, `etf-eu`, `trendline-forex`, `trendline-indices`, `factor`.
+- **`bars` map / `candidates[].bars`** (l'AGENT fournit les barres OHLCV brutes, le scanner score/détecte) : `candlestick` (`candidates:[{ticker,bars}]`), `metals` (`bars:{TICKER:[...]}`), `hybrid` (`bars:{TICKER:[...]}`).
+
+Barres = **`QueryData(types=bars_daily)`** (forme array `[[date,o,h,l,c,v],...]` ascendante OU objet `[{date,open,high,low,close,volume}]` — les deux acceptées). Univers/candidats = **`RunScreener`** (rappel Phase 1 : JAMAIS `market_cap` en `pass_expr` → post-filtre en code). Toujours `mcp_ok:true` + `asof:"YYYY-MM-DD"`. **MCP down / couverture insuffisante → NE PAS écrire le staging** (le scanner skippera, 0 signal légitime) — ne JAMAIS fabriquer.
+
+| Scanner | Env-var (défaut) | Appels MCP (AGENT) | Shape staging |
+|---------|------------------|--------------------|---------------|
+| `candlestick` | `CANDLESTICK_STAGE` (`/tmp/candlestick-stage.json`) | `RunScreener` US (univers) → `QueryData bars_daily` par ticker | `{mcp_ok,asof,regime?,universeFetched?,candidates:[{ticker,bars:[[date,o,h,l,c,v]…]}]}` |
+| `highvol` | `HIGHVOL_STAGE` (`/tmp/highvol-stage.json`) | `RunScreener` US breakout + `QueryData bars_daily` → l'agent calcule metrics + score | `{mcp_ok,asof,regime?,vix:{level,trend},universeFetched?,candidates:[{ticker,name?,score,entry,stop,sharia?,region?,horizon?,metrics:{atrPct,distMA20,volRatio,rsi,bbPctB?,distMA200?,mom120?}}]}` |
+| `metals` | `METALS_STAGE` (`/tmp/metals-stage.json`) | `RunScreener` métaux/mines + `QueryData bars_daily` | `{mcp_ok,asof?,minVolumeUsd?,names?:{TICKER:"…"},bars:{TICKER:[[date,o,h,l,c,v]…]}}` |
+| `forex` | `FOREX_STAGE` (`/tmp/forex-stage.json`) | `QueryData bars_daily` sur paires FX + DX-Y.NYB → l'agent score 3 axes | `{mcp_ok,asof,dxyMom30?,dxySymbol?,universeFetched?,candidates:[{ticker,name?,score,price(\|entry),atr,sharia?,region?,horizon?,metrics:{rsi,atrPct,bbPctB,ret30d,ret14d,ret7d,momentumScore,mrScore,rsScore,distMA20,distMA50,distMA200}}]}` |
+| `momentum` | `MOMENTUM_STAGE` (`/tmp/momentum-stage.json`) | `RunScreener` US + `QueryData bars_daily` → l'agent score mom 20/50/100 | `{mcp_ok,asof,regime?,universe?,universeFetched?,candidates:[{ticker,name?,score,entry,stop?,sharia?,region?,universe?,horizon?,metrics:{mom20,mom50,mom100,rsi,atr,…}}]}` |
+| `etf` (US) | `ETF_STAGE` (`/tmp/etf-stage.json`) | `RunScreener` ETF US + `QueryData bars_daily` → l'agent score momentum | `{mcp_ok,asof?,regime?,universeFetched?,candidates:[{ticker,name?,score,entry,stop,cluster?,mom20?,rsi?,atrPct?,category?,sharia?,estDolVol?,estBars?}]}` |
+| `etf-eu` | `ETF_EU_STAGE` (`/tmp/etf-eu-stage.json`) | idem, univers ETF Europe (`--universe etf-eu`) | même shape que `etf` |
+| `trendline-forex` | `TRENDLINE_FOREX_STAGE` (`/tmp/trendline-forex-stage.json`) | `QueryData bars_daily` FX (daily) → l'agent score trend/breakout | `{mcp_ok,asof,regime?,universe?,universeFetched?,candidates:[{ticker,name?,score,entry,stop?,sharia?,region?,universe?,horizon?,metrics:{distMA200,rsi,atrPct,atr?,volRatio?,maAligned?}}]}` |
+| `trendline-indices` | `TRENDLINE_INDICES_STAGE` (`/tmp/trendline-indices-stage.json`) | idem mais **barres 4h** (`QueryData` interval 4h), univers indices | même shape que `trendline-forex` |
+| `hybrid` | `HYBRID_STAGE` (`/tmp/hybrid-stage.json`) | `QueryData bars_daily` sur mega-caps (breadth SMA200) | `{mcp_ok,asof,regime?,bars:{TICKER:[[date,o,h,l,c,v]…]}}` |
+| `factor` | `FACTOR_STAGE` (`/tmp/factor-stage.json`) | `RunScreener` US + `QueryData bars_daily` → l'agent calcule le composite (momentum 12-1 / vol / maxDD) | `{mcp_ok,asof,regime?,universeFetched,universeEligible?,rebalance_day?,candidates:[{ticker,name?,sector?,market_cap?,sharia?,momentum_12_1,realized_vol,max_drawdown,composite,entry,rebalance_day?}]}` |
+
+**Fail-closed uniforme** : staging absent / vide / malformé / `candidates` non-array (ou `bars` non-map) / `mcp_ok:false` → le scanner écrit son marqueur `_scanRuns[...]` incomplet et **NE FABRIQUE RIEN** (exit ≥ 2/3). C'est le comportement voulu : un run sans staging = 0 signal honnête, pas une régression déguisée en fetch local.
+
+⚠️ **`metals` = swap, pas seulement `--ingest`** : `publish-daily-card.sh` appelait `fractal-scanner.js --universe metals`, or **fractal N'EST PAS flippé** (il fetche encore Yahoo + lit `data/metals-universe.json`). Le fix câble donc **`metals-scanner.js --ingest`** (le vrai binaire flippé) et laisse fractal (mode `adaptive_fractal`, Step 2d) intact sur sa voie locale.
+
 ### Phase 2 — Ticker Selection & Validation
 
 **⚠️ Dilution Filter v2 MCP-driven (OBLIGATOIRE)** : `QueryData types=sec_filings,flags days=180` par candidat. Disqualification :
@@ -289,22 +319,24 @@ Après chaque scanner publié, lancer pipeline complet **sans demander confirmat
 
 Source de vérité: tools/publish-daily-card.sh — si divergence, c'est le runner qui gagne.
 
+⛔ **PRÉ-REQUIS (Phase 1c)** : les 10 lignes `--ingest` ci-dessous supposent que l'AGENT a **déjà écrit** les `/tmp/<name>-stage.json` via `mcp__marketdata__*` (voir §"Phase 1c — Production des staging MCP (AGENT)"). Dans `publish-daily-card.sh` chaque appel est gardé par `if [ -f "$<NAME>_STAGE" ]` (env-var surchargeable) → sinon **skip non-bloquant** (0 signal légitime, jamais de fetch local). `fractal` (Step 2d) reste NON flippé (voie locale).
+
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
 node tools/candlestick-scanner.js --ingest /tmp/candlestick-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # AB candlestick signals → bull[] in signals.json. MCP-PRIMARY : NE FETCH PLUS (Yahoo/allorigins + univers local retirés). L'AGENT produit d'abord le staging (mcp__marketdata__ RunScreener US + QueryData bars_daily → {mcp_ok:true,candidates:[{ticker,bars:[[date,o,h,l,c,v],...]}]}). --date = last trading day, --folder = scanner session folder
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
-node tools/highvol-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 20  # HighVol mode (dedicated scanner)
-node tools/fractal-scanner.js --universe metals --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Metals scan
-node tools/forex-scanner.js --output signals --date YYYYMMDD --min-score 20 --top 10  # Forex 3-axis faithful (systematic-tss port: Momentum 40%/MeanRev 30%/RelStrength vs DXY 30%, Yahoo direct) → forex_pool in signals.json. No --folder/--regime flags (unsupported by this script).
+node tools/highvol-scanner.js --ingest /tmp/highvol-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 20  # HighVol mode. MCP-PRIMARY : --ingest OBLIGATOIRE (staging AGENT). Absent → publish-daily-card.sh skip non-bloquant (0 signal légitime).
+node tools/metals-scanner.js --ingest /tmp/metals-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Metals scan. FLIPPÉ : metals-scanner.js --ingest (PLUS fractal-scanner --universe metals — fractal reste NON flippé, fetch local). Staging AGENT.
+node tools/forex-scanner.js --ingest /tmp/forex-stage.json --output signals --date YYYYMMDD --min-score 20 --top 10  # Forex 3-axis (systematic-tss port: Momentum 40%/MeanRev 30%/RelStrength vs DXY 30%) → forex_pool. MCP-PRIMARY --ingest. No --folder/--regime flags (unsupported).
 # Casablanca RETIRÉ 2026-07-11 (univers BVC bloqué/malformé, api.casablanca-bourse.com KO) — ne plus lancer, sinon échec chaque soir + alerte Telegram. casablanca_pool reste vide (géré). Réactivation = source BVC fiable + revalidation.
 # node tools/casablanca-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15
 # node tools/momentum-scanner.js --universe casablanca --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 15
-node tools/momentum-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 20  # Momentum Rotation (US)
-node tools/etf-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (US)
-node tools/etf-scanner.js --universe etf-eu --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (Europe)
-node tools/trendline-scanner.js --universe forex --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (forex)
-node tools/trendline-scanner.js --universe indices --interval 4h --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 40 --top 10  # Trendline Breakout (indices 4h)
-node tools/hybrid-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap signals if narrow rally)
+node tools/momentum-scanner.js --ingest /tmp/momentum-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 5 --top 20  # Momentum Rotation (US). MCP-PRIMARY : staging PRE-SCORÉ (candidates[] scorés côté agent).
+node tools/etf-scanner.js --ingest /tmp/etf-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (US). MCP-PRIMARY --ingest.
+node tools/etf-scanner.js --universe etf-eu --ingest /tmp/etf-eu-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --top 10  # ETF Momentum (Europe). Staging DISTINCT (ETF_EU_STAGE).
+node tools/trendline-scanner.js --universe forex --ingest /tmp/trendline-forex-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 10  # Trendline Breakout (forex). MCP-PRIMARY --ingest (TRENDLINE_FOREX_STAGE).
+node tools/trendline-scanner.js --universe indices --interval 4h --ingest /tmp/trendline-indices-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 10  # Trendline Breakout (indices 4h). Staging DISTINCT (TRENDLINE_INDICES_STAGE, barres 4h).
+node tools/hybrid-scanner.js --ingest /tmp/hybrid-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # Hybrid breadth analysis → signals.json (MegaCap si narrow rally). MCP-PRIMARY --ingest.
 # FACTOR (mode `factor`, sim-only) → factor_pool. 2 voies (voir "factor — voie MCP (--ingest)" §ci-dessous) :
 #   VOIE MCP (POC #1 migration local→MCP, RECOMMANDÉE) : ÉTAPE AGENT d'abord (l'agent appelle mcp__marketdata__*
 #     RunScreener US + QueryData bars_daily, calcule le composite, écrit /tmp/factor-stage.json), PUIS :
