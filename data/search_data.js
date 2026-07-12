@@ -5,19 +5,6 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Le CPI de lundi décide de tout — Semaine du 13 au 17 juillet 2026",
-    "desc": "Le S&P clôture la semaine sur un record, la croissance a repris le volant et le VIX est retombé à 15. Toute la semaine à venir se joue lundi avant l'ouverture, sur un seul chiffre d'inflation. Positionnement, niveaux réels et bilan honnête des idées de la semaine écoulée.",
-    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,energy,trade-idea,etf",
-    "grade": "",
-    "href": "/weekly/20260713/",
-    "date": "13 juillet 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
     "title": "Rotation on Trial: Where the Money Goes Next — Week of July 6–10, 2026",
     "desc": "A flat S&P hid the sharpest factor rotation of the summer: tech and semis dumped into gold, materials, healthcare and international. Credit and crypto say risk is still on. Here is how to trade the week ahead — with real levels.",
     "tags": "us,eu,commodity,gold,mining,healthcare,semis,macro,technique,trade-idea,etf",
@@ -323,6 +310,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "CPI, banques et semis: la semaine qui teste le record",
+    "desc": "Weekly DailyTickers du 13 au 17 juillet 2026. CPI lundi, earnings bancaires mardi, ASML mercredi, TSM/NFLX/GE jeudi. Régime risk-on mais taux à 4,57% et options SPY concentrées sur le CPI.",
+    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,industrials,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260713/",
+    "date": "13 juillet 2026"
   },
   {
     "type": "daily",
