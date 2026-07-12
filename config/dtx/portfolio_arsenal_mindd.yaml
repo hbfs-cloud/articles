@@ -7,10 +7,13 @@
 # ROBUST optimum — a whole cluster of near-center genomes lands on the same ~60/DD19/S2.07 plateau.
 # The higher-fitness variants squeeze +4pp CAGR only by DROPPING etf_us = knife-edge SHARP-PEAK
 # (rec_score -1.9, neighbors collapse) → rejected. Equal-weight chosen for OOS stability.
-#   FULL 2021-01-01..2026-06-30: CAGR 60.3% / MaxDD 19.3% / Sharpe 2.07 / R2 0.91 / 4817 trades.
+#   Baseline MARKET/no-stop 2021-01-01..2026-06-30: CAGR 60.3% / MaxDD 19.3% / Sharpe 2.07 / R2 0.91 / 4817 trades.
+#   Clean isolated-universe + rotation LIMIT-only guard:
+#   CAGR 58.6% / MaxDD 19.4% / Sharpe 1.55 / R2 0.91 / 3963 trades.
+#   Guarded max-DD: peak 2025-02-18 -> trough 2025-04-07 -> recovery 2025-07-17.
 #   Walk-forward: W1 2021-22 9.7%/DD17.7 (choppy, R2 0.06) · W2 22-24 64.9%/DD15.1/S2.75 ·
 #                 W3 24-26 89.0%/DD14.7/S2.67. No losing window.
-# Bar: R2 0.91>=0.80 · CAGR 60.3>DD 19.3 · Sharpe 2.07>=1. VIABLE.
+# Bar: R2 0.91>=0.80 · CAGR 58.6>DD 19.4 · Sharpe 1.55>=1. VIABLE.
 #
 # HONEST CAVEATS:
 #  - DD FLOOR ~18-19% for this cost-honest long-only-unlevered US-centric pool. Lower-DD sleeves
@@ -110,6 +113,8 @@ portfolios:
         rotation_rebalance_days: 21
         rotation_abs_filter: 0
         rotation_cooldown_days: 35
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
   - name: etf_us
     region: US
     currency: USD
@@ -209,6 +214,8 @@ portfolios:
         rotation_abs_filter: 1
         regime_scale_ma_days: 150
         rotation_cooldown_days: 21
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
   - name: ep
     region: US
     currency: USD

@@ -6,8 +6,9 @@
 #   MEASURED cost-honest (TOTAL_RETURN=1, FROZEN_BARS_DATE=2026-07-08, COST_SPREAD_BPS=10,
 #   -max-participation 0.1, 2021-01-01..2026-06-30):
 #     us_highvol seul : CAGR 86.7% / DD 28.6% / Sharpe 1.83 / R2 0.93
-#     stockbox  seul : CAGR 76.0% / DD 31.7% / Sharpe 1.64 / R2 0.83
-#     BOOK 50/50     : CAGR 81.7% / DD 25.0% / Sharpe 2.07 / R2 0.92   <-- DD < chacun, Sharpe > chacun
+#     stockbox  seul : CAGR 74.9% / DD 31.2% / Sharpe 1.63 / R2 0.83 (LIMIT-only)
+#     BOOK 50/50     : CAGR 81.2% / DD 25.0% / Sharpe 2.06 / R2 0.92 / 852 trades (LIMIT-only)
+#       Max-DD: peak 2023-07-31 -> trough 2023-10-27 -> recovery 2024-02-12.
 #   Walk-forward (anneal_optimizer, seed42, config/optimizer/highvol_stockbox_weights.yaml, ser):
 #     W1 2021-22 30.8%/DD23.0  ·  W2 2022-24 104.8%/DD24.4  ·  W3 2024-26 132.9%/DD25.1  — STABLE plateau,
 #     baseline 50/50 = recommended (rec_score 3.891, std 0.010, PAS de sharp peak).
@@ -24,10 +25,9 @@
 #   [RÉSERVE #2 — look-ahead] whitelist stockbox = membership NDX-2026 ; ALAB/NBIS (IPO 2024) + ARM
 #     (IPO 2023) sont dans les 8 positions finales mais n'existaient pas dans le NDX en 2021 →
 #     magnitude surestimée (biais commun à tout le book : ranking fiable, magnitude optimiste).
-#   [RÉSERVE #3 — exec] stockbox=index-rotation émet des MARKET nus → desk-guard les passe en
-#     LIMIT@prev_close×1.03 + stop 2×ATR NON backtesté : une rotation gap-up >3% peut ne pas remplir
-#     (slot en cash, gagnant raté). Non chiffré (export sans prev_close/rotation). À mesurer sur les
-#     226 rotations ; envisager MARKET réel pour la leg d'achat de rotation. highvol=bracket natif OK.
+#   [RÉSERVE #3 — exec] stockbox=index-rotation est maintenant backtesté en LIMIT@prev_close×1.03
+#     sans stop ATR. Le stop 2×ATR dégradait la rotation (75.0/DD29.5); LIMIT-only garde le profil
+#     historique quasi intact (81.2/DD25.0/S2.06).
 #   [OK] Coûts : stress spread 20bp = CAGR 77.4/DD24.9/Sharpe1.98/R2 0.92 (vs 81.7/25.0/2.07 @10bp) —
 #     barre CAGR>DD tenue avec marge massive (low-turnover : 226 rot + 627 trades). Capacité 100k€ OK
 #     (~23 lignes ~2-4k€, gate $3M/j + max-participation 0.1 → <1% du volume/jour, fractional Alpaca).
@@ -117,3 +117,5 @@ portfolios:
         rotation_rebalance_days: 21
         rotation_abs_filter: 0
         rotation_cooldown_days: 35
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
