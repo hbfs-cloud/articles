@@ -7,21 +7,27 @@
  * Momentum ranking scanner: MA50>MA200 uptrend, positive momentum 20/50/100d,
  * weighted scoring, consistency bonus. Used by Casablanca (MA) and EU configs.
  *
+ * ─── MCP-PRIMARY (décret archi 2026-07-12 « le MCP fait foi ») ─────────────────────────────────
+ * Pour les univers COUVERTS par le MCP marketdata (americanbull=US, metals, forex, eu), la voie
+ * --ingest (staging produit par l'AGENT via mcp__marketdata__* — OAuth2, zéro token) est le SEUL
+ * chemin data. Le fetch Yahoo (query1.finance.yahoo.com) et la lecture data/*-universe.json ont
+ * été RETIRÉS : le node ne fetch plus rien pour ces univers.
+ * SEULE EXCEPTION : casablanca (BVC) N'EST PAS couvert par le MCP marketdata (COVERED_STALE — ATW/
+ * IAM figés 2022-03) → conserve sa voie publique BVC légitime (bvc-fetcher, tickers depuis l'API
+ * BVC, pas d'univers local ni de Yahoo). Ce n'est PAS du legacy à virer.
+ *
  * Usage:
- *   node tools/momentum-scanner.js --dry-run
- *   node tools/momentum-scanner.js --universe americanbull --top 20
- *   node tools/momentum-scanner.js --output signals --folder 20260629
+ *   node tools/momentum-scanner.js --universe americanbull --ingest /tmp/momentum-stage.json --output signals --folder 20260629
+ *   node tools/momentum-scanner.js --universe casablanca --output signals --folder 20260629   # voie BVC publique
  */
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 const {
   calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
   calcAvgVolume, calcMedianVolume, calcDollarVolumePercentile,
 } = require('./lib/fractal-indicators');
 const { batchFetchBVC } = require('./lib/bvc-fetcher');
-const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -42,10 +48,11 @@ const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const CONCURRENCY = parseInt(getArg('concurrency', '10'));
-// ─── VOIE MCP (--ingest) — voie optionnelle data-path MCP (modèle factor-scanner.js --ingest) ──
-// Quand --ingest est fourni, le scanner NE FETCH RIEN (ni Yahoo, ni BVC, ni cache) : il PARSE un
-// staging JSON écrit par l'AGENT (qui, LUI, a appelé mcp__marketdata__* — OAuth2, zéro token). Le
-// chemin LOCAL (Yahoo/BVC + univers local) reste PRIMARY ; --ingest est une voie MCP optionnelle.
+// ─── VOIE MCP (--ingest) — SEUL chemin data pour les univers couverts (MCP-PRIMARY) ─────────────
+// Quand --ingest est fourni, le scanner NE FETCH RIEN : il PARSE un staging JSON écrit par l'AGENT
+// (qui, LUI, a appelé mcp__marketdata__* — OAuth2, zéro token) : RunScreener (pool US/EU/metals/forex)
+// + QueryData bars_daily → momentum scoré côté agent. Modèle factor-scanner.js / top-10.
+// Pour americanbull/metals/forex/eu, --ingest est OBLIGATOIRE : le fetch Yahoo local a été supprimé.
 const INGEST_PATH = getArg('ingest', null);
 // Univers effectif de la voie MCP (résolu depuis le staging dans ingestMain — défaut = --universe).
 let INGEST_UNIVERSE = UNIVERSE_NAME;
@@ -67,100 +74,14 @@ const PARTIAL_TP_GAIN_PCT = 10; // modes-config.json modes.momentum.partialTPGai
 
 const IS_BVC = UNIVERSE_NAME === 'casablanca';
 
-// Cache prix DATÉ partagé (tools/lib/price-cache.js). marché=CVA pour casablanca (chemin BVC
-// géré par bvc-fetcher), US sinon ; interval 1d ; date = jour de scan (--date ou aujourd'hui).
-// Snapshot point-in-time rejouable : une date passée relit le fichier gelé, jamais de re-fetch.
-const CACHE_MARKET = IS_BVC ? priceCache.MARKETS.CVA : priceCache.MARKETS.US;
-const CACHE_OPTS = { date: SCAN_DATE, market: CACHE_MARKET, interval: '1d' };
-
-const UNIVERSE_FILES = {
-  americanbull: 'americanbull-universe.json',
-  metals: 'metals-universe.json',
-  forex: 'forex-universe.json',
-  casablanca: 'casablanca-universe.json',
-  eu: 'eu-universe.json', // univers EU (stockanalysis, DE/FR/NL/IT/ES/PL/CH/UK/GR) — momentum EU
-};
-
-// ─── Universe loader ────────────────────────────────────────────────────────
-
-function loadUniverse() {
-  if (CUSTOM_TICKERS.length) return CUSTOM_TICKERS;
-  const file = UNIVERSE_FILES[UNIVERSE_NAME];
-  if (!file) { console.error(`❌ Unknown universe: ${UNIVERSE_NAME}`); process.exit(1); }
-  const fp = path.join(ROOT, 'data', file);
-  if (!fs.existsSync(fp)) { console.error(`❌ Universe file not found: ${fp}`); process.exit(1); }
-  const data = JSON.parse(fs.readFileSync(fp, 'utf8'));
-  // Supporte 3 formats: {tickers:[strings]} (americanbull), {stocks:[{symbol}]} (eu-universe), array brut.
-  const raw = data.tickers || data.stocks || (Array.isArray(data) ? data : []);
-  return raw.map(x => (typeof x === 'string' ? x : (x && (x.symbol || x.ticker)))).filter(Boolean);
-}
-
-// ─── Yahoo OHLCV fetcher (shared cache) ─────────────────────────────────────
-
+// MIN_BARS : 120 (BVC, historiques plus courts) sinon 200 (nécessaire pour MA200). Utilisé par
+// scoreSymbol (voie BVC casablanca) et hérité par les gates ; la voie MCP --ingest score côté agent.
 const MIN_BARS = IS_BVC ? 120 : 200;
 
-function readCache(ticker) {
-  // Snapshot DATÉ …/<SCAN_DATE>/1d/US/<ticker>.json (TTL 12h uniquement si SCAN_DATE==aujourd'hui ;
-  // date passée = immuable). Fallback lecture seule sur le legacy plat géré par le helper.
-  const bars = priceCache.readBars(ticker, CACHE_OPTS);
-  if (bars && bars.length >= MIN_BARS) return bars;
-  return null;
-}
-
-function fetchOHLCV(ticker) {
-  return new Promise((resolve) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=2y&interval=1d`;
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 15000 }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (!j.chart?.result?.[0]) return resolve(null);
-          const q = j.chart.result[0];
-          const ts = q.timestamp || [];
-          const ind = q.indicators?.quote?.[0];
-          const adj = q.indicators?.adjclose?.[0]?.adjclose;
-          if (!ind || !ts.length) return resolve(null);
-          const bars = [];
-          for (let i = 0; i < ts.length; i++) {
-            const o = ind.open?.[i], h = ind.high?.[i], l = ind.low?.[i], c2 = ind.close?.[i], v = ind.volume?.[i];
-            if (o == null || c2 == null) continue;
-            bars.push({
-              date: new Date(ts[i] * 1000).toISOString().slice(0, 10),
-              open: o, high: h || o, low: l || o, close: c2,
-              adjClose: adj?.[i] || c2, volume: v || 0,
-            });
-          }
-          if (bars.length >= MIN_BARS) {
-            // writeBars TRONQUE à bar.date <= SCAN_DATE (anti-look-ahead ; no-op en forward).
-            priceCache.writeBars(ticker, bars, CACHE_OPTS);
-          }
-          resolve(bars.length >= MIN_BARS ? bars : null);
-        } catch { resolve(null); }
-      });
-    }).on('error', () => resolve(null)).on('timeout', function () { this.destroy(); resolve(null); });
-  });
-}
-
-async function batchFetch(tickers, concurrency) {
-  const result = new Map();
-  const queue = [...tickers];
-  let done = 0, cached = 0;
-  async function worker() {
-    while (queue.length) {
-      const t = queue.shift();
-      let bars = readCache(t);
-      if (bars) { cached++; } else { bars = await fetchOHLCV(t); }
-      if (bars) result.set(t, bars);
-      done++;
-      if (done % 100 === 0) process.stderr.write(`  fetched ${done}/${tickers.length} (${result.size} valid, ${cached} cached)\r`);
-    }
-  }
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  process.stderr.write(`  fetched ${done}/${tickers.length} (${result.size} valid, ${cached} cached)\n`);
-  return result;
-}
+// NOTE MCP-PRIMARY : le fetch Yahoo (fetchOHLCV/batchFetch), son cache prix daté (price-cache) et le
+// loader d'univers local (loadUniverse + data/*-universe.json) ont été RETIRÉS. Les univers couverts
+// par le MCP passent par --ingest (staging agent→mcp__marketdata__) ; casablanca passe par batchFetchBVC
+// (API BVC publique, tickers résolus par bvc-fetcher.loadInstruments — hors périmètre MCP).
 
 // ─── Momentum Rotation Scoring (exact port of scanner_momentum_rotation.go) ─
 
@@ -423,23 +344,27 @@ function ingestMain() {
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function main() {
-  // VOIE MCP (optionnelle) : si --ingest, on PARSE le staging agent→MCP et on NE FETCH RIEN (ni Yahoo,
-  // ni BVC, ni univers local). Le chemin LOCAL ci-dessous reste PRIMARY (défaut, --ingest absent).
+  // VOIE MCP (--ingest) : on PARSE le staging agent→MCP et on NE FETCH RIEN. SEUL chemin data pour les
+  // univers couverts (americanbull/metals/forex/eu).
   if (INGEST_PATH) { ingestMain(); return; }
 
-  const universe = loadUniverse();
-  console.log(`🔄 Momentum Rotation Scanner (systematic-tss port)`);
-  console.log(`   Universe: ${universe.length} tickers (${UNIVERSE_NAME}) | minScore: ${MIN_SCORE} | top: ${TOP_N}`);
-  console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
-
-  let priceData;
-  if (IS_BVC) {
-    console.log(`📡 Fetching OHLCV data via BVC API...`);
-    priceData = await batchFetchBVC(CONCURRENCY, { date: SCAN_DATE });
-  } else {
-    console.log(`📡 Fetching OHLCV data via Yahoo...`);
-    priceData = await batchFetch(universe, CONCURRENCY);
+  // MCP-PRIMARY (« le MCP fait foi », décret 2026-07-12) : pour un univers COUVERT par le MCP
+  // marketdata, --ingest est OBLIGATOIRE. Le fetch Yahoo local et la lecture data/*-universe.json ont
+  // été RETIRÉS — le node ne fetch plus rien pour ces univers. RIEN n'est fabriqué : on sort en erreur.
+  if (!IS_BVC) {
+    console.error(`❌ momentum est MCP-PRIMARY pour l'univers « ${UNIVERSE_NAME} » : fournir --ingest <staging.json>.`);
+    console.error(`   Le staging est produit par l'AGENT via mcp__marketdata__* (RunScreener + QueryData bars_daily).`);
+    console.error(`   Le fetch Yahoo/query1 + la lecture data/*-universe.json ont été supprimés (MCP = référence).`);
+    process.exit(1);
   }
+
+  // casablanca : NON couvert par le MCP marketdata (COVERED_STALE, ATW/IAM figés 2022-03) → voie
+  // publique BVC légitime (bvc-fetcher : tickers résolus depuis l'API BVC, aucun univers local, aucun
+  // Yahoo). Ce n'est PAS du legacy à retirer — c'est le seul flux data disponible pour Casablanca.
+  console.log(`🔄 Momentum Rotation Scanner (casablanca / BVC — hors périmètre MCP marketdata)`);
+  console.log(`   minScore: ${MIN_SCORE} | top: ${TOP_N} | Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
+  console.log(`📡 Fetching OHLCV data via BVC API...`);
+  const priceData = await batchFetchBVC(CONCURRENCY, { date: SCAN_DATE });
   if (!priceData.size) { console.error('❌ No OHLCV data — aborting.'); process.exit(1); }
 
   console.log('🔍 Scoring candidates (momentum ranking)...');
@@ -449,11 +374,6 @@ async function main() {
   for (const [ticker, rawBars] of priceData) {
     const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
     const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
-
-    if (!IS_BVC) {
-      const dvP80 = calcDollarVolumePercentile(bars, 20, 0.80);
-      if (dvP80 < 100_000) continue;
-    }
 
     const result = scoreSymbol(bars, REGIME);
     if (!result) continue;
