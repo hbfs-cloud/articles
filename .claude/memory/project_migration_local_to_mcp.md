@@ -25,6 +25,25 @@ scanners couverts par le MCP en MCP-PRIMARY + on PURGE la branche fetch local + 
 nécessaire : ne purger le local QUE là où le MCP COUVRE la data. crypto (Binance) / casablanca (BVC) ne sont
 PAS couverts par le MCP → restent fetch-direct public légitime (pas du legacy local à virer).
 
+## ✅ FAIT 2026-07-12 : 10 scanners basculés MCP-primary + pipeline câblé (e2e prouvé)
+10 scanners (momentum/etf/trendline/factor/highvol/forex/stockbox/hybrid/metals/candlestick) basculés
+MCP-primary : retrait fetch Yahoo/univers local, le chemin `--ingest` (staging produit par l'AGENT via MCP)
+devient le SEUL chemin. Commits `0be160794`→`20419cdac` (flips) + `aa92811d7` (câblage pipeline).
+
+⚠️ **LEÇON DURE (gotcha à retenir)** : un flip MCP-primary N'EST PAS COMPLET tant que le PIPELINE n'est pas
+câblé. Le flip initial a retiré le fetch local des 10 scanners MAIS `publish-daily-card.sh` les appelait
+encore SANS `--ingest` → ils refusaient de tourner → **0 signal en run auto = régression de prod silencieuse**
+(masquée par `|| non-blocking`). Cause : un subprocess `node` NE PEUT PAS appeler le MCP. **Un flip
+MCP-primary DOIT livrer, dans le MÊME lot** : (1) retrait fetch local du scanner, (2) `publish-daily-card.sh`
+staging-check + `--ingest` (pattern candlestick : `if [ -f "$X_STAGE" ]; then --ingest; else skip gracieux`),
+(3) skill `/scanner` Phase 1 = l'AGENT produit `/tmp/<name>-stage.json` via MCP AVANT le shell, (4) vérif
+e2e (staging MCP → --ingest → signaux > 0). Réparé `aa92811d7`, e2e prouvé (momentum 2 / etf 5 / factor 5).
+
+## Purge univers = ENCORE BLOQUÉE (consommateurs restants)
+`fractal-scanner.js` + `gap-scanner.js` (non flippés, general-purpose) lisent encore TOUS les
+`data/*-universe.json` → aucun univers n'est orphelin, donc RIEN purgé (correct). Pour purger : migrer aussi
+fractal/gap (ou les faire lire un univers MCP), puis supprimer les univers sans consommateur.
+
 ## Rollout (mode par mode, gated sur validité MCP)
 - **momentum / etf / trendline / factor** : --ingest MCP déjà construit → flip en sole path + retrait branche
   Yahoo/univers local. equity US couvert par le MCP.
