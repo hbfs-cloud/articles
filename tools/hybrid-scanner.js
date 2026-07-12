@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * hybrid-scanner.js — Port of systematic-tss Hybrid Scanner
+ * hybrid-scanner.js — Port of systematic-tss Hybrid Scanner. MCP-PRIMARY.
  *
  * Switches between AF (fractal-scanner), MegaCap, and DSL based on market breadth:
  *   - AF (aggressive) when >15% of stocks have >30% gain in 60d (broad momentum frenzy)
@@ -10,22 +10,44 @@
  *   - DSL (defensive) otherwise
  *   - BLEND modes for gray zones
  *
- * This scanner reads the shared cache from candlestick/fractal scanners.
- * It appends signals to an existing signals.json with strategy: "Hybrid-AF" / "Hybrid-MegaCap" / "Hybrid-DSL"
+ * It appends signals to an existing signals.json with strategy "HybridMegaCap" (MEGACAP/BLEND_MEGA
+ * mode only) and writes the breadth analysis into signals.breadth + a _scanRuns['hybrid'] marker.
+ * (AF / DSL / BLEND modes emit no own signals — fractal-scanner already produced them.)
+ *
+ * ─── VOIE UNIQUE : MCP (décret archi 2026-07-12 « le MCP fait foi ») ──────────────────────────────
+ *   Le scanner hybrid est MCP-PRIMARY : le CHEMIN MCP (--ingest, staging produit par l'AGENT) est
+ *   le SEUL chemin data. L'ancienne branche fetch local (Yahoo query1/allorigins) et la lecture du
+ *   cache prix partagé + de l'univers local (data/americanbull-universe.json) ont été RETIRÉES. Ce
+ *   script NE FETCH RIEN (ni réseau, ni cache disque) et NE LIT AUCUN univers local : il PARSE le
+ *   staging JSON écrit par l'agent — qui, LUI, a appelé mcp__marketdata__* (RunScreener US +
+ *   QueryData bars_daily) et rassemblé les barres OHLCV. Seule la SOURCE des barres change ; toute la
+ *   LOGIQUE de signal (breadth extremePct/megaConc/megaMom, determineMode, scoreMegaCap) est intacte.
+ *
+ *   Pipeline de génération du staging (côté AGENT, PAS ce node) :
+ *     RunScreener(region=US, asset=stock, force_async → Jobs) → univers US large énuméré
+ *       (représentatif pour la breadth — la même intention que l'ancien americanbull-universe)
+ *     QueryData(types=bars_daily) ~2y → barres OHLCV par nom, MEGA_CAP_TICKERS INCLUS avec ≥200
+ *       barres (SMA200 dans scoreMegaCap). L'agent écrit /tmp/hybrid-stage.json {mcp_ok, asof, bars}.
  *
  * Usage:
- *   node tools/hybrid-scanner.js --date 20260626 --folder 20260629 --output signals
- *   node tools/hybrid-scanner.js --date 20260626 --dry-run    # breadth analysis only
+ *   # l'agent a d'abord écrit /tmp/hybrid-stage.json via mcp__marketdata__*
+ *   node tools/hybrid-scanner.js --ingest /tmp/hybrid-stage.json --output signals --date 20260710 --folder 20260713 --regime RISK_ON
+ *   node tools/hybrid-scanner.js --ingest /tmp/hybrid-stage.json --dry-run    # breadth analysis only, aucun fichier écrit
+ *
+ * Staging shape :
+ *   { mcp_ok:true, asof:"YYYY-MM-DD", regime?:"RISK_ON",
+ *     bars: { "AAPL": [["YYYY-MM-DD",o,h,l,c,v], ...] | [{date,open,high,low,close,volume},...], ... } }
+ *
+ * Codes de sortie : 0 = OK ; 3 = staging absent/vide/malformé/mcp_ok:false/error (run marqué
+ *   incomplet, RIEN fabriqué) ; 2 = --ingest manquant (voie MCP obligatoire) ; 1 = inattendu.
  */
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 const {
   calcSMA, calcRSI, calcATR, calcVolatility, calcMomentum,
   calcAvgVolume, calcDollarVolumePercentile, calcStochastic,
 } = require('./lib/fractal-indicators');
-const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
 
@@ -37,18 +59,16 @@ function getArg(name, def) {
 const hasFlag = name => args.includes(`--${name}`);
 
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
-// Cache prix DATÉ partagé (source unique de vérité). Marché=US, interval=1d.
-// La date = le jour de scan (--date) → snapshot point-in-time rejouable, jamais de pollution
-// inter-dates. Fallback lecture legacy géré par le helper si le fichier daté manque.
-const CACHE_OPTS = { date: SCAN_DATE, market: priceCache.MARKETS.US, interval: '1d' };
-const SCAN_DATE_IS_TODAY = priceCache.normalizeDate(SCAN_DATE) === priceCache.todayISO();
 const SCAN_FOLDER = getArg('folder', null);
 const REGIME = getArg('regime', null);
 const DRY_RUN = hasFlag('dry-run');
 const OUTPUT_MODE = getArg('output', 'stdout');
 const TOP_N = parseInt(getArg('top', '30'));
-const CONCURRENCY = parseInt(getArg('concurrency', '15'));
 const STRATEGY_TAG = getArg('strategy', null);
+// ─── VOIE MCP (--ingest) — SEUL chemin data (MCP-PRIMARY) ───────────────────────────────────────
+// Le scanner NE FETCH RIEN (ni Yahoo, ni cache disque) et NE LIT AUCUN univers local : il PARSE un
+// staging JSON écrit par l'AGENT (qui, LUI, a appelé mcp__marketdata__*). --ingest est OBLIGATOIRE.
+const INGEST_PATH = getArg('ingest', null);
 
 // Point-in-time established-liquidity gate (survivorship / look-ahead guard) — MEDIAN dollar
 // volume over ESTABLISHED_LOOKBACK bars ≤ scanDate. OFF by default (0); a re-ported mode passes
@@ -66,72 +86,25 @@ const MEGA_CAP_TICKERS = [
   'GS', 'ELV', 'BKNG', 'AMAT', 'BLK',
 ];
 
-// ─── Yahoo OHLCV fetcher ──────────────────────────────────────────────────
-
-function readCache(ticker, minBars = 60) {
-  // Lecture via le cache daté partagé (TTL 12h appliqué SEULEMENT si SCAN_DATE == aujourd'hui ;
-  // date passée = snapshot immuable). Fallback legacy plat en lecture seule si fichier daté absent.
-  const bars = priceCache.readBars(ticker, CACHE_OPTS);
-  if (!bars || bars.length < minBars) return null;
-  // Parité migration : le helper ne TTL pas le fallback legacy. Tant qu'aucun snapshot DATÉ n'existe
-  // pour aujourd'hui, on lit encore le plat — on restaure alors le gate de fraîcheur 24h historique de
-  // la breadth (identique en forward, où l'amont rafraîchit le cache le jour même). No-op dès qu'un
-  // snapshot daté existe (le helper prend le relais avec son TTL 12h) ou pour une date passée (immuable).
-  if (SCAN_DATE_IS_TODAY && !fs.existsSync(priceCache.cacheFile(ticker, CACHE_OPTS))) {
-    try {
-      const legacy = path.join(priceCache.PRICE_CACHE_ROOT, `${ticker}_ohlcv.json`);
-      const age = (Date.now() - fs.statSync(legacy).mtimeMs) / 3600000;
-      if (age > 24) return null;
-    } catch { /* pas de legacy lisible → laisser passer (le helper a déjà validé les bars) */ }
+// ─── Staging bars normalizer (MCP-native rows OR objects → {date,open,high,low,close,volume}) ────
+// N'INVENTE aucune donnée : toute barre incomplète est écartée. Accepte les deux formes que peut
+// émettre l'agent : ligne MCP [date,o,h,l,c,v] ou objet déjà nommé.
+function normalizeBars(raw) {
+  if (!Array.isArray(raw)) return null;
+  const out = [];
+  for (const b of raw) {
+    let date, open, high, low, close, volume;
+    if (Array.isArray(b)) {
+      [date, open, high, low, close, volume] = b;
+    } else if (b && typeof b === 'object') {
+      date = b.date; open = b.open; high = b.high; low = b.low; close = b.close; volume = b.volume;
+    } else { continue; }
+    if (date == null || open == null || high == null || low == null || close == null) continue;
+    out.push({ date: String(date).slice(0, 10), open: +open, high: +high, low: +low, close: +close, volume: +(volume || 0) });
   }
-  return bars;
-}
-
-function fetchOHLCV(ticker) {
-  return new Promise((resolve) => {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=2y&interval=1d`;
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 15000 }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (!j.chart?.result?.[0]) return resolve(null);
-          const q = j.chart.result[0];
-          const ts = q.timestamp || [];
-          const ohlc = q.indicators?.quote?.[0] || {};
-          const bars = [];
-          for (let i = 0; i < ts.length; i++) {
-            const o = ohlc.open?.[i], h = ohlc.high?.[i], l = ohlc.low?.[i], c = ohlc.close?.[i], v = ohlc.volume?.[i];
-            if (o != null && h != null && l != null && c != null) {
-              const d = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-              bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v || 0 });
-            }
-          }
-          if (bars.length >= 60) {
-            // Écrit dans le snapshot daté ; writeBars TRONQUE à bar.date <= SCAN_DATE
-            // (anti-look-ahead au backfill ; no-op en forward).
-            priceCache.writeBars(ticker, bars, CACHE_OPTS);
-          }
-          resolve(bars.length >= 60 ? bars : null);
-        } catch { resolve(null); }
-      });
-    }).on('error', () => resolve(null)).on('timeout', function() { this.destroy(); resolve(null); });
-  });
-}
-
-async function ensureCached(tickers) {
-  const missing = tickers.filter(t => !readCache(t));
-  if (!missing.length) return;
-  console.log(`  Fetching ${missing.length} uncached tickers...`);
-  const queue = [...missing];
-  async function worker() {
-    while (queue.length) {
-      const t = queue.shift();
-      await fetchOHLCV(t);
-    }
-  }
-  await Promise.all(Array.from({ length: CONCURRENCY }, () => worker()));
+  // Tri chronologique ascendant (parité avec l'ancien fetch Yahoo qui rendait des barres ordonnées).
+  out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return out;
 }
 
 // ─── Breadth analysis (port of calcExtremePct, calcMegaCapConcentration) ────
@@ -257,36 +230,113 @@ function scoreMegaCap(bars, regime) {
   };
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+// ─── VOIE MCP : --ingest (SEUL chemin data) ─────────────────────────────────────────────────────
+// Ingest + validation du staging (mêmes règles fail-closed que factor/pead-scanner.loadStaging).
+function loadStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!data.bars || typeof data.bars !== 'object' || Array.isArray(data.bars)) {
+    return { ok: false, reason: 'ingest_no_bars_object' };
+  }
+  if (!Object.keys(data.bars).length) return { ok: false, reason: 'ingest_bars_empty' };
+  return { ok: true, data };
+}
 
+function resolveSigPath() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
+}
+
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de pool. No-op en dry-run / hors signals.
+function writeIncompleteMarker(reason, extra) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPath();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude hybrid.`);
+    return false;
+  }
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  if (!signals._scanRuns) signals._scanRuns = {};
+  signals._scanRuns.hybrid = Object.assign({
+    at: new Date().toISOString(), universe: 'hybrid', dataPath: 'mcp-ingest',
+    signals: 0, incomplete: true, reason,
+  }, extra || {});
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _scanRuns['hybrid'] écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
+}
+
+// ─── Main ───────────────────────────────────────────────────────────────────
 async function main() {
-  console.log('🔄 Hybrid Scanner (systematic-tss port)');
+  console.log('🔄 Hybrid Scanner (systematic-tss port) — VOIE MCP (--ingest, MCP-PRIMARY, seul chemin data)');
   console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
 
-  // Load universe for breadth analysis
-  const uniPath = path.join(ROOT, 'data', 'americanbull-universe.json');
-  if (!fs.existsSync(uniPath)) { console.error('❌ americanbull-universe.json not found'); process.exit(1); }
-  const universe = JSON.parse(fs.readFileSync(uniPath, 'utf8')).tickers || [];
+  // MCP-PRIMARY : --ingest (staging agent→MCP) est le SEUL chemin data. Plus de fallback local
+  // (Yahoo + cache prix + univers local retirés — décret archi 2026-07-12). Sans --ingest → erreur.
+  if (!INGEST_PATH) {
+    console.error('❌ hybrid-scanner est MCP-PRIMARY : --ingest <staging.json> est OBLIGATOIRE.');
+    console.error('   L\'agent doit d\'abord écrire le staging via mcp__marketdata__* (RunScreener US + QueryData bars_daily),');
+    console.error('   puis : node tools/hybrid-scanner.js --ingest /tmp/hybrid-stage.json --output signals --folder YYYYMMDD --regime REGIME');
+    process.exit(2);
+  }
 
-  // Read all cached bars for breadth calculation
-  console.log('📊 Loading cached OHLCV for breadth analysis...');
+  const staged = loadStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging hybrid indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeIncompleteMarker(staged.reason, { ingestPath: INGEST_PATH || null });
+    process.exit(3);
+  }
+  const data = staged.data;
+  const regime = REGIME || data.regime || null;
+
+  // Construit allBars depuis le staging (barres OHLCV rassemblées par l'agent via MCP). L'univers =
+  // les clés de staging.bars — plus aucune lecture de data/americanbull-universe.json ni du cache.
+  console.log('📊 Chargement des barres OHLCV du staging pour la breadth...');
   const allBars = new Map();
   let loaded = 0;
-  for (const t of universe) {
-    const bars = readCache(t);
-    if (bars) { allBars.set(t, bars); loaded++; }
+  for (const [ticker, rawBars] of Object.entries(data.bars)) {
+    const bars = normalizeBars(rawBars);
+    if (bars && bars.length >= 60) { allBars.set(ticker, bars); loaded++; }
   }
-  console.log(`   ${loaded}/${universe.length} tickers cached`);
+  const universeCount = Object.keys(data.bars).length;
+  console.log(`   ${loaded}/${universeCount} tickers avec ≥60 barres valides`);
 
   if (loaded < 200) {
-    console.log('⚠️  Insufficient cached data for breadth. Run fractal-scanner first to populate cache.');
-    console.log('   Defaulting to DSL mode.');
-    console.log(JSON.stringify({ mode: 'DSL', extremePct: 0, megaCapConcentration: 0, note: 'insufficient data' }));
+    // Breadth non fiable sur < 200 noms : on NE fabrique pas de signal, on marque le run incomplet
+    // et on retombe sur DSL (défaut défensif — parité avec l'ancien comportement "insufficient data").
+    console.log('⚠️  Barres insuffisantes pour la breadth (< 200 noms valides). Mode par défaut : DSL.');
+    const fallback = { mode: 'DSL', extremePct: 0, megaCapConcentration: 0, note: 'insufficient data' };
+    console.log(JSON.stringify(fallback));
+    if (!DRY_RUN && OUTPUT_MODE === 'signals') {
+      const sigPath = resolveSigPath();
+      if (fs.existsSync(sigPath)) {
+        const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+        signals.breadth = fallback;
+        if (!signals._scanRuns) signals._scanRuns = {};
+        signals._scanRuns.hybrid = {
+          at: new Date().toISOString(), universe: 'hybrid', dataPath: 'mcp-ingest',
+          mode: 'DSL', signals: 0, universeFetched: universeCount, loaded,
+          incomplete: true, reason: 'insufficient_breadth_data',
+        };
+        fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+        console.log(`📁 Breadth (fallback DSL) + marqueur _scanRuns['hybrid'] écrits dans ${sigPath}`);
+      }
+    }
     return;
   }
 
   // Determine scanner mode based on breadth
-  const analysis = determineMode(allBars, SCAN_DATE, REGIME);
+  const analysis = determineMode(allBars, SCAN_DATE, regime);
   console.log(`\n📈 Breadth Analysis:`);
   console.log(`   Extreme Momentum: ${analysis.extremePct}% of stocks with >30% gain in 60d`);
   console.log(`   MegaCap Concentration: ${analysis.megaCapConcentration}% of top-20 momentum are mega-caps`);
@@ -299,23 +349,25 @@ async function main() {
   }
 
   // For AF and BLEND modes, the fractal-scanner.js already ran and produced signals.
-  // For MEGACAP mode, we need to score mega-caps specifically.
+  // For MEGACAP mode, we score mega-caps specifically — from the SAME staging bars (agent must
+  // include MEGA_CAP_TICKERS in staging.bars with ≥200 bars). No local fetch/cache anymore.
+  let megaSignals = [];
   if (analysis.mode === 'MEGACAP' || analysis.mode === 'BLEND_MEGA') {
     console.log('\n🏢 Scoring Mega-Cap candidates...');
-    await ensureCached(MEGA_CAP_TICKERS);
     const candidates = [];
     const scanDateNorm = SCAN_DATE.replace(/-/g, '');
+    const missingMega = [];
 
     for (const t of MEGA_CAP_TICKERS) {
-      const rawBars = readCache(t);
-      if (!rawBars) continue;
+      const rawBars = allBars.get(t);
+      if (!rawBars) { missingMega.push(t); continue; }
       const cutIdx = rawBars.findIndex(b => b.date.replace(/-/g, '') > scanDateNorm);
       const bars = cutIdx > 0 ? rawBars.slice(0, cutIdx) : rawBars;
       if (MIN_ESTABLISHED_DOLLAR_VOLUME > 0) {
         if (bars.length < ESTABLISHED_LOOKBACK) continue;
         if (calcDollarVolumePercentile(bars, ESTABLISHED_LOOKBACK, 0.50) < MIN_ESTABLISHED_DOLLAR_VOLUME) continue;
       }
-      const result = scoreMegaCap(bars, REGIME);
+      const result = scoreMegaCap(bars, regime);
       if (!result || result.score < 50) continue;
 
       const risk = result.entry - result.stop;
@@ -329,47 +381,51 @@ async function main() {
         metrics: result,
       });
     }
-    candidates.sort((a, b) => b.score - a.score);
-    const top = candidates.slice(0, TOP_N);
-    console.log(`   Found ${candidates.length} mega-cap signals, top ${top.length}:`);
-    for (const c of top) {
-      console.log(`     ${c.ticker.padEnd(6)} score:${c.score} E:${c.entry} RSI:${c.metrics.rsi.toFixed(0)} Mom60:${(c.metrics.mom60 * 100).toFixed(0)}%`);
+    if (missingMega.length) {
+      console.log(`   ⚠️  ${missingMega.length} mega-caps absents du staging (breadth OK, score partiel): ${missingMega.join(',')}`);
     }
-
-    if (OUTPUT_MODE === 'signals' && top.length) {
-      const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
-      const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
-      if (fs.existsSync(sigPath)) {
-        const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
-        const existing = new Set((signals.signals || []).map(s => s.ticker));
-        let added = 0;
-        for (const c of top) {
-          if (existing.has(c.ticker)) continue;
-          signals.signals.push({
-            ticker: c.ticker, name: c.ticker, score: c.score, strategy: STRATEGY_TAG || 'HybridMegaCap',
-            entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
-            horizon: 21, region: 'US', sharia: null,
-            thesis: `MegaCap score ${c.score}: Mom60=${(c.metrics.mom60 * 100).toFixed(0)}%, RSI=${c.metrics.rsi.toFixed(0)}`,
-          });
-          existing.add(c.ticker);
-          added++;
-        }
-        fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
-        console.log(`   Appended ${added} mega-cap signals to ${sigPath}`);
-      }
+    candidates.sort((a, b) => b.score - a.score);
+    megaSignals = candidates.slice(0, TOP_N);
+    console.log(`   Found ${candidates.length} mega-cap signals, top ${megaSignals.length}:`);
+    for (const c of megaSignals) {
+      console.log(`     ${c.ticker.padEnd(6)} score:${c.score} E:${c.entry} RSI:${c.metrics.rsi.toFixed(0)} Mom60:${(c.metrics.mom60 * 100).toFixed(0)}%`);
     }
   }
 
-  // Write breadth analysis to signals metadata
+  // Write signals (mega-cap append) + breadth analysis + _scanRuns marker.
   if (OUTPUT_MODE === 'signals') {
-    const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
-    const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
-    if (fs.existsSync(sigPath)) {
-      const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
-      signals.breadth = analysis;
-      fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
-      console.log(`\n📁 Breadth analysis written to ${sigPath}`);
+    const sigPath = resolveSigPath();
+    if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} introuvable`); process.exit(1); }
+    const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+
+    let added = 0;
+    if (megaSignals.length) {
+      if (!Array.isArray(signals.signals)) signals.signals = [];
+      const existing = new Set(signals.signals.map(s => s.ticker));
+      for (const c of megaSignals) {
+        if (existing.has(c.ticker)) continue;
+        signals.signals.push({
+          ticker: c.ticker, name: c.ticker, score: c.score, strategy: STRATEGY_TAG || 'HybridMegaCap',
+          entry: c.entry, stop: c.stop, tp1: c.tp1, tp2: c.tp2, rr: c.rr,
+          horizon: 21, region: 'US', sharia: null,
+          thesis: `MegaCap score ${c.score}: Mom60=${(c.metrics.mom60 * 100).toFixed(0)}%, RSI=${c.metrics.rsi.toFixed(0)}`,
+        });
+        existing.add(c.ticker);
+        added++;
+      }
+      console.log(`   Appended ${added} mega-cap signals to ${sigPath}`);
     }
+
+    signals.breadth = analysis;
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns.hybrid = {
+      at: new Date().toISOString(), universe: 'hybrid', dataPath: 'mcp-ingest',
+      mode: analysis.mode, universeFetched: universeCount, loaded,
+      candidates: megaSignals.length, signals: added, added,
+      regime: regime || 'auto', incomplete: false,
+    };
+    fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+    console.log(`\n📁 Breadth analysis + _scanRuns['hybrid'] written to ${sigPath}`);
   }
 
   console.log('\n✅ Done.');
