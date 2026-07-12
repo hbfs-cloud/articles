@@ -2,32 +2,49 @@
 'use strict';
 
 /**
- * candlestick-scanner.js — Faithful port of systematic-tss americanbulls scanner.
+ * candlestick-scanner.js — Faithful port of systematic-tss americanbulls scanner. MCP-PRIMARY.
  *
- * Scans the full US equity universe (mcap ≥$300M, volume ≥5M) for 25 candlestick
- * patterns with volume spike confirmation (8× signal-day close volume — trading parity with Go). Multi-factor scoring:
- * pattern base + ATR% + momentum + MA20 distance + RSI + BB%B + regime.
+ * Scans the US equity universe (mcap ≥$300M, volume ≥5M) for 25 candlestick patterns with
+ * volume spike confirmation (8× signal-day close volume — trading parity with Go). Multi-factor
+ * scoring: pattern base + ATR% + momentum + MA20 distance + RSI + BB%B + regime.
  *
- * Data source: DailyTickers MCP gateway (bars_daily via QueryData), same transport
- * as refresh-risk-metrics.js. Set MCP_GATEWAY_URL (default https://mcp.dailytickers.com/mcp).
- * Yahoo direct is kept only as a fallback (--source yahoo / auto) — it is fragile and
- * blocked in several environments, which previously zeroed out the Bull mode signals.
+ * ─── VOIE UNIQUE : MCP (décret archi 2026-07-12 « le MCP fait foi ») ──────────────────────────────
+ *   Le scanner candlestick est MCP-PRIMARY : le CHEMIN MCP (--ingest, staging produit par l'AGENT)
+ *   est le SEUL chemin data. L'ancienne branche fetch local (Yahoo query1/allorigins, cache prix daté)
+ *   et la lecture d'univers local (data/americanbull-universe.json) ont été RETIRÉES. Ce script NE
+ *   FETCH RIEN (ni réseau, ni cache) et NE LIT AUCUN univers local : il PARSE le staging JSON écrit
+ *   par l'agent — qui, LUI, a appelé mcp__marketdata__* (RunScreener US + QueryData bars_daily).
+ *
+ *   ⚠️  La LOGIQUE DE SIGNAL est INCHANGÉE : detectPattern + gates (score, 8× vol, P80/established
+ *   liquidity) + scoring + tp1/tp2/rr tournent EXACTEMENT comme avant, sur les MÊMES barres OHLCV.
+ *   Seule la SOURCE des barres change : elles arrivent désormais du staging MCP au lieu de Yahoo.
+ *
+ *   Pipeline de génération du staging (côté AGENT, PAS ce node) :
+ *     RunScreener(region=us, asset=stock, pass_expr="vol>5000000 && close>0", force_async → Jobs)
+ *       → univers US énuméré (post-filtre market_cap>=3e8 EN CODE côté agent — JAMAIS market_cap
+ *         dans pass_expr, il s'évalue à 0 → 0 candidat silencieux ; cf scanner-pipeline §DSL)
+ *     QueryData(types=bars_daily, days≈200, timeframe=1d) par batch → l'agent écrit, PAR TICKER, ses
+ *       barres brutes [date,o,h,l,c,v] dans /tmp/candlestick-stage.json (aucun scoring côté agent :
+ *       les patterns/gates restent dans CE node — modèle "bars staging", pas "score staging").
+ *
+ * Shape staging attendu :
+ *   { mcp_ok:true, asof:"YYYY-MM-DD", regime?:"Neutral", universeFetched?:<int>,
+ *     candidates:[ { ticker:"AAPL", bars:[[date,o,h,l,c,v], ...] }, ... ] }
+ *   (bars accepte aussi la forme objet [{date,open,high,low,close,volume}, ...].)
  *
  * Usage:
- *   node tools/candlestick-scanner.js                                      # full scan, stdout
- *   node tools/candlestick-scanner.js --output json                        # write data/candlestick-scan-YYYY-MM-DD.json
- *   node tools/candlestick-scanner.js --output signals                     # append to scanner/YYYYMMDD/signals.json
- *   node tools/candlestick-scanner.js --tickers AAPL,MSFT,NVDA            # custom universe
- *   node tools/candlestick-scanner.js --min-score 70 --min-vol-ratio 8    # filter thresholds
- *   node tools/candlestick-scanner.js --top 30                            # max candidates
- *   node tools/candlestick-scanner.js --backtest --from 2026-03-01        # compare with Go
- *   node tools/candlestick-scanner.js --dry-run                           # no file write
+ *   # l'agent a d'abord écrit /tmp/candlestick-stage.json via mcp__marketdata__*
+ *   node tools/candlestick-scanner.js --ingest /tmp/candlestick-stage.json --output signals --date 2026-07-10 --folder 20260713 --regime Neutral
+ *   node tools/candlestick-scanner.js --ingest /tmp/candlestick-stage.json --output json --date 2026-07-10
+ *   node tools/candlestick-scanner.js --ingest /tmp/candlestick-stage.json --dry-run
+ *
+ * Codes de sortie : 0 = OK (0 signal légitime inclus — jour calme = parité systematic-tss) ;
+ *   3 = staging absent/vide/malformé/mcp_ok:false/error/candidates non-array (run marqué incomplete,
+ *   RIEN fabriqué) ; 2 = --ingest manquant (voie MCP obligatoire) ; 1 = inattendu.
  */
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
-const crypto = require('crypto');
 const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/candlestick-patterns');
 // Sector + Sharia classification — shared single source of truth (also used by sweep.js /
 // gen-status-page.js) so Bull signals carry the same metadata as every other scanner instead
@@ -35,13 +52,8 @@ const { detectPattern, calcATR, calcRSI, calcSMA, volRatio } = require('./lib/ca
 // candlestick_missing_sharia). Detection logic (pattern/score/vol-gate) is untouched — this is
 // metadata attached to already-qualified candidates.
 const { getSector, isHaramForHalalMode } = require('./lib/sharia-filter');
-// Cache prix DATÉ partagé (source unique de vérité). Remplace la logique inline
-// (fichiers plats ${ticker}_ohlcv.json sans date) qui polluait les snapshots passés.
-// Arbo: data/.price-cache/<SCAN_DATE>/1d/US/<ticker>.json — point-in-time, rejouable.
-const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-const CACHE_DIR = path.join(ROOT, 'data', '.price-cache');
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -52,7 +64,6 @@ function getArg(name, def) {
 }
 const hasFlag = name => args.includes(`--${name}`);
 
-const CUSTOM_TICKERS = getArg('tickers', '').split(',').filter(Boolean);
 const MIN_SCORE = parseFloat(getArg('min-score', '70'));
 // Default 8.0 = trading parity with systematic-tss portfolio_us_americanbulls.yaml (min_vol_ratio: 8.0).
 // The 8× is measured on the SIGNAL DAY's close volume vs 20d avg (absCandleVolRatio in the Go port),
@@ -79,23 +90,14 @@ const ESTABLISHED_LOOKBACK = parseInt(getArg('established-lookback', '60'));
 const TOP_N = parseInt(getArg('top', '30'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
-const BACKTEST = hasFlag('backtest');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
 const SCAN_FOLDER = getArg('folder', null); // output folder override (e.g. 20260629 when scan date is 20260626)
 const REGIME = getArg('regime', null);
-const CONCURRENCY = parseInt(getArg('concurrency', '10'));
 
-//   --source yahoo     → Yahoo Finance (default — works locally and in cloud routines)
-//   --source api       → REST API https://mcp.dailytickers.com/api (needs DT_API_KEY env var)
-//   --source gateway   → legacy MCP JSON-RPC (deprecated post-OAuth2)
-//   --source cache     → local cache only, no network
-//   --source auto      → api/gateway first if DT_API_KEY set, Yahoo fallback
-const SOURCE = getArg('source', 'yahoo').toLowerCase();
-const API_BASE = process.env.DT_API_URL || 'https://mcp.dailytickers.com/api';
-const API_KEY = process.env.DT_API_KEY || '';
-const GATEWAY = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
-const GATEWAY_BATCH = parseInt(getArg('gateway-batch', '60'));
-const GATEWAY_DAYS = parseInt(getArg('gateway-days', '200'));
+// ─── VOIE MCP (--ingest) — SEUL chemin data (MCP-PRIMARY) ───────────────────────────────────────
+// Le scanner NE FETCH RIEN (ni Yahoo, ni cache) et NE LIT AUCUN univers local : il PARSE un staging
+// JSON écrit par l'AGENT (qui, LUI, a appelé mcp__marketdata__*). --ingest est OBLIGATOIRE.
+const INGEST_PATH = getArg('ingest', null);
 
 // systematic-tss config: min mcap $300M, min volume 5M, blacklist DAWN/GLDD
 const MIN_MARKET_CAP = 300_000_000;
@@ -114,278 +116,90 @@ const BLACKLIST = new Set(['DAWN', 'GLDD']);
 // distance (pattern+ATR stop — untouched by this fix).
 const PARTIAL_TP_GAIN_PCT = 8; // modes-config.json modes.bull.partialTPGain
 
-// ─── Universe: local pre-built file (americanbull-universe.json) ────────────
-
-async function fetchScreenerUniverse() {
-  const universeFile = path.join(ROOT, 'data', 'americanbull-universe.json');
-  if (fs.existsSync(universeFile)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(universeFile, 'utf8'));
-      const tickers = (data.tickers || []).filter(t => !BLACKLIST.has(t));
-      if (tickers.length > 100) {
-        console.log(`  ✅ Universe from local file: ${tickers.length} tickers`);
-        return tickers;
-      }
-    } catch {}
-  }
-
-  console.error('ERROR: Could not load universe. Provide data/americanbull-universe.json');
-  process.exit(1);
-}
-
-// ─── Yahoo Finance OHLCV fetch (120d, with volume) ──────────────────────────
-
-// Marché US, interval 1d, snapshot daté = SCAN_DATE (jour de scan). readBars applique
-// le TTL 12h uniquement quand SCAN_DATE == aujourd'hui ; une date passée = snapshot immuable.
-// Fallback lecture seule sur l'ancien fichier plat si le fichier daté manque (compat descendante).
-const CACHE_OPTS = () => ({ date: SCAN_DATE, market: priceCache.MARKETS.US, interval: '1d' });
-
-function loadCachedPrice(ticker) {
-  // Décision de fetch : on ne lit QUE le snapshot daté (pas de fallback legacy ici) — un snapshot
-  // absent doit déclencher un fetch live suivi d'un writeBars daté, garantissant "toujours écrire
-  // en daté" (migration hors des vieux fichiers plats). Le fallback legacy lecture-seule reste
-  // disponible pour --source cache (fetchOHLCVCacheOnly), qui ne peut pas re-fetch.
-  return priceCache.readBars(ticker, { ...CACHE_OPTS(), allowLegacyFallback: false });
-}
-
-function saveCachedOHLCV(ticker, bars) {
-  // writeBars tronque à bar.date <= SCAN_DATE (anti-look-ahead ; no-op en forward) et écrit en daté.
-  priceCache.writeBars(ticker, bars, CACHE_OPTS());
-}
-
-function fetchOHLCV(ticker) {
-  const cached = loadCachedPrice(ticker);
-  if (cached) return Promise.resolve(cached);
-
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=2y`;
-  return new Promise(resolve => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          const result = j?.chart?.result?.[0];
-          if (!result) return resolve(null);
-          const ts = result.timestamp || [];
-          const q = result.indicators?.quote?.[0] || {};
-          const rmp = result.meta?.regularMarketPrice;
-          const bars = [];
-          for (let i = 0; i < ts.length; i++) {
-            const d = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-            const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i], v = q.volume?.[i] || 0;
-            if (o != null && h != null && l != null && c != null) {
-              bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v });
-            } else if (i === ts.length - 1 && rmp != null) {
-              bars.push({ date: d, open: o ?? rmp, high: h ?? rmp, low: l ?? rmp, close: rmp, volume: v });
-            }
-          }
-          saveCachedOHLCV(ticker, bars);
-          resolve(bars);
-        } catch { resolve(null); }
-      });
-    });
-    req.on('error', () => resolve(null));
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-  });
-}
-
-// ─── DailyTickers REST API (Bearer auth) ────────────────────────────────────
-// POST https://mcp.dailytickers.com/api/{ToolName} with JSON body.
-// Auth via DT_API_KEY env var (Bearer token). Falls back to legacy MCP JSON-RPC
-// if DT_API_KEY is absent (deprecated path, will fail post-OAuth2 migration).
-
-function apiCall(toolName, params) {
-  const url = new URL(`${API_BASE}/${toolName}`);
-  const body = JSON.stringify(params);
-  const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    'Content-Length': Buffer.byteLength(body),
-  };
-  if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
-  const opts = {
-    hostname: url.hostname,
-    port: url.port || 443,
-    path: url.pathname + (url.search || ''),
-    method: 'POST',
-    headers,
-    timeout: 45000,
-  };
-  return new Promise((resolve, reject) => {
-    const req = https.request(opts, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (j.error) return reject(new Error(j.error.message || 'api error'));
-          resolve(j);
-        } catch (e) { reject(new Error(`API response not JSON: ${data.slice(0, 120)}`)); }
-      });
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('api timeout')); });
-    req.write(body);
-    req.end();
-  });
-}
-
-// Legacy MCP JSON-RPC gateway (deprecated — kept for backward compat)
-function gatewayCall(toolName, params) {
-  const url = new URL(GATEWAY);
-  const body = JSON.stringify({
-    jsonrpc: '2.0', id: crypto.randomUUID(),
-    method: 'tools/call',
-    params: { name: toolName, arguments: params },
-  });
-  const headers = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json, text/event-stream',
-    'Content-Length': Buffer.byteLength(body),
-  };
-  if (API_KEY) headers['Authorization'] = `Bearer ${API_KEY}`;
-  const opts = {
-    hostname: url.hostname, port: url.port || 443,
-    path: url.pathname + (url.search || ''),
-    method: 'POST', headers, timeout: 45000,
-  };
-  return new Promise((resolve, reject) => {
-    const req = https.request(opts, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        try {
-          const j = JSON.parse(data);
-          if (j.error) return reject(new Error(j.error.message || 'rpc error'));
-          const r = j.result;
-          if (r && r.isError) return reject(new Error(r.content?.[0]?.text || 'MCP tool returned isError'));
-          if (r && Array.isArray(r.content) && r.content[0]?.type === 'text') {
-            try { return resolve(JSON.parse(r.content[0].text)); } catch { return resolve(r.content[0].text); }
-          }
-          resolve(r);
-        } catch (e) { reject(e); }
-      });
-    });
-    req.on('error', reject);
-    req.on('timeout', () => { req.destroy(); reject(new Error('gateway timeout')); });
-    req.write(body);
-    req.end();
-  });
-}
-
-// Convert a gateway bars_daily row [date,open,high,low,close,volume] → bar object.
-function rowsToBars(rows) {
+// ─── Staging bars parsing (agent → mcp__marketdata__ QueryData bars_daily) ──────────────────────
+// Convert a bars_daily row [date,open,high,low,close,volume] → bar object. Also accepts the object
+// form {date,open,high,low,close,volume} (both are valid staging shapes). Bad rows are dropped.
+function toBars(rows) {
   const bars = [];
   for (const row of (rows || [])) {
-    if (!Array.isArray(row) || row.length < 5) continue;
-    const [d, o, h, l, c, v] = row;
-    if (o == null || h == null || l == null || c == null) continue;
-    bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v || 0 });
+    if (Array.isArray(row)) {
+      if (row.length < 5) continue;
+      const [d, o, h, l, c, v] = row;
+      if (o == null || h == null || l == null || c == null) continue;
+      bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v || 0 });
+    } else if (row && typeof row === 'object') {
+      const { date: d, open: o, high: h, low: l, close: c, volume: v } = row;
+      if (d == null || o == null || h == null || l == null || c == null) continue;
+      bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v || 0 });
+    }
   }
   return bars;
 }
 
-// Fetch OHLCV from cache only — no network calls. For cloud routines that
-// pre-populate the cache via MCP QueryData before running the scanner.
-function fetchOHLCVCacheOnly(tickers) {
-  const results = new Map();
-  for (const t of tickers) {
-    const bars = priceCache.readBars(t, CACHE_OPTS());
-    if (bars && bars.length >= 60) results.set(t, bars);
-  }
-  process.stderr.write(`  cache-only: ${results.size}/${tickers.length} loaded\n`);
-  return results;
+// ─── Ingest + validation du staging (mêmes règles fail-closed que factor/momentum loadStaging) ──
+function loadStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!Array.isArray(data.candidates)) return { ok: false, reason: 'ingest_no_candidates_array' };
+  return { ok: true, data };
 }
 
-// Fetch OHLCV for the whole universe from the API/gateway in batches. Cache-first per
-// ticker; only uncached symbols are requested. Returns Map(ticker → bars[]).
-async function fetchOHLCVGateway(tickers) {
-  const results = new Map();
-  const need = [];
-  for (const t of tickers) {
-    const cached = loadCachedPrice(t);
-    if (cached && cached.length >= 60) results.set(t, cached);
-    else need.push(t);
+// Build priceData Map(ticker → bars[]) from the staged candidates. Only tickers with ≥60 usable
+// bars are kept (same threshold the removed Yahoo fetch enforced), BLACKLIST names are dropped.
+function buildPriceData(candidates) {
+  const priceData = new Map();
+  let dropped = 0;
+  for (const c of (candidates || [])) {
+    const ticker = c && c.ticker && String(c.ticker).trim();
+    if (!ticker || BLACKLIST.has(ticker)) continue;
+    const bars = toBars(c.bars);
+    if (bars.length >= 60) priceData.set(ticker, bars);
+    else dropped++;
   }
-  if (!need.length) { process.stderr.write(`  gateway: ${results.size}/${tickers.length} from cache\n`); return results; }
-
-  const useApi = API_KEY && API_BASE;
-  const caller = useApi ? apiCall : gatewayCall;
-  const label = useApi ? 'api' : 'gateway';
-
-  const batches = [];
-  for (let i = 0; i < need.length; i += GATEWAY_BATCH) batches.push(need.slice(i, i + GATEWAY_BATCH));
-  let done = 0, valid = results.size;
-  const queue = [...batches];
-  async function worker() {
-    while (queue.length) {
-      const batch = queue.shift();
-      try {
-        const res = await caller('QueryData', { symbols: batch.join(','), types: 'bars_daily', days: GATEWAY_DAYS, timeframe: '1d' });
-        for (const r of (res.results || [])) {
-          if (r.data_type !== 'bars_daily' || !r.data) continue;
-          const syms = r.symbols || [];
-          for (let i = 0; i < syms.length; i++) {
-            const bars = rowsToBars(r.data[i]);
-            if (bars.length >= 60) { results.set(syms[i], bars); saveCachedOHLCV(syms[i], bars); valid++; }
-          }
-        }
-      } catch (e) {
-        process.stderr.write(`\n  ⚠️  ${label} batch failed (${batch.length} syms): ${e.message}\n`);
-      }
-      done++;
-      process.stderr.write(`  ${label} batch ${done}/${batches.length} (${valid} valid)\r`);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(4, batches.length) }, () => worker()));
-  process.stderr.write(`  ${label}: ${valid}/${tickers.length} valid\n`);
-  return results;
+  return { priceData, dropped };
 }
 
-// ─── Source orchestration ────────────────────────────────────────────────────
-
-async function fetchAll(universe, concurrency) {
-  if (SOURCE === 'cache') return fetchOHLCVCacheOnly(universe);
-  if (SOURCE === 'yahoo') return batchFetch(universe, concurrency);
-
-  let priceData = new Map();
-  try {
-    priceData = await fetchOHLCVGateway(universe);
-  } catch (e) {
-    if (SOURCE === 'gateway' || SOURCE === 'api') { console.error(`❌ Fetch failed and --source ${SOURCE} forbids fallback: ${e.message}`); process.exit(1); }
-    process.stderr.write(`  ⚠️  api/gateway unavailable (${e.message}), falling back to Yahoo\n`);
-  }
-  if (SOURCE === 'gateway' || SOURCE === 'api') return priceData;
-
-  // auto: fill any gaps from Yahoo (best-effort; skipped silently where blocked)
-  const missing = universe.filter(t => !priceData.has(t));
-  if (missing.length) {
-    process.stderr.write(`  ${missing.length} tickers missing — trying Yahoo fallback\n`);
-    const yh = await batchFetch(missing, concurrency);
-    for (const [t, bars] of yh) priceData.set(t, bars);
-  }
-  return priceData;
+function resolveSigPath() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
 }
 
-// ─── Batch fetch with concurrency ───────────────────────────────────────────
-
-async function batchFetch(tickers, concurrency) {
-  const results = new Map();
-  const queue = [...tickers];
-  let done = 0;
-  async function worker() {
-    while (queue.length) {
-      const t = queue.shift();
-      const bars = await fetchOHLCV(t);
-      if (bars && bars.length >= 60) results.set(t, bars);
-      done++;
-      if (done % 50 === 0) process.stderr.write(`  fetched ${done}/${tickers.length} (${results.size} valid)\r`);
-    }
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de pool. QA lit toujours _candlestickScan
+// (qa-check.js special:candlestick) ; incomplete:true + qualified:0 signale "run raté", pas "0 calme".
+// No-op en dry-run / hors --output signals.
+function writeIncompleteMarker(reason) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPath();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude candlestick.`);
+    return false;
   }
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  process.stderr.write(`  fetched ${done}/${tickers.length} (${results.size} valid)\n`);
-  return results;
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  signals._candlestickScan = {
+    ranFor: SCAN_DATE,
+    at: new Date().toISOString(),
+    dataPath: 'mcp-ingest',
+    universeFetched: 0,
+    liquidScanned: 0,
+    detectedPatterns: 0,
+    qualified: 0,
+    incomplete: true,
+    reason,
+    ingestPath: INGEST_PATH || null,
+  };
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _candlestickScan écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
 }
 
 // ─── P80 dollar volume filter (exact port of calcDollarVolumePercentile) ────
@@ -412,14 +226,34 @@ function calcDollarVolumeMedian(bars, lookback = 60) {
 // ─── Main scan ──────────────────────────────────────────────────────────────
 
 async function main() {
-  const universe = CUSTOM_TICKERS.length ? CUSTOM_TICKERS : await fetchScreenerUniverse();
-  console.log(`🕯️  AmericanBulls Scanner (systematic-tss port)`);
-  console.log(`   Universe: ${universe.length} tickers | minScore: ${MIN_SCORE} | minVolRatio: ${MIN_VOL_RATIO} | top: ${TOP_N}`);
-  console.log(`   Date: ${SCAN_DATE} | Regime: ${REGIME || 'auto'}`);
+  // VOIE MCP (--ingest) : SEUL chemin data. Sans staging, on ne fabrique RIEN.
+  if (!INGEST_PATH) {
+    console.error('⛔ candlestick-scanner est MCP-PRIMARY : --ingest <staging.json> est OBLIGATOIRE (le fetch Yahoo/allorigins + l\'univers local ont été retirés). L\'AGENT produit le staging via mcp__marketdata__*.');
+    process.exit(2);
+  }
+  if (OUTPUT_MODE !== 'signals' && OUTPUT_MODE !== 'stdout' && OUTPUT_MODE !== 'json') {
+    console.error(`❌ --output inconnu: ${OUTPUT_MODE} (attendu: signals|stdout|json)`); process.exit(1);
+  }
 
-  console.log(`📡 Fetching OHLCV data via ${SOURCE === 'yahoo' ? 'Yahoo' : 'MCP gateway' + (SOURCE === 'auto' ? ' (Yahoo fallback)' : '')}...`);
-  const priceData = await fetchAll(universe, CONCURRENCY);
-  if (!priceData.size) { console.error('❌ No OHLCV data retrieved from any source — aborting (no signals written).'); process.exit(1); }
+  const staged = loadStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging candlestick indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeIncompleteMarker(staged.reason);
+    process.exit(3);
+  }
+  const data = staged.data;
+  const regime = REGIME || data.regime || null;
+  const { priceData, dropped } = buildPriceData(data.candidates);
+
+  console.log(`🕯️  AmericanBulls Scanner (systematic-tss port) — VOIE MCP (--ingest, MCP-PRIMARY, seul chemin data)`);
+  console.log(`   Staging: ${INGEST_PATH} | tickers avec ≥60 barres: ${priceData.size} (${dropped} écartés <60) | minScore: ${MIN_SCORE} | minVolRatio: ${MIN_VOL_RATIO} | top: ${TOP_N}`);
+  console.log(`   Date: ${SCAN_DATE} | Regime: ${regime || 'auto'}`);
+
+  if (!priceData.size) {
+    console.error('❌ Aucun ticker avec barres exploitables (≥60) dans le staging — run incomplet, aucun signal écrit.');
+    writeIncompleteMarker('no_usable_bars');
+    process.exit(3);
+  }
 
   console.log('🔍 Scanning for candlestick patterns (25 bullish)...');
   const candidates = [];
@@ -451,7 +285,7 @@ async function main() {
     }
     liquidScanned++;
 
-    const result = detectPattern(bars, REGIME);
+    const result = detectPattern(bars, regime);
     if (!result) continue;
 
     // Min score filter
@@ -540,7 +374,7 @@ async function main() {
 
   if (OUTPUT_MODE === 'json') {
     const outPath = path.join(ROOT, 'data', `candlestick-scan-${SCAN_DATE}.json`);
-    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, regime: REGIME, candidates: topCandidates }, null, 2));
+    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, regime, dataPath: 'mcp-ingest', candidates: topCandidates }, null, 2));
     console.log(`\n📁 Written to ${outPath}`);
   } else if (OUTPUT_MODE === 'signals') {
     const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
@@ -558,6 +392,7 @@ async function main() {
         thesis: `${c.pattern.name} pattern (base ${c.pattern.baseScore}) with ${c.metrics.volRatio}x volume spike. ATR% ${c.metrics.atrPct}%, RSI ${c.extension.rsi}, BB%B ${c.metrics.bbPctB}.`,
         extension: c.extension, pattern: c.pattern,
         earnings_clear: true, dilution_clear: true,
+        dataPath: 'mcp-ingest',
       });
       existing.add(c.ticker);
       added++;
@@ -566,12 +401,15 @@ async function main() {
     // QA distinguishes "ran, 0 qualified the 8× spike" (OK, quiet day) from "never ran" (pipeline bug).
     signals._candlestickScan = {
       ranFor: SCAN_DATE,
+      at: new Date().toISOString(),
+      dataPath: 'mcp-ingest',
       universeFetched: priceData.size,
       liquidScanned,
       detectedPatterns,            // passed score+liquidity, before vol-spike gate
       qualified: topCandidates.length, // passed the full 8× trading gate
       volThreshold: MIN_VOL_RATIO,
       minScore: MIN_SCORE,
+      incomplete: false,
     };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.log(`\n📁 Appended ${added} candlestick signals to ${sigPath} (scanned ${liquidScanned} liquid, ${detectedPatterns} patterns, ${topCandidates.length} qualified 8× spike)`);

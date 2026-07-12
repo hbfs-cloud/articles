@@ -291,7 +291,7 @@ Source de vérité: tools/publish-daily-card.sh — si divergence, c'est le runn
 
 ```bash
 node tools/update-tracking.js           # Tracking exits (prix Yahoo)
-node tools/candlestick-scanner.js --output signals --source yahoo --date YYYYMMDD --folder FOLDER --regime REGIME  # AB candlestick signals → bull[] in signals.json. --date = last trading day, --folder = scanner session folder
+node tools/candlestick-scanner.js --ingest /tmp/candlestick-stage.json --output signals --date YYYYMMDD --folder FOLDER --regime REGIME  # AB candlestick signals → bull[] in signals.json. MCP-PRIMARY : NE FETCH PLUS (Yahoo/allorigins + univers local retirés). L'AGENT produit d'abord le staging (mcp__marketdata__ RunScreener US + QueryData bars_daily → {mcp_ok:true,candidates:[{ticker,bars:[[date,o,h,l,c,v],...]}]}). --date = last trading day, --folder = scanner session folder
 node tools/fractal-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 35 --top 30  # AF default → signals.json (adaptive_fractal strategy)
 node tools/highvol-scanner.js --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 50 --top 20  # HighVol mode (dedicated scanner)
 node tools/fractal-scanner.js --universe metals --output signals --date YYYYMMDD --folder FOLDER --regime REGIME --min-score 25 --top 15  # Metals scan

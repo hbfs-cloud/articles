@@ -72,13 +72,23 @@ if [ "$SKIP_SWEEP" = false ]; then
   # gen-status-page (gen-status-page builds the per-mode "Orders to Place" panel by
   # filtering the latest scan's signals.json — without this, bull shows 0 signals).
   # Idempotent: candlestick-scanner dedups by ticker, safe to re-run.
+  # MCP-PRIMARY (décret archi 2026-07-12 « le MCP fait foi ») : candlestick-scanner NE FETCH PLUS
+  # (Yahoo/allorigins + univers local retirés) — il ingère un staging JSON de barres OHLCV produit
+  # par l'AGENT via mcp__marketdata__* (RunScreener US + QueryData bars_daily). Ce subprocess node
+  # NE PEUT PAS appeler le MCP (OAuth2, zéro token) : si le staging n'a pas été pré-produit, on skip
+  # (non-bloquant), exactement comme factor/momentum. Chemin par défaut surchargé par CANDLESTICK_STAGE.
   echo ""
   echo "🕯️  Step 2c: Candlestick scan (Bull mode signals)..."
   CS_SCAN_DIR=$(ls -d scanner/2*/ 2>/dev/null | sort | tail -1)
   CS_FOLDER=$(basename "$CS_SCAN_DIR")
   CS_REGIME=$(node -e "try{process.stdout.write(require('./${CS_SCAN_DIR}signals.json').regime||'')}catch(e){}" 2>/dev/null)
   CS_LAST_TRADING=$(node -e "const s=require('./${CS_SCAN_DIR}signals.json');const d=s.signals[0]?.date||'';process.stdout.write(d.replace(/-/g,''))" 2>/dev/null || echo "$CS_FOLDER")
-  node tools/candlestick-scanner.js --output signals --source yahoo --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Candlestick scan failed (non-blocking)"
+  CS_STAGE="${CANDLESTICK_STAGE:-/tmp/candlestick-stage.json}"
+  if [ -f "$CS_STAGE" ]; then
+    node tools/candlestick-scanner.js --ingest "$CS_STAGE" --output signals --date "${CS_LAST_TRADING:-$CS_FOLDER}" --folder "$CS_FOLDER" --regime "$CS_REGIME" || echo "⚠️  Candlestick scan failed (non-blocking)"
+  else
+    echo "⚠️  Candlestick staging absent ($CS_STAGE) — MCP-primary : staging produit par l'AGENT (mcp__marketdata__*). Skip non-bloquant."
+  fi
 
   echo ""
   echo "🔮 Step 2d: Adaptive Fractal scan (AF mode signals)..."
