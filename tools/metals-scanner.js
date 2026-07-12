@@ -2,7 +2,7 @@
 'use strict';
 
 /**
- * metals-scanner.js — Faithful port of systematic-tss MetalsScanner.
+ * metals-scanner.js — Faithful port of systematic-tss MetalsScanner. MCP-PRIMARY.
  *
  * Ranks precious-metals ETFs and mining stocks by a momentum composite for a
  * metals rotation mode. Source: internal/engine/scanner_metals.go.
@@ -22,37 +22,45 @@
  *   - minScore (Scan filter loop, scanner_metals.go:96-112)
  *   - need ≥maPeriod (default 200) bars (scanner_metals.go:71-77, 143-145)
  *
- * Mirrors tools/crypto-scanner.js conventions: getArg/hasFlag CLI parsing,
- * data/.price-cache OHLCV cache, batchFetch concurrency, output modes
- * (json | signals | stdout), --dry-run, --top, --min-score, --date, --as-of.
+ * ─── VOIE UNIQUE : MCP (décret archi 2026-07-12 « le MCP fait foi ») ──────────────────────────────
+ *   Le scanner metals est MCP-PRIMARY : le CHEMIN MCP (--ingest, staging produit par l'AGENT) est le
+ *   SEUL chemin data. L'ancienne branche fetch local (Yahoo query1/allorigins), le cache prix daté
+ *   (price-cache) et la lecture d'univers local (data/metals-universe.json) ont été RETIRÉS. Ce script
+ *   NE FETCH RIEN (ni réseau, ni cache) et NE LIT AUCUN univers local : il PARSE le staging JSON écrit
+ *   par l'AGENT — qui, LUI, a appelé mcp__marketdata__* (RunScreener US/GLD-miners + QueryData
+ *   bars_daily) et a fourni les barres OHLCV par ticker.
  *
- * DATA SOURCE: Yahoo Finance chart endpoint (equity business-day calendar),
- * the same endpoint candlestick-scanner.js uses:
- *   query1.finance.yahoo.com/v8/finance/chart/{ticker}?interval=1d&range=250d
- * These are plain Yahoo equity tickers (GLD, GDX, NEM, FCX, ...).
+ *   ⚠️ LA LOGIQUE DE SIGNAL EST INTACTE : scoreSymbol + tous les indicateurs/filtres
+ *   (SMA/RSI/ATR/return/volRatio/P80 dollar-volume/MA200 bull filter/minScore) tournent EN NODE, à
+ *   l'identique de la parité Go. SEULE LA SOURCE DES BARRES change (staging MCP au lieu de Yahoo).
+ *
+ *   Pipeline de génération du staging (côté AGENT, PAS ce node) :
+ *     - Univers metals (ETF or/argent + miners) énuméré par l'agent (RunScreener region=us côté MCP,
+ *       ou liste metals connue) — le node ne lit plus aucun fichier d'univers.
+ *     - QueryData(types=bars_daily) ~250 barres 1d par ticker → l'agent écrit /tmp/metals-stage.json
+ *       avec la map `bars` (une entrée par ticker) + `minVolumeUsd`/`names` optionnels.
  *
  * Usage:
- *   node tools/metals-scanner.js                            # full scan, stdout
- *   node tools/metals-scanner.js --dry-run --top 8          # quick test, no write
- *   node tools/metals-scanner.js --output json              # data/metals-scan-YYYY-MM-DD.json
- *   node tools/metals-scanner.js --output signals           # append metals_pool to scanner/YYYYMMDD/signals.json
- *   node tools/metals-scanner.js --tickers GLD,GDX,NEM      # custom universe
- *   node tools/metals-scanner.js --as-of 2026-05-01         # point-in-time scoring
- *   node tools/metals-scanner.js --min-score 55 --top 10
+ *   # l'agent a d'abord écrit /tmp/metals-stage.json via mcp__marketdata__*
+ *   node tools/metals-scanner.js --ingest /tmp/metals-stage.json                          # stdout
+ *   node tools/metals-scanner.js --ingest /tmp/metals-stage.json --dry-run --top 8        # aucun fichier écrit
+ *   node tools/metals-scanner.js --ingest /tmp/metals-stage.json --output json --date 2026-07-11
+ *   node tools/metals-scanner.js --ingest /tmp/metals-stage.json --output signals --folder 20260711
+ *   node tools/metals-scanner.js --ingest /tmp/metals-stage.json --as-of 2026-05-01       # point-in-time scoring
+ *   node tools/metals-scanner.js --ingest /tmp/metals-stage.json --min-score 55 --top 10
+ *
+ * Codes de sortie : 0 = OK (0 signal légitime inclus) ; 3 = staging absent/vide/malformé/
+ * mcp_ok:false (run marqué incomplet, RIEN fabriqué) ; 2 = --ingest manquant (voie MCP obligatoire) ;
+ * 1 = inattendu.
  */
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
 const {
   calcSMA, calcRSI, calcATR, calcReturn, volRatio, calcDollarVolumePercentile,
 } = require('./lib/metals-indicators');
-const priceCache = require('./lib/price-cache');
 
 const ROOT = path.join(__dirname, '..');
-// Marché/intervalle du scanner metals (Yahoo equity tickers, daily).
-const CACHE_MARKET = priceCache.MARKETS.US;
-const CACHE_INTERVAL = '1d';
 
 // ─── CLI args ───────────────────────────────────────────────────────────────
 
@@ -63,136 +71,48 @@ function getArg(name, def) {
 }
 const hasFlag = name => args.includes(`--${name}`);
 
-const CUSTOM_TICKERS = getArg('tickers', '').split(',').filter(Boolean);
 const MIN_SCORE = parseFloat(getArg('min-score', '50'));
 const TOP_N = parseInt(getArg('top', '10'));
 const OUTPUT_MODE = getArg('output', 'stdout');
 const DRY_RUN = hasFlag('dry-run');
 const SCAN_DATE = getArg('date', new Date().toISOString().slice(0, 10));
+const SCAN_FOLDER = getArg('folder', null);
 // --as-of YYYY-MM-DD: point-in-time scoring. When set, OHLCV bars are sliced to
 // only those with date <= AS_OF before scoring, so historical backfills score on
 // the data that was knowable at that date. Absent = use all bars (current/default).
 const AS_OF = getArg('as-of', '');
-const CONCURRENCY = parseInt(getArg('concurrency', '8'));
 const MA_FILTER_PERIOD = parseInt(getArg('ma-filter', '200')); // bull filter (default 200)
-const RANGE = '250d'; // enough for MA200 + 30d return headroom
+// ─── VOIE MCP (--ingest) — SEUL chemin data (MCP-PRIMARY) ───────────────────────────────────────
+// Le scanner NE FETCH RIEN (ni Yahoo, ni cache) et NE LIT AUCUN univers local : il PARSE un staging
+// JSON écrit par l'AGENT (qui, LUI, a appelé mcp__marketdata__*). --ingest est OBLIGATOIRE.
+const INGEST_PATH = getArg('ingest', null);
 
 // Momentum weights (scanner_metals.go:197) — 14d-dominant
 const W30D = 0.20, W14D = 0.50, W7D = 0.15, W_VOL = 0.10, W_MA50 = 0.05;
 
-// ─── Universe: local pre-built file (metals-universe.json) ──────────────────
-
-function loadUniverse() {
-  if (CUSTOM_TICKERS.length) return { tickers: CUSTOM_TICKERS, names: {}, minVolumeUsd: 0 };
-  const universeFile = path.join(ROOT, 'data', 'metals-universe.json');
-  if (!fs.existsSync(universeFile)) {
-    console.error('ERROR: Could not load universe. Provide data/metals-universe.json');
-    process.exit(1);
-  }
-  try {
-    const data = JSON.parse(fs.readFileSync(universeFile, 'utf8'));
-    const tickers = data.tickers || [];
-    if (tickers.length < 5) throw new Error('too few tickers');
-    console.log(`  ✅ Universe from local file: ${tickers.length} tickers`);
-    return { tickers, names: data.names || {}, minVolumeUsd: data.minVolumeUsd || 0 };
-  } catch (e) {
-    console.error(`ERROR: Could not parse data/metals-universe.json: ${e.message}`);
-    process.exit(1);
-  }
-}
-
-// ─── Yahoo Finance OHLCV fetch (250d, with volume) ──────────────────────────
-// Same endpoint as candlestick-scanner.js — equity business-day calendar.
-
-// Cache prix DATÉ, point-in-time (helper partagé tools/lib/price-cache.js).
-// Lecture : snapshot gelé …/<SCAN_DATE>/1d/US/<ticker>.json (TTL 12h seulement si
-// SCAN_DATE == aujourd'hui ; date passée = immuable). Fallback lecture legacy plat.
-function loadCachedPrice(ticker) {
-  return priceCache.readBars(ticker, { date: SCAN_DATE, market: CACHE_MARKET, interval: CACHE_INTERVAL });
-}
-
-// Écriture : toujours en daté, tronqué à bar.date <= SCAN_DATE (anti-look-ahead ;
-// no-op en pipeline forward où SCAN_DATE == aujourd'hui).
-function saveCachedOHLCV(ticker, bars) {
-  priceCache.writeBars(ticker, bars, { date: SCAN_DATE, market: CACHE_MARKET, interval: CACHE_INTERVAL });
-}
-
-function fetchYahooChart(ticker, attempt = 0) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?interval=1d&range=${RANGE}`;
-  return new Promise(resolve => {
-    const req = https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }, timeout: 12000 }, res => {
-      let data = '';
-      res.on('data', c => data += c);
-      res.on('end', () => {
-        if (res.statusCode !== 200) {
-          // Retry once on transient/rate-limit errors; otherwise give up quietly.
-          if (attempt < 1 && (res.statusCode === 429 || res.statusCode >= 500)) {
-            setTimeout(() => resolve(fetchYahooChart(ticker, attempt + 1)), 600);
-          } else {
-            resolve(null);
-          }
-          return;
-        }
-        try {
-          const j = JSON.parse(data);
-          const result = j?.chart?.result?.[0];
-          if (!result) return resolve(null);
-          const ts = result.timestamp || [];
-          const q = result.indicators?.quote?.[0] || {};
-          const rmp = result.meta?.regularMarketPrice;
-          const bars = [];
-          for (let i = 0; i < ts.length; i++) {
-            const d = new Date(ts[i] * 1000).toISOString().slice(0, 10);
-            const o = q.open?.[i], h = q.high?.[i], l = q.low?.[i], c = q.close?.[i], v = q.volume?.[i] || 0;
-            if (o != null && h != null && l != null && c != null) {
-              bars.push({ date: d, open: o, high: h, low: l, close: c, volume: v });
-            } else if (i === ts.length - 1 && rmp != null) {
-              bars.push({ date: d, open: o ?? rmp, high: h ?? rmp, low: l ?? rmp, close: rmp, volume: v });
-            }
-          }
-          if (!bars.length) return resolve(null);
-          saveCachedOHLCV(ticker, bars);
-          resolve(bars);
-        } catch { resolve(null); }
-      });
-    });
-    req.on('error', () => {
-      if (attempt < 1) setTimeout(() => resolve(fetchYahooChart(ticker, attempt + 1)), 600);
-      else resolve(null);
-    });
-    req.on('timeout', () => { req.destroy(); resolve(null); });
-  });
-}
-
-function fetchOHLCV(ticker) {
-  const cached = loadCachedPrice(ticker);
-  // A cache hit must carry enough history to be scoreable (≥ maPeriod bars).
-  // This rejects short/foreign legacy caches the original scanner never consulted —
-  // notably a sweep-written date-keyed ${ticker}.json (< maPeriod bars) that the
-  // shared helper now also reads as legacy fallback (e.g. GOLD/Barrick 120 bars).
-  // Preserves iso candidate output; a fresh fetch then writes a full dated snapshot.
-  if (cached && cached.length >= MA_FILTER_PERIOD) return Promise.resolve(cached);
-  return fetchYahooChart(ticker);
-}
-
-// ─── Batch fetch with concurrency ───────────────────────────────────────────
-
-async function batchFetch(tickers, concurrency) {
-  const results = new Map();
-  const queue = [...tickers];
-  let done = 0;
-  async function worker() {
-    while (queue.length) {
-      const t = queue.shift();
-      const bars = await fetchOHLCV(t);
-      if (bars && bars.length >= 60) results.set(t, bars);
-      done++;
-      if (done % 10 === 0) process.stderr.write(`  fetched ${done}/${tickers.length} (${results.size} valid)\r`);
+// ─── Normalisation des barres du staging (array-form MCP ou object-form) ─────────────────────────
+// QueryData(bars_daily) renvoie [[date,o,h,l,c,v], ...] (ascendant). On accepte aussi la forme objet
+// {date,open,high,low,close,volume}. Retourne des barres {date,open,high,low,close,volume} triées
+// ascendant, en ne gardant que les barres OHLC finies (parité fetchYahooChart d'origine).
+function normalizeBars(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const b of raw) {
+    let date, o, h, l, c, v;
+    if (Array.isArray(b)) {
+      [date, o, h, l, c, v] = b;
+    } else if (b && typeof b === 'object') {
+      date = b.date; o = b.open; h = b.high; l = b.low; c = b.close; v = b.volume;
+    } else {
+      continue;
     }
+    if (!date) continue;
+    const O = Number(o), H = Number(h), L = Number(l), C = Number(c), V = Number(v);
+    if (![O, H, L, C].every(Number.isFinite)) continue;
+    out.push({ date: String(date).slice(0, 10), open: O, high: H, low: L, close: C, volume: Number.isFinite(V) ? V : 0 });
   }
-  await Promise.all(Array.from({ length: concurrency }, () => worker()));
-  process.stderr.write(`  fetched ${done}/${tickers.length} (${results.size} valid)\n`);
-  return results;
+  out.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  return out;
 }
 
 // ─── Point-in-time slicing (--as-of) ─────────────────────────────────────────
@@ -202,7 +122,7 @@ function sliceAsOf(bars, asOf) {
   return bars.filter(b => b.date <= asOf);
 }
 
-// ─── Scoring (port of scoreSymbol, scanner_metals.go:129-254) ───────────────
+// ─── Scoring (port of scoreSymbol, scanner_metals.go:129-254) — INCHANGÉ ────────────────────────
 
 function scoreSymbol(ticker, bars, gldMom30d) {
   const n = bars.length;
@@ -265,23 +185,103 @@ function scoreSymbol(ticker, bars, gldMom30d) {
   };
 }
 
+// ─── VOIE MCP : --ingest (SEUL chemin data) ─────────────────────────────────────────────────────
+// L'AGENT (claude -p / /scanner) appelle mcp__marketdata__* :
+//   - énumère l'univers metals (ETF or/argent + miners) et récupère ~250 barres 1d par ticker via
+//     QueryData(types=bars_daily).
+//   - écrit /tmp/metals-stage.json avec la map `bars` (une entrée par ticker) + `minVolumeUsd`/`names`.
+// CE script PARSE le staging (jamais de fetch réseau, jamais d'appel MCP — OAuth2, zéro token dans un
+// subprocess node), construit le priceData Map et lance le scoring INCHANGÉ (scoreSymbol + filtres).
+//
+// ⛔ ZÉRO FABRICATION (MCP HARD STOP, fail-closed) : staging absent / vide / malformé / mcp_ok:false /
+// error → marqueur _scanRuns['metals'] {incomplete:true, signals:0} + exit 3, RIEN fabriqué (comme pead).
+//
+// Shape attendu :
+//   { mcp_ok:true, asof?, minVolumeUsd?, names?:{TICKER:"Full Name"},
+//     bars: { TICKER: [[date,o,h,l,c,v], ...] | [{date,open,high,low,close,volume}, ...], ... } }
+
+function resolveSigPathMetals() {
+  const scanDir = SCAN_FOLDER || SCAN_DATE.replace(/-/g, '');
+  return path.join(ROOT, 'scanner', scanDir, 'signals.json');
+}
+
+// MCP HARD STOP : marqueur d'incomplétude sans fabriquer de pool. No-op en dry-run / hors signals.
+function writeMetalsIncompleteMarker(reason, extra) {
+  if (DRY_RUN || OUTPUT_MODE !== 'signals') return false;
+  const sigPath = resolveSigPathMetals();
+  if (!fs.existsSync(sigPath)) {
+    console.error(`❌ ${sigPath} introuvable — impossible d'écrire le marqueur d'incomplétude metals.`);
+    return false;
+  }
+  const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
+  if (!signals._scanRuns) signals._scanRuns = {};
+  signals._scanRuns.metals = Object.assign({
+    at: new Date().toISOString(), universe: 'metals', dataPath: 'mcp-ingest',
+    signals: 0, incomplete: true, reason,
+  }, extra || {});
+  fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
+  console.error(`⚠️  Marqueur _scanRuns['metals'] écrit (incomplete=true, reason="${reason}") dans ${sigPath}`);
+  return true;
+}
+
+// Ingest + validation du staging (mêmes règles fail-closed que factor/momentum/pead loadStaging).
+function loadMetalsStaging() {
+  if (!INGEST_PATH) return { ok: false, reason: 'no_ingest_arg' };
+  if (!fs.existsSync(INGEST_PATH)) return { ok: false, reason: 'ingest_file_missing' };
+  let raw;
+  try { raw = fs.readFileSync(INGEST_PATH, 'utf8'); }
+  catch (e) { return { ok: false, reason: `ingest_read_error:${e.message}` }; }
+  if (!raw || !raw.trim()) return { ok: false, reason: 'ingest_empty' };
+  let data;
+  try { data = JSON.parse(raw); }
+  catch (e) { return { ok: false, reason: `ingest_malformed_json:${e.message}` }; }
+  if (!data || typeof data !== 'object') return { ok: false, reason: 'ingest_not_object' };
+  if (data.mcp_ok === false) return { ok: false, reason: 'mcp_ok_false' };
+  if (data.error) return { ok: false, reason: `staging_error:${String(data.error).slice(0, 120)}` };
+  if (!data.bars || typeof data.bars !== 'object' || Array.isArray(data.bars)) {
+    return { ok: false, reason: 'ingest_no_bars_map' };
+  }
+  if (!Object.keys(data.bars).length) return { ok: false, reason: 'ingest_empty_bars_map' };
+  return { ok: true, data };
+}
+
 // ─── Main scan ──────────────────────────────────────────────────────────────
 
-async function main() {
-  const { tickers: universe, names, minVolumeUsd } = loadUniverse();
-  console.log(`🥇  Metals Momentum Scanner (systematic-tss port)`);
-  console.log(`   Universe: ${universe.length} tickers | minScore: ${MIN_SCORE} | top: ${TOP_N} | MA-filter: ${MA_FILTER_PERIOD} | minVolUsd: ${minVolumeUsd}`);
-  console.log(`   Date: ${SCAN_DATE}${AS_OF ? ` | as-of: ${AS_OF} (point-in-time)` : ''}`);
-
-  console.log('📡 Fetching Yahoo chart OHLCV (daily, 250 bars)...');
-  const priceDataRaw = await batchFetch(universe, CONCURRENCY);
-
-  // Apply --as-of slicing up front so GLD momentum + all scoring are point-in-time.
-  const priceData = new Map();
-  for (const [t, bars] of priceDataRaw) {
-    const sliced = sliceAsOf(bars, AS_OF);
-    if (sliced.length >= 60) priceData.set(t, sliced);
+function main() {
+  // MCP-PRIMARY : --ingest (staging agent→MCP) est le SEUL chemin data. Il n'y a plus de fallback
+  // local (Yahoo + cache + univers local retirés — décret archi 2026-07-12). Sans --ingest → erreur.
+  if (!INGEST_PATH) {
+    console.error('❌ metals-scanner est MCP-PRIMARY : --ingest <staging.json> est OBLIGATOIRE.');
+    console.error('   L\'agent doit d\'abord écrire le staging via mcp__marketdata__* (QueryData bars_daily par ticker metals),');
+    console.error('   puis : node tools/metals-scanner.js --ingest /tmp/metals-stage.json --output signals --folder YYYYMMDD');
+    process.exit(2);
   }
+
+  const staged = loadMetalsStaging();
+  if (!staged.ok) {
+    console.error(`⛔ Staging metals indisponible/invalide (reason="${staged.reason}"). RIEN fabriqué.`);
+    writeMetalsIncompleteMarker(staged.reason, { ingestPath: INGEST_PATH || null });
+    process.exit(3);
+  }
+
+  const data = staged.data;
+  const names = (data.names && typeof data.names === 'object') ? data.names : {};
+  const minVolumeUsd = Number.isFinite(data.minVolumeUsd) ? data.minVolumeUsd : 0;
+  const barsMap = data.bars;
+  const universe = Object.keys(barsMap);
+
+  console.log(`🥇  Metals Momentum Scanner (systematic-tss port) — VOIE MCP (--ingest, MCP-PRIMARY, seul chemin data)`);
+  console.log(`   Staging: ${INGEST_PATH} | universe: ${universe.length} tickers | minScore: ${MIN_SCORE} | top: ${TOP_N} | MA-filter: ${MA_FILTER_PERIOD} | minVolUsd: ${minVolumeUsd}`);
+  console.log(`   Date: ${SCAN_DATE}${AS_OF ? ` | as-of: ${AS_OF} (point-in-time)` : ''}${data.asof ? ` | staging asof: ${data.asof}` : ''}`);
+
+  // Construit le priceData Map depuis le staging (normalisation + slicing --as-of), même contrat que
+  // l'ancienne branche fetch : on ne garde que les tickers avec ≥60 barres exploitables.
+  const priceData = new Map();
+  for (const [ticker, rawBars] of Object.entries(barsMap)) {
+    const bars = sliceAsOf(normalizeBars(rawBars), AS_OF);
+    if (bars.length >= 60) priceData.set(ticker, bars);
+  }
+  console.log(`   Barres exploitables : ${priceData.size}/${universe.length} tickers (≥60 barres après normalisation${AS_OF ? '/as-of' : ''})`);
 
   // GLD 30d momentum for the sector bonus (scanner_metals.go:57-61).
   let gldMom30d = 0;
@@ -331,6 +331,7 @@ async function main() {
       region: 'METALS',
       sharia: null,
       assetClass: 'metals',
+      dataPath: 'mcp-ingest',
       thesis: `Metals momentum: +${r.return30d.toFixed(1)}% 30d / +${r.return14d.toFixed(1)}% 14d / +${r.return7d.toFixed(1)}% 7d, above MA${MA_FILTER_PERIOD} bull filter, ${r.distMA50.toFixed(1)}% over MA50, vol ${r.volRatio.toFixed(2)}× 30d avg${gldMom30d > 0 && ticker !== 'GLD' ? ` (GLD +${gldMom30d.toFixed(1)}% sector bonus)` : ''}.`,
       extension: {
         rsi: +r.rsi.toFixed(1),
@@ -367,14 +368,15 @@ async function main() {
 
   if (OUTPUT_MODE === 'json') {
     const outPath = path.join(ROOT, 'data', `metals-scan-${SCAN_DATE}.json`);
-    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, asOf: AS_OF || null, gldMom30d: +gldMom30d.toFixed(2), candidates: topCandidates }, null, 2));
+    fs.writeFileSync(outPath, JSON.stringify({ scanDate: SCAN_DATE, asOf: AS_OF || null, dataPath: 'mcp-ingest', gldMom30d: +gldMom30d.toFixed(2), candidates: topCandidates }, null, 2));
     console.log(`\n📁 Written to ${outPath}`);
   } else if (OUTPUT_MODE === 'signals') {
-    const scanDir = SCAN_DATE.replace(/-/g, '');
-    const sigPath = path.join(ROOT, 'scanner', scanDir, 'signals.json');
+    const sigPath = resolveSigPathMetals();
     if (!fs.existsSync(sigPath)) { console.error(`❌ ${sigPath} not found`); process.exit(1); }
     const signals = JSON.parse(fs.readFileSync(sigPath, 'utf8'));
     // metals_pool — analogous to crypto_pool, consumed downstream by sweep for the metals mode.
+    // Fusion NON DESTRUCTIVE, dedup par ticker : on préserve le reste du fichier (autres pools +
+    // _scanRuns) et on n'écrase pas les lignes metals déjà présentes du même ticker.
     if (!Array.isArray(signals.metals_pool)) signals.metals_pool = [];
     const existing = new Set(signals.metals_pool.map(s => s.ticker));
     let added = 0;
@@ -384,6 +386,13 @@ async function main() {
       existing.add(c.ticker);
       added++;
     }
+    if (!signals._scanRuns) signals._scanRuns = {};
+    signals._scanRuns.metals = {
+      at: new Date().toISOString(), universe: 'metals', dataPath: 'mcp-ingest',
+      universeFetched: universe.length, scoreable: priceData.size,
+      candidates: candidates.length, signals: topCandidates.length, added,
+      incomplete: false,
+    };
     fs.writeFileSync(sigPath, JSON.stringify(signals, null, 2));
     console.log(`\n📁 Appended ${added} metals signals to metals_pool in ${sigPath}`);
   }
@@ -392,7 +401,12 @@ async function main() {
 }
 
 if (require.main === module) {
-  main().catch(err => { console.error(err); process.exit(1); });
+  try {
+    main();
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
+  }
 }
 
-module.exports = { main, scoreSymbol, sliceAsOf };
+module.exports = { main, scoreSymbol, sliceAsOf, normalizeBars };
