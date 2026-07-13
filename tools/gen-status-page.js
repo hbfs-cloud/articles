@@ -141,12 +141,15 @@ const OUT = path.join(ROOT, 'scanner/status/index.html');
 // Maps the dashboard mode id → the dtx portfolio staging file. hybrid has NO config/dtx/ yaml →
 // not wired (stays on sweep). QUALITY modes (turbo/dynamic/balanced/secured/fortress/aplus) are
 // absent by design — LLM/MCP-driven, never dtx.
+// dtx MCP v15 cut-over (2026-07-13): dashboard reduced to the 6 cost-honest viable strategies.
+// Legacy scanner scriptings are status=stopped (hidden). Each live mode id maps to its v15 staging.
 const DTX_STAGING_MAP = {
-  highvol: 'us_highvol',
-  forex: 'forex',
-  etf: 'etf_us',
-  etf_eu: 'etf_eu',
-  stockbox: 'stockbox_nasdaq',
+  book_honest: 'book_honest',
+  us_highvol: 'us_highvol',
+  hvep: 'hvep',
+  stockbox_pit: 'stockbox_pit',
+  etf_us: 'etf_us',
+  ep: 'ep',
 };
 const _dtxStagingCache = {};
 function loadDtxStaging(id) {
