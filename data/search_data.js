@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "CPI, banques et semis: la semaine qui teste le record",
+    "desc": "Weekly DailyTickers du 13 au 17 juillet 2026. CPI lundi, earnings bancaires mardi, ASML mercredi, TSM/NFLX/GE jeudi. Régime risk-on mais taux à 4,57% et options SPY concentrées sur le CPI.",
+    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,industrials,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260713/",
+    "date": "13 juillet 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Rotation on Trial: Where the Money Goes Next — Week of July 6–10, 2026",
     "desc": "A flat S&P hid the sharpest factor rotation of the summer: tech and semis dumped into gold, materials, healthcare and international. Credit and crypto say risk is still on. Here is how to trade the week ahead — with real levels.",
     "tags": "us,eu,commodity,gold,mining,healthcare,semis,macro,technique,trade-idea,etf",
@@ -312,17 +325,17 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
+    "type": "daily",
+    "icon": "fa-sun",
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "CPI, banques et semis: la semaine qui teste le record",
-    "desc": "Weekly DailyTickers du 13 au 17 juillet 2026. CPI lundi, earnings bancaires mardi, ASML mercredi, TSM/NFLX/GE jeudi. Régime risk-on mais taux à 4,57% et options SPY concentrées sur le CPI.",
-    "tags": "us,eu,asia,crypto,commodity,macro,earnings,technique,financials,industrials,trade-idea,etf",
+    "title": "Top Setups A+ — À Date (13 juillet 2026)",
+    "desc": "Le régime de marché ressort neutre, et de peu : 41 % de probabilité neutre contre 25 % risk-on et 27 % risk-off, avec une queue de crise à 7 %. Le modèle table sur un S&P 500 quasi plat à cinq séances (+0,1 %) pour un drawdown attendu de 3,4 %. Autrement dit : peu à gagner en moyenne, un vrai risque...",
+    "tags": "us,trade-idea,technique",
     "grade": "",
-    "href": "/weekly/20260713/",
-    "date": "13 juillet 2026"
+    "href": "/daily/20260616/top-aplus/",
+    "date": "16 juin 2026"
   },
   {
     "type": "daily",
@@ -557,19 +570,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/daily/20260621/",
     "date": "21 juin 2026"
-  },
-  {
-    "type": "daily",
-    "icon": "fa-sun",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "Top 10 Setups A+ — À Date (16 juin 2026)",
-    "desc": "Le marché n'envoie pas de signal clair. Notre lecture de régime le situe en neutre, avec une confiance modeste de 41,2 % : les probabilités sont presque équilibrées entre risk-on (25,4 %), neutre (41,2 %) et early risk-off (26,8 %), avec une queue de crise faible mais non nulle (6,6 %). Concrètement...",
-    "tags": "us,trade-idea,technique",
-    "grade": "",
-    "href": "/daily/20260616/top-aplus/",
-    "date": "16 juin 2026"
   },
   {
     "type": "daily",
