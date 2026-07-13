@@ -836,8 +836,13 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
 
     // Forward continuity layer: when healthy AND carrying post-anchor points, IT is the hero
     // (sealed history + delta of trades closed since the anchor — one current continuous number).
+    // FIX 2026-07-13: gated by !frozenMeaningful, mirroring gen-status-page.js — the forward layer
+    // is primary ONLY for fresh specialists. For a mode with a real sealed track record the sealed
+    // sweep IS the headline (else branch below), never the MtM-moving forward number. Without this
+    // gate, qa expected turbo's hero = forward (106.92) and would go red once the generator was
+    // fixed to show the sealed 112.24 — the guardrail must enforce the SAME rule it documents.
     const fe = pitFwdModes[id];
-    const fwdPrimary = !!(fe && fe.healthy && (fe.newPoints || 0) > 0);
+    const fwdPrimary = !!(!frozenMeaningful && fe && fe.healthy && (fe.newPoints || 0) > 0);
 
     if (fwdPrimary) {
       // Hero must equal the forward return (continuous, not the sealed-only endpoint).

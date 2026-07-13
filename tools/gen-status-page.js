@@ -1117,15 +1117,38 @@ async function main() {
     // history exists. Enforced downstream by qa-check ("sealed-primary invariant").
     const frozenMeaningful = (m.trades || 0) >= 10 || Math.abs(m.ret || 0) >= 5;
     // ── 3 VOIES pour le hero (ADDITIF — les 2 branches existantes = filet de sécurité) ──
-    //   1. forward SAIN avec points post-ancre → H = forward (hero=forward.ret, courbe continue
-    //      scellé-immuable + delta des trades clôturés depuis l'ancre). UN seul chiffre courant.
+    //   1. (specialist frais SEULEMENT) forward SAIN avec points post-ancre → H = forward
+    //      (hero=forward.ret, courbe continue scellé-immuable + delta des trades clôturés depuis
+    //      l'ancre). UN seul chiffre courant.
     //   2. sinon si frozenMeaningful → H = m (track record scellé, INCHANGÉ — jamais déplacé).
     //   3. sinon → H = m.pit (pit-live pour les specialists frais, INCHANGÉ).
     // F est aliasé sur P pour que les libellés/CI conditionnés par `!P` (bootstrap CI, small-n
     // du seul échantillon scellé) ne s'affichent pas sur le chiffre forward continu.
-    const F = (m.forward && m.forward.healthy && m.forward.hasPostAnchor) ? m.forward : null;
+    //
+    // FIX 2026-07-13 (sealed-primary invariant): F est désormais gaté par `!frozenMeaningful`,
+    // EXACTEMENT comme la branche pit. La branche forward n'était PAS gatée → un mode meaningful
+    // (turbo/dynamic/balanced/fortress/secured…) affichait forward.ret (turbo 106.92, MtM inclus)
+    // au lieu du frozen m.ret scellé (112.24) → « le RETURN passe de 112 à 106% sans explication ».
+    // C'est la MÊME classe d'incident que le 2026-07-02 (turbo 111.76% → 5.51%) : un chiffre live
+    // (qui bouge avec le MtM des positions ouvertes) ne doit JAMAIS déplacer le track record scellé.
+    // Résultat : mode meaningful → H = m (scellé, cohérent avec la console gen-status & qa-check) ;
+    // specialist frais (aplus/highvol/etf/etf_eu/factor…) → forward/pit INCHANGÉ.
+    const F = (!frozenMeaningful && m.forward && m.forward.healthy && m.forward.hasPostAnchor) ? m.forward : null;
     const P = F || ((!frozenMeaningful && m.pit && m.pit.hasData) ? m.pit : null);
     const H = P || m;
+    // ── SECONDAIRE (transparence) : chiffre LIVE incl. MtM affiché À PART du headline ──
+    // Pour un mode meaningful (H = m scellé, donc closed-only), quand il DÉTIENT encore des
+    // positions ouvertes, la vue forward porte le chiffre courant (scellé + delta post-ancre +
+    // mark-to-market des positions ouvertes). On le montre SÉPARÉMENT, jamais fondu dans « Total
+    // Return ». Aucune valeur inventée : on réutilise m.forward.ret / m.forward.unrealized déjà
+    // calculés (forwardViewFor). Ne s'affiche que s'il diffère réellement du scellé (Δ ≥ 0,01pt).
+    // CAVEAT (hors scope, documenté) : si une position est markée SOUS le niveau où son stop
+    // l'aurait vendue, ce MtM SURESTIME la perte (le MtM ignore le scénario de vente au stop).
+    // Le corriger n'est pas l'objet ici — mais sortir ce live du headline règle la confusion.
+    const liveMtm = (frozenMeaningful && m.forward && m.forward.healthy && m.forward.hasPostAnchor
+      && Math.abs((m.forward.ret ?? m.ret) - (m.ret || 0)) >= 0.01)
+      ? { ret: m.forward.ret, unreal: m.forward.unrealized || 0 }
+      : null;
     // "live book starts" note: only for a freshly-seeded mode (anchor-only pit entry).
     // Modes with a long flat pit curve (e.g. fortress) stay sim-primary with no note.
     const _pitStartLbl = (m.pit && m.pit.anchorOnly && m.pit.since) ? m.pit.since.lbl : null;
@@ -1357,7 +1380,7 @@ ${renderStatusBanner(cfg)}
   </div>
   <div class="perf-stats">
     <div class="ps" title="${m.dtxEngine ? 'Real LIVE return since this mode went live (' + m.liveFromHuman + '). Includes mark-to-market on open positions. The multi-year backtest is summarised separately under the curve.' : 'Cumulative percent gain of the portfolio since inception. Includes mark-to-market on open positions.'}">
-      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxEngine ? `Live Return <small style="opacity:.7">since ${m.liveFromHuman}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>
+      <span class="ps-v ${H.ret > 0 ? 'pos' : H.ret < 0 ? 'neg' : 'flat'}" style="color:${cfg.color}">${H.ret > 0 ? '+' : ''}${H.ret}%</span><span class="ps-l">${m.dtxEngine ? `Live Return <small style="opacity:.7">since ${m.liveFromHuman}</small>` : 'Total Return'}${H.unrealized ? ' <small style="opacity:.6">(incl. ' + (H.unrealized > 0 ? '+' : '') + H.unrealized + '% MtM)</small>' : ''}</span>${liveMtm ? `<span class="ps-live" title="Portfolio value RIGHT NOW, including the mark-to-market of open positions. The headline above is the SEALED backtest (closed trades only, immutable) — this live figure moves with open P&amp;L and is shown separately so it never displaces the track record. Caveat: if a position is marked below its stop level, this MtM overstates the loss (it ignores the stop-sell scenario).">Live incl. MtM <b class="${liveMtm.ret > 0 ? 'pos' : liveMtm.ret < 0 ? 'neg' : 'flat'}">${liveMtm.ret > 0 ? '+' : ''}${liveMtm.ret}%</b>${liveMtm.unreal ? ` <span class="ps-live-o">· open ${liveMtm.unreal > 0 ? '+' : ''}${liveMtm.unreal}%</span>` : ''}</span>` : ''}
     </div>
     <div class="ps" title="Largest peak-to-trough drop on the equity curve. Lower is better; measures worst pain experienced.">
       <span class="ps-v neg">${H.dd}%</span><span class="ps-l">Max Drawdown</span>
@@ -2033,6 +2056,11 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);margin
 .ps:hover{border-color:var(--border)}
 .ps-v{display:block;font-family:var(--mono);font-size:1.4rem;font-weight:700;color:var(--ink);line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .ps-l{display:block;font-size:.62rem;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-top:.3rem;font-weight:600}
+/* Live-incl-MtM secondary line under the sealed headline — explicitly NOT the "Total Return" number */
+.ps-live{display:block;font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;margin-top:.35rem;font-weight:600;line-height:1.3;cursor:help}
+.ps-live b{font-family:var(--mono);font-weight:700;font-variant-numeric:tabular-nums}
+.ps-live b.pos{color:var(--pos)}.ps-live b.neg{color:var(--neg)}.ps-live b.flat{color:var(--muted)}
+.ps-live-o{opacity:.7;font-weight:500}
 
 /* ── Section cards ── */
 .section-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-l);padding:1.4rem 1.6rem;margin-bottom:1.35rem}
@@ -2670,7 +2698,9 @@ document.addEventListener('DOMContentLoaded',function(){
     // The forward curve is primary ONLY when healthy with post-anchor points; else the two
     // existing branches are untouched (safety net when pit-forward is absent/unhealthy).
     const frozenMeaningful = (m.m.trades || 0) >= 10 || Math.abs(m.m.ret || 0) >= 5;
-    const useFwd = !!(m.m.forward && m.m.forward.healthy && m.m.forward.hasPostAnchor);
+    // Mirror panel()'s FIX 2026-07-13: forward curve is primary ONLY for non-meaningful modes,
+    // so the CHART endpoint matches the sealed hero headline for meaningful modes (no 112↔106 split).
+    const useFwd = !!(!frozenMeaningful && m.m.forward && m.m.forward.healthy && m.m.forward.hasPostAnchor);
     const usePit = !!(!useFwd && !frozenMeaningful && m.m.pit && m.m.pit.hasData);
     const primEc = useFwd ? m.m.forward.ec : (usePit ? m.m.pit.ec : m.ec);
     const _pm = promotionMarker(m.cfg, primEc);
