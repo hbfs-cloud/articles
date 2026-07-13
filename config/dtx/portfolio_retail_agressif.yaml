@@ -1,0 +1,508 @@
+# Generated strategy-mix portfolio.
+# Source: scripts/generate_strategy_mix_portfolios.py
+# Underlying strategy implementations are copied from existing config/dtx engines.
+# Mix weights: {'highvol_stockbox': 50, 'arsenal_mindd': 20, 'uk': 10, 'jp': 10, 'forex': 10}
+portfolios:
+- id: retail_agressif
+  name: TSS Retail Agressif
+  currency: USD
+  initial_capital: 100000
+  allocations:
+  - name: highvol_stockbox__us_highvol
+    region: US
+    currency: USD
+    blacklist: SKYT,ALAB,RERE,QBTS,ATAI,DQ,NTLA,LCID,TE,IBRX,KOD,AUR,RXRX,TERN,NVAX,ASTS,DAWN,GLDD
+    percent: 25.0
+    broker: alpaca
+    strategy: highvol-breakout-corr
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.5
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 1000000000
+    min_volume: 10000000
+    max_open_positions: 15
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    max_position_value: 500000
+    max_correlation: 0.8
+    base_stop_atr: 2.5
+    take_profit_pct: 30
+    dynamic_max_loss:
+      risk_on: 0.35
+      recovery: 0.25
+      neutral: 0.3
+      early_risk_off: 0.2
+      risk_off: 0.15
+    trail_trigger_pct: 0.12
+    trail_atr_mult: 1.5
+    timeout_days: 14
+    limit_price_markup: 1.025
+    entry_stop_atr_mult: 6.0
+    max_portfolio_risk_pct: 0.05
+    dynamic_max_positions:
+      risk_on: 15
+      recovery: 8
+      neutral: 3
+      early_risk_off: 3
+      risk_off: 0
+    scanner_filters:
+      params:
+        entry_gap_down_pct: 0.13
+        entry_candidate_buffer: 8
+      min_p80_dollar_volume: 5000000
+      min_established_dollar_volume: 3000000
+      established_lookback_days: 60
+      min_atr_pct: 0.07
+      max_atr_ratio: 0.1
+      min_dist_ma20: 0.05
+      min_vol_ratio: 1.5
+      max_volatility_index: 28
+      max_rsi: 85
+      min_score: 50
+      excluded_sectors:
+      - Real Estate
+      - Utilities
+      - Materials
+      - Communication Services
+  - name: highvol_stockbox__stockbox_nasdaq
+    region: US
+    currency: USD
+    percent: 25.0
+    broker: alpaca
+    strategy: index-rotation
+    stocks: true
+    etfs: false
+    pure: true
+    whitelist: NVDA,AAPL,MSFT,AMZN,AVGO,META,GOOGL,GOOG,TSLA,NFLX,COST,PLTR,ASML,CSCO,AMD,TMUS,AZN,LIN,INTU,PEP,ISRG,BKNG,ADBE,QCOM,TXN,AMGN,GILD,HON,CMCSA,AMAT,PANW,ADP,VRTX,MU,ADI,LRCX,MELI,KLAC,SBUX,INTC,CRWD,MDLZ,CTAS,CEG,CDNS,ORLY,MAR,SNPS,PYPL,MRVL,REGN,FTNT,DASH,ADSK,WDAY,MNST,NXPI,ROP,AEP,TTD,CPRT,PCAR,CHTR,PAYX,ROST,KDP,FANG,ODFL,FAST,EA,BKR,VRSK,CTSH,EXC,XEL,CCEP,GEHC,KHC,LULU,DDOG,TTWO,IDXX,CSGP,ANSS,ON,ZS,BIIB,ARM,MDB,GFS,WBD,ILMN,DXCM,MCHP,SMCI,STX,SNDK,ALAB,NBIS
+    regime_tickers:
+      index: ^IXIC
+      volatility: ^VIX
+    scanner_filters:
+      params:
+        rotation_lookback_days: 84
+        rotation_top_k: 8
+        rotation_rebalance_days: 21
+        rotation_abs_filter: 0
+        rotation_cooldown_days: 35
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
+  - name: arsenal_mindd__us_highvol
+    region: US
+    currency: USD
+    blacklist: SKYT,ALAB,RERE,QBTS,ATAI,DQ,NTLA,LCID,TE,IBRX,KOD,AUR,RXRX,TERN,NVAX,ASTS,DAWN,GLDD
+    percent: 4.0
+    broker: alpaca
+    strategy: highvol-breakout-corr
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.5
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 1000000000
+    min_volume: 10000000
+    max_open_positions: 15
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    max_position_value: 500000
+    max_correlation: 0.8
+    base_stop_atr: 2.5
+    take_profit_pct: 30
+    dynamic_max_loss:
+      risk_on: 0.35
+      recovery: 0.25
+      neutral: 0.3
+      early_risk_off: 0.2
+      risk_off: 0.15
+    trail_trigger_pct: 0.12
+    trail_atr_mult: 1.5
+    timeout_days: 14
+    limit_price_markup: 1.025
+    entry_stop_atr_mult: 6.0
+    max_portfolio_risk_pct: 0.05
+    dynamic_max_positions:
+      risk_on: 15
+      recovery: 8
+      neutral: 3
+      early_risk_off: 3
+      risk_off: 0
+    scanner_filters:
+      params:
+        entry_gap_down_pct: 0.13
+        entry_candidate_buffer: 8
+      min_p80_dollar_volume: 5000000
+      min_established_dollar_volume: 3000000
+      established_lookback_days: 60
+      min_atr_pct: 0.07
+      max_atr_ratio: 0.1
+      min_dist_ma20: 0.05
+      min_vol_ratio: 1.5
+      max_volatility_index: 28
+      max_rsi: 85
+      min_score: 50
+      excluded_sectors:
+      - Real Estate
+      - Utilities
+      - Materials
+      - Communication Services
+  - name: arsenal_mindd__stockbox
+    region: US
+    currency: USD
+    percent: 4.0
+    broker: alpaca
+    strategy: index-rotation
+    stocks: true
+    etfs: false
+    pure: true
+    whitelist: NVDA,AAPL,MSFT,AMZN,AVGO,META,GOOGL,GOOG,TSLA,NFLX,COST,PLTR,ASML,CSCO,AMD,TMUS,AZN,LIN,INTU,PEP,ISRG,BKNG,ADBE,QCOM,TXN,AMGN,GILD,HON,CMCSA,AMAT,PANW,ADP,VRTX,MU,ADI,LRCX,MELI,KLAC,SBUX,INTC,CRWD,MDLZ,CTAS,CEG,CDNS,ORLY,MAR,SNPS,PYPL,MRVL,REGN,FTNT,DASH,ADSK,WDAY,MNST,NXPI,ROP,AEP,TTD,CPRT,PCAR,CHTR,PAYX,ROST,KDP,FANG,ODFL,FAST,EA,BKR,VRSK,CTSH,EXC,XEL,CCEP,GEHC,KHC,LULU,DDOG,TTWO,IDXX,CSGP,ANSS,ON,ZS,BIIB,ARM,MDB,GFS,WBD,ILMN,DXCM,MCHP,SMCI,STX,SNDK,ALAB,NBIS
+    regime_tickers:
+      index: ^IXIC
+      volatility: ^VIX
+    scanner_filters:
+      params:
+        rotation_lookback_days: 84
+        rotation_top_k: 8
+        rotation_rebalance_days: 21
+        rotation_abs_filter: 0
+        rotation_cooldown_days: 35
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
+  - name: arsenal_mindd__etf_us
+    region: US
+    currency: USD
+    percent: 4.0
+    max_open_positions: 7
+    dynamic_max_positions:
+      risk_on: 7
+      recovery: 7
+      neutral: 7
+      early_risk_off: 5
+      risk_off: 1
+    stocks: false
+    etfs: true
+    pure: true
+    broker: alpaca
+    strategy: etf-momentum
+    regime_tickers:
+      index: ^GSPC
+      volatility: ^VIX
+    risk_per_trade_pct: 2.5
+    base_stop_atr: 2.5
+    min_cash_reserve: 10
+    pending_buy_cancel_days: 1
+    early_exit:
+      enabled: true
+      min_days: 2
+      max_days: 5
+      max_loss_pct: 0.05
+    circuit_breaker:
+      stop_period_days: 5
+      max_stops_before_pause: 4
+      base_pause_days: 3
+      max_pause_multiplier: 2
+    dynamic_max_loss:
+      risk_on: 0.17
+      recovery: 0.17
+      neutral: 0.17
+      early_risk_off: 0.17
+      risk_off: 0.17
+    scanner_filters:
+      min_price: 10
+      max_atr_ratio: 0.06
+      params:
+        cbpm_overlay_enabled: 1
+        cbpm_vix_cut: 30.0
+        cbpm_bottom: 50.0
+        cbpm_deploy_frac_cut: 0.4
+        cbpm_max_pos_frac_cut: 0.5
+        cbpm_boost_reentry: 0
+        blacklist:
+        - BITI
+        - VXX
+        - VXZ
+        - COPJ
+        - CTEX
+        - GBTC
+        riskon_max_atr: 0.045
+        riskon_min_mom: 0.02
+        riskon_rsi_boost_thresh: 60
+        riskon_rsi_boost_factor: 2.0
+        recovery_max_rsi: 48
+        recovery_max_atr: 0.04
+        recovery_min_mom: 0.03
+        riskoff_deep_dip_dist: -0.05
+        riskoff_oversold_rsi: 40
+        riskoff_meanrev_rsi: 50
+        neutral_meanrev_rsi: 40
+        neutral_meanrev_dist: -0.03
+        neutral_lowvol_atr: 0.04
+        neutral_lowvol_mom: 0.05
+        early_riskoff_max_rsi: 25
+        early_riskoff_min_dist: -0.1
+        extreme_mom_thresh: 0.15
+        extreme_oversold_rsi: 30
+        extreme_oversold_dist: -0.05
+        extreme_min_dist_ma20: 0.0
+  - name: arsenal_mindd__eu_dax
+    region: DE
+    currency: EUR
+    percent: 4.0
+    broker: saxo
+    strategy: index-rotation
+    stocks: true
+    etfs: false
+    pure: true
+    whitelist: SAP.DE,SIE.DE,DTE.DE,ALV.DE,RHM.DE,MUV2.DE,IFX.DE,DHL.DE,DBK.DE,BMW.DE,MRK.DE,DB1.DE,VOW3.DE,BAS.DE,SHL.DE,RWE.DE,CBK.DE,HEI.DE,HNR1.DE,HOT.DE,TLX.DE,HEN.DE,FRE.DE,ADS.DE,VNA.DE,MTX.DE,UN0.DE,KBX.DE,BEI.DE,SRT.DE,CON.DE,DWS.DE,FME.DE,G1A.DE,PAH3.DE
+    regime_tickers:
+      index: ^STOXX50E
+      volatility: ^VIX
+    scanner_filters:
+      params:
+        rotation_lookback_days: 63
+        rotation_top_k: 3
+        rotation_rebalance_days: 21
+        regime_ma_days: 200
+        regime_scale_fraction: 0.5
+        rotation_abs_filter: 1
+        regime_scale_ma_days: 150
+        rotation_cooldown_days: 21
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
+  - name: arsenal_mindd__ep
+    region: US
+    currency: USD
+    blacklist: SKYT,ALAB,RERE,QBTS,ATAI,DQ,NTLA,LCID,TE,IBRX,KOD,AUR,RXRX,TERN,NVAX,ASTS,DAWN,GLDD
+    percent: 4.0
+    broker: alpaca
+    strategy: episodic-pivot
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.5
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 1000000000
+    min_volume: 10000000
+    max_open_positions: 15
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    max_position_value: 500000
+    max_correlation: 0.8
+    base_stop_atr: 1.5
+    take_profit_pct: 20
+    dynamic_max_loss:
+      risk_on: 0.3
+      recovery: 0.3
+      neutral: 0.3
+      early_risk_off: 0.3
+      risk_off: 0.15
+    trail_trigger_pct: 0.12
+    trail_atr_mult: 2.5
+    timeout_days: 20
+    limit_price_markup: 1.025
+    entry_stop_atr_mult: 6.0
+    max_portfolio_risk_pct: 0.05
+    dynamic_max_positions:
+      risk_on: 15
+      recovery: 8
+      neutral: 3
+      early_risk_off: 3
+      risk_off: 0
+    scanner_filters:
+      params:
+        entry_gap_down_pct: 0.13
+        entry_candidate_buffer: 8
+        ep_min_gap: 0.1
+        ep_min_vol_mult: 5.0
+        ep_min_close_pos: 0.5
+        min_score: 40
+      min_p80_dollar_volume: 5000000
+      min_established_dollar_volume: 3000000
+      established_lookback_days: 60
+      min_atr_pct: 0.07
+      max_atr_ratio: 0.1
+      min_dist_ma20: 0.05
+      min_vol_ratio: 1.5
+      max_volatility_index: 28
+      max_rsi: 85
+      min_score: 50
+      excluded_sectors:
+      - Real Estate
+      - Utilities
+      - Materials
+      - Communication Services
+  - name: uk__uk
+    region: UK
+    currency: GBP
+    blacklist: 0LOV.L,0A91.L,0A6A.L,0V6R.L,0K17.L,0L35.L,0QCO.L,0A8O.L,0I0H.L,0JPO.L
+    percent: 10.0
+    max_open_positions: 10
+    stocks: true
+    etfs: false
+    pure: true
+    min_market_cap: 100000000
+    broker: ibkr
+    strategy: selective-momentum
+    pending_buy_cancel_days: 2
+    min_cash_reserve: 10
+    max_loss_pct: 0.2
+    timeout_days: 10
+    regime_tickers:
+      index: ^FTSE
+      volatility: ^VIX
+    dynamic_timeout:
+      risk_on: 5
+      recovery: 5
+      neutral: 5
+      early_risk_off: 5
+      risk_off: 5
+    dynamic_take_profit:
+      risk_on: 0.1
+      recovery: 0.1
+      neutral: 0.1
+      early_risk_off: 0.1
+      risk_off: 0.1
+    dynamic_base_stop_atr:
+      risk_on: 1.75
+      recovery: 1.75
+      neutral: 1.75
+      early_risk_off: 1.75
+      risk_off: 1.75
+    dynamic_trail_trigger:
+      risk_on: 0.03
+      recovery: 0.03
+      neutral: 0.03
+      early_risk_off: 0.03
+      risk_off: 0.03
+    dynamic_trail_atr:
+      risk_on: 1.5
+      recovery: 1.5
+      neutral: 1.5
+      early_risk_off: 1.5
+      risk_off: 1.5
+    scanner_filters:
+      max_rsi: 90
+      min_vol_ratio: 1.75
+      min_dist_ma20: 0.075
+      min_score: 110
+      min_established_dollar_volume: 3950000
+      established_lookback_days: 60
+  - name: jp__jp
+    region: JP
+    currency: JPY
+    percent: 10.0
+    max_open_positions: 25
+    stocks: true
+    etfs: false
+    pure: false
+    min_market_cap: 50000000000
+    min_volume: 0
+    broker: ''
+    strategy: jp-recovery
+    smooth_start_days: 20
+    smooth_start_initial_pct: 0.5
+    pending_buy_cancel_days: 1
+    min_cash_reserve: 10
+    regime_tickers:
+      index: ^N225
+      volatility: ^VIX
+      vol_neutral: 20.0
+      vol_range: 8.0
+      vol_risk_off: 35.0
+      vol_early_ro: 28.0
+      vol_exit_ro: 25.0
+      vol_exit_early_ro: 22.0
+    dynamic_max_loss:
+      risk_on: 0.15
+      recovery: 0.15
+      neutral: 0.12
+      early_risk_off: 0.1
+      risk_off: 0.08
+    dynamic_max_positions:
+      risk_on: 0
+      recovery: 0
+      neutral: 25
+      early_risk_off: 25
+      risk_off: 25
+    dynamic_timeout:
+      risk_on: 14
+      recovery: 14
+      neutral: 14
+      early_risk_off: 14
+      risk_off: 14
+    dynamic_base_stop_atr:
+      risk_on: 1.8
+      recovery: 1.8
+      neutral: 1.5
+      early_risk_off: 1.3
+      risk_off: 1.2
+    scanner_filters:
+      min_established_dollar_volume: 750000000
+      established_lookback_days: 60
+      max_dist_ma20: -0.01
+      min_rsi: 10
+      max_rsi: 45
+      min_atr_pct: 0.025
+      max_atr_ratio: 0.175
+      min_vol_ratio: 0.5
+      min_score: 55
+      skip_regimes:
+      - RECOVERY
+      - RISK_ON
+    base_stop_atr: 2.2
+    take_profit_pct: 8
+    timeout_days: 18
+    trail_trigger_pct: 0.03
+    trail_atr_mult: 1.2
+    risk_per_trade_pct: 2.5
+    max_portfolio_risk_pct: 0.08
+  - name: forex__forex-majors
+    region: FOREX
+    currency: EUR
+    percent: 10.0
+    max_open_positions: 8
+    forex: true
+    forex_universe:
+    - EURUSD
+    - EURGBP
+    - EURJPY
+    - GBPUSD
+    - USDJPY
+    - USDCAD
+    - GBPJPY
+    - AUDUSD
+    forex_leverage: 1
+    target_currency: EUR
+    broker: simulated
+    strategy: forex-momentum
+    timeframe: 1d
+    position_size_pct: 35.0
+    max_loss_pct: 0.012
+    take_profit_pct: 0.08
+    timeout_days: 5
+    base_stop_atr: 1.5
+    dynamic_max_positions:
+      risk_on: 3
+      recovery: 1
+      neutral: 4
+      early_risk_off: 2
+      risk_off: 8
+    dynamic_timeout:
+      risk_on: 4
+      neutral: 5
+      risk_off: 8
+    custom_params:
+      min_hold_days: 1
+      trailing_stop_pct: 0.008
+      dd_reduce_pct: 0.35
+      sizing_cap_mult: 5.0
+      toxic_combos: EURJPY=X:RISK_ON,USDCAD=X:RISK_OFF
+      max_currency_exposure: 3
+    regime_tickers:
+      index: ^GSPC
+      volatility: ^VIX
+    scanner_filters:
+      min_rsi: 30
+      max_rsi: 75
+      min_score: 8
+      min_atr_pct: 0.006

@@ -6,7 +6,9 @@
 #
 # MEASURED (prefetched NDX-100, TOTAL_RETURN=1, 2021-01-01..2026-06-30, universe=99 names),
 # lookback 84 (anneal-optimizer campaign 2026-07-06, seed42, walk-forward + stability audit):
-#   CAGR 77.3% / MaxDD 31.6% / Sharpe 1.65 / R2 0.83 / 230 trades / WR 53.9%. Clears the whole
+#   LIMIT-only live guard (entry LIMIT@close×1.03, no ATR stop): CAGR 74.9% / MaxDD 31.2% /
+#   Sharpe 1.63 / R2 0.83 / 225 trades. Max-DD: 2025-02-18 -> 2025-04-04.
+#   Legacy MARKET/no-stop: CAGR 77.3% / MaxDD 31.6% / Sharpe 1.65 / R2 0.83 / 230 trades / WR 53.9%. Clears the whole
 #   bar with margin. Old lookback 126: 54.9/49.1/1.24/0.81 (kept reproducible via optimizer cache).
 #   WHY 84: top-5 walk-forward fitness are ALL lb84 variants (k5-k8, reb5-21) — rounded hill, not a
 #   knife-edge (axis: 63→57%, 84→77-84%, 105→66%, 126→55%); EVERY ±1-step neighbor of lb84 beats
@@ -54,3 +56,8 @@ portfolios:
         rotation_top_k: 8                # the box holds exactly 8
         rotation_rebalance_days: 21      # monthly rebalance
         rotation_abs_filter: 0           # the box always holds 8 (no cash filter) — momentum RANK only
+        rotation_cooldown_days: 35       # anti-churn: no re-buy within 35d of exiting a name. Walk-forward
+                                         # validated 2026-07-11 (3 windows: neutral W1, +3pp W2, +10pp/-4DD W3).
+                                         # Full window 76.35/DD31.64 → 78.62/DD31.61/S1.68 (+2.3pp, DD flat).
+        rotation_entry_limit_markup: 0.03
+        rotation_stop_atr_mult: 0
