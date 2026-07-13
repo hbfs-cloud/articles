@@ -30,10 +30,10 @@
  * Order fields are snake_case; dtx-scan.mapOrder maps them → the staging camelCase order fields.
  *
  * Usage:
- *   node tools/dtx-mcp-ingest.js --portfolio etf_eu --decide decide.json --replay replay.json \
+ *   node tools/dtx-mcp-ingest.js --portfolio ep --decide decide.json --replay replay.json \
  *        --asof 2026-07-09 [--from 2021-01-01] [--to 2026-07-06] [--out path] [--quiet]
  *
- *   --portfolio <id>   dtx portfolio id (see DtxListConfigs): us_highvol|forex|etf_us|etf_eu|stockbox_nasdaq|…
+ *   --portfolio <id>   dtx portfolio id (see DtxListConfigs): book_honest|us_highvol|hvep|stockbox_pit|etf_us|ep
  *   --decide <file>    REQUIRED — path to the DtxDecide JSON result (or "-" to read stdin)
  *   --replay <file>    OPTIONAL — path to the DtxReplay JSON result (omit → metrics/equity = null)
  *   --asof YYYY-MM-DD  REQUIRED — the session the decide was run for
@@ -59,6 +59,8 @@ function parseArgs(argv) {
     else if (a === '--from') o.from = argv[++i];
     else if (a === '--to') o.to = argv[++i];
     else if (a === '--out') o.out = argv[++i];
+    else if (a === '--currency') o.currency = argv[++i];
+    else if (a === '--name') o.name = argv[++i];
     else if (a === '--pit') o.pit = true;
     else if (a === '--quiet') o.quiet = true;
   }
@@ -78,17 +80,22 @@ function readJson(p, label) {
   return j;
 }
 
-/** Resolve the config for a portfolio id from config/dtx/. Reuses dtx-scan's discovery so name /
- *  currency / config path match the native producer exactly. */
-function resolveMode(portfolioId) {
+/** Resolve the 4 fields the staging needs (id / name / currency / initial_capital) for a portfolio.
+ *  The MCP (systematic.dailytickers.com) is the SOLE config source of truth — strategy logic, allocations
+ *  and how-tos live THERE, never here. So a local config/dtx/portfolio_<id>.yaml is NOT required: if one
+ *  exists it is honoured (back-compat), otherwise the fields are synthesized from CLI flags the agent
+ *  already holds from DtxListConfigs (--currency, --name). Never throw on a missing local yaml. */
+function resolveMode(portfolioId, opts) {
   const modes = scan.discoverModes();
   const m = modes[portfolioId];
-  if (!m || m.error) {
-    const known = Object.keys(modes).filter((k) => !k.startsWith('__err_')).join(', ');
-    throw new Error(`unknown portfolio "${portfolioId}". Known: ${known}`);
+  if (m && !m.error && m.path) {
+    return { modeInfo: m, cfg: dtxBars.readConfig(m.path) };
   }
-  const cfg = dtxBars.readConfig(m.path);
-  return { modeInfo: m, cfg };
+  const currency = opts.currency || 'USD';
+  const name = opts.name || portfolioId;
+  const cfg = { id: portfolioId, name, currency, initial_capital: 100000 };
+  const modeInfo = { id: portfolioId, name, currency, initialCapital: 100000, file: null, path: null };
+  return { modeInfo, cfg };
 }
 
 function main() {
@@ -98,7 +105,7 @@ function main() {
   if (!opts.decide) { console.error('ERROR: --decide <file> required (DtxDecide JSON)'); process.exit(2); }
   if (!opts.asof) { console.error('ERROR: --asof YYYY-MM-DD required'); process.exit(2); }
 
-  const { modeInfo, cfg } = resolveMode(opts.portfolio);
+  const { modeInfo, cfg } = resolveMode(opts.portfolio, opts);
   const currency = cfg.currency || 'USD';
 
   // 1) decide payload → orders. Tolerate either the bare {actions:…} or a wrapper {result:{actions}}.

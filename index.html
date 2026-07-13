@@ -45,7 +45,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <!-- ECharts lazy-loaded on radar/scanner tab -->
-  <script src="/data/search_data.js?v=202607132117"></script>
+  <script src="/data/search_data.js?v=202607132209"></script>
   <style>
     /* Landing Specific Overrides */
     body {
@@ -2892,7 +2892,11 @@
       document
         .querySelectorAll("#tab-scanner .grid-cards .report-card")
         .forEach(function (card) {
-          var catMatch = scat === "all" || scannerCardCategory(card) === scat;
+          // The live status dashboard (⚡ Scanner Live → /scanner/status/) is a permanent entry
+          // point: always show it regardless of the active sub-filter, so it's reachable from the
+          // default "Scans" view (it used to hide behind the "Statut" chip only).
+          var cat = scannerCardCategory(card);
+          var catMatch = scat === "all" || cat === scat || cat === "status";
           var langMatch = true;
           if (langF && langF !== "all") {
             var langs = typeof detectCardLangs === "function" ? detectCardLangs(card) : ["fr"];

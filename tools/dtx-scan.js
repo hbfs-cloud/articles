@@ -30,7 +30,7 @@
  *
  * Usage:
  *   node tools/dtx-scan.js --list
- *   node tools/dtx-scan.js --mode etf_eu --asof 2026-07-09   # → prints MCP-ingest guidance, exit 0
+ *   node tools/dtx-scan.js --mode ep --asof 2026-07-14      # → prints MCP-ingest guidance, exit 0
  *
  * Modes are auto-discovered from config/dtx/portfolio_*.yaml (mode id = portfolio id).
  */
@@ -54,9 +54,14 @@ const DEFAULT_FROM = '2021-01-01';
 // dashboard mode id that carries statusSince. Unwired portfolios (crypto/eu_dax/…) fall back
 // to --asof (they are not launched, so there is no live segment to splice against).
 const MODES_CFG = path.join(REPO_ROOT, 'data', 'modes-config.json');
+// dtx MCP v15 cut-over (2026-07-13): the 6 cost-honest strategies. Fresh ids => identity map
+// (dashboard mode id == dtx portfolio id == staging file). Legacy scripted modes are stopped.
 const PORTFOLIO_TO_MODE = {
-  us_highvol: 'highvol', forex: 'forex', etf_us: 'etf', etf_eu: 'etf_eu', stockbox_nasdaq: 'stockbox',
+  book_honest: 'book_honest', us_highvol: 'us_highvol', hvep: 'hvep',
+  stockbox_pit: 'stockbox_pit', etf_us: 'etf_us', ep: 'ep',
 };
+// Multi-allocation BOOKS: their portfolio == the `combined` block, not results[0] (first sleeve).
+const MULTI_ALLOC_BOOKS = new Set(['book_honest', 'hvep']);
 let _modesCfgCache;
 function loadModesCfg() {
   if (_modesCfgCache !== undefined) return _modesCfgCache;
@@ -74,7 +79,7 @@ function goLiveFor(portfolioId) {
   return since ? String(since).slice(0, 10) : null;
 }
 
-// The 5 SCRIPTED modes wired to the dtx engine (the MCP produces their staging).
+// The 6 dtx modes wired to the engine (the MCP produces their staging).
 const SCRIPTED_MODES = Object.keys(PORTFOLIO_TO_MODE);
 
 // ---------------------------------------------------------------------------
@@ -167,8 +172,45 @@ function mapOrder(or) {
 /** Extract {metrics, equity} from a replay result envelope ({results:[{...}]}). from/to stamp the
  *  window (metrics.to = go-live splice). Returns {metrics:null, equity:null} if no result row. */
 function extractReplayMetrics(rep, from, to) {
-  const r = rep && rep.results && rep.results[0];
+  const rows = rep && rep.results;
+  const r = rows && rows[0];
   if (!r) return { metrics: null, equity: null };
+  // Multi-allocation BOOK (book_honest, hvep, …): the portfolio IS the `combined` block, NOT
+  // results[0] (just the first/dominant sleeve — publishing that would overstate the book, e.g.
+  // book_honest's 81% highvol sleeve instead of the 58% blend). Stamp the TRUE combined metrics
+  // and build the book curve = element-wise sum of the sleeve equity, rebased to 100k start and
+  // rescaled so the endpoint honours combined.final_equity / Σ(sleeve initial_capital).
+  if (rows.length > 1 && rep.combined) {
+    const c = rep.combined;
+    const dates = r.equity_dates || [];
+    const n = dates.length;
+    const summed = new Array(n).fill(0);
+    for (const row of rows) {
+      const ev = row.equity_values || [];
+      for (let i = 0; i < n; i++) summed[i] += (ev[i] || 0);
+    }
+    const sumInit = rows.reduce((s, x) => s + (x.initial_capital || 0), 0) || 100000;
+    const base0 = summed[0] || sumInit;
+    const targetFinal = 100000 * ((c.final_equity || summed[n - 1]) / sumInit); // combined multiple × 100k
+    let curve = summed.map(v => v * (100000 / base0));                          // rebase to 100k start
+    const rescale = curve[n - 1] ? targetFinal / curve[n - 1] : 1;
+    curve = curve.map(v => Math.round(v * rescale * 100) / 100);
+    const winners = rows.reduce((s, x) => s + (x.winners || 0), 0);
+    const losers = rows.reduce((s, x) => s + (x.losers || 0), 0);
+    const trades = rows.reduce((s, x) => s + (x.total_trades || 0), 0);
+    return {
+      metrics: {
+        allocation: rep.portfolio_id || r.allocation, strategy: r.strategy,
+        initial_capital: 100000,
+        final_equity: curve[n - 1], total_trades: trades,
+        winners, losers,
+        win_rate: (winners + losers) ? Math.round(winners / (winners + losers) * 10000) / 100 : c.win_rate,
+        return_pct: Math.round((curve[n - 1] / 1000 - 100) * 100) / 100,
+        cagr_pct: c.cagr_pct, max_dd_pct: c.max_dd_pct, sharpe: c.sharpe, r2: c.r2, from, to,
+      },
+      equity: { dates, values: curve },
+    };
+  }
   return {
     metrics: {
       allocation: r.allocation, strategy: r.strategy,
@@ -250,7 +292,9 @@ function buildStaging({ modeInfo, cfg, asof, currency, decision, metrics, equity
     generatedAt: new Date().toISOString(),
     engine: engineLabel,
     engineMode,
-    config: path.relative(REPO_ROOT, modeInfo.path),
+    // MCP is the config source of truth. If a local yaml exists we cite its relative path;
+    // otherwise the config lives only server-side (systematic.dailytickers.com).
+    config: modeInfo.path ? path.relative(REPO_ROOT, modeInfo.path) : `MCP:${cfg.id}`,
     currency,
     orders: create.map(mapOrder),
     updates: (decision && decision.actions && decision.actions.UPDATE) || [],

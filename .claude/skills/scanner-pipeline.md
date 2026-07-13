@@ -362,10 +362,11 @@ node tools/sweep.js                     # Append-only: nouveaux trades fermés (
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
 node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
-# ── dtx (systematic-tss) refresh — SCRIPTED modes (highvol/forex/etf/etf_eu/stockbox) ──────────────
+# ── dtx (systematic-tss) refresh — les 6 stratégies v15 cost-honest ─────────────────────────────────
+#    book_honest · us_highvol · hvep · stockbox_pit · etf_us · ep   (cut-over dtx MCP v15, 2026-07-13)
 # ⚠️ MCP = SEUL MOTEUR ("le MCP fait foi"). Binaire local + bundle SUPPRIMÉS (cut-over 2026-07-08).
 # Un subprocess `node` NE PEUT PAS appeler le MCP (OAuth2, ZÉRO token). C'est une ÉTAPE AGENT à faire
-# AVANT le pipeline shell (voir "dtx refresh — MCP SEUL MOTEUR" §ci-dessous) : pour chacun des 5 modes,
+# AVANT le pipeline shell (voir "dtx refresh — MCP SEUL MOTEUR" §ci-dessous) : pour chacun des 6 modes,
 # l'AGENT appelle DtxReplay + DtxDecide (poll DtxJobStatus), écrit les JSON bruts, puis :
 #   node tools/dtx-mcp-ingest.js --portfolio <id> --decide /tmp/<id>.decide.json --replay /tmp/<id>.replay.json --asof <J+1> --from 2021-01-01 --to <statusSince>
 # → data/dtx/<id>.json (engineMode:"mcp"). Si un mode échoue au MCP → laisser le staging committé
@@ -412,8 +413,11 @@ trade — le clamper à 3-8% rejetterait tout le panier. Les gates réellement a
 **Architecture (cut-over 2026-07-08).** Le serveur MCP dtx (`systematic.dailytickers.com`) est le
 **SEUL moteur**. **Le binaire local + le bundle `tools/bin/dtx-data/` ont été SUPPRIMÉS** — plus aucun
 fallback binaire. Le staging `data/dtx/<id>.json` (orders = `decide` CREATE, equity+metrics = `replay`)
-alimente les 5 modes câblés (`us_highvol`, `forex`, `etf_us`, `etf_eu`, `stockbox_nasdaq`) via
-`gen-status-page` → `DTX_STAGING_MAP`. Un **seul producteur** : l'ingest MCP
+alimente les **6 modes câblés v15 cost-honest** (`book_honest`, `us_highvol`, `hvep`, `stockbox_pit`,
+`etf_us`, `ep`) via `gen-status-page` → `DTX_STAGING_MAP` (identity : mode id == portfolio == staging).
+**Books multi-sleeve** (`book_honest`, `hvep`) : `extractReplayMetrics` détecte `results.length>1 &&
+combined`, stampe les vraies métriques `combined` et blende les courbes des sleeves (rebase 100k) — NE
+publie PAS le sleeve dominant (ex. les 81 % highvol pour book_honest). Un **seul producteur** : l'ingest MCP
 (`tools/dtx-mcp-ingest.js`), qui écrit le schéma canonique via les helpers partagés de `tools/dtx-scan.js`
 (`buildStaging`/`extractReplayMetrics`/`writeStaging`/`mapOrder`) — `engineMode:"mcp"`.
 
@@ -447,8 +451,9 @@ en nommant la **cause réelle** si connue (connector-absent vs serveur-down), co
 rapport, et **ne jamais continuer cette étape en silence**.
 
 **Procédure AGENT PAR MODE (Phase 5, AVANT `publish-daily-card.sh` / `gen-status-page`)** — si le
-preflight passe, pour CHACUN des 5 modes (`us_highvol`, `forex`, `etf_us`, `etf_eu`, `stockbox_nasdaq`),
-`asof` = séance J+1, `from`=`2021-01-01`, `to` = `statusSince` du mode (splice backtest↔live) :
+preflight passe, pour CHACUN des **6 modes v15** (`book_honest`, `us_highvol`, `hvep`, `stockbox_pit`,
+`etf_us`, `ep`), `asof` = séance J+1, `from`=`2021-01-01`, `to` = `statusSince` du mode (splice
+backtest↔live). Devise : `ep`/`stockbox_pit`/`us_highvol`/`etf_us`/`book_honest` = USD, `hvep` = EUR :
 
 1. `DtxReplay(portfolio=<id>, from=2021-01-01, to=<statusSince>)` → poll `DtxJobStatus` → écrire `result` dans `/tmp/<id>.replay.json`.
 2. `DtxDecide(portfolio=<id>, asof=<J+1>, balances={base_currency:<cur>, cash_by_currency:{<cur>:100000}, total_equity:100000}, positions=[], orders=[])` → poll `DtxJobStatus` → écrire `result` dans `/tmp/<id>.decide.json`.
