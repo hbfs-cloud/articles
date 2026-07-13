@@ -335,7 +335,7 @@ window.searchDataPrebuilt = [
     "tags": "us,trade-idea,technique",
     "grade": "",
     "href": "/daily/20260616/top-aplus/",
-    "date": "16 juin 2026"
+    "date": "13 juillet 2026"
   },
   {
     "type": "daily",
@@ -1272,6 +1272,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/daily/20260217/",
     "date": "17 février 2026"
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "APLD",
+    "exchange": "NASDAQ • Technology • IT Services — AI / HPC Cloud Infrastructure",
+    "name": "APLD — AI/HPC infrastructure — 175MW live, fifth campus leased, +139% revenue, ChronoScale clo...",
+    "title": "APLD — AI/HPC infrastructure — 175MW live, fifth campus leased, +139% revenue, ChronoScale clo...",
+    "desc": "Applied Digital analysis: AI/HPC data center infrastructure, 175MW live at Polaris Forge 1, Delta Forge 2 210MW lease, $1.59B notes, +139% revenue. Target $73.",
+    "tags": "us,tech,ai,energy,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/APLD/",
+    "date": ""
   },
   {
     "type": "analyse",
@@ -2558,19 +2571,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,semis,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/FN/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "APLD",
-    "exchange": "NASDAQ • Technology • IT Services — AI / HPC Cloud Infrastructure",
-    "name": "APLD — AI/HPC infrastructure play with 250% revenue growth, $5B hyperscaler lease, ChronoScale...",
-    "title": "APLD — AI/HPC infrastructure play with 250% revenue growth, $5B hyperscaler lease, ChronoScale...",
-    "desc": "Applied Digital Corporation analysis: AI/HPC data center infrastructure, CoreWeave 400MW lease, ChronoScale spinoff, $1.9B cash, 250% revenue growth. Target $45.27.",
-    "tags": "us,tech,ai,energy,trade-idea",
-    "grade": "B+",
-    "href": "/analyses/APLD/",
     "date": ""
   },
   {
