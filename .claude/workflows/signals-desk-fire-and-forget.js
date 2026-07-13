@@ -10,8 +10,11 @@ export const meta = {
 }
 
 // args (optionnel) : { dryRun?:bool, universe?:string, macroEvents?:[{name,dateISO,timeET,impact}] }
-const A = (typeof args === 'object' && args) ? args : {}
-const DRY = !!A.dryRun
+// Robuste : args peut arriver comme OBJET ou comme CHAÎNE JSON (selon l'appelant) — parser les deux.
+let A = {}
+try { A = (typeof args === 'string') ? (args.trim() ? JSON.parse(args) : {}) : (args && typeof args === 'object' ? args : {}) } catch (_) { A = {} }
+// Sécurité : si dryRun est passé en string "true"/"false", le normaliser.
+const DRY = A.dryRun === true || A.dryRun === 'true' || A.dryRun === 1
 // Le feed MCP economic_events est aveugle au CPI/FOMC (ticket owner docs/specs/mcp-economic-calendar-request.md).
 // Les dates macro VÉRIFIÉES (BLS/Fed) sont passées via args.macroEvents ; sinon l'agent vérifie via WebSearch.
 const MACRO = Array.isArray(A.macroEvents) ? A.macroEvents : []
