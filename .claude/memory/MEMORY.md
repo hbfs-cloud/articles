@@ -137,6 +137,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - [Video Full List](project_video_full_list.md) — 58+ vidéos: 7 trading, 2 tech, 43 scolaire (toutes matières), 6 langues (EN/AR/ES enfants 8-15). Output sur SSD externe.
 
 ## Scanner Strategy & Modes
+- [dtx v15 — 6 stratégies](project_dtx_v15_six_strategies.md) — 2026-07-13 cut-over: scanner réduit aux 6 stratégies dtx cost-honest; anciens scriptings stopped.
 - [Mode 7 Alpha](project_mode7_alpha.md) — Concentrated Nasdaq swing (P2/H10/ATR3.0x/Trail 2.0R). Paper-ramp from Jun 4. Target: beat Nasdaq DD.
 - [Sweep Bugs Round 3](project_sweep_bugs_round3.md) — Dead optimizer (key mismatch), score mutation, correlation sign, BE-as-loss. Found by 3-round war room.
 - [v7.1 Config Overhaul](project_v7_config_overhaul.md) — DD breaker %, correlation gate, ATR widen, stale off everywhere, 12 how-to template fixes. War room audit.
