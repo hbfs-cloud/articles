@@ -34,16 +34,16 @@ const TICKERS = ['ACA','ALV','ALLY','ASML','BK','BTSG','CECO','COLB','CPAY','CSC
 const THEME_CSS = `<style>
  /* EMERALD THEME — Top A+ Daily */
  .hero-section { padding:4rem 2rem 7rem 2rem; background:linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%); text-align:center; }
- .hero-date { font-size:0.85rem; font-weight:700; color:#059669; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem; }
+ .hero-date { font-size:0.9rem; font-weight:600; color:#047857; margin-bottom:1rem; }
  .hero-badges { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; margin-top:2rem; }
  .hero-badge { display:inline-flex; align-items:center; gap:0.4rem; padding:0.5rem 1rem; border-radius:99px; font-size:0.8rem; font-weight:700; }
- .hero-badge-emerald { background:rgba(5,150,105,0.1); color:#059669; border:1px solid rgba(5,150,105,0.2); }
+ .hero-badge-emerald { background:rgba(5,150,105,0.1); color:#047857; border:1px solid rgba(5,150,105,0.25); }
  .hero-badge-blue { background:rgba(37,99,235,0.1); color:#2563eb; border:1px solid rgba(37,99,235,0.2); }
  .hero-badge-amber { background:rgba(245,158,11,0.12); color:#d97706; border:1px solid rgba(245,158,11,0.25); }
  .hero-badge-red { background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2); }
  .hero-badge-purple { background:rgba(147,51,234,0.1); color:#9333ea; border:1px solid rgba(147,51,234,0.2); }
 
- .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#94a3b8; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
+ .section-divider { display:flex; align-items:center; gap:1rem; margin:3rem 0 2rem; color:#64748b; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; }
  .section-divider::before, .section-divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
 
  .compare-table { width:100%; border-collapse:separate; border-spacing:0; border-radius:12px; overflow:hidden; border:1px solid #e2e8f0; margin:2rem 0; font-variant-numeric:tabular-nums; }
@@ -56,18 +56,18 @@ const THEME_CSS = `<style>
  .checklist li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.6rem 0; font-size:0.95rem; color:#334155; line-height:1.5; }
  .checklist li i { margin-top:0.15rem; flex-shrink:0; }
 
- .pick-card { background:white; border:1px solid #e2e8f0; border-left:4px solid #059669; border-radius:12px; padding:1.25rem 1.5rem; margin:1rem 0; }
+ .pick-card { background:white; border:1px solid #e2e8f0; border-radius:12px; padding:1.25rem 1.5rem; margin:1rem 0; }
  .pick-card h3 { margin:0 0 0.25rem; font-size:1.15rem; color:#0f172a; }
  .pick-rank { display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:28px; border-radius:8px; background:linear-gradient(135deg,#047857,#10b981); color:white; font-weight:900; font-size:0.85rem; margin-right:0.5rem; }
  .pick-levels { display:flex; flex-wrap:wrap; gap:1rem; margin:0.75rem 0; font-size:0.85rem; }
  .pick-levels b { color:#047857; }
 
- .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border:1px solid #059669; border-radius:16px; padding:2rem; margin:2rem 0; }
+ .takeaway-box { background:linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border:1px solid #047857; border-radius:12px; padding:2rem; margin:2rem 0; }
  .takeaway-box h3 { color:#047857; margin-top:0; }
  .takeaway-list { list-style:none; padding:0; margin:0; }
  .takeaway-list li { display:flex; align-items:flex-start; gap:0.75rem; padding:0.75rem 0; font-size:1rem; color:#334155; line-height:1.6; border-bottom:1px solid rgba(5,150,105,0.15); }
  .takeaway-list li:last-child { border-bottom:none; }
- .takeaway-list li i { color:#059669; margin-top:0.2rem; flex-shrink:0; }
+ .takeaway-list li i { color:#047857; margin-top:0.2rem; flex-shrink:0; }
 
  .alert-box { background:#fffbeb; border:1px solid #fde68a; border-radius:12px; padding:1.25rem 1.5rem; margin:1.5rem 0; }
  .alert-box h4 { color:#b45309; margin:0 0 0.5rem; }
@@ -320,7 +320,7 @@ ${HEAD}
 2. [BRAND BAR — VERBATIM]
 ${BRAND_BAR}
 
-3. [HERO] <section class="hero-section"> : hero-date = "Daily — ${DATE_FR}" ; <h1>Top 10 Setups A+ — À Date</h1> ; sous-titre (re-validation au spot de nos A+ du mois) ; hero-badges (régime neutre, "R/R re-validé au spot", "${selection.top10 ? selection.top10.length : 10} A+ retenus", "transparence sur les écartés") ; <div id="article-clickable-tags" class="card-tags" ...></div>.
+3. [HERO] <section class="hero-section"> : hero-date = fil d'ariane "Daily · ${DATE_FR}" (sentence case, PAS un eyebrow uppercase tracké) ; <h1>Top 10 Setups A+ — À Date</h1> ; sous-titre (re-validation au spot de nos A+ du mois) ; hero-badges (régime neutre, "R/R re-validé au spot", "${selection.top10 ? selection.top10.length : 10} A+ retenus", "transparence sur les écartés") ; <div id="article-clickable-tags" class="card-tags" ...></div>.
 
 4. [FNAV] <div class="fnav" id="floatingNav"><div class="fnav-menu" id="fnavMenu"> … un item par section … </div>
 ${FNAV_SCRIPT}
