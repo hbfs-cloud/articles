@@ -203,8 +203,8 @@ node tools/gen-mode-cards.js                                                 # P
 node tools/gen-api.js                                                        # Refresh 50+ public JSON endpoints
 node tools/daily-synthesis.js                                                # Per-mode synthesis: entries / exits / equity move
 bash tools/publish-daily-card.sh                                             # Image + media + Telegram + final git push
-node tools/trading-executor/run-session.js                                   # Generate plans + execute for all configured mode/broker pairs
 ```
+> ⚠️ **Aucune exécution broker dans /scanner.** Le pipeline s'arrête à la publication + dashboards + notification. `run-session` (trading-executor) reste un outil **manuel séparé** — on ne trade JAMAIS du réel automatiquement depuis le scanner.
 
 ### Phase 5b — Regime Recalibration (optional, run weekly OR on regime shift)
 

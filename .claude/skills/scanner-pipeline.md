@@ -374,8 +374,9 @@ node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimePro
 # (warn si staging manquant/stale) — NE régénère plus rien (plus de binaire). Jamais bloquant.
 node tools/gen-status-page.js           # Snapshot J + Dashboard (lit fortress_pool + data/dtx/*.json)
 node tools/gen-api.js                   # Refresh public JSONs (50 endpoints)
-node tools/trading-executor/run-session.js  # Generate plans + execute
 node tools/substack-publish.js scanner/YYYYMMDD/index.html  # OPTIONAL/non-blocking: Substack draft + Notes teaser (needs MCP_AUTH_TOKEN, else draft-only local); disable via SUBSTACK_DISABLE=1
+# NB: PAS d'exécution broker dans /scanner. run-session (trading-executor) = outil MANUEL séparé,
+# jamais dans le flux auto — on ne trade jamais du réel automatiquement depuis le scanner.
 ```
 
 ### factor — voie MCP (`--ingest`) — POC #1 migration data local→MCP
