@@ -874,9 +874,9 @@ ${strategyTablesHtml}
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem;margin-top:1rem;">
       <h4 style="margin:0 0 0.5rem;">Sources de données</h4>
       <ul style="margin:0;font-size:0.85rem;color:#64748b;">
-        <li>Prix &amp; niveaux : DailyTickers Gateway (MCP QueryData)</li>
-        <li>Régime : RunAutoScreener (modèle 6 composantes)</li>
-        <li>Screening : RunScreener DSL (momentum, breakout, pullback)</li>
+        <li>Prix &amp; niveaux : données de marché temps réel</li>
+        <li>Régime : modèle 6 composantes (crédit, VIX, dollar, liquidité, actions, taux)</li>
+        <li>Screening : filtres techniques multi-stratégies (momentum, breakout, pullback)</li>
         <li>Généré : ${d.session_label || d.date}</li>
       </ul>
     </div>
@@ -912,7 +912,7 @@ ${strategyTablesHtml}
 </div>
 
 <footer class="article-footer">
-  © 2026 DailyTickers. Données via DailyTickers Gateway.
+  © 2026 DailyTickers. Données de marché temps réel.
   Ceci n'est pas un conseil financier.
   <br><a href="/" title="Accueil"><i class="fas fa-house"></i></a>
 </footer>
