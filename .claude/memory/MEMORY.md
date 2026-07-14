@@ -81,6 +81,7 @@ Site de publication d'analyses financières (dailytickers.com) hébergé sur Git
 - **Data** : Yahoo Finance via allorigins, Binance direct, radar.json, watchlist.json
 
 ## Feedback
+- [Scanner no broker exec](feedback_scanner_no_broker_exec.md) — JAMAIS d'exécution broker auto dans /scanner (run-session retiré du flux); notif Telegram scanner = canal daily.
 - [Scanner mode change = full pipeline](feedback_scanner_mode_change_full_pipeline.md) — changer le SET de modes scanner = tracer TOUT le pipeline + vérifier le dashboard RENDU (pas juste boot-smoke).
 - [Balanced SL-bleed = NOT a bug](feedback_balanced_sl_bleed_not_a_bug.md) — la "wall of stop-losses" balanced est du legacy de configs remplacées (0 trade sous v10.1 courant) + scratches de trailing mal-labellisés 'sl' ; les stops same-day sur modes vwapGate=false sont légitimes (HON 06-30 low 219.33 a percé le stop 220.7), PAS des artefacts → pas de guard entry-bar. Bug réel corrigé (a81b5255f) : open/pending fuyaient dans Trade History + closedTrades ledger → closed-only. Hero(60 frozen) vs history(64 ledger) divergent par design (immutabilité).
 - [Fable plans, Sonnet/Opus implement](feedback_fable_plans_sonnet_implements.md) — modèle de travail permanent : Fable spécifie, Sonnet/Opus implémentent selon complexité, toujours en workflow dynamic. (miroir MCP en attente — memory MCP down 2026-07-03)
