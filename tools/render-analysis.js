@@ -821,7 +821,7 @@ function renderDisclaimer() {
         <div class="disclaimer-mega">
           <p>This analysis is provided for <strong>informational and educational purposes only</strong>. It does not constitute financial advice, investment recommendation, or solicitation to buy or sell any security.</p>
           <p>Past performance is not indicative of future results. All investments involve risk, including the possible loss of principal. Always conduct your own research and consult a licensed financial advisor before making investment decisions.</p>
-          <p>Data sourced from DailyTickers Gateway, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>
+          <p>Data sourced from real-time market data, Yahoo Finance, SEC EDGAR, and public market data. Accuracy is not guaranteed.</p>
         </div>
       </div>`;
 }
@@ -886,7 +886,7 @@ ${archives.map(a => `          <a href="archive/${a.date}/" style="display:flex;
 function renderFooter() {
   return `
     <footer class="article-footer">
-      &copy; 2026 DailyTickers. Data via DailyTickers Gateway. Not financial advice.
+      &copy; 2026 DailyTickers. Data via institutional market data feeds. Not financial advice.
       <br><a href="/" title="Home"><i class="fas fa-house"></i></a>
     </footer>`;
 }

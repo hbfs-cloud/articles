@@ -1276,6 +1276,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CLSK",
+    "exchange": "NASDAQ · Bitcoin Mining / Data Centers",
+    "name": "CLSK — CLSK signe un bail HPC 20 ans de 6,6 Md$ (jusqu'à 11,6). Le pivot data-center IA change...",
+    "title": "CLSK — CLSK signe un bail HPC 20 ans de 6,6 Md$ (jusqu'à 11,6). Le pivot data-center IA change...",
+    "desc": "CleanSpark bascule de mineur Bitcoin pur vers bailleur de data-centers IA : bail 20 ans de 6,6 Md$ avec un locataire investment-grade, plus 885 MW au Texas en option. Re-rating structurel, mais financement et exécution à prouver.",
+    "tags": "us,crypto,mining,ai,speculative,short-squeeze,trade-idea",
+    "grade": "C+",
+    "href": "/analyses/CLSK/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "APLD",
     "exchange": "NASDAQ • Technology • IT Services — AI / HPC Cloud Infrastructure",
     "name": "APLD — AI/HPC infrastructure — 175MW live, fifth campus leased, +139% revenue, ChronoScale clo...",
