@@ -1276,6 +1276,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EQX",
+    "exchange": "NYSE · Gold / Basic Materials",
+    "name": "EQX — cheapest gold major at 5.7x forward PE, merger vote July 22 — but gold is in a -28% dra...",
+    "title": "EQX — cheapest gold major at 5.7x forward PE, merger vote July 22 — but gold is in a -28% dra...",
+    "desc": "Equinox Gold slides to $8.75 (5.7x forward PE) six days before the July 22 Orla merger vote, as gold breaks below its 200-day average. Our July 11 stop at $8.85 was hit — the value case is intact but the entry now belongs near book value, not at spot.",
+    "tags": "us,materials,commodity,dividende",
+    "grade": "B",
+    "href": "/analyses/EQX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CLSK",
     "exchange": "NASDAQ · Bitcoin Mining / Data Centers",
     "name": "CLSK — CLSK signe un bail HPC 20 ans de 6,6 Md$ (jusqu'à 11,6). Le pivot data-center IA change...",
@@ -1505,19 +1518,6 @@ window.searchDataPrebuilt = [
     "tags": "",
     "grade": "B",
     "href": "/analyses/AAPL/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EQX",
-    "exchange": "NYSE · Gold / Basic Materials",
-    "name": "EQX — Cheapest gold major at 6.0x PE, Orla merger de-risked as ISS and Glass Lewis back the vote. Score...",
-    "title": "EQX — Cheapest gold major at 6.0x PE, Orla merger de-risked as ISS and Glass Lewis back the vote. Score...",
-    "desc": "Equinox Gold trades at 6.0x forward PE with 59% gross margins as the Orla merger clears its final vote. Deep value, but the chart just broke $10.26 support with nothing intact until $6.46.",
-    "tags": "us,materials,commodity,dividende",
-    "grade": "B+",
-    "href": "/analyses/EQX/",
     "date": ""
   },
   {
