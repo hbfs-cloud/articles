@@ -331,21 +331,50 @@ warn('scanner: modes live scriptés — marqueur présent mais 0 signal (jour ca
 // n'a pas pu régénérer un mode est ATTRAPÉE ici, jamais passée en silence.
 check('dtx: staging scriptés complets (5 modes MCP frais — pas de skip silencieux)', () => {
   const markerPath = path.join(ROOT, 'data', 'dtx', '_staging-completeness.json');
-  let marker;
-  try { marker = JSON.parse(fs.readFileSync(markerPath, 'utf8')); }
-  catch { return; } // pas de marqueur (aucun run récent) → rien à garantir ici
-  const genDay = String(marker.generatedAt || '').slice(0, 10);
   const today = new Date().toISOString().slice(0, 10);
-  if (genDay !== today) return; // marqueur d'un run antérieur → ne pas remonter de faux ❌
-  if (marker.complete) return;  // les 5 modes frais → OK
-  const skipped = (marker.skipped || []).map(id => {
-    const m = (marker.modes || {})[id] || {};
-    return `${id} (${m.status || '?'})`;
-  });
-  return `staging dtx INCOMPLET pour le scan ${marker.scanDate || '?'} — mode(s) NON régénéré(s) via MCP ce run: `
-    + `${skipped.join(', ')}. MCP dtx injoignable / connector absent / job(s) échoué(s) → staging conservé = STALE `
-    + `(jamais fabriqué). L'agent DOIT avoir alerté Telegram (alias 'alerts'). Régénérer via `
-    + `DtxReplay+DtxDecide → dtx-mcp-ingest, PUIS relancer gen-status-page.`;
+  let marker = null;
+  try { marker = JSON.parse(fs.readFileSync(markerPath, 'utf8')); } catch { /* voir filet asof ci-dessous */ }
+  if (marker) {
+    const genDay = String(marker.generatedAt || '').slice(0, 10);
+    if (genDay === today) {
+      if (marker.complete) return;  // les modes frais → OK
+      const skipped = (marker.skipped || []).map(id => {
+        const m = (marker.modes || {})[id] || {};
+        return `${id} (${m.status || '?'})`;
+      });
+      return `staging dtx INCOMPLET pour le scan ${marker.scanDate || '?'} — mode(s) NON régénéré(s) via MCP ce run: `
+        + `${skipped.join(', ')}. MCP dtx injoignable / connector absent / job(s) échoué(s) → staging conservé = STALE `
+        + `(jamais fabriqué). L'agent DOIT avoir alerté Telegram (alias 'alerts'). Régénérer via `
+        + `DtxReplay+DtxDecide → dtx-mcp-ingest, PUIS relancer gen-status-page.`;
+    }
+  }
+  // FILET ASOF (durci 2026-07-16). « Pas de marqueur » n'est PLUS un pass silencieux : entre le
+  // cut-over du 08/07 et le 16/07, Step 4d crashait AVANT d'écrire le marqueur (js-yaml absent →
+  // require top-level de dtx-bars) et cette check rendait OK pendant que le staging restait figé
+  // au 13/07. Vérité indépendante du marqueur : si un dossier scanner/<date> existe et qu'un
+  // staging scripté a un asof ANTÉRIEUR à cette séance, le staging est stale → ❌.
+  const scanDirs = (() => {
+    try { return fs.readdirSync(path.join(ROOT, 'scanner')).filter(d => /^\d{8}$/.test(d)).sort(); }
+    catch { return []; }
+  })();
+  if (!scanDirs.length) return;
+  const latest = scanDirs[scanDirs.length - 1];
+  const latestISO = `${latest.slice(0, 4)}-${latest.slice(4, 6)}-${latest.slice(6, 8)}`;
+  const stale = [];
+  try {
+    const dir = path.join(ROOT, 'data', 'dtx');
+    for (const f of fs.readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('_') && !f.includes('@'))) {
+      try {
+        const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
+        const asof = String(j.asof || '').slice(0, 10);
+        if (j.engineMode === 'mcp' && asof && asof < latestISO) stale.push(`${f.replace(/\.json$/, '')} (asof:${asof})`);
+      } catch { /* staging illisible → couvert par 4e */ }
+    }
+  } catch { return; }
+  if (!stale.length) return;
+  return `staging dtx STALE vs scan ${latestISO} (marqueur Step 4d ${marker ? 'ancien' : 'ABSENT — le filet primaire n\'a pas tourné'}): `
+    + `${stale.join(', ')}. Les modes scriptés tournent sur des ordres/métriques d'une séance passée. `
+    + `Régénérer via DtxReplay+DtxDecide → dtx-mcp-ingest → dtx-pool-bridge, PUIS relancer gen-status-page.`;
 });
 
 // 4e. dtx SANITY GATE (anti-corrupt-publish). Le MCP dtx est sain (diagnostic 2026-07-10 : interrogé

@@ -279,6 +279,16 @@ function parseScan(dir) {
   const peadPool = dedup(buildSetups(loaded.peadPool, 'pead_pool'));
   const filingsPool = dedup(buildSetups(loaded.filingsPool, 'filings_pool'));
   const gapPool = dedup(buildSetups(loaded.gapPool, 'gap_pool'));
+  // dtx_pool: ordres du moteur systematic-tss (dtx-pool-bridge.js). Un même ticker peut être
+  // proposé à PLUSIEURS modes scriptés (ex. LASR pour us_highvol ET book_honest ET hvep) →
+  // dedup par (ticker, universe) et PAS par ticker global, sinon seul le premier mode garde
+  // son candidat. L'isolation inter-modes est déjà garantie par universeFilter === modeId.
+  const dtxPool = (() => {
+    const seen = new Set();
+    return buildSetups(loaded.dtxPool, 'dtx_pool')
+      .filter(s => { const k = `${s.ticker}|${s.universe || ''}`; if (seen.has(k)) return false; seen.add(k); return true; })
+      .sort((a, b) => b.score - a.score);
+  })();
 
   return {
     dir, scanDate,
@@ -295,12 +305,13 @@ function parseScan(dir) {
     peadPool,
     filingsPool,
     gapPool,
+    dtxPool,
   };
 }
 
 // Asset-class pool registry: source tag → assetClass. Equity modes exclude ALL of these;
 // each asset-class mode trades ONLY its own pool. Generalizes the crypto wiring to N classes.
-const ASSET_POOL_SOURCES = { crypto: 'crypto_pool', metals: 'metals_pool', forex: 'forex_pool', casablanca: 'casablanca_pool', equity_eu: 'eu_smallcap_pool', us_factor: 'factor_pool', pead: 'pead_pool', filings: 'filings_pool', gap: 'gap_pool' };
+const ASSET_POOL_SOURCES = { crypto: 'crypto_pool', metals: 'metals_pool', forex: 'forex_pool', casablanca: 'casablanca_pool', equity_eu: 'eu_smallcap_pool', us_factor: 'factor_pool', pead: 'pead_pool', filings: 'filings_pool', gap: 'gap_pool', dtx: 'dtx_pool' };
 const ALL_ASSET_POOL_SOURCES = Object.values(ASSET_POOL_SOURCES);
 
 // ─── Regime-score override (proactive de-risk / "parachute") ─────────────────
@@ -528,6 +539,12 @@ for (const [_k, _set] of Object.entries(STRATEGY_FILTERS_MAP)) {
     if (_k !== _own) _set.add(_tag);
   }
 }
+// dtx_engine (modes scriptés, assetClass 'dtx') : filtre stratégie PERMISSIF (n'exclut rien) —
+// les candidats viennent EXCLUSIVEMENT de dtx_pool (ASSET_POOL_SOURCES) et sont partitionnés par
+// mode via universeFilter === modeId ; le tag stratégie (dérivé du `reason` du moteur) est
+// informatif, pas un gate. Déclaré APRÈS la boucle ROTATION_ONLY exprès : les ordres du moteur
+// portant un reason type IndexRotation ne doivent PAS être exclus de leur propre mode.
+STRATEGY_FILTERS_MAP['dtx_engine'] = new Set();
 
 // Frozen (exit-config) key for a mode config — the composite of every EXIT parameter that
 // determines a candidate's precomputed outcome (horizon, stops, trailing, partials, gates).
@@ -2132,7 +2149,7 @@ async function main() {
     const list = s.setups.slice();
     if (includeTklPool) list.push(...(s.tklPool || []));
     // Asset-class pools (crypto/metals/forex/…/event-driven); equity modes exclude these via excludeSources.
-    list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []), ...(s.casablancaPool || []), ...(s.euSmallcapPool || []), ...(s.factorPool || []), ...(s.peadPool || []), ...(s.filingsPool || []), ...(s.gapPool || []));
+    list.push(...(s.cryptoPool || []), ...(s.metalsPool || []), ...(s.forexPool || []), ...(s.casablancaPool || []), ...(s.euSmallcapPool || []), ...(s.factorPool || []), ...(s.peadPool || []), ...(s.filingsPool || []), ...(s.gapPool || []), ...(s.dtxPool || []));
     return list.map(t => ({ ...t, scanDate: s.scanDate, dir: s.dir, regime: s.regime, regimeScore: s.regimeScore }));
   });
   const tklPoolCount = allSetups.filter(s => s.source === 'tkl_pool').length;
@@ -3019,7 +3036,7 @@ async function main() {
             const pool = [...scan.setups];
             if (cfg.tklPoolEnabled !== false) pool.push(...(scan.tklPool || []));
             // Asset-class pools (incl. event-driven pead/filings/gap); each mode keeps only its own via exclSources.
-            pool.push(...(scan.cryptoPool || []), ...(scan.metalsPool || []), ...(scan.forexPool || []), ...(scan.casablancaPool || []), ...(scan.euSmallcapPool || []), ...(scan.factorPool || []), ...(scan.peadPool || []), ...(scan.filingsPool || []), ...(scan.gapPool || []));
+            pool.push(...(scan.cryptoPool || []), ...(scan.metalsPool || []), ...(scan.forexPool || []), ...(scan.casablancaPool || []), ...(scan.euSmallcapPool || []), ...(scan.factorPool || []), ...(scan.peadPool || []), ...(scan.filingsPool || []), ...(scan.gapPool || []), ...(scan.dtxPool || []));
             const filtered = pool
               .filter(s => exclSources.size === 0 || !exclSources.has(s.source || 'signals'))
               .filter(s => !activeFilter.has(s.strategy))

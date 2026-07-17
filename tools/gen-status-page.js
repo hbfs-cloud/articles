@@ -908,7 +908,7 @@ async function main() {
     etf_momentum: s => /^(ETFMomentum|etf_momentum)$/i.test(s),
     trendline_breakout: s => /^(TrendlineBreakout|trendline_breakout)$/i.test(s),
   };
-  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', hybrid_af: 'Hybrid-AF', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+', pead_drift: 'PEAD Drift', filings_catalyst: 'Insider & Catalyst', gap_and_go: 'Gap & Go' }[f] || f; }
+  function filterLabel(f) { return { all: 'All strategies', no_sq: 'No Short Squeeze', momentum_only: 'Momentum only', breakout_only: 'Breakout only', no_sq_pb: 'No SQ/PB', mom_bo: 'Momentum + Breakout', candlestick_only: 'Candlestick only', adaptive_fractal: 'Adaptive Fractal', hybrid_af: 'Hybrid-AF', highvol_breakout: 'HighVol Breakout', momentum_rotation: 'Momentum Rotation', etf_momentum: 'ETF Momentum', trendline_breakout: 'Trendline Breakout', fortress_pm: 'Fortress A+', pead_drift: 'PEAD Drift', filings_catalyst: 'Insider & Catalyst', gap_and_go: 'Gap & Go', dtx_engine: 'Engine orders' }[f] || f; }
 
   // Generate config-aware tagline (overrides stale hardcoded taglines in modes-config.json)
   function buildTagline(id, cfg) {

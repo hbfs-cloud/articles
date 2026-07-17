@@ -156,6 +156,10 @@ function loadSignals(dir) {
       const peadPool = poolFrom('pead_pool');
       const filingsPool = poolFrom('filings_pool');
       const gapPool = poolFrom('gap_pool');
+      // dtx_pool: ordres CREATE du moteur systematic-tss (dtx-pool-bridge.js). Consommé
+      // EXCLUSIVEMENT par les modes scriptés (assetClass 'dtx'), partitionné par mode via
+      // `universe: <modeId>`. Même câblage source-taggé que les autres asset-pools.
+      const dtxPool = poolFrom('dtx_pool');
       const filingsFlags = (data.filings_flags && typeof data.filings_flags === 'object') ? data.filings_flags : {};
       // Fortress-pm: source dédiée du mode Fortress + A+ (scan A+ Halal produit par le skill
       // fortress-pm, PAS le composite mom_bo). Tag strategy='FortressA+', exclu du mom_bo/all.
@@ -187,7 +191,7 @@ function loadSignals(dir) {
       // regimeScore: numeric regime strength (0-100). Used by the regime-score override
       // (proactive de-risk when the score deteriorates even if the label still says RISK-ON).
       const regimeScore = (data.regimeScore ?? data.regime_score ?? null);
-      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, euSmallcapPool, factorPool, peadPool, filingsPool, gapPool, filingsFlags, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
+      return { signals, strategyPools, tklPool, cryptoPool, metalsPool, forexPool, casablancaPool, euSmallcapPool, factorPool, peadPool, filingsPool, gapPool, dtxPool, filingsFlags, fortressPool, fortressPoolSource, thesis, regime: data.regime || 'EARLY RISK-OFF', regimeScore };  // fail-closed: null regime defaults to ERO (defensive)
     } catch (_) { /* fall through to HTML */ }
   }
 
@@ -207,7 +211,7 @@ function loadSignals(dir) {
     thesis: thesisMap[s.ticker] || '',
   }));
   const regime = extractRegimeFromHtml(html);
-  return { signals, tklPool: [], cryptoPool: [], metalsPool: [], forexPool: [], casablancaPool: [], euSmallcapPool: [], factorPool: [], peadPool: [], filingsPool: [], gapPool: [], filingsFlags: {}, thesis: thesisMap, regime, regimeScore: null };
+  return { signals, tklPool: [], cryptoPool: [], metalsPool: [], forexPool: [], casablancaPool: [], euSmallcapPool: [], factorPool: [], peadPool: [], filingsPool: [], gapPool: [], dtxPool: [], filingsFlags: {}, thesis: thesisMap, regime, regimeScore: null };
 }
 
 // ─── LEGACY: HTML parsers (kept for old scans without signals.json) ─────────

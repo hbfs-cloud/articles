@@ -432,6 +432,16 @@ pipeline shell** (`publish-daily-card.sh` / `gen-status-page`) :
 Poller `DtxJobStatus(job_id)` jusqu'à `status:"done"` → lire `result` (isolé par job_id). Le cache serveur
 étant chaud, beaucoup de jobs répondent quasi-inline, mais **toujours** passer par le poll.
 
+**Tracking live (fix « 0 trades depuis D0 », 2026-07-16).** Le staging n'alimente PLUS seulement
+l'affichage : `publish-daily-card.sh` **Step 2q** (`tools/dtx-pool-bridge.js`) convertit les ordres
+CREATE du staging du jour en signaux `dtx_pool` dans `signals.json` (partition `universe=<modeId>`,
+tp1 approximé à 2R — le moteur n'émet pas de TP). Les 6 modes scriptés ont `assetClass:'dtx'` +
+`filterName:'dtx_engine'` + `universeFilter:<modeId>` dans modes-config → le **sweep** tracke
+fills/exits/positions/trades (chemin append-only scellé, comme eu_smallcap/factor). Conséquence
+directe : si l'agent ne régénère pas le staging (asof ≠ séance), le bridge skippe le mode
+BRUYAMMENT et ce mode n'a AUCUN candidat ce soir-là → la fraîcheur du staging est maintenant
+la condition d'existence des trades live, pas juste de l'affichage.
+
 ### ⛔ Preflight & complétude dtx — ANTI-SKIP SILENCIEUX (OBLIGATOIRE)
 
 **Aucun skip silencieux.** Depuis le cut-over 2026-07-08 il n'y a plus de fallback binaire : si le MCP

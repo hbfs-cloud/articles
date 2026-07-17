@@ -220,6 +220,16 @@ if [ "$SKIP_SWEEP" = false ]; then
   fi
 
   echo ""
+  echo "🧩 Step 2q: dtx pool bridge (ordres moteur scriptés → dtx_pool)..."
+  # Fix « 0 trades depuis D0 » (2026-07-16) : les ordres DtxDecide du staging data/dtx/<id>.json
+  # deviennent des signaux source-taggés dtx_pool dans signals.json, consommés EXCLUSIVEMENT par
+  # les modes scriptés (assetClass 'dtx', partition universe=modeId). C'est ce qui permet au sweep
+  # de tracker fills/exits/trades pour ces modes (avant : AUCUN producteur → live book vide à vie).
+  # Staging stale (asof ≠ séance du scan) → mode skippé BRUYAMMENT par le bridge (exit 3, résumé
+  # par mode) — dégradation honnête, jamais fabriquée, jamais silencieuse.
+  node tools/dtx-pool-bridge.js --folder "$CS_FOLDER" --date "$SCAN_DATE_ISO" || echo "⚠️  dtx pool bridge incomplet (modes skippés ou erreur — voir résumé ci-dessus, non-bloquant)"
+
+  echo ""
   echo "🔄 Step 3: Running sweep (~5 min)..."
   SWEEP_START=$(date +%s)
   node tools/sweep.js 2>&1 | tail -20

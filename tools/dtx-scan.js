@@ -37,7 +37,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const dtxBars = require('./lib/dtx-bars'); // still used for readConfig()
+// dtx-bars (→ js-yaml) est chargé PARESSEUSEMENT : seul discoverModes()/le CLI en a besoin.
+// Un require top-level faisait crasher writeStagingCompleteness/stagingStatus dans tout
+// environnement sans node_modules (js-yaml manquant) → le filet Step 4d mourait AVANT d'écrire
+// le marqueur, et qa-check traitait « pas de marqueur » comme OK. Constaté le 2026-07-16
+// (marqueur jamais écrit depuis le cut-over). Les fonctions de complétude ne dépendent plus
+// que de fs/path.
+let _dtxBars = null;
+function dtxBars() { if (!_dtxBars) _dtxBars = require('./lib/dtx-bars'); return _dtxBars; }
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const CONFIG_DIR = path.join(REPO_ROOT, 'config', 'dtx');
@@ -111,7 +118,7 @@ function discoverModes() {
   const modes = {};
   for (const f of files) {
     try {
-      const p = dtxBars.readConfig(path.join(CONFIG_DIR, f));
+      const p = dtxBars().readConfig(path.join(CONFIG_DIR, f));
       modes[p.id] = { id: p.id, name: p.name, currency: p.currency, initialCapital: p.initial_capital, file: f, path: path.join(CONFIG_DIR, f) };
     } catch (e) {
       modes[`__err_${f}`] = { id: f, error: e.message, path: path.join(CONFIG_DIR, f) };
