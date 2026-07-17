@@ -432,6 +432,15 @@ pipeline shell** (`publish-daily-card.sh` / `gen-status-page`) :
 Poller `DtxJobStatus(job_id)` jusqu'à `status:"done"` → lire `result` (isolé par job_id). Le cache serveur
 étant chaud, beaucoup de jobs répondent quasi-inline, mais **toujours** passer par le poll.
 
+**Prix du sweep — MCP SEUL AUSSI (fix 2026-07-17, « y'a pas de Yahoo »).** Le fallback réseau de
+sweep.js est mort en cloud (`Fetched prices for 0/937` dans les runs committés) → AVANT le pipeline,
+l'agent stage les bars : `node tools/price-cache-ingest.js --list-needed` → QueryData
+`types=bars_daily, symbols=<lots de ~10>, days=70` (poll Jobs si async) → écrire chaque réponse
+brute en `/tmp/price-stage-<NN>.json` au format `{"symbols":[...ordre exact de l'appel...],
+"result":<sortie brute>}` → `publish-daily-card.sh` Step 2p2 (`price-cache-ingest.js`) écrit le
+cache daté `data/.price-cache/<date>/` que `loadCachedPrice()` lit avant tout réseau. Sans staging
+prix : zéro nouveau trade pour TOUS les modes ce soir-là (loggé bruyamment, jamais fabriqué).
+
 **Tracking live (fix « 0 trades depuis D0 », 2026-07-16).** Le staging n'alimente PLUS seulement
 l'affichage : `publish-daily-card.sh` **Step 2q** (`tools/dtx-pool-bridge.js`) convertit les ordres
 CREATE du staging du jour en signaux `dtx_pool` dans `signals.json` (partition `universe=<modeId>`,

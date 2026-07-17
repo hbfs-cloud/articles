@@ -220,6 +220,21 @@ if [ "$SKIP_SWEEP" = false ]; then
   fi
 
   echo ""
+  echo "💲 Step 2p2: price cache ingest (bars MCP marketdata → cache daté du sweep)..."
+  # DÉCRET « le MCP fait foi » : PAS de Yahoo. Le fallback réseau de sweep.js est mort en cloud
+  # (« Fetched prices for 0/937 » dans les runs committés) → l'AGENT stage les bars via
+  # QueryData(bars_daily) AVANT le pipeline (liste : node tools/price-cache-ingest.js --list-needed),
+  # et cet ingest les écrit dans data/.price-cache/<date>/ que loadCachedPrice() lit AVANT tout
+  # réseau. Staging absent → skip non-bloquant MAIS le sweep n'appendra rien de neuf (loggé).
+  PRICE_STAGE_GLOB="${PRICE_STAGE_GLOB:-/tmp/price-stage-*.json}"
+  # shellcheck disable=SC2086
+  if ls $PRICE_STAGE_GLOB >/dev/null 2>&1; then
+    node tools/price-cache-ingest.js --stage $PRICE_STAGE_GLOB || echo "⚠️  price-cache-ingest incomplet (non-bloquant)"
+  else
+    echo "⚠️  Price staging absent ($PRICE_STAGE_GLOB) — MCP-primary : bars produits par l'AGENT (QueryData bars_daily). Sans lui, le sweep n'a PAS de prix frais → zéro nouveau trade ce soir (dégradation honnête)."
+  fi
+
+  echo ""
   echo "🧩 Step 2q: dtx pool bridge (ordres moteur scriptés → dtx_pool)..."
   # Fix « 0 trades depuis D0 » (2026-07-16) : les ordres DtxDecide du staging data/dtx/<id>.json
   # deviennent des signaux source-taggés dtx_pool dans signals.json, consommés EXCLUSIVEMENT par
