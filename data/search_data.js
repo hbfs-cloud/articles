@@ -1276,6 +1276,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "TLN",
+    "exchange": "NASDAQ · Utilities — IPP",
+    "name": "TLN — Haussier sur repli setup, score 84/100.",
+    "title": "TLN — Haussier sur repli setup, score 84/100.",
+    "desc": "Talen Energy : 1,208 Md$ de revenus de capacité PJM verrouillés pour 2028/29 et un PPA nucléaire AWS jusqu'en 2042, mais le marché a vendu la nouvelle (-8% le 16/07). Repli vers l'EMA200 — setup pullback, pas momentum.",
+    "tags": "us,energy,utilities,ai,trade-idea",
+    "grade": "B+",
+    "href": "/analyses/TLN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQX",
     "exchange": "NYSE · Gold / Basic Materials",
     "name": "EQX — cheapest gold major at 5.7x forward PE, merger vote July 22 — but gold is in a -28% dra...",
