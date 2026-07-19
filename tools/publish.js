@@ -157,6 +157,16 @@ runSafe('git', ['add', ...uniquePaths], 'git add');
 // ─── Step 4b: Content validation gate ────────────────────────────────────────
 
 console.log('\nStep 4b/7 — Validating article content...');
+// Rétro : assertion CI d'intégrité de notation (fill unique scan/rétro, tolérance chase
+// partagée — tools/lib/fill-policy.js). Ligne notée hors politique = build en échec.
+if (type === 'retro') {
+  const retroRes = spawnSync('node', ['tools/qa-retro.js', artPath], { cwd: ROOT, stdio: 'inherit' });
+  if (retroRes.status !== 0 && !process.argv.includes('--skip-validate')) {
+    console.error('\nERROR: qa-retro failed — notation hors politique de fill, aborting publish.');
+    spawnSync('git', ['reset', 'HEAD'], { cwd: ROOT, stdio: 'inherit' });
+    process.exit(retroRes.status || 1);
+  }
+}
 const valRes = spawnSync('node', ['tools/validate-article.js', artPath, '--type', type], { cwd: ROOT, stdio: 'inherit' });
 if (valRes.status !== 0) {
   console.error('\nERROR: Content validation failed — aborting publish.');
