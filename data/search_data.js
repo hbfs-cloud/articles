@@ -1280,7 +1280,7 @@ window.searchDataPrebuilt = [
     "exchange": "NASDAQ · Utilities — IPP",
     "name": "TLN — Haussier sur repli setup, score 84/100.",
     "title": "TLN — Haussier sur repli setup, score 84/100.",
-    "desc": "Talen Energy : 1,208 Md$ de revenus de capacité PJM verrouillés pour 2028/29 et un PPA nucléaire AWS jusqu'en 2042, mais le marché a vendu la nouvelle (-8% le 16/07). Repli vers l'EMA200 — setup pullback, pas momentum.",
+    "desc": "Talen Energy : 1,208 Md$ de revenus de capacité PJM verrouillés pour 2028/29, PPA nucléaire AWS jusqu'en 2042, buyback 1,9 Md$ — mais le marché a vendu la nouvelle (-8% le 16/07). Repli vers l'EMA200 : setup haussier sur repli, discipliné.",
     "tags": "us,energy,utilities,ai,trade-idea",
     "grade": "B+",
     "href": "/analyses/TLN/",
