@@ -387,6 +387,57 @@ function forwardViewFor(fe) {
   };
 }
 
+// ── G4 heartbeat rétro (audit 13-19/07, généralisation du correctif staging du 17/07) ──
+// À chaque run : compare la date "Updated:" du bloc Scanner Performance de l'index avec la
+// dernière rétro publiée. Bloc plus vieux que la dernière rétro = le même mode de panne que
+// le gel du 2 juillet → alerte Telegram (token .env) ou marqueur bruyant repris par la
+// routine cloud (pattern notify-scanner-status). Écrit data/scanner-heartbeat.json.
+function emitRetroHeartbeat() {
+  try {
+    const retroDir = path.join(ROOT, 'scanner', 'retrospective');
+    const lastRetro = fs.readdirSync(retroDir).filter(d => /^\d{8}$/.test(d)).sort().pop();
+    if (!lastRetro) return;
+    const lastRetroISO = `${lastRetro.slice(0, 4)}-${lastRetro.slice(4, 6)}-${lastRetro.slice(6, 8)}`;
+
+    const idx = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+    const MONTHS = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+    const m = idx.match(/Updated: ([A-Z][a-z]{2}) (\d{1,2}) (\d{4}) — Period:/);
+    let blockISO = null;
+    if (m) {
+      const d = new Date(Date.UTC(+m[3], MONTHS[m[1]], +m[2]));
+      blockISO = d.toISOString().slice(0, 10);
+    }
+    const fresh = blockISO != null && blockISO >= lastRetroISO;
+    const hb = {
+      checked_at: new Date().toISOString(),
+      last_retro: lastRetroISO,
+      index_block_updated: blockISO,
+      fresh,
+    };
+    fs.writeFileSync(path.join(ROOT, 'data', 'scanner-heartbeat.json'), JSON.stringify(hb, null, 2) + '\n');
+    if (fresh) {
+      console.log(`💓 heartbeat rétro OK — bloc index ${blockISO} >= dernière rétro ${lastRetroISO}`);
+      return;
+    }
+    const alert = blockISO == null
+      ? `Bloc "Scanner Performance" de l'index illisible (ligne Updated introuvable) — lancer node tools/update-scanner-perf.js`
+      : `Bloc "Scanner Performance" de l'index figé au ${blockISO} alors que la dernière rétro est du ${lastRetroISO} — lancer node tools/update-scanner-perf.js`;
+    console.error(`\n⚠️  HEARTBEAT-RETRO-STALE: ${alert}\n`);
+    const token = process.env.TELEGRAM_BOT_TOKEN, chat = process.env.TELEGRAM_CHAT_ID;
+    if (token && chat) {
+      const body = JSON.stringify({ chat_id: chat, parse_mode: 'HTML', text: `⚠️ <b>Scanner index périmé</b>\n${alert}` });
+      const req = https.request({ hostname: 'api.telegram.org', path: `/bot${token}/sendMessage`, method: 'POST', headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body) } },
+        res => res.resume());
+      req.on('error', e => console.error(`⚠️  heartbeat: envoi Telegram échoué (${e.message}) — le marqueur HEARTBEAT-RETRO-STALE ci-dessus reste le signal`));
+      req.end(body);
+    } else {
+      console.error('⚠️  heartbeat: pas de TELEGRAM_BOT_TOKEN — alerte à relayer par la routine cloud (MCP notification, alias alerts)');
+    }
+  } catch (e) {
+    console.error(`⚠️  heartbeat rétro en échec: ${e.message}`);
+  }
+}
+
 async function main() {
   let config;
   try { config = JSON.parse(fs.readFileSync(MODES_CFG)); } catch (e) { console.error(`[gen-status-page] Cannot read modes-config: ${e.message}`); process.exit(1); }
@@ -3760,6 +3811,8 @@ document.addEventListener('DOMContentLoaded',function(){
   for (const [id, m] of Object.entries(modes)) {
     console.log(`   ${m.cfg.label}: ${m.m.ret > 0 ? '+' : ''}${m.m.ret}%, DD ${m.m.dd}%, WR ${m.m.wr}%, PF ${m.m.pf == null ? '—' : m.m.pf + 'x'}, ${m.m.trades} trades${m.m.dtxEngine ? ' [dtx]' : ''}`);
   }
+
+  emitRetroHeartbeat();
 
   // ── Save daily snapshot for time machine ──
   // Snapshot filename MUST use the canonical NY trading-day key: a run after 00:00 UTC

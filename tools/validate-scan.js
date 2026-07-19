@@ -627,6 +627,136 @@ async function main() {
   // validate-scan.js blocks hard errors above; advisory deviations are surfaced below
   // so Claude can iterate — but a passing scan with warnings still publishes.
 
+  // ── Gates G1-G3 (audit scanner 13-19/07/2026, tag lecon-20260717) ─────────────
+  // Encodage des règles mémoire entry-strategy-coherence, etf-lookthrough-correlation-cap
+  // et regime-score-label-lag (extension décrochage). Détail + contrat d'enrichissement :
+  // docs/scanner-gates.md. Portée : le top publié (signals[] du signals.json RAW), pas le
+  // pool candidat élargi. `active_from` grandfathere les scans déjà publiés avant l'audit.
+  const ag = filters.audit_gates || {};
+  const scanISO = /^\d{8}$/.test(dirName) ? `${dirName.slice(0, 4)}-${dirName.slice(4, 6)}-${dirName.slice(6, 8)}` : null;
+  if (ag.active_from && scanISO && scanISO >= ag.active_from) {
+    const rawGates = loadRawSignalsJson(dir);
+    if (!rawGates || !Array.isArray(rawGates.signals)) {
+      violations.push({ rule: 'audit_gates', message: 'signals.json brut illisible — gates G1-G3 inapplicables (fail-closed).' });
+    } else {
+      const published = rawGates.signals.filter(s => (s.strategy || '') !== 'Candlestick');
+
+      // G1 entry-strategy-coherence : une ligne Momentum/Breakout s'achète en stop-buy
+      // AU-DESSUS du niveau de cassure — min(zone d'entrée) >= close de la veille.
+      const g1 = ag.entry_strategy_coherence;
+      if (g1) {
+        const tol = (g1.tolerance_pct ?? 0) / 100;
+        for (const s of published) {
+          if (!(g1.strategies || []).includes(s.strategy)) continue;
+          const zoneMin = typeof s.entry_low === 'number' ? s.entry_low : s.entry;
+          if (typeof zoneMin !== 'number' || typeof s.price !== 'number') {
+            violations.push({
+              rule: 'entry_strategy_coherence',
+              message: `${s.ticker}: ${s.strategy} sans entry_low/price exploitables — min(zone) >= close veille invérifiable (fail-closed).`
+            });
+            continue;
+          }
+          if (zoneMin < s.price * (1 - tol)) {
+            violations.push({
+              rule: 'entry_strategy_coherence',
+              message: `${s.ticker}: ${s.strategy} avec min(zone) ${zoneMin} < close veille ${s.price} — retirer la ligne ou requalifier Pullback.`
+            });
+          }
+        }
+      }
+
+      // G2 etf-lookthrough-correlation-cap : chaque ETF est décomposé sur ses top
+      // holdings (enrichissement MCP au scan → champ `lookthrough`) AVANT le cap de
+      // 2 par cluster ; un ETF factoriel dont le facteur est déclaré en sortie dans
+      // la thèse du jour (`exited_factors`) est retiré (cas MTUM 14/07, SPMO 16/07).
+      const g2 = ag.etf_lookthrough;
+      if (g2) {
+        const SECTOR_MAP = filters.diversification?.sector_map || {};
+        const exited = (rawGates.exited_factors || []).map(x => String(x).toLowerCase());
+        const clusterMembers = {};
+        for (const s of published) {
+          const isEtf = String(s.region || '').toUpperCase() === 'ETF' || String(s.sector || '').toUpperCase() === 'ETF';
+          let clusters;
+          if (isEtf) {
+            const lt = s.lookthrough;
+            if (!lt || !Array.isArray(lt.clusters) || !lt.clusters.length) {
+              violations.push({
+                rule: 'etf_lookthrough',
+                message: `${s.ticker}: ETF sans champ lookthrough {factor, clusters[]} (décomposition top holdings via MCP à l'enrichissement) — fail-closed.`
+              });
+              continue;
+            }
+            if (lt.factor && exited.includes(String(lt.factor).toLowerCase())) {
+              violations.push({
+                rule: 'etf_factor_exit',
+                message: `${s.ticker}: ETF factoriel "${lt.factor}" alors que la thèse du jour le déclare en sortie (exited_factors) — retirer.`
+              });
+            }
+            clusters = lt.clusters;
+          } else {
+            clusters = [SECTOR_MAP[String(s.ticker).toUpperCase()] || s.sector || 'Other'];
+          }
+          for (const c of clusters) {
+            const key = String(c).toLowerCase().trim();
+            (clusterMembers[key] = clusterMembers[key] || []).push(s.ticker);
+          }
+        }
+        const cap = g2.max_per_cluster ?? 2;
+        for (const [c, members] of Object.entries(clusterMembers)) {
+          if (c === 'other') continue;
+          if (members.length > cap) {
+            violations.push({
+              rule: 'etf_lookthrough_correlation_cap',
+              message: `Cluster "${c}": ${members.length} expositions dans le top publié (cap ${cap}, ETF décomposés sur leurs holdings) — ${members.join(', ')}.`
+            });
+          }
+        }
+      }
+
+      // G3 regime-score-label-lag (extension) : décrochage de confiance > drop_pts sur
+      // window_sessions séances → poids Momentum plafonné quelle que soit l'étiquette,
+      // et les ETF factoriels momentum sortent du panier.
+      const g3 = ag.regime_score_drop;
+      if (g3) {
+        const norm = v => (typeof v === 'number' ? (v <= 1 ? v * 100 : v) : null);
+        const win = g3.window_sessions ?? 5;
+        const prevDirs = fs.readdirSync(path.join(ROOT, 'scanner'))
+          .filter(d => /^\d{8}$/.test(d) && d < dirName).sort().slice(-(win - 1));
+        const hist = [];
+        for (const d of prevDirs) {
+          try {
+            const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'scanner', d, 'signals.json'), 'utf8'));
+            const v = norm(j.regimeScore);
+            if (v != null) hist.push(v);
+          } catch { /* scan sans signals.json : ignoré */ }
+        }
+        const cur = norm(regimeScore);
+        if (cur != null && hist.length) {
+          const peak = Math.max(...hist, cur);
+          const drop = peak - cur;
+          if (drop > (g3.drop_pts ?? 15)) {
+            const capN = Math.max(1, Math.floor(published.length * (g3.momentum_cap_pct ?? 20) / 100));
+            const moms = published.filter(s => s.strategy === 'Momentum');
+            if (moms.length > capN) {
+              violations.push({
+                rule: 'regime_score_drop_momentum_cap',
+                message: `Décrochage de confiance ${drop.toFixed(0)} pts sur ${hist.length + 1} séances (pic ${peak} → ${cur}) : Momentum plafonné à ${capN}/${published.length} quelle que soit l'étiquette "${regime}" — ${moms.length} présents (${moms.map(s => s.ticker).join(', ')}).`
+              });
+            }
+            for (const s of published) {
+              if (s.lookthrough && String(s.lookthrough.factor || '').toLowerCase() === 'momentum') {
+                violations.push({
+                  rule: 'etf_factor_exit',
+                  message: `${s.ticker}: ETF factoriel momentum pendant un décrochage de ${drop.toFixed(0)} pts — retirer (regime-score-label-lag).`
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   // 10. tp1-horizon-calibration — TP1 too far for horizon
   for (const s of signals) {
     if (typeof s.entry !== 'number' || typeof s.stop !== 'number' || typeof s.tp1 !== 'number') continue;
