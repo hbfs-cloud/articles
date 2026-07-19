@@ -325,6 +325,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Ormuz, la BCE et le vrai test du AI trade",
+    "desc": "Weekly DailyTickers du 20 au 24 juillet 2026. Escalade dans le détroit d'Ormuz, WTI à 81,78 $, semis en bear market, Alphabet/Tesla mercredi, Intel jeudi, BCE jeudi. Régime NEUTRAL 61%, plan complet, niveaux et trades.",
+    "tags": "us,eu,asia,crypto,commodity,energy,geopolitique,macro,earnings,technique,trade-idea,etf",
+    "grade": "",
+    "href": "/weekly/20260720/",
+    "date": "20 juillet 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
