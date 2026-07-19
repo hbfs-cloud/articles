@@ -984,6 +984,11 @@ Chaque pilier donne un score numérique (1-7), la moyenne arrondie = note finale
   1. Créer `scanner/retrospective/YYYYMMDD/index.html`
   2. Mettre à jour le redirect dans `scanner/retrospective/index.html` (`<meta http-equiv="refresh" content="0;url=/scanner/retrospective/YYYYMMDD/">`)
   3. Lancer `node tools/add_card.js scanner/retrospective/YYYYMMDD/index.html` — la carte aura un href unique, les anciennes rétros restent dans l'index
+  3b. **Attester la notation aux niveaux publiés** : `node tools/qa-retro.js scanner/retrospective/YYYYMMDD/`
+      DOIT passer (câblé dans `publish.js --type retro`) — ligne notée = |écart| ≤ 2% (tolérance unique
+      `tools/lib/fill-policy.js`) OU NON REMPLI ; écart → « Transparence process », jamais de rebasing.
+      Puis **rafraîchir le bloc index** : `node tools/update-scanner-perf.js` après mise à jour de
+      `data/retro-summary.json` (5 assertions = exit 0). Détail : `docs/scanner-gates.md`.
   4. La carte dans `scanner.json` DOIT avoir le style rétrospective : bordure colorée selon la note, badges RÉTROSPECTIVE + NOTE, bouton gradient
 - **NE PAS** supprimer les anciennes rétrospectives — elles restent dans l'index `scanner.json` triées par date avec les scans
 
@@ -1023,6 +1028,11 @@ Cette synthèse est **non-optionnelle** — elle évite la dérive du process et
 
 Après génération du fichier HTML, ces 5 étapes sont **BLOQUANTES**. Si l'une échoue, NE PAS passer à la suivante :
 
+0. **Gates audit (docs/scanner-gates.md)** : `node tools/validate-scan.js scanner/YYYYMMDD/` passe
+   G1–G3 (`entry_strategy_coherence`, `etf_lookthrough_correlation_cap`, `regime_score_drop`) ;
+   le scan publie le **pass/fail nominatif** des 4 gates (G4 = heartbeat gen-status-page) dans sa
+   section Méthode. Prérequis `signals.json` : `lookthrough:{factor, clusters[]}` sur chaque ETF,
+   `exited_factors:[]` à la racine, zone d'entrée COMPLÈTE (`entry_low`–`entry`) affichée sur la page.
 1. **Vérifier la taille** : `wc -c scanner/YYYYMMDD/index.html` — doit être > 30KB (sinon article tronqué/incomplet)
 2. **Indexer** : `node tools/add_card.js scanner/YYYYMMDD/index.html` — vérifier que `data/scanner.json` et `data/search_data.js` apparaissent dans `git status`
    - **INTERDIT** de modifier `data/scanner.json` manuellement ou via Write/Edit. TOUJOURS utiliser `add_card.js` qui gère l'escaping JSON correctement.

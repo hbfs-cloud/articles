@@ -616,6 +616,14 @@ send_batch(messages = <contenu de data/scanner-notifications.json#messages>)
 
 **Post-pipeline checklist OBLIGATOIRE** :
 - QA check (`tools/qa-check.js`) doit afficher 0 ❌
+- **Gates audit (docs/scanner-gates.md) — pass/fail NOMINATIF publié** : `validate-scan.js` passe
+  G1 `entry_strategy_coherence`, G2 `etf_lookthrough_correlation_cap`, G3 `regime_score_drop`
+  (+ G4 heartbeat via `gen-status-page.js`). Le scan publie le verdict nominatif des 4 gates
+  (G1: PASS/FAIL, G2: …, G3: …, G4: …) dans sa section Méthode / QA de pipeline — un gate absent
+  du rapport = run non conforme. Prérequis de génération `signals.json` : chaque signal ETF porte
+  `lookthrough:{factor, clusters[]}` (décomposition top holdings via MCP), la racine porte
+  `exited_factors:[]` si la thèse du jour sort un facteur, et la page affiche la zone d'entrée
+  COMPLÈTE (`entry_low`–`entry`), jamais la seule borne basse.
 - ⚠️ **Mode Bull = haute-conviction, 0 signal est LÉGITIME les jours calmes** : `candlestick-scanner.js` ne qualifie un signal Bull que si un pattern chandelier a un **spike de volume ≥ 8× la moyenne 20j le jour du signal** (volume de CLÔTURE, parité systematic-tss config `americanbull` — PAS intraday J+1) + score ≥ 88 + dollar-volume ≥ $1M. Sur 5 ans : ~1 trade/sem (1061 trades, parité Go/JS validée). **Vérifié 2026-06-30** : sur 3512 tickers, 1 seul candidat (MESH) passe score+vol mais échoue la liquidité ($111k < $1M) → **0 ordre, identique au backtest Go**. Donc **0 signal Bull ≠ bug**. Le QA check vérifie le **marqueur `_candlestickScan`** (preuve que le scanner a tourné : `universeFetched`, `detectedPatterns`, `qualified`), PAS la présence de signaux. Le seuil 8× vit dans `data/scanner-filters.json#candlestick.min_vol_ratio_trading` (source de vérité, lu par sweep.js + gen-status-page.js). **Source des prix = `--source yahoo`** (défaut). **CRITIQUE** : `--date` = dernier jour de trading (pas la date du dossier si weekend). `--folder` = nom du dossier scanner (= prochaine séance). Le scanner DOIT tourner à chaque pipeline pour écrire le marqueur, même s'il qualifie 0.
 - `scanner/status/index.html` : pas de "Pending (Nd/Md)" sur trades dont `exitDate` est passé
 - `data/risk-snapshots.json` non-stub si MCP_GATEWAY_URL set
@@ -691,6 +699,15 @@ node tools/optimize-param.js --mode balanced --param horizon --range 2,3,5,8,10
    ```
 
 **⚠️ Checklist post-rétro (OBLIGATOIRE) :**
+- [ ] **Notation aux niveaux publiés attestée** : `node tools/qa-retro.js scanner/retrospective/YYYYMMDD/`
+      PASS (câblé dans `publish.js --type retro`) — chaque ligne notée respecte
+      `|entrée_effective − entrée_publiée| <= 2%` (tolérance unique `tools/lib/fill-policy.js`)
+      OU est NON REMPLI ; tout écart va en « Transparence process », jamais en rebasing silencieux
+- [ ] **Bloc index rafraîchi** : `node tools/update-scanner-perf.js` exécuté APRÈS la mise à jour
+      de retro-summary.json (assertions updated_at/compteur/note/lien/régime = exit 0), puis
+      heartbeat G4 `fresh: true` dans `data/scanner-heartbeat.json` (via gen-status-page)
+- [ ] **Boucle de promotion** : toute règle mémoire à confiance ≥ 0,70 ET n ≥ 5 est encodée en gate
+      bloquant au scan suivant (scanner-filters.json + validate-scan.js + docs/scanner-gates.md)
 - [ ] retro-summary.json contient la nouvelle rétro avec grade, HR, stats
 - [ ] scanner-lessons.json bumped avec nouvelles règles ou mises à jour
 - [ ] `lessons-engine.js --decay` puis `--contradictions` exécutés (pas d'édition manuelle de confidence/status)
