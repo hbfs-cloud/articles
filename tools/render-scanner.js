@@ -411,12 +411,12 @@ function setupCard(s, idx) {
 
   return `
 <!-- SETUP ${idx + 1}: ${esc(s.ticker)} -->
-<div class="section-header"><h2>#${idx + 1} ${esc(s.ticker)} &mdash; ${esc(s.name)}</h2></div>
+<div class="section-header"><h2>#${idx + 1} ${esc(s.ticker)} &middot; ${esc(s.name)}</h2></div>
 <div class="setup-card" id="setup-${escAttr(s.ticker)}" data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia ? 'true' : 'false'}" data-entry="${s.entry_low || s.entry_high || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">
   <div class="setup-header">
     <div class="scanner-ticker-logo" style="${gradStyle}">${esc(s.ticker)}</div>
     <div class="setup-header-info">
-      <h3>${esc(s.ticker)} &mdash; ${esc(s.name)}</h3>
+      <h3>${esc(s.ticker)} &middot; ${esc(s.name)}</h3>
       <div class="setup-name">${esc(s.description || '')}</div>
     </div>
     <div class="setup-header-price">
@@ -454,9 +454,9 @@ function setupCard(s, idx) {
     <div><strong>Entry:</strong> ${entryDisplay}</div>
     <div><strong>Stop Loss:</strong> ${fmtPrice(s.stop)}</div>
     <div><strong>TP1:</strong> ${fmtPrice(s.tp1)}</div>
-    <div><strong>TP2:</strong> ${s.tp2 ? fmtPrice(s.tp2) : '&mdash;'}</div>
-    <div><strong>R/R:</strong> ${s.rr || '&mdash;'}</div>
-    <div><strong>Horizon:</strong> ${s.horizon_days ? s.horizon_days + ' days' : '&mdash;'}</div>
+    <div><strong>TP2:</strong> ${s.tp2 ? fmtPrice(s.tp2) : 'n/a'}</div>
+    <div><strong>R/R:</strong> ${s.rr || 'n/a'}</div>
+    <div><strong>Horizon:</strong> ${s.horizon_days ? s.horizon_days + ' s\u00e9ances' : 'n/a'}</div>
   </div>
 </div>`;
 }
@@ -480,7 +480,7 @@ function syntheseTable(setups) {
   const rows = setups.map((s, i) => {
     const shariaAttr = `data-sharia="${s.sharia ? 'true' : 'false'}"`;
     const entryVal = s.entry_low || s.entry_high || 0;
-    return `        <tr ${shariaAttr}><td>${i + 1}</td><td><strong>${esc(s.ticker)}</strong></td><td>${s.name}</td><td>${esc(s.region_label || s.region || 'US')}</td><td>${esc(s.pattern || 'Momentum')}</td><td class="up"><strong>${s.score}</strong></td><td>$${entryVal}</td><td>$${s.stop || ''}</td><td>$${s.tp1 || ''}</td><td>${s.rr || ''}</td></tr>`;
+    return `        <tr ${shariaAttr}><td>${i + 1}</td><td><strong>${esc(s.ticker)}</strong></td><td>${s.name}</td><td>${esc(s.region_label || s.region || 'US')}</td><td>${esc(s.pattern || 'Momentum')}</td><td class="up"><strong>${s.score}</strong></td><td>${s.entry_low && s.entry_high && s.entry_low !== s.entry_high ? `$${s.entry_low}&ndash;$${s.entry_high}` : `$${entryVal}`}</td><td>$${s.stop || ''}</td><td>$${s.tp1 || ''}</td><td>${s.rr || ''}</td></tr>`;
   });
   return `    <div style="overflow-x:auto"><table class="data-table">
       <thead>
@@ -505,7 +505,7 @@ function divmatTable(data) {
       <thead><tr><th>Region</th><th>Tickers</th><th>Count</th><th>Strategies</th></tr></thead>
       <tbody>
 ${rows.join('\n')}
-        <tr style="background:#eff6ff;font-weight:700;"><td><strong>Total</strong></td><td>${total} setups</td><td>${total}</td><td>&mdash;</td></tr>
+        <tr style="background:#eff6ff;font-weight:700;"><td><strong>Total</strong></td><td>${total} setups</td><td>${total}</td><td></td></tr>
       </tbody>
     </table></div>`;
 }
@@ -545,7 +545,7 @@ function macroCalendarTable(rows) {
     return `            <tr><td><strong>${esc(r.date)}</strong></td><td>${esc(r.event)}</td><td class="${impactClass}"><strong>${esc(r.impact || '')}</strong></td><td>${esc(r.note || '')}</td></tr>`;
   });
   return `        <div style="overflow-x:auto"><table class="data-table">
-          <thead><tr><th>Date</th><th>Event</th><th>Impact</th><th>Direction Risk</th></tr></thead>
+          <thead><tr><th>Date</th><th>&Eacute;v&eacute;nement</th><th>Impact</th><th>Sens du risque</th></tr></thead>
           <tbody>${trs.join('')}</tbody>
         </table></div>`;
 }
@@ -559,7 +559,7 @@ function sectorRotationTable(rows) {
     return `            <tr><td>${esc(r.sector)}</td><td class="${dirClass}">${esc(r.perf)}</td><td>${esc(r.signal)}</td><td><strong>${esc(r.exposure)}</strong></td></tr>`;
   });
   return `        <div style="overflow-x:auto"><table class="data-table">
-          <thead><tr><th>Sector (ETF)</th><th>Week Performance</th><th>Regime Signal</th><th>Our Exposure</th></tr></thead>
+          <thead><tr><th>Secteur (ETF)</th><th>Perf. s&eacute;ance</th><th>Signal de r&eacute;gime</th><th>Exposition du scan</th></tr></thead>
           <tbody>${trs.join('')}</tbody>
         </table></div>`;
 }
@@ -636,7 +636,7 @@ function strategyTable(title, subtitle, rows) {
     return `        <tr data-ticker="${escAttr(s.ticker)}" data-sharia="${s.sharia === true ? 'true' : s.sharia === false ? 'false' : ''}" data-entry="${entry || 0}" data-stop="${s.stop || 0}" data-tp1="${s.tp1 || 0}" data-tp2="${s.tp2 || 0}">`
       + `<td><strong>${esc(s.ticker)}</strong>${shariaBadge}</td>`
       + `<td class="setup-phrase">${setupPhrase(s)}</td>`
-      + `<td>${num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td></tr>`;
+      + `<td>${s.entry_low != null && s.entry_high != null && s.entry_low !== s.entry_high ? `${num(s.entry_low)}&ndash;${num(s.entry_high)}` : num(entry)}</td><td>${num(s.stop)}</td><td>${num(tp)}</td><td><strong>${rrDisplay(s.rr)}</strong></td></tr>`;
   }).join('\n');
   const civBlocks = rows.map(confirmInvalidDetails).filter(Boolean).join('\n');
   return `  <h3 class="strategy-table-title">${title}${subtitle ? ` <span style="font-weight:500;color:#64748b;font-size:.85rem">— ${subtitle}</span>` : ''}</h3>
@@ -719,7 +719,7 @@ function buildPage(d) {
 
   // ── Disclaimer extra ───────────────────────────────────────────────────────
   const disclaimerExtra = d.disclaimer_extra
-    ? `<p><strong>Contextual Risk Warning (${d.session_label || d.date}):</strong> ${d.disclaimer_extra}</p>`
+    ? `<p><strong>Avertissement de risque contextuel (${d.session_label || d.date}) :</strong> ${d.disclaimer_extra}</p>`
     : '';
 
   // ── synthese_extra tables ──────────────────────────────────────────────────
@@ -732,9 +732,9 @@ function buildPage(d) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Top ${setups.length} A+ ${regime} &mdash; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
-  <meta name="description" content="Scanner ${d.session_label || d.date} &mdash; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups A+ en tableaux compacts, niveaux vettés.">
-  <meta property="og:title" content="Scanner DailyTickers &mdash; ${d.session_label || d.date} &mdash; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
+  <title>Top ${setups.length} A+ ${regime} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')} | DailyTickers Scanner</title>
+  <meta name="description" content="Scanner ${d.session_label || d.date} &middot; ${regime} (score ${d.regime_score || 0}). ${setups.length} setups A+ en tableaux compacts, niveaux vérifiés.">
+  <meta property="og:title" content="Scanner DailyTickers &middot; ${d.session_label || d.date} &middot; ${setups.slice(0,10).map(s=>s.ticker).join(', ')}">
   <meta property="og:description" content="${regime} regime. ${d.session_label || d.date}. ${setups.length} setups A+.">
   <meta property="og:image" content="https://articles.dailytickers.com/scanner-daily-card.png">
   <meta property="og:url" content="${d.url || `https://articles.dailytickers.com/scanner/${d.date}/`}">
@@ -771,7 +771,7 @@ function buildPage(d) {
     ${heroBadges}
   </div>
   <h1 class="ticker-name">Scanner DailyTickers — ${d.session_label || d.date}</h1>
-  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} — niveaux vettés MCP, tableaux compacts par stratégie</p>
+  <p class="ticker-subtitle">Top ${setups.length} A+ ${regime} — niveaux vérifiés sur données de séance, tableaux compacts par stratégie</p>
   <div class="ticker-metrics">
     <div class="ticker-metric"><div class="tm-value" style="color:${regColor};">${regime}</div><div class="tm-label">Régime</div></div>
     <div class="ticker-metric"><div class="tm-value">${avgScore}</div><div class="tm-label">Score moyen</div></div>
@@ -796,7 +796,7 @@ ${alertsHtml(d.alerts)}
 
 <!-- REGIME -->
 <section id="regime" class="section-block">
-  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (Score ${d.regime_score || 0})</h2></div>
+  <div class="section-header"><h2><i class="fas fa-gauge"></i> Régime de marché : ${regime} (confiance ${d.regime_score ? String((d.regime_score * 100).toFixed(1)).replace('.', ',') + '%' : 'n/a'})</h2></div>
   <div class="content-card">
     <p>${d.regime_prose || ''}</p>
     <h3 style="margin:1.25rem 0 0.6rem;font-weight:700;">Market Snapshot (${d.session_label || d.date})</h3>
@@ -838,7 +838,7 @@ ${sectorRotationTable(d.sector_rotation)}
 <section id="synthese" class="section-block">
   <div class="section-header"><h2><i class="fas fa-table-list"></i> Signaux du jour — ${setups.length} setups par stratégie</h2></div>
   <div class="content-card">
-    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés et vérifiés via MCP sur les données de séance. Les setups momentum/breakout jugés faibles (R/R non actionnable, entrée trop étendue) ont été retirés. Prendre 50% à TP1 puis stop au point mort.</p>
+    <p style="font-size:0.9rem;color:#475569;">Niveaux (entrée, stop, TP, R/R) calculés et vérifiés sur les données de séance. Les setups momentum/breakout jugés faibles (R/R non actionnable, entrée trop étendue) ont été retirés. Prendre 50% à TP1 puis stop au point mort.</p>
 ${strategyTablesHtml}
     <div class="pedagogy-box">
       <h4><i class="fas fa-info-circle"></i> Comment utiliser ces niveaux</h4>
@@ -864,7 +864,7 @@ ${strategyTablesHtml}
       <p>Technique (40%), Momentum (30%), Confluence (20% — min. 3 signaux alignés pour A+), Catalyseur (10%). Seuls les setups ≥85 qualifient A+.</p>
     </div>
     <div class="pedagogy-box">
-      <h4>4. Niveaux réels vettés MCP</h4>
+      <h4>4. Niveaux réels vérifiés</h4>
       <p>Entrée / stop / TP / R/R calculés sur les données de séance réelles (plus-bas de cassure, résistances 52 sem., extensions mesurées). Les setups à R/R non actionnable ou entrée trop étendue au-dessus de l'EMA20 sont retirés du pool.</p>
     </div>
     <div class="pedagogy-box">
