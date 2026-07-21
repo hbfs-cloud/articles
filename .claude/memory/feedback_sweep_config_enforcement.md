@@ -16,4 +16,4 @@ Le **sweep** (backtest/trades) et la **status page** (affichage) doivent appliqu
 2. propagé dans le setup via `buildSetups` si basé sur une propriété du signal (universe, sharia, pattern),
 3. appliqué dans le `.filter()` de sélection ET dans l'injection live (2 sites).
 
-**How to apply:** Après tout ajout de filtre par-mode, vérifier: pour chaque mode univers/sharia-restreint, `pending <= portfolioSize` ET aucune position hors-univers/non-conforme. Comparer signalsFor (display) vs le filtre sweep. Lié à [[config-change-forward-only]] et [[sharia-sector-screen]].
+**How to apply:** Après tout ajout de filtre par-mode, vérifier: pour chaque mode univers/sharia-restreint, `pending <= portfolioSize` ET aucune position hors-univers/non-conforme. Comparer signalsFor (display) vs le filtre sweep. Lié à [[config-change-forward-only]] et [[sharia-bank-detection]].

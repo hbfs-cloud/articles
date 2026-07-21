@@ -32,4 +32,4 @@ de l'existant. Chaîne complète :
 
 **Principe absolu** : la mémoire n'inverse jamais un signal quantitatif — elle ajuste
 confiance/sizing ou alerte. Les hard_blocks restent enforced par code (validate-scan).
-Lié : [[frozen-append-only]], [[parity-v10-2]], [[screener-reliability-20260702]].
+Lié : [[frozen-stats-append-only-advance]], [[modes-config-baseline]], [[screener-reliability-20260702]].

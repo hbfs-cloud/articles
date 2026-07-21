@@ -23,4 +23,4 @@ Grille A+ validée empiriquement sur cohorte 29 setups réels (10/06–21/06/202
 
 **How to apply:** Appliquer dans tous les pipelines de notation : skill aplus-setups, scanner-pipeline, analyses, routine cloud Setup A+. Les 4 éliminatoires sont des gates durs. Mis à jour dans les 3 skills + mémoire MCP (priority=critical).
 
-Liens : [[aplus-screening-dsl]], [[no-hallucination]], [[analyses-factcheck]]
+Liens : [[aplus-screening-dsl]], [[no-hallucination]]

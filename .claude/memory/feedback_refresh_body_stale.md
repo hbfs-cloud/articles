@@ -25,4 +25,4 @@ classes de bugs, et la routine cloud n'a pas de hook pre-commit (`.git/hooks` no
 3. Filets en place : qa-content --strict détecte désormais prix $0.00, Entry $0.00,
    placeholders, badges Score dupliqués, EMA20==EMA200 (FAIL) ; pre-commit local gate les
    articles stagés ; CI `.github/workflows/qa-content.yml` rougit sur tout push fautif.
-Lié : [[analyses-factcheck]], [[no-hallucination]], [[mcp-hard-stop]].
+Lié : [[no-hallucination]], [[mcp-hard-stop]].

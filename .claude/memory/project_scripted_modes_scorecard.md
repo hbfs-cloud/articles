@@ -28,7 +28,7 @@ barres ≤ D > $5M), porté du frère systematic-tss (`applyEstablishedLiquidity
 
 **Règle** : disabling d'un mode = Mode Status State Machine (`set-mode-status.js`, pausing→stopped),
 JAMAIS supprimer les données/trades scellés. Toujours projeter l'impact + laisser le user choisir.
-Lié : [[frozen-portfolio-aware]], [[segment-replay-absolute-dd]].
+Lié : [[frozen-stats-append-only-advance]], [[segment-replay-absolute-dd]].
 
 ## MAJ 2026-07-03 — Clean-slate + constat re-port
 User a décidé clean-slate : **10 modes scriptés wipés** (bull/momentum/highvol/trendline/etf/etf_eu/

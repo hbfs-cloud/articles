@@ -27,7 +27,7 @@ metadata:
    filtrer qualité EU par avg_vol(20)/prix, jamais par mcap. L'univers EU contient du junk
    (pennies, volume<100) — floor indispensable une fois mcap peuplé.
 3. `RunAutoScreener` n'a pas de filtre mcap → renvoie des micro-caps RSI 88-90
-   (value-traps per lessons) ; toujours filtrer en aval (règle [[screener-mcap-filter]]).
+   (value-traps per lessons) ; toujours filtrer en aval (règle [[runscreener-dsl-calibration]]).
 
 **Fixes écrits le 2026-07-02** (marketwatch-gateway, NON commités/déployés — revue user requise) :
 1. RunBacktestExpr() pour les pass_expr custom (RunBacktest ne connaissait que les 4 stratégies
@@ -41,7 +41,7 @@ Tests : go build/vet/test clean + test réseau live EU (4 tickers réels).
 
 **Décision user 2026-07-02** : fixer les 3 gaps À LA SOURCE dans marketwatch-gateway AVANT
 toute expérience screener (momentum v2 etc.). Usages ensuite : candidate feed Phase 1 du
-/scanner, momentum US v2 par sélection DSL (cf [[momentum-us-backtest]]), rétrospectives as_of.
+/scanner, momentum US v2 par sélection DSL (cf [[modes-config-baseline]]), rétrospectives as_of.
 
 **Décommissionnements même jour** : gen-plans.yml CI supprimé (le cron Convex évoqué dans
 son commentaire n'existe plus depuis ~mai 2026 — plans générés localement par le pipeline) ;

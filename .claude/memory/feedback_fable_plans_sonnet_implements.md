@@ -25,4 +25,4 @@ complexe) pour implémenter, (3) Fable revoit le résultat (vérifie les claims 
 [[scripted-modes-scorecard]], Sonnet a produit 3 claims fausses ce jour), régen/QA, commit.
 Exception : correctifs triviaux et clôture d'une tâche déjà implémentée peuvent rester en direct.
 
-Lié : [[scripted-modes-scorecard]], [[go-edge-and-deployment]].
+Lié : [[scripted-modes-scorecard]], [[dtx-architecture]].

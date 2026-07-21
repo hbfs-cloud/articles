@@ -1,6 +1,6 @@
 ---
 name: runscreener-dsl-calibration
-description: Le scan momentum/breakout renvoie 0 quand le DSL RunScreener est mal calibré (EMA-stack gating, mauvais nb d'args). RunScreener EST fiable — recalibrer le DSL, ne PAS basculer sur les scanners locaux.
+description: Le scan momentum/breakout renvoie 0 quand le DSL RunScreener est mal calibré. NE JAMAIS mettre market_cap dans pass_expr (évalue à 0 = killer silencieux) → post-filtrer mcap>=$2B + ETF + penny EN CODE. RunScreener EST fiable — recalibrer le DSL, ne PAS basculer sur les scanners locaux.
 metadata:
   type: feedback
 ---
@@ -18,6 +18,13 @@ metadata:
 
 **Post-filtrage OBLIGATOIRE en code** (le DSL ne filtre pas la mcap) : `market_cap>=2e9` + exclure ETF (mc==0 ou tickers connus IJR/BIL/VTEB/XHB/XLV/MUB/KRE/SHV) + exclure penny (REPL 733M, SDOT 10M). `pass_expr` doit être booléen, `score_expr` numérique (helpers booléens type `vol_spike45`/`near_breakout`/`cross_up` ne marchent QUE dans pass_expr).
 
-**Why:** un `pass_expr` trop strict ou un helper mal appelé → 0 silencieux → scan stub → modes mom_bo à 0 signal → badge sharia disparu → 12 modes "cassés". Toujours smoke-tester le DSL (attendre ≥10 candidats) AVANT de committer un scan.
+## Historique (origine 2026-06-25) — pourquoi la mcap est un filtre obligatoire
+Le skill `scanner-pipeline` Phase 1 disait « RunScreener (3 DSL) » sans spécifier les requêtes → chaque agent improvisait son DSL, parfois **sans filtre `market_cap`**, ce qui fait remonter uniquement des penny stocks (tout le marché est scanné, les tickers junk dominent via des scores de volatilité gonflés). Découvert quand la routine cloud a renvoyé **60 penny stocks** (YYGH $509K, BMGL $11M…) ; l'agent a ignoré le junk et **inventé ses propres picks** — fragile et non reproductible. Fix : le skill a désormais **5 requêtes DSL explicites** avec planchers mcap ($5B-$20B selon la stratégie) ; routine cloud passée en **v4** (`trig_016idAivWzRTwcoeGnUgJB2S`). ⚠️ La formulation d'origine « chaque pass_expr DOIT inclure un filtre market_cap » est **superséded** par le killer ci-dessus : le plancher mcap doit être appliqué en POST-FILTRE code, jamais dans `pass_expr`.
 
-**How to apply:** Dans la routine Scanner Nocturne + `scanner-pipeline`, tester chaque DSL momentum/breakout et si <10 candidats → alerter, ne PAS committer un scan mono-stratégie sans le signaler. Lié à [[screener-mcp-filter]] et [[aplus-screening-and-screener-dsl]].
+**SAFETY-STOP** : si TOUS les candidats renvoyés ont `mcap < $500M` → le screener est cassé → **STOP + alerter**, ne pas publier.
+
+**Sizing tiéré** (rappel) : $2-10B ×0.5, $10-50B ×0.7, >$50B ×1.0 — cf [[tiered-mcap-oscillation]].
+
+**Why:** un `pass_expr` trop strict, un helper mal appelé, ou une mcap dans le pass_expr → 0 silencieux → scan stub → modes mom_bo à 0 signal → badge sharia disparu → 12 modes "cassés". OU l'inverse (pas de plancher) → 60 penny junk → picks inventés. Toujours smoke-tester le DSL (attendre ≥10 candidats) AVANT de committer un scan.
+
+**How to apply:** Dans la routine Scanner Nocturne + `scanner-pipeline`, tester chaque DSL momentum/breakout ; si <10 candidats → alerter, ne PAS committer un scan mono-stratégie sans le signaler ; si tous mcap<$500M → STOP. Lié à [[tiered-mcap-oscillation]], [[candlestick-no-mcp]], [[mcp-hard-stop]] et [[aplus-screening-and-screener-dsl]].

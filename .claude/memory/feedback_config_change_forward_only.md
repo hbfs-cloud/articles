@@ -14,4 +14,4 @@ Quand on change la config d'un mode (ex: Fortress portfolioSize 4→10), le swee
 
 **Why:** Un changement forward-only ne doit JAMAIS réécrire l'historique réalisé ni gonfler les positions ouvertes. Les nouveaux slots se remplissent progressivement via ordres en séance, pas overnight.
 
-**How to apply:** Tout changement de capacité/filtre d'un mode → ajouter `_effectiveFrom: "YYYY-MM-DD"` + `_prior*` dans modes-config.json. Vérifier après sweep que `pending <= portfolioSize` pour CHAQUE mode (qa-check le teste). Lié à [[config-change-backtest]] et [[fortress-mandate]].
+**How to apply:** Tout changement de capacité/filtre d'un mode → ajouter `_effectiveFrom: "YYYY-MM-DD"` + `_prior*` dans modes-config.json. Vérifier après sweep que `pending <= portfolioSize` pour CHAQUE mode (qa-check le teste). Lié à [[config-change-backtest]] et [[modes-config-baseline]].
