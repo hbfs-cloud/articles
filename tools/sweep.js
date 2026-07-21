@@ -3130,17 +3130,42 @@ async function main() {
 
         let stats;
         if (existingFrozen) {
-          // IMMUTABLE + PORTFOLIO-AWARE: existing frozen stats are preserved byte-for-byte.
-          // They were produced by the portfolio simulation (simulatePortfolio), which respects
-          // each period's portfolioSize / horizon / config as trades were actually taken.
-          // They must NOT be recomputed here by computeStatsFromTrades: that function is
-          // config-BLIND — it ignores portfolioSize (aggregates every raw sealed trade as if
-          // size=1) and its uniform full-period replay deflated the sealed track record on
-          // 2026-07-02/03 (dynamic 91.18%→75.45%; real DD -4.59% → phantom -8.76%; orbit
-          // -5.96% → phantom -10.15%). Per the project rule "Segment-Replay Absolute DD",
-          // absolute return/DD from a uniform replay is UNRELIABLE — trust the config-aware
-          // append-only frozen. New trades still get appended to backtest-trades.json; the
-          // aggregate advances via gen-status-page snapshots, never a sweep recompute.
+          // IMMUTABLE + APPEND-ONLY ADVANCE (fix 21/07/2026). L'historique scellé reste
+          // intouchable : les points d'équité pré-gel sont copiés octet pour octet via
+          // opts.priorEC (le fast-forward de computeStatsFromTrades ne recalcule RIEN avant
+          // appendAfter). Seul le SEGMENT postérieur au dernier point gelé est construit, à
+          // partir des pnl SCELLÉS des nouveaux trades clos (aucune resimulation uniforme —
+          // c'est le recalcul config-blind full-period qui avait dégonflé le track record les
+          // 02-03/07, PAS l'append). Sans ce chaînon, les stats hero restaient figées au
+          // dernier recalcul (26/06) pendant que backtest-trades continuait d'accumuler des
+          // trades clos — « stats as of 06/26 » un mois plus tard.
+          const _priorPts = (existingFrozen.equityCurve || []);
+          const _lastFrozenISO = [..._priorPts].reverse().find(p => p && p.date)?.date || null;
+          const _newClosed = _lastFrozenISO
+            ? merged.filter(t => t.status !== 'pending' && t.status !== 'sim2_artifact' && (t.exitDate || '') > _lastFrozenISO)
+            : [];
+          if (_lastFrozenISO && _newClosed.length > 0) {
+            const advanced = computeStatsFromTrades(merged, cfg.portfolioSize, cfg.positionSizePct || 1, id, undefined, { priorEC: _priorPts });
+            const _prefixIntact = advanced && Array.isArray(advanced.equityCurve)
+              && advanced.equityCurve.length >= _priorPts.length
+              && JSON.stringify(advanced.equityCurve.slice(0, _priorPts.length)) === JSON.stringify(_priorPts);
+            if (_prefixIntact) {
+              output[`frozen_${id}`] = {
+                returnTotal: advanced.returnTotal, returnRealized: advanced.returnRealized,
+                returnUnrealized: advanced.returnUnrealized,
+                maxDD: advanced.maxDD, winRate: advanced.winRate,
+                profitFactor: advanced.profitFactor, trades: advanced.trades,
+                calmar: advanced.calmar, sharpe: advanced.sharpe, returnDDRatio: advanced.returnDDRatio,
+                equityCurve: advanced.equityCurve,
+                in_sample: existingFrozen.in_sample ?? null,
+                out_sample: existingFrozen.out_sample ?? null,
+              };
+              frozenTrades[id] = merged;
+              console.log(`  ${id} (${cfg.label}): ${merged.length} trades — APPEND-ONLY: ${_newClosed.length} trade(s) scellé(s) intégré(s) après ${_lastFrozenISO}, return ${existingFrozen.returnTotal}% → ${advanced.returnTotal}%, DD ${existingFrozen.maxDD}% → ${advanced.maxDD}%`);
+              continue;
+            }
+            console.error(`  ⚠️ ${id}: préfixe d'équité gelé NON reproduit à l'identique — fallback [IMMUTABLE], stats inchangées (à investiguer)`);
+          }
           stats = existingFrozen;
           const tag = toAppend.length > 0 ? `${toAppend.length} new trades appended` : 'unchanged';
           console.log(`  ${id} (${cfg.label}): ${merged.length} trades (${tag}), return=${stats.returnTotal}%, DD=${stats.maxDD}% [IMMUTABLE]`);
