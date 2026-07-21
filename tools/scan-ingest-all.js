@@ -161,6 +161,7 @@ function main() {
 
   // 5) DTX : bruts decide/replay → fichiers → dtx-mcp-ingest.js par mode (garde sanity exit 7 propagée).
   const dtxSuspect = [];
+  const dtxFrozen = [];
   const dtxSkipped = [];
   for (const id of DTX_MODES) {
     const dec = raw(`dtx_${id}_decide`);
@@ -181,6 +182,7 @@ function main() {
     process.stdout.write(res.stdout || '');
     if (res.stderr) process.stderr.write(res.stderr);
     if (res.status === 7) { dtxSuspect.push(id); written.push(`dtx:${id}(SUSPECT)`); }
+    else if (res.status === 8) { dtxFrozen.push(id); }   // anti-gel : staging précédent conservé stale, jamais écrasé
     else if (res.status === 0) written.push(`dtx:${id}`);
     else dtxSkipped.push(`${id}(ingest exit ${res.status})`);
   }
@@ -190,10 +192,12 @@ function main() {
   console.log(`   ÉCRIT : ${written.join(', ') || '(rien)'}`);
   if (warns.length) { console.log('   ⚠️  SKIPS (fail-closed, jamais fabriqué) :'); for (const w of warns) console.log(`      • ${w}`); }
   if (dtxSuspect.length) console.error(`   ⛔ DTX SUSPECT (metricsSuspect, exit 7) : ${dtxSuspect.join(', ')} → ALERTER Telegram 'alerts', NE PAS publier ces métriques.`);
+  if (dtxFrozen.length) console.error(`   ⛔ DTX FIGÉ (anti-gel, exit 8) : ${dtxFrozen.join(', ')} → réponse DtxDecide non recalculée pour cette séance. Re-appeler DtxDecide(asof=${asof}), ALERTER Telegram 'alerts'. Staging précédent conservé stale.`);
   if (dtxSkipped.length) console.error(`   ⚠️  DTX SKIPPÉS : ${dtxSkipped.join(', ')} → staging conservé stale, jamais fabriqué.`);
 
-  // exit non-zéro si un mode dtx est suspect (aligne la garde existante) — jamais bloquant sur un simple skip.
+  // exit non-zéro si un mode dtx est suspect (7) ou figé (8) — aligne les gardes ; jamais bloquant sur un simple skip.
   if (dtxSuspect.length) process.exitCode = 7;
+  else if (dtxFrozen.length) process.exitCode = 8;
 }
 
 if (require.main === module) main();

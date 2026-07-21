@@ -80,6 +80,23 @@ function readJson(p, label) {
   return j;
 }
 
+/** Cherche une DATE DE CALCUL dans le payload decide (le MCP corrigé peut la stamper, typiquement dans
+ *  `state`). Retourne 'YYYY-MM-DD' ou null. Best-effort : si absente, le garde anti-gel s'appuie sur la
+ *  comparaison batch-vs-précédent (b), qui elle est toujours disponible. */
+function extractComputedDate(decide) {
+  if (!decide || typeof decide !== 'object') return null;
+  const st = decide.state && typeof decide.state === 'object' ? decide.state : {};
+  const cands = [
+    decide.asof, decide.as_of, decide.date, decide.decision_date, decide.computed_for,
+    st.asof, st.as_of, st.last_asof, st.last_decision_date, st.decision_date, st.date, st.as_of_date,
+    decide.meta && decide.meta.asof,
+  ];
+  for (const c of cands) {
+    if (typeof c === 'string' && /^\d{4}-\d{2}-\d{2}/.test(c)) return c.slice(0, 10);
+  }
+  return null;
+}
+
 /** Resolve the 4 fields the staging needs (id / name / currency / initial_capital) for a portfolio.
  *  The MCP (systematic.dailytickers.com) is the SOLE config source of truth — strategy logic, allocations
  *  and how-tos live THERE, never here. So a local config/dtx/portfolio_<id>.yaml is NOT required: if one
@@ -142,6 +159,38 @@ function main() {
   // pour qu'un replay de RÉTRO n'écrase JAMAIS la staging LIVE du mode (data/dtx/<id>.json), et
   // réciproquement. Sans --pit → chemin live inchangé (pipeline nocturne intact). --out prime toujours.
   const outPath = opts.out || scan.stagingPathFor(modeInfo.id, { asof: opts.asof, pit: opts.pit });
+
+  // ── ⛔ ANTI-GEL (frozen-orders) — tripwire de régression (root cause corrigée côté MCP le 21/07/2026) ──
+  // Bug 09→21/07 : DtxDecide renvoyait des CREATE FIGÉS à J-9, ré-ingérés en silence chaque soir. Les
+  // contrôles de fraîcheur portaient sur les ENTRÉES (prix/NaN/stale >48h), JAMAIS sur la SORTIE du
+  // moteur : un 200 OK au corps gelé passait tous les gardes. Ici on confronte la sortie à l'asof demandé
+  // AVANT d'écrire. Contrairement à metricsSuspect (écrit-puis-exit-7), un batch figé NE DOIT PAS être
+  // écrit — sinon dtx-pool-bridge le transforme en dtx_pool et le sweep tracke des trades fantômes.
+  const frozenReasons = [];
+  // (a) Date de calcul stampée par le moteur ≠ asof demandé (signal DIRECT si le payload la porte).
+  const computedDate = extractComputedDate(decide);
+  if (computedDate && computedDate !== opts.asof) {
+    frozenReasons.push(`date de calcul moteur ${computedDate} ≠ --asof ${opts.asof} (réponse d'une autre séance)`);
+  }
+  // (b) Batch CREATE byte-identique au staging d'une séance DIFFÉRENTE = figé (prix/order_id/reason=Score
+  //     varient chaque jour → un batch NON VIDE identique sur deux asof distincts n'a pas été recalculé).
+  //     N'affecte NI un premier run (pas de précédent) NI un re-run du même asof (prior.asof === asof, ex. --pit).
+  if (Array.isArray(out.orders) && out.orders.length > 0 && fs.existsSync(outPath)) {
+    let prior = null;
+    try { prior = JSON.parse(fs.readFileSync(outPath, 'utf8')); } catch (_) { prior = null; }
+    if (prior && prior.asof && prior.asof !== opts.asof && Array.isArray(prior.orders)
+        && JSON.stringify(prior.orders) === JSON.stringify(out.orders)) {
+      frozenReasons.push(`batch CREATE (${out.orders.length} ordres) byte-identique au staging du ${prior.asof} — réponse moteur figée, pas recalculée pour ${opts.asof}`);
+    }
+  }
+  if (frozenReasons.length) {
+    console.error(`⛔ [${modeInfo.id}] DECIDE FIGÉ — staging NON écrit (anti-gel), séance ${opts.asof} :`);
+    for (const r of frozenReasons) console.error(`     • ${r}`);
+    console.error(`   → Le MCP dtx doit RECALCULER pour cette séance. Re-appeler DtxDecide(${cfg.id}, asof=${opts.asof}) puis ré-ingérer.`);
+    console.error(`     Staging précédent CONSERVÉ = stale → Step 4d / qa-check le remontent ; ALERTER Telegram 'alerts'. JAMAIS ingérer un batch figé en silence.`);
+    process.exit(8);
+  }
+
   scan.writeStaging(out, outPath);
 
   if (!opts.quiet) {

@@ -526,6 +526,18 @@ backtest↔live). Devise : `ep`/`stockbox_pit`/`us_highvol`/`etf_us`/`book_hones
 4. **Échec par mode NON silencieux** : si un job (`DtxReplay`/`DtxDecide`/`DtxJobStatus`) échoue OU l'ingest KO pour un mode → **NE PAS ingérer** ce mode (laisser le staging committé = stale, jamais fabriqué) et **COLLECTER** le mode échoué. NE JAMAIS crasher le scan, NE JAMAIS fabriquer de données.
 5. **⛔ SANITY GATE sur les métriques replay (données aberrantes ≠ échec technique — garde DÉTERMINISTE, en place)** : le MCP dtx est **sain** (diagnostic 2026-07-10 : interrogé en direct il reproduit les chiffres sains de la répétition ; les chiffres cassés du 2026-07-09 — us_highvol 1169tr/DD-63 %, etf_eu 3404tr/DD-89,6 % — ne sont PAS reproductibles côté serveur). Un run peut donc « réussir » techniquement mais avoir **capturé** un replay corrompu / param-drifté. La garde vit maintenant **dans le code** : `dtx-mcp-ingest.js` appelle `assertReplaySanity()` (`tools/dtx-scan.js`) contre les bornes de `config/dtx/_sanity-baselines.json` (`|max_dd|>50 %`, `sharpe<0`, `win_rate∉[15,92]`, `cagr<-5 %`, `total_trades` >2,2× ou <0,4× le baseline du mode). Si ça saute : le staging est écrit avec `metricsSuspect:true` + `_sanityWarning[…]`, **l'ingest sort en code 7**, et `qa-check.js` **échoue en dur** (`dtx: métriques replay saines`). **RÉACTION OBLIGATOIRE de l'agent** : si `dtx-mcp-ingest.js` sort ≠ 0 (code 7) ou que le staging du mode porte `metricsSuspect:true` → **NE PAS publier les métriques de ce mode**, **alerter Telegram `alerts`**, et re-appeler `DtxReplay(<id>, from=2021-01-01, to=<statusSince ou J-1>)` en re-vérifiant `total_trades` vs `config/dtx/_sanity-baselines.json` avant de ré-ingérer. Ne JAMAIS publier en silence un mode aberrant — c'est exactement le garbage que « le MCP fait foi » ne doit PAS laisser passer. Nouveau mode sans baseline ? les tripwires universels (DD/sharpe/win_rate/cagr) s'appliquent quand même ; ajouter sa ligne dans `_sanity-baselines.json` après un premier run sain.
 
+**5bis. ⛔ GARDE ANTI-GEL (frozen-orders, exit 8) — `dtx-mcp-ingest.js`, en place depuis le 21/07/2026.**
+Post-mortem : DtxDecide a renvoyé des CREATE **figés à J-9** ré-ingérés en silence du 09 au 21/07 — les
+gardes de fraîcheur portaient sur les ENTRÉES, jamais sur la SORTIE moteur. La garde confronte désormais
+la sortie à l'`asof` demandé **AVANT d'écrire** : (a) date de calcul stampée par le moteur ≠ `--asof`, OU
+(b) batch CREATE **byte-identique** au staging d'une séance DIFFÉRENTE (prix/order_id/reason=Score varient
+chaque jour). Si ça saute → **staging NON écrit** (contrairement à metricsSuspect qui écrit-puis-exit-7 : un
+batch figé ne doit pas atteindre le bridge/sweep), **exit 8**, staging précédent conservé stale.
+**RÉACTION AGENT** : re-appeler `DtxDecide(<id>, asof=<J+1>)`, vérifier que la réponse est bien recalculée,
+**alerter Telegram `alerts`**, ré-ingérer. `scan-ingest-all.js` collecte les modes exit-8 (bucket « DTX
+FIGÉ »). Ne JAMAIS ingérer un batch figé en silence. (N'affecte ni un premier run, ni un re-run du même
+asof / `--pit`.)
+
 **6. Historique live + drift (audit 21/07/2026 — tools/dtx-live-track.js).** Le point live QUOTIDIEN
 de chaque mode scripté est appendu automatiquement par `gen-status-page.js` dans
 `data/dtx-live-track.json` (append-only entre jours ; un run de mi-journée est écrasé par le run du
