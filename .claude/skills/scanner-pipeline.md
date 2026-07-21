@@ -10,6 +10,51 @@ user_invocable: false
 
 JAMAIS skipper une étape du pipeline (anti-dilution, MCP enrichment per ticker, risk gating, earnings/economic event proximity, validation) sans accord explicite du user. Token/temps ≠ raison valable. Si une étape semble trop coûteuse, demander explicitement avant. Default = exécution complète.
 
+## ⚡ EXÉCUTION RAPIDE (ORDRE CANONIQUE — cible : phase agent/MCP ≤ 5 min)
+
+Doctrine : **`perf-parallel-mcp`** (R1-R6). Le goulot historique = les ~150 appels MCP joués EN SÉRIE.
+On ne retire **aucune** étape (no-skip) — on change la FORME : **isoler tout le MCP en salves parallèles,
+scripter l'assemblage en node, backgrounder le pipeline lourd.** Les Phases 0-5 ci-dessous restent la
+SPEC de ce que chaque étape fait ; cette section dicte l'ORDRE d'exécution rapide.
+
+1. **Prep + manifeste** (Phase 0) : lire les inputs de prep, puis `node tools/scan-plan.js` → écrit
+   `/tmp/scan-plan.json` (le plan de TOUS les appels MCP, en vagues). Lire ce fichier.
+2. **SALVE 1 — contexte + univers** (UN seul message, tous les `tool_use` en //). Tirer
+   `waves.wave1_context_universes` : preflight `GetStatus` + 5 `RunScreener` + `RunAutoScreener` +
+   `GetMarketContext` overview/regime + `economic_events` + `GetEarningsCalendarFiltered` + les 6
+   screeners d'univers. **Dumper chaque réponse brute → `/tmp/mcp-raw/<key>.json`.** Preflight KO →
+   MCP HARD STOP (alerter, ne rien fabriquer).
+3. **SALVE dtx** (//): tirer les 18 jobs `waves.wave_dtx` (6 modes × replay/decide/drift), PUIS poller
+   `DtxJobStatus` (R4 : lancer d'abord, poller ensuite). Dumper bruts → `/tmp/mcp-raw/dtx_*.json`.
+4. **Résoudre les barres** : `node tools/scan-plan.js --resolve-bars` → `/tmp/scan-plan-bars.json`
+   (dédup cross-scanner des candidats des screeners). **SALVE 2** (//): tirer `wave2_static_bars` +
+   `wave2_dynamic_bars` en `QueryData bars_daily` **multi-symboles** (lots ~15), forme POSITIONNELLE
+   **`{symbols:[…ordre exact…], result:<brut>}`** → `/tmp/mcp-raw/bars_*.json`.
+5. **Assembler (node, zéro MCP)** : `node tools/scan-ingest-all.js` → écrit candlestick/metals/hybrid
+   staging (mécanique), les `price-stage-*`, les `<scanner>-bars-bundle.json`, et **ingère dtx**
+   (`dtx-mcp-ingest.js`, garde sanity exit 7 respectée). Pour les scanners PRE-SCORÉS
+   (highvol/momentum/factor/etf/etf-eu/forex/trendline-*), appliquer la **formule de score documentée**
+   (Phase 1/1c) sur le `<scanner>-bars-bundle.json` **en local** (aucun round-trip) → écrire le
+   `/tmp/<scanner>-stage.json` final.
+6. **SALVE 3 — validation** (//, Phase 2) : `sec_filings/flags/insider/dark_pool/unusual_options/earnings`
+   par candidat, batchés en un message ; `PortfolioRisk` correlation+sizing ; `GetMarketContext regime`
+   pour le gating. Appliquer les gates Phase 2/2b sur données en main (no-skip intégral).
+7. **fortress-pm** (Phase 5.5) : `Skill(skill="fortress-pm")` — ses fetchs (quote/technicals/regime) sont
+   déjà batchables ; écrire `fortress_pool` AVANT gen-status-page.
+8. **Pipeline node en BACKGROUND** : lancer `tools/publish-daily-card.sh` en tâche de fond
+   (`run_in_background`) — le sweep (~5 min) + gen-status/api + media ne bloquent PAS le budget agent.
+   Surveiller la fin (fraîcheur staging dtx, QA) via un monitor ; ne pas rester bloqué dessus.
+9. **signals-desk** : écrire le handoff `/tmp/scan-context.json` (regime, VIX, indices, earnings, données
+   candidats DÉJÀ fetchées) puis `Skill(skill="signals-desk")` → il réutilise le handoff (zéro re-fetch)
+   et poste le digest. (signals-desk reste invocable seul par ailleurs.)
+10. **Rapport final** : modes générés vs skippés, gates G1-G4, dtx completeness, dtx suspects (exit 7),
+    digest signals-desk. Ne jamais écrire « scan complet » si `qa-check` remonte un ❌.
+
+**Invariants (perf n'assouplit rien)** : MCP HARD STOP, fail-closed (staging non écrit si brut
+manquant/`mcp_ok:false` — jamais fabriqué), no-skip, zéro hallucination. Vérif A/B : le `signals.json`
+et les `/tmp/*-stage.json` du chemin parallèle doivent être identiques au chemin série (mêmes pools,
+mêmes `_scanRuns`).
+
 ## ✅ MCP DSL Syntax — Référence (source: `GetDSLDescription`, vérifié 2026-06-25)
 
 ### Séries numériques (utilisables dans pass_expr ET score_expr)

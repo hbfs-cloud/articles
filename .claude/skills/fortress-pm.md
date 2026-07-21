@@ -153,6 +153,16 @@ Règles dures :
 
 ---
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`QueryData quote+technicals` sur TOUS les tenus/redéploiements en UN batch CSV (§2.2), `RunAutoScreener` (regime only),
+`QueryData performance_rotations` + `regime`, `RunScreener` pool liquide (async → poll `Jobs`). **Salve 2** (//):
+`QueryData quote/technicals/bars_daily` multi-symboles sur les survivants du screener (ext EMA20, EMA stack), dédupés vs les tenus déjà tirés.
+**Salve 3** (//): par candidat les 4 éliminatoires — `QueryData earnings/news` (guidance), `earnings_quarterly` (≥5 beats),
+`stats` (forwardPE) — + flags/dilution SEC EDGAR/`news`/volume anormal. Scoring /100 + war-room = code local (zéro MCP). Fail-closed +
+MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## 2. ROUTINE DE DÉMARRAGE (chaque session)
 
 1. Charger le BLOC §1 comme book courant.

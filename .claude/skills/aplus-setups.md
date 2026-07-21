@@ -51,6 +51,14 @@ En PLUS des 5 axes ci-dessus, appliquer cette grille de scoring validée empiriq
 - A avec earnings nocturnes (MRVL, NBIS, COHR, CIEN) ont explosé → régime différent (earnings play)
 - **Note ASML** : PE=37 validé A+ car monopole litho mondial + carnet multi-années + guidance relevée + 5 beats + ext <1% + PEG 1.9. Performance +9.6% en 8j.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`RunAutoScreener` (régime seul) + `RunScreener` pool liquide (`force_async`, puis poll `Jobs`). **Salve 2**
+(//, multi-symboles dédupés, CSV) : `QueryData(types="earnings_quarterly,technicals,stats,quote", symbols="A,B,C,…")` sur les candidats.
+**Salve 3** (//): validation par candidat — `QueryData(types="flags,news")` + `WebSearch` dilution/corporate-action (S-3/ATM/M&A).
+Éliminatoires + grille /100 = code local (zéro MCP). Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## Pipeline (MCP-driven, no hallucination)
 
 ### 1. Regime context

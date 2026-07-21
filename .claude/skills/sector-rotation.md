@@ -16,6 +16,15 @@ Vue **top-down** : quels secteurs sur/sous-pondérer *maintenant*, et dans les s
 - **Régime dérivé des données live**, pas d'un label (`rule/derive-regime-from-live-data`) : `GetMarketContext facets=overview` + `RunAutoScreener` intensité.
 - **Idées ≠ données desk** ; **Telegram `format:"html"` `<b>`** ; **envoi sur demande**.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`GetMarketContext(facets="overview")` + `QueryData(types="performance_rotations,indices,sentiment,rates,commodities,currencies")`
+(régime + classement secteurs + bilan) + `RunScreener` leaders RS (`perf_rank`/`perf_rel`). **Salve 2** (//):
+`QueryData(types="quote,technicals", symbols=…)` des leaders RS candidats (multi-symboles dédupés) pour confirmer la RS au spot.
+**Salve 3** (//): pas de validation par titre ici — cohérence tilt↔régime en code local. Décision/scoring = code local (zéro MCP).
+Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## Étapes
 1. **Bilan** de la rotation précédente : les secteurs surpondérés ont-ils sur-performé ? (`QueryData types="performance_rotations,indices"` + comparer aux ETF secteurs).
 2. **Régime** : `GetMarketContext(facets="overview")` → régime, VIX, indices, breadth ; en **total-return** pour toute compa vs benchmark dividende (`rule/compare-rendement-total-return`).

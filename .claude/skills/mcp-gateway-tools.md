@@ -6,6 +6,11 @@ user_invocable: false
 
 # MCP Market Data
 
+**⚡ Perf (OBLIGATOIRE)** : tout usage en VOLUME de ces outils suit la doctrine **`perf-parallel-mcp`** —
+appels indépendants tirés en **salves parallèles** (un message = N tool_use), `QueryData` **multi-symboles**
+dédupé, preflight `GetStatus` 1×, jobs async lancés en lot PUIS pollés (`Jobs`). Le round-trip en série est
+le goulot, jamais le calcul.
+
 Outils `mcp__claude_ai_marketdata__*` (ex-Gateway/DailyTickers — namespaces morts).
 
 **⚠️ Surface v5 consolidée** : les anciens noms ci-dessous (GetMarketOverview, GetRegimeProbability,

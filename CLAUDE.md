@@ -201,6 +201,7 @@ Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du pro
 |-------|------------------|
 | `mcp-forecast-timesfm` | forecast, TimesFM, ForecastRaw, ForecastVix, Backtest |
 | `mcp-gateway-tools` | QueryData, GetMarketContext, GetInstruments, RunScreener, Jobs, PortfolioRisk, GetEarningsCalendarFiltered, GetStatus, OptionsAnalytics, Polymarket |
+| `perf-parallel-mcp` | performance, lent, salve parallèle, isoler MCP, paralléliser, batch QueryData, scan-plan, scan-ingest-all, background pipeline (doctrine transverse — TOUT skill MCP l'applique) |
 | `scanner-pipeline` | scanner, scan du jour, sweep, regime, risk gating, dilution, Sharia, optimize-param, Mountain Plateau, rétrospective |
 | `trading-executor` | run-session, gen-trading-plan, broker, alpaca, ibkr, saxo, trading212, binance, paper mode |
 | `status-page-architecture` | scanner/status, Time Machine, tmUpdateLive, tmLoadIdx, lp-grid, panel(), rotation tracking |

@@ -16,6 +16,16 @@ Deux volets : **PRÉ** (ce qui rapporte cette semaine + les setups à surveiller
 - **Pas d'entrée swing dans le trou earnings** : pour un SWING classique on DROP ±3 séances (cf `swing-signals`). Ici c'est l'inverse — le trade EST l'événement → le risque de gap est explicite, **taille réduite**, jamais « faux caveat » mais jamais non plus minimiser le gap.
 - **Idées ≠ données desk** ; **Telegram `format:"html"` `<b>`** ; **envoi sur demande**.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)` + `QueryData(types="earnings_calendar")`,
+`GetMarketContext(facets="overview")` (régime), et la revalidation des idées passées en `QueryData(types="quote,bars_daily")`
+batché. **Salve 2** (//, par ticker retenu, multi-symboles dédupés) : PRÉ `QueryData(types="earnings_quarterly,financials,analyst_actions,technicals")`
+et POST `QueryData(types="quote,bars_daily,technicals,unusual_options")`. **Salve 3** (//): `QueryData(types="sec_filings,flags")`
+(anti-dilution / surprise offering post-résultats). Sélection setup / niveaux / scoring = code local (zéro MCP).
+Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## Étapes
 1. **Bilan** des idées earnings précédentes : statut au spot (a beat/raté, gap tenu ou refermé).
 2. **Calendrier** : `GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)` + `QueryData types="earnings_calendar"` → qui rapporte, quand (BMO/AMC), move implicite.

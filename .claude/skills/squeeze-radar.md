@@ -17,6 +17,16 @@ Sort des candidats **short-squeeze** avec un vrai edge donnée (FINRA + coût d'
 - **Idées ≠ données desk** ; **Telegram `format:"html"` `<b>`** ; **envoi sur demande seulement** (cf skill `swing-signals`).
 - **Taille réduite** : un squeeze est haute-volatilité → demi/quart de taille, stop discipliné.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`RunScreener` stratégie `short_squeeze` (+ `QueryData(types="short_interest", days=730)` sur watchlist),
+`GetMarketContext(facets="overview")` (régime risk-on), et la revalidation des candidats passés en
+`QueryData(types="quote,bars_daily")` batché. **Salve 2** (//, par candidat retenu) : `QueryData(types="ctb,ctb_history")`
++ `short_interest` (SI% float / DTC). **Salve 3** (//): `QueryData(types="unusual_options,dark_pool,news")`
++ `sec_filings,flags` + `GetInstruments` (anti-dilution). Timing / niveaux / scoring = code local (zéro MCP).
+Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## Étapes
 1. **Bilan des candidats passés** : `list_notifications` + `get_context(workspace='dailystocks')` → statut au spot (`QueryData quote,bars_daily`) : a-t-il squeezé (+X%), fait pschitt, ou stoppé ?
 2. **Univers short** : `RunScreener(pass_expr="...", ...)` stratégie **short_squeeze** (réel short interest Fintel/ChartExchange), OU `QueryData types="short_interest"` (FINRA bi-mensuel, `days=730`) sur une watchlist → garder **SI% float élevé** (>~15-20%) + **days-to-cover élevé** (>~5).

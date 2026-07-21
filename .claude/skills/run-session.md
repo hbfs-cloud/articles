@@ -22,6 +22,16 @@ Heures = Paris (CET/CEST), marché US.
 
 ## PRE-MARKET (argument: pre-market ou vide)
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`GetMarketContext(facets='regime')`, `QueryData ^VIX` quote, `GetEarningsCalendarFiltered`, `get_portfolio` — plus les
+lectures locales (scanner `data.json`, `modes-config.json`). **Salve 2** (//): sur les picks retenus, `QueryData` quote/VWAP
+multi-symboles (batch CSV) + `PortfolioRisk(action='correlation')` par pick. **Salve 3** (//, à l'OPEN): re-check `QueryData`
+tickers+^VIX quote + `GetMarketContext(facets='regime')`. Filtres/sizing/harness = code local (zéro MCP). Fail-closed +
+MCP HARD STOP conservés (la perf n'assouplit aucun invariant). ⚠️ Broker : seules les LECTURES (accounts/positions/quotes)
+se parallélisent ; les ORDRES restent séquentiels + confirmés (jamais de salve d'ordres réels).
+
 ### Étape 1 — Fetch en parallèle :
 1. `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability)
 2. `QueryData symbols=^VIX types=quote`

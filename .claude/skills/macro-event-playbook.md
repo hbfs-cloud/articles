@@ -16,6 +16,15 @@ Cadre le **prochain événement macro** (CPI/Fed/OPEP/jobs), ses **scénarios** 
 - **Idées ≠ données desk** ; **Telegram `format:"html"` `<b>`** ; **envoi sur demande**.
 - **On ne prédit pas l'événement** : on prépare des **réactions conditionnelles** (si chaud → X ; si froid → Y), pas un pari directionnel déguisé.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+`GetMarketContext(facets="overview")` + `QueryData(types="economic_events,indices,rates,commodities,currencies,regime,sentiment")`
+(bilan + prochain événement + état marché + facteurs sensibles) + `GetEarningsCalendarFiltered`. **Salve 2** (//):
+consensus/positionnement manquant → `GetMarketContext(facets="prediction_markets")` + `WebSearch` (chiffre de consensus).
+**Salve 3** (//): pas de validation par titre — positionnement de facteur, pas de stock-picking. Scénarios/de-risk = code local (zéro MCP).
+Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## Étapes
 1. **Bilan** du dernier événement joué : le playbook a-t-il tenu ? (`QueryData types="economic_events,indices,rates,commodities"` autour de la date).
 2. **Prochain événement** : `QueryData types="economic_events"` (priorité, date, heure) + `GetEarningsCalendarFiltered`/`is_near_economic_event` → l'événement dominant + son consensus (via news/WebSearch si absent).

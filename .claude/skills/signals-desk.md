@@ -31,8 +31,20 @@ Le pivot est une COUCHE de méta qui accompagne les niveaux, pas un remplacement
 **Agrégation confidence-weighted (#6b) — `aggregateTicker` / `aggregateAll`.** Verdict desk REPRODUCTIBLE par ticker, en code :
 `weightedScore = Σ(valeur(signal_i) × confidence_i) / Σ(confidence_i) ∈ [-1,1]` (bullish=+1, bearish=−1, neutral=0) → `≥ +0.25` bullish, `≤ −0.25` bearish, sinon neutral ; confidence du verdict = moyenne des confidences des sources alignées. C'est l'INVERSE de l'anti-pattern du repo (convictions agrégées sans pondération, tranchées par un LLM non reproductible). Chaque chiffre du verdict est justifiable → colle à `EDITORIAL_STYLE`. Ce verdict alimente le classement (étape 3) et les digests (étape 6). CLI : `node tools/lib/signals-desk-state.js --in state.json`.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Isoler le MCP en salves parallèles (R2), batcher `QueryData` multi-symboles (R3), preflight `GetStatus`
+1× (R4). **Salve 1** (un message, // ) : `GetMarketContext` overview+regime + `RunAutoScreener` +
+`economic_events` + `GetEarningsCalendarFiltered` + les `RunScreener` des presets retenus. **Salve 2**
+(//): toutes les barres/quotes des candidats (dédupées, multi-symboles). **Salve 3** (//): flux §4bis
+(insider/put-call/short-interest/13F) par candidat. Le classement/agrégation (state) est du **code local**
+(zéro MCP). Fail-closed + HARD STOP conservés.
+
 ## Étape 1 — Contexte (le cerveau)
-`GetMarketContext(facets="overview")` + `RunAutoScreener` intensité → **régime** (risk-on/off + score), VIX, indices/breadth, pétrole/or/taux. `QueryData types="economic_events"` + `GetEarningsCalendarFiltered(days_ahead=7)` → **proximité d'un événement macro** (CPI/Fed/jobs ±3 séances ?) et **densité earnings** (saison ?).
+**Réutilisation handoff (appel depuis `/scanner`)** : si `/tmp/scan-context.json` existe ET est frais
+(même séance), le CHARGER (regime, VIX, indices/breadth, earnings calendar, economic events, données
+candidats déjà fetchées) et **SKIP les appels contexte redondants** — zéro re-fetch. Sinon (appel seul),
+faire la collecte normale ci-dessous.
+`GetMarketContext(facets="overview")` + `RunAutoScreener` intensité → **régime** (risk-on/off + score), VIX, indices/breadth, pétrole/or/taux. `QueryData types="economic_events"` + `GetEarningsCalendarFiltered(days_ahead=7)` → **proximité d'un événement macro** (CPI/Fed/jobs ±3 séances ?) et **densité earnings** (saison ?). Émettre ces appels EN UNE SALVE (//), pas en série.
 
 ## Étape 2 — Sélection des familles (matrice contexte → briques)
 Choisir 2-3 familles à activer, PAS les cinq :

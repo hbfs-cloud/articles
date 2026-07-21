@@ -6,6 +6,15 @@ user_invocable: false
 
 # Article Generation Workflows
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+lancer `GetMarketContext(facets='overview')` async (poll `Jobs`), `QueryData` quote/social_sentiment/capital_flow/trading_signals
+sur TOUT le panier d'indices en UN seul CSV (SPY/QQQ/DIA/IWM/GLD/TLT/BTC-USD…), `GetInstruments` (analyse ticker), `WebSearch` géopolitique/Polymarket.
+**Salve 2** (//): enrichissement par ticker — `QueryData` analyst_actions/insider_transactions/ctb/news/options_chain/earnings_quarterly/financials/stats
++ support_resistance/volume_profile + bars. **Salve 3** (//): dilution — `WebSearch` SEC S-3/warrants + `insider_transactions`/`news`.
+Rédaction/valorisation (`valuation-multi.js`) = code local (zéro MCP). Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ## "Nouvelle analyse weekly"
 **Langue par défaut : anglais intermediate.** Voir `weekly/CLAUDE.md` pour template complet et 18 sections obligatoires.
 

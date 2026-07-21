@@ -22,6 +22,16 @@ Produit, en une passe : (1) le **bilan** des signaux swing précédents (statut 
 ### 1. Rappel des plans passés
 Récupère les plans swing J-1 et J-2 : `mcp__notification__list_notifications` (historique des messages postés) + `mcp__memory__get_context(query=..., workspace='dailystocks')`. Extrais VERBATIM par ticker : entrée, stop, cibles, thèse, date. Distingue **swings** (5-10 séances) et **accumulation** (6-12 mois — thèse « acheter sur repli »). Plan introuvable → écrire « introuvable », ne pas inventer.
 
+## ⚡ Exécution (doctrine `perf-parallel-mcp`)
+Le goulot = les appels MCP en série. Isoler le MCP en salves parallèles (R2), batcher `QueryData`
+multi-symboles (R3), preflight `GetStatus` 1× (R4). **Salve 1** (un seul message, tous les tool_use //) :
+les 2 `RunScreener` momentum + continuation (`force_async`, poll `Jobs`), `GetMarketContext(facets="overview")`
+(régime), `GetEarningsCalendarFiltered`, et la revalidation des plans J-1/J-2 en `QueryData(types="quote,technicals,bars_daily")`
+batché sur tous les tickers. **Salve 2** (//): barres/quotes des candidats screener en `QueryData(types="bars_daily,technicals")`
+multi-symboles dédupés. **Salve 3** (//, par candidat): `QueryData(types="calendar")`, `sec_filings,flags`,
+`insider_transactions`, `unusual_options,max_pain`, `short_interest`, `institutional_holdings`. Validation
+niveaux / R/R / scoring = code local (zéro MCP). Fail-closed + MCP HARD STOP conservés (la perf n'assouplit aucun invariant).
+
 ### 2. Revalidation au spot (MCP)
 Pour chaque ticker des plans : `QueryData(symbols=T, types="quote,technicals,bars_daily", days=40)`. Classe :
 - **stoppé** / **cible touchée** / **encore valide** (≤3% de l'entrée, tendance intacte) / **étendu** (>~5% au-dessus → ne plus entrer) / **non déclenché** (entrée conditionnelle non armée) / **invalidé**.
