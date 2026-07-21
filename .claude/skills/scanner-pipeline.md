@@ -24,8 +24,11 @@ SPEC de ce que chaque étape fait ; cette section dicte l'ORDRE d'exécution rap
    `GetMarketContext` overview/regime + `economic_events` + `GetEarningsCalendarFiltered` + les 6
    screeners d'univers. **Dumper chaque réponse brute → `/tmp/mcp-raw/<key>.json`.** Preflight KO →
    MCP HARD STOP (alerter, ne rien fabriquer).
-3. **SALVE dtx** (//): tirer les 18 jobs `waves.wave_dtx` (6 modes × replay/decide/drift), PUIS poller
-   `DtxJobStatus` (R4 : lancer d'abord, poller ensuite). Dumper bruts → `/tmp/mcp-raw/dtx_*.json`.
+3. **SALVE dtx — PAR LOTS de ≤3** (`waves.wave_dtx_batches`) : l'origine dtx **sature en burst (502
+   Cloudflare sur 12 appels simultanés, run 2026-07-22)**. Tirer un lot, attendre, lot suivant ; **retry
+   un 502/5xx après ~60s**. Poller `DtxJobStatus` pour les DtxReplay. Dumper bruts → `/tmp/mcp-raw/dtx_*.json`.
+   **⚠️ Ne PAS raisonner sur les payloads inline** : écrire chaque réponse en `/tmp/mcp-raw/` (Bash) et
+   traiter via node/jq (les gros résultats sont déjà auto-sauvés en fichier). top_k ≤25 pour borner le contexte.
 4. **Résoudre les barres** : `node tools/scan-plan.js --resolve-bars` → `/tmp/scan-plan-bars.json`
    (dédup cross-scanner des candidats des screeners). **SALVE 2** (//): tirer `wave2_static_bars` +
    `wave2_dynamic_bars` en `QueryData bars_daily` **multi-symboles** (lots ~15), forme POSITIONNELLE

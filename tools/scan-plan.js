@@ -87,13 +87,16 @@ function contextCalls() {
     params: Object.assign({ pass_expr: pass, score_expr: score, region: 'us', force_async: true }, extra),
     note: 'post-filtre market_cap>=2e9 + no-ETF EN CODE (jamais en pass_expr)',
   });
+  // DSL VÉRIFIÉE (run live 2026-07-22) — variables valides seulement : rsi14/ema20/ema50/ema200/atrpct/vol/
+  // close/obvz/vwap/bbw/hhv*/llv*/sma*. PAS de `macd` (n'existe pas → screener KO). JAMAIS `market_cap` en
+  // pass_expr (→0, killer silencieux) : post-filtrer mcap/ETF/penny EN CODE. top_k modéré = borne le contexte.
   return [
     { key: 'preflight', tool: 'GetStatus', params: {}, note: 'MCP HARD STOP si down/stale>48h — jamais fabriquer' },
-    RS('rs_momentum', 'rsi14 > 53 and rsi14 < 70 and macd > 0 and vol > 1500000 and close > 10', 'rsi14 + (macd > 0 ? 15 : 0)', { top_k: 40 }),
-    RS('rs_pullback', 'rsi14 > 40 and rsi14 < 65 and ema20 > ema50 and atrpct < 2.5 and vol > 1500000 and close > 10', '(65 - rsi14) * 1.5 + (2.5 - atrpct) * 20', { top_k: 25 }),
-    RS('rs_breakout', 'near_breakout(0.03) and vol > 1500000 and rsi14 > 52 and rsi14 < 72 and close > 10', 'rsi14 + (vol_spike45(1.5) ? 20 : 0)', { top_k: 40 }),
-    RS('rs_oversold', 'rsi14 < 40 and ema50 > ema200 and vol > 1500000 and close > 10', '(40 - rsi14) * 3 + obvz * 10', { top_k: 15 }),
-    { key: 'rs_eu', tool: 'RunScreener', params: { pass_expr: 'rsi14 > 45 and rsi14 < 75 and ema20 > ema50 and vol > 500000 and close > 5', score_expr: '(75 - rsi14) * 2 + obvz * 10', region: 'eu', top_k: 15 }, note: 'post-filtre market_cap>=1e9 + no-ETF' },
+    RS('rs_momentum', 'rsi14 > 50 and rsi14 < 72 and ema20 > ema50 and ema50 > ema200 and vol > 1500000 and close > 10', 'rsi14', { top_k: 25 }),
+    RS('rs_pullback', 'rsi14 > 42 and rsi14 < 60 and ema20 > ema50 and close > ema50 and atrpct < 3 and vol > 1000000 and close > 10', '60 - rsi14', { top_k: 25 }),
+    RS('rs_breakout', 'near_breakout(0.03) and rsi14 > 52 and rsi14 < 72 and vol > 1500000 and close > 10', 'rsi14', { top_k: 25 }),
+    RS('rs_presqueeze', 'near_breakout(0.05) and rsi14 > 45 and rsi14 < 65 and vol > 800000 and close > 10', 'rsi14', { top_k: 20 }),
+    { key: 'rs_eu', tool: 'RunScreener', params: { pass_expr: 'rsi14 > 48 and rsi14 < 72 and ema20 > ema50 and vol > 300000 and close > 5', score_expr: 'rsi14', region: 'eu', force_async: true, top_k: 20 }, note: 'post-filtre market_cap>=1e9 + no-ETF ; ⚠️ tagger event ECB proche' },
     { key: 'autoscreener', tool: 'RunAutoScreener', params: {}, note: 'régime-aware pool' },
     { key: 'ctx_overview', tool: 'GetMarketContext', params: { facets: 'overview' }, note: 'async — poller Jobs' },
     { key: 'ctx_regime', tool: 'GetMarketContext', params: { facets: 'regime', model: 'ensemble', horizon_days: 5 }, note: 'risk gating' },
@@ -106,7 +109,7 @@ function contextCalls() {
 function stagingUniverseCalls() {
   return [
     { key: 'uni_highvol', tool: 'RunScreener', params: { pass_expr: 'near_breakout(0.04) and vol > 2000000 and rsi14 > 50 and close > 10', score_expr: 'rsi14 + atrpct * 5', region: 'us', force_async: true, top_k: 60 }, forScanner: 'highvol' },
-    { key: 'uni_momentum', tool: 'RunScreener', params: { pass_expr: 'rsi14 > 50 and macd > 0 and vol > 1500000 and close > 10', score_expr: 'rsi14', region: 'us', force_async: true, top_k: 60 }, forScanner: 'momentum' },
+    { key: 'uni_momentum', tool: 'RunScreener', params: { pass_expr: 'rsi14 > 50 and ema20 > ema50 and vol > 1500000 and close > 10', score_expr: 'rsi14', region: 'us', force_async: true, top_k: 60 }, forScanner: 'momentum' },
     { key: 'uni_factor', tool: 'RunScreener', params: { pass_expr: 'vol > 1500000 and close > 10', score_expr: 'vol', region: 'us', force_async: true, top_k: 120 }, forScanner: 'factor', note: 'composite 12-1/vol/maxDD calculé côté agent depuis barres 5y' },
     { key: 'uni_candlestick', tool: 'RunScreener', params: { pass_expr: 'vol > 1000000 and close > 5', score_expr: 'vol', region: 'us', force_async: true, top_k: 200 }, forScanner: 'candlestick', note: 'univers large — patterns chandeliers détectés côté scanner depuis barres' },
     { key: 'uni_etf_us', tool: 'RunScreener', params: { pass_expr: 'vol > 500000', score_expr: 'vol', region: 'us', asset: 'etf', force_async: true, top_k: 60 }, forScanner: 'etf' },
@@ -156,24 +159,33 @@ function buildPlan(opts) {
   const lastTrade = iso(lastTradingDay(now));
   const folder = opts.folder || folderOf(asof);
   const lot = opts.lot || 15;
+  const dtx = dtxCalls(asof);
+  const dtxBatchSize = opts.dtxBatch || 3;   // l'origine dtx renvoie des 502 sous burst (run 2026-07-22) → petits lots
+  const dtxBatches = chunk(dtx, dtxBatchSize);
   return {
     generatedAt: iso(now),
     scanDate: asof, folder, lastTradingDay: lastTrade,
     rawDir: RAW_DIR,
     doctrine: 'perf-parallel-mcp — R2: chaque `wave` = UN message, tous les appels en parallèle. R3: bars batchés multi-symboles.',
+    execution: {
+      raw_dump: `Après CHAQUE salve, écrire chaque réponse brute → ${RAW_DIR}/<key>.json (Bash), NE PAS raisonner sur le payload inline. Les gros résultats sont déjà auto-sauvés en fichier par Jobs → lire via node/jq, jamais re-inline.`,
+      dtx_throttle: `⚠️ dtx origine sature en burst (502 Cloudflare observé sur 12 appels simultanés le 2026-07-22). Tirer wave_dtx par LOTS de ${dtxBatchSize} MAX (voir wave_dtx_batches), attendre le lot avant le suivant. Retry un 502/5xx après 60s (retryable). Poller DtxJobStatus pour les DtxReplay.`,
+      context_budget: 'top_k modéré (≤25) + ne lire que symbol/score/entry/stop/rsi/atr/mcap des candidats. Ne jamais re-dumper un screener entier en contexte.',
+    },
     waves: {
       // SALVE 1 : preflight + tout le contexte + tous les univers de screening (aucune dépendance entre eux)
       wave1_context_universes: [...contextCalls(), ...stagingUniverseCalls()],
-      // SALVE dtx : 6 modes × 3 (indépendants) — lancer tous les jobs puis poller (R4)
-      wave_dtx: dtxCalls(asof),
+      // SALVE dtx : 6 modes × 3 — MAIS l'origine sature en burst → tirer par LOTS (wave_dtx_batches)
+      wave_dtx: dtx,
+      wave_dtx_batches: dtxBatches,
       // SALVE 2a : barres des univers STATIQUES (connus d'avance) — batchées
       wave2_static_bars: staticBarsCalls(lot),
       // SALVE 2b : barres des candidats issus des screeners → résolue par `--resolve-bars` APRÈS wave1
       wave2_dynamic_bars: { deferred: true, how: 'node tools/scan-plan.js --resolve-bars (lit /tmp/mcp-raw/ des screeners, dédup, émet /tmp/scan-plan-bars.json)' },
     },
     nextSteps: [
-      '1. Tirer wave1_context_universes en UNE salve (message unique, tool_use //). Dumper chaque réponse → /tmp/mcp-raw/<key>.json',
-      '2. Tirer wave_dtx : lancer les 18 jobs, PUIS poller DtxJobStatus. Dumper → /tmp/mcp-raw/<key>.json',
+      '1. Tirer wave1_context_universes en UNE salve //. Dumper CHAQUE réponse → /tmp/mcp-raw/<key>.json (Bash), pas d\'inline.',
+      '2. Tirer wave_dtx par LOTS (wave_dtx_batches, ≤3/lot ; attendre le lot avant le suivant ; retry 502 après 60s). Poller DtxJobStatus. Dumper → /tmp/mcp-raw/dtx_*.json.',
       '3. node tools/scan-plan.js --resolve-bars → /tmp/scan-plan-bars.json ; tirer wave2 (static+dynamic) en salves //',
       '4. node tools/scan-ingest-all.js → assemble tous les /tmp/*-stage.json + ingest dtx',
       '5. publish-daily-card.sh en BACKGROUND ; Skill(signals-desk) avec handoff ; rapport final',

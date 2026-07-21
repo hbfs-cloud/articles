@@ -33,11 +33,15 @@ Entre deux vagues il y a une barrière (V2 a besoin des tickers de V1) ; DANS un
 lieu d'un appel par ticker. **Dédupliquer cross-usage** : un symbole demandé par 3 scanners = **un seul
 fetch**, fan-out ensuite. Idem `quote`/`technicals` (multi-symbols) et les types batchables.
 
-## R4 — Preflight UNE fois, async en parallèle
+## R4 — Preflight UNE fois, async en parallèle (mais throttle les origines fragiles)
 `GetStatus`/`GetHealth` : un seul preflight en tête (MCP HARD STOP si down/stale >48h — jamais fabriquer).
 Pour les jobs async (`force_async:true`, `DtxReplay/DtxDecide`, gros screeners) : **lancer TOUS les jobs
 d'abord** (récupérer les `job_id`), PUIS poller `Jobs`/`DtxJobStatus` — ne jamais lancer-poller-lancer en
 série. Le cache serveur est chaud : beaucoup répondent quasi-inline, mais toujours passer par le poll.
+**⚠️ Une salve large ne veut PAS dire « tout d'un coup sur une origine fragile ».** Le moteur **dtx**
+sature et renvoie des **502 Cloudflare** sous un burst de ~12 appels (run live 2026-07-22) → le tirer par
+**lots de ≤3**, attendre le lot avant le suivant, et **retry un 502/5xx après ~60s** (retryable). La
+parallélisation est un moyen, pas un dogme : borner la largeur d'un lot à ce que l'origine encaisse.
 
 ## R5 — Scripter l'assemblage en node (le MCP ne sort que du brut)
 Un subprocess `node` NE PEUT PAS appeler le MCP (OAuth2, ZÉRO token) — invariant. Donc : l'agent tire le
