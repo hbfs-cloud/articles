@@ -12,6 +12,7 @@ const ms = require('./lib/mode-status');
 // Halal (shariaOnly) compliance filter — shared with sweep.js so signals/orders on the Fortress
 // "Halal" page never surface a haram ticker that the backtest itself would refuse to hold.
 const { isHaramForHalalMode } = require('./lib/sharia-filter');
+const dlt = require('./lib/dtx-live-track');
 
 function fmtDateFR(iso) {
   if (!iso) return '';
@@ -864,7 +865,16 @@ async function main() {
       //    launch), rescaled to CONTINUE from the backtest's end value (continuity). No fabrication:
       //    when there are no live points yet (mode just launched), we anchor ONE point at go-live =
       //    btEnd (0% since launch) purely to mark "live starts here / building" — not invented P&L.
-      const liveRaw = (m.equityCurve || []).filter(p => p && p.date && p.date >= goLiveISO);
+      // Série LIVE append-only (data/dtx-live-track.json) — source du segment live. La courbe
+      // sweep (m.equityCurve) stagne sans trade clos ni point de scan (constat du 21/07/2026 :
+      // arrêtée au 15/07) ; le tracker accumule un point RÉEL par soirée de pipeline.
+      const _track = dlt.loadTrack();
+      const _trackPts = (_track.modes[id] ? _track.modes[id].points : []).map(p => ({ date: p.date, value: +(100 + p.ret).toFixed(2) }));
+      const _sweepPts = (m.equityCurve || []).filter(p => p && p.date && p.date >= goLiveISO);
+      const _mergeMap = new Map();
+      for (const p of _sweepPts) _mergeMap.set(p.date, p.value);
+      for (const p of _trackPts) _mergeMap.set(p.date, p.value); // le tracker prime
+      const liveRaw = [..._mergeMap.entries()].map(([date, value]) => ({ date, value })).sort((a, b) => (a.date < b.date ? -1 : 1));
       const liveRet = liveRaw.length ? +(liveRaw[liveRaw.length - 1].value - 100).toFixed(2) : 0;
       const liveObjs = liveRaw.map(p => ({ date: p.date, value: +(btEnd * p.value / 100).toFixed(2), _live: true }));
       if (!liveObjs.some(p => p.date === goLiveISO)) {
@@ -910,6 +920,27 @@ async function main() {
       m.frozenRawLastISO = liveRaw.length ? liveRaw[liveRaw.length - 1].date : goLiveISO;
       m.pit = null;
       m.forward = null;
+
+      // Point live DU JOUR → tracker (append-only, idempotent par (mode,date)) + courbe du soir.
+      // Un soir sans changement (mode 100% cash) enregistre un ret inchangé : c'est factuel.
+      const _todayRet = m.ret != null ? m.ret : liveRet;
+      const _appended = dlt.appendPoint(_track, id, {
+        date: TODAY_ISO, goLive: goLiveISO,
+        ret: _todayRet, unrealized: m.unrealized, trades: m.trades,
+        ordersPublished: Array.isArray(_dtx.orders) ? _dtx.orders.length : null,
+      });
+      if (_appended) {
+        dlt.saveTrack(_track);
+        if (!m.equityCurve.some(p => p.date === TODAY_ISO)) {
+          m.equityCurve.push({ date: TODAY_ISO, value: +(btEnd * (100 + _todayRet) / 100).toFixed(2), _live: true });
+        }
+      }
+      const _tmFinal = _track.modes[id] || { points: [], drift: null };
+      m.dtxLiveTrack = {
+        points: _tmFinal.points.length,
+        first: _tmFinal.points.length ? _tmFinal.points[0].date : null,
+        drift: _tmFinal.drift || null,
+      };
       // Rebuild the chart series (ec) from the spliced curve. FULL ISO date labels (not MM/DD) so
       // the multi-year backtest stays chronological and unique; the renderer compacts them to YY/MM
       // on the axis and splits backtest↔live at the first date >= liveFrom.
@@ -1430,6 +1461,7 @@ ${renderStatusBanner(cfg)}
         <span class="bt-ctx-cum"><b>${m.dtxBacktest.ret != null ? (m.dtxBacktest.ret > 0 ? '+' : '') + m.dtxBacktest.ret + '%' : '—'}</b> cumulative</span>
       </span>
       <span class="bt-ctx-note">Real engine · ${m.dtxBacktest.trades} trades over the book history (muted/dashed). Live track (solid) begins ${m.liveFromHuman} — building.</span>
+      ${m.dtxLiveTrack ? `<span class="bt-ctx-note" title="Série live append-only (data/dtx-live-track.json) : un point réel par soirée de pipeline, jamais interpolé. Drift = return live cumulé vs return du même segment dans le replay moteur complet — indicatif (échantillonnage bi-hebdomadaire du replay).">Live history · ${m.dtxLiveTrack.points} pt${m.dtxLiveTrack.points > 1 ? 's' : ''}${m.dtxLiveTrack.first ? ' since ' + m.dtxLiveTrack.first : ''}${m.dtxLiveTrack.drift ? ` · Drift vs engine ${m.dtxLiveTrack.drift.drift_pp > 0 ? '+' : ''}${m.dtxLiveTrack.drift.drift_pp} pp <b style="color:${m.dtxLiveTrack.drift.status === 'OK' ? '#10b981' : m.dtxLiveTrack.drift.status === 'WATCH' ? '#f59e0b' : '#ef4444'}">[${m.dtxLiveTrack.drift.status}]</b>` : ' · drift: pending engine replay'}</span>` : ''}
     </div>` : ''}
   </div>
   <div class="perf-stats">

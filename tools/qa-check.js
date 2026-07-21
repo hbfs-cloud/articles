@@ -780,6 +780,25 @@ check('signals.json (dernier scan): distance_50dma_pct ≤ cap par stratégie', 
   if (missing.length === (sig.signals || []).length) return `${scanDir} — extension field absent sur tous les signaux (skip — pre-extension-filter scan)`;
 });
 
+// ─── Check 25c: dtx-live-track — série live scriptée fraîche (audit 21/07/2026) ──
+// Deux semaines de modes dtx live sans historique accumulé ni drift : ne doit JAMAIS se
+// reproduire. La série data/dtx-live-track.json doit exister et porter, pour chacun des 6
+// modes, un dernier point de moins de 72h (tolérance week-end).
+warn('dtx-live-track.json: série live des modes scriptés fraîche (<72h)', () => {
+  const DTX = ['book_honest', 'us_highvol', 'hvep', 'stockbox_pit', 'etf_us', 'ep'];
+  let track;
+  try { track = readJSON('data/dtx-live-track.json'); } catch { return 'fichier absent — lancer dtx-live-track.js --backfill puis gen-status-page'; }
+  const stale = [];
+  for (const id of DTX) {
+    const m = (track.modes || {})[id];
+    if (!m || !m.points || !m.points.length) { stale.push(id + ' (aucun point)'); continue; }
+    const lastDate = m.points[m.points.length - 1].date;
+    const age = (Date.now() - new Date(lastDate + 'T21:00:00Z').getTime()) / 3600000;
+    if (age > 72) stale.push(`${id} (dernier point ${lastDate})`);
+  }
+  if (stale.length) return stale.join('; ');
+});
+
 // ─── Check 26: advisor_* non-null in backtest-results.json ───────────────────
 warn('backtest-results.json: advisor_* non-null (sweep complet requis)', () => {
   const br = readJSON('data/backtest-results.json');

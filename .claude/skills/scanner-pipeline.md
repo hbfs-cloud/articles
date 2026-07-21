@@ -481,6 +481,20 @@ backtest↔live). Devise : `ep`/`stockbox_pit`/`us_highvol`/`etf_us`/`book_hones
 4. **Échec par mode NON silencieux** : si un job (`DtxReplay`/`DtxDecide`/`DtxJobStatus`) échoue OU l'ingest KO pour un mode → **NE PAS ingérer** ce mode (laisser le staging committé = stale, jamais fabriqué) et **COLLECTER** le mode échoué. NE JAMAIS crasher le scan, NE JAMAIS fabriquer de données.
 5. **⛔ SANITY GATE sur les métriques replay (données aberrantes ≠ échec technique — garde DÉTERMINISTE, en place)** : le MCP dtx est **sain** (diagnostic 2026-07-10 : interrogé en direct il reproduit les chiffres sains de la répétition ; les chiffres cassés du 2026-07-09 — us_highvol 1169tr/DD-63 %, etf_eu 3404tr/DD-89,6 % — ne sont PAS reproductibles côté serveur). Un run peut donc « réussir » techniquement mais avoir **capturé** un replay corrompu / param-drifté. La garde vit maintenant **dans le code** : `dtx-mcp-ingest.js` appelle `assertReplaySanity()` (`tools/dtx-scan.js`) contre les bornes de `config/dtx/_sanity-baselines.json` (`|max_dd|>50 %`, `sharpe<0`, `win_rate∉[15,92]`, `cagr<-5 %`, `total_trades` >2,2× ou <0,4× le baseline du mode). Si ça saute : le staging est écrit avec `metricsSuspect:true` + `_sanityWarning[…]`, **l'ingest sort en code 7**, et `qa-check.js` **échoue en dur** (`dtx: métriques replay saines`). **RÉACTION OBLIGATOIRE de l'agent** : si `dtx-mcp-ingest.js` sort ≠ 0 (code 7) ou que le staging du mode porte `metricsSuspect:true` → **NE PAS publier les métriques de ce mode**, **alerter Telegram `alerts`**, et re-appeler `DtxReplay(<id>, from=2021-01-01, to=<statusSince ou J-1>)` en re-vérifiant `total_trades` vs `config/dtx/_sanity-baselines.json` avant de ré-ingérer. Ne JAMAIS publier en silence un mode aberrant — c'est exactement le garbage que « le MCP fait foi » ne doit PAS laisser passer. Nouveau mode sans baseline ? les tripwires universels (DD/sharpe/win_rate/cagr) s'appliquent quand même ; ajouter sa ligne dans `_sanity-baselines.json` après un premier run sain.
 
+**6. Historique live + drift (audit 21/07/2026 — tools/dtx-live-track.js).** Le point live QUOTIDIEN
+de chaque mode scripté est appendu automatiquement par `gen-status-page.js` dans
+`data/dtx-live-track.json` (append-only entre jours ; un run de mi-journée est écrasé par le run du
+soir, jamais l'inverse ; backfill possible depuis les snapshots : `node tools/dtx-live-track.js
+--backfill`). Pour le DRIFT backtest↔live, APRÈS l'ingest des stagings : pour chaque mode,
+`DtxReplay(portfolio=<id>, from=2021-01-01, to=<J+1>)` → écrire le résultat dans
+`/tmp/<id>.replay-live.json` → `node tools/dtx-live-track.js --drift`. Le calcul extrait le return du
+segment [go-live → dernier point] DANS la courbe du replay complet (delta relatif — conforme à la
+règle Segment Replay) et exige un point échantillonné strictement APRÈS le go-live (fail-closed : un
+cache OHLCV serveur qui s'arrête avant la fenêtre produit le même « plat » qu'un zéro-fill — constat
+du 21/07, replays fenêtrés en DATA FAILURE). Seuils : |drift| <2pp OK · 2-5 WATCH · >5 ALERT ; WATCH/
+ALERT → le signaler dans le rapport + Telegram `alerts`. Gardes : `qa-check` warn si la série a >72h
+de retard sur un mode ; affichage page status : ligne « Live history · N pts · Drift vs engine ».
+
 **Alerte consolidée par mode** — après la boucle, si **AU MOINS un** mode a échoué : envoyer **UNE seule**
 alerte Telegram consolidée `send_message(to='alerts', format='html', body=…)` listant **exactement** les
 modes stale/manquants (+ la cause par mode si connue). C'est la preuve que le run est incomplet, pas un
