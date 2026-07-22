@@ -747,6 +747,7 @@ async function main() {
     // Frozen EC never changes retroactively — unlike snapshot stats.ret which gets
     // recalculated when sweep reruns with updated parameters.
     let ec;
+    let sealedV = null, sealedDates = null;   // courbe/dates SCELLÉES (record), pour R²/CAGR/Sharpe cohérents avec le hero
     if (m.equityCurve && m.equityCurve.filter(p => p.date).length > 0) {
       // Deduplicate: multiple trades on same date → keep last value (end-of-day state)
       const _dedup = new Map();
@@ -755,21 +756,19 @@ async function main() {
         _dedup.set(p.date.slice(5, 7) + '/' + p.date.slice(8, 10), p.value);
       }
       ec = { d: [..._dedup.keys()], v: [..._dedup.values()] };
-      // Bridge the frozen-EC → today gap with snapshot-derived equity points.
-      // The frozen curve lags the last sweep (e.g. ends 06/26 while snapshots
-      // already have 06/29, 06/30, 07/01): splice in the modeEquityHistory points
-      // strictly after the frozen last date and before today, so the chart shows
-      // the intermediate sessions instead of a multi-day hole.
-      // (MM/DD string compare — safe while the curve stays within one calendar year.)
-      const _frozenLastLbl = ec.d.length ? ec.d[ec.d.length - 1] : null;
-      if (_frozenLastLbl) {
-        for (const p of (modeEquityHistory[id] || [])) {
-          if (p.d > _frozenLastLbl && p.d < TODAY_LABEL) { ec.d.push(p.d); ec.v.push(p.v); }
-        }
-      }
+      // ── SOURCE UNIQUE (2026-07-22) ──────────────────────────────────────────────
+      // Le chart = la courbe SCELLÉE (frozen) + UNE queue MtM fraîche ancrée sur
+      // l'endpoint scellé COURANT. On NE splice PLUS les points de modeEquityHistory
+      // (snapshots périmés) : ils pouvaient porter un stats.ret pré-re-seal (ex. turbo
+      // 112.24 le 07/17-07/20 alors que le frozen avait été redescendu à 100.57), d'où
+      // un chart montant à 220 pendant que le hero scellé disait 100.57. Bug supprimé.
+      // R²/CAGR/Sharpe sont calculés sur cette base scellée (sealedV) — voir plus bas —
+      // pour rester cohérents avec le hero. La queue MtM ci-dessous n'entre PAS dans le record.
+      sealedV = [...ec.v];       // courbe scellée pure (avant extension MtM)
+      sealedDates = (m.equityCurve || []).filter(p => p.date); // dates ISO scellées
       // Extend the frozen (closed-only) curve to TODAY with the LIVE mark-to-market of open
       // positions, so the equity block re-evaluates with current closes while the mode is holding.
-      // Without this the curve froze at the last closed trade and ignored open-position P&L.
+      // Ancrage GARANTI sur ec.v[last] = dernier point scellé (le bridge périmé est supprimé).
       const _openLive = trades.filter(t => t._premature && t.status === 'pending');
       if (_openLive.length && ec.v.length) {
         const _liveUnreal = _openLive.reduce((s, t) => s + (t.pnlPct || 0) / cfg.portfolioSize * (cfg.positionSizePct || 1), 0);
@@ -789,36 +788,42 @@ async function main() {
         v: [..._hist.map(p => p.v), _todayMtm],
       };
     }
-    // ── Compute R², CAGR, Sharpe from equity curve ──
-    if (ec.v && ec.v.length >= 3) {
+    // ── Compute R², CAGR, Sharpe from the SEALED curve (record), not the MtM-extended chart ──
+    // sealedV/sealedDates = courbe frozen pure (voir plus haut). Sur le chemin « frais » (non
+    // scellé), sealedV est null → on retombe sur ec.v (la courbe de ce mode-là). Ainsi R²/CAGR/
+    // Sharpe décrivent le MÊME record que Total Return/DD/WR/PF (le hero), plus le 220 MtM.
+    const statV = (sealedV && sealedV.length) ? sealedV : ec.v;
+    const statDates = (sealedDates && sealedDates.length)
+      ? sealedDates
+      : (m.equityCurve ? m.equityCurve.filter(p => p.date) : []);
+    if (statV && statV.length >= 3) {
       // R² — linear regression on equity values
-      const n = ec.v.length;
+      const n = statV.length;
       const xMean = (n - 1) / 2;
-      const yMean = ec.v.reduce((a, b) => a + b, 0) / n;
+      const yMean = statV.reduce((a, b) => a + b, 0) / n;
       let ssXY = 0, ssXX = 0, ssTot = 0, ssRes = 0;
       for (let i = 0; i < n; i++) {
-        ssXY += (i - xMean) * (ec.v[i] - yMean);
+        ssXY += (i - xMean) * (statV[i] - yMean);
         ssXX += (i - xMean) ** 2;
-        ssTot += (ec.v[i] - yMean) ** 2;
+        ssTot += (statV[i] - yMean) ** 2;
       }
       const slope = ssXX ? ssXY / ssXX : 0;
       const intercept = yMean - slope * xMean;
-      for (let i = 0; i < n; i++) { ssRes += (ec.v[i] - (intercept + slope * i)) ** 2; }
+      for (let i = 0; i < n; i++) { ssRes += (statV[i] - (intercept + slope * i)) ** 2; }
       m.r2 = ssTot > 0 ? +(1 - ssRes / ssTot).toFixed(3) : 0;
 
       // CAGR — annualized from equity curve date range
-      const ecDates = m.equityCurve ? m.equityCurve.filter(p => p.date) : [];
-      if (ecDates.length >= 2) {
-        const d0 = new Date(ecDates[0].date), d1 = new Date(ecDates[ecDates.length - 1].date);
+      if (statDates.length >= 2) {
+        const d0 = new Date(statDates[0].date), d1 = new Date(statDates[statDates.length - 1].date);
         const years = (d1 - d0) / (365.25 * 86400000);
-        const finalV = ec.v[ec.v.length - 1], startV = ec.v[0];
+        const finalV = statV[statV.length - 1], startV = statV[0];
         m.cagr = years > 0.01 && startV > 0 ? +((Math.pow(finalV / startV, 1 / years) - 1) * 100).toFixed(1) : null;
       } else { m.cagr = null; }
 
       // Sharpe — annualized (daily returns, risk-free = 0)
       const dailyRet = [];
-      for (let i = 1; i < ec.v.length; i++) {
-        if (ec.v[i - 1] > 0) dailyRet.push((ec.v[i] - ec.v[i - 1]) / ec.v[i - 1]);
+      for (let i = 1; i < statV.length; i++) {
+        if (statV[i - 1] > 0) dailyRet.push((statV[i] - statV[i - 1]) / statV[i - 1]);
       }
       if (dailyRet.length >= 5) {
         const mu = dailyRet.reduce((a, b) => a + b, 0) / dailyRet.length;
@@ -1230,10 +1235,12 @@ async function main() {
     // CAVEAT (hors scope, documenté) : si une position est markée SOUS le niveau où son stop
     // l'aurait vendue, ce MtM SURESTIME la perte (le MtM ignore le scénario de vente au stop).
     // Le corriger n'est pas l'objet ici — mais sortir ce live du headline règle la confusion.
-    const liveMtm = (frozenMeaningful && m.forward && m.forward.healthy && m.forward.hasPostAnchor
-      && Math.abs((m.forward.ret ?? m.ret) - (m.ret || 0)) >= 0.01)
-      ? { ret: m.forward.ret, unreal: m.forward.unrealized || 0 }
-      : null;
+    // SOURCE UNIQUE (2026-07-22, décision owner) : on RETIRE l'overlay live issu de pit-forward.
+    // L'ancre pit-forward pouvait être pré-déflation (ex. turbo 212 alors que le scellé était
+    // redescendu à 200.57) → sous-ligne incohérente avec le chart. Le mouvement live est déjà
+    // porté par la queue MtM du CHART (ancrée sur l'endpoint scellé courant). Plus de sous-ligne
+    // forward. (pit-forward/pit-state ne sont plus consommés en affichage pour les modes scellés.)
+    const liveMtm = null;
     // "live book starts" note: only for a freshly-seeded mode (anchor-only pit entry).
     // Modes with a long flat pit curve (e.g. fortress) stay sim-primary with no note.
     const _pitStartLbl = (m.pit && m.pit.anchorOnly && m.pit.since) ? m.pit.since.lbl : null;
