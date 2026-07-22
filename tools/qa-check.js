@@ -414,6 +414,33 @@ check('dtx: métriques replay saines (AUCUN staging corrompu — frais OU stale 
     + `Re-appeler DtxReplay (from=2021-01-01) séquentiellement, vérifier trades vs config/dtx/_sanity-baselines.json, ré-ingérer, alerter 'alerts'.`;
 });
 
+// 5a-bis. GARDE-FOU FRAÎCHEUR FROZEN (anti-gel silencieux). Bug du 26/06→21/07 2026 : les héros LLM
+// sont restés GELÉS 3 semaines (frozen bloqué au 26/06, affichant le pic pendant que juillet chutait)
+// car l'avance append-only ne tournait plus. Ici : si des trades CLÔTURÉS existent APRÈS la fin de la
+// courbe frozen d'un mode, le frozen n'a pas avancé → ❌ (le dashboard surévalue en cachant les pertes).
+check('frozen: avance append-only à jour (aucun trade clôturé au-delà de la fin de la courbe frozen)', () => {
+  const rp = path.join(ROOT, 'data', 'backtest-results.json');
+  const tp = path.join(ROOT, 'data', 'backtest-trades.json');
+  if (!fs.existsSync(rp) || !fs.existsSync(tp)) return; // pas de contexte sweep → skip
+  const R = JSON.parse(fs.readFileSync(rp, 'utf8'));
+  const T = JSON.parse(fs.readFileSync(tp, 'utf8'));
+  const TOL_DAYS = 3; // tolérance : le frozen peut légitimement traîner de qq séances (sweep différé)
+  const stale = [];
+  for (const [mode, trades] of Object.entries(T)) {
+    const f = R['frozen_' + mode];
+    if (!f || !Array.isArray(f.equityCurve) || !f.equityCurve.length) continue;
+    const closed = (trades || []).filter(x => x && x.exitDate && !x._premature);
+    if (!closed.length) continue;
+    const maxExit = closed.map(x => x.exitDate).sort().slice(-1)[0];       // dernière clôture réelle
+    const curveLast = f.equityCurve[f.equityCurve.length - 1].date;         // fin de la courbe scellée
+    const gapDays = Math.round((new Date(maxExit) - new Date(curveLast)) / 86400000);
+    if (gapDays > TOL_DAYS) stale.push(`${mode}: courbe finit ${curveLast} mais dernière clôture ${maxExit} (+${gapDays}j non intégrés)`);
+  }
+  if (!stale.length) return;
+  return `FROZEN GELÉ (non avancé) — ${stale.join(' | ')}. Le dashboard affiche un pic périmé en cachant les pertes récentes `
+    + `(cf. incident 26/06→21/07). Relancer le sweep (avance append-only des stats frozen) puis gen-status-page/gen-api.`;
+});
+
 // 5b. data/bench-spy.json — existence + fraîcheur + stats numériques
 check('bench-spy.json: fichier existe', () => {
   if (!fs.existsSync(path.join(ROOT, 'data', 'bench-spy.json'))) return 'data/bench-spy.json absent — relancer node tools/fetch-bench-spy.js';
