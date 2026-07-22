@@ -8,7 +8,7 @@ NEVER skip any phase, step, or per-ticker check without explicit user consent. T
 
 Mandatory per-ticker checks (run for EVERY candidate top-10 + every tkl_pool entry):
 - Anti-dilution: `QueryData(symbols=T, types='sec_filings,flags', days=180)` — disqualify dilution_risk_score≥70, S-3 active, ATM, aggressive underwriter, ITM warrants, recent PIPE
-- Per-ticker enrichment: `QueryData(symbols=T, types='quote,social_sentiment,capital_flow,insider_transactions,dark_pool,unusual_options,trading_signals')`
+- Per-ticker enrichment: `QueryData(symbols=T, types='quote,social_sentiment,insider_transactions,dark_pool,unusual_options,trading_signals')`
 - Earnings proximity: `GetEarningsCalendarFiltered(days_ahead=7)` AND DSL `days_until_earnings('T') <= 3` check — DISQUALIFY if within ±3 trading days (or tag "earnings risk")
 - Economic event proximity (per ticker currency): `is_near_economic_event(currency, min_priority=2, within_days=3)` — drop or tag
 
@@ -101,7 +101,7 @@ Disqualify on: dilution_risk_score >= 70, shelf_active, atm_program_active, aggr
 Before finalizing top 10, run 4 MCP checks:
 ```
 mcp__claude_ai_marketdata__GetMarketContext(facets="regime", model="ensemble", horizon_days=5)   # canonique, ex-GetRegimeProbability
-mcp__claude_ai_marketdata__PortfolioRisk(action="correlation", symbols="TICK1,TICK2,...", lookback_days=60, method="pearson")   # canonique, ex-GetCorrelationMatrix — symbols=CSV string (piège: PAS un array JSON ici)
+mcp__claude_ai_marketdata__PortfolioRisk(action="correlation", symbols="TICK1,TICK2,...", lookback_days=60, method="pearson")   # symbols=CSV string (PAS un array). ⚠️ US-only : mélanger des tickers EU (.PA) casse le calc ("0 common trading days"). Endpoint parfois cassé côté serveur (même sur large-caps US) → si échec, FALLBACK concentration manuelle : max 2/secteur + dispersion géo, NE PAS inventer de rho.
 mcp__claude_ai_marketdata__GetEarningsCalendarFiltered(days_ahead=7, min_expected_move=4)
 mcp__claude_ai_marketdata__PortfolioRisk(action="sizing", signals=[...], constraints={mode:"balanced", max_position_risk_pct:1.0, max_pairwise_correlation:0.7}, mode="balanced")   # canonique, ex-OptimizeSizing — signals=JSON array, constraints=JSON object
 ```
@@ -119,7 +119,7 @@ For each of the 10 selected tickers:
 ```
 mcp__claude_ai_marketdata__QueryData(
   symbols="TICKER",
-  types="quote,social_sentiment,capital_flow,insider_transactions,dark_pool,unusual_options,trading_signals"
+  types="quote,social_sentiment,insider_transactions,dark_pool,unusual_options,trading_signals"
 )
 ```
 
@@ -191,20 +191,40 @@ If publish validation fails (filter violations), return to Phase 2 with the spec
 
 ## Phase 5 — Downstream Pipeline (skip with --skip-downstream)
 
-Strict order — `update-tracking` → `candlestick-scanner` → `sweep` → ... (candlestick MUST precede sweep AND gen-status-page; sweep reads tracked exits):
+**⚡ Doctrine « le MCP fait foi » (OAuth2, ZÉRO token) : un subprocess `node` NE PEUT PAS appeler le MCP. Donc l'AGENT (toi) appelle le MCP, écrit des JSON, et les scripts INGÈRENT. Ça évite les 3 bugs d'aujourd'hui (risk-metrics auth-fail, Telegram token-fail, sweep re-run redondant).**
+
+Ordre (le sweep tourne UNE SEULE fois ici — `publish-daily-card.sh` reçoit `--no-sweep`) :
 ```bash
-node tools/update-tracking.js                                                # Yahoo prices → exit triggers
-node tools/candlestick-scanner.js --ingest /tmp/candlestick-stage.json --output signals --date YYYYMMDD --regime <REGIME>   # AmericanBulls candlestick patterns → appends to signals.json (feeds the "bull" mode, filterName=candlestick_only). Idempotent (dedup by ticker). REQUIRED: the "bull" tab's "Orders to Place" panel is built by gen-status-page filtering the latest scan's signals.json — skip this and bull shows "0 signals". MCP-PRIMARY : NE FETCH PLUS — l'AGENT produit d'abord le staging OHLCV via mcp__marketdata__* (RunScreener US + QueryData bars_daily), CE node ne fait qu'ingérer + détecter les patterns (--ingest OBLIGATOIRE, sinon exit 2).
-node tools/sweep.js                                                          # Append-only: new closed trades + advisor_*
-MCP_GATEWAY_URL=https://mcp.dailytickers.com/mcp \
-  node tools/refresh-risk-metrics.js                                         # VaR + stress + correlation + regimeProb (6 modes from config)
+node tools/update-tracking.js                                                # Yahoo prices → exit triggers (pas de MCP)
+node tools/sweep.js                                                          # Append-only: closed trades + advisor_* (LENT ~5-7 min, CPU-bound — normal)
+
+# ── refresh-risk-metrics : VOIE --ingest (MCP connecté). NE PAS utiliser MCP_GATEWAY_URL (auth-fail
+#    "Authorization required", pas du JSON). L'AGENT produit risk-mcp.json AVANT :
+#    1) GetMarketContext(facets="regime", model="ensemble", horizon_days=5) → bloc regimeProbability
+#    2) pour CHAQUE mode AVEC positions ouvertes (voir scanner/status/history/<latest>.json) :
+#       PortfolioRisk(action="var"/"stress") → modes{<id>}. Modes à 0 position = omis (→ no_positions auto).
+#    Corrélation : souvent cassée serveur ("0 common trading days") et EU (.PA) casse le calc → US-only,
+#    sinon fallback concentration manuelle (max 2/secteur). N'INVENTE JAMAIS de VaR.
+node tools/refresh-risk-metrics.js --ingest /tmp/risk-mcp.json               # écrit data/risk-snapshots.json (non-stub)
+
 node tools/gen-status-page.js                                                # Snapshot J + dashboard (6 modes)
-node tools/gen-mode-cards.js                                                 # Per-mode PNG cards for Telegram/Discord (6 modes)
-node tools/gen-api.js                                                        # Refresh 50+ public JSON endpoints
-node tools/daily-synthesis.js                                                # Per-mode synthesis: entries / exits / equity move
-bash tools/publish-daily-card.sh                                             # Image + media + Telegram + final git push
+node tools/gen-mode-cards.js                                                 # Per-mode PNG cards (6 modes)
+node tools/gen-api.js                                                        # Refresh 100+ public JSON endpoints
+node tools/daily-synthesis.js                                               # Per-mode synthesis: entries / exits / equity move
+node tools/dtx-pool-bridge.js --folder YYYYMMDD --date YYYY-MM-DD            # dtx CREATE (6 modes systematic) → dtx_pool[] dans signals.json
+
+# Push + QA SANS notif token-based ; le sweep n'est PAS relancé :
+bash tools/publish-daily-card.sh --no-sweep --no-telegram                    # image + git push + QA (Step 7)
+
+# ── Telegram : VIA LE MCP notification connecté (envoyé par l'AGENT), pas par le shell.
+#    send_message(to="alerts", format="html", body="<b>…</b>…", ...) — HTML uniquement (pas de **markdown**),
+#    AUCUN terme interne (pas de "MCP"/"dtx"/noms de scripts), voix éditoriale (EDITORIAL_STYLE.md).
 ```
-> ⚠️ **Aucune exécution broker dans /scanner.** Le pipeline s'arrête à la publication + dashboards + notification. `run-session` (trading-executor) reste un outil **manuel séparé** — on ne trade JAMAIS du réel automatiquement depuis le scanner.
+
+> ⚠️ **`candlestick`/mode « bull » = SUPPRIMÉ (été 2026).** Ne PAS le rappeler dans le pipeline (plus de `candlestick-scanner.js`, plus de staging candlestick). Idem `refresh-risk-metrics` sans token = stub inutile.
+> ⚠️ **dtx (6 modes systematic)** : l'AGENT appelle `DtxDecide(portfolio, asof, balances)` pour les 6 configs (`DtxListConfigs`), écrit chaque résultat, puis `node tools/dtx-mcp-ingest.js --portfolio <id> --decide <file> --asof YYYY-MM-DD` (staging `data/dtx/<id>.json`). 0 ordre CREATE = LÉGITIME (setup non déclenché ce soir), staging quand même rafraîchi.
+> ⚠️ **Aucune exécution broker dans /scanner.** Le pipeline s'arrête à la publication + dashboards + notification. `run-session` reste manuel — on ne trade JAMAIS du réel depuis le scanner.
+> ⚠️ **Connector `marketdata` instable** (redéploiements serveur) : peut se déregistrer après quelques appels → l'utilisateur relance `/mcp`. Batcher agressivement (max de données par salve), les gros payloads débordent en fichiers `tool-results` → parser en jq/node, pas re-fetch. `capital_flow` n'est PAS un data_type valide — utiliser `dark_pool,unusual_options,trading_signals,insider_transactions`.
 
 ### Phase 5b — Regime Recalibration (optional, run weekly OR on regime shift)
 
@@ -229,12 +249,12 @@ node tools/rolling-walk-forward.js --days=20          # rolling 20-day window
 
 Outputs `data/rolling-walk-forward.json` + markdown summary. Per-mode rolling-N-day WR/PF/Ret time series. Caveat: small sample sizes (~9 weeks of data) limit statistical power — use for direction-of-travel signal only.
 
-⚠️ **MCP_GATEWAY_URL is mandatory** (prod URL `https://mcp.dailytickers.com/mcp` always available). Never silently accept `--stub` — it writes an empty schema. If gateway down, log warning and re-run when restored. Ref: memory `reference_mcp_gateway.md`.
+⚠️ **refresh-risk-metrics = voie `--ingest` (MCP connecté).** NE PAS compter sur `MCP_GATEWAY_URL` en local : le MCP est OAuth2 ZÉRO token → un subprocess node reçoit "Authorization required" (pas du JSON) et écrit des nulls. L'AGENT appelle `GetMarketContext(facets=regime)` + `PortfolioRisk` (modes avec positions), écrit `risk-mcp.json`, puis `refresh-risk-metrics.js --ingest`. `MCP_GATEWAY_URL` direct reste réservé aux routines cloud qui ONT un token injecté. Jamais `--stub` (schéma vide).
 
 ### Post-Pipeline Checklist
 - QA check (`tools/qa-check.js`, step 7 of publish-daily-card.sh) must show 0 ❌. Investigate every failure (not only ⚠️). qa-check reads `signals.json` (NOT the HTML).
 - `scanner/status/index.html` per mode: no stale "Pending (Nd/Md)" on trades whose `exitDate` is past. "Orders to Place" count cohérent avec rangées affichées (filter applies execution-day-only — commit 0fd444af).
-- `data/risk-snapshots.json` — must NOT be a stub if MCP_GATEWAY_URL was set
+- `data/risk-snapshots.json` — non-stub via `--ingest` : `source:"ingest:mcp_connected"`, `regimeProbability` peuplé (depuis GetMarketContext), modes à 0 position = `{reason:"no_positions"}` (correct, pas un échec), modes AVEC positions = VaR agent-fed ou `awaiting_mcp` si non fourni
 - signals.json strategy labels match `data.json` setup labels
 - **Stats consistency** for ALL 6 modes (`turbo`, `dynamic`, `balanced`, `secured`, `fortress`, `tkl`):
   - Hero stats (Closed Trades, WR, PF, Return, DD) in `scanner/status/index.html` match `frozen_*` values in `data/backtest-results.json`
@@ -275,7 +295,7 @@ Each agent returns PASS/WARN/FAIL per check area with required fixes.
 
 ## Phase 8 — Final Commit & Notify
 
-⚠️ `publish-daily-card.sh` (Phase 5) already does the final `git push` and Telegram notification. Phase 8 only runs in two cases:
+⚠️ En Phase 5, `publish-daily-card.sh --no-sweep --no-telegram` fait l'image + le `git push` + le QA, MAIS **PAS le Telegram** (envoyé par l'AGENT via le MCP notification). Phase 8 ne sert que dans deux cas :
 
 1. **`--skip-downstream` was used** — manual commit + push:
    ```bash
@@ -290,7 +310,7 @@ Each agent returns PASS/WARN/FAIL per check area with required fixes.
    git push origin main
    ```
 
-If Phase 5 ran successfully, do NOT push twice — already pushed by `publish-daily-card.sh`.
+Si la Phase 5 s'est bien déroulée, `publish-daily-card.sh --no-sweep --no-telegram` a déjà poussé — ne pas push deux fois. Le Telegram, lui, part via le MCP notification (AGENT).
 
 ## Error Handling
 - MCP screener returns empty → use GetMarketContext(facets="overview") top movers + manual candidate selection
@@ -298,6 +318,6 @@ If Phase 5 ran successfully, do NOT push twice — already pushed by `publish-da
 - EU screener empty → fill EU slots from GetMarketContext(facets="overview") EU movers or known EU large-caps
 - Sweep timeout → continue pipeline, sweep is not blocking
 - Telegram notification fails → log warning, do not block
-- refresh-risk-metrics.js: **MCP_GATEWAY_URL is mandatory in prod**. Stub fallback only acceptable if gateway is verifiably down — flag loudly in post-pipeline check, never accept silently
+- refresh-risk-metrics.js: **voie `--ingest` (MCP connecté)**. En local, un subprocess node ne peut pas s'authentifier au MCP OAuth2 (auth-fail) → l'AGENT fournit les données. La corrélation MCP peut être cassée côté serveur ("0 common trading days", et EU `.PA` mélangés cassent le calc) → US-only + fallback concentration manuelle (max 2/secteur). NE JAMAIS inventer de VaR/corrélation.
 - Phase 6 validation loops > 3 → stop, report remaining issues to user
 - TKL pool empty (Time Machine backfill missing) → re-run scanner with `--date YYYYMMDD` to populate `scanner/status/history/YYYYMMDD.json`

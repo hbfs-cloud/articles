@@ -4,9 +4,12 @@
 # Pipeline post-scan complet : tracking → image Telegram → sweep → mode cards → status page → push
 #
 # Usage:
-#   ./tools/publish-daily-card.sh              # Full pipeline + Telegram
-#   ./tools/publish-daily-card.sh --dry-run    # Full pipeline sans Telegram
-#   ./tools/publish-daily-card.sh --no-sweep   # Skip sweep (rapide, tracking + image seulement)
+#   ./tools/publish-daily-card.sh                        # Full pipeline + Telegram (token-based)
+#   ./tools/publish-daily-card.sh --dry-run              # Full pipeline sans push ni Telegram
+#   ./tools/publish-daily-card.sh --no-sweep             # Skip le sweep (déjà lancé en amont par /scanner)
+#   ./tools/publish-daily-card.sh --no-telegram          # Push + QA MAIS pas de notif token-based —
+#                                                        # le Telegram part via le MCP notification (AGENT)
+#   ./tools/publish-daily-card.sh --no-sweep --no-telegram   # ← recommandé depuis /scanner (voir .claude/commands/scanner.md)
 #
 # Cron (chaque soir à 23h30):
 #   30 23 * * 1-5 cd /home/ci/projects/articles && ./tools/publish-daily-card.sh >> /tmp/scanner-publish.log 2>&1
@@ -17,16 +20,22 @@ cd "$(dirname "$0")/.."
 
 SKIP_SWEEP=false
 DRY_RUN=false
+NO_TELEGRAM=false   # --no-telegram : pipeline complet (image, push, QA) SANS notif token-based.
+                    # Le Telegram part alors via le MCP notification connecté (envoyé par l'AGENT).
 for arg in "$@"; do
   case "$arg" in
-    --no-sweep) SKIP_SWEEP=true ;;
-    --dry-run)  DRY_RUN=true ;;
+    --no-sweep)    SKIP_SWEEP=true ;;
+    --dry-run)     DRY_RUN=true ;;
+    --no-telegram) NO_TELEGRAM=true ;;
   esac
 done
+# NO_NOTIFY = vrai si dry-run OU no-telegram → gate unique pour les Steps 8/9/10 (notif token-based).
+NO_NOTIFY=false
+{ [ "$DRY_RUN" = true ] || [ "$NO_TELEGRAM" = true ]; } && NO_NOTIFY=true
 
 echo "=== Scanner Daily Card Publisher ==="
 echo "Date: $(date '+%Y-%m-%d %H:%M:%S')"
-echo "Options: sweep=$([ "$SKIP_SWEEP" = true ] && echo "skip" || echo "yes") telegram=$([ "$DRY_RUN" = true ] && echo "no" || echo "yes")"
+echo "Options: sweep=$([ "$SKIP_SWEEP" = true ] && echo "skip" || echo "yes") telegram=$([ "$NO_NOTIFY" = true ] && echo "no (→ via MCP notification)" || echo "yes")"
 
 # ─── Next trading session (séance J+1) — computed ONCE, used by dtx-scan (Step 4d) ─────
 # and by the commit step (Step 6). Convention: scanner du soir = prochaine séance ouvrable
@@ -409,7 +418,7 @@ node tools/lessons-engine.js --decay 2>/dev/null || true
 echo ""
 echo "🎬 Step 8: Generating media (audio + video + Telegram)..."
 SCAN_PATH="scanner/${SCAN_DATE}/index.html"
-if [ -f "$SCAN_PATH" ] && [ "$DRY_RUN" != true ]; then
+if [ -f "$SCAN_PATH" ] && [ "$NO_NOTIFY" != true ]; then
   # ANTHROPIC_API_KEY needed for AI script generation
   if [ -z "$ANTHROPIC_API_KEY" ]; then
     source ~/.profile 2>/dev/null || true
@@ -426,8 +435,8 @@ fi
 # ─── Step 9: Scanner Status Notification (text per portfolio mode: 89/90/91) ─
 echo ""
 echo "📡 Step 9: Scanner status notification..."
-if [ "$DRY_RUN" = true ]; then
-  echo "   (dry-run: skip notification)"
+if [ "$NO_NOTIFY" = true ]; then
+  echo "   (skip notif token-based → Telegram via MCP notification connecté, envoyé par l'AGENT)"
 else
   node tools/notify-scanner-status.js 2>&1 || echo "⚠️  notify-scanner-status failed (non-blocking)"
 fi
@@ -441,8 +450,8 @@ echo ""
 echo "📰 Step 10: Substack draft (optional)..."
 if [ "${SUBSTACK_DISABLE:-0}" = "1" ]; then
   echo "   (SUBSTACK_DISABLE=1: skipped)"
-elif [ "$DRY_RUN" = true ]; then
-  echo "   (dry-run: skip)"
+elif [ "$NO_NOTIFY" = true ]; then
+  echo "   (no-telegram/dry-run: skip)"
 else
   SCAN_PATH="scanner/${SCAN_DATE}/index.html"
   if [ -f "$SCAN_PATH" ]; then

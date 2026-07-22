@@ -13,7 +13,15 @@
  * Source: scanner/status/history/<latest>.json (current open positions per mode)
  *
  * Transport: HTTP POST to MCP gateway via JSON-RPC 2.0.
- * Configure with env var MCP_GATEWAY_URL (e.g. https://mcp.dailytickers.com/mcp).
+ * ⚠️ VOIE CANONIQUE = --ingest (MCP connecté, OAuth2). Le MCP DailyTickers est OAuth2 ZÉRO TOKEN :
+ * un subprocess node ne PEUT PAS s'authentifier via MCP_GATEWAY_URL (renvoie "Authorization required",
+ * pas du JSON). L'AGENT (Claude Code) appelle GetMarketContext(facets=regime) + PortfolioRisk sur les
+ * modes AVEC positions ouvertes, écrit un JSON, puis :
+ *   node tools/refresh-risk-metrics.js --ingest risk-mcp.json
+ * Format du fichier : { regimeProbability: <facets.regime brut OU normalisé>,
+ *                       modes: { <modeId>: { var95_5d, var99_5d, stressScenarios[], maxPairwiseCorrelation, ... } } }
+ * modes[] est OPTIONNEL : un mode à 0 position ouverte reçoit {reason:'no_positions'} (rien à mesurer).
+ * La voie MCP_GATEWAY_URL directe reste en place pour les routines cloud qui ONT un token OAuth injecté.
  * Without the env var the script writes a stub file documenting the schema.
  *
  * Output: data/risk-snapshots.json
@@ -36,6 +44,13 @@ const OUT_PATH = path.join(ROOT, 'data', 'risk-snapshots.json');
 const GATEWAY = process.env.MCP_GATEWAY_URL || 'https://mcp.dailytickers.com/mcp';
 const STUB = process.argv.includes('--stub');
 const DRY = process.argv.includes('--dry-run');
+// --ingest <file> : agent-fed CONNECTED-MCP data (OAuth2, zéro token → un subprocess node ne peut
+// PAS appeler le MCP). L'AGENT (Claude Code) appelle GetMarketContext(facets=regime) + PortfolioRisk
+// et écrit le JSON ; ce script se contente d'ingérer. Même doctrine « le MCP fait foi » que dtx-mcp-ingest.
+const INGEST = (() => {
+  const i = process.argv.indexOf('--ingest');
+  return i !== -1 ? process.argv[i + 1] : null;
+})();
 const PORTFOLIO_VALUE_USD = +(process.env.PORTFOLIO_VALUE_USD || 100000);
 const MODE_IDS = (() => {
   try {
@@ -113,6 +128,11 @@ function jsonrpcCall(toolName, params) {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => {
+        // OAuth2-protected endpoint (zéro token en env) → réponse HTML/texte "Authorization required",
+        // pas du JSON. Détecter tôt et donner un message actionnable (voie --ingest agent-fed).
+        if (res.statusCode === 401 || res.statusCode === 403 || /^\s*(Authorization|Unauthorized|<)/i.test(data)) {
+          return reject(new Error(`gateway OAuth2 (HTTP ${res.statusCode}) — un subprocess node ne peut pas s'authentifier. Utiliser: refresh-risk-metrics.js --ingest <fichier> (données MCP produites par l'AGENT).`));
+        }
         try {
           const j = JSON.parse(data);
           if (j.error) return reject(new Error(j.error.message || 'rpc error'));
@@ -275,8 +295,73 @@ async function fetchRegimeProbability() {
   } catch (e) { console.log(`  [warn] regime: ${e.message}`); return null; }
 }
 
+// Normalize a regime object — accepts BOTH the raw connected-MCP shape
+// (GetMarketContext facets.regime: current_state / probabilities / transition_5d / regime_score)
+// AND the already-normalized shape (currentState / transition5d). Idempotent.
+function normalizeRegime(rg) {
+  if (!rg || typeof rg !== 'object') return null;
+  // unwrap {facets:{regime:{...}}} if the agent passed the whole GetMarketContext payload
+  if (rg.facets && rg.facets.regime) rg = rg.facets.regime;
+  const probs = rg.probabilities || null;
+  const nProbs = probs ? {
+    risk_on: _validateProb(probs.risk_on),
+    neutral: _validateProb(probs.neutral),
+    early_risk_off: _validateProb(probs.early_risk_off),
+    crisis: _validateProb(probs.crisis),
+  } : null;
+  return {
+    asOf: new Date().toISOString(),
+    source: 'mcp_connected:GetMarketContext(facets=regime)',
+    currentState: rg.current_state ?? rg.currentState ?? null,
+    currentStateConfidence: rg.current_state_confidence ?? rg.currentStateConfidence ?? null,
+    regimeScore: rg.regime_score ?? rg.regimeScore ?? null,
+    probabilities: nProbs,
+    transition5d: rg.transition_5d ?? rg.transition5d ?? null,
+    expectedReturnSpyPct: rg.expected_return_spy_pct ?? rg.expectedReturnSpyPct ?? null,
+    expectedDrawdownPct: rg.expected_drawdown_pct ?? rg.expectedDrawdownPct ?? null,
+    model: rg.model || 'context_conditional',
+  };
+}
+
+// --ingest path : NO gateway calls. Build risk-snapshots from the latest status snapshot
+// (which modes hold positions) + agent-provided connected-MCP data {regimeProbability, modes{}}.
+// A mode with 0 open positions → {reason:'no_positions'} (rien à mesurer, PAS un stub).
+function runIngest(now) {
+  let ing = {};
+  try { ing = JSON.parse(fs.readFileSync(INGEST, 'utf8')); }
+  catch (e) { console.error(`FATAL: --ingest illisible (${INGEST}): ${e.message}`); process.exit(1); }
+
+  let snap = null;
+  try { snap = readLatestSnapshot(); } catch { /* pas de snapshot → modes null */ }
+
+  const result = {
+    asOf: now,
+    portfolioValueUsd: PORTFOLIO_VALUE_USD,
+    snapshotDate: snap?.date || null,
+    source: 'ingest:mcp_connected',
+    regimeProbability: normalizeRegime(ing.regimeProbability || ing.regime),
+    modes: {},
+    _riskMetricsNote: ing._note || 'Risk metrics via MCP connecté (agent-fed). VaR/stress par mode uniquement quand positions ouvertes (sinon no_positions).',
+  };
+  const ingModes = ing.modes || {};
+  for (const id of MODE_IDS) {
+    const mode = snap?.modes?.[id];
+    const nPos = (mode?.positions || []).length;
+    if (ingModes[id]) { result.modes[id] = { asOf: now, ...ingModes[id] }; continue; }
+    result.modes[id] = { asOf: now, reason: nPos === 0 ? 'no_positions' : 'awaiting_mcp', openPositions: nPos };
+  }
+
+  if (DRY) { console.log(JSON.stringify(result, null, 2)); return; }
+  _writeAtomic(OUT_PATH, JSON.stringify(result, null, 2));
+  const ok = result.regimeProbability ? `regime=${result.regimeProbability.currentState}` : 'regime=null';
+  const withPos = Object.values(result.modes).filter(m => m && m.reason !== 'no_positions' && m.reason !== 'awaiting_mcp').length;
+  console.log(`  [ok]  wrote ${OUT_PATH} (ingest, ${ok}, ${withPos} modes avec métriques, reste no_positions)`);
+}
+
 async function main() {
   const now = new Date().toISOString();
+
+  if (INGEST) return runIngest(now);
 
   let STUB_FALLBACK = false;
 

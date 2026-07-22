@@ -44,9 +44,13 @@ SPEC de ce que chaque étape fait ; cette section dicte l'ORDRE d'exécution rap
    pour le gating. Appliquer les gates Phase 2/2b sur données en main (no-skip intégral).
 7. **fortress-pm** (Phase 5.5) : `Skill(skill="fortress-pm")` — ses fetchs (quote/technicals/regime) sont
    déjà batchables ; écrire `fortress_pool` AVANT gen-status-page.
-8. **Pipeline node en BACKGROUND** : lancer `tools/publish-daily-card.sh` en tâche de fond
-   (`run_in_background`) — le sweep (~5 min) + gen-status/api + media ne bloquent PAS le budget agent.
-   Surveiller la fin (fraîcheur staging dtx, QA) via un monitor ; ne pas rester bloqué dessus.
+8. **Pipeline node** : lancer `node tools/sweep.js` UNE fois (≈5-7 min, CPU-bound), puis
+   `tools/publish-daily-card.sh --no-sweep --no-telegram` (le `--no-sweep` évite le DOUBLE sweep de 7 min
+   — bug d'aujourd'hui ; `--no-telegram` = pas de notif token-based). Le Telegram part ENSUITE via le MCP
+   notification connecté (`send_message` par l'AGENT, HTML, zéro terme interne). Surveiller la fin
+   (fraîcheur staging dtx, QA 0 ❌) via un monitor ; ne pas rester bloqué dessus.
+   ⚠️ Connector `marketdata` instable (redéploiements serveur) : se déregistre après quelques appels →
+   l'utilisateur relance `/mcp`. Batcher au max ; gros payloads → fichiers `tool-results`, parser jq/node.
 9. **signals-desk** : écrire le handoff `/tmp/scan-context.json` (regime, VIX, indices, earnings, données
    candidats DÉJÀ fetchées) puis `Skill(skill="signals-desk")` → il réutilise le handoff (zéro re-fetch)
    et poste le digest. (signals-desk reste invocable seul par ailleurs.)
@@ -122,7 +126,7 @@ RunScreener params : `pass_expr`, `score_expr`, `region` ('us'/'eu'), `asset` ('
 
 ### Phase 1 — MCP Data Collection
 
-**Collecte MCP** : `RunAutoScreener` + **5 RunScreener DSL** (ci-dessous) + `GetMarketContext(facets='overview')` (trending, sectors, calendar — canonique, ex-GetMarketOverview, async seul, poller via `Jobs`) + `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability) + `QueryData` (quote, **social_sentiment, capital_flow, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats
+**Collecte MCP** : `RunAutoScreener` + **5 RunScreener DSL** (ci-dessous) + `GetMarketContext(facets='overview')` (trending, sectors, calendar — canonique, ex-GetMarketOverview, async seul, poller via `Jobs`) + `GetMarketContext(facets='regime', model='ensemble', horizon_days=5)` (canonique, ex-GetRegimeProbability) + `QueryData` (quote, **social_sentiment, insider_transactions, dark_pool, unusual_options, ftd_threshold, sec_filings, flags**) pour candidats  ⚠️ `capital_flow` N'EST PAS un data_type valide (renvoie « unknown data_type ») — smart-money = `dark_pool`/`unusual_options`/`trading_signals`
 
 **⚠️ RunScreener — 5 queries obligatoires :**
 
@@ -409,7 +413,7 @@ node tools/sweep.js                     # Append-only: nouveaux trades fermés (
 # ⛔ Phase 5.5 OBLIGATOIRE (AI-driven, PAS un script node) : Skill(skill="fortress-pm")
 #    → écrire fortress_pool dans scanner/YYYYMMDD/signals.json AVANT gen-status-page.
 #    Sinon aplus/fortress fallback (fortress_fallback) et peuvent rendre vides / non-Halal. Voir §5.5.
-node tools/refresh-risk-metrics.js      # VaR + stress + correlation + regimeProb (MCP OAuth2)
+node tools/refresh-risk-metrics.js --ingest /tmp/risk-mcp.json   # VaR + stress + regimeProb — VOIE --ingest (MCP connecté). L'AGENT écrit risk-mcp.json {regimeProbability, modes{}} via GetMarketContext(facets=regime) + PortfolioRisk. PAS de MCP_GATEWAY_URL en local (OAuth2 zéro token → auth-fail). Corrélation US-only (EU .PA casse) + souvent cassée serveur → fallback concentration manuelle.
 # ── dtx (systematic-tss) refresh — les 6 stratégies v15 cost-honest ─────────────────────────────────
 #    book_honest · us_highvol · hvep · stockbox_pit · etf_us · ep   (cut-over dtx MCP v15, 2026-07-13)
 # ⚠️ MCP = SEUL MOTEUR ("le MCP fait foi"). Binaire local + bundle SUPPRIMÉS (cut-over 2026-07-08).
@@ -698,7 +702,8 @@ send_batch(messages = <contenu de data/scanner-notifications.json#messages>)
   `lookthrough:{factor, clusters[]}` (décomposition top holdings via MCP), la racine porte
   `exited_factors:[]` si la thèse du jour sort un facteur, et la page affiche la zone d'entrée
   COMPLÈTE (`entry_low`–`entry`), jamais la seule borne basse.
-- ⚠️ **Mode Bull = haute-conviction, 0 signal est LÉGITIME les jours calmes** : `candlestick-scanner.js` ne qualifie un signal Bull que si un pattern chandelier a un **spike de volume ≥ 8× la moyenne 20j le jour du signal** (volume de CLÔTURE, parité systematic-tss config `americanbull` — PAS intraday J+1) + score ≥ 88 + dollar-volume ≥ $1M. Sur 5 ans : ~1 trade/sem (1061 trades, parité Go/JS validée). **Vérifié 2026-06-30** : sur 3512 tickers, 1 seul candidat (MESH) passe score+vol mais échoue la liquidité ($111k < $1M) → **0 ordre, identique au backtest Go**. Donc **0 signal Bull ≠ bug**. Le QA check vérifie le **marqueur `_candlestickScan`** (preuve que le scanner a tourné : `universeFetched`, `detectedPatterns`, `qualified`), PAS la présence de signaux. Le seuil 8× vit dans `data/scanner-filters.json#candlestick.min_vol_ratio_trading` (source de vérité, lu par sweep.js + gen-status-page.js). **Source des prix = `--source yahoo`** (défaut). **CRITIQUE** : `--date` = dernier jour de trading (pas la date du dossier si weekend). `--folder` = nom du dossier scanner (= prochaine séance). Le scanner DOIT tourner à chaque pipeline pour écrire le marqueur, même s'il qualifie 0.
+- 🚫 **MODE « BULL » / candlestick — SUPPRIMÉ (été 2026).** Ne PLUS l'exécuter dans le pipeline : pas de `candlestick-scanner.js`, pas de staging candlestick, pas de marqueur `_candlestickScan` attendu. Le paragraphe ci-dessous est conservé UNIQUEMENT comme référence historique du gabarit `--ingest` (que `metals`/`hybrid`/`highvol` réutilisent). Ignorer pour un run /scanner normal.
+- ⚠️ _(historique)_ **Mode Bull = haute-conviction, 0 signal est LÉGITIME les jours calmes** : `candlestick-scanner.js` ne qualifie un signal Bull que si un pattern chandelier a un **spike de volume ≥ 8× la moyenne 20j le jour du signal** (volume de CLÔTURE, parité systematic-tss config `americanbull` — PAS intraday J+1) + score ≥ 88 + dollar-volume ≥ $1M. Sur 5 ans : ~1 trade/sem (1061 trades, parité Go/JS validée). **Vérifié 2026-06-30** : sur 3512 tickers, 1 seul candidat (MESH) passe score+vol mais échoue la liquidité ($111k < $1M) → **0 ordre, identique au backtest Go**. Donc **0 signal Bull ≠ bug**. Le QA check vérifie le **marqueur `_candlestickScan`** (preuve que le scanner a tourné : `universeFetched`, `detectedPatterns`, `qualified`), PAS la présence de signaux. Le seuil 8× vit dans `data/scanner-filters.json#candlestick.min_vol_ratio_trading` (source de vérité, lu par sweep.js + gen-status-page.js). **Source des prix = `--source yahoo`** (défaut). **CRITIQUE** : `--date` = dernier jour de trading (pas la date du dossier si weekend). `--folder` = nom du dossier scanner (= prochaine séance). Le scanner DOIT tourner à chaque pipeline pour écrire le marqueur, même s'il qualifie 0.
 - `scanner/status/index.html` : pas de "Pending (Nd/Md)" sur trades dont `exitDate` est passé
 - `data/risk-snapshots.json` non-stub si MCP_GATEWAY_URL set
 - QA strategy-label lit `signals.json` (pas HTML)
