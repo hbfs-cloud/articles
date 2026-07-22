@@ -110,3 +110,4 @@
 - [Repo Facts](reference_repo_facts.md) — Faits opérationnels du repo NON couverts par CLAUDE.md — hosts infra (ser/hetzner/discord-bot/schedules), proxy live-price (allorigins /get), widget…
 
 - [Scanner pipeline fixes 2026-07-22](feedback_scanner_pipeline_fixes_20260722.md) — risk-metrics via --ingest MCP connecté, Telegram via MCP, no double-sweep, capital_flow invalide, corrélation US-only, connector flapping, bull supprimé
+- [Momentum crash & loss-based breakers](project_momentum_crash_loss_breakers.md) — crash momentum invisible au macro (score risk-on + VIX calme) → coupe-circuits loss-based only ; feed regimeScore contaminé ; méthodo backtest versionné forward ; garde-fou anti-gel frozen ; force-refresh MCP
