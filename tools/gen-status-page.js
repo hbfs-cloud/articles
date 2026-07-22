@@ -814,8 +814,10 @@ async function main() {
         if (Math.abs(_liveUnreal) > 0.001) {
           const _todayLbl = TODAY_LABEL; // canonical NY chart label
           const _mtmVal = +(ec.v[ec.v.length - 1] + _liveUnreal).toFixed(2);
-          if (ec.d[ec.d.length - 1] === _todayLbl) { ec.v[ec.v.length - 1] = _mtmVal; }
-          else { ec.d.push(_todayLbl); ec.v.push(_mtmVal); }
+          // Le frozen (sweep) porte déjà le MtM quotidien jusqu'à son dernier point. S'il atteint
+          // déjà aujourd'hui, ce point EST autoritaire (hero) — ne PAS le ré-MtM (double-comptage).
+          // On n'étend que si le frozen n'atteint pas encore today (frozen stale → queue live).
+          if (ec.d[ec.d.length - 1] !== _todayLbl) { ec.d.push(_todayLbl); ec.v.push(_mtmVal); }
         }
       }
     } else {

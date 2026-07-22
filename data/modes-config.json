@@ -1,8 +1,8 @@
 {
-  "_comment": "dtx MCP v15 : 6 stratégies cost-honest live (book_honest, us_highvol, hvep, stockbox_pit, etf_us, ep) + modes LLM/quality conservés (turbo, dynamic, balanced, secured/Orbit, fortress, aplus, hybrid). Seuls les 5 anciens SCRIPTÉS dtx (highvol, forex, etf, etf_eu, stockbox) sont stopped/remplacés.",
-  "_updated": "2026-07-13T16:00:00.000Z",
-  "_version": "v10.8",
-  "_prevVersion": "v10.7",
+  "_comment": "25 modes — loss-based circuit-breakers forward (effectiveFrom 2026-07-23, v10.9). balanced+CB3/5/3, secured ms7->5, hybrid ms20->12. Previous: v10.8. Zero re-freeze (dernier trade clos 07-21 < effectiveFrom).",
+  "_updated": "2026-07-22",
+  "_version": "v10.9",
+  "_prevVersion": "v10.8",
   "_regime": "EARLY RISK-OFF",
   "_riskLayer": "v1.3-20260604",
   "modes": {
@@ -142,7 +142,7 @@
       },
       "tklPoolEnabled": false,
       "_prevVersion": "v10.0",
-      "_changeReason": "H2/no-stop config bled -0.35% avg/trade since Apr 20. H8+maxStop5%+mom_bo+daily_max1 backtest: OOS +12.79% vs -7.68%, PF 1.73 vs 1.14.",
+      "_changeReason": "H2/no-stop config bled -0.35% avg/trade since Apr 20. H8+maxStop5%+mom_bo+daily_max1 backtest: OOS +12.79% vs -7.68%, PF 1.73 vs 1.14. | 2026-07-22 (v10.9): coupe-circuit loss-based forward (effectiveFrom 2026-07-23). Verdict trader retail agile Option A. Regime macro etait aveugle au crash momentum juin-juil (score switcher 0.70-0.76, VIX ~16) => loss-based only. Valide vs config ACTUELLE (war room vs-current), calme dormant. balanced: +circuitBreakerStops 3/5/3 (coupe apres 3 SL/5 entrees, pause 3j). War room vs-actuel: coupe 6 entrees TOUTES perdantes / 0 gagnant rate, stress -11.2->-3.2 (+6.83).",
       "ddBreakerPct": 8,
       "vixKillThreshold": 30,
       "sectorCapMax": 0,
@@ -151,8 +151,11 @@
       "trailGraceDays": 3,
       "sizingMethod": "inverse_atr",
       "targetRiskPct": 1,
-      "configVersion": "v10.1-20260701",
-      "statusReason": "Balanced P4 (GO): stop non-capé + FIXED sizing = root cause du sous-perf. atrStopMult 0→1.8, maxStopPct 5→7, +trailing 2R/grace3, sizingMethod inverse_atr, targetRiskPct 1. Valid: full +18.35% vs -13.95%, MaxDD -4.16%, PF 2.09, OOS +6.7%, tous régimes améliorés."
+      "configVersion": "v10.9-20260723",
+      "statusReason": "Balanced P4 (GO): stop non-capé + FIXED sizing = root cause du sous-perf. atrStopMult 0→1.8, maxStopPct 5→7, +trailing 2R/grace3, sizingMethod inverse_atr, targetRiskPct 1. Valid: full +18.35% vs -13.95%, MaxDD -4.16%, PF 2.09, OOS +6.7%, tous régimes améliorés.",
+      "circuitBreakerStops": 3,
+      "circuitBreakerWindow": 5,
+      "circuitBreakerPause": 3
     },
     "secured": {
       "status": "live",
@@ -175,7 +178,7 @@
       "trailingStop": true,
       "trailMultR": 2,
       "trailGraceDays": 3,
-      "maxStopPct": 7,
+      "maxStopPct": 5,
       "atrStopMult": 3.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -206,7 +209,9 @@
       },
       "tklPoolEnabled": false,
       "statusReason": "Restauration mandat Orbit (H20/ATR3.5/trail 2R) — la config précédente (H5/ATR1/no-trail) était la recalibration régime v9.6 EARLY RISK-OFF (war room 27/06) jamais desserrée au retour RISK-ON. Gate 30j = WAIT (artefact H20 : n=0 trades résolus sur 30j) ; DÉROGATION EXPLICITE user 2026-07-04. Re-gate à la review.",
-      "statusNextReviewAt": "2026-08-01"
+      "statusNextReviewAt": "2026-08-01",
+      "configVersion": "v10.9-20260723",
+      "_changeReason": " | 2026-07-22 (v10.9): coupe-circuit loss-based forward (effectiveFrom 2026-07-23). Verdict trader retail agile Option A. Regime macro etait aveugle au crash momentum juin-juil (score switcher 0.70-0.76, VIX ~16) => loss-based only. Valide vs config ACTUELLE (war room vs-current), calme dormant. secured: maxStopPct 7->5 (depth-cap calme-safe). War room vs-actuel: stress -5.3->-0.4 (+4.95)."
     },
     "tkl": {
       "status": "stopped",
@@ -513,7 +518,7 @@
       "trailingStop": false,
       "trailMultR": 1.5,
       "trailGraceDays": 0,
-      "maxStopPct": 20,
+      "maxStopPct": 12,
       "atrStopMult": 1.5,
       "dailyTrailPct": 0,
       "breakevenPct": 0,
@@ -565,7 +570,9 @@
           "early_risk_off": 15,
           "risk_off": 12
         }
-      }
+      },
+      "configVersion": "v10.9-20260723",
+      "_changeReason": " | 2026-07-22 (v10.9): coupe-circuit loss-based forward (effectiveFrom 2026-07-23). Verdict trader retail agile Option A. Regime macro etait aveugle au crash momentum juin-juil (score switcher 0.70-0.76, VIX ~16) => loss-based only. Valide vs config ACTUELLE (war room vs-current), calme dormant. hybrid: maxStopPct 20->12 (depth-cap calme-safe, plafonne pertes catastrophiques). War room vs-actuel: +1.03."
     },
     "forex": {
       "status": "stopped",

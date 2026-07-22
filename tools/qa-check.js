@@ -1003,13 +1003,17 @@ check('scanner/status: bout scellé du chart == frozen equityCurve (SEALED-PRIMA
       issues.push(`${id}: modeCharts absent/vide`);
       continue;
     }
-    const n = ch.v.length;
-    // Retirer la queue MtM : le dernier point si son label == aujourd'hui.
-    const sealedIdx = (ch.d[n - 1] === todayLabel && n >= 2) ? n - 2 : n - 1;
-    const sealedV = ch.v[sealedIdx];
     const ec = Array.isArray(frozen.equityCurve) ? frozen.equityCurve : [];
     if (!ec.length) { issues.push(`${id}: frozen.equityCurve vide`); continue; }
-    const frozenLastV = ec[ec.length - 1].value;
+    const frozenLast = ec[ec.length - 1];
+    const frozenLastV = frozenLast.value;
+    // Comparer le point du chart À LA DATE du dernier point frozen (pas un strip aveugle
+    // d'« aujourd'hui » : le frozen avance quotidiennement en MtM, son dernier point EST scellé).
+    const flLabel = frozenLast.date ? frozenLast.date.slice(5, 7) + '/' + frozenLast.date.slice(8, 10) : null;
+    let sealedIdx = -1;
+    if (flLabel) { for (let i = ch.d.length - 1; i >= 0; i--) { if (ch.d[i] === flLabel) { sealedIdx = i; break; } } }
+    if (sealedIdx < 0) sealedIdx = ch.v.length - 1;
+    const sealedV = ch.v[sealedIdx];
     if (typeof sealedV !== 'number' || typeof frozenLastV !== 'number') {
       issues.push(`${id}: valeurs non numériques (chart ${sealedV}, frozen ${frozenLastV})`);
       continue;
