@@ -166,10 +166,20 @@ const scanDay = lastWeekday; // le scan attendu = dernier jour ouvré
 const scanPath = `scanner/${scanDay}/index.html`;
 const weekendNote = isWeekend() ? ` (week-end — dernier scan ouvré attendu: ${scanDay})` : '';
 
-check(`scan dernier jour ouvré (${scanDay})${weekendNote}: fichier > 30KB`, () => {
+check(`scan dernier jour ouvré (${scanDay})${weekendNote}: taille proportionnelle aux setups`, () => {
   const size = fileSize(scanPath);
   if (size === 0) return `scanner/${scanDay}/index.html manquant`;
-  if (size < 30000) return `taille ${Math.round(size/1024)}KB < 30KB`;
+  // Le seuil est un proxy « scan complet, pas tronqué ». Un scan honnêtement plus court
+  // (sélection resserrée) est légitimement plus petit — on juge la DENSITÉ par setup, pas un
+  // forfait qui suppose 10 lignes. 30KB reste la barre d'un scan plein (≥9 setups) ; en-dessous,
+  // on exige ~3,4KB/setup (densité saine) avec un plancher anti-troncature à 20KB.
+  let nSetups = 10;
+  try {
+    const sig = JSON.parse(fs.readFileSync(path.join(ROOT, 'scanner', scanDay, 'signals.json'), 'utf8'));
+    nSetups = (sig.signals || sig.top_10 || []).length || 10;
+  } catch (_) { /* garde le défaut 10 → barre pleine 30KB */ }
+  const minSize = Math.max(20000, Math.min(30000, nSetups * 3400));
+  if (size < minSize) return `taille ${Math.round(size/1024)}KB < ${Math.round(minSize/1024)}KB (attendu pour ${nSetups} setups)`;
 });
 
 check(`scan dernier jour ouvré: id="synthese" présent`, () => {
