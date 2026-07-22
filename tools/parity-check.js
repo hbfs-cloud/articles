@@ -4,8 +4,12 @@
 /**
  * parity-check.js — Go (systematic-tss) ↔ articles scanner-mode parity drift detector
  *
- * Every scripted scanner mode (highvol, etf, etf_eu, casablanca, trendline) claims to mirror
+ * Every scripted scanner mode (highvol, etf, etf_eu, bull) claims to mirror
  * a backtested Go strategy in systematic-tss (5y CAGR figures live in the yaml comments).
+ * NOTE (2026-07-22): casablanca & trendline modes were REMOVED (plus dans modes-config) — leurs
+ * blocs de parité ont été retirés. Les outils casablanca-scanner.js / trendline-scanner.js peuvent
+ * subsister (trendline-scanner est réutilisé génériquement pour forex/indices), mais ne sont plus
+ * des modes.
  * v10.2 (2026-07-02, see .claude/memory/project_parity_v10_2.md and
  * data/modes-config-history.json entry "v10.2-20260702") realigned the scripted configs onto
  * the Go configs. This script re-derives that comparison mechanically so future edits to either
@@ -23,9 +27,6 @@
  *     too, but articles etf_eu.maxStopPct is 0 (ATR-only stop) — a known, accepted gap, not
  *     part of the v10.2 alignment (see modes-config-history.json v10.2 comment: etf_eu list
  *     does not mention maxStopPct).
- *   - casablanca skip_months: Go has skip_months:[9] (September underperforms); pit-engine.js
- *     has no month-skip mechanism. Documented open gap (project_parity_v10_2.md), reported here
- *     as GAP (informational), not DRIFT — it must not fail the gate every single day.
  *
  * Usage:
  *   node tools/parity-check.js               # exit 1 if any real DRIFT found
@@ -146,6 +147,26 @@ function jsConstNumber(text, name) {
   return m ? parseFloat(m[1]) : null;
 }
 
+// Extract the DEFAULT (3rd arg) of paramF(PARAMS, 'key', DEFAULT). etf-scanner.js lit ses seuils
+// DYNAMIQUEMENT depuis PARAMS (= scanner_filters.params du MÊME yaml Go) avec ces littéraux comme
+// fallback aligné → la valeur effective articles == Go par construction. DEFAULT peut être un
+// nombre ou un ternaire `COND ? euVal : usVal` (on retourne la branche US/else).
+function jsParamFDefault(text, key) {
+  const m = text.match(new RegExp(`paramF\\(\\s*\\w+\\s*,\\s*['"]${key}['"]\\s*,\\s*([^)]+)\\)`));
+  if (!m) return null;
+  const def = m[1].trim();
+  if (/^[\d.]+$/.test(def)) return parseFloat(def);
+  const tern = def.match(/\?\s*([\d.]+)\s*:\s*([\d.]+)/);
+  if (tern) return parseFloat(tern[2]);
+  return null;
+}
+// Taille du tableau blacklist:[...] dans un littéral `const NAME = { ... blacklist: [...] }`.
+function jsObjBlacklistSize(text, varName) {
+  const m = text.match(new RegExp(`${varName}\\s*=\\s*\\{[\\s\\S]*?blacklist:\\s*\\[([\\s\\S]*?)\\]`));
+  if (!m) return null;
+  return m[1].split(',').map(s => s.trim()).filter(Boolean).length;
+}
+
 function jsSetSize(text, varName) {
   const m = text.match(new RegExp(`${varName}\\s*=\\s*new Set\\(\\[([\\s\\S]*?)\\]\\)`));
   if (!m) return null;
@@ -255,10 +276,10 @@ const PARITY_MAP = [
           getScalar(text, 'base_stop_atr'), art.atrStopMult),
         row('etf', 'max_loss (min dynamic_max_loss, ×100) ↔ maxStopPct',
           maxLossPctFromGo(text), art.maxStopPct),
-        row('etf', 'scanner_filters.min_price ↔ etf-scanner.js MIN_PRICE',
-          getScalar(text, 'min_price'), scannerText ? jsConstNumber(scannerText, 'MIN_PRICE') : null),
-        row('etf', 'scanner_filters.max_atr_ratio ↔ etf-scanner.js MAX_ATR_RATIO',
-          getScalar(text, 'max_atr_ratio'), scannerText ? jsConstNumber(scannerText, 'MAX_ATR_RATIO') : null),
+        row('etf', 'scanner_filters.min_price ↔ etf-scanner.js paramF min_price default',
+          getScalar(text, 'min_price'), scannerText ? jsParamFDefault(scannerText, 'min_price') : null),
+        row('etf', 'scanner_filters.max_atr_ratio ↔ etf-scanner.js paramF max_atr_ratio default',
+          getScalar(text, 'max_atr_ratio'), scannerText ? jsParamFDefault(scannerText, 'max_atr_ratio') : null),
         // v10.4: earlyExit + circuitBreaker port (PositionManager exit-logic parity, see
         // data/modes-config-history.json v10.4 entry).
         row('etf', 'early_exit.max_days ↔ earlyExitDays',
@@ -290,9 +311,9 @@ const PARITY_MAP = [
           getScalar(text, 'min_score'), art.minScore),
         row('etf_eu', 'base_stop_atr ↔ atrStopMult',
           getScalar(text, 'base_stop_atr'), art.atrStopMult),
-        row('etf_eu', 'blacklist size ↔ BLACKLIST_EU.size (etf-scanner.js)',
+        row('etf_eu', 'blacklist size ↔ DEFAULT_PARAMS_EU.blacklist (etf-scanner.js)',
           (() => { const items = getListItems(text, 'blacklist'); return items ? items.length : null; })(),
-          scannerText ? jsSetSize(scannerText, 'BLACKLIST_EU') : null),
+          scannerText ? jsObjBlacklistSize(scannerText, 'DEFAULT_PARAMS_EU') : null),
         // v10.4: earlyExit + circuitBreaker port (PositionManager exit-logic parity, see
         // data/modes-config-history.json v10.4 entry).
         row('etf_eu', 'early_exit.max_days ↔ earlyExitDays',
@@ -310,69 +331,12 @@ const PARITY_MAP = [
     },
   },
   {
-    id: 'casablanca',
-    goFile: 'config/later/portfolio_ma.yaml (fallback: config/pre-live/portfolio_ma.yaml)',
-    run(ctx) {
-      const { text, usedPath } = ctx.goFallback([
-        'config/later/portfolio_ma.yaml',
-        'config/pre-live/portfolio_ma.yaml',
-      ]);
-      const art = modes.casablanca || {};
-      if (!text) return [row('casablanca', 'file', null, null, { note: 'Go yaml introuvable (ni later/ ni pre-live/)' })];
-      const rows = [
-        row('casablanca', `timeout_days ↔ horizon (${usedPath})`,
-          getScalar(text, 'timeout_days'), art.horizon),
-        row('casablanca', 'positions ↔ portfolioSize',
-          getScalar(text, 'max_open_positions'), art.portfolioSize),
-        row('casablanca', 'strategy=momentum-rotation ↔ rotation=daily_max1',
-          getScalar(text, 'strategy') === 'momentum-rotation' && art.rotation === 'daily_max1' ? 'match' : 'mismatch',
-          'match'),
-      ];
-      const skipMonths = getScalar(text, 'skip_months');
-      rows.push(row('casablanca', 'skip_months presence (Go-only, no articles equivalent)',
-        skipMonths, 'not implemented — documented gap',
-        { gap: true, note: `Go has skip_months: ${skipMonths} — pit-engine.js has no month-skip mechanism (see project_parity_v10_2.md "Gaps restants")` }));
-      // v10.4: tighten port (PositionManager exit-logic parity, see
-      // data/modes-config-history.json v10.4 entry).
-      rows.push(row('casablanca', 'tighten_after_days ↔ tightenAfterDays',
-        getScalar(text, 'tighten_after_days'), art.tightenAfterDays));
-      rows.push(row('casablanca', 'tightened_max_loss (×100) ↔ tightenToPct',
-        (() => { const v = getScalar(text, 'tightened_max_loss'); return v !== null ? parseFloat(v) * 100 : null; })(),
-        art.tightenToPct));
-      const tightenThresh = getScalar(text, 'tighten_loss_threshold');
-      rows.push(row('casablanca', 'tighten_loss_threshold (Go-only conditional gate, no articles equivalent)',
-        tightenThresh, 'not implemented — unconditional tighten',
-        { gap: true, note: `Go only tightens when losing beyond ${tightenThresh} (×100=${tightenThresh !== null ? parseFloat(tightenThresh) * 100 : '?'}%) after tighten_after_days; articles' tightenAfterDays/tightenToPct floors the stop unconditionally (superset approximation, see simulateTrade doc comment in sweep.js)` }));
-      return rows;
-    },
-  },
-  {
-    id: 'trendline',
-    goFile: 'internal/engine/pm_eu_trend.go (constants hardcoded here — Go source parsing is brittle for this file)',
-    run() {
-      const art = modes.trendline || {};
-      // Verified by hand against pm_eu_trend.go comments/constants on 2026-07-02:
-      //   "Stop: 2.5xATR" / "Timeout: 25 jours" (both literal Go consts: stopATRMult=2.5, timeout=25)
-      // minScore=50 is the scanner-side threshold applied to filterName=trendline_breakout signals,
-      // not a Go PM constant — carried over from the v10.2 alignment comment (minScore 40→50).
-      const HARDCODED = { horizon: 25, atrStopMult: 2.5, minScore: 50 };
-      return [
-        row('trendline', 'horizon (hardcoded from pm_eu_trend.go: "Timeout: 25 jours")',
-          HARDCODED.horizon, art.horizon),
-        row('trendline', 'atrStopMult (hardcoded from pm_eu_trend.go: "Stop: 2.5xATR")',
-          HARDCODED.atrStopMult, art.atrStopMult),
-        row('trendline', 'minScore (hardcoded, v10.2 alignment target)',
-          HARDCODED.minScore, art.minScore),
-      ];
-    },
-  },
-  {
     id: 'bull',
     goFile: 'config/portfolio_us_americanbulls.yaml',
     run(ctx) {
       const { text } = ctx.go('config/portfolio_us_americanbulls.yaml');
       const filters = readArticlesJSON('data/scanner-filters.json');
-      if (!text) return [row('bull', 'file', null, null, { note: 'Go yaml introuvable' })];
+      if (!text) return [row('bull', 'file', null, null, { gap: true, note: 'yaml Go bull (portfolio_us_americanbulls) non présent localement — comparaison impossible (repo systematic-tss partiel)' })];
       // ONLY min_vol_ratio is compared — bull is a DELIBERATE high-conviction variant
       // (score 88 / P3 / H8) vs Go's min_score 70 / P5 / H10 (see feedback_bull_8x_parity.md).
       // Comparing minScore/portfolioSize/horizon here would be a false-positive DRIFT by design.
