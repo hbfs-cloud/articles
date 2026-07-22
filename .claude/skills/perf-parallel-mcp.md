@@ -57,6 +57,24 @@ Ce qui ne bloque pas la décision agent tourne en tâche de fond (`run_in_backgr
 gen-status-page, gen-api, media. Le budget « temps ressenti » du skill = **phase MCP seule**. Surveiller la
 fin via un monitor (fraîcheur staging, QA), ne pas rester bloqué dessus.
 
+## R7 — Le fan-out d'AGENTS ne contient JAMAIS d'appel MCP (anti-pattern coûteux)
+**Incident 2026-07-22 : un workflow scanner a spawné 14 agents (1 par ticker), CHACUN refaisant sa
+salve MCP (`GetInstruments` + 3-4 `QueryData`) + relisant les fichiers en effort=high → 4.3M tokens,
+28 min, pour UN scan (et un résultat maigre).** Un fan-out de N agents multiplie le coût par N ; si
+chaque branche appelle le MCP, on retombe dans le round-trip-en-série que R1-R3 éliminent — en PIRE
+(N contextes d'agent en plus). **Le nombre de round-trips MCP scale avec le nombre de TYPES de données,
+PAS avec le nombre de tickers.** Donc :
+- **Batch AVANT le fan-out** : 1 salve `QueryData(symbols="T1,…,T14", types="quote,sec_filings,flags,
+  social_sentiment,insider_transactions,dark_pool,unusual_options,trading_signals", days=180)` +
+  `GetInstruments` multi si besoin → **~2-4 appels au TOTAL** pour toute la shortlist, dump brut → fichier.
+- **Fan-out APRÈS, SANS MCP** : si on fan-out pour raisonner, les agents reçoivent le JSON **pré-fetché**
+  et ne rappellent JAMAIS le MCP. Souvent mieux : **UN seul agent** raisonne sur le lot (le verdict
+  per-ticker garde/rejette n'a pas besoin d'un contexte d'agent par ticker).
+- **Dans un Workflow** : la salve MCP vit dans UNE phase `data` (ou l'agent principal) ; les phases
+  `validate`/`generate` consomment le pré-fetché. **JAMAIS `parallel(tickers.map(t => agent(…appelle MCP…)))`.**
+- Corollaire effort : un fan-out large en `effort:'high'` sur des sous-tâches mécaniques = gaspillage —
+  réserver high aux vraies décisions, low/medium au reste.
+
 ## Invariants NON négociables (la perf ne les assouplit JAMAIS)
 - **MCP HARD STOP** : bloqué/stale/incohérent → STOP, alerter, ne rien fabriquer. La parallélisation ne
   masque pas un preflight KO — elle vient APRÈS le preflight.

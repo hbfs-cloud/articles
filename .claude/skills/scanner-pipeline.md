@@ -12,7 +12,13 @@ JAMAIS skipper une étape du pipeline (anti-dilution, MCP enrichment per ticker,
 
 ## ⚡ EXÉCUTION RAPIDE (ORDRE CANONIQUE — cible : phase agent/MCP ≤ 5 min)
 
-Doctrine : **`perf-parallel-mcp`** (R1-R6). Le goulot historique = les ~150 appels MCP joués EN SÉRIE.
+**⚠️ GARDE-COÛT (incident 2026-07-22, 4.3M tokens / 28 min pour un scan) : la Phase 2 validation NE se
+fait JAMAIS en 1 agent/ticker.** Le per-ticker (anti-dilution/enrichment/earnings/technicals) = UNE salve
+`QueryData` **multi-symbole** sur toute la shortlist (perf-parallel-mcp **R3+R7**), puis raisonnement sur
+le pré-fetché (idéalement 1 agent). En Workflow : la salve MCP vit dans la phase `data`, **jamais**
+`parallel(tickers.map(t => agent(…qui appelle le MCP…)))`. Le nb d'appels MCP scale avec les TYPES, pas les tickers.
+
+Doctrine : **`perf-parallel-mcp`** (R1-R7). Le goulot historique = les ~150 appels MCP joués EN SÉRIE.
 On ne retire **aucune** étape (no-skip) — on change la FORME : **isoler tout le MCP en salves parallèles,
 scripter l'assemblage en node, backgrounder le pipeline lourd.** Les Phases 0-5 ci-dessous restent la
 SPEC de ce que chaque étape fait ; cette section dicte l'ORDRE d'exécution rapide.
