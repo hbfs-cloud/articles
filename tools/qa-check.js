@@ -929,12 +929,126 @@ check('scanner/status: SEALED-PRIMARY invariant (hero = sealed sweep, no sim/str
         issues.push(`${id}: hero ${heroRet}% ≠ sweep scellé ${frozenRet}% (Δ${(heroRet - frozenRet).toFixed(2)}) — un track record scellé ne doit JAMAIS être remplacé`);
       }
     } else {
-      // Fresh mode: hero = its live book (its only portfolio), else frozen when pit not primary.
-      const pitRet = pitPrimary(pitModes[id]);
-      const expected = pitRet !== null ? pitRet : frozenRet;
+      // Fresh mode (2026-07-22, SOURCE UNIQUE) : pit-state.json RETIRÉ de l'affichage. Le hero d'un
+      // mode frais = son frozen (computeStatsFromTrades de ses propres trades), JAMAIS pit-state.
+      // On valide donc contre frozenRet (le générateur montre désormais frozen pour les modes frais).
+      const expected = frozenRet;
       if (expected !== null && Math.abs(heroRet - expected) > TOL) {
-        issues.push(`${id}: hero ${heroRet}% ≠ portfolio attendu ${expected}% (Δ${(heroRet - expected).toFixed(2)})`);
+        issues.push(`${id}: hero ${heroRet}% ≠ frozen ${expected}% (Δ${(heroRet - expected).toFixed(2)}) — mode frais, source = sweep frozen`);
       }
+    }
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
+// ─── Check 27c: SEALED chart endpoint == frozen ──────────────────────────────
+// Le scalaire hero est déjà validé vs frozen.returnTotal par 27b. Ici on verrouille
+// le BOUT SCELLÉ de la courbe embarquée (modeCharts) : son dernier point, une fois
+// retirée la queue MtM (= le point dont le label vaut aujourd'hui), doit coïncider
+// avec le dernier point de frozen_<mode>.equityCurve (le sweep scellé fait foi).
+// Périmètre : modes scellés uniquement (mêmes conditions que 27b / frozenMeaningful).
+check('scanner/status: bout scellé du chart == frozen equityCurve (SEALED-PRIMARY)', () => {
+  const html = readFile('scanner/status/index.html');
+  if (!html) return 'scanner/status/index.html absent';
+  const br = readJSON('data/backtest-results.json');
+  const mc = readJSON('data/modes-config.json');
+  const modes = mc.modes ? mc.modes : mc;
+  const NON_PUBLIC = new Set(['draft', 'stopped']);
+  const TOL = 0.5; // même endpoint : tolérance d'arrondi seulement
+  const cm = html.match(/var modeCharts=(\{[\s\S]*?\});/);
+  if (!cm) return 'modeCharts introuvable dans scanner/status/index.html';
+  let modeCharts;
+  try { modeCharts = JSON.parse(cm[1]); } catch (e) { return `modeCharts illisible: ${e.message}`; }
+  const now = new Date();
+  const todayLabel = `${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}`;
+  const issues = [];
+
+  for (const [id, cfg] of Object.entries(modes)) {
+    if (NON_PUBLIC.has(cfg.status)) continue;
+    const frozen = br[`frozen_${id}`];
+    const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
+    const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
+    const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
+    if (!frozenMeaningful) continue; // mode frais : hors périmètre SEALED-PRIMARY
+
+    const ch = modeCharts[id];
+    if (!ch || !Array.isArray(ch.v) || !Array.isArray(ch.d) || !ch.v.length) {
+      issues.push(`${id}: modeCharts absent/vide`);
+      continue;
+    }
+    const n = ch.v.length;
+    // Retirer la queue MtM : le dernier point si son label == aujourd'hui.
+    const sealedIdx = (ch.d[n - 1] === todayLabel && n >= 2) ? n - 2 : n - 1;
+    const sealedV = ch.v[sealedIdx];
+    const ec = Array.isArray(frozen.equityCurve) ? frozen.equityCurve : [];
+    if (!ec.length) { issues.push(`${id}: frozen.equityCurve vide`); continue; }
+    const frozenLastV = ec[ec.length - 1].value;
+    if (typeof sealedV !== 'number' || typeof frozenLastV !== 'number') {
+      issues.push(`${id}: valeurs non numériques (chart ${sealedV}, frozen ${frozenLastV})`);
+      continue;
+    }
+    if (Math.abs(sealedV - frozenLastV) > TOL) {
+      issues.push(`${id}: bout scellé chart ${sealedV} (${ch.d[sealedIdx]}) ≠ frozen ${frozenLastV} (Δ${(sealedV - frozenLastV).toFixed(2)})`);
+    }
+  }
+  if (issues.length) return issues.join(' | ');
+});
+
+// ─── Check 27d: API equity.json == dashboard (hero) == frozen ────────────────
+// Verrouille "API == dashboard" : pour chaque mode scellé, portfolio/v1/<mode>/equity.json
+//   (a) stats.ret == le hero AFFICHÉ (±1pt) — l'API et le tableau de bord montrent le même chiffre ;
+//   (b) equityCurve dernier point == frozen_<mode>.equityCurve dernier (±0.5) — l'API est ancrée au sweep scellé.
+// Périmètre : modes scellés uniquement (mêmes conditions que 27b / frozenMeaningful).
+check('portfolio/v1: equity.json == dashboard hero == frozen (SEALED-PRIMARY)', () => {
+  const html = readFile('scanner/status/index.html');
+  if (!html) return 'scanner/status/index.html absent';
+  const br = readJSON('data/backtest-results.json');
+  const mc = readJSON('data/modes-config.json');
+  const modes = mc.modes ? mc.modes : mc;
+  const NON_PUBLIC = new Set(['draft', 'stopped']);
+  const RET_TOL = 1.0; // hero vs API : bridge live-MtM (<1pt)
+  const CURVE_TOL = 0.5; // même endpoint scellé
+  const issues = [];
+
+  for (const [id, cfg] of Object.entries(modes)) {
+    if (NON_PUBLIC.has(cfg.status)) continue;
+    const frozen = br[`frozen_${id}`];
+    const frozenRet = frozen && typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
+    const frozenTrades = frozen && typeof frozen.trades === 'number' ? frozen.trades : 0;
+    const frozenMeaningful = frozenRet !== null && (frozenTrades >= 10 || Math.abs(frozenRet) >= 5);
+    if (!frozenMeaningful) continue; // mode frais : hors périmètre SEALED-PRIMARY
+
+    // Hero affiché sur le tableau de bord (même extraction que 27b).
+    const anchor = `id="p-${id}"`;
+    const start = html.indexOf(anchor);
+    if (start === -1) { issues.push(`${id}: panneau hero absent`); continue; }
+    const nextIdx = html.indexOf('id="p-', start + anchor.length);
+    const panel = html.slice(start, nextIdx === -1 ? html.length : nextIdx);
+    const heroM = panel.match(/>([+\-]?[0-9.]+)%<\/span><span class="ps-l">(?:Total Return|Live Return)/);
+    if (!heroM) { issues.push(`${id}: hero Total/Live Return introuvable`); continue; }
+    const heroRet = parseFloat(heroM[1]);
+
+    // API equity.json
+    const eqRel = `portfolio/v1/${id}/equity.json`;
+    let eq;
+    try { eq = readJSON(eqRel); } catch (e) { issues.push(`${id}: equity.json illisible (${e.message})`); continue; }
+    const apiRet = eq.stats && typeof eq.stats.ret === 'number' ? eq.stats.ret : null;
+    if (apiRet === null) { issues.push(`${id}: equity.json stats.ret manquant`); continue; }
+    // (a) API stats.ret == hero affiché
+    if (Math.abs(apiRet - heroRet) > RET_TOL) {
+      issues.push(`${id}: equity.json ret ${apiRet}% ≠ hero ${heroRet}% (Δ${(apiRet - heroRet).toFixed(2)})`);
+    }
+    // (b) API equityCurve dernier == frozen dernier
+    const ac = eq.equityCurve;
+    const apiV = ac && Array.isArray(ac.v) ? ac.v : null;
+    const fec = Array.isArray(frozen.equityCurve) ? frozen.equityCurve : [];
+    if (!apiV || !apiV.length) { issues.push(`${id}: equity.json equityCurve vide`); continue; }
+    if (!fec.length) { issues.push(`${id}: frozen.equityCurve vide`); continue; }
+    const apiLastV = apiV[apiV.length - 1];
+    const frozenLastV = fec[fec.length - 1].value;
+    if (typeof apiLastV === 'number' && typeof frozenLastV === 'number'
+        && Math.abs(apiLastV - frozenLastV) > CURVE_TOL) {
+      issues.push(`${id}: equity.json dernier ${apiLastV} ≠ frozen ${frozenLastV} (Δ${(apiLastV - frozenLastV).toFixed(2)})`);
     }
   }
   if (issues.length) return issues.join(' | ');

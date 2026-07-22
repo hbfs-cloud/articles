@@ -1,9 +1,11 @@
 openapi: "3.0.3"
 info:
   title: DailyTickers Portfolio API
-  version: "1.3.0"
+  version: "1.3.1"
   description: >
-    Free JSON endpoints to replicate the DailyTickers 6 specialized scanner portfolios (Turbo, Dynamic, Balanced, Secured, Fortress, TKL).
+    Free JSON endpoints to replicate the DailyTickers specialized scanner portfolios (21 modes:
+    Turbo, Dynamic, Balanced, Secured, Fortress, TKL, Alpha, A+, HighVol, Hybrid, Forex, ETF,
+    ETF-EU, ETF-US, Stockbox, Stockbox-PIT, Factor, Book-Honest, US-HighVol, HVEP, EP).
     Updated every trading session (~23:00 UTC weekdays). No authentication required.
   contact:
     url: https://articles.dailytickers.com/integrations/portfolio/
@@ -20,7 +22,22 @@ servers:
           - "secured"
           - "fortress"
           - "tkl"
-        description: Portfolio mode (turbo, dynamic, balanced, secured, fortress, or tkl)
+          - "alpha"
+          - "aplus"
+          - "highvol"
+          - "hybrid"
+          - "forex"
+          - "etf"
+          - "etf_eu"
+          - "etf_us"
+          - "stockbox"
+          - "stockbox_pit"
+          - "factor"
+          - "book_honest"
+          - "us_highvol"
+          - "hvep"
+          - "ep"
+        description: Portfolio mode (one of the 21 generated modes)
   - url: https://articles.dailytickers.com/portfolio/v1
     description: Root endpoints (no mode prefix) — modes overview, regime, status, config-history, instruments
 
@@ -337,18 +354,29 @@ components:
 
     Stats:
       type: object
+      description: >
+        Simulation statistics computed from the mode's sealed (frozen) closed-trades ledger
+        via point-in-time position weighting. All returns are in percent, base 100.
       properties:
-        ret: { type: number, description: "Total cumulative return %", example: 45.2 }
-        dd: { type: number, description: "Max drawdown %", example: -3.8 }
+        ret: { type: number, description: "Total cumulative return % (realized + unrealized)", example: 45.2 }
+        realized: { type: number, description: "Realized cumulative return % from closed trades", example: 45.2 }
+        unrealized: { type: number, description: "Unrealized return % contributed by still-open positions (marked-to-market)", example: 0 }
+        dd: { type: number, description: "Max drawdown % (negative)", example: -3.8 }
         wr: { type: number, description: "Win rate %", example: 68.2 }
-        pf: { type: number, description: "Profit factor", example: 2.15 }
-        rr: { type: number, description: "Reward/Risk ratio", example: 1.6 }
-        trades: { type: integer, example: 22 }
-        avgWin: { type: number }
-        avgLoss: { type: number }
+        pf: { type: number, description: "Profit factor (gross wins / gross losses)", example: 2.15 }
+        pfLow: { type: number, description: "Lower bound of the profit-factor confidence interval", example: 1.32 }
+        pfHigh: { type: number, description: "Upper bound of the profit-factor confidence interval", example: 8.76 }
+        pfReliable: { type: boolean, description: "True when the profit-factor sample is large enough to be statistically reliable", example: false }
+        trades: { type: integer, description: "Number of closed trades in the sealed ledger", example: 22 }
         avgHold: { type: number, description: "Average hold days", example: 4.2 }
-        score: { type: number, description: "Composite score (0-100)", example: 88.5 }
-        r2: { type: number, description: "Linearity (equity curve quality)", example: 0.94 }
+        cagr: { type: number, description: "Compound annualized growth rate %", example: 120.4 }
+        sharpe: { type: number, description: "Sharpe ratio of the equity curve", example: 2.1 }
+        r2: { type: number, description: "Linearity of the equity curve (0-1, higher = smoother/more reliable)", example: 0.94 }
+        oosWarn:
+          type: string
+          nullable: true
+          description: "Out-of-sample warning flag; null when no warning, otherwise a short reason string."
+          example: null
 
     EquityCurve:
       type: object

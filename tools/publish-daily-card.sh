@@ -282,14 +282,17 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "   Replay done."
 
   # ─── Step 4c: Forward continuity layer (sealed anchor + post-anchor delta) ──
-  # Runs AFTER sweep+replay so backtest-trades.json is final: pit-forward.js re-reads
-  # each frozen_<mode> anchor and appends ONLY the delta of trades closed/opened since,
-  # into data/pit-forward.json (READ-ONLY on results/trades; sealed prefix byte-identical).
-  # gen-status-page prefers this healthy forward hero+curve, else falls back to sealed.
-  # Non-blocking (like the scanners): a failure just leaves the sealed hero in place.
+  # DÉPRÉCIÉ (2026-07-22) POUR L'AFFICHAGE : pit-forward.json n'est PLUS consommé par
+  # gen-status-page.js ni gen-api.js. Source unique de la perf affichée = le sweep frozen
+  # (computeStatsFromTrades). L'étape est donc SKIPPÉE par défaut ; on la conserve derrière
+  # un flag opt-in (ENABLE_PIT_FORWARD=1) pour référence / rollback uniquement.
   echo ""
-  echo "🧭 Step 4c: Forward continuity (pit-forward)..."
-  node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
+  if [ "${ENABLE_PIT_FORWARD:-0}" = "1" ]; then
+    echo "🧭 Step 4c: Forward continuity (pit-forward) [opt-in ENABLE_PIT_FORWARD=1]..."
+    node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
+  else
+    echo "⏭️  Step 4c: pit-forward SKIPPÉ (déprécié en affichage — source unique = sweep frozen). Réactiver avec ENABLE_PIT_FORWARD=1."
+  fi
 
   # ─── Step 4d: dtx (systematic-tss) staging GUARD for SCRIPTED modes — MCP is the SOLE engine ───
   # CUT-OVER (2026-07-08): the hosted dtx MCP (systematic.dailytickers.com) is the ONLY engine

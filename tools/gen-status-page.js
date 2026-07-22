@@ -13,6 +13,10 @@ const ms = require('./lib/mode-status');
 // "Halal" page never surface a haram ticker that the backtest itself would refuse to hold.
 const { isHaramForHalalMode } = require('./lib/sharia-filter');
 const dlt = require('./lib/dtx-live-track');
+// Comptabilité POINT-IN-TIME partagée (UNIQUE, verbatim depuis sweep.js). Réutilisée pour
+// calculer courbe/stats des modes FRAIS (non scellés) depuis LEURS propres trades — jamais
+// depuis pit-state/modeEquityHistory (décision owner 2026-07-22 : SOURCE UNIQUE = sweep frozen).
+const { computeStatsFromTrades: libStatsFromTrades } = require('./lib/mode-stats');
 
 function fmtDateFR(iso) {
   if (!iso) return '';
@@ -564,6 +568,17 @@ async function main() {
     }
   }
 
+  // Cache OHLCV (forme attendue par lib/mode-stats: {ticker:{'YYYY-MM-DD':{close}}}) reconstruit
+  // depuis prematureBars (positions ouvertes). Sert au MtM des modes FRAIS calculés via
+  // libStatsFromTrades. Absent → la lib retombe sur unrealized 0 (honnête, pas d'invention).
+  const modePriceCache = {};
+  for (const [_tk, _pb] of Object.entries(prematureBars)) {
+    if (!_pb || !_pb.bars) continue;
+    const _h = {};
+    for (const [_dt, _cl] of Object.entries(_pb.bars)) { if (_cl != null) _h[_dt] = { close: _cl }; }
+    if (Object.keys(_h).length) modePriceCache[_tk] = _h;
+  }
+
   // Latest scan signals — JSON-first via loadSignals, HTML fallback for legacy scans
   const parser = require('./lib/scanner-parser');
   const sharedCfg = require('./config');
@@ -743,6 +758,30 @@ async function main() {
         m.oosWarn = null;
       }
     }
+    // ── Modes FRAIS sans record scellé (pas de frozen_<id>) — SOURCE = leurs propres trades ──
+    // Décision owner (2026-07-22) : un mode non scellé calcule courbe+stats via la MÊME lib
+    // partagée que le sweep (computeStatsFromTrades : poids point-in-time + MtM quotidien), PAS
+    // via pit-state/modeEquityHistory. Ne s'applique QU'AUX modes sans frozen ET non-dtx (les
+    // modes dtx, bloc plus bas, réécrivent intégralement m/m.equityCurve → jamais touchés ici).
+    if (!frozen && !loadDtxStaging(id)) {
+      let _ls = null;
+      try {
+        _ls = libStatsFromTrades(trades, cfg.portfolioSize, cfg.positionSizePct, id, cfg.calendar, { priceCache: modePriceCache });
+      } catch (_) { _ls = null; }
+      if (_ls && _ls.equityCurve && _ls.equityCurve.filter(p => p && p.date).length > 0) {
+        m.ret = _ls.returnTotal;
+        m.dd = _ls.maxDD;
+        if (_ls.returnRealized != null) m.realized = _ls.returnRealized;
+        if (_ls.returnUnrealized != null) m.unrealized = _ls.returnUnrealized;
+        if (_ls.winRate != null) m.wr = _ls.winRate;
+        if (_ls.profitFactor != null) m.pf = _ls.profitFactor;
+        if (_ls.trades != null) m.trades = _ls.trades;
+        if (_ls.sharpe != null) m.sharpe = _ls.sharpe;
+        m.equityCurve = _ls.equityCurve.filter(p => p && p.date);
+        const _rawDated = m.equityCurve.filter(p => p.date && p.date <= TODAY_ISO);
+        m.frozenRawLastISO = _rawDated.length ? _rawDated[_rawDated.length - 1].date : null;
+      }
+    }
     // Use FROZEN equity curve (authoritative daily MtM from sweep).
     // Frozen EC never changes retroactively — unlike snapshot stats.ret which gets
     // recalculated when sweep reruns with updated parameters.
@@ -780,13 +819,17 @@ async function main() {
         }
       }
     } else {
+      // Mode FRAIS sans AUCUN trade daté (courbe non constructible depuis les trades — ex. mode en
+      // 'test' à 0 trade clos). SOURCE UNIQUE (2026-07-22) : on NE lit PLUS modeEquityHistory
+      // (snapshots pit/périmés). Courbe plate = fait (aucun trade), ancrée sur le lancement du mode
+      // et son ret trades-based (0 quand pas de trade). Zéro dépendance pit-state/snapshot.
       const _todayLabel = TODAY_LABEL; // canonical NY chart label
-      const _hist = modeEquityHistory[id] || [];
-      const _todayMtm = +(100 + (m.ret || 0)).toFixed(2);
-      ec = {
-        d: [..._hist.map(p => p.d), _todayLabel],
-        v: [..._hist.map(p => p.v), _todayMtm],
-      };
+      const _startISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : null;
+      const _startLbl = _startISO ? _startISO.slice(5, 7) + '/' + _startISO.slice(8, 10) : null;
+      const _endMtm = +(100 + (m.ret || 0)).toFixed(2);
+      ec = (_startLbl && _startLbl !== _todayLabel)
+        ? { d: [_startLbl, _todayLabel], v: [100, _endMtm] }
+        : { d: [_todayLabel], v: [_endMtm] };
     }
     // ── Compute R², CAGR, Sharpe from the SEALED curve (record), not the MtM-extended chart ──
     // sealedV/sealedDates = courbe frozen pure (voir plus haut). Sur le chemin « frais » (non
@@ -954,6 +997,17 @@ async function main() {
       ec = { d: [..._dd.keys()], v: [..._dd.values()] };
     }
 
+    // ── SOURCE UNIQUE (2026-07-22, décision owner) : pit-state.json / pit-forward.json RETIRÉS
+    //    de l'affichage. Le hero ET la courbe d'un mode FRAIS (non scellé, non-dtx) proviennent de
+    //    computeStatsFromTrades de SES trades (m / m.ec ci-dessus, == sweep frozen quand il existe),
+    //    PAS du pit-live ni du forward. On neutralise m.pit/m.forward → panel() (H = P || m) et le
+    //    modeCharts (usePit/useFwd) retombent tous deux sur m. Gardé après le bloc dtx (qui lit m.pit
+    //    et gère déjà son propre m.pit=null) et gaté sur !m.dtxEngine → modes dtx JAMAIS touchés.
+    //    Les modes scellés (frozenMeaningful) avaient déjà F/P gatés → no-op pour eux.
+    if (!m.dtxEngine) {
+      const _frozenMeaningful = (m.trades || 0) >= 10 || Math.abs(m.ret || 0) >= 5;
+      if (!_frozenMeaningful) { m.pit = null; m.forward = null; }
+    }
     modes[id] = { cfg, trades, m, ec };
   }
   // Default mode for API/telegram = balanced

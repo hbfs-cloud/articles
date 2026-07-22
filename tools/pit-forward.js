@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 /*
+ * ───────────────────────────────────────────────────────────────────────────
+ * DÉPRÉCIÉ (2026-07-22) POUR L'AFFICHAGE — pit-state.json / pit-forward.json ne
+ * sont PLUS consommés par gen-status-page.js ni gen-api.js. Source unique de la
+ * performance affichée = le sweep frozen (computeStatsFromTrades dans sweep.js).
+ * Fichier CONSERVÉ pour référence / rollback ; ne pas supprimer.
+ * ───────────────────────────────────────────────────────────────────────────
+ *
  * pit-forward.js — FORWARD-ONLY equity layer anchored to the SEALED frozen curve.
  *
  * Product goal: the status page shows ONE current, continuous equity number per mode —

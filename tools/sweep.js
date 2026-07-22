@@ -1249,14 +1249,12 @@ function simulateTrade(setup, scanDate, priceHistory, config = {}) {
 // Falls back to `defaultWeight` when the version/mode is absent. Callers that must
 // FAIL on an unknown version (config-blind guard) pass defaultWeight=null and treat
 // a null return as "unresolved".
-function getWeight(trade, modeId, cfgVersions, defaultWeight) {
-  const ver = trade.configVersion;
-  if (ver && cfgVersions[ver] && cfgVersions[ver][modeId]) {
-    const c = cfgVersions[ver][modeId];
-    return (1 / (c.portfolioSize || 1)) * (c.positionSizePct || 1);
-  }
-  return defaultWeight;
-}
+// getWeight + computeStatsFromTrades ont été extraits dans la lib partagée
+// tools/lib/mode-stats.js (SOURCE UNIQUE de la comptabilité des modes) pour que
+// sweep.js, gen-status-page.js et gen-api.js calculent EXACTEMENT la même chose.
+// getWeight est pur → réexporté tel quel. computeStatsFromTrades est enveloppé
+// (voir plus bas) dans un wrapper mince qui injecte le priceCache de module.
+const { getWeight, computeStatsFromTrades: _computeStatsFromTradesLib } = require('./lib/mode-stats');
 
 // ─── Stats from a flat closed-trade list (append-only mode) ──────────────────
 // Computes returnTotal, maxDD, winRate, profitFactor, equityCurve from a
@@ -1265,207 +1263,16 @@ function getWeight(trade, modeId, cfgVersions, defaultWeight) {
 // open positions at each business day's close (via priceCache).
 // Trades must have: pnlPct, exitDate, scanDate, status, holdDays, actualEntry.
 // Uses configVersion on each trade to look up the correct weight from config history.
+// Wrapper mince autour de la lib partagée. Injecte le priceCache de MODULE de
+// sweep.js dans opts quand l'appelant n'en fournit pas — ce cache est peuplé par
+// fetchOHLCV et partagé PAR RÉFÉRENCE avec pit-forward.js/extend-frozen.js, donc
+// la comptabilité reste byte-identique au comportement historique. Signature
+// publique inchangée : (closedTrades, portfolioSize, positionSizePct, modeId, calendar, opts).
 function computeStatsFromTrades(closedTrades, portfolioSize, positionSizePct, modeId, calendar, opts = {}) {
-  const DF = dayFnsFor(calendar);
-  const allTrades = (closedTrades || []).filter(t => t.actualEntry > 0);
-  if (allTrades.length === 0) return null;
-  const defaultWeight = (1 / portfolioSize) * (positionSizePct || 1);
-
-  // Load config history for per-trade weight lookup
-  const cfgHistPath = path.join(ROOT, 'data', 'modes-config-history.json');
-  let cfgVersions = {};
-  if (fs.existsSync(cfgHistPath)) {
-    try {
-      const hist = JSON.parse(fs.readFileSync(cfgHistPath, 'utf8'));
-      for (const v of (hist.versions || [])) {
-        cfgVersions[v.id] = v.config;
-      }
-    } catch(e) {}
-  }
-
-  const RESOLVED_STATUSES = ['tp1', 'tp1_partial', 'tp2', 'sl', 'expired', 'rotated', 'breakeven', 'trail'];
-  const resolved = allTrades.filter(t => {
-    const base = (t.status || '').replace(/_amb$/, '');
-    return RESOLVED_STATUSES.includes(base);
-  });
-  const pendingTrades = allTrades.filter(t => t.status === 'pending')
-    .sort((a, b) => {
-      // Injected (real broker positions) always take priority over sim2 artifacts
-      if (a._injected && !b._injected) return -1;
-      if (!a._injected && b._injected) return 1;
-      return (a.scanDate || '').localeCompare(b.scanDate || '');
-    });
-
-  if (resolved.length === 0 && pendingTrades.length === 0) return null;
-
-  // ─── Daily MtM equity curve: realized + unrealized at each biz day close ───
-  const allDates = [
-    ...resolved.flatMap(t => [t.scanDate, t.entryDate, t.exitDate]),
-    ...pendingTrades.flatMap(t => [t.scanDate, t.entryDate, t.exitDate]),
-  ].filter(Boolean).sort();
-  const firstDate = allDates[0];
-  // Use last available price date (not today) to avoid zero-unrealized tail
-  // when Yahoo data hasn't arrived yet for the current day.
-  const lastTradeDate = allDates[allDates.length - 1];
-  let lastPriceDate = '';
-  const allMtmTickers = [...new Set([...pendingTrades.map(t => t.ticker), ...resolved.map(t => t.ticker)])];
-  for (const ticker of allMtmTickers) {
-    const hist = priceCache[ticker];
-    if (hist) {
-      const dates = Object.keys(hist).sort();
-      if (dates.length > 0 && dates[dates.length - 1] > lastPriceDate) {
-        lastPriceDate = dates[dates.length - 1];
-      }
-    }
-  }
-  // Clamp to today — never extend the equity curve into future dates
-  const todayClamp = new Date().toISOString().slice(0, 10);
-  if (lastPriceDate > todayClamp) lastPriceDate = todayClamp;
-  const endDate = lastPriceDate || lastTradeDate;
-
-  const allDays = DF.allDays(firstDate, endDate);
-  const sortedResolved = [...resolved].sort((a, b) => (a.exitDate || '').localeCompare(b.exitDate || ''));
-
-  let realizedPnl = 0;
-  let resolvedIdx = 0;
-  let peak = 100, maxDD = 0;
-  const equityCurve = [];
-  const lastKnownClose = {};
-
-  // Append-only: if prior equity curve provided, copy frozen points and fast-forward
-  const priorEC = opts.priorEC || [];
-  let appendAfter = '';
-  if (priorEC.length > 0) {
-    for (const pt of priorEC) {
-      equityCurve.push(pt);
-      if (pt.value > peak) peak = pt.value;
-      const dd = ((peak - pt.value) / peak) * 100;
-      if (dd > maxDD) maxDD = dd;
-    }
-    appendAfter = priorEC[priorEC.length - 1].date;
-    // Fast-forward realized PnL and resolvedIdx to match the frozen point
-    for (let i = 0; i < sortedResolved.length; i++) {
-      if (sortedResolved[i].exitDate <= appendAfter) {
-        realizedPnl += (sortedResolved[i].pnlPct || 0) * getWeight(sortedResolved[i], modeId || '', cfgVersions, defaultWeight);
-        resolvedIdx = i + 1;
-      }
-    }
-  }
-
-  function getClose(ticker, day) {
-    const hist = priceCache[ticker];
-    if (hist && hist[day]) {
-      lastKnownClose[ticker] = hist[day].close;
-      return hist[day].close;
-    }
-    return lastKnownClose[ticker] || null;
-  }
-
-  for (const day of allDays) {
-    if (appendAfter && day <= appendAfter) continue;
-    // Accumulate realized from trades closing on or before this day
-    while (resolvedIdx < sortedResolved.length && sortedResolved[resolvedIdx].exitDate <= day) {
-      realizedPnl += (sortedResolved[resolvedIdx].pnlPct || 0) * getWeight(sortedResolved[resolvedIdx], modeId || '', cfgVersions, defaultWeight);
-      resolvedIdx++;
-    }
-
-    // Unrealized: resolved trades not yet closed + pending trades
-    let unrealizedPnl = 0;
-
-    // Resolved trades entered but not yet exited as of this day
-    // Cap at portfolioSize to prevent inflated equity when FROZEN_ONLY merges
-    // overlapping old + new trades (e.g. 23 positions at 10% each = 230% exposure)
-    let resolvedExposure = 0;
-    const maxExposure = (1 / portfolioSize) * (positionSizePct || 1) * portfolioSize; // = positionSizePct (1.0)
-    for (let i = resolvedIdx; i < sortedResolved.length; i++) {
-      const t = sortedResolved[i];
-      const entryDay = t.entryDate || t.scanDate;
-      if (entryDay && entryDay <= day && t.actualEntry > 0) {
-        const w = getWeight(t, modeId || '', cfgVersions, defaultWeight);
-        if (resolvedExposure + w > maxExposure + 1e-9) continue;
-        const close = getClose(t.ticker, day);
-        if (close) {
-          resolvedExposure += w;
-          unrealizedPnl += ((close - t.actualEntry) / t.actualEntry) * 100 * w;
-        }
-      }
-    }
-
-    // Pending trades (still open) — cap total unrealized exposure at 1.0 (100% capital)
-    let pendingExposure = 0;
-    for (const t of pendingTrades) {
-      const w = getWeight(t, modeId || '', cfgVersions, defaultWeight);
-      if (pendingExposure + w > 1.0 + 1e-9) continue;
-      const entryDay = t.entryDate || t.scanDate;
-      if (entryDay && entryDay <= day && t.actualEntry > 0) {
-        const close = getClose(t.ticker, day);
-        if (close) {
-          pendingExposure += w;
-          unrealizedPnl += ((close - t.actualEntry) / t.actualEntry) * 100 * w;
-        }
-      }
-    }
-
-    const dailyEquity = 100 + realizedPnl + unrealizedPnl;
-    equityCurve.push({ date: day, value: +dailyEquity.toFixed(2) });
-
-    if (dailyEquity > peak) peak = dailyEquity;
-    const dd = ((peak - dailyEquity) / peak) * 100;
-    if (dd > maxDD) maxDD = dd;
-  }
-
-  // Keep ALL business days in equity curve — flat days are real (capital idle, no trade)
-
-  const returnTotal = equityCurve.length > 0
-    ? +(equityCurve[equityCurve.length - 1].value - 100).toFixed(2) : 0;
-  const returnRealized = +realizedPnl.toFixed(2);
-  const returnUnrealized = +(returnTotal - returnRealized).toFixed(2);
-
-  // WR, PF — from resolved trades only (unrealized don't count)
-  const wins = resolved.filter(t => (t.pnlPct || 0) > 0);
-  const losses = resolved.filter(t => (t.pnlPct || 0) <= 0);
-  const winRate = resolved.length ? +((wins.length / resolved.length) * 100).toFixed(1) : 0;
-  const grossWin = wins.reduce((s, t) => s + t.pnlPct, 0);
-  const grossLoss = Math.abs(losses.reduce((s, t) => s + t.pnlPct, 0));
-  const profitFactor = grossLoss > 0 ? +(grossWin / grossLoss).toFixed(2) : grossWin > 0 ? 99 : 0;
-
-  // Risk-adjusted return metrics
-  const returnDDRatio = maxDD > 0 ? +(returnTotal / maxDD).toFixed(2) : returnTotal > 0 ? 99 : 0;
-
-  // True Sharpe ratio from daily MtM returns
-  let sharpe = 0;
-  if (equityCurve.length > 2) {
-    const dailyReturns = [];
-    for (let i = 1; i < equityCurve.length; i++) {
-      const prev = equityCurve[i - 1].value;
-      const curr = equityCurve[i].value;
-      if (prev > 0) dailyReturns.push((curr - prev) / prev);
-    }
-    if (dailyReturns.length > 1) {
-      const mean = dailyReturns.reduce((s, r) => s + r, 0) / dailyReturns.length;
-      const variance = dailyReturns.reduce((s, r) => s + (r - mean) ** 2, 0) / (dailyReturns.length - 1);
-      const stdev = Math.sqrt(variance);
-      if (stdev > 0) sharpe = +(Math.sqrt(252) * mean / stdev).toFixed(2);
-    }
-  }
-
-  const dayCount = allDays.length || 1;
-  const annReturn = returnTotal * (252 / dayCount);
-  const calmar = maxDD > 0 ? +(annReturn / maxDD).toFixed(2) : 0;
-
-  return {
-    returnTotal,
-    returnRealized,
-    returnUnrealized,
-    maxDD: +(-maxDD).toFixed(2),
-    winRate,
-    profitFactor,
-    trades: resolved.length,
-    calmar,
-    sharpe,
-    returnDDRatio,
-    equityCurve,
-  };
+  return _computeStatsFromTradesLib(
+    closedTrades, portfolioSize, positionSizePct, modeId, calendar,
+    { ...opts, priceCache: (opts && opts.priceCache) || priceCache }
+  );
 }
 
 // ─── Portfolio simulation (proper daily MtM) ─────────────────────────────────

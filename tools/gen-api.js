@@ -160,6 +160,71 @@ const ordersStale = scanDir !== todayKey && scanDir !== nextBizDay;
 
 console.log(`  Source: ${path.relative(ROOT, latestFile)} (${snap.date})${ordersStale ? ` [orders stale: scanDir=${scanDir} != today=${todayKey}]` : ''}`);
 
+// ─── T2: coherence guard (equity.json ⇄ frozen source of truth) ──────────────
+// gen-api copies mode.stats / mode.equity from the daily snapshot, which already
+// carries the SEALED (frozen) curve — so the API is coherent with the dashboard by
+// construction. This guard makes that coherence VERIFIABLE: for every mode that has
+// a frozen entry in data/backtest-results.json (frozenMeaningful=true), it asserts
+// equity.json.stats.ret == frozen_<mode>.returnTotal AND equity.json.equityCurve's
+// last point == frozen_<mode>.equityCurve's last point (0.01 tolerance). A divergence
+// is logged as a clear warning — never fatal. Modes with no frozen entry are "fresh"
+// (frozenMeaningful=false): their stats come from computeStatsFromTrades of their own
+// trades and there is nothing sealed to check against, so they are skipped.
+let _modeStatsLib = null;
+try { _modeStatsLib = require('./lib/mode-stats'); } catch (_) { _modeStatsLib = null; }
+let _frozenResults = null;
+try {
+  _frozenResults = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'backtest-results.json'), 'utf8'));
+} catch (_) { _frozenResults = null; }
+const coherenceReport = { checked: 0, ok: 0, warnings: 0, skipped: 0, details: [] };
+const COH_TOL = 0.01;
+
+function verifyEquityCoherence(modeId, stats, equity) {
+  // Guard only arms when the shared accounting lib AND the frozen results are both present.
+  if (!_modeStatsLib || typeof _modeStatsLib.computeStatsFromTrades !== 'function' || !_frozenResults) {
+    coherenceReport.skipped++;
+    return;
+  }
+  const frozen = _frozenResults[`frozen_${modeId}`];
+  if (!frozen) {
+    // Fresh mode (frozenMeaningful=false) — nothing sealed to check against.
+    coherenceReport.skipped++;
+    coherenceReport.details.push({ mode: modeId, status: 'no-frozen' });
+    return;
+  }
+  coherenceReport.checked++;
+  const problems = [];
+
+  // (1) returnTotal — snapshot stats.ret vs frozen.returnTotal
+  const apiRet = stats && typeof stats.ret === 'number' ? stats.ret : null;
+  const frozenRet = typeof frozen.returnTotal === 'number' ? frozen.returnTotal : null;
+  if (apiRet === null || frozenRet === null) {
+    problems.push(`ret unavailable (api=${apiRet}, frozen=${frozenRet})`);
+  } else if (Math.abs(apiRet - frozenRet) > COH_TOL) {
+    problems.push(`ret ${apiRet} != frozen.returnTotal ${frozenRet} (Δ=${(apiRet - frozenRet).toFixed(2)})`);
+  }
+
+  // (2) equityCurve last point — snapshot equity is {d:[…], v:[…]}, frozen is [{date,value}]
+  const apiLastV = equity && Array.isArray(equity.v) && equity.v.length ? equity.v[equity.v.length - 1] : null;
+  const fEC = Array.isArray(frozen.equityCurve) ? frozen.equityCurve : [];
+  const fLast = fEC.length ? fEC[fEC.length - 1] : null;
+  const frozenLastV = fLast && typeof fLast.value === 'number' ? fLast.value : null;
+  if (apiLastV === null || frozenLastV === null) {
+    problems.push(`equityCurve tail unavailable (api=${apiLastV}, frozen=${frozenLastV})`);
+  } else if (Math.abs(apiLastV - frozenLastV) > COH_TOL) {
+    problems.push(`equityCurve last ${apiLastV} != frozen ${frozenLastV} (Δ=${(apiLastV - frozenLastV).toFixed(2)})`);
+  }
+
+  if (problems.length) {
+    coherenceReport.warnings++;
+    coherenceReport.details.push({ mode: modeId, status: 'divergence', problems });
+    console.warn(`  [warn] [coherence] "${modeId}" equity.json diverges from frozen_${modeId}: ${problems.join('; ')}`);
+  } else {
+    coherenceReport.ok++;
+    coherenceReport.details.push({ mode: modeId, status: 'ok', ret: apiRet, lastV: apiLastV });
+  }
+}
+
 // ─── Helper: write all 7 endpoints for a mode ─────────────────────────────────
 function writeMode(mode, prefix) {
   const p = prefix ? `${prefix}/` : '';
@@ -300,6 +365,11 @@ function writeMode(mode, prefix) {
     reliability,
     equityCurve: equity || {},
   });
+
+  // T2 coherence guard — cross-check the just-written equity.json against the frozen seal.
+  // Only for the real per-mode pass (prefix truthy); the root copy (= balanced) is byte-identical
+  // and already verified in the loop, so skipping it avoids double-counting.
+  if (prefix) verifyEquityCoherence(modeId, mode.stats || {}, equity || {});
 
   // 5. orders.json — orders only valid on scan date
   // Modes that do not accept new entries (paused, stopped, pausing, liquidated, draft) emit empty orders.
@@ -718,6 +788,16 @@ if (fs.existsSync(CFG_HIST_PATH)) {
 if (brokerMap) {
   write('instruments.json', brokerMap);
   count++;
+}
+
+// ─── T2 coherence summary — equity.json ⇄ frozen source of truth ─────────────
+if (coherenceReport.checked > 0 || coherenceReport.warnings > 0) {
+  console.log(`\n[coherence] equity.json ⇄ frozen: ${coherenceReport.ok}/${coherenceReport.checked} OK, ${coherenceReport.warnings} divergence(s), ${coherenceReport.skipped} skipped (fresh mode / lib absent).`);
+  if (coherenceReport.warnings > 0) {
+    console.warn(`  [warn] [coherence] ${coherenceReport.warnings} mode(s) drift from the sealed curve — inspect the warnings above (non-fatal).`);
+  }
+} else if (!_modeStatsLib || !_frozenResults) {
+  console.log(`\n[coherence] guard inactive (${!_modeStatsLib ? 'mode-stats lib' : 'backtest-results.json'} unavailable).`);
 }
 
 console.log(`\nDone. ${count} endpoints written to portfolio/v1/ at ${now}`);
