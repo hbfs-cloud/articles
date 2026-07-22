@@ -79,6 +79,11 @@ Wait for async jobs via `Jobs(job_id=...)` (canonique, ex-CheckJobStatus/ListJob
 - Top movers, sector variations, trending themes
 - Screener candidates with scores
 
+**Manifeste de fraîcheur (skill `content-harness`, H2)** : tracer chaque source collectée dans
+`scanner/YYYYMMDD/harness.json` avec son `as_of` RÉEL (régime 6h, quotes/calendriers 24h, insiders 96h,
+SEC 168h). Avant Phase 4 (publish) : `node tools/check-freshness.js scanner/YYYYMMDD/harness.json` —
+**exit 1 = publication interdite** (recollecter, jamais estimer). `--warn-only` interdit en pipeline.
+
 ## Phase 2 — Ticker Selection & Validation
 
 ### Selection Rules (scanner-filters.json)

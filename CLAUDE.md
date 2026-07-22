@@ -197,8 +197,15 @@ Mis à jour à chaque publication (daily, weekly, scanner). Rédigé par Claude,
 ## Skill Index (auto-load par triggers)
 Skills dans `.claude/skills/` chargent à la demande selon les mots-clés du prompt. Liste :
 
+**Commandes éditoriales harnachées** (`.claude/commands/`) : `/daily`, `/weekly`, `/retro`, `/analyse`,
+`/series`, `/scanner` — chacune exécute le skill transverse `content-harness` (salves MCP complètes
+marketdata+systematic, manifeste `harness.json` + `tools/check-freshness.js` BLOQUANT anti-stale,
+war room retail avant rédaction, senior-review avant publication, erreurs bloquantes codifiées).
+Ne pas générer un daily/weekly/retro/analyse/series « à la main » quand la commande existe.
+
 | Skill | Trigger keywords |
 |-------|------------------|
+| `content-harness` | harness, harnais, war room, freshness, stale data, salve MCP, gate publication |
 | `mcp-forecast-timesfm` | forecast, TimesFM, ForecastRaw, ForecastVix, Backtest |
 | `mcp-gateway-tools` | QueryData, GetMarketContext, GetInstruments, RunScreener, Jobs, PortfolioRisk, GetEarningsCalendarFiltered, GetStatus, OptionsAnalytics, Polymarket |
 | `perf-parallel-mcp` | performance, lent, salve parallèle, isoler MCP, paralléliser, batch QueryData, scan-plan, scan-ingest-all, background pipeline (doctrine transverse — TOUT skill MCP l'applique) |
