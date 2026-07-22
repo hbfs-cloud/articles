@@ -31,7 +31,8 @@ noms canoniques ci-dessous pour que l'agent puisse charger l'outil.
   - `action='correlation', symbols='AAPL,MSFT'` (CSV, pas un array JSON !), `lookback_days`, `method` — ex-GetCorrelationMatrix
   - `action='sizing', signals=[JSON], constraints={JSON}, mode` — ex-OptimizeSizing
   - `action='var'` — ex-CalculatePortfolioVaR ; `action='stress'` — ex-GetPortfolioStressTest
-- **GetStatus** — remplace GetHealth/GetVersion
+- **GetStatus** — remplace GetHealth/GetVersion. Lire la FRAÎCHEUR des bars : `bar_service_1d_max_last_bar_date` + `bar_service_1d_ref_lag_sessions`. Si stale (lag > 1-2 séances) → **`RefreshBars`** (fire-and-forget ~4 min, full-univers ; `already_running` = déjà en cours) → **poller `GetStatus`** jusqu'à ce que `max_last_bar_date` avance, PUIS reprendre. Ne jamais publier/screener sur des bars périmés (cf. CLAUDE.md « FORCE-REFRESH avant stop »).
+- **RefreshBars** — force un refresh full-univers des bars daily (RAM + DuckDB), pour récupérer d'un cache figé sans redéploiement. Fire-and-forget (~4 min > cap async) : ne renvoie PAS de job_id, suivre via `GetStatus`.
 - **OptionsAnalytics** — remplace GetOptionsSentiment/CalculateOptionsGreeks/CalculatePortfolioGreeks/CalculateSABRVolatility/AnalyzeOptionsStrategy (vérifier les actions disponibles via sa description au moment de l'appel)
 - **GetEarningsCalendarFiltered**: days_ahead=7, min_expected_move=4 → exclusion_window — inchangé
 - **SUPPRIMÉS sans remplaçant direct** (retirer toute référence, ne plus appeler) : ScreenFundamentals, SaveDiscovery, ValidateDiscovery, GetTopDiscoveries, GetDiscoveryStats

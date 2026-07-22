@@ -115,13 +115,20 @@ Telegram ne supporte PAS le Markdown GitHub (`**bold**` reste en texte brut). Ut
 `daily`, `weekly`, `analysis`, `learning`, `scanner-turbo`, `scanner-dynamic`, `scanner-balanced`,
 `scanner-orbit`, `scanner-fortress`, `alerts`
 
-## ⛔ MCP HARD STOP (IMMUABLE)
-Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **renvoie des données incohérentes** (prix aberrants, NaN, valeurs stale > 48h) :
+## ⛔ MCP HARD STOP (IMMUABLE) — avec FORCE-REFRESH avant stop
+Si le MCP DailyTickers **bloque** (auth expirée, timeout, erreur réseau) ou **renvoie des données incohérentes** (prix aberrants, NaN) :
 1. **STOP IMMÉDIAT** — ne pas continuer la génération/correction d'article
 2. **Ne JAMAIS substituer** par des données inventées, estimées, ou issues de mémoire
 3. **Signaler** au user : « MCP indisponible, tâche suspendue »
 4. **Reprendre** uniquement quand le MCP est reconnecté ET qu'un test QueryData de contrôle renvoie des données fraîches
-Cette règle s'applique à TOUS les workflows : scanner, daily, weekly, analyses, retrospectives, refresh-analyses.
+
+### 🔄 Données STALE ≠ hard stop d'emblée — FORCE-REFRESH d'abord
+Si les données sont **vieilles** (bars en retard, `sessions_behind` > seuil, `max_last_bar_date` ancien, staging dtx périmé) mais le MCP répond, NE PAS hard-stopper tout de suite : **forcer le rafraîchissement** puis re-vérifier.
+- **marketdata** : `GetStatus` expose `bar_service_1d_max_last_bar_date` + `bar_service_1d_ref_lag_sessions`. Si stale (lag > 1-2 séances de marché), appeler **`RefreshBars`** (fire-and-forget ~4 min, full-univers) → **poller `GetStatus`** jusqu'à ce que `max_last_bar_date` avance / `ref_lag_sessions` retombe → puis reprendre. `already_running` = un refresh est déjà en cours, poller.
+- **systematic (dtx)** : `GetHealth` / `DtxDecide` renvoient `data_asof`/`last_data_date`/`sessions_behind` (et un statut `stale_data` sans actions si trop en retard). Si stale, appeler **`DtxRefreshBars`** (fire-and-forget ~4 min) → **poller `GetHealth`** (`prefetch.running` repasse false, `last_data_date` avance) → puis re-`DtxDecide`.
+- **Seulement si** le force-refresh échoue / ne rattrape pas (données toujours stale après refresh) → appliquer le HARD STOP ci-dessus. NE JAMAIS publier/backtester sur des bars périmés « faute de mieux ».
+
+Cette règle s'applique à TOUS les workflows : scanner, daily, weekly, analyses, retrospectives, refresh-analyses. Nos skills/scripts DOIVENT savoir invoquer `RefreshBars`/`DtxRefreshBars` face à des données trop vieilles.
 
 ## ⚠️ LECTURE OBLIGATOIRE AVANT GÉNÉRATION
 Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fichier JSON cible** (`data/daily.json`, `data/weekly.json`, etc.) pour :

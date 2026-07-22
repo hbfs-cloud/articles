@@ -442,7 +442,7 @@ Go à casser, univers US couvert par le MCP, facteurs prix-only). La source LOCA
 **Câblage (identique au pattern pead/dtx — un `node` NE PEUT PAS appeler le MCP, OAuth2 zéro token).**
 C'est une **ÉTAPE AGENT** exécutée AVANT `factor-scanner.js` :
 
-1. L'AGENT appelle `mcp__marketdata__GetStatus` (preflight : healthy, pas stale > 48h — sinon **STOP**, MCP HARD STOP).
+1. L'AGENT appelle `mcp__marketdata__GetStatus` (preflight : healthy + fraîcheur `bar_service_1d_ref_lag_sessions`/`max_last_bar_date`). **Si stale** (lag > 1-2 séances) → **`RefreshBars`** (fire-and-forget ~4 min) puis **poller `GetStatus`** jusqu'à rattrapage AVANT de continuer. **STOP** (MCP HARD STOP) seulement si le refresh ne rattrape pas.
 2. `RunScreener(region:"us", asset:"stock", pass_expr:"vol>1500000 && close>10", score_expr:"vol(share)", force_async:true)` → poller `Jobs`.
    🔴 **JAMAIS `market_cap` dans `pass_expr`** (→ 0 candidat silencieux) : post-filtrer `market_cap>=2e9` **en code** côté agent.
 3. `QueryData(types="bars_daily")` 5y ajusté sur le top univers → l'agent calcule momentum 12-1 + low-vol +
@@ -479,6 +479,8 @@ claude.ai, règle ZÉRO token en .env). Seul l'**AGENT** (Claude Code en local ;
 cloud) détient `mcp__claude_ai_systematic__*`. Donc le staging est une **ÉTAPE AGENT, exécutée AVANT le
 pipeline shell** (`publish-daily-card.sh` / `gen-status-page`) :
 **agent → DtxReplay/DtxDecide (async → poll DtxJobStatus) → écrit les JSON bruts → `dtx-mcp-ingest.js` → staging**.
+
+**🔄 Fraîcheur dtx.** `DtxDecide`/`DtxRegime`/`GetHealth` renvoient `data_asof`/`last_data_date`/`sessions_behind` ; un retard trop grand donne un statut `stale_data` (sans actions). Face à des bars dtx périmés, l'AGENT appelle **`DtxRefreshBars`** (fire-and-forget ~4 min, refresh full-univers de tous les portefeuilles) → **poller `GetHealth`** (`prefetch.running` repasse false, `last_data_date` avance, ~10 min de fenêtre) → puis re-`DtxDecide`. `expected_data_date` (contrat de date sur `DtxDecide`) recommandé en live pour refuser un « monde d'hier » silencieux. Ne backtester/décider JAMAIS sur des bars stale — force-refresh d'abord (cf. CLAUDE.md « FORCE-REFRESH avant stop »).
 
 **Chaîne async (obligatoire).** `DtxDecide`/`DtxReplay` renvoient `{status:"async_pending", job_id}`.
 Poller `DtxJobStatus(job_id)` jusqu'à `status:"done"` → lire `result` (isolé par job_id). Le cache serveur
