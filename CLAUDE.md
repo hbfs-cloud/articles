@@ -128,7 +128,12 @@ Si les données sont **vieilles** (bars en retard, `sessions_behind` > seuil, `m
 - **systematic (dtx)** : `GetHealth` / `DtxDecide` renvoient `data_asof`/`last_data_date`/`sessions_behind` (et un statut `stale_data` sans actions si trop en retard). Si stale, appeler **`DtxRefreshBars`** (fire-and-forget ~4 min) → **poller `GetHealth`** (`prefetch.running` repasse false, `last_data_date` avance) → puis re-`DtxDecide`.
 - **Seulement si** le force-refresh échoue / ne rattrape pas (données toujours stale après refresh) → appliquer le HARD STOP ci-dessus. NE JAMAIS publier/backtester sur des bars périmés « faute de mieux ».
 
-Cette règle s'applique à TOUS les workflows : scanner, daily, weekly, analyses, retrospectives, refresh-analyses. Nos skills/scripts DOIVENT savoir invoquer `RefreshBars`/`DtxRefreshBars` face à des données trop vieilles.
+### 📅 Contrat de DATE DE RÉFÉRENCE en input (complément anti-« monde d'hier »)
+Le force-refresh récupère les données ; le **contrat de date** empêche de les consommer stale **sans s'en apercevoir**. Passer la date de séance visée EN INPUT des calls de données — le serveur REFUSE/FLAGGE au lieu de renvoyer silencieusement la veille :
+- **systematic (dtx)** : `DtxDecide(..., expected_data_date="YYYY-MM-DD")` et `DtxRegime(..., expected_data_date=...)` — le serveur renvoie `status:"data_date_mismatch"` (sans actions) si les OHLCV n'atteignent pas cette date. **OBLIGATOIRE en live** : passer la clôture qu'on veut trader (souvent la séance J), pour que « on a silencieusement pris le monde d'hier » soit impossible au bord clôture/ingestion.
+- **marketdata** : borner explicitement avec `QueryData(end_date=D[, form_types])` et `GetInstruments(as_of=D)` pour le point-in-time (sec_filings/financials/earnings/insider → jamais un filing POSTÉRIEUR à D, leçons IOVA/INDO). En amont, vérifier la fraîcheur via `GetStatus` (`max_last_bar_date`/`ref_lag_sessions`) avant la salve.
+
+Cette règle s'applique à TOUS les workflows : scanner, daily, weekly, analyses, retrospectives, refresh-analyses. Nos skills/scripts DOIVENT (1) invoquer `RefreshBars`/`DtxRefreshBars` face à des données trop vieilles ET (2) passer la date de référence (`expected_data_date`/`end_date`/`as_of`) en input pour ne jamais consommer un « monde d'hier » en silence.
 
 ## ⚠️ LECTURE OBLIGATOIRE AVANT GÉNÉRATION
 Avant de générer un article ou d'appeler `add_card.js`, **TOUJOURS lire le fichier JSON cible** (`data/daily.json`, `data/weekly.json`, etc.) pour :
