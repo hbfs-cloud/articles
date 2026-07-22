@@ -33,7 +33,7 @@ RunScreener call params: `pass_expr` (boolean filter), `score_expr` (numeric ran
 `$ARGUMENTS` — Options:
 - *(empty)* — auto-detect next trading day, full pipeline with validation
 - `--date YYYYMMDD` — target a specific scan date
-- `--skip-validation` — skip the 7-agent QA pass (faster, routine scans)
+- `--skip-validation` — skip the 7-agent QA pass. **RÉSERVÉ à un run interactif avec accord explicite du user dans la session. INTERDIT aux routines/runs autonomes** : la règle durable `analysis-senior-review-first` exige le panel AVANT publication, jamais en rattrapage (violée par le run nocturne du 22/07 — risk_gating vide + zéro panel, corrigé a posteriori).
 - `--skip-downstream` — stop after publish (no sweep, status page, API, Telegram)
 - `--dry-run` — generate data.json only, no publish or push
 
@@ -268,7 +268,10 @@ Outputs `data/rolling-walk-forward.json` + markdown summary. Per-mode rolling-N-
 - **TKL pool**: `modes-config.json#tklPoolEnabled` per-mode gate respected. Time Machine backfill present in `scanner/status/history/*.json` (commit 4a39aea3).
 - **BSD date fallback**: any `date -d` in shell scripts must have BSD `date -v` fallback (publish-daily-card.sh helper).
 
-## Phase 6 — Multi-Agent Validation (skip with --skip-validation)
+## Phase 6 — Multi-Agent Validation (skip UNIQUEMENT en interactif avec accord user)
+
+**Deux invariants NON négociables, même en fast-path :** (1) le panel senior-review tourne AVANT le push final de la session de scan ; (2) `data.json#engine_meta.risk_gating` doit porter les champs réels (ensemble_confidence, crisis_prob_5d, max_pair_correlation, avg_off_diagonal_correlation, sizing) — un bloc vide = le risk gating de Phase 2 n'a pas tourné = scan NON conforme (garde qa-check `risk_gating non vide`).
+
 
 Spawn 7 parallel validation agents:
 

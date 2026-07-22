@@ -780,6 +780,25 @@ check('signals.json (dernier scan): distance_50dma_pct ≤ cap par stratégie', 
   if (missing.length === (sig.signals || []).length) return `${scanDir} — extension field absent sur tous les signaux (skip — pre-extension-filter scan)`;
 });
 
+// ─── Check 25d: risk_gating non vide sur le dernier scan (incident 22/07/2026) ────
+// Le run nocturne du 22/07 a publié avec engine_meta.risk_gating = {} : ni corrélation, ni
+// crise, ni sizing — le risk gating de Phase 2 n'avait pas tourné. Un bloc vide = ❌.
+check('scanner (dernier scan): engine_meta.risk_gating non vide (corrélation + crise + sizing)', () => {
+  const scannerDir = path.join(ROOT, 'scanner');
+  const dirs = fs.readdirSync(scannerDir).filter(d => /^\d{8}$/.test(d)).sort().reverse();
+  for (const d of dirs) {
+    const p = path.join(scannerDir, d, 'data.json');
+    if (!fs.existsSync(p)) continue;
+    let data; try { data = JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return `${d}: data.json illisible`; }
+    const rg = (data.engine_meta || {}).risk_gating || {};
+    const need = ['max_pair_correlation', 'crisis_prob_5d'];
+    const missing = need.filter(k => rg[k] == null);
+    if (missing.length) return `${d}: risk_gating incomplet — champs manquants: ${missing.join(', ')} (Phase 2 risk gating non exécutée ?)`;
+    return; // dernier scan seulement
+  }
+  return 'aucun scan trouvé';
+});
+
 // ─── Check 25c: dtx-live-track — série live scriptée fraîche (audit 21/07/2026) ──
 // Deux semaines de modes dtx live sans historique accumulé ni drift : ne doit JAMAIS se
 // reproduire. La série data/dtx-live-track.json doit exister et porter, pour chacun des 6
