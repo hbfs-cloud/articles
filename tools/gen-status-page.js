@@ -1200,7 +1200,9 @@ async function main() {
       positions.push({
         ticker: t.ticker, scan_date: t.scanDate, entry, current_price: currentPrice,
         return_pct: ret, score: t.score || 0,
-        stop, tp1: t.tp1 || 0, tp2: t.tp2 || null,
+        // Les trades pending portent actualTp1/actualTp2 (posés par le sweep), PAS tp1/tp2 →
+        // sans ce fallback toutes les positions ouvertes affichaient tp1=0 / tp2=null (bug 23/07).
+        stop, tp1: t.actualTp1 || t.tp1 || 0, tp2: t.actualTp2 || t.tp2 || null,
         vwap: t.vwap || (lp && lp.vwap) || null,
         // days_remaining MUST reflect THIS mode's horizon (not scanner-positions.json's
         // per-ticker expire_date, which ignored the mode and showed e.g. 22d in a H8 mode).
@@ -1214,7 +1216,7 @@ async function main() {
         entry: t.actualEntry || t.entry || 0,
         current_price: t.exitPrice || t.actualEntry || 0,
         return_pct: t.pnlPct || 0, score: t.score || 0,
-        stop: t.actualStop || t.stop || 0, tp1: t.tp1 || 0, tp2: t.tp2 || null,
+        stop: t.actualStop || t.stop || 0, tp1: t.actualTp1 || t.tp1 || 0, tp2: t.actualTp2 || t.tp2 || null,
         vwap: t.vwap || null, days_remaining: 0,
         strategy: t.strategy || '', thesis: thesisMap[t.ticker] || '',
         _terminal: true, _terminalStatus: t.status,
