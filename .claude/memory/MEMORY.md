@@ -113,3 +113,4 @@
 - [Momentum crash & loss-based breakers](project_momentum_crash_loss_breakers.md) — crash momentum invisible au macro (score risk-on + VIX calme) → coupe-circuits loss-based only ; feed regimeScore contaminé ; méthodo backtest versionné forward ; garde-fou anti-gel frozen ; force-refresh MCP
 - [Scanner workflow token blowup](feedback_scanner_workflow_token_blowup.md) — fan-out 1 agent/ticker chacun appelant le MCP = 4.3M tokens ; batcher QueryData multi-symbole AVANT le fan-out, raisonner sur le pré-fetché (perf R7)
 - [Frozen orphan trade (append limit)](feedback_frozen_orphan_trade.md) — un trade résolu sur/avant la pointe scellée devient orphelin (72 clos / 71 agrégé) ; non corrigeable sans réécrire le scellé → garder le frozen, ne jamais overwrite from-scratch
+- [Sharia defense-revenue exclusion](feedback_sharia_defense_revenue.md) — defense/military revenue >5% ⇒ non-compliant even with clean debt (HXL incident 20260728)
