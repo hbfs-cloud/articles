@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "Une reprise sans moteur : Fed, PCE et Amazon",
+    "desc": "Weekly DailyTickers du 27 au 31 juillet 2026. Le pétrole a fait l'aller-retour sur la détente Iran-US, la tech reste la ligne de fracture, le régime revient en RECOVERY mais sans moteur. FOMC mercredi, Core PCE et PIB jeudi, Amazon jeudi soir, inflation zone euro vendredi. Plan complet, niveaux et 3 trades.",
+    "tags": "us,eu,asia,crypto,commodity,energy,macro,earnings,technique,trade-idea,etf,financials",
+    "grade": "",
+    "href": "/weekly/20260727/",
+    "date": "27 juillet 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Ormuz, la BCE et le vrai test du AI trade",
     "desc": "Weekly DailyTickers du 20 au 24 juillet 2026. Escalade dans le détroit d'Ormuz, WTI à 81,78 $, semis en bear market, Alphabet/Tesla mercredi, Intel jeudi, BCE jeudi. Régime NEUTRAL 61%, plan complet, niveaux et trades.",
     "tags": "us,eu,asia,crypto,commodity,energy,geopolitique,macro,earnings,technique,trade-idea,etf",
@@ -4600,6 +4613,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/scanner/status/",
     "date": "Updated continuously"
+  },
+  {
+    "type": "scanner",
+    "icon": "fa-satellite-dish",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "Top 10 A+ NEUTRAL · MET, CSX, PKG, MPC, HXL, ISP.MI, ZAL.DE, TAK, VFLO, LVHI",
+    "desc": "Le marché est constructif mais sans conviction : les indices tiennent grâce à un crédit sain et une volatilité contenue (VIX 18,7), mais aucun secteur ne prend franchement la tête. Le signal du jour est clair dans la rotation : les semi-conducteurs et la tech ont été punis (matériel informatique, éq...",
+    "tags": "us,eu,asia,etf,financials,energy,industrials,materials,healthcare,macro,technique,trade-idea,value,defensive",
+    "grade": "",
+    "href": "/scanner/20260728/",
+    "date": "mardi 28 juillet 2026"
   },
   {
     "type": "scanner",
