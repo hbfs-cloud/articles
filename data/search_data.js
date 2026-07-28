@@ -1341,6 +1341,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "",
+    "exchange": "",
+    "name": "Or, argent, Bitcoin, Ethereum, Brent — 45 setups classés par risque (28 juillet 2026)",
+    "title": "Or, argent, Bitcoin, Ethereum, Brent — 45 setups classés par risque (28 juillet 2026)",
+    "desc": "Cinq actifs, trois niveaux de risque, trois valeurs par niveau : 45 setups. Univers sourcé via référentiels + screener ; stops calés sur l'ATR, cibles sur les moyennes mobiles réelles. Pour un investisseur retail agile et peu capitalisé.",
+    "tags": "commodity,crypto,gold,energy,macro,technique,trade-idea,speculative",
+    "grade": "",
+    "href": "/analyses/setups-actifs-20260728/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "SNEX",
     "exchange": "NASDAQ · Financial Services",
     "name": "SNEX — Momentum setup, score 72/100. TP1 hit — extended at ATH, wait for pullback.",
