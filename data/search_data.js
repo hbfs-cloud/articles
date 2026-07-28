@@ -4646,7 +4646,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RECOVERY · COP, ADM, FTNT, IBKR, NTRA, EVK.DE, VOD, SONY, XLU, XBI",
+    "title": "Top 10 A+ RECOVERY · COP, ADM, CRWD, IBKR, NTRA, EVK.DE, VOD, SE, XLU, XBI",
     "desc": "Deux lectures du régime coexistent ce soir, et l'écart lui-même est le signal. Le modèle d'ensemble voit un marché risk-on (confiance 0,76), pendant que le moteur systématique lit une RECOVERY (score 0,66) : le S&P a bien repris ses moyennes 100 et 200 jours mais reste sous sa moyenne 50, et le VIX ...",
     "tags": "us,eu,asia,etf,energy,staples,healthcare,materials,financials,macro,technique,trade-idea,value,defensive",
     "grade": "",
