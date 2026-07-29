@@ -820,6 +820,24 @@ async function main() {
           if (ec.d[ec.d.length - 1] !== _todayLbl) { ec.d.push(_todayLbl); ec.v.push(_mtmVal); }
         }
       }
+      // ── RÉGRESSION FIX (2026-07-29) ── Modes SCELLÉS : le sweep écarte les trades non résolus
+      // (lastDate < expireDate → null), donc _openLive est VIDE et la queue MtM ne s'étendait
+      // jamais → chart figé au dernier trade résolu (ex. 24/07 alors qu'on est le 29). On prolonge
+      // alors le CHART via la couche forward (pit-forward.js) : son ec est ancrée sur l'endpoint
+      // scellé COURANT (forward.ec[anchorLbl] == ec dernier point ; baseline=anchorValue, plus de
+      // bug 212-vs-100 corrigé par le hardening pit-forward). On n'ajoute QUE les points datés
+      // APRÈS le dernier point scellé → aucun double-comptage. Hero + sealedV (R²/CAGR/Sharpe)
+      // restent le RECORD scellé (copiés plus haut) — seule la queue visuelle du chart bouge.
+      const _fwdTail = (pitForwardModes && pitForwardModes[id]) ? forwardViewFor(pitForwardModes[id]) : null;
+      if (!_openLive.length && _fwdTail && _fwdTail.hasPostAnchor && _fwdTail.ec && _fwdTail.ec.d.length && ec.d.length) {
+        const _fd = _fwdTail.ec.d, _fv = _fwdTail.ec.v;
+        const _si = _fd.lastIndexOf(ec.d[ec.d.length - 1]); // aligne sur le dernier point scellé
+        if (_si >= 0) {
+          for (let i = _si + 1; i < _fd.length; i++) {
+            if (ec.d[ec.d.length - 1] !== _fd[i]) { ec.d.push(_fd[i]); ec.v.push(_fv[i]); }
+          }
+        }
+      }
     } else {
       // Mode FRAIS sans AUCUN trade daté (courbe non constructible depuis les trades — ex. mode en
       // 'test' à 0 trade clos). SOURCE UNIQUE (2026-07-22) : on NE lit PLUS modeEquityHistory
@@ -3960,6 +3978,21 @@ document.addEventListener('DOMContentLoaded',function(){
         d: [...hist.map(p => p.d), todayLabel],
         v: [...hist.map(p => p.v), todayMtm]
       };
+    }
+    // ── RÉGRESSION FIX (2026-07-29) ── La courbe SNAPSHOT (celle qu'affiche le chart, cf L~3331)
+    // s'arrêtait au dernier point frozen (ex. 24/07 alors qu'on est le 29) : le sweep écarte les
+    // trades non résolus, donc aucune queue MtM. On prolonge jusqu'à aujourd'hui avec la couche
+    // forward LISSÉE (pit-forward.js) — ancrée sur l'endpoint frozen COURANT (forward.ec[anchorLbl]
+    // == frozen dernier point), donc continuité parfaite, pas de discontinuité ni de bug 212-vs-100
+    // (baseline=anchorValue). Hero (stats.ret) INCHANGÉ = frozen. On n'ajoute QUE les points datés
+    // APRÈS le dernier point frozen → zéro double-comptage. Requiert pit-forward.js frais en amont.
+    const _fwdSnap = pitForwardModes[id] ? forwardViewFor(pitForwardModes[id]) : null;
+    if (_fwdSnap && _fwdSnap.hasPostAnchor && _fwdSnap.ec && _fwdSnap.ec.d.length && ec.d.length) {
+      const _fd = _fwdSnap.ec.d, _fv = _fwdSnap.ec.v;
+      const _si = _fd.lastIndexOf(ec.d[ec.d.length - 1]);
+      if (_si >= 0) for (let i = _si + 1; i < _fd.length; i++) {
+        if (ec.d[ec.d.length - 1] !== _fd[i]) { ec.d.push(_fd[i]); ec.v.push(_fv[i]); }
+      }
     }
     // Compute closeNow (timed out positions) first — they free slots for orders
     function bizDaysHeldSnap(sd) { if (!sd) return 0; return Math.round(Math.round((Date.now() - new Date(sd)) / 86400000) * 5 / 7); }

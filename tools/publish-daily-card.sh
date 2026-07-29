@@ -282,12 +282,12 @@ if [ "$SKIP_SWEEP" = false ]; then
   echo "   Replay done."
 
   # ─── Step 4c: Forward continuity layer (sealed anchor + post-anchor delta) ──
-  # DÉPRÉCIÉ (2026-07-22) POUR L'AFFICHAGE : pit-forward.json n'est PLUS consommé par
-  # gen-status-page.js ni gen-api.js. Source unique de la perf affichée = le sweep frozen
+  # RÉ-ACTIVÉ (2026-07-29) : pit-forward.json est de nouveau consommé par gen-status-page (queue MtM
+  # du CHART uniquement, ancrée sur endpoint frozen — hero scellé INCHANGÉ, bug 212-vs-100 corrigé).
   # (computeStatsFromTrades). L'étape est donc SKIPPÉE par défaut ; on la conserve derrière
   # un flag opt-in (ENABLE_PIT_FORWARD=1) pour référence / rollback uniquement.
   echo ""
-  if [ "${ENABLE_PIT_FORWARD:-0}" = "1" ]; then
+  if [ "${ENABLE_PIT_FORWARD:-1}" != "0" ]; then
     echo "🧭 Step 4c: Forward continuity (pit-forward) [opt-in ENABLE_PIT_FORWARD=1]..."
     node tools/pit-forward.js 2>&1 | tail -10 || echo "⚠️  pit-forward failed (non-blocking — sealed hero stays)"
   else
