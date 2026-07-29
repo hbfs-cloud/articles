@@ -50,6 +50,19 @@ const { fetchOHLCV, priceCache, getWeight } = sweep;
 
 const ROOT = path.join(__dirname, '..');
 const RESULTS_PATH = path.join(ROOT, 'data', 'backtest-results.json');
+
+// Modes SCRIPTÉS (assetClass:'dtx') : pilotés par le moteur systematic-tss via le MCP. Ils n'ont
+// AUCUNE notion de poids scanner / config-history — leur equity vient du staging dtx (data/dtx/*.json,
+// replay MCP), lu directement par gen-status-page. pit-forward (poids via getWeight + garde I6) ne
+// s'applique donc PAS à eux : on les SAUTE (sinon faux « configVersion introuvable … I6 » parasites).
+let MODES_CFG = {};
+try {
+  const _mc = JSON.parse(fs.readFileSync(path.join(ROOT, 'data', 'modes-config.json'), 'utf8'));
+  const _arr = _mc.modes || _mc;
+  if (Array.isArray(_arr)) { for (const m of _arr) if (m && (m.id || m.slug)) MODES_CFG[m.id || m.slug] = m; }
+  else { for (const [k, v] of Object.entries(_arr)) if (v && typeof v === 'object') MODES_CFG[k] = v; } // objet clé-par-id
+} catch (_) { /* absent → tout traité comme discrétionnaire (comportement historique) */ }
+const isDtxMode = (id) => !!(MODES_CFG[id] && (MODES_CFG[id].assetClass === 'dtx' || MODES_CFG[id].filterName === 'dtx_engine'));
 const TRADES_PATH = path.join(ROOT, 'data', 'backtest-trades.json');
 const CFG_HIST_PATH = path.join(ROOT, 'data', 'modes-config-history.json');
 const OUT_PATH = path.join(ROOT, 'data', 'pit-forward.json');
@@ -136,6 +149,15 @@ function latestPriceDate(ticker) {
 async function forwardForMode(id, frozen, allTrades, cfgVersions) {
   const reasons = [];
   let healthy = true;
+
+  // Modes scriptés (dtx) : hors périmètre pit-forward — leur equity vient du MCP (staging dtx),
+  // pas des poids scanner. On les saute proprement (pas de forward, pas d'erreur configVersion/I6).
+  if (isDtxMode(id)) {
+    return { mode: id, healthy: false, skipped: true,
+      reasons: ['mode scripté (dtx) — piloté par le MCP (staging dtx), hors périmètre pit-forward (pas de poids scanner)'],
+      anchorDate: null, anchorValue: null, asOf: null, ec: [], ret: null, dd: null, wr: 0, pf: 0,
+      trades: 0, avgHold: 0, unrealized: 0, newPoints: 0, sealedLen: 0 };
+  }
 
   const sealed = (frozen.equityCurve || []).filter(p => p && p.date);
   if (sealed.length === 0) {
