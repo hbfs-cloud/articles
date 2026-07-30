@@ -1,5 +1,5 @@
 {
-  "_comment": "Hard rules enforced pre-publish on every scan. Source of truth \u2014 NOT editorial. tools/validate-scan.js asserts these against scanner/YYYYMMDD/signals.json before publication.",
+  "_comment": "Hard rules enforced pre-publish on every scan. Source of truth — NOT editorial. tools/validate-scan.js asserts these against scanner/YYYYMMDD/signals.json before publication.",
   "_updated": "2026-06-30",
   "_provenance": "Encoded from scanner/CLAUDE.md + retrospective learnings (Apr 6 INDO dilution, Mar 27 stop tightness, Mar 13 EU FX headwind, Feb 27 Short Squeeze 0% WR).",
   "strategies": {
@@ -31,7 +31,7 @@
     "min_market_cap_usd": 10000000,
     "min_avg_daily_volume_usd": 2000000,
     "validation_identical_to_main": true,
-    "_reason": "TKL targets small-caps by design. $10M mcap floor avoids penny stocks. $2M ADV ensures basic liquidity. All other filters (dilution, earnings \u00b13d, sharia) apply identically."
+    "_reason": "TKL targets small-caps by design. $10M mcap floor avoids penny stocks. $2M ADV ensures basic liquidity. All other filters (dilution, earnings ±3d, sharia) apply identically."
   },
   "dilution_blocklist": {
     "_comment": "Underwriters known for serial dilution / toxic financing. Block tickers whose recent 424B/S-3 includes any of these names.",
@@ -121,11 +121,11 @@
   "earnings_window": {
     "exclude_days_before": 3,
     "exclude_days_after": 3,
-    "_reason": "TimesFM directional accuracy drops to 40% within \u00b13d of earnings vs 56% baseline. Setups are unreliable."
+    "_reason": "TimesFM directional accuracy drops to 40% within ±3d of earnings vs 56% baseline. Setups are unreliable."
   },
   "candlestick": {
     "_comment": "Trading filter for candlestick/bull signals. Detection uses 1.0x (like Go ab-scan-history). Trading uses 8.0x (like Go portfolio config). sweep.js checks this when simulating candlestick trades.",
-    "min_vol_ratio_trading": 8.0,
+    "min_vol_ratio_trading": 8,
     "min_score_trading": 60,
     "_reason": "Matches systematic-tss portfolio_us_americanbulls.yaml min_vol_ratio: 8.0. Separates detection (all patterns) from trading (high-conviction only)."
   },
@@ -136,7 +136,7 @@
     "_reason": "Mar 27 retro: stops < 1.5x ATR triggered intraday before recovery on 3 setups. Floor at 3% absolute."
   },
   "overextension": {
-    "_comment": "Block parabolic / late-stage setups. Encoded from VRT failure May 18 (entry $367 \u2192 SL $336 same-day, -7.9% on AI-leader sell-off). VRT was +27% in 6 weeks, +38% above 50-DMA, RSI > 75 \u2014 pure narrative momentum with no technical health.",
+    "_comment": "Block parabolic / late-stage setups. Encoded from VRT failure May 18 (entry $367 → SL $336 same-day, -7.9% on AI-leader sell-off). VRT was +27% in 6 weeks, +38% above 50-DMA, RSI > 75 — pure narrative momentum with no technical health.",
     "max_distance_50dma_pct_by_strategy": {
       "Momentum": 20,
       "Breakout": 25,
@@ -412,23 +412,54 @@
   "regime_strategy_gates": {
     "_comment": "Strategy caps per regime — added 2026-06-30 after 4 Pullback signals in ERO violated lesson pullback-regime-confidence-gate.",
     "EARLY RISK-OFF": {
-      "Pullback": { "max_count": 1, "min_regime_confidence": 60 },
-      "Breakout": { "max_count": 0 },
-      "Momentum": { "max_count": 4 }
+      "Pullback": {
+        "max_count": 1,
+        "min_regime_confidence": 60
+      },
+      "Breakout": {
+        "max_count": 0
+      },
+      "Momentum": {
+        "max_count": 4
+      }
     },
     "RISK-OFF": {
-      "Pullback": { "max_count": 0 },
-      "Breakout": { "max_count": 0 },
-      "Momentum": { "max_count": 2 }
+      "Pullback": {
+        "max_count": 0
+      },
+      "Breakout": {
+        "max_count": 0
+      },
+      "Momentum": {
+        "max_count": 2
+      }
     },
     "_reason": "ERO lesson: Pullback blocked below 60% regime confidence + max 1 in ERO. Breakout 0% WR in ERO across 3+ retros. Momentum capped per regime-score-label-lag rule."
   },
   "audit_gates": {
     "_comment": "Gates bloquants issus de l'audit scanner 13-19/07/2026 (mémoire tag lecon-20260717). G1 entry-strategy-coherence, G2 etf-lookthrough-correlation-cap (+ exited_factors), G3 regime-score-label-lag extension décrochage. Contrat d'enrichissement + détail : docs/scanner-gates.md. active_from grandfathere les scans publiés avant l'audit.",
     "active_from": "2026-07-21",
-    "entry_strategy_coherence": { "strategies": ["Momentum", "Breakout"], "tolerance_pct": 0.1 },
-    "etf_lookthrough": { "max_per_cluster": 2 },
-    "regime_score_drop": { "window_sessions": 5, "drop_pts": 15, "momentum_cap_pct": 20 }
+    "entry_strategy_coherence": {
+      "strategies": [
+        "Momentum",
+        "Breakout"
+      ],
+      "tolerance_pct": 0.1
+    },
+    "etf_lookthrough": {
+      "max_per_cluster": 2
+    },
+    "regime_score_drop": {
+      "window_sessions": 5,
+      "drop_pts": 15,
+      "momentum_cap_pct": 20
+    },
+    "pipeline_order": {
+      "active_from": "2026-07-31",
+      "min_screened_ratio": 2,
+      "require_source_per_signal": true,
+      "_reason": "G4 — incident 20260730. La doctrine perf (perf-parallel-mcp R2) place le filtre resultats en Vague 1, AVANT l'enrichissement par ticker; rien ne le forcait. Le 30/07 il a tourne en Vague 3: F et PFE sont morts APRES leur salve d'enrichissement complete (~15 min de reprise), et le calendrier previsionnel avait laisse passer 10 titres deja publies. Ce gate exige la preuve de l'ordre dans signals.json#_pipelineOrder + earnings_source='8k_item_202' par ligne. active_from grandfathere les scans anterieurs."
+    }
   },
   "vix_kill_switch": {
     "_comment": "Regime-based position sizing. Applied in tools/sweep.js via regimeSizeMultiplier(). Halves drawdown during stress episodes.",
@@ -479,8 +510,8 @@
       "RISK-ON": 1.5,
       "NEUTRAL": 1.5,
       "RECOVERY": 1.5,
-      "EARLY RISK-OFF": 2.0,
-      "RISK-OFF": 2.0
+      "EARLY RISK-OFF": 2,
+      "RISK-OFF": 2
     }
   }
 }

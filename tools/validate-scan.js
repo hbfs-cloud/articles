@@ -757,6 +757,59 @@ async function main() {
     }
   }
 
+  // ── Gate G4 pipeline-order (incident 20260730) ───────────────────────────────
+  // La doctrine perf (.claude/skills/perf-parallel-mcp.md, R2) place le filtre
+  // résultats en Vague 1, AVANT l'enrichissement par ticker. Rien ne le forçait :
+  // le 30/07 il a tourné en Vague 3, et F + PFE sont morts APRÈS avoir consommé
+  // leur salve d'enrichissement complète (~15 min de reprise). Ce gate exige la
+  // preuve de l'ordre, pas la bonne volonté. `active_from` grandfathere les scans
+  // antérieurs — on ne réécrit pas l'histoire d'un scan déjà publié.
+  const g4 = (filters.audit_gates || {}).pipeline_order;
+  if (g4 && scanISO && (!g4.active_from || scanISO >= g4.active_from)) {
+    const rawOrder = loadRawSignalsJson(dir);
+    const po = rawOrder && rawOrder._pipelineOrder;
+    const pub = rawOrder && Array.isArray(rawOrder.signals)
+      ? rawOrder.signals.filter(s => (s.strategy || '') !== 'Candlestick') : [];
+    if (!po || typeof po !== 'object') {
+      violations.push({
+        rule: 'pipeline_order',
+        message: 'signals.json sans bloc _pipelineOrder {earnings_screened_at, enrichment_started_at, candidates_screened} — ordre filtre-avant-enrichissement invérifiable (fail-closed).'
+      });
+    } else {
+      const tScreen = Date.parse(po.earnings_screened_at || '');
+      const tEnrich = Date.parse(po.enrichment_started_at || '');
+      if (!Number.isFinite(tScreen) || !Number.isFinite(tEnrich)) {
+        violations.push({
+          rule: 'pipeline_order',
+          message: '_pipelineOrder: earnings_screened_at / enrichment_started_at absents ou non ISO-8601 — ordre invérifiable (fail-closed).'
+        });
+      } else if (tScreen >= tEnrich) {
+        violations.push({
+          rule: 'pipeline_order',
+          message: `_pipelineOrder: filtre résultats (${po.earnings_screened_at}) postérieur ou simultané à l'enrichissement (${po.enrichment_started_at}) — le vivier a été enrichi avant d'être filtré. Rejouer la Vague 1 avant la Vague 3.`
+        });
+      }
+      const screened = Number(po.candidates_screened);
+      const ratio = g4.min_screened_ratio ?? 2;
+      if (!Number.isFinite(screened) || screened < pub.length * ratio) {
+        violations.push({
+          rule: 'pipeline_order',
+          message: `_pipelineOrder.candidates_screened=${po.candidates_screened} — le filtre résultats doit couvrir le vivier COMPLET (≥ ${ratio}× les ${pub.length} lignes publiées), pas la sélection finale.`
+        });
+      }
+      if (g4.require_source_per_signal) {
+        for (const s of pub) {
+          if (String(s.earnings_source || '') !== '8k_item_202') {
+            violations.push({
+              rule: 'pipeline_order',
+              message: `${s.ticker}: earnings_source absent ou ≠ "8k_item_202" — la date de résultats vient du dépôt 8-K item 2.02, jamais du calendrier prévisionnel (10 faux négatifs le 20260730 : F, AWK, EXR, REG, FE, CNC, IVZ, LYV, KKR, OWL, RAL).`
+            });
+          }
+        }
+      }
+    }
+  }
+
   // 10. tp1-horizon-calibration — TP1 too far for horizon
   for (const s of signals) {
     if (typeof s.entry !== 'number' || typeof s.stop !== 'number' || typeof s.tp1 !== 'number') continue;

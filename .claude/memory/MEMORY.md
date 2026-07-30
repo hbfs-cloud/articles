@@ -116,3 +116,4 @@
 - [Sharia defense-revenue exclusion](feedback_sharia_defense_revenue.md) — defense/military revenue >5% ⇒ non-compliant even with clean debt (HXL incident 20260728)
 - [Earnings date → ground truth = 8-K item 2.02](feedback_earnings_calendar_authoritative.md) — calendar/next_earnings feeds are insufficient (FTNT 20260729, then 10 same-window reporters hidden on 20260730: F, AWK, EXR, REG, FE, CNC, IVZ + LYV/KKR/OWL/RAL same-day)
 - [marketdata path & coverage traps](feedback_marketdata_path_and_coverage_traps.md) — bars_daily windowed vs unwindowed lag a session; RefreshBars in market hours writes a partial bar; EU 29/07 gap unfixable; support_resistance/vwap/dark_pool empty; dilution_risk_score doesn't exist
+- [Filtrer avant d enrichir (gate G4)](feedback_scanner_filter_before_enrich_order.md) — la doctrine perf existait et n etait pas suivie ; _pipelineOrder + earnings_source desormais bloquants dans validate-scan.js

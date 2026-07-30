@@ -99,3 +99,29 @@ QA de pipeline — un gate absent du rapport = run non conforme. L'enrichissemen
 `qa-retro.js` PASS (via `publish.js --type retro`) ; (b) bloc index rafraîchi —
 `update-scanner-perf.js` exécuté après mise à jour de `data/retro-summary.json`, puis
 heartbeat G4 `fresh: true`. Les écarts vont en « Transparence process ».
+
+## G4 — pipeline_order (incident 20260730)
+
+`active_from: 2026-07-31`. La doctrine perf (`.claude/skills/perf-parallel-mcp.md`, R2) place le
+filtre resultats en **Vague 1**, avant tout enrichissement par ticker. Rien ne le forcait : le 30/07
+il a tourne en Vague 3 et F + PFE sont morts APRES avoir consomme leur salve d enrichissement
+complete (~15 min de reprise sur un run de 78 min).
+
+`signals.json` doit porter, sous peine de refus de publication :
+
+```json
+"_pipelineOrder": {
+  "earnings_screened_at": "2026-07-30T20:05:00Z",
+  "enrichment_started_at": "2026-07-30T20:18:00Z",
+  "candidates_screened": 39,
+  "method": "8-K item 2.02 sur le vivier complet, avant toute salve enrichissement"
+}
+```
+
+plus `earnings_source: "8k_item_202"` sur **chaque** ligne publiee.
+
+Controles : (a) `earnings_screened_at` strictement anterieur a `enrichment_started_at` ;
+(b) `candidates_screened` >= `min_screened_ratio` (2) x le nombre de lignes publiees, pour que le
+filtre couvre le vivier COMPLET et pas la selection finale ; (c) source 8-K par ligne — le champ
+calendrier previsionnel a laisse passer 10 titres deja publies le 20260730 (F, AWK, EXR, REG, FE,
+CNC, IVZ + LYV/KKR/OWL/RAL le jour meme).

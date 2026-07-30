@@ -164,6 +164,19 @@ This validation is NOT optional — it runs as part of Phase 2, immediately afte
    - `earnings_clear: true` — set false ONLY if you decide to tag-and-keep (rare); default true means scan was filtered against `±3d` earnings window.
    - `dilution_clear: true` — set false ONLY if you accept a flagged ticker with explicit rationale (extremely rare); default true means anti-dilution v2 passed.
    - `region: "US"|"EU"|"UK"|"ASIA"|"CHINA"|"JAPAN"|"ETF"` — used for diversification floor advisory (5 US + 2 EU + 1 APAC + 2 ETFs).
+   - `earnings_source: "8k_item_202"` — **BLOQUANT (gate G4)**. La date de résultats DOIT venir du dépôt 8-K item 2.02, jamais du champ calendrier prévisionnel. Le 20260730 ce champ a laissé passer 10 titres ayant déjà publié (F, AWK, EXR, REG, FE, CNC, IVZ + LYV/KKR/OWL/RAL le jour même).
+3a-bis. **`_pipelineOrder` block (MANDATORY, top-level — gate G4 bloquant à partir du 2026-07-31)** — preuve que le filtre résultats a tourné sur le vivier COMPLET **avant** toute salve d'enrichissement par ticker (doctrine `perf-parallel-mcp` R2 : calendrier + 8-K en **Vague 1**, enrichissement en Vague 3) :
+   ```json
+   "_pipelineOrder": {
+     "earnings_screened_at": "2026-07-30T20:05:00Z",
+     "enrichment_started_at": "2026-07-30T20:18:00Z",
+     "candidates_screened": 39,
+     "method": "8-K item 2.02 filing dates sur le vivier complet, avant toute salve enrichissement"
+   }
+   ```
+   - `earnings_screened_at` **doit être strictement antérieur** à `enrichment_started_at`, sinon publication refusée.
+   - `candidates_screened` doit couvrir le vivier complet (≥ 2× le nombre de lignes publiées), pas la sélection finale.
+   - Raison d'être : le 20260730, le filtre résultats a tourné en Vague 3. F et PFE sont morts **après** avoir consommé leur enrichissement complet — ~15 min de reprise pure. La doctrine perf existait déjà et n'était pas appliquée ; ce gate la rend mécanique.
 3b. **`_memoryImpact` block (MANDATORY, top-level in `signals.json`)** — records what Phase 0.8 retrieval actually did to this scan's decisions, for audit + weekly retro consumption:
    ```json
    "_memoryImpact": {
