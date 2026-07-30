@@ -114,4 +114,5 @@
 - [Scanner workflow token blowup](feedback_scanner_workflow_token_blowup.md) — fan-out 1 agent/ticker chacun appelant le MCP = 4.3M tokens ; batcher QueryData multi-symbole AVANT le fan-out, raisonner sur le pré-fetché (perf R7)
 - [Frozen orphan trade (append limit)](feedback_frozen_orphan_trade.md) — un trade résolu sur/avant la pointe scellée devient orphelin (72 clos / 71 agrégé) ; non corrigeable sans réécrire le scellé → garder le frozen, ne jamais overwrite from-scratch
 - [Sharia defense-revenue exclusion](feedback_sharia_defense_revenue.md) — defense/military revenue >5% ⇒ non-compliant even with clean debt (HXL incident 20260728)
-- [Earnings date → use instrument_calendar](feedback_earnings_calendar_authoritative.md) — screener next_earnings field is stale; caused live FTNT error on scanner 20260729
+- [Earnings date → ground truth = 8-K item 2.02](feedback_earnings_calendar_authoritative.md) — calendar/next_earnings feeds are insufficient (FTNT 20260729, then 10 same-window reporters hidden on 20260730: F, AWK, EXR, REG, FE, CNC, IVZ + LYV/KKR/OWL/RAL same-day)
+- [marketdata path & coverage traps](feedback_marketdata_path_and_coverage_traps.md) — bars_daily windowed vs unwindowed lag a session; RefreshBars in market hours writes a partial bar; EU 29/07 gap unfixable; support_resistance/vwap/dark_pool empty; dilution_risk_score doesn't exist
