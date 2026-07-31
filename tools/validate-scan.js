@@ -798,11 +798,25 @@ async function main() {
         });
       }
       if (g4.require_source_per_signal) {
+        // Sources recevables selon la NATURE de la ligne. Un ETF n'a pas de résultats à publier
+        // et aucun dépôt 8-K n'existe hors SEC : exiger "8k_item_202" partout rendrait le gate
+        // insatisfiable pour les ETF et les cotations européennes. Les dents restent là où elles
+        // comptent — pour une ACTION AMÉRICAINE, seul le dépôt 8-K item 2.02 est recevable, le
+        // calendrier prévisionnel ayant laissé passer 10 titres déjà publiés le 20260730.
+        const OK_ETF = new Set(['n_a_etf', '8k_item_202']);
+        const OK_NON_US = new Set(['issuer_calendar_verified', '8k_item_202']);
         for (const s of pub) {
-          if (String(s.earnings_source || '') !== '8k_item_202') {
+          const src = String(s.earnings_source || '');
+          const region = String(s.region || '').toUpperCase().trim();
+          const isEtf = region === 'ETF' || String(s.sector || '').toUpperCase().startsWith('ETF') || !!s.lookthrough;
+          let allowed, expected;
+          if (isEtf) { allowed = OK_ETF; expected = 'n_a_etf (aucun résultat à publier)'; }
+          else if (region && region !== 'US') { allowed = OK_NON_US; expected = 'issuer_calendar_verified (aucun dépôt réglementaire hors SEC)'; }
+          else { allowed = new Set(['8k_item_202']); expected = '8k_item_202 (dépôt SEC item 2.02, JAMAIS le calendrier prévisionnel)'; }
+          if (!allowed.has(src)) {
             violations.push({
               rule: 'pipeline_order',
-              message: `${s.ticker}: earnings_source absent ou ≠ "8k_item_202" — la date de résultats vient du dépôt 8-K item 2.02, jamais du calendrier prévisionnel (10 faux négatifs le 20260730 : F, AWK, EXR, REG, FE, CNC, IVZ, LYV, KKR, OWL, RAL).`
+              message: `${s.ticker}: earnings_source="${src || 'absent'}" invalide — attendu ${expected}.`
             });
           }
         }
