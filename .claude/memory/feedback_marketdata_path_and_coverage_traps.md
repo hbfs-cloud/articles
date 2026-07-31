@@ -42,3 +42,13 @@ rééchelonnées**. Mon écriture manuelle a supprimé 157 points de courbe pour
 Corollaire : **`book_honest` est AUSSI multi-compartiments** (4 sleeves) — son `results[0]` vaut 79,65
 alors que le livre fait 55,33. Je ne l'avais pas vu. Règle : passer la réponse MCP **verbatim** à
 l'ingest et le laisser faire ; ne jamais pré-mâcher un replay multi-sleeve.
+
+**9. `bars_daily` multi-symboles ABANDONNE silencieusement les symboles indisponibles (2026-07-31).**
+Une requête multi-symboles renvoie la **liste complète** des symboles demandés dans `symbols[]`, mais
+`data[]` ne contient que ceux qui ont des barres. Un mapping naïf par index décale donc **toutes** les
+séries situées après le trou et les renomme silencieusement. Constaté sur un lot de 30 tickers où
+PSTG renvoyait 404 (« No data found, symbol may be delisted ») : la première passe a mal étiqueté
+l'intégralité du groupe nucléaire, avec des niveaux plausibles mais attribués au mauvais titre — le
+type d'erreur qui passe une relecture. **Règle : ne jamais mapper par index. Vérifier chaque série
+contre le champ `symbol` de son propre bloc, et re-tirer en mono-symbole les tickers douteux pour
+ancrer le mapping.**
