@@ -30,3 +30,15 @@ Calling it at ~12:30 CET on 20 EU symbols advanced their tail from 07-29 to a pa
 **7. `GetMarketContext(facets='overview')` is fragile.** Failed once with `context deadline exceeded` after several minutes, then ran long on retry. Pulling `QueryData(types='indices,commodities,currencies,rates,crypto,economic_events')` directly is faster and sufficient for the market-snapshot section.
 
 Related: [[mcp-hard-stop]], [[earnings-date-ground-truth-is-8k-item-202]], [[no-hallucination-financial-data]].
+
+**8. CORRECTION (2026-07-31) — le multi-sleeve dtx EST géré, ne pas l'écrire à la main.**
+Le 30/07 j'avais lu `results[0]` dans `dtx-mcp-ingest.js` et conclu que le bloc `combined` d'un livre
+multi-compartiments était ignoré ; j'ai donc écrit `hvep` à la main en omettant sa courbe d'equity.
+**C'était faux et destructeur.** L'extraction réelle est dans `tools/dtx-scan.js`
+(`extractReplayMetrics()`, ~L190-219) : quand `rows.length > 1 && rep.combined`, elle prend déjà
+cagr/dd/sharpe/r2 du `combined`, somme trades/winners/losers sur les compartiments, épingle
+`initial_capital: 100000` et **synthétise une courbe livre à partir des courbes de compartiments
+rééchelonnées**. Mon écriture manuelle a supprimé 157 points de courbe pour rien.
+Corollaire : **`book_honest` est AUSSI multi-compartiments** (4 sleeves) — son `results[0]` vaut 79,65
+alors que le livre fait 55,33. Je ne l'avais pas vu. Règle : passer la réponse MCP **verbatim** à
+l'ingest et le laisser faire ; ne jamais pré-mâcher un replay multi-sleeve.
