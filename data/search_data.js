@@ -1341,6 +1341,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "USAS",
+    "exchange": "NYSE American • Basic Materials\n            • Argent, plomb, cuivre, antimoine",
+    "name": "USAS — Production record, chiffre d'affaires +187%, et -63% depuis janvier. L'argent doit enco...",
+    "title": "USAS — Production record, chiffre d'affaires +187%, et -63% depuis janvier. L'argent doit enco...",
+    "desc": "Analyse Americas Gold and Silver : meilleure année opérationnelle de son histoire, titre à -63%. Coût tout compris 34,12 $/oz contre un argent à 57,80 $. Guide de production, dilution, scénarios et niveaux.",
+    "tags": "commodity,mining,small-cap,speculative,macro",
+    "grade": "C",
+    "href": "/analyses/USAS/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "",
     "exchange": "",
     "name": "Or, argent, Bitcoin, Ethereum, Brent — 45 setups classés par risque (28 juillet 2026)",
