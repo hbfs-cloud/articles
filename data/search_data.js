@@ -5,6 +5,19 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
+    "title": "L'indice monte, la moitié du marché baisse",
+    "desc": "Weekly DailyTickers du 3 au 7 août 2026. Le S&P a pris 1,1% pendant que 56% des actions baissaient. Le 30 ans à 5,275% touche son plus haut depuis juillet 2007, le dollar casse 100. Emploi américain vendredi, AMD et Caterpillar mardi, Palantir lundi soir. Plan complet, niveaux et 3 trades.",
+    "tags": "us,eu,asia,crypto,commodity,macro,geopolitique,earnings,technique,trade-idea,etf,financials,semis,mining",
+    "grade": "",
+    "href": "/weekly/20260803/",
+    "date": "3 août 2026"
+  },
+  {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
     "title": "Une reprise sans moteur : Fed, PCE et Amazon",
     "desc": "Weekly DailyTickers du 27 au 31 juillet 2026. Le pétrole a fait l'aller-retour sur la détente Iran-US, la tech reste la ligne de fracture, le régime revient en RECOVERY mais sans moteur. FOMC mercredi, Core PCE et PIB jeudi, Amazon jeudi soir, inflation zone euro vendredi. Plan complet, niveaux et 3 trades.",
     "tags": "us,eu,asia,crypto,commodity,energy,macro,earnings,technique,trade-idea,etf,financials",
@@ -349,19 +362,6 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/weekly/20251229/",
     "date": "29 décembre 2025 - 3 janvier 2026"
-  },
-  {
-    "type": "hebdo",
-    "icon": "fa-calendar-week",
-    "ticker": "",
-    "exchange": "",
-    "name": "",
-    "title": "L'indice monte, la moitié du marché baisse",
-    "desc": "Weekly DailyTickers du 3 au 7 août 2026. Le S&P a pris 1,1% pendant que 56% des actions baissaient. Le 30 ans à 5,275% touche son plus haut depuis juillet 2007, le dollar casse 100. Emploi américain vendredi, AMD et Caterpillar mardi, Palantir lundi soir. Plan complet, niveaux et 3 trades.",
-    "tags": "us,eu,asia,crypto,commodity,macro,geopolitique,earnings,technique,trade-idea,etf,financials,semis,mining",
-    "grade": "",
-    "href": "/weekly/20260803/",
-    "date": "3 août 2026"
   },
   {
     "type": "daily",
@@ -1350,6 +1350,19 @@ window.searchDataPrebuilt = [
     "grade": "",
     "href": "/daily/20260217/",
     "date": "17 février 2026"
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
+    "ticker": "AMD",
+    "exchange": "NASDAQ · Technology",
+    "name": "AMD — AMD before the 4 August print: a 160M-share warrant that vests if the stock rises, 101 ...",
+    "title": "AMD — AMD before the 4 August print: a 160M-share warrant that vests if the stock rises, 101 ...",
+    "desc": "AMD reports Tuesday 4 August after the close. The +235% EPS growth headline rests on a base crushed by an $800M one-off charge — real growth is about +78%. Plus a 160M-share customer warrant sitting above this price. Full analysis.",
+    "tags": "us,semis,tech,ai,earnings,options,technique,trade-idea",
+    "grade": "C+",
+    "href": "/analyses/AMD/",
+    "date": ""
   },
   {
     "type": "analyse",
@@ -3286,19 +3299,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,commodity,trade-idea",
     "grade": "B+",
     "href": "/analyses/AG/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AMD",
-    "exchange": "NASDAQ • Technology",
-    "name": "Advanced Micro Devices",
-    "title": "Advanced Micro Devices",
-    "desc": "Analyse complete d'AMD : leader GPU/CPU pour l'IA et les data\n    centers. Revenue $34.6B (+34%), EPS en forte hausse, target $287.\n    Profil Growth/AI.",
-    "tags": "us,semis,tech,ai,trade-idea",
-    "grade": "B+",
-    "href": "/analyses/AMD/",
     "date": ""
   },
   {

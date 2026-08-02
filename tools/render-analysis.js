@@ -325,11 +325,15 @@ function renderBusiness(d) {
         <h2><i class="fa-solid fa-building"></i> Business Overview</h2>
         ${b.overview}`;
   if (b.segments && b.segments.length) {
+    // Colonnes émises seulement si au moins un segment porte la donnée —
+    // sinon le <thead> annonçait 4 colonnes pour des lignes à 2 cellules.
+    const hasPct = b.segments.some(s => s.pct);
+    const hasDesc = b.segments.some(s => s.description);
     html += `\n        <h4 style="margin-top:1rem;">Segments</h4>
         <table class="data-table">
-          <thead><tr><th>Segment</th><th>Revenue</th><th>% Total</th><th>Description</th></tr></thead>
+          <thead><tr><th>Segment</th><th>Revenue</th>${hasPct ? '<th>% Total</th>' : ''}${hasDesc ? '<th>Description</th>' : ''}</tr></thead>
           <tbody>
-${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><td>${esc(s.revenue || '')}</td><td>${esc(s.pct || '')}</td><td>${esc(s.description || '')}</td></tr>`).join('\n')}
+${b.segments.map(s => `            <tr><td><strong>${esc(s.name)}</strong></td><td>${esc(s.revenue || '')}</td>${hasPct ? `<td>${esc(s.pct || '')}</td>` : ''}${hasDesc ? `<td>${esc(s.description || '')}</td>` : ''}</tr>`).join('\n')}
           </tbody>
         </table>`;
   }
