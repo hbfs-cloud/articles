@@ -4816,9 +4816,9 @@ window.searchDataPrebuilt = [
     "exchange": "",
     "name": "",
     "title": "Rétrospective Scanner",
-    "desc": "Huit stops sur neuf clôtures. Taux de réussite 11%, R moyen -0,66. Trois lignes portaient des résultats dans leur horizon alors que toutes avaient passé le filtre des trois séances à l'entrée : la règle protège l'entrée, pas la détention. Mais le contrefactuel est sans appel — ce trou n'explique que 22% de la perte. Note E.",
+    "desc": "Huit stops sur dix lignes résolues. Taux de réussite 10%, R moyen -0,73. Trois lignes portaient des résultats pendant leur portage, mais la règle proposée n'en attrape que deux alors que toutes avaient passé le filtre des trois séances à l'entrée : la règle protège l'entrée, pas la détention. Ce trou n'explique pourtant que 14% de la perte. Note F.",
     "tags": "us,eu,asia,etf,technique,macro,retrospective,industrials,healthcare,financials,consumer",
-    "grade": "E",
+    "grade": "F",
     "href": "/scanner/20260717/retro/",
     "date": "17 juillet 2026"
   },
