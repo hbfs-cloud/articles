@@ -2592,7 +2592,119 @@
    "invalidation_conditions": [
     "Un scan de pleine saison sans aucune ligne portant un evenement dans l'horizon dont le R moyen reste inferieur a -0,4 : la regle ne serait alors pas le levier."
    ],
-   "notes": "Trou identifie a la retro du scan 20260717. Le scan 20260803 applique deja la parade (selection exclusive de societes ayant deja publie) pour une autre raison : le calendrier ne couvre que J+1. Les deux se rejoignent.",
+   "notes": "Trou identifie a la retro du scan 20260717. Portee MESUREE : 22% de la perte seulement (R moyen -0,66 -> -0,52 en retirant les 3 lignes). Les 78% restants relevent du calibrage du coussin de volatilite, cf. atr-cushion-verified-at-fill-not-published-level. Le scan 20260803 applique deja la parade pour une raison independante.",
+   "applies_to": [
+    "top_10",
+    "tkl_pool"
+   ],
+   "from_retros": [
+    "20260717"
+   ]
+  },
+  {
+   "id": "atr-cushion-verified-at-fill-not-published-level",
+   "class": "process",
+   "status": "active",
+   "severity": "selection_filter",
+   "rule": "Le plancher de stop a 1,5 fois l'ATR doit etre verifie depuis entry_low (borne la plus defavorable de la zone), PAS depuis entry (borne haute publiee). Le remplissage se produit plus bas dans la fourchette que le niveau valide : le coussin est donc controle au point le plus genereux et consomme au point le moins genereux. Plus la fourchette d'entree est large, plus l'ecart se creuse. Corollaire : publier l'amplitude de la fourchette en pourcentage a cote du stop.",
+   "scope": {
+    "setups": [],
+    "regimes": [
+     "RISK-ON",
+     "RECOVERY",
+     "NEUTRAL",
+     "EARLY RISK-OFF",
+     "RISK-OFF"
+    ],
+    "modes": []
+   },
+   "effect": {
+    "action": "validate_stop_floor",
+    "target": {},
+    "params": {
+     "measure_from": "entry_low",
+     "min_atr_multiple": 1.5
+    }
+   },
+   "evidence": {
+    "sample_size": 10,
+    "wins": 1,
+    "losses": 8,
+    "expectancy": -0.66,
+    "period": "2026-07-17 -> 2026-07-31",
+    "tickers": [
+     "BTSG",
+     "DG",
+     "EWT",
+     "IR"
+    ],
+    "note": "Scan 20260717. Coussin reel depuis le fill : stoppees 1,64x en moyenne, survivantes 2,24x. DEUX lignes sont parties SOUS le plancher reglementaire : BTSG 1,12x et DG 1,45x. BTSG valide pourtant 1,55x depuis son entry publie de 70,00 — elle s'est remplie a 69,00, bas de fourchette. Aucune violation de la regle telle qu'ecrite ; le defaut est dans le point de mesure. Meme classe que la divergence de convention R/R (validate depuis le milieu, qa depuis le haut) trouvee le 2026-08-02."
+   },
+   "confidence": 0.62,
+   "confidence_base": 0.62,
+   "half_life_days": 180,
+   "created_at": "2026-08-02",
+   "last_validated_at": "2026-08-02",
+   "expires_at": "2027-01-29",
+   "invalidation_conditions": [
+    "Trois scans consecutifs ou le coussin mesure depuis entry_low est >= 1,5x sur toutes les lignes ET le taux de stop reste au-dessus de 60% : le calibrage ne serait alors pas le levier."
+   ],
+   "notes": "Trouve a la retro 20260717, seconde passe (la premiere avait conclu a tort a un mauvais pari directionnel : l'indice a monte de 0,50% sur la fenetre). NUANCE (panel senior, persona slop) : les distributions de coussin se CHEVAUCHENT entre 1,76 et 2,03 — CP a ete stoppe avec 2,03x, au-dessus d'EDU qui a gagne a 1,76x. Le coussin est un BIAIS, pas un discriminant. Severite abaissee de hard_block a selection_filter en consequence.",
+   "applies_to": [
+    "top_10",
+    "tkl_pool"
+   ],
+   "from_retros": [
+    "20260717"
+   ]
+  },
+  {
+   "id": "stop-exit-must-be-a-traded-price",
+   "class": "process",
+   "status": "active",
+   "severity": "hard_block",
+   "rule": "Une sortie sur stop doit etre comptabilisee a un prix REELLEMENT TRAITE dans la seance. Si la seance ouvre au-dela du stop et n'y revient jamais (plus haut de seance < stop pour un long), la sortie se fait A L'OUVERTURE, pas au stop. Comptabiliser au stop invente un prix que le marche n'a jamais cote et flatte mecaniquement le R et la note. La verification 'plus haut de seance >= stop' est obligatoire avant toute notation.",
+   "scope": {
+    "setups": [],
+    "regimes": [
+     "RISK-ON",
+     "RECOVERY",
+     "NEUTRAL",
+     "EARLY RISK-OFF",
+     "RISK-OFF"
+    ],
+    "modes": []
+   },
+   "effect": {
+    "action": "validate_exit_price",
+    "target": {},
+    "params": {
+     "require_traded_price": true,
+     "gap_rule": "exit_at_open_when_session_high_below_stop"
+    }
+   },
+   "evidence": {
+    "sample_size": 2,
+    "wins": 0,
+    "losses": 2,
+    "expectancy": -1.345,
+    "period": "2026-07-17 -> 2026-07-31",
+    "tickers": [
+     "CHRW",
+     "HLN"
+    ],
+    "note": "Retro 20260717, trouve par le panel senior (persona trader). CHRW le 24/07 : plus haut de seance 194,87 < stop 195,00 -> sortie reelle a l'ouverture 191,81, R -1,33 et non -1,00. HLN le 23/07 : plus haut 9,7349 < stop 9,80 -> sortie a 9,68, R -1,36 et non -1,00. Impact agrege : R moyen -0,66 -> -0,73, rendement -2,92% -> -3,19%, facteur de profit 0,23 -> 0,21. Booker au stop aurait flatte le R de 0,07 et la note."
+   },
+   "confidence": 0.8,
+   "confidence_base": 0.8,
+   "half_life_days": 365,
+   "created_at": "2026-08-02",
+   "last_validated_at": "2026-08-02",
+   "expires_at": "2027-08-02",
+   "invalidation_conditions": [
+    "Aucune : c'est une contrainte d'integrite, pas une heuristique de marche."
+   ],
+   "notes": "Symetrique de fill-policy.js cote entree. Le module partage couvre l'ENTREE ; la SORTIE n'etait couverte nulle part et la premiere passe de cette retro a invente deux prix.",
    "applies_to": [
     "top_10",
     "tkl_pool"
