@@ -65,6 +65,7 @@
 ## 🎯 Intelligence trading
 - [Analysis Senior Review First](feedback_analysis_senior_review_first.md) — Senior-review AVANT publication + checklist MCP complète (buyback, 13F, FINRA, S-3 par type) — incident TLN 19/07/2026
 - [Senior Review Args Shape](feedback_senior_review_args_shape.md) — senior-review attend artifacts=[{path,type,label}] : une chaîne = 0 agent lancé et faux PASS silencieux (02/08/2026)
+- [Dilution Check Window](feedback_dilution_check_window.md) — CRITIQUE : le check anti-dilution n'est JAMAIS borné à 180j (warrant OpenAI 160M actions raté sur AMD, 02/08/2026) — days=1825 + ouvrir tout 8-K item 3.02/1.01 et Ex-4.x
 - [Aplus Grading Empirical](feedback_aplus_grading_empirical.md) — Grille de notation A+ empirique validée sur 29 setups (juin 2026) — 4 éliminatoires + 6 critères pondérés /100
 - [Harness Portfolio Coherence](feedback_harness_portfolio_coherence.md) — Le harness/war-room DOIT vérifier la cohérence panier↔thèse macro (persona Strategist), pas seulement valider chaque trade en isolation
 - [Sharia Bank Detection](feedback_sharia_bank_detection.md) — Le gate shariaOnly est PERMISSIF → tout repose sur la détection. Screener par SECTEUR + liste SHARIA_EXCLUDED (pas juste sharia:false) : banques non…
