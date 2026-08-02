@@ -351,6 +351,19 @@ window.searchDataPrebuilt = [
     "date": "29 décembre 2025 - 3 janvier 2026"
   },
   {
+    "type": "hebdo",
+    "icon": "fa-calendar-week",
+    "ticker": "",
+    "exchange": "",
+    "name": "",
+    "title": "L'indice monte, la moitié du marché baisse",
+    "desc": "Weekly DailyTickers du 3 au 7 août 2026. Le S&P a pris 1,1% pendant que 56% des actions baissaient. Le 30 ans à 5,275% touche son plus haut depuis juillet 2007, le dollar casse 100. Emploi américain vendredi, AMD et Caterpillar mardi, Palantir lundi soir. Plan complet, niveaux et 3 trades.",
+    "tags": "us,eu,asia,crypto,commodity,macro,geopolitique,earnings,technique,trade-idea,etf,financials,semis,mining",
+    "grade": "",
+    "href": "/weekly/20260803/",
+    "date": "3 août 2026"
+  },
+  {
     "type": "daily",
     "icon": "fa-sun",
     "ticker": "",
