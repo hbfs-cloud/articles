@@ -718,7 +718,17 @@ async function main() {
       // et les ETF factoriels momentum sortent du panier.
       const g3 = ag.regime_score_drop;
       if (g3) {
-        const norm = v => (typeof v === 'number' ? (v <= 1 ? v * 100 : v) : null);
+        // ⚠️ DEUX ÉCHELLES dans l'archive (cf. canon §2b) : BULLISH 0-100 (65+ = RISK-ON)
+        // et DÉFENSIVITÉ 0-100 (0 = plein risk-on, convention MCP v5 facet regime).
+        // Ce gate compare des scores ENTRE scans : il DOIT donc ramener chaque valeur sur
+        // une échelle commune (bullish) AVANT de mesurer un décrochage, sinon un scan
+        // écrit en défensivité (ex. 3.4) face à un historique bullish (69-72) produit un
+        // faux décrochage de ~69 pts et bloque la publication à tort.
+        const norm = (v, scale) => {
+          if (typeof v !== 'number') return null;
+          const pct = v <= 1 ? v * 100 : v;              // 0-1 → 0-100
+          return scale === 'defensiveness' ? 100 - pct : pct; // → toujours bullish
+        };
         const win = g3.window_sessions ?? 5;
         const prevDirs = fs.readdirSync(path.join(ROOT, 'scanner'))
           .filter(d => /^\d{8}$/.test(d) && d < dirName).sort().slice(-(win - 1));
@@ -726,11 +736,13 @@ async function main() {
         for (const d of prevDirs) {
           try {
             const j = JSON.parse(fs.readFileSync(path.join(ROOT, 'scanner', d, 'signals.json'), 'utf8'));
-            const v = norm(j.regimeScore);
+            // échelle absente (tout l'historique <= 20260731) => bullish, comportement inchangé
+            const v = norm(j.regimeScore, j.regimeScoreScale || null);
             if (v != null) hist.push(v);
           } catch { /* scan sans signals.json : ignoré */ }
         }
-        const cur = norm(regimeScore);
+        const curScale = (loadRawSignalsJson(dir) || {}).regimeScoreScale || null;
+        const cur = norm(regimeScore, curScale);
         if (cur != null && hist.length) {
           const peak = Math.max(...hist, cur);
           const drop = peak - cur;
