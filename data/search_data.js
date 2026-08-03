@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "MU",
+    "exchange": "NASDAQ · Technologie",
+    "name": "MU — le multiple de 5,3x ne porte pas sur les bénéfices réalisés mais sur une estimation 3,4...",
+    "title": "MU — le multiple de 5,3x ne porte pas sur les bénéfices réalisés mais sur une estimation 3,4...",
+    "desc": "Micron se traite à 5,3 fois les bénéfices prévisionnels après avoir multiplié son bénéfice par action par 8,3 en quatre trimestres. Ce multiple n'est pas une décote : il porte sur une estimation de 155 $ par action, soit 3,4 fois ce que la société a réellement gagné sur douze mois.",
+    "tags": "us,semis,tech,ai,technique,trade-idea,earnings",
+    "grade": "C",
+    "href": "/analyses/MU/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "EQX",
     "exchange": "NYSE American · Matériaux de base",
     "name": "EQX — EQX a émis 421,8 M d'actions vendredi (+53,4% du capital). Le flux de données affiche t...",
