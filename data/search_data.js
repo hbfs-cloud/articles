@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "AMZN",
+    "exchange": "NASDAQ · Consommation discrétionnaire",
+    "name": "AMZN — le PE historique affiché à 21,8x vaut environ 32x une fois retirée la plus-value Anthro...",
+    "title": "AMZN — le PE historique affiché à 21,8x vaut environ 32x une fois retirée la plus-value Anthro...",
+    "desc": "Amazon a gagné 388 milliards de dollars de valeur en une séance. Le résultat qui a déclenché ce mouvement contient 53,4 Md$ de plus-values comptables sur Anthropic, et la guidance du trimestre suivant ramène la croissance de 20% à 9-12%. AWS +37% à 39,4% de marge tient la thèse ; à 271,58 $, on attend un repli vers 265,00 $ pour entrer.",
+    "tags": "us,tech,ai,earnings,technique,trade-idea,software",
+    "grade": "C+",
+    "href": "/analyses/AMZN/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "CCJ",
     "exchange": "NYSE · Énergie",
     "name": "CCJ — 43x l'excédent brut pour 7,1% de croissance et 9,6% de rentabilité des capitaux. La bai...",
@@ -3247,19 +3260,6 @@ window.searchDataPrebuilt = [
     "tags": "us,industrials,trade-idea",
     "grade": "A-",
     "href": "/analyses/AGX/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "AMZN",
-    "exchange": "NASDAQ • Consumer Cyclical",
-    "name": "Amazon.com Inc",
-    "title": "Amazon.com Inc",
-    "desc": "Analyse complète d'Amazon (AMZN) : AWS, e-commerce, valorisation,\n    technique et risques. RSI à 23 — zone de survente extrême. Target\n    $282 (+42%).",
-    "tags": "us,tech,consumer,ai,trade-idea",
-    "grade": "A-",
-    "href": "/analyses/AMZN/",
     "date": ""
   },
   {
