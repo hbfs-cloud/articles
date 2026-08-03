@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "CCJ",
+    "exchange": "NYSE · Énergie",
+    "name": "CCJ — 43x l'excédent brut pour 7,1% de croissance et 9,6% de rentabilité des capitaux. La bai...",
+    "title": "CCJ — 43x l'excédent brut pour 7,1% de croissance et 9,6% de rentabilité des capitaux. La bai...",
+    "desc": "Cameco se paie 43 fois son excédent brut d'exploitation pour 7,1% de croissance. Entre juin et juillet, tout le complexe uranium a reculé de 26 à 40% : le risque dominant est thématique. Westinghouse a déposé un projet d'introduction en bourse le 31 juillet, le jour même des résultats trimestriels.",
+    "tags": "us,energy,commodity,materials,technique,trade-idea,earnings",
+    "grade": "D",
+    "href": "/analyses/CCJ/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "MU",
     "exchange": "NASDAQ · Technologie",
     "name": "MU — le multiple de 5,3x ne porte pas sur les bénéfices réalisés mais sur une estimation 3,4...",
@@ -1921,19 +1934,6 @@ window.searchDataPrebuilt = [
     "tags": "us,financials,trade-idea,technique",
     "grade": "A",
     "href": "/analyses/MTB/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "CCJ",
-    "exchange": "NYSE · Energy",
-    "name": "CCJ — Analyse complète de Cameco Corporation (CCJ) : leader mondial de l'uranium, Westinghous...",
-    "title": "CCJ — Analyse complète de Cameco Corporation (CCJ) : leader mondial de l'uranium, Westinghous...",
-    "desc": "CCJ analysis: Cameco Corporation est le plus grand producteur d'uranium coté en bourse au monde, basé à Saskatoon, Canada. L'entreprise opère sur 3 segments : Uranium (explor",
-    "tags": "us,tech,financials",
-    "grade": "B",
-    "href": "/analyses/CCJ/",
     "date": ""
   },
   {
