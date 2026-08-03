@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EQX",
+    "exchange": "NYSE American · Matériaux de base",
+    "name": "EQX — EQX a émis 421,8 M d'actions vendredi (+53,4% du capital). Le flux de données affiche t...",
+    "title": "EQX — EQX a émis 421,8 M d'actions vendredi (+53,4% du capital). Le flux de données affiche t...",
+    "desc": "Equinox Gold a bouclé sa fusion avec Orla vendredi 31 juillet en émettant jusqu'à 421,8 millions d'actions, soit +53,4% du capital. Les données de marché affichent encore l'ancien nombre d'actions : le titre paraît bon marché pour une raison qui n'existe plus. Résultats mercredi.",
+    "tags": "us,gold,mining,commodity,technique,trade-idea,earnings",
+    "grade": "D",
+    "href": "/analyses/EQX/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AMD",
     "exchange": "NASDAQ · Technology",
     "name": "AMD — Good company, bad entry before the 4 August print: a 160M-share warrant that vests if t...",
@@ -1674,19 +1687,6 @@ window.searchDataPrebuilt = [
     "tags": "us,tech,materials",
     "grade": "B-",
     "href": "/analyses/GLW/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EQX",
-    "exchange": "NYSE · Gold / Basic Materials",
-    "name": "EQX — Deep-value gold producer at 6.0x PE. Merger de-risked (ISS + Glass Lewis vote FOR), but...",
-    "title": "EQX — Deep-value gold producer at 6.0x PE. Merger de-risked (ISS + Glass Lewis vote FOR), but...",
-    "desc": "Equinox Gold trades at 6.0x forward PE with 59% gross margins as the Orla merger clears its final vote (ISS and Glass Lewis both recommend FOR). Deep value, but the chart just broke $10.26 support with nothing intact until $6.46.",
-    "tags": "us,materials,commodity,dividende",
-    "grade": "D",
-    "href": "/analyses/EQX/",
     "date": ""
   },
   {
