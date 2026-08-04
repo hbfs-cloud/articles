@@ -4698,7 +4698,7 @@ window.searchDataPrebuilt = [
     "ticker": "",
     "exchange": "",
     "name": "",
-    "title": "Top 10 A+ RECOVERY · RTX, ROST, HOMB, ESTC, ABT, TCOM, KESKOB.HE, BNP.PA, IWD, EFV",
+    "title": "Top 10 A+ RECOVERY · RTX, ROST, HOMB, ESTC, ABT, TCOM, KESKOB.HE, BNP.PA, IGV, IHI",
     "desc": "Le moteur de régime donne un état risk-on avec une confiance de 0,562 et une probabilité nulle sur les deux états défensifs. Nous gardons l'étiquette RECOVERY d'hier, un cran plus prudente, pour les mêmes raisons qu'hier : 0,438 reste sur l'état neutre — presque un tirage à pile ou face — et la matr...",
     "tags": "scanner,momentum,breakout,us,eu,asia,etf,financials,tech,consumer,healthcare,industrials,staples",
     "grade": "",

@@ -108,21 +108,24 @@ Propriétés établies par backtest relatif (2 ans, univers neutres, 600+ trades
 ## 1. ÉTAT DU BOOK — BLOC MUTABLE (réécrire à chaque session)
 
 > Charger comme book courant, puis **recalculer tous les prix via QueryData** (§2). Ne jamais
-> réutiliser un mark mémorisé comme prix vivant. Seed ci-dessous = clôture de session 30/06/2026.
+> réutiliser un mark mémorisé comme prix vivant. Seed ci-dessous = clôture de session 03/08/2026.
 
 Book ouvert le 10/06/2026 (entrée = close 10/06). Lignes legacy équipondérées ; **nouvelles
-entrées au sizing par conviction (§1bis)**. Seed ci-dessous = clôture session 06/07/2026.
+entrées au sizing par conviction (§1bis)**. Seed ci-dessous = clôture session 03/08/2026,
+décisions du 04/08 pré-open.
 
 **TENUS** (✅ Halal) | entrée | dernier mark | P&L | note groupe/trail
-- TEX  | 59,51  | 69,58  | +16,9% | Industrials LEADER — RSI 56,3, trail EMA20 ($67,58)
-- ACA  | 122,85 | 145,38 | +18,3% | Building materials — RSI 71,4 (juste sous 72), trail EMA20 ($138,40). Secteur Materials LAGGARD -1%, surveiller
-- BTSG | 60,59  | 70,56  | +16,4% | Healthcare — RSI 74,0 → PARTIEL 33% exécuté, trail EMA20 ($66,11). Nouveau ATH $72,06
-- AMGN | 347,84 | 366,44 | +5,3%  | Biotech — RSI 62,9, trail EMA20 ($353,60)
+- ACA  | 122,85 | 145,32 | +18,3% | Building materials — RSI 66,8, ext +0,8%, trail EMA20 ($144,19). Consolidation 6 sem. juste sous ATH $146,92, DD intra-trade 0,5%
+- AMGN | 347,84 | 378,87 | +8,9%  | Biotech — RSI 58,1, ext +1,6%, trail EMA20 ($373,03). Peak close $393,10 le 28/07
 
-**SORTIES** : CECO (technique, sous EMA20) · ENVA (riba) · ING (riba) · KLAC (sous EMA20, anti-give-back violé : +41,7%→+9,3%, close $233,31 < EMA20 $243,47, exit à $233,31) → CASH.
-**CASH** : SNEX (+5,7% réalisé) · ASML (+2,5% réalisé) · CECO · ENVA · ING · KLAC (+9,3% réalisé, leçon anti-give-back) · BTSG partiel 33%.
-**Held avg ≈ +14,2%** · MaxDD ≈ −2,5% · slots cash : 6 — REDÉPLOYER en A+ Halal ou ETF Sharia (SPUS/HLAL).
-Régime RISK-ON DEPLOY. Rotation : Capital Markets, Semis, Auto Manufacturers, Electrical Equipment mènent. Secteurs top : Financials, Technology, Consumer Discretionary. Laggards : Consumer Staples, Materials.
+**ORDRES À EXÉCUTER (open 04/08 — décidés, PAS ENCORE PASSÉS : broker indisponible session 04/08)** :
+- VENTE TEX @ open (mark 64,41, +8,2% vs 59,51) — trail EMA20 violé (close < EMA20 $65,87), RSI 46,5, MACD < 0. DD intra-trade 16,6% depuis peak $74,58 (25/06)
+- VENTE BTSG solde 67% @ open (mark 60,465, −0,2% vs 60,59) — cassure violente 31/07 (close $59,71, vol 7,7M), 11,5% SOUS EMA20 ($68,36), RSI 36,5. DD intra-trade 18,1%
+- ACHAT SPUS 7 slots (réf 57,17, > EMA20 $56,56) — barreau 3 beta halal (§6) : cash idle interdit en risk_on ; rotation vers A+ dès que le fuel revient. 1 slot tampon conservé (NFP 07/08 + pic earnings)
+
+**SORTIES cumulées** : CECO (technique) · ENVA (riba) · ING (riba) · KLAC (+9,3%, anti-give-back) · SNEX (+5,7%) · ASML (+2,5%) · BTSG partiel 33% · TEX (+8,2%, trail, 04/08) · BTSG solde (−0,2%, trail, 04/08).
+**Held avg (2 lignes) ≈ +13,6%** · slots cash : 8 → 7 en SPUS + 1 tampon après exécution.
+Régime (pipeline 04/08) : risk_on conf 0,562, étiquette RECOVERY, VIX 15,70 (−2,97/5 séances), SPX à 0,3% du plus haut. Rotation live indisponible ce matin (timeouts) — dernier pointage 06/07 : Financials/Tech/Conso disc. mènent, Staples/Materials laggards. A+ fuel du 04/08 = 0 (screen 90 → 28 mcap 2-20G$ → 21 post-Sharia → 6 survivants techniques → 5 KO earnings <10 séances (pic de saison : COMP 04/08, PR/NVST/ELAN 05/08, PAA 07/08) → BBY seul clear (27/08) mais plafonné A : beats vérifiables sur 4 trimestres seulement, guidance relevée non confirmée, CFO change 03/08). Watchlist : BBY (A), APA (ext 3,7%). Prochain checkpoint : re-screen post-earnings + post-NFP (vendredi 07/08).
 
 ---
 
