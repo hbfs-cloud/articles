@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "ORCL",
+    "exchange": "NYSE · Technology",
+    "name": "ORCL — Oracle: record AI backlog, broken stock. Why the $638B RPO doesn't make ORCL a buy at 1...",
+    "title": "ORCL — Oracle: record AI backlog, broken stock. Why the $638B RPO doesn't make ORCL a buy at 1...",
+    "desc": "ORCL analysis: Oracle pairs a $90B FY27 revenue guide and a $638B RPO backlog with a broken chart, a $55.7B capex bill, open-ended share issuance and the Ellison/WBD pledge overhang. A watch, not a buy.",
+    "tags": "us,tech,software,ai",
+    "grade": "C+",
+    "href": "/analyses/ORCL/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "AMZN",
     "exchange": "NASDAQ · Consommation discrétionnaire",
     "name": "AMZN — le PE historique affiché à 21,8x vaut environ 32x une fois retirée la plus-value Anthro...",
