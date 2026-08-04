@@ -915,8 +915,17 @@ async function main() {
     // honest LIVE return since launch (like the quality modes) — NOT the multi-thousand-percent
     // backtest cumulative. A labelled "Backtest (2021→)" block carries the book's CAGR/MaxDD/Sharpe.
     // READ-ONLY: sealed backtest-trades.json / trade-chain.json untouched.
+    // SEALED-PRIMARY GATE (2026-08-04) : dès qu'un mode dtx possède un record scellé sweep
+    // (frozen_<id> dans backtest-results.json), le splice ne remplace PLUS le hero ni la courbe —
+    // le chemin frozen standard ci-dessus (identique à turbo/dynamic) reste la source unique.
+    // Sans ce gate : (1) liveRet reprenait la queue STALE de dtx-live-track (append auto-référent —
+    // chaque soir ré-écrivait le ret de la veille, figé à -1.24/-2.7 depuis le 2026-07-23) alors
+    // que le frozen avait avancé à -4.49/-6.13 le 2026-07-30 ; (2) la courbe/equity.json montrait
+    // le replay rebasé ×btEnd (ex. 656.45) au lieu du segment scellé base 100 (93.87).
+    // qa-check 27b/c/d codifie l'invariant hero/chart/API == frozen. Modes dtx SANS frozen
+    // (us_highvol, hvep, etf_us, ep) : splice backtest+live inchangé.
     const _dtx = loadDtxStaging(id);
-    if (_dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
+    if (!frozen && _dtx && _dtx.metrics && _dtx.equity && (_dtx.equity.dates || []).length >= 2) {
       const met = _dtx.metrics, eq = _dtx.equity;
       const base = met.initial_capital || eq.values[0] || 100000;
       const goLiveISO = cfg.statusSince ? cfg.statusSince.slice(0, 10) : String(eq.dates[eq.dates.length - 1]).slice(0, 10);
