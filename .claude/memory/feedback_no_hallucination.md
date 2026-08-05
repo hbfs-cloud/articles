@@ -36,3 +36,25 @@ Ne JAMAIS citer un événement sans l'avoir vérifié via WebSearch ou MCP `GetM
 > ⚠️ Note 2026-07 (surface MCP v5) : `GetMarketOverview` est un alias serveur legacy (marche encore en HTTP direct) mais n'est plus découvrable via ToolSearch. Canonique : `GetMarketContext(facets='overview')`. Note ajoutée, historique non réécrit.
 
 Voir aussi : [[immutable-trades]], [[mcp-hard-stop]], [[feedback_no_skip]], [[feedback_no_false_caveats]]
+
+## Deux sources d'initiés qui ne disent pas la même chose (5 août 2026, EONR)
+
+`GetInstruments` → bloc `instrument_insider_transactions` : **28 achats / 2 ventes**.
+`QueryData types=insider_transactions` → **14 achats / 0 vente**, avec le détail transaction par
+transaction (date de dépôt, code de type, prix, titres détenus après).
+
+Les deux servent le même symbole au même moment. La description de `QueryData` le dit noir sur
+blanc : ce type renvoie les **Form 4 INDIVIDUELS récupérés en direct sur EDGAR**, *« not the
+secform4.com aggregates GetInstruments/GetInstruments use »*. L'agrégat doublait les achats et
+inventait deux ventes qui n'existent pas.
+
+**Règle** : pour toute affirmation publiée sur des initiés — a fortiori nommant des personnes —
+utiliser `QueryData types=insider_transactions`, jamais le bloc agrégé de `GetInstruments`. Ce
+dernier sert à repérer un signal, pas à le chiffrer.
+
+**Piège associé** : les lignes de code `M` (levée d'options, prix 0) ne sont NI des achats NI des
+ventes. Sur EONR, cinq levées à prix nul le 16/02/2026 ajoutent 211 667 titres sans le moindre
+décaissement. Les compter comme de l'achat d'initié transforme un signal en propagande. La vérité
+publiable : 14 achats de marché, 983 237 titres, 370 329 $, prix moyen 0,3766 $, zéro vente.
+
+Coût : un chiffre faux publié deux fois sur une page nommant cinq dirigeants, rattrapé par le panel.
