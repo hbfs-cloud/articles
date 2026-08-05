@@ -1367,6 +1367,19 @@ window.searchDataPrebuilt = [
   {
     "type": "analyse",
     "icon": "fa-chart-column",
+    "ticker": "EONR",
+    "exchange": "NYSE American (listed, late filer) · Oil & Gas E&P",
+    "name": "EONR — EONR held at D, rebuilt on 4 Aug closes. The dilution we feared never came and insiders...",
+    "title": "EONR — EONR held at D, rebuilt on 4 Aug closes. The dilution we feared never came and insiders...",
+    "desc": "EONR analysis: Our June note put a D on EON and said the danger was dilution through a $150m equity facility. Six weeks later the stock is at $0.4942, down 12.5% from the 9 Ju",
+    "tags": "us,energy,small-cap,speculative",
+    "grade": "D",
+    "href": "/analyses/EONR/",
+    "date": ""
+  },
+  {
+    "type": "analyse",
+    "icon": "fa-chart-column",
     "ticker": "GALP.LS",
     "exchange": "Euronext Lisbon · Energy",
     "name": "GALP.LS — Galp guides €4bn EBITDA and yields 3.4% at 5.3x EV/EBITDA. Why the trade is at 19.45, a...",
@@ -2714,19 +2727,6 @@ window.searchDataPrebuilt = [
     "tags": "us,materials,speculative,trade-idea",
     "grade": "C+",
     "href": "/analyses/ABAT/",
-    "date": ""
-  },
-  {
-    "type": "analyse",
-    "icon": "fa-chart-column",
-    "ticker": "EONR",
-    "exchange": "NYSE American (Compliance Failure) • Oil & Gas E&P",
-    "name": "EONR — EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active diluti...",
-    "title": "EONR — EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active diluti...",
-    "desc": "EONR DOWNGRADE: D from C+. Down 31% since April. NYSE compliance failure, active dilution (+11% shares), White Lion death-spiral ELOC, multi-year restatement. Expert panel says: avoid.",
-    "tags": "us,energy,small-cap,speculative",
-    "grade": "D",
-    "href": "/analyses/EONR/",
     "date": ""
   },
   {
