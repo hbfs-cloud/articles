@@ -645,6 +645,14 @@ async function main() {
     fs.copyFileSync(pngPath, dailyCardPath);
     console.log(`✅ Daily card copied to: ${dailyCardPath}`);
 
+    // Cible Open Graph canonique : render-scanner.js pointe TOUTES les pages scanner sur
+    // /scanner-daily-card.png (meta og:image + twitter:image). Aucun outil n'écrivait ce
+    // fichier — il n'était mis à jour que par les copies datées, donc l'aperçu partagé sur
+    // Telegram/WhatsApp restait figé sur une carte périmée. On l'écrase à chaque génération.
+    const ogCardPath = path.join(ROOT, 'scanner-daily-card.png');
+    fs.copyFileSync(pngPath, ogCardPath);
+    console.log(`✅ Open Graph card updated: ${ogCardPath}`);
+
     // Update manifest.json with daily-card entry
     const manifestPath = path.join(statusDir, 'manifest.json');
     let manifest = {};
