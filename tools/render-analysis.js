@@ -109,6 +109,15 @@ function metricTile(value, label) {
   return `          <div class="ticker-metric"><div class="tm-value">${esc(v)}</div><div class="tm-label">${esc(label)}</div></div>\n`;
 }
 
+// Les jauges de risque attendent un NOMBRE. Une valeur en prose (« Structural »,
+// « Already the case ») était injectée telle quelle dans style="width:...%",
+// déclaration invalide donc barre cassée et légende invisible — six par page sur
+// EONR. On ne laisse plus passer que du numérique borné ; la prose part en verdict.
+function pct(v) {
+  const n = typeof v === 'number' ? v : parseFloat(v);
+  return Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 50;
+}
+
 function riskIcon(icon) {
   const g = String(icon || '').replace(/\bfa-(solid|regular|light|thin|duotone|brands)\b/g, '').trim();
   return /^fa-[a-z0-9-]+$/.test(g) ? g : 'fa-triangle-exclamation';
@@ -604,9 +613,9 @@ ${r.riskRadarValues ? `        <div style="display:flex;justify-content:center;m
 ${r.riskCards.map(rc => `          <div class="risk-card ${severityClass(rc.severity)}">
             <div class="risk-card-header"><div class="risk-card-icon"><i class="fa-solid ${riskIcon(rc.icon)}"></i></div><h4>${esc(rc.title)}</h4><span class="risk-severity">${esc(rc.severity.charAt(0).toUpperCase() + rc.severity.slice(1))}</span></div>
             <div class="risk-card-body"><ul>${(rc.points||[]).map(p => `<li>${esc(p)}</li>`).join('')}</ul>
-              <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">Probability</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${rc.probability||50}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${rc.impact||50}%;"></div></div></div></div>
+              <div class="risk-meters"><div class="risk-meter"><div class="risk-meter-label">Probability</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.probability)}%;"></div></div></div><div class="risk-meter"><div class="risk-meter-label">Impact</div><div class="risk-meter-bar"><div class="risk-meter-fill" style="width:${pct(rc.impact)}%;"></div></div></div></div>
             </div>
-            <div class="risk-verdict"><i class="fa-solid ${severityIcon(rc.severity)}"></i> ${esc(rc.verdict||'')}</div>
+            ${(rc.verdict || (typeof rc.impact === 'string' ? rc.impact : '')) ? `<div class="risk-verdict"><i class="fa-solid ${severityIcon(rc.severity)}"></i> ${esc(rc.verdict || rc.impact)}</div>` : ''}
           </div>`).join('\n')}
         </div>
 ${r.pedagogy ? `        <div class="pedagogy-box"><h4><i class="fa-solid fa-lightbulb"></i> Risk Synthesis</h4><p>${esc(r.pedagogy)}</p></div>` : ''}${sourceRefsHtml(r.sourceRefs)}
