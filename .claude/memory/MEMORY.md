@@ -126,3 +126,5 @@
 - [Décomposer un résultat avant de le qualifier](feedback_decompose_headline_earnings_before_characterising.md) — 85% du bénéfice « record » d'Amazon et 69% de celui d'Alphabet étaient des écritures non monétaires ; le capex Microsoft « en baisse » était un changement de méthode comptable
 - [Programme d'émission ACTIF ≠ nombre d'actions stable](feedback_active_issuance_program_not_share_count.md) — 3e récidive (INDO, bon de souscription AMD, puis CCJ) : un programme au fil de l'eau de 500 M$ actif jusqu'au 12/12/2026 invisible dans le nombre d'actions ; écrire « aucune dilution CONSTATÉE », jamais « aucune dilution »
 - [Les correctifs du panel vivent dans le HTML, pas dans le JSON](feedback_panel_fixes_html_only_lost_on_rerender.md) — un `render-analysis.js` après panel écrase 40 correctifs en silence (CCJ 03/08) ; reporter dans le JSON source AVANT de re-rendre, récupération via journal.jsonl
+
+- `feedback_lire_nos_propres_publications.md` — lire les 3 derniers daily/weekly avant toute thèse macro ; deux thèses réfutées le même jour par notre propre archive (5 août 2026)
