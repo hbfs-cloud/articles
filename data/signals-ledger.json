@@ -482,11 +482,12 @@
       "regime": "pre-fomc-defensive-lightsize",
       "confidence": "low",
       "maxHoldDays": 6,
-      "status": "open",
-      "triggered": false,
-      "outcomeR": null,
-      "closedDate": null,
-      "addedAt": "2026-07-27T23:47:20Z"
+      "status": "stopped",
+      "triggered": true,
+      "outcomeR": -1,
+      "closedDate": "2026-07-28",
+      "addedAt": "2026-07-27T23:47:20Z",
+      "correction": "2026-08-05: ligne corrigee de open (+6,4%) en stopped -1R. Seance d entree du 28/07 : haut 82,00 (entree 81 remplie) puis bas 72,1399, sous le stop 73 — entree et sortie dans la meme seance. La barre ouvre a 82,00 au-dessus du stop, donc remplissage du stop a 73, pas de trou. Barres MCP."
     },
     {
       "id": "20260728-MET-rotation_value_defensive_v1",
@@ -567,10 +568,11 @@
       "confidence": "med",
       "maxHoldDays": 10,
       "status": "stopped",
-      "triggered": false,
-      "outcomeR": -1,
+      "triggered": true,
+      "outcomeR": -1.5625,
       "closedDate": "2026-08-04",
-      "addedAt": "2026-07-27T23:49:25.468Z"
+      "addedAt": "2026-07-27T23:49:25.468Z",
+      "correction": "2026-08-05: outcomeR corrige de -1 en -1,5625. Le 04/08 ouvre a 16,35 et plafonne a 16,6809 : toute la seance sous le stop 16,80, donc trou de cotation. Remplissage a l ouverture : (16,35-17,60)/(17,60-16,80) = -1,5625 R. Le -1R theorique supposait un stop servi au niveau."
     },
     {
       "id": "20260731-CFFN-breakout_postearnings_v1",
@@ -672,10 +674,11 @@
       "confidence": "med",
       "maxHoldDays": 15,
       "status": "pending",
-      "triggered": false,
+      "triggered": true,
       "outcomeR": null,
       "closedDate": null,
-      "addedAt": "2026-08-04T10:06:27.280Z"
+      "addedAt": "2026-08-04T10:06:27.280Z",
+      "correction": "2026-08-05: triggered corrige en true — seance du 04/08 214,59-218,60 (cloture 217,93), entree 217,70 touchee. Barres MCP."
     },
     {
       "id": "20260805-AEG-swing_continuation_v1",
@@ -719,5 +722,10 @@
       "closedDate": null,
       "addedAt": "2026-08-05T02:45:40.832Z"
     }
-  ]
+  ],
+  "_knownDefect": {
+    "id": "triggered-flag-not-maintained",
+    "noted": "2026-08-05",
+    "detail": "sweep ne met jamais triggered a true : 1 entree sur 34 le porte. 17 trades clos, dont des gagnants tp2, restent marques triggered:false. N affecte pas les stats (calculees sur closedDate) mais rend le champ inutilisable. A corriger dans tools/signals-ledger.js."
+  }
 }
